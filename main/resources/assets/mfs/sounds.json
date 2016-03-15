@@ -1,0 +1,6 @@
+{
+    "small_engine_cranking"    : {"category": "master", "sounds": [{"name": "small_engine_cranking","stream": false}]},
+    "small_engine_starting"    : {"category": "master", "sounds": [{"name": "small_engine_starting","stream": false}]},
+    "small_engine_running"     : {"category": "master", "sounds": [{"name": "small_engine_running","stream": false}]},
+    "large_engine_running"     : {"category": "master", "sounds": [{"name": "large_engine_running","stream": false}]}
+}
