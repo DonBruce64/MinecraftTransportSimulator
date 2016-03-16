@@ -2,12 +2,11 @@ package minecraftflightsimulator.containers;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.EntityParent;
-import minecraftflightsimulator.packets.general.FuelPacket;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidContainerRegistry;
-import cpw.mods.fml.common.IFuelHandler;
+import net.minecraftforge.fluids.FluidStack;
 
 public class SlotFuel extends Slot{
 	private EntityParent parent;
@@ -18,11 +17,10 @@ public class SlotFuel extends Slot{
 	}
 	
     public boolean isItemValid(ItemStack item){
-    	if(item.getItem().equals(Items.lava_bucket)){
-    		return true;
-    	}else if(FluidContainerRegistry.isBucket(item)){
-    		if(item.getItem() instanceof IFuelHandler){
-    			if(((IFuelHandler) item.getItem()).getBurnTime(item) > 0){
+    	FluidStack stack = FluidContainerRegistry.getFluidForFilledItem(item);
+    	if(stack != null){
+    		if(MFS.fluidValues.containsKey(stack.getFluid().getName())){
+    			if(MFS.fluidValues.get(stack.getFluid().getName()) > 0){
     				return true;
     			}
     		}
@@ -42,11 +40,8 @@ public class SlotFuel extends Slot{
     		}
 	    	if(parent.fuel < parent.maxFuel - 100){
 	    		this.putStack(null);
-	    		if(item.getItem().equals(Items.lava_bucket)){
-	    			parent.fuel = Math.min(parent.fuel + 1000, parent.maxFuel);
-	    		}else{
-	    			parent.fuel = Math.min(parent.fuel + ((IFuelHandler) item.getItem()).getBurnTime(item), parent.maxFuel);
-	    		}
+	    		int fuelValue = MFS.fluidValues.get(FluidContainerRegistry.getFluidForFilledItem(item).getFluid().getName());
+	    		parent.fuel = Math.min(parent.fuel + fuelValue, parent.maxFuel);
 	    		parent.setInventorySlotContents(parent.emptyBucketSlot, new ItemStack(Items.bucket, buckets != null ? buckets.stackSize+1 : 1));
 	    	}
     	}

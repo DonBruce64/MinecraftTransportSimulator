@@ -1,5 +1,7 @@
 death.attack.propellor=%1$s was shredded by a propellor.
 death.attack.propellor.player=%1$s was was shredded by a propellor while fighting %2$s
+entity.mfs.Chest.name=Plane Chest
+
 item.MC172.name=MC-172
 item.Seat.name=Seat
 item.Wheel_0.name=Small Wheel
@@ -26,10 +28,10 @@ item.FlightInstrument6.name=Vertical Speed Indicator
 item.FlightInstrument6.description=Indicates climb rate.
 item.FlightInstrument7.name=Lift Reserve Indicator
 item.FlightInstrument7.description=Indicates lift potential.
-item.FlightInstrument8.name=Dummy Indicator
-item.FlightInstrument8.description=Dummy item for future use.
-item.FlightInstrument9.name=Dummy Indicator
-item.FlightInstrument9.description=Dummy item for future use.
+item.FlightInstrument8.name=DUMMY
+item.FlightInstrument8.description=
+item.FlightInstrument9.name=DUMMY
+item.FlightInstrument9.description=
 item.FlightInstrument10.name=Tachometer
 item.FlightInstrument10.description=Indicates engine speeds.
 item.FlightInstrument11.name=Fuel Gauge

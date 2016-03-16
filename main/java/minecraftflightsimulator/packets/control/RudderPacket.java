@@ -44,7 +44,7 @@ public class RudderPacket implements IMessage{
 				if(ctx.side==Side.SERVER){
 					if(message.rudderAngle + thisEntity.rudderAngle >= -250 && message.rudderAngle + thisEntity.rudderAngle <= 250){
 						thisEntity.rudderAngle += message.rudderAngle;
-						thisEntity.rudderCooldown = 4;
+						thisEntity.rudderCooldown = MFS.controlSurfaceCooldown;
 						MFS.MFSNet.sendToAll(message);
 					}
 				}else{

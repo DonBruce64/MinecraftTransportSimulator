@@ -1,5 +1,8 @@
 package minecraftflightsimulator;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import minecraftflightsimulator.other.EntityController;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -25,9 +28,11 @@ public class MFS {
 	public static final String MODVER="3.0.0";
 	
 	public static Configuration config;
-	public static float planeSpeedFactor;
-	public static float fuelUsageFactor;
+	public static int controlSurfaceCooldown;
+	public static double planeSpeedFactor;
+	public static double fuelUsageFactor;
 	public static String heavyItems;
+	public static Map<String, Integer> fluidValues = new HashMap<String, Integer>();
 	
 	@Instance(value = MFS.MODID)
 	public static MFS instance;
@@ -46,9 +51,10 @@ public class MFS {
 	public void PreInit(FMLPreInitializationEvent event){
 		config = new Configuration(event.getSuggestedConfigurationFile());
 		config.load();
-		planeSpeedFactor = config.getFloat("PlaneSpeedFactor", config.CATEGORY_GENERAL, 0.5F, 0.1F, 5F, "Factor to apply to plane movement.  1 is the realistic value, but this makes planes move too fast for Minecraft.  \nAdjust with caution.");
-		fuelUsageFactor = config.getFloat("FuelUsageFactor", config.CATEGORY_GENERAL, 1.0F, 0F, 100F, "Factor times which engines use fuel.  \nChange this if you think engines use fuel too fast or slow.");
-		heavyItems = config.getString("HeavyItems", config.CATEGORY_GENERAL, "diamond, iron, gold, coal, ore, stone", "Any item that contains these words will be counted as heavy (double mass) when considering plane mass.  Change and tweak to your liking.");
+		controlSurfaceCooldown = config.get(config.CATEGORY_GENERAL, "ControlSurfaceCooldown", 4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.").getInt();
+		planeSpeedFactor = config.get(config.CATEGORY_GENERAL, "PlaneSpeedFactor", 0.5F, "Factor to apply to plane movement.  1 is the realistic value, but this makes planes move too fast for Minecraft.  \nAdjust with caution.").getDouble();
+		fuelUsageFactor = config.get(config.CATEGORY_GENERAL, "FuelUsageFactor", 1.0F, "Factor times which engines use fuel.  \nChange this if you think engines use fuel too fast or slow.").getDouble();
+		heavyItems = config.get(config.CATEGORY_GENERAL, "HeavyItems", "diamond, iron, gold, coal, ore, stone", "Any item that contains these words will be counted as heavy (double mass) when considering plane mass.  \nChange and tweak to your liking.").getString();
 		
 		EntityController.modKey = config.get("controls", "ModKey", Keyboard.KEY_RSHIFT).getInt();
 		EntityController.camLockKey = config.get("controls", "CamLockKey", Keyboard.KEY_RCONTROL).getInt();

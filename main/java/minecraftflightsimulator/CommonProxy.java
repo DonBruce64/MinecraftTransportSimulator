@@ -1,5 +1,7 @@
 package minecraftflightsimulator;
 
+import java.util.Collection;
+
 import minecraftflightsimulator.containers.GUIHandler;
 import minecraftflightsimulator.entities.EntityCore;
 import minecraftflightsimulator.entities.EntityEngine;
@@ -37,6 +39,11 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidContainerRegistry;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidContainerRegistry.FluidContainerData;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -58,6 +65,7 @@ public class CommonProxy{
 		initPackets();
 		initItems();
 		initRecipies();
+		initFuels();
 		NetworkRegistry.INSTANCE.registerGuiHandler(MFS.instance, new GUIHandler());
 	}
 	
@@ -165,26 +173,36 @@ public class CommonProxy{
 	}
 	
 	private void initEngines(){
-		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 1805),
+		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 2805),
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.piston, 'B', Blocks.obsidian,'C', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 2007),
+		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 3007),
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.piston, 'B', Blocks.obsidian,'C', Items.diamond);
-		GameRegistry.addRecipe(new ItemStack(engineLarge, 1, 1907),
+		GameRegistry.addRecipe(new ItemStack(engineLarge, 1, 2907),
 				"ABA",
 				"ACA",
 				"ABA",
 				'A', Blocks.piston, 'B', Blocks.obsidian,'C', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(engineLarge, 1, 2210),
+		GameRegistry.addRecipe(new ItemStack(engineLarge, 1, 3210),
 				"ABA",
 				"ACA",
 				"ABA",
 				'A', Blocks.piston, 'B', Blocks.obsidian,'C', Items.diamond);
+	}
+	
+	private void initFuels(){
+    	FluidContainerData[] fluidData = FluidContainerRegistry.getRegisteredFluidContainerData();
+		for(FluidContainerData data : fluidData){
+			if(data.emptyContainer.equals(FluidContainerRegistry.EMPTY_BUCKET)){
+				MFS.fluidValues.put(data.fluid.getFluid().getName(), MFS.config.get("fuels", data.fluid.getFluid().getName(), data.fluid.getFluid().equals(FluidRegistry.LAVA) ? 1000 :0).getInt());
+			}
+		}
+		MFS.config.save();
 	}
 	
 	public void updateSittingPlayer(EntitySeat seat){}

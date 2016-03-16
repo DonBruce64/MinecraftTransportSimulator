@@ -60,15 +60,17 @@ public class EntityPropeller extends EntityChild{
 						this.setDead();
 					}
 				}
+				if(engineRPM/60*Math.PI*diameter*0.0254 > 340.29){
+					worldObj.playSoundAtEntity(this, "minecraft:random.break", 2, 1);
+					this.setDead();
+				}
 			}
 		}
 	}
 	
 	public double getThrustForce(){
 		if(parent!=null){
-			return parent.airDensity*Math.PI*Math.pow(0.0254*diameter, 2)/4D*(Math.pow(engineRPM*0.0254*pitch/60D, 2)-(engineRPM*0.0254*pitch/60D)*parent.velocity)*Math.pow(diameter/3.29546/pitch, 1.5)/400D;
-			//Don't know why this simplified calculation isn't working.  Works fine with printlns.
-			//return parent.airDensity*3.585632e-8*engineRPM*Math.pow(diameter, 3.5)/Math.sqrt(pitch)*(0.000423333*engineRPM*pitch - parent.velocity*20)/400;
+			return parent.airDensity*Math.PI*Math.pow(0.0254*diameter, 2)/4D*(Math.pow(engineRPM*0.0254*pitch/60D, 2)-(engineRPM*0.0254*pitch/60D)*parent.velocity*20)*Math.pow(diameter/2.25/pitch, 1.5)/400D;
 		}else{
 			return 0;
 		}

@@ -49,7 +49,7 @@ public class EntityTrimotor extends EntityPlane{
 		rudderArea=1.5F;
 		elevatorArea=3.0F;
 		maxLiftCoeff=2F;
-		defaultWingAngle=5;
+		angleOfIncidence=5;
 		defaultElevatorAngle=-3;
 		criticalAoA=15;
 		initialDragCoeff=0.0341F;
@@ -76,7 +76,7 @@ public class EntityTrimotor extends EntityPlane{
 	
 	@Override
 	public void drawHUD(int width, int height){
-		HUDParent.instance.drawBasicPlaneHUD(this, width, height, backplateTexture, moldingTexture);
+		HUDParent.instance.drawBasicHUD(this, width, height, backplateTexture, moldingTexture);
 	}
 	
 	@Override

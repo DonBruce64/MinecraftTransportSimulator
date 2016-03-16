@@ -19,7 +19,7 @@ public class ItemEngineLarge extends ItemEngine{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List itemList){
-        itemList.add(new ItemStack(item, 1, 1907));
-        itemList.add(new ItemStack(item, 1, 2210));
+        itemList.add(new ItemStack(item, 1, 2907));
+        itemList.add(new ItemStack(item, 1, 3210));
     }
 }

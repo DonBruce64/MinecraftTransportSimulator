@@ -44,7 +44,7 @@ public class ElevatorPacket implements IMessage{
 				if(ctx.side==Side.SERVER){
 					if(message.elevatorAngle + thisEntity.elevatorAngle >= -250 && message.elevatorAngle + thisEntity.elevatorAngle <= 250){
 						thisEntity.elevatorAngle += message.elevatorAngle;
-						thisEntity.elevatorCooldown = 20;
+						thisEntity.elevatorCooldown = MFS.controlSurfaceCooldown;
 						MFS.MFSNet.sendToAll(message);
 					}
 				}else{

@@ -38,8 +38,15 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	public float prevRotationRoll;
 	public double fuel;
 	public double prevFuel;
+	public double fuelFlow;
 	public double velocity;
 	public double airDensity;
+	public double trackAngle;
+	
+	public Vec3 velocityVec = Vec3.createVectorHelper(0, 0, 0);
+	public Vec3 bearingVec = Vec3.createVectorHelper(0, 0, 0);
+	public Vec3 wingVec = Vec3.createVectorHelper(0, 0, 0);
+	public Vec3 sideVec = Vec3.createVectorHelper(0, 0, 0);
 	
 	public static final int pilotSeatSlot = 24;
 	public static final int passengerSeatSlot = 25;
@@ -61,7 +68,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	 * Slot 41 is for empty buckets.
 	 * Slot 42 is for fuel buckets, which drop out of the inventory if left in slot during closing.
 	 */
-	private ItemStack[] compenentItems = new ItemStack[43];
+	private ItemStack[] compenentItems = new ItemStack[fuelBucketSlot+1];
 	
 	/**
 	 * Array containing locations of all child positions with respect to slots.
@@ -183,7 +190,8 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			MFS.MFSNet.sendToAll(new ServerSyncPacket(getEntityId(), posX, posY, posZ, motionX, motionY, motionZ, rotationPitch, rotationRoll, rotationYaw));
 		}
 		airDensity = 1.225*Math.pow(2, -posY/500);
-		this.prevFuel = this.fuel;
+		fuelFlow = prevFuel - fuel;
+		prevFuel = fuel;
 	}
 	
 	@Override
@@ -234,7 +242,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		this.setDead();
 		if(!worldObj.isRemote){
 			openInventory();
-			for(int i=1; i<=120; ++i){
+			for(int i=1; i<=fuelBucketSlot; ++i){
 				setInventorySlotContents(i, null);
 			}
 		}

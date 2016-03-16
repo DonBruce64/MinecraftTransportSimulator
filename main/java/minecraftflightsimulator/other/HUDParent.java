@@ -22,12 +22,12 @@ public class HUDParent{
 	
 	public HUDParent(){}
 	
-	public static void drawBasicPlaneHUD(EntityPlane plane, int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
+	public static void drawBasicHUD(EntityParent parent, int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
 		if(ClientProxy.hudMode == 3){
 			drawLowerConsole(width, height, backplateTexture, moldingTexture);
-			for(int i=5; i<plane.instrumentList.size(); ++i){
-				if(plane.instrumentList.get(i) != null){
-					drawInstrument(plane, (5*(i-5)+6)*width/32, height - 32, plane.instrumentList.get(i).getItemDamage(), true);
+			for(int i=5; i<parent.instrumentList.size(); ++i){
+				if(parent.instrumentList.get(i) != null){
+					drawInstrument(parent, (5*(i-5)+6)*width/32, height - 32, parent.instrumentList.get(i).getItemDamage(), true);
 				}
 			}
 			height -= 64;
@@ -37,68 +37,70 @@ public class HUDParent{
 			drawLeftConsole(width, height, backplateTexture, moldingTexture);
 			drawRightConsole(width, height, backplateTexture, moldingTexture);
 			
-			if(plane.hasFlaps){
-				drawFlapIndicator(plane, width/8 - 15, height - 19, true);
+			if(parent instanceof EntityPlane){
+				if(((EntityPlane) parent).hasFlaps){
+					drawFlapIndicator((EntityPlane) parent, width/8 - 15, height - 19, true);
+				}
 			}
-	    	drawThrottle(plane, 7*width/8 + 10, height - 18, true);
-	    	drawParkingBrake(plane, 15*width/16 + 14, height - 18, true);
+	    	drawThrottle(parent, 7*width/8 + 10, height - 18, true);
+	    	drawParkingBrake(parent, 15*width/16 + 14, height - 18, true);
 	    	
 	    	GL11.glPushMatrix();
 	    	GL11.glScalef(0.75F, 0.75F, 0.75F);
-	    	if(plane.instrumentList.get(0) != null){
-	    		drawInstrument(plane, width/4, (height - 24)*4/3, plane.instrumentList.get(0).getItemDamage(), true);
+	    	if(parent.instrumentList.get(0) != null){
+	    		drawInstrument(parent, width/4, (height - 24)*4/3, parent.instrumentList.get(0).getItemDamage(), true);
 	    	}
-	    	if(plane.instrumentList.get(4) != null){
-	    		drawInstrument(plane, width*17/16, (height - 24)*4/3, plane.instrumentList.get(4).getItemDamage(), true);
+	    	if(parent.instrumentList.get(4) != null){
+	    		drawInstrument(parent, width*17/16, (height - 24)*4/3, parent.instrumentList.get(4).getItemDamage(), true);
 	    	}
 	    	GL11.glPopMatrix();
 		}
 		if(ClientProxy.hudMode != 0){
 			for(int i=1; i<4; ++i){
-				if(plane.instrumentList.get(i) != null){
-					drawInstrument(plane, (5*i+6)*width/32, height - 32, plane.instrumentList.get(i).getItemDamage(), true);
+				if(parent.instrumentList.get(i) != null){
+					drawInstrument(parent, (5*i+6)*width/32, height - 32, parent.instrumentList.get(i).getItemDamage(), true);
 				}
 			}
 		}
 	}
 	
-	public static void drawInstrument(EntityPlane plane, int x, int y, int type, boolean hud){
+	public static void drawInstrument(EntityParent parent, int x, int y, int type, boolean hud){
 		if(type == 0){
-			drawAttitudeIndicator(plane, x, y, hud);
+			drawAttitudeIndicator(parent, x, y, hud);
 		}else if(type == 1){
-			drawAltimeter(plane, x, y, hud);
+			drawAltimeter(parent, x, y, hud);
 		}else if(type == 2){
-			drawHeadingIndicator(plane, x, y, hud);
+			drawHeadingIndicator(parent, x, y, hud);
 		}else if(type == 3){
-			drawAirspeedIndicator(plane, x, y, hud);
+			drawAirspeedIndicator(parent, x, y, hud);
 		}else if(type == 4){
-			drawTurnCoordinator(plane, x, y, hud);
+			drawTurnCoordinator(parent, x, y, hud);
 		}else if(type == 5){
-			//drawTurnAndSlipIndicator
+			drawTurnAndSlipIndicator(parent, x, y, hud);
 		}else if(type == 6){
-			//drawVerticalSpeedIndicator
+			drawVerticalSpeedIndicator(parent, x, y, hud);
 		}else if(type == 7){
-			//drawLiftReserveIndicator
+			drawLiftReserveIndicator(parent, x, y, hud);
 		}else if(type == 8){
 			//DUMMY
 		}else if(type == 9){
 			//DUMMY
 		}else if(type == 10){
-			drawTachometer(plane, x, y, hud);
+			drawTachometer(parent, x, y, hud);
 		}else if(type == 11){
-			drawFuelGauge(plane, x, y, hud);
+			drawFuelGauge(parent, x, y, hud);
 		}else if(type == 12){
-			drawFuelFlowGauge(plane, x, y, hud);
+			drawFuelFlowGauge(parent, x, y, hud);
 		}else if(type == 13){
 			//drawEngineTempGauge()
 		}else if(type == 14){
 			//drawOilPressureGauge()
 		}else if(type == 15){
-			drawThrottle(plane, x, y, hud);
+			drawThrottle(parent, x, y, hud);
 		}else if(type == 16){
-			drawParkingBrake(plane, x, y, hud);
+			drawParkingBrake(parent, x, y, hud);
 		}else if(type == 17){
-			drawFlapIndicator(plane, x, y, hud);
+			drawFlapIndicator((EntityPlane) parent, x, y, hud);
 		}
 	}
     
@@ -387,7 +389,7 @@ public class HUDParent{
     		GL11.glDisable(GL11.GL_LIGHTING);
     		GL11.glTranslatef(0, 0, -0.1F);
     	}
-    	
+
     	drawScaledString("BLK/S", centerX*2-15, centerY*2+14, 0.5F);
     	drawDialColoring(centerX, centerY, 292.5F, 330, 25, 3, new float[] {1, 0, 0});
     	drawDialColoring(centerX, centerY, 217.5F, 292.5F, 25, 3, new float[] {1, 1, 0});
@@ -412,24 +414,208 @@ public class HUDParent{
     		GL11.glDisable(GL11.GL_LIGHTING);
     		GL11.glTranslatef(0, 0, -0.1F);
     	}
-
+    	
     	drawDialIncrements(centerX, centerY, -90, 90, 20, 5, 2);
-    	drawDialIncrements(centerX, centerY, -75, 75, 20, 5, 2);
-    	if(!hud){GL11.glTranslatef(0, 0, -0.2F);}
+    	drawDialIncrements(centerX, centerY, -115, 115, 20, 5, 2);
     	
     	ModelRenderHelper.startRender();
-    	rotationHelper(centerX, centerY, ((parent.rotationRoll - parent.prevRotationRoll)/10 + parent.rotationYaw - parent.prevRotationYaw)/0.15F*15F);
-    	ModelRenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+25, centerY-25, 0, 0, 0.75, 1, 0.5, 0.625, false);
+    	ModelRenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+18.75, centerY+6.25, 0, 0, 0.75, 1, 0.5625, 0.625, false);
+    	ModelRenderHelper.endRender();
+    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	
+    	float turn = Math.max(Math.min(((parent.rotationRoll - parent.prevRotationRoll)/10 + parent.rotationYaw - parent.prevRotationYaw)/0.15F*25F, 50), -50);
+    	rotationHelper(centerX, centerY, turn);
+    	ModelRenderHelper.startRender();
+    	ModelRenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+6.25, centerY-6.25, 0, 0, 0.75, 1, 0.5, 0.5625, false);
+    	ModelRenderHelper.endRender();
+    	rotationHelper(centerX, centerY, -turn);
+    	
+    	ModelRenderHelper.startRender();
+    	double slip = parent.sideVec.dotProduct(parent.velocityVec);
+    	ModelRenderHelper.renderSquareUV(centerX-2.5 + 20*slip, centerX+2.5 + 20*slip, centerY+15 - Math.abs(slip), centerY+10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
     	ModelRenderHelper.endRender();
     	if(!hud){GL11.glTranslatef(0, 0, 0.1F);}
 
-    	drawScaledString("M.J.", centerX*2-6, centerY*2-46, 0.5F);
-    	drawScaledString("ELEC", centerX*2-10, centerY*2-36, 0.5F);
-    	drawScaledString("2 MIN", centerX*2-12, centerY*2+14, 0.5F);
+    	drawScaledString("L", centerX*2-34, centerY*2+20, 0.5F);
+    	drawScaledString("R", centerX*2+30, centerY*2+20, 0.5F);
+    	drawScaledString("M.J.", centerX*2-8, centerY*2-46, 0.5F);
+    	drawScaledString("ELEC", centerX*2-12, centerY*2-36, 0.5F);
+    	drawScaledString("2 MIN", centerX*2-14, centerY*2+36, 0.5F);
 
-    	
     	if(!hud){GL11.glEnable(GL11.GL_LIGHTING);}
     	GL11.glPopMatrix();
+	}
+	
+	private static void drawTurnAndSlipIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
+		textureManager.bindTexture(instruments);
+		drawGaugeBase(centerX, centerY, 30);
+		GL11.glPushMatrix();
+    	if(!hud){
+    		GL11.glDisable(GL11.GL_LIGHTING);
+    		GL11.glTranslatef(0, 0, -0.1F);
+    	}
+    	
+    	ModelRenderHelper.startRender();
+    	ModelRenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+18.75, centerY+6.25, 0, 0, 0.75, 1, 0.5625, 0.625, false);
+    	ModelRenderHelper.endRender();
+    	
+    	GL11.glDisable(GL11.GL_TEXTURE_2D);
+    	GL11.glColor3f(1, 1, 1);
+    	GL11.glBegin(GL11.GL_QUADS);
+    	GL11.glVertex2d(centerX - 2, centerY - 18);
+    	GL11.glVertex2d(centerX + 2, centerY - 18);
+    	GL11.glVertex2d(centerX + 3, centerY - 20);
+    	GL11.glVertex2d(centerX - 3, centerY - 20);
+    	
+    	GL11.glVertex2d(centerX - 3, centerY - 20);
+    	GL11.glVertex2d(centerX + 3, centerY - 20);
+    	GL11.glVertex2d(centerX + 3, centerY - 24);
+    	GL11.glVertex2d(centerX - 3, centerY - 24);
+    	GL11.glEnd();
+    	
+    	rotationHelper(centerX, centerY, 25);
+    	GL11.glBegin(GL11.GL_QUADS);
+    	GL11.glVertex2d(centerX - 2, centerY - 18);
+    	GL11.glVertex2d(centerX + 2, centerY - 18);
+    	GL11.glVertex2d(centerX + 2, centerY - 20);
+    	GL11.glVertex2d(centerX - 2, centerY - 20);
+    	GL11.glEnd();
+    	GL11.glBegin(GL11.GL_TRIANGLES);
+    	GL11.glVertex2d(centerX, centerY - 22);
+    	GL11.glVertex2d(centerX - 2, centerY - 20);
+    	GL11.glVertex2d(centerX + 2, centerY - 20);
+    	GL11.glEnd();
+    	
+    	rotationHelper(centerX, centerY, -50);
+    	GL11.glBegin(GL11.GL_QUADS);
+    	GL11.glVertex2d(centerX - 2, centerY - 18);
+    	GL11.glVertex2d(centerX + 2, centerY - 18);
+    	GL11.glVertex2d(centerX + 2, centerY - 20);
+    	GL11.glVertex2d(centerX - 2, centerY - 20);
+    	GL11.glEnd();
+    	GL11.glBegin(GL11.GL_TRIANGLES);
+    	GL11.glVertex2d(centerX, centerY - 22);
+    	GL11.glVertex2d(centerX - 2, centerY - 20);
+    	GL11.glVertex2d(centerX + 2, centerY - 20);
+    	GL11.glEnd();
+    	
+    	float turn = Math.max(Math.min((parent.rotationYaw - parent.prevRotationYaw)/0.15F*25F, 50), -50);
+    	rotationHelper(centerX, centerY, turn + 25);
+    	GL11.glBegin(GL11.GL_QUADS);
+    	GL11.glVertex2d(centerX - 2, centerY - 10);
+    	GL11.glVertex2d(centerX + 2, centerY - 10);
+    	GL11.glVertex2d(centerX + 2, centerY - 18);
+    	GL11.glVertex2d(centerX - 2, centerY - 18);
+    	GL11.glEnd();
+    	
+    	GL11.glColor3f(0, 0, 0);
+    	GL11.glBegin(GL11.GL_QUADS);
+    	GL11.glVertex2d(centerX - 2, centerY + 3);
+    	GL11.glVertex2d(centerX + 2, centerY + 3);
+    	GL11.glVertex2d(centerX + 2, centerY - 10);
+    	GL11.glVertex2d(centerX - 2, centerY - 10);
+    	
+    	GL11.glVertex2d(centerX - 3, centerY + 3);
+    	GL11.glVertex2d(centerX + 3, centerY + 3);
+    	GL11.glVertex2d(centerX + 3, centerY - 3);
+    	GL11.glVertex2d(centerX - 3, centerY - 3);
+    	GL11.glEnd();
+    	rotationHelper(centerX, centerY, -turn);
+    	GL11.glEnable(GL11.GL_TEXTURE_2D);
+    	
+    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	ModelRenderHelper.startRender();
+    	double slip = parent.sideVec.dotProduct(parent.velocityVec);
+    	ModelRenderHelper.renderSquareUV(centerX-2.5 + 20*slip, centerX+2.5 + 20*slip, centerY+15 - Math.abs(slip), centerY+10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
+    	ModelRenderHelper.endRender();
+    	if(!hud){GL11.glTranslatef(0, 0, 0.1F);}
+
+    	drawScaledString("L", centerX*2-30, centerY*2-30, 0.5F);
+    	drawScaledString("R", centerX*2+26, centerY*2-30, 0.5F);
+    	drawScaledString("2 MIN", centerX*2-14, centerY*2+36, 0.5F);
+
+    	if(!hud){GL11.glEnable(GL11.GL_LIGHTING);}
+    	GL11.glPopMatrix();
+	}
+	
+	private static void drawVerticalSpeedIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
+		drawGaugeBase(centerX, centerY, 30);
+    	if(!hud){
+			GL11.glPushMatrix();
+    		GL11.glDisable(GL11.GL_LIGHTING);
+    		GL11.glTranslatef(0, 0, -0.2F);
+    	}
+
+    	drawScaledString("CLIMB", centerX*2-14, centerY*2-14, 0.5F);
+    	drawScaledString("BLK/S", centerX*2-14, centerY*2+10, 0.5F);
+    	drawDialNumbers(centerX, centerY, -90, 90, 16, 0, 1, 4, 0.7F);
+    	drawDialNumbers(centerX, centerY, -132.5F, -217.5F, 16, 1, 1, 2, 0.7F);
+    	drawDialIncrements(centerX, centerY, -260, 80, 25, 5, 9);
+    	drawDialIncrements(centerX, centerY, -132.5F, -47.5F, 25, 3, 11);
+    	drawDialIncrements(centerX, centerY, -47.5F, 80, 25, 2, 16);
+    	drawDialIncrements(centerX, centerY, -260, -132.5F, 25, 2, 16);
+    	drawLongPointer(centerX, centerY, (float) (-90+10.625*parent.motionY*20), 35, 2);
+    	
+        if(!hud){
+        	GL11.glEnable(GL11.GL_LIGHTING);
+        	GL11.glPopMatrix();
+        }
+	}
+	
+	private static void drawLiftReserveIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
+		drawGaugeBase(centerX, centerY, 30);
+    	GL11.glPushMatrix();
+    	if(!hud){
+    		GL11.glDisable(GL11.GL_LIGHTING);
+    		GL11.glTranslatef(0, 0, -0.1F);
+    	}
+    	
+    	drawScaledString("LIFT RESERVE", centerX*2-32, centerY*2+14, 0.5F);
+    	drawDialColoring(centerX, centerY+20, -37, -35, 35, 10, new float[] {0, 0, 0});
+    	drawDialColoring(centerX, centerY+20, -35, -26, 32, 7, new float[] {1, 0, 0});
+    	drawDialColoring(centerX, centerY+20, -26, -24, 32, 7, new float[] {0, 0, 0});
+    	drawDialColoring(centerX, centerY+20, -24, -11, 32, 7, new float[] {1, 1, 0});
+    	drawDialColoring(centerX, centerY+20, -11, -9, 32, 7, new float[] {0, 0, 0});
+    	drawDialColoring(centerX, centerY+20, -9, 35, 32, 7, new float[] {0, 1, 0});
+    	drawDialColoring(centerX, centerY+20, -35, 35, 35, 3, new float[] {1, 1, 1});
+    	drawDialColoring(centerX, centerY+20, 35, 37, 35, 10, new float[] {0, 0, 0});
+    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	
+    	GL11.glDisable(GL11.GL_TEXTURE_2D);
+    	GL11.glColor3f(0, 0, 0);
+        for(float theta=-33; theta<=33; theta+=3){
+        	GL11.glBegin(GL11.GL_LINES);
+            GL11.glVertex2d(centerX+34.5*Math.sin(Math.toRadians(theta)), centerY+20-34.5*Math.cos(Math.toRadians(-theta)));
+            GL11.glVertex2d(centerX+(34.5-2)*Math.sin(Math.toRadians(theta)), centerY+20-(34.5-2)*Math.cos(Math.toRadians(-theta)));
+            GL11.glEnd();
+        }
+    	
+        float angle = (float) Math.max(Math.min(parent instanceof EntityPlane ? ((EntityPlane) parent).criticalAoA + parent.trackAngle - 25 : -25, 35), -35);
+        rotationHelper(centerX, centerY + 20, angle);    	
+    	GL11.glColor3f(0, 0, 0);
+    	GL11.glBegin(GL11.GL_QUADS);
+    	GL11.glVertex2d(centerX - 0.5, centerY - 5);
+    	GL11.glVertex2d(centerX + 0.5, centerY - 5);
+    	GL11.glVertex2d(centerX + 0.5, centerY - 18);
+    	GL11.glVertex2d(centerX - 0.5, centerY - 18);
+    	GL11.glEnd();
+    	
+    	GL11.glColor3f(1, 1, 1);
+    	GL11.glBegin(GL11.GL_QUADS);
+    	GL11.glVertex2d(centerX - 1.5, centerY + 20);
+    	GL11.glVertex2d(centerX + 1.5, centerY + 20);
+    	GL11.glVertex2d(centerX + 1.5, centerY + 12);
+    	GL11.glVertex2d(centerX - 1.5, centerY + 12);
+    	
+    	GL11.glVertex2d(centerX - 0.5, centerY + 12);
+    	GL11.glVertex2d(centerX + 0.5, centerY + 12);
+    	GL11.glVertex2d(centerX + 0.5, centerY - 5);
+    	GL11.glVertex2d(centerX - 0.5, centerY - 5);
+    	GL11.glEnd();
+
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        if(!hud){GL11.glEnable(GL11.GL_LIGHTING);}
+        GL11.glPopMatrix();
 	}
 	
 	private static void drawTachometer(EntityParent parent, int centerX, int centerY, boolean hud){
@@ -455,6 +641,8 @@ public class HUDParent{
         	GL11.glPopMatrix();
         }
     }
+	
+	
     
 	private static void drawFuelGauge(EntityParent parent, int centerX, int centerY, boolean hud){
     	drawGaugeBase(centerX, centerY, 30);
@@ -481,6 +669,8 @@ public class HUDParent{
         }
     }
 	
+	
+	
 	private static void drawFuelFlowGauge(EntityParent parent, int centerX, int centerY, boolean hud){
     	drawGaugeBase(centerX, centerY, 30);
     	if(!hud){
@@ -496,9 +686,7 @@ public class HUDParent{
         drawDialIncrements(centerX, centerY, -135, 135, 25, 3, 41);
         drawDialIncrements(centerX, centerY, -135, 135, 25, 5, 9);
         drawDialNumbers(centerX, centerY, -135, 135, 16, 0, 1, 4, 0.6F);
-        //TODO figure out why this is not working.
-        //System.out.println((parent.prevFuel - parent.fuel)*20*60*60/1000);
-    	drawLongPointer(centerX, centerY, (float) (-135 + (parent.prevFuel - parent.fuel)*20*60*60/1000), 30, 3);
+    	drawLongPointer(centerX, centerY, (float) (-135 + parent.fuelFlow*20*60*60/1000), 30, 3);
         if(!hud){
         	GL11.glEnable(GL11.GL_LIGHTING);
         	GL11.glPopMatrix();
@@ -523,7 +711,6 @@ public class HUDParent{
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glPopMatrix();
     }
-    
     /**
      * Draws numbers in a clockwise rotation offset from a center point.
      * Angles are in degrees.  The number size can be altered with the scale parameter.
@@ -572,7 +759,6 @@ public class HUDParent{
 	    GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glPopMatrix();
     }
-    
     /**
      * Draws a long pointer with the given parameters.
      */

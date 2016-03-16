@@ -87,7 +87,7 @@ public abstract class RenderPlane extends Render{
 		GL11.glVertex3d(0, 2, 0);
 		GL11.glVertex3d(plane.bearingVec.xCoord, 2 + plane.bearingVec.yCoord,  plane.bearingVec.zCoord);
 		GL11.glEnd();
-		
+				
 		GL11.glLineWidth(1);
 		GL11.glEnable(GL11.GL_LIGHTING);
 		GL11.glEnable(GL11.GL_TEXTURE_2D);

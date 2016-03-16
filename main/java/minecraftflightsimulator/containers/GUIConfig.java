@@ -147,7 +147,6 @@ public class GUIConfig extends GuiScreen{
         }
     	for(GuiTextField box : boxes){
     		if(box.isFocused()){
-    			MFS.config.load();
     			box.setText(Keyboard.getKeyName(bytecode));
     			if(box.equals(pitchUpKeyBox)){
     				EntityController.pitchUpKey=bytecode;

@@ -49,7 +49,7 @@ public class EntityMC172 extends EntityPlane{
 		rudderArea=1.5F;
 		elevatorArea=3.0F;
 		maxLiftCoeff=2F;
-		defaultWingAngle=0;
+		angleOfIncidence=0;
 		defaultElevatorAngle=-5;
 		criticalAoA=15;
 		initialDragCoeff=0.03F;
@@ -75,7 +75,7 @@ public class EntityMC172 extends EntityPlane{
 	
 	@Override
 	public void drawHUD(int width, int height){
-		HUDParent.instance.drawBasicPlaneHUD(this, width, height, this.getHudBackplateTexture(), this.getHudMoldingTexture());
+		HUDParent.instance.drawBasicHUD(this, width, height, this.getHudBackplateTexture(), this.getHudMoldingTexture());
 	}
 	
 	private ResourceLocation getHudBackplateTexture(){
@@ -107,8 +107,7 @@ public class EntityMC172 extends EntityPlane{
 		container.addSlotToContainer(new SlotBucket(this, 7, 113));
 		container.addSlotToContainer(new SlotFuel(this, 7, 73));
 		for(int i=0; i<10; ++i){
-			if(i == 0 || i == 5){continue;}
-			container.addSlotToContainer(new SlotInstrument(this, -11 + 18*(i%5), i < 5 ? 7 : 25, i + instrumentStartSlot));
+			container.addSlotToContainer(new SlotInstrument(this, 7 + 18*(i%5), i < 5 ? 7 : 25, i + instrumentStartSlot));
 		}
 	}
 }

@@ -28,20 +28,16 @@ public abstract class EntityPlane extends EntityParent{
 	public byte aileronIncrement;
 	public byte elevatorIncrement;
 	public byte rudderIncrement;
-	public byte aileronCooldown;
-	public byte elevatorCooldown;
-	public byte rudderCooldown;
 	
 	//note that angle variable should be divided by 10 to get actual angle.
 	public int aileronAngle;
 	public int elevatorAngle;
 	public int rudderAngle;
 	public int flapAngle;
-	
-	public Vec3 velocityVec = Vec3.createVectorHelper(0, 0, 0);
-	public Vec3 bearingVec = Vec3.createVectorHelper(0, 0, 0);
-	public Vec3 wingVec = Vec3.createVectorHelper(0, 0, 0);
-	public Vec3 sideVec = Vec3.createVectorHelper(0, 0, 0);
+	public int aileronCooldown;
+	public int elevatorCooldown;
+	public int rudderCooldown;
+	public float criticalAoA;
 	
 	//Defined plane properties
 	protected long fuelCapcacity;
@@ -57,9 +53,8 @@ public abstract class EntityPlane extends EntityParent{
 	protected float rudderArea;//m^2
 	protected float elevatorArea;//m^2
 	protected float maxLiftCoeff;//unit-less
-	protected float defaultWingAngle;//degrees
-	protected float defaultElevatorAngle;//degrees
-	protected float criticalAoA;//degrees
+	protected float angleOfIncidence;//degrees
+	protected float defaultElevatorAngle;//degrees	
 	protected float initialDragCoeff;//unit-less
 	protected float dragAtCriticalAoA;//unit-less
 	protected float dragCoeffOffset;//unit-less
@@ -73,7 +68,6 @@ public abstract class EntityPlane extends EntityParent{
 	private float motionPitch;
 	private float motionYaw;
 	private double currentWingArea;
-	private double trackAngle;
 	private double wingAoA;
 	private double aileronAoA;
 	private double elevatorAoA;
@@ -223,17 +217,16 @@ public abstract class EntityPlane extends EntityParent{
 		velocityVec.yCoord = motionY;
 		velocityVec.zCoord = motionZ;
 		velocity = velocityVec.dotProduct(bearingVec);
+		velocityVec = velocityVec.normalize();
 		
-		//TODO get better track angle
-		trackAngle = Math.toDegrees(Math.atan(velocityVec.dotProduct(wingVec)/(velocity+0.000001)));
-		wingAoA = defaultWingAngle - trackAngle;
+		trackAngle = Math.toDegrees(Math.atan2(velocityVec.dotProduct(wingVec), velocityVec.dotProduct(bearingVec)));
+		wingAoA = angleOfIncidence - trackAngle;
 		aileronAoA = aileronAngle/10F;
 		elevatorAoA = defaultElevatorAngle - trackAngle - elevatorAngle/10F;
-		rudderAoA = rudderAngle/10F + Math.toDegrees(Math.atan(velocityVec.dotProduct(sideVec)/(velocity+0.000001)));
+		rudderAoA = rudderAngle/10F + Math.toDegrees(Math.atan2(velocityVec.dotProduct(sideVec), velocityVec.dotProduct(bearingVec)));
 		
-		dragCoeff = dragCoeffOffset*Math.pow(defaultWingAngle - trackAngle, 2) + initialDragCoeff;
+		dragCoeff = dragCoeffOffset*Math.pow(angleOfIncidence - trackAngle, 2) + initialDragCoeff;
 		wingLiftCoeff = getLiftCoeff(wingAoA, maxLiftCoeff + flapAngle/350F, criticalAoA);
-		
 		aileronLiftCoeff = getLiftCoeff(aileronAoA, maxLiftCoeff, criticalAoA);
 		elevatorLiftCoeff = getLiftCoeff(elevatorAoA, maxLiftCoeff, criticalAoA);
 		rudderLiftCoeff = getLiftCoeff(rudderAoA, maxLiftCoeff, criticalAoA);
@@ -264,7 +257,6 @@ public abstract class EntityPlane extends EntityParent{
 		rudderTorque = rudderForce*tailDistance;
 		gravitationalTorque = gravitationalForce*centerOfGravity;
 		
-		velocityVec = velocityVec.normalize();
 		if(brakeForce > 0){
 			if(motionX > 0){
 				motionX = Math.max(motionX + (bearingVec.xCoord*thrustForce - velocityVec.xCoord*(dragForce + brakeForce) + wingVec.xCoord*(wingForce + elevatorForce))/currentMass, 0);
@@ -283,8 +275,7 @@ public abstract class EntityPlane extends EntityParent{
 		motionY += (bearingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + wingVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
 		motionRoll = (float) (180/Math.PI*((1-bearingVec.yCoord)*aileronTorque)/momentRoll);
 		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + wingVec.yCoord*gravitationalTorque)/momentPitch);
-		motionYaw = (float) (180/Math.PI*(bearingVec.yCoord*aileronTorque - wingVec.yCoord*(thrustTorque - rudderTorque) + Math.signum(wingVec.yCoord)*sideVec.yCoord*elevatorTorque)/momentYaw);
-		//System.out.format("Pitch Motions elevatorTorque:%f vec:%f torque:%f liftCoeff:%f\n", (1-Math.abs(sideVec.yCoord))*elevatorTorque, sideVec.yCoord, elevatorTorque, elevatorLiftCoeff);
+		motionYaw = (float) (180/Math.PI*(bearingVec.yCoord*aileronTorque - wingVec.yCoord*(thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
 	}
 	
 	private void performGroundOperations(){

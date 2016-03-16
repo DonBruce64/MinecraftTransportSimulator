@@ -38,7 +38,14 @@ public class RenderMC172 extends RenderPlane {
 		for(int i=0; i<plane.instrumentList.size(); ++i){
 			if(plane.instrumentList.get(i) != null){
 				int type = plane.instrumentList.get(i).getItemDamage();
-				if(i==4 || i==9){
+				if(i==0 || i==5){
+					GL11.glPushMatrix();
+					GL11.glRotatef(-90, 0, 1, 0);
+					GL11.glTranslatef(-80, 0, -30);
+					GL11.glScalef(0.75F, 0.75F, 0.75F);
+					HUDParent.drawInstrument(plane, 72 + (i%5)*62, i<5 ? -10 : 52, type, false);
+					GL11.glPopMatrix();
+				}else if(i==4 || i==9){
 					GL11.glPushMatrix();
 					GL11.glScalef(0.75F, 0.75F, 0.75F);
 					HUDParent.drawInstrument(plane, 72 + (i%5)*62, i<5 ? -10 : 52, type, false);

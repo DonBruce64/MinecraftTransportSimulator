@@ -44,7 +44,7 @@ public class AileronPacket implements IMessage{
 				if(ctx.side==Side.SERVER){
 					if(message.aileronAngle + thisEntity.aileronAngle >= -250 && message.aileronAngle + thisEntity.aileronAngle <= 250){
 						thisEntity.aileronAngle += message.aileronAngle;
-						thisEntity.aileronCooldown = 4;
+						thisEntity.aileronCooldown = MFS.controlSurfaceCooldown;
 						MFS.MFSNet.sendToAll(message);
 					}
 				}else{

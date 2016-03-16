@@ -27,6 +27,7 @@ public class ItemPropeller extends Item {
 	@Override
 	public void addInformation(ItemStack item, EntityPlayer player, List list, boolean p_77624_4_){
 		list.add("Model# " + item.getItemDamage());
+		list.add("Blades: " + (item.getItemDamage()%100/10));
 		list.add("Pitch: " + (55+3*(item.getItemDamage()%1000/100)));
 		list.add("Diameter: " + (70+5*(item.getItemDamage()/1000)));
 	}

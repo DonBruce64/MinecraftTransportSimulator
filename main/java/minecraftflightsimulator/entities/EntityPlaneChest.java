@@ -13,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
 public class EntityPlaneChest extends EntityChild implements IInventory{
@@ -150,7 +151,7 @@ public class EntityPlaneChest extends EntityChild implements IInventory{
 	
 	@Override
 	public String getInventoryName(){
-		return "Plane Chest";
+		return StatCollector.translateToLocal("entity.mfs.Chest.name");
 	}
 	
 	@Override

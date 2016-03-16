@@ -21,7 +21,7 @@ public abstract class ItemEngine extends Item {
 	@Override
 	public void addInformation(ItemStack item, EntityPlayer player, List list, boolean p_77624_4_){
 		list.add("Model# " + item.getItemDamage());
-		list.add("Max RPM: " + (1000 + (item.getItemDamage()/((int) 100))*100));
+		list.add("Max RPM: " + (item.getItemDamage()/((int) 100))*100);
 		list.add("Fuel consumption: " + (item.getItemDamage()%100)/10F);
 	}
 	
