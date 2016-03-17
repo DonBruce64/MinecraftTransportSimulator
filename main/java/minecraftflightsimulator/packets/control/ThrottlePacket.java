@@ -43,7 +43,7 @@ public class ThrottlePacket implements IMessage{
 			if(thisEntity!=null){
 				if(thisEntity.throttle < 100 && message.throttle == 111){
 					++thisEntity.throttle;
-				}else if(thisEntity.throttle > 10 && message.throttle == -111){
+				}else if(thisEntity.throttle > 15 && message.throttle == -111){
 					--thisEntity.throttle;
 				}else{
 					thisEntity.throttle = message.throttle;

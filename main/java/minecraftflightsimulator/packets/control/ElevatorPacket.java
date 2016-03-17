@@ -57,6 +57,7 @@ public class ElevatorPacket implements IMessage{
 					}
 				}else{
 					thisEntity.elevatorAngle = (int) (message.elevatorAngle*2.5);
+					thisEntity.elevatorCooldown = Integer.MAX_VALUE;
 				}
 				if(ctx.side==Side.SERVER){
 					MFS.MFSNet.sendToAll(message);

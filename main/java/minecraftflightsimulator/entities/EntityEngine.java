@@ -42,30 +42,32 @@ public abstract class EntityEngine extends EntityChild{
 		if(!linked){return;}
 		if(engineOn){
 			parent.fuel -= this.fuelConsumption*MFS.fuelUsageFactor*engineRPM/maxEngineRPM;
-			if(parent.fuel < 0){
-				parent.fuel=0;
+			if(parent.fuel <= 0 || engineRPM < 300){
 				stopEngine();
 			}else{
 				fueled = true;
+			}
+		}else{
+			if(engineRPM > 500 && parent.fuel > 0){
+				worldObj.playSoundAtEntity(this, "mfs:" + engineStartingSoundName, 1, 1);
+				engineOn=true;
 			}
 		}
 		
 		propeller = parent.getPropellerForEngine(this.UUID);
 		if(starterState > 0){
 			--starterState;
+			parent.fuel -= this.fuelConsumption*MFS.fuelUsageFactor;
 			if(engineRPM < 600){
 				engineRPM = Math.min(engineRPM+starterPower, 600);
 			}else{
 				engineRPM = Math.max(engineRPM-starterPower, 600);
 			}
-			if(engineRPM > 500 && parent.fuel > 0 && !engineOn){
-				worldObj.playSoundAtEntity(this, "mfs:" + engineStartingSoundName, 1, 1);
-				engineOn=true;
-			}
 		}
 				
 		if(fueled){
 			if(propeller != null){
+				//TODO make propeller blades and diameter affect engine.
 				engineRPM += (parent.throttle/100F*maxEngineRPM-engineRPM)/10 + (parent.velocity - 0.0254*propeller.pitch * engineRPM/60/20)*15;
 			}else{
 				engineRPM += (parent.throttle/100F*maxEngineRPM-engineRPM)/10;

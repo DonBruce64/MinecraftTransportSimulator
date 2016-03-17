@@ -70,7 +70,8 @@ public class EntityPropeller extends EntityChild{
 	
 	public double getThrustForce(){
 		if(parent!=null){
-			return parent.airDensity*Math.PI*Math.pow(0.0254*diameter, 2)/4D*(Math.pow(engineRPM*0.0254*pitch/60D, 2)-(engineRPM*0.0254*pitch/60D)*parent.velocity*20)*Math.pow(diameter/2.25/pitch, 1.5)/400D;
+			//TODO make this perfect
+			return parent.airDensity*Math.PI*Math.pow(0.0254*diameter, 2)/4D*(Math.pow(engineRPM*0.0254*pitch/60D, 2)-(engineRPM*0.0254*pitch/60D)*parent.velocity*20)*Math.pow(diameter/2.1/pitch, 1.5)/400D;
 		}else{
 			return 0;
 		}

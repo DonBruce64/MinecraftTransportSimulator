@@ -60,6 +60,7 @@ public class ClientProxy extends CommonProxy{
 		super.init();
 		initEntityRenders();
 		initItemRenders();
+		EntityController.initKeys();
 		configKey = new KeyBinding("key.config", Keyboard.KEY_P, "key.categories.mfs");
 		ClientRegistry.registerKeyBinding(configKey);
 		MinecraftForge.EVENT_BUS.register(ClientEventHandler.instance);

@@ -190,6 +190,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			MFS.MFSNet.sendToAll(new ServerSyncPacket(getEntityId(), posX, posY, posZ, motionX, motionY, motionZ, rotationPitch, rotationRoll, rotationYaw));
 		}
 		airDensity = 1.225*Math.pow(2, -posY/500);
+		if(fuel < 0){fuel = 0;}
 		fuelFlow = prevFuel - fuel;
 		prevFuel = fuel;
 	}
@@ -414,7 +415,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		enginePropellers.remove(childUUID);
 	}
 	
-	
 	public void moveChildren(){
 		Iterator<EntityChild> childIterator = getChildIterator();
 		while(childIterator.hasNext()){
@@ -450,6 +450,16 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		return passengerPositions.size();
 	}
 	
+	public static float calculateInventoryWeight(IInventory inventory){
+		float weight = 0;
+		for(int i=0; i<inventory.getSizeInventory(); ++i){
+			ItemStack stack = inventory.getStackInSlot(i);
+			if(stack != null){
+				weight += 1.2F*stack.stackSize/stack.getMaxStackSize()*(MFS.heavyItems.contains(stack.getItem().getUnlocalizedName().substring(5)) ? 2 : 1);
+			}
+		}
+		return weight;
+	}
 	//TODO fix iterator issues.
 	
 	protected Iterator<EntityChild> getChildIterator(){

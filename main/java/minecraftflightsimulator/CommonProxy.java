@@ -1,7 +1,5 @@
 package minecraftflightsimulator;
 
-import java.util.Collection;
-
 import minecraftflightsimulator.containers.GUIHandler;
 import minecraftflightsimulator.entities.EntityCore;
 import minecraftflightsimulator.entities.EntityEngine;
@@ -39,11 +37,9 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidContainerRegistry;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidContainerRegistry.FluidContainerData;
+import net.minecraftforge.fluids.FluidRegistry;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -119,6 +115,7 @@ public class CommonProxy{
 	}
 	
 	private void initRecipies(){
+		//TODO add gauge recipes
 		//MC172
 		for(int i=0; i<6; ++i){
 			GameRegistry.addRecipe(new ItemStack(planeMC172, 1, i),

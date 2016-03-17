@@ -57,6 +57,7 @@ public class AileronPacket implements IMessage{
 					}
 				}else{
 					thisEntity.aileronAngle = (int) (message.aileronAngle*2.5);
+					thisEntity.aileronCooldown = Integer.MAX_VALUE;
 				}
 				if(ctx.side==Side.SERVER){
 					MFS.MFSNet.sendToAll(message);

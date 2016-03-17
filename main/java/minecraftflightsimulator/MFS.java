@@ -48,11 +48,10 @@ public class MFS {
 	public void PreInit(FMLPreInitializationEvent event){
 		config = new Configuration(event.getSuggestedConfigurationFile());
 		config.load();
-		controlSurfaceCooldown = config.get(config.CATEGORY_GENERAL, "ControlSurfaceCooldown", 4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.").getInt();
-		planeSpeedFactor = config.get(config.CATEGORY_GENERAL, "PlaneSpeedFactor", 0.5F, "Factor to apply to plane movement.  1 is the realistic value, but this makes planes move too fast for Minecraft.  \nAdjust with caution.").getDouble();
+		controlSurfaceCooldown = config.get(config.CATEGORY_GENERAL, "ControlSurfaceCooldown", 4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.  \nThis is not used when using a joystick.").getInt();
+		planeSpeedFactor = config.get(config.CATEGORY_GENERAL, "PlaneSpeedFactor", 0.5F, "Factor to apply to plane movement.  \n1 is the realistic value, but this makes planes move too fast for Minecraft. Adjust with caution.").getDouble();
 		fuelUsageFactor = config.get(config.CATEGORY_GENERAL, "FuelUsageFactor", 1.0F, "Factor times which engines use fuel.  \nChange this if you think engines use fuel too fast or slow.").getDouble();
 		heavyItems = config.get(config.CATEGORY_GENERAL, "HeavyItems", "diamond, iron, gold, coal, ore, stone", "Any item that contains these words will be counted as heavy (double mass) when considering plane mass.  \nChange and tweak to your liking.").getString();
-		EntityController.initKeys();
 		config.save();
 	}
 	

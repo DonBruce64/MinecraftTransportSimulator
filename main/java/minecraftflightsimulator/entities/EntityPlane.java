@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.other.MFSHelper;
 import minecraftflightsimulator.other.RotationHelper;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
@@ -200,10 +199,10 @@ public abstract class EntityPlane extends EntityParent{
 			if(child.riddenByEntity != null){
 				currentMass += 100;
 				if(child.riddenByEntity instanceof EntityPlayer){
-					currentMass += MFSHelper.calculateInventoryWeight(((EntityPlayer) child.riddenByEntity).inventory);
+					currentMass += calculateInventoryWeight(((EntityPlayer) child.riddenByEntity).inventory);
 				}
 			}else if(child instanceof EntityPlaneChest){
-				currentMass += MFSHelper.calculateInventoryWeight((EntityPlaneChest) child);
+				currentMass += calculateInventoryWeight((EntityPlaneChest) child);
 			}else if(child instanceof EntityPropeller){
 				currentMass += 50F*child.propertyCode%10;
 			}
@@ -578,7 +577,6 @@ public abstract class EntityPlane extends EntityParent{
 	}
 
 	private void dampenControlSurfaces(){
-		/*
 		if(aileronCooldown==0){
 			if(aileronAngle > 0){
 				aileronAngle -= aileronIncrement/2;
@@ -612,7 +610,6 @@ public abstract class EntityPlane extends EntityParent{
 		}else{
 			--rudderCooldown;
 		}
-		*/
 	}
 	
 	public double[] getDebugForces(){
