@@ -41,14 +41,25 @@ public class RudderPacket implements IMessage{
 				thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 			}
 			if(thisEntity!=null){
-				if(ctx.side==Side.SERVER){
-					if(message.rudderAngle + thisEntity.rudderAngle >= -250 && message.rudderAngle + thisEntity.rudderAngle <= 250){
-						thisEntity.rudderAngle += message.rudderAngle;
+				if(message.rudderAngle == 111){
+					if(thisEntity.rudderAngle + thisEntity.rudderIncrement <= 250){
+						thisEntity.rudderAngle += thisEntity.rudderIncrement;
 						thisEntity.rudderCooldown = MFS.controlSurfaceCooldown;
-						MFS.MFSNet.sendToAll(message);
+					}else{
+						return null;
+					}
+				}else if(message.rudderAngle == -111){
+					if(thisEntity.rudderAngle - thisEntity.rudderIncrement >= -250){
+						thisEntity.rudderAngle -= thisEntity.rudderIncrement;
+						thisEntity.rudderCooldown = MFS.controlSurfaceCooldown;
+					}else{
+						return null;
 					}
 				}else{
-					thisEntity.rudderAngle += message.rudderAngle;
+					thisEntity.rudderAngle = (int) (message.rudderAngle*2.5);
+				}
+				if(ctx.side==Side.SERVER){
+					MFS.MFSNet.sendToAll(message);
 				}
 			}
 			return null;

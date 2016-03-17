@@ -578,6 +578,7 @@ public abstract class EntityPlane extends EntityParent{
 	}
 
 	private void dampenControlSurfaces(){
+		/*
 		if(aileronCooldown==0){
 			if(aileronAngle > 0){
 				aileronAngle -= aileronIncrement/2;
@@ -611,6 +612,7 @@ public abstract class EntityPlane extends EntityParent{
 		}else{
 			--rudderCooldown;
 		}
+		*/
 	}
 	
 	public double[] getDebugForces(){

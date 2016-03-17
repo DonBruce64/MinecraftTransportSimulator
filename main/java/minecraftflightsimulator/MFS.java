@@ -7,9 +7,6 @@ import minecraftflightsimulator.other.EntityController;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.config.Configuration;
-
-import org.lwjgl.input.Keyboard;
-
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.Mod.Instance;
@@ -55,24 +52,7 @@ public class MFS {
 		planeSpeedFactor = config.get(config.CATEGORY_GENERAL, "PlaneSpeedFactor", 0.5F, "Factor to apply to plane movement.  1 is the realistic value, but this makes planes move too fast for Minecraft.  \nAdjust with caution.").getDouble();
 		fuelUsageFactor = config.get(config.CATEGORY_GENERAL, "FuelUsageFactor", 1.0F, "Factor times which engines use fuel.  \nChange this if you think engines use fuel too fast or slow.").getDouble();
 		heavyItems = config.get(config.CATEGORY_GENERAL, "HeavyItems", "diamond, iron, gold, coal, ore, stone", "Any item that contains these words will be counted as heavy (double mass) when considering plane mass.  \nChange and tweak to your liking.").getString();
-		
-		EntityController.modKey = config.get("controls", "ModKey", Keyboard.KEY_RSHIFT).getInt();
-		EntityController.camLockKey = config.get("controls", "CamLockKey", Keyboard.KEY_RCONTROL).getInt();
-		EntityController.pitchUpKey = config.get("controls", "PitchUpKey", Keyboard.KEY_S).getInt();
-		EntityController.pitchDownKey = config.get("controls", "PitchDownKey", Keyboard.KEY_W).getInt();
-		EntityController.rollLeftKey = config.get("controls", "RollLeftKey", Keyboard.KEY_A).getInt();
-		EntityController.rollRightKey = config.get("controls", "RollRightKey", Keyboard.KEY_D).getInt();
-		EntityController.rollRightKey = config.get("controls", "RollRightKey", Keyboard.KEY_D).getInt();
-		EntityController.throttleUpKey = config.get("controls", "ThrottleUpKey", Keyboard.KEY_I).getInt();
-		EntityController.throttleDownKey = config.get("controls", "ThrottleDownKey", Keyboard.KEY_K).getInt();
-		EntityController.yawLeftKey = config.get("controls", "YawLeftKey", Keyboard.KEY_J).getInt();
-		EntityController.yawRightKey = config.get("controls", "YawRightKey", Keyboard.KEY_L).getInt();
-		EntityController.flapsUpKey = config.get("controls", "FlapsUpKey", Keyboard.KEY_Y).getInt();
-		EntityController.flapsDownKey = config.get("controls", "FlapsDownKey", Keyboard.KEY_H).getInt();
-		EntityController.brakeKey = config.get("controls", "BrakeKey", Keyboard.KEY_B).getInt();
-		EntityController.starterKey = config.get("controls", "StarterKey", Keyboard.KEY_M).getInt();
-		EntityController.zoomInKey = config.get("controls", "ZoomInKey", Keyboard.KEY_PRIOR).getInt();
-		EntityController.zoomOutKey = config.get("controls", "ZoomOutKey", Keyboard.KEY_NEXT).getInt();
+		EntityController.initKeys();
 		config.save();
 	}
 	

@@ -41,14 +41,25 @@ public class ElevatorPacket implements IMessage{
 				thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 			}
 			if(thisEntity!=null){
-				if(ctx.side==Side.SERVER){
-					if(message.elevatorAngle + thisEntity.elevatorAngle >= -250 && message.elevatorAngle + thisEntity.elevatorAngle <= 250){
-						thisEntity.elevatorAngle += message.elevatorAngle;
+				if(message.elevatorAngle == 111){
+					if(thisEntity.elevatorAngle + thisEntity.elevatorIncrement <= 250){
+						thisEntity.elevatorAngle += thisEntity.elevatorIncrement;
 						thisEntity.elevatorCooldown = MFS.controlSurfaceCooldown;
-						MFS.MFSNet.sendToAll(message);
+					}else{
+						return null;
+					}
+				}else if(message.elevatorAngle == -111){
+					if(thisEntity.elevatorAngle - thisEntity.elevatorIncrement >= -250){
+						thisEntity.elevatorAngle -= thisEntity.elevatorIncrement;
+						thisEntity.elevatorCooldown = MFS.controlSurfaceCooldown;
+					}else{
+						return null;
 					}
 				}else{
-					thisEntity.elevatorAngle += message.elevatorAngle;
+					thisEntity.elevatorAngle = (int) (message.elevatorAngle*2.5);
+				}
+				if(ctx.side==Side.SERVER){
+					MFS.MFSNet.sendToAll(message);
 				}
 			}
 			return null;

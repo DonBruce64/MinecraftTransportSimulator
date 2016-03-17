@@ -41,14 +41,25 @@ public class AileronPacket implements IMessage{
 				thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 			}
 			if(thisEntity!=null){
-				if(ctx.side==Side.SERVER){
-					if(message.aileronAngle + thisEntity.aileronAngle >= -250 && message.aileronAngle + thisEntity.aileronAngle <= 250){
-						thisEntity.aileronAngle += message.aileronAngle;
+				if(message.aileronAngle == 111){
+					if(thisEntity.aileronAngle + thisEntity.aileronIncrement <= 250){
+						thisEntity.aileronAngle += thisEntity.aileronIncrement;
 						thisEntity.aileronCooldown = MFS.controlSurfaceCooldown;
-						MFS.MFSNet.sendToAll(message);
+					}else{
+						return null;
+					}
+				}else if(message.aileronAngle == -111){
+					if(thisEntity.aileronAngle - thisEntity.aileronIncrement >= -250){
+						thisEntity.aileronAngle -= thisEntity.aileronIncrement;
+						thisEntity.aileronCooldown = MFS.controlSurfaceCooldown;
+					}else{
+						return null;
 					}
 				}else{
-					thisEntity.aileronAngle += message.aileronAngle;
+					thisEntity.aileronAngle = (int) (message.aileronAngle*2.5);
+				}
+				if(ctx.side==Side.SERVER){
+					MFS.MFSNet.sendToAll(message);
 				}
 			}
 			return null;
