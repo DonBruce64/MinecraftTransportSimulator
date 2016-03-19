@@ -108,10 +108,6 @@ public abstract class EntityPlane extends EntityParent{
 	private List collidingBoxes;
 	private AxisAlignedBB newChildBox;
 	private AxisAlignedBB collidingBox;
-	private Iterator<EntityChild> childIterator;
-	private Iterator<EntityPropeller> propellerIterator;
-	private EntityChild child;
-	private EntityPropeller propeller;
 	private Vec3 offset;
 	
 	public EntityPlane(World world){
@@ -166,9 +162,7 @@ public abstract class EntityPlane extends EntityParent{
 	private void refreshChildStatuses(){
 		groundedWheels = 0;
 		collidedCores = 0;
-		childIterator = getChildIterator();
-		while(childIterator.hasNext()){
-			child = childIterator.next();
+		for(EntityChild child : getChildren()){
 			if(child instanceof EntityWheel){
 				if(!child.isDead){
 					child.onGround = !child.worldObj.getCollidingBoundingBoxes(child, child.boundingBox.copy().offset(0, -0.05, 0)).isEmpty();
@@ -193,9 +187,7 @@ public abstract class EntityPlane extends EntityParent{
 	
 	private void getBasicProperties(){
 		currentMass = (float) (mass + fuel/50);
-		childIterator = this.getChildIterator();
-		while(childIterator.hasNext()){
-			child = childIterator.next();
+		for(EntityChild child : getChildren()){;
 			if(child.riddenByEntity != null){
 				currentMass += 100;
 				if(child.riddenByEntity instanceof EntityPlayer){
@@ -233,9 +225,7 @@ public abstract class EntityPlane extends EntityParent{
 	
 	private void getForcesAndMotions(){
 		thrustForce = 0;
-		propellerIterator = getPropellerIterator();
-		while(propellerIterator.hasNext()){
-			propeller = propellerIterator.next();
+		for(EntityPropeller propeller : getPropellers()){
 			if(!propeller.isDead){
 				thrust = propeller.getThrustForce();
 				thrustForce += thrust;
@@ -313,11 +303,9 @@ public abstract class EntityPlane extends EntityParent{
 	}
 	
 	private void adjustXZMovement(){
-		childIterator = this.getChildIterator();
-		while(childIterator.hasNext()){
+		for(EntityChild child : getChildren()){
 			xCollisionDepth = 0;
 			zCollisionDepth = 0;
-			child = childIterator.next();
 			newChildBox = child.boundingBox.copy().offset(motionX*MFS.planeSpeedFactor, 0, 0);
 			collidingBoxes = child.worldObj.getCollidingBoundingBoxes(child, newChildBox);			
 			for(int i=0; i < collidingBoxes.size(); ++i){
@@ -349,7 +337,7 @@ public abstract class EntityPlane extends EntityParent{
 						}else{
 							worldObj.playSoundAtEntity(this, "minecraft:random.break", 2, 1);
 							child.setDead();
-							removeChild(child.UUID, childIterator);
+							removeChild(child.UUID);
 							this.sendDataToClient();
 						}
 					}else{
@@ -378,9 +366,7 @@ public abstract class EntityPlane extends EntityParent{
 		do{
 			yawChildXOffset = 0;
 			yawChildZOffset = 0;
-			childIterator = this.getChildIterator();
-			while(childIterator.hasNext()){
-				child = childIterator.next();
+			for(EntityChild child : getChildren()){
 				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw + motionYaw, rotationRoll);
 				newChildBox = child.boundingBox.copy().offset(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, 0, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor);
 				child.isCollidedHorizontally = !child.worldObj.getCollidingBoundingBoxes(child, newChildBox).isEmpty();
@@ -433,9 +419,7 @@ public abstract class EntityPlane extends EntityParent{
 		originalMotionPitch = motionPitch;
 		do{
 			pitchChildOffset = 0;
-			childIterator = this.getChildIterator();
-			while(childIterator.hasNext()){
-				child = childIterator.next();
+			for(EntityChild child : getChildren()){
 				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll);
 				newChildBox = child.boundingBox.copy().offset(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, posY + offset.yCoord - child.posY + motionY*MFS.planeSpeedFactor, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor).contract(0.001, 0.001, 0.001);
 				child.isCollidedHorizontally = !child.worldObj.getCollidingBoundingBoxes(child, newChildBox).isEmpty();
@@ -472,9 +456,7 @@ public abstract class EntityPlane extends EntityParent{
 		originalMotionRoll = motionRoll;
 		do{
 			rollChildOffset = 0;
-			childIterator = this.getChildIterator();
-			while(childIterator.hasNext()){
-				child = childIterator.next();
+			for(EntityChild child : getChildren()){
 				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
 				newChildBox = child.boundingBox.copy().offset(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, posY + offset.yCoord - child.posY + motionY*MFS.planeSpeedFactor, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor).contract(0.001, 0.001, 0.001);
 				child.isCollidedHorizontally = !child.worldObj.getCollidingBoundingBoxes(child, newChildBox).isEmpty();
@@ -506,10 +488,8 @@ public abstract class EntityPlane extends EntityParent{
 	}
 	
 	private void adjustYMovement(){
-		childIterator = this.getChildIterator();
-		while(childIterator.hasNext()){
+		for(EntityChild child : getChildren()){
 			yCollisionDepth = 0;
-			child = childIterator.next();
 			offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
 			newChildBox = child.boundingBox.copy().offset(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, posY + offset.yCoord - child.posY + motionY*MFS.planeSpeedFactor, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor);
 			collidingBoxes = child.worldObj.getCollidingBoundingBoxes(child, newChildBox);
@@ -530,7 +510,7 @@ public abstract class EntityPlane extends EntityParent{
 						}else{
 							child.setDead();
 							worldObj.playSoundAtEntity(this, "minecraft:random.break", 2, 1);
-							removeChild(child.UUID, childIterator);
+							removeChild(child.UUID);
 							this.sendDataToClient();
 						}
 					}else{
@@ -544,10 +524,8 @@ public abstract class EntityPlane extends EntityParent{
 	}
 	
 	private void adjustYMovement2(){
-		childIterator = this.getChildIterator();
-		while(childIterator.hasNext()){
+		for(EntityChild child : getChildren()){
 			yCollisionDepth = 0;
-			child = childIterator.next();
 			newChildBox = child.boundingBox.copy().offset(0, motionY*MFS.planeSpeedFactor, 0);
 			collidingBoxes = child.worldObj.getCollidingBoundingBoxes(child, newChildBox);
 			for(int i=0; i < collidingBoxes.size(); ++i){

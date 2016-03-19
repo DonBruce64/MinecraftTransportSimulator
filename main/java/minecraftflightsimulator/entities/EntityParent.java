@@ -3,7 +3,6 @@ package minecraftflightsimulator.entities;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +10,6 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.containers.ContainerParent;
 import minecraftflightsimulator.containers.GUIParent;
 import minecraftflightsimulator.other.RotationHelper;
-import minecraftflightsimulator.packets.general.FuelPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -161,9 +159,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				player.openGui(MFS.instance, this.getEntityId(), worldObj, (int) posX, (int) posY, (int) posZ);
 				return true;
 			}else{
-				Iterator<EntityChild> childIterator = getChildIterator();
-				while(childIterator.hasNext()){
-					EntityChild child = childIterator.next();
+				for(EntityChild child : getChildren()){
 					if(child instanceof EntitySeat){
 						if(this.boundingBox.intersectsWith(child.boundingBox)){
 							child.interactFirst(player);
@@ -231,10 +227,8 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				}
 			}
 		}
-		Iterator<EntityChild> childIterator = getChildIterator();
-		while(childIterator.hasNext()){
-			EntityChild child = childIterator.next();
-			removeChild(child.UUID, childIterator);
+		for(EntityChild child : getChildren()){
+			removeChild(child.UUID);
 			child.setDead();
 		}
 	}
@@ -245,16 +239,14 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	}
 
 	public void setEngineState(byte engineCode){
-		Iterator<EntityEngine> engineIterator = getEngineIterator();
 		if(engineCode == 0){
 			throttle = 0;
-			while(engineIterator.hasNext()){
-				engineIterator.next().stopEngine(true);
+			for(EntityEngine engine : getEngines()){
+				engine.stopEngine(true);
 			}
 		}else if(engineCode != 1){
 			if(throttle < 15){throttle = 15;}
-			while(engineIterator.hasNext()){
-				EntityEngine engine = engineIterator.next();
+			for(EntityEngine engine : getEngines()){
 				float[] enginePosition = {engine.offsetX, engine.offsetY, engine.offsetZ};
 				if(Arrays.equals(partPositions.get((int) engineCode), enginePosition)){
 					engine.startEngine();
@@ -263,8 +255,8 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			}
 		}else{
 			if(throttle < 15){throttle = 15;}
-			while(engineIterator.hasNext()){
-				engineIterator.next().startEngine();
+			for(EntityEngine engine : getEngines()){
+				engine.startEngine();
 			}
 		}
 	}
@@ -284,9 +276,8 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	
 	public List<Double> getEngineSpeeds(){
 		List<Double> speeds = new ArrayList<Double>();
-		Iterator<EntityEngine> engineIterator = getEngineIterator();
-		while(engineIterator.hasNext()){
-			speeds.add(engineIterator.next().engineRPM);
+		for(EntityEngine engine : getEngines()){
+			speeds.add(engine.engineRPM);
 		}
 		return speeds;
 	}
@@ -365,9 +356,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			wheels.put(childUUID, (EntityWheel) child);
 		}else if(child instanceof EntityEngine){
 			engines.put(childUUID, (EntityEngine) child);
-			Iterator<EntityPropeller> propellerIterator = getPropellerIterator();
-			while(propellerIterator.hasNext()){
-				EntityPropeller propeller = propellerIterator.next();
+			for(EntityPropeller propeller : getPropellers()){
 				if(propeller.offsetX == child.offsetX && Math.abs(propeller.offsetZ - child.offsetZ) < 2){
 					propellerEngines.put(propeller.UUID, childUUID);
 					enginePropellers.put(childUUID, propeller.UUID);
@@ -375,9 +364,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			}
 		}else if(child instanceof EntityPropeller){
 			propellers.put(childUUID, (EntityPropeller) child);
-			Iterator<EntityEngine> engineIterator = getEngineIterator();
-			while(engineIterator.hasNext()){
-				EntityEngine engine = engineIterator.next();
+			for(EntityEngine engine : getEngines()){
 				if(engine.offsetX == child.offsetX && Math.abs(engine.offsetZ - child.offsetZ) < 2){
 					propellerEngines.put(childUUID, engine.UUID);
 					enginePropellers.put(engine.UUID, childUUID);
@@ -387,19 +374,13 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	}
 	
 	/**
-	 * Removes a child from mappings.  Iterator is needed to prevent
-	 * concurrentModificationException from being thrown.  If null, iterator's
+	 * Removes a child from mappings.
 	 * remove method is not used.
 	 * @param childUUID
-	 * @param childIterator
 	 */
-	public void removeChild(String childUUID, Iterator<EntityChild> childIterator){
+	public void removeChild(String childUUID){
 		if(children.containsKey(childUUID)){
-			if(childIterator != null){
-				childIterator.remove();
-			}else{
-				children.remove(childUUID);
-			}
+			children.remove(childUUID);
 			--numberChildren;
 		}
 		wheels.remove(childUUID);
@@ -410,11 +391,9 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	}
 	
 	public void moveChildren(){
-		Iterator<EntityChild> childIterator = getChildIterator();
-		while(childIterator.hasNext()){
-			EntityChild child = childIterator.next();
+		for(EntityChild child : getChildren()){
 			if(child.isDead){
-				removeChild(child.UUID, childIterator);
+				removeChild(child.UUID);
 			}else{
 				Vec3 offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
 				child.setPosition(posX + offset.xCoord, posY + offset.yCoord, posZ + offset.zCoord);
@@ -424,9 +403,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	}
 	
 	private EntityChild getChildAtLocation(float[] coords){
-		Iterator<EntityChild> childIterator = getChildIterator();
-		while(childIterator.hasNext()){
-			EntityChild child = childIterator.next();				
+		for(EntityChild child : getChildren()){
 			if(child.getClass().equals(EntityCore.class)){continue;}
 			float[] childPos = new float[]{child.offsetX, child.offsetY, child.offsetZ};
 			if(Arrays.equals(childPos, coords)){
@@ -454,27 +431,12 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		}
 		return weight;
 	}
-	//TODO fix iterator issues.
 	
-	protected Iterator<EntityChild> getChildIterator(){
-		return children.values().iterator();
-	}
-	
-	protected Iterator<EntityWheel> getWheelIterator(){
-		return wheels.values().iterator();
-	}
-	
-	protected Iterator<EntityEngine> getEngineIterator(){
-		return engines.values().iterator();
-	}
-	
-	protected Iterator<EntityPropeller> getPropellerIterator(){
-		return propellers.values().iterator();
-	}
-	
-	public EntityPropeller getPropellerForEngine(String engineUUID){
-		return propellers.get(enginePropellers.get(engineUUID));
-	}
+	protected EntityChild[] getChildren(){return children.values().toArray(new EntityChild[children.size()]);}	
+	protected EntityWheel[] getWheels(){return wheels.values().toArray(new EntityWheel[wheels.size()]);}
+	protected EntityEngine[] getEngines(){return engines.values().toArray(new EntityEngine[engines.size()]);}
+	protected EntityPropeller[] getPropellers(){return propellers.values().toArray(new EntityPropeller[propellers.size()]);}
+	public EntityPropeller getPropellerForEngine(String engineUUID){return propellers.get(enginePropellers.get(engineUUID));}
 	
 	protected abstract void initPlaneProperties();
 	protected abstract void initChildPositions();
@@ -631,13 +593,13 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 							if(i >= 10 && i <= 13 && getStackInSlot(i-4) == null){
 								worldObj.spawnEntityInWorld(new EntityItem(worldObj, this.posX, this.posY, this.posZ, new ItemStack(MFS.proxy.propeller, 1,stack.getItemDamage())));
 								child.setDead();
-								removeChild(child.UUID, null);
+								removeChild(child.UUID);
 								setInventorySlotContents(i, null);
 							}
 							continue;
 						}else{
 							child.setDead();
-							removeChild(child.UUID, null);
+							removeChild(child.UUID);
 						}
 					}
 					
@@ -672,7 +634,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				}else{
 					if(child != null){
 						child.setDead();
-						removeChild(child.UUID, null);
+						removeChild(child.UUID);
 					}
 				}
 			}
@@ -685,7 +647,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				if(child != null){
 					if(i+1 > numberPilotSeats){
 						child.setDead();
-						removeChild(child.UUID, null);
+						removeChild(child.UUID);
 					}
 				}else{
 					if(i+1 <= numberPilotSeats){
@@ -704,7 +666,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				if(child != null){
 					if(i+1 > numberPassengerSeats || !(child instanceof EntitySeat ^ chests)){
 						child.setDead();
-						removeChild(child.UUID, null);
+						removeChild(child.UUID);
 					}
 				}
 				if(child == null ? true : child.isDead ? true : false){
