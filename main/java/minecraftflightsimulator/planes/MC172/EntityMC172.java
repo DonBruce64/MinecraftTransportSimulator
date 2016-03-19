@@ -11,7 +11,7 @@ import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.containers.SlotPropeller;
 import minecraftflightsimulator.containers.SlotWheel;
 import minecraftflightsimulator.entities.EntityPlane;
-import minecraftflightsimulator.other.HUDParent;
+import minecraftflightsimulator.other.InstrumentHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.ResourceLocation;
@@ -75,7 +75,7 @@ public class EntityMC172 extends EntityPlane{
 	
 	@Override
 	public void drawHUD(int width, int height){
-		HUDParent.instance.drawBasicHUD(this, width, height, this.getHudBackplateTexture(), this.getHudMoldingTexture());
+		InstrumentHelper.instance.drawBasicHUD(this, width, height, this.getHudBackplateTexture(), this.getHudMoldingTexture());
 	}
 	
 	private ResourceLocation getHudBackplateTexture(){

@@ -29,17 +29,17 @@ public abstract class EntityPlane extends EntityParent{
 	public byte rudderIncrement;
 	
 	//note that angle variable should be divided by 10 to get actual angle.
-	public int aileronAngle;
-	public int elevatorAngle;
-	public int rudderAngle;
-	public int flapAngle;
-	public int aileronCooldown;
-	public int elevatorCooldown;
-	public int rudderCooldown;
-	public float criticalAoA;
+	public short aileronAngle;
+	public short elevatorAngle;
+	public short rudderAngle;
+	public short flapAngle;
+	public short aileronCooldown;
+	public short elevatorCooldown;
+	public short rudderCooldown;
+	public short criticalAoA;
 	
 	//Defined plane properties
-	protected long fuelCapcacity;
+	protected int fuelCapcacity;
 	protected float mass;//kg
 	protected float centerOfGravity;//m forward from center of lift
 	protected float momentRoll;//kg*m^2
@@ -579,33 +579,33 @@ public abstract class EntityPlane extends EntityParent{
 	private void dampenControlSurfaces(){
 		if(aileronCooldown==0){
 			if(aileronAngle > 0){
-				aileronAngle -= aileronIncrement/2;
-				MFS.MFSNet.sendToAll(new AileronPacket(this.getEntityId(), (byte) (-aileronIncrement/2)));
+				aileronAngle -= aileronIncrement;
+				MFS.MFSNet.sendToAll(new AileronPacket(this.getEntityId(), false, (short) 0));
 			}else if(aileronAngle < 0){
-				aileronAngle += aileronIncrement/2;
-				MFS.MFSNet.sendToAll(new AileronPacket(this.getEntityId(), (byte) (aileronIncrement/2)));
+				aileronAngle += aileronIncrement;
+				MFS.MFSNet.sendToAll(new AileronPacket(this.getEntityId(), true, (short) 0));
 			}
 		}else{
 			--aileronCooldown;
 		}
 		if(elevatorCooldown==0){
 			if(elevatorAngle > 0){
-				elevatorAngle -= elevatorIncrement/2;
-				MFS.MFSNet.sendToAll(new ElevatorPacket(this.getEntityId(), (byte) (-elevatorIncrement/2)));
+				elevatorAngle -= elevatorIncrement;
+				MFS.MFSNet.sendToAll(new ElevatorPacket(this.getEntityId(), false, (short) 0));
 			}else if(elevatorAngle < 0){
-				elevatorAngle += elevatorIncrement/2;
-				MFS.MFSNet.sendToAll(new ElevatorPacket(this.getEntityId(), (byte) (elevatorIncrement/2)));
+				elevatorAngle += elevatorIncrement;
+				MFS.MFSNet.sendToAll(new ElevatorPacket(this.getEntityId(), true, (short) 0));
 			}
 		}else{
 			--elevatorCooldown;
 		}
 		if(rudderCooldown==0){
 			if(rudderAngle > 0){
-				rudderAngle -= rudderIncrement/2;
-				MFS.MFSNet.sendToAll(new RudderPacket(this.getEntityId(), (byte) (-rudderIncrement/2)));
+				rudderAngle -= rudderIncrement;
+				MFS.MFSNet.sendToAll(new RudderPacket(this.getEntityId(), false, (short) 0));
 			}else if(rudderAngle < 0){
-				rudderAngle += rudderIncrement/2;
-				MFS.MFSNet.sendToAll(new RudderPacket(this.getEntityId(), (byte) (rudderIncrement/2)));
+				rudderAngle += rudderIncrement;
+				MFS.MFSNet.sendToAll(new RudderPacket(this.getEntityId(), true, (short) 0));
 			}
 		}else{
 			--rudderCooldown;
@@ -620,19 +620,19 @@ public abstract class EntityPlane extends EntityParent{
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
 		this.hasFlaps=tagCompound.getBoolean("hasFlaps");
-		this.aileronAngle=tagCompound.getInteger("aileronAngle");
-		this.elevatorAngle=tagCompound.getInteger("elevatorAngle");
-		this.rudderAngle=tagCompound.getInteger("rudderAngle");
-		this.flapAngle=tagCompound.getInteger("flapAngle");
+		this.aileronAngle=tagCompound.getShort("aileronAngle");
+		this.elevatorAngle=tagCompound.getShort("elevatorAngle");
+		this.rudderAngle=tagCompound.getShort("rudderAngle");
+		this.flapAngle=tagCompound.getShort("flapAngle");
 	}
     
 	@Override
 	public void writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("hasFlaps", this.hasFlaps);
-		tagCompound.setInteger("aileronAngle", this.aileronAngle);
-		tagCompound.setInteger("elevatorAngle", this.elevatorAngle);
-		tagCompound.setInteger("rudderAngle", this.rudderAngle);
-		tagCompound.setInteger("flapAngle", this.flapAngle);
+		tagCompound.setShort("aileronAngle", this.aileronAngle);
+		tagCompound.setShort("elevatorAngle", this.elevatorAngle);
+		tagCompound.setShort("rudderAngle", this.rudderAngle);
+		tagCompound.setShort("flapAngle", this.flapAngle);
 	}
 }

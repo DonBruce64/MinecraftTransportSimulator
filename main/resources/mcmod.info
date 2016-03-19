@@ -3,7 +3,7 @@
   "modid": "mfs",
   "name": "Minecraft Flight Simulator",
   "description": "Realistic planes for Minecraft!",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "mcversion": "${mcversion}",
   "url": "http://minecraft.curseforge.com/projects/minecraft-flight-simulator",
   "updateUrl": "",

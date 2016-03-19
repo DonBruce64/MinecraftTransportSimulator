@@ -4,7 +4,7 @@ import minecraftflightsimulator.entities.EntityPlane;
 import minecraftflightsimulator.modelrenders.ModelRenderHelper;
 import minecraftflightsimulator.modelrenders.RenderPlane;
 import minecraftflightsimulator.models.ModelPlane;
-import minecraftflightsimulator.other.HUDParent;
+import minecraftflightsimulator.other.InstrumentHelper;
 
 import org.lwjgl.opengl.GL11;
 
@@ -43,21 +43,21 @@ public class RenderMC172 extends RenderPlane {
 					GL11.glRotatef(-90, 0, 1, 0);
 					GL11.glTranslatef(-80, 0, -30);
 					GL11.glScalef(0.75F, 0.75F, 0.75F);
-					HUDParent.drawInstrument(plane, 72 + (i%5)*62, i<5 ? -10 : 52, type, false);
+					InstrumentHelper.drawInstrument(plane, 72 + (i%5)*62, i<5 ? -10 : 52, type, false);
 					GL11.glPopMatrix();
 				}else if(i==4 || i==9){
 					GL11.glPushMatrix();
 					GL11.glScalef(0.75F, 0.75F, 0.75F);
-					HUDParent.drawInstrument(plane, 72 + (i%5)*62, i<5 ? -10 : 52, type, false);
+					InstrumentHelper.drawInstrument(plane, 72 + (i%5)*62, i<5 ? -10 : 52, type, false);
 					GL11.glPopMatrix();
 				}else{
-					HUDParent.drawInstrument(plane, (i%5)*62, i<5 ? 0 : 62, type, false);
+					InstrumentHelper.drawInstrument(plane, (i%5)*62, i<5 ? 0 : 62, type, false);
 				}
 			}
 		}
-		HUDParent.drawInstrument(plane, 272, -5, 15, false);
-		HUDParent.drawInstrument(plane, 272, 60, 16, false);
-		HUDParent.drawInstrument(plane, 232, 80, 17, false);
+		InstrumentHelper.drawInstrument(plane, 272, -5, 15, false);
+		InstrumentHelper.drawInstrument(plane, 272, 60, 16, false);
+		InstrumentHelper.drawInstrument(plane, 232, 80, 17, false);
 		GL11.glPopMatrix();
 	}
 }

@@ -18,6 +18,7 @@ public class ItemMC172 extends ItemPlane{
 		this.setUnlocalizedName("MC172");
 	}
 	
+	@Override
 	public boolean onItemUse(ItemStack item, EntityPlayer player, World world, int x, int y, int z, int p_77648_7_, float hitX, float hitY, float hitZ){
 		if(!world.isRemote){
 			EntityMC172 plane = new EntityMC172(world, x, y+2.25F, z, player.rotationYaw, item.getItemDamage());

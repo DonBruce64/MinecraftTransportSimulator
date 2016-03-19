@@ -1,5 +1,6 @@
 package minecraftflightsimulator;
 
+import scala.reflect.internal.Trees.This;
 import minecraftflightsimulator.containers.GUIHandler;
 import minecraftflightsimulator.entities.EntityCore;
 import minecraftflightsimulator.entities.EntityEngine;
@@ -13,6 +14,9 @@ import minecraftflightsimulator.entities.EntityWheelSmall;
 import minecraftflightsimulator.items.ItemEngineLarge;
 import minecraftflightsimulator.items.ItemEngineSmall;
 import minecraftflightsimulator.items.ItemFlightInstrument;
+import minecraftflightsimulator.items.ItemFlightInstrumentBase;
+import minecraftflightsimulator.items.ItemPointerLong;
+import minecraftflightsimulator.items.ItemPointerShort;
 import minecraftflightsimulator.items.ItemPropeller;
 import minecraftflightsimulator.items.ItemSeat;
 import minecraftflightsimulator.items.ItemWheel;
@@ -54,6 +58,9 @@ public class CommonProxy{
 	public static Item propeller = new ItemPropeller();
 	public static Item engineSmall = new ItemEngineSmall();
 	public static Item engineLarge = new ItemEngineLarge();
+	public static Item shortPointer = new ItemPointerShort();
+	public static Item longPointer = new ItemPointerLong();
+	public static Item flightInstrumentBase = new ItemFlightInstrumentBase();
 	public static Item flightInstrument = new ItemFlightInstrument();
 	
 	public void init(){
@@ -104,6 +111,7 @@ public class CommonProxy{
 	}
 	
 	private void initItems(){
+		
 		GameRegistry.registerItem(planeMC172, "MC172");
 		//GameRegistry.registerItem(planeTrimotor, "Trimotor");
 		GameRegistry.registerItem(seat, "Seat");
@@ -111,11 +119,17 @@ public class CommonProxy{
 		GameRegistry.registerItem(propeller, "Propeller");
 		GameRegistry.registerItem(engineSmall, "SmallEngine");
 		GameRegistry.registerItem(engineLarge, "LargeEngine");
+		GameRegistry.registerItem(shortPointer, "ShortPointer");
+		GameRegistry.registerItem(longPointer, "LongPointer");
+		GameRegistry.registerItem(flightInstrumentBase, "FlightInstrumentBase");
 		GameRegistry.registerItem(flightInstrument, "FlightInstrument");
 	}
 	
 	private void initRecipies(){
-		//TODO add gauge recipes
+		this.initPropellerRecipes();
+		this.initEngineRecipes();
+		this.initFlightInstrumentRecipes();
+		
 		//MC172
 		for(int i=0; i<6; ++i){
 			GameRegistry.addRecipe(new ItemStack(planeMC172, 1, i),
@@ -147,11 +161,10 @@ public class CommonProxy{
 				"BCB",
 				"ABA",
 				'A', Blocks.wool, 'B', new ItemStack(Items.dye, 1, 0), 'C', Items.iron_ingot);
-		this.initPropellers();
-		this.initEngines();
 	}
 	
-	private void initPropellers(){
+	
+	private void initPropellerRecipes(){
 		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1120),
 				"  A",
 				" B ",
@@ -169,7 +182,8 @@ public class CommonProxy{
 				'A', Blocks.obsidian, 'B', Items.iron_ingot);
 	}
 	
-	private void initEngines(){
+	
+	private void initEngineRecipes(){
 		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 2805),
 				"ABA",
 				"BCB",
@@ -192,6 +206,87 @@ public class CommonProxy{
 				'A', Blocks.piston, 'B', Blocks.obsidian,'C', Items.diamond);
 	}
 	
+	
+	private void initFlightInstrumentRecipes(){
+		GameRegistry.addRecipe(new ItemStack(flightInstrumentBase, 16),
+				"III",
+				"IGI",
+				"III",
+				'I', Items.iron_ingot, 'G', Blocks.glass_pane);
+		GameRegistry.addRecipe(new ItemStack(shortPointer),
+				" WW",
+				" WW",
+				"B  ",
+				'W', new ItemStack(Items.dye, 1, 15), 'B', new ItemStack(Items.dye, 1, 0));
+		GameRegistry.addRecipe(new ItemStack(longPointer),
+				"  W",
+				" W ",
+				"B  ",
+				'W', new ItemStack(Items.dye, 1, 15), 'B', new ItemStack(Items.dye, 1, 0));
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 0),
+				"LLL",
+				"RRR",
+				" B ",
+				'B', flightInstrumentBase, 'L', new ItemStack(Items.dye, 1, 4), 'R', new ItemStack(Items.dye, 1, 3));
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 1),
+				"WLW",
+				"WSW",
+				" B ",
+				'B', flightInstrumentBase, 'L', longPointer, 'S', shortPointer, 'W', new ItemStack(Items.dye, 1, 15));
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 2),
+				" W ",
+				"WIW",
+				" B ",
+				'B', flightInstrumentBase, 'I', Items.iron_ingot, 'W', new ItemStack(Items.dye, 1, 15));
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 3),
+				"R W",
+				"YLG",
+				"GBG",
+				'B', flightInstrumentBase, 'L', longPointer, 'R', new ItemStack(Items.dye, 1, 1), 'Y', new ItemStack(Items.dye, 1, 11), 'G', new ItemStack(Items.dye, 1, 10), 'W', new ItemStack(Items.dye, 1, 15));
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 4),
+				"   ",
+				"WIW",
+				"WBW",
+				'B', flightInstrumentBase, 'I', Items.iron_ingot, 'W', new ItemStack(Items.dye, 1, 15));
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 5),
+				"WWW",
+				" I ",
+				"WBW",
+				'B', flightInstrumentBase, 'I', Items.iron_ingot, 'W', new ItemStack(Items.dye, 1, 15));
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 6),
+				"W W",
+				" L ",
+				"WBW",
+				'B', flightInstrumentBase, 'L', longPointer, 'W', new ItemStack(Items.dye, 1, 15));
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 7),
+				"RYG",
+				" LG",
+				" B ",
+				'B', flightInstrumentBase, 'L', longPointer, 'R', new ItemStack(Items.dye, 1, 1), 'Y', new ItemStack(Items.dye, 1, 11), 'G', new ItemStack(Items.dye, 1, 10), 'W', new ItemStack(Items.dye, 1, 15));
+		
+		//Instrument 8 does not exist
+		//Instrument 9 does not exist
+		
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 10),
+				"W W",
+				" L ",
+				"WBR",
+				'B', flightInstrumentBase, 'L', longPointer, 'R', new ItemStack(Items.dye, 1, 1), 'W', new ItemStack(Items.dye, 1, 15));
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 11),
+				"RWW",
+				" L ",
+				" B ",
+				'B', flightInstrumentBase, 'L', longPointer, 'R', new ItemStack(Items.dye, 1, 1), 'W', new ItemStack(Items.dye, 1, 15));
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 12),
+				" W ",
+				"WLW",
+				" B ",
+				'B', flightInstrumentBase, 'L', longPointer, 'W', new ItemStack(Items.dye, 1, 15));
+		
+		//Instrument 13 does not exist
+		//Instrument 14 does not exist
+	}
+	
 	private void initFuels(){
     	FluidContainerData[] fluidData = FluidContainerRegistry.getRegisteredFluidContainerData();
 		for(FluidContainerData data : fluidData){
@@ -201,6 +296,7 @@ public class CommonProxy{
 		}
 		MFS.config.save();
 	}
+	
 	
 	public void updateSittingPlayer(EntitySeat seat){}
 	public void checkKeyboard(EntitySeat seat){}

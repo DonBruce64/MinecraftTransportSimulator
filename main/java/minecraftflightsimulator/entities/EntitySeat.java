@@ -9,6 +9,7 @@ import net.minecraft.world.World;
 
 public class EntitySeat extends EntityChild{
 	public boolean driver;
+	private boolean hadRiderLastTick;
 	
 	public EntitySeat(World world){
 		super(world);
@@ -43,9 +44,15 @@ public class EntitySeat extends EntityChild{
 		super.onEntityUpdate();
 		if(!linked){return;}
 		if(this.riddenByEntity != null){
+			hadRiderLastTick=true;
 			if(worldObj.isRemote){
 				MFS.proxy.updateSittingPlayer(this);
 				MFS.proxy.checkKeyboard(this);
+			}
+		}else if(hadRiderLastTick){
+			hadRiderLastTick=false;
+			if(!worldObj.isRemote){
+				parent.sendDataToClient();
 			}
 		}
 	}

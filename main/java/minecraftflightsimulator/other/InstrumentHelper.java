@@ -14,13 +14,13 @@ import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-public class HUDParent{
+public class InstrumentHelper{
 	protected static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
 	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	private static final ResourceLocation instruments = new ResourceLocation("mfs", "textures/instruments.png");
-	public static HUDParent instance = new HUDParent();
+	public static InstrumentHelper instance = new InstrumentHelper();
 	
-	public HUDParent(){}
+	public InstrumentHelper(){}
 	
 	public static void drawBasicHUD(EntityParent parent, int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
 		if(ClientProxy.hudMode == 3){
@@ -147,13 +147,6 @@ public class HUDParent{
     	ModelRenderHelper.endRender();
     }
     
-	private static void drawGaugeBase(int centerX, int centerY, int size){
-    	ModelRenderHelper.startRender();
-    	textureManager.bindTexture(instruments);
-    	ModelRenderHelper.renderSquareUV(centerX-size, centerX+size, centerY+size, centerY-size, 0, 0, 0.75, 1, 0, 0.25, false);
-    	ModelRenderHelper.endRender();
-    }
-    
 	private static void drawThrottle(EntityParent parent, int centerX, int centerY, boolean hud){
 		ModelRenderHelper.startRender();
     	textureManager.bindTexture(instruments);
@@ -274,6 +267,13 @@ public class HUDParent{
         	}
     	}
     }
+	
+	private static void drawGaugeBase(int centerX, int centerY){
+    	ModelRenderHelper.startRender();
+    	textureManager.bindTexture(instruments);
+    	ModelRenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.75, 1, 0, 0.25, false);
+    	ModelRenderHelper.endRender();
+    }
     
 	private static void drawAttitudeIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
 		GL11.glPushMatrix();
@@ -308,7 +308,7 @@ public class HUDParent{
 	}
 	
 	private static void drawAltimeter(EntityParent parent, int centerX, int centerY, boolean hud){
-    	drawGaugeBase(centerX, centerY, 30);
+    	drawGaugeBase(centerX, centerY);
     	if(!hud){
 			GL11.glPushMatrix();
     		GL11.glDisable(GL11.GL_LIGHTING);
@@ -320,9 +320,9 @@ public class HUDParent{
         drawDialIncrements(centerX, centerY, -180, 180, 25, 5, 11);
         drawDialNumbers(centerX, centerY, 0, 320,  17, 0, 1, 9, 0.7F);
         if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-        drawShortPointer(centerX, centerY, (float) (.36*parent.posY), 20, 6);
+        drawShortPointer(centerX, centerY, (float) (.36*(parent.posY - (ClientController.seaLevelOffset ? 64 : 0))), 20, 6);
         if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-        drawLongPointer(centerX, centerY, (float) (3.6*parent.posY), 35, 3);
+        drawLongPointer(centerX, centerY, (float) (3.6*(parent.posY - (ClientController.seaLevelOffset ? 64 : 0))), 35, 3);
         if(!hud){
         	GL11.glEnable(GL11.GL_LIGHTING);
         	GL11.glPopMatrix();
@@ -330,7 +330,7 @@ public class HUDParent{
     }
     
 	private static void drawHeadingIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
-    	drawGaugeBase(centerX, centerY, 30);
+    	drawGaugeBase(centerX, centerY);
     	if(!hud){
 			GL11.glPushMatrix();
     		GL11.glDisable(GL11.GL_LIGHTING);
@@ -383,7 +383,7 @@ public class HUDParent{
     }
     
 	private static void drawAirspeedIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
-    	drawGaugeBase(centerX, centerY, 30);
+    	drawGaugeBase(centerX, centerY);
 		if(!hud){
 			GL11.glPushMatrix();
     		GL11.glDisable(GL11.GL_LIGHTING);
@@ -408,7 +408,7 @@ public class HUDParent{
     
 	private static void drawTurnCoordinator(EntityParent parent, int centerX, int centerY, boolean hud){
 		textureManager.bindTexture(instruments);
-		drawGaugeBase(centerX, centerY, 30);
+		drawGaugeBase(centerX, centerY);
 		GL11.glPushMatrix();
     	if(!hud){
     		GL11.glDisable(GL11.GL_LIGHTING);
@@ -448,7 +448,7 @@ public class HUDParent{
 	
 	private static void drawTurnAndSlipIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
 		textureManager.bindTexture(instruments);
-		drawGaugeBase(centerX, centerY, 30);
+		drawGaugeBase(centerX, centerY);
 		GL11.glPushMatrix();
     	if(!hud){
     		GL11.glDisable(GL11.GL_LIGHTING);
@@ -539,7 +539,7 @@ public class HUDParent{
 	}
 	
 	private static void drawVerticalSpeedIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
-		drawGaugeBase(centerX, centerY, 30);
+		drawGaugeBase(centerX, centerY);
     	if(!hud){
 			GL11.glPushMatrix();
     		GL11.glDisable(GL11.GL_LIGHTING);
@@ -563,7 +563,7 @@ public class HUDParent{
 	}
 	
 	private static void drawLiftReserveIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
-		drawGaugeBase(centerX, centerY, 30);
+		drawGaugeBase(centerX, centerY);
     	GL11.glPushMatrix();
     	if(!hud){
     		GL11.glDisable(GL11.GL_LIGHTING);
@@ -619,7 +619,7 @@ public class HUDParent{
 	}
 	
 	private static void drawTachometer(EntityParent parent, int centerX, int centerY, boolean hud){
-    	drawGaugeBase(centerX, centerY, 30);
+    	drawGaugeBase(centerX, centerY);
     	if(!hud){
 			GL11.glPushMatrix();
     		GL11.glDisable(GL11.GL_LIGHTING);
@@ -645,7 +645,7 @@ public class HUDParent{
 	
     
 	private static void drawFuelGauge(EntityParent parent, int centerX, int centerY, boolean hud){
-    	drawGaugeBase(centerX, centerY, 30);
+    	drawGaugeBase(centerX, centerY);
     	if(!hud){
 			GL11.glPushMatrix();
     		GL11.glDisable(GL11.GL_LIGHTING);
@@ -672,7 +672,7 @@ public class HUDParent{
 	
 	
 	private static void drawFuelFlowGauge(EntityParent parent, int centerX, int centerY, boolean hud){
-    	drawGaugeBase(centerX, centerY, 30);
+    	drawGaugeBase(centerX, centerY);
     	if(!hud){
 			GL11.glPushMatrix();
     		GL11.glDisable(GL11.GL_LIGHTING);

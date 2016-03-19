@@ -12,6 +12,9 @@ item.Propeller_2.name=Obsidian Propeller
 item.SmallEngine.name=Small Engine
 item.LargeEngine.name=Large Engine
 
+item.FlightInstrumentBase.name=Flight Instrument Base
+item.ShortPointer.name=Short Pointer
+item.LongPointer.name=Long Pointer
 item.FlightInstrument0.name=Attitude Indicator
 item.FlightInstrument0.description=Indicates where the plane is pointing.
 item.FlightInstrument1.name=Altimeter

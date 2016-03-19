@@ -42,7 +42,7 @@ public class EntityPlaneChest extends EntityChild implements IInventory{
 		super.setDead();
 		if(!worldObj.isRemote){
 			for(int i=0; i<this.getSizeInventory(); ++i){
-				ItemStack item = getStackInSlotOnClosing(i);
+				ItemStack item = getStackInSlot(i);
 				if(item != null){
 					worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, item));
 				}

@@ -41,10 +41,14 @@ public class ThrottlePacket implements IMessage{
 				thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 			}
 			if(thisEntity!=null){
-				if(thisEntity.throttle < 100 && message.throttle == 111){
-					++thisEntity.throttle;
-				}else if(thisEntity.throttle > 15 && message.throttle == -111){
-					--thisEntity.throttle;
+				if(message.throttle == Byte.MAX_VALUE){
+					if(thisEntity.throttle < 100){
+						++thisEntity.throttle;
+					}
+				}else if(message.throttle == Byte.MIN_VALUE){
+					if(thisEntity.throttle > 15){
+						--thisEntity.throttle;
+					}
 				}else{
 					thisEntity.throttle = message.throttle;
 				}

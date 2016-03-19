@@ -19,6 +19,7 @@ public abstract class EntityEngine extends EntityChild{
 	protected String engineStartingSoundName;
 	
 	//unique to each individual engine
+	private boolean engineEngaged;
 	private boolean engineOn;
 	private byte starterState;
 	private int maxEngineRPM;
@@ -43,12 +44,12 @@ public abstract class EntityEngine extends EntityChild{
 		if(engineOn){
 			parent.fuel -= this.fuelConsumption*MFS.fuelUsageFactor*engineRPM/maxEngineRPM;
 			if(parent.fuel <= 0 || engineRPM < 300){
-				stopEngine();
+				stopEngine(false);
 			}else{
 				fueled = true;
 			}
 		}else{
-			if(engineRPM > 500 && parent.fuel > 0){
+			if(engineRPM > 500 && parent.fuel > 0 && parent.throttle > 5 && engineEngaged){
 				worldObj.playSoundAtEntity(this, "mfs:" + engineStartingSoundName, 1, 1);
 				engineOn=true;
 			}
@@ -92,7 +93,8 @@ public abstract class EntityEngine extends EntityChild{
 		if(worldObj.isRemote){engineSound = MFS.proxy.updateEngineSound(engineSound, this);}
 	}
 	
-	public void stopEngine(){
+	public void stopEngine(boolean switchedOff){
+		engineEngaged = !switchedOff;
 		if(engineOn){
 			internalFuel = 100;
 			engineOn = false;
@@ -102,6 +104,7 @@ public abstract class EntityEngine extends EntityChild{
 	}
 	
 	public void startEngine(){
+		engineEngaged = true;
 		if(starterState==0){
 			if(!worldObj.isRemote){worldObj.playSoundAtEntity(this, "mfs:" + engineCrankingSoundName, 1, 1);}
 			this.starterState += starterIncrement;

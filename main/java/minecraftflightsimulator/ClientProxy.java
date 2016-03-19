@@ -21,7 +21,7 @@ import minecraftflightsimulator.modelrenders.RenderPlaneChest;
 import minecraftflightsimulator.modelrenders.RenderPropeller;
 import minecraftflightsimulator.modelrenders.RenderSeat;
 import minecraftflightsimulator.modelrenders.RenderWheel;
-import minecraftflightsimulator.other.EntityController;
+import minecraftflightsimulator.other.ClientController;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
 import minecraftflightsimulator.planes.MC172.ModelMC172;
 import minecraftflightsimulator.planes.MC172.RenderMC172;
@@ -45,7 +45,10 @@ import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
+@SideOnly(Side.CLIENT)
 public class ClientProxy extends CommonProxy{
 	private static boolean lockedView = true;
 	private static int zoomLevel = 4;
@@ -60,7 +63,7 @@ public class ClientProxy extends CommonProxy{
 		super.init();
 		initEntityRenders();
 		initItemRenders();
-		EntityController.initKeys();
+		ClientController.init();
 		configKey = new KeyBinding("key.config", Keyboard.KEY_P, "key.categories.mfs");
 		ClientRegistry.registerKeyBinding(configKey);
 		MinecraftForge.EVENT_BUS.register(ClientEventHandler.instance);
@@ -108,10 +111,10 @@ public class ClientProxy extends CommonProxy{
 	public void checkKeyboard(EntitySeat seat){
 		if(seat.riddenByEntity.equals(Minecraft.getMinecraft().thePlayer)){
 			if(!Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen()){
-				EntityController.controlCamera();
+				ClientController.controlCamera();
 				if(seat.driver){
 					if(seat.parent instanceof EntityPlane){
-						EntityController.controlPlane((EntityPlane) seat.parent);
+						ClientController.controlPlane((EntityPlane) seat.parent);
 					}
 				}
 			}

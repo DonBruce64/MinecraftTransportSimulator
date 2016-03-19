@@ -10,7 +10,7 @@ import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.containers.SlotPropeller;
 import minecraftflightsimulator.containers.SlotWheel;
 import minecraftflightsimulator.entities.EntityPlane;
-import minecraftflightsimulator.other.HUDParent;
+import minecraftflightsimulator.other.InstrumentHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -76,7 +76,7 @@ public class EntityTrimotor extends EntityPlane{
 	
 	@Override
 	public void drawHUD(int width, int height){
-		HUDParent.instance.drawBasicHUD(this, width, height, backplateTexture, moldingTexture);
+		InstrumentHelper.instance.drawBasicHUD(this, width, height, backplateTexture, moldingTexture);
 	}
 	
 	@Override

@@ -11,25 +11,35 @@ import cpw.mods.fml.relauncher.Side;
 
 public class ElevatorPacket implements IMessage{
 	private int id;
-	private byte elevatorAngle;	
+	private byte packetType;
+	private short elevatorData;
 
 	public ElevatorPacket() { }
 	
-	public ElevatorPacket(int id, byte elevatorAngle){
+	public ElevatorPacket(int id, boolean increment, short elevatorCooldown){
 		this.id=id;
-		this.elevatorAngle=elevatorAngle;
+		this.elevatorData=elevatorCooldown;
+		this.packetType = (byte) (increment ? 1 : -1);
+	}
+	
+	public ElevatorPacket(int id, short elevatorAngle){
+		this.id=id;
+		this.elevatorData=elevatorAngle;
+		this.packetType = 0;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		this.id=buf.readInt();
-		this.elevatorAngle=buf.readByte();
+		this.packetType=buf.readByte();
+		this.elevatorData=buf.readShort();
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		buf.writeInt(this.id);
-		buf.writeByte(this.elevatorAngle);
+		buf.writeByte(this.packetType);
+		buf.writeShort(this.elevatorData);
 	}
 
 	public static class ElevatorPacketHandler implements IMessageHandler<ElevatorPacket, IMessage> {
@@ -41,23 +51,23 @@ public class ElevatorPacket implements IMessage{
 				thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 			}
 			if(thisEntity!=null){
-				if(message.elevatorAngle == 111){
+				if(message.packetType == 1){
 					if(thisEntity.elevatorAngle + thisEntity.elevatorIncrement <= 250){
 						thisEntity.elevatorAngle += thisEntity.elevatorIncrement;
-						thisEntity.elevatorCooldown = MFS.controlSurfaceCooldown;
+						thisEntity.elevatorCooldown = message.elevatorData;
 					}else{
 						return null;
 					}
-				}else if(message.elevatorAngle == -111){
+				}else if(message.packetType == -1){
 					if(thisEntity.elevatorAngle - thisEntity.elevatorIncrement >= -250){
 						thisEntity.elevatorAngle -= thisEntity.elevatorIncrement;
-						thisEntity.elevatorCooldown = MFS.controlSurfaceCooldown;
+						thisEntity.elevatorCooldown = message.elevatorData;
 					}else{
 						return null;
 					}
 				}else{
-					thisEntity.elevatorAngle = (int) (message.elevatorAngle*2.5);
-					thisEntity.elevatorCooldown = Integer.MAX_VALUE;
+					thisEntity.elevatorAngle = message.elevatorData;
+					thisEntity.elevatorCooldown = Short.MAX_VALUE;
 				}
 				if(ctx.side==Side.SERVER){
 					MFS.MFSNet.sendToAll(message);

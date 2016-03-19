@@ -225,7 +225,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		if(!worldObj.isRemote){
 			openInventory();
 			for(int i=1; i<getSizeInventory(); ++i){
-				ItemStack item = getStackInSlotOnClosing(i);
+				ItemStack item = getStackInSlot(i);
 				if(item != null){
 					worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, item));
 				}
@@ -241,12 +241,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	
 	public void explodeAtPosition(double x, double y, double z){
 		this.setDead();
-		if(!worldObj.isRemote){
-			openInventory();
-			for(int i=1; i<=fuelBucketSlot; ++i){
-				setInventorySlotContents(i, null);
-			}
-		}
 		worldObj.newExplosion(this, x, y, z, (float) (fuel/1000 + 1F), true, true);
 	}
 
@@ -255,10 +249,10 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		if(engineCode == 0){
 			throttle = 0;
 			while(engineIterator.hasNext()){
-				engineIterator.next().stopEngine();
+				engineIterator.next().stopEngine(true);
 			}
 		}else if(engineCode != 1){
-			if(throttle < 10){throttle = 10;}
+			if(throttle < 15){throttle = 15;}
 			while(engineIterator.hasNext()){
 				EntityEngine engine = engineIterator.next();
 				float[] enginePosition = {engine.offsetX, engine.offsetY, engine.offsetZ};
@@ -268,7 +262,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				}
 			}
 		}else{
-			if(throttle < 10){throttle = 10;}
+			if(throttle < 15){throttle = 15;}
 			while(engineIterator.hasNext()){
 				engineIterator.next().startEngine();
 			}
