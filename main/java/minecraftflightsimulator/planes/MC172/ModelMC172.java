@@ -1,11 +1,7 @@
 package minecraftflightsimulator.planes.MC172;
 
-import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.models.ModelPlane;
 import net.minecraft.client.model.ModelRenderer;
-import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.ResourceLocation;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -195,7 +191,6 @@ public class ModelMC172 extends ModelPlane{
     
     @Override
     public void renderPlane(byte textureCode, float aileronAngle, float elevatorAngle, float rudderAngle, float flapAngle){
-    	RenderHelper.bindTexture(new ResourceLocation("minecraft", "textures/blocks/" +  Blocks.wooden_slab.getIcon(0, textureCode).getIconName() + ".png"));
     	frontFuselage.render(scale);
         bottomFuselage.render(scale);
         rearFuselage.render(scale);

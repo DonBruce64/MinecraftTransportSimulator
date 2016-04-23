@@ -6,8 +6,8 @@ import net.minecraft.item.Item;
 public class ItemPointerShort extends Item{
 
 	public ItemPointerShort(){
-		this.setUnlocalizedName("ShortPointer");
+		this.setUnlocalizedName("PointerShort");
 		this.setCreativeTab(MFS.tabMFS);
-		this.setTextureName("mfs:shortpointer");
+		this.setTextureName("mfs:pointershort");
 	}
 }

@@ -1,16 +1,7 @@
 package minecraftflightsimulator.planes.Trimotor;
 
-import org.lwjgl.opengl.GL11;
-
-import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.models.ModelPlane;
-import net.minecraft.block.material.MapColor;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelRenderer;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.init.Items;
-import net.minecraft.util.ResourceLocation;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -44,12 +35,6 @@ public class ModelTrimotor extends ModelPlane{
     private ModelRenderer wing;
     private ModelRenderer stabilizer;
     private ModelRenderer tail;    
-    
-    int colorcode = 0;
-
-    private static final ResourceLocation sideTexture = new ResourceLocation("mfs", "textures/trimotor_side.png");
-    private static final ResourceLocation rotatedSideTexture = new ResourceLocation("mfs", "textures/trimotor_side_rotated.png");
-    private static final ResourceLocation detailTexture = new ResourceLocation("minecraft", "textures/blocks/stone.png");
  
     public ModelTrimotor(){
     	this.textureHeight = 8;
@@ -381,16 +366,10 @@ public class ModelTrimotor extends ModelPlane{
     }    
     
     @Override
-    public void renderPlane(byte textureCode, float aileronAngle, float elevatorAngle, float rudderAngle, float flapAngle){
+    public void renderPlane(byte textureCode, float aileronAngle, float elevatorAngle, float rudderAngle, float flapAngle){}
+    	
+    public void renderFirstStage(byte textureCode, float aileronAngle, float elevatorAngle, float rudderAngle, float flapAngle){
         //windows 12x6 
-
-    	
-
-
-    	
-    	
-    	
-    	RenderHelper.bindTexture(sideTexture);
     	frontFuselage.render(scale);
         leftRearFuselage.render(scale);
         rightRearFuselage.render(scale);
@@ -405,11 +384,9 @@ public class ModelTrimotor extends ModelPlane{
         cockpitWindowFrameRight.render(scale);
         tail.render(scale);
         renderRudder(rudderAngle);
-        
+    }
 
-    	
-
-        RenderHelper.bindTexture(rotatedSideTexture);
+    public void renderSecondStage(byte textureCode, float aileronAngle, float elevatorAngle, float rudderAngle, float flapAngle){
         bottomFuselage.render(scale);
         bottomRearFuselage.render(scale);
         bottomTailFuselage.render(scale);
@@ -419,24 +396,9 @@ public class ModelTrimotor extends ModelPlane{
         stabilizer.render(scale);
         renderAilerons(aileronAngle);
         renderElevators(elevatorAngle);
-        
-        //MapColor.getMapColorForBlockColored(textureCode).colorValue;
-        RenderHelper.bindTexture(detailTexture);
-        int color = MapColor.getMapColorForBlockColored(colorcode/16).colorValue;
-        if(colorcode/20==16)colorcode=0;
-        ++colorcode;
-        GL11.glColor3ub((byte) ((color >> 16) & 0xFF), (byte) ((color >> 8) & 0xFF), (byte) (color & 0xFF));
-        
-        
+    }
 
-
-        
-        
-
-    	
-    	
-    	
-        
+    public void renderThirdStage(byte textureCode, float aileronAngle, float elevatorAngle, float rudderAngle, float flapAngle){        
         leftNoseFlashing.render(scale);
         rightNoseFlashing.render(scale);
         bottomNose.render(scale);
@@ -444,8 +406,5 @@ public class ModelTrimotor extends ModelPlane{
         rightFrontCowling.render(scale);
         frontCowling.render(scale);
         windowFrames.render(scale);
-
-        
-        RenderHelper.bindTexture(windowTexture);
-    }
+    }        
 }

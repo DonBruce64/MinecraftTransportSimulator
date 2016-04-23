@@ -3,15 +3,18 @@ package minecraftflightsimulator.planes.MC172;
 import java.util.List;
 
 import minecraftflightsimulator.items.ItemPlane;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 public class ItemMC172 extends ItemPlane{
+	private IIcon[] icons = new IIcon[6];
 	
 	public ItemMC172(){
 		this.hasSubtypes=true;
@@ -39,5 +42,19 @@ public class ItemMC172 extends ItemPlane{
 		for(int i=0; i<6; ++i){
 			itemList.add(new ItemStack(item, 1, i));
 		}
+    }
+	
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void registerIcons(IIconRegister register){
+    	for(int i=0; i<6; ++i){
+    		icons[i] = register.registerIcon("mfs:mc172" + i);
+    	}
+    }
+    
+    @Override
+    @SideOnly(Side.CLIENT)
+    public IIcon getIconFromDamage(int damage){
+        return this.icons[damage > 6 ? 0 : damage];
     }
 }

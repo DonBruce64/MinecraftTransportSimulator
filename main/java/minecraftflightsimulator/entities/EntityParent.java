@@ -646,7 +646,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			}
 			
 			//Next spawn new seats
-			//TODO fix seats not replacing each other
 			int numberPilotSeats = getStackInSlot(pilotSeatSlot) == null ? 0 : getStackInSlot(pilotSeatSlot).stackSize;
 			for(int i=0; i<pilotPositions.size(); ++i){
 				float[] position = pilotPositions.get(i);

@@ -17,6 +17,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class RenderEngine extends Render{
 	private static final ModelEngine model = new ModelEngine();
+	private static final ResourceLocation engineTexture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
 	
     public RenderEngine(){
         super();
@@ -32,7 +33,7 @@ public class RenderEngine extends Render{
 			GL11.glRotatef(engine.parent.rotationPitch, 1, 0, 0);
 			GL11.glRotatef(engine.parent.rotationRoll, 0, 0, 1);
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-	        Minecraft.getMinecraft().renderEngine.bindTexture(model.texture);
+	        Minecraft.getMinecraft().renderEngine.bindTexture(engineTexture);
 			if(engine instanceof EntityEngineLarge){
 				model.renderLargeEngine();
 			}else{
@@ -47,6 +48,6 @@ public class RenderEngine extends Render{
 
 	@Override
 	protected ResourceLocation getEntityTexture(Entity propellor){
-		return model.texture;
+		return null;
 	}
 }

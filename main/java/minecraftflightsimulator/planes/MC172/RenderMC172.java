@@ -5,18 +5,25 @@ import minecraftflightsimulator.helpers.InstrumentHelper;
 import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.modelrenders.RenderPlane;
 import minecraftflightsimulator.models.ModelPlane;
+import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-public class RenderMC172 extends RenderPlane {
+public class RenderMC172 extends RenderPlane{
+	private static final ModelPlane model = new ModelMC172();
+	private static final ResourceLocation[] planeTextures = getPlaneTextures();
 
-	public RenderMC172(){
-		super(new ModelMC172());
+	public RenderMC172(){}
+	
+	@Override
+	protected void renderFuselage(EntityPlane plane){
+    	RenderHelper.bindTexture(planeTextures[plane.textureOptions > 5 ? 0 : plane.textureOptions]);
+        model.renderPlane(plane.textureOptions, plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F, plane.flapAngle/10F * 0.017453292F);
 	}
 
 	@Override
-	protected void renderWindows(){
-		RenderHelper.bindTexture(ModelPlane.windowTexture);
+	protected void renderWindows(EntityPlane plane){
+		RenderHelper.bindTexture(windowTexture);
 		RenderHelper.renderQuad(-0.75, -0.75, 0.75, 0.75, 1.625, 0.625, 0.625, 1.625, 0.875, 1.75, 1.75, 0.875, true);
 		RenderHelper.renderTriangle(-0.75, -0.75, -0.75, 1.625, 0.625, 0.625, 0.875, 0.875, 1.75, true);
 		RenderHelper.renderTriangle(0.75, 0.75, 0.75, 1.625, 0.625, 0.625, 0.875, 0.875, 1.75, true);
@@ -57,5 +64,17 @@ public class RenderMC172 extends RenderPlane {
 		InstrumentHelper.drawInstrument(plane, 272, 60, 16, false);
 		InstrumentHelper.drawInstrument(plane, 232, 80, 17, false);
 		GL11.glPopMatrix();
+	}
+	
+	private static ResourceLocation[] getPlaneTextures(){
+		ResourceLocation[] texArray = new ResourceLocation[6];
+		int texIndex = 0;
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_oak.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_spruce.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_spruce.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_jungle.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_acacia.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_big_oak.png");
+		return texArray;
 	}
 }

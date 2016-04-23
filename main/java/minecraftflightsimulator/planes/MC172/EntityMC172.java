@@ -9,18 +9,17 @@ import minecraftflightsimulator.containers.SlotInstrument;
 import minecraftflightsimulator.containers.SlotPassenger;
 import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.containers.SlotPropeller;
-import minecraftflightsimulator.containers.SlotWheel;
+import minecraftflightsimulator.containers.SlotWheelSmall;
 import minecraftflightsimulator.entities.EntityPlane;
 import minecraftflightsimulator.helpers.InstrumentHelper;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class EntityMC172 extends EntityPlane{
 	private static final ResourceLocation foregroundGUI = new ResourceLocation("mfs", "textures/gui_mc172.png");
-	private static final ResourceLocation backplateTexture = new ResourceLocation("minecraft", "textures/blocks/planks_oak.png");
-	private static final ResourceLocation moldingTexture = new ResourceLocation("minecraft", "textures/blocks/log_oak.png");
+	private static final ResourceLocation[] backplateTextures = getBackplateTextures();
+	private static final ResourceLocation[] mouldingTextures = getMouldingTextures();
 	
 	public EntityMC172(World world){
 		super(world);
@@ -75,19 +74,7 @@ public class EntityMC172 extends EntityPlane{
 	
 	@Override
 	public void drawHUD(int width, int height){
-		InstrumentHelper.instance.drawBasicHUD(this, width, height, this.getHudBackplateTexture(), this.getHudMoldingTexture());
-	}
-	
-	private ResourceLocation getHudBackplateTexture(){
-		return new ResourceLocation("minecraft", "textures/blocks/" +  Blocks.wooden_slab.getIcon(0, this.textureOptions).getIconName() + ".png");
-	}
-	
-	private ResourceLocation getHudMoldingTexture(){
-		if(this.textureOptions < 3){
-			return new ResourceLocation("minecraft", "textures/blocks/" +  Blocks.log.getIcon(2, this.textureOptions).getIconName() + ".png");
-		}else{
-			return new ResourceLocation("minecraft", "textures/blocks/" +  Blocks.log2.getIcon(2, this.textureOptions%4).getIconName() + ".png");
-		}
+		InstrumentHelper.drawBasicHUD(this, width, height, backplateTextures[this.textureOptions], mouldingTextures[this.textureOptions]);
 	}
 	
 	@Override
@@ -97,9 +84,9 @@ public class EntityMC172 extends EntityPlane{
 	
 	@Override
 	public void initParentContainerSlots(ContainerParent container){
-		container.addSlotToContainer(new SlotWheel(this, 86, 113, 1, 0));
-		container.addSlotToContainer(new SlotWheel(this, 50, 113, 2, 0));
-		container.addSlotToContainer(new SlotWheel(this, 68, 113, 4, 0));
+		container.addSlotToContainer(new SlotWheelSmall(this, 86, 113, 1));
+		container.addSlotToContainer(new SlotWheelSmall(this, 50, 113, 2));
+		container.addSlotToContainer(new SlotWheelSmall(this, 68, 113, 4));
 		container.addSlotToContainer(new SlotEngineSmall(this, 131, 66, 6));
 		container.addSlotToContainer(new SlotPropeller(this, 150, 66, 10));
 		container.addSlotToContainer(new SlotPilot(this, 110, 66));
@@ -109,5 +96,29 @@ public class EntityMC172 extends EntityPlane{
 		for(int i=0; i<10; ++i){
 			container.addSlotToContainer(new SlotInstrument(this, 7 + 18*(i%5), i < 5 ? 7 : 25, i + instrumentStartSlot));
 		}
+	}
+	
+	private static ResourceLocation[] getMouldingTextures(){
+		ResourceLocation[] texArray = new ResourceLocation[6];
+		int texIndex = 0;
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/log_oak.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/log_spruce.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/log_spruce.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/log_jungle.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/log_acacia.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/log_big_oak.png");
+		return texArray;
+	}
+	
+	private static ResourceLocation[] getBackplateTextures(){
+		ResourceLocation[] texArray = new ResourceLocation[6];
+		int texIndex = 0;
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_oak.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_spruce.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_spruce.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_jungle.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_acacia.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_big_oak.png");
+		return texArray;
 	}
 }

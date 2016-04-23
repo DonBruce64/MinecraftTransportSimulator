@@ -2,6 +2,8 @@ package minecraftflightsimulator;
 
 import minecraftflightsimulator.entities.EntityParent;
 import minecraftflightsimulator.entities.EntitySeat;
+import minecraftflightsimulator.helpers.ControlHelper;
+import minecraftflightsimulator.helpers.RenderHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -32,8 +34,8 @@ public class ClientEventHandler{
 	@SubscribeEvent
 	public void on(TickEvent.PlayerTickEvent event){
 		if(Minecraft.getMinecraft().thePlayer.ridingEntity == null){
-			MFS.proxy.changeCameraRoll(0);
-			MFS.proxy.changeCameraZoom(0);
+			RenderHelper.changeCameraRoll(0);
+			RenderHelper.changeCameraZoom(0);
 		}
 	}
 	
@@ -74,7 +76,7 @@ public class ClientEventHandler{
 	
     @SubscribeEvent
     public void onKeyInput(InputEvent.KeyInputEvent event){
-    	if(ClientProxy.configKey.isPressed()){
+    	if(ControlHelper.configKey.isPressed()){
     		EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
     		player.openGui(MFS.instance, -1, player.worldObj, (int) player.posX, (int) player.posY, (int) player.posZ);
     	}

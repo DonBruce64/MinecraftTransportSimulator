@@ -14,6 +14,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class RenderPlaneChest extends Render{
 	private static final ModelPlaneChest model = new ModelPlaneChest();
+	private static final ResourceLocation chestTexture = new ResourceLocation("minecraft", "textures/entity/chest/normal.png");
 	
     public RenderPlaneChest(){
         super();
@@ -29,7 +30,7 @@ public class RenderPlaneChest extends Render{
 			GL11.glRotatef(chest.parent.rotationPitch, 1, 0, 0);
 			GL11.glRotatef(chest.parent.rotationRoll, 0, 0, 1);
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-			this.bindTexture(new ResourceLocation("minecraft", "textures/entity/chest/normal.png"));
+			this.bindTexture(chestTexture);
 			model.renderAll();
 			GL11.glPopMatrix();
 		}
@@ -37,6 +38,6 @@ public class RenderPlaneChest extends Render{
 
 	@Override
 	protected ResourceLocation getEntityTexture(Entity seat) {
-		return new ResourceLocation("minecraft", "textures/entity/chest/normal.png");
+		return null;
 	}
 }

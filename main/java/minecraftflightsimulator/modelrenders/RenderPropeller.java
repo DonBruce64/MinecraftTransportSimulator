@@ -15,6 +15,9 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class RenderPropeller extends Render{
 	private static final ModelPropeller model = new ModelPropeller();
+	private static final ResourceLocation tierOneTexture = new ResourceLocation("minecraft", "textures/blocks/planks_oak.png");
+	private static final ResourceLocation tierTwoTexture = new ResourceLocation("minecraft", "textures/blocks/iron_block.png");
+	private static final ResourceLocation tierThreeTexture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
 	
     public RenderPropeller(){
         super();
@@ -31,11 +34,11 @@ public class RenderPropeller extends Render{
 			GL11.glRotatef(propeller.parent.rotationRoll, 0, 0, 1);
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 			if(propeller.propertyCode%10==1){
-				Minecraft.getMinecraft().renderEngine.bindTexture(model.tierTwoTexture);
+				Minecraft.getMinecraft().renderEngine.bindTexture(tierTwoTexture);
 			}else if(propeller.propertyCode%10==2){
-				Minecraft.getMinecraft().renderEngine.bindTexture(model.tierThreeTexture);
+				Minecraft.getMinecraft().renderEngine.bindTexture(tierThreeTexture);
 			}else{
-				Minecraft.getMinecraft().renderEngine.bindTexture(model.tierOneTexture);
+				Minecraft.getMinecraft().renderEngine.bindTexture(tierOneTexture);
 			}
 			model.renderPropellor(propeller.propertyCode%100/10, 70+5*(propeller.propertyCode/1000), propeller.angularPosition);
 			GL11.glPopMatrix();
@@ -44,12 +47,6 @@ public class RenderPropeller extends Render{
 
 	@Override
 	protected ResourceLocation getEntityTexture(Entity propellor){
-		if(((EntityPropeller) propellor).propertyCode==1){
-			return model.tierTwoTexture;
-		}else if(((EntityPropeller) propellor).propertyCode==2){
-			return model.tierThreeTexture;
-		}else{
-			return model.tierOneTexture;
-		}
+		return null;
 	}
 }

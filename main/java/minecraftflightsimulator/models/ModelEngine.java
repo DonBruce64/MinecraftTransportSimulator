@@ -2,13 +2,11 @@ package minecraftflightsimulator.models;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
-import net.minecraft.util.ResourceLocation;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public class ModelEngine extends ModelBase{
-	public static final ResourceLocation texture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
     private final float scale=0.0625F;
     private ModelRenderer engineSmall;
     private ModelRenderer engineLarge;

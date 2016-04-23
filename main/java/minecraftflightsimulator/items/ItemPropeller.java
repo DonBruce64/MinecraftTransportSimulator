@@ -8,10 +8,12 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIcon;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class ItemPropeller extends Item {
+public class ItemPropeller extends Item{
+	private IIcon[] icons = new IIcon[3];
 
 	public ItemPropeller(){
 		this.setUnlocalizedName("Propeller");
@@ -42,5 +44,15 @@ public class ItemPropeller extends Item {
 	
     @Override
     @SideOnly(Side.CLIENT)
-    public void registerIcons(IIconRegister p_94581_1_){}
+    public void registerIcons(IIconRegister register){
+    	for(int i=0; i<3; ++i){
+    		icons[i] = register.registerIcon("mfs:propeller" + i);
+    	}
+    }
+    
+    @Override
+    @SideOnly(Side.CLIENT)
+    public IIcon getIconFromDamage(int damage){
+        return this.icons[damage%10 > 3 ? 0 : damage%10];
+    }
 }

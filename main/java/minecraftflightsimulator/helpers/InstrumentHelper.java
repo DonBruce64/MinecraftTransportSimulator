@@ -2,26 +2,18 @@ package minecraftflightsimulator.helpers;
 
 import java.awt.Color;
 
-import minecraftflightsimulator.ClientProxy;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.EntityParent;
 import minecraftflightsimulator.entities.EntityPlane;
-import minecraftflightsimulator.other.ClientController;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
 public class InstrumentHelper{
-	protected static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-	private static final ResourceLocation instruments = new ResourceLocation("mfs", "textures/instruments.png");
-	public static InstrumentHelper instance = new InstrumentHelper();
-	
-	public InstrumentHelper(){}
+	private static final ResourceLocation instrumentTexture = new ResourceLocation("mfs", "textures/instruments.png");
 	
 	public static void drawBasicHUD(EntityParent parent, int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
-		if(ClientProxy.hudMode == 3){
+		if(RenderHelper.hudMode == 3){
 			drawLowerConsole(width, height, backplateTexture, moldingTexture);
 			for(int i=5; i<parent.instrumentList.size(); ++i){
 				if(parent.instrumentList.get(i) != null){
@@ -30,7 +22,7 @@ public class InstrumentHelper{
 			}
 			height -= 64;
 		}
-		if(ClientProxy.hudMode > 1){
+		if(RenderHelper.hudMode > 1){
 			drawUpperConsole(width, height, backplateTexture, moldingTexture);
 			drawLeftConsole(width, height, backplateTexture, moldingTexture);
 			drawRightConsole(width, height, backplateTexture, moldingTexture);
@@ -53,7 +45,7 @@ public class InstrumentHelper{
 	    	}
 	    	GL11.glPopMatrix();
 		}
-		if(ClientProxy.hudMode != 0){
+		if(RenderHelper.hudMode != 0){
 			for(int i=1; i<4; ++i){
 				if(parent.instrumentList.get(i) != null){
 					drawInstrument(parent, (5*i+6)*width/32, height - 32, parent.instrumentList.get(i).getItemDamage(), true);
@@ -105,7 +97,6 @@ public class InstrumentHelper{
 	private static void drawUpperConsole(int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
 		RenderHelper.bindTexture(backplateTexture);
     	RenderHelper.renderQuadUV(width/4, width/4, 3*width/4, 3*width/4, height-64, height, height, height-64, 0, 0, 0, 0, 0, 3, 0, 1, false);
-    	
     	RenderHelper.bindTexture(moldingTexture);
     	RenderHelper.renderQuadUV(width/4, 3*width/4, 3*width/4, width/4, height-64, height-64, height-80, height-80, 0, 0, 0, 0, 0, 1, 0, 8, false);
     }
@@ -113,7 +104,6 @@ public class InstrumentHelper{
 	private static void drawLeftConsole(int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
     	RenderHelper.bindTexture(backplateTexture);
     	RenderHelper.renderQuadUVCustom(0, width/4, width/4, 0, height, height, height-64, height-32, 0, 0, 0, 0, 0, 1.5, 1.5, 0, 1, 1, 0, 0.5, false);
-    	
     	RenderHelper.bindTexture(moldingTexture);
     	RenderHelper.renderQuadUV(0, width/4, width/4, 0, height-32, height-64, height-80, height-48, 0, 0, 0, 0, 0, 1, 0, 4, false);
     }
@@ -121,7 +111,6 @@ public class InstrumentHelper{
 	private static void drawRightConsole(int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
     	RenderHelper.bindTexture(backplateTexture);
     	RenderHelper.renderQuadUVCustom(3*width/4, width, width, 3*width/4, height, height, height-32, height-64, 0, 0, 0, 0, 0, 1.5, 1.5, 0, 1, 1, 0.5, 0, false);
-    	
     	RenderHelper.bindTexture(moldingTexture);
     	RenderHelper.renderQuadUV(3*width/4, width, width, 3*width/4, height-63, height-32, height-48, height-80, 0, 0, 0, 0, 0, 1, 0, 4, false);
     }
@@ -132,7 +121,7 @@ public class InstrumentHelper{
     }
     
 	private static void drawThrottle(EntityParent parent, int centerX, int centerY, boolean hud){
-    	RenderHelper.bindTexture(instruments);
+    	RenderHelper.bindTexture(instrumentTexture);
 		if(!hud){
 			GL11.glPushMatrix();
     		GL11.glDisable(GL11.GL_LIGHTING);
@@ -154,7 +143,7 @@ public class InstrumentHelper{
     }
     
 	private static void drawFlapIndicator(EntityPlane plane, int centerX, int centerY, boolean hud){
-    	RenderHelper.bindTexture(instruments);
+    	RenderHelper.bindTexture(instrumentTexture);
     	RenderHelper.renderSquareUV(centerX-11.25, centerX+11.25, centerY+15, centerY-15, 0, 0, 0.515625, 0.609375, 0.875, 1, false);
     	
     	if(!hud){
@@ -165,17 +154,16 @@ public class InstrumentHelper{
     	
         GL11.glPushMatrix();
     	rotationHelper(centerX, centerY, -90);
-    	GL11.glScalef(0.5F, 0.5F, 0.5F);
-    	fontRenderer.drawString("FLAPS", centerX*2-15, centerY*2-15, Color.WHITE.getRGB());
+    	drawScaledString("FLAPS", centerX*2-15, centerY*2-15, 0.5F);
     	GL11.glPopMatrix();
     	
     	GL11.glPushMatrix();
     	GL11.glScalef(0.5F, 0.5F, 1);
-    	fontRenderer.drawString("0", centerX*2+8, centerY*2-16, Color.WHITE.getRGB());
-    	fontRenderer.drawString("35", centerX*2+8, centerY*2+10, Color.WHITE.getRGB());
+    	drawScaledString("0", centerX*2+8, centerY*2-16, 0.5F);
+    	drawScaledString("35", centerX*2+8, centerY*2+10, 0.5F);
     	GL11.glPopMatrix();
         
-    	RenderHelper.bindTexture(instruments);
+    	RenderHelper.bindTexture(instrumentTexture);
     	if(!hud){
     		RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX-5.625, centerX-5.625, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
     		RenderHelper.renderQuadUV(centerX+1.875, centerX+1.875, centerX+1.875, centerX+1.875, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
@@ -190,7 +178,7 @@ public class InstrumentHelper{
     }
     
 	private static void drawParkingBrake(EntityParent parent, int centerX, int centerY, boolean hud){
-    	RenderHelper.bindTexture(instruments);
+    	RenderHelper.bindTexture(instrumentTexture);
     	
     	if(!hud){
 			GL11.glPushMatrix();
@@ -241,14 +229,14 @@ public class InstrumentHelper{
     }
 	
 	private static void drawGaugeBase(int centerX, int centerY){
-    	RenderHelper.bindTexture(instruments);
+    	RenderHelper.bindTexture(instrumentTexture);
     	RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.75, 1, 0, 0.25, false);
     }
     
 	private static void drawAttitudeIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
 		GL11.glPushMatrix();
 		if(!hud){GL11.glDisable(GL11.GL_LIGHTING);}
-		RenderHelper.bindTexture(instruments);
+		RenderHelper.bindTexture(instrumentTexture);
 		
 		//0.00390625 is 1 degree of pitch
 		rotationHelper(centerX, centerY, -parent.rotationRoll);
@@ -284,9 +272,9 @@ public class InstrumentHelper{
         drawDialIncrements(centerX, centerY, -180, 180, 25, 5, 11);
         drawDialNumbers(centerX, centerY, 0, 320,  17, 0, 1, 9, 0.7F);
         if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-        drawShortPointer(centerX, centerY, (float) (.36*(parent.posY - (ClientController.seaLevelOffset ? 64 : 0))), 20, 6);
+        drawShortPointer(centerX, centerY, (float) (.36*(parent.posY - (ControlHelper.seaLevelOffset ? 64 : 0))), 20, 6);
         if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-        drawLongPointer(centerX, centerY, (float) (3.6*(parent.posY - (ClientController.seaLevelOffset ? 64 : 0))), 35, 3);
+        drawLongPointer(centerX, centerY, (float) (3.6*(parent.posY - (ControlHelper.seaLevelOffset ? 64 : 0))), 35, 3);
         if(!hud){
         	GL11.glEnable(GL11.GL_LIGHTING);
         	GL11.glPopMatrix();
@@ -301,7 +289,7 @@ public class InstrumentHelper{
     		GL11.glTranslatef(0, 0, -0.1F);
     	}
     	
-    	RenderHelper.bindTexture(instruments);
+    	RenderHelper.bindTexture(instrumentTexture);
     	RenderHelper.renderSquareUV(centerX-20, centerX+20, centerY+20, centerY-20, 0, 0, 0.75, 1, 0.25, 0.5, false);
     	
     	drawScaledString("HEADING", centerX*2-18, centerY*2+14, 0.5F);
@@ -313,29 +301,29 @@ public class InstrumentHelper{
         GL11.glScalef(0.60F, 0.60F, 0.60F);
         centerX=Math.round(((float)centerX)*(1/0.60F));
         centerY=Math.round(((float)centerY)*(1/0.60F));
-        fontRenderer.drawString("S", centerX-3, centerY-32, Color.WHITE.getRGB());
+        RenderHelper.drawString("S", centerX-3, centerY-32, Color.WHITE);
         rotationHelper(centerX, centerY, 30);
-        fontRenderer.drawString("3", centerX-3, centerY-32, Color.WHITE.getRGB());
+        RenderHelper.drawString("3", centerX-3, centerY-32, Color.WHITE);
         rotationHelper(centerX, centerY, 30);
-        fontRenderer.drawString("6", centerX-3, centerY-32, Color.WHITE.getRGB());
+        RenderHelper.drawString("6", centerX-3, centerY-32, Color.WHITE);
         rotationHelper(centerX, centerY, 30);
-        fontRenderer.drawString("W", centerX-2, centerY-32, Color.WHITE.getRGB());
+        RenderHelper.drawString("W", centerX-2, centerY-32, Color.WHITE);
         rotationHelper(centerX, centerY, 30);
-        fontRenderer.drawString("12", centerX-4, centerY-32, Color.WHITE.getRGB());
+        RenderHelper.drawString("12", centerX-4, centerY-32, Color.WHITE);
         rotationHelper(centerX, centerY, 30);
-        fontRenderer.drawString("15", centerX-4, centerY-32, Color.WHITE.getRGB());
+        RenderHelper.drawString("15", centerX-4, centerY-32, Color.WHITE);
         rotationHelper(centerX, centerY, 30);
-        fontRenderer.drawString("N", centerX-2, centerY-32, Color.WHITE.getRGB());
+        RenderHelper.drawString("N", centerX-2, centerY-32, Color.WHITE);
         rotationHelper(centerX, centerY, 30);
-        fontRenderer.drawString("21", centerX-4, centerY-32, Color.WHITE.getRGB());
+        RenderHelper.drawString("21", centerX-4, centerY-32, Color.WHITE);
         rotationHelper(centerX, centerY, 30);
-        fontRenderer.drawString("24", centerX-4, centerY-32, Color.WHITE.getRGB());
+        RenderHelper.drawString("24", centerX-4, centerY-32, Color.WHITE);
         rotationHelper(centerX, centerY, 30);
-        fontRenderer.drawString("E", centerX-3, centerY-32, Color.WHITE.getRGB());
+        RenderHelper.drawString("E", centerX-3, centerY-32, Color.WHITE);
         rotationHelper(centerX, centerY, 30);
-        fontRenderer.drawString("30", centerX-5, centerY-32, Color.WHITE.getRGB());
+        RenderHelper.drawString("30", centerX-5, centerY-32, Color.WHITE);
         rotationHelper(centerX, centerY, 30);
-        fontRenderer.drawString("33", centerX-5, centerY-32, Color.WHITE.getRGB());
+        RenderHelper.drawString("33", centerX-5, centerY-32, Color.WHITE);
         rotationHelper(centerX, centerY, 30);
         GL11.glPopMatrix();
         if(!hud){
@@ -369,7 +357,7 @@ public class InstrumentHelper{
     }
     
 	private static void drawTurnCoordinator(EntityParent parent, int centerX, int centerY, boolean hud){
-		RenderHelper.bindTexture(instruments);
+		RenderHelper.bindTexture(instrumentTexture);
 		drawGaugeBase(centerX, centerY);
 		GL11.glPushMatrix();
     	if(!hud){
@@ -403,7 +391,7 @@ public class InstrumentHelper{
 	}
 	
 	private static void drawTurnAndSlipIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
-		RenderHelper.bindTexture(instruments);
+		RenderHelper.bindTexture(instrumentTexture);
 		drawGaugeBase(centerX, centerY);
 		GL11.glPushMatrix();
     	if(!hud){
@@ -686,7 +674,7 @@ public class InstrumentHelper{
         			(centerX + offset*Math.sin(Math.toRadians(theta)))/scale,
         			(centerY-offset*Math.cos(Math.toRadians(theta)))/scale,
         			0);
-        	fontRenderer.drawString(String.valueOf(Math.round(currentNumber)), Math.round(-3*scale), Math.round(-3*scale), Color.WHITE.getRGB());
+        	RenderHelper.drawString(String.valueOf(Math.round(currentNumber)), Math.round(-3*scale), Math.round(-3*scale), Color.WHITE);
         	GL11.glPopMatrix();
         	currentNumber+=numberDelta;
         }
@@ -717,7 +705,7 @@ public class InstrumentHelper{
     private static void drawLongPointer(int centerX, int centerY, float angle, int length, int width){
     	GL11.glPushMatrix();
     	GL11.glColor3f(1,1,1);
-    	RenderHelper.bindTexture(instruments);
+    	RenderHelper.bindTexture(instrumentTexture);
     	rotationHelper(centerX, centerY, angle);
     	GL11.glTranslatef(0, -length*0.25F, 0);
     	RenderHelper.renderSquareUV(centerX-width/2, centerX+width/2, centerY+length/2, centerY-length/2, 0, 0, 0.09375, 0.15625, 0.5, 1, false);
@@ -730,7 +718,7 @@ public class InstrumentHelper{
     private static void drawShortPointer(int centerX, int centerY, float angle, int length, int width){
         GL11.glPushMatrix();
         GL11.glColor3f(1,1,1);
-        RenderHelper.bindTexture(instruments);
+        RenderHelper.bindTexture(instrumentTexture);
         rotationHelper(centerX, centerY, angle);
         GL11.glTranslatef(0, -length*0.0625F, 0);
         RenderHelper.renderSquareUV(centerX-width/2, centerX+width/2, centerY+length/2, centerY-length/2, 0, 0, 0.03125, 0.21875, 0, 0.5, true);
@@ -743,7 +731,7 @@ public class InstrumentHelper{
     private static void drawScaledString(String string, int x, int y, float scale){
     	GL11.glPushMatrix();
     	GL11.glScalef(scale, scale, scale);
-    	fontRenderer.drawString(string, x, y, Color.WHITE.getRGB());
+    	RenderHelper.drawString(string, x, y, Color.WHITE);
     	GL11.glPopMatrix();
     }
     

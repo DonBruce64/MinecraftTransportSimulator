@@ -1,7 +1,6 @@
 package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.entities.EntityPlane;
-import minecraftflightsimulator.models.ModelPlane;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
@@ -14,12 +13,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public abstract class RenderPlane extends Render{
-	private ModelPlane model;
-	
-    public RenderPlane(ModelPlane model){
-        super();
-        this.model=model;
-    }
+    protected static final ResourceLocation windowTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 
 	@Override
 	public void doRender(Entity entity, double x, double y, double z, float yaw, float pitch){
@@ -30,8 +24,8 @@ public abstract class RenderPlane extends Render{
 		GL11.glRotatef(plane.rotationPitch, 1, 0, 0);
 		GL11.glRotatef(plane.rotationRoll, 0, 0, 1);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        model.renderPlane(plane.textureOptions, plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F, plane.flapAngle/10F * 0.017453292F);
-        renderWindows();
+        renderFuselage(plane);
+        renderWindows(plane);
         renderConsole(plane);
         GL11.glPopMatrix();
         
@@ -40,7 +34,8 @@ public abstract class RenderPlane extends Render{
         }
 	}
 	
-	protected abstract void renderWindows();
+	protected abstract void renderFuselage(EntityPlane plane);
+	protected abstract void renderWindows(EntityPlane plane);
 	protected abstract void renderConsole(EntityPlane plane);
 	
 	private void renderDebugVectors(EntityPlane plane, double x, double y, double z){

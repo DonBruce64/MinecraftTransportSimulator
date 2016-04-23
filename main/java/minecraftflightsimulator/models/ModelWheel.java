@@ -2,14 +2,11 @@ package minecraftflightsimulator.models;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
-import net.minecraft.util.ResourceLocation;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
-public class ModelWheel extends ModelBase{
-	public static final ResourceLocation innerTexture = new ResourceLocation("minecraft", "textures/blocks/wool_colored_white.png");
-	public static final ResourceLocation outerTexture = new ResourceLocation("minecraft", "textures/blocks/wool_colored_black.png");	
+public class ModelWheel extends ModelBase{	
     private final float scale=0.0625F;
     private ModelRenderer smallInnerWheel;
     private ModelRenderer smallOuterWheel;

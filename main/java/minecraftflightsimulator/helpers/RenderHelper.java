@@ -1,23 +1,86 @@
 package minecraftflightsimulator.helpers;
 
+import java.awt.Color;
+
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
+import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public class RenderHelper{	
+	public static boolean lockedView = true;
+	public static int hudMode = 2;
+	private static int zoomLevel = 4;
+	private static final String[] rollNames =new String[] {"camRoll", "R", "field_78495_O"};
+	private static final String[] zoomNames = new String[] {"thirdPersonDistance", "E", "field_78490_B"};
 	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
+	private static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+	
+	public static void changeCameraZoom(int zoom){
+		if(zoomLevel < 15 && zoom == 1){
+			++zoomLevel;
+		}else if(zoomLevel > 4 && zoom == -1){
+			--zoomLevel;
+		}else if(zoom == 0){
+			zoomLevel = 4;
+		}else{
+			return;
+		}
+			
+		try{
+			ObfuscationReflectionHelper.setPrivateValue(EntityRenderer.class, Minecraft.getMinecraft().entityRenderer, zoomLevel, zoomNames);
+		}catch (Exception e){
+			System.err.println("ERROR IN AIRCRAFT ZOOM REFLECTION!");
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public static void changeCameraRoll(float roll){
+		try{
+			ObfuscationReflectionHelper.setPrivateValue(EntityRenderer.class, Minecraft.getMinecraft().entityRenderer, roll, rollNames);
+		}catch (Exception e){
+			System.err.println("ERROR IN AIRCRAFT ROLL REFLECTION!");
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public static void changeCameraLock(){
+		lockedView = !lockedView;
+		Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.func_147673_a(new ResourceLocation("gui.button.press")));
+	}
 	
 	/**
 	 * Binds the specified texture.
 	 */
 	public static void bindTexture(ResourceLocation texture){
 		textureManager.bindTexture(texture);
+	}
+	
+	/**
+	 * Basic string draw function for 2D GUIs.
+	 */
+	public static void drawString(String string, int x, int y, Color color){
+		fontRenderer.drawString(string, x, y, color.getRGB());
+	}
+	
+	/**
+	 * Complex draw function for strings in 3D space.
+	 */
+	public static void drawScaledStringAt(String string, float x, float y, float z, float scale, Color color){
+		GL11.glPushMatrix();
+		GL11.glTranslatef(x, y, z);
+		GL11.glScalef(scale, scale, scale);
+		fontRenderer.drawString(string, 0, 0, color.getRGB());
+		GL11.glPopMatrix();
 	}
 	
 	/**

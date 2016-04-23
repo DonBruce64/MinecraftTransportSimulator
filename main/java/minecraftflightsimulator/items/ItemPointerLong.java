@@ -6,8 +6,8 @@ import net.minecraft.item.Item;
 public class ItemPointerLong extends Item{
 
 	public ItemPointerLong(){
-		this.setUnlocalizedName("LongPointer");
+		this.setUnlocalizedName("PointerLong");
 		this.setCreativeTab(MFS.tabMFS);
-		this.setTextureName("mfs:longpointer");
+		this.setTextureName("mfs:pointerlong");
 	}
 }

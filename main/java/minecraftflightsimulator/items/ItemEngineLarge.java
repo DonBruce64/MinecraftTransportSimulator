@@ -2,18 +2,28 @@ package minecraftflightsimulator.items;
 
 import java.util.List;
 
+import minecraftflightsimulator.MFS;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-
-public class ItemEngineLarge extends ItemEngine{
-
+public class ItemEngineLarge extends Item{
+	
 	public ItemEngineLarge(){
-		super();
-		this.setUnlocalizedName("LargeEngine");
+		this.setUnlocalizedName("EngineLarge");
+		this.setCreativeTab(MFS.tabMFS);
+		this.hasSubtypes=true;
+		this.setTextureName("mfs:enginelarge");
+	}
+	
+	@Override
+	public void addInformation(ItemStack item, EntityPlayer player, List list, boolean p_77624_4_){
+		list.add("Model# " + item.getItemDamage());
+		list.add("Max RPM: " + (item.getItemDamage()/((int) 100))*100);
+		list.add("Fuel consumption: " + (item.getItemDamage()%100)/10F);
 	}
 	
 	@Override

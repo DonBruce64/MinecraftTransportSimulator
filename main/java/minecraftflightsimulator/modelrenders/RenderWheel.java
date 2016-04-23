@@ -1,7 +1,7 @@
 package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.entities.EntityWheel;
-import minecraftflightsimulator.entities.EntityWheelLarge;
+import minecraftflightsimulator.entities.EntityWheelSmall;
 import minecraftflightsimulator.models.ModelWheel;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
@@ -15,6 +15,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class RenderWheel extends Render{
 	private static final ModelWheel model = new ModelWheel();
+	private static final ResourceLocation innerTexture = new ResourceLocation("minecraft", "textures/blocks/wool_colored_white.png");
+	private static final ResourceLocation outerTexture = new ResourceLocation("minecraft", "textures/blocks/wool_colored_black.png");
 	
     public RenderWheel(){
         super();
@@ -30,16 +32,16 @@ public class RenderWheel extends Render{
 			GL11.glRotatef(wheel.parent.rotationPitch, 1, 0, 0);
 			GL11.glRotatef(wheel.parent.rotationRoll, 0, 0, 1);
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-			if(wheel instanceof EntityWheelLarge){
-				this.bindTexture(model.innerTexture);
-				model.renderLargeInnerWheel(wheel.angularPosition);
-				this.bindTexture(model.outerTexture);
-				model.renderLargeOuterWheel(wheel.angularPosition);
-			}else{
-				this.bindTexture(model.innerTexture);
+			if(wheel instanceof EntityWheelSmall){
+				this.bindTexture(innerTexture);
 				model.renderSmallInnerWheel(wheel.angularPosition);
-				this.bindTexture(model.outerTexture);
+				this.bindTexture(outerTexture);
 				model.renderSmallOuterWheel(wheel.angularPosition);
+			}else{
+				this.bindTexture(innerTexture);
+				model.renderLargeInnerWheel(wheel.angularPosition);
+				this.bindTexture(outerTexture);
+				model.renderLargeOuterWheel(wheel.angularPosition);
 			}
 			GL11.glPopMatrix();
 		}
@@ -47,6 +49,6 @@ public class RenderWheel extends Render{
 
 	@Override
 	protected ResourceLocation getEntityTexture(Entity p_110775_1_) {
-		return model.outerTexture;
+		return null;
 	}
 }

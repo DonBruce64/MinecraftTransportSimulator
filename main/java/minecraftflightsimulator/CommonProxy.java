@@ -1,6 +1,5 @@
 package minecraftflightsimulator;
 
-import scala.reflect.internal.Trees.This;
 import minecraftflightsimulator.containers.GUIHandler;
 import minecraftflightsimulator.entities.EntityCore;
 import minecraftflightsimulator.entities.EntityEngine;
@@ -19,7 +18,8 @@ import minecraftflightsimulator.items.ItemPointerLong;
 import minecraftflightsimulator.items.ItemPointerShort;
 import minecraftflightsimulator.items.ItemPropeller;
 import minecraftflightsimulator.items.ItemSeat;
-import minecraftflightsimulator.items.ItemWheel;
+import minecraftflightsimulator.items.ItemWheelLarge;
+import minecraftflightsimulator.items.ItemWheelSmall;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.BrakePacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
@@ -37,6 +37,7 @@ import minecraftflightsimulator.planes.MC172.ItemMC172;
 import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.planes.Trimotor.ItemTrimotor;
 import minecraftflightsimulator.sounds.EngineSound;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -53,13 +54,15 @@ import cpw.mods.fml.relauncher.Side;
 public class CommonProxy{
 	public static Item planeMC172 = new ItemMC172();
 	public static Item planeTrimotor = new ItemTrimotor();
+	
 	public static Item seat = new ItemSeat();
-	public static Item wheel = new ItemWheel();
+	public static Item wheelSmall = new ItemWheelSmall();
+	public static Item wheelLarge = new ItemWheelLarge();
 	public static Item propeller = new ItemPropeller();
 	public static Item engineSmall = new ItemEngineSmall();
 	public static Item engineLarge = new ItemEngineLarge();
-	public static Item shortPointer = new ItemPointerShort();
-	public static Item longPointer = new ItemPointerLong();
+	public static Item pointerShort = new ItemPointerShort();
+	public static Item pointerLong = new ItemPointerLong();
 	public static Item flightInstrumentBase = new ItemFlightInstrumentBase();
 	public static Item flightInstrument = new ItemFlightInstrument();
 	
@@ -112,17 +115,18 @@ public class CommonProxy{
 	
 	private void initItems(){
 		
-		GameRegistry.registerItem(planeMC172, "MC172");
-		//GameRegistry.registerItem(planeTrimotor, "Trimotor");
-		GameRegistry.registerItem(seat, "Seat");
-		GameRegistry.registerItem(wheel, "Wheel");
-		GameRegistry.registerItem(propeller, "Propeller");
-		GameRegistry.registerItem(engineSmall, "SmallEngine");
-		GameRegistry.registerItem(engineLarge, "LargeEngine");
-		GameRegistry.registerItem(shortPointer, "ShortPointer");
-		GameRegistry.registerItem(longPointer, "LongPointer");
-		GameRegistry.registerItem(flightInstrumentBase, "FlightInstrumentBase");
-		GameRegistry.registerItem(flightInstrument, "FlightInstrument");
+		GameRegistry.registerItem(planeMC172, planeMC172.getUnlocalizedName().substring(5));
+		//GameRegistry.registerItem(planeTrimotor, planeTrimotor.getUnlocalizedName().substring(5));
+		GameRegistry.registerItem(seat, seat.getUnlocalizedName().substring(5));
+		GameRegistry.registerItem(wheelSmall, wheelSmall.getUnlocalizedName().substring(5));
+		GameRegistry.registerItem(wheelLarge, wheelLarge.getUnlocalizedName().substring(5));
+		GameRegistry.registerItem(propeller, propeller.getUnlocalizedName().substring(5));
+		GameRegistry.registerItem(engineSmall, engineSmall.getUnlocalizedName().substring(5));
+		GameRegistry.registerItem(engineLarge, engineLarge.getUnlocalizedName().substring(5));
+		GameRegistry.registerItem(pointerShort, pointerShort.getUnlocalizedName().substring(5));
+		GameRegistry.registerItem(pointerLong, pointerLong.getUnlocalizedName().substring(5));
+		GameRegistry.registerItem(flightInstrumentBase, flightInstrumentBase.getUnlocalizedName().substring(5));
+		GameRegistry.registerItem(flightInstrument, flightInstrument.getUnlocalizedName().substring(5));
 	}
 	
 	private void initRecipies(){
@@ -142,7 +146,7 @@ public class CommonProxy{
 		//Seat
 		for(int i=0; i<6; ++i){
 			for(int j=0; j<16; ++j){
-				GameRegistry.addRecipe(new ItemStack(seat, 1, i + (j << 3)),
+				GameRegistry.addRecipe(new ItemStack(seat, 1, (i << 4) + j),
 					" BA",
 					" BA",
 					"AAA",
@@ -151,12 +155,12 @@ public class CommonProxy{
 		}
 		
 		//Wheels
-		GameRegistry.addRecipe(new ItemStack(wheel, 1, 0),
+		GameRegistry.addRecipe(new ItemStack(wheelSmall, 1, 0),
 				"ABA",
 				"ACA",
 				"ABA",
 				'A', Blocks.wool, 'B', new ItemStack(Items.dye, 1, 0), 'C', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(wheel, 1, 1),
+		GameRegistry.addRecipe(new ItemStack(wheelLarge, 1, 1),
 				"ABA",
 				"BCB",
 				"ABA",
@@ -213,12 +217,12 @@ public class CommonProxy{
 				"IGI",
 				"III",
 				'I', Items.iron_ingot, 'G', Blocks.glass_pane);
-		GameRegistry.addRecipe(new ItemStack(shortPointer),
+		GameRegistry.addRecipe(new ItemStack(pointerShort),
 				" WW",
 				" WW",
 				"B  ",
 				'W', new ItemStack(Items.dye, 1, 15), 'B', new ItemStack(Items.dye, 1, 0));
-		GameRegistry.addRecipe(new ItemStack(longPointer),
+		GameRegistry.addRecipe(new ItemStack(pointerLong),
 				"  W",
 				" W ",
 				"B  ",
@@ -232,7 +236,7 @@ public class CommonProxy{
 				"WLW",
 				"WSW",
 				" B ",
-				'B', flightInstrumentBase, 'L', longPointer, 'S', shortPointer, 'W', new ItemStack(Items.dye, 1, 15));
+				'B', flightInstrumentBase, 'L', pointerLong, 'S', pointerShort, 'W', new ItemStack(Items.dye, 1, 15));
 		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 2),
 				" W ",
 				"WIW",
@@ -242,7 +246,7 @@ public class CommonProxy{
 				"R W",
 				"YLG",
 				"GBG",
-				'B', flightInstrumentBase, 'L', longPointer, 'R', new ItemStack(Items.dye, 1, 1), 'Y', new ItemStack(Items.dye, 1, 11), 'G', new ItemStack(Items.dye, 1, 10), 'W', new ItemStack(Items.dye, 1, 15));
+				'B', flightInstrumentBase, 'L', pointerLong, 'R', new ItemStack(Items.dye, 1, 1), 'Y', new ItemStack(Items.dye, 1, 11), 'G', new ItemStack(Items.dye, 1, 10), 'W', new ItemStack(Items.dye, 1, 15));
 		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 4),
 				"   ",
 				"WIW",
@@ -257,12 +261,12 @@ public class CommonProxy{
 				"W W",
 				" L ",
 				"WBW",
-				'B', flightInstrumentBase, 'L', longPointer, 'W', new ItemStack(Items.dye, 1, 15));
+				'B', flightInstrumentBase, 'L', pointerLong, 'W', new ItemStack(Items.dye, 1, 15));
 		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 7),
 				"RYG",
 				" LG",
 				" B ",
-				'B', flightInstrumentBase, 'L', longPointer, 'R', new ItemStack(Items.dye, 1, 1), 'Y', new ItemStack(Items.dye, 1, 11), 'G', new ItemStack(Items.dye, 1, 10), 'W', new ItemStack(Items.dye, 1, 15));
+				'B', flightInstrumentBase, 'L', pointerLong, 'R', new ItemStack(Items.dye, 1, 1), 'Y', new ItemStack(Items.dye, 1, 11), 'G', new ItemStack(Items.dye, 1, 10), 'W', new ItemStack(Items.dye, 1, 15));
 		
 		//Instrument 8 does not exist
 		//Instrument 9 does not exist
@@ -271,17 +275,17 @@ public class CommonProxy{
 				"W W",
 				" L ",
 				"WBR",
-				'B', flightInstrumentBase, 'L', longPointer, 'R', new ItemStack(Items.dye, 1, 1), 'W', new ItemStack(Items.dye, 1, 15));
+				'B', flightInstrumentBase, 'L', pointerLong, 'R', new ItemStack(Items.dye, 1, 1), 'W', new ItemStack(Items.dye, 1, 15));
 		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 11),
 				"RWW",
 				" L ",
 				" B ",
-				'B', flightInstrumentBase, 'L', longPointer, 'R', new ItemStack(Items.dye, 1, 1), 'W', new ItemStack(Items.dye, 1, 15));
+				'B', flightInstrumentBase, 'L', pointerLong, 'R', new ItemStack(Items.dye, 1, 1), 'W', new ItemStack(Items.dye, 1, 15));
 		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 12),
 				" W ",
 				"WLW",
 				" B ",
-				'B', flightInstrumentBase, 'L', longPointer, 'W', new ItemStack(Items.dye, 1, 15));
+				'B', flightInstrumentBase, 'L', pointerLong, 'W', new ItemStack(Items.dye, 1, 15));
 		
 		//Instrument 13 does not exist
 		//Instrument 14 does not exist
@@ -297,11 +301,6 @@ public class CommonProxy{
 		MFS.config.save();
 	}
 	
-	
-	public void updateSeatedPlayer(EntitySeat seat){}
-	public void checkKeyboard(EntitySeat seat){}
-	public void changeCameraRoll(float roll){}
-	public void changeCameraZoom(int zoom){}
-	public void changeCameraLock(){}
+	public void updateSeatedRider(EntitySeat seat, EntityLivingBase rider){}
 	public EngineSound updateEngineSound(EngineSound sound, EntityEngine engine){return null;}
 }
