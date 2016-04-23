@@ -40,6 +40,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	public double velocity;
 	public double airDensity;
 	public double trackAngle;
+	public String ownerName;
 	
 	public Vec3 velocityVec = Vec3.createVectorHelper(0, 0, 0);
 	public Vec3 bearingVec = Vec3.createVectorHelper(0, 0, 0);
@@ -141,6 +142,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		this.setPositionAndRotation(posX, posY, posZ, playerRotation-90, 0);
 		this.UUID=String.valueOf(this.getUniqueID());
 		this.numberChildren=(byte) this.getCoreLocations().length;
+		this.ownerName="MFS";
 	}
 	
 	@Override
@@ -517,7 +519,11 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				child = getChildAtLocation(partPositions.get(i));
 				if(child != null){
 					if(i <= 5){
-						setInventorySlotContents(i, new ItemStack(MFS.proxy.wheel, 1, child.propertyCode));
+						if(child instanceof EntityWheelSmall){
+							setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelSmall));
+						}else{
+							setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelLarge));
+						}
 					}else if(i <= 9){
 						if(child instanceof EntityEngineLarge){
 							setInventorySlotContents(i, new ItemStack(MFS.proxy.engineLarge, 1, child.propertyCode));
@@ -640,16 +646,18 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			}
 			
 			//Next spawn new seats
+			//TODO fix seats not replacing each other
 			int numberPilotSeats = getStackInSlot(pilotSeatSlot) == null ? 0 : getStackInSlot(pilotSeatSlot).stackSize;
 			for(int i=0; i<pilotPositions.size(); ++i){
 				float[] position = pilotPositions.get(i);
 				child = getChildAtLocation(position);
 				if(child != null){
-					if(i+1 > numberPilotSeats){
+					if(getStackInSlot(pilotSeatSlot) == null ? true : (i+1 > numberPilotSeats || getStackInSlot(pilotSeatSlot).getItemDamage() != child.propertyCode)){
 						child.setDead();
 						removeChild(child.UUID);
 					}
-				}else{
+				}
+				if(child == null ? true : child.isDead){
 					if(i+1 <= numberPilotSeats){
 						newChild = new EntitySeat(worldObj, this, this.UUID, position[0], position[1], position[2], getStackInSlot(pilotSeatSlot).getItemDamage(), true);
 						worldObj.spawnEntityInWorld(newChild);
@@ -664,12 +672,12 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				float[] position = passengerPositions.get(i);
 				child = getChildAtLocation(position);
 				if(child != null){
-					if(i+1 > numberPassengerSeats || !(child instanceof EntitySeat ^ chests)){
+					if(getStackInSlot(passengerSeatSlot) == null ? true : (i+1 > numberPassengerSeats || getStackInSlot(passengerSeatSlot).getItemDamage() != child.propertyCode || !(child instanceof EntitySeat ^ chests))){
 						child.setDead();
 						removeChild(child.UUID);
 					}
 				}
-				if(child == null ? true : child.isDead ? true : false){
+				if(child == null ? true : child.isDead){
 					if(i+1 <= numberPassengerSeats){
 						if(chests){ 
 							newChild = new EntityPlaneChest(worldObj, this, this.UUID, position[0], position[1], position[2]);
@@ -710,6 +718,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		this.emptyBuckets=tagCompound.getByte("emptyBuckets");
 		this.rotationRoll=tagCompound.getFloat("rotationRoll");
 		this.fuel=tagCompound.getDouble("fuel");
+		this.ownerName=tagCompound.getString("ownerName");
 		for(int i=0; i<10; ++i){
 			if(tagCompound.hasKey("instrument" + i)){
 				instrumentList.set(i, new ItemStack(MFS.proxy.flightInstrument, 1, tagCompound.getInteger("instrument" + i)));
@@ -730,6 +739,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		tagCompound.setByte("emptyBuckets", this.emptyBuckets);
 		tagCompound.setFloat("rotationRoll", this.rotationRoll);
 		tagCompound.setDouble("fuel", this.fuel);
+		tagCompound.setString("ownerName", this.ownerName);
 		for(int i=0; i<instrumentList.size(); ++i){
 			if(instrumentList.get(i) != null){
 				tagCompound.setInteger("instrument" + i, instrumentList.get(i).getItemDamage());
