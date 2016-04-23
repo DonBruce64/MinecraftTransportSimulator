@@ -4,17 +4,17 @@ entity.mfs.Chest.name=Plane Chest
 
 item.MC172.name=MC-172
 item.Seat.name=Seat
-item.Wheel_0.name=Small Wheel
-item.Wheel_1.name=Large Wheel
+item.WheelSmall.name=Small Wheel
+item.WheelLarge.name=Large Wheel
 item.Propeller_0.name=Wooden Propeller
 item.Propeller_1.name=Iron Propeller
 item.Propeller_2.name=Obsidian Propeller
-item.SmallEngine.name=Small Engine
-item.LargeEngine.name=Large Engine
+item.EngineSmall.name=Small Engine
+item.EngineLarge.name=Large Engine
 
 item.FlightInstrumentBase.name=Flight Instrument Base
-item.ShortPointer.name=Short Pointer
-item.LongPointer.name=Long Pointer
+item.PointerShort.name=Short Pointer
+item.PointerLong.name=Long Pointer
 item.FlightInstrument0.name=Attitude Indicator
 item.FlightInstrument0.description=Indicates where the plane is pointing.
 item.FlightInstrument1.name=Altimeter

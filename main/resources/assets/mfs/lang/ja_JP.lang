@@ -4,17 +4,17 @@ entity.mfs.Chest.name=機体 Chest
 
 item.MC172.name=MC-172
 item.Seat.name=座席
-item.Wheel_0.name=小さい車輪
-item.Wheel_1.name=大きい車輪
+item.WheelSmall.name=小さい車輪
+item.WheelLarge.name=大きい車輪
 item.Propeller_0.name=木のプロペラ
 item.Propeller_1.name=鉄のプロペラ
 item.Propeller_2.name=黒曜石のプロペラ
-item.SmallEngine.name=小さいエンジン
-item.LargeEngine.name=大きいエンジン
+item.EngineSmall.name=小さいエンジン
+item.EngineLarge.name=大きいエンジン
 
 item.FlightInstrumentBase.name=計器のフレーム
-item.ShortPointer.name=短い針
-item.LongPointer.name=長い針
+item.PointerShort.name=短い針
+item.PointerLong.name=長い針
 item.FlightInstrument0.name=姿勢指示器
 item.FlightInstrument0.description=姿勢を水平線と比べ、機体のピッチやロールの角度を示す
 item.FlightInstrument1.name=高度計
