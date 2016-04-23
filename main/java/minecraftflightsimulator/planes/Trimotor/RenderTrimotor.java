@@ -1,7 +1,7 @@
 package minecraftflightsimulator.planes.Trimotor;
 
 import minecraftflightsimulator.entities.EntityPlane;
-import minecraftflightsimulator.modelrenders.ModelRenderHelper;
+import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.modelrenders.RenderPlane;
 import minecraftflightsimulator.models.ModelPlane;
 
@@ -13,10 +13,7 @@ public class RenderTrimotor extends RenderPlane {
 
 	@Override
 	protected void renderWindows(){
-		this.renderManager.renderEngine.bindTexture(ModelPlane.windowTexture);
-    	ModelRenderHelper.startRender();
-		
-		ModelRenderHelper.endRender();
+		RenderHelper.bindTexture(ModelPlane.windowTexture);
 	}
 
 	@Override

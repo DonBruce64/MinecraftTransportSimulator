@@ -11,7 +11,7 @@ import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.containers.SlotPropeller;
 import minecraftflightsimulator.containers.SlotWheel;
 import minecraftflightsimulator.entities.EntityPlane;
-import minecraftflightsimulator.other.InstrumentHelper;
+import minecraftflightsimulator.helpers.InstrumentHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.ResourceLocation;

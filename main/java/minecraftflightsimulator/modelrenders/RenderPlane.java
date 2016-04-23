@@ -30,7 +30,7 @@ public abstract class RenderPlane extends Render{
 		GL11.glRotatef(plane.rotationPitch, 1, 0, 0);
 		GL11.glRotatef(plane.rotationRoll, 0, 0, 1);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        model.renderPlane(this.renderManager.renderEngine, plane.textureOptions, plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F, plane.flapAngle/10F * 0.017453292F);
+        model.renderPlane(plane.textureOptions, plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F, plane.flapAngle/10F * 0.017453292F);
         renderWindows();
         renderConsole(plane);
         GL11.glPopMatrix();

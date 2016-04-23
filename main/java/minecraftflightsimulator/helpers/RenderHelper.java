@@ -1,18 +1,24 @@
-package minecraftflightsimulator.modelrenders;
+package minecraftflightsimulator.helpers;
 
-import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.util.ResourceLocation;
 
-public class ModelRenderHelper{
-	public static Tessellator tessellator = Tessellator.instance;
+import org.lwjgl.opengl.GL11;
+
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+
+@SideOnly(Side.CLIENT)
+public class RenderHelper{	
+	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	
-	public static void startRender(){
-		tessellator.startDrawingQuads();
+	/**
+	 * Binds the specified texture.
+	 */
+	public static void bindTexture(ResourceLocation texture){
+		textureManager.bindTexture(texture);
 	}
-	
-	public static void endRender(){
-		tessellator.draw();
-	}
-	
 	
 	/**
      * Draws a quad clockwise starting from top-left point.
@@ -32,17 +38,30 @@ public class ModelRenderHelper{
      * Draws a quad clockwise starting from top-left point with custom UV mapping for each vertex.
      */
     public static void renderQuadUVCustom(double x1, double x2, double x3, double x4, double y1, double y2, double y3, double y4, double z1, double z2, double z3, double z4, double u1, double u2, double u3, double u4, double v1, double v2, double v3, double v4, boolean mirror){
-		tessellator.addVertexWithUV(x1, y1, z1, u1, v1);
-		tessellator.addVertexWithUV(x2, y2, z2, u2, v2);
-    	tessellator.addVertexWithUV(x3, y3, z3, u3, v3);
-		tessellator.addVertexWithUV(x4, y4, z4, u4, v4);
+    	GL11.glPushMatrix();
+		GL11.glBegin(GL11.GL_QUADS);
+		
+		GL11.glTexCoord2d(u1, v1);
+		GL11.glVertex3d(x1, y1, z1);
+		GL11.glTexCoord2d(u2, v2);
+		GL11.glVertex3d(x2, y2, z2);
+		GL11.glTexCoord2d(u3, v3);
+		GL11.glVertex3d(x3, y3, z3);
+		GL11.glTexCoord2d(u4, v4);
+		GL11.glVertex3d(x4, y4, z4);
     	
     	if(mirror){
-    		tessellator.addVertexWithUV(x4, y4, z4, u1, v1);
-    		tessellator.addVertexWithUV(x3, y3, z3, u2, v2);
-    		tessellator.addVertexWithUV(x2, y2, z2, u3, v3);
-    		tessellator.addVertexWithUV(x1, y1, z1, u4, v4);
+    		GL11.glTexCoord2d(u1, v1);
+    		GL11.glVertex3d(x4, y4, z4);
+    		GL11.glTexCoord2d(u2, v2);
+    		GL11.glVertex3d(x3, y3, z3);
+    		GL11.glTexCoord2d(u3, v3);
+    		GL11.glVertex3d(x2, y2, z2);
+    		GL11.glTexCoord2d(u4, v4);
+    		GL11.glVertex3d(x1, y1, z1);
     	}
+    	GL11.glEnd();
+		GL11.glPopMatrix();
     }
     
     /**
@@ -56,17 +75,27 @@ public class ModelRenderHelper{
      * Draws a triangle clockwise starting from top-left point with custom UV mapping.
      */
     public static  void renderTriangleUV(double x1, double x2, double x3, double y1, double y2, double y3, double z1, double z2, double z3, double u, double U, double v, double V, boolean mirror){
-    	tessellator.addVertexWithUV(x3, y3, z3, U, v);
-    	tessellator.addVertexWithUV(x1, y1, z1, u, v);
-		tessellator.addVertexWithUV(x2, y2, z2, u, V);
-    	tessellator.addVertexWithUV(x3, y3, z3, U, V);
+    	GL11.glPushMatrix();
+		GL11.glBegin(GL11.GL_TRIANGLES);
+		
+		GL11.glTexCoord2d(u, v);
+		GL11.glVertex3d(x1, y1, z1);
+		GL11.glTexCoord2d(u, V);
+		GL11.glVertex3d(x2, y2, z2);
+		GL11.glTexCoord2d(U, V);
+		GL11.glVertex3d(x3, y3, z3);
     	
     	if(mirror){
-    		tessellator.addVertexWithUV(x3, y3, z3, U, v);
-    		tessellator.addVertexWithUV(x3, y3, z3, U, V);
-    		tessellator.addVertexWithUV(x2, y2, z2, u, V);
-    		tessellator.addVertexWithUV(x1, y1, z1, u, v);
+    		GL11.glTexCoord2d(U, V);
+    		GL11.glVertex3d(x3, y3, z3);
+    		GL11.glTexCoord2d(u, V);
+    		GL11.glVertex3d(x2, y2, z2);
+    		GL11.glTexCoord2d(u, v);
+    		GL11.glVertex3d(x1, y1, z1);
     	}
+    	
+    	GL11.glEnd();
+		GL11.glPopMatrix();
     }
     
     /**

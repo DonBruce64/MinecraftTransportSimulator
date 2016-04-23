@@ -37,7 +37,7 @@ public class RenderItemPlane implements IItemRenderer{
 			GL11.glTranslatef(0, -0.4F, 0);
 		}
 		GL11.glScalef(0.25F, 0.25F, 0.25F);
-		model.renderPlane(Minecraft.getMinecraft().renderEngine, (byte) item.getItemDamage(), 0, 0, 0, 0);
+		model.renderPlane((byte) item.getItemDamage(), 0, 0, 0, 0);
 		GL11.glPopMatrix();
 	}
 }

@@ -2,7 +2,7 @@ package minecraftflightsimulator.planes.Trimotor;
 
 import org.lwjgl.opengl.GL11;
 
-import minecraftflightsimulator.modelrenders.ModelRenderHelper;
+import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.models.ModelPlane;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.client.Minecraft;
@@ -381,7 +381,7 @@ public class ModelTrimotor extends ModelPlane{
     }    
     
     @Override
-    public void renderPlane(TextureManager renderEngine, byte textureCode, float aileronAngle, float elevatorAngle, float rudderAngle, float flapAngle){
+    public void renderPlane(byte textureCode, float aileronAngle, float elevatorAngle, float rudderAngle, float flapAngle){
         //windows 12x6 
 
     	
@@ -390,7 +390,7 @@ public class ModelTrimotor extends ModelPlane{
     	
     	
     	
-    	renderEngine.bindTexture(sideTexture);
+    	RenderHelper.bindTexture(sideTexture);
     	frontFuselage.render(scale);
         leftRearFuselage.render(scale);
         rightRearFuselage.render(scale);
@@ -409,7 +409,7 @@ public class ModelTrimotor extends ModelPlane{
 
     	
 
-        renderEngine.bindTexture(rotatedSideTexture);
+        RenderHelper.bindTexture(rotatedSideTexture);
         bottomFuselage.render(scale);
         bottomRearFuselage.render(scale);
         bottomTailFuselage.render(scale);
@@ -421,7 +421,7 @@ public class ModelTrimotor extends ModelPlane{
         renderElevators(elevatorAngle);
         
         //MapColor.getMapColorForBlockColored(textureCode).colorValue;
-        renderEngine.bindTexture(detailTexture);
+        RenderHelper.bindTexture(detailTexture);
         int color = MapColor.getMapColorForBlockColored(colorcode/16).colorValue;
         if(colorcode/20==16)colorcode=0;
         ++colorcode;
@@ -446,8 +446,6 @@ public class ModelTrimotor extends ModelPlane{
         windowFrames.render(scale);
 
         
-    	renderEngine.bindTexture(windowTexture);
-    	ModelRenderHelper.startRender();
-		ModelRenderHelper.endRender();
+        RenderHelper.bindTexture(windowTexture);
     }
 }

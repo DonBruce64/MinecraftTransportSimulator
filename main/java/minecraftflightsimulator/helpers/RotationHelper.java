@@ -1,4 +1,4 @@
-package minecraftflightsimulator.other;
+package minecraftflightsimulator.helpers;
 
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;

@@ -1,10 +1,10 @@
 package minecraftflightsimulator.planes.MC172;
 
 import minecraftflightsimulator.entities.EntityPlane;
-import minecraftflightsimulator.modelrenders.ModelRenderHelper;
+import minecraftflightsimulator.helpers.InstrumentHelper;
+import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.modelrenders.RenderPlane;
 import minecraftflightsimulator.models.ModelPlane;
-import minecraftflightsimulator.other.InstrumentHelper;
 
 import org.lwjgl.opengl.GL11;
 
@@ -16,17 +16,15 @@ public class RenderMC172 extends RenderPlane {
 
 	@Override
 	protected void renderWindows(){
-		this.renderManager.renderEngine.bindTexture(ModelPlane.windowTexture);
-    	ModelRenderHelper.startRender();
-		ModelRenderHelper.renderQuad(-0.75, -0.75, 0.75, 0.75, 1.625, 0.625, 0.625, 1.625, 0.875, 1.75, 1.75, 0.875, true);
-		ModelRenderHelper.renderTriangle(-0.75, -0.75, -0.75, 1.625, 0.625, 0.625, 0.875, 0.875, 1.75, true);
-		ModelRenderHelper.renderTriangle(0.75, 0.75, 0.75, 1.625, 0.625, 0.625, 0.875, 0.875, 1.75, true);
-		ModelRenderHelper.renderSquare(0.85, 0.85, 0.625, 1.625, -0.25, 0.625, true);
-		ModelRenderHelper.renderSquare(-0.85, -0.85, 0.625, 1.625, -0.25, 0.625, true);
-		ModelRenderHelper.renderTriangle(-0.85, -0.85, -0.7, 1.6, 0.625, 0.625, -0.5, -0.5, -1.95, true);
-		ModelRenderHelper.renderTriangle(0.85, 0.85, 0.7, 1.6, 0.625, 0.625, -0.5, -0.5, -1.95, true);
-		ModelRenderHelper.renderQuad(-0.8, -0.525, 0.525, 0.8, 1.625, 0.625, 0.625, 1.625, -0.5, -2.1, -2.1, -0.5, true);
-		ModelRenderHelper.endRender();
+		RenderHelper.bindTexture(ModelPlane.windowTexture);
+		RenderHelper.renderQuad(-0.75, -0.75, 0.75, 0.75, 1.625, 0.625, 0.625, 1.625, 0.875, 1.75, 1.75, 0.875, true);
+		RenderHelper.renderTriangle(-0.75, -0.75, -0.75, 1.625, 0.625, 0.625, 0.875, 0.875, 1.75, true);
+		RenderHelper.renderTriangle(0.75, 0.75, 0.75, 1.625, 0.625, 0.625, 0.875, 0.875, 1.75, true);
+		RenderHelper.renderSquare(0.85, 0.85, 0.625, 1.625, -0.25, 0.625, true);
+		RenderHelper.renderSquare(-0.85, -0.85, 0.625, 1.625, -0.25, 0.625, true);
+		RenderHelper.renderTriangle(-0.85, -0.85, -0.7, 1.6, 0.625, 0.625, -0.5, -0.5, -1.95, true);
+		RenderHelper.renderTriangle(0.85, 0.85, 0.7, 1.6, 0.625, 0.625, -0.5, -0.5, -1.95, true);
+		RenderHelper.renderQuad(-0.8, -0.525, 0.525, 0.8, 1.625, 0.625, 0.625, 1.625, -0.5, -2.1, -2.1, -0.5, true);
 	}
 
 	@Override

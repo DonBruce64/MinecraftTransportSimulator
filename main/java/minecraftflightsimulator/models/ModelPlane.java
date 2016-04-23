@@ -20,7 +20,7 @@ public abstract class ModelPlane extends ModelBase{
     
     public static final ResourceLocation windowTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 
-    public abstract void renderPlane(TextureManager renderEngine, byte textureCode, float aileronAngle, float elevatorAngle, float rudderAngle, float flapAngle);
+    public abstract void renderPlane(byte textureCode, float aileronAngle, float elevatorAngle, float rudderAngle, float flapAngle);
     
     protected void renderAilerons(float aileronAngle){
     	leftAileron.rotateAngleX = -aileronAngle;

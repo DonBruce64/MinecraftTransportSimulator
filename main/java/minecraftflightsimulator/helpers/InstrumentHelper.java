@@ -1,4 +1,4 @@
-package minecraftflightsimulator.other;
+package minecraftflightsimulator.helpers;
 
 import java.awt.Color;
 
@@ -6,17 +6,15 @@ import minecraftflightsimulator.ClientProxy;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.EntityParent;
 import minecraftflightsimulator.entities.EntityPlane;
-import minecraftflightsimulator.modelrenders.ModelRenderHelper;
+import minecraftflightsimulator.other.ClientController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
 public class InstrumentHelper{
 	protected static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	private static final ResourceLocation instruments = new ResourceLocation("mfs", "textures/instruments.png");
 	public static InstrumentHelper instance = new InstrumentHelper();
 	
@@ -105,77 +103,59 @@ public class InstrumentHelper{
 	}
     
 	private static void drawUpperConsole(int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
-		ModelRenderHelper.startRender();
-    	textureManager.bindTexture(backplateTexture);
-    	ModelRenderHelper.renderQuadUV(width/4, width/4, 3*width/4, 3*width/4, height-64, height, height, height-64, 0, 0, 0, 0, 0, 3, 0, 1, false);
-    	ModelRenderHelper.endRender();
+		RenderHelper.bindTexture(backplateTexture);
+    	RenderHelper.renderQuadUV(width/4, width/4, 3*width/4, 3*width/4, height-64, height, height, height-64, 0, 0, 0, 0, 0, 3, 0, 1, false);
     	
-    	ModelRenderHelper.startRender();
-    	textureManager.bindTexture(moldingTexture);
-    	ModelRenderHelper.renderQuadUV(width/4, 3*width/4, 3*width/4, width/4, height-64, height-64, height-80, height-80, 0, 0, 0, 0, 0, 1, 0, 8, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.bindTexture(moldingTexture);
+    	RenderHelper.renderQuadUV(width/4, 3*width/4, 3*width/4, width/4, height-64, height-64, height-80, height-80, 0, 0, 0, 0, 0, 1, 0, 8, false);
     }
         
 	private static void drawLeftConsole(int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
-		ModelRenderHelper.startRender();
-    	textureManager.bindTexture(backplateTexture);
-    	ModelRenderHelper.renderQuadUVCustom(0, width/4, width/4, 0, height, height, height-64, height-32, 0, 0, 0, 0, 0, 1.5, 1.5, 0, 1, 1, 0, 0.5, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.bindTexture(backplateTexture);
+    	RenderHelper.renderQuadUVCustom(0, width/4, width/4, 0, height, height, height-64, height-32, 0, 0, 0, 0, 0, 1.5, 1.5, 0, 1, 1, 0, 0.5, false);
     	
-    	ModelRenderHelper.startRender();
-    	textureManager.bindTexture(moldingTexture);
-    	ModelRenderHelper.renderQuadUV(0, width/4, width/4, 0, height-32, height-64, height-80, height-48, 0, 0, 0, 0, 0, 1, 0, 4, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.bindTexture(moldingTexture);
+    	RenderHelper.renderQuadUV(0, width/4, width/4, 0, height-32, height-64, height-80, height-48, 0, 0, 0, 0, 0, 1, 0, 4, false);
     }
     
 	private static void drawRightConsole(int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
-		ModelRenderHelper.startRender();
-    	textureManager.bindTexture(backplateTexture);
-    	ModelRenderHelper.renderQuadUVCustom(3*width/4, width, width, 3*width/4, height, height, height-32, height-64, 0, 0, 0, 0, 0, 1.5, 1.5, 0, 1, 1, 0.5, 0, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.bindTexture(backplateTexture);
+    	RenderHelper.renderQuadUVCustom(3*width/4, width, width, 3*width/4, height, height, height-32, height-64, 0, 0, 0, 0, 0, 1.5, 1.5, 0, 1, 1, 0.5, 0, false);
     	
-    	ModelRenderHelper.startRender();
-    	textureManager.bindTexture(moldingTexture);
-    	ModelRenderHelper.renderQuadUV(3*width/4, width, width, 3*width/4, height-63, height-32, height-48, height-80, 0, 0, 0, 0, 0, 1, 0, 4, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.bindTexture(moldingTexture);
+    	RenderHelper.renderQuadUV(3*width/4, width, width, 3*width/4, height-63, height-32, height-48, height-80, 0, 0, 0, 0, 0, 1, 0, 4, false);
     }
     
 	private static void drawLowerConsole(int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
-    	ModelRenderHelper.startRender();
-    	textureManager.bindTexture(backplateTexture);
-    	ModelRenderHelper.renderQuadUV(0, 0, width, width, height-64, height, height, height-64, 0, 0, 0, 0, 0, 6, 0, 1, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.bindTexture(backplateTexture);
+    	RenderHelper.renderQuadUV(0, 0, width, width, height-64, height, height, height-64, 0, 0, 0, 0, 0, 6, 0, 1, false);
     }
     
 	private static void drawThrottle(EntityParent parent, int centerX, int centerY, boolean hud){
-		ModelRenderHelper.startRender();
-    	textureManager.bindTexture(instruments);
+    	RenderHelper.bindTexture(instruments);
 		if(!hud){
 			GL11.glPushMatrix();
     		GL11.glDisable(GL11.GL_LIGHTING);
-    		ModelRenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+5.25, centerY-5.25, 0, 0, 0.75, 0.875, 0.875, 1, false);
+    		RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+5.25, centerY-5.25, 0, 0, 0.75, 0.875, 0.875, 1, false);
     		
-    		ModelRenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY+1.75, centerY+1.75, -7-parent.throttle/10F, 0, 0, -7-parent.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
-    		ModelRenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY-1.75, centerY-1.75, -7-parent.throttle/10F, 0, 0, -7-parent.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
-        	ModelRenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY-1.75, centerY-1.75, -7-parent.throttle/10F, 0, 0, -7-parent.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
-        	ModelRenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY+1.75, centerY+1.75, -7-parent.throttle/10F, 0, 0, -7-parent.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
+    		RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY+1.75, centerY+1.75, -7-parent.throttle/10F, 0, 0, -7-parent.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
+    		RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY-1.75, centerY-1.75, -7-parent.throttle/10F, 0, 0, -7-parent.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
+        	RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY-1.75, centerY-1.75, -7-parent.throttle/10F, 0, 0, -7-parent.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
+        	RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY+1.75, centerY+1.75, -7-parent.throttle/10F, 0, 0, -7-parent.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
         	
-        	ModelRenderHelper.renderSquareUV(centerX-7, centerX+7, centerY+7, centerY-7, -7-parent.throttle/10F, -7-parent.throttle/10F, 0.75, 0.875, 0.875, 1, true);
+        	RenderHelper.renderSquareUV(centerX-7, centerX+7, centerY+7, centerY-7, -7-parent.throttle/10F, -7-parent.throttle/10F, 0.75, 0.875, 0.875, 1, true);
     		GL11.glEnable(GL11.GL_LIGHTING);
     		GL11.glPopMatrix();
     	}else{
-        	ModelRenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+0.175, centerY-10.5, 0, 0, 0.75, 0.875, 0.875, 1, false);
-        	ModelRenderHelper.renderSquareUV(centerX-1.75, centerX+1.75, centerY+7+parent.throttle/10, centerY-7, 0, 0, 0.640625, 0.734375, 0.890625, 0.984375, false);
-        	ModelRenderHelper.renderSquareUV(centerX-7, centerX+7, centerY+7+parent.throttle/10F, centerY-7+parent.throttle/10F, 0, 0, 0.75, 0.875, 0.875, 1, false);
+        	RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+0.175, centerY-10.5, 0, 0, 0.75, 0.875, 0.875, 1, false);
+        	RenderHelper.renderSquareUV(centerX-1.75, centerX+1.75, centerY+7+parent.throttle/10, centerY-7, 0, 0, 0.640625, 0.734375, 0.890625, 0.984375, false);
+        	RenderHelper.renderSquareUV(centerX-7, centerX+7, centerY+7+parent.throttle/10F, centerY-7+parent.throttle/10F, 0, 0, 0.75, 0.875, 0.875, 1, false);
     	}
-		ModelRenderHelper.endRender();    	
     }
     
 	private static void drawFlapIndicator(EntityPlane plane, int centerX, int centerY, boolean hud){
-		ModelRenderHelper.startRender();
-    	textureManager.bindTexture(instruments);
-    	ModelRenderHelper.renderSquareUV(centerX-11.25, centerX+11.25, centerY+15, centerY-15, 0, 0, 0.515625, 0.609375, 0.875, 1, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.bindTexture(instruments);
+    	RenderHelper.renderSquareUV(centerX-11.25, centerX+11.25, centerY+15, centerY-15, 0, 0, 0.515625, 0.609375, 0.875, 1, false);
     	
     	if(!hud){
 			GL11.glPushMatrix();
@@ -195,40 +175,35 @@ public class InstrumentHelper{
     	fontRenderer.drawString("35", centerX*2+8, centerY*2+10, Color.WHITE.getRGB());
     	GL11.glPopMatrix();
         
-    	ModelRenderHelper.startRender();
-    	textureManager.bindTexture(instruments);
+    	RenderHelper.bindTexture(instruments);
     	if(!hud){
-    		ModelRenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX-5.625, centerX-5.625, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
-    		ModelRenderHelper.renderQuadUV(centerX+1.875, centerX+1.875, centerX+1.875, centerX+1.875, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
-        	ModelRenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, 0, -7, -7, 0, 0.421875, 0.453125, 0.921875, 0.953125, false);
-        	ModelRenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
-        	ModelRenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-8+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-8+plane.flapAngle/25, -7, -7, -7, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
-    		ModelRenderHelper.endRender();
+    		RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX-5.625, centerX-5.625, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
+    		RenderHelper.renderQuadUV(centerX+1.875, centerX+1.875, centerX+1.875, centerX+1.875, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
+        	RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, 0, -7, -7, 0, 0.421875, 0.453125, 0.921875, 0.953125, false);
+        	RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
+        	RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-8+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-8+plane.flapAngle/25, -7, -7, -7, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
     		GL11.glEnable(GL11.GL_LIGHTING);
     		GL11.glPopMatrix();
     	}else{
-    		ModelRenderHelper.renderSquareUV(centerX-5.625, centerX+1.875, centerY-0.5+plane.flapAngle/25, centerY-8+plane.flapAngle/25, 0, 0, 0.421875, 0.453125, 0.921875, 0.953125, false);
-    		ModelRenderHelper.endRender();
+    		RenderHelper.renderSquareUV(centerX-5.625, centerX+1.875, centerY-0.5+plane.flapAngle/25, centerY-8+plane.flapAngle/25, 0, 0, 0.421875, 0.453125, 0.921875, 0.953125, false);
     	}
     }
     
 	private static void drawParkingBrake(EntityParent parent, int centerX, int centerY, boolean hud){
-    	ModelRenderHelper.startRender();
-    	textureManager.bindTexture(instruments);
+    	RenderHelper.bindTexture(instruments);
     	
     	if(!hud){
 			GL11.glPushMatrix();
     		GL11.glDisable(GL11.GL_LIGHTING);
-    		ModelRenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+5.25, centerY-5.25, 0, 0, 0.75, 0.875, 0.875, 1, false);
+    		RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+5.25, centerY-5.25, 0, 0, 0.75, 0.875, 0.875, 1, false);
         	
     		if(parent.parkingBrakeOn){        		
-        		ModelRenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY+1.75, centerY+1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
-        		ModelRenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY-1.75, centerY-1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
-            	ModelRenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY-1.75, centerY-1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
-            	ModelRenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY+1.75, centerY+1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
+        		RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY+1.75, centerY+1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
+        		RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY-1.75, centerY-1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
+            	RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY-1.75, centerY-1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
+            	RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY+1.75, centerY+1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
         		
-        		ModelRenderHelper.renderQuadUV(centerX-5, centerX+5, centerX+5, centerX-5, centerY+25, centerY+25, centerY-10, centerY-10, -20, -20, -20, -20, 0.2578125, 0.3671875, 0.921875, 0.953125, false);
-    	        ModelRenderHelper.endRender();
+        		RenderHelper.renderQuadUV(centerX-5, centerX+5, centerX+5, centerX-5, centerY+25, centerY+25, centerY-10, centerY-10, -20, -20, -20, -20, 0.2578125, 0.3671875, 0.921875, 0.953125, false);
     	        GL11.glTranslatef(0, 0, -20.01F);
     	        
     	        GL11.glPushMatrix();
@@ -236,72 +211,61 @@ public class InstrumentHelper{
     	    	drawScaledString("BRAKE", centerX*2-30, centerY*2-4, 0.5F);
     	    	GL11.glPopMatrix();
         	}else{
-        		ModelRenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY+1.75, centerY+1.75, -2, 0, 0, -2, 0.640625, 0.734375, 0.890625, 0.984375, false);
-        		ModelRenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY-1.75, centerY-1.75, -2, 0, 0, -2, 0.640625, 0.734375, 0.890625, 0.984375, false);
-            	ModelRenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY-1.75, centerY-1.75, -2, 0, 0, -2, 0.640625, 0.734375, 0.890625, 0.984375, false);
-            	ModelRenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY+1.75, centerY+1.75, -2, 0, 0, -2, 0.640625, 0.734375, 0.890625, 0.984375, false);
+        		RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY+1.75, centerY+1.75, -2, 0, 0, -2, 0.640625, 0.734375, 0.890625, 0.984375, false);
+        		RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY-1.75, centerY-1.75, -2, 0, 0, -2, 0.640625, 0.734375, 0.890625, 0.984375, false);
+            	RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY-1.75, centerY-1.75, -2, 0, 0, -2, 0.640625, 0.734375, 0.890625, 0.984375, false);
+            	RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY+1.75, centerY+1.75, -2, 0, 0, -2, 0.640625, 0.734375, 0.890625, 0.984375, false);
         		
-    	        ModelRenderHelper.renderSquareUV(centerX-22.5, centerX+12.5, centerY+5, centerY-5, -2, -2, 0.2578125, 0.3671875, 0.921875, 0.953125, false);    		
-    	        ModelRenderHelper.endRender();
+    	        RenderHelper.renderSquareUV(centerX-22.5, centerX+12.5, centerY+5, centerY-5, -2, -2, 0.2578125, 0.3671875, 0.921875, 0.953125, false);    		
     	        GL11.glTranslatef(0, 0, -2.01F);
     	        drawScaledString("BRAKE", centerX*2-25, centerY*2-4, 0.5F);
         	}
     		GL11.glEnable(GL11.GL_LIGHTING);
     		GL11.glPopMatrix();
     	}else{
-    		ModelRenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+0.175, centerY-10.5, 0, 0, 0.75, 0.875, 0.875, 1, true);
+    		RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+0.175, centerY-10.5, 0, 0, 0.75, 0.875, 0.875, 1, true);
         	if(parent.parkingBrakeOn){
-        		ModelRenderHelper.renderSquareUV(centerX-1.75, centerX+1.75, centerY+15, centerY-7, 0, 0, 0.640625, 0.734375, 0.890625, 0.984375, false);
-        		ModelRenderHelper.renderQuadUV(centerX-5, centerX+5, centerX+5, centerX-5, centerY+35, centerY+35, centerY, centerY, 0, 0, 0, 0, 0.2578125, 0.3671875, 0.921875, 0.953125, false);
-    	        ModelRenderHelper.endRender();
+        		RenderHelper.renderSquareUV(centerX-1.75, centerX+1.75, centerY+15, centerY-7, 0, 0, 0.640625, 0.734375, 0.890625, 0.984375, false);
+        		RenderHelper.renderQuadUV(centerX-5, centerX+5, centerX+5, centerX-5, centerY+35, centerY+35, centerY, centerY, 0, 0, 0, 0, 0.2578125, 0.3671875, 0.921875, 0.953125, false);
     	        
     	        GL11.glPushMatrix();
     	    	rotationHelper(centerX, centerY, -90);
     	        drawScaledString("BRAKE", centerX*2-50, centerY*2-4, 0.5F);
     	    	GL11.glPopMatrix();
         	}else{
-        		ModelRenderHelper.renderSquareUV(centerX-1.75, centerX+1.75, centerY+5, centerY-7, 0, 0, 0.640625, 0.734375, 0.890625, 0.984375, false);
-    	        ModelRenderHelper.renderSquareUV(centerX-22.5, centerX+12.5, centerY+5, centerY-5, 0, 0, 0.2578125, 0.3671875, 0.921875, 0.953125, false);    		
-    	        ModelRenderHelper.endRender();
+        		RenderHelper.renderSquareUV(centerX-1.75, centerX+1.75, centerY+5, centerY-7, 0, 0, 0.640625, 0.734375, 0.890625, 0.984375, false);
+    	        RenderHelper.renderSquareUV(centerX-22.5, centerX+12.5, centerY+5, centerY-5, 0, 0, 0.2578125, 0.3671875, 0.921875, 0.953125, false);    		
     	        drawScaledString("BRAKE", centerX*2-25, centerY*2-4, 0.5F);
         	}
     	}
     }
 	
 	private static void drawGaugeBase(int centerX, int centerY){
-    	ModelRenderHelper.startRender();
-    	textureManager.bindTexture(instruments);
-    	ModelRenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.75, 1, 0, 0.25, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.bindTexture(instruments);
+    	RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.75, 1, 0, 0.25, false);
     }
     
 	private static void drawAttitudeIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
 		GL11.glPushMatrix();
 		if(!hud){GL11.glDisable(GL11.GL_LIGHTING);}
-		textureManager.bindTexture(instruments);
+		RenderHelper.bindTexture(instruments);
 		
 		//0.00390625 is 1 degree of pitch
 		rotationHelper(centerX, centerY, -parent.rotationRoll);
-		ModelRenderHelper.startRender();
 		if(parent.rotationPitch >= 24){
-			ModelRenderHelper.renderQuadUV(centerX-20, centerX+20, centerX+20, centerX-20, centerY+20, centerY+20, centerY-20, centerY-20, 0, 0, 0, 0, 0.25, 0.5625, 0.53125, 0.84375, false);
+			RenderHelper.renderQuadUV(centerX-20, centerX+20, centerX+20, centerX-20, centerY+20, centerY+20, centerY-20, centerY-20, 0, 0, 0, 0, 0.25, 0.5625, 0.53125, 0.84375, false);
 		}else if(parent.rotationPitch <= -24){
-			ModelRenderHelper.renderQuadUV(centerX-20, centerX+20, centerX+20, centerX-20, centerY+20, centerY+20, centerY-20, centerY-20, 0, 0, 0, 0, 0.4375, 0.75, 0.53125, 0.84375, false);
+			RenderHelper.renderQuadUV(centerX-20, centerX+20, centerX+20, centerX-20, centerY+20, centerY+20, centerY-20, centerY-20, 0, 0, 0, 0, 0.4375, 0.75, 0.53125, 0.84375, false);
 		}else{
-			ModelRenderHelper.renderQuadUV(centerX-20, centerX+20, centerX+20, centerX-20, centerY+20, centerY+20, centerY-20, centerY-20, 0, 0, 0, 0, 0.34375 - parent.rotationPitch*0.00390625, 0.65625 - 0.00390625*parent.rotationPitch, 0.53125,  0.84375, false);
+			RenderHelper.renderQuadUV(centerX-20, centerX+20, centerX+20, centerX-20, centerY+20, centerY+20, centerY-20, centerY-20, 0, 0, 0, 0, 0.34375 - parent.rotationPitch*0.00390625, 0.65625 - 0.00390625*parent.rotationPitch, 0.53125,  0.84375, false);
 		}
-		ModelRenderHelper.endRender();
     	
 		if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-    	ModelRenderHelper.startRender();
-    	ModelRenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.25, 0.5, 0, 0.25, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.25, 0.5, 0, 0.25, false);
     	
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
     	rotationHelper(centerX, centerY, parent.rotationRoll);
-		ModelRenderHelper.startRender();
-    	ModelRenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.5, 0.75, 0, 0.25, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.5, 0.75, 0, 0.25, false);
     	
     	if(!hud){GL11.glEnable(GL11.GL_LIGHTING);}
 		GL11.glPopMatrix();
@@ -337,10 +301,8 @@ public class InstrumentHelper{
     		GL11.glTranslatef(0, 0, -0.1F);
     	}
     	
-    	ModelRenderHelper.startRender();
-    	textureManager.bindTexture(instruments);
-    	ModelRenderHelper.renderSquareUV(centerX-20, centerX+20, centerY+20, centerY-20, 0, 0, 0.75, 1, 0.25, 0.5, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.bindTexture(instruments);
+    	RenderHelper.renderSquareUV(centerX-20, centerX+20, centerY+20, centerY-20, 0, 0, 0.75, 1, 0.25, 0.5, false);
     	
     	drawScaledString("HEADING", centerX*2-18, centerY*2+14, 0.5F);
     	
@@ -407,7 +369,7 @@ public class InstrumentHelper{
     }
     
 	private static void drawTurnCoordinator(EntityParent parent, int centerX, int centerY, boolean hud){
-		textureManager.bindTexture(instruments);
+		RenderHelper.bindTexture(instruments);
 		drawGaugeBase(centerX, centerY);
 		GL11.glPushMatrix();
     	if(!hud){
@@ -418,22 +380,16 @@ public class InstrumentHelper{
     	drawDialIncrements(centerX, centerY, -90, 90, 20, 5, 2);
     	drawDialIncrements(centerX, centerY, -115, 115, 20, 5, 2);
     	
-    	ModelRenderHelper.startRender();
-    	ModelRenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+18.75, centerY+6.25, 0, 0, 0.75, 1, 0.5625, 0.625, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+18.75, centerY+6.25, 0, 0, 0.75, 1, 0.5625, 0.625, false);
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
     	
     	float turn = Math.max(Math.min(((parent.rotationRoll - parent.prevRotationRoll)/10 + parent.rotationYaw - parent.prevRotationYaw)/0.15F*25F, 50), -50);
     	rotationHelper(centerX, centerY, turn);
-    	ModelRenderHelper.startRender();
-    	ModelRenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+6.25, centerY-6.25, 0, 0, 0.75, 1, 0.5, 0.5625, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+6.25, centerY-6.25, 0, 0, 0.75, 1, 0.5, 0.5625, false);
     	rotationHelper(centerX, centerY, -turn);
     	
-    	ModelRenderHelper.startRender();
     	double slip = parent.sideVec.dotProduct(parent.velocityVec);
-    	ModelRenderHelper.renderSquareUV(centerX-2.5 + 20*slip, centerX+2.5 + 20*slip, centerY+15 - Math.abs(slip), centerY+10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.renderSquareUV(centerX-2.5 + 20*slip, centerX+2.5 + 20*slip, centerY+15 - Math.abs(slip), centerY+10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
     	if(!hud){GL11.glTranslatef(0, 0, 0.1F);}
 
     	drawScaledString("L", centerX*2-34, centerY*2+20, 0.5F);
@@ -447,7 +403,7 @@ public class InstrumentHelper{
 	}
 	
 	private static void drawTurnAndSlipIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
-		textureManager.bindTexture(instruments);
+		RenderHelper.bindTexture(instruments);
 		drawGaugeBase(centerX, centerY);
 		GL11.glPushMatrix();
     	if(!hud){
@@ -455,9 +411,7 @@ public class InstrumentHelper{
     		GL11.glTranslatef(0, 0, -0.1F);
     	}
     	
-    	ModelRenderHelper.startRender();
-    	ModelRenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+18.75, centerY+6.25, 0, 0, 0.75, 1, 0.5625, 0.625, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+18.75, centerY+6.25, 0, 0, 0.75, 1, 0.5625, 0.625, false);
     	
     	GL11.glDisable(GL11.GL_TEXTURE_2D);
     	GL11.glColor3f(1, 1, 1);
@@ -524,10 +478,8 @@ public class InstrumentHelper{
     	GL11.glEnable(GL11.GL_TEXTURE_2D);
     	
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-    	ModelRenderHelper.startRender();
     	double slip = parent.sideVec.dotProduct(parent.velocityVec);
-    	ModelRenderHelper.renderSquareUV(centerX-2.5 + 20*slip, centerX+2.5 + 20*slip, centerY+15 - Math.abs(slip), centerY+10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
-    	ModelRenderHelper.endRender();
+    	RenderHelper.renderSquareUV(centerX-2.5 + 20*slip, centerX+2.5 + 20*slip, centerY+15 - Math.abs(slip), centerY+10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
     	if(!hud){GL11.glTranslatef(0, 0, 0.1F);}
 
     	drawScaledString("L", centerX*2-30, centerY*2-30, 0.5F);
@@ -765,12 +717,10 @@ public class InstrumentHelper{
     private static void drawLongPointer(int centerX, int centerY, float angle, int length, int width){
     	GL11.glPushMatrix();
     	GL11.glColor3f(1,1,1);
-    	ModelRenderHelper.startRender();
-    	textureManager.bindTexture(instruments);
-    	ModelRenderHelper.renderSquareUV(centerX-width/2, centerX+width/2, centerY+length/2, centerY-length/2, 0, 0, 0.09375, 0.15625, 0.5, 1, false);
-        rotationHelper(centerX, centerY, angle);
-        GL11.glTranslatef(0, -length*0.25F, 0);
-        ModelRenderHelper.endRender();
+    	RenderHelper.bindTexture(instruments);
+    	rotationHelper(centerX, centerY, angle);
+    	GL11.glTranslatef(0, -length*0.25F, 0);
+    	RenderHelper.renderSquareUV(centerX-width/2, centerX+width/2, centerY+length/2, centerY-length/2, 0, 0, 0.09375, 0.15625, 0.5, 1, false);
         GL11.glPopMatrix();
     }
     
@@ -780,12 +730,10 @@ public class InstrumentHelper{
     private static void drawShortPointer(int centerX, int centerY, float angle, int length, int width){
         GL11.glPushMatrix();
         GL11.glColor3f(1,1,1);
-        ModelRenderHelper.startRender();
-        textureManager.bindTexture(instruments);
-        ModelRenderHelper.renderSquareUV(centerX-width/2, centerX+width/2, centerY+length/2, centerY-length/2, 0, 0, 0.03125, 0.21875, 0, 0.5, true);
+        RenderHelper.bindTexture(instruments);
         rotationHelper(centerX, centerY, angle);
         GL11.glTranslatef(0, -length*0.0625F, 0);
-        ModelRenderHelper.endRender();
+        RenderHelper.renderSquareUV(centerX-width/2, centerX+width/2, centerY+length/2, centerY-length/2, 0, 0, 0.03125, 0.21875, 0, 0.5, true);
         GL11.glPopMatrix();
     }
     
