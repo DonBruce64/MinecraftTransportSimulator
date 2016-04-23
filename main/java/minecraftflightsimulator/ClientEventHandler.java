@@ -17,14 +17,13 @@ import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 //This class handles rendering/camera edits that need to happen when riding planes.
 public class ClientEventHandler{
 	public static ClientEventHandler instance = new ClientEventHandler();
-	private float offset;
 	
 	@SubscribeEvent
 	public void on(TickEvent.ClientTickEvent event){
 		if(Minecraft.getMinecraft().theWorld != null && event.phase.equals(Phase.END)){
-			for(int i=0; i < Minecraft.getMinecraft().theWorld.loadedEntityList.size(); ++i){
-				if(Minecraft.getMinecraft().theWorld.loadedEntityList.get(i) instanceof EntityParent){
-					((EntityParent) Minecraft.getMinecraft().theWorld.loadedEntityList.get(i)).moveChildren();
+			for(Object entity : Minecraft.getMinecraft().theWorld.getLoadedEntityList()){
+				if(entity instanceof EntityParent){
+					((EntityParent) entity).moveChildren();
 				}
 			}
 		}
@@ -44,11 +43,6 @@ public class ClientEventHandler{
 			EntityParent parent = ((EntitySeat) event.entityPlayer.ridingEntity).parent;
 			if(parent!=null){
 				GL11.glPushMatrix();
-				offset = event.entityPlayer.yOffset;
-				if(offset!=0){
-					event.entityPlayer.yOffset=0.6F;
-					GL11.glTranslatef(0, -1.02F, 0);
-				}
 				GL11.glRotated(parent.rotationPitch, Math.cos(parent.rotationYaw  * 0.017453292F), 0, Math.sin(parent.rotationYaw * 0.017453292F));
 				GL11.glRotated(parent.rotationRoll, -Math.sin(parent.rotationYaw  * 0.017453292F), 0, Math.cos(parent.rotationYaw * 0.017453292F));
 			}
@@ -59,7 +53,6 @@ public class ClientEventHandler{
 	public void on(RenderPlayerEvent.Post event){
 		if(event.entityPlayer.ridingEntity instanceof EntitySeat){
 			if(((EntitySeat) event.entityPlayer.ridingEntity).parent!=null){
-				event.entityPlayer.yOffset=offset;
 				GL11.glPopMatrix();
 			}
 		}

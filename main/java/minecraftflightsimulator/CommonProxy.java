@@ -298,7 +298,7 @@ public class CommonProxy{
 	}
 	
 	
-	public void updateSittingPlayer(EntitySeat seat){}
+	public void updateSeatedPlayer(EntitySeat seat){}
 	public void checkKeyboard(EntitySeat seat){}
 	public void changeCameraRoll(float roll){}
 	public void changeCameraZoom(int zoom){}

@@ -9,7 +9,7 @@ import java.util.Map;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.containers.ContainerParent;
 import minecraftflightsimulator.containers.GUIParent;
-import minecraftflightsimulator.other.RotationHelper;
+import minecraftflightsimulator.helpers.RotationHelper;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;

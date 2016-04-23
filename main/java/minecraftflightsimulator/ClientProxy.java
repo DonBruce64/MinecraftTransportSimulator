@@ -94,17 +94,29 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	@Override
-	public void updateSittingPlayer(EntitySeat part){
-		((EntityLivingBase) part.riddenByEntity).renderYawOffset += part.parent.rotationYaw - part.parent.prevRotationYaw;
+	public void updateSeatedPlayer(EntitySeat part){
+		EntityLivingBase rider = ((EntityLivingBase) part.riddenByEntity);
+		rider.renderYawOffset += part.parent.rotationYaw - part.parent.prevRotationYaw;
 		if(lockedView){
-			part.riddenByEntity.rotationYaw += part.parent.rotationYaw - part.parent.prevRotationYaw;
-			part.riddenByEntity.rotationPitch += part.parent.rotationPitch - part.parent.prevRotationPitch;
+			rider.rotationYaw += part.parent.rotationYaw - part.parent.prevRotationYaw;
+			
+			if(part.parent.rotationPitch > 90 || part.parent.rotationPitch < -90){
+				rider.rotationPitch -= part.parent.rotationPitch - part.parent.prevRotationPitch;
+			}else{
+				rider.rotationPitch += part.parent.rotationPitch - part.parent.prevRotationPitch;
+			}
+			
+			if((part.parent.rotationPitch > 90 || part.parent.rotationPitch < -90) ^ part.parent.prevRotationPitch > 90 || part.parent.prevRotationPitch < -90){
+				rider.rotationYaw+=180;
+			}
 		}
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView==0 && part.riddenByEntity.equals(Minecraft.getMinecraft().thePlayer)){
 			this.changeCameraRoll(part.parent.rotationRoll);
 		}else{
 			this.changeCameraRoll(0);
 		}
+		
+		
 	}
 	
 	@Override

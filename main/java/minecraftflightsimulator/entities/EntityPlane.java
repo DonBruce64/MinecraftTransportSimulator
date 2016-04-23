@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.other.RotationHelper;
+import minecraftflightsimulator.helpers.RotationHelper;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
 import minecraftflightsimulator.packets.control.RudderPacket;
@@ -185,7 +185,7 @@ public abstract class EntityPlane extends EntityParent{
 		}
 	}
 	
-	private void getBasicProperties(){
+	private void getBasicProperties(){		
 		currentMass = (float) (mass + fuel/50);
 		for(EntityChild child : getChildren()){;
 			if(child.riddenByEntity != null){
@@ -549,7 +549,7 @@ public abstract class EntityPlane extends EntityParent{
 		prevRotationPitch = rotationPitch;
 		prevRotationYaw = rotationYaw;
 		rotationRoll += motionRoll;
-		rotationPitch += motionPitch;
+		rotationPitch = (motionPitch + rotationPitch)%360;
 		rotationYaw += motionYaw;
 		setPosition(posX + motionX*MFS.planeSpeedFactor, posY + motionY*MFS.planeSpeedFactor, posZ + motionZ*MFS.planeSpeedFactor);
 	}
