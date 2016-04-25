@@ -11,7 +11,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public abstract class EntityBase extends Entity{
 	public boolean linked;
-	public String UUID;
+	public String UUID = "";
 	
 	public EntityBase(World world) {
 		super(world);
@@ -19,7 +19,7 @@ public abstract class EntityBase extends Entity{
 	}
 	
 	public boolean hasUUID(){
-		if(this.UUID==null){
+		if(this.UUID.equals("")){
 			if(this.worldObj.isRemote){
 				if(this.ticksExisted==1 || this.ticksExisted%10==0){
 					this.requestDataFromServer();
@@ -39,6 +39,19 @@ public abstract class EntityBase extends Entity{
     	//super.setPositionAndRotation2(posX, posY, posZ, yaw, pitch, p_70056_9_);
     }
 	
+	public void requestDataFromServer(){
+		MFS.MFSNet.sendToServer(new ClientRequestDataPacket(this.getEntityId()));
+	}
+	
+	public void sendDataToClient(){
+		NBTTagCompound tagCompound = new NBTTagCompound();
+		this.writeToNBT(tagCompound);
+		MFS.MFSNet.sendToAll(new ServerSendDataPacket(this.getEntityId(), tagCompound));
+	}
+	
+	public boolean canBeCollidedWith(){return true;}
+	public float getShadowSize(){return 0.0F;}
+	
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
@@ -50,21 +63,6 @@ public abstract class EntityBase extends Entity{
 		super.writeToNBT(tagCompound);
 		tagCompound.setString("UUID", this.UUID);
 	}
-	
-	//Packet methods
-	public void requestDataFromServer(){
-		MFS.MFSNet.sendToServer(new ClientRequestDataPacket(this.getEntityId()));
-	}
-	
-	public void sendDataToClient(){
-		NBTTagCompound tagCompound = new NBTTagCompound();
-		this.writeToNBT(tagCompound);
-		MFS.MFSNet.sendToAll(new ServerSendDataPacket(this.getEntityId(), tagCompound));
-	}
-	
-	//Basic overridden methods.
-	public boolean canBeCollidedWith(){return true;}
-	public float getShadowSize(){return 0.0F;}
 	
 	//Junk methods, forced to pull in.
 	protected void readEntityFromNBT(NBTTagCompound p_70037_1_){}
