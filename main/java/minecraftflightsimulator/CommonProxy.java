@@ -34,6 +34,10 @@ import minecraftflightsimulator.packets.general.ServerSendDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
 import minecraftflightsimulator.planes.MC172.ItemMC172;
+import minecraftflightsimulator.planes.Otter.EntityOtter;
+import minecraftflightsimulator.planes.Otter.ItemOtter;
+import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
+import minecraftflightsimulator.planes.PZLP11.ItemPZLP11;
 import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.planes.Trimotor.ItemTrimotor;
 import minecraftflightsimulator.sounds.EngineSound;
@@ -52,19 +56,21 @@ import cpw.mods.fml.relauncher.Side;
 
 
 public class CommonProxy{
-	public static Item planeMC172 = new ItemMC172();
-	public static Item planeTrimotor = new ItemTrimotor();
+	public static final Item planeMC172 = new ItemMC172();
+	public static final Item planeTrimotor = new ItemTrimotor();
+	public static final Item planeOtter = new ItemOtter();
+	public static final Item planePLZP11 = new ItemPZLP11();
 	
-	public static Item seat = new ItemSeat();
-	public static Item wheelSmall = new ItemWheelSmall();
-	public static Item wheelLarge = new ItemWheelLarge();
-	public static Item propeller = new ItemPropeller();
-	public static Item engineSmall = new ItemEngineSmall();
-	public static Item engineLarge = new ItemEngineLarge();
-	public static Item pointerShort = new ItemPointerShort();
-	public static Item pointerLong = new ItemPointerLong();
-	public static Item flightInstrumentBase = new ItemFlightInstrumentBase();
-	public static Item flightInstrument = new ItemFlightInstrument();
+	public static final Item seat = new ItemSeat();
+	public static final Item wheelSmall = new ItemWheelSmall();
+	public static final Item wheelLarge = new ItemWheelLarge();
+	public static final Item propeller = new ItemPropeller();
+	public static final Item engineSmall = new ItemEngineSmall();
+	public static final Item engineLarge = new ItemEngineLarge();
+	public static final Item pointerShort = new ItemPointerShort();
+	public static final Item pointerLong = new ItemPointerLong();
+	public static final Item flightInstrumentBase = new ItemFlightInstrumentBase();
+	public static final Item flightInstrument = new ItemFlightInstrument();
 	
 	public void init(){
 		initEntites();
@@ -76,17 +82,24 @@ public class CommonProxy{
 	}
 	
 	private void initEntites(){
-		int entityNumber = 0;	
-		EntityRegistry.registerModEntity(EntityMC172.class, "MC172", ++entityNumber, "mfs", 80, 5, false);
-		EntityRegistry.registerModEntity(EntityTrimotor.class, "Trimotor", ++entityNumber, "mfs", 80, 5, false);
-		EntityRegistry.registerModEntity(EntityCore.class, "Core", ++entityNumber, "mfs", 80, 5, false);
-		EntityRegistry.registerModEntity(EntitySeat.class, "Seat", ++entityNumber, "mfs", 80, 5, false);
-		EntityRegistry.registerModEntity(EntityPlaneChest.class, "Chest", ++entityNumber, "mfs", 80, 5, false);
-		EntityRegistry.registerModEntity(EntityWheelSmall.class, "SmallWheel", ++entityNumber, "mfs", 80, 5, false);
-		EntityRegistry.registerModEntity(EntityWheelLarge.class, "LargeWheel", ++entityNumber, "mfs", 80, 5, false);
-		EntityRegistry.registerModEntity(EntityPropeller.class, "Propeller", ++entityNumber, "mfs", 80, 5, false);
-		EntityRegistry.registerModEntity(EntityEngineSmall.class, "SmallEngine", ++entityNumber, "mfs", 80, 5, false);
-		EntityRegistry.registerModEntity(EntityEngineLarge.class, "LargeEngine", ++entityNumber, "mfs", 80, 5, false);
+		int entityNumber = 0;
+		registerEntity(EntityMC172.class, ++entityNumber);
+		registerEntity(EntityTrimotor.class, ++entityNumber);
+		registerEntity(EntityOtter.class, ++entityNumber);
+		registerEntity(EntityPZLP11.class, ++entityNumber);
+		
+		registerEntity(EntityCore.class, ++entityNumber);
+		registerEntity(EntitySeat.class, ++entityNumber);
+		registerEntity(EntityPlaneChest.class, ++entityNumber);
+		registerEntity(EntityWheelSmall.class, ++entityNumber);
+		registerEntity(EntityWheelLarge.class, ++entityNumber);
+		registerEntity(EntityPropeller.class, ++entityNumber);
+		registerEntity(EntityEngineSmall.class, ++entityNumber);
+		registerEntity(EntityEngineLarge.class, ++entityNumber);
+	}
+	
+	private void registerEntity(Class entityClass, int entityNumber){
+		EntityRegistry.registerModEntity(entityClass, entityClass.getName().substring(7), entityNumber, MFS.MODID, 80, 5, false);
 	}
 	
 	private void initPackets(){
@@ -114,19 +127,25 @@ public class CommonProxy{
 	}
 	
 	private void initItems(){
+		registerItem(planeMC172);
+		//registerItem(planeTrimotor);
+		registerItem(planeOtter);
+		registerItem(planePLZP11);
 		
-		GameRegistry.registerItem(planeMC172, planeMC172.getUnlocalizedName().substring(5));
-		//GameRegistry.registerItem(planeTrimotor, planeTrimotor.getUnlocalizedName().substring(5));
-		GameRegistry.registerItem(seat, seat.getUnlocalizedName().substring(5));
-		GameRegistry.registerItem(wheelSmall, wheelSmall.getUnlocalizedName().substring(5));
-		GameRegistry.registerItem(wheelLarge, wheelLarge.getUnlocalizedName().substring(5));
-		GameRegistry.registerItem(propeller, propeller.getUnlocalizedName().substring(5));
-		GameRegistry.registerItem(engineSmall, engineSmall.getUnlocalizedName().substring(5));
-		GameRegistry.registerItem(engineLarge, engineLarge.getUnlocalizedName().substring(5));
-		GameRegistry.registerItem(pointerShort, pointerShort.getUnlocalizedName().substring(5));
-		GameRegistry.registerItem(pointerLong, pointerLong.getUnlocalizedName().substring(5));
-		GameRegistry.registerItem(flightInstrumentBase, flightInstrumentBase.getUnlocalizedName().substring(5));
-		GameRegistry.registerItem(flightInstrument, flightInstrument.getUnlocalizedName().substring(5));
+		registerItem(seat);
+		registerItem(wheelSmall);
+		registerItem(wheelLarge);
+		registerItem(propeller);
+		registerItem(engineSmall);
+		registerItem(engineLarge);
+		registerItem(pointerShort);
+		registerItem(pointerLong);
+		registerItem(flightInstrumentBase);
+		registerItem(flightInstrument);
+	}
+	
+	private void registerItem(Item item){
+		GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
 	}
 	
 	private void initRecipies(){

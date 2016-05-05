@@ -20,6 +20,10 @@ import minecraftflightsimulator.modelrenders.RenderSeat;
 import minecraftflightsimulator.modelrenders.RenderWheel;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
 import minecraftflightsimulator.planes.MC172.RenderMC172;
+import minecraftflightsimulator.planes.Otter.EntityOtter;
+import minecraftflightsimulator.planes.Otter.RenderOtter;
+import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
+import minecraftflightsimulator.planes.PZLP11.RenderPZLP11;
 import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.planes.Trimotor.RenderTrimotor;
 import minecraftflightsimulator.sounds.EngineSound;
@@ -47,6 +51,9 @@ public class ClientProxy extends CommonProxy{
 	private void initEntityRenders(){
 		RenderingRegistry.registerEntityRenderingHandler(EntityMC172.class, new RenderMC172());
 		RenderingRegistry.registerEntityRenderingHandler(EntityTrimotor.class, new RenderTrimotor());
+		RenderingRegistry.registerEntityRenderingHandler(EntityOtter.class, new RenderOtter());
+		RenderingRegistry.registerEntityRenderingHandler(EntityPZLP11.class, new RenderPZLP11());
+		
 		RenderingRegistry.registerEntityRenderingHandler(EntitySeat.class, new RenderSeat());
 		RenderingRegistry.registerEntityRenderingHandler(EntityPlaneChest.class, new RenderPlaneChest());
 		RenderingRegistry.registerEntityRenderingHandler(EntityWheelSmall.class, new RenderWheel());
