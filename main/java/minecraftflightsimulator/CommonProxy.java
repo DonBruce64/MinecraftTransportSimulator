@@ -72,6 +72,9 @@ public class CommonProxy{
 	public static final Item flightInstrumentBase = new ItemFlightInstrumentBase();
 	public static final Item flightInstrument = new ItemFlightInstrument();
 	
+	private static int entityNumber = 0;
+	private static int packetNumber = 0;
+	
 	public void init(){
 		initEntites();
 		initPackets();
@@ -82,28 +85,26 @@ public class CommonProxy{
 	}
 	
 	private void initEntites(){
-		int entityNumber = 0;
-		registerEntity(EntityMC172.class, ++entityNumber);
-		registerEntity(EntityTrimotor.class, ++entityNumber);
-		registerEntity(EntityOtter.class, ++entityNumber);
-		registerEntity(EntityPZLP11.class, ++entityNumber);
+		registerEntity(EntityMC172.class);
+		registerEntity(EntityTrimotor.class);
+		registerEntity(EntityOtter.class);
+		registerEntity(EntityPZLP11.class);
 		
-		registerEntity(EntityCore.class, ++entityNumber);
-		registerEntity(EntitySeat.class, ++entityNumber);
-		registerEntity(EntityPlaneChest.class, ++entityNumber);
-		registerEntity(EntityWheelSmall.class, ++entityNumber);
-		registerEntity(EntityWheelLarge.class, ++entityNumber);
-		registerEntity(EntityPropeller.class, ++entityNumber);
-		registerEntity(EntityEngineSmall.class, ++entityNumber);
-		registerEntity(EntityEngineLarge.class, ++entityNumber);
+		registerEntity(EntityCore.class);
+		registerEntity(EntitySeat.class);
+		registerEntity(EntityPlaneChest.class);
+		registerEntity(EntityWheelSmall.class);
+		registerEntity(EntityWheelLarge.class);
+		registerEntity(EntityPropeller.class);
+		registerEntity(EntityEngineSmall.class);
+		registerEntity(EntityEngineLarge.class);
 	}
 	
-	private void registerEntity(Class entityClass, int entityNumber){
-		EntityRegistry.registerModEntity(entityClass, entityClass.getName().substring(7), entityNumber, MFS.MODID, 80, 5, false);
+	private void registerEntity(Class entityClass){
+		EntityRegistry.registerModEntity(entityClass, entityClass.getName().substring(7), ++entityNumber, MFS.MODID, 80, 5, false);
 	}
 	
 	private void initPackets(){
-		int packetNumber=0;
 		MFS.MFSNet.registerMessage(ChatPacket.ChatPacketHandler.class,  ChatPacket.class, ++packetNumber, Side.CLIENT);
 		MFS.MFSNet.registerMessage(FuelPacket.FuelPacketHandler.class,  FuelPacket.class, ++packetNumber, Side.CLIENT);
 		MFS.MFSNet.registerMessage(ServerSendDataPacket.ServerSendDataPacketHandler.class,  ServerSendDataPacket.class, ++packetNumber, Side.CLIENT);
@@ -186,7 +187,6 @@ public class CommonProxy{
 				'A', Blocks.wool, 'B', new ItemStack(Items.dye, 1, 0), 'C', Items.iron_ingot);
 	}
 	
-	
 	private void initPropellerRecipes(){
 		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1120),
 				"  A",
@@ -204,7 +204,6 @@ public class CommonProxy{
 				"A  ",
 				'A', Blocks.obsidian, 'B', Items.iron_ingot);
 	}
-	
 	
 	private void initEngineRecipes(){
 		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 2805),
@@ -228,7 +227,6 @@ public class CommonProxy{
 				"ABA",
 				'A', Blocks.piston, 'B', Blocks.obsidian,'C', Items.diamond);
 	}
-	
 	
 	private void initFlightInstrumentRecipes(){
 		GameRegistry.addRecipe(new ItemStack(flightInstrumentBase, 16),
