@@ -519,10 +519,10 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				child = getChildAtLocation(partPositions.get(i));
 				if(child != null){
 					if(i <= 5){
-						if(child instanceof EntityWheelSmall){
-							setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelSmall));
-						}else{
+						if(child instanceof EntityWheelLarge){
 							setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelLarge));
+						}else{
+							setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelSmall));
 						}
 					}else if(i <= 9){
 						if(child instanceof EntityEngineLarge){
@@ -619,7 +619,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 					
 					float[] position = partPositions.get(i);
 					if(i <= 5){
-						if(stack.getItemDamage()==1){
+						if(stack.getItem().equals(MFS.proxy.wheelLarge)){
 							newChild = new EntityWheelLarge(worldObj, this, this.UUID, position[0], position[1], position[2]);
 						}else{
 							newChild = new EntityWheelSmall(worldObj, this, this.UUID, position[0], position[1], position[2]);
