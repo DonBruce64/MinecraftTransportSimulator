@@ -329,7 +329,8 @@ public class GUIConfig extends GuiScreen{
     @Override
     protected void keyTyped(char key, int bytecode){
     	super.keyTyped(key, bytecode);
-    	if(key=='e' || bytecode==1){
+    	System.out.println(bytecode);
+    	if(bytecode==1){
             this.mc.displayGuiScreen((GuiScreen)null);
             this.mc.setIngameFocus();
             return;
