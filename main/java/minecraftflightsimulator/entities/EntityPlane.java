@@ -114,10 +114,9 @@ public abstract class EntityPlane extends EntityParent{
 		super(world);
 	}
 	
-	public EntityPlane(World world, float posX, float posY, float posZ, float rotation, int textureCode, boolean hasFlaps){
+	public EntityPlane(World world, float posX, float posY, float posZ, float rotation, int textureCode){
 		super(world, posX, posY, posZ, rotation);
 		this.textureOptions=(byte) textureCode;
-		this.hasFlaps=hasFlaps;
 	}
 	
 	@Override

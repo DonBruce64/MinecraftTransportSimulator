@@ -26,11 +26,12 @@ public class EntityMC172 extends EntityPlane{
 	}
 	
 	public EntityMC172(World world, float posX, float posY, float posZ, float rotation, int textureCode){
-		super(world, posX, posY, posZ, rotation, textureCode, true);
+		super(world, posX, posY, posZ, rotation, textureCode);
 	}
 
 	@Override
 	protected void initPlaneProperties(){
+		hasFlaps = true;
 		aileronIncrement = 2;
 		elevatorIncrement = 6;
 		rudderIncrement = 6;
@@ -41,7 +42,7 @@ public class EntityMC172 extends EntityPlane{
 		momentRoll=1285;
 		momentPitch=1825;
 		momentYaw=2667;
-		wingspan=12;
+		wingspan=11;
 		wingArea=16;
 		wingEfficiency=0.8F;
 		tailDistance=7;

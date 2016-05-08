@@ -26,11 +26,12 @@ public class EntityOtter extends EntityPlane{
 	}
 	
 	public EntityOtter(World world, float posX, float posY, float posZ, float rotation, int textureCode){
-		super(world, posX, posY, posZ, rotation, textureCode, true);
+		super(world, posX, posY, posZ, rotation, textureCode);
 	}
 
 	@Override
 	protected void initPlaneProperties(){
+		hasFlaps = true;
 		aileronIncrement = 2;
 		elevatorIncrement = 6;
 		rudderIncrement = 6;

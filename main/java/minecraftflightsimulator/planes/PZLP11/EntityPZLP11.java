@@ -27,24 +27,26 @@ public class EntityPZLP11 extends EntityPlane{
 	}
 	
 	public EntityPZLP11(World world, float posX, float posY, float posZ, float rotation, int textureCode){
-		super(world, posX, posY, posZ, rotation, textureCode, false);
+		super(world, posX, posY, posZ, rotation, textureCode);
 		
 	}
 
 	@Override
 	protected void initPlaneProperties(){
-		//TODO get new properties
+		hasFlaps = false;
 		aileronIncrement = 2;
 		elevatorIncrement = 6;
 		rudderIncrement = 6;
 		maxFuel = 5000;
 		
-		mass=800;
+		mass=1150;
 		centerOfGravity=-1;
 		momentRoll=1285;
 		momentPitch=1825;
 		momentYaw=2667;
-		wingspan=12;
+		wingspan=11;
+		
+		//TODO get new properties
 		wingArea=16;
 		wingEfficiency=0.8F;
 		tailDistance=7;
@@ -72,8 +74,7 @@ public class EntityPZLP11 extends EntityPlane{
 	
 	@Override
 	public float[][] getCoreLocations(){
-		//TODO set new positions
-		return new float[][]{{0, -0.3F, 1}, {0, -0.3F, -4.25F}};
+		return new float[][]{{0, -0.3F, 1}, {0, -0.35F, -5F}};
 	}
 	
 	@Override
