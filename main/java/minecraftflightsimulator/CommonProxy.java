@@ -14,6 +14,7 @@ import minecraftflightsimulator.items.ItemEngineLarge;
 import minecraftflightsimulator.items.ItemEngineSmall;
 import minecraftflightsimulator.items.ItemFlightInstrument;
 import minecraftflightsimulator.items.ItemFlightInstrumentBase;
+import minecraftflightsimulator.items.ItemPlane;
 import minecraftflightsimulator.items.ItemPointerLong;
 import minecraftflightsimulator.items.ItemPointerShort;
 import minecraftflightsimulator.items.ItemPropeller;
@@ -33,13 +34,9 @@ import minecraftflightsimulator.packets.general.FuelPacket;
 import minecraftflightsimulator.packets.general.ServerSendDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
-import minecraftflightsimulator.planes.MC172.ItemMC172;
 import minecraftflightsimulator.planes.Otter.EntityOtter;
-import minecraftflightsimulator.planes.Otter.ItemOtter;
 import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
-import minecraftflightsimulator.planes.PZLP11.ItemPZLP11;
 import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
-import minecraftflightsimulator.planes.Trimotor.ItemTrimotor;
 import minecraftflightsimulator.sounds.EngineSound;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
@@ -56,10 +53,10 @@ import cpw.mods.fml.relauncher.Side;
 
 
 public class CommonProxy{
-	public static final Item planeMC172 = new ItemMC172();
-	public static final Item planeTrimotor = new ItemTrimotor();
-	public static final Item planeOtter = new ItemOtter();
-	public static final Item planePLZP11 = new ItemPZLP11();
+	public static final Item planeMC172 = new ItemPlane(EntityMC172.class, 6);
+	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 1);
+	public static final Item planeOtter = new ItemPlane(EntityOtter.class, 1);
+	public static final Item planePLZP11 = new ItemPlane(EntityPZLP11.class, 1);
 	
 	public static final Item seat = new ItemSeat();
 	public static final Item wheelSmall = new ItemWheelSmall();
