@@ -6,6 +6,7 @@ import minecraftflightsimulator.containers.SlotBucket;
 import minecraftflightsimulator.containers.SlotEngineLarge;
 import minecraftflightsimulator.containers.SlotEngineSmall;
 import minecraftflightsimulator.containers.SlotFuel;
+import minecraftflightsimulator.containers.SlotInstrument;
 import minecraftflightsimulator.containers.SlotPassenger;
 import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.containers.SlotPropeller;
@@ -34,6 +35,7 @@ public class EntityPZLP11 extends EntityPlane{
 	@Override
 	protected void initPlaneProperties(){
 		hasFlaps = false;
+		taildragger = true;
 		aileronIncrement = 2;
 		elevatorIncrement = 6;
 		rudderIncrement = 6;
@@ -50,11 +52,12 @@ public class EntityPZLP11 extends EntityPlane{
 		wingArea=16;
 		wingEfficiency=0.8F;
 		tailDistance=7;
+		thirdWheelDistance=5;
 		rudderArea=1.5F;
 		elevatorArea=3.0F;
 		maxLiftCoeff=2F;
 		angleOfIncidence=0;
-		defaultElevatorAngle=5;
+		defaultElevatorAngle=0F;
 		criticalAoA=15;
 		initialDragCoeff=0.03F;
 		dragAtCriticalAoA=0.12F;
@@ -99,5 +102,8 @@ public class EntityPZLP11 extends EntityPlane{
 		container.addSlotToContainer(new SlotPilot(this, 110, 66));
 		container.addSlotToContainer(new SlotBucket(this, 7, 113));
 		container.addSlotToContainer(new SlotFuel(this, 7, 73));
+		for(int i=0; i<10; ++i){
+			container.addSlotToContainer(new SlotInstrument(this, 7 + 18*(i%5), i < 5 ? 7 : 25, i + instrumentStartSlot));
+		}
 	}
 }
