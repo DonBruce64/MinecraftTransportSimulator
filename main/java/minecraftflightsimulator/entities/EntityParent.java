@@ -609,6 +609,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 						}
 					}
 					
+					//TODO fix false boosting
 					if(needsBoosting){
 						this.rotationPitch = 0;
 						this.rotationRoll = 0;

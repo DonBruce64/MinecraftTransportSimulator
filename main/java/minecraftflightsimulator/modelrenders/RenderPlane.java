@@ -24,7 +24,7 @@ public abstract class RenderPlane extends Render{
 		GL11.glRotatef(plane.rotationPitch, 1, 0, 0);
 		GL11.glRotatef(plane.rotationRoll, 0, 0, 1);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        renderFuselage(plane);
+        renderPlane(plane);
         renderWindows(plane);
         renderConsole(plane);
         GL11.glPopMatrix();
@@ -34,7 +34,7 @@ public abstract class RenderPlane extends Render{
         }
 	}
 	
-	protected abstract void renderFuselage(EntityPlane plane);
+	protected abstract void renderPlane(EntityPlane plane);
 	protected abstract void renderWindows(EntityPlane plane);
 	protected abstract void renderConsole(EntityPlane plane);
 	

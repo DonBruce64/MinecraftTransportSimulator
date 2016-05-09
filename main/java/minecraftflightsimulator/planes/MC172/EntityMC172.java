@@ -32,6 +32,8 @@ public class EntityMC172 extends EntityPlane{
 	@Override
 	protected void initPlaneProperties(){
 		hasFlaps = true;
+		taildragger = false;
+		
 		aileronIncrement = 2;
 		elevatorIncrement = 6;
 		rudderIncrement = 6;
@@ -46,6 +48,7 @@ public class EntityMC172 extends EntityPlane{
 		wingArea=16;
 		wingEfficiency=0.8F;
 		tailDistance=7;
+		thirdWheelDistance=1.7F;
 		rudderArea=1.5F;
 		elevatorArea=3.0F;
 		maxLiftCoeff=2F;

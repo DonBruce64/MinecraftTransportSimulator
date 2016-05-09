@@ -16,7 +16,7 @@ public class RenderOtter extends RenderPlane{
 	public RenderOtter(){}
 	
 	@Override
-	protected void renderFuselage(EntityPlane plane){
+	protected void renderPlane(EntityPlane plane){
     	RenderHelper.bindTexture(new ResourceLocation("minecraft", "textures/blocks/stone.png"));
     	//GL11.glScalef(1.5F, 1.5F, 1.5F);
     	GL11.glTranslated(0, -0.5, 6.25);

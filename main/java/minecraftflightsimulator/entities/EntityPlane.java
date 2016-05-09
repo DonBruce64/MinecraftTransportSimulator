@@ -23,7 +23,8 @@ import net.minecraft.world.World;
  */
 public abstract class EntityPlane extends EntityParent{	
 	//visible plane variables
-	public boolean hasFlaps = false;
+	public boolean hasFlaps;
+	public boolean taildragger;
 	public byte aileronIncrement;
 	public byte elevatorIncrement;
 	public byte rudderIncrement;
@@ -49,6 +50,7 @@ public abstract class EntityPlane extends EntityParent{
 	protected float wingArea;//m^2
 	protected float wingEfficiency;//unit-less
 	protected float tailDistance;//m away from center of lift
+	protected float thirdWheelDistance;//m away from center of lift
 	protected float rudderArea;//m^2
 	protected float elevatorArea;//m^2
 	protected float maxLiftCoeff;//unit-less
@@ -62,7 +64,6 @@ public abstract class EntityPlane extends EntityParent{
 	private byte groundedWheels;
 	private byte collidedCores;
 	private float currentMass;
-	private float thirdWheelDistance;
 	private float motionRoll;
 	private float motionPitch;
 	private float motionYaw;
@@ -159,6 +160,8 @@ public abstract class EntityPlane extends EntityParent{
 	}
 	
 	private void refreshChildStatuses(){
+		//TODO find better way to deal with taildraggers
+		//groundedWheels = (byte) (taildragger ? 1 : 0);
 		groundedWheels = 0;
 		collidedCores = 0;
 		for(EntityChild child : getChildren()){
@@ -172,14 +175,16 @@ public abstract class EntityPlane extends EntityParent{
 							groundedWheels += 4;
 						}else{
 							groundedWheels += 1;
-							thirdWheelDistance = child.offsetZ;
 						}
 					}
 				}
-			}else if(child instanceof EntityCore){
+			}else if(child instanceof EntityCore && !(taildragger && child.offsetZ != 0)){
 				if(!child.worldObj.getCollidingBoundingBoxes(child, child.boundingBox.copy().expand(0.2, 0.2, 0.2)).isEmpty()){
 					++collidedCores;
 				}
+				
+				//TODO fix core collision issues
+				collidedCores = 0;
 			}
 		}
 	}
@@ -271,6 +276,7 @@ public abstract class EntityPlane extends EntityParent{
 			rotationRoll = motionRoll = 0;
 			adjustYMovement2();
 		}
+		//TODO fix rotation yaw for taildraggers.
 		if(groundedWheels == 3 || groundedWheels == 5){
 			if(thirdWheelDistance > 0){
 				if(motionPitch > 0){

@@ -21,7 +21,7 @@ public class RenderTrimotor extends RenderPlane{
 	}
 
 	@Override
-	protected void renderFuselage(EntityPlane plane){
+	protected void renderPlane(EntityPlane plane){
 		RenderHelper.bindTexture(sideTexture);
 		model.renderFirstStage(plane.textureOptions, plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F, plane.flapAngle/10F * 0.017453292F);
 		RenderHelper.bindTexture(rotatedSideTexture);

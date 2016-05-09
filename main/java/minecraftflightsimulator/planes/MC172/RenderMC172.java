@@ -4,21 +4,24 @@ import minecraftflightsimulator.entities.EntityPlane;
 import minecraftflightsimulator.helpers.InstrumentHelper;
 import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.modelrenders.RenderPlane;
-import minecraftflightsimulator.models.ModelPlane;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
 public class RenderMC172 extends RenderPlane{
-	private static final ModelPlane model = new ModelMC172();
+	private static final ModelMC172 model = new ModelMC172();
 	private static final ResourceLocation[] planeTextures = getPlaneTextures();
 
 	public RenderMC172(){}
 	
 	@Override
-	protected void renderFuselage(EntityPlane plane){
+	protected void renderPlane(EntityPlane plane){
     	RenderHelper.bindTexture(planeTextures[plane.textureOptions > 5 ? 0 : plane.textureOptions]);
-        model.renderPlane(plane.textureOptions, plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F, plane.flapAngle/10F * 0.017453292F);
+        model.renderPlane();
+        model.renderAilerons(plane.aileronAngle/10F * 0.017453292F);
+        model.renderElevators(plane.elevatorAngle/10F * 0.017453292F);
+        model.renderRudder(plane.rudderAngle/10F * 0.017453292F);
+        model.renderFlaps(plane.flapAngle/10F * 0.017453292F);
 	}
 
 	@Override

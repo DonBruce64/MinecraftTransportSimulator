@@ -1,12 +1,14 @@
 package minecraftflightsimulator.planes.MC172;
 
-import minecraftflightsimulator.models.ModelPlane;
+import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
-public class ModelMC172 extends ModelPlane{	
+public class ModelMC172 extends ModelBase{
+	private static final float scale=0.0625F;
+	
     private ModelRenderer frontFuselage;
     private ModelRenderer rearFuselage;
     private ModelRenderer leftRearFuselage;
@@ -22,6 +24,14 @@ public class ModelMC172 extends ModelPlane{
     private ModelRenderer leftWingSupport;
     private ModelRenderer rightWingSupport;
     private ModelRenderer tail;
+    
+    private ModelRenderer leftAileron;
+    private ModelRenderer rightAileron;
+    private ModelRenderer leftFlap;
+    private ModelRenderer rightFlap;
+    private ModelRenderer leftElevator;
+    private ModelRenderer rightElevator;
+    private ModelRenderer rudder;
  
     public ModelMC172(){
     	this.textureHeight = 16;
@@ -189,8 +199,7 @@ public class ModelMC172 extends ModelPlane{
         cowling.addBox(-12F, 0F, 20F, 24, 2, 3);
     }    
     
-    @Override
-    public void renderPlane(byte textureCode, float aileronAngle, float elevatorAngle, float rudderAngle, float flapAngle){
+    public void renderPlane(){
     	frontFuselage.render(scale);
         bottomFuselage.render(scale);
         rearFuselage.render(scale);
@@ -206,10 +215,31 @@ public class ModelMC172 extends ModelPlane{
         rightWingSupport.render(scale);
         tail.render(scale);
         centerStrut.render(scale);
-        
-        renderElevators(elevatorAngle);
-        renderAilerons(aileronAngle);
-        renderRudder(rudderAngle);
-        renderFlaps(flapAngle);
+    }
+    
+	public void renderAilerons(float aileronAngle){
+    	leftAileron.rotateAngleX = -aileronAngle;
+    	rightAileron.rotateAngleX = aileronAngle;
+    	leftAileron.render(scale);
+    	rightAileron.render(scale);
+    }
+    
+	public void renderElevators(float elevatorAngle){
+    	leftElevator.rotateAngleX=elevatorAngle;
+    	rightElevator.rotateAngleX=elevatorAngle;
+    	leftElevator.render(scale);
+    	rightElevator.render(scale);
+    }
+    
+	public void renderRudder(float rudderAngle){
+    	rudder.rotateAngleY=rudderAngle;
+    	rudder.render(scale);
+    }
+    
+	public void renderFlaps(float flapAngle){
+    	leftFlap.rotateAngleX = -flapAngle;
+    	rightFlap.rotateAngleX = -flapAngle;
+    	leftFlap.render(scale);
+    	rightFlap.render(scale);
     }
 }
