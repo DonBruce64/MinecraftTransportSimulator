@@ -12,7 +12,7 @@ import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.containers.SlotPropeller;
 import minecraftflightsimulator.containers.SlotWheelLarge;
 import minecraftflightsimulator.containers.SlotWheelSmall;
-import minecraftflightsimulator.entities.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.helpers.InstrumentHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
@@ -36,13 +36,10 @@ public class EntityPZLP11 extends EntityPlane{
 	protected void initPlaneProperties(){
 		hasFlaps = false;
 		taildragger = true;
-		aileronIncrement = 2;
-		elevatorIncrement = 6;
-		rudderIncrement = 6;
 		maxFuel = 5000;
 		
-		mass=1150;
-		centerOfGravity=-1;
+		emptyMass=1150;
+		emptyCOG=-1;
 		momentRoll=1285;
 		momentPitch=1825;
 		momentYaw=2667;
@@ -52,16 +49,13 @@ public class EntityPZLP11 extends EntityPlane{
 		wingArea=16;
 		wingEfficiency=0.8F;
 		tailDistance=7;
-		thirdWheelDistance=5;
 		rudderArea=1.5F;
 		elevatorArea=3.0F;
 		maxLiftCoeff=2F;
-		angleOfIncidence=0;
 		defaultElevatorAngle=0F;
-		criticalAoA=15;
 		initialDragCoeff=0.03F;
 		dragAtCriticalAoA=0.12F;
-		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(criticalAoA - 0, 2));		
+		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(15 - 0, 2));		
 	}
 	
 	@Override
@@ -77,7 +71,7 @@ public class EntityPZLP11 extends EntityPlane{
 	
 	@Override
 	public float[][] getCoreLocations(){
-		return new float[][]{{0, -0.3F, 1}, {0, -0.35F, -5F}};
+		return new float[][]{{0, -0.3F, 1}, {0, 0F, -5F}};
 	}
 	
 	@Override
