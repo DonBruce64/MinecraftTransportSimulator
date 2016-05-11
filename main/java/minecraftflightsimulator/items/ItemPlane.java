@@ -3,8 +3,8 @@ package minecraftflightsimulator.items;
 import java.util.List;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.EntityCore;
-import minecraftflightsimulator.entities.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityCore;
+import minecraftflightsimulator.entities.core.EntityPlane;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -34,7 +34,7 @@ public class ItemPlane extends Item{
 		if(!world.isRemote){
 			EntityPlane plane;
 			try{
-				plane = this.plane.getConstructor(World.class, float.class, float.class, float.class, float.class, int.class).newInstance(world, x, y+2.25F, z, player.rotationYaw, item.getItemDamage());
+				plane = this.plane.getConstructor(World.class, float.class, float.class, float.class, float.class, int.class).newInstance(world, x, y+1.5F, z, player.rotationYaw, item.getItemDamage());
 				if(canSpawnPlane(world, plane)){
 					if(!player.capabilities.isCreativeMode){
 						--item.stackSize;
