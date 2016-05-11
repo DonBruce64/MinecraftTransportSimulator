@@ -3,8 +3,8 @@ package minecraftflightsimulator.helpers;
 import java.awt.Color;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.EntityParent;
-import minecraftflightsimulator.entities.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityPlane;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -158,7 +158,6 @@ public class InstrumentHelper{
     	GL11.glPopMatrix();
     	
     	GL11.glPushMatrix();
-    	GL11.glScalef(0.5F, 0.5F, 1);
     	drawScaledString("0", centerX*2+8, centerY*2-16, 0.5F);
     	drawScaledString("35", centerX*2+8, centerY*2+10, 0.5F);
     	GL11.glPopMatrix();
@@ -530,7 +529,7 @@ public class InstrumentHelper{
             GL11.glEnd();
         }
     	
-        float angle = (float) Math.max(Math.min(parent instanceof EntityPlane ? ((EntityPlane) parent).criticalAoA + parent.trackAngle - 25 : -25, 35), -35);
+        float angle = (float) Math.max(Math.min(parent instanceof EntityPlane ? 15 + parent.trackAngle - 25 : -25, 35), -35);
         rotationHelper(centerX, centerY + 20, angle);    	
     	GL11.glColor3f(0, 0, 0);
     	GL11.glBegin(GL11.GL_QUADS);
