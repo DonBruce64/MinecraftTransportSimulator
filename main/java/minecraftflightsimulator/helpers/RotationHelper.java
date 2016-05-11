@@ -5,11 +5,11 @@ import net.minecraft.util.Vec3;
 
 public class RotationHelper {	
 	/**
-	 * Takes a Vec3 and rotates it about a specified pitch, roll, and yaw.
-	 * Used for the complex positioning of child entities in planes.
-	 * @param x X-coordinate of the child
-	 * @param y Y-coordinate of the child
-	 * @param z Z-coordinate of the child
+	 * Takes a set of points and rotates it about a specified pitch, roll, and yaw.
+	 * Used for the complex positioning of child entities and force calculations.
+	 * @param x X-coordinate
+	 * @param y Y-coordinate
+	 * @param z Z-coordinate
 	 * @param pitch The pitch of the aircraft (in degrees).
 	 * @param yaw The yaw of the aircraft (in degrees).
 	 * @param roll The roll of the aircraft (in degrees).
