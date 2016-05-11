@@ -10,7 +10,7 @@ import minecraftflightsimulator.containers.SlotPassenger;
 import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.containers.SlotPropeller;
 import minecraftflightsimulator.containers.SlotWheelSmall;
-import minecraftflightsimulator.entities.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.helpers.InstrumentHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
@@ -34,13 +34,11 @@ public class EntityMC172 extends EntityPlane{
 		hasFlaps = true;
 		taildragger = false;
 		
-		aileronIncrement = 2;
-		elevatorIncrement = 6;
-		rudderIncrement = 6;
+		
 		maxFuel = 5000;
 		
-		mass=800;
-		centerOfGravity=1;
+		emptyMass=800;
+		emptyCOG=1;
 		momentRoll=1285;
 		momentPitch=1825;
 		momentYaw=2667;
@@ -48,16 +46,13 @@ public class EntityMC172 extends EntityPlane{
 		wingArea=16;
 		wingEfficiency=0.8F;
 		tailDistance=7;
-		thirdWheelDistance=1.7F;
 		rudderArea=1.5F;
 		elevatorArea=3.0F;
 		maxLiftCoeff=2F;
-		angleOfIncidence=0;
 		defaultElevatorAngle=-5;
-		criticalAoA=15;
 		initialDragCoeff=0.03F;
 		dragAtCriticalAoA=0.12F;
-		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(criticalAoA - 0, 2));		
+		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(15 - 0, 2));		
 	}
 	
 	@Override
