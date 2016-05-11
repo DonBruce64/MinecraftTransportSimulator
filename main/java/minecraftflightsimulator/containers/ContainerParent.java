@@ -1,6 +1,6 @@
 package minecraftflightsimulator.containers;
 
-import minecraftflightsimulator.entities.EntityParent;
+import minecraftflightsimulator.entities.core.EntityParent;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
@@ -47,11 +47,14 @@ public class ContainerParent extends Container{
 			for(int i=0; i<inventorySlots.size(); ++i){
 				Slot slot = (Slot) inventorySlots.get(i);
 				if(slot.inventory.equals(parent)){
-					if(slot.isItemValid(item) && (slot.getHasStack() ? slot.getStack().stackSize < slot.getSlotStackLimit() : true)){
-						if(item.stackSize != 0){
-							slot.putStack(item.splitStack(1));
+					if(slot.isItemValid(item) && item.stackSize != 0){
+						if(slot.getHasStack()){
+							if(slot.getStack().stackSize < slot.getSlotStackLimit()){
+								slot.getStack().stackSize += item.splitStack(slot.getSlotStackLimit() - slot.getStack().stackSize).stackSize;
+							}
+						}else{
+							slot.putStack(item.splitStack(slot.getSlotStackLimit()));
 						}
-						
 					}
 				}
 			}
