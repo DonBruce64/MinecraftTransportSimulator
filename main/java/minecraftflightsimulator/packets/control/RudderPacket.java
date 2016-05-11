@@ -2,7 +2,7 @@ package minecraftflightsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityPlane;
 import net.minecraft.client.Minecraft;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
@@ -52,15 +52,15 @@ public class RudderPacket implements IMessage{
 			}
 			if(thisEntity!=null){
 				if(message.packetType == 1){
-					if(thisEntity.rudderAngle + thisEntity.rudderIncrement <= 250){
-						thisEntity.rudderAngle += thisEntity.rudderIncrement;
+					if(thisEntity.rudderAngle + 6 <= 250){
+						thisEntity.rudderAngle += 6;
 						thisEntity.rudderCooldown = message.rudderData;
 					}else{
 						return null;
 					}
 				}else if(message.packetType == -1){
-					if(thisEntity.rudderAngle - thisEntity.rudderIncrement >= -250){
-						thisEntity.rudderAngle -= thisEntity.rudderIncrement;
+					if(thisEntity.rudderAngle - 6 >= -250){
+						thisEntity.rudderAngle -= 6;
 						thisEntity.rudderCooldown = message.rudderData;
 					}else{
 						return null;

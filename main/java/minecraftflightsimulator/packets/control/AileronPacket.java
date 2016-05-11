@@ -2,7 +2,7 @@ package minecraftflightsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityPlane;
 import net.minecraft.client.Minecraft;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
@@ -52,15 +52,15 @@ public class AileronPacket implements IMessage{
 			}
 			if(thisEntity!=null){
 				if(message.packetType == 1){
-					if(thisEntity.aileronAngle + thisEntity.aileronIncrement <= 250){
-						thisEntity.aileronAngle += thisEntity.aileronIncrement;
+					if(thisEntity.aileronAngle + 2 <= 250){
+						thisEntity.aileronAngle += 2;
 						thisEntity.aileronCooldown = message.aileronData;
 					}else{
 						return null;
 					}
 				}else if(message.packetType == -1){
-					if(thisEntity.aileronAngle - thisEntity.aileronIncrement >= -250){
-						thisEntity.aileronAngle -= thisEntity.aileronIncrement;
+					if(thisEntity.aileronAngle - 2 >= -250){
+						thisEntity.aileronAngle -= 2;
 						thisEntity.aileronCooldown = message.aileronData;
 					}else{
 						return null;
