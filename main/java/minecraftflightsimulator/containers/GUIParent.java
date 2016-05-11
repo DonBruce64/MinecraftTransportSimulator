@@ -1,6 +1,6 @@
 package minecraftflightsimulator.containers;
 
-import minecraftflightsimulator.entities.EntityParent;
+import minecraftflightsimulator.entities.core.EntityParent;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;

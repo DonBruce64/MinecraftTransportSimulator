@@ -1,6 +1,6 @@
 package minecraftflightsimulator.modelrenders;
 
-import minecraftflightsimulator.entities.EntityPlaneChest;
+import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.models.ModelPlaneChest;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;

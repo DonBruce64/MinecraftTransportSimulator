@@ -1,7 +1,7 @@
 package minecraftflightsimulator.containers;
 
-import minecraftflightsimulator.entities.EntityPlaneChest;
-import minecraftflightsimulator.entities.EntityParent;
+import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;

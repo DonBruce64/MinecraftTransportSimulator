@@ -3,7 +3,7 @@ package minecraftflightsimulator.packets.control;
 import net.minecraft.client.Minecraft;
 import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityPlane;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;

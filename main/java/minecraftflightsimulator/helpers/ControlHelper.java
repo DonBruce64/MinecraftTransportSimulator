@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.EntityParent;
-import minecraftflightsimulator.entities.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.BrakePacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;

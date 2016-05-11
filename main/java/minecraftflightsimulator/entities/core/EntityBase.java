@@ -1,4 +1,4 @@
-package minecraftflightsimulator.entities;
+package minecraftflightsimulator.entities.core;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.packets.general.ClientRequestDataPacket;

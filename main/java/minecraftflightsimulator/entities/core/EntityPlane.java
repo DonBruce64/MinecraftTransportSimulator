@@ -1,9 +1,11 @@
-package minecraftflightsimulator.entities;
+package minecraftflightsimulator.entities.core;
 
-import java.util.Iterator;
 import java.util.List;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.entities.parts.EntityPlaneChest;
+import minecraftflightsimulator.entities.parts.EntityPropeller;
+import minecraftflightsimulator.entities.parts.EntityWheel;
 import minecraftflightsimulator.helpers.RotationHelper;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
@@ -25,9 +27,6 @@ public abstract class EntityPlane extends EntityParent{
 	//visible plane variables
 	public boolean hasFlaps;
 	public boolean taildragger;
-	public byte aileronIncrement;
-	public byte elevatorIncrement;
-	public byte rudderIncrement;
 	
 	//note that angle variable should be divided by 10 to get actual angle.
 	public short aileronAngle;
@@ -37,12 +36,11 @@ public abstract class EntityPlane extends EntityParent{
 	public short aileronCooldown;
 	public short elevatorCooldown;
 	public short rudderCooldown;
-	public short criticalAoA;
 	
 	//Defined plane properties
 	protected int fuelCapcacity;
-	protected float mass;//kg
-	protected float centerOfGravity;//m forward from center of lift
+	protected float emptyMass;//kg
+	protected float emptyCOG;//m forward from center of lift
 	protected float momentRoll;//kg*m^2
 	protected float momentPitch;//kg*m^2
 	protected float momentYaw;//kg*m^2
@@ -50,11 +48,9 @@ public abstract class EntityPlane extends EntityParent{
 	protected float wingArea;//m^2
 	protected float wingEfficiency;//unit-less
 	protected float tailDistance;//m away from center of lift
-	protected float thirdWheelDistance;//m away from center of lift
 	protected float rudderArea;//m^2
 	protected float elevatorArea;//m^2
 	protected float maxLiftCoeff;//unit-less
-	protected float angleOfIncidence;//degrees
 	protected float defaultElevatorAngle;//degrees	
 	protected float initialDragCoeff;//unit-less
 	protected float dragAtCriticalAoA;//unit-less
@@ -62,22 +58,20 @@ public abstract class EntityPlane extends EntityParent{
 
 	//internal plane variables
 	private byte groundedWheels;
-	private byte collidedCores;
+	private byte groundedCores;
 	private float currentMass;
+	private float currentCOG;
 	private float motionRoll;
 	private float motionPitch;
 	private float motionYaw;
 	private double currentWingArea;
-	private double wingAoA;
-	private double aileronAoA;
-	private double elevatorAoA;
-	private double rudderAoA;
 	private double dragCoeff;
 	private double wingLiftCoeff;
 	private double aileronLiftCoeff;
 	private double elevatorLiftCoeff;
 	private double rudderLiftCoeff;
 	private double thrust;
+	
 	private double brakeForce;//kg*m/ticks^2
 	private double thrustForce;//kg*m/ticks^2
 	private double dragForce;//kg*m/ticks^2
@@ -86,11 +80,13 @@ public abstract class EntityPlane extends EntityParent{
 	private double elevatorForce;//kg*m/ticks^2
 	private double rudderForce;//kg*m/ticks^2
 	private double gravitationalForce;//kg*m/ticks^2
+	private double brakeTorque;//kg*m^2/ticks^2
 	private double thrustTorque;//kg*m^2/ticks^2
 	private double aileronTorque;//kg*m^2/ticks^2
 	private double elevatorTorque;//kg*m^2/ticks^2
 	private double rudderTorque;//kg*m^2/ticks^2
 	private double gravitationalTorque;//kg*m^2/ticks^2
+	
 	private double xCollisionDepth;
 	private double yCollisionDepth;
 	private double zCollisionDepth;
@@ -124,7 +120,7 @@ public abstract class EntityPlane extends EntityParent{
 	public void onEntityUpdate(){
 		super.onEntityUpdate();	
 		if(!linked){return;}
-		refreshChildStatuses();
+		refreshGroundedStatuses();
 		getBasicProperties();
 		getForcesAndMotions();
 		performGroundOperations();
@@ -145,30 +141,27 @@ public abstract class EntityPlane extends EntityParent{
 		return RotationHelper.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
 	}
 	
-	private double getLiftCoeff(double angleOfAttack, double maxLiftCoeff, double criticalAngleOfAttack){
-		if(Math.abs(angleOfAttack) <= criticalAngleOfAttack*1.25){
-			return maxLiftCoeff*Math.sin(Math.PI/2*angleOfAttack/criticalAngleOfAttack);
-		}else if(Math.abs(angleOfAttack) <= criticalAngleOfAttack*1.5){
+	private double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
+		if(Math.abs(angleOfAttack) <= 15*1.25){
+			return maxLiftCoeff*Math.sin(Math.PI/2*angleOfAttack/15);
+		}else if(Math.abs(angleOfAttack) <= 15*1.5){
 			if(angleOfAttack > 0){
-				return maxLiftCoeff*(0.4 + 1/(angleOfAttack - criticalAngleOfAttack));
+				return maxLiftCoeff*(0.4 + 1/(angleOfAttack - 15));
 			}else{
-				return maxLiftCoeff*(-0.4 + 1/(angleOfAttack + criticalAngleOfAttack));
+				return maxLiftCoeff*(-0.4 + 1/(angleOfAttack + 15));
 			}
 		}else{
-			return maxLiftCoeff*Math.sin(Math.PI/6*angleOfAttack/criticalAngleOfAttack);
+			return maxLiftCoeff*Math.sin(Math.PI/6*angleOfAttack/15);
 		}
 	}
 	
-	private void refreshChildStatuses(){
-		//TODO find better way to deal with taildraggers
-		//groundedWheels = (byte) (taildragger ? 1 : 0);
+	private void refreshGroundedStatuses(){
 		groundedWheels = 0;
-		collidedCores = 0;
+		groundedCores = 0;
 		for(EntityChild child : getChildren()){
 			if(child instanceof EntityWheel){
 				if(!child.isDead){
-					child.onGround = !child.worldObj.getCollidingBoundingBoxes(child, child.boundingBox.copy().offset(0, -0.05, 0)).isEmpty();
-					if(child.onGround){
+					if(child.isOnGround()){
 						if(child.offsetX > 0){
 							groundedWheels += 2;
 						}else if(child.offsetX < 0){
@@ -178,21 +171,20 @@ public abstract class EntityPlane extends EntityParent{
 						}
 					}
 				}
-			}else if(child instanceof EntityCore && !(taildragger && child.offsetZ != 0)){
-				if(!child.worldObj.getCollidingBoundingBoxes(child, child.boundingBox.copy().expand(0.2, 0.2, 0.2)).isEmpty()){
-					++collidedCores;
+			}else if(child instanceof EntityCore){
+				if(child.isOnGround()){
+					++groundedCores;
 				}
-				
-				//TODO fix core collision issues
-				collidedCores = 0;
 			}
 		}
 	}
 	
 	private void getBasicProperties(){		
-		currentMass = (float) (mass + fuel/50);
+		currentMass = (float) (emptyMass + fuel/50);
+		currentCOG = emptyCOG;
 		for(EntityChild child : getChildren()){;
 			if(child.riddenByEntity != null){
+				currentCOG = (currentCOG*currentMass + child.offsetZ*100F)/(currentMass+100F);
 				currentMass += 100;
 				if(child.riddenByEntity instanceof EntityPlayer){
 					currentMass += calculateInventoryWeight(((EntityPlayer) child.riddenByEntity).inventory);
@@ -215,40 +207,37 @@ public abstract class EntityPlane extends EntityParent{
 		velocityVec = velocityVec.normalize();
 		
 		trackAngle = Math.toDegrees(Math.atan2(velocityVec.dotProduct(wingVec), velocityVec.dotProduct(bearingVec)));
-		wingAoA = angleOfIncidence - trackAngle;
-		aileronAoA = aileronAngle/10F;
-		elevatorAoA = defaultElevatorAngle - trackAngle - elevatorAngle/10F;
-		rudderAoA = rudderAngle/10F + Math.toDegrees(Math.atan2(velocityVec.dotProduct(sideVec), velocityVec.dotProduct(bearingVec)));
-		
-		dragCoeff = dragCoeffOffset*Math.pow(angleOfIncidence - trackAngle, 2) + initialDragCoeff;
-		wingLiftCoeff = getLiftCoeff(wingAoA, maxLiftCoeff + flapAngle/350F, criticalAoA);
-		aileronLiftCoeff = getLiftCoeff(aileronAoA, maxLiftCoeff, criticalAoA);
-		elevatorLiftCoeff = getLiftCoeff(elevatorAoA, maxLiftCoeff, criticalAoA);
-		rudderLiftCoeff = getLiftCoeff(rudderAoA, maxLiftCoeff, criticalAoA);
+		dragCoeff = dragCoeffOffset*Math.pow(trackAngle, 2) + initialDragCoeff;
+		wingLiftCoeff = getLiftCoeff(-trackAngle, maxLiftCoeff + flapAngle/350F);
+		aileronLiftCoeff = getLiftCoeff(aileronAngle/10F, maxLiftCoeff);
+		elevatorLiftCoeff = getLiftCoeff(defaultElevatorAngle - trackAngle - elevatorAngle/10F, maxLiftCoeff);
+		rudderLiftCoeff = getLiftCoeff(rudderAngle/10F + Math.toDegrees(Math.atan2(velocityVec.dotProduct(sideVec), velocityVec.dotProduct(bearingVec))), maxLiftCoeff);
 	}
 	
 	private void getForcesAndMotions(){
-		thrustForce = 0;
+		thrustForce = thrustTorque = 0;
 		for(EntityPropeller propeller : getPropellers()){
 			if(!propeller.isDead){
 				thrust = propeller.getThrustForce();
 				thrustForce += thrust;
 				thrustTorque += thrust*propeller.offsetX;
 			}
-		}	
+		}
 		
 		dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*wingspan*wingspan/currentWingArea*wingEfficiency));		
-		brakeForce = (brakeOn || parkingBrakeOn) ? ((groundedWheels & 1) + (groundedWheels & 2)/2 + (groundedWheels & 4)/4)*4 + collidedCores*2: collidedCores*2;
+		brakeForce = (brakeOn || parkingBrakeOn) ? ((groundedWheels & (taildragger ? 0 : 1)) + (groundedWheels & 2)/2 + (groundedWheels & 4)/4)*4 + groundedCores*2 : groundedCores*2;
 		wingForce = 0.5F*airDensity*velocity*velocity*currentWingArea*wingLiftCoeff;
 		aileronForce = 0.5F*airDensity*velocity*velocity*wingArea/5*aileronLiftCoeff;
 		elevatorForce = 0.5F*airDensity*velocity*velocity*elevatorArea*elevatorLiftCoeff;			
 		rudderForce = 0.5F*airDensity*velocity*velocity*rudderArea*rudderLiftCoeff;
 		gravitationalForce = currentMass*(9.8/400);
 					
+		//TODO get this working
+		brakeTorque = 0;
 		aileronTorque = 2*aileronForce*wingspan*0.3;
 		elevatorTorque = elevatorForce*tailDistance;
 		rudderTorque = rudderForce*tailDistance;
-		gravitationalTorque = gravitationalForce*centerOfGravity;
+		gravitationalTorque = gravitationalForce*emptyCOG;
 		
 		if(brakeForce > 0){
 			if(motionX > 0){
@@ -265,10 +254,12 @@ public abstract class EntityPlane extends EntityParent{
 			motionX += (bearingVec.xCoord*thrustForce - velocityVec.xCoord*dragForce + wingVec.xCoord*(wingForce + elevatorForce))/currentMass;
 			motionZ += (bearingVec.zCoord*thrustForce - velocityVec.zCoord*dragForce + wingVec.zCoord*(wingForce + elevatorForce))/currentMass;
 		}
+				
+		//TODO get this working as well
 		motionY += (bearingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + wingVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
 		motionRoll = (float) (180/Math.PI*((1-bearingVec.yCoord)*aileronTorque)/momentRoll);
-		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + wingVec.yCoord*gravitationalTorque)/momentPitch);
-		motionYaw = (float) (180/Math.PI*(bearingVec.yCoord*aileronTorque - wingVec.yCoord*(thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
+		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + (1-Math.abs(bearingVec.yCoord))*gravitationalTorque)/momentPitch);
+		motionYaw = (float) (180/Math.PI*(bearingVec.yCoord*aileronTorque - wingVec.yCoord*(-thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
 	}
 	
 	private void performGroundOperations(){
@@ -276,29 +267,10 @@ public abstract class EntityPlane extends EntityParent{
 			rotationRoll = motionRoll = 0;
 			adjustYMovement2();
 		}
-		//TODO fix rotation yaw for taildraggers.
-		if(groundedWheels == 3 || groundedWheels == 5){
-			if(thirdWheelDistance > 0){
-				if(motionPitch > 0){
-					motionPitch = 0;
-					if(Math.abs(rotationPitch) < 2){
-						rotationPitch = 0;
-					}
-					adjustYMovement2();
-				}
-			}
-		}
 		if(groundedWheels == 7){
 			if(motionY<0){motionY=0;}
-			if(thirdWheelDistance > 0){
-				if(motionPitch > 0){
-					motionPitch = 0;
-					if(Math.abs(rotationPitch) < 2){
-						rotationPitch = 0;
-					}
-					adjustYMovement2();
-				}
-			}
+			if(motionPitch*emptyCOG > 0 ){motionPitch = 0;}
+			if(Math.abs(rotationPitch) < 0.25){rotationPitch = 0;}
 			motionYaw += 7*velocityVec.dotProduct(sideVec) + rudderAngle/(350*(0.5 + velocity*velocity));
 			double groundSpeed = Math.hypot(motionX, motionZ);
 			bearingVec = getLookVec();
@@ -561,34 +533,25 @@ public abstract class EntityPlane extends EntityParent{
 
 	private void dampenControlSurfaces(){
 		if(aileronCooldown==0){
-			if(aileronAngle > 0){
-				aileronAngle -= aileronIncrement;
-				MFS.MFSNet.sendToAll(new AileronPacket(this.getEntityId(), false, (short) 0));
-			}else if(aileronAngle < 0){
-				aileronAngle += aileronIncrement;
-				MFS.MFSNet.sendToAll(new AileronPacket(this.getEntityId(), true, (short) 0));
+			if(aileronAngle != 0){
+				MFS.MFSNet.sendToAll(new AileronPacket(this.getEntityId(), aileronAngle < 0, (short) 0));
+				aileronAngle += aileronAngle < 0 ? 2 : -2;
 			}
 		}else{
 			--aileronCooldown;
 		}
 		if(elevatorCooldown==0){
-			if(elevatorAngle > 0){
-				elevatorAngle -= elevatorIncrement;
-				MFS.MFSNet.sendToAll(new ElevatorPacket(this.getEntityId(), false, (short) 0));
-			}else if(elevatorAngle < 0){
-				elevatorAngle += elevatorIncrement;
-				MFS.MFSNet.sendToAll(new ElevatorPacket(this.getEntityId(), true, (short) 0));
+			if(elevatorAngle != 0){
+				MFS.MFSNet.sendToAll(new ElevatorPacket(this.getEntityId(), elevatorAngle < 0, (short) 0));
+				elevatorAngle += elevatorAngle < 0 ? 6 : -6;
 			}
 		}else{
 			--elevatorCooldown;
 		}
 		if(rudderCooldown==0){
-			if(rudderAngle > 0){
-				rudderAngle -= rudderIncrement;
-				MFS.MFSNet.sendToAll(new RudderPacket(this.getEntityId(), false, (short) 0));
-			}else if(rudderAngle < 0){
-				rudderAngle += rudderIncrement;
-				MFS.MFSNet.sendToAll(new RudderPacket(this.getEntityId(), true, (short) 0));
+			if(rudderAngle != 0){
+				MFS.MFSNet.sendToAll(new RudderPacket(this.getEntityId(), rudderAngle < 0, (short) 0));
+				rudderAngle += rudderAngle < 0 ? 6 : -6;
 			}
 		}else{
 			--rudderCooldown;

@@ -1,15 +1,15 @@
 package minecraftflightsimulator;
 
 import minecraftflightsimulator.containers.GUIHandler;
-import minecraftflightsimulator.entities.EntityCore;
-import minecraftflightsimulator.entities.EntityEngine;
-import minecraftflightsimulator.entities.EntityEngineLarge;
-import minecraftflightsimulator.entities.EntityEngineSmall;
-import minecraftflightsimulator.entities.EntityPlaneChest;
-import minecraftflightsimulator.entities.EntityPropeller;
-import minecraftflightsimulator.entities.EntitySeat;
-import minecraftflightsimulator.entities.EntityWheelLarge;
-import minecraftflightsimulator.entities.EntityWheelSmall;
+import minecraftflightsimulator.entities.core.EntityCore;
+import minecraftflightsimulator.entities.parts.EntityEngine;
+import minecraftflightsimulator.entities.parts.EntityEngineLarge;
+import minecraftflightsimulator.entities.parts.EntityEngineSmall;
+import minecraftflightsimulator.entities.parts.EntityPlaneChest;
+import minecraftflightsimulator.entities.parts.EntityPropeller;
+import minecraftflightsimulator.entities.parts.EntitySeat;
+import minecraftflightsimulator.entities.parts.EntityWheelLarge;
+import minecraftflightsimulator.entities.parts.EntityWheelSmall;
 import minecraftflightsimulator.items.ItemEngineLarge;
 import minecraftflightsimulator.items.ItemEngineSmall;
 import minecraftflightsimulator.items.ItemFlightInstrument;

@@ -1,7 +1,7 @@
 package minecraftflightsimulator;
 
-import minecraftflightsimulator.entities.EntityParent;
-import minecraftflightsimulator.entities.EntitySeat;
+import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.helpers.ControlHelper;
 import minecraftflightsimulator.helpers.RenderHelper;
 import net.minecraft.client.Minecraft;

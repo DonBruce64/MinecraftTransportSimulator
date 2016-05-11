@@ -1,9 +1,11 @@
-package minecraftflightsimulator.entities;
+package minecraftflightsimulator.entities.parts;
 
 import java.util.Iterator;
 import java.util.List;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.entities.core.EntityChild;
+import minecraftflightsimulator.entities.core.EntityParent;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ContainerChest;

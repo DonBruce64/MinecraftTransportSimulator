@@ -1,7 +1,7 @@
 package minecraftflightsimulator.modelrenders;
 
-import minecraftflightsimulator.entities.EntityEngine;
-import minecraftflightsimulator.entities.EntityEngineLarge;
+import minecraftflightsimulator.entities.parts.EntityEngine;
+import minecraftflightsimulator.entities.parts.EntityEngineLarge;
 import minecraftflightsimulator.models.ModelEngine;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.Render;

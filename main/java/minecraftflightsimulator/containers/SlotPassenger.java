@@ -1,6 +1,6 @@
 package minecraftflightsimulator.containers;
 
-import minecraftflightsimulator.entities.EntityParent;
+import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.items.ItemSeat;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.Slot;

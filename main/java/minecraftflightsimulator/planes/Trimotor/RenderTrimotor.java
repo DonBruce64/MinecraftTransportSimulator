@@ -1,6 +1,6 @@
 package minecraftflightsimulator.planes.Trimotor;
 
-import minecraftflightsimulator.entities.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.modelrenders.RenderPlane;
 import net.minecraft.block.material.MapColor;

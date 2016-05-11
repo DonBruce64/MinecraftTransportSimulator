@@ -1,6 +1,8 @@
-package minecraftflightsimulator.entities;
+package minecraftflightsimulator.entities.parts;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.entities.core.EntityChild;
+import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.helpers.RotationHelper;
 import minecraftflightsimulator.packets.general.ChatPacket;
 import net.minecraft.entity.EntityLivingBase;
@@ -39,6 +41,11 @@ public class EntitySeat extends EntityChild{
 	
 	@Override
 	public boolean canRiderInteract(){
+		return true;
+	}
+	
+	@Override
+	public boolean canBeCollidedWith(){
 		return true;
 	}
 	

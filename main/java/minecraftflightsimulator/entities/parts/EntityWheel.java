@@ -1,5 +1,7 @@
-package minecraftflightsimulator.entities;
+package minecraftflightsimulator.entities.parts;
 
+import minecraftflightsimulator.entities.core.EntityChild;
+import minecraftflightsimulator.entities.core.EntityParent;
 import net.minecraft.world.World;
 
 public abstract class EntityWheel extends EntityChild{
@@ -20,7 +22,7 @@ public abstract class EntityWheel extends EntityChild{
 		super.onUpdate();
 		if(!linked){return;}
 		if(worldObj.isRemote){
-			if(onGround){
+			if(this.isOnGround()){
 				angularVelocity = (float) (parent.velocity/wheelDiameter);
 			}else{
 				if(parent.brakeOn || parent.parkingBrakeOn){
@@ -31,5 +33,10 @@ public abstract class EntityWheel extends EntityChild{
 			}
 			angularPosition += angularVelocity;
 		}
+	}
+	
+	@Override
+	public boolean canBeCollidedWith(){
+		return false;
 	}
 }

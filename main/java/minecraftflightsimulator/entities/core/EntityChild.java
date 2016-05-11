@@ -1,19 +1,20 @@
-package minecraftflightsimulator.entities;
+package minecraftflightsimulator.entities.core;
 
 import minecraftflightsimulator.helpers.RotationHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
-public abstract class EntityChild extends EntityBase{
+public abstract class EntityChild extends EntityBase{	
 	public int propertyCode;
 	public float offsetX;
 	public float offsetY;
 	public float offsetZ;
-	protected String parentUUID;
 	public EntityParent parent;
+	protected String parentUUID;
 	
 	public EntityChild(World world) {
 		super(world);
@@ -73,6 +74,26 @@ public abstract class EntityChild extends EntityBase{
 				}
 			}
 		}
+	}
+	
+	public boolean isOnGround(){
+		return !isAirBlockAtLocation(posX, posY - 0.01, posZ);
+	}
+	
+	public boolean isCollidedHorizontally(){
+		return this.willCollideWithOffset(0, 0, 0);
+	}
+	
+	//TODO decide if this needs to be here
+	public boolean willCollideWithOffset(double offsetX, double offsetY, double offsetZ){
+		return !isAirBlockAtLocation(posX + offsetX, posY + offsetY, posZ + offsetZ)
+			|| !isAirBlockAtLocation(posX + offsetX + this.width, posY + offsetY, posZ + offsetY)
+			|| !isAirBlockAtLocation(posX + offsetX, posY + offsetY, posZ + offsetY + this.width)
+			|| !isAirBlockAtLocation(posX + offsetX + this.width, posY + offsetY, posZ + offsetY + this.width);
+	}
+	
+	private boolean isAirBlockAtLocation(double x, double y, double z){
+		return worldObj.isAirBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z));
 	}
 	
 	@Override

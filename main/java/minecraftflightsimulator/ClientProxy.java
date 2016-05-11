@@ -1,15 +1,15 @@
 package minecraftflightsimulator;
 
-import minecraftflightsimulator.entities.EntityBase;
-import minecraftflightsimulator.entities.EntityEngine;
-import minecraftflightsimulator.entities.EntityEngineLarge;
-import minecraftflightsimulator.entities.EntityEngineSmall;
-import minecraftflightsimulator.entities.EntityPlane;
-import minecraftflightsimulator.entities.EntityPlaneChest;
-import minecraftflightsimulator.entities.EntityPropeller;
-import minecraftflightsimulator.entities.EntitySeat;
-import minecraftflightsimulator.entities.EntityWheelLarge;
-import minecraftflightsimulator.entities.EntityWheelSmall;
+import minecraftflightsimulator.entities.core.EntityBase;
+import minecraftflightsimulator.entities.core.EntityPlane;
+import minecraftflightsimulator.entities.parts.EntityEngine;
+import minecraftflightsimulator.entities.parts.EntityEngineLarge;
+import minecraftflightsimulator.entities.parts.EntityEngineSmall;
+import minecraftflightsimulator.entities.parts.EntityPlaneChest;
+import minecraftflightsimulator.entities.parts.EntityPropeller;
+import minecraftflightsimulator.entities.parts.EntitySeat;
+import minecraftflightsimulator.entities.parts.EntityWheelLarge;
+import minecraftflightsimulator.entities.parts.EntityWheelSmall;
 import minecraftflightsimulator.helpers.ControlHelper;
 import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.modelrenders.RenderEngine;
@@ -75,7 +75,7 @@ public class ClientProxy extends CommonProxy{
 				rider.rotationPitch += seat.parent.rotationPitch - seat.parent.prevRotationPitch;
 			}
 			if((seat.parent.rotationPitch > 90 || seat.parent.rotationPitch < -90) ^ seat.parent.prevRotationPitch > 90 || seat.parent.prevRotationPitch < -90){
-				rider.rotationYaw+=180;
+				//rider.rotationYaw+=180;
 			}
 		}
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView==0 && seat.riddenByEntity.equals(Minecraft.getMinecraft().thePlayer)){

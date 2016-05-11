@@ -1,6 +1,6 @@
 package minecraftflightsimulator.modelrenders;
 
-import minecraftflightsimulator.entities.EntitySeat;
+import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.models.ModelSeat;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;

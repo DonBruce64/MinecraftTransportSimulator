@@ -1,7 +1,7 @@
 package minecraftflightsimulator.modelrenders;
 
-import minecraftflightsimulator.entities.EntityWheel;
-import minecraftflightsimulator.entities.EntityWheelSmall;
+import minecraftflightsimulator.entities.parts.EntityWheel;
+import minecraftflightsimulator.entities.parts.EntityWheelSmall;
 import minecraftflightsimulator.models.ModelWheel;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;

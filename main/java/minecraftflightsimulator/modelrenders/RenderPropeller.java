@@ -1,6 +1,6 @@
 package minecraftflightsimulator.modelrenders;
 
-import minecraftflightsimulator.entities.EntityPropeller;
+import minecraftflightsimulator.entities.parts.EntityPropeller;
 import minecraftflightsimulator.models.ModelPropeller;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.Render;

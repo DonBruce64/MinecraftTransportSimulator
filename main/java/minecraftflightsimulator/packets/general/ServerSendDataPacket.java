@@ -1,8 +1,8 @@
 package minecraftflightsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
-import minecraftflightsimulator.entities.EntityBase;
-import minecraftflightsimulator.entities.EntityParent;
+import minecraftflightsimulator.entities.core.EntityBase;
+import minecraftflightsimulator.entities.core.EntityParent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import cpw.mods.fml.common.network.ByteBufUtils;

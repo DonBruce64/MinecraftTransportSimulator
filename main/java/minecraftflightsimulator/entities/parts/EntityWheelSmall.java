@@ -1,5 +1,6 @@
-package minecraftflightsimulator.entities;
+package minecraftflightsimulator.entities.parts;
 
+import minecraftflightsimulator.entities.core.EntityParent;
 import net.minecraft.world.World;
 
 public class EntityWheelSmall extends EntityWheel{

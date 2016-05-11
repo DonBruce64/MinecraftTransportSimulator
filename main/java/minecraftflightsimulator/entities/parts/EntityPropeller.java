@@ -1,8 +1,11 @@
-package minecraftflightsimulator.entities;
+package minecraftflightsimulator.entities.parts;
 
 import java.util.List;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.entities.core.EntityBase;
+import minecraftflightsimulator.entities.core.EntityChild;
+import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.other.EntityDamageSourcePropellor;
 import minecraftflightsimulator.packets.control.EnginePacket;
 import net.minecraft.entity.Entity;
@@ -54,7 +57,7 @@ public class EntityPropeller extends EntityChild{
 						collidedEntity.attackEntityFrom(new EntityDamageSourcePropellor("propellor", this), (float) (engineRPM/500F));
 					}
 				}
-				if(!worldObj.getCollidingBoundingBoxes(this, this.boundingBox.expand(0.2, 0.2, 0.2)).isEmpty()){
+				if(this.isCollidedHorizontally() || this.isOnGround()){
 					if(--health<0){
 						worldObj.playSoundAtEntity(this, "minecraft:random.break", 2, 1);
 						this.setDead();

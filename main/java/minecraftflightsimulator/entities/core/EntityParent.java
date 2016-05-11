@@ -1,4 +1,4 @@
-package minecraftflightsimulator.entities;
+package minecraftflightsimulator.entities.core;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,6 +9,15 @@ import java.util.Map;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.containers.ContainerParent;
 import minecraftflightsimulator.containers.GUIParent;
+import minecraftflightsimulator.entities.parts.EntityEngine;
+import minecraftflightsimulator.entities.parts.EntityEngineLarge;
+import minecraftflightsimulator.entities.parts.EntityEngineSmall;
+import minecraftflightsimulator.entities.parts.EntityPlaneChest;
+import minecraftflightsimulator.entities.parts.EntityPropeller;
+import minecraftflightsimulator.entities.parts.EntitySeat;
+import minecraftflightsimulator.entities.parts.EntityWheel;
+import minecraftflightsimulator.entities.parts.EntityWheelLarge;
+import minecraftflightsimulator.entities.parts.EntityWheelSmall;
 import minecraftflightsimulator.helpers.RotationHelper;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import net.minecraft.entity.item.EntityItem;
@@ -285,7 +294,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	}
 	
 	protected void addCenterWheelPosition(float[] coords){
-		if(!partPositions.containsValue(1)){
+		if(!partPositions.containsKey(1)){
 			partPositions.put(1, coords);
 		}else{
 			System.err.println("AN ENTITY HAS TRIED TO ADD TOO MANY CENTER WHEELS!  THINGS MAY GO BADLY!");
@@ -293,9 +302,9 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	}
 	
 	protected void addLeftWheelPosition(float[] coords){
-		if(!partPositions.containsValue(2)){
+		if(!partPositions.containsKey(2)){
 			partPositions.put(2, coords);
-		}else if(!partPositions.containsValue(3)){
+		}else if(!partPositions.containsKey(3)){
 			partPositions.put(3, coords);
 		}else{
 			System.err.println("AN ENTITY HAS TRIED TO ADD TOO MANY LEFT WHEELS!  THINGS MAY GO BADLY!");
@@ -303,9 +312,9 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	}
 	
 	protected void addRightWheelPosition(float[] coords){
-		if(!partPositions.containsValue(4)){
+		if(!partPositions.containsKey(4)){
 			partPositions.put(4, coords);
-		}else if(!partPositions.containsValue(5)){
+		}else if(!partPositions.containsKey(5)){
 			partPositions.put(5, coords);
 		}else{
 			System.err.println("AN ENTITY HAS TRIED TO ADD TOO MANY RIGHT WHEELS!  THINGS MAY GO BADLY!");
@@ -314,7 +323,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	
 	protected void addEnginePosition(float[] coords){
 		for(int i=6; i<=9; ++i){
-			if(!partPositions.containsValue(i)){
+			if(!partPositions.containsKey(i)){
 				partPositions.put(i, coords);
 				return;
 			}
@@ -324,7 +333,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	
 	protected void addPropellerPosition(float[] coords){
 		for(int i=10; i<=13; ++i){
-			if(!partPositions.containsValue(i)){
+			if(!partPositions.containsKey(i)){
 				partPositions.put(i, coords);
 				return;
 			}

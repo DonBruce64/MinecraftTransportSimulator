@@ -1,6 +1,8 @@
-package minecraftflightsimulator.entities;
+package minecraftflightsimulator.entities.parts;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.entities.core.EntityChild;
+import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.sounds.EngineSound;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
@@ -126,6 +128,11 @@ public abstract class EntityEngine extends EntityChild{
 		fueled=false;
 		internalFuel=0;
 		if(worldObj.isRemote){engineSound = MFS.proxy.updateEngineSound(engineSound, this);}
+	}
+	
+	@Override
+	public boolean canBeCollidedWith(){
+		return false;
 	}
 	
 	@Override

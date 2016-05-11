@@ -1,6 +1,6 @@
 package minecraftflightsimulator.sounds;
 
-import minecraftflightsimulator.entities.EntityEngine;
+import minecraftflightsimulator.entities.parts.EntityEngine;
 import net.minecraft.util.ResourceLocation;
 
 public class EngineSound extends EntitySoundBase{
