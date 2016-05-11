@@ -9,7 +9,7 @@ import minecraftflightsimulator.containers.SlotPassenger;
 import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.containers.SlotPropeller;
 import minecraftflightsimulator.containers.SlotWheelSmall;
-import minecraftflightsimulator.entities.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.helpers.InstrumentHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
@@ -33,13 +33,11 @@ public class EntityTrimotor extends EntityPlane{
 	protected void initPlaneProperties(){
 		//TODO set new properties
 		hasFlaps = false;
-		aileronIncrement = 2;
-		elevatorIncrement = 6;
-		rudderIncrement = 6;
+		
 		maxFuel = 5000;
 		
-		mass=800;
-		centerOfGravity=-1;
+		emptyMass=800;
+		emptyCOG=-1;
 		momentRoll=1285;
 		momentPitch=1825;
 		momentYaw=2667;
@@ -50,12 +48,10 @@ public class EntityTrimotor extends EntityPlane{
 		rudderArea=1.5F;
 		elevatorArea=3.0F;
 		maxLiftCoeff=2F;
-		angleOfIncidence=5;
 		defaultElevatorAngle=-3;
-		criticalAoA=15;
 		initialDragCoeff=0.0341F;
 		dragAtCriticalAoA=0.12F;
-		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(criticalAoA - 0, 2));		
+		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(15 - 0, 2));		
 	}
 	
 	@Override
