@@ -10,7 +10,7 @@ import minecraftflightsimulator.containers.SlotPassenger;
 import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.containers.SlotPropeller;
 import minecraftflightsimulator.containers.SlotWheelSmall;
-import minecraftflightsimulator.entities.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.helpers.InstrumentHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
@@ -32,40 +32,42 @@ public class EntityOtter extends EntityPlane{
 	@Override
 	protected void initPlaneProperties(){
 		hasFlaps = true;
-		aileronIncrement = 2;
-		elevatorIncrement = 6;
-		rudderIncrement = 6;
-		maxFuel = 5000;
+		taildragger = false;
 		
-		mass=800;
-		centerOfGravity=1;
-		momentRoll=1285;
-		momentPitch=1825;
-		momentYaw=2667;
-		wingspan=12;
-		wingArea=16;
+		maxFuel = 15000;
+		emptyMass=3200;
+		emptyCOG=1;
+		momentRoll=21259;
+		momentPitch=39972;
+		momentYaw=44944;
+		wingspan=20;
+		wingArea=39;
 		wingEfficiency=0.8F;
-		tailDistance=7;
-		rudderArea=1.5F;
-		elevatorArea=3.0F;
+		tailDistance=10;
+		rudderArea=6F;
+		elevatorArea=6F;
 		maxLiftCoeff=2F;
-		angleOfIncidence=0;
 		defaultElevatorAngle=-5;
-		criticalAoA=15;
 		initialDragCoeff=0.03F;
 		dragAtCriticalAoA=0.12F;
-		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(criticalAoA - 0, 2));		
+		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(15 - 0, 2));//		
 	}
 	
 	@Override
 	protected void initChildPositions(){
-		addCenterWheelPosition(new float[]{0, -1F, 1.7F});
-		addLeftWheelPosition(new float[]{-1.65F, -1F, 0});
-		addRightWheelPosition(new float[]{1.65F, -1F, 0});
-		addEnginePosition(new float[]{0, -0.3F, 1.65F});
-		addPropellerPosition(new float[]{0, -0.375F, 2.5F});
-		addPilotPosition(new float[]{0.5F, 1F, 3.25F});
-		addPassengerPosition(new float[]{0, 1F, -1});
+		addCenterWheelPosition(new float[]{0, -0.4F, 4.4F});
+		addLeftWheelPosition(new float[]{-2F, -0.35F, 0});
+		addRightWheelPosition(new float[]{2F, -0.35F, 0});		
+		addEnginePosition(new float[]{-2.975F, 1.7F, 1.91F});
+		addEnginePosition(new float[]{2.975F, 1.7F, 1.91F});
+		addPropellerPosition(new float[]{-2.975F, 1.6F, 2.7F});
+		addPropellerPosition(new float[]{2.975F, 1.6F, 2.7F});
+		addPilotPosition(new float[]{0.45F, 0.8F, 3.55F});
+		addPilotPosition(new float[]{-0.45F, 0.8F, 3.55F});
+		for(byte i=0; i<5; ++i){
+			addPassengerPosition(new float[]{0.45F, 0.8F, 1.82F-i});
+			addPassengerPosition(new float[]{-0.45F, 0.8F, 1.82F-i});
+		}
 	}
 	
 	@Override
@@ -75,6 +77,7 @@ public class EntityOtter extends EntityPlane{
 	
 	@Override
 	public void drawHUD(int width, int height){
+		//TODO get new HUD
 		InstrumentHelper.drawBasicHUD(this, width, height, backplateTexture, moldingTexture);
 	}
 	
@@ -85,11 +88,17 @@ public class EntityOtter extends EntityPlane{
 	
 	@Override
 	public void initParentContainerSlots(ContainerParent container){
+		//TODO make new GUI
 		container.addSlotToContainer(new SlotWheelSmall(this, 86, 113, 1));
 		container.addSlotToContainer(new SlotWheelSmall(this, 50, 113, 2));
 		container.addSlotToContainer(new SlotWheelSmall(this, 68, 113, 4));
+		
 		container.addSlotToContainer(new SlotEngineSmall(this, 131, 66, 6));
+		container.addSlotToContainer(new SlotEngineSmall(this, 131, 82, 7));
+		
 		container.addSlotToContainer(new SlotPropeller(this, 150, 66, 10));
+		container.addSlotToContainer(new SlotPropeller(this, 150, 82, 11));
+		
 		container.addSlotToContainer(new SlotPilot(this, 110, 66));
 		container.addSlotToContainer(new SlotPassenger(this, 92, 66));
 		container.addSlotToContainer(new SlotBucket(this, 7, 113));
