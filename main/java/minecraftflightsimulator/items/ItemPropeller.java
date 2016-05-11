@@ -53,6 +53,6 @@ public class ItemPropeller extends Item{
     @Override
     @SideOnly(Side.CLIENT)
     public IIcon getIconFromDamage(int damage){
-        return this.icons[damage%10 > 3 ? 0 : damage%10];
+        return this.icons[damage%10 > 2 ? 0 : damage%10];
     }
 }
