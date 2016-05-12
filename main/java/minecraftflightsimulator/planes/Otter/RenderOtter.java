@@ -72,7 +72,7 @@ public class RenderOtter extends RenderPlane{
 		GL11.glTranslatef(0.7985F, 1.7F, 3.95F);
 		GL11.glRotatef(180, 0, 0, 1);
 		GL11.glScalef(0.00390625F*1.3F, 0.00390625F*1.3F, 0.00390625F*1.3F);
-		for(int i=0; i<plane.instrumentList.size(); ++i){
+		for(byte i=0; i<plane.instrumentList.size(); ++i){
 			if(plane.instrumentList.get(i) != null){
 				InstrumentHelper.drawInstrument(plane, (i%5)*66, i<5 ? 0 : 62, plane.instrumentList.get(i).getItemDamage(), false);
 			}

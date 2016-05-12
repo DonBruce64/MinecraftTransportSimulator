@@ -43,7 +43,7 @@ public class RenderMC172 extends RenderPlane{
 		GL11.glTranslatef(0.92F, 0.35F, 0.715F);
 		GL11.glRotatef(180, 0, 0, 1);
 		GL11.glScalef(0.00390625F*1.5F, 0.00390625F*1.5F, 0.00390625F*1.5F);
-		for(int i=0; i<plane.instrumentList.size(); ++i){
+		for(byte i=0; i<plane.instrumentList.size(); ++i){
 			if(plane.instrumentList.get(i) != null){
 				int type = plane.instrumentList.get(i).getItemDamage();
 				if(i==0 || i==5){
