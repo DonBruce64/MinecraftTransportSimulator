@@ -12,6 +12,6 @@ public class EntityWheelLarge extends EntityWheel{
 	}
 	
 	public EntityWheelLarge(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, 1);
+		super(world, parent, parentUUID, offsetX, offsetY, offsetZ);
 	}
 }
