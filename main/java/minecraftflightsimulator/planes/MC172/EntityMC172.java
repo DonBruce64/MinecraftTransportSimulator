@@ -17,7 +17,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class EntityMC172 extends EntityPlane{
-	private static final ResourceLocation foregroundGUI = new ResourceLocation("mfs", "textures/gui_mc172.png");
+	private static final ResourceLocation foregroundGUI = new ResourceLocation("mfs", "textures/planes/mc172/gui.png");
 	private static final ResourceLocation[] backplateTextures = getBackplateTextures();
 	private static final ResourceLocation[] mouldingTextures = getMouldingTextures();
 	

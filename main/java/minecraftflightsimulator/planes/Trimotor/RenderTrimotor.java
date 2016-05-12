@@ -10,8 +10,8 @@ import org.lwjgl.opengl.GL11;
 
 public class RenderTrimotor extends RenderPlane{
 	private static final ModelTrimotor model = new ModelTrimotor();
-    private static final ResourceLocation sideTexture = new ResourceLocation("mfs", "textures/trimotor_side.png");
-    private static final ResourceLocation rotatedSideTexture = new ResourceLocation("mfs", "textures/trimotor_side_rotated.png");
+    private static final ResourceLocation sideTexture = new ResourceLocation("mfs", "textures/planes/trimotor/side.png");
+    private static final ResourceLocation rotatedSideTexture = new ResourceLocation("mfs", "textures/planes/trimotor/side_rotated.png");
     private static final ResourceLocation detailTexture = new ResourceLocation("minecraft", "textures/blocks/stone.png");
 
     private int colorcode = 0;
