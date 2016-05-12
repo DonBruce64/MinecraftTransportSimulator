@@ -1,6 +1,7 @@
 package minecraftflightsimulator.planes.PZLP11;
 
 import minecraftflightsimulator.entities.core.EntityPlane;
+import minecraftflightsimulator.helpers.InstrumentHelper;
 import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.modelrenders.RenderPlane;
 import net.minecraft.util.ResourceLocation;
@@ -66,13 +67,25 @@ public class RenderPZLP11 extends RenderPlane{
 	@Override
 	protected void renderWindows(EntityPlane plane){
 		RenderHelper.bindTexture(windowTexture);
-		RenderHelper.renderQuad(-0.25, -0.25, 0.25, 0.25, 1.12, 0.88, 0.88, 1.12, -0.75, -0.35, -0.35, -0.75, true);
+		RenderHelper.renderQuad(-0.25, -0.25, 0.25, 0.25, 1.125, 0.88, 0.88, 1.125, -0.75, -0.325, -0.325, -0.75, true);
 		RenderHelper.renderTriangle(-0.25, -0.25, -0.25,     1.05, 0.88, 0.88,     -0.75, -0.75, -0.45, true);
 		RenderHelper.renderTriangle(0.25, 0.25, 0.25,     1.05, 0.88, 0.88,     -0.75, -0.75, -0.45, true);
 	}
 
 	@Override
 	protected void renderConsole(EntityPlane plane){
-			
+		GL11.glPushMatrix();
+		GL11.glTranslatef(0.47F, 0.70F, -0.825F);
+		GL11.glRotatef(180, 0, 0, 1);
+		GL11.glScalef(0.00390625F*1F, 0.00390625F*1F, 0.00390625F*1F);
+		for(byte i=0; i<plane.instrumentList.size(); ++i){
+			if(plane.instrumentList.get(i) != null){
+				InstrumentHelper.drawInstrument(plane, (i%5)*60, i<5 ? 0 : 62, plane.instrumentList.get(i).getItemDamage(), false);
+			}
+		}
+		GL11.glScalef(2F, 2F, 2F);
+		InstrumentHelper.drawInstrument(plane, 32, 52, 15, false);
+		InstrumentHelper.drawInstrument(plane, 96, 52, 16, false);
+		GL11.glPopMatrix();
 	}
 }

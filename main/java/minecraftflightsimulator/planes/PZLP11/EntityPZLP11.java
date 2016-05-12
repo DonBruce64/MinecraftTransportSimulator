@@ -4,10 +4,8 @@ import minecraftflightsimulator.containers.ContainerParent;
 import minecraftflightsimulator.containers.GUIParent;
 import minecraftflightsimulator.containers.SlotBucket;
 import minecraftflightsimulator.containers.SlotEngineLarge;
-import minecraftflightsimulator.containers.SlotEngineSmall;
 import minecraftflightsimulator.containers.SlotFuel;
 import minecraftflightsimulator.containers.SlotInstrument;
-import minecraftflightsimulator.containers.SlotPassenger;
 import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.containers.SlotPropeller;
 import minecraftflightsimulator.containers.SlotWheelLarge;
@@ -19,9 +17,9 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class EntityPZLP11 extends EntityPlane{
-	private static final ResourceLocation foregroundGUI = new ResourceLocation("mfs", "textures/gui_mc172.png");
-	private static final ResourceLocation backplateTexture = new ResourceLocation("mfs", "textures/trimotor_side.png");
-	private static final ResourceLocation moldingTexture = new ResourceLocation("mfs", "textures/trimotor_side_rotated.png");
+	private static final ResourceLocation foregroundGUI = new ResourceLocation("mfs", "textures/planes/pzlp11/gui.png");
+	private static final ResourceLocation backplateTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/hud_backplate.png");
+	private static final ResourceLocation moldingTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/hud_moulding.png");
 	
 	public EntityPZLP11(World world){
 		super(world);
@@ -36,7 +34,7 @@ public class EntityPZLP11 extends EntityPlane{
 	protected void initPlaneProperties(){
 		hasFlaps = false;
 		taildragger = true;
-		maxFuel = 5000;
+		maxFuel = 7000;
 		
 		emptyMass=1150;
 		emptyCOG=-1;
@@ -44,13 +42,11 @@ public class EntityPZLP11 extends EntityPlane{
 		momentPitch=1825;
 		momentYaw=2667;
 		wingspan=11;
-		
-		//TODO get new properties
-		wingArea=16;
+		wingArea=18;
 		wingEfficiency=0.8F;
-		tailDistance=7;
-		rudderArea=1.5F;
-		elevatorArea=3.0F;
+		tailDistance=5;
+		rudderArea=1F;
+		elevatorArea=2F;
 		maxLiftCoeff=2F;
 		defaultElevatorAngle=0F;
 		initialDragCoeff=0.03F;
@@ -60,7 +56,6 @@ public class EntityPZLP11 extends EntityPlane{
 	
 	@Override
 	protected void initChildPositions(){
-		//TODO set new positions
 		addCenterWheelPosition(new float[]{0F, -0.5F, -5.5F});
 		addLeftWheelPosition(new float[]{-1.4F, -1.8F, 0.375F});
 		addRightWheelPosition(new float[]{1.4F, -1.8F, 0.375F});
@@ -81,23 +76,21 @@ public class EntityPZLP11 extends EntityPlane{
 	
 	@Override
 	public GUIParent getGUI(EntityPlayer player){
-		//TODO make new GUI
 		return new GUIParent(player, this, foregroundGUI);
 	}
 	
 	@Override
 	public void initParentContainerSlots(ContainerParent container){
-		//TODO make new GUI
-		container.addSlotToContainer(new SlotWheelSmall(this, 86, 113, 1));
-		container.addSlotToContainer(new SlotWheelLarge(this, 50, 113, 2));
+		container.addSlotToContainer(new SlotWheelLarge(this, 86, 113, 2));
+		container.addSlotToContainer(new SlotWheelSmall(this, 50, 113, 1));
 		container.addSlotToContainer(new SlotWheelLarge(this, 68, 113, 4));
-		container.addSlotToContainer(new SlotEngineLarge(this, 131, 66, 6));
-		container.addSlotToContainer(new SlotPropeller(this, 150, 66, 10));
-		container.addSlotToContainer(new SlotPilot(this, 110, 66));
+		container.addSlotToContainer(new SlotEngineLarge(this, 131, 62, 6));
+		container.addSlotToContainer(new SlotPropeller(this, 149, 62, 10));
+		container.addSlotToContainer(new SlotPilot(this, 113, 62));
 		container.addSlotToContainer(new SlotBucket(this, 7, 113));
 		container.addSlotToContainer(new SlotFuel(this, 7, 73));
-		for(int i=0; i<10; ++i){
-			container.addSlotToContainer(new SlotInstrument(this, 7 + 18*(i%5), i < 5 ? 7 : 25, i + instrumentStartSlot));
+		for(byte i=0; i<6; ++i){
+			container.addSlotToContainer(new SlotInstrument(this, 7 + 18*(i%3), i < 3 ? 7 : 25, (i < 3 ? i + 1 : i + 3 ) + instrumentStartSlot));
 		}
 	}
 }
