@@ -182,6 +182,7 @@ public abstract class EntityPlane extends EntityParent{
 	private void getBasicProperties(){		
 		currentMass = (float) (emptyMass + fuel/50);
 		currentCOG = emptyCOG;
+		//TODO make COG better.
 		for(EntityChild child : getChildren()){;
 			if(child.riddenByEntity != null){
 				currentCOG = (currentCOG*currentMass + child.offsetZ*100F)/(currentMass+100F);

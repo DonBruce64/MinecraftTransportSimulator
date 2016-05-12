@@ -93,6 +93,11 @@ public class EntityPropeller extends EntityChild{
 	}
 	
 	@Override
+	public boolean canBeCollidedWith(){
+		return true;
+	}
+	
+	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
 		this.numberBlades=tagCompound.getInteger("numberBlades");

@@ -456,6 +456,9 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	public abstract GUIParent getGUI(EntityPlayer player);
 	public abstract void initParentContainerSlots(ContainerParent container);
 	
+	public boolean canBeCollidedWith(){
+		return true;
+	}
 	
 	//Start of IInventory section
 	@Override

@@ -13,8 +13,8 @@ public abstract class EntityWheel extends EntityChild{
 		super(world);
 	}
 	
-	public EntityWheel(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
+	public EntityWheel(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ){
+		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, 0);
 	}
 	
 	@Override
@@ -33,10 +33,5 @@ public abstract class EntityWheel extends EntityChild{
 			}
 			angularPosition += angularVelocity;
 		}
-	}
-	
-	@Override
-	public boolean canBeCollidedWith(){
-		return false;
 	}
 }

@@ -49,7 +49,6 @@ public abstract class EntityBase extends Entity{
 		MFS.MFSNet.sendToAll(new ServerSendDataPacket(this.getEntityId(), tagCompound));
 	}
 	
-	public boolean canBeCollidedWith(){return true;}
 	public float getShadowSize(){return 0.0F;}
 	
     @Override

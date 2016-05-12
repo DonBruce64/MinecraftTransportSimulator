@@ -131,11 +131,6 @@ public abstract class EntityEngine extends EntityChild{
 	}
 	
 	@Override
-	public boolean canBeCollidedWith(){
-		return false;
-	}
-	
-	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
 		this.engineOn=tagCompound.getBoolean("engineOn");
