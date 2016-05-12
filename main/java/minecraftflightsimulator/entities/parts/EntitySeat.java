@@ -32,7 +32,7 @@ public class EntitySeat extends EntityChild{
 			if(riddenByEntity==null){
 				player.mountEntity(this);
 				return true;
-			}else{
+			}else if(!riddenByEntity.equals(player)){
 				MFS.MFSNet.sendTo(new ChatPacket("This seat is taken!"), (EntityPlayerMP) player);
 			}
 		}
@@ -43,12 +43,7 @@ public class EntitySeat extends EntityChild{
 	public boolean canRiderInteract(){
 		return true;
 	}
-	
-	@Override
-	public boolean canBeCollidedWith(){
-		return true;
-	}
-	
+
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
@@ -72,6 +67,11 @@ public class EntitySeat extends EntityChild{
 			Vec3 posVec = RotationHelper.getRotatedPoint(offsetX, (float) (offsetY + this.riddenByEntity.getYOffset()), (float) offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
 			this.riddenByEntity.setPosition(parent.posX + posVec.xCoord, parent.posY + posVec.yCoord, parent.posZ + posVec.zCoord);
         }
+	}
+	
+	@Override
+	public boolean canBeCollidedWith(){
+		return true;
 	}
 	
 	@Override
