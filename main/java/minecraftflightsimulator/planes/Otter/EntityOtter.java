@@ -62,8 +62,8 @@ public class EntityOtter extends EntityPlane{
 		addEnginePosition(new float[]{2.975F, 1.7F, 1.91F});
 		addPropellerPosition(new float[]{-2.975F, 1.6F, 2.7F});
 		addPropellerPosition(new float[]{2.975F, 1.6F, 2.7F});
-		addPilotPosition(new float[]{0.45F, 0.8F, 3.55F});
-		addPilotPosition(new float[]{-0.45F, 0.8F, 3.55F});
+		addPilotPosition(new float[]{0.45F, 0.9F, 3.35F});
+		addPilotPosition(new float[]{-0.45F, 0.9F, 3.35F});
 		for(byte i=0; i<5; ++i){
 			addPassengerPosition(new float[]{0.45F, 0.8F, 1.82F-i});
 			addPassengerPosition(new float[]{-0.45F, 0.8F, 1.82F-i});
