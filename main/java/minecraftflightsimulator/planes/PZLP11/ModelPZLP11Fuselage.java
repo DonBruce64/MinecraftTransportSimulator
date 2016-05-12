@@ -1483,7 +1483,7 @@ public class ModelPZLP11Fuselage extends ModelBase{
       setRotation(tl64, 0F, 0F, 0F);
       tl65 = new ModelRenderer(this, 5, 205);
       tl65.addBox(0F, 0F, 0F, 8, 0, 19);
-      tl65.setRotationPoint(-4F, -10F, 54F);
+      tl65.setRotationPoint(-4F, -9.999F, 54F);
       tl65.setTextureSize(256, 256);
       tl65.mirror = true;
       setRotation(tl65, 0F, 0F, 0F);
@@ -1729,7 +1729,7 @@ public class ModelPZLP11Fuselage extends ModelBase{
       setRotation(Vs13, 0F, 0F, 0F);
       Vs14 = new ModelRenderer(this, 88, 28);
       Vs14.addBox(0F, -19.7F, 0F, 0, 20, 2);
-      Vs14.setRotationPoint(1F, -13F, 73F);
+      Vs14.setRotationPoint(1.001F, -13F, 73F);
       Vs14.setTextureSize(256, 256);
       Vs14.mirror = true;
       setRotation(Vs14, -0.2617994F, 0F, 0F);
@@ -1897,7 +1897,7 @@ public class ModelPZLP11Fuselage extends ModelBase{
       setRotation(Hs17, 0F, 0F, 0F);
       Hs18 = new ModelRenderer(this, 6, 43);
       Hs18.addBox(-21F, 0F, 0F, 21, 0, 2);
-      Hs18.setRotationPoint(-5F, -8F, 73F);
+      Hs18.setRotationPoint(-5F, -8.001F, 73F);
       Hs18.setTextureSize(256, 256);
       Hs18.mirror = true;
       setRotation(Hs18, 0F, 0.4452335F, 0F);
@@ -3259,7 +3259,7 @@ public class ModelPZLP11Fuselage extends ModelBase{
       setRotation(Wg56, 0F, 0F, 0F);
       Wg57 = new ModelRenderer(this, 105, 33);
       Wg57.addBox(-2F, 0F, -11F, 2, 0, 11);
-      Wg57.setRotationPoint(-27F, -18F, 19F);
+      Wg57.setRotationPoint(-27F, -18.001F, 19F);
       Wg57.setTextureSize(256, 256);
       Wg57.mirror = true;
       setRotation(Wg57, 0F, -0.715585F, 0F);
@@ -3271,7 +3271,7 @@ public class ModelPZLP11Fuselage extends ModelBase{
       setRotation(Wg58, 0F, 0F, 0F);
       Wg60 = new ModelRenderer(this, 105, 33);
       Wg60.addBox(0F, 0F, -11F, 2, 0, 11);
-      Wg60.setRotationPoint(27F, -18F, 19F);
+      Wg60.setRotationPoint(27F, -18.001F, 19F);
       Wg60.setTextureSize(256, 256);
       Wg60.mirror = true;
       setRotation(Wg60, 0F, 0.715585F, 0F);
@@ -3373,7 +3373,7 @@ public class ModelPZLP11Fuselage extends ModelBase{
       setRotation(Hs22, 0F, 0F, 0F);
       Hs23 = new ModelRenderer(this, 6, 41);
       Hs23.addBox(0F, 0F, 0F, 21, 0, 2);
-      Hs23.setRotationPoint(5F, -8F, 73F);
+      Hs23.setRotationPoint(5F, -8.001F, 73F);
       Hs23.setTextureSize(256, 256);
       Hs23.mirror = true;
       setRotation(Hs23, 0F, -0.4452335F, 0F);
@@ -3613,7 +3613,7 @@ public class ModelPZLP11Fuselage extends ModelBase{
       setRotation(Hs41, 0F, -0.4452335F, 0F);
       Hs42 = new ModelRenderer(this, 6, 45);
       Hs42.addBox(0F, 0F, 0F, 21, 0, 2);
-      Hs42.setRotationPoint(5F, -10F, 73F);
+      Hs42.setRotationPoint(5F, -9.999F, 73F);
       Hs42.setTextureSize(256, 256);
       Hs42.mirror = true;
       setRotation(Hs42, 0F, -0.4452335F, 0F);
@@ -3739,7 +3739,7 @@ public class ModelPZLP11Fuselage extends ModelBase{
       setRotation(Hs62, 0F, 0.4452335F, 0F);
       Hs63 = new ModelRenderer(this, 6, 47);
       Hs63.addBox(-21F, 0F, 0F, 21, 0, 2);
-      Hs63.setRotationPoint(-5F, -10F, 73F);
+      Hs63.setRotationPoint(-5F, -10.001F, 73F);
       Hs63.setTextureSize(256, 256);
       Hs63.mirror = true;
       setRotation(Hs63, 0F, 0.4452335F, 0F);
@@ -3775,7 +3775,7 @@ public class ModelPZLP11Fuselage extends ModelBase{
       setRotation(Vs30, -0.2617994F, 0F, 0F);
       Vs31 = new ModelRenderer(this, 88, 28);
       Vs31.addBox(0F, -19.7F, 0F, 0, 20, 2);
-      Vs31.setRotationPoint(-1F, -13F, 73F);
+      Vs31.setRotationPoint(-1.001F, -13F, 73F);
       Vs31.setTextureSize(256, 256);
       Vs31.mirror = true;
       setRotation(Vs31, -0.2617994F, 0F, 0F);
@@ -3865,7 +3865,7 @@ public class ModelPZLP11Fuselage extends ModelBase{
       setRotation(Wg110, 0F, -0.715585F, 0F);
       Wg111 = new ModelRenderer(this, 113, 32);
       Wg111.addBox(-2F, 0F, -11F, 2, 0, 11);
-      Wg111.setRotationPoint(-27F, -20F, 19F);
+      Wg111.setRotationPoint(-27F, -19.999F, 19F);
       Wg111.setTextureSize(256, 256);
       Wg111.mirror = true;
       setRotation(Wg111, 0F, -0.715585F, 0F);
@@ -3961,7 +3961,7 @@ public class ModelPZLP11Fuselage extends ModelBase{
       setRotation(Wg126, 0F, 0.715585F, 0F);
       Wg127 = new ModelRenderer(this, 109, 32);
       Wg127.addBox(0F, 0F, -11F, 2, 0, 11);
-      Wg127.setRotationPoint(27F, -20F, 19F);
+      Wg127.setRotationPoint(27F, -19.999F, 19F);
       Wg127.setTextureSize(256, 256);
       Wg127.mirror = true;
       setRotation(Wg127, 0F, 0.715585F, 0F);
