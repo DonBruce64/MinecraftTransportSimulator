@@ -3,6 +3,9 @@ death.attack.propellor.player=%1$s was was shredded by a propellor while fightin
 entity.mfs.Chest.name=Plane Chest
 
 item.MC172.name=MC-172
+item.PZLP11.name=PZL P.11
+item.Otter.name=Twin Otter
+item.Trimotor.name=Trimotor
 item.Seat.name=Seat
 item.WheelSmall.name=Small Wheel
 item.WheelLarge.name=Large Wheel
