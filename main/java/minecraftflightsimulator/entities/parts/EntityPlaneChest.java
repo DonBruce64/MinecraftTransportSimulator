@@ -121,8 +121,6 @@ public class EntityPlaneChest extends EntityChild implements IInventory{
 	public int getSizeInventory(){return 27;}
 	public int getInventoryStackLimit(){return 64;}
 	public String getInventoryName(){return StatCollector.translateToLocal("entity.mfs.Chest.name");}
-	
-	
 	public ItemStack getStackInSlot(int slot){return this.chestContents[slot];}
 	public ItemStack getStackInSlotOnClosing(int slot){return null;}
 	
