@@ -32,10 +32,15 @@ public class ItemPlane extends Item{
 	@Override
 	public boolean onItemUse(ItemStack item, EntityPlayer player, World world, int x, int y, int z, int p_77648_7_, float hitX, float hitY, float hitZ){
 		if(!world.isRemote){
-			EntityPlane plane;
+			EntityPlane newPlane;
 			try{
-				plane = this.plane.getConstructor(World.class, float.class, float.class, float.class, float.class, int.class).newInstance(world, x, y+1.5F, z, player.rotationYaw, item.getItemDamage());
-				if(canSpawnPlane(world, plane)){
+				newPlane = this.plane.getConstructor(World.class, float.class, float.class, float.class, float.class, int.class).newInstance(world, x, y + 1, z, player.rotationYaw, item.getItemDamage());
+				float minHeight = 0;
+				for(float[] coreCoords : newPlane.getCoreLocations()){
+					minHeight = -coreCoords[1] > minHeight ? -coreCoords[1] : minHeight;
+				}
+				newPlane.posY += minHeight;				
+				if(canSpawnPlane(world, newPlane)){
 					if(!player.capabilities.isCreativeMode){
 						--item.stackSize;
 					}
