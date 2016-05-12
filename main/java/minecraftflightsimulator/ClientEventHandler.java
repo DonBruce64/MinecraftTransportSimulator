@@ -28,14 +28,10 @@ public class ClientEventHandler{
 					((EntityParent) entity).moveChildren();
 				}
 			}
-		}
-	}
-	
-	@SubscribeEvent
-	public void on(TickEvent.PlayerTickEvent event){
-		if(Minecraft.getMinecraft().thePlayer.ridingEntity == null){
-			RenderHelper.changeCameraRoll(0);
-			RenderHelper.changeCameraZoom(0);
+			if(Minecraft.getMinecraft().thePlayer.ridingEntity == null){
+				RenderHelper.changeCameraRoll(0);
+				RenderHelper.changeCameraZoom(0);
+			}
 		}
 	}
 	
