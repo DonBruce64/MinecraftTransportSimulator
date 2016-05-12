@@ -12,6 +12,7 @@ import minecraftflightsimulator.entities.parts.EntityWheelLarge;
 import minecraftflightsimulator.entities.parts.EntityWheelSmall;
 import minecraftflightsimulator.helpers.ControlHelper;
 import minecraftflightsimulator.helpers.RenderHelper;
+import minecraftflightsimulator.items.ItemRender;
 import minecraftflightsimulator.modelrenders.RenderEngine;
 import minecraftflightsimulator.modelrenders.RenderNull;
 import minecraftflightsimulator.modelrenders.RenderPlaneChest;
@@ -30,6 +31,7 @@ import minecraftflightsimulator.sounds.EngineSound;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.MinecraftForge;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -49,6 +51,7 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	private void initEntityRenders(){
+		//MinecraftForgeClient.registerItemRenderer(this.skid, new ItemRender());
 		RenderingRegistry.registerEntityRenderingHandler(EntityMC172.class, new RenderMC172());
 		RenderingRegistry.registerEntityRenderingHandler(EntityTrimotor.class, new RenderTrimotor());
 		RenderingRegistry.registerEntityRenderingHandler(EntityOtter.class, new RenderOtter());

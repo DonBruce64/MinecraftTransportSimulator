@@ -8,6 +8,7 @@ import minecraftflightsimulator.entities.parts.EntityEngineSmall;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
 import minecraftflightsimulator.entities.parts.EntitySeat;
+import minecraftflightsimulator.entities.parts.EntitySkid;
 import minecraftflightsimulator.entities.parts.EntityWheelLarge;
 import minecraftflightsimulator.entities.parts.EntityWheelSmall;
 import minecraftflightsimulator.items.ItemEngineLarge;
@@ -19,6 +20,7 @@ import minecraftflightsimulator.items.ItemPointerLong;
 import minecraftflightsimulator.items.ItemPointerShort;
 import minecraftflightsimulator.items.ItemPropeller;
 import minecraftflightsimulator.items.ItemSeat;
+import minecraftflightsimulator.items.ItemSkid;
 import minecraftflightsimulator.items.ItemWheelLarge;
 import minecraftflightsimulator.items.ItemWheelSmall;
 import minecraftflightsimulator.packets.control.AileronPacket;
@@ -31,6 +33,7 @@ import minecraftflightsimulator.packets.control.ThrottlePacket;
 import minecraftflightsimulator.packets.general.ChatPacket;
 import minecraftflightsimulator.packets.general.ClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.FuelPacket;
+import minecraftflightsimulator.packets.general.GUIPacket;
 import minecraftflightsimulator.packets.general.ServerSendDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
@@ -54,13 +57,15 @@ import cpw.mods.fml.relauncher.Side;
 
 public class CommonProxy{
 	public static final Item planeMC172 = new ItemPlane(EntityMC172.class, 6);
+	public static final Item planePLZP11 = new ItemPlane(EntityPZLP11.class, 1);
 	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 1);
 	public static final Item planeOtter = new ItemPlane(EntityOtter.class, 1);
-	public static final Item planePLZP11 = new ItemPlane(EntityPZLP11.class, 1);
+	
 	
 	public static final Item seat = new ItemSeat();
 	public static final Item wheelSmall = new ItemWheelSmall();
 	public static final Item wheelLarge = new ItemWheelLarge();
+	public static final Item skid = new ItemSkid();
 	public static final Item propeller = new ItemPropeller();
 	public static final Item engineSmall = new ItemEngineSmall();
 	public static final Item engineLarge = new ItemEngineLarge();
@@ -83,15 +88,16 @@ public class CommonProxy{
 	
 	private void initEntites(){
 		registerEntity(EntityMC172.class);
+		registerEntity(EntityPZLP11.class);
 		registerEntity(EntityTrimotor.class);
 		registerEntity(EntityOtter.class);
-		registerEntity(EntityPZLP11.class);
 		
 		registerEntity(EntityCore.class);
 		registerEntity(EntitySeat.class);
 		registerEntity(EntityPlaneChest.class);
 		registerEntity(EntityWheelSmall.class);
 		registerEntity(EntityWheelLarge.class);
+		registerEntity(EntitySkid.class);
 		registerEntity(EntityPropeller.class);
 		registerEntity(EntityEngineSmall.class);
 		registerEntity(EntityEngineLarge.class);
@@ -106,6 +112,8 @@ public class CommonProxy{
 		MFS.MFSNet.registerMessage(FuelPacket.FuelPacketHandler.class,  FuelPacket.class, ++packetNumber, Side.CLIENT);
 		MFS.MFSNet.registerMessage(ServerSendDataPacket.ServerSendDataPacketHandler.class,  ServerSendDataPacket.class, ++packetNumber, Side.CLIENT);
 		MFS.MFSNet.registerMessage(ServerSyncPacket.ServerSyncPacketHandler.class,  ServerSyncPacket.class, ++packetNumber, Side.CLIENT);
+		
+		MFS.MFSNet.registerMessage(GUIPacket.GUIPacketHandler.class,  GUIPacket.class, ++packetNumber, Side.SERVER);
 		MFS.MFSNet.registerMessage(ClientRequestDataPacket.ClientRequestDataPacketHandler.class,  ClientRequestDataPacket.class, ++packetNumber, Side.SERVER);
 		
 		MFS.MFSNet.registerMessage(AileronPacket.AileronPacketHandler.class,  AileronPacket.class, ++packetNumber, Side.SERVER);
@@ -133,6 +141,7 @@ public class CommonProxy{
 		registerItem(seat);
 		registerItem(wheelSmall);
 		registerItem(wheelLarge);
+		//registerItem(skid);
 		registerItem(propeller);
 		registerItem(engineSmall);
 		registerItem(engineLarge);

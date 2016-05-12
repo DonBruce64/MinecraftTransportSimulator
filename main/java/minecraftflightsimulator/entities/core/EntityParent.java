@@ -33,6 +33,9 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+
 public abstract class EntityParent extends EntityBase implements IInventory{
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
@@ -120,16 +123,10 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	private Map<String, EntityPropeller> propellers = new HashMap<String, EntityPropeller>();
 	
 	/**
-	 * Map that contains mappings from propeller UUID to engine UUID.  Used when propellers
-	 * need to know what engine powers them.
+	 * BiMap that contains mappings of engine UUID to propeller UUID.  Used when propellers
+	 * need to know what engine powers them.  Or when engines need to know what propeller to power.
 	 */
-	private Map<String, String> propellerEngines = new HashMap<String, String>();
-	
-	/**
-	 * Map that contains mappings from engine UUID to propeller UUID.  Used when engines
-	 * need to know what propeller to power.
-	 */
-	private Map<String, String> enginePropellers = new HashMap<String, String>();
+	private BiMap<String, String> enginePropellers = HashBiMap.create();
 	
 	/**
 	 * List containing data about what instruments are equipped.
@@ -164,25 +161,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	}
 	
 	@Override
-    public boolean interactFirst(EntityPlayer player){
-		if(!worldObj.isRemote){
-			if(player.isSneaking()){
-				player.openGui(MFS.instance, this.getEntityId(), worldObj, (int) posX, (int) posY, (int) posZ);
-				return true;
-			}else{
-				for(EntityChild child : getChildren()){
-					if(child instanceof EntitySeat){
-						if(this.boundingBox.intersectsWith(child.boundingBox)){
-							child.interactFirst(player);
-						}
-					}
-				}
-			}
-		}
-		return false;
-    }
-	
-	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
 		if(!this.hasUUID()){return;}
@@ -210,7 +188,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
         float f4 = MathHelper.sin(-this.rotationPitch * 0.017453292F);
         return Vec3.createVectorHelper((double)(f2 * f3), (double)f4, (double)(f1 * f3));
    	}
-
+	
 	@Override
 	public boolean attackEntityFrom(DamageSource source, float damage){
 		super.attackEntityFrom(source, damage);
@@ -240,57 +218,13 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		}
 		for(EntityChild child : getChildren()){
 			removeChild(child.UUID);
-			child.setDead();
 		}
 	}
 	
+	//Start of custom methods
 	public void explodeAtPosition(double x, double y, double z){
 		this.setDead();
 		worldObj.newExplosion(this, x, y, z, (float) (fuel/1000 + 1F), true, true);
-	}
-
-	public void setEngineState(byte engineCode){
-		if(engineCode == 0){
-			throttle = 0;
-			for(EntityEngine engine : getEngines()){
-				engine.stopEngine(true);
-			}
-		}else if(engineCode != 1){
-			if(throttle < 15){throttle = 15;}
-			for(EntityEngine engine : getEngines()){
-				float[] enginePosition = {engine.offsetX, engine.offsetY, engine.offsetZ};
-				if(Arrays.equals(partPositions.get((int) engineCode), enginePosition)){
-					engine.startEngine();
-					return;
-				}
-			}
-		}else{
-			if(throttle < 15){throttle = 15;}
-			for(EntityEngine engine : getEngines()){
-				engine.startEngine();
-			}
-		}
-	}
-	
-	public byte getEngineOfHitPropeller(String propellerUUID){
-		EntityEngine engine = engines.get(propellerEngines.get(propellerUUID));
-		if(engine != null){
-			float[] enginePosition = {engine.offsetX, engine.offsetY, engine.offsetZ};
-			for(int i=6; i<=9; ++i){
-				if(Arrays.equals(enginePosition, partPositions.get(i))){
-					return (byte) i;
-				}
-			}
-		}
-		return 0;
-	}
-	
-	public List<Double> getEngineSpeeds(){
-		List<Double> speeds = new ArrayList<Double>();
-		for(EntityEngine engine : getEngines()){
-			speeds.add(engine.engineRPM);
-		}
-		return speeds;
 	}
 	
 	protected void addCenterWheelPosition(float[] coords){
@@ -367,40 +301,44 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			wheels.put(childUUID, (EntityWheel) child);
 		}else if(child instanceof EntityEngine){
 			engines.put(childUUID, (EntityEngine) child);
-			for(EntityPropeller propeller : getPropellers()){
-				if(propeller.offsetX == child.offsetX && Math.abs(propeller.offsetZ - child.offsetZ) < 2){
-					propellerEngines.put(propeller.UUID, childUUID);
-					enginePropellers.put(childUUID, propeller.UUID);
+			float[] childOffset = new float[]{child.offsetX, child.offsetY, child.offsetZ};
+			for(int i=1; i<pilotSeatSlot; ++i){
+				if(Arrays.equals(childOffset, partPositions.get(i))){
+					if(getChildAtLocation(partPositions.get(i+4)) != null){
+						enginePropellers.forcePut(childUUID, getChildAtLocation(partPositions.get(i+4)).UUID);
+					}
 				}
 			}
 		}else if(child instanceof EntityPropeller){
 			propellers.put(childUUID, (EntityPropeller) child);
-			for(EntityEngine engine : getEngines()){
-				if(engine.offsetX == child.offsetX && Math.abs(engine.offsetZ - child.offsetZ) < 2){
-					propellerEngines.put(childUUID, engine.UUID);
-					enginePropellers.put(engine.UUID, childUUID);
+			float[] childOffset = new float[]{child.offsetX, child.offsetY, child.offsetZ};
+			for(int i=1; i<pilotSeatSlot; ++i){
+				if(Arrays.equals(childOffset, partPositions.get(i))){
+					if(getChildAtLocation(partPositions.get(i-4)) != null){
+						enginePropellers.forcePut(getChildAtLocation(partPositions.get(i-4)).UUID, childUUID);
+					}
 				}
 			}
 		}
 	}
 	
 	/**
-	 * Removes a child from mappings.
-	 * remove method is not used.
+	 * Removes a child from mappings, setting it dead in the process.
 	 * @param childUUID
 	 */
 	public void removeChild(String childUUID){
 		if(children.containsKey(childUUID)){
+			children.get(childUUID).setDead();
 			children.remove(childUUID);
 			--numberChildren;
 		}
 		wheels.remove(childUUID);
 		engines.remove(childUUID);
 		propellers.remove(childUUID);
-		propellerEngines.remove(childUUID);
 		enginePropellers.remove(childUUID);
+		enginePropellers.inverse().remove(childUUID);
 	}
-	
+
 	public void moveChildren(){
 		for(EntityChild child : getChildren()){
 			if(child.isDead){
@@ -413,23 +351,67 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		}
 	}
 	
-	private EntityChild getChildAtLocation(float[] coords){
+	/**
+	 * Given an offset coordinate set, returns the child at that offset.
+	 * Used for finding out which slot a specified entity belongs to.
+	 * @param offsetCoords
+	 * @return the child with the specified offset.
+	 */
+	private EntityChild getChildAtLocation(float[] offsetCoords){
 		for(EntityChild child : getChildren()){
 			if(child.getClass().equals(EntityCore.class)){continue;}
-			float[] childPos = new float[]{child.offsetX, child.offsetY, child.offsetZ};
-			if(Arrays.equals(childPos, coords)){
+			float[] childOffset = new float[]{child.offsetX, child.offsetY, child.offsetZ};
+			if(Arrays.equals(childOffset, offsetCoords)){
 				return child;
 			}
 		}
 		return null;
 	}
 	
-	public int getNumberPilotSeats(){
-		return pilotPositions.size();
+	public void setEngineState(byte engineCode){
+		if(engineCode == 0){
+			throttle = 0;
+			for(EntityEngine engine : getEngines()){
+				engine.stopEngine(true);
+			}
+		}else if(engineCode != 1){
+			if(throttle < 15){throttle = 15;}
+			for(EntityEngine engine : getEngines()){
+				float[] enginePosition = {engine.offsetX, engine.offsetY, engine.offsetZ};
+				if(Arrays.equals(partPositions.get((int) engineCode), enginePosition)){
+					engine.startEngine();
+					return;
+				}
+			}
+		}else{
+			if(throttle < 15){throttle = 15;}
+			for(EntityEngine engine : getEngines()){
+				engine.startEngine();
+			}
+		}
 	}
 	
-	public int getNumberPassengerSeats(){
-		return passengerPositions.size();
+	public byte getEngineOfHitPropeller(String propellerUUID){
+		String engineUUID = enginePropellers.inverse().get(propellerUUID);
+		for(EntityEngine engine : getEngines()){
+			if(engine.UUID.equals(engineUUID)){
+				float[] enginePosition = {engine.offsetX, engine.offsetY, engine.offsetZ};
+				for(int i=6; i<=9; ++i){
+					if(Arrays.equals(enginePosition, partPositions.get(i))){
+						return (byte) i;
+					}
+				}
+			}
+		}
+		return 0;
+	}
+	
+	public List<Double> getEngineSpeeds(){
+		List<Double> speeds = new ArrayList<Double>();
+		for(EntityEngine engine : getEngines()){
+			speeds.add(engine.engineRPM);
+		}
+		return speeds;
 	}
 	
 	public static float calculateInventoryWeight(IInventory inventory){
@@ -443,6 +425,8 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		return weight;
 	}
 	
+	public int getNumberPilotSeats(){return pilotPositions.size();}
+	public int getNumberPassengerSeats(){return passengerPositions.size();}
 	protected EntityChild[] getChildren(){return children.values().toArray(new EntityChild[children.size()]);}	
 	protected EntityWheel[] getWheels(){return wheels.values().toArray(new EntityWheel[wheels.size()]);}
 	protected EntityEngine[] getEngines(){return engines.values().toArray(new EntityEngine[engines.size()]);}
@@ -456,38 +440,23 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	public abstract GUIParent getGUI(EntityPlayer player);
 	public abstract void initParentContainerSlots(ContainerParent container);
 	
-	public boolean canBeCollidedWith(){
-		return true;
-	}
+	
 	
 	//Start of IInventory section
-	@Override
-	public int getSizeInventory(){
-		return compenentItems.length;
-	}
-	
-	@Override
-	public ItemStack getStackInSlot(int slot){
-		return compenentItems[slot];
-	}
-	
-	@Override
-	public ItemStack decrStackSize(int slot, int amount){
-		ItemStack stack = getStackInSlot(slot);
-		if(stack != null){
-			setInventorySlotContents(slot, null);
-		}
-		return stack;
-	}
-	
-	@Override
-	public ItemStack getStackInSlotOnClosing(int slot){
-		ItemStack stack = getStackInSlot(slot);
-		if(stack != null){
-			setInventorySlotContents(slot, null);
-		}
-		return stack;
-	}
+	public void markDirty(){}
+	public void openInventory(){this.openInventory(null);}
+	public void openInventory(EntityPlayer player){loadInventory();}
+	public void closeInventory(){this.closeInventory(null);}
+    public void closeInventory(EntityPlayer player){saveInventory();}
+    
+	public boolean hasCustomInventoryName(){return false;}
+	public boolean isUseableByPlayer(EntityPlayer player){return player.getDistanceToEntity(this) < 5;}
+	public boolean isItemValidForSlot(int slot, ItemStack stack){return false;}
+	public int getSizeInventory(){return compenentItems.length;}
+	public int getInventoryStackLimit(){return 1;}
+	public String getInventoryName(){return "Parent Inventory";}
+	public ItemStack getStackInSlot(int slot){return compenentItems[slot];}
+	public ItemStack getStackInSlotOnClosing(int slot){return null;}
 	
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack stack){
@@ -495,40 +464,30 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	}
 	
 	@Override
-	public String getInventoryName(){
-		return "Parent Inventory";
-	}
+    public ItemStack decrStackSize(int slot, int number){
+        if(compenentItems[slot] != null){
+            ItemStack itemstack;
+            if(compenentItems[slot].stackSize <= number){
+                itemstack = compenentItems[slot];
+                compenentItems[slot] = null;
+                return itemstack;
+            }else{
+                itemstack = compenentItems[slot].splitStack(number);
+                if(compenentItems[slot].stackSize == 0){
+                	compenentItems[slot] = null;
+                }
+                return itemstack;
+            }
+        }else{
+            return null;
+        }
+    }
 	
-	@Override
-	public boolean hasCustomInventoryName(){
-		return false;
-	}
-	
-	@Override
-	public int getInventoryStackLimit(){
-		return 1;
-	}
-	
-	@Override
-	public void markDirty(){}
-	
-	@Override
-	public boolean isUseableByPlayer(EntityPlayer player){
-		return player.getDistanceToEntity(this) < 5;
-	}
-	
-	@Override
-	public boolean isItemValidForSlot(int slot, ItemStack stack){
-		return false;
-	}
-	
-	@Override
-    public void openInventory(){
+	public void loadInventory(){
 		if(!worldObj.isRemote){
-			EntityChild child;
-			//First match part positions to slots.
+			//First, match part positions to slots.
 			for(int i=1; i<pilotSeatSlot; ++i){
-				child = getChildAtLocation(partPositions.get(i));
+				EntityChild child = getChildAtLocation(partPositions.get(i));				
 				if(child != null){
 					if(i <= 5){
 						if(child instanceof EntityWheelLarge){
@@ -550,11 +509,11 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				}
 			}
 			
-			//Next get seats inputed
+			//Next, get seats inputed
 			int numberPilotSeats = 0;
 			int pilotPropertyCode = 0;
 			for(int i=0; i<pilotPositions.size(); ++i){
-				child = getChildAtLocation(pilotPositions.get(i));
+				EntityChild child = getChildAtLocation(pilotPositions.get(i));
 				if(child != null){
 					++numberPilotSeats;
 					pilotPropertyCode = child.propertyCode;
@@ -568,7 +527,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			int passengerPropertyCode = 0;
 			boolean chests = false;
 			for(int i=0; i<passengerPositions.size(); ++i){
-				child = getChildAtLocation(passengerPositions.get(i));
+				EntityChild child = getChildAtLocation(passengerPositions.get(i));
 				if(child != null){
 					++numberPassengerSeats;
 					passengerPropertyCode = child.propertyCode;
@@ -583,6 +542,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				}
 			}
 			
+			//Finally, do instrument and bucket things
 			for(int i=0; i<10; ++i){
 				setInventorySlotContents(i+instrumentStartSlot, instrumentList.get(i));
 			}
@@ -593,44 +553,36 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		}
 	}
 
-	@Override
-    public void closeInventory(){
+    public void saveInventory(){
 		if(!worldObj.isRemote){
-			EntityChild child;
 			EntityChild newChild;
-			ItemStack stack;
-			boolean needsBoosting = true;
+			float boostAmount = 0;
 			
-			//First spawn components
+			//First, spawn components
 			for(int i=1; i<pilotSeatSlot; ++i){
-				child = getChildAtLocation(partPositions.get(i));
-				stack = getStackInSlot(i);
+				float[] position = partPositions.get(i);
+				EntityChild child = getChildAtLocation(partPositions.get(i));
+				ItemStack stack = getStackInSlot(i);
+				
 				if(stack != null){
-					if(child != null){
-						if(child.propertyCode == stack.getItemDamage()){
-							if(i >= 10 && i <= 13 && getStackInSlot(i-4) == null){
-								worldObj.spawnEntityInWorld(new EntityItem(worldObj, this.posX, this.posY, this.posZ, new ItemStack(MFS.proxy.propeller, 1,stack.getItemDamage())));
-								child.setDead();
-								removeChild(child.UUID);
-								setInventorySlotContents(i, null);
-							}
-							continue;
-						}else{
-							child.setDead();
+					//Is a propeller not connected to an engine?
+					if(i >= 10 && i <= 13 && getStackInSlot(i-4) == null){
+						worldObj.spawnEntityInWorld(new EntityItem(worldObj, this.posX, this.posY, this.posZ, new ItemStack(MFS.proxy.propeller, 1, stack.getItemDamage())));
+						setInventorySlotContents(i, null);
+						if(child != null){
 							removeChild(child.UUID);
+						}
+						continue;
+					}
+					
+					if(child != null){
+						if(child.propertyCode != stack.getItemDamage()){
+							removeChild(child.UUID);
+						}else{
+							continue;
 						}
 					}
 					
-					//TODO fix false boosting
-					if(needsBoosting){
-						this.rotationPitch = 0;
-						this.rotationRoll = 0;
-						this.setPosition(posX, posY+1.5, posZ);
-						this.sendDataToClient();
-						needsBoosting = false;
-					}
-					
-					float[] position = partPositions.get(i);
 					if(i <= 5){
 						if(stack.getItem().equals(MFS.proxy.wheelLarge)){
 							newChild = new EntityWheelLarge(worldObj, this, this.UUID, position[0], position[1], position[2]);
@@ -648,21 +600,29 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 					}else{
 						continue;
 					}
+					
+					if(newChild.isCollidedHorizontally()){
+						float boost = Math.max(0, -newChild.offsetY);
+						this.rotationPitch = 0;
+						this.rotationRoll = 0;
+						this.setPosition(posX, posY + boost, posZ);
+						newChild.setPosition(newChild.posX, newChild.posY + boost, newChild.posZ);
+					}
 					worldObj.spawnEntityInWorld(newChild);
 					addChild(newChild.UUID, newChild, true);
 				}else{
 					if(child != null){
-						child.setDead();
 						removeChild(child.UUID);
 					}
 				}
 			}
 			
-			//Next spawn new seats
+			//Next, spawn new seats
 			int numberPilotSeats = getStackInSlot(pilotSeatSlot) == null ? 0 : getStackInSlot(pilotSeatSlot).stackSize;
 			for(int i=0; i<pilotPositions.size(); ++i){
 				float[] position = pilotPositions.get(i);
-				child = getChildAtLocation(position);
+				EntityChild child = getChildAtLocation(position);
+				
 				if(child != null){
 					if(getStackInSlot(pilotSeatSlot) == null ? true : (i+1 > numberPilotSeats || getStackInSlot(pilotSeatSlot).getItemDamage() != child.propertyCode)){
 						child.setDead();
@@ -682,7 +642,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			boolean chests = getStackInSlot(passengerSeatSlot) == null ? false : (getStackInSlot(passengerSeatSlot).getItem().equals(Item.getItemFromBlock(Blocks.chest)) ? true : false);
 			for(int i=0; i<passengerPositions.size(); ++i){
 				float[] position = passengerPositions.get(i);
-				child = getChildAtLocation(position);
+				EntityChild child = getChildAtLocation(position);
 				if(child != null){
 					if(getStackInSlot(passengerSeatSlot) == null ? true : (i+1 > numberPassengerSeats || getStackInSlot(passengerSeatSlot).getItemDamage() != child.propertyCode || !(child instanceof EntitySeat ^ chests))){
 						child.setDead();
@@ -702,6 +662,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				}
 			}
 			
+			//Finally, do instrument and bucket things
 			for(int i=0; i<10; ++i){
 				instrumentList.set(i, getStackInSlot(i+instrumentStartSlot));
 			}
@@ -715,7 +676,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				setInventorySlotContents(fuelBucketSlot, null);
 			}
 			this.sendDataToClient();
-			//MFS.MFSNet.sendToAll(new FuelPacket(this.getEntityId(), fuel, emptyBuckets));
 		}
 	}
 	

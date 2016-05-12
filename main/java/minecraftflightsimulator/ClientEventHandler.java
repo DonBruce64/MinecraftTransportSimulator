@@ -4,6 +4,7 @@ import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.helpers.ControlHelper;
 import minecraftflightsimulator.helpers.RenderHelper;
+import minecraftflightsimulator.packets.general.GUIPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -17,6 +18,7 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 
 //This class handles rendering/camera edits that need to happen when riding planes.
+//It also calls GUI's up when the player presses the P key.
 public class ClientEventHandler{
 	public static ClientEventHandler instance = new ClientEventHandler();
 	
@@ -74,7 +76,21 @@ public class ClientEventHandler{
     public void onKeyInput(InputEvent.KeyInputEvent event){
     	if(ControlHelper.configKey.isPressed()){
     		EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
-    		player.openGui(MFS.instance, -1, player.worldObj, (int) player.posX, (int) player.posY, (int) player.posZ);
+    		if(player.ridingEntity instanceof EntitySeat){
+    			player.openGui(MFS.instance, -1, player.worldObj, (int) player.posX, (int) player.posY, (int) player.posZ);
+    		}else{
+    			for(Object entity : player.worldObj.loadedEntityList){
+    				if(entity instanceof EntityParent){
+    					EntityParent parent = (EntityParent) entity;
+    					if(parent.getDistanceToEntity(player) < 5){
+    						MFS.MFSNet.sendToServer(new GUIPacket(parent.getEntityId()));
+    						player.openGui(MFS.instance, parent.getEntityId(), player.worldObj, (int) player.posX, (int) player.posY, (int) player.posZ);
+    						return;
+    					}
+    				}
+    			}
+    			
+    		}
     	}
     }
 }
