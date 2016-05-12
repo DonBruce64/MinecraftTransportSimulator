@@ -53,6 +53,12 @@ public class EntityPlaneChest extends EntityChild implements IInventory{
 	}
 	
 	@Override
+	public boolean canBeCollidedWith(){
+		return true;
+	}
+	
+	//Copied from chest code
+	@Override
 	public void onEntityUpdate(){
         super.onEntityUpdate();
         ++this.ticksSinceSync;
@@ -102,17 +108,31 @@ public class EntityPlaneChest extends EntityChild implements IInventory{
         }
     }
 	
-	@Override
-	public int getSizeInventory(){
-		return 27;
-	}
 	
-	@Override
-	public ItemStack getStackInSlot(int slot){
-		return this.chestContents[slot];
-	}
+	public void markDirty(){}
+	public void openInventory(){this.openInventory(null);}
+	public void openInventory(EntityPlayer player){this.numPlayersUsing = this.numPlayersUsing < 0 ? 0 : this.numPlayersUsing + 1;}
+	public void closeInventory(){this.closeInventory(null);}
+    public void closeInventory(EntityPlayer player){--this.numPlayersUsing;}
+    
+	public boolean hasCustomInventoryName(){return false;}
+	public boolean isUseableByPlayer(EntityPlayer player){return player.getDistanceToEntity(this) < 5;}
+	public boolean isItemValidForSlot(int slot, ItemStack stack){return true;}
+	public int getSizeInventory(){return 27;}
+	public int getInventoryStackLimit(){return 64;}
+	public String getInventoryName(){return StatCollector.translateToLocal("entity.mfs.Chest.name");}
 	
-	@Override
+	
+	public ItemStack getStackInSlot(int slot){return this.chestContents[slot];}
+	public ItemStack getStackInSlotOnClosing(int slot){return null;}
+	
+    public void setInventorySlotContents(int slot, ItemStack item){
+        this.chestContents[slot] = item;
+        if(item != null && item.stackSize > this.getInventoryStackLimit()){
+            item.stackSize = this.getInventoryStackLimit();
+        }
+    }
+	
     public ItemStack decrStackSize(int slot, int number){
         if(this.chestContents[slot] != null){
             ItemStack itemstack;
@@ -130,66 +150,6 @@ public class EntityPlaneChest extends EntityChild implements IInventory{
         }else{
             return null;
         }
-    }
-	
-	@Override
-    public ItemStack getStackInSlotOnClosing(int slot){
-        if(this.chestContents[slot] != null){
-            ItemStack itemstack = this.chestContents[slot];
-            this.chestContents[slot] = null;
-            return itemstack;
-        }else{
-            return null;
-        }
-    }
-	
-	@Override
-    public void setInventorySlotContents(int slot, ItemStack item){
-        this.chestContents[slot] = item;
-        if(item != null && item.stackSize > this.getInventoryStackLimit()){
-            item.stackSize = this.getInventoryStackLimit();
-        }
-    }
-	
-	@Override
-	public String getInventoryName(){
-		return StatCollector.translateToLocal("entity.mfs.Chest.name");
-	}
-	
-	@Override
-	public boolean hasCustomInventoryName(){
-		return false;
-	}
-	
-	@Override
-	public int getInventoryStackLimit(){
-		return 64;
-	}
-	
-	@Override
-	public void markDirty(){}
-	
-	@Override
-	public boolean isUseableByPlayer(EntityPlayer player){
-		return player.getDistanceToEntity(this) < 5;
-	}
-	
-	@Override
-	public boolean isItemValidForSlot(int slot, ItemStack stack){
-		return true;
-	}
-
-	@Override
-    public void openInventory(){
-        if(this.numPlayersUsing < 0){
-            this.numPlayersUsing = 0;
-        }
-        ++this.numPlayersUsing;
-    }
-
-	@Override
-    public void closeInventory(){
-    	--this.numPlayersUsing;
     }
 	
 	@Override
