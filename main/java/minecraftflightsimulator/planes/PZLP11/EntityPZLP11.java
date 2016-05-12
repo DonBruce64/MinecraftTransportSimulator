@@ -82,8 +82,8 @@ public class EntityPZLP11 extends EntityPlane{
 	@Override
 	public void initParentContainerSlots(ContainerParent container){
 		container.addSlotToContainer(new SlotWheelLarge(this, 86, 113, 2));
-		container.addSlotToContainer(new SlotWheelSmall(this, 50, 113, 1));
-		container.addSlotToContainer(new SlotWheelLarge(this, 68, 113, 4));
+		container.addSlotToContainer(new SlotWheelSmall(this, 68, 113, 1));
+		container.addSlotToContainer(new SlotWheelLarge(this, 50, 113, 4));
 		container.addSlotToContainer(new SlotEngineLarge(this, 131, 62, 6));
 		container.addSlotToContainer(new SlotPropeller(this, 149, 62, 10));
 		container.addSlotToContainer(new SlotPilot(this, 113, 62));
