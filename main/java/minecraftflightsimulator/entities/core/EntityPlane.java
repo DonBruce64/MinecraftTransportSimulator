@@ -5,6 +5,7 @@ import java.util.List;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
+import minecraftflightsimulator.entities.parts.EntitySkid;
 import minecraftflightsimulator.entities.parts.EntityWheel;
 import minecraftflightsimulator.helpers.RotationHelper;
 import minecraftflightsimulator.packets.control.AileronPacket;
@@ -26,7 +27,6 @@ import net.minecraft.world.World;
 public abstract class EntityPlane extends EntityParent{	
 	//visible plane variables
 	public boolean hasFlaps;
-	public boolean taildragger;
 	
 	//note that angle variable should be divided by 10 to get actual angle.
 	public short aileronAngle;
@@ -38,7 +38,7 @@ public abstract class EntityPlane extends EntityParent{
 	public short rudderCooldown;
 	
 	//Defined plane properties
-	protected int fuelCapcacity;
+	protected int fuelCapcacity;//1 bucket is 100 units
 	protected float emptyMass;//kg
 	protected float emptyCOG;//m forward from center of lift
 	protected float momentRoll;//kg*m^2
@@ -46,11 +46,9 @@ public abstract class EntityPlane extends EntityParent{
 	protected float momentYaw;//kg*m^2
 	protected float wingspan;//m
 	protected float wingArea;//m^2
-	protected float wingEfficiency;//unit-less
 	protected float tailDistance;//m away from center of lift
 	protected float rudderArea;//m^2
 	protected float elevatorArea;//m^2
-	protected float maxLiftCoeff;//unit-less
 	protected float defaultElevatorAngle;//degrees	
 	protected float initialDragCoeff;//unit-less
 	protected float dragAtCriticalAoA;//unit-less
@@ -159,7 +157,7 @@ public abstract class EntityPlane extends EntityParent{
 		groundedWheels = 0;
 		groundedCores = 0;
 		for(EntityChild child : getChildren()){
-			if(child instanceof EntityWheel){
+			if(child instanceof EntityWheel || child instanceof EntitySkid){
 				if(!child.isDead){
 					if(child.isOnGround()){
 						if(child.offsetX > 0){
@@ -209,10 +207,10 @@ public abstract class EntityPlane extends EntityParent{
 		
 		trackAngle = Math.toDegrees(Math.atan2(velocityVec.dotProduct(wingVec), velocityVec.dotProduct(bearingVec)));
 		dragCoeff = dragCoeffOffset*Math.pow(trackAngle, 2) + initialDragCoeff;
-		wingLiftCoeff = getLiftCoeff(-trackAngle, maxLiftCoeff + flapAngle/350F);
-		aileronLiftCoeff = getLiftCoeff(aileronAngle/10F, maxLiftCoeff);
-		elevatorLiftCoeff = getLiftCoeff(defaultElevatorAngle - trackAngle - elevatorAngle/10F, maxLiftCoeff);
-		rudderLiftCoeff = getLiftCoeff(rudderAngle/10F + Math.toDegrees(Math.atan2(velocityVec.dotProduct(sideVec), velocityVec.dotProduct(bearingVec))), maxLiftCoeff);
+		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapAngle/350F);
+		aileronLiftCoeff = getLiftCoeff(aileronAngle/10F, 2);
+		elevatorLiftCoeff = getLiftCoeff(defaultElevatorAngle - trackAngle - elevatorAngle/10F, 2);
+		rudderLiftCoeff = getLiftCoeff(rudderAngle/10F + Math.toDegrees(Math.atan2(velocityVec.dotProduct(sideVec), velocityVec.dotProduct(bearingVec))), 2);
 	}
 	
 	private void getForcesAndMotions(){
@@ -225,8 +223,8 @@ public abstract class EntityPlane extends EntityParent{
 			}
 		}
 		
-		dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*wingspan*wingspan/currentWingArea*wingEfficiency));		
-		brakeForce = (brakeOn || parkingBrakeOn) ? ((groundedWheels & (taildragger ? 0 : 1)) + (groundedWheels & 2)/2 + (groundedWheels & 4)/4)*4 + groundedCores*2 : groundedCores*2;
+		dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*wingspan*wingspan/currentWingArea*0.8));		
+		brakeForce = (brakeOn || parkingBrakeOn) ? ((groundedWheels & 1) + (groundedWheels & 2)/2 + (groundedWheels & 4)/4)*4 + groundedCores*2 : groundedCores*2;
 		wingForce = 0.5F*airDensity*velocity*velocity*currentWingArea*wingLiftCoeff;
 		aileronForce = 0.5F*airDensity*velocity*velocity*wingArea/5*aileronLiftCoeff;
 		elevatorForce = 0.5F*airDensity*velocity*velocity*elevatorArea*elevatorLiftCoeff;			

@@ -8,8 +8,8 @@ import minecraftflightsimulator.containers.SlotFuel;
 import minecraftflightsimulator.containers.SlotInstrument;
 import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.containers.SlotPropeller;
+import minecraftflightsimulator.containers.SlotSkid;
 import minecraftflightsimulator.containers.SlotWheelLarge;
-import minecraftflightsimulator.containers.SlotWheelSmall;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.helpers.InstrumentHelper;
 import net.minecraft.entity.player.EntityPlayer;
@@ -33,9 +33,7 @@ public class EntityPZLP11 extends EntityPlane{
 	@Override
 	protected void initPlaneProperties(){
 		hasFlaps = false;
-		taildragger = true;
-		maxFuel = 7000;
-		
+		maxFuel = 7000;		
 		emptyMass=1150;
 		emptyCOG=-1;
 		momentRoll=1285;
@@ -43,11 +41,9 @@ public class EntityPZLP11 extends EntityPlane{
 		momentYaw=2667;
 		wingspan=11;
 		wingArea=18;
-		wingEfficiency=0.8F;
 		tailDistance=5;
 		rudderArea=1F;
 		elevatorArea=2F;
-		maxLiftCoeff=2F;
 		defaultElevatorAngle=0F;
 		initialDragCoeff=0.03F;
 		dragAtCriticalAoA=0.12F;
@@ -56,7 +52,7 @@ public class EntityPZLP11 extends EntityPlane{
 	
 	@Override
 	protected void initChildPositions(){
-		addCenterWheelPosition(new float[]{0F, -0.5F, -5.5F});
+		addCenterWheelPosition(new float[]{0F, -0.3F, -5.5F});
 		addLeftWheelPosition(new float[]{-1.4F, -1.8F, 0.375F});
 		addRightWheelPosition(new float[]{1.4F, -1.8F, 0.375F});
 		addEnginePosition(new float[]{0, -0.3F, 0.65F});
@@ -82,7 +78,7 @@ public class EntityPZLP11 extends EntityPlane{
 	@Override
 	public void initParentContainerSlots(ContainerParent container){
 		container.addSlotToContainer(new SlotWheelLarge(this, 86, 113, 2));
-		container.addSlotToContainer(new SlotWheelSmall(this, 68, 113, 1));
+		container.addSlotToContainer(new SlotSkid(this, 68, 113, 1));
 		container.addSlotToContainer(new SlotWheelLarge(this, 50, 113, 4));
 		container.addSlotToContainer(new SlotEngineLarge(this, 131, 62, 6));
 		container.addSlotToContainer(new SlotPropeller(this, 149, 62, 10));

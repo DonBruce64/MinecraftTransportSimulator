@@ -32,8 +32,6 @@ public class EntityOtter extends EntityPlane{
 	@Override
 	protected void initPlaneProperties(){
 		hasFlaps = true;
-		taildragger = false;
-		
 		maxFuel = 15000;
 		emptyMass=3200;
 		emptyCOG=1;
@@ -42,11 +40,9 @@ public class EntityOtter extends EntityPlane{
 		momentYaw=44944;
 		wingspan=20;
 		wingArea=39;
-		wingEfficiency=0.8F;
 		tailDistance=10;
 		rudderArea=6F;
 		elevatorArea=6F;
-		maxLiftCoeff=2F;
 		defaultElevatorAngle=-5;
 		initialDragCoeff=0.03F;
 		dragAtCriticalAoA=0.12F;

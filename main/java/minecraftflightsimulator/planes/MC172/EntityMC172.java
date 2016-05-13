@@ -32,11 +32,7 @@ public class EntityMC172 extends EntityPlane{
 	@Override
 	protected void initPlaneProperties(){
 		hasFlaps = true;
-		taildragger = false;
-		
-		
 		maxFuel = 5000;
-		
 		emptyMass=800;
 		emptyCOG=1;
 		momentRoll=1285;
@@ -44,15 +40,13 @@ public class EntityMC172 extends EntityPlane{
 		momentYaw=2667;
 		wingspan=11;
 		wingArea=16;
-		wingEfficiency=0.8F;
 		tailDistance=7;
 		rudderArea=1.5F;
 		elevatorArea=3.0F;
-		maxLiftCoeff=2F;
 		defaultElevatorAngle=-5;
 		initialDragCoeff=0.03F;
 		dragAtCriticalAoA=0.12F;
-		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(15 - 0, 2));		
+		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(15, 2));		
 	}
 	
 	@Override

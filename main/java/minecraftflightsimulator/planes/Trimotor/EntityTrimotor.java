@@ -33,9 +33,7 @@ public class EntityTrimotor extends EntityPlane{
 	protected void initPlaneProperties(){
 		//TODO set new properties
 		hasFlaps = false;
-		
 		maxFuel = 5000;
-		
 		emptyMass=800;
 		emptyCOG=-1;
 		momentRoll=1285;
@@ -43,11 +41,9 @@ public class EntityTrimotor extends EntityPlane{
 		momentYaw=2667;
 		wingspan=12;
 		wingArea=16;
-		wingEfficiency=0.8F;
 		tailDistance=7;
 		rudderArea=1.5F;
 		elevatorArea=3.0F;
-		maxLiftCoeff=2F;
 		defaultElevatorAngle=-3;
 		initialDragCoeff=0.0341F;
 		dragAtCriticalAoA=0.12F;
