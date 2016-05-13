@@ -55,7 +55,7 @@ public class RenderPZLP11 extends RenderPlane{
 		GL11.glPopMatrix();
 		
 		GL11.glPushMatrix();
-		GL11.glTranslatef(0F, -1.45F, 5.44F);
+		GL11.glTranslatef(0F, -1.44F, 5.44F);
 		GL11.glRotatef(-plane.rudderAngle/10F, 0, 1, 0);
 		RenderHelper.bindTexture(rudderTexture);
 		rudder.render();
