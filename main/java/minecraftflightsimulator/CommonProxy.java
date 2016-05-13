@@ -141,7 +141,7 @@ public class CommonProxy{
 		registerItem(seat);
 		registerItem(wheelSmall);
 		registerItem(wheelLarge);
-		//registerItem(skid);
+		registerItem(skid);
 		registerItem(propeller);
 		registerItem(engineSmall);
 		registerItem(engineLarge);

@@ -15,6 +15,7 @@ import minecraftflightsimulator.entities.parts.EntityEngineSmall;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
 import minecraftflightsimulator.entities.parts.EntitySeat;
+import minecraftflightsimulator.entities.parts.EntitySkid;
 import minecraftflightsimulator.entities.parts.EntityWheel;
 import minecraftflightsimulator.entities.parts.EntityWheelLarge;
 import minecraftflightsimulator.entities.parts.EntityWheelSmall;
@@ -490,10 +491,12 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				EntityChild child = getChildAtLocation(partPositions.get(i));				
 				if(child != null){
 					if(i <= 5){
-						if(child instanceof EntityWheelLarge){
+						if(child instanceof EntityWheelSmall){
+							setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelSmall));
+						}else if(child instanceof EntityWheelLarge){
 							setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelLarge));
 						}else{
-							setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelSmall));
+							setInventorySlotContents(i, new ItemStack(MFS.proxy.skid));
 						}
 					}else if(i <= 9){
 						if(child instanceof EntityEngineLarge){
@@ -584,10 +587,12 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 					}
 					
 					if(i <= 5){
-						if(stack.getItem().equals(MFS.proxy.wheelLarge)){
+						if(stack.getItem().equals(MFS.proxy.wheelSmall)){
+							newChild = new EntityWheelSmall(worldObj, this, this.UUID, position[0], position[1], position[2]);
+						}else if(stack.getItem().equals(MFS.proxy.wheelLarge)){
 							newChild = new EntityWheelLarge(worldObj, this, this.UUID, position[0], position[1], position[2]);
 						}else{
-							newChild = new EntityWheelSmall(worldObj, this, this.UUID, position[0], position[1], position[2]);
+							newChild = new EntitySkid(worldObj, this, this.UUID, position[0], position[1], position[2]);
 						}
 					}else if(i <= 9){
 						if(stack.getItem().equals(MFS.proxy.engineLarge)){
@@ -603,10 +608,9 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 					
 					if(newChild.isCollidedHorizontally()){
 						float boost = Math.max(0, -newChild.offsetY);
-						this.rotationPitch = 0;
 						this.rotationRoll = 0;
-						this.setPosition(posX, posY + boost, posZ);
-						newChild.setPosition(newChild.posX, newChild.posY + boost, newChild.posZ);
+						this.setPositionAndRotation(posX, posY + boost, posZ, rotationYaw, 0);
+						newChild.setPosition(posX + newChild.offsetX, posY + newChild.offsetY + boost, posZ + newChild.offsetZ);
 					}
 					worldObj.spawnEntityInWorld(newChild);
 					addChild(newChild.UUID, newChild, true);
