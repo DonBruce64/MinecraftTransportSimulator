@@ -12,7 +12,7 @@ public class ContainerParent extends Container{
 	
 	public ContainerParent(InventoryPlayer invPlayer, EntityParent parent){
 		this.parent = parent;
-		parent.openInventory();
+		parent.loadInventory();
         for(int j=0; j<3; ++j){
             for(int k=0; k<9; ++k){
                 this.addSlotToContainer(new Slot(invPlayer, k + j * 9 + 9, 8 + k * 18, 103 + j * 18 + 18*2 + 1));
@@ -25,9 +25,9 @@ public class ContainerParent extends Container{
 	}
 	
 	@Override
-    public Slot addSlotToContainer(Slot slot){
+	public Slot addSlotToContainer(Slot slot){
 		return super.addSlotToContainer(slot);
-    }
+	}
 	
 	@Override
 	public boolean canInteractWith(EntityPlayer player) {
@@ -37,7 +37,7 @@ public class ContainerParent extends Container{
 	@Override
 	public void onContainerClosed(EntityPlayer player){
 		super.onContainerClosed(player);
-		parent.closeInventory();
+		parent.saveInventory();
 	}
 	
 	@Override
