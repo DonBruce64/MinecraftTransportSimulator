@@ -20,22 +20,24 @@ public class RenderOtter extends RenderPlane{
     	RenderHelper.bindTexture(new ResourceLocation("minecraft", "textures/blocks/stone.png"));
     	GL11.glTranslated(0, -0.5, 6.4);
     	
-    	model.renderPart("Mesh.015_Mesh19_Model");
-    	model.renderPart("Mesh.008_Mesh5_Steering_wheel_frame_Model");
+    	model.renderPart("Mesh.010_Mesh14_Model");
     	
     	GL11.glRotatef(plane.aileronAngle/10F, 1, 0, 0);
-    	model.renderPart("Mesh.018_Mesh10_Aileron_2_Model");
+    	
+    	model.renderPart("Mesh.013_Mesh7_Aileron_2_Model");
     	GL11.glRotatef(-2*plane.aileronAngle/10F, 1, 0, 0);
-    	model.renderPart("Mesh.011_Mesh6_Aileron_1_Model");
+    	model.renderPart("Mesh.006_Mesh5_Aileron_1_Model");
     	GL11.glRotatef(plane.aileronAngle/10F, 1, 0, 0);
     	
     	GL11.glRotatef(plane.rudderAngle/10F, 0, 1, 0);
-    	model.renderPart("Mesh.019_Mesh1_Group1_Rudder_Model");
-    	GL11.glRotatef(-plane.rudderAngle/10F, 0, 1, 0);
+    	model.renderPart("Mesh.009_Mesh3_Group4_Group3_Rudder_Model");
+    	GL11.glRotatef(-2*plane.rudderAngle/10F, 0, 1, 0);
+    	model.renderPart("Mesh.008_Mesh5_Steering_wheel_frame_Model");
+    	GL11.glRotatef(plane.rudderAngle/10F, 0, 1, 0);
     	
     	GL11.glRotatef(-plane.flapAngle/10F, 1, 0, 0);
-    	model.renderPart("Mesh.013_Mesh9_Flap_1_Model");
-    	model.renderPart("Mesh.016_Mesh13_Flaps_2_Model");
+    	model.renderPart("Mesh_Mesh6_Flap_1_Model");
+    	model.renderPart("Mesh.012_Mesh8_Flaps_2_Model");
     	GL11.glRotatef(plane.flapAngle/10F, 1, 0, 0);  
     	GL11.glTranslated(0, +0.5, -6.4);
 	}
@@ -45,8 +47,12 @@ public class RenderOtter extends RenderPlane{
 		RenderHelper.bindTexture(windowTexture);		
 		RenderHelper.renderQuad(-1, -1, 0, 0, 2.3, 1.85, 1.85, 2.3, 3.5, 3.97, 3.97, 3.5, true);
 		RenderHelper.renderQuad(0, 0, 1, 1, 2.3, 1.85, 1.85, 2.3, 3.5, 3.97, 3.97, 3.5, true);
-		RenderHelper.renderTriangle(-1, -1, -1, 2.435, 1.8, 1.8, 3.275, 3.275, 3.97, true);
-		RenderHelper.renderTriangle(1, 1, 1, 2.435, 1.8, 1.8, 3.275, 3.275, 3.97, true);
+		RenderHelper.renderTriangle(-1, -1, -1, 2.3, 1.8, 1.8, 3.45, 3.45, 3.97, true);
+		RenderHelper.renderTriangle(1, 1, 1, 2.3, 1.8, 1.8, 3.45, 3.45, 3.97, true);
+		RenderHelper.renderSquare(-1, -1, 1.8, 2.3, 3.09, 3.45, true);
+		RenderHelper.renderSquare(1, 1, 1.8, 2.3, 3.09, 3.45, true);
+		
+		
 		
 		RenderHelper.renderSquare(-1.05, -1.05, 1.44, 1.88, 2.29, 2.64, true);
 		RenderHelper.renderSquare(1.05, 1.05, 1.44, 1.88, 2.29, 2.64, true);		
