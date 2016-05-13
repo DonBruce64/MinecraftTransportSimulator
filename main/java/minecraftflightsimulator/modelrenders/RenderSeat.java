@@ -31,7 +31,7 @@ public class RenderSeat extends Render{
 			GL11.glRotatef(seat.parent.rotationPitch, 1, 0, 0);
 			GL11.glRotatef(seat.parent.rotationRoll, 0, 0, 1);
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-			this.bindTexture(woodTextures[seat.propertyCode >> 4]);
+			this.bindTexture(woodTextures[seat.propertyCode >> 4 > 5 ? 0 : seat.propertyCode >> 4]);
 			model.renderFrame();
 			this.bindTexture(woolTextures[seat.propertyCode & 15]);
 			model.renderCushion();
