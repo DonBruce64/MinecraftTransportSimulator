@@ -9,7 +9,7 @@ import minecraftflightsimulator.containers.SlotInstrument;
 import minecraftflightsimulator.containers.SlotPassenger;
 import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.containers.SlotPropeller;
-import minecraftflightsimulator.containers.SlotWheelSmall;
+import minecraftflightsimulator.containers.SlotWheelLarge;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.helpers.InstrumentHelper;
 import net.minecraft.entity.player.EntityPlayer;
@@ -17,7 +17,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class EntityOtter extends EntityPlane{
-	private static final ResourceLocation foregroundGUI = new ResourceLocation("mfs", "textures/gui_mc172.png");
+	private static final ResourceLocation foregroundGUI = new ResourceLocation("mfs", "textures/planes/mc172/gui.png");
 	private static final ResourceLocation backplateTexture = new ResourceLocation("minecraft", "textures/blocks/stone.png");
 	private static final ResourceLocation moldingTexture = new ResourceLocation("minecraft", "textures/blocks/stone.png");
 	
@@ -51,9 +51,9 @@ public class EntityOtter extends EntityPlane{
 	
 	@Override
 	protected void initChildPositions(){
-		addCenterWheelPosition(new float[]{0, -0.4F, 4.4F});
-		addLeftWheelPosition(new float[]{-2F, -0.35F, 0});
-		addRightWheelPosition(new float[]{2F, -0.35F, 0});		
+		addCenterWheelPosition(new float[]{0, -0.5F, 4.4F});
+		addLeftWheelPosition(new float[]{-2F, -0.45F, 0});
+		addRightWheelPosition(new float[]{2F, -0.45F, 0});		
 		addEnginePosition(new float[]{-2.975F, 1.7F, 1.91F});
 		addEnginePosition(new float[]{2.975F, 1.7F, 1.91F});
 		addPropellerPosition(new float[]{-2.975F, 1.6F, 2.7F});
@@ -85,9 +85,9 @@ public class EntityOtter extends EntityPlane{
 	@Override
 	public void initParentContainerSlots(ContainerParent container){
 		//TODO make new GUI
-		container.addSlotToContainer(new SlotWheelSmall(this, 86, 113, 1));
-		container.addSlotToContainer(new SlotWheelSmall(this, 50, 113, 2));
-		container.addSlotToContainer(new SlotWheelSmall(this, 68, 113, 4));
+		container.addSlotToContainer(new SlotWheelLarge(this, 86, 113, 1));
+		container.addSlotToContainer(new SlotWheelLarge(this, 50, 113, 2));
+		container.addSlotToContainer(new SlotWheelLarge(this, 68, 113, 4));
 		
 		container.addSlotToContainer(new SlotEngineSmall(this, 131, 66, 6));
 		container.addSlotToContainer(new SlotEngineSmall(this, 131, 82, 7));
