@@ -29,8 +29,8 @@ public class RenderPropeller extends Render{
 		if(propeller.parent != null){
 			GL11.glPushMatrix();
 			GL11.glTranslated(x, y, z);
-			GL11.glRotatef(-propeller.parent.rotationYaw, 0, 1, 0);
-			GL11.glRotatef(propeller.parent.rotationPitch, 1, 0, 0);
+			GL11.glRotatef(180-propeller.parent.rotationYaw, 0, 1, 0);
+			GL11.glRotatef(-propeller.parent.rotationPitch, 1, 0, 0);
 			GL11.glRotatef(propeller.parent.rotationRoll, 0, 0, 1);
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 			if(propeller.propertyCode%10==1){
@@ -40,7 +40,8 @@ public class RenderPropeller extends Render{
 			}else{
 				Minecraft.getMinecraft().renderEngine.bindTexture(tierOneTexture);
 			}
-			model.renderPropellor(propeller.propertyCode%100/10, 70+5*(propeller.propertyCode/1000), propeller.angularPosition);
+			
+			model.renderPropellor(propeller.propertyCode%100/10, 70+5*(propeller.propertyCode/1000), -propeller.angularPosition);
 			GL11.glPopMatrix();
 		}
 	}
