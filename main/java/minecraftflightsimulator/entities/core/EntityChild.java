@@ -77,19 +77,24 @@ public abstract class EntityChild extends EntityBase{
 	}
 	
 	public boolean isOnGround(){
-		return !isAirBlockAtLocation(posX, posY - 0.01, posZ);
+		return !isAirBlockAtLocation(posX, posY - 0.02, posZ);
 	}
 	
 	public boolean isCollidedHorizontally(){
-		return this.willCollideWithOffset(0, 0, 0);
+		return this.willCollideHorizontallyWithOffset(0, 0, 0);
 	}
 	
 	//TODO decide if this needs to be here
-	public boolean willCollideWithOffset(double offsetX, double offsetY, double offsetZ){
+	public boolean willCollideHorizontallyWithOffset(double offsetX, double offsetY, double offsetZ){
 		return !isAirBlockAtLocation(posX + offsetX, posY + offsetY, posZ + offsetZ)
 			|| !isAirBlockAtLocation(posX + offsetX + this.width, posY + offsetY, posZ + offsetY)
 			|| !isAirBlockAtLocation(posX + offsetX, posY + offsetY, posZ + offsetY + this.width)
 			|| !isAirBlockAtLocation(posX + offsetX + this.width, posY + offsetY, posZ + offsetY + this.width);
+	}
+	
+	public boolean willCollideVerticallyWithOffset(double offsetX, double offsetY, double offsetZ){
+		return !isAirBlockAtLocation(posX + offsetX, posY + offsetY, posZ + offsetZ)
+			|| !isAirBlockAtLocation(posX + offsetX, posY + offsetY + this.height, posZ + offsetY);
 	}
 	
 	private boolean isAirBlockAtLocation(double x, double y, double z){
