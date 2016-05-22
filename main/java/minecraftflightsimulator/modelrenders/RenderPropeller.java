@@ -31,7 +31,7 @@ public class RenderPropeller extends Render{
 			GL11.glTranslated(x, y, z);
 			GL11.glRotatef(180-propeller.parent.rotationYaw, 0, 1, 0);
 			GL11.glRotatef(-propeller.parent.rotationPitch, 1, 0, 0);
-			GL11.glRotatef(propeller.parent.rotationRoll, 0, 0, 1);
+			GL11.glRotatef(-propeller.parent.rotationRoll, 0, 0, 1);
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 			if(propeller.propertyCode%10==1){
 				Minecraft.getMinecraft().renderEngine.bindTexture(tierTwoTexture);
