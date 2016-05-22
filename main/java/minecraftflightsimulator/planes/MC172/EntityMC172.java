@@ -34,7 +34,6 @@ public class EntityMC172 extends EntityPlane{
 		hasFlaps = true;
 		maxFuel = 5000;
 		emptyMass=800;
-		emptyCOG=1;
 		momentRoll=1285;
 		momentPitch=1825;
 		momentYaw=2667;

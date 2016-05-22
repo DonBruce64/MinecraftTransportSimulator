@@ -35,7 +35,6 @@ public class EntityTrimotor extends EntityPlane{
 		hasFlaps = false;
 		maxFuel = 5000;
 		emptyMass=800;
-		emptyCOG=-1;
 		momentRoll=1285;
 		momentPitch=1825;
 		momentYaw=2667;

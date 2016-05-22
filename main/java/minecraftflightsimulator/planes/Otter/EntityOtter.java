@@ -34,7 +34,6 @@ public class EntityOtter extends EntityPlane{
 		hasFlaps = true;
 		maxFuel = 15000;
 		emptyMass=3200;
-		emptyCOG=1;
 		momentRoll=21259;
 		momentPitch=39972;
 		momentYaw=44944;

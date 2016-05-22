@@ -35,7 +35,6 @@ public class EntityPZLP11 extends EntityPlane{
 		hasFlaps = false;
 		maxFuel = 7000;		
 		emptyMass=1150;
-		emptyCOG=-1;
 		momentRoll=1285;
 		momentPitch=1825;
 		momentYaw=2667;
