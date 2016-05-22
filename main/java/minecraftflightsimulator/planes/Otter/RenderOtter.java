@@ -20,24 +20,29 @@ public class RenderOtter extends RenderPlane{
     	RenderHelper.bindTexture(new ResourceLocation("minecraft", "textures/blocks/stone.png"));
     	GL11.glTranslated(0, -0.5, 6.4);
     	
-    	model.renderPart("Mesh.010_Mesh14_Model");
+    	model.renderPart("Mesh.006_Mesh.007_Fuselage");
     	
     	GL11.glRotatef(plane.aileronAngle/10F, 1, 0, 0);
-    	
-    	model.renderPart("Mesh.013_Mesh7_Aileron_2_Model");
+    	model.renderPart("Mesh_Mesh6_Aileron_2_Model");
     	GL11.glRotatef(-2*plane.aileronAngle/10F, 1, 0, 0);
-    	model.renderPart("Mesh.006_Mesh5_Aileron_1_Model");
+    	model.renderPart("Mesh.006_Mesh4_Aileron_1_Model");
     	GL11.glRotatef(plane.aileronAngle/10F, 1, 0, 0);
+    	
+    	GL11.glRotatef(plane.elevatorAngle/10F, 1, 0, 0);
+    	model.renderPart("Mesh.001_Mesh8_Group8_Group7_Group6_Group5_Group4_Elevator_1_Model");
+    	model.renderPart("Mesh.008_Mesh2_Group3_Model");
+    	GL11.glRotatef(-plane.elevatorAngle/10F, 1, 0, 0);
     	
     	GL11.glRotatef(plane.rudderAngle/10F, 0, 1, 0);
-    	model.renderPart("Mesh.009_Mesh3_Group4_Group3_Rudder_Model");
+    	model.renderPart("Mesh.004_Mesh1_Group2_Group1_Rudder_Model");
     	GL11.glRotatef(-2*plane.rudderAngle/10F, 0, 1, 0);
-    	model.renderPart("Mesh.008_Mesh5_Steering_wheel_frame_Model");
+    	RenderHelper.bindTexture(new ResourceLocation("mfs", "textures/planes/otter/wheelframe.png"));
+    	model.renderPart("Mesh.005_Mesh.002_Steering_wheel_frame");
     	GL11.glRotatef(plane.rudderAngle/10F, 0, 1, 0);
     	
     	GL11.glRotatef(-plane.flapAngle/10F, 1, 0, 0);
-    	model.renderPart("Mesh_Mesh6_Flap_1_Model");
-    	model.renderPart("Mesh.012_Mesh8_Flaps_2_Model");
+    	model.renderPart("Mesh.005_Mesh5_Flap_1_Model");
+    	model.renderPart("Mesh.003_Mesh7_Flaps_2_Model");
     	GL11.glRotatef(plane.flapAngle/10F, 1, 0, 0);  
     	GL11.glTranslated(0, +0.5, -6.4);
 	}
