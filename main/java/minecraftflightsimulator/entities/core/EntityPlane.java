@@ -40,7 +40,6 @@ public abstract class EntityPlane extends EntityParent{
 	//Defined plane properties
 	protected int fuelCapcacity;//1 bucket is 100 units
 	protected float emptyMass;//kg
-	protected float emptyCOG;//m forward from center of lift
 	protected float momentRoll;//kg*m^2
 	protected float momentPitch;//kg*m^2
 	protected float momentYaw;//kg*m^2
@@ -124,9 +123,8 @@ public abstract class EntityPlane extends EntityParent{
 		performGroundOperations();
 		adjustXZMovement();
 		adjustYawMovement();
-		adjustPitchMovement();
 		adjustRollMovement();
-		adjustYMovement();
+		adjustVerticalMovement();
 		movePlane();
 		if(!worldObj.isRemote){
 			//Movement for children on client side is done in tick handler.
@@ -179,7 +177,7 @@ public abstract class EntityPlane extends EntityParent{
 	
 	private void getBasicProperties(){		
 		currentMass = (float) (emptyMass + fuel/50);
-		currentCOG = emptyCOG;
+		currentCOG = 1;
 		//TODO make COG better.
 		for(EntityChild child : getChildren()){;
 			if(child.riddenByEntity != null){
@@ -236,7 +234,7 @@ public abstract class EntityPlane extends EntityParent{
 		aileronTorque = 2*aileronForce*wingspan*0.3;
 		elevatorTorque = elevatorForce*tailDistance;
 		rudderTorque = rudderForce*tailDistance;
-		gravitationalTorque = gravitationalForce*emptyCOG;
+		gravitationalTorque = gravitationalForce*currentCOG;
 		
 		if(brakeForce > 0){
 			if(motionX > 0){
@@ -252,7 +250,7 @@ public abstract class EntityPlane extends EntityParent{
 		}else{
 			motionX += (bearingVec.xCoord*thrustForce - velocityVec.xCoord*dragForce + wingVec.xCoord*(wingForce + elevatorForce))/currentMass;
 			motionZ += (bearingVec.zCoord*thrustForce - velocityVec.zCoord*dragForce + wingVec.zCoord*(wingForce + elevatorForce))/currentMass;
-		}
+		}		
 				
 		//TODO get this working as well
 		motionY += (bearingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + wingVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
@@ -264,17 +262,17 @@ public abstract class EntityPlane extends EntityParent{
 	private void performGroundOperations(){
 		if(groundedWheels >= 6 && Math.abs(rotationRoll) < 1){
 			rotationRoll = motionRoll = 0;
-			adjustYMovement2();
 		}
 		if(groundedWheels == 7){
 			if(motionY<0){motionY=0;}
-			if(motionPitch*emptyCOG > 0 ){motionPitch = 0;}
+			if(motionPitch*currentCOG > 0 ){motionPitch = 0;}
 			if(Math.abs(rotationPitch) < 0.25){rotationPitch = 0;}
 			motionYaw += 7*velocityVec.dotProduct(sideVec) + rudderAngle/(350*(0.5 + velocity*velocity));
-			double groundSpeed = Math.hypot(motionX, motionZ);
 			bearingVec = getLookVec();
-			motionX = bearingVec.xCoord * groundSpeed;
-			motionZ = bearingVec.zCoord * groundSpeed;
+			double groundSpeed = Math.hypot(motionX, motionZ);
+			Vec3 groundVec = bearingVec.addVector(0, -bearingVec.yCoord, 0).normalize();
+			motionX = groundVec.xCoord * groundSpeed;
+			motionZ = groundVec.zCoord * groundSpeed;
 		}
 	}
 	
@@ -389,43 +387,6 @@ public abstract class EntityPlane extends EntityParent{
 			}
 		}while(yawChildXOffset!=0 || yawChildZOffset!=0);
 	}
-
-	private void adjustPitchMovement(){
-		prevPitchChildOffset = 0;
-		originalMotionPitch = motionPitch;
-		do{
-			pitchChildOffset = 0;
-			for(EntityChild child : getChildren()){
-				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll);
-				newChildBox = child.boundingBox.copy().offset(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, posY + offset.yCoord - child.posY + motionY*MFS.planeSpeedFactor, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor).contract(0.001, 0.001, 0.001);
-				child.isCollidedHorizontally = !child.worldObj.getCollidingBoundingBoxes(child, newChildBox).isEmpty();
-				if(child.isCollidedHorizontally && child.offsetZ != 0){
-					if(pitchChildOffset==0){
-						pitchChildOffset = child.offsetZ;
-					}else if(Math.signum(pitchChildOffset)!=Math.signum(child.offsetZ)){
-						motionPitch = 0;
-						return;	
-					}
-				}
-				
-			}
-			//if there's a blockage, take care of it.
-			if(pitchChildOffset!=0){
-				if(Math.signum(pitchChildOffset)!=Math.signum(prevPitchChildOffset)){
-					if(prevPitchChildOffset!=0){
-						motionPitch = 0;
-						return;							
-					}
-				}
-				motionPitch += pitchChildOffset > 0 ? -0.1 : 0.1;
-				prevPitchChildOffset = pitchChildOffset;
-				if((Math.abs(motionPitch)>=5 && Math.signum(originalMotionPitch)!=Math.signum(motionPitch)) || Math.abs(motionPitch) > 5){
-					motionPitch = 0;
-					return;	
-				}
-			}
-		}while(pitchChildOffset!=0);
-	}
 	
 	private void adjustRollMovement(){
 		prevRollChildOffset = 0;
@@ -463,7 +424,37 @@ public abstract class EntityPlane extends EntityParent{
 		}while(rollChildOffset!=0);
 	}
 	
-	private void adjustYMovement(){
+	private void adjustVerticalMovement(){
+		prevPitchChildOffset = 0;
+		originalMotionPitch = motionPitch;
+		do{
+			pitchChildOffset = 0;
+			for(EntityChild child : getChildren()){
+				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);				
+				offset = offset.addVector(posX - child.posX + motionX*MFS.planeSpeedFactor, posY - child.posY + motionY*MFS.planeSpeedFactor, posZ - child.posZ + motionZ*MFS.planeSpeedFactor);				
+				if(child.willCollideVerticallyWithOffset(offset.xCoord, offset.yCoord, offset.zCoord)){
+					if(child.offsetZ != 0){
+						prevPitchChildOffset = pitchChildOffset;
+						pitchChildOffset = child.offsetZ;
+						if(prevPitchChildOffset != 0 && (prevPitchChildOffset * pitchChildOffset < 0)){
+							if((motionY += 0.1) > 0){
+								pitchChildOffset = motionY = motionPitch = 0;
+								return;
+							}else{
+								break;
+							}
+						}else{
+							motionPitch += pitchChildOffset > 0 ? -0.1 : 0.1;
+							if(Math.abs(motionPitch) >= 15){
+								pitchChildOffset = motionPitch = 0;
+								break;	
+							}
+						}
+					}
+				}
+			}
+		}while(pitchChildOffset != 0);
+		
 		for(EntityChild child : getChildren()){
 			yCollisionDepth = 0;
 			offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
