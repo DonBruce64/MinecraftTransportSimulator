@@ -70,8 +70,7 @@ public abstract class EntityEngine extends EntityChild{
 				
 		if(fueled){
 			if(propeller != null){
-				//TODO make propeller blades and diameter affect engine.
-				engineRPM += (parent.throttle/100F*maxEngineRPM-engineRPM)/10 + (parent.velocity - 0.0254*propeller.pitch * engineRPM/60/20)*15;
+				engineRPM += (parent.throttle/100F*maxEngineRPM-engineRPM)/10 + (parent.velocity - 0.0254*propeller.pitch * engineRPM/60/20 - Math.pow((propeller.diameter - (70-1/0.0254))*0.0254, 20)/100 - 0.001)*15;
 			}else{
 				engineRPM += (parent.throttle/100F*maxEngineRPM-engineRPM)/10;
 			}
