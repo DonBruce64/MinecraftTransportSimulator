@@ -81,15 +81,10 @@ public abstract class EntityChild extends EntityBase{
 	}
 	
 	public boolean isCollidedHorizontally(){
-		return this.willCollideHorizontallyWithOffset(0, 0, 0);
-	}
-	
-	//TODO decide if this needs to be here
-	public boolean willCollideHorizontallyWithOffset(double offsetX, double offsetY, double offsetZ){
-		return !isAirBlockAtLocation(posX + offsetX, posY + offsetY, posZ + offsetZ)
-			|| !isAirBlockAtLocation(posX + offsetX + this.width, posY + offsetY, posZ + offsetY)
-			|| !isAirBlockAtLocation(posX + offsetX, posY + offsetY, posZ + offsetY + this.width)
-			|| !isAirBlockAtLocation(posX + offsetX + this.width, posY + offsetY, posZ + offsetY + this.width);
+		return !isAirBlockAtLocation(posX, posY, posZ)
+				|| !isAirBlockAtLocation(posX + this.width, posY, posZ)
+				|| !isAirBlockAtLocation(posX, posY, posZ + this.width)
+				|| !isAirBlockAtLocation(posX + this.width, posY, posZ + this.width);
 	}
 	
 	public boolean willCollideVerticallyWithOffset(double offsetX, double offsetY, double offsetZ){
