@@ -22,4 +22,9 @@ public class EntityEngineSmall extends EntityEngine{
 		this.engineCrankingSoundName = "small_engine_cranking";
 		this.engineStartingSoundName = "small_engine_starting";
 	}
+
+	@Override
+	protected double getPropellerForcePenalty(){
+		return Math.pow(1.9, 3 + (propeller.diameter - 70)/5)/25 - 0.2;
+	}
 }

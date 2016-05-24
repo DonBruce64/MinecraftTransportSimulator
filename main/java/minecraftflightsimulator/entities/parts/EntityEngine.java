@@ -27,7 +27,7 @@ public abstract class EntityEngine extends EntityChild{
 	private int maxEngineRPM;
 	private float fuelConsumption;
 	private EngineSound engineSound;
-	private EntityPropeller propeller;
+	protected EntityPropeller propeller;
 
 	public EntityEngine(World world) {
 		super(world);
@@ -70,7 +70,10 @@ public abstract class EntityEngine extends EntityChild{
 				
 		if(fueled){
 			if(propeller != null){
-				engineRPM += (parent.throttle/100F*maxEngineRPM-engineRPM)/10 + (parent.velocity - 0.0254*propeller.pitch * engineRPM/60/20 - Math.pow((propeller.diameter - (70-1/0.0254))*0.0254, 20)/100 - 0.001)*15;
+				engineRPM += (parent.throttle/100F*maxEngineRPM-engineRPM)/10 + (parent.velocity - 0.0254*propeller.pitch * engineRPM/60/20 - this.getPropellerForcePenalty())*15;
+				if(propeller.diameter > 80 && engineRPM < 300 && parent.throttle >= 15){
+					engineRPM = 300;
+				}
 			}else{
 				engineRPM += (parent.throttle/100F*maxEngineRPM-engineRPM)/10;
 			}
@@ -91,6 +94,15 @@ public abstract class EntityEngine extends EntityChild{
 		if(propeller != null){
 			propeller.engineRPM = this.engineRPM;
 		}
+		if(worldObj.isRemote){engineSound = MFS.proxy.updateEngineSound(engineSound, this);}
+	}
+	
+	@Override
+	public void setDead(){
+		super.setDead();
+		engineOn=false;
+		fueled=false;
+		internalFuel=0;
 		if(worldObj.isRemote){engineSound = MFS.proxy.updateEngineSound(engineSound, this);}
 	}
 	
@@ -120,14 +132,7 @@ public abstract class EntityEngine extends EntityChild{
 		}
 	}
 	
-	@Override
-	public void setDead(){
-		super.setDead();
-		engineOn=false;
-		fueled=false;
-		internalFuel=0;
-		if(worldObj.isRemote){engineSound = MFS.proxy.updateEngineSound(engineSound, this);}
-	}
+	protected abstract double getPropellerForcePenalty();
 	
 	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){
