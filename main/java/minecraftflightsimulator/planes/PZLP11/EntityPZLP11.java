@@ -42,8 +42,8 @@ public class EntityPZLP11 extends EntityPlane{
 		wingArea=18;
 		tailDistance=5;
 		rudderArea=1F;
-		elevatorArea=2F;
-		defaultElevatorAngle=0F;
+		elevatorArea=3;
+		defaultElevatorAngle=-10F;
 		initialDragCoeff=0.03F;
 		dragAtCriticalAoA=0.12F;
 		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(15 - 0, 2));		
