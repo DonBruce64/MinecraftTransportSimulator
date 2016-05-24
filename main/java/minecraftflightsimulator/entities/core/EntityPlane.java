@@ -57,7 +57,9 @@ public abstract class EntityPlane extends EntityParent{
 	private byte groundedWheels;
 	private byte groundedCores;
 	private float currentMass;
+	private float addedMass;
 	private float currentCOG;
+	private float brakeDistance;
 	private float motionRoll;
 	private float motionPitch;
 	private float motionYaw;
@@ -87,17 +89,17 @@ public abstract class EntityPlane extends EntityParent{
 	private double xCollisionDepth;
 	private double yCollisionDepth;
 	private double zCollisionDepth;
-	private double prevYawXChildOffset;
-	private double prevYawZChildOffset;
+	private double originalMotionYaw;
+	private double originalMotionPitch;
+	private double originalMotionRoll;
 	private double yawChildXOffset;
 	private double yawChildZOffset;
-	private double originalMotionYaw;
-	private double prevPitchChildOffset;
 	private double pitchChildOffset;
-	private double originalMotionPitch;
-	private double prevRollChildOffset;
 	private double rollChildOffset;
-	private double originalMotionRoll;
+	private double prevYawXChildOffset;
+	private double prevYawZChildOffset;
+	private double prevPitchChildOffset;
+	private double prevRollChildOffset;
 	
 	private List collidingBoxes;
 	private AxisAlignedBB newChildBox;
@@ -152,16 +154,14 @@ public abstract class EntityPlane extends EntityParent{
 	}
 	
 	private void refreshGroundedStatuses(){
-		groundedWheels = 0;
-		groundedCores = 0;
+		brakeDistance = groundedWheels = groundedCores = 0;
 		for(EntityChild child : getChildren()){
 			if(child instanceof EntityWheel || child instanceof EntitySkid){
 				if(!child.isDead){
 					if(child.isOnGround()){
-						if(child.offsetX > 0){
-							groundedWheels += 2;
-						}else if(child.offsetX < 0){
-							groundedWheels += 4;
+						if(child.offsetX != 0){
+							brakeDistance = -child.offsetY;
+							groundedWheels += child.offsetX > 0 ? 2 : 4;
 						}else{
 							groundedWheels += 1;
 						}
@@ -176,21 +176,22 @@ public abstract class EntityPlane extends EntityParent{
 	}
 	
 	private void getBasicProperties(){		
-		currentMass = (float) (emptyMass + fuel/50);
 		currentCOG = 1;
-		//TODO make COG better.
+		currentMass = (float) (emptyMass + fuel/50);
 		for(EntityChild child : getChildren()){;
 			if(child.riddenByEntity != null){
-				currentCOG = (currentCOG*currentMass + child.offsetZ*100F)/(currentMass+100F);
-				currentMass += 100;
 				if(child.riddenByEntity instanceof EntityPlayer){
-					currentMass += calculateInventoryWeight(((EntityPlayer) child.riddenByEntity).inventory);
+					addedMass = 100 + calculateInventoryWeight(((EntityPlayer) child.riddenByEntity).inventory);
+				}else{
+					addedMass = 100;
 				}
 			}else if(child instanceof EntityPlaneChest){
-				currentMass += calculateInventoryWeight((EntityPlaneChest) child);
+				addedMass = calculateInventoryWeight((EntityPlaneChest) child);
 			}else if(child instanceof EntityPropeller){
-				currentMass += 50F*child.propertyCode%10;
+				addedMass = 50F*child.propertyCode%10;
 			}
+			currentCOG = (currentCOG*currentMass + child.offsetZ*addedMass)/(currentMass+addedMass);
+			currentMass += addedMass;
 		}
 		
 		currentWingArea = wingArea + wingArea*flapAngle/250F;
@@ -229,8 +230,7 @@ public abstract class EntityPlane extends EntityParent{
 		rudderForce = 0.5F*airDensity*velocity*velocity*rudderArea*rudderLiftCoeff;
 		gravitationalForce = currentMass*(9.8/400);
 					
-		//TODO get this working
-		brakeTorque = 0;
+		brakeTorque = ((groundedWheels & 2)/2 + (groundedWheels & 4)/4)*brakeForce*brakeDistance;
 		aileronTorque = 2*aileronForce*wingspan*0.3;
 		elevatorTorque = elevatorForce*tailDistance;
 		rudderTorque = rudderForce*tailDistance;
@@ -255,7 +255,7 @@ public abstract class EntityPlane extends EntityParent{
 		//TODO get this working as well
 		motionY += (bearingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + wingVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
 		motionRoll = (float) (180/Math.PI*((1-bearingVec.yCoord)*aileronTorque)/momentRoll);
-		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + (1-Math.abs(bearingVec.yCoord))*gravitationalTorque)/momentPitch);
+		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + (1-Math.abs(bearingVec.yCoord))*(gravitationalTorque + brakeTorque))/momentPitch);
 		motionYaw = (float) (180/Math.PI*(bearingVec.yCoord*aileronTorque - wingVec.yCoord*(-thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
 	}
 	
