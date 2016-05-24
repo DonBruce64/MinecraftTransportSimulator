@@ -178,7 +178,8 @@ public abstract class EntityPlane extends EntityParent{
 	private void getBasicProperties(){		
 		currentCOG = 1;
 		currentMass = (float) (emptyMass + fuel/50);
-		for(EntityChild child : getChildren()){;
+		for(EntityChild child : getChildren()){
+			addedMass = 0;
 			if(child.riddenByEntity != null){
 				if(child.riddenByEntity instanceof EntityPlayer){
 					addedMass = 100 + calculateInventoryWeight(((EntityPlayer) child.riddenByEntity).inventory);
@@ -188,12 +189,12 @@ public abstract class EntityPlane extends EntityParent{
 			}else if(child instanceof EntityPlaneChest){
 				addedMass = calculateInventoryWeight((EntityPlaneChest) child);
 			}else if(child instanceof EntityPropeller){
-				addedMass = 50F*child.propertyCode%10;
+				addedMass = 50*(child.propertyCode%10);
 			}
 			currentCOG = (currentCOG*currentMass + child.offsetZ*addedMass)/(currentMass+addedMass);
 			currentMass += addedMass;
 		}
-		
+				
 		currentWingArea = wingArea + wingArea*flapAngle/250F;
 		bearingVec = getLookVec();
 		wingVec = getWingVec();
