@@ -50,9 +50,9 @@ public class EntityMC172 extends EntityPlane{
 	
 	@Override
 	protected void initChildPositions(){
-		addCenterWheelPosition(new float[]{0, -1F, 1.7F});
-		addLeftWheelPosition(new float[]{-1.65F, -1F, 0});
-		addRightWheelPosition(new float[]{1.65F, -1F, 0});
+		addCenterGearPosition(new float[]{0, -1F, 1.7F});
+		addLeftGearPosition(new float[]{-1.65F, -1F, 0});
+		addRightGearPosition(new float[]{1.65F, -1F, 0});
 		addEnginePosition(new float[]{0, -0.3F, 1.65F});
 		addPropellerPosition(new float[]{0, -0.375F, 2.5F});
 		addPilotPosition(new float[]{0, -.1F, 0});

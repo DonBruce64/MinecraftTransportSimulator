@@ -50,9 +50,9 @@ public class EntityOtter extends EntityPlane{
 	
 	@Override
 	protected void initChildPositions(){
-		addCenterWheelPosition(new float[]{0, -0.5F, 4.4F});
-		addLeftWheelPosition(new float[]{-2F, -0.45F, 0});
-		addRightWheelPosition(new float[]{2F, -0.45F, 0});		
+		addCenterGearPosition(new float[]{0, -0.5F, 4.4F});
+		addLeftGearPosition(new float[]{-2F, -0.45F, 0});
+		addRightGearPosition(new float[]{2F, -0.45F, 0});		
 		addEnginePosition(new float[]{-2.975F, 1.7F, 1.91F});
 		addEnginePosition(new float[]{2.975F, 1.7F, 1.91F});
 		addPropellerPosition(new float[]{-2.975F, 1.6F, 2.7F});

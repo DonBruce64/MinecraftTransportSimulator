@@ -52,9 +52,9 @@ public class EntityTrimotor extends EntityPlane{
 	@Override
 	protected void initChildPositions(){
 		//TODO set new positions
-		addCenterWheelPosition(new float[]{0, -1F, -10F});
-		addLeftWheelPosition(new float[]{-3F, -2F, -1.5F});
-		addRightWheelPosition(new float[]{3F, -2F, -1.5F});
+		addCenterGearPosition(new float[]{0, -1F, -10F});
+		addLeftGearPosition(new float[]{-3F, -2F, -1.5F});
+		addRightGearPosition(new float[]{3F, -2F, -1.5F});
 		addEnginePosition(new float[]{0, -0.3F, 1.65F});
 		addPropellerPosition(new float[]{0, -0.375F, 2.5F});
 		addPilotPosition(new float[]{0, -.1F, 0});

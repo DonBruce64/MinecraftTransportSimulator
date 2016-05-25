@@ -32,6 +32,9 @@ public abstract class EntityBase extends Entity{
 		return true;
 	}
 	
+	@Override
+	public float getShadowSize(){return 0.0F;}
+	
     @Override
     @SideOnly(Side.CLIENT)
     public void setPositionAndRotation2(double posX, double posY, double posZ, float yaw, float pitch, int p_70056_9_){
@@ -49,7 +52,9 @@ public abstract class EntityBase extends Entity{
 		MFS.MFSNet.sendToAll(new ServerSendDataPacket(this.getEntityId(), tagCompound));
 	}
 	
-	public float getShadowSize(){return 0.0F;}
+	//Junk methods, forced to pull in.
+	protected void readEntityFromNBT(NBTTagCompound p_70037_1_){}
+	protected void writeEntityToNBT(NBTTagCompound p_70014_1_){}
 	
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
@@ -62,8 +67,4 @@ public abstract class EntityBase extends Entity{
 		super.writeToNBT(tagCompound);
 		tagCompound.setString("UUID", this.UUID);
 	}
-	
-	//Junk methods, forced to pull in.
-	protected void readEntityFromNBT(NBTTagCompound p_70037_1_){}
-	protected void writeEntityToNBT(NBTTagCompound p_70014_1_){}
 }

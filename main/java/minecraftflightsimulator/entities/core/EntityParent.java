@@ -13,6 +13,7 @@ import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntityEngineLarge;
 import minecraftflightsimulator.entities.parts.EntityEngineSmall;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
+import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.entities.parts.EntitySkid;
@@ -103,11 +104,11 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	private Map<String, EntityChild> children = new HashMap<String, EntityChild>();
 
 	/**
-	 * Map that contains wheel mappings.  Keyed by wheel's UUID.
-	 * Note that this is for performing wheel operations, and will update as wheels are
+	 * Map that contains landing gear mappings.  Keyed by landing gear's UUID.
+	 * Note that this is for performing landing operations, and will update as landing gears are
 	 * linked and destroyed.
 	 */
-	private Map<String, EntityWheel> wheels = new HashMap<String, EntityWheel>();
+	private Map<String, EntityLandingGear> landingGears = new HashMap<String, EntityLandingGear>();
 	
 	/**
 	 * Map that contains engine mappings.  Keyed by engine's UUID.
@@ -228,31 +229,31 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		worldObj.newExplosion(this, x, y, z, (float) (fuel/1000 + 1F), true, true);
 	}
 	
-	protected void addCenterWheelPosition(float[] coords){
+	protected void addCenterGearPosition(float[] coords){
 		if(!partPositions.containsKey(1)){
 			partPositions.put(1, coords);
 		}else{
-			System.err.println("AN ENTITY HAS TRIED TO ADD TOO MANY CENTER WHEELS!  THINGS MAY GO BADLY!");
+			System.err.println("AN ENTITY HAS TRIED TO ADD TOO MANY CENTER GEARS!  THINGS MAY GO BADLY!");
 		}
 	}
 	
-	protected void addLeftWheelPosition(float[] coords){
+	protected void addLeftGearPosition(float[] coords){
 		if(!partPositions.containsKey(2)){
 			partPositions.put(2, coords);
 		}else if(!partPositions.containsKey(3)){
 			partPositions.put(3, coords);
 		}else{
-			System.err.println("AN ENTITY HAS TRIED TO ADD TOO MANY LEFT WHEELS!  THINGS MAY GO BADLY!");
+			System.err.println("AN ENTITY HAS TRIED TO ADD TOO MANY LEFT GEARS!  THINGS MAY GO BADLY!");
 		}
 	}
 	
-	protected void addRightWheelPosition(float[] coords){
+	protected void addRightGearPosition(float[] coords){
 		if(!partPositions.containsKey(4)){
 			partPositions.put(4, coords);
 		}else if(!partPositions.containsKey(5)){
 			partPositions.put(5, coords);
 		}else{
-			System.err.println("AN ENTITY HAS TRIED TO ADD TOO MANY RIGHT WHEELS!  THINGS MAY GO BADLY!");
+			System.err.println("AN ENTITY HAS TRIED TO ADD TOO MANY RIGHT GEARS!  THINGS MAY GO BADLY!");
 		}
 	}
 	
@@ -298,8 +299,8 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				++numberChildren;
 			}
 		}
-		if(child instanceof EntityWheel){
-			wheels.put(childUUID, (EntityWheel) child);
+		if(child instanceof EntityLandingGear){
+			landingGears.put(childUUID, (EntityLandingGear) child);
 		}else if(child instanceof EntityEngine){
 			engines.put(childUUID, (EntityEngine) child);
 			float[] childOffset = new float[]{child.offsetX, child.offsetY, child.offsetZ};
@@ -333,7 +334,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			children.remove(childUUID);
 			--numberChildren;
 		}
-		wheels.remove(childUUID);
+		landingGears.remove(childUUID);
 		engines.remove(childUUID);
 		propellers.remove(childUUID);
 		enginePropellers.remove(childUUID);
@@ -429,7 +430,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	public int getNumberPilotSeats(){return pilotPositions.size();}
 	public int getNumberPassengerSeats(){return passengerPositions.size();}
 	protected EntityChild[] getChildren(){return children.values().toArray(new EntityChild[children.size()]);}	
-	protected EntityWheel[] getWheels(){return wheels.values().toArray(new EntityWheel[wheels.size()]);}
+	protected EntityWheel[] getWheels(){return landingGears.values().toArray(new EntityWheel[landingGears.size()]);}
 	protected EntityEngine[] getEngines(){return engines.values().toArray(new EntityEngine[engines.size()]);}
 	protected EntityPropeller[] getPropellers(){return propellers.values().toArray(new EntityPropeller[propellers.size()]);}
 	public EntityPropeller getPropellerForEngine(String engineUUID){return propellers.get(enginePropellers.get(engineUUID));}
@@ -495,6 +496,8 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 							setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelSmall));
 						}else if(child instanceof EntityWheelLarge){
 							setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelLarge));
+						}else if(child instanceof EntityPontoon){
+							setInventorySlotContents(i, new ItemStack(MFS.proxy.pontoon));
 						}else{
 							setInventorySlotContents(i, new ItemStack(MFS.proxy.skid));
 						}
@@ -591,6 +594,8 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 							newChild = new EntityWheelSmall(worldObj, this, this.UUID, position[0], position[1], position[2]);
 						}else if(stack.getItem().equals(MFS.proxy.wheelLarge)){
 							newChild = new EntityWheelLarge(worldObj, this, this.UUID, position[0], position[1], position[2]);
+						}else if(stack.getItem().equals(MFS.proxy.pontoon)){
+							newChild = new EntityPontoon(worldObj, this, this.UUID, position[0], position[1], position[2]);
 						}else{
 							newChild = new EntitySkid(worldObj, this, this.UUID, position[0], position[1], position[2]);
 						}

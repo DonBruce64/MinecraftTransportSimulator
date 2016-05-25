@@ -51,9 +51,9 @@ public class EntityPZLP11 extends EntityPlane{
 	
 	@Override
 	protected void initChildPositions(){
-		addCenterWheelPosition(new float[]{0F, -0.3F, -5.5F});
-		addLeftWheelPosition(new float[]{-1.4F, -1.8F, 0.375F});
-		addRightWheelPosition(new float[]{1.4F, -1.8F, 0.375F});
+		addCenterGearPosition(new float[]{0F, -0.3F, -5.5F});
+		addLeftGearPosition(new float[]{-1.4F, -1.8F, 0.375F});
+		addRightGearPosition(new float[]{1.4F, -1.8F, 0.375F});
 		addEnginePosition(new float[]{0, -0.3F, 0.65F});
 		addPropellerPosition(new float[]{0, -0.375F, 1.65F});
 		addPilotPosition(new float[]{0, -.1F, -1.3F});

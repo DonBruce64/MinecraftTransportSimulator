@@ -77,23 +77,24 @@ public abstract class EntityChild extends EntityBase{
 	}
 	
 	public boolean isOnGround(){
-		return !isAirBlockAtLocation(posX, posY - 0.02, posZ);
+		return !isBlockAtLocation(posX, posY - 0.05, posZ);
 	}
 	
 	public boolean isCollidedHorizontally(){
-		return !isAirBlockAtLocation(posX, posY, posZ)
-				|| !isAirBlockAtLocation(posX + this.width, posY, posZ)
-				|| !isAirBlockAtLocation(posX, posY, posZ + this.width)
-				|| !isAirBlockAtLocation(posX + this.width, posY, posZ + this.width);
+		return !isBlockAtLocation(posX, posY, posZ)
+				|| !isBlockAtLocation(posX + this.width, posY, posZ)
+				|| !isBlockAtLocation(posX, posY, posZ + this.width)
+				|| !isBlockAtLocation(posX + this.width, posY, posZ + this.width);
 	}
 	
 	public boolean willCollideVerticallyWithOffset(double offsetX, double offsetY, double offsetZ){
-		return !isAirBlockAtLocation(posX + offsetX, posY + offsetY, posZ + offsetZ)
-			|| !isAirBlockAtLocation(posX + offsetX, posY + offsetY + this.height, posZ + offsetY);
+		return !isBlockAtLocation(posX + offsetX, posY + offsetY, posZ + offsetZ)
+			|| !isBlockAtLocation(posX + offsetX, posY + offsetY + this.height, posZ + offsetY);
 	}
 	
-	private boolean isAirBlockAtLocation(double x, double y, double z){
-		return worldObj.isAirBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z));
+	protected boolean isBlockAtLocation(double x, double y, double z){
+		return worldObj.isAirBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z))
+				|| worldObj.isAnyLiquid(this.boundingBox);
 	}
 	
 	@Override

@@ -5,8 +5,6 @@ import java.util.List;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
-import minecraftflightsimulator.entities.parts.EntitySkid;
-import minecraftflightsimulator.entities.parts.EntityWheel;
 import minecraftflightsimulator.helpers.RotationHelper;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
@@ -156,7 +154,7 @@ public abstract class EntityPlane extends EntityParent{
 	private void refreshGroundedStatuses(){
 		brakeDistance = groundedWheels = groundedCores = 0;
 		for(EntityChild child : getChildren()){
-			if(child instanceof EntityWheel || child instanceof EntitySkid){
+			if(child instanceof EntityLandingGear){
 				if(!child.isDead){
 					if(child.isOnGround()){
 						if(child.offsetX != 0){

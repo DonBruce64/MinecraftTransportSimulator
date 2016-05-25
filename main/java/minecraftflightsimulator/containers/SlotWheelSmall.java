@@ -1,5 +1,6 @@
 package minecraftflightsimulator.containers;
 
+import minecraftflightsimulator.items.ItemPontoon;
 import minecraftflightsimulator.items.ItemWheelSmall;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
@@ -11,6 +12,6 @@ public class SlotWheelSmall extends Slot{
 	}
 	
     public boolean isItemValid(ItemStack item){
-    	return item.getItem() instanceof ItemWheelSmall;
+    	return item.getItem() instanceof ItemWheelSmall || item.getItem() instanceof ItemPontoon;
     }
 }
