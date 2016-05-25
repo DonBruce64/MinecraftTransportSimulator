@@ -6,11 +6,11 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityBase;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityParent;
-import minecraftflightsimulator.other.EntityDamageSourcePropellor;
 import minecraftflightsimulator.packets.control.EnginePacket;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EntityDamageSource;
 import net.minecraft.world.World;
 
 public class EntityPropeller extends EntityChild{
@@ -113,4 +113,11 @@ public class EntityPropeller extends EntityChild{
 		tagCompound.setInteger("pitch", this.pitch);
 		tagCompound.setInteger("diameter", this.diameter);
 	}
+	
+	public class EntityDamageSourcePropellor extends EntityDamageSource{
+		public EntityDamageSourcePropellor(String name, Entity transmitter){
+			super(name, transmitter);
+			this.damageType="propellor";
+		}
+	};
 }

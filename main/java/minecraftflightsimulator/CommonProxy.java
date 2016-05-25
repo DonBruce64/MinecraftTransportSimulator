@@ -1,5 +1,7 @@
 package minecraftflightsimulator;
 
+import java.lang.reflect.Field;
+
 import minecraftflightsimulator.containers.GUIHandler;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.parts.EntityEngine;
@@ -15,16 +17,9 @@ import minecraftflightsimulator.entities.parts.EntityWheelSmall;
 import minecraftflightsimulator.items.ItemEngineLarge;
 import minecraftflightsimulator.items.ItemEngineSmall;
 import minecraftflightsimulator.items.ItemFlightInstrument;
-import minecraftflightsimulator.items.ItemFlightInstrumentBase;
 import minecraftflightsimulator.items.ItemPlane;
-import minecraftflightsimulator.items.ItemPointerLong;
-import minecraftflightsimulator.items.ItemPointerShort;
-import minecraftflightsimulator.items.ItemPontoon;
 import minecraftflightsimulator.items.ItemPropeller;
 import minecraftflightsimulator.items.ItemSeat;
-import minecraftflightsimulator.items.ItemSkid;
-import minecraftflightsimulator.items.ItemWheelLarge;
-import minecraftflightsimulator.items.ItemWheelSmall;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.BrakePacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
@@ -63,20 +58,20 @@ public class CommonProxy{
 	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 1);
 	public static final Item planeOtter = new ItemPlane(EntityOtter.class, 1);
 	
-	
 	public static final Item seat = new ItemSeat();
-	public static final Item wheelSmall = new ItemWheelSmall();
-	public static final Item wheelLarge = new ItemWheelLarge();
-	public static final Item skid = new ItemSkid();
-	public static final Item pontoon = new ItemPontoon();
 	public static final Item propeller = new ItemPropeller();
 	public static final Item engineSmall = new ItemEngineSmall();
 	public static final Item engineLarge = new ItemEngineLarge();
-	public static final Item pointerShort = new ItemPointerShort();
-	public static final Item pointerLong = new ItemPointerLong();
-	public static final Item flightInstrumentBase = new ItemFlightInstrumentBase();
 	public static final Item flightInstrument = new ItemFlightInstrument();
 	
+	public static final Item wheelSmall = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("WheelSmall").setTextureName("mfs:wheelsmall");
+	public static final Item wheelLarge = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("WheelLarge").setTextureName("mfs:wheellarge");
+	public static final Item skid = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("Skid").setTextureName("mfs:skid");
+	public static final Item pontoon = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("Pontoon").setTextureName("mfs:pontoon");
+	public static final Item pointerShort = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("PointerShort").setTextureName("mfs:pointershort");
+	public static final Item pointerLong = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("PointerLong").setTextureName("mfs:pointerlong");
+	public static final Item flightInstrumentBase = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("FlightInstrumentBase").setTextureName("mfs:flightinstrumentbase");
+		
 	private static int entityNumber = 0;
 	private static int packetNumber = 0;
 	
@@ -137,27 +132,14 @@ public class CommonProxy{
 	}
 	
 	private void initItems(){
-		registerItem(planeMC172);
-		//registerItem(planeTrimotor);
-		registerItem(planeOtter);
-		registerItem(planePLZP11);
-		
-		registerItem(seat);
-		registerItem(wheelSmall);
-		registerItem(wheelLarge);
-		registerItem(skid);
-		registerItem(pontoon);
-		registerItem(propeller);
-		registerItem(engineSmall);
-		registerItem(engineLarge);
-		registerItem(pointerShort);
-		registerItem(pointerLong);
-		registerItem(flightInstrumentBase);
-		registerItem(flightInstrument);
-	}
-	
-	private void registerItem(Item item){
-		GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
+		for(Field feild : this.getClass().getFields()){
+			if(feild.getType().equals(Item.class)){
+				try{
+					Item item = (Item) feild.get(Item.class);
+					GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
+				}catch(Exception e){}
+			}
+		}
 	}
 	
 	private void initRecipies(){
