@@ -4685,9 +4685,7 @@ public class ModelPZLP11Fuselage extends ModelBase{
     Xh11.render(scale);
     Xh12.render(scale);
     Wg129.render(scale);
-    Wg130.render(scale);
-    
-    Vs14.setRotationPoint(1F, -13.01F, 73F);
+    Wg130.render(scale);    
   }
   
   private void setRotation(ModelRenderer model, float x, float y, float z){
