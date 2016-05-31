@@ -64,13 +64,13 @@ public class CommonProxy{
 	public static final Item engineLarge = new ItemEngineLarge();
 	public static final Item flightInstrument = new ItemFlightInstrument();
 	
+	public static final Item flightInstrumentBase = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("FlightInstrumentBase").setTextureName("mfs:flightinstrumentbase");
+	public static final Item pointerShort = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("PointerShort").setTextureName("mfs:pointershort");
+	public static final Item pointerLong = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("PointerLong").setTextureName("mfs:pointerlong");
 	public static final Item wheelSmall = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("WheelSmall").setTextureName("mfs:wheelsmall");
 	public static final Item wheelLarge = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("WheelLarge").setTextureName("mfs:wheellarge");
 	public static final Item skid = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("Skid").setTextureName("mfs:skid");
 	public static final Item pontoon = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("Pontoon").setTextureName("mfs:pontoon");
-	public static final Item pointerShort = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("PointerShort").setTextureName("mfs:pointershort");
-	public static final Item pointerLong = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("PointerLong").setTextureName("mfs:pointerlong");
-	public static final Item flightInstrumentBase = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("FlightInstrumentBase").setTextureName("mfs:flightinstrumentbase");
 		
 	private static int entityNumber = 0;
 	private static int packetNumber = 0;
