@@ -26,11 +26,12 @@ public class RenderPontoon extends Render{
 		EntityPontoon pontoon=(EntityPontoon) entity;
 		if(pontoon.parent != null){
 			GL11.glPushMatrix();
-			GL11.glTranslated(x, y + 0.6, z);
+			GL11.glTranslated(x, y, z);
 			GL11.glRotatef(180, 1, 0, 0);
 			GL11.glRotatef(pontoon.parent.rotationYaw, 0, 1, 0);
 			GL11.glRotatef(pontoon.parent.rotationPitch, 1, 0, 0);
 			GL11.glRotatef(-pontoon.parent.rotationRoll, 0, 0, 1);
+			GL11.glTranslatef(0, -0.6F, -0.2F);
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 	        Minecraft.getMinecraft().renderEngine.bindTexture(pontoonTexture);
 	        model.render();
