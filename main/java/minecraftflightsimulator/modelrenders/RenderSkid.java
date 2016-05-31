@@ -26,11 +26,12 @@ public class RenderSkid extends Render{
 		EntitySkid skid=(EntitySkid) entity;
 		if(skid.parent != null){
 			GL11.glPushMatrix();
-			GL11.glTranslated(x, y + 0.25, z);
+			GL11.glTranslated(x, y, z);
 			GL11.glRotatef(180, 1, 0, 0);
 			GL11.glRotatef(skid.parent.rotationYaw, 0, 1, 0);
 			GL11.glRotatef(skid.parent.rotationPitch, 1, 0, 0);
 			GL11.glRotatef(-skid.parent.rotationRoll, 0, 0, 1);
+			GL11.glTranslatef(0, -0.25F, 0);
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 	        Minecraft.getMinecraft().renderEngine.bindTexture(skidTexture);
 	        model.render();
