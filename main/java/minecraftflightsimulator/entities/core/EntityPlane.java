@@ -251,7 +251,7 @@ public abstract class EntityPlane extends EntityParent{
 			motionZ += (bearingVec.zCoord*thrustForce - velocityVec.zCoord*dragForce + wingVec.zCoord*(wingForce + elevatorForce))/currentMass;
 		}		
 				
-		//TODO get this working as well
+		//TODO fix this to allow barrel rolls
 		motionY += (bearingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + wingVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
 		motionRoll = (float) (180/Math.PI*((1-bearingVec.yCoord)*aileronTorque)/momentRoll);
 		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + (1-Math.abs(bearingVec.yCoord))*(gravitationalTorque + brakeTorque))/momentPitch);
@@ -485,27 +485,6 @@ public abstract class EntityPlane extends EntityParent{
 					continue;
 				}
 				motionY += yCollisionDepth/MFS.planeSpeedFactor;
-			}
-		}
-	}
-	
-	private void adjustYMovement2(){
-		for(EntityChild child : getChildren()){
-			yCollisionDepth = 0;
-			newChildBox = child.boundingBox.copy().offset(0, motionY*MFS.planeSpeedFactor, 0);
-			collidingBoxes = child.worldObj.getCollidingBoundingBoxes(child, newChildBox);
-			for(int i=0; i < collidingBoxes.size(); ++i){
-				collidingBox = (AxisAlignedBB) collidingBoxes.get(i);
-				if(newChildBox.maxY > collidingBox.minY && newChildBox.maxY < collidingBox.maxY){
-					yCollisionDepth = Math.min(collidingBox.minY - newChildBox.maxY, yCollisionDepth);
-				}else if(newChildBox.minY < collidingBox.maxY && newChildBox.minY > collidingBox.minY){
-					yCollisionDepth =  Math.max(collidingBox.maxY - newChildBox.minY, yCollisionDepth);
-				}
-			}
-			if(yCollisionDepth > 0){
-				if(yCollisionDepth < 0.3){
-					motionY += yCollisionDepth/MFS.planeSpeedFactor;
-				}
 			}
 		}
 	}
