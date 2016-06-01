@@ -54,7 +54,8 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	public double velocity;
 	public double airDensity;
 	public double trackAngle;
-	public String ownerName;
+	public String ownerName="MFS";
+	public String displayName="";
 	
 	public Vec3 velocityVec = Vec3.createVectorHelper(0, 0, 0);
 	public Vec3 bearingVec = Vec3.createVectorHelper(0, 0, 0);
@@ -137,7 +138,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	
 	public EntityParent(World world){
 		super(world);
-		this.setSize(1F, 1F);
+		this.setSize(0.75F, 0.75F);
 		this.ignoreFrustumCheck=true;
 		this.preventEntitySpawning = false;
 		for(int i=0; i<10; ++i){
@@ -150,7 +151,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		this.setPositionAndRotation(posX, posY, posZ, playerRotation-90, 0);
 		this.UUID=String.valueOf(this.getUniqueID());
 		this.numberChildren=(byte) this.getCoreLocations().length;
-		this.ownerName="MFS";
 	}
 	
 	@Override
@@ -183,6 +183,16 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	}
 	
 	@Override
+    public boolean interactFirst(EntityPlayer player){
+		return this.performRightClickAction(this, player);
+	}
+	
+	@Override
+    public boolean attackEntityFrom(DamageSource source, float damage){
+		return this.performAttackAction(this, source, damage);
+	}
+	
+	@Override
 	public Vec3 getLookVec(){
         float f1 = MathHelper.cos(-this.rotationYaw * 0.017453292F - (float)Math.PI);
         float f2 = MathHelper.sin(-this.rotationYaw * 0.017453292F - (float)Math.PI);
@@ -190,21 +200,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
         float f4 = MathHelper.sin(-this.rotationPitch * 0.017453292F);
         return Vec3.createVectorHelper((double)(f2 * f3), (double)f4, (double)(f1 * f3));
    	}
-	
-	@Override
-	public boolean attackEntityFrom(DamageSource source, float damage){
-		super.attackEntityFrom(source, damage);
-		if(!worldObj.isRemote){
-			if(source.getEntity() instanceof EntityPlayer){
-				if(((EntityPlayer) source.getEntity()).isSneaking()){
-					if(((EntityPlayer) source.getEntity()).capabilities.isCreativeMode){
-						this.setDead();
-					}
-				}
-			}
-		}
-		return false;
-    }
 	
 	@Override
 	public void setDead(){
@@ -224,6 +219,49 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	}
 	
 	//Start of custom methods
+	/**
+	 * Handler for all right-clicking actions performed.  May be circumvented by overriding
+	 * the appropriate methods in subclassed child entities.
+	 * @param entityClicked the entity that was clicked
+	 * @param player the player that clicked this entity
+	 * 
+	 * @return whether or not an action occured.
+	 */
+	public boolean performRightClickAction(EntityBase entityClicked, EntityPlayer player){
+		if(!worldObj.isRemote){
+			if(player.getHeldItem() != null){
+				if(player.getHeldItem().getItem().equals(Items.name_tag)){
+					this.ownerName = player.getHeldItem().getDisplayName();
+					this.sendDataToClient();
+					return true;
+				}
+			}
+			if(entityClicked.equals(this)){
+				for(EntityChild child : this.getChildren()){
+					if(child.boundingBox.intersectsWith(boundingBox) && child instanceof EntitySeat){
+						child.interactFirst(player);
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	public boolean performAttackAction(EntityBase attackedEntity, DamageSource source, float damage){
+		if(!worldObj.isRemote){
+			if(source.getEntity() instanceof EntityPlayer){
+				EntityPlayer attackingPlayer = (EntityPlayer) source.getEntity();
+				if(attackingPlayer.isSneaking()){
+					if(attackingPlayer.capabilities.isCreativeMode || attackingPlayer.getDisplayName().endsWith(this.ownerName)){
+						this.setDead();
+					}
+				}
+			}
+		}
+		return true;
+	}
+	
 	public void explodeAtPosition(double x, double y, double z){
 		this.setDead();
 		worldObj.newExplosion(this, x, y, z, (float) (fuel/1000 + 1F), true, true);
@@ -700,6 +738,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		this.rotationRoll=tagCompound.getFloat("rotationRoll");
 		this.fuel=tagCompound.getDouble("fuel");
 		this.ownerName=tagCompound.getString("ownerName");
+		this.displayName=tagCompound.getString("displayName");
 		for(int i=0; i<10; ++i){
 			if(tagCompound.hasKey("instrument" + i)){
 				instrumentList.set(i, new ItemStack(MFS.proxy.flightInstrument, 1, tagCompound.getInteger("instrument" + i)));
@@ -721,6 +760,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		tagCompound.setFloat("rotationRoll", this.rotationRoll);
 		tagCompound.setDouble("fuel", this.fuel);
 		tagCompound.setString("ownerName", this.ownerName);
+		tagCompound.setString("displayName", this.displayName);
 		for(int i=0; i<instrumentList.size(); ++i){
 			if(instrumentList.get(i) != null){
 				tagCompound.setInteger("instrument" + i, instrumentList.get(i).getItemDamage());

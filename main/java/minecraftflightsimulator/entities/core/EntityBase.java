@@ -33,7 +33,14 @@ public abstract class EntityBase extends Entity{
 	}
 	
 	@Override
-	public float getShadowSize(){return 0.0F;}
+	public boolean canBeCollidedWith(){
+		return true;
+	}
+	
+	@Override
+	public float getShadowSize(){
+		return 0.0F;
+	}
 	
     @Override
     @SideOnly(Side.CLIENT)

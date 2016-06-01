@@ -2,6 +2,7 @@ package minecraftflightsimulator.entities.core;
 
 import minecraftflightsimulator.helpers.RotationHelper;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
@@ -48,6 +49,16 @@ public abstract class EntityChild extends EntityBase{
 		}
 	}
 	
+	@Override
+    public boolean interactFirst(EntityPlayer player){
+		return parent != null ? parent.performRightClickAction(this, player) : false;
+	}
+	
+	@Override
+	public boolean attackEntityFrom(DamageSource source, float damage){
+		return parent != null ? parent.performAttackAction(this, source, damage) : false;
+    }
+	
 	public boolean hasParent(){
 		if(this.parent==null){
 			if(ticksExisted==1 || ticksExisted%10==0){
@@ -77,34 +88,24 @@ public abstract class EntityChild extends EntityBase{
 	}
 	
 	public boolean isOnGround(){
-		return !isBlockAtLocation(posX, posY - 0.05, posZ);
+		return isBlockAtLocation(posX, posY - 0.05, posZ);
 	}
 	
 	public boolean isCollidedHorizontally(){
-		return !isBlockAtLocation(posX, posY, posZ)
-				|| !isBlockAtLocation(posX + this.width, posY, posZ)
-				|| !isBlockAtLocation(posX, posY, posZ + this.width)
-				|| !isBlockAtLocation(posX + this.width, posY, posZ + this.width);
+		return isBlockAtLocation(posX, posY, posZ)
+				|| isBlockAtLocation(posX + this.width, posY, posZ)
+				|| isBlockAtLocation(posX, posY, posZ + this.width)
+				|| isBlockAtLocation(posX + this.width, posY, posZ + this.width);
 	}
 	
 	public boolean willCollideVerticallyWithOffset(double offsetX, double offsetY, double offsetZ){
-		return !isBlockAtLocation(posX + offsetX, posY + offsetY, posZ + offsetZ)
-			|| !isBlockAtLocation(posX + offsetX, posY + offsetY + this.height, posZ + offsetY);
+		return isBlockAtLocation(posX + offsetX, posY + offsetY, posZ + offsetZ)
+			|| isBlockAtLocation(posX + offsetX, posY + offsetY + this.height, posZ + offsetY);
 	}
 	
 	protected boolean isBlockAtLocation(double x, double y, double z){
-		return worldObj.isAirBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z))
-				|| worldObj.isAnyLiquid(this.boundingBox);
+		return worldObj.getBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z)).getCollisionBoundingBoxFromPool(worldObj, 0, 0, 0) != null;
 	}
-	
-	@Override
-	public boolean attackEntityFrom(DamageSource source, float damage){
-		super.attackEntityFrom(source, damage);
-		if(this.parent!=null){
-			parent.attackEntityFrom(source, damage);
-		}
-		return false;
-    }
 	
 	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){

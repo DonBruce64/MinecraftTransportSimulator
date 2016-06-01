@@ -39,7 +39,8 @@ public class ItemPlane extends Item{
 				for(float[] coreCoords : newPlane.getCoreLocations()){
 					minHeight = -coreCoords[1] > minHeight ? -coreCoords[1] : minHeight;
 				}
-				newPlane.posY += minHeight;				
+				newPlane.posY += minHeight;
+				newPlane.ownerName = player.getDisplayName();
 				if(canSpawnPlane(world, newPlane)){
 					if(!player.capabilities.isCreativeMode){
 						--item.stackSize;
