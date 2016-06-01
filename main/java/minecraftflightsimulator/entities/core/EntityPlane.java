@@ -132,10 +132,6 @@ public abstract class EntityPlane extends EntityParent{
 			dampenControlSurfaces();
 		}
 	}
-		
-	private Vec3 getWingVec(){
-		return RotationHelper.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
-	}
 	
 	private double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
 		if(Math.abs(angleOfAttack) <= 15*1.25){
@@ -195,7 +191,7 @@ public abstract class EntityPlane extends EntityParent{
 				
 		currentWingArea = wingArea + wingArea*flapAngle/250F;
 		bearingVec = getLookVec();
-		wingVec = getWingVec();
+		wingVec = RotationHelper.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
 		sideVec = bearingVec.crossProduct(wingVec);
 		velocityVec.xCoord = motionX;
 		velocityVec.yCoord = motionY;
