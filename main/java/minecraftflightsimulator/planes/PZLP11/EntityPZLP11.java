@@ -27,7 +27,7 @@ public class EntityPZLP11 extends EntityPlane{
 	
 	public EntityPZLP11(World world, float posX, float posY, float posZ, float rotation, int textureCode){
 		super(world, posX, posY, posZ, rotation, textureCode);
-		
+		this.displayName = "DietPepsi1997";
 	}
 
 	@Override
