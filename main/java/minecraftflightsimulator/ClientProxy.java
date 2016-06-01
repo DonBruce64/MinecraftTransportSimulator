@@ -53,7 +53,7 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	private void initEntityRenders(){
-		//MinecraftForgeClient.registerItemRenderer(this.skid, new ItemRender());
+		//MinecraftForgeClient.registerItemRenderer(this.item, new ItemRender());
 		RenderingRegistry.registerEntityRenderingHandler(EntityMC172.class, new RenderMC172());
 		RenderingRegistry.registerEntityRenderingHandler(EntityTrimotor.class, new RenderTrimotor());
 		RenderingRegistry.registerEntityRenderingHandler(EntityOtter.class, new RenderOtter());
