@@ -27,6 +27,7 @@ public abstract class RenderPlane extends Render{
         renderPlane(plane);
         renderWindows(plane);
         renderConsole(plane);
+        renderMarkings(plane);
         GL11.glPopMatrix();
         
         if(Minecraft.getMinecraft().gameSettings.showDebugInfo){
@@ -37,6 +38,7 @@ public abstract class RenderPlane extends Render{
 	protected abstract void renderPlane(EntityPlane plane);
 	protected abstract void renderWindows(EntityPlane plane);
 	protected abstract void renderConsole(EntityPlane plane);
+	protected abstract void renderMarkings(EntityPlane plane);
 	
 	private void renderDebugVectors(EntityPlane plane, double x, double y, double z){
 		double[] debugForces = plane.getDebugForces();

@@ -80,4 +80,7 @@ public class RenderMC172 extends RenderPlane{
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_big_oak.png");
 		return texArray;
 	}
+
+	@Override
+	protected void renderMarkings(EntityPlane plane){}
 }

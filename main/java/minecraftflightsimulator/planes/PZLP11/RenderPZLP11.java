@@ -1,5 +1,7 @@
 package minecraftflightsimulator.planes.PZLP11;
 
+import java.awt.Color;
+
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.helpers.InstrumentHelper;
 import minecraftflightsimulator.helpers.RenderHelper;
@@ -23,6 +25,8 @@ public class RenderPZLP11 extends RenderPlane{
 	private static final ResourceLocation elevatorrTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/elevatorr.png");
 	private static final ResourceLocation rudderTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/rudder.png");
     
+	private static final Color letteringColor = new Color((63 << 16) + (28 << 8) + 25);
+	
 	public RenderPZLP11(){
 		super();
 	}
@@ -87,5 +91,14 @@ public class RenderPZLP11 extends RenderPlane{
 		InstrumentHelper.drawInstrument(plane, 32, 52, 15, false);
 		InstrumentHelper.drawInstrument(plane, 96, 52, 16, false);
 		GL11.glPopMatrix();
+	}
+
+	@Override
+	protected void renderMarkings(EntityPlane plane){
+		GL11.glRotatef(180, 1, 0, 0);
+		GL11.glRotatef(100, 0, 1, 0);
+		GL11.glDisable(GL11.GL_LIGHTING);
+		RenderHelper.drawScaledStringAt(plane.ownerName, -3.75F, -0.4F, -1.1F, 1F/32F, Color.white);
+		GL11.glEnable(GL11.GL_LIGHTING);
 	}
 }

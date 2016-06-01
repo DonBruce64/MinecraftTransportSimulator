@@ -93,4 +93,7 @@ public class RenderOtter extends RenderPlane{
 		InstrumentHelper.drawInstrument(plane, 320, 30, 17, false);
 		GL11.glPopMatrix();
 	}
+
+	@Override
+	protected void renderMarkings(EntityPlane plane){}
 }

@@ -45,4 +45,7 @@ public class RenderTrimotor extends RenderPlane{
 	protected void renderConsole(EntityPlane plane){
 			
 	}
+
+	@Override
+	protected void renderMarkings(EntityPlane plane){}
 }
