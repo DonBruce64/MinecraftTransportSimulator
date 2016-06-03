@@ -24,9 +24,7 @@ public class RenderPZLP11 extends RenderPlane{
 	private static final ResourceLocation elevatorlTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/elevatorl.png");
 	private static final ResourceLocation elevatorrTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/elevatorr.png");
 	private static final ResourceLocation rudderTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/rudder.png");
-    
-	private static final Color letteringColor = new Color((63 << 16) + (28 << 8) + 25);
-	
+    	
 	public RenderPZLP11(){
 		super();
 	}
@@ -96,9 +94,11 @@ public class RenderPZLP11 extends RenderPlane{
 	@Override
 	protected void renderMarkings(EntityPlane plane){
 		GL11.glRotatef(180, 1, 0, 0);
-		GL11.glRotatef(100, 0, 1, 0);
+		GL11.glRotatef(99, 0, 1, 0);
 		GL11.glDisable(GL11.GL_LIGHTING);
-		RenderHelper.drawScaledStringAt(plane.ownerName, -3.75F, -0.4F, -1.1F, 1F/32F, Color.white);
+		RenderHelper.drawScaledStringAt(plane.displayName, -2.8F, -0.4F, -1.03F, 1F/32F, Color.lightGray);
+		GL11.glRotatef(162, 0, 1, 0);
+		RenderHelper.drawScaledStringAt(plane.displayName, 2.8F, -0.4F, -1.03F, 1F/32F, Color.lightGray);
 		GL11.glEnable(GL11.GL_LIGHTING);
 	}
 }

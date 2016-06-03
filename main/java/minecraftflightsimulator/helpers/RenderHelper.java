@@ -79,7 +79,7 @@ public class RenderHelper{
 		GL11.glPushMatrix();
 		GL11.glTranslatef(x, y, z);
 		GL11.glScalef(scale, scale, scale);
-		fontRenderer.drawString(string, 0, 0, color.getRGB());
+		fontRenderer.drawString(string, -fontRenderer.getStringWidth(string)/2, 0, color.getRGB());
 		GL11.glPopMatrix();
 	}
 	
