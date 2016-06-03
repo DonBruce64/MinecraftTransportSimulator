@@ -7,6 +7,7 @@ import minecraftflightsimulator.entities.parts.EntityEngineLarge;
 import minecraftflightsimulator.entities.parts.EntityEngineSmall;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
+import minecraftflightsimulator.entities.parts.EntityPontoonDummy;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.entities.parts.EntitySkid;
@@ -65,6 +66,7 @@ public class ClientProxy extends CommonProxy{
 		RenderingRegistry.registerEntityRenderingHandler(EntityWheelLarge.class, new RenderWheel());
 		RenderingRegistry.registerEntityRenderingHandler(EntitySkid.class, new RenderSkid());
 		RenderingRegistry.registerEntityRenderingHandler(EntityPontoon.class, new RenderPontoon());
+		RenderingRegistry.registerEntityRenderingHandler(EntityPontoonDummy.class, new RenderNull());
 		RenderingRegistry.registerEntityRenderingHandler(EntityPropeller.class, new RenderPropeller());
 		RenderingRegistry.registerEntityRenderingHandler(EntityEngineSmall.class, new RenderEngine());
 		RenderingRegistry.registerEntityRenderingHandler(EntityEngineLarge.class, new RenderEngine());

@@ -1,14 +1,14 @@
 package minecraftflightsimulator.planes.Trimotor;
 
+import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.containers.ContainerParent;
 import minecraftflightsimulator.containers.GUIParent;
 import minecraftflightsimulator.containers.SlotBucket;
-import minecraftflightsimulator.containers.SlotEngineLarge;
 import minecraftflightsimulator.containers.SlotFuel;
+import minecraftflightsimulator.containers.SlotLandingGear;
+import minecraftflightsimulator.containers.SlotPart;
 import minecraftflightsimulator.containers.SlotPassenger;
 import minecraftflightsimulator.containers.SlotPilot;
-import minecraftflightsimulator.containers.SlotPropeller;
-import minecraftflightsimulator.containers.SlotWheelSmall;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.helpers.InstrumentHelper;
 import net.minecraft.entity.player.EntityPlayer;
@@ -80,11 +80,11 @@ public class EntityTrimotor extends EntityPlane{
 	@Override
 	public void initParentContainerSlots(ContainerParent container){
 		//TODO make new GUI
-		container.addSlotToContainer(new SlotWheelSmall(this, 6, 6, 1));
-		container.addSlotToContainer(new SlotWheelSmall(this, 6, 24, 2));
-		container.addSlotToContainer(new SlotWheelSmall(this, 6, 42, 4));
-		container.addSlotToContainer(new SlotEngineLarge(this, 90, 30, 6));
-		container.addSlotToContainer(new SlotPropeller(this, 90, 11, 10));
+		container.addSlotToContainer(new SlotLandingGear(this, 6, 6, 1, MFS.proxy.wheelSmall));
+		container.addSlotToContainer(new SlotLandingGear(this, 6, 24, 2, MFS.proxy.wheelLarge));
+		container.addSlotToContainer(new SlotLandingGear(this, 6, 42, 4, MFS.proxy.wheelLarge));
+		container.addSlotToContainer(new SlotPart(this, 90, 30, 6, MFS.proxy.engineLarge));
+		container.addSlotToContainer(new SlotPart(this, 90, 11, 10, MFS.proxy.propeller));
 		container.addSlotToContainer(new SlotPilot(this, 90, 51));
 		container.addSlotToContainer(new SlotPassenger(this, 90, 69));
 		container.addSlotToContainer(new SlotFuel(this, 125, 11));

@@ -9,6 +9,7 @@ import minecraftflightsimulator.entities.parts.EntityEngineLarge;
 import minecraftflightsimulator.entities.parts.EntityEngineSmall;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
+import minecraftflightsimulator.entities.parts.EntityPontoonDummy;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.entities.parts.EntitySkid;
@@ -97,6 +98,7 @@ public class CommonProxy{
 		registerEntity(EntityWheelLarge.class);
 		registerEntity(EntitySkid.class);
 		registerEntity(EntityPontoon.class);
+		registerEntity(EntityPontoonDummy.class);
 		registerEntity(EntityPropeller.class);
 		registerEntity(EntityEngineSmall.class);
 		registerEntity(EntityEngineLarge.class);

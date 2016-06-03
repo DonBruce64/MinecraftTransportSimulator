@@ -4,6 +4,7 @@ import java.util.List;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
+import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
 import minecraftflightsimulator.helpers.RotationHelper;
 import minecraftflightsimulator.packets.control.AileronPacket;
@@ -52,6 +53,7 @@ public abstract class EntityPlane extends EntityParent{
 	protected float dragCoeffOffset;//unit-less
 
 	//internal plane variables
+	private boolean hasPontoons;
 	private byte groundedWheels;
 	private byte groundedCores;
 	private float currentMass;
@@ -156,6 +158,7 @@ public abstract class EntityPlane extends EntityParent{
 						if(child.offsetX != 0){
 							brakeDistance = -child.offsetY;
 							groundedWheels += child.offsetX > 0 ? 2 : 4;
+							hasPontoons = child instanceof EntityPontoon;
 						}else{
 							groundedWheels += 1;
 						}
@@ -255,7 +258,14 @@ public abstract class EntityPlane extends EntityParent{
 	}
 	
 	private void performGroundOperations(){
-		if(groundedWheels >= 6 && Math.abs(rotationRoll) < 1){
+		if(hasPontoons && groundedWheels >= 6){
+			if(Math.abs(rotationRoll) <  5){
+				rotationRoll = motionRoll = 0;
+			}
+			if(groundedWheels == 12){
+				groundedWheels = 7;
+			}
+		}else if(groundedWheels >= 6 && Math.abs(rotationRoll) <  1){
 			rotationRoll = motionRoll = 0;
 		}
 		if(groundedWheels == 7){
@@ -305,7 +315,6 @@ public abstract class EntityPlane extends EntityParent{
 							return;
 						}else{
 							worldObj.playSoundAtEntity(this, "minecraft:random.break", 2, 1);
-							child.setDead();
 							removeChild(child.UUID);
 							this.sendDataToClient();
 						}
@@ -335,7 +344,7 @@ public abstract class EntityPlane extends EntityParent{
 		do{
 			yawChildXOffset = 0;
 			yawChildZOffset = 0;
-			for(EntityChild child : getChildren()){
+			for(EntityChild child : getChildren()){				
 				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw + motionYaw, rotationRoll);
 				newChildBox = child.boundingBox.copy().offset(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, 0, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor);
 				child.isCollidedHorizontally = !child.worldObj.getCollidingBoundingBoxes(child, newChildBox).isEmpty();
@@ -390,9 +399,8 @@ public abstract class EntityPlane extends EntityParent{
 			rollChildOffset = 0;
 			for(EntityChild child : getChildren()){
 				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-				newChildBox = child.boundingBox.copy().offset(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, posY + offset.yCoord - child.posY + motionY*MFS.planeSpeedFactor, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor).contract(0.001, 0.001, 0.001);
-				child.isCollidedHorizontally = !child.worldObj.getCollidingBoundingBoxes(child, newChildBox).isEmpty();
-				if(child.isCollidedHorizontally){
+				offset = offset.addVector(posX - child.posX + motionX*MFS.planeSpeedFactor, posY - child.posY + motionY*MFS.planeSpeedFactor, posZ - child.posZ + motionZ*MFS.planeSpeedFactor);
+				if(child.willCollideVerticallyWithOffset(offset.xCoord, offset.yCoord, offset.zCoord)){
 					if(rollChildOffset==0){
 						rollChildOffset = child.offsetX;
 					}else if(Math.signum(rollChildOffset)!=Math.signum(child.offsetX)){
@@ -432,17 +440,18 @@ public abstract class EntityPlane extends EntityParent{
 						prevPitchChildOffset = pitchChildOffset;
 						pitchChildOffset = child.offsetZ;
 						if(prevPitchChildOffset != 0 && (prevPitchChildOffset * pitchChildOffset < 0)){
-							if((motionY += 0.1) > 0){
-								pitchChildOffset = motionY = motionPitch = 0;
+							if((motionY += 0.1) > (hasPontoons ? 0.1 : 0)){
+								pitchChildOffset = motionPitch = 0;
+								motionY = hasPontoons ? 0.1 : 0;
 								return;
 							}else{
 								break;
 							}
 						}else{
 							motionPitch += pitchChildOffset > 0 ? -0.1 : 0.1;
-							if(Math.abs(motionPitch) >= 15){
-								pitchChildOffset = motionPitch = 0;
-								break;	
+							if(Math.abs(motionPitch) > 15){
+								pitchChildOffset = 0;
+								break;
 							}
 						}
 					}
@@ -470,7 +479,6 @@ public abstract class EntityPlane extends EntityParent{
 							this.explodeAtPosition(child.posX, child.posY, child.posZ);
 							return;
 						}else{
-							child.setDead();
 							worldObj.playSoundAtEntity(this, "minecraft:random.break", 2, 1);
 							removeChild(child.UUID);
 							this.sendDataToClient();

@@ -1,15 +1,13 @@
 package minecraftflightsimulator.planes.PZLP11;
 
+import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.containers.ContainerParent;
 import minecraftflightsimulator.containers.GUIParent;
 import minecraftflightsimulator.containers.SlotBucket;
-import minecraftflightsimulator.containers.SlotEngineLarge;
 import minecraftflightsimulator.containers.SlotFuel;
-import minecraftflightsimulator.containers.SlotInstrument;
+import minecraftflightsimulator.containers.SlotLandingGear;
+import minecraftflightsimulator.containers.SlotPart;
 import minecraftflightsimulator.containers.SlotPilot;
-import minecraftflightsimulator.containers.SlotPropeller;
-import minecraftflightsimulator.containers.SlotSkid;
-import minecraftflightsimulator.containers.SlotWheelLarge;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.helpers.InstrumentHelper;
 import net.minecraft.entity.player.EntityPlayer;
@@ -76,16 +74,16 @@ public class EntityPZLP11 extends EntityPlane{
 	
 	@Override
 	public void initParentContainerSlots(ContainerParent container){
-		container.addSlotToContainer(new SlotWheelLarge(this, 86, 113, 2));
-		container.addSlotToContainer(new SlotSkid(this, 68, 113, 1));
-		container.addSlotToContainer(new SlotWheelLarge(this, 50, 113, 4));
-		container.addSlotToContainer(new SlotEngineLarge(this, 131, 62, 6));
-		container.addSlotToContainer(new SlotPropeller(this, 149, 62, 10));
+		container.addSlotToContainer(new SlotLandingGear(this, 86, 113, 2, MFS.proxy.wheelLarge));
+		container.addSlotToContainer(new SlotPart(this, 68, 113, 1, MFS.proxy.skid));
+		container.addSlotToContainer(new SlotLandingGear(this, 50, 113, 4, MFS.proxy.wheelLarge));
+		container.addSlotToContainer(new SlotPart(this, 131, 62, 6, MFS.proxy.engineLarge));
+		container.addSlotToContainer(new SlotPart(this, 149, 62, 10, MFS.proxy.propeller));
 		container.addSlotToContainer(new SlotPilot(this, 113, 62));
 		container.addSlotToContainer(new SlotBucket(this, 7, 113));
 		container.addSlotToContainer(new SlotFuel(this, 7, 73));
 		for(byte i=0; i<6; ++i){
-			container.addSlotToContainer(new SlotInstrument(this, 7 + 18*(i%3), i < 3 ? 7 : 25, (i < 3 ? i + 1 : i + 3 ) + instrumentStartSlot));
+			container.addSlotToContainer(new SlotPart(this, 7 + 18*(i%3), i < 3 ? 7 : 25, (i < 3 ? i + 1 : i + 3 ) + instrumentStartSlot, MFS.proxy.flightInstrument));
 		}
 	}
 }

@@ -14,6 +14,7 @@ import minecraftflightsimulator.entities.parts.EntityEngineLarge;
 import minecraftflightsimulator.entities.parts.EntityEngineSmall;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
+import minecraftflightsimulator.entities.parts.EntityPontoonDummy;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.entities.parts.EntitySkid;
@@ -225,13 +226,13 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	 * @param entityClicked the entity that was clicked
 	 * @param player the player that clicked this entity
 	 * 
-	 * @return whether or not an action occured.
+	 * @return whether or not an action occurred.
 	 */
 	public boolean performRightClickAction(EntityBase entityClicked, EntityPlayer player){
 		if(!worldObj.isRemote){
 			if(player.getHeldItem() != null){
 				if(player.getHeldItem().getItem().equals(Items.name_tag)){
-					this.ownerName = player.getHeldItem().getDisplayName();
+					this.displayName = player.getHeldItem().getDisplayName().length() > 12 ? player.getHeldItem().getDisplayName().substring(0, 11) : player.getHeldItem().getDisplayName();
 					this.sendDataToClient();
 					return true;
 				}
@@ -324,8 +325,8 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	}
 	
 	/**
-	 * Adds a child to all appropriate mappings.  Set newChild to true if parent needs
-	 * to keep track of an additional child.
+	 * Spawns a child and adds a child to all appropriate mappings.
+	 * Set newChild to true if parent needs to keep track of an additional child.
 	 * @param childUUID
 	 * @param child
 	 * @param newChild
@@ -335,6 +336,13 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			children.put(childUUID, child);
 			if(newChild){
 				++numberChildren;
+				if(child.isCollidedHorizontally()){
+					float boost = Math.max(0, -child.offsetY);
+					this.rotationRoll = 0;
+					this.setPositionAndRotation(posX, posY + boost, posZ, rotationYaw, 0);
+					child.setPosition(posX + child.offsetX, posY + child.offsetY + boost, posZ + child.offsetZ);
+				}
+				worldObj.spawnEntityInWorld(child);
 			}
 		}
 		if(child instanceof EntityLandingGear){
@@ -620,7 +628,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 					}
 					
 					if(child != null){
-						if(child.propertyCode != stack.getItemDamage()){
+						if(child.propertyCode != stack.getItemDamage() || (!(child instanceof EntityWheel ^ stack.getItem().equals(MFS.proxy.pontoon)) && i <= 5)){
 							removeChild(child.UUID);
 						}else{
 							continue;
@@ -633,7 +641,11 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 						}else if(stack.getItem().equals(MFS.proxy.wheelLarge)){
 							newChild = new EntityWheelLarge(worldObj, this, this.UUID, position[0], position[1], position[2]);
 						}else if(stack.getItem().equals(MFS.proxy.pontoon)){
-							newChild = new EntityPontoon(worldObj, this, this.UUID, position[0], position[1], position[2]);
+							newChild = new EntityPontoon(worldObj, this, this.UUID, position[0], position[1] - (position[2] > 0 ? 0 : 0.1F), position[2] + (position[2] > 0 ? 0 : 2));
+							EntityPontoonDummy pontoonDummy = new EntityPontoonDummy(worldObj, this, this.UUID, position[0], position[1] + (position[2] > 0 ? 0.25F : 0), position[2] - (position[2] > 0 ? 2 : 0));
+							pontoonDummy.setOtherHalf((EntityPontoon) newChild);
+							((EntityPontoon) newChild).setOtherHalf(pontoonDummy);
+							addChild(pontoonDummy.UUID, pontoonDummy, true);
 						}else{
 							newChild = new EntitySkid(worldObj, this, this.UUID, position[0], position[1], position[2]);
 						}
@@ -648,14 +660,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 					}else{
 						continue;
 					}
-					
-					if(newChild.isCollidedHorizontally()){
-						float boost = Math.max(0, -newChild.offsetY);
-						this.rotationRoll = 0;
-						this.setPositionAndRotation(posX, posY + boost, posZ, rotationYaw, 0);
-						newChild.setPosition(posX + newChild.offsetX, posY + newChild.offsetY + boost, posZ + newChild.offsetZ);
-					}
-					worldObj.spawnEntityInWorld(newChild);
 					addChild(newChild.UUID, newChild, true);
 				}else{
 					if(child != null){
@@ -679,7 +683,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				if(child == null ? true : child.isDead){
 					if(i+1 <= numberPilotSeats){
 						newChild = new EntitySeat(worldObj, this, this.UUID, position[0], position[1], position[2], getStackInSlot(pilotSeatSlot).getItemDamage(), true);
-						worldObj.spawnEntityInWorld(newChild);
 						addChild(newChild.UUID, newChild, true);
 					}
 				}
@@ -703,7 +706,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 						}else{
 							newChild = new EntitySeat(worldObj, this, this.UUID, position[0], position[1], position[2], getStackInSlot(passengerSeatSlot).getItemDamage(), false);
 						}
-						worldObj.spawnEntityInWorld(newChild);
 						addChild(newChild.UUID, newChild, true);
 					}
 				}
