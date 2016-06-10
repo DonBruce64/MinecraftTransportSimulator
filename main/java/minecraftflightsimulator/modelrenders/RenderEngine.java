@@ -2,7 +2,8 @@ package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntityEngineLarge;
-import minecraftflightsimulator.models.ModelEngine;
+import minecraftflightsimulator.models.ModelEngineLarge;
+import minecraftflightsimulator.models.ModelEngineSmall;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
@@ -16,8 +17,10 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public class RenderEngine extends Render{
-	private static final ModelEngine model = new ModelEngine();
-	private static final ResourceLocation engineTexture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
+	private static final ModelEngineSmall modelSmall = new ModelEngineSmall();
+	private static final ModelEngineLarge modelLarge = new ModelEngineLarge();
+	private static final ResourceLocation smallTexture = new ResourceLocation("mfs", "textures/parts/enginesmall.png");
+	private static final ResourceLocation largeTexture = new ResourceLocation("mfs", "textures/parts/enginelarge.png");
 	
     public RenderEngine(){
         super();
@@ -33,11 +36,16 @@ public class RenderEngine extends Render{
 			GL11.glRotatef(engine.parent.rotationPitch, 1, 0, 0);
 			GL11.glRotatef(engine.parent.rotationRoll, 0, 0, 1);
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-	        Minecraft.getMinecraft().renderEngine.bindTexture(engineTexture);
 			if(engine instanceof EntityEngineLarge){
-				model.renderLargeEngine();
+				GL11.glRotatef(180, 1, 0, 0);
+				GL11.glTranslatef(0, -0.4F, -0.4F);
+				Minecraft.getMinecraft().renderEngine.bindTexture(largeTexture);
+				modelLarge.render();
 			}else{
-				model.renderSmallEngine();
+				Minecraft.getMinecraft().renderEngine.bindTexture(smallTexture);
+				GL11.glRotatef(180, 1, 0, 0);
+				GL11.glTranslatef(0, -0.4F, -0.0F);
+				modelSmall.render();
 			}
 			GL11.glPopMatrix();
 	        if(engine.engineRPM > 1000 && engine.fueled){
