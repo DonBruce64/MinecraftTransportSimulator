@@ -1,5 +1,7 @@
 package minecraftflightsimulator.planes.MC172;
 
+import java.awt.Color;
+
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.helpers.InstrumentHelper;
 import minecraftflightsimulator.helpers.RenderHelper;
@@ -82,5 +84,13 @@ public class RenderMC172 extends RenderPlane{
 	}
 
 	@Override
-	protected void renderMarkings(EntityPlane plane){}
+	protected void renderMarkings(EntityPlane plane){
+		GL11.glRotatef(180, 1, 0, 0);
+		GL11.glRotatef(105, 0, 1, 0);
+		GL11.glDisable(GL11.GL_LIGHTING);
+		RenderHelper.drawScaledStringAt(plane.displayName, -2.8F, -0.35F, -1.36F, 1F/32F, Color.lightGray);
+		GL11.glRotatef(150, 0, 1, 0);
+		RenderHelper.drawScaledStringAt(plane.displayName, 2.8F, -0.35F, -1.36F, 1F/32F, Color.lightGray);
+		GL11.glEnable(GL11.GL_LIGHTING);
+	}
 }

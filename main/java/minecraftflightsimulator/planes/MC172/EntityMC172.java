@@ -26,6 +26,7 @@ public class EntityMC172 extends EntityPlane{
 	
 	public EntityMC172(World world, float posX, float posY, float posZ, float rotation, int textureCode){
 		super(world, posX, posY, posZ, rotation, textureCode);
+		this.displayName = "MFS";
 	}
 
 	@Override
