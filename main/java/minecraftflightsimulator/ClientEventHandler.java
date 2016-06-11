@@ -77,14 +77,13 @@ public class ClientEventHandler{
     	if(ControlHelper.configKey.isPressed()){
     		EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
     		if(player.ridingEntity instanceof EntitySeat){
-    			player.openGui(MFS.instance, -1, player.worldObj, (int) player.posX, (int) player.posY, (int) player.posZ);
+    			player.openGui(MFS.instance, -1, null, 0, 0, 0);
     		}else{
     			for(Object entity : player.worldObj.loadedEntityList){
     				if(entity instanceof EntityParent){
     					EntityParent parent = (EntityParent) entity;
     					if(parent.getDistanceToEntity(player) < 5){
     						MFS.MFSNet.sendToServer(new GUIPacket(parent.getEntityId()));
-    						player.openGui(MFS.instance, parent.getEntityId(), player.worldObj, (int) player.posX, (int) player.posY, (int) player.posZ);
     						return;
     					}
     				}

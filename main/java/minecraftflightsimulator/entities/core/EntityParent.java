@@ -628,7 +628,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 					}
 					
 					if(child != null){
-						if(child.propertyCode != stack.getItemDamage() || (!(child instanceof EntityWheel ^ stack.getItem().equals(MFS.proxy.pontoon)) && i <= 5)){
+						if(child.propertyCode != stack.getItemDamage() || (!((child instanceof EntityWheel || child instanceof EntitySkid) ^ stack.getItem().equals(MFS.proxy.pontoon)) && i <= 5)){
 							removeChild(child.UUID);
 						}else{
 							continue;

@@ -38,8 +38,18 @@ public class ItemPropeller extends Item{
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List itemList){
         itemList.add(new ItemStack(item, 1, 1120));
+        itemList.add(new ItemStack(item, 1, 1130));
+        itemList.add(new ItemStack(item, 1, 1140));
         itemList.add(new ItemStack(item, 1, 1121));
+        itemList.add(new ItemStack(item, 1, 1131));
+        itemList.add(new ItemStack(item, 1, 1141));
+        itemList.add(new ItemStack(item, 1, 9121));
         itemList.add(new ItemStack(item, 1, 1122));
+        itemList.add(new ItemStack(item, 1, 1132));
+        itemList.add(new ItemStack(item, 1, 1142));
+        itemList.add(new ItemStack(item, 1, 9122));
+        itemList.add(new ItemStack(item, 1, 9132));
+        itemList.add(new ItemStack(item, 1, 9142));
     }
 	
     @Override

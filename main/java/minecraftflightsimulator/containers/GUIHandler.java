@@ -1,5 +1,6 @@
 package minecraftflightsimulator.containers;
 
+import minecraftflightsimulator.blocks.BlockPropellerBench;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import net.minecraft.client.gui.inventory.GuiChest;
@@ -20,6 +21,10 @@ public class GUIHandler implements IGuiHandler{
 			}else if(entity instanceof EntityPlaneChest){
 				return new ContainerChest(player.inventory, (EntityPlaneChest) entity);
 			}
+		}else{
+			if(world.getBlock(x, y, z) instanceof BlockPropellerBench){
+				return new ContainerPropellerBench(player.inventory);
+			}
 		}
 		return null;
 	}
@@ -34,7 +39,13 @@ public class GUIHandler implements IGuiHandler{
 				return  new GuiChest(player.inventory, (EntityPlaneChest) entity);
 			}
 		}else{
-			return new GUIConfig();
+			if(world != null){
+				if(world.getBlock(x, y, z) instanceof BlockPropellerBench){
+					return new GUIPropellerBench(player.inventory);
+				}	
+			}else{
+				return new GUIConfig();
+			}
 		}
 		return null;
 	}

@@ -2,6 +2,7 @@ package minecraftflightsimulator;
 
 import java.lang.reflect.Field;
 
+import minecraftflightsimulator.blocks.BlockPropellerBench;
 import minecraftflightsimulator.containers.GUIHandler;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.parts.EntityEngine;
@@ -39,6 +40,7 @@ import minecraftflightsimulator.planes.Otter.EntityOtter;
 import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
 import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.sounds.EngineSound;
+import net.minecraft.block.Block;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -54,6 +56,8 @@ import cpw.mods.fml.relauncher.Side;
 
 
 public class CommonProxy{
+	public static final Block blockPropellerBench = new BlockPropellerBench();
+	
 	public static final Item planeMC172 = new ItemPlane(EntityMC172.class, 6);
 	public static final Item planePLZP11 = new ItemPlane(EntityPZLP11.class, 1);
 	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 1);
@@ -79,6 +83,7 @@ public class CommonProxy{
 	public void init(){
 		initEntites();
 		initPackets();
+		initBlocks();
 		initItems();
 		initRecipies();
 		initFuels();
@@ -88,8 +93,8 @@ public class CommonProxy{
 	private void initEntites(){
 		registerEntity(EntityMC172.class);
 		registerEntity(EntityPZLP11.class);
-		registerEntity(EntityTrimotor.class);
-		registerEntity(EntityOtter.class);
+		//registerEntity(EntityTrimotor.class);
+		//registerEntity(EntityOtter.class);
 		
 		registerEntity(EntityCore.class);
 		registerEntity(EntitySeat.class);
@@ -133,12 +138,25 @@ public class CommonProxy{
 		MFS.MFSNet.registerMessage(ThrottlePacket.ThrottlePacketHandler.class,  ThrottlePacket.class, ++packetNumber, Side.CLIENT);
 	}
 	
+	private void initBlocks(){
+		for(Field feild : this.getClass().getFields()){
+			if(feild.getType().equals(Block.class)){
+				try{
+					Block block = (Block) feild.get(Block.class);
+					//GameRegistry.registerBlock(block, block.getUnlocalizedName().substring(5));
+				}catch(Exception e){}
+			}
+		}
+	}
+	
 	private void initItems(){
 		for(Field feild : this.getClass().getFields()){
 			if(feild.getType().equals(Item.class)){
 				try{
 					Item item = (Item) feild.get(Item.class);
-					GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
+					if(!item.equals(planeOtter) && !item.equals(planeTrimotor)){
+						GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
+					}
 				}catch(Exception e){}
 			}
 		}
@@ -183,21 +201,20 @@ public class CommonProxy{
 	}
 	
 	private void initPropellerRecipes(){
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1120),
-				"  A",
-				" B ",
-				"A  ",
-				'A', Blocks.planks, 'B', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1121),
-				"  A",
-				" A ",
-				"A  ",
-				'A', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1122),
-				"  A",
-				" B ",
-				"A  ",
-				'A', Blocks.obsidian, 'B', Items.iron_ingot);
+		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1120), "  A", " B ", "A  ", 'A', Blocks.planks, 'B', Items.iron_ingot);
+		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1130), "A A", " B ", "A  ", 'A', Blocks.planks, 'B', Items.iron_ingot);
+		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1140), "A A", " B ", "A A", 'A', Blocks.planks, 'B', Items.iron_ingot);
+		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1121), "  A", " A ", "A  ", 'A', Items.iron_ingot);
+		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1131), "A A", " A ", "A  ", 'A', Items.iron_ingot);
+		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1141), "A A", " A ", "A A", 'A', Items.iron_ingot);		
+		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1122), "  A", " B ", "A  ", 'A', Blocks.obsidian, 'B', Items.iron_ingot);
+		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1132), "A A", " B ", "A  ", 'A', Blocks.obsidian, 'B', Items.iron_ingot);
+		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1142), "A A", " B ", "A A", 'A', Blocks.obsidian, 'B', Items.iron_ingot);
+		
+		GameRegistry.addRecipe(new ItemStack(propeller, 1, 9121), "  A", " B ", "A  ", 'A', Items.iron_ingot, 'B', Blocks.iron_block);
+		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1122), "  A", " B ", "A  ", 'A', Blocks.obsidian, 'B', Blocks.iron_block);
+		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1132), "A A", " B ", "A  ", 'A', Blocks.obsidian, 'B', Blocks.iron_block);
+		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1142), "A A", " B ", "A A", 'A', Blocks.obsidian, 'B', Blocks.iron_block);
 	}
 	
 	private void initEngineRecipes(){
