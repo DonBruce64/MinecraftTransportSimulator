@@ -196,9 +196,7 @@ public abstract class EntityPlane extends EntityParent{
 		bearingVec = getLookVec();
 		wingVec = RotationHelper.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
 		sideVec = bearingVec.crossProduct(wingVec);
-		velocityVec.xCoord = motionX;
-		velocityVec.yCoord = motionY;
-		velocityVec.zCoord = motionZ;
+		velocityVec = Vec3.createVectorHelper(motionX, motionY, motionZ);
 		velocity = velocityVec.dotProduct(bearingVec);
 		velocityVec = velocityVec.normalize();
 		
@@ -285,7 +283,7 @@ public abstract class EntityPlane extends EntityParent{
 		for(EntityChild child : getChildren()){
 			xCollisionDepth = 0;
 			zCollisionDepth = 0;
-			newChildBox = child.boundingBox.copy().offset(motionX*MFS.planeSpeedFactor, 0, 0);
+			newChildBox = child.getEntityBoundingBox().getOffsetBoundingBox(motionX*MFS.planeSpeedFactor, 0, 0);
 			collidingBoxes = child.worldObj.getCollidingBoundingBoxes(child, newChildBox);			
 			for(int i=0; i < collidingBoxes.size(); ++i){
 				collidingBox = (AxisAlignedBB) collidingBoxes.get(i);
@@ -296,7 +294,7 @@ public abstract class EntityPlane extends EntityParent{
 				}
 			}
 			
-			newChildBox = child.boundingBox.copy().offset(0, 0, motionZ*MFS.planeSpeedFactor);
+			newChildBox = child.getEntityBoundingBox().getOffsetBoundingBox(0, 0, motionZ*MFS.planeSpeedFactor);
 			collidingBoxes = child.worldObj.getCollidingBoundingBoxes(child, newChildBox);	
 			for(int i=0; i < collidingBoxes.size(); ++i){
 				collidingBox = (AxisAlignedBB) collidingBoxes.get(i);
@@ -346,7 +344,7 @@ public abstract class EntityPlane extends EntityParent{
 			yawChildZOffset = 0;
 			for(EntityChild child : getChildren()){				
 				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw + motionYaw, rotationRoll);
-				newChildBox = child.boundingBox.copy().offset(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, 0, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor);
+				newChildBox = child.getEntityBoundingBox().getOffsetBoundingBox(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, 0, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor);
 				child.isCollidedHorizontally = !child.worldObj.getCollidingBoundingBoxes(child, newChildBox).isEmpty();
 				if(child.isCollidedHorizontally){
 					if(yawChildXOffset==0){
@@ -462,7 +460,7 @@ public abstract class EntityPlane extends EntityParent{
 		for(EntityChild child : getChildren()){
 			yCollisionDepth = 0;
 			offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-			newChildBox = child.boundingBox.copy().offset(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, posY + offset.yCoord - child.posY + motionY*MFS.planeSpeedFactor, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor);
+			newChildBox = child.getEntityBoundingBox().getOffsetBoundingBox(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, posY + offset.yCoord - child.posY + motionY*MFS.planeSpeedFactor, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor);
 			collidingBoxes = child.worldObj.getCollidingBoundingBoxes(child, newChildBox);
 			for(int i=0; i < collidingBoxes.size(); ++i){
 				collidingBox = (AxisAlignedBB) collidingBoxes.get(i);

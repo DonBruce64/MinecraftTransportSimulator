@@ -5,6 +5,7 @@ import minecraftflightsimulator.packets.general.ClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.ServerSendDataPacket;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -37,16 +38,10 @@ public abstract class EntityBase extends Entity{
 		return true;
 	}
 	
-	@Override
-	public float getShadowSize(){
-		return 0.0F;
-	}
-	
     @Override
     @SideOnly(Side.CLIENT)
     public void setPositionAndRotation2(double posX, double posY, double posZ, float yaw, float pitch, int p_70056_9_){
     	//Overridden due to stupid tracker behavior.
-    	//super.setPositionAndRotation2(posX, posY, posZ, yaw, pitch, p_70056_9_);
     }
 	
 	public void requestDataFromServer(){
@@ -57,6 +52,10 @@ public abstract class EntityBase extends Entity{
 		NBTTagCompound tagCompound = new NBTTagCompound();
 		this.writeToNBT(tagCompound);
 		MFS.MFSNet.sendToAll(new ServerSendDataPacket(this.getEntityId(), tagCompound));
+	}
+	
+	public AxisAlignedBB getEntityBoundingBox(){
+		return this.boundingBox;
 	}
 	
 	//Junk methods, forced to pull in.

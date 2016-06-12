@@ -14,7 +14,6 @@ import net.minecraft.inventory.InventoryLargeChest;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
@@ -65,8 +64,7 @@ public class EntityPlaneChest extends EntityChild implements IInventory{
         float f;
         if(!this.worldObj.isRemote && this.numPlayersUsing != 0 && (this.ticksSinceSync + this.posX + this.posY + this.posZ) % 200 == 0){
             this.numPlayersUsing = 0;
-            f = 5.0F;
-            List list = this.worldObj.getEntitiesWithinAABB(EntityPlayer.class, AxisAlignedBB.getBoundingBox((double)((float)this.posX - f), (double)((float)this.posY - f), (double)((float)this.posZ - f), (double)((float)(this.posX + 1) + f), (double)((float)(this.posY + 1) + f), (double)((float)(this.posZ + 1) + f)));
+            List list = this.worldObj.getEntitiesWithinAABB(EntityPlayer.class, this.getEntityBoundingBox().expand(5, 5, 5));
             Iterator iterator = list.iterator();
             while (iterator.hasNext()){
                 EntityPlayer entityplayer = (EntityPlayer)iterator.next();
@@ -108,8 +106,9 @@ public class EntityPlaneChest extends EntityChild implements IInventory{
         }
     }
 	
-	
 	public void markDirty(){}
+	public void clear(){}
+	public void setField(int id, int value){}
 	public void openInventory(){this.openInventory(null);}
 	public void openInventory(EntityPlayer player){this.numPlayersUsing = this.numPlayersUsing < 0 ? 0 : this.numPlayersUsing + 1;}
 	public void closeInventory(){this.closeInventory(null);}
@@ -118,6 +117,8 @@ public class EntityPlaneChest extends EntityChild implements IInventory{
 	public boolean hasCustomInventoryName(){return false;}
 	public boolean isUseableByPlayer(EntityPlayer player){return player.getDistanceToEntity(this) < 5;}
 	public boolean isItemValidForSlot(int slot, ItemStack stack){return true;}
+	public int getField(int id){return 0;}
+	public int getFieldCount(){return 0;}
 	public int getSizeInventory(){return 27;}
 	public int getInventoryStackLimit(){return 64;}
 	public String getInventoryName(){return StatCollector.translateToLocal("entity.mfs.Chest.name");}
@@ -149,6 +150,12 @@ public class EntityPlaneChest extends EntityChild implements IInventory{
             return null;
         }
     }
+    
+    public ItemStack removeStackFromSlot(int index){
+		ItemStack removedStack = getStackInSlot(index);
+		setInventorySlotContents(index, null);
+		return removedStack;
+	}
 	
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){

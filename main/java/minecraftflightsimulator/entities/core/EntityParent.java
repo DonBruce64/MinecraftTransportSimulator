@@ -239,7 +239,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			}
 			if(entityClicked.equals(this)){
 				for(EntityChild child : this.getChildren()){
-					if(child.boundingBox.intersectsWith(boundingBox) && child instanceof EntitySeat){
+					if(child.getEntityBoundingBox().intersectsWith(this.getEntityBoundingBox()) && child instanceof EntitySeat){
 						child.interactFirst(player);
 						return true;
 					}
@@ -489,9 +489,10 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	public abstract void initParentContainerSlots(ContainerParent container);
 	
 	
-	
 	//Start of IInventory section
 	public void markDirty(){}
+	public void clear(){}
+	public void setField(int id, int value){}
 	public void openInventory(){this.openInventory(null);}
 	public void openInventory(EntityPlayer player){loadInventory();}
 	public void closeInventory(){this.closeInventory(null);}
@@ -500,6 +501,8 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	public boolean hasCustomInventoryName(){return false;}
 	public boolean isUseableByPlayer(EntityPlayer player){return player.getDistanceToEntity(this) < 5;}
 	public boolean isItemValidForSlot(int slot, ItemStack stack){return false;}
+	public int getField(int id){return 0;}
+	public int getFieldCount(){return 0;}
 	public int getSizeInventory(){return compenentItems.length;}
 	public int getInventoryStackLimit(){return 1;}
 	public String getInventoryName(){return "Parent Inventory";}
@@ -530,6 +533,12 @@ public abstract class EntityParent extends EntityBase implements IInventory{
             return null;
         }
     }
+	
+    public ItemStack removeStackFromSlot(int index){
+		ItemStack removedStack = getStackInSlot(index);
+		setInventorySlotContents(index, null);
+		return removedStack;
+	}
 	
 	public void loadInventory(){
 		if(!worldObj.isRemote){

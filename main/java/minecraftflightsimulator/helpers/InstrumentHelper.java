@@ -462,6 +462,7 @@ public class InstrumentHelper{
     	GL11.glVertex2d(centerX - 3, centerY - 3);
     	GL11.glEnd();
     	rotationHelper(centerX, centerY, -turn);
+    	GL11.glColor3f(1, 1, 1);
     	GL11.glEnable(GL11.GL_TEXTURE_2D);
     	
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}

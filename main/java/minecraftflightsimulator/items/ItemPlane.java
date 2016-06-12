@@ -30,11 +30,11 @@ public class ItemPlane extends Item{
 	}
 	
 	@Override
-	public boolean onItemUse(ItemStack item, EntityPlayer player, World world, int x, int y, int z, int p_77648_7_, float hitX, float hitY, float hitZ){
+	public boolean onItemUse(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int p_77648_7_, float hitX, float hitY, float hitZ){
 		if(!world.isRemote){
 			EntityPlane newPlane;
 			try{
-				newPlane = this.plane.getConstructor(World.class, float.class, float.class, float.class, float.class, int.class).newInstance(world, x, y + 1, z, player.rotationYaw, item.getItemDamage());
+				newPlane = this.plane.getConstructor(World.class, float.class, float.class, float.class, float.class, int.class).newInstance(world, x, y + 1, z, player.rotationYaw, stack.getItemDamage());
 				float minHeight = 0;
 				for(float[] coreCoords : newPlane.getCoreLocations()){
 					minHeight = -coreCoords[1] > minHeight ? -coreCoords[1] : minHeight;
@@ -43,7 +43,7 @@ public class ItemPlane extends Item{
 				newPlane.ownerName = player.getDisplayName();
 				if(canSpawnPlane(world, newPlane)){
 					if(!player.capabilities.isCreativeMode){
-						--item.stackSize;
+						--stack.stackSize;
 					}
 					return true;
 				}
@@ -61,7 +61,7 @@ public class ItemPlane extends Item{
 			EntityCore core = new EntityCore(world, plane, plane.UUID, coreLocations[i][0], coreLocations[i][1], coreLocations[i][2]);
 			world.spawnEntityInWorld(core);
 			spawnedCores[i] = core;
-			if(!core.worldObj.getCollidingBoundingBoxes(core, core.boundingBox).isEmpty()){
+			if(!core.worldObj.getCollidingBoundingBoxes(core, core.getEntityBoundingBox()).isEmpty()){
 				for(int j=0; j<=i; ++j){
 					spawnedCores[j].setDead();
 				}

@@ -50,7 +50,7 @@ public class EntityPropeller extends EntityChild{
 			angularPosition = (angularVelocity+angularPosition)%6.283185312F;
 		}else{
 			if(engineRPM >= 100){
-				List collidedEntites = worldObj.getEntitiesWithinAABBExcludingEntity(this, this.boundingBox);
+				List collidedEntites = worldObj.getEntitiesWithinAABBExcludingEntity(this, this.getEntityBoundingBox());
 				for(int i=0; i < collidedEntites.size(); ++i){
 					Entity collidedEntity = (Entity) collidedEntites.get(i);
 					if(!(collidedEntity instanceof EntityBase)){

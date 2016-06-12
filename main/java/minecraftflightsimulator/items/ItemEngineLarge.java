@@ -16,7 +16,6 @@ public class ItemEngineLarge extends Item{
 		this.setUnlocalizedName("EngineLarge");
 		this.setCreativeTab(MFS.tabMFS);
 		this.hasSubtypes=true;
-		this.setTextureName("mfs:enginelarge");
 	}
 	
 	@Override

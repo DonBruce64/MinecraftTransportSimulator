@@ -59,14 +59,14 @@ public class CommonProxy{
 	public static final Block blockPropellerBench = new BlockPropellerBench();
 	
 	public static final Item planeMC172 = new ItemPlane(EntityMC172.class, 6);
-	public static final Item planePLZP11 = new ItemPlane(EntityPZLP11.class, 1);
+	public static final Item planePZLP11 = new ItemPlane(EntityPZLP11.class, 1);
 	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 1);
 	public static final Item planeOtter = new ItemPlane(EntityOtter.class, 1);
 	
 	public static final Item seat = new ItemSeat();
 	public static final Item propeller = new ItemPropeller();
-	public static final Item engineSmall = new ItemEngineSmall();
-	public static final Item engineLarge = new ItemEngineLarge();
+	public static final Item engineSmall = new ItemEngineSmall().setTextureName("mfs:enginesmall");
+	public static final Item engineLarge = new ItemEngineLarge().setTextureName("mfs:enginelarge");
 	public static final Item flightInstrument = new ItemFlightInstrument();
 	
 	public static final Item flightInstrumentBase = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("FlightInstrumentBase").setTextureName("mfs:flightinstrumentbase");
@@ -176,6 +176,13 @@ public class CommonProxy{
 				'A', new ItemStack(Blocks.wooden_slab, 1, i), 'B', new ItemStack(Blocks.planks, 1, i));
 		}
 		
+		//PZLP11
+		GameRegistry.addRecipe(new ItemStack(planePZLP11),
+				"AAA",
+				" B ",
+				"ABA",
+				'A', Items.iron_ingot, 'B', Blocks.iron_bars);
+		
 		//Seat
 		for(int i=0; i<6; ++i){
 			for(int j=0; j<16; ++j){
@@ -198,6 +205,18 @@ public class CommonProxy{
 				"BCB",
 				"ABA",
 				'A', Blocks.wool, 'B', new ItemStack(Items.dye, 1, 0), 'C', Items.iron_ingot);
+		//Skid
+		GameRegistry.addRecipe(new ItemStack(skid),
+				"A A",
+				" A ",
+				"  A",
+				'A', Blocks.iron_bars);
+		//Pontoon
+		GameRegistry.addRecipe(new ItemStack(pontoon, 2),
+				"AAA",
+				"BBB",
+				"AAA",
+				'A', Items.iron_ingot, 'B', Blocks.wool);
 	}
 	
 	private void initPropellerRecipes(){

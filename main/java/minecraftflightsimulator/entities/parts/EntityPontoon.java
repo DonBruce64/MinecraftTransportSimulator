@@ -45,7 +45,9 @@ public class EntityPontoon extends EntityLandingGear{
 		super.setDead();
 		if(otherHalf != null){
 			if(!otherHalf.isDead){
-				this.parent.removeChild(otherHalfUUID);
+				if(parent != null){
+					this.parent.removeChild(otherHalfUUID);
+				}
 			}
 		}
 	}

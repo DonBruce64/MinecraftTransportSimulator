@@ -15,6 +15,11 @@ import cpw.mods.fml.relauncher.SideOnly;
 public abstract class RenderPlane extends Render{
     protected static final ResourceLocation windowTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 
+    public RenderPlane(){
+    	super();
+    	shadowSize = 0;
+    }
+    
 	@Override
 	public void doRender(Entity entity, double x, double y, double z, float yaw, float pitch){
 		EntityPlane plane=(EntityPlane) entity;
