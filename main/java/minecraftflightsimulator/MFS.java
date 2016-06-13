@@ -1,6 +1,7 @@
 package minecraftflightsimulator;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import net.minecraft.creativetab.CreativeTabs;
@@ -40,6 +41,22 @@ public class MFS {
 		@SideOnly(Side.CLIENT)
 	    public Item getTabIconItem() {
 	    	return MFS.proxy.planeMC172;
+	    }
+	    
+	    @Override
+	    @SideOnly(Side.CLIENT)
+	    public void displayAllReleventItems(List givenList){
+	    	super.displayAllReleventItems(givenList);
+	    	Object[] itemArray = givenList.toArray(); 
+	    	boolean[] occupiedSlot = new boolean[givenList.size()];
+	    	int currentIndex = 0;
+	    	for(int i=0; i<proxy.itemList.size(); ++i){
+	    		for(int j=0; j<givenList.size(); ++j){
+	    			if(proxy.itemList.get(i).equals(itemArray[j])){
+	    				givenList.set(currentIndex++, itemArray[j]);
+	    			}
+	    		}
+	    	}
 	    }
 	};
 	

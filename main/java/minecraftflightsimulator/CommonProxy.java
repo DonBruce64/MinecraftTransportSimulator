@@ -1,6 +1,8 @@
 package minecraftflightsimulator;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 import minecraftflightsimulator.blocks.BlockPropellerBench;
 import minecraftflightsimulator.containers.GUIHandler;
@@ -58,6 +60,7 @@ import cpw.mods.fml.relauncher.Side;
 public class CommonProxy{
 	public static final Block blockPropellerBench = new BlockPropellerBench();
 	
+	public static List<Item> itemList = new ArrayList<Item>();
 	public static final Item planeMC172 = new ItemPlane(EntityMC172.class, 6);
 	public static final Item planePZLP11 = new ItemPlane(EntityPZLP11.class, 1);
 	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 1);
@@ -65,17 +68,17 @@ public class CommonProxy{
 	
 	public static final Item seat = new ItemSeat();
 	public static final Item propeller = new ItemPropeller();
-	public static final Item engineSmall = new ItemEngineSmall().setTextureName("mfs:enginesmall");
-	public static final Item engineLarge = new ItemEngineLarge().setTextureName("mfs:enginelarge");
+	public static final Item engineSmall = new ItemEngineSmall();
+	public static final Item engineLarge = new ItemEngineLarge();
 	public static final Item flightInstrument = new ItemFlightInstrument();
 	
-	public static final Item flightInstrumentBase = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("FlightInstrumentBase").setTextureName("mfs:flightinstrumentbase");
-	public static final Item pointerShort = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("PointerShort").setTextureName("mfs:pointershort");
-	public static final Item pointerLong = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("PointerLong").setTextureName("mfs:pointerlong");
-	public static final Item wheelSmall = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("WheelSmall").setTextureName("mfs:wheelsmall");
-	public static final Item wheelLarge = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("WheelLarge").setTextureName("mfs:wheellarge");
-	public static final Item skid = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("Skid").setTextureName("mfs:skid");
-	public static final Item pontoon = new Item().setCreativeTab(MFS.tabMFS).setUnlocalizedName("Pontoon").setTextureName("mfs:pontoon");
+	public static final Item flightInstrumentBase = new Item();
+	public static final Item pointerShort = new Item();
+	public static final Item pointerLong = new Item();
+	public static final Item wheelSmall = new Item();
+	public static final Item wheelLarge = new Item();
+	public static final Item skid = new Item();
+	public static final Item pontoon = new Item();
 		
 	private static int entityNumber = 0;
 	private static int packetNumber = 0;
@@ -155,7 +158,13 @@ public class CommonProxy{
 				try{
 					Item item = (Item) feild.get(Item.class);
 					if(!item.equals(planeOtter) && !item.equals(planeTrimotor)){
+						if(item.getUnlocalizedName().equals("item.null")){
+							item.setUnlocalizedName(feild.getName().substring(0, 1).toUpperCase() + feild.getName().substring(1));
+						}
+						item.setCreativeTab(MFS.tabMFS);
+						item.setTextureName("mfs:" + item.getUnlocalizedName().substring(5).toLowerCase());
 						GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
+						itemList.add(item);
 					}
 				}catch(Exception e){}
 			}
