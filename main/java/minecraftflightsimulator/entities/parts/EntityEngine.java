@@ -43,6 +43,7 @@ public abstract class EntityEngine extends EntityChild{
 	public void onUpdate(){
 		super.onUpdate();
 		if(!linked){return;}
+		//TODO make engine drownable
 		if(engineOn){
 			parent.fuel -= this.fuelConsumption*MFS.fuelUsageFactor*engineRPM/maxEngineRPM;
 			if(parent.fuel <= 0 || engineRPM < 300){
@@ -94,7 +95,7 @@ public abstract class EntityEngine extends EntityChild{
 		if(propeller != null){
 			propeller.engineRPM = this.engineRPM;
 		}
-		if(worldObj.isRemote){engineSound = MFS.proxy.updateEngineSound(engineSound, this);}
+		engineSound = MFS.proxy.updateEngineSound(engineSound, this);
 	}
 	
 	@Override
@@ -103,7 +104,7 @@ public abstract class EntityEngine extends EntityChild{
 		engineOn=false;
 		fueled=false;
 		internalFuel=0;
-		if(worldObj.isRemote){engineSound = MFS.proxy.updateEngineSound(engineSound, this);}
+		engineSound = MFS.proxy.updateEngineSound(engineSound, this);
 	}
 	
 	public void stopEngine(boolean switchedOff){
@@ -112,21 +113,21 @@ public abstract class EntityEngine extends EntityChild{
 			internalFuel = 100;
 			engineOn = false;
 			fueled = false;
-			if(!worldObj.isRemote){worldObj.playSoundAtEntity(this, "mfs:" + engineStartingSoundName, 1, 1);}
+			MFS.proxy.playSound(this, "mfs:" + engineStartingSoundName, 1, 1);
 		}
 	}
 	
 	public void startEngine(){
 		engineEngaged = true;
 		if(starterState==0){
-			if(!worldObj.isRemote){worldObj.playSoundAtEntity(this, "mfs:" + engineCrankingSoundName, 1, 1);}
+			MFS.proxy.playSound(this, "mfs:" + engineCrankingSoundName, 1, 1);
 			this.starterState += starterIncrement;
 		}
 	}
 	
 	public EngineSound getEngineSound(){
 		if(worldObj.isRemote){
-			return new EngineSound(new ResourceLocation("mfs:"+engineRunningSoundName), this, 0.5F, 2000F);
+			return new EngineSound(new ResourceLocation("mfs:" + engineRunningSoundName), this, 0.5F, 2000F);
 		}else{
 			return null;
 		}

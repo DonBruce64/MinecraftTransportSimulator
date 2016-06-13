@@ -119,6 +119,7 @@ public abstract class EntityPlane extends EntityParent{
 	public void onEntityUpdate(){
 		super.onEntityUpdate();	
 		if(!linked){return;}
+		//TODO outsource AABB collisions to EntityBase
 		refreshGroundedStatuses();
 		getBasicProperties();
 		getForcesAndMotions();
@@ -312,7 +313,7 @@ public abstract class EntityPlane extends EntityParent{
 							this.explodeAtPosition(child.posX, child.posY, child.posZ);
 							return;
 						}else{
-							worldObj.playSoundAtEntity(this, "minecraft:random.break", 2, 1);
+							MFS.proxy.playSound(this, "random.break", 2, 1);
 							removeChild(child.UUID);
 							this.sendDataToClient();
 						}
@@ -477,7 +478,7 @@ public abstract class EntityPlane extends EntityParent{
 							this.explodeAtPosition(child.posX, child.posY, child.posZ);
 							return;
 						}else{
-							worldObj.playSoundAtEntity(this, "minecraft:random.break", 2, 1);
+							MFS.proxy.playSound(this, "random.break", 2, 1);
 							removeChild(child.UUID);
 							this.sendDataToClient();
 						}

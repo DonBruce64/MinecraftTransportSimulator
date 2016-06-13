@@ -33,8 +33,11 @@ import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.planes.Trimotor.RenderTrimotor;
 import minecraftflightsimulator.sounds.EngineSound;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -106,15 +109,30 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	@Override
+	public void playSound(Entity noisyEntity, String soundName, float volume, float pitch){
+		if(noisyEntity.worldObj.isRemote){
+			double soundDistance = Minecraft.getMinecraft().renderViewEntity.getDistance(noisyEntity.posX, noisyEntity.posY, noisyEntity.posZ);
+	        PositionedSoundRecord sound = new PositionedSoundRecord(new ResourceLocation(soundName), volume, pitch, (float)noisyEntity.posX, (float)noisyEntity.posY, (float)noisyEntity.posZ);
+	        if(soundDistance > 10.0D){
+	        	Minecraft.getMinecraft().getSoundHandler().playDelayedSound(sound, (int)(soundDistance/2));
+	        }else{
+	        	Minecraft.getMinecraft().getSoundHandler().playSound(sound);
+	        }
+		}
+	}
+	
+	@Override
 	public EngineSound updateEngineSound(EngineSound sound, EntityEngine engine){
-		if(sound == null){
-			sound = engine.getEngineSound();
-		}else{
-			SoundHandler handler = Minecraft.getMinecraft().getSoundHandler();
-			if(!handler.isSoundPlaying(sound)){
-				if(engine.fueled || engine.internalFuel > 0){
-					sound = new EngineSound(sound.getPositionedSoundLocation(), engine, sound.getVolume(), sound.pitchFactor);
-					handler.playSound(sound);
+		if(engine.worldObj.isRemote){
+			if(sound == null){
+				sound = engine.getEngineSound();
+			}else{
+				SoundHandler handler = Minecraft.getMinecraft().getSoundHandler();
+				if(!handler.isSoundPlaying(sound)){
+					if(engine.fueled || engine.internalFuel > 0){
+						sound = engine.getEngineSound();
+						handler.playSound(sound);
+					}
 				}
 			}
 		}

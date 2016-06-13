@@ -43,6 +43,7 @@ import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
 import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.sounds.EngineSound;
 import net.minecraft.block.Block;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -358,6 +359,7 @@ public class CommonProxy{
 		MFS.config.save();
 	}
 	
+	public void playSound(Entity noisyEntity, String soundName, float volume, float pitch){}
 	public void updateSeatedRider(EntitySeat seat, EntityLivingBase rider){}
 	public EngineSound updateEngineSound(EngineSound sound, EntityEngine engine){return null;}
 }

@@ -59,12 +59,12 @@ public class EntityPropeller extends EntityChild{
 				}
 				if(this.isCollidedHorizontally() || this.isOnGround()){
 					if(--health<0){
-						worldObj.playSoundAtEntity(this, "minecraft:random.break", 2, 1);
+						MFS.proxy.playSound(this, "random.break", 2, 1);
 						this.setDead();
 					}
 				}
 				if(engineRPM/60*Math.PI*diameter*0.0254 > 340.29){
-					worldObj.playSoundAtEntity(this, "minecraft:random.break", 2, 1);
+					MFS.proxy.playSound(this, "random.break", 2, 1);
 					this.setDead();
 				}
 			}

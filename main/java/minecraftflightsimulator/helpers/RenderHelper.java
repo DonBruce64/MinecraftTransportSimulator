@@ -2,8 +2,8 @@ package minecraftflightsimulator.helpers;
 
 import java.awt.Color;
 
+import minecraftflightsimulator.MFS;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -55,7 +55,7 @@ public class RenderHelper{
 	
 	public static void changeCameraLock(){
 		lockedView = !lockedView;
-		Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.func_147673_a(new ResourceLocation("gui.button.press")));
+		MFS.proxy.playSound(Minecraft.getMinecraft().thePlayer, "gui.button.press", 1, 1);
 	}
 	
 	/**
