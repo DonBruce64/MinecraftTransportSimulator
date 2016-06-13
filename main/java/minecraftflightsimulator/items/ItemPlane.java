@@ -2,7 +2,6 @@ package minecraftflightsimulator.items;
 
 import java.util.List;
 
-import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -22,7 +21,6 @@ public class ItemPlane extends Item{
 	
 	public ItemPlane(Class<? extends EntityPlane> plane, int numberSubtypes){
 		super();
-		this.setCreativeTab(MFS.tabMFS);
 		this.setUnlocalizedName(plane.getSimpleName().substring(6));
 		this.plane = plane;
 		this.numberTypes = numberSubtypes;

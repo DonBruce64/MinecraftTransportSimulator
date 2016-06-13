@@ -18,9 +18,6 @@ public class ItemFlightInstrument extends Item{
 	private static List<IIcon> iconList = new ArrayList<IIcon>();
 	
 	public ItemFlightInstrument(){
-		super();
-		this.setUnlocalizedName("FlightInstrument");
-		this.setCreativeTab(MFS.tabMFS);
 		this.hasSubtypes = true;
 	}
 	

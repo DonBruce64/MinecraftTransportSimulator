@@ -13,8 +13,6 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class ItemEngineLarge extends Item{
 	
 	public ItemEngineLarge(){
-		this.setUnlocalizedName("EngineLarge");
-		this.setCreativeTab(MFS.tabMFS);
 		this.hasSubtypes=true;
 	}
 	

@@ -13,8 +13,6 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class ItemEngineSmall extends Item{
 
 	public ItemEngineSmall(){
-		this.setUnlocalizedName("EngineSmall");
-		this.setCreativeTab(MFS.tabMFS);
 		this.hasSubtypes=true;
 	}
 	

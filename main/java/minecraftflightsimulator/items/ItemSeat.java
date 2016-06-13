@@ -15,8 +15,6 @@ public class ItemSeat extends Item{
 	private IIcon[] icons = new IIcon[96];
 
 	public ItemSeat(){
-		this.setUnlocalizedName("Seat");
-		this.setCreativeTab(MFS.tabMFS);
 		this.hasSubtypes=true;
 	}
 	

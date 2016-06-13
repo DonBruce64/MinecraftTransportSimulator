@@ -16,8 +16,6 @@ public class ItemPropeller extends Item{
 	private IIcon[] icons = new IIcon[3];
 
 	public ItemPropeller(){
-		this.setUnlocalizedName("Propeller");
-		this.setCreativeTab(MFS.tabMFS);
 		this.hasSubtypes=true;
 	}
 	
