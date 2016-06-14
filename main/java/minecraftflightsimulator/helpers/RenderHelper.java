@@ -35,7 +35,7 @@ public class RenderHelper{
 		}else{
 			return;
 		}
-			
+		
 		try{
 			ObfuscationReflectionHelper.setPrivateValue(EntityRenderer.class, Minecraft.getMinecraft().entityRenderer, zoomLevel, zoomNames);
 		}catch (Exception e){

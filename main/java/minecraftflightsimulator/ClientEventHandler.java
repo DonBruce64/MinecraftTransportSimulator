@@ -16,23 +16,29 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.InputEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 //This class handles rendering/camera edits that need to happen when riding planes.
 //It also calls GUI's up when the player presses the P key.
+@SideOnly(Side.CLIENT)
 public class ClientEventHandler{
+	private static Minecraft minecraft = Minecraft.getMinecraft();	
 	public static ClientEventHandler instance = new ClientEventHandler();
 	
 	@SubscribeEvent
 	public void on(TickEvent.ClientTickEvent event){
-		if(Minecraft.getMinecraft().theWorld != null && event.phase.equals(Phase.END)){
-			for(Object entity : Minecraft.getMinecraft().theWorld.getLoadedEntityList()){
-				if(entity instanceof EntityParent){
-					((EntityParent) entity).moveChildren();
+		if(minecraft.theWorld != null){
+			if(event.phase.equals(Phase.END)){
+				for(Object entity : minecraft.theWorld.getLoadedEntityList()){
+					if(entity instanceof EntityParent){
+						((EntityParent) entity).moveChildren();
+					}
 				}
-			}
-			if(Minecraft.getMinecraft().thePlayer.ridingEntity == null){
-				RenderHelper.changeCameraRoll(0);
-				RenderHelper.changeCameraZoom(0);
+				if(minecraft.thePlayer.ridingEntity == null){
+					RenderHelper.changeCameraRoll(0);
+					RenderHelper.changeCameraZoom(0);
+				}
 			}
 		}
 	}
@@ -60,12 +66,12 @@ public class ClientEventHandler{
 	
 	@SubscribeEvent
 	public void on(RenderGameOverlayEvent.Pre event){
-		if(Minecraft.getMinecraft().thePlayer.ridingEntity instanceof EntitySeat){
+		if(minecraft.thePlayer.ridingEntity instanceof EntitySeat){
 			if(event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
 				event.setCanceled(true);
 			}else if(event.type.equals(RenderGameOverlayEvent.ElementType.CHAT)){
-				EntitySeat seat = ((EntitySeat) Minecraft.getMinecraft().thePlayer.ridingEntity);
-				if(seat.parent != null && seat.driver && Minecraft.getMinecraft().gameSettings.thirdPersonView==0){
+				EntitySeat seat = ((EntitySeat) minecraft.thePlayer.ridingEntity);
+				if(seat.parent != null && seat.driver && minecraft.gameSettings.thirdPersonView==0){
 					seat.parent.drawHUD(event.resolution.getScaledWidth(), event.resolution.getScaledHeight());
 				}
 			}
@@ -75,7 +81,7 @@ public class ClientEventHandler{
     @SubscribeEvent
     public void onKeyInput(InputEvent.KeyInputEvent event){
     	if(ControlHelper.configKey.isPressed()){
-    		EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
+    		EntityClientPlayerMP player = minecraft.thePlayer;
     		if(player.ridingEntity instanceof EntitySeat){
     			player.openGui(MFS.instance, -1, null, 0, 0, 0);
     		}else{
