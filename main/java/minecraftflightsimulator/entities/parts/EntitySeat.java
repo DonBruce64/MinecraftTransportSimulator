@@ -64,8 +64,11 @@ public class EntitySeat extends EntityChild{
 	@Override
 	public void updateRiderPosition(){
 		if(this.riddenByEntity != null && this.parent != null){
-			Vec3 posVec = RotationHelper.getRotatedPoint(offsetX, (float) (offsetY + this.riddenByEntity.getYOffset()), (float) offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
-			this.riddenByEntity.setPosition(parent.posX + posVec.xCoord, parent.posY + posVec.yCoord, parent.posZ + posVec.zCoord);
+			Vec3 posVec = RotationHelper.getRotatedPoint(offsetX, (float) (offsetY + riddenByEntity.getYOffset()), (float) offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
+			riddenByEntity.setPosition(parent.posX + posVec.xCoord, parent.posY + posVec.yCoord, parent.posZ + posVec.zCoord);
+			riddenByEntity.motionX = parent.motionX;
+			riddenByEntity.motionY = parent.motionY;
+			riddenByEntity.motionZ = parent.motionZ;
         }
 	}
 	
