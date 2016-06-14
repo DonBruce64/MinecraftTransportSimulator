@@ -79,7 +79,7 @@ public class EntityPlaneChest extends EntityChild implements IInventory{
         this.prevLidAngle = this.lidAngle;
         f = 0.1F;
         if(this.numPlayersUsing > 0 && this.lidAngle == 0.0F){
-        	MFS.proxy.playSound(this, "random.chestclosed", 0.5F, this.worldObj.rand.nextFloat() * 0.1F + 0.9F);
+        	MFS.proxy.playSound(this, "random.chestopen", 0.5F, this.worldObj.rand.nextFloat() * 0.1F + 0.9F);
         }
 
         if(this.numPlayersUsing == 0 && this.lidAngle > 0.0F || this.numPlayersUsing > 0 && this.lidAngle < 1.0F){
