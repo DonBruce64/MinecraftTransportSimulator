@@ -1,9 +1,12 @@
 package minecraftflightsimulator.entities.core;
 
+import java.util.List;
+
 import minecraftflightsimulator.helpers.RotationHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
@@ -85,6 +88,10 @@ public abstract class EntityChild extends EntityBase{
 				}
 			}
 		}
+	}
+	
+	public List getCollidingBlocks(AxisAlignedBB box){
+		return worldObj.func_147461_a(box);
 	}
 	
 	public boolean isOnGround(){
