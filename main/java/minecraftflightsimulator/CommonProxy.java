@@ -84,6 +84,10 @@ public class CommonProxy{
 	private static int entityNumber = 0;
 	private static int packetNumber = 0;
 	
+	public void preInit(){
+		
+	}
+	
 	public void init(){
 		initEntites();
 		initPackets();

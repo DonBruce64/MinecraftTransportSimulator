@@ -51,6 +51,7 @@ public class ControlHelper{
 	public static KeyBinding configKey;
 	public static boolean seaLevelOffset;
 	private static boolean throttleKills;
+	private static boolean electricStart;
 	private static byte joystickForceFactor;
 	private static short controlSurfaceCooldown;
 	private static double joystickDeadZone;
@@ -64,6 +65,7 @@ public class ControlHelper{
 	
 		throttleKills = MFS.config.get(CLIENTSIDE_CONFIG, "ThrottleKills", false, "Whether or not the throttle can be put to zero and kill the engine.  \nOnly valid for joysticks.").getBoolean();
 		seaLevelOffset = MFS.config.get(CLIENTSIDE_CONFIG, "SeaLevelOffset", false, "Does altimiter read zero at Y=64 instead of Y=0?").getBoolean();
+		electricStart = MFS.config.get(CLIENTSIDE_CONFIG, "ElectricStart", true, "Is the starter enabled? \nIf not, players must hit propellers to start them").getBoolean();
 		joystickForceFactor = (byte) MFS.config.get(CLIENTSIDE_CONFIG, "JoystickForceFactor", 15, "Factor by which joystick inputs are multiplied.  \nThis controls how quickly the control surfaces change.", 1, Byte.MAX_VALUE).getInt();
 		controlSurfaceCooldown = (short) MFS.config.get(CLIENTSIDE_CONFIG, "ControlSurfaceCooldown", 4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.  \nThis is not used when using a joystick.", 0, Short.MAX_VALUE).getInt();
 		joystickDeadZone = MFS.config.get(CLIENTSIDE_CONFIG, "DeadZone", 0.03D, "Dead zone for joystick axis.  \nMFS will always use the greater of this value and the value provided by the computer.").getDouble();
@@ -86,7 +88,7 @@ public class ControlHelper{
 		keyboardMap.put(controls.ZOOM_I.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.ZOOM_I.keyboardName, Keyboard.KEY_PRIOR).getInt());
 		keyboardMap.put(controls.ZOOM_O.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.ZOOM_O.keyboardName, Keyboard.KEY_NEXT).getInt());
 		
-		String joystickName = MFS.config.get(CLIENTSIDE_CONFIG, "JoystickName", "", "Name of the joystick controller.  \nChanged to match selection in control GUI.").getString();
+		String joystickName = MFS.config.get(JOYSTICK_CONFIG, "JoystickName", "", "Name of the joystick controller.  \nChanged to match selection in control GUI.").getString();
 		for(Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()){
 			if(controller.getName().equals(joystickName)){
 				joystick = controller;
@@ -360,7 +362,9 @@ public class ControlHelper{
 			if(isControlPressed(controls.MOD)){
 				MFS.MFSNet.sendToServer(new EnginePacket(vehicle.getEntityId(), (byte) 0));
 			}else{
-				MFS.MFSNet.sendToServer(new EnginePacket(vehicle.getEntityId(), (byte) 1));
+				if(electricStart){
+					MFS.MFSNet.sendToServer(new EnginePacket(vehicle.getEntityId(), (byte) 1));
+				}
 			}
 		}
 	}

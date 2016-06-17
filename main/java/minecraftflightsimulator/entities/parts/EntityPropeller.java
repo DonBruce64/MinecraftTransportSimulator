@@ -54,7 +54,7 @@ public class EntityPropeller extends EntityChild{
 				for(int i=0; i < collidedEntites.size(); ++i){
 					Entity collidedEntity = (Entity) collidedEntites.get(i);
 					if(!(collidedEntity instanceof EntityBase)){
-						collidedEntity.attackEntityFrom(new EntityDamageSourcePropellor("propellor", this), (float) (engineRPM/500F));
+						collidedEntity.attackEntityFrom(new EntityDamageSourcePropellor("propellor", this), (float) (MFS.propellerDamageFactor*engineRPM/500F));
 					}
 				}
 				if(this.isCollidedHorizontally() || this.isOnGround()){

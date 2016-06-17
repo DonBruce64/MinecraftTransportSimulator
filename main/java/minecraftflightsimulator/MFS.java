@@ -23,11 +23,12 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class MFS {
 	public static final String MODID="mfs";
 	public static final String MODNAME="Minecraft Flight Simulator";
-	public static final String MODVER="4.0.0";
+	public static final String MODVER="4.1.0";
 
 	public static double planeSpeedFactor;
 	public static double fuelUsageFactor;
 	public static String heavyItems;
+	public static double propellerDamageFactor;
 	public static Map<String, Integer> fluidValues = new HashMap<String, Integer>();
 	
 	public static Configuration config;
@@ -62,6 +63,7 @@ public class MFS {
 	
 	@EventHandler
 	public void PreInit(FMLPreInitializationEvent event){
+		proxy.preInit();
 		this.initConfigFile(event);
 		this.initModMetadata(event);
 	}
@@ -77,6 +79,7 @@ public class MFS {
 		planeSpeedFactor = config.get(config.CATEGORY_GENERAL, "PlaneSpeedFactor", 0.5F, "Factor to apply to plane movement.  \n1 is the realistic value, but this makes planes move too fast for Minecraft. Adjust with caution.").getDouble();
 		fuelUsageFactor = config.get(config.CATEGORY_GENERAL, "FuelUsageFactor", 1.0F, "Factor times which engines use fuel.  \nChange this if you think engines use fuel too fast or slow.").getDouble();
 		heavyItems = config.get(config.CATEGORY_GENERAL, "HeavyItems", "diamond, iron, gold, coal, ore, stone", "Any item that contains these words will be counted as heavy (double mass) when considering plane mass.  \nChange and tweak to your liking.").getString();
+		propellerDamageFactor = config.get(config.CATEGORY_GENERAL, "PropellerDamageFactor", 1.0F, "Factor for damage caused by a propeller.").getDouble();
 		config.save();
 	}
 	
