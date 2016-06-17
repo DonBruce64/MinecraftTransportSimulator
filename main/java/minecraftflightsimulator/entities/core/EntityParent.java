@@ -376,8 +376,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	 */
 	public void removeChild(String childUUID){
 		if(children.containsKey(childUUID)){
-			children.get(childUUID).setDead();
-			children.remove(childUUID);
+			children.remove(childUUID).setDead();
 			--numberChildren;
 		}
 		landingGears.remove(childUUID);
@@ -546,24 +545,22 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			for(int i=1; i<pilotSeatSlot; ++i){
 				EntityChild child = getChildAtLocation(partPositions.get(i));				
 				if(child != null){
-					if(i <= 5){
-						if(child instanceof EntityWheelSmall){
-							setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelSmall));
-						}else if(child instanceof EntityWheelLarge){
-							setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelLarge));
-						}else if(child instanceof EntityPontoon){
-							setInventorySlotContents(i, new ItemStack(MFS.proxy.pontoon));
-						}else{
-							setInventorySlotContents(i, new ItemStack(MFS.proxy.skid));
-						}
-					}else if(i <= 9){
-						if(child instanceof EntityEngineLarge){
-							setInventorySlotContents(i, new ItemStack(MFS.proxy.engineLarge, 1, child.propertyCode));
-						}else{
-							setInventorySlotContents(i, new ItemStack(MFS.proxy.engineSmall, 1, child.propertyCode));
-						}
-					}else if(i <= 13){
+					if(child instanceof EntityWheelSmall){
+						setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelSmall));
+					}else if(child instanceof EntityWheelLarge){
+						setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelLarge));
+					}else if(child instanceof EntityPontoon){
+						setInventorySlotContents(i, new ItemStack(MFS.proxy.pontoon));
+					}else if(child instanceof EntitySkid){
+						setInventorySlotContents(i, new ItemStack(MFS.proxy.skid));
+					}else if(child instanceof EntityEngineSmall){
+						setInventorySlotContents(i, new ItemStack(MFS.proxy.engineSmall, 1, child.propertyCode));
+					}else if(child instanceof EntityEngineLarge){
+						setInventorySlotContents(i, new ItemStack(MFS.proxy.engineLarge, 1, child.propertyCode));
+					}else if(child instanceof EntityPropeller){
 						setInventorySlotContents(i, new ItemStack(MFS.proxy.propeller, 1, child.propertyCode));
+					}else{
+						setInventorySlotContents(i, null);
 					}
 				}else{
 					setInventorySlotContents(i, null);
@@ -644,27 +641,23 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 						}
 					}
 					
-					if(i <= 5){
-						if(stack.getItem().equals(MFS.proxy.wheelSmall)){
-							newChild = new EntityWheelSmall(worldObj, this, this.UUID, position[0], position[1], position[2]);
-						}else if(stack.getItem().equals(MFS.proxy.wheelLarge)){
-							newChild = new EntityWheelLarge(worldObj, this, this.UUID, position[0], position[1], position[2]);
-						}else if(stack.getItem().equals(MFS.proxy.pontoon)){
-							newChild = new EntityPontoon(worldObj, this, this.UUID, position[0], position[1] - (position[2] > 0 ? 0 : 0.1F), position[2] + (position[2] > 0 ? 0 : 2));
-							EntityPontoonDummy pontoonDummy = new EntityPontoonDummy(worldObj, this, this.UUID, position[0], position[1] + (position[2] > 0 ? 0.25F : 0), position[2] - (position[2] > 0 ? 2 : 0));
-							pontoonDummy.setOtherHalf((EntityPontoon) newChild);
-							((EntityPontoon) newChild).setOtherHalf(pontoonDummy);
-							addChild(pontoonDummy.UUID, pontoonDummy, true);
-						}else{
-							newChild = new EntitySkid(worldObj, this, this.UUID, position[0], position[1], position[2]);
-						}
-					}else if(i <= 9){
-						if(stack.getItem().equals(MFS.proxy.engineLarge)){
-							newChild = new EntityEngineLarge(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
-						}else{
-							newChild = new EntityEngineSmall(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
-						}
-					}else if(i <= 13){
+					if(stack.getItem().equals(MFS.proxy.wheelSmall)){
+						newChild = new EntityWheelSmall(worldObj, this, this.UUID, position[0], position[1], position[2]);
+					}else if(stack.getItem().equals(MFS.proxy.wheelLarge)){
+						newChild = new EntityWheelLarge(worldObj, this, this.UUID, position[0], position[1], position[2]);
+					}else if(stack.getItem().equals(MFS.proxy.pontoon)){
+						newChild = new EntityPontoon(worldObj, this, this.UUID, position[0], position[1] - (position[2] > 0 ? 0 : 0.1F), position[2] + (position[2] > 0 ? 0 : 2));
+						EntityPontoonDummy pontoonDummy = new EntityPontoonDummy(worldObj, this, this.UUID, position[0], position[1] + (position[2] > 0 ? 0.25F : 0), position[2] - (position[2] > 0 ? 2 : 0));
+						pontoonDummy.setOtherHalf((EntityPontoon) newChild);
+						((EntityPontoon) newChild).setOtherHalf(pontoonDummy);
+						addChild(pontoonDummy.UUID, pontoonDummy, true);
+					}else if(stack.getItem().equals(MFS.proxy.skid)){
+						newChild = new EntitySkid(worldObj, this, this.UUID, position[0], position[1], position[2]);
+					}else if(stack.getItem().equals(MFS.proxy.engineSmall)){
+						newChild = new EntityEngineSmall(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
+					}else if(stack.getItem().equals(MFS.proxy.engineLarge)){
+						newChild = new EntityEngineLarge(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
+					}else if(stack.getItem().equals(MFS.proxy.propeller)){
 						newChild = new EntityPropeller(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
 					}else{
 						continue;
