@@ -6,6 +6,7 @@ import java.util.Map;
 
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.config.Configuration;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
@@ -48,13 +49,13 @@ public class MFS {
 	    @SideOnly(Side.CLIENT)
 	    public void displayAllReleventItems(List givenList){
 	    	super.displayAllReleventItems(givenList);
-	    	Object[] itemArray = givenList.toArray(); 
-	    	boolean[] occupiedSlot = new boolean[givenList.size()];
+	    	ItemStack[] itemArray = (ItemStack[]) givenList.toArray(new ItemStack[givenList.size()]); 
 	    	int currentIndex = 0;
 	    	for(int i=0; i<proxy.itemList.size(); ++i){
 	    		for(int j=0; j<givenList.size(); ++j){
-	    			if(proxy.itemList.get(i).equals(itemArray[j])){
+	    			if(proxy.itemList.get(i).equals(itemArray[j].getItem())){
 	    				givenList.set(currentIndex++, itemArray[j]);
+	    			}else{
 	    			}
 	    		}
 	    	}
