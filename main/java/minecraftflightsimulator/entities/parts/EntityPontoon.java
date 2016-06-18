@@ -1,5 +1,6 @@
 package minecraftflightsimulator.entities.parts;
 
+import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityLandingGear;
 import minecraftflightsimulator.entities.core.EntityParent;
 import net.minecraft.entity.Entity;
@@ -34,7 +35,7 @@ public class EntityPontoon extends EntityLandingGear{
 			return;
 		}
 		if(willCollideVerticallyWithOffset(0, 1, 0)){
-			worldObj.playSoundAtEntity(this, "minecraft:random.break", 2, 1);
+			MFS.proxy.playSound(this, "random.break", 2, 1);
 			parent.removeChild(UUID);
 			parent.sendDataToClient();
 		}

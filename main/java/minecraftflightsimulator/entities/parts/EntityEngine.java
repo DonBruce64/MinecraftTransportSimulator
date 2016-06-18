@@ -53,7 +53,7 @@ public abstract class EntityEngine extends EntityChild{
 			}
 		}else{
 			if(engineRPM > 500 && parent.fuel > 0 && parent.throttle > 5 && engineEngaged){
-				worldObj.playSoundAtEntity(this, "mfs:" + engineStartingSoundName, 1, 1);
+				MFS.proxy.playSound(this, "mfs:" + engineStartingSoundName, 1, 1);
 				engineOn=true;
 			}
 		}

@@ -414,6 +414,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		return null;
 	}
 	
+	//TODO fix bug where client engine starts without server.
 	public void setEngineState(byte engineCode){
 		if(engineCode == 0){
 			throttle = 0;
