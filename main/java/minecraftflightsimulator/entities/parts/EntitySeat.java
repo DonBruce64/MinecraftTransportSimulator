@@ -3,13 +3,13 @@ package minecraftflightsimulator.entities.parts;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.helpers.MFSVector;
 import minecraftflightsimulator.helpers.RotationHelper;
 import minecraftflightsimulator.packets.general.ChatPacket;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 public class EntitySeat extends EntityChild{
@@ -64,7 +64,7 @@ public class EntitySeat extends EntityChild{
 	@Override
 	public void updateRiderPosition(){
 		if(this.riddenByEntity != null && this.parent != null){
-			Vec3 posVec = RotationHelper.getRotatedPoint(offsetX, (float) (offsetY + riddenByEntity.getYOffset()), (float) offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
+			MFSVector posVec = RotationHelper.getRotatedPoint(offsetX, (float) (offsetY + riddenByEntity.getYOffset()), (float) offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
 			riddenByEntity.setPosition(parent.posX + posVec.xCoord, parent.posY + posVec.yCoord, parent.posZ + posVec.zCoord);
 			riddenByEntity.motionX = parent.motionX;
 			riddenByEntity.motionY = parent.motionY;

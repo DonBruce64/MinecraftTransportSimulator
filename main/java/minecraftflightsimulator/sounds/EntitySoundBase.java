@@ -1,6 +1,5 @@
 package minecraftflightsimulator.sounds;
 
-import minecraftflightsimulator.entities.core.EntityPlane;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;

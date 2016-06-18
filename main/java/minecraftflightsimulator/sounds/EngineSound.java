@@ -2,18 +2,18 @@ package minecraftflightsimulator.sounds;
 
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntitySeat;
+import minecraftflightsimulator.helpers.MFSVector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Vec3;
 
 public class EngineSound extends EntitySoundBase{
 	private EntityEngine engine;
 	public float pitchFactor;
 	
 	private final float originalVolume;
-	private Vec3 playerPos;
-	private Vec3 soundPos;
+	private MFSVector playerPos = new MFSVector(0, 0, 0);
+	private MFSVector soundPos = new MFSVector(0, 0, 0);
 	double soundVelocity;
 	private double playerLastX;
 	private double playerLastY;
@@ -35,10 +35,10 @@ public class EngineSound extends EntitySoundBase{
 	public void update(){
 		if(engine.fueled || engine.internalFuel > 0){
 			super.update();
-			playerPos = Vec3.createVectorHelper(player.posX, player.posY, player.posZ);
-			soundPos = Vec3.createVectorHelper(this.xPosF, this.yPosF, this.zPosF);
+			playerPos.set(player.posX, player.posY, player.posZ);
+			soundPos.set(this.xPosF, this.yPosF, this.zPosF);
 			if(engine.parent != null){
-				soundVelocity = (playerPos.distanceTo(soundPos) - playerPos.addVector(player.motionX, player.motionY, player.motionZ).distanceTo(soundPos.addVector(engine.parent.motionX, engine.parent.motionY, engine.parent.motionZ)));
+				soundVelocity = (playerPos.distanceTo(soundPos) - playerPos.add(player.motionX, player.motionY, player.motionZ).distanceTo(soundPos.add(engine.parent.motionX, engine.parent.motionY, engine.parent.motionZ)));
 				this.field_147663_c=(float) (engine.engineRPM*(1+soundVelocity/10)/pitchFactor);
 				if(player.ridingEntity instanceof EntitySeat && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
 					this.volume = (float) (originalVolume*0.5);

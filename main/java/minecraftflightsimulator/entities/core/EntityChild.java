@@ -2,6 +2,7 @@ package minecraftflightsimulator.entities.core;
 
 import java.util.List;
 
+import minecraftflightsimulator.helpers.MFSVector;
 import minecraftflightsimulator.helpers.RotationHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -9,7 +10,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 public abstract class EntityChild extends EntityBase{	
@@ -35,7 +35,7 @@ public abstract class EntityChild extends EntityBase{
 		this.propertyCode=propertyCode;
 		this.UUID=String.valueOf(this.getUniqueID());
 		this.parentUUID=parentUUID;
-		Vec3 offset = RotationHelper.getRotatedPoint(offsetX, offsetY, offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
+		MFSVector offset = RotationHelper.getRotatedPoint(offsetX, offsetY, offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
 		this.setPositionAndRotation(parent.posX+offset.xCoord, parent.posY+offset.yCoord, parent.posZ+offset.zCoord, parent.rotationYaw, parent.rotationPitch);
 	}
 	

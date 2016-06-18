@@ -21,6 +21,7 @@ import minecraftflightsimulator.entities.parts.EntitySkid;
 import minecraftflightsimulator.entities.parts.EntityWheel;
 import minecraftflightsimulator.entities.parts.EntityWheelLarge;
 import minecraftflightsimulator.entities.parts.EntityWheelSmall;
+import minecraftflightsimulator.helpers.MFSVector;
 import minecraftflightsimulator.helpers.RotationHelper;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import net.minecraft.entity.item.EntityItem;
@@ -33,7 +34,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 import com.google.common.collect.BiMap;
@@ -58,10 +58,10 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	public String ownerName="MFS";
 	public String displayName="";
 	
-	public Vec3 velocityVec = Vec3.createVectorHelper(0, 0, 0);
-	public Vec3 bearingVec = Vec3.createVectorHelper(0, 0, 0);
-	public Vec3 wingVec = Vec3.createVectorHelper(0, 0, 0);
-	public Vec3 sideVec = Vec3.createVectorHelper(0, 0, 0);
+	public MFSVector velocityVec = new MFSVector(0, 0, 0);
+	public MFSVector headingVec = new MFSVector(0, 0, 0);
+	public MFSVector wingVec = new MFSVector(0, 0, 0);
+	public MFSVector sideVec = new MFSVector(0, 0, 0);
 	
 	public static final int pilotSeatSlot = 24;
 	public static final int passengerSeatSlot = 25;
@@ -193,13 +193,12 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		return this.performAttackAction(this, source, damage);
 	}
 	
-	@Override
-	public Vec3 getLookVec(){
+	public MFSVector getHeadingVec(){
         float f1 = MathHelper.cos(-this.rotationYaw * 0.017453292F - (float)Math.PI);
         float f2 = MathHelper.sin(-this.rotationYaw * 0.017453292F - (float)Math.PI);
         float f3 = -MathHelper.cos(-this.rotationPitch * 0.017453292F);
         float f4 = MathHelper.sin(-this.rotationPitch * 0.017453292F);
-        return Vec3.createVectorHelper((double)(f2 * f3), (double)f4, (double)(f1 * f3));
+        return new MFSVector((double)(f2 * f3), (double)f4, (double)(f1 * f3));
    	}
 	
 	@Override
@@ -391,7 +390,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			if(child.isDead){
 				removeChild(child.UUID);
 			}else{
-				Vec3 offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
+				MFSVector offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
 				child.setPosition(posX + offset.xCoord, posY + offset.yCoord, posZ + offset.zCoord);
 				child.updateRiderPosition();
 			}

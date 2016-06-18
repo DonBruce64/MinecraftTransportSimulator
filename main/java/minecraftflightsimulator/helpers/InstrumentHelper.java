@@ -375,7 +375,7 @@ public class InstrumentHelper{
     	RenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+6.25, centerY-6.25, 0, 0, 0.75, 1, 0.5, 0.5625, false);
     	rotationHelper(centerX, centerY, -turn);
     	
-    	double slip = parent.sideVec.dotProduct(parent.velocityVec);
+    	double slip = parent.sideVec.dot(parent.velocityVec);
     	RenderHelper.renderSquareUV(centerX-2.5 + 20*slip, centerX+2.5 + 20*slip, centerY+15 - Math.abs(slip), centerY+10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
     	if(!hud){GL11.glTranslatef(0, 0, 0.1F);}
 
@@ -466,7 +466,7 @@ public class InstrumentHelper{
     	GL11.glEnable(GL11.GL_TEXTURE_2D);
     	
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-    	double slip = parent.sideVec.dotProduct(parent.velocityVec);
+    	double slip = parent.sideVec.dot(parent.velocityVec);
     	RenderHelper.renderSquareUV(centerX-2.5 + 20*slip, centerX+2.5 + 20*slip, centerY+15 - Math.abs(slip), centerY+10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
     	if(!hud){GL11.glTranslatef(0, 0, 0.1F);}
 

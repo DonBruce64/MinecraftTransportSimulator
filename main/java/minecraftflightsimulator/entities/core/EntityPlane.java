@@ -6,6 +6,7 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
+import minecraftflightsimulator.helpers.MFSVector;
 import minecraftflightsimulator.helpers.RotationHelper;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
@@ -13,7 +14,6 @@ import minecraftflightsimulator.packets.control.RudderPacket;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 /**
@@ -104,7 +104,7 @@ public abstract class EntityPlane extends EntityParent{
 	private List collidingBoxes;
 	private AxisAlignedBB newChildBox;
 	private AxisAlignedBB collidingBox;
-	private Vec3 offset;
+	private MFSVector offset;
 	
 	public EntityPlane(World world){
 		super(world);
@@ -193,19 +193,19 @@ public abstract class EntityPlane extends EntityParent{
 		}
 				
 		currentWingArea = wingArea + wingArea*flapAngle/250F;
-		bearingVec = getLookVec();
+		headingVec = getHeadingVec();
 		wingVec = RotationHelper.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
-		sideVec = bearingVec.crossProduct(wingVec);
-		velocityVec = Vec3.createVectorHelper(motionX, motionY, motionZ);
-		velocity = velocityVec.dotProduct(bearingVec);
+		sideVec = headingVec.cross(wingVec);
+		velocityVec.set(motionX, motionY, motionZ);
+		velocity = velocityVec.dot(headingVec);
 		velocityVec = velocityVec.normalize();
 		
-		trackAngle = Math.toDegrees(Math.atan2(velocityVec.dotProduct(wingVec), velocityVec.dotProduct(bearingVec)));
+		trackAngle = Math.toDegrees(Math.atan2(velocityVec.dot(wingVec), velocityVec.dot(headingVec)));
 		dragCoeff = dragCoeffOffset*Math.pow(trackAngle, 2) + initialDragCoeff;
 		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapAngle/350F);
 		aileronLiftCoeff = getLiftCoeff(aileronAngle/10F, 2);
 		elevatorLiftCoeff = getLiftCoeff(defaultElevatorAngle - trackAngle - elevatorAngle/10F, 2);
-		rudderLiftCoeff = getLiftCoeff(rudderAngle/10F + Math.toDegrees(Math.atan2(velocityVec.dotProduct(sideVec), velocityVec.dotProduct(bearingVec))), 2);
+		rudderLiftCoeff = getLiftCoeff(rudderAngle/10F + Math.toDegrees(Math.atan2(velocityVec.dot(sideVec), velocityVec.dot(headingVec))), 2);
 	}
 	
 	private void getForcesAndMotions(){
@@ -234,25 +234,25 @@ public abstract class EntityPlane extends EntityParent{
 		
 		if(brakeForce > 0){
 			if(motionX > 0){
-				motionX = Math.max(motionX + (bearingVec.xCoord*thrustForce - velocityVec.xCoord*(dragForce + brakeForce) + wingVec.xCoord*(wingForce + elevatorForce))/currentMass, 0);
+				motionX = Math.max(motionX + (headingVec.xCoord*thrustForce - velocityVec.xCoord*(dragForce + brakeForce) + wingVec.xCoord*(wingForce + elevatorForce))/currentMass, 0);
 			}else if(motionX < 0){
-				motionX = Math.min(motionX + (bearingVec.xCoord*thrustForce - velocityVec.xCoord*(dragForce + brakeForce) + wingVec.xCoord*(wingForce + elevatorForce))/currentMass, 0);
+				motionX = Math.min(motionX + (headingVec.xCoord*thrustForce - velocityVec.xCoord*(dragForce + brakeForce) + wingVec.xCoord*(wingForce + elevatorForce))/currentMass, 0);
 			}
 			if(motionZ > 0){
-				motionZ = Math.max(motionZ + (bearingVec.zCoord*thrustForce - velocityVec.zCoord*(dragForce + brakeForce) + wingVec.zCoord*(wingForce + elevatorForce))/currentMass, 0);	
+				motionZ = Math.max(motionZ + (headingVec.zCoord*thrustForce - velocityVec.zCoord*(dragForce + brakeForce) + wingVec.zCoord*(wingForce + elevatorForce))/currentMass, 0);	
 			}else if(motionZ < 0){
-				motionZ = Math.min(motionZ + (bearingVec.zCoord*thrustForce - velocityVec.zCoord*(dragForce + brakeForce) + wingVec.zCoord*(wingForce + elevatorForce))/currentMass, 0);
+				motionZ = Math.min(motionZ + (headingVec.zCoord*thrustForce - velocityVec.zCoord*(dragForce + brakeForce) + wingVec.zCoord*(wingForce + elevatorForce))/currentMass, 0);
 			}
 		}else{
-			motionX += (bearingVec.xCoord*thrustForce - velocityVec.xCoord*dragForce + wingVec.xCoord*(wingForce + elevatorForce))/currentMass;
-			motionZ += (bearingVec.zCoord*thrustForce - velocityVec.zCoord*dragForce + wingVec.zCoord*(wingForce + elevatorForce))/currentMass;
+			motionX += (headingVec.xCoord*thrustForce - velocityVec.xCoord*dragForce + wingVec.xCoord*(wingForce + elevatorForce))/currentMass;
+			motionZ += (headingVec.zCoord*thrustForce - velocityVec.zCoord*dragForce + wingVec.zCoord*(wingForce + elevatorForce))/currentMass;
 		}		
 				
 		//TODO fix this to allow barrel rolls
-		motionY += (bearingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + wingVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
-		motionRoll = (float) (180/Math.PI*((1-bearingVec.yCoord)*aileronTorque)/momentRoll);
-		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + (1-Math.abs(bearingVec.yCoord))*(gravitationalTorque + brakeTorque))/momentPitch);
-		motionYaw = (float) (180/Math.PI*(bearingVec.yCoord*aileronTorque - wingVec.yCoord*(-thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
+		motionY += (headingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + wingVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
+		motionRoll = (float) (180/Math.PI*((1-headingVec.yCoord)*aileronTorque)/momentRoll);
+		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + (1-Math.abs(headingVec.yCoord))*(gravitationalTorque + brakeTorque))/momentPitch);
+		motionYaw = (float) (180/Math.PI*(headingVec.yCoord*aileronTorque - wingVec.yCoord*(-thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
 	}
 	
 	private void performGroundOperations(){
@@ -270,10 +270,10 @@ public abstract class EntityPlane extends EntityParent{
 			if(motionY<0){motionY=0;}
 			if(motionPitch*currentCOG > 0 ){motionPitch = 0;}
 			if(Math.abs(rotationPitch) < 0.25){rotationPitch = 0;}
-			motionYaw += 7*velocityVec.dotProduct(sideVec) + rudderAngle/(350*(0.5 + velocity*velocity));
-			bearingVec = getLookVec();
+			motionYaw += 7*velocityVec.dot(sideVec) + rudderAngle/(350*(0.5 + velocity*velocity));
+			headingVec = getHeadingVec();
 			double groundSpeed = Math.hypot(motionX, motionZ);
-			Vec3 groundVec = bearingVec.addVector(0, -bearingVec.yCoord, 0).normalize();
+			MFSVector groundVec = headingVec.add(0, -headingVec.yCoord, 0).normalize();
 			motionX = groundVec.xCoord * groundSpeed;
 			motionZ = groundVec.zCoord * groundSpeed;
 		}
@@ -397,7 +397,7 @@ public abstract class EntityPlane extends EntityParent{
 			rollChildOffset = 0;
 			for(EntityChild child : getChildren()){
 				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-				offset = offset.addVector(posX - child.posX + motionX*MFS.planeSpeedFactor, posY - child.posY + motionY*MFS.planeSpeedFactor, posZ - child.posZ + motionZ*MFS.planeSpeedFactor);
+				offset = offset.add(posX - child.posX + motionX*MFS.planeSpeedFactor, posY - child.posY + motionY*MFS.planeSpeedFactor, posZ - child.posZ + motionZ*MFS.planeSpeedFactor);
 				if(child.willCollideVerticallyWithOffset(offset.xCoord, offset.yCoord, offset.zCoord)){
 					if(rollChildOffset==0){
 						rollChildOffset = child.offsetX;
@@ -432,7 +432,7 @@ public abstract class EntityPlane extends EntityParent{
 			pitchChildOffset = 0;
 			for(EntityChild child : getChildren()){
 				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);				
-				offset = offset.addVector(posX - child.posX + motionX*MFS.planeSpeedFactor, posY - child.posY + motionY*MFS.planeSpeedFactor, posZ - child.posZ + motionZ*MFS.planeSpeedFactor);				
+				offset = offset.add(posX - child.posX + motionX*MFS.planeSpeedFactor, posY - child.posY + motionY*MFS.planeSpeedFactor, posZ - child.posZ + motionZ*MFS.planeSpeedFactor);				
 				if(child.willCollideVerticallyWithOffset(offset.xCoord, offset.yCoord, offset.zCoord)){
 					if(child.offsetZ != 0){
 						prevPitchChildOffset = pitchChildOffset;

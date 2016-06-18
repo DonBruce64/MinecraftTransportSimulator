@@ -2,7 +2,6 @@ package minecraftflightsimulator.items;
 
 import java.util.List;
 
-import minecraftflightsimulator.MFS;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;

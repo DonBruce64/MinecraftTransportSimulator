@@ -102,7 +102,7 @@ public class CommonProxy{
 		registerEntity(EntityMC172.class);
 		registerEntity(EntityPZLP11.class);
 		//registerEntity(EntityTrimotor.class);
-		//registerEntity(EntityOtter.class);
+		//yregisterEntity(EntityOtter.class);
 		
 		registerEntity(EntityCore.class);
 		registerEntity(EntitySeat.class);

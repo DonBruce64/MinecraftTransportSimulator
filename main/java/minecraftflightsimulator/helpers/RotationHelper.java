@@ -1,7 +1,6 @@
 package minecraftflightsimulator.helpers;
 
 import net.minecraft.util.MathHelper;
-import net.minecraft.util.Vec3;
 
 public class RotationHelper {	
 	/**
@@ -15,7 +14,7 @@ public class RotationHelper {
 	 * @param roll The roll of the aircraft (in degrees).
 	 * @return A Vec3 with the rotated points.
 	 */
-	public static Vec3 getRotatedPoint(float x, float y, float z, float pitch, float yaw, float roll){
+	public static MFSVector getRotatedPoint(float x, float y, float z, float pitch, float yaw, float roll){
 		float f1 = MathHelper.cos(pitch * 0.017453292F);//A
 		float f2 = MathHelper.sin(pitch * 0.017453292F);//B
 		float f3 = MathHelper.cos(yaw * 0.017453292F);//C
@@ -25,7 +24,7 @@ public class RotationHelper {
 		float f7 = x*(f3*f5-f2*f4*f6) + y*(-f2*f4*f5-f3*f6) + z*(-f1*f4);
 		float f8 = x*(f1*f6)          + y*(f1*f5)           + z*(-f2);
 		float f9 = x*(f4*f5+f2*f3*f6) + y*(f2*f3*f5-f4*f6)  + z*(f1*f3);
-		return Vec3.createVectorHelper(f7, f8, f9);
+		return new MFSVector(f7, f8, f9);
 	}
 	
 	/**
@@ -36,14 +35,14 @@ public class RotationHelper {
 	 * @param roll The roll of the aircraft (in degrees).
 	 * @return A Vec3 with the rotated unit vector.
 	 */
-	public static Vec3 getRotatedY(float pitch, float yaw, float roll){
+	public static MFSVector getRotatedY(float pitch, float yaw, float roll){
 		float f1 = MathHelper.cos(pitch * 0.017453292F);
 		float f2 = MathHelper.sin(pitch * 0.017453292F);
 		float f3 = MathHelper.cos(yaw * 0.017453292F);
 		float f4 = MathHelper.sin(yaw * 0.017453292F);
 		float f5 = MathHelper.cos(roll * 0.017453292F);
 		float f6 = MathHelper.sin(roll * 0.017453292F);
-		return Vec3.createVectorHelper((-f3*f6 - f2*f4*f5), (f1*f5), (f2*f3*f5 - f4*f6));
+		return new MFSVector((-f3*f6 - f2*f4*f5), (f1*f5), (f2*f3*f5 - f4*f6));
 	}
 	
 	/*For reference, here are the rotation matrixes.
