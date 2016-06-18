@@ -7,6 +7,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.StatCollector;
 
 public class ContainerPropellerBench extends Container implements IInventory{
@@ -54,8 +55,10 @@ public class ContainerPropellerBench extends Container implements IInventory{
 	public ItemStack transferStackInSlot(EntityPlayer player, int sourceSlotIndex){
 		return null;		
 	}
-
+	
 	public void markDirty(){}
+	public void clear(){}
+	public void setField(int id, int value){}
 	public void openInventory(){}
 	public void openInventory(EntityPlayer player){}
 	public void closeInventory(){}
@@ -63,31 +66,32 @@ public class ContainerPropellerBench extends Container implements IInventory{
     
 	public boolean hasCustomInventoryName(){return false;}
 	public boolean isUseableByPlayer(EntityPlayer player){return true;}
-	public boolean isItemValidForSlot(int slot, ItemStack stack){return true;}
+	public boolean isItemValidForSlot(int slot, ItemStack stack){return false;}
+	public int getField(int id){return 0;}
+	public int getFieldCount(){return 0;}
 	public int getSizeInventory(){return items.length;}
-	public int getInventoryStackLimit(){return 2;}
+	public int getInventoryStackLimit(){return 64;}
 	public String getInventoryName(){return StatCollector.translateToLocal("tile.mfs.Chest.name");}
-	public ItemStack getStackInSlot(int slot){return this.items[slot];}
+	public ItemStack getStackInSlot(int slot){return items[slot];}
 	public ItemStack getStackInSlotOnClosing(int slot){return null;}
 	
-    public void setInventorySlotContents(int slot, ItemStack item){
-        this.items[slot] = item;
-        if(item != null && item.stackSize > this.getInventoryStackLimit()){
-            item.stackSize = this.getInventoryStackLimit();
-        }
-    }
+	@Override
+	public void setInventorySlotContents(int slot, ItemStack stack){
+		items[slot] = stack;
+	}
 	
+	@Override
     public ItemStack decrStackSize(int slot, int number){
-        if(this.items[slot] != null){
+        if(items[slot] != null){
             ItemStack itemstack;
-            if(this.items[slot].stackSize <= number){
-                itemstack = this.items[slot];
-                this.items[slot] = null;
+            if(items[slot].stackSize <= number){
+                itemstack = items[slot];
+                items[slot] = null;
                 return itemstack;
             }else{
-                itemstack = this.items[slot].splitStack(number);
-                if(this.items[slot].stackSize == 0){
-                    this.items[slot] = null;
+                itemstack = items[slot].splitStack(number);
+                if(items[slot].stackSize == 0){
+                	items[slot] = null;
                 }
                 return itemstack;
             }
@@ -95,4 +99,14 @@ public class ContainerPropellerBench extends Container implements IInventory{
             return null;
         }
     }
+	
+    public ItemStack removeStackFromSlot(int index){
+		ItemStack removedStack = getStackInSlot(index);
+		setInventorySlotContents(index, null);
+		return removedStack;
+	}
+    
+    public boolean hasCustomName(){return false;}
+	public String getName(){return null;}
+	public IChatComponent getDisplayName(){return null;}
 }
