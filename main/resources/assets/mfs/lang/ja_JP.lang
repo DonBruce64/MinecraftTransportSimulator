@@ -1,5 +1,5 @@
-death.attack.propellor=%1$s がプロペラに当たってズタズタになった！.
-death.attack.propellor.player=%1$s が戦いながらプロペラに切られていった！ %2$s
+﻿death.attack.propellor=%1$s がプロペラに当たって千切りになった！.
+death.attack.propellor.player=%1$s が戦いながらプロペラに粉砕されていった！ %2$s
 entity.mfs.Chest.name=機体 Chest
 
 item.MC172.name=MC-172
@@ -7,8 +7,8 @@ item.PZLP11.name=PZL P.11
 item.Otter.name=Twin Otter
 item.Trimotor.name=Trimotor
 item.Seat.name=座席
-item.Skid.name=Skid
-item.Pontoon.name=Pontoon
+item.Skid.name=スキッド
+item.Pontoon.name=浮舟（フロート）
 item.WheelSmall.name=小さい車輪
 item.WheelLarge.name=大きい車輪
 item.Propeller_0.name=木のプロペラ
@@ -49,7 +49,7 @@ item.FlightInstrument12.description=燃料の使用率が表示される
 item.FlightInstrument13.name=温度計
 item.FlightInstrument13.description=エンジンの温度が表示される (NO USE).
 item.FlightInstrument14.name=油圧計
-item.FlightInstrument14.description=Indicates oil pressure (NO USE).
+item.FlightInstrument14.description=油圧を表示する (NO USE).
 
 itemGroup.tabMFS=Minecraft Flight Simulator
 key.categories.mfs=Minecraft Flight Simulator
