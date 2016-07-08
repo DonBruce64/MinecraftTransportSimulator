@@ -3,7 +3,6 @@ package minecraftflightsimulator.planes.PZLP11;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.containers.ContainerParent;
 import minecraftflightsimulator.containers.GUIParent;
-import minecraftflightsimulator.containers.SlotBucket;
 import minecraftflightsimulator.containers.SlotFuel;
 import minecraftflightsimulator.containers.SlotItem;
 import minecraftflightsimulator.containers.SlotPilot;
@@ -79,7 +78,7 @@ public class EntityPZLP11 extends EntityPlane{
 		container.addSlotToContainer(new SlotItem(this, 131, 62, 6, MFS.proxy.engineLarge));
 		container.addSlotToContainer(new SlotItem(this, 149, 62, 10, MFS.proxy.propeller));
 		container.addSlotToContainer(new SlotPilot(this, 113, 62));
-		container.addSlotToContainer(new SlotBucket(this, 7, 113));
+		container.addSlotToContainer(new SlotItem(this, 7, 113, this.emptyBucketSlot));
 		container.addSlotToContainer(new SlotFuel(this, 7, 73));
 		for(byte i=0; i<6; ++i){
 			container.addSlotToContainer(new SlotItem(this, 7 + 18*(i%3), i < 3 ? 7 : 25, (i < 3 ? i + 1 : i + 3 ) + instrumentStartSlot, MFS.proxy.flightInstrument));

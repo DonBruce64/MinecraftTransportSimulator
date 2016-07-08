@@ -3,7 +3,6 @@ package minecraftflightsimulator.planes.Trimotor;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.containers.ContainerParent;
 import minecraftflightsimulator.containers.GUIParent;
-import minecraftflightsimulator.containers.SlotBucket;
 import minecraftflightsimulator.containers.SlotFuel;
 import minecraftflightsimulator.containers.SlotItem;
 import minecraftflightsimulator.containers.SlotPassenger;
@@ -87,6 +86,6 @@ public class EntityTrimotor extends EntityPlane{
 		container.addSlotToContainer(new SlotPilot(this, 90, 51));
 		container.addSlotToContainer(new SlotPassenger(this, 90, 69));
 		container.addSlotToContainer(new SlotFuel(this, 125, 11));
-		container.addSlotToContainer(new SlotBucket(this, 143, 11));	
+		container.addSlotToContainer(new SlotItem(this, 143, 11, this.emptyBucketSlot));	
 	}
 }

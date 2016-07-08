@@ -33,7 +33,6 @@ import minecraftflightsimulator.packets.control.RudderPacket;
 import minecraftflightsimulator.packets.control.ThrottlePacket;
 import minecraftflightsimulator.packets.general.ChatPacket;
 import minecraftflightsimulator.packets.general.ClientRequestDataPacket;
-import minecraftflightsimulator.packets.general.FuelPacket;
 import minecraftflightsimulator.packets.general.GUIPacket;
 import minecraftflightsimulator.packets.general.ServerSendDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
@@ -49,8 +48,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.FluidContainerRegistry;
-import net.minecraftforge.fluids.FluidContainerRegistry.FluidContainerData;
 import net.minecraftforge.fluids.FluidRegistry;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.EntityRegistry;
@@ -101,8 +98,8 @@ public class CommonProxy{
 	private void initEntites(){
 		registerEntity(EntityMC172.class);
 		registerEntity(EntityPZLP11.class);
-		//registerEntity(EntityTrimotor.class);
-		//yregisterEntity(EntityOtter.class);
+		registerEntity(EntityTrimotor.class);
+		//registerEntity(EntityOtter.class);
 		
 		registerEntity(EntityCore.class);
 		registerEntity(EntitySeat.class);
@@ -123,7 +120,6 @@ public class CommonProxy{
 	
 	private void initPackets(){
 		MFS.MFSNet.registerMessage(ChatPacket.ChatPacketHandler.class,  ChatPacket.class, ++packetNumber, Side.CLIENT);
-		MFS.MFSNet.registerMessage(FuelPacket.FuelPacketHandler.class,  FuelPacket.class, ++packetNumber, Side.CLIENT);
 		MFS.MFSNet.registerMessage(ServerSendDataPacket.ServerSendDataPacketHandler.class,  ServerSendDataPacket.class, ++packetNumber, Side.CLIENT);
 		MFS.MFSNet.registerMessage(ServerSyncPacket.ServerSyncPacketHandler.class,  ServerSyncPacket.class, ++packetNumber, Side.CLIENT);
 		
@@ -162,7 +158,8 @@ public class CommonProxy{
 			if(feild.getType().equals(Item.class)){
 				try{
 					Item item = (Item) feild.get(Item.class);
-					if(!item.equals(planeOtter) && !item.equals(planeTrimotor)){
+					//if(!item.equals(planeOtter) && !item.equals(planeTrimotor)){
+					if(!item.equals(planeOtter)){
 						if(item.getUnlocalizedName().equals("item.null")){
 							item.setUnlocalizedName(feild.getName().substring(0, 1).toUpperCase() + feild.getName().substring(1));
 						}
@@ -354,11 +351,8 @@ public class CommonProxy{
 	}
 	
 	private void initFuels(){
-    	FluidContainerData[] fluidData = FluidContainerRegistry.getRegisteredFluidContainerData();
-		for(FluidContainerData data : fluidData){
-			if(data.emptyContainer.equals(FluidContainerRegistry.EMPTY_BUCKET)){
-				MFS.fluidValues.put(data.fluid.getFluid().getName(), MFS.config.get("fuels", data.fluid.getFluid().getName(), data.fluid.getFluid().equals(FluidRegistry.LAVA) ? 1000 :0).getInt());
-			}
+		for(String fluidName : FluidRegistry.getRegisteredFluids().keySet()){
+			MFS.fluidValues.put(fluidName, MFS.config.get("fuels", fluidName, fluidName.equals(FluidRegistry.LAVA.getName()) ? 1.0F : 0.0F).getDouble());
 		}
 		MFS.config.save();
 	}

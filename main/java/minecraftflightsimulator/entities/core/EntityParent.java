@@ -45,7 +45,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	public byte textureOptions;
 	public byte numberChildren;
 	public byte throttle;
-	public byte emptyBuckets;
 	public int maxFuel;
 	public float rotationRoll;
 	public float prevRotationRoll;
@@ -604,10 +603,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			for(int i=0; i<10; ++i){
 				setInventorySlotContents(i+instrumentStartSlot, instrumentList.get(i));
 			}
-
-			if(emptyBuckets>0){
-				setInventorySlotContents(emptyBucketSlot, new ItemStack(Items.bucket, emptyBuckets));
-			}
 		}
 	}
 
@@ -718,10 +713,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				instrumentList.set(i, getStackInSlot(i+instrumentStartSlot));
 			}
 			
-			if(getStackInSlot(emptyBucketSlot) != null){
-				this.emptyBuckets = (byte) getStackInSlot(emptyBucketSlot).stackSize;
-			}
-			
 			if(getStackInSlot(fuelBucketSlot) != null){
 				worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, getStackInSlot(fuelBucketSlot)));
 				setInventorySlotContents(fuelBucketSlot, null);
@@ -738,7 +729,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		this.numberChildren=tagCompound.getByte("numberChildren");
 		this.textureOptions=tagCompound.getByte("textureOptions");
 		this.throttle=tagCompound.getByte("throttle");
-		this.emptyBuckets=tagCompound.getByte("emptyBuckets");
 		this.rotationRoll=tagCompound.getFloat("rotationRoll");
 		this.fuel=tagCompound.getDouble("fuel");
 		this.ownerName=tagCompound.getString("ownerName");
@@ -750,6 +740,9 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				instrumentList.set(i, null);
 			}
 		}
+		if(tagCompound.hasKey("bucketId")){
+			this.setInventorySlotContents(emptyBucketSlot, new ItemStack(Item.getItemById(tagCompound.getShort("bucketId")), tagCompound.getByte("bucketCount"), tagCompound.getShort("bucketDamage")));
+		}
 	}
     
 	@Override
@@ -760,7 +753,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		tagCompound.setByte("numberChildren", this.numberChildren);
 		tagCompound.setByte("textureOptions", this.textureOptions);
 		tagCompound.setByte("throttle", this.throttle);
-		tagCompound.setByte("emptyBuckets", this.emptyBuckets);
 		tagCompound.setFloat("rotationRoll", this.rotationRoll);
 		tagCompound.setDouble("fuel", this.fuel);
 		tagCompound.setString("ownerName", this.ownerName);
@@ -769,6 +761,12 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			if(instrumentList.get(i) != null){
 				tagCompound.setInteger("instrument" + i, instrumentList.get(i).getItemDamage());
 			}
+		}
+		if(this.getStackInSlot(emptyBucketSlot) != null){
+			ItemStack bucketStack = getStackInSlot(emptyBucketSlot);
+			tagCompound.setShort("bucketId", (short) Item.getIdFromItem(bucketStack.getItem()));
+			tagCompound.setByte("bucketCount", (byte) bucketStack.stackSize);
+			tagCompound.setShort("bucketDamage", (short) bucketStack.getItemDamage());
 		}
 	}
 }

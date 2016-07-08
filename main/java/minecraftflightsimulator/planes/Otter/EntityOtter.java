@@ -3,7 +3,6 @@ package minecraftflightsimulator.planes.Otter;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.containers.ContainerParent;
 import minecraftflightsimulator.containers.GUIParent;
-import minecraftflightsimulator.containers.SlotBucket;
 import minecraftflightsimulator.containers.SlotFuel;
 import minecraftflightsimulator.containers.SlotItem;
 import minecraftflightsimulator.containers.SlotPassenger;
@@ -94,7 +93,7 @@ public class EntityOtter extends EntityPlane{
 		
 		container.addSlotToContainer(new SlotPilot(this, 110, 66));
 		container.addSlotToContainer(new SlotPassenger(this, 92, 66));
-		container.addSlotToContainer(new SlotBucket(this, 7, 113));
+		container.addSlotToContainer(new SlotItem(this, 7, 113, this.emptyBucketSlot));
 		container.addSlotToContainer(new SlotFuel(this, 7, 73));
 		for(int i=0; i<10; ++i){
 			container.addSlotToContainer(new SlotItem(this, 7 + 18*(i%5), i < 5 ? 7 : 25, i + instrumentStartSlot, MFS.proxy.flightInstrument));
