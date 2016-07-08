@@ -1,0 +1,58 @@
+#Translated by Minddao
+
+death.attack.propellor=%1$s был разорвать винтом.
+death.attack.propellor.player=%1$s был разорвать винтом в полете %2$s
+entity.mfs.Chest.name=Сундук самолета
+
+item.MC172.name=MC-172
+item.PZLP11.name=PZL P.11
+item.Otter.name=Турбовинтовой
+item.Trimotor.name=Трехмоторный
+item.Seat.name=Cиденье
+item.Skid.name=Задняя подставка
+item.Pontoon.name=Водная лыжа
+item.WheelSmall.name=Малое колесо
+item.WheelLarge.name=Большое колесо
+item.Propeller_0.name=Деревянный пропеллер
+item.Propeller_1.name=Железный пропеллер
+item.Propeller_2.name=Обсидиановый пропеллер
+item.EngineSmall.name=Малый двигатель
+item.EngineLarge.name=Большой двигатель
+
+item.FlightInstrumentBase.name=Базовый индикатор
+item.PointerShort.name=Короткая стрелка
+item.PointerLong.name=Длинная стрелка
+item.FlightInstrument0.name=Авиагоризонт
+item.FlightInstrument0.description=Показывает положение самолета
+item.FlightInstrument1.name=Высотометр
+item.FlightInstrument1.description=Показывает высоту
+item.FlightInstrument2.name=Указатель курса
+item.FlightInstrument2.description=Показывает направление самолета
+item.FlightInstrument3.name=Спидометр
+item.FlightInstrument3.description=Показывает скорость
+item.FlightInstrument4.name=Указатель крена
+item.FlightInstrument4.description=Показывает угол крена
+item.FlightInstrument5.name=Указатель поворота и скольжения
+item.FlightInstrument5.description=Показывает угол поворота и крена.
+item.FlightInstrument6.name=Вариометр
+item.FlightInstrument6.description=Показывает скорость подъема
+item.FlightInstrument7.name=Индикатор перегрузок
+item.FlightInstrument7.description=Показывает чило Маха
+item.FlightInstrument8.name=DUMMY
+item.FlightInstrument8.description=
+item.FlightInstrument9.name=DUMMY
+item.FlightInstrument9.description=
+item.FlightInstrument10.name=Тахометр
+item.FlightInstrument10.description=Показывает обороты двигателя
+item.FlightInstrument11.name=Датчик топлика
+item.FlightInstrument11.description=Показывает уровень топлива
+item.FlightInstrument12.name=Датчик расхода топлива
+item.FlightInstrument12.description=Показывает расход топлива.
+item.FlightInstrument13.name=Датчик температуры двигателя
+item.FlightInstrument13.description=Показывает температуру двигателя (не используется).
+item.FlightInstrument14.name=Датчик давления масла
+item.FlightInstrument14.description=Показывает давление масла (не использовать).
+
+itemGroup.tabMFS=Minecraft Симулятор полета
+key.categories.mfs=Minecraft Симулятор полета
+key.config=Открыть интерфейс самолета/ Управление 
