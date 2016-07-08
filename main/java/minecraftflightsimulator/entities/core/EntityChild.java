@@ -98,6 +98,10 @@ public abstract class EntityChild extends EntityBase{
 		return isBlockAtLocation(posX, posY - 0.05, posZ);
 	}
 	
+	public boolean isLiquidAt(int x, int y, int z){
+		return worldObj.getBlock(x, y, z).getMaterial().isLiquid();
+	}
+	
 	public boolean isCollidedHorizontally(){
 		return isBlockAtLocation(posX, posY, posZ)
 				|| isBlockAtLocation(posX + this.width, posY, posZ)

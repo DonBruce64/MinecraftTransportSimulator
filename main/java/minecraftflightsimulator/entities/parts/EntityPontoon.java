@@ -77,7 +77,7 @@ public class EntityPontoon extends EntityLandingGear{
 	
 	@Override
 	protected boolean isBlockAtLocation(double x, double y, double z){
-		return worldObj.getBlock(MathHelper.floor_double(x), MathHelper.floor_double(y + 0.35), MathHelper.floor_double(z)).getMaterial().isLiquid() ? true : super.isBlockAtLocation(x, y, z);
+		return isLiquidAt(MathHelper.floor_double(x), MathHelper.floor_double(y + 0.35), MathHelper.floor_double(z)) ? true : super.isBlockAtLocation(x, y, z);
 	}
 	
 	@Override
