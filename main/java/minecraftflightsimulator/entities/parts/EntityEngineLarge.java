@@ -17,10 +17,10 @@ public class EntityEngineLarge extends EntityEngine{
 	@Override
 	protected void entityInit(){
 		//TODO find other sounds.
-		this.starterPower = 50;
-		this.starterIncrement = 4;
+		this.starterPower = 25;
+		this.starterIncrement = 22;
 		this.engineRunningSoundName = "large_engine_running";
-		this.engineCrankingSoundName = "small_engine_cranking";
+		this.engineCrankingSoundName = "large_engine_cranking";
 		this.engineStartingSoundName = "small_engine_starting";
 	}
 

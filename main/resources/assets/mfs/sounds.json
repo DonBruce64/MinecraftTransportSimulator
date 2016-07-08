@@ -1,6 +1,7 @@
 {
+    "small_engine_running"     : {"category": "master", "sounds": [{"name": "mfs:small_engine_running","stream": false}]},
     "small_engine_cranking"    : {"category": "master", "sounds": [{"name": "mfs:small_engine_cranking","stream": false}]},
     "small_engine_starting"    : {"category": "master", "sounds": [{"name": "mfs:small_engine_starting","stream": false}]},
-    "small_engine_running"     : {"category": "master", "sounds": [{"name": "mfs:small_engine_running","stream": false}]},
-    "large_engine_running"     : {"category": "master", "sounds": [{"name": "mfs:large_engine_running","stream": false}]}
+    "large_engine_running"     : {"category": "master", "sounds": [{"name": "mfs:large_engine_running","stream": false}]},
+    "large_engine_cranking"     : {"category": "master", "sounds": [{"name": "mfs:large_engine_cranking","stream": false}]}
 }
