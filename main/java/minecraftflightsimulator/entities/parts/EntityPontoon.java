@@ -5,7 +5,6 @@ import minecraftflightsimulator.entities.core.EntityLandingGear;
 import minecraftflightsimulator.entities.core.EntityParent;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
 public class EntityPontoon extends EntityLandingGear{
@@ -77,7 +76,7 @@ public class EntityPontoon extends EntityLandingGear{
 	
 	@Override
 	protected boolean isBlockAtLocation(double x, double y, double z){
-		return isLiquidAt(MathHelper.floor_double(x), MathHelper.floor_double(y + 0.35), MathHelper.floor_double(z)) ? true : super.isBlockAtLocation(x, y, z);
+		return isLiquidAt(x, y + 0.35, z) ? true : super.isBlockAtLocation(x, y, z);
 	}
 	
 	@Override
