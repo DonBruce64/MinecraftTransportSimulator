@@ -20,7 +20,6 @@ public class EntityEngineSmall extends EntityEngine{
 		this.starterIncrement = 4;
 		this.engineRunningSoundName = "small_engine_running";
 		this.engineCrankingSoundName = "small_engine_cranking";
-		this.engineStartingSoundName = "small_engine_starting";
 	}
 
 	@Override

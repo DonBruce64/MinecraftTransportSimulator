@@ -20,7 +20,6 @@ public abstract class EntityEngine extends EntityChild{
 	protected byte starterPower;
 	protected String engineRunningSoundName;
 	protected String engineCrankingSoundName;
-	protected String engineStartingSoundName;
 	
 	//unique to each individual engine
 	private boolean engineEngaged;
@@ -89,7 +88,7 @@ public abstract class EntityEngine extends EntityChild{
 			}
 		}else{
 			if(engineRPM > 500 && parent.fuel > 0 && parent.throttle > 5 && engineEngaged && !isLiquidAt(posX, posY + 0.25, posZ)){
-				MFS.proxy.playSound(this, "mfs:" + engineStartingSoundName, 1, 1);
+				MFS.proxy.playSound(this, "mfs:engine_starting", 1, 1);
 				engineOn=true;
 			}
 		}
@@ -149,7 +148,7 @@ public abstract class EntityEngine extends EntityChild{
 			internalFuel = 100;
 			engineOn = false;
 			fueled = false;
-			MFS.proxy.playSound(this, "mfs:" + engineStartingSoundName, 1, 1);
+			MFS.proxy.playSound(this, "mfs:engine_starting", 1, 1);
 		}
 	}
 	
