@@ -199,7 +199,7 @@ public class InstrumentHelper{
     		GL11.glDisable(GL11.GL_LIGHTING);
     		RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+5.25, centerY-5.25, 0, 0, 0.75, 0.875, 0.875, 1, false);
         	
-    		if(parent.parkingBrakeOn){        		
+    		if(parent.parkingBrakeOn || parent.brakeOn){        		
         		RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY+1.75, centerY+1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
         		RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY-1.75, centerY-1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
             	RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY-1.75, centerY-1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
@@ -226,7 +226,7 @@ public class InstrumentHelper{
     		GL11.glPopMatrix();
     	}else{
     		RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+0.175, centerY-10.5, 0, 0, 0.75, 0.875, 0.875, 1, true);
-        	if(parent.parkingBrakeOn){
+        	if(parent.parkingBrakeOn || parent.brakeOn){
         		RenderHelper.renderSquareUV(centerX-1.75, centerX+1.75, centerY+15, centerY-7, 0, 0, 0.640625, 0.734375, 0.890625, 0.984375, false);
         		RenderHelper.renderQuadUV(centerX-5, centerX+5, centerX+5, centerX-5, centerY+35, centerY+35, centerY, centerY, 0, 0, 0, 0, 0.2578125, 0.3671875, 0.921875, 0.953125, false);
     	        
