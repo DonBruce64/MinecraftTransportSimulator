@@ -71,7 +71,7 @@ public class ClientEventHandler{
 				event.setCanceled(true);
 			}else if(event.type.equals(RenderGameOverlayEvent.ElementType.CHAT)){
 				EntitySeat seat = ((EntitySeat) minecraft.thePlayer.ridingEntity);
-				if(seat.parent != null && seat.driver && minecraft.gameSettings.thirdPersonView==0){
+				if(seat.parent != null && seat.driver && (minecraft.gameSettings.thirdPersonView==0 || RenderHelper.hudMode == 1)){
 					seat.parent.drawHUD(event.resolution.getScaledWidth(), event.resolution.getScaledHeight());
 				}
 			}
