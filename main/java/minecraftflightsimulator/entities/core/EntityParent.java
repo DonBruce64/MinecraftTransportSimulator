@@ -632,7 +632,14 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 					if(child != null){
 						if(child.propertyCode != stack.getItemDamage() || (!((child instanceof EntityWheel || child instanceof EntitySkid) ^ stack.getItem().equals(MFS.proxy.pontoon)) && i <= 5)){
 							removeChild(child.UUID);
-						}else{
+						}else if(child instanceof EntityEngine && i>=6 && i<=9){
+							if(stack.hasTagCompound()){
+								if(stack.getTagCompound().getDouble("hours") == ((EntityEngine) child).hours){
+									continue;
+								}
+							}
+							removeChild(child.UUID);
+						}else{	
 							continue;
 						}
 					}
