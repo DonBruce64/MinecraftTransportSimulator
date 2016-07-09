@@ -5,9 +5,10 @@ import minecraftflightsimulator.entities.parts.EntityEngineLarge;
 import minecraftflightsimulator.models.ModelEngineLarge;
 import minecraftflightsimulator.models.ModelEngineSmall;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.particle.EntityFlameFX;
+import net.minecraft.client.particle.EntitySmokeFX;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -48,9 +49,17 @@ public class RenderEngine extends Render{
 				modelSmall.render();
 			}
 			GL11.glPopMatrix();
-	        if(engine.engineRPM > 1000 && engine.fueled){
-	        	engine.worldObj.spawnParticle("smoke", engine.posX+0.5*MathHelper.sin(engine.parent.rotationYaw * 0.017453292F), engine.posY-MathHelper.sin(engine.parent.rotationPitch * 0.017453292F), engine.posZ-0.5*MathHelper.cos(engine.parent.rotationYaw * 0.017453292F), 0.25*MathHelper.sin(engine.parent.rotationYaw * 0.017453292F), -0.25, -0.25*MathHelper.cos(engine.parent.rotationYaw * 0.017453292F));
-	        }
+			if(engine.engineTemp > 93.3333){
+				if(Minecraft.getMinecraft().effectRenderer != null){
+					Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySmokeFX(engine.worldObj, engine.posX, engine.posY, engine.posZ, 0, 0.5, 0));
+					if(engine.engineTemp > 107.222){
+						Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySmokeFX(engine.worldObj, engine.posX, engine.posY, engine.posZ, 0, 0.5, 0, 2.5F));
+					}
+					if(engine.engineTemp > 121.111){
+						Minecraft.getMinecraft().effectRenderer.addEffect(new EntityFlameFX(engine.worldObj, engine.posX, engine.posY, engine.posZ, 0, 0.5, 0));
+					}
+				}
+			}
 		}
 	}
 
