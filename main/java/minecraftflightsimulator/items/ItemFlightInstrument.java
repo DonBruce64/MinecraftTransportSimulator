@@ -29,7 +29,7 @@ public class ItemFlightInstrument extends Item{
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List itemList){
 		for(int i=0; i<15; ++i){
-			if(i==8 || i==9 || i==13 || i==14){continue;}
+			if(i==8 || i==9 || i==14){continue;}
 			itemList.add(new ItemStack(item, 1, i));
 		}
     }

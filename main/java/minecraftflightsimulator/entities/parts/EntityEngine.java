@@ -12,6 +12,8 @@ public abstract class EntityEngine extends EntityChild{
 	public boolean fueled;
 	public int internalFuel;
 	public double engineRPM;
+	public double engineTemp = 20;
+	public double hours;
 	
 	//unique to each class of engine
 	protected byte starterIncrement;
@@ -43,16 +45,27 @@ public abstract class EntityEngine extends EntityChild{
 	public void onUpdate(){
 		super.onUpdate();
 		if(!linked){return;}
-		//TODO make engine drownable
+		engineTemp -= (engineTemp - (20*(1 - posY/400)))*(0.25 + parent.velocity/2F)/100F/2F;
 		if(engineOn){
+			engineTemp += engineRPM/5000F/2F;
+			hours += 0.001;
+			if(engineRPM > 500 && engineTemp < 30){//Not warmed up
+				hours += 0.001*(engineRPM/500 - 1);
+			}
+			if(engineRPM > maxEngineRPM - (maxEngineRPM - 2500)/2){//Too fast
+				hours += 0.001*(engineRPM - (maxEngineRPM - (maxEngineRPM - 2500)/2))/10F;
+			}
+			if(engineTemp > 93.3333){//Too hot, 200 by gauge standard
+				hours += 0.001*(engineTemp - 93.3333);
+			}
 			parent.fuel -= this.fuelConsumption*MFS.fuelUsageFactor*engineRPM/maxEngineRPM;
-			if(parent.fuel <= 0 || engineRPM < 300){
+			if(parent.fuel <= 0 || engineRPM < 300 || isLiquidAt(posX, posY, posZ)){
 				stopEngine(false);
 			}else{
 				fueled = true;
 			}
 		}else{
-			if(engineRPM > 500 && parent.fuel > 0 && parent.throttle > 5 && engineEngaged){
+			if(engineRPM > 500 && parent.fuel > 0 && parent.throttle > 5 && engineEngaged && !isLiquidAt(posX, posY + 0.25, posZ)){
 				MFS.proxy.playSound(this, "mfs:" + engineStartingSoundName, 1, 1);
 				engineOn=true;
 			}
@@ -71,12 +84,12 @@ public abstract class EntityEngine extends EntityChild{
 				
 		if(fueled){
 			if(propeller != null){
-				engineRPM += (parent.throttle/100F*maxEngineRPM-engineRPM)/10 + (parent.velocity - 0.0254*propeller.pitch * engineRPM/60/20 - this.getPropellerForcePenalty())*15;
+				engineRPM += (parent.throttle/100F*Math.max(maxEngineRPM - hours, maxEngineRPM - 500) - engineRPM)/10 + (parent.velocity - 0.0254*propeller.pitch * engineRPM/60/20 - this.getPropellerForcePenalty())*15;
 				if(propeller.diameter > 80 && engineRPM < 300 && parent.throttle >= 15){
 					engineRPM = 300;
 				}
 			}else{
-				engineRPM += (parent.throttle/100F*maxEngineRPM-engineRPM)/10;
+				engineRPM += (parent.throttle/100F*(maxEngineRPM) - engineRPM)/10;
 			}
 		}else{
 			if(internalFuel > 0){
@@ -133,6 +146,10 @@ public abstract class EntityEngine extends EntityChild{
 		}
 	}
 	
+	public double[] getEngineProperties(){
+		return new double[] {this.engineTemp, this.engineRPM, this.maxEngineRPM};
+	}
+	
 	protected abstract double getPropellerForcePenalty();
 	
 	@Override
@@ -142,6 +159,7 @@ public abstract class EntityEngine extends EntityChild{
 		this.maxEngineRPM=tagCompound.getInteger("maxEngineRPM");
 		this.fuelConsumption=tagCompound.getFloat("fuelConsumption");
 		this.engineRPM=tagCompound.getDouble("engineRPM");
+		this.hours=tagCompound.getDouble("hours");
 	}
 	
 	@Override
@@ -151,5 +169,6 @@ public abstract class EntityEngine extends EntityChild{
 		tagCompound.setInteger("maxEngineRPM", this.maxEngineRPM);
 		tagCompound.setFloat("fuelConsumption", this.fuelConsumption);
 		tagCompound.setDouble("engineRPM", this.engineRPM);
+		tagCompound.setDouble("hours", this.hours);
 	}
 }

@@ -23,6 +23,7 @@ import minecraftflightsimulator.entities.parts.EntityWheelLarge;
 import minecraftflightsimulator.entities.parts.EntityWheelSmall;
 import minecraftflightsimulator.helpers.MFSVector;
 import minecraftflightsimulator.helpers.RotationHelper;
+import minecraftflightsimulator.items.ItemEngine;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -452,12 +453,12 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		return 0;
 	}
 	
-	public List<Double> getEngineSpeeds(){
-		List<Double> speeds = new ArrayList<Double>();
+	public List<double[]> getEngineProperties(){
+		List<double[]> properties = new ArrayList<double[]>();
 		for(EntityEngine engine : getEngines()){
-			speeds.add(engine.engineRPM);
+			properties.add(engine.getEngineProperties());
 		}
-		return speeds;
+		return properties;
 	}
 	
 	public static float calculateInventoryWeight(IInventory inventory){
@@ -553,9 +554,9 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 					}else if(child instanceof EntitySkid){
 						setInventorySlotContents(i, new ItemStack(MFS.proxy.skid));
 					}else if(child instanceof EntityEngineSmall){
-						setInventorySlotContents(i, new ItemStack(MFS.proxy.engineSmall, 1, child.propertyCode));
+						setInventorySlotContents(i, ItemEngine.createStack(MFS.proxy.engineSmall, child.propertyCode, ((EntityEngine) child).hours));
 					}else if(child instanceof EntityEngineLarge){
-						setInventorySlotContents(i, new ItemStack(MFS.proxy.engineLarge, 1, child.propertyCode));
+						setInventorySlotContents(i, ItemEngine.createStack(MFS.proxy.engineLarge, child.propertyCode, ((EntityEngine) child).hours));
 					}else if(child instanceof EntityPropeller){
 						setInventorySlotContents(i, new ItemStack(MFS.proxy.propeller, 1, child.propertyCode));
 					}else{
@@ -649,9 +650,17 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 					}else if(stack.getItem().equals(MFS.proxy.skid)){
 						newChild = new EntitySkid(worldObj, this, this.UUID, position[0], position[1], position[2]);
 					}else if(stack.getItem().equals(MFS.proxy.engineSmall)){
-						newChild = new EntityEngineSmall(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
+						EntityEngine engine = new EntityEngineSmall(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
+						if(stack.hasTagCompound()){
+							engine.hours = stack.getTagCompound().getDouble("hours");
+						}
+						newChild = engine;
 					}else if(stack.getItem().equals(MFS.proxy.engineLarge)){
-						newChild = new EntityEngineLarge(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
+						EntityEngine engine = new EntityEngineLarge(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
+						if(stack.hasTagCompound()){
+							engine.hours = stack.getTagCompound().getDouble("hours");
+						}
+						newChild = engine;
 					}else if(stack.getItem().equals(MFS.proxy.propeller)){
 						newChild = new EntityPropeller(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
 					}else{

@@ -11,8 +11,23 @@ import org.lwjgl.opengl.GL11;
 
 public class InstrumentHelper{
 	private static final ResourceLocation instrumentTexture = new ResourceLocation("mfs", "textures/instruments.png");
+	private static byte numberEngines;
+	private static double[] engineTemps = new double[4];
+	private static double[] engineRPMs = new double[4];
+	private static int maxEngineRPMs;
 	
-	public static void drawBasicHUD(EntityParent parent, int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
+	public static void updateEngineProperties(EntityParent parent){
+		numberEngines = 0;
+		maxEngineRPMs = 2500;
+		for(double[] property : parent.getEngineProperties()){
+			engineTemps[numberEngines] = property[0];
+			engineRPMs[numberEngines] = property[1];
+			maxEngineRPMs = (int) Math.max(maxEngineRPMs, property[2] - (property[2] - 2500)/2);
+			++numberEngines;
+        }
+	}
+	
+	public static void drawBasicHUD(EntityParent parent, int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){		
 		if(RenderHelper.hudMode == 3){
 			drawLowerConsole(width, height, backplateTexture, moldingTexture);
 			for(int i=5; i<parent.instrumentList.size(); ++i){
@@ -82,7 +97,7 @@ public class InstrumentHelper{
 		}else if(type == 12){
 			drawFuelFlowGauge(parent, x, y, hud);
 		}else if(type == 13){
-			//drawEngineTempGauge()
+			drawEngineTempGauge(parent, x, y, hud);
 		}else if(type == 14){
 			//drawOilPressureGauge()
 		}else if(type == 15){
@@ -120,7 +135,7 @@ public class InstrumentHelper{
     	RenderHelper.renderQuadUV(0, 0, width, width, height-64, height, height, height-64, 0, 0, 0, 0, 0, 6, 0, 1, false);
     }
     
-	private static void drawThrottle(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawThrottle(EntityParent parent, int centerX, int centerY, boolean hud){		
     	RenderHelper.bindTexture(instrumentTexture);
 		if(!hud){
 			GL11.glPushMatrix();
@@ -237,7 +252,6 @@ public class InstrumentHelper{
 		if(!hud){GL11.glDisable(GL11.GL_LIGHTING);}
 		RenderHelper.bindTexture(instrumentTexture);
 		
-		//0.00390625 is 1 degree of pitch
 		rotationHelper(centerX, centerY, -parent.rotationRoll);
 		if(parent.rotationPitch >= 24){
 			RenderHelper.renderQuadUV(centerX-20, centerX+20, centerX+20, centerX-20, centerY+20, centerY+20, centerY-20, centerY-20, 0, 0, 0, 0, 0.25, 0.5625, 0.53125, 0.84375, false);
@@ -565,15 +579,14 @@ public class InstrumentHelper{
     		GL11.glDisable(GL11.GL_LIGHTING);
     		GL11.glTranslatef(0, 0, -0.1F);
     	}
-    	
     	drawScaledString("RPM", centerX*2-10, centerY*2+14, 0.5F);
-    	drawDialColoring(centerX, centerY, 135, 165, 25, 4, new float[] {1, 0, 0});
+    	drawDialColoring(centerX, centerY, -135+maxEngineRPMs/10, 165, 25, 4, new float[] {1, 0, 0});
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-        drawDialIncrements(centerX, centerY, -135, 165, 25, 5, 56);
-        drawDialIncrements(centerX, centerY, -135, 165, 25, 9, 12);
-        drawDialNumbers(centerX, centerY, -135, 135, 13, 0, 5, 5, 0.6F);
-        for(double speed : parent.getEngineSpeeds()){
-        	drawLongPointer(centerX, centerY, (float) (-135+speed/10), 30, 3);
+		drawDialIncrements(centerX, centerY, -135, 165, 25, 5, 61);
+		drawDialIncrements(centerX, centerY, -135, 165, 25, 9, 13);
+        drawDialNumbers(centerX, centerY, -135, 165, 13, 0, 5, 6, 0.6F);
+        for(byte i=0; i<numberEngines; ++i){
+        	drawLongPointer(centerX, centerY, (float) (-135+engineRPMs[i]/10), 30, 3);
         	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
         }
         if(!hud){
@@ -632,6 +645,35 @@ public class InstrumentHelper{
         	GL11.glPopMatrix();
         }
     }
+	
+	private static void drawEngineTempGauge(EntityParent parent, int centerX, int centerY, boolean hud){
+		drawGaugeBase(centerX, centerY);
+    	if(!hud){
+			GL11.glPushMatrix();
+    		GL11.glDisable(GL11.GL_LIGHTING);
+    		GL11.glTranslatef(0, 0, -0.1F);
+    	}
+    	
+    	drawScaledString("TEMP", centerX*2-12, centerY*2+14, 0.5F);
+    	drawDialColoring(centerX, centerY, -110.7F, -86.4F, 25, 3, new float[] {1, 1, 0});
+    	drawDialColoring(centerX, centerY, -86.4F, 67.5F, 25, 3, new float[] {0, 1, 0});
+    	
+    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	drawDialIncrements(centerX, centerY, -135, 135, 25, 6, 5);
+    	drawDialIncrements(centerX, centerY, -135, 135, 25, 3, 21);
+    	drawDialColoring(centerX, centerY, 67.0F, 71.0F, 25, 6, new float[] {1, 0, 0});
+    	drawDialNumbers(centerX, centerY, -135, 135, 16, 50, 50, 4, 0.5F);
+        
+    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	for(byte i=0; i<numberEngines; ++i){
+    		drawLongPointer(centerX, centerY, (float) (-135 + ((engineTemps[i]*9F/5F + 32) - 50)*1.35), 30, 3);
+        	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	}
+        if(!hud){
+        	GL11.glEnable(GL11.GL_LIGHTING);
+        	GL11.glPopMatrix();
+        }
+	}
     
     /**
      * Draws a series of white lines in a polar array.  Used for gauge markers.

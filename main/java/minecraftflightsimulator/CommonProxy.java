@@ -18,8 +18,8 @@ import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.entities.parts.EntitySkid;
 import minecraftflightsimulator.entities.parts.EntityWheelLarge;
 import minecraftflightsimulator.entities.parts.EntityWheelSmall;
-import minecraftflightsimulator.items.ItemEngineLarge;
-import minecraftflightsimulator.items.ItemEngineSmall;
+import minecraftflightsimulator.items.ItemEngine;
+import minecraftflightsimulator.items.ItemEngine.EngineType;
 import minecraftflightsimulator.items.ItemFlightInstrument;
 import minecraftflightsimulator.items.ItemPlane;
 import minecraftflightsimulator.items.ItemPropeller;
@@ -66,8 +66,8 @@ public class CommonProxy{
 	
 	public static final Item seat = new ItemSeat();
 	public static final Item propeller = new ItemPropeller();
-	public static final Item engineSmall = new ItemEngineSmall();
-	public static final Item engineLarge = new ItemEngineLarge();
+	public static final Item engineSmall = new ItemEngine(EngineType.SMALL);
+	public static final Item engineLarge = new ItemEngine(EngineType.LARGE);
 	public static final Item flightInstrument = new ItemFlightInstrument();
 	
 	public static final Item flightInstrumentBase = new Item();
@@ -98,7 +98,7 @@ public class CommonProxy{
 	private void initEntites(){
 		registerEntity(EntityMC172.class);
 		registerEntity(EntityPZLP11.class);
-		registerEntity(EntityTrimotor.class);
+		//registerEntity(EntityTrimotor.class);
 		//registerEntity(EntityOtter.class);
 		
 		registerEntity(EntityCore.class);
@@ -158,8 +158,7 @@ public class CommonProxy{
 			if(feild.getType().equals(Item.class)){
 				try{
 					Item item = (Item) feild.get(Item.class);
-					//if(!item.equals(planeOtter) && !item.equals(planeTrimotor)){
-					if(!item.equals(planeOtter)){
+					if(!item.equals(planeOtter) && !item.equals(planeTrimotor)){
 						if(item.getUnlocalizedName().equals("item.null")){
 							item.setUnlocalizedName(feild.getName().substring(0, 1).toUpperCase() + feild.getName().substring(1));
 						}
@@ -345,8 +344,11 @@ public class CommonProxy{
 				"WLW",
 				" B ",
 				'B', flightInstrumentBase, 'L', pointerLong, 'W', new ItemStack(Items.dye, 1, 15));
-		
-		//Instrument 13 does not exist
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 13),
+				"YGR",
+				" L ",
+				" B ",
+				'B', flightInstrumentBase, 'L', pointerLong, 'Y', new ItemStack(Items.dye, 1, 11), 'G', new ItemStack(Items.dye, 1, 10), 'R', new ItemStack(Items.dye, 1, 1), 'W', new ItemStack(Items.dye, 1, 15));
 		//Instrument 14 does not exist
 	}
 	

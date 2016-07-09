@@ -1,6 +1,7 @@
 package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.entities.core.EntityPlane;
+import minecraftflightsimulator.helpers.InstrumentHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
@@ -23,6 +24,7 @@ public abstract class RenderPlane extends Render{
 	@Override
 	public void doRender(Entity entity, double x, double y, double z, float yaw, float pitch){
 		EntityPlane plane=(EntityPlane) entity;
+		InstrumentHelper.updateEngineProperties(plane);
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glRotatef(-plane.rotationYaw, 0, 1, 0);
