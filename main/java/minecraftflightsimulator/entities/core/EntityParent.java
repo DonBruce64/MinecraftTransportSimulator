@@ -612,6 +612,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 			EntityChild newChild;
 			float boostAmount = 0;
 			
+			//TODO make it so engine changes don't mess up engine.
 			//First, spawn components
 			for(int i=1; i<pilotSeatSlot; ++i){
 				float[] position = partPositions.get(i);
