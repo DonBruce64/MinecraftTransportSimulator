@@ -13,10 +13,10 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class ItemEngine extends Item{
 	private final byte type; 
 	
-	public ItemEngine(EngineType type){
+	public ItemEngine(EngineTypes type){
 		this.hasSubtypes=true;
 		this.setMaxStackSize(1);
-		this.type = type.getTypeID();
+		this.type = (byte) type.ordinal();
 	}
 	
 	public static ItemStack createStack(Item engine, int propertyCode, double hours){
@@ -44,28 +44,19 @@ public class ItemEngine extends Item{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List itemList){
-		for(EngineType type : EngineType.values()){
-			if(type.getTypeID() == ((ItemEngine) item).type){
-				for(int subtype : type.getSubtypes()){
-					itemList.add(new ItemStack(item, 1, subtype));
-				}
-				return;
-			}
+		for(int subtype : EngineTypes.values()[((ItemEngine) item).type].getSubtypes()){
+			itemList.add(new ItemStack(item, 1, subtype));
 		}
+		return;
     }
 	
-	public enum EngineType{
-		SMALL((byte) 0, (short) 2805, (short) 3007), 
-		LARGE((byte) 1, (short) 2907, (short) 3210);
+	public enum EngineTypes{
+		SMALL((short) 2805, (short) 3007), 
+		LARGE((short) 2907, (short) 3210);
 		
-		private byte type;
 		private short[] subtypes;
-		private EngineType(byte type, short... subtypes){
-			this.type = type;
+		private EngineTypes(short... subtypes){
 			this.subtypes = subtypes;
-		}
-		public byte getTypeID(){
-			return this.type;
 		}
 		
 		public short[] getSubtypes(){

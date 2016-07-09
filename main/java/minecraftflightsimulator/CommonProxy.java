@@ -19,7 +19,7 @@ import minecraftflightsimulator.entities.parts.EntitySkid;
 import minecraftflightsimulator.entities.parts.EntityWheelLarge;
 import minecraftflightsimulator.entities.parts.EntityWheelSmall;
 import minecraftflightsimulator.items.ItemEngine;
-import minecraftflightsimulator.items.ItemEngine.EngineType;
+import minecraftflightsimulator.items.ItemEngine.EngineTypes;
 import minecraftflightsimulator.items.ItemFlightInstrument;
 import minecraftflightsimulator.items.ItemPlane;
 import minecraftflightsimulator.items.ItemPropeller;
@@ -66,8 +66,8 @@ public class CommonProxy{
 	
 	public static final Item seat = new ItemSeat();
 	public static final Item propeller = new ItemPropeller();
-	public static final Item engineSmall = new ItemEngine(EngineType.SMALL);
-	public static final Item engineLarge = new ItemEngine(EngineType.LARGE);
+	public static final Item engineSmall = new ItemEngine(EngineTypes.SMALL);
+	public static final Item engineLarge = new ItemEngine(EngineTypes.LARGE);
 	public static final Item flightInstrument = new ItemFlightInstrument();
 	
 	public static final Item flightInstrumentBase = new Item();
