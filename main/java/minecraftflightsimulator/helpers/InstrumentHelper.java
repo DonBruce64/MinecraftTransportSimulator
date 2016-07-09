@@ -544,7 +544,8 @@ public class InstrumentHelper{
             GL11.glEnd();
         }
     	
-        float angle = (float) Math.max(Math.min(parent instanceof EntityPlane ? 15 + parent.trackAngle - 25 : -25, 35), -35);
+
+        float angle = (float) Math.max(Math.min(parent.trackAngle*3 + 20, 35), -35);
         rotationHelper(centerX, centerY + 20, angle);    	
     	GL11.glColor3f(0, 0, 0);
     	GL11.glBegin(GL11.GL_QUADS);
@@ -661,6 +662,8 @@ public class InstrumentHelper{
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
     	drawDialIncrements(centerX, centerY, -135, 135, 25, 6, 5);
     	drawDialIncrements(centerX, centerY, -135, 135, 25, 3, 21);
+    	
+    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
     	drawDialColoring(centerX, centerY, 67.0F, 71.0F, 25, 6, new float[] {1, 0, 0});
     	drawDialNumbers(centerX, centerY, -135, 135, 16, 50, 50, 4, 0.5F);
         
