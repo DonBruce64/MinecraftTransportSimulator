@@ -1,3 +1,5 @@
+#Translated by don_bruce
+
 death.attack.propellor=%1$s was shredded by a propellor.
 death.attack.propellor.player=%1$s was was shredded by a propellor while fighting %2$s
 entity.mfs.Chest.name=Plane Chest
@@ -47,7 +49,7 @@ item.FlightInstrument11.description=Indicates fuel.
 item.FlightInstrument12.name=Fuel Flow Gauge
 item.FlightInstrument12.description=Indicates fuel consumption rate.
 item.FlightInstrument13.name=Engine Temperature Gauge
-item.FlightInstrument13.description=Indicates engine temperature (NO USE).
+item.FlightInstrument13.description=Indicates engine temperature.
 item.FlightInstrument14.name=Oil Pressure Gauge
 item.FlightInstrument14.description=Indicates oil pressure (NO USE).
 

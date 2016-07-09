@@ -1,3 +1,5 @@
+#Translated by sotakan0808
+
 ﻿death.attack.propellor=%1$s がプロペラに当たって千切りになった！.
 death.attack.propellor.player=%1$s が戦いながらプロペラに粉砕されていった！ %2$s
 entity.mfs.Chest.name=機体 Chest
@@ -47,7 +49,7 @@ item.FlightInstrument11.description=燃料量を表示する
 item.FlightInstrument12.name=燃料流量計
 item.FlightInstrument12.description=燃料の使用率が表示される
 item.FlightInstrument13.name=温度計
-item.FlightInstrument13.description=エンジンの温度が表示される (NO USE).
+item.FlightInstrument13.description=エンジンの温度が表示される
 item.FlightInstrument14.name=油圧計
 item.FlightInstrument14.description=油圧を表示する (NO USE).
 
