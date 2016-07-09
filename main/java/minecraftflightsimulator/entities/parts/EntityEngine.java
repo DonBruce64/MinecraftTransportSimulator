@@ -45,6 +45,24 @@ public abstract class EntityEngine extends EntityChild{
 	public void onUpdate(){
 		super.onUpdate();
 		if(!linked){return;}
+		
+		if(isBurning()){
+			hours += 0.1;
+			if(isLiquidAt(posX, posY + 0.25, posZ)){
+				engineTemp -= 0.3;
+			}else{
+				engineTemp += 0.3;
+			}
+			if(engineTemp > 150){
+				worldObj.newExplosion(this, posX, posY, posZ, 1F, true, true);
+				this.parent.removeChild(this.UUID);
+				if(this.propeller != null){
+					this.parent.removeChild(propeller.UUID);
+				}
+				return;
+			}
+		}
+		
 		engineTemp -= (engineTemp - (20*(1 - posY/400)))*(0.25 + parent.velocity/2F)/100F/2F;
 		if(engineOn){
 			engineTemp += engineRPM/5000F/2F;
@@ -54,10 +72,15 @@ public abstract class EntityEngine extends EntityChild{
 			}
 			if(engineRPM > maxEngineRPM - (maxEngineRPM - 2500)/2){//Too fast
 				hours += 0.001*(engineRPM - (maxEngineRPM - (maxEngineRPM - 2500)/2))/10F;
+				engineTemp += (engineRPM - (maxEngineRPM - (maxEngineRPM - 2500)/2))/1000;
 			}
 			if(engineTemp > 93.3333){//Too hot, 200 by gauge standard
 				hours += 0.001*(engineTemp - 93.3333);
+				if(engineTemp > 130){
+					setFire(10);
+				}
 			}
+
 			parent.fuel -= this.fuelConsumption*MFS.fuelUsageFactor*engineRPM/maxEngineRPM;
 			if(parent.fuel <= 0 || engineRPM < 300 || isLiquidAt(posX, posY, posZ)){
 				stopEngine(false);
