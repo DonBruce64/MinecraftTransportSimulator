@@ -361,5 +361,5 @@ public class CommonProxy{
 	
 	public void playSound(Entity noisyEntity, String soundName, float volume, float pitch){}
 	public void updateSeatedRider(EntitySeat seat, EntityLivingBase rider){}
-	public EngineSound updateEngineSound(EngineSound sound, EntityEngine engine){return null;}
+	public EngineSound updateEngineSoundAndSmoke(EngineSound sound, EntityEngine engine){return null;}
 }

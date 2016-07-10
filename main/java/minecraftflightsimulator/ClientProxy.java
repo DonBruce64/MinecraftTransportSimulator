@@ -35,6 +35,8 @@ import minecraftflightsimulator.sounds.EngineSound;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
+import net.minecraft.client.particle.EntityFlameFX;
+import net.minecraft.client.particle.EntitySmokeFX;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ResourceLocation;
@@ -127,7 +129,7 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	@Override
-	public EngineSound updateEngineSound(EngineSound sound, EntityEngine engine){
+	public EngineSound updateEngineSoundAndSmoke(EngineSound sound, EntityEngine engine){
 		if(engine.worldObj.isRemote){
 			if(sound == null){
 				sound = engine.getEngineSound();
@@ -137,6 +139,18 @@ public class ClientProxy extends CommonProxy{
 					if(engine.fueled || engine.internalFuel > 0){
 						sound = engine.getEngineSound();
 						handler.playSound(sound);
+					}
+				}
+			}
+			
+			if(engine.engineTemp > 93.3333){
+				if(Minecraft.getMinecraft().effectRenderer != null){
+					Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySmokeFX(engine.worldObj, engine.posX, engine.posY, engine.posZ, 0, 0.15, 0));
+					if(engine.engineTemp > 107.222){
+						Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySmokeFX(engine.worldObj, engine.posX, engine.posY, engine.posZ, 0, 0.15, 0, 2.5F));
+					}
+					if(engine.engineTemp > 121.111){
+						Minecraft.getMinecraft().effectRenderer.addEffect(new EntityFlameFX(engine.worldObj, engine.posX, engine.posY, engine.posZ, 0, 0.15, 0));
 					}
 				}
 			}

@@ -5,8 +5,6 @@ import minecraftflightsimulator.entities.parts.EntityEngineLarge;
 import minecraftflightsimulator.models.ModelEngineLarge;
 import minecraftflightsimulator.models.ModelEngineSmall;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.EntityFlameFX;
-import net.minecraft.client.particle.EntitySmokeFX;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
@@ -49,17 +47,6 @@ public class RenderEngine extends Render{
 				modelSmall.render();
 			}
 			GL11.glPopMatrix();
-			if(engine.engineTemp > 93.3333){
-				if(Minecraft.getMinecraft().effectRenderer != null){
-					Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySmokeFX(engine.worldObj, engine.posX, engine.posY, engine.posZ, 0, 0.5, 0));
-					if(engine.engineTemp > 107.222){
-						Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySmokeFX(engine.worldObj, engine.posX, engine.posY, engine.posZ, 0, 0.5, 0, 2.5F));
-					}
-					if(engine.engineTemp > 121.111){
-						Minecraft.getMinecraft().effectRenderer.addEffect(new EntityFlameFX(engine.worldObj, engine.posX, engine.posY, engine.posZ, 0, 0.5, 0));
-					}
-				}
-			}
 		}
 	}
 
