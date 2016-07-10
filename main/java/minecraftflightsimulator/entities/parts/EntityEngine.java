@@ -130,7 +130,7 @@ public abstract class EntityEngine extends EntityChild{
 		if(propeller != null){
 			propeller.engineRPM = this.engineRPM;
 		}
-		engineSound = MFS.proxy.updateEngineSound(engineSound, this);
+		engineSound = MFS.proxy.updateEngineSoundAndSmoke(engineSound, this);
 	}
 	
 	@Override
@@ -139,7 +139,7 @@ public abstract class EntityEngine extends EntityChild{
 		engineOn=false;
 		fueled=false;
 		internalFuel=0;
-		engineSound = MFS.proxy.updateEngineSound(engineSound, this);
+		engineSound = MFS.proxy.updateEngineSoundAndSmoke(engineSound, this);
 	}
 	
 	public void stopEngine(boolean switchedOff){
@@ -181,6 +181,7 @@ public abstract class EntityEngine extends EntityChild{
 		this.maxEngineRPM=tagCompound.getInteger("maxEngineRPM");
 		this.fuelConsumption=tagCompound.getFloat("fuelConsumption");
 		this.engineRPM=tagCompound.getDouble("engineRPM");
+		this.engineTemp=tagCompound.getDouble("engineTemp");
 		this.hours=tagCompound.getDouble("hours");
 	}
 	
@@ -191,6 +192,7 @@ public abstract class EntityEngine extends EntityChild{
 		tagCompound.setInteger("maxEngineRPM", this.maxEngineRPM);
 		tagCompound.setFloat("fuelConsumption", this.fuelConsumption);
 		tagCompound.setDouble("engineRPM", this.engineRPM);
+		tagCompound.setDouble("engineTemp", this.engineTemp);
 		tagCompound.setDouble("hours", this.hours);
 	}
 }
