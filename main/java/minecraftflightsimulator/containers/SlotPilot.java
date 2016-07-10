@@ -1,16 +1,16 @@
 package minecraftflightsimulator.containers;
 
+import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.items.ItemSeat;
-import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-public class SlotPilot extends Slot{
+public class SlotPilot extends SlotItem{
 	private EntityParent parent;
 
 	public SlotPilot(EntityParent parent, int xDisplayPosition, int yDisplayPosition) {
-		super(parent, parent.pilotSeatSlot, xDisplayPosition, yDisplayPosition);
-		this.parent=parent;
+		super(parent, xDisplayPosition, yDisplayPosition, parent.pilotSeatSlot, MFS.proxy.seat);
+		this.parent = parent;
 	}
 	
     public boolean isItemValid(ItemStack item){

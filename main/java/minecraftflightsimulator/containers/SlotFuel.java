@@ -2,17 +2,16 @@ package minecraftflightsimulator.containers;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityParent;
-import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
 
-public class SlotFuel extends Slot{
+public class SlotFuel extends SlotItem{
 	private EntityParent parent;
 	
 	public SlotFuel(EntityParent parent, int xDisplayPosition, int yDisplayPosition){
-		super(parent, parent.fuelBucketSlot, xDisplayPosition, yDisplayPosition);
+		super(parent, xDisplayPosition, yDisplayPosition, parent.fuelBucketSlot);
 		this.parent = parent;
 	}
 	
