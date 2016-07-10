@@ -84,6 +84,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	 * Slot 42 is for fuel buckets, which drop out of the inventory if left in slot during closing.
 	 */
 	private ItemStack[] compenentItems = new ItemStack[fuelBucketSlot+1];
+	private boolean[] itemChanged = new boolean[fuelBucketSlot+1];
 	
 	/**
 	 * Array containing locations of all child positions with respect to slots.
@@ -508,13 +509,17 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	public ItemStack getStackInSlot(int slot){return compenentItems[slot];}
 	public ItemStack getStackInSlotOnClosing(int slot){return null;}
 	
-	@Override
 	public void setInventorySlotContents(int slot, ItemStack stack){
+		if(!worldObj.isRemote){
+			itemChanged[slot] = true;
+		}
 		compenentItems[slot] = stack;
 	}
 	
-	@Override
     public ItemStack decrStackSize(int slot, int number){
+    	if(!worldObj.isRemote){
+			itemChanged[slot] = true;
+		}
         if(compenentItems[slot] != null){
             ItemStack itemstack;
             if(compenentItems[slot].stackSize <= number){
@@ -538,12 +543,16 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		setInventorySlotContents(index, null);
 		return removedStack;
 	}
+    
 	
+	/**
+	 * Loads inventory upon opening.  Needs to run each opening to account for broken parts.
+	 */
 	public void loadInventory(){
 		if(!worldObj.isRemote){
 			//First, match part positions to slots.
 			for(int i=1; i<pilotSeatSlot; ++i){
-				EntityChild child = getChildAtLocation(partPositions.get(i));				
+				EntityChild child = getChildAtLocation(partPositions.get(i));
 				if(child != null){
 					if(child instanceof EntityWheelSmall){
 						setInventorySlotContents(i, new ItemStack(MFS.proxy.wheelSmall));
@@ -600,134 +609,137 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 				}
 			}
 			
-			//Finally, do instrument and bucket things
+			//Finally, do instrument and bucket things.  Also clear changes.
 			for(int i=0; i<10; ++i){
-				setInventorySlotContents(i+instrumentStartSlot, instrumentList.get(i));
+				setInventorySlotContents(i+instrumentStartSlot,  instrumentList.get(i));
 			}
+			itemChanged = new boolean[fuelBucketSlot+1];
 		}
 	}
 
+	/**
+	 * Saves inventory after closing.
+	 * New items are found by checking to see if itemChanged is true for that slot.
+	 */
     public void saveInventory(){
 		if(!worldObj.isRemote){
 			EntityChild newChild;
 			float boostAmount = 0;
 			
-			//TODO make it so engine changes don't mess up engine.
 			//First, spawn components
 			for(int i=1; i<pilotSeatSlot; ++i){
-				float[] position = partPositions.get(i);
-				EntityChild child = getChildAtLocation(partPositions.get(i));
-				ItemStack stack = getStackInSlot(i);
-				
-				if(stack != null){
-					//Is a propeller not connected to an engine?
-					if(i >= 10 && i <= 13 && getStackInSlot(i-4) == null){
-						worldObj.spawnEntityInWorld(new EntityItem(worldObj, this.posX, this.posY, this.posZ, new ItemStack(MFS.proxy.propeller, 1, stack.getItemDamage())));
-						setInventorySlotContents(i, null);
+				if(itemChanged[i]){
+					float[] position = partPositions.get(i);
+					EntityChild child = getChildAtLocation(partPositions.get(i));
+					ItemStack stack = getStackInSlot(i);
+					if(stack != null){
 						if(child != null){
 							removeChild(child.UUID);
 						}
-						continue;
-					}
-					
-					if(child != null){
-						if(child.propertyCode != stack.getItemDamage() || (!((child instanceof EntityWheel || child instanceof EntitySkid) ^ stack.getItem().equals(MFS.proxy.pontoon)) && i <= 5)){
-							removeChild(child.UUID);
-						}else if(child instanceof EntityEngine && i>=6 && i<=9){
+						if(stack.getItem().equals(MFS.proxy.wheelSmall)){
+							newChild = new EntityWheelSmall(worldObj, this, this.UUID, position[0], position[1], position[2]);
+						}else if(stack.getItem().equals(MFS.proxy.wheelLarge)){
+							newChild = new EntityWheelLarge(worldObj, this, this.UUID, position[0], position[1], position[2]);
+						}else if(stack.getItem().equals(MFS.proxy.pontoon)){
+							newChild = new EntityPontoon(worldObj, this, this.UUID, position[0], position[1] - (position[2] > 0 ? 0 : 0.1F), position[2] + (position[2] > 0 ? 0 : 2));
+							EntityPontoonDummy pontoonDummy = new EntityPontoonDummy(worldObj, this, this.UUID, position[0], position[1] + (position[2] > 0 ? 0.25F : 0), position[2] - (position[2] > 0 ? 2 : 0));
+							pontoonDummy.setOtherHalf((EntityPontoon) newChild);
+							((EntityPontoon) newChild).setOtherHalf(pontoonDummy);
+							addChild(pontoonDummy.UUID, pontoonDummy, true);
+						}else if(stack.getItem().equals(MFS.proxy.skid)){
+							newChild = new EntitySkid(worldObj, this, this.UUID, position[0], position[1], position[2]);
+						}else if(stack.getItem().equals(MFS.proxy.engineSmall)){
+							EntityEngine engine = new EntityEngineSmall(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
 							if(stack.hasTagCompound()){
-								if(stack.getTagCompound().getDouble("hours") == ((EntityEngine) child).hours){
-									continue;
-								}
+								engine.hours = stack.getTagCompound().getDouble("hours");
 							}
-							removeChild(child.UUID);
-						}else{	
+							newChild = engine;
+						}else if(stack.getItem().equals(MFS.proxy.engineLarge)){
+							EntityEngine engine = new EntityEngineLarge(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
+							if(stack.hasTagCompound()){
+								engine.hours = stack.getTagCompound().getDouble("hours");
+							}
+							newChild = engine;
+						}else if(stack.getItem().equals(MFS.proxy.propeller)){
+							newChild = new EntityPropeller(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
+						}else{
 							continue;
 						}
-					}
-					
-					if(stack.getItem().equals(MFS.proxy.wheelSmall)){
-						newChild = new EntityWheelSmall(worldObj, this, this.UUID, position[0], position[1], position[2]);
-					}else if(stack.getItem().equals(MFS.proxy.wheelLarge)){
-						newChild = new EntityWheelLarge(worldObj, this, this.UUID, position[0], position[1], position[2]);
-					}else if(stack.getItem().equals(MFS.proxy.pontoon)){
-						newChild = new EntityPontoon(worldObj, this, this.UUID, position[0], position[1] - (position[2] > 0 ? 0 : 0.1F), position[2] + (position[2] > 0 ? 0 : 2));
-						EntityPontoonDummy pontoonDummy = new EntityPontoonDummy(worldObj, this, this.UUID, position[0], position[1] + (position[2] > 0 ? 0.25F : 0), position[2] - (position[2] > 0 ? 2 : 0));
-						pontoonDummy.setOtherHalf((EntityPontoon) newChild);
-						((EntityPontoon) newChild).setOtherHalf(pontoonDummy);
-						addChild(pontoonDummy.UUID, pontoonDummy, true);
-					}else if(stack.getItem().equals(MFS.proxy.skid)){
-						newChild = new EntitySkid(worldObj, this, this.UUID, position[0], position[1], position[2]);
-					}else if(stack.getItem().equals(MFS.proxy.engineSmall)){
-						EntityEngine engine = new EntityEngineSmall(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
-						if(stack.hasTagCompound()){
-							engine.hours = stack.getTagCompound().getDouble("hours");
-						}
-						newChild = engine;
-					}else if(stack.getItem().equals(MFS.proxy.engineLarge)){
-						EntityEngine engine = new EntityEngineLarge(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
-						if(stack.hasTagCompound()){
-							engine.hours = stack.getTagCompound().getDouble("hours");
-						}
-						newChild = engine;
-					}else if(stack.getItem().equals(MFS.proxy.propeller)){
-						newChild = new EntityPropeller(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
+						addChild(newChild.UUID, newChild, true);
 					}else{
-						continue;
-					}
-					addChild(newChild.UUID, newChild, true);
-				}else{
-					if(child != null){
-						removeChild(child.UUID);
-					}
-				}
-			}
-			
-			//Next, spawn new seats
-			int numberPilotSeats = getStackInSlot(pilotSeatSlot) == null ? 0 : getStackInSlot(pilotSeatSlot).stackSize;
-			for(int i=0; i<pilotPositions.size(); ++i){
-				float[] position = pilotPositions.get(i);
-				EntityChild child = getChildAtLocation(position);
-				
-				if(child != null){
-					if(getStackInSlot(pilotSeatSlot) == null ? true : (i+1 > numberPilotSeats || getStackInSlot(pilotSeatSlot).getItemDamage() != child.propertyCode)){
-						child.setDead();
-						removeChild(child.UUID);
-					}
-				}
-				if(child == null ? true : child.isDead){
-					if(i+1 <= numberPilotSeats){
-						newChild = new EntitySeat(worldObj, this, this.UUID, position[0], position[1], position[2], getStackInSlot(pilotSeatSlot).getItemDamage(), true);
-						addChild(newChild.UUID, newChild, true);
-					}
-				}
-			}
-			
-			int numberPassengerSeats = getStackInSlot(passengerSeatSlot) == null ? 0 : getStackInSlot(passengerSeatSlot).stackSize;
-			boolean chests = getStackInSlot(passengerSeatSlot) == null ? false : (getStackInSlot(passengerSeatSlot).getItem().equals(Item.getItemFromBlock(Blocks.chest)) ? true : false);
-			for(int i=0; i<passengerPositions.size(); ++i){
-				float[] position = passengerPositions.get(i);
-				EntityChild child = getChildAtLocation(position);
-				if(child != null){
-					if(getStackInSlot(passengerSeatSlot) == null ? true : (i+1 > numberPassengerSeats || getStackInSlot(passengerSeatSlot).getItemDamage() != child.propertyCode || !(child instanceof EntitySeat ^ chests))){
-						child.setDead();
-						removeChild(child.UUID);
-					}
-				}
-				if(child == null ? true : child.isDead){
-					if(i+1 <= numberPassengerSeats){
-						if(chests){ 
-							newChild = new EntityPlaneChest(worldObj, this, this.UUID, position[0], position[1], position[2]);
-						}else{
-							newChild = new EntitySeat(worldObj, this, this.UUID, position[0], position[1], position[2], getStackInSlot(passengerSeatSlot).getItemDamage(), false);
+						if(child != null){
+							removeChild(child.UUID);
 						}
-						addChild(newChild.UUID, newChild, true);
+					}
+				}
+			}
+			
+			//Check to see if any propellers lost their engines
+			for(int i=10; i<=13; ++i){
+				if(getStackInSlot(i) != null){
+					if(getStackInSlot(i-4) == null){
+						worldObj.spawnEntityInWorld(new EntityItem(worldObj, this.posX, this.posY, this.posZ, new ItemStack(MFS.proxy.propeller, 1, getStackInSlot(i).getItemDamage())));
+						setInventorySlotContents(i, null);
+						EntityChild child = getChildAtLocation(partPositions.get(i));
+						if(child != null){
+							removeChild(child.UUID);
+						}
+					}
+				}
+			}
+
+			//Next, spawn new seats
+			if(itemChanged[pilotSeatSlot]){
+				int numberPilotSeats = getStackInSlot(pilotSeatSlot) == null ? 0 : getStackInSlot(pilotSeatSlot).stackSize;
+				for(int i=0; i<pilotPositions.size(); ++i){
+					float[] position = pilotPositions.get(i);
+					EntityChild child = getChildAtLocation(position);
+					
+					if(child != null){
+						if(getStackInSlot(pilotSeatSlot) == null ? true : (i+1 > numberPilotSeats || getStackInSlot(pilotSeatSlot).getItemDamage() != child.propertyCode)){
+							child.setDead();
+							removeChild(child.UUID);
+						}
+					}
+					if(child == null ? true : child.isDead){
+						if(i+1 <= numberPilotSeats){
+							newChild = new EntitySeat(worldObj, this, this.UUID, position[0], position[1], position[2], getStackInSlot(pilotSeatSlot).getItemDamage(), true);
+							addChild(newChild.UUID, newChild, true);
+						}
+					}
+				}
+			}
+			
+			if(itemChanged[passengerSeatSlot]){
+				int numberPassengerSeats = getStackInSlot(passengerSeatSlot) == null ? 0 : getStackInSlot(passengerSeatSlot).stackSize;
+				boolean chests = getStackInSlot(passengerSeatSlot) == null ? false : (getStackInSlot(passengerSeatSlot).getItem().equals(Item.getItemFromBlock(Blocks.chest)) ? true : false);
+				for(int i=0; i<passengerPositions.size(); ++i){
+					float[] position = passengerPositions.get(i);
+					EntityChild child = getChildAtLocation(position);
+					if(child != null){
+						if(getStackInSlot(passengerSeatSlot) == null ? true : (i+1 > numberPassengerSeats || getStackInSlot(passengerSeatSlot).getItemDamage() != child.propertyCode || !(child instanceof EntitySeat ^ chests))){
+							child.setDead();
+							removeChild(child.UUID);
+						}
+					}
+					if(child == null ? true : child.isDead){
+						if(i+1 <= numberPassengerSeats){
+							if(chests){ 
+								newChild = new EntityPlaneChest(worldObj, this, this.UUID, position[0], position[1], position[2]);
+							}else{
+								newChild = new EntitySeat(worldObj, this, this.UUID, position[0], position[1], position[2], getStackInSlot(passengerSeatSlot).getItemDamage(), false);
+							}
+							addChild(newChild.UUID, newChild, true);
+						}
 					}
 				}
 			}
 			
 			//Finally, do instrument and bucket things
 			for(int i=0; i<10; ++i){
-				instrumentList.set(i, getStackInSlot(i+instrumentStartSlot));
+				if(itemChanged[i+instrumentStartSlot]){
+					instrumentList.set(i, getStackInSlot(i+instrumentStartSlot));
+				}
 			}
 			
 			if(getStackInSlot(fuelBucketSlot) != null){
