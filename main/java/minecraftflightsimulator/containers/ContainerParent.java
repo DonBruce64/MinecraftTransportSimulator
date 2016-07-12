@@ -42,23 +42,23 @@ public class ContainerParent extends Container{
 	
 	@Override
 	public ItemStack transferStackInSlot(EntityPlayer player, int sourceSlotIndex){
-		ItemStack item = getSlot(sourceSlotIndex).getStack();
-		if(item != null){
+		ItemStack stack = getSlot(sourceSlotIndex).getStack();
+		if(stack != null){
 			for(int i=0; i<inventorySlots.size(); ++i){
 				Slot slot = (Slot) inventorySlots.get(i);
 				if(slot.inventory.equals(parent)){
-					if(slot.isItemValid(item) && item.stackSize != 0){
+					if(slot.isItemValid(stack) && stack.stackSize != 0){
 						if(slot.getHasStack()){
 							if(slot.getStack().stackSize < slot.getSlotStackLimit()){
-								slot.getStack().stackSize += item.splitStack(slot.getSlotStackLimit() - slot.getStack().stackSize).stackSize;
+								slot.getStack().stackSize += stack.splitStack(slot.getSlotStackLimit() - slot.getStack().stackSize).stackSize;
 							}
 						}else{
-							slot.putStack(item.splitStack(slot.getSlotStackLimit()));
+							slot.putStack(stack.splitStack(Math.min(slot.getSlotStackLimit(), stack.stackSize)));
 						}
 					}
 				}
 			}
-			if(item.stackSize == 0){
+			if(stack.stackSize == 0){
 				((Slot) inventorySlots.get(sourceSlotIndex)).putStack(null);
 			}
 		}
