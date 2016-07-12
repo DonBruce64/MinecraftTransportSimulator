@@ -6,7 +6,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 
 public class GUIParent extends GuiContainer{
-	private static final ResourceLocation background = new ResourceLocation("mfs", "textures/gui_background.png");
+	private static final ResourceLocation background = new ResourceLocation("mfs", "textures/guis/gui_background.png");
 	private ResourceLocation foreground;
 
 	public GUIParent(EntityPlayer player, EntityParent parent, ResourceLocation foreground){

@@ -20,7 +20,7 @@ import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Keyboard;
 
 public class GUIConfig extends GuiScreen{
-	private static final ResourceLocation background = new ResourceLocation("mfs", "textures/gui_config.png");
+	private static final ResourceLocation background = new ResourceLocation("mfs", "textures/guis/gui_config.png");
 	
 	private final int xSize = 256;
 	private final int ySize = 192;
