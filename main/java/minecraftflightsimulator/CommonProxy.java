@@ -186,7 +186,6 @@ public class CommonProxy{
 	}
 	
 	private void initRecipies(){
-		this.initPropellerRecipes();
 		this.initEngineRecipes();
 		this.initFlightInstrumentRecipes();
 		
@@ -240,23 +239,6 @@ public class CommonProxy{
 				"BBB",
 				"AAA",
 				'A', Items.iron_ingot, 'B', Blocks.wool);
-	}
-	
-	private void initPropellerRecipes(){
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1120), "  A", " B ", "A  ", 'A', Blocks.planks, 'B', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1130), "A A", " B ", "A  ", 'A', Blocks.planks, 'B', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1140), "A A", " B ", "A A", 'A', Blocks.planks, 'B', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1121), "  A", " A ", "A  ", 'A', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1131), "A A", " A ", "A  ", 'A', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1141), "A A", " A ", "A A", 'A', Items.iron_ingot);		
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1122), "  A", " B ", "A  ", 'A', Blocks.obsidian, 'B', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1132), "A A", " B ", "A  ", 'A', Blocks.obsidian, 'B', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1142), "A A", " B ", "A A", 'A', Blocks.obsidian, 'B', Items.iron_ingot);
-		
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 9121), "  A", " B ", "A  ", 'A', Items.iron_ingot, 'B', Blocks.iron_block);
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1122), "  A", " B ", "A  ", 'A', Blocks.obsidian, 'B', Blocks.iron_block);
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1132), "A A", " B ", "A  ", 'A', Blocks.obsidian, 'B', Blocks.iron_block);
-		GameRegistry.addRecipe(new ItemStack(propeller, 1, 1142), "A A", " B ", "A A", 'A', Blocks.obsidian, 'B', Blocks.iron_block);
 	}
 	
 	private void initEngineRecipes(){
