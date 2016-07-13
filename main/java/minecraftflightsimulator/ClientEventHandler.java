@@ -3,6 +3,7 @@ package minecraftflightsimulator;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.helpers.ControlHelper;
+import minecraftflightsimulator.helpers.InstrumentHelper;
 import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.packets.general.GUIPacket;
 import net.minecraft.client.Minecraft;
@@ -72,6 +73,7 @@ public class ClientEventHandler{
 			}else if(event.type.equals(RenderGameOverlayEvent.ElementType.CHAT)){
 				EntitySeat seat = ((EntitySeat) minecraft.thePlayer.ridingEntity);
 				if(seat.parent != null && seat.driver && (minecraft.gameSettings.thirdPersonView==0 || RenderHelper.hudMode == 1)){
+					InstrumentHelper.updateEngineProperties(seat.parent);
 					seat.parent.drawHUD(event.resolution.getScaledWidth(), event.resolution.getScaledHeight());
 				}
 			}
