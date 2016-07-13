@@ -7,6 +7,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IChatComponent;
 
 public class TileEntityCrafter extends TileEntity implements IInventory{
 	public boolean isOn;
@@ -51,8 +52,9 @@ public class TileEntityCrafter extends TileEntity implements IInventory{
 	public void openInventory(){this.openInventory(null);}
 	public void openInventory(EntityPlayer player){}
 	public void closeInventory(){this.closeInventory(null);}
-    public void closeInventory(EntityPlayer player){}
-    
+	public void closeInventory(EntityPlayer player){}
+
+	public boolean hasCustomName(){return false;}    
 	public boolean hasCustomInventoryName(){return false;}
 	public boolean isUseableByPlayer(EntityPlayer player){return this.getDistanceFrom(player.posX, player.posY, player.posZ) <= 64;}
 	public boolean isItemValidForSlot(int slot, ItemStack stack){return true;}
@@ -60,7 +62,9 @@ public class TileEntityCrafter extends TileEntity implements IInventory{
 	public int getFieldCount(){return 0;}
 	public int getSizeInventory(){return contents.length;}
 	public int getInventoryStackLimit(){return 64;}
+	public String getName(){return "";}
 	public String getInventoryName(){return "";}
+	public IChatComponent getDisplayName(){return null;}
 	public ItemStack getStackInSlot(int slot){return this.contents[slot];}
 	public ItemStack getStackInSlotOnClosing(int slot){return null;}
 	
