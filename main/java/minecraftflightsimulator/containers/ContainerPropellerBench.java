@@ -1,40 +1,42 @@
 package minecraftflightsimulator.containers;
 
+import minecraftflightsimulator.blocks.TileEntityCrafter;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.IChatComponent;
-import net.minecraft.util.StatCollector;
 
-public class ContainerPropellerBench extends Container implements IInventory{
-	private ItemStack[] items = new ItemStack[10];
+public class ContainerPropellerBench extends Container{
+	private final TileEntityCrafter tile;
 	
-	public ContainerPropellerBench(InventoryPlayer invPlayer){
-		for (int i=0; i<9; ++i){
-            this.addSlotToContainer(new Slot(invPlayer, i, 8 + i * 18, 161 + 18*2 + 1));
-        }
-		for(int i=0; i<3; ++i){
-            for(int j=0; j<9; ++j){
-                this.addSlotToContainer(new Slot(invPlayer, j + i * 9 + 9, 8 + j * 18, 103 + i * 18 + 18*2 + 1));
+	public ContainerPropellerBench(InventoryPlayer invPlayer, TileEntityCrafter tile){
+		this.tile = tile;
+		this.addSlotToContainer(new SlotItem(tile, 12, 54, 0, Items.iron_ingot));
+		this.addSlotToContainer(new SlotItem(tile, 63, 54, 1, Item.getItemFromBlock(Blocks.planks), Items.iron_ingot, Item.getItemFromBlock(Blocks.obsidian)));
+		this.addSlotToContainer(new SlotItem(tile, 12, 107, 2, Items.redstone));
+		this.addSlotToContainer(new SlotItem(tile, 127, 54, 3));
+		SlotItem dummy = new SlotItem(tile, 63, 36, 4);
+		dummy.enabled = false;
+		this.addSlotToContainer(dummy);
+
+		for (int j=0; j<9; ++j){
+            this.addSlotToContainer(new Slot(invPlayer, j, 8 + j * 18, 161 + 18*2 + 1));
+        } 
+		for(int j=0; j<3; ++j){
+            for(int k=0; k<9; ++k){
+                this.addSlotToContainer(new Slot(invPlayer, k + j * 9 + 9, 8 + k * 18, 103 + j * 18 + 18*2 + 1));
             }
         }
-        for (int i=0; i<9; ++i){
-        	if(i!=4){
-        		//this.addSlotToContainer(new SlotItem(this, 18+i*26 - (i/3)*78, 31 + (i/3)*26, i, Item.getItemFromBlock(Blocks.planks), Items.iron_ingot, Item.getItemFromBlock(Blocks.obsidian)));
-        	}else{
-        		//this.addSlotToContainer(new SlotItem(this, 18+i*26 - (i/3)*78, 31 + (i/3)*26, i, Items.iron_ingot));
-        	}
-        }
-        //this.addSlotToContainer(new SlotItem(this, 134, 105, 9));
 	}
-	
+
 	@Override
 	public boolean canInteractWith(EntityPlayer player) {
-		return true;
+		return tile.isUseableByPlayer(player);
 	}
 	
 	@Override
@@ -50,63 +52,33 @@ public class ContainerPropellerBench extends Container implements IInventory{
 			}
 		}
 	}
-	
+
 	@Override
 	public ItemStack transferStackInSlot(EntityPlayer player, int sourceSlotIndex){
+		ItemStack stack = getSlot(sourceSlotIndex).getStack();
+		if(stack != null){
+			for(int i=0; i<inventorySlots.size(); ++i){
+				Slot slot = (Slot) inventorySlots.get(i);
+				if(slot.inventory.equals(tile)){
+					if(slot.isItemValid(stack) && stack.stackSize != 0){
+						if(slot.getHasStack()){
+							if(slot.getStack().equals(stack)){
+								return null;
+							}
+							if(slot.getStack().stackSize < slot.getSlotStackLimit()){
+								slot.getStack().stackSize += stack.splitStack(Math.min(slot.getSlotStackLimit() - slot.getStack().stackSize, stack.stackSize)).stackSize;
+							}
+						}else{
+							ItemStack split = stack.splitStack(Math.min(slot.getSlotStackLimit(), stack.stackSize));
+							slot.putStack(split);
+						}
+					}
+				}
+			}
+			if(stack.stackSize == 0){
+				((Slot) inventorySlots.get(sourceSlotIndex)).putStack(null);
+			}
+		}
 		return null;		
 	}
-	
-	public void markDirty(){}
-	public void clear(){}
-	public void setField(int id, int value){}
-	public void openInventory(){}
-	public void openInventory(EntityPlayer player){}
-	public void closeInventory(){}
-    public void closeInventory(EntityPlayer player){}
-    
-	public boolean hasCustomInventoryName(){return false;}
-	public boolean isUseableByPlayer(EntityPlayer player){return true;}
-	public boolean isItemValidForSlot(int slot, ItemStack stack){return false;}
-	public int getField(int id){return 0;}
-	public int getFieldCount(){return 0;}
-	public int getSizeInventory(){return items.length;}
-	public int getInventoryStackLimit(){return 64;}
-	public String getInventoryName(){return StatCollector.translateToLocal("tile.mfs.Chest.name");}
-	public ItemStack getStackInSlot(int slot){return items[slot];}
-	public ItemStack getStackInSlotOnClosing(int slot){return null;}
-	
-	@Override
-	public void setInventorySlotContents(int slot, ItemStack stack){
-		items[slot] = stack;
-	}
-	
-	@Override
-    public ItemStack decrStackSize(int slot, int number){
-        if(items[slot] != null){
-            ItemStack itemstack;
-            if(items[slot].stackSize <= number){
-                itemstack = items[slot];
-                items[slot] = null;
-                return itemstack;
-            }else{
-                itemstack = items[slot].splitStack(number);
-                if(items[slot].stackSize == 0){
-                	items[slot] = null;
-                }
-                return itemstack;
-            }
-        }else{
-            return null;
-        }
-    }
-	
-    public ItemStack removeStackFromSlot(int index){
-		ItemStack removedStack = getStackInSlot(index);
-		setInventorySlotContents(index, null);
-		return removedStack;
-	}
-    
-    public boolean hasCustomName(){return false;}
-	public String getName(){return null;}
-	public IChatComponent getDisplayName(){return null;}
 }

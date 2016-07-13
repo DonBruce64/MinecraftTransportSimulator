@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecraftflightsimulator.blocks.BlockPropellerBench;
+import minecraftflightsimulator.blocks.TileEntityCrafter;
 import minecraftflightsimulator.containers.GUIHandler;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.parts.EntityEngine;
@@ -33,6 +34,7 @@ import minecraftflightsimulator.packets.control.RudderPacket;
 import minecraftflightsimulator.packets.control.ThrottlePacket;
 import minecraftflightsimulator.packets.general.ChatPacket;
 import minecraftflightsimulator.packets.general.ClientRequestDataPacket;
+import minecraftflightsimulator.packets.general.CraftingTileUpdatePacket;
 import minecraftflightsimulator.packets.general.GUIPacket;
 import minecraftflightsimulator.packets.general.ServerSendDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
@@ -86,6 +88,7 @@ public class CommonProxy{
 	}
 	
 	public void init(){
+		initTileEntites();
 		initEntites();
 		initPackets();
 		initBlocks();
@@ -93,6 +96,14 @@ public class CommonProxy{
 		initRecipies();
 		initFuels();
 		NetworkRegistry.INSTANCE.registerGuiHandler(MFS.instance, new GUIHandler());
+	}
+	
+	private void initTileEntites(){
+		registerTileEntity(TileEntityCrafter.class);
+	}
+	
+	private void registerTileEntity(Class tileEntityClass){
+		GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
 	}
 	
 	private void initEntites(){
@@ -122,9 +133,11 @@ public class CommonProxy{
 		MFS.MFSNet.registerMessage(ChatPacket.ChatPacketHandler.class,  ChatPacket.class, ++packetNumber, Side.CLIENT);
 		MFS.MFSNet.registerMessage(ServerSendDataPacket.ServerSendDataPacketHandler.class,  ServerSendDataPacket.class, ++packetNumber, Side.CLIENT);
 		MFS.MFSNet.registerMessage(ServerSyncPacket.ServerSyncPacketHandler.class,  ServerSyncPacket.class, ++packetNumber, Side.CLIENT);
+		MFS.MFSNet.registerMessage(CraftingTileUpdatePacket.CraftingTileUpdatePacketHandler.class,  CraftingTileUpdatePacket.class, ++packetNumber, Side.CLIENT);
 		
 		MFS.MFSNet.registerMessage(GUIPacket.GUIPacketHandler.class,  GUIPacket.class, ++packetNumber, Side.SERVER);
 		MFS.MFSNet.registerMessage(ClientRequestDataPacket.ClientRequestDataPacketHandler.class,  ClientRequestDataPacket.class, ++packetNumber, Side.SERVER);
+		MFS.MFSNet.registerMessage(CraftingTileUpdatePacket.CraftingTileUpdatePacketHandler.class,  CraftingTileUpdatePacket.class, ++packetNumber, Side.SERVER);
 		
 		MFS.MFSNet.registerMessage(AileronPacket.AileronPacketHandler.class,  AileronPacket.class, ++packetNumber, Side.SERVER);
 		MFS.MFSNet.registerMessage(AileronPacket.AileronPacketHandler.class,  AileronPacket.class, ++packetNumber, Side.CLIENT);
@@ -147,7 +160,7 @@ public class CommonProxy{
 			if(feild.getType().equals(Block.class)){
 				try{
 					Block block = (Block) feild.get(Block.class);
-					//GameRegistry.registerBlock(block, block.getUnlocalizedName().substring(5));
+					GameRegistry.registerBlock(block, block.getUnlocalizedName().substring(5));
 				}catch(Exception e){}
 			}
 		}
