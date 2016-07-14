@@ -665,6 +665,7 @@ public class InstrumentHelper{
     	
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
     	drawDialColoring(centerX, centerY, 67.0F, 71.0F, 25, 6, new float[] {1, 0, 0});
+    	GL11.glColor3f(1, 1, 1);
     	drawDialNumbers(centerX, centerY, -135, 135, 16, 50, 50, 4, 0.5F);
         
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
