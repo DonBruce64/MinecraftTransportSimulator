@@ -95,6 +95,9 @@ public abstract class EntityEngine extends EntityChild{
 		
 		propeller = parent.getPropellerForEngine(this.UUID);
 		if(starterState > 0){
+			if(starterState==starterIncrement){
+				MFS.proxy.playSound(this, "mfs:" + engineCrankingSoundName, 1, 1);
+			}
 			--starterState;
 			parent.fuel -= this.fuelConsumption*MFS.fuelUsageFactor;
 			if(engineRPM < 600){
@@ -115,6 +118,9 @@ public abstract class EntityEngine extends EntityChild{
 			}
 		}else{
 			if(internalFuel > 0){
+				if(internalFuel == 100){
+					MFS.proxy.playSound(this, "mfs:engine_starting", 1, 1);
+				}
 				if(engineRPM < 100){
 					internalFuel = 0;
 				}else{
@@ -148,14 +154,12 @@ public abstract class EntityEngine extends EntityChild{
 			internalFuel = 100;
 			engineOn = false;
 			fueled = false;
-			MFS.proxy.playSound(this, "mfs:engine_starting", 1, 1);
 		}
 	}
 	
 	public void startEngine(){
 		engineEngaged = true;
 		if(starterState==0){
-			MFS.proxy.playSound(this, "mfs:" + engineCrankingSoundName, 1, 1);
 			this.starterState += starterIncrement;
 		}
 	}
