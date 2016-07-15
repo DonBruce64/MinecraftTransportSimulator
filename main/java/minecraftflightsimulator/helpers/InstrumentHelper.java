@@ -508,6 +508,7 @@ public class InstrumentHelper{
     	drawDialIncrements(centerX, centerY, -132.5F, -47.5F, 25, 3, 11);
     	drawDialIncrements(centerX, centerY, -47.5F, 80, 25, 2, 16);
     	drawDialIncrements(centerX, centerY, -260, -132.5F, 25, 2, 16);
+    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
     	drawLongPointer(centerX, centerY, (float) (-90+10.625*parent.motionY*20), 35, 2);
     	
         if(!hud){
