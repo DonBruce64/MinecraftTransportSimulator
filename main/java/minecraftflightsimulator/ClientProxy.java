@@ -31,6 +31,8 @@ import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
 import minecraftflightsimulator.planes.PZLP11.RenderPZLP11;
 import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.planes.Trimotor.RenderTrimotor;
+import minecraftflightsimulator.planes.Vulcanair.EntityVulcanair;
+import minecraftflightsimulator.planes.Vulcanair.RenderVulcanair;
 import minecraftflightsimulator.sounds.EngineSound;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -67,6 +69,7 @@ public class ClientProxy extends CommonProxy{
 		//MinecraftForgeClient.registerItemRenderer(this.item, new ItemRender());
 		RenderingRegistry.registerEntityRenderingHandler(EntityMC172.class, new RenderMC172());
 		RenderingRegistry.registerEntityRenderingHandler(EntityTrimotor.class, new RenderTrimotor());
+		RenderingRegistry.registerEntityRenderingHandler(EntityVulcanair.class, new RenderVulcanair());
 		RenderingRegistry.registerEntityRenderingHandler(EntityOtter.class, new RenderOtter());
 		RenderingRegistry.registerEntityRenderingHandler(EntityPZLP11.class, new RenderPZLP11());
 		
@@ -145,12 +148,12 @@ public class ClientProxy extends CommonProxy{
 			
 			if(engine.engineTemp > 93.3333){
 				if(Minecraft.getMinecraft().effectRenderer != null){
-					Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySmokeFX(engine.worldObj, engine.posX, engine.posY, engine.posZ, 0, 0.15, 0));
+					Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySmokeFX(engine.worldObj, engine.posX, engine.posY + 0.5, engine.posZ, 0, 0.15, 0));
 					if(engine.engineTemp > 107.222){
-						Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySmokeFX(engine.worldObj, engine.posX, engine.posY, engine.posZ, 0, 0.15, 0, 2.5F));
+						Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySmokeFX(engine.worldObj, engine.posX, engine.posY + 0.5, engine.posZ, 0, 0.15, 0, 2.5F));
 					}
 					if(engine.engineTemp > 121.111){
-						Minecraft.getMinecraft().effectRenderer.addEffect(new EntityFlameFX(engine.worldObj, engine.posX, engine.posY, engine.posZ, 0, 0.15, 0));
+						Minecraft.getMinecraft().effectRenderer.addEffect(new EntityFlameFX(engine.worldObj, engine.posX, engine.posY + 0.5, engine.posZ, 0, 0.15, 0));
 					}
 				}
 			}
