@@ -178,6 +178,9 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 		}else if(!worldObj.isRemote && this.ticksExisted%5==0){
 			MFS.MFSNet.sendToAll(new ServerSyncPacket(getEntityId(), posX, posY, posZ, motionX, motionY, motionZ, rotationPitch, rotationRoll, rotationYaw));
 		}
+		prevRotationRoll = rotationRoll;
+		prevRotationPitch = rotationPitch;
+		prevRotationYaw = rotationYaw;
 		airDensity = 1.225*Math.pow(2, -posY/500);
 		if(fuel < 0){fuel = 0;}
 		fuelFlow = prevFuel - fuel;
@@ -622,6 +625,7 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	 * New items are found by checking to see if itemChanged is true for that slot.
 	 */
     public void saveInventory(){
+    	//TODO fix error where seats go away if there's more than one seat in a stack.
 		if(!worldObj.isRemote){
 			EntityChild newChild;
 			float boostAmount = 0;

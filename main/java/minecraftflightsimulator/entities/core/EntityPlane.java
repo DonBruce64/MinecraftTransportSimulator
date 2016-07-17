@@ -214,7 +214,9 @@ public abstract class EntityPlane extends EntityParent{
 			if(!propeller.isDead){
 				thrust = propeller.getThrustForce();
 				thrustForce += thrust;
-				thrustTorque += thrust*propeller.offsetX;
+				if(!(groundedWheels == 7 && velocity == 0)){
+					thrustTorque += thrust*propeller.offsetX;
+				}
 			}
 		}
 		
@@ -492,9 +494,6 @@ public abstract class EntityPlane extends EntityParent{
 	}
 		
 	private void movePlane(){
-		prevRotationRoll = rotationRoll;
-		prevRotationPitch = rotationPitch;
-		prevRotationYaw = rotationYaw;
 		rotationRoll += motionRoll;
 		rotationPitch = (motionPitch + rotationPitch)%360;
 		rotationYaw += motionYaw;
