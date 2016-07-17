@@ -626,7 +626,6 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	 * New items are found by checking to see if itemChanged is true for that slot.
 	 */
     public void saveInventory(){
-    	//TODO fix error where seats go away if there's more than one seat in a stack.
 		if(!worldObj.isRemote){
 			EntityChild newChild;
 			float boostAmount = 0;

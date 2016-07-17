@@ -51,6 +51,7 @@ public class ContainerParent extends Container{
 						if(slot.getHasStack()){
 							if(slot.getStack().stackSize < slot.getSlotStackLimit()){
 								slot.getStack().stackSize += stack.splitStack(slot.getSlotStackLimit() - slot.getStack().stackSize).stackSize;
+								parent.setInventorySlotContents(slot.getSlotIndex(), slot.getStack());
 							}
 						}else{
 							slot.putStack(stack.splitStack(Math.min(slot.getSlotStackLimit(), stack.stackSize)));
