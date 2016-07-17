@@ -23,7 +23,7 @@ public class EntityPZLP11 extends EntityPlane{
 	
 	public EntityPZLP11(World world, float posX, float posY, float posZ, float rotation, int textureCode){
 		super(world, posX, posY, posZ, rotation, textureCode);
-		this.displayName = "DietPepsi1997";
+		this.displayName = "Limit1997";
 	}
 
 	@Override
@@ -34,11 +34,11 @@ public class EntityPZLP11 extends EntityPlane{
 		momentRoll=1285;
 		momentPitch=1825;
 		momentYaw=2667;
-		wingspan=11;
-		wingArea=18;
-		tailDistance=5;
-		rudderArea=1F;
-		elevatorArea=3;
+		wingspan=11.0F;
+		wingArea=18.0F;
+		tailDistance=7;
+		rudderArea=1.5F;
+		elevatorArea=3.0F;
 		defaultElevatorAngle=-10F;
 		initialDragCoeff=0.03F;
 		dragAtCriticalAoA=0.12F;

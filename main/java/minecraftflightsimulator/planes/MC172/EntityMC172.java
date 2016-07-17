@@ -35,12 +35,12 @@ public class EntityMC172 extends EntityPlane{
 		momentRoll=1285;
 		momentPitch=1825;
 		momentYaw=2667;
-		wingspan=11;
-		wingArea=16;
+		wingspan=11.0F;
+		wingArea=16.0F;
 		tailDistance=7;
 		rudderArea=1.5F;
 		elevatorArea=3.0F;
-		defaultElevatorAngle=-5;
+		defaultElevatorAngle=-5F;
 		initialDragCoeff=0.03F;
 		dragAtCriticalAoA=0.12F;
 		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(15, 2));		
