@@ -1,5 +1,6 @@
 package minecraftflightsimulator;
 
+import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.entities.core.EntityBase;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.entities.parts.EntityEngine;
@@ -33,6 +34,7 @@ import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.planes.Trimotor.RenderTrimotor;
 import minecraftflightsimulator.planes.Vulcanair.EntityVulcanair;
 import minecraftflightsimulator.planes.Vulcanair.RenderVulcanair;
+import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.sounds.EngineSound;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -66,7 +68,7 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	private void initEntityRenders(){
-		//MinecraftForgeClient.registerItemRenderer(this.item, new ItemRender());
+		//MinecraftForgeClient.registerItemRenderer(this.item, new ItemRender());	
 		RenderingRegistry.registerEntityRenderingHandler(EntityMC172.class, new RenderMC172());
 		RenderingRegistry.registerEntityRenderingHandler(EntityTrimotor.class, new RenderTrimotor());
 		RenderingRegistry.registerEntityRenderingHandler(EntityVulcanair.class, new RenderVulcanair());
@@ -154,6 +156,24 @@ public class ClientProxy extends CommonProxy{
 					}
 					if(engine.engineTemp > 121.111){
 						Minecraft.getMinecraft().effectRenderer.addEffect(new EntityFlameFX(engine.worldObj, engine.posX, engine.posY + 0.5, engine.posZ, 0, 0.15, 0));
+					}
+				}
+			}
+		}
+		return sound;
+	}
+	
+	@Override
+	public BenchSound updateBenchSound(BenchSound sound, TileEntityPropellerBench bench){
+		if(bench.getWorldObj().isRemote){
+			if(sound == null){
+				sound = new BenchSound(bench);
+			}else{
+				SoundHandler handler = Minecraft.getMinecraft().getSoundHandler();
+				if(!handler.isSoundPlaying(sound)){
+					if(bench.isOn){
+						sound = new BenchSound(bench);
+						handler.playSound(sound);
 					}
 				}
 			}

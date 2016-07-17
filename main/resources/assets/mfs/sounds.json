@@ -1,4 +1,5 @@
 {
+    "bench_running"    : {"category": "master", "sounds": [{"name": "bench_running","stream": false}]},
     "engine_starting"    : {"category": "master", "sounds": [{"name": "mfs:engine_starting","stream": false}]},
     "small_engine_running"     : {"category": "master", "sounds": [{"name": "mfs:small_engine_running","stream": false}]},
     "small_engine_cranking"    : {"category": "master", "sounds": [{"name": "mfs:small_engine_cranking","stream": false}]},
