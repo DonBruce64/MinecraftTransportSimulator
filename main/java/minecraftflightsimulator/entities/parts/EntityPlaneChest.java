@@ -26,6 +26,7 @@ public class EntityPlaneChest extends EntityChild implements IInventory{
 	
 	public EntityPlaneChest(World world){
 		super(world);
+		this.setSize(0.75F, 0.75F);
 	}
 	
 	public EntityPlaneChest(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ){
