@@ -21,6 +21,7 @@ import minecraftflightsimulator.modelrenders.RenderNull;
 import minecraftflightsimulator.modelrenders.RenderPlaneChest;
 import minecraftflightsimulator.modelrenders.RenderPontoon;
 import minecraftflightsimulator.modelrenders.RenderPropeller;
+import minecraftflightsimulator.modelrenders.RenderPropellerBench;
 import minecraftflightsimulator.modelrenders.RenderSeat;
 import minecraftflightsimulator.modelrenders.RenderSkid;
 import minecraftflightsimulator.modelrenders.RenderWheel;
@@ -45,6 +46,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
+import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
@@ -68,7 +70,9 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	private void initEntityRenders(){
-		//MinecraftForgeClient.registerItemRenderer(this.item, new ItemRender());	
+		//MinecraftForgeClient.registerItemRenderer(this.item, new ItemRender());
+		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPropellerBench.class, new RenderPropellerBench());
+		
 		RenderingRegistry.registerEntityRenderingHandler(EntityMC172.class, new RenderMC172());
 		RenderingRegistry.registerEntityRenderingHandler(EntityTrimotor.class, new RenderTrimotor());
 		RenderingRegistry.registerEntityRenderingHandler(EntityVulcanair.class, new RenderVulcanair());

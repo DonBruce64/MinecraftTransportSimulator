@@ -1,6 +1,6 @@
 package minecraftflightsimulator.containers;
 
-import minecraftflightsimulator.blocks.TileEntityCrafter;
+import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -12,9 +12,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class ContainerPropellerBench extends Container{
-	private final TileEntityCrafter tile;
+	private final TileEntityPropellerBench tile;
 	
-	public ContainerPropellerBench(InventoryPlayer invPlayer, TileEntityCrafter tile){
+	public ContainerPropellerBench(InventoryPlayer invPlayer, TileEntityPropellerBench tile){
 		this.tile = tile;
 		this.addSlotToContainer(new SlotItem(tile, 12, 54, 0, Items.iron_ingot));
 		this.addSlotToContainer(new SlotItem(tile, 63, 54, 1, Item.getItemFromBlock(Blocks.planks), Items.iron_ingot, Item.getItemFromBlock(Blocks.obsidian)));

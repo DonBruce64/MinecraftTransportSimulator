@@ -1,21 +1,21 @@
 package minecraftflightsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
-import minecraftflightsimulator.blocks.TileEntityCrafter;
+import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import net.minecraft.client.Minecraft;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 
-public class CraftingTileUpdatePacket implements IMessage{
+public class PropellerBenchTilepdatePacket implements IMessage{
 	private int x;
 	private int y;
 	private int z;
 	private short propertyCode;
 
-	public CraftingTileUpdatePacket() {}
+	public PropellerBenchTilepdatePacket() {}
 	
-	public CraftingTileUpdatePacket(TileEntityCrafter tile, short propertyCode){
+	public PropellerBenchTilepdatePacket(TileEntityPropellerBench tile, short propertyCode){
 		this.x = tile.xCoord;
 		this.y = tile.yCoord;
 		this.z = tile.zCoord;
@@ -38,18 +38,20 @@ public class CraftingTileUpdatePacket implements IMessage{
 		buf.writeShort(this.propertyCode);
 	}
 
-	public static class CraftingTileUpdatePacketHandler implements IMessageHandler<CraftingTileUpdatePacket, CraftingTileUpdatePacket> {
-		public CraftingTileUpdatePacket onMessage(CraftingTileUpdatePacket message, MessageContext ctx){
-			TileEntityCrafter tile;
+	public static class CraftingTileUpdatePacketHandler implements IMessageHandler<PropellerBenchTilepdatePacket, PropellerBenchTilepdatePacket> {
+		public PropellerBenchTilepdatePacket onMessage(PropellerBenchTilepdatePacket message, MessageContext ctx){
+			TileEntityPropellerBench tile;
 			if(ctx.side.isServer()){
-				tile = (TileEntityCrafter) ctx.getServerHandler().playerEntity.worldObj.getTileEntity(message.x, message.y, message.z);
+				tile = (TileEntityPropellerBench) ctx.getServerHandler().playerEntity.worldObj.getTileEntity(message.x, message.y, message.z);
 			}else{
-				tile = (TileEntityCrafter) Minecraft.getMinecraft().theWorld.getTileEntity(message.x, message.y, message.z);
+				tile = (TileEntityPropellerBench) Minecraft.getMinecraft().theWorld.getTileEntity(message.x, message.y, message.z);
 			}
 			
 			if(tile != null){
 				if(message.propertyCode > 0){
 					tile.propertyCode = message.propertyCode;
+					tile.isOn = false;
+					tile.timeLeft = 0;
 				}else if(message.propertyCode < 0){
 					if(tile.getStackInSlot(3) == null){
 						tile.isOn = true;
@@ -59,7 +61,6 @@ public class CraftingTileUpdatePacket implements IMessage{
 					}
 				}else{
 					tile.isOn = false;
-					tile.timeLeft = 0;
 				}
 			}
 			return ctx.side.isServer() ? message : null;

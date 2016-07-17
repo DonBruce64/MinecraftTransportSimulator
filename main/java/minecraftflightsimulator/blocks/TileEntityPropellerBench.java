@@ -1,32 +1,40 @@
 package minecraftflightsimulator.blocks;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.sounds.BenchSound;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IChatComponent;
 
-public class TileEntityCrafter extends TileEntity implements IInventory{
+public class TileEntityPropellerBench extends TileEntity implements IInventory{
 	public boolean isOn;
-	public short propertyCode;
+	public short propertyCode = 1120;
 	public int timeLeft;
-	private ItemStack[] contents;
+	public static final int opTime = 1000;
+	private ItemStack[] contents = new ItemStack[5];
+	private BenchSound benchSound;
 	
-	public TileEntityCrafter(){}
-	
-	public TileEntityCrafter(int numberSlots, short defaultPropertyCode){
-		this.contents = new ItemStack[numberSlots];
-		this.propertyCode = defaultPropertyCode;
-	}
+	public TileEntityPropellerBench(){}
 	
 	@Override
 	public void updateEntity(){
+		if(!isMaterialCorrect() || !isMaterialSufficient()){
+			timeLeft = 0;
+			isOn = false;
+		}
 		if(isOn){
 			if(timeLeft > 0){
-				if(timeLeft%50 == 0){
+				if(timeLeft%200 == 0){
 					if(getStackInSlot(2) != null){
 						decrStackSize(2, 1);
 					}else{
@@ -38,15 +46,29 @@ public class TileEntityCrafter extends TileEntity implements IInventory{
 				isOn = false;
 				//TODO make this work for any item selected in the GUI, as helicopter blades will be added.
 				this.decrStackSize(0, 1);
-				this.decrStackSize(1, 70+5*(propertyCode/1000) < 90 ? (propertyCode%10) : (propertyCode%10)*2);
+				this.decrStackSize(1, 70+5*(propertyCode/1000) < 90 ? (propertyCode%100/10) : (propertyCode%100/10)*2);
 				this.setInventorySlotContents(3, new ItemStack(MFS.proxy.propeller, 1, propertyCode));
 				return;
 			}
 			--timeLeft;
 		}
+		benchSound = MFS.proxy.updateBenchSound(benchSound, this);
 	}
 	
-	public void markDirty(){}
+	public boolean isMaterialCorrect(){
+		switch(propertyCode%10){
+			case(0): return getStackInSlot(1) != null ? getStackInSlot(1).getItem().equals(Item.getItemFromBlock(Blocks.planks)) : false;
+			case(1): return getStackInSlot(1) != null ? getStackInSlot(1).getItem().equals(Items.iron_ingot) : false;
+			case(2): return getStackInSlot(1) != null ? getStackInSlot(1).getItem().equals(Item.getItemFromBlock(Blocks.obsidian)) : false;
+			default: return false;
+		}
+	}
+	
+	public boolean isMaterialSufficient(){
+		return getStackInSlot(0) != null && (getStackInSlot(1) != null ? (getStackInSlot(1).stackSize >= (70+5*(propertyCode/1000) < 90 ? (propertyCode%100/10) : (propertyCode%100/10)*2)) : false);
+	}
+	
+	public void markDirty(){super.markDirty();}
 	public void clear(){}
 	public void setField(int id, int value){}
 	public void openInventory(){this.openInventory(null);}
@@ -99,6 +121,18 @@ public class TileEntityCrafter extends TileEntity implements IInventory{
 		setInventorySlotContents(index, null);
 		return removedStack;
 	}
+    
+    @Override
+    public Packet getDescriptionPacket() {
+        NBTTagCompound tagCompound = new NBTTagCompound();
+        writeToNBT(tagCompound);
+        return new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, 1, tagCompound);
+    }
+    
+    @Override
+    public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt){
+    	this.readFromNBT(pkt.func_148857_g());
+    }
 	
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){

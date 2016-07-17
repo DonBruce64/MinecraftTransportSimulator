@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecraftflightsimulator.blocks.BlockPropellerBench;
-import minecraftflightsimulator.blocks.TileEntityCrafter;
+import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.containers.GUIHandler;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.parts.EntityEngine;
@@ -34,14 +34,16 @@ import minecraftflightsimulator.packets.control.RudderPacket;
 import minecraftflightsimulator.packets.control.ThrottlePacket;
 import minecraftflightsimulator.packets.general.ChatPacket;
 import minecraftflightsimulator.packets.general.ClientRequestDataPacket;
-import minecraftflightsimulator.packets.general.CraftingTileUpdatePacket;
 import minecraftflightsimulator.packets.general.GUIPacket;
+import minecraftflightsimulator.packets.general.PropellerBenchTilepdatePacket;
 import minecraftflightsimulator.packets.general.ServerSendDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
 import minecraftflightsimulator.planes.Otter.EntityOtter;
 import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
 import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
+import minecraftflightsimulator.planes.Vulcanair.EntityVulcanair;
+import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.sounds.EngineSound;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
@@ -91,15 +93,15 @@ public class CommonProxy{
 		initTileEntites();
 		initEntites();
 		initPackets();
-		initBlocks();
 		initItems();
+		initBlocks();
 		initRecipies();
 		initFuels();
 		NetworkRegistry.INSTANCE.registerGuiHandler(MFS.instance, new GUIHandler());
 	}
 	
 	private void initTileEntites(){
-		registerTileEntity(TileEntityCrafter.class);
+		registerTileEntity(TileEntityPropellerBench.class);
 	}
 	
 	private void registerTileEntity(Class tileEntityClass){
@@ -133,11 +135,11 @@ public class CommonProxy{
 		MFS.MFSNet.registerMessage(ChatPacket.ChatPacketHandler.class,  ChatPacket.class, ++packetNumber, Side.CLIENT);
 		MFS.MFSNet.registerMessage(ServerSendDataPacket.ServerSendDataPacketHandler.class,  ServerSendDataPacket.class, ++packetNumber, Side.CLIENT);
 		MFS.MFSNet.registerMessage(ServerSyncPacket.ServerSyncPacketHandler.class,  ServerSyncPacket.class, ++packetNumber, Side.CLIENT);
-		MFS.MFSNet.registerMessage(CraftingTileUpdatePacket.CraftingTileUpdatePacketHandler.class,  CraftingTileUpdatePacket.class, ++packetNumber, Side.CLIENT);
+		MFS.MFSNet.registerMessage(PropellerBenchTilepdatePacket.CraftingTileUpdatePacketHandler.class,  PropellerBenchTilepdatePacket.class, ++packetNumber, Side.CLIENT);
 		
 		MFS.MFSNet.registerMessage(GUIPacket.GUIPacketHandler.class,  GUIPacket.class, ++packetNumber, Side.SERVER);
 		MFS.MFSNet.registerMessage(ClientRequestDataPacket.ClientRequestDataPacketHandler.class,  ClientRequestDataPacket.class, ++packetNumber, Side.SERVER);
-		MFS.MFSNet.registerMessage(CraftingTileUpdatePacket.CraftingTileUpdatePacketHandler.class,  CraftingTileUpdatePacket.class, ++packetNumber, Side.SERVER);
+		MFS.MFSNet.registerMessage(PropellerBenchTilepdatePacket.CraftingTileUpdatePacketHandler.class,  PropellerBenchTilepdatePacket.class, ++packetNumber, Side.SERVER);
 		
 		MFS.MFSNet.registerMessage(AileronPacket.AileronPacketHandler.class,  AileronPacket.class, ++packetNumber, Side.SERVER);
 		MFS.MFSNet.registerMessage(AileronPacket.AileronPacketHandler.class,  AileronPacket.class, ++packetNumber, Side.CLIENT);
@@ -155,17 +157,6 @@ public class CommonProxy{
 		MFS.MFSNet.registerMessage(ThrottlePacket.ThrottlePacketHandler.class,  ThrottlePacket.class, ++packetNumber, Side.CLIENT);
 	}
 	
-	private void initBlocks(){
-		for(Field feild : this.getClass().getFields()){
-			if(feild.getType().equals(Block.class)){
-				try{
-					Block block = (Block) feild.get(Block.class);
-					GameRegistry.registerBlock(block, block.getUnlocalizedName().substring(5));
-				}catch(Exception e){}
-			}
-		}
-	}
-	
 	private void initItems(){
 		for(Field feild : this.getClass().getFields()){
 			if(feild.getType().equals(Item.class)){
@@ -180,6 +171,18 @@ public class CommonProxy{
 						GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
 						itemList.add(item);
 					}
+				}catch(Exception e){}
+			}
+		}
+	}
+	
+	private void initBlocks(){
+		for(Field feild : this.getClass().getFields()){
+			if(feild.getType().equals(Block.class)){
+				try{
+					Block block = (Block) feild.get(Block.class);
+					GameRegistry.registerBlock(block, block.getUnlocalizedName().substring(5));
+					itemList.add(Item.getItemFromBlock(block));
 				}catch(Exception e){}
 			}
 		}
@@ -357,4 +360,5 @@ public class CommonProxy{
 	public void playSound(Entity noisyEntity, String soundName, float volume, float pitch){}
 	public void updateSeatedRider(EntitySeat seat, EntityLivingBase rider){}
 	public EngineSound updateEngineSoundAndSmoke(EngineSound sound, EntityEngine engine){return null;}
+	public BenchSound updateBenchSound(BenchSound sound, TileEntityPropellerBench bench){return null;}
 }

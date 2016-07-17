@@ -13,12 +13,11 @@ public class BlockPropellerBench extends BlockContainer{
 		super(Material.iron);
 		this.setBlockName("PropellerBench");
 		this.setCreativeTab(MFS.tabMFS);
-		this.textureName = "mfs:propellerbench";
 	}
 	
 	@Override
 	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float hitX, float hitY, float hitZ){
-		if(!world.isRemote && ((TileEntityCrafter) world.getTileEntity(x, y, z)).isUseableByPlayer(player)){
+		if(!world.isRemote && ((TileEntityPropellerBench) world.getTileEntity(x, y, z)).isUseableByPlayer(player)){
 			player.openGui(MFS.instance, -1, world, x, y, z);
 		}
 		return true;
@@ -26,6 +25,21 @@ public class BlockPropellerBench extends BlockContainer{
 	
 	@Override
 	public TileEntity createNewTileEntity(World world, int metadata){
-		return new TileEntityCrafter(5, (short) 1120);
+		return new TileEntityPropellerBench();
+	}
+	
+	@Override
+    public int getRenderType(){
+        return -1;
+    }
+	
+	@Override
+    public boolean renderAsNormalBlock(){
+        return false;
+    }
+	
+	@Override
+	public boolean isOpaqueCube(){
+		return false;
 	}
 }

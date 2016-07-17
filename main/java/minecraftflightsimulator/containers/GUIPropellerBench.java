@@ -3,9 +3,9 @@ package minecraftflightsimulator.containers;
 import java.awt.Color;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.blocks.TileEntityCrafter;
+import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.helpers.RenderHelper;
-import minecraftflightsimulator.packets.general.CraftingTileUpdatePacket;
+import minecraftflightsimulator.packets.general.PropellerBenchTilepdatePacket;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -36,13 +36,13 @@ public class GUIPropellerBench extends GuiContainer{
 	private GuiButton pitchDownButton;
 	private GuiButton powerButton;
 	
-	private TileEntityCrafter tile;
+	private TileEntityPropellerBench tile;
 	private byte propType;
 	private byte propBlades;
 	private byte propPitch;
 	private byte propDiameter;
 	
-	public GUIPropellerBench(InventoryPlayer invPlayer, TileEntityCrafter tile){
+	public GUIPropellerBench(InventoryPlayer invPlayer, TileEntityPropellerBench tile){
 		super(new ContainerPropellerBench(invPlayer, tile));
 		this.allowUserInput=true;
 		this.xSize = 226;
@@ -97,7 +97,7 @@ public class GUIPropellerBench extends GuiContainer{
 		RenderHelper.renderSquare(12, 28, 106, 90, 0, 0, false);
 		RenderHelper.bindTexture(arrow);
 		if(tile.timeLeft > 0){
-			RenderHelper.renderSquareUV(89, 113 - 24F*(tile.timeLeft/300F), 70, 54, 0, 0, 0, 1 - tile.timeLeft/300F, 0, 1, false);
+			RenderHelper.renderSquareUV(89, 113 - 24F*tile.timeLeft/tile.opTime, 70, 54, 0, 0, 0, 1 - 1F*tile.timeLeft/tile.opTime, 0, 1, false);
 		}
 		
 		GL11.glPushMatrix();
@@ -148,27 +148,17 @@ public class GUIPropellerBench extends GuiContainer{
 		}else if(buttonClicked.equals(diameterUpButton)){
 			if(propDiameter<115)propDiameter+=5;
 		}else if(buttonClicked.equals(diameterDownButton)){
-			if(propDiameter>55)propDiameter-=5;
+			if(propDiameter>70)propDiameter-=5;
 		}else if(buttonClicked.equals(pitchUpButton)){			
 			if(propPitch<82)propPitch+=3;
 		}else if(buttonClicked.equals(pitchDownButton)){
 			if(propPitch>55)propPitch-=3;
 		}else if(buttonClicked.equals(powerButton)){
 			if(tile.isOn){
-				MFS.MFSNet.sendToServer(new CraftingTileUpdatePacket(tile, (short) 0));
+				MFS.MFSNet.sendToServer(new PropellerBenchTilepdatePacket(tile, (short) 0));
 			}else{
-				if(tile.getStackInSlot(0) != null){
-					if(tile.getStackInSlot(0).stackSize >= 1){
-						if(tile.getStackInSlot(1) != null){
-							if((tile.getStackInSlot(1).getItem().equals(Blocks.planks) && propType == 1) 
-							|| (tile.getStackInSlot(1).getItem().equals(Items.iron_ingot) && propType == 2) 
-							|| (tile.getStackInSlot(1).getItem().equals(Blocks.obsidian) && propType == 3)){
-								if(tile.getStackInSlot(1).stackSize >= (propDiameter < 90 ? propBlades : propBlades*2)){
-									MFS.MFSNet.sendToServer(new CraftingTileUpdatePacket(tile, (short) -300));
-								}
-							}
-						}
-					}
+				if(tile.isMaterialCorrect() && tile.isMaterialSufficient() && tile.getStackInSlot(3) == null){
+					MFS.MFSNet.sendToServer(new PropellerBenchTilepdatePacket(tile, (short) -tile.opTime));
 				}
 			}
 			return;
@@ -178,9 +168,6 @@ public class GUIPropellerBench extends GuiContainer{
 		tier2Button.enabled = propType != 2;
 		tier3Button.enabled = propType != 3;
 
-		MFS.MFSNet.sendToServer(new CraftingTileUpdatePacket(tile, (short) ((propDiameter - 70)/5*1000 + (propPitch-55)/3*100 + propBlades*10 + (propType - 1))));
+		MFS.MFSNet.sendToServer(new PropellerBenchTilepdatePacket(tile, (short) ((propDiameter - 70)/5*1000 + (propPitch-55)/3*100 + propBlades*10 + (propType - 1))));
 	}
-	
-	@Override
-    public boolean doesGuiPauseGame(){return false;}
 }

@@ -3,6 +3,7 @@
 death.attack.propellor=%1$s был разорвать винтом.
 death.attack.propellor.player=%1$s был разорвать винтом в полете %2$s
 entity.mfs.Chest.name=Сундук самолета
+tile.PropellerBench.name=Propeller Bench
 
 item.MC172.name=MC-172
 item.PZLP11.name=PZL P.11
