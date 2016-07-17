@@ -31,9 +31,6 @@ public class EntityVulcanair extends EntityPlane{
 		hasFlaps = true;
 		maxFuel = 7000;
 		emptyMass=1230;
-		momentRoll=1845;
-		momentPitch=2000;
-		momentYaw=2667;
 		wingspan=12.0F;
 		wingArea=18.6F;
 		tailDistance=7;

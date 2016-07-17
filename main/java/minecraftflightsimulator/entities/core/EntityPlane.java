@@ -39,9 +39,6 @@ public abstract class EntityPlane extends EntityParent{
 	//Defined plane properties
 	protected int fuelCapcacity;//1 bucket is 100 units
 	protected float emptyMass;//kg
-	protected float momentRoll;//kg*m^2
-	protected float momentPitch;//kg*m^2
-	protected float momentYaw;//kg*m^2
 	protected float wingspan;//m
 	protected float wingArea;//m^2
 	protected float tailDistance;//m away from center of lift
@@ -57,6 +54,9 @@ public abstract class EntityPlane extends EntityParent{
 	private float addedMass;
 	private float currentCOG;
 	private float brakeDistance;
+	private float momentRoll;
+	private float momentPitch;
+	private float momentYaw;
 	private float motionRoll;
 	private float motionPitch;
 	private float motionYaw;
@@ -189,6 +189,9 @@ public abstract class EntityPlane extends EntityParent{
 			currentCOG = (currentCOG*currentMass + child.offsetZ*addedMass)/(currentMass+addedMass);
 			currentMass += addedMass;
 		}
+		momentRoll = (float) (emptyMass*(1.5F+(fuel/10000F)));
+		momentPitch = 2*currentMass;
+		momentYaw = 3*currentMass;
 				
 		currentWingArea = wingArea + wingArea*flapAngle/250F;
 		headingVec = getHeadingVec();
