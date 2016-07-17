@@ -13,7 +13,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class EntityPZLP11 extends EntityPlane{
-	private static final ResourceLocation foregroundGUI = new ResourceLocation("mfs", "textures/planes/pzlp11/gui.png");
 	private static final ResourceLocation backplateTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/hud_backplate.png");
 	private static final ResourceLocation moldingTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/hud_moulding.png");
 	
@@ -63,11 +62,6 @@ public class EntityPZLP11 extends EntityPlane{
 	@Override
 	public void drawHUD(int width, int height){
 		InstrumentHelper.drawBasicHUD(this, width, height, backplateTexture, moldingTexture);
-	}
-	
-	@Override
-	public GUIParent getGUI(EntityPlayer player){
-		return new GUIParent(player, this, foregroundGUI);
 	}
 	
 	@Override

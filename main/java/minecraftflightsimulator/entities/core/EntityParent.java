@@ -35,6 +35,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 import com.google.common.collect.BiMap;
@@ -483,12 +484,12 @@ public abstract class EntityParent extends EntityBase implements IInventory{
 	protected EntityEngine[] getEngines(){return engines.values().toArray(new EntityEngine[engines.size()]);}
 	protected EntityPropeller[] getPropellers(){return propellers.values().toArray(new EntityPropeller[propellers.size()]);}
 	public EntityPropeller getPropellerForEngine(String engineUUID){return propellers.get(enginePropellers.get(engineUUID));}
+	public GUIParent getGUI(EntityPlayer player){return new GUIParent(player, this, new ResourceLocation("mfs", "textures/planes/" + this.getClass().getSimpleName().substring(6).toLowerCase() + "/gui.png"));} 
 	
 	protected abstract void initPlaneProperties();
 	protected abstract void initChildPositions();
 	public abstract float[][] getCoreLocations();
 	public abstract void drawHUD(int width, int height);
-	public abstract GUIParent getGUI(EntityPlayer player);
 	public abstract void initParentContainerSlots(ContainerParent container);
 	
 	

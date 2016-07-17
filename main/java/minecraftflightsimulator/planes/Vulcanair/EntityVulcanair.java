@@ -14,7 +14,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class EntityVulcanair extends EntityPlane{
-	private static final ResourceLocation foregroundGUI = new ResourceLocation("mfs", "textures/planes/vulcanair/gui.png");
 	private static final ResourceLocation backplateTexture = new ResourceLocation("textures/blocks/wool_colored_white.png");
 	private static final ResourceLocation[] mouldingTextures = getMouldingTextures();
 	
@@ -68,11 +67,6 @@ public class EntityVulcanair extends EntityPlane{
 	@Override
 	public void drawHUD(int width, int height){
 		InstrumentHelper.drawBasicHUD(this, width, height, backplateTexture, mouldingTextures[this.textureOptions]);
-	}
-	
-	@Override
-	public GUIParent getGUI(EntityPlayer player){
-		return new GUIParent(player, this, foregroundGUI);
 	}
 	
 	@Override

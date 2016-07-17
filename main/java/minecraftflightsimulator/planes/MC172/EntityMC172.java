@@ -14,7 +14,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class EntityMC172 extends EntityPlane{
-	private static final ResourceLocation foregroundGUI = new ResourceLocation("mfs", "textures/planes/mc172/gui.png");
 	private static final ResourceLocation[] backplateTextures = getBackplateTextures();
 	private static final ResourceLocation[] mouldingTextures = getMouldingTextures();
 	
@@ -65,11 +64,6 @@ public class EntityMC172 extends EntityPlane{
 	@Override
 	public void drawHUD(int width, int height){
 		InstrumentHelper.drawBasicHUD(this, width, height, backplateTextures[this.textureOptions], mouldingTextures[this.textureOptions]);
-	}
-	
-	@Override
-	public GUIParent getGUI(EntityPlayer player){
-		return new GUIParent(player, this, foregroundGUI);
 	}
 	
 	@Override
