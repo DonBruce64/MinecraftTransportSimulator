@@ -39,9 +39,6 @@ public class EntityPZLP11 extends EntityPlane{
 		rudderArea=1.5F;
 		elevatorArea=3.0F;
 		defaultElevatorAngle=-10F;
-		initialDragCoeff=0.03F;
-		dragAtCriticalAoA=0.12F;
-		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(15 - 0, 2));		
 	}
 	
 	@Override

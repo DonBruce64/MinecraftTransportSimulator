@@ -31,8 +31,8 @@ public class EntityVulcanair extends EntityPlane{
 		hasFlaps = true;
 		maxFuel = 7000;
 		emptyMass=1230;
-		momentRoll=1285;
-		momentPitch=1825;
+		momentRoll=1845;
+		momentPitch=2000;
 		momentYaw=2667;
 		wingspan=12.0F;
 		wingArea=18.6F;
@@ -40,9 +40,6 @@ public class EntityVulcanair extends EntityPlane{
 		rudderArea=1.5F;
 		elevatorArea=3.0F;
 		defaultElevatorAngle=-10F;
-		initialDragCoeff=0.03F;
-		dragAtCriticalAoA=0.12F;
-		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(15, 2));//		
 	}
 	
 	@Override

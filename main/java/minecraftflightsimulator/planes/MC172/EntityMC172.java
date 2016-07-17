@@ -40,9 +40,6 @@ public class EntityMC172 extends EntityPlane{
 		rudderArea=1.5F;
 		elevatorArea=3.0F;
 		defaultElevatorAngle=-5F;
-		initialDragCoeff=0.03F;
-		dragAtCriticalAoA=0.12F;
-		dragCoeffOffset = (float) ((dragAtCriticalAoA - initialDragCoeff)/Math.pow(15, 2));		
 	}
 	
 	@Override

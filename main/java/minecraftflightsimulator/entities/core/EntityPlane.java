@@ -48,9 +48,6 @@ public abstract class EntityPlane extends EntityParent{
 	protected float rudderArea;//m^2
 	protected float elevatorArea;//m^2
 	protected float defaultElevatorAngle;//degrees	
-	protected float initialDragCoeff;//unit-less
-	protected float dragAtCriticalAoA;//unit-less
-	protected float dragCoeffOffset;//unit-less
 
 	//internal plane variables
 	private boolean hasPontoons;
@@ -119,6 +116,7 @@ public abstract class EntityPlane extends EntityParent{
 	public void onEntityUpdate(){
 		super.onEntityUpdate();	
 		if(!linked){return;}
+		momentRoll=1845;
 		refreshGroundedStatuses();
 		getBasicProperties();
 		getForcesAndMotions();
@@ -201,7 +199,7 @@ public abstract class EntityPlane extends EntityParent{
 		velocityVec = velocityVec.normalize();
 		
 		trackAngle = Math.toDegrees(Math.atan2(velocityVec.dot(wingVec), velocityVec.dot(headingVec)));
-		dragCoeff = dragCoeffOffset*Math.pow(trackAngle, 2) + initialDragCoeff;
+		dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
 		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapAngle/350F);
 		aileronLiftCoeff = getLiftCoeff(aileronAngle/10F, 2);
 		elevatorLiftCoeff = getLiftCoeff(defaultElevatorAngle - trackAngle - elevatorAngle/10F, 2);
