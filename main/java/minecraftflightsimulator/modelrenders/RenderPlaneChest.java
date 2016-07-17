@@ -28,7 +28,7 @@ public class RenderPlaneChest extends Render{
 			GL11.glTranslated(x, y, z);
 			GL11.glRotatef(-chest.parent.rotationYaw, 0, 1, 0);
 			GL11.glRotatef(180 + chest.parent.rotationPitch, 1, 0, 0);
-			GL11.glRotatef(chest.parent.rotationRoll, 0, 0, 1);
+			GL11.glRotatef(-chest.parent.rotationRoll, 0, 0, 1);
 	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 			this.bindTexture(chestTexture);
 			model.renderAll(-chest.lidAngle);
