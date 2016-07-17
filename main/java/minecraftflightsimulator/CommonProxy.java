@@ -65,6 +65,7 @@ public class CommonProxy{
 	public static List<Item> itemList = new ArrayList<Item>();
 	public static final Item planeMC172 = new ItemPlane(EntityMC172.class, 6);
 	public static final Item planePZLP11 = new ItemPlane(EntityPZLP11.class, 1);
+	public static final Item planeVulcanair = new ItemPlane(EntityVulcanair.class, 2);
 	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 1);
 	public static final Item planeOtter = new ItemPlane(EntityOtter.class, 1);
 	
@@ -111,6 +112,7 @@ public class CommonProxy{
 	private void initEntites(){
 		registerEntity(EntityMC172.class);
 		registerEntity(EntityPZLP11.class);
+		registerEntity(EntityVulcanair.class);
 		//registerEntity(EntityTrimotor.class);
 		//registerEntity(EntityOtter.class);
 		
