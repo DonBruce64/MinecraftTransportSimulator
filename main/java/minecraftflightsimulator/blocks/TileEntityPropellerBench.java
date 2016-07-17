@@ -21,8 +21,10 @@ public class TileEntityPropellerBench extends TileEntity implements IInventory{
 	public short propertyCode = 1120;
 	public int timeLeft;
 	public static final int opTime = 1000;
-	private ItemStack[] contents = new ItemStack[5];
+	
 	private BenchSound benchSound;
+	private ItemStack[] contents = new ItemStack[5];
+	private static final ItemStack op1Stack = new ItemStack(MFS.proxy.propeller, 1, 0);
 	
 	public TileEntityPropellerBench(){}
 	
@@ -44,7 +46,6 @@ public class TileEntityPropellerBench extends TileEntity implements IInventory{
 				}
 			}else{
 				isOn = false;
-				//TODO make this work for any item selected in the GUI, as helicopter blades will be added.
 				this.decrStackSize(0, 1);
 				this.decrStackSize(1, 70+5*(propertyCode/1000) < 90 ? (propertyCode%100/10) : (propertyCode%100/10)*2);
 				this.setInventorySlotContents(3, new ItemStack(MFS.proxy.propeller, 1, propertyCode));
