@@ -42,7 +42,7 @@ public class MFS {
 	    @Override
 		@SideOnly(Side.CLIENT)
 	    public Item getTabIconItem() {
-	    	return MFS.proxy.planeMC172;
+	    	return MFSRegistry.planeMC172;
 	    }
 	    
 	    @Override
@@ -51,9 +51,9 @@ public class MFS {
 	    	super.displayAllReleventItems(givenList);
 	    	ItemStack[] itemArray = (ItemStack[]) givenList.toArray(new ItemStack[givenList.size()]); 
 	    	int currentIndex = 0;
-	    	for(int i=0; i<proxy.itemList.size(); ++i){
+	    	for(int i=0; i<MFSRegistry.itemList.size(); ++i){
 	    		for(int j=0; j<givenList.size(); ++j){
-	    			if(proxy.itemList.get(i).equals(itemArray[j].getItem())){
+	    			if(MFSRegistry.itemList.get(i).equals(itemArray[j].getItem())){
 	    				givenList.set(currentIndex++, itemArray[j]);
 	    			}else{
 	    			}

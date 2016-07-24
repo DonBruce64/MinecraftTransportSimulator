@@ -1,6 +1,7 @@
 package minecraftflightsimulator.blocks;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.sounds.BenchSound;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -24,7 +25,7 @@ public class TileEntityPropellerBench extends TileEntity implements IInventory{
 	
 	private BenchSound benchSound;
 	private ItemStack[] contents = new ItemStack[5];
-	private static final ItemStack op1Stack = new ItemStack(MFS.proxy.propeller, 1, 0);
+	private static final ItemStack op1Stack = new ItemStack(MFSRegistry.propeller, 1, 0);
 	
 	public TileEntityPropellerBench(){}
 	
@@ -48,7 +49,7 @@ public class TileEntityPropellerBench extends TileEntity implements IInventory{
 				isOn = false;
 				this.decrStackSize(0, 1);
 				this.decrStackSize(1, 70+5*(propertyCode/1000) < 90 ? (propertyCode%100/10) : (propertyCode%100/10)*2);
-				this.setInventorySlotContents(3, new ItemStack(MFS.proxy.propeller, 1, propertyCode));
+				this.setInventorySlotContents(3, new ItemStack(MFSRegistry.propeller, 1, propertyCode));
 				return;
 			}
 			--timeLeft;

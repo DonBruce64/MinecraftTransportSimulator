@@ -5,7 +5,7 @@ import java.util.List;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityChild;
-import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityFlyable;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ContainerChest;
@@ -29,8 +29,8 @@ public class EntityPlaneChest extends EntityChild implements IInventory{
 		this.setSize(0.75F, 0.75F);
 	}
 	
-	public EntityPlaneChest(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, 0);
+	public EntityPlaneChest(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ){
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, 0);
 	}
 	
 	@Override

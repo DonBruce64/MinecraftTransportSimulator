@@ -1,17 +1,17 @@
 package minecraftflightsimulator.entities.parts;
 
-import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityFlyable;
 import net.minecraft.world.World;
 
-public class EntityEngineLarge extends EntityEngine{
+public class EntityEngineLarge extends EntityEngineAircraft{
 
 	public EntityEngineLarge(World world){
 		super(world);
 		this.setSize(1.2F, 1.2F);
 	}
 
-	public EntityEngineLarge(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
+	public EntityEngineLarge(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
 	}
 	
 	@Override

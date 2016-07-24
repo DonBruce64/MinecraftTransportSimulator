@@ -1,4 +1,4 @@
-package minecraftflightsimulator.helpers;
+package minecraftflightsimulator.utilities;
 
 import net.minecraft.util.MathHelper;
 

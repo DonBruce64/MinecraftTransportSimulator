@@ -1,8 +1,8 @@
 package minecraftflightsimulator.entities.parts;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.entities.core.EntityFlyable;
 import minecraftflightsimulator.entities.core.EntityLandingGear;
-import minecraftflightsimulator.entities.core.EntityParent;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -16,8 +16,8 @@ public class EntityPontoon extends EntityLandingGear{
 		this.setSize(0.75F, 0.75F);
 	}
 	
-	public EntityPontoon(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ);
+	public EntityPontoon(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ){
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ);
 	}
 	
 	@Override

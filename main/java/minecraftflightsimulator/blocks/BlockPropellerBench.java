@@ -1,8 +1,10 @@
 package minecraftflightsimulator.blocks;
 
 import minecraftflightsimulator.MFS;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -22,6 +24,17 @@ public class BlockPropellerBench extends BlockContainer{
 		}
 		return true;
 	}
+	
+	@Override
+    public void breakBlock(World world, int x, int y, int z, Block block, int meta){
+        TileEntityPropellerBench tile = (TileEntityPropellerBench) world.getTileEntity(x, y, z);
+        for(byte i=0; i<tile.getSizeInventory(); ++i){
+        	if(tile.getStackInSlot(i) != null){
+        		world.spawnEntityInWorld(new EntityItem(world, x, y, z, tile.getStackInSlot(i)));
+        	}
+        }
+		super.breakBlock(world, x, y, z, block, meta);
+    }
 	
 	@Override
 	public TileEntity createNewTileEntity(World world, int metadata){

@@ -2,28 +2,28 @@ package minecraftflightsimulator.sounds;
 
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntitySeat;
-import minecraftflightsimulator.helpers.MFSVector;
+import minecraftflightsimulator.utilities.MFSVector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 
-public class EngineSound extends EntitySoundBase{
-	private EntityEngine engine;
-	public float pitchFactor;
-	
+public class EngineSound extends DynamicSound{
+	private final EntityEngine engine;
+	private final EntityPlayer player;
 	private final float originalVolume;
+	private final float pitchFactor;
+	
 	private MFSVector playerPos = new MFSVector(0, 0, 0);
 	private MFSVector soundPos = new MFSVector(0, 0, 0);
-	double soundVelocity;
 	private double playerLastX;
 	private double playerLastY;
 	private double playerLastZ;
-	private final EntityPlayer player;
+	private double soundVelocity;
 	
 	public EngineSound(ResourceLocation location, EntityEngine engine, float volume, float pitchFactor){
 		super(location, engine, volume);
 		this.originalVolume = volume;
-		this.entity = this.engine = engine;
+		this.engine = (EntityEngine) this.entity;
 		this.pitchFactor = pitchFactor;
 		this.player = Minecraft.getMinecraft().thePlayer;
 		playerLastX = player.posX;

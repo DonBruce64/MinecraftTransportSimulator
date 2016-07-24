@@ -6,11 +6,11 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
-import minecraftflightsimulator.helpers.MFSVector;
-import minecraftflightsimulator.helpers.RotationHelper;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
 import minecraftflightsimulator.packets.control.RudderPacket;
+import minecraftflightsimulator.utilities.MFSVector;
+import minecraftflightsimulator.utilities.RotationHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
@@ -23,7 +23,7 @@ import net.minecraft.world.World;
  * @author don_bruce
  *
  */
-public abstract class EntityPlane extends EntityParent{	
+public abstract class EntityPlane extends EntityFlyable{	
 	//visible plane variables
 	public boolean hasFlaps;
 	
@@ -116,7 +116,6 @@ public abstract class EntityPlane extends EntityParent{
 	public void onEntityUpdate(){
 		super.onEntityUpdate();	
 		if(!linked){return;}
-		momentRoll=1845;
 		refreshGroundedStatuses();
 		getBasicProperties();
 		getForcesAndMotions();
@@ -175,9 +174,9 @@ public abstract class EntityPlane extends EntityParent{
 		currentMass = (float) (emptyMass + fuel/50);
 		for(EntityChild child : getChildren()){
 			addedMass = 0;
-			if(child.riddenByEntity != null){
-				if(child.riddenByEntity instanceof EntityPlayer){
-					addedMass = 100 + calculateInventoryWeight(((EntityPlayer) child.riddenByEntity).inventory);
+			if(child.getRider() != null){
+				if(child.getRider() instanceof EntityPlayer){
+					addedMass = 100 + calculateInventoryWeight(((EntityPlayer) child.getRider()).inventory);
 				}else{
 					addedMass = 100;
 				}
@@ -195,13 +194,13 @@ public abstract class EntityPlane extends EntityParent{
 				
 		currentWingArea = wingArea + wingArea*flapAngle/250F;
 		headingVec = getHeadingVec();
-		wingVec = RotationHelper.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
-		sideVec = headingVec.cross(wingVec);
+		verticalVec = RotationHelper.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
+		sideVec = headingVec.cross(verticalVec);
 		velocityVec.set(motionX, motionY, motionZ);
 		velocity = velocityVec.dot(headingVec);
 		velocityVec = velocityVec.normalize();
 		
-		trackAngle = Math.toDegrees(Math.atan2(velocityVec.dot(wingVec), velocityVec.dot(headingVec)));
+		trackAngle = Math.toDegrees(Math.atan2(velocityVec.dot(verticalVec), velocityVec.dot(headingVec)));
 		dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
 		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapAngle/350F);
 		aileronLiftCoeff = getLiftCoeff(aileronAngle/10F, 2);
@@ -237,25 +236,25 @@ public abstract class EntityPlane extends EntityParent{
 		
 		if(brakeForce > 0){
 			if(motionX > 0){
-				motionX = Math.max(motionX + (headingVec.xCoord*thrustForce - velocityVec.xCoord*(dragForce + brakeForce) + wingVec.xCoord*(wingForce + elevatorForce))/currentMass, 0);
+				motionX = Math.max(motionX + (headingVec.xCoord*thrustForce - velocityVec.xCoord*(dragForce + brakeForce) + verticalVec.xCoord*(wingForce + elevatorForce))/currentMass, 0);
 			}else if(motionX < 0){
-				motionX = Math.min(motionX + (headingVec.xCoord*thrustForce - velocityVec.xCoord*(dragForce + brakeForce) + wingVec.xCoord*(wingForce + elevatorForce))/currentMass, 0);
+				motionX = Math.min(motionX + (headingVec.xCoord*thrustForce - velocityVec.xCoord*(dragForce + brakeForce) + verticalVec.xCoord*(wingForce + elevatorForce))/currentMass, 0);
 			}
 			if(motionZ > 0){
-				motionZ = Math.max(motionZ + (headingVec.zCoord*thrustForce - velocityVec.zCoord*(dragForce + brakeForce) + wingVec.zCoord*(wingForce + elevatorForce))/currentMass, 0);	
+				motionZ = Math.max(motionZ + (headingVec.zCoord*thrustForce - velocityVec.zCoord*(dragForce + brakeForce) + verticalVec.zCoord*(wingForce + elevatorForce))/currentMass, 0);	
 			}else if(motionZ < 0){
-				motionZ = Math.min(motionZ + (headingVec.zCoord*thrustForce - velocityVec.zCoord*(dragForce + brakeForce) + wingVec.zCoord*(wingForce + elevatorForce))/currentMass, 0);
+				motionZ = Math.min(motionZ + (headingVec.zCoord*thrustForce - velocityVec.zCoord*(dragForce + brakeForce) + verticalVec.zCoord*(wingForce + elevatorForce))/currentMass, 0);
 			}
 		}else{
-			motionX += (headingVec.xCoord*thrustForce - velocityVec.xCoord*dragForce + wingVec.xCoord*(wingForce + elevatorForce))/currentMass;
-			motionZ += (headingVec.zCoord*thrustForce - velocityVec.zCoord*dragForce + wingVec.zCoord*(wingForce + elevatorForce))/currentMass;
+			motionX += (headingVec.xCoord*thrustForce - velocityVec.xCoord*dragForce + verticalVec.xCoord*(wingForce + elevatorForce))/currentMass;
+			motionZ += (headingVec.zCoord*thrustForce - velocityVec.zCoord*dragForce + verticalVec.zCoord*(wingForce + elevatorForce))/currentMass;
 		}		
 				
 		//TODO fix this to allow barrel rolls
-		motionY += (headingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + wingVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
+		motionY += (headingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + verticalVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
 		motionRoll = (float) (180/Math.PI*((1-headingVec.yCoord)*aileronTorque)/momentRoll);
 		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + (1-Math.abs(headingVec.yCoord))*(gravitationalTorque + brakeTorque))/momentPitch);
-		motionYaw = (float) (180/Math.PI*(headingVec.yCoord*aileronTorque - wingVec.yCoord*(-thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
+		motionYaw = (float) (180/Math.PI*(headingVec.yCoord*aileronTorque - verticalVec.yCoord*(-thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
 	}
 	
 	private void performGroundOperations(){

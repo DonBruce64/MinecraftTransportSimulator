@@ -1,18 +1,18 @@
 package minecraftflightsimulator.containers;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityVehicle;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
 
 public class SlotFuel extends SlotItem{
-	private EntityParent parent;
+	private EntityVehicle vehicle;
 	
-	public SlotFuel(EntityParent parent, int xDisplayPosition, int yDisplayPosition){
-		super(parent, xDisplayPosition, yDisplayPosition, parent.fuelBucketSlot);
-		this.parent = parent;
+	public SlotFuel(EntityVehicle vehicle, int xDisplayPosition, int yDisplayPosition){
+		super(vehicle, xDisplayPosition, yDisplayPosition, vehicle.fuelBucketSlot);
+		this.vehicle = vehicle;
 	}
 	
     public boolean isItemValid(ItemStack stack){
@@ -35,15 +35,15 @@ public class SlotFuel extends SlotItem{
     	super.putStack(stack);
     	if(stack != null){
     		if(stack.getItem() instanceof IFluidContainerItem){
-    			if(parent.fuel < parent.maxFuel && parent.getStackInSlot(parent.emptyBucketSlot) == null){
+    			if(vehicle.fuel < vehicle.maxFuel && vehicle.getStackInSlot(vehicle.emptyBucketSlot) == null){
 	    			FluidStack fluidStack = ((IFluidContainerItem) stack.getItem()).getFluid(stack);
 	    			if(fluidStack != null){
 	    				if(fluidStack.getFluid() != null){
 	    					if(MFS.fluidValues.containsKey(fluidStack.getFluid().getName())){
 	    						double fuelValue = MFS.fluidValues.get(fluidStack.getFluid().getName());
-	    						FluidStack drainedFluid = ((IFluidContainerItem) stack.getItem()).drain(stack, (int) ((parent.maxFuel - parent.fuel)*fuelValue), true);
-	    						parent.fuel += drainedFluid.amount;
-	    						parent.setInventorySlotContents(parent.emptyBucketSlot, stack);
+	    						FluidStack drainedFluid = ((IFluidContainerItem) stack.getItem()).drain(stack, (int) ((vehicle.maxFuel - vehicle.fuel)*fuelValue), true);
+	    						vehicle.fuel += drainedFluid.amount;
+	    						vehicle.setInventorySlotContents(vehicle.emptyBucketSlot, stack);
 	    						this.putStack(null);
     						}
     					}
@@ -51,8 +51,8 @@ public class SlotFuel extends SlotItem{
     			}
     		}else if(FluidContainerRegistry.isFilledContainer(stack)){
     			FluidStack fluidStack = FluidContainerRegistry.getFluidForFilledItem(stack);
-    			if(parent.getStackInSlot(parent.emptyBucketSlot) != null){
-    				ItemStack emptyBucketStack = parent.getStackInSlot(parent.emptyBucketSlot);
+    			if(vehicle.getStackInSlot(vehicle.emptyBucketSlot) != null){
+    				ItemStack emptyBucketStack = vehicle.getStackInSlot(vehicle.emptyBucketSlot);
     				ItemStack emptyContainerStack = FluidContainerRegistry.drainFluidContainer(stack.copy());
     				if(!emptyBucketStack.getItem().equals(emptyContainerStack.getItem()) || emptyBucketStack.stackSize == emptyBucketStack.getMaxStackSize()){
     					return;
@@ -60,12 +60,12 @@ public class SlotFuel extends SlotItem{
     			}
     			if(MFS.fluidValues.containsKey(fluidStack.getFluid().getName())){
     				double fuelValue = MFS.fluidValues.get(fluidStack.getFluid().getName());  
-    				if((parent.fuel + fluidStack.amount*fuelValue) - 100 < parent.maxFuel){
-    					parent.fuel = Math.min(parent.fuel + fluidStack.amount*fuelValue, parent.maxFuel);
-    					if(parent.getStackInSlot(parent.emptyBucketSlot) != null){
-    						++parent.getStackInSlot(parent.emptyBucketSlot).stackSize; 
+    				if((vehicle.fuel + fluidStack.amount*fuelValue) - 100 < vehicle.maxFuel){
+    					vehicle.fuel = Math.min(vehicle.fuel + fluidStack.amount*fuelValue, vehicle.maxFuel);
+    					if(vehicle.getStackInSlot(vehicle.emptyBucketSlot) != null){
+    						++vehicle.getStackInSlot(vehicle.emptyBucketSlot).stackSize; 
     					}else{
-    						parent.setInventorySlotContents(parent.emptyBucketSlot, FluidContainerRegistry.drainFluidContainer(stack));
+    						vehicle.setInventorySlotContents(vehicle.emptyBucketSlot, FluidContainerRegistry.drainFluidContainer(stack));
     					}
     					this.putStack(null);
     				}

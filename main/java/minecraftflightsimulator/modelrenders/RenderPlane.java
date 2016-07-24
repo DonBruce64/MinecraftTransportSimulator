@@ -1,7 +1,7 @@
 package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.entities.core.EntityPlane;
-import minecraftflightsimulator.helpers.InstrumentHelper;
+import minecraftflightsimulator.utilities.InstrumentHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
@@ -24,7 +24,7 @@ public abstract class RenderPlane extends Render{
 	@Override
 	public void doRender(Entity entity, double x, double y, double z, float yaw, float pitch){
 		EntityPlane plane=(EntityPlane) entity;
-		InstrumentHelper.updateEngineProperties(plane);
+		InstrumentHelper.updateAircraftEngineProperties(plane);
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glRotatef(-plane.rotationYaw, 0, 1, 0);
@@ -61,10 +61,10 @@ public abstract class RenderPlane extends Render{
 		GL11.glVertex3d(plane.headingVec.xCoord*debugForces[0], 2 + plane.headingVec.yCoord*debugForces[0],  plane.headingVec.zCoord*debugForces[0]);
 		
 		GL11.glVertex3d(Math.cos(Math.toRadians(plane.rotationYaw)), 2, Math.sin(Math.toRadians(plane.rotationYaw)));
-		GL11.glVertex3d(Math.cos(Math.toRadians(plane.rotationYaw)) + plane.wingVec.xCoord*debugForces[2]/10, 2 + plane.wingVec.yCoord*debugForces[2]/10,  Math.sin(Math.toRadians(plane.rotationYaw)) + plane.wingVec.zCoord*debugForces[2]/10);
+		GL11.glVertex3d(Math.cos(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.xCoord*debugForces[2]/10, 2 + plane.verticalVec.yCoord*debugForces[2]/10,  Math.sin(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.zCoord*debugForces[2]/10);
 
 		GL11.glVertex3d(-Math.cos(Math.toRadians(plane.rotationYaw)), 2, -Math.sin(Math.toRadians(plane.rotationYaw)));
-		GL11.glVertex3d(-Math.cos(Math.toRadians(plane.rotationYaw)) + plane.wingVec.xCoord*debugForces[2]/10, 2 + plane.wingVec.yCoord*debugForces[2]/10,  -Math.sin(Math.toRadians(plane.rotationYaw)) + plane.wingVec.zCoord*debugForces[2]/10);
+		GL11.glVertex3d(-Math.cos(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.xCoord*debugForces[2]/10, 2 + plane.verticalVec.yCoord*debugForces[2]/10,  -Math.sin(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.zCoord*debugForces[2]/10);
 		GL11.glEnd();
 		
 		GL11.glLineWidth(5);
@@ -73,11 +73,11 @@ public abstract class RenderPlane extends Render{
 		GL11.glVertex3d(plane.headingVec.xCoord*debugForces[0], 2 + plane.headingVec.yCoord*debugForces[0],  plane.headingVec.zCoord*debugForces[0]);
 		GL11.glVertex3d(plane.headingVec.xCoord*(debugForces[0] - debugForces[1]), 2 + plane.headingVec.yCoord*(debugForces[0] - debugForces[1]),  plane.headingVec.zCoord*(debugForces[0] - debugForces[1]));
 		
-		GL11.glVertex3d(Math.cos(Math.toRadians(plane.rotationYaw)) + plane.wingVec.xCoord*debugForces[2]/10, 2 + plane.wingVec.yCoord*debugForces[2]/10,  Math.sin(Math.toRadians(plane.rotationYaw)) + plane.wingVec.zCoord*debugForces[2]/10);
-		GL11.glVertex3d(Math.cos(Math.toRadians(plane.rotationYaw)) + plane.wingVec.xCoord*(debugForces[2] - debugForces[3])/10, 2 + plane.wingVec.yCoord*(debugForces[2] - debugForces[3])/10,  Math.sin(Math.toRadians(plane.rotationYaw)) + plane.wingVec.zCoord*(debugForces[2] - debugForces[3])/10);
+		GL11.glVertex3d(Math.cos(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.xCoord*debugForces[2]/10, 2 + plane.verticalVec.yCoord*debugForces[2]/10,  Math.sin(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.zCoord*debugForces[2]/10);
+		GL11.glVertex3d(Math.cos(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.xCoord*(debugForces[2] - debugForces[3])/10, 2 + plane.verticalVec.yCoord*(debugForces[2] - debugForces[3])/10,  Math.sin(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.zCoord*(debugForces[2] - debugForces[3])/10);
 		
-		GL11.glVertex3d(-Math.cos(Math.toRadians(plane.rotationYaw)) + plane.wingVec.xCoord*debugForces[2]/10, 2 + plane.wingVec.yCoord*debugForces[2]/10,  -Math.sin(Math.toRadians(plane.rotationYaw)) + plane.wingVec.zCoord*debugForces[2]/10);
-		GL11.glVertex3d(-Math.cos(Math.toRadians(plane.rotationYaw)) + plane.wingVec.xCoord*(debugForces[2] - debugForces[3])/10, 2 + plane.wingVec.yCoord*(debugForces[2] - debugForces[3])/10,  -Math.sin(Math.toRadians(plane.rotationYaw)) + plane.wingVec.zCoord*(debugForces[2] - debugForces[3])/10);
+		GL11.glVertex3d(-Math.cos(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.xCoord*debugForces[2]/10, 2 + plane.verticalVec.yCoord*debugForces[2]/10,  -Math.sin(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.zCoord*debugForces[2]/10);
+		GL11.glVertex3d(-Math.cos(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.xCoord*(debugForces[2] - debugForces[3])/10, 2 + plane.verticalVec.yCoord*(debugForces[2] - debugForces[3])/10,  -Math.sin(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.zCoord*(debugForces[2] - debugForces[3])/10);
 		GL11.glEnd();
 		
 		GL11.glColor4f(0, 0, 1, 1);

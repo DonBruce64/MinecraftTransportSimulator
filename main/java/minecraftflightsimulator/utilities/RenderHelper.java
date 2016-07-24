@@ -1,4 +1,4 @@
-package minecraftflightsimulator.helpers;
+package minecraftflightsimulator.utilities;
 
 import java.awt.Color;
 
@@ -20,8 +20,8 @@ public class RenderHelper{
 	public static boolean lockedView = true;
 	public static int hudMode = 2;
 	private static int zoomLevel = 4;
-	private static final String[] rollNames =new String[] {"camRoll", "R", "field_78495_O"};
-	private static final String[] zoomNames = new String[] {"thirdPersonDistance", "E", "field_78490_B"};
+	private static final String[] rollNames = new String[] {"camRoll", "R", "field_78495_O"};
+  private static final String[] zoomNames = new String[] {"thirdPersonDistance", "thirdPersonDistanceTemp", "field_78490_B", "field_78491_C"};
 	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	private static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
 	
@@ -49,7 +49,6 @@ public class RenderHelper{
 			ObfuscationReflectionHelper.setPrivateValue(EntityRenderer.class, Minecraft.getMinecraft().entityRenderer, roll, rollNames);
 		}catch (Exception e){
 			System.err.println("ERROR IN AIRCRAFT ROLL REFLECTION!");
-			throw new RuntimeException(e);
 		}
 	}
 	

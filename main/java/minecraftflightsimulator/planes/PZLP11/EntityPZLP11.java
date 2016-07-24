@@ -1,13 +1,13 @@
 package minecraftflightsimulator.planes.PZLP11;
 
-import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.containers.ContainerParent;
+import minecraftflightsimulator.MFSRegistry;
+import minecraftflightsimulator.containers.ContainerVehicle;
 import minecraftflightsimulator.containers.GUIParent;
 import minecraftflightsimulator.containers.SlotFuel;
 import minecraftflightsimulator.containers.SlotItem;
 import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.entities.core.EntityPlane;
-import minecraftflightsimulator.helpers.InstrumentHelper;
+import minecraftflightsimulator.utilities.InstrumentHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -45,7 +45,7 @@ public class EntityPZLP11 extends EntityPlane{
 		addRightGearPosition(new float[]{1.4F, -1.8F, 0.375F});
 		addEnginePosition(new float[]{0, -0.3F, 0.65F});
 		addPropellerPosition(new float[]{0, -0.375F, 1.65F});
-		addPilotPosition(new float[]{0, -.1F, -1.3F});
+		addControllerPosition(new float[]{0, -.1F, -1.3F});
 	}
 	
 	@Override
@@ -55,21 +55,21 @@ public class EntityPZLP11 extends EntityPlane{
 	
 	@Override
 	public void drawHUD(int width, int height){
-		InstrumentHelper.drawBasicHUD(this, width, height, backplateTexture, moldingTexture);
+		InstrumentHelper.drawBasicFlyableHUD(this, width, height, backplateTexture, moldingTexture);
 	}
 	
 	@Override
-	public void initParentContainerSlots(ContainerParent container){
-		container.addSlotToContainer(new SlotItem(this, 86, 113, 2, MFS.proxy.wheelLarge, MFS.proxy.pontoon));
-		container.addSlotToContainer(new SlotItem(this, 68, 113, 1, MFS.proxy.skid));
-		container.addSlotToContainer(new SlotItem(this, 50, 113, 4, MFS.proxy.wheelLarge, MFS.proxy.pontoon));
-		container.addSlotToContainer(new SlotItem(this, 131, 62, 6, MFS.proxy.engineLarge));
-		container.addSlotToContainer(new SlotItem(this, 149, 62, 10, MFS.proxy.propeller));
+	public void initVehicleContainerSlots(ContainerVehicle container){
+		container.addSlotToContainer(new SlotItem(this, 86, 113, 2, MFSRegistry.wheelLarge, MFSRegistry.pontoon));
+		container.addSlotToContainer(new SlotItem(this, 68, 113, 1, MFSRegistry.skid));
+		container.addSlotToContainer(new SlotItem(this, 50, 113, 4, MFSRegistry.wheelLarge, MFSRegistry.pontoon));
+		container.addSlotToContainer(new SlotItem(this, 131, 62, 6, MFSRegistry.engineLarge));
+		container.addSlotToContainer(new SlotItem(this, 149, 62, 10, MFSRegistry.propeller));
 		container.addSlotToContainer(new SlotPilot(this, 113, 62));
 		container.addSlotToContainer(new SlotItem(this, 7, 113, this.emptyBucketSlot));
 		container.addSlotToContainer(new SlotFuel(this, 7, 73));
 		for(byte i=0; i<6; ++i){
-			container.addSlotToContainer(new SlotItem(this, 7 + 18*(i%3), i < 3 ? 7 : 25, (i < 3 ? i + 1 : i + 3 ) + instrumentStartSlot, MFS.proxy.flightInstrument));
+			container.addSlotToContainer(new SlotItem(this, 7 + 18*(i%3), i < 3 ? 7 : 25, (i < 3 ? i + 1 : i + 3 ) + instrumentStartSlot, MFSRegistry.flightInstrument));
 		}
 	}
 }

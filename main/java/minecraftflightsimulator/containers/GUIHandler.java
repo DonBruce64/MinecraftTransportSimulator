@@ -2,7 +2,7 @@ package minecraftflightsimulator.containers;
 
 import minecraftflightsimulator.blocks.BlockPropellerBench;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
-import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.entity.Entity;
@@ -17,8 +17,8 @@ public class GUIHandler implements IGuiHandler{
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z){
 		if(ID != -1){
 			Entity entity = world.getEntityByID(ID);
-			if(entity instanceof EntityParent){
-				return new ContainerParent(player.inventory, (EntityParent) entity);
+			if(entity instanceof EntityVehicle){
+				return new ContainerVehicle(player.inventory, (EntityVehicle) entity);
 			}else if(entity instanceof EntityPlaneChest){
 				return new ContainerChest(player.inventory, (EntityPlaneChest) entity);
 			}
@@ -34,8 +34,8 @@ public class GUIHandler implements IGuiHandler{
 	public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z){
 		if(ID != -1){
 			Entity entity = world.getEntityByID(ID);
-			if(entity instanceof EntityParent){
-				return ((EntityParent) entity).getGUI(player);
+			if(entity instanceof EntityVehicle){
+				return ((EntityVehicle) entity).getGUI(player);
 			}else if(entity instanceof EntityPlaneChest){
 				return  new GuiChest(player.inventory, (EntityPlaneChest) entity);
 			}

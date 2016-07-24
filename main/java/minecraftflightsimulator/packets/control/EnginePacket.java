@@ -2,8 +2,7 @@ package minecraftflightsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.core.EntityParent;
-import minecraftflightsimulator.entities.core.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityFlyable;
 import net.minecraft.client.Minecraft;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
@@ -35,11 +34,11 @@ public class EnginePacket implements IMessage{
 
 	public static class EnginePacketHandler implements IMessageHandler<EnginePacket, IMessage> {
 		public IMessage onMessage(EnginePacket message, MessageContext ctx){
-			EntityParent thisEntity;
+			EntityFlyable thisEntity;
 			if(ctx.side==Side.SERVER){
-				thisEntity = (EntityParent) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+				thisEntity = (EntityFlyable) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 			}else{
-				thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+				thisEntity = (EntityFlyable) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 			}	
 			if(thisEntity!=null){
 				thisEntity.setEngineState(message.engineCode);

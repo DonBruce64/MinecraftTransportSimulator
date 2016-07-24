@@ -1,6 +1,6 @@
 package minecraftflightsimulator.entities.parts;
 
-import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityFlyable;
 import net.minecraft.world.World;
 
 public class EntityWheelLarge extends EntityWheel{
@@ -11,7 +11,7 @@ public class EntityWheelLarge extends EntityWheel{
 		this.wheelDiameter=0.6875F;
 	}
 	
-	public EntityWheelLarge(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ);
+	public EntityWheelLarge(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ){
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ);
 	}
 }

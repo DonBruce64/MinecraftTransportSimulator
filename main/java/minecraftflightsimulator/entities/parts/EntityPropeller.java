@@ -5,7 +5,7 @@ import java.util.List;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityBase;
 import minecraftflightsimulator.entities.core.EntityChild;
-import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityFlyable;
 import minecraftflightsimulator.packets.control.EnginePacket;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -14,6 +14,7 @@ import net.minecraft.util.EntityDamageSource;
 import net.minecraft.world.World;
 
 public class EntityPropeller extends EntityChild{
+	private EntityFlyable flyer;
 	public int health;
 	public int numberBlades;
 	public int pitch;
@@ -27,8 +28,8 @@ public class EntityPropeller extends EntityChild{
 		this.setSize(0.8F, 1.0F);
 	}
 	
-	public EntityPropeller(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
+	public EntityPropeller(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
 		if(propertyCode%10==1){
 			this.health = 500;
 		}else if(propertyCode%10==2){
@@ -45,6 +46,8 @@ public class EntityPropeller extends EntityChild{
 	public void onUpdate(){
 		super.onUpdate();
 		if(!linked){return;}
+		flyer = (EntityFlyable) this.parent;
+				
 		if(worldObj.isRemote){
 			angularVelocity = (float) (0.8F*Math.atan(engineRPM/250F));
 			angularPosition = (angularVelocity+angularPosition)%6.283185312F;
@@ -72,8 +75,8 @@ public class EntityPropeller extends EntityChild{
 	}
 	
 	public double getThrustForce(){
-		if(parent!=null){
-			return parent.airDensity*Math.PI*Math.pow(0.0254*diameter/2D, 2)*(Math.pow(engineRPM*0.0254*pitch/60D, 2)-(engineRPM*0.0254*pitch/60D)*parent.velocity*20)*Math.pow(diameter/2D/pitch + numberBlades/1000D, 1.5)/400D;
+		if(flyer!=null){
+			return flyer.airDensity*Math.PI*Math.pow(0.0254*diameter/2D, 2)*(Math.pow(engineRPM*0.0254*pitch/60D, 2)-(engineRPM*0.0254*pitch/60D)*flyer.velocity*20)*Math.pow(diameter/2D/pitch + numberBlades/1000D, 1.5)/400D;
 		}else{
 			return 0;
 		}
@@ -82,9 +85,9 @@ public class EntityPropeller extends EntityChild{
 	@Override
 	public boolean hitByEntity(Entity entity){
 		if(!worldObj.isRemote){
-			if(parent != null){
+			if(flyer != null){
 				if(entity instanceof EntityPlayer){
-					MFS.MFSNet.sendToServer(new EnginePacket(parent.getEntityId(), parent.getEngineOfHitPropeller(this.UUID)));
+					MFS.MFSNet.sendToServer(new EnginePacket(flyer.getEntityId(), flyer.getEngineOfHitPropeller(this.UUID)));
 				}
 			}
 		}

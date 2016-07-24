@@ -1,6 +1,6 @@
 package minecraftflightsimulator.entities.parts;
 
-import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityFlyable;
 import net.minecraft.world.World;
 
 public class EntityPontoonDummy extends EntityPontoon{
@@ -8,7 +8,7 @@ public class EntityPontoonDummy extends EntityPontoon{
 		super(world);
 	}
 	
-	public EntityPontoonDummy(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ);
+	public EntityPontoonDummy(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ){
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ);
 	}
 }

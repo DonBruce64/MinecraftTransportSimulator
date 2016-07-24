@@ -3,9 +3,9 @@ package minecraftflightsimulator.planes.PZLP11;
 import java.awt.Color;
 
 import minecraftflightsimulator.entities.core.EntityPlane;
-import minecraftflightsimulator.helpers.InstrumentHelper;
-import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.modelrenders.RenderPlane;
+import minecraftflightsimulator.utilities.InstrumentHelper;
+import minecraftflightsimulator.utilities.RenderHelper;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -82,12 +82,12 @@ public class RenderPZLP11 extends RenderPlane{
 		GL11.glScalef(0.00390625F*1F, 0.00390625F*1F, 0.00390625F*1F);
 		for(byte i=0; i<plane.instrumentList.size(); ++i){
 			if(plane.instrumentList.get(i) != null){
-				InstrumentHelper.drawInstrument(plane, (i%5)*60, i<5 ? 0 : 62, plane.instrumentList.get(i).getItemDamage(), false);
+				InstrumentHelper.drawFlyableInstrument(plane, (i%5)*60, i<5 ? 0 : 62, plane.instrumentList.get(i).getItemDamage(), false);
 			}
 		}
 		GL11.glScalef(2F, 2F, 2F);
-		InstrumentHelper.drawInstrument(plane, 32, 52, 15, false);
-		InstrumentHelper.drawInstrument(plane, 96, 52, 16, false);
+		InstrumentHelper.drawFlyableInstrument(plane, 32, 52, 15, false);
+		InstrumentHelper.drawFlyableInstrument(plane, 96, 52, 16, false);
 		GL11.glPopMatrix();
 	}
 

@@ -1,12 +1,12 @@
-package minecraftflightsimulator.helpers;
+package minecraftflightsimulator.utilities;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.BrakePacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
@@ -341,7 +341,7 @@ public class ControlHelper{
 		}
 	}
 	
-	private static void checkBrakes(EntityParent vehicle){
+	private static void checkBrakes(EntityVehicle vehicle){
 		if(isControlPressed(controls.BRAKE)){
 			if(!brakeKeyPressed){
 				brakeKeyPressed = true;
@@ -357,7 +357,7 @@ public class ControlHelper{
 		}
 	}
 	
-	private static void checkStarter(EntityParent vehicle){
+	private static void checkStarter(EntityVehicle vehicle){
 		if(isControlPressed(controls.STARTER)){
 			if(isControlPressed(controls.MOD)){
 				MFS.MFSNet.sendToServer(new EnginePacket(vehicle.getEntityId(), (byte) 0));
@@ -369,7 +369,7 @@ public class ControlHelper{
 		}
 	}
 	
-	private static void checkThrottle(EntityParent vehicle){
+	private static void checkThrottle(EntityVehicle vehicle){
 		if(joystickMap.get(controls.THROTTLE.joystickName) != 999 && joystick != null){
 			MFS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), (byte) (Math.max(50 + getAxisState(controls.THROTTLE, false)/2, throttleKills ? 0 : 15))));
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.THROTTLE.keyboardIncrementName))){

@@ -1,10 +1,11 @@
-package minecraftflightsimulator.helpers;
+package minecraftflightsimulator.utilities;
 
 import java.awt.Color;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityFlyable;
 import minecraftflightsimulator.entities.core.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityVehicle;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -16,7 +17,7 @@ public class InstrumentHelper{
 	private static double[] engineRPMs = new double[4];
 	private static int maxEngineRPMs;
 	
-	public static void updateEngineProperties(EntityParent parent){
+	public static void updateAircraftEngineProperties(EntityFlyable parent){
 		numberEngines = 0;
 		maxEngineRPMs = 2500;
 		for(double[] property : parent.getEngineProperties()){
@@ -27,12 +28,12 @@ public class InstrumentHelper{
         }
 	}
 	
-	public static void drawBasicHUD(EntityParent parent, int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){		
+	public static void drawBasicFlyableHUD(EntityFlyable flyer, int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){		
 		if(RenderHelper.hudMode == 3){
 			drawLowerConsole(width, height, backplateTexture, moldingTexture);
-			for(int i=5; i<parent.instrumentList.size(); ++i){
-				if(parent.instrumentList.get(i) != null){
-					drawInstrument(parent, (5*(i-5)+6)*width/32, height - 32, parent.instrumentList.get(i).getItemDamage(), true);
+			for(int i=5; i<flyer.instrumentList.size(); ++i){
+				if(flyer.instrumentList.get(i) != null){
+					drawFlyableInstrument(flyer, (5*(i-5)+6)*width/32, height - 32, flyer.instrumentList.get(i).getItemDamage(), true);
 				}
 			}
 			height -= 64;
@@ -42,70 +43,70 @@ public class InstrumentHelper{
 			drawLeftConsole(width, height, backplateTexture, moldingTexture);
 			drawRightConsole(width, height, backplateTexture, moldingTexture);
 			
-			if(parent instanceof EntityPlane){
-				if(((EntityPlane) parent).hasFlaps){
-					drawFlapIndicator((EntityPlane) parent, width/8 - 15, height - 19, true);
+			if(flyer instanceof EntityPlane){
+				if(((EntityPlane) flyer).hasFlaps){
+					drawFlapIndicator((EntityPlane) flyer, width/8 - 15, height - 19, true);
 				}
 			}
-	    	drawThrottle(parent, 7*width/8 + 10, height - 18, true);
-	    	drawParkingBrake(parent, 15*width/16 + 14, height - 18, true);
+	    	drawThrottle(flyer, 7*width/8 + 10, height - 18, true);
+	    	drawParkingBrake(flyer, 15*width/16 + 14, height - 18, true);
 	    	
 	    	GL11.glPushMatrix();
 	    	GL11.glScalef(0.75F, 0.75F, 0.75F);
-	    	if(parent.instrumentList.get(0) != null){
-	    		drawInstrument(parent, width/4, (height - 24)*4/3, parent.instrumentList.get(0).getItemDamage(), true);
+	    	if(flyer.instrumentList.get(0) != null){
+	    		drawFlyableInstrument(flyer, width/4, (height - 24)*4/3, flyer.instrumentList.get(0).getItemDamage(), true);
 	    	}
-	    	if(parent.instrumentList.get(4) != null){
-	    		drawInstrument(parent, width*17/16, (height - 24)*4/3, parent.instrumentList.get(4).getItemDamage(), true);
+	    	if(flyer.instrumentList.get(4) != null){
+	    		drawFlyableInstrument(flyer, width*17/16, (height - 24)*4/3, flyer.instrumentList.get(4).getItemDamage(), true);
 	    	}
 	    	GL11.glPopMatrix();
 		}
 		if(RenderHelper.hudMode != 0){
 			for(int i=1; i<4; ++i){
-				if(parent.instrumentList.get(i) != null){
-					drawInstrument(parent, (5*i+6)*width/32, height - 32, parent.instrumentList.get(i).getItemDamage(), true);
+				if(flyer.instrumentList.get(i) != null){
+					drawFlyableInstrument(flyer, (5*i+6)*width/32, height - 32, flyer.instrumentList.get(i).getItemDamage(), true);
 				}
 			}
 		}
 	}
 	
-	public static void drawInstrument(EntityParent parent, int x, int y, int type, boolean hud){
+	public static void drawFlyableInstrument(EntityFlyable flyer, int x, int y, int type, boolean hud){
 		if(type == 0){
-			drawAttitudeIndicator(parent, x, y, hud);
+			drawAttitudeIndicator(flyer, x, y, hud);
 		}else if(type == 1){
-			drawAltimeter(parent, x, y, hud);
+			drawAltimeter(flyer, x, y, hud);
 		}else if(type == 2){
-			drawHeadingIndicator(parent, x, y, hud);
+			drawHeadingIndicator(flyer, x, y, hud);
 		}else if(type == 3){
-			drawAirspeedIndicator(parent, x, y, hud);
+			drawAirspeedIndicator(flyer, x, y, hud);
 		}else if(type == 4){
-			drawTurnCoordinator(parent, x, y, hud);
+			drawTurnCoordinator(flyer, x, y, hud);
 		}else if(type == 5){
-			drawTurnAndSlipIndicator(parent, x, y, hud);
+			drawTurnAndSlipIndicator(flyer, x, y, hud);
 		}else if(type == 6){
-			drawVerticalSpeedIndicator(parent, x, y, hud);
+			drawVerticalSpeedIndicator(flyer, x, y, hud);
 		}else if(type == 7){
-			drawLiftReserveIndicator(parent, x, y, hud);
+			drawLiftReserveIndicator(flyer, x, y, hud);
 		}else if(type == 8){
 			//DUMMY
 		}else if(type == 9){
 			//DUMMY
 		}else if(type == 10){
-			drawTachometer(parent, x, y, hud);
+			drawTachometer(flyer, x, y, hud);
 		}else if(type == 11){
-			drawFuelGauge(parent, x, y, hud);
+			drawFuelGauge(flyer, x, y, hud);
 		}else if(type == 12){
-			drawFuelFlowGauge(parent, x, y, hud);
+			drawFuelFlowGauge(flyer, x, y, hud);
 		}else if(type == 13){
-			drawEngineTempGauge(parent, x, y, hud);
+			drawEngineTempGauge(flyer, x, y, hud);
 		}else if(type == 14){
 			//drawOilPressureGauge()
 		}else if(type == 15){
-			drawThrottle(parent, x, y, hud);
+			drawThrottle(flyer, x, y, hud);
 		}else if(type == 16){
-			drawParkingBrake(parent, x, y, hud);
+			drawParkingBrake(flyer, x, y, hud);
 		}else if(type == 17){
-			drawFlapIndicator((EntityPlane) parent, x, y, hud);
+			drawFlapIndicator((EntityPlane) flyer, x, y, hud);
 		}
 	}
     
@@ -135,25 +136,25 @@ public class InstrumentHelper{
     	RenderHelper.renderQuadUV(0, 0, width, width, height-64, height, height, height-64, 0, 0, 0, 0, 0, 6, 0, 1, false);
     }
     
-	private static void drawThrottle(EntityParent parent, int centerX, int centerY, boolean hud){		
+	private static void drawThrottle(EntityVehicle vehicle, int centerX, int centerY, boolean hud){		
     	RenderHelper.bindTexture(instrumentTexture);
 		if(!hud){
 			GL11.glPushMatrix();
     		GL11.glDisable(GL11.GL_LIGHTING);
     		RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+5.25, centerY-5.25, 0, 0, 0.75, 0.875, 0.875, 1, false);
     		
-    		RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY+1.75, centerY+1.75, -7-parent.throttle/10F, 0, 0, -7-parent.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
-    		RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY-1.75, centerY-1.75, -7-parent.throttle/10F, 0, 0, -7-parent.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
-        	RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY-1.75, centerY-1.75, -7-parent.throttle/10F, 0, 0, -7-parent.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
-        	RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY+1.75, centerY+1.75, -7-parent.throttle/10F, 0, 0, -7-parent.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
+    		RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY+1.75, centerY+1.75, -7-vehicle.throttle/10F, 0, 0, -7-vehicle.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
+    		RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY-1.75, centerY-1.75, -7-vehicle.throttle/10F, 0, 0, -7-vehicle.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
+        	RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY-1.75, centerY-1.75, -7-vehicle.throttle/10F, 0, 0, -7-vehicle.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
+        	RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY+1.75, centerY+1.75, -7-vehicle.throttle/10F, 0, 0, -7-vehicle.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
         	
-        	RenderHelper.renderSquareUV(centerX-7, centerX+7, centerY+7, centerY-7, -7-parent.throttle/10F, -7-parent.throttle/10F, 0.75, 0.875, 0.875, 1, true);
+        	RenderHelper.renderSquareUV(centerX-7, centerX+7, centerY+7, centerY-7, -7-vehicle.throttle/10F, -7-vehicle.throttle/10F, 0.75, 0.875, 0.875, 1, true);
     		GL11.glEnable(GL11.GL_LIGHTING);
     		GL11.glPopMatrix();
     	}else{
         	RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+0.175, centerY-10.5, 0, 0, 0.75, 0.875, 0.875, 1, false);
-        	RenderHelper.renderSquareUV(centerX-1.75, centerX+1.75, centerY+7+parent.throttle/10, centerY-7, 0, 0, 0.640625, 0.734375, 0.890625, 0.984375, false);
-        	RenderHelper.renderSquareUV(centerX-7, centerX+7, centerY+7+parent.throttle/10F, centerY-7+parent.throttle/10F, 0, 0, 0.75, 0.875, 0.875, 1, false);
+        	RenderHelper.renderSquareUV(centerX-1.75, centerX+1.75, centerY+7+vehicle.throttle/10, centerY-7, 0, 0, 0.640625, 0.734375, 0.890625, 0.984375, false);
+        	RenderHelper.renderSquareUV(centerX-7, centerX+7, centerY+7+vehicle.throttle/10F, centerY-7+vehicle.throttle/10F, 0, 0, 0.75, 0.875, 0.875, 1, false);
     	}
     }
     
@@ -191,7 +192,7 @@ public class InstrumentHelper{
     	}
     }
     
-	private static void drawParkingBrake(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawParkingBrake(EntityVehicle vehicle, int centerX, int centerY, boolean hud){
     	RenderHelper.bindTexture(instrumentTexture);
     	
     	if(!hud){
@@ -199,7 +200,7 @@ public class InstrumentHelper{
     		GL11.glDisable(GL11.GL_LIGHTING);
     		RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+5.25, centerY-5.25, 0, 0, 0.75, 0.875, 0.875, 1, false);
         	
-    		if(parent.parkingBrakeOn || parent.brakeOn){        		
+    		if(vehicle.parkingBrakeOn || vehicle.brakeOn){        		
         		RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY+1.75, centerY+1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
         		RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY-1.75, centerY-1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
             	RenderHelper.renderQuadUV(centerX+1.75, centerX+1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY-1.75, centerY-1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
@@ -226,7 +227,7 @@ public class InstrumentHelper{
     		GL11.glPopMatrix();
     	}else{
     		RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+0.175, centerY-10.5, 0, 0, 0.75, 0.875, 0.875, 1, true);
-        	if(parent.parkingBrakeOn || parent.brakeOn){
+        	if(vehicle.parkingBrakeOn || vehicle.brakeOn){
         		RenderHelper.renderSquareUV(centerX-1.75, centerX+1.75, centerY+15, centerY-7, 0, 0, 0.640625, 0.734375, 0.890625, 0.984375, false);
         		RenderHelper.renderQuadUV(centerX-5, centerX+5, centerX+5, centerX-5, centerY+35, centerY+35, centerY, centerY, 0, 0, 0, 0, 0.2578125, 0.3671875, 0.921875, 0.953125, false);
     	        
@@ -247,32 +248,32 @@ public class InstrumentHelper{
     	RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.75, 1, 0, 0.25, false);
     }
     
-	private static void drawAttitudeIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawAttitudeIndicator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
 		GL11.glPushMatrix();
 		if(!hud){GL11.glDisable(GL11.GL_LIGHTING);}
 		RenderHelper.bindTexture(instrumentTexture);
 		
-		rotationHelper(centerX, centerY, -parent.rotationRoll);
-		if(parent.rotationPitch >= 24){
+		rotationHelper(centerX, centerY, -flyer.rotationRoll);
+		if(flyer.rotationPitch >= 24){
 			RenderHelper.renderQuadUV(centerX-20, centerX+20, centerX+20, centerX-20, centerY+20, centerY+20, centerY-20, centerY-20, 0, 0, 0, 0, 0.25, 0.5625, 0.53125, 0.84375, false);
-		}else if(parent.rotationPitch <= -24){
+		}else if(flyer.rotationPitch <= -24){
 			RenderHelper.renderQuadUV(centerX-20, centerX+20, centerX+20, centerX-20, centerY+20, centerY+20, centerY-20, centerY-20, 0, 0, 0, 0, 0.4375, 0.75, 0.53125, 0.84375, false);
 		}else{
-			RenderHelper.renderQuadUV(centerX-20, centerX+20, centerX+20, centerX-20, centerY+20, centerY+20, centerY-20, centerY-20, 0, 0, 0, 0, 0.34375 - parent.rotationPitch*0.00390625, 0.65625 - 0.00390625*parent.rotationPitch, 0.53125,  0.84375, false);
+			RenderHelper.renderQuadUV(centerX-20, centerX+20, centerX+20, centerX-20, centerY+20, centerY+20, centerY-20, centerY-20, 0, 0, 0, 0, 0.34375 - flyer.rotationPitch*0.00390625, 0.65625 - 0.00390625*flyer.rotationPitch, 0.53125,  0.84375, false);
 		}
     	
 		if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
     	RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.25, 0.5, 0, 0.25, false);
     	
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-    	rotationHelper(centerX, centerY, parent.rotationRoll);
+    	rotationHelper(centerX, centerY, flyer.rotationRoll);
     	RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.5, 0.75, 0, 0.25, false);
     	
     	if(!hud){GL11.glEnable(GL11.GL_LIGHTING);}
 		GL11.glPopMatrix();
 	}
 	
-	private static void drawAltimeter(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawAltimeter(EntityFlyable flyer, int centerX, int centerY, boolean hud){
     	drawGaugeBase(centerX, centerY);
     	if(!hud){
 			GL11.glPushMatrix();
@@ -285,16 +286,16 @@ public class InstrumentHelper{
         drawDialIncrements(centerX, centerY, -180, 180, 25, 5, 11);
         drawDialNumbers(centerX, centerY, 0, 320,  17, 0, 1, 9, 0.7F);
         if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-        drawShortPointer(centerX, centerY, (float) (.36*(parent.posY - (ControlHelper.seaLevelOffset ? 64 : 0))), 20, 6);
+        drawShortPointer(centerX, centerY, (float) (.36*(flyer.posY - (ControlHelper.seaLevelOffset ? 64 : 0))), 20, 6);
         if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-        drawLongPointer(centerX, centerY, (float) (3.6*(parent.posY - (ControlHelper.seaLevelOffset ? 64 : 0))), 35, 3);
+        drawLongPointer(centerX, centerY, (float) (3.6*(flyer.posY - (ControlHelper.seaLevelOffset ? 64 : 0))), 35, 3);
         if(!hud){
         	GL11.glEnable(GL11.GL_LIGHTING);
         	GL11.glPopMatrix();
         }
     }
     
-	private static void drawHeadingIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawHeadingIndicator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
     	drawGaugeBase(centerX, centerY);
     	if(!hud){
 			GL11.glPushMatrix();
@@ -308,7 +309,7 @@ public class InstrumentHelper{
     	drawScaledString("HEADING", centerX*2-18, centerY*2+14, 0.5F);
     	
         GL11.glPushMatrix();
-        rotationHelper(centerX, centerY, -parent.rotationYaw);
+        rotationHelper(centerX, centerY, -flyer.rotationYaw);
         drawDialIncrements(centerX, centerY, 0, 360, 25, 5, 25);
         drawDialIncrements(centerX, centerY, 7.5F, 367.5F, 25, 3, 25);
         GL11.glScalef(0.60F, 0.60F, 0.60F);
@@ -345,7 +346,7 @@ public class InstrumentHelper{
         }
     }
     
-	private static void drawAirspeedIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawAirspeedIndicator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
     	drawGaugeBase(centerX, centerY);
 		if(!hud){
 			GL11.glPushMatrix();
@@ -361,7 +362,7 @@ public class InstrumentHelper{
     	drawDialIncrements(centerX, centerY, 30, 330, 25, 8, 9);
     	drawDialIncrements(centerX, centerY, 30, 330, 25, 3, 41);
     	drawDialNumbers(centerX, centerY, 30, 330, 15, 0, 10, 4, 0.6F);
-    	drawLongPointer(centerX, centerY, (float) (30+7.5*parent.velocity*MFS.planeSpeedFactor*20), 35, 2);
+    	drawLongPointer(centerX, centerY, (float) (30+7.5*flyer.velocity*MFS.planeSpeedFactor*20), 35, 2);
     	
     	if(!hud){
     		GL11.glEnable(GL11.GL_LIGHTING);
@@ -369,7 +370,7 @@ public class InstrumentHelper{
     	}
     }
     
-	private static void drawTurnCoordinator(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawTurnCoordinator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
 		RenderHelper.bindTexture(instrumentTexture);
 		drawGaugeBase(centerX, centerY);
 		GL11.glPushMatrix();
@@ -384,12 +385,12 @@ public class InstrumentHelper{
     	RenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+18.75, centerY+6.25, 0, 0, 0.75, 1, 0.5625, 0.625, false);
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
     	
-    	float turn = Math.max(Math.min(((parent.rotationRoll - parent.prevRotationRoll)/10 + parent.rotationYaw - parent.prevRotationYaw)/0.15F*25F, 50), -50);
+    	float turn = Math.max(Math.min(((flyer.rotationRoll - flyer.prevRotationRoll)/10 + flyer.rotationYaw - flyer.prevRotationYaw)/0.15F*25F, 50), -50);
     	rotationHelper(centerX, centerY, turn);
     	RenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+6.25, centerY-6.25, 0, 0, 0.75, 1, 0.5, 0.5625, false);
     	rotationHelper(centerX, centerY, -turn);
     	
-    	double slip = parent.sideVec.dot(parent.velocityVec);
+    	double slip = flyer.sideVec.dot(flyer.velocityVec);
     	RenderHelper.renderSquareUV(centerX-2.5 + 20*slip, centerX+2.5 + 20*slip, centerY+15 - Math.abs(slip), centerY+10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
     	if(!hud){GL11.glTranslatef(0, 0, 0.1F);}
 
@@ -403,7 +404,7 @@ public class InstrumentHelper{
     	GL11.glPopMatrix();
 	}
 	
-	private static void drawTurnAndSlipIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawTurnAndSlipIndicator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
 		RenderHelper.bindTexture(instrumentTexture);
 		drawGaugeBase(centerX, centerY);
 		GL11.glPushMatrix();
@@ -454,7 +455,7 @@ public class InstrumentHelper{
     	GL11.glVertex2d(centerX + 2, centerY - 20);
     	GL11.glEnd();
     	
-    	float turn = Math.max(Math.min((parent.rotationYaw - parent.prevRotationYaw)/0.15F*25F, 50), -50);
+    	float turn = Math.max(Math.min((flyer.rotationYaw - flyer.prevRotationYaw)/0.15F*25F, 50), -50);
     	rotationHelper(centerX, centerY, turn + 25);
     	GL11.glBegin(GL11.GL_QUADS);
     	GL11.glVertex2d(centerX - 2, centerY - 10);
@@ -480,7 +481,7 @@ public class InstrumentHelper{
     	GL11.glEnable(GL11.GL_TEXTURE_2D);
     	
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-    	double slip = parent.sideVec.dot(parent.velocityVec);
+    	double slip = flyer.sideVec.dot(flyer.velocityVec);
     	RenderHelper.renderSquareUV(centerX-2.5 + 20*slip, centerX+2.5 + 20*slip, centerY+15 - Math.abs(slip), centerY+10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
     	if(!hud){GL11.glTranslatef(0, 0, 0.1F);}
 
@@ -492,7 +493,7 @@ public class InstrumentHelper{
     	GL11.glPopMatrix();
 	}
 	
-	private static void drawVerticalSpeedIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawVerticalSpeedIndicator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
 		drawGaugeBase(centerX, centerY);
     	if(!hud){
 			GL11.glPushMatrix();
@@ -509,7 +510,7 @@ public class InstrumentHelper{
     	drawDialIncrements(centerX, centerY, -47.5F, 80, 25, 2, 16);
     	drawDialIncrements(centerX, centerY, -260, -132.5F, 25, 2, 16);
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-    	drawLongPointer(centerX, centerY, (float) (-90+10.625*parent.motionY*20), 35, 2);
+    	drawLongPointer(centerX, centerY, (float) (-90+10.625*flyer.motionY*20), 35, 2);
     	
         if(!hud){
         	GL11.glEnable(GL11.GL_LIGHTING);
@@ -517,7 +518,7 @@ public class InstrumentHelper{
         }
 	}
 	
-	private static void drawLiftReserveIndicator(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawLiftReserveIndicator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
 		drawGaugeBase(centerX, centerY);
     	GL11.glPushMatrix();
     	if(!hud){
@@ -546,7 +547,7 @@ public class InstrumentHelper{
         }
     	
 
-        float angle = (float) Math.max(Math.min(parent.trackAngle*3 + 20, 35), -35);
+        float angle = (float) Math.max(Math.min(flyer.trackAngle*3 + 20, 35), -35);
         rotationHelper(centerX, centerY + 20, angle);    	
     	GL11.glColor3f(0, 0, 0);
     	GL11.glBegin(GL11.GL_QUADS);
@@ -574,7 +575,7 @@ public class InstrumentHelper{
         GL11.glPopMatrix();
 	}
 	
-	private static void drawTachometer(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawTachometer(EntityVehicle vehicle, int centerX, int centerY, boolean hud){
     	drawGaugeBase(centerX, centerY);
     	if(!hud){
 			GL11.glPushMatrix();
@@ -599,7 +600,7 @@ public class InstrumentHelper{
 	
 	
     
-	private static void drawFuelGauge(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawFuelGauge(EntityVehicle vehicle, int centerX, int centerY, boolean hud){
     	drawGaugeBase(centerX, centerY);
     	if(!hud){
 			GL11.glPushMatrix();
@@ -610,14 +611,14 @@ public class InstrumentHelper{
     	drawScaledString("BUCKETS", centerX*2-20, centerY*2+14, 0.5F);
     	drawScaledString("FUEL", centerX*2-10, centerY*2+24, 0.5F);
     	drawScaledString("0", centerX*2-40, centerY*2-10, 0.5F);
-    	drawScaledString(String.valueOf(parent.maxFuel/1000/2F), centerX*2-7, centerY*2-45, 0.5F);
-    	drawScaledString(String.valueOf(parent.maxFuel/1000), centerX*2+35, centerY*2-10, 0.5F);
+    	drawScaledString(String.valueOf(vehicle.maxFuel/1000/2F), centerX*2-7, centerY*2-45, 0.5F);
+    	drawScaledString(String.valueOf(vehicle.maxFuel/1000), centerX*2+35, centerY*2-10, 0.5F);
         drawDialIncrements(centerX, centerY+8, -50, 50, 25, 7, 5);
         drawDialColoring(centerX, centerY+8, -50, 50, 18, 2, new float[] {1, 1, 1});
         if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
     	drawDialColoring(centerX, centerY+8, -50, -45, 25, 9, new float[] {1, 0, 0});
     	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-        drawLongPointer(centerX, centerY+8, (float) (-50+parent.fuel/parent.maxFuel*100F), 35, 3);
+        drawLongPointer(centerX, centerY+8, (float) (-50+vehicle.fuel/vehicle.maxFuel*100F), 35, 3);
         if(!hud){
         	GL11.glEnable(GL11.GL_LIGHTING);
         	GL11.glPopMatrix();
@@ -626,7 +627,7 @@ public class InstrumentHelper{
 	
 	
 	
-	private static void drawFuelFlowGauge(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawFuelFlowGauge(EntityVehicle vehicle, int centerX, int centerY, boolean hud){
     	drawGaugeBase(centerX, centerY);
     	if(!hud){
 			GL11.glPushMatrix();
@@ -641,14 +642,14 @@ public class InstrumentHelper{
         drawDialIncrements(centerX, centerY, -135, 135, 25, 3, 41);
         drawDialIncrements(centerX, centerY, -135, 135, 25, 5, 9);
         drawDialNumbers(centerX, centerY, -135, 135, 16, 0, 1, 4, 0.6F);
-    	drawLongPointer(centerX, centerY, (float) (-135 + parent.fuelFlow*20*60*60/1000), 30, 3);
+    	drawLongPointer(centerX, centerY, (float) (-135 + vehicle.fuelFlow*20*60*60/1000), 30, 3);
         if(!hud){
         	GL11.glEnable(GL11.GL_LIGHTING);
         	GL11.glPopMatrix();
         }
     }
 	
-	private static void drawEngineTempGauge(EntityParent parent, int centerX, int centerY, boolean hud){
+	private static void drawEngineTempGauge(EntityVehicle vehicle, int centerX, int centerY, boolean hud){
 		drawGaugeBase(centerX, centerY);
     	if(!hud){
 			GL11.glPushMatrix();

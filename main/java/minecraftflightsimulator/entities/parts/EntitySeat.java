@@ -2,10 +2,10 @@ package minecraftflightsimulator.entities.parts;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityChild;
-import minecraftflightsimulator.entities.core.EntityParent;
-import minecraftflightsimulator.helpers.MFSVector;
-import minecraftflightsimulator.helpers.RotationHelper;
+import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.packets.general.ChatPacket;
+import minecraftflightsimulator.utilities.MFSVector;
+import minecraftflightsimulator.utilities.RotationHelper;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -21,18 +21,18 @@ public class EntitySeat extends EntityChild{
 		this.setSize(0.75F, 0.75F);
 	}
 	
-	public EntitySeat(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode, boolean driver){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
+	public EntitySeat(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode, boolean driver){
+		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
 		this.driver=driver;
 	}
 	
 	@Override
     public boolean interactFirst(EntityPlayer player){
 		if(!worldObj.isRemote){
-			if(riddenByEntity==null){
+			if(this.getRider()==null){
 				player.mountEntity(this);
 				return true;
-			}else if(!riddenByEntity.equals(player)){
+			}else if(!this.getRider().equals(player)){
 				MFS.MFSNet.sendTo(new ChatPacket("This seat is taken!"), (EntityPlayerMP) player);
 			}
 		}
@@ -48,10 +48,11 @@ public class EntitySeat extends EntityChild{
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
 		if(!linked){return;}
-		if(this.riddenByEntity != null){
+		
+		if(this.getRider() != null){
 			hadRiderLastTick=true;
 			if(worldObj.isRemote){
-				MFS.proxy.updateSeatedRider(this, (EntityLivingBase) this.riddenByEntity);
+				MFS.proxy.updateSeatedRider(this, (EntityLivingBase) this.getRider());
 			}
 		}else if(hadRiderLastTick){
 			hadRiderLastTick=false;
@@ -63,12 +64,12 @@ public class EntitySeat extends EntityChild{
 	
 	@Override
 	public void updateRiderPosition(){
-		if(this.riddenByEntity != null && this.parent != null){
-			MFSVector posVec = RotationHelper.getRotatedPoint(offsetX, (float) (offsetY + riddenByEntity.getYOffset()), (float) offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
-			riddenByEntity.setPosition(parent.posX + posVec.xCoord, parent.posY + posVec.yCoord, parent.posZ + posVec.zCoord);
-			riddenByEntity.motionX = parent.motionX;
-			riddenByEntity.motionY = parent.motionY;
-			riddenByEntity.motionZ = parent.motionZ;
+		if(this.getRider() != null && this.parent != null){
+			MFSVector posVec = RotationHelper.getRotatedPoint(offsetX, (float) (offsetY + this.getRider().getYOffset()), (float) offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
+			this.getRider().setPosition(parent.posX + posVec.xCoord, parent.posY + posVec.yCoord, parent.posZ + posVec.zCoord);
+			this.getRider().motionX = parent.motionX;
+			this.getRider().motionY = parent.motionY;
+			this.getRider().motionZ = parent.motionZ;
         }
 	}
 	

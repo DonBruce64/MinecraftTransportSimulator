@@ -2,7 +2,7 @@ package minecraftflightsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.core.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityVehicle;
 import net.minecraft.client.Minecraft;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
@@ -34,11 +34,11 @@ public class ThrottlePacket implements IMessage{
 
 	public static class ThrottlePacketHandler implements IMessageHandler<ThrottlePacket, IMessage> {
 		public IMessage onMessage(ThrottlePacket message, MessageContext ctx) {
-			EntityPlane thisEntity;
+			EntityVehicle thisEntity;
 			if(ctx.side==Side.SERVER){
-				thisEntity = (EntityPlane) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+				thisEntity = (EntityVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 			}else{
-				thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+				thisEntity = (EntityVehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 			}
 			if(thisEntity!=null){
 				if(message.throttle == Byte.MAX_VALUE){

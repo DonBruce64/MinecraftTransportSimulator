@@ -4,8 +4,8 @@ import java.awt.Color;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
-import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.packets.general.PropellerBenchTilepdatePacket;
+import minecraftflightsimulator.utilities.RenderHelper;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;

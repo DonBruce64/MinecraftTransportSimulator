@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.helpers.ControlHelper;
+import minecraftflightsimulator.utilities.ControlHelper;
 import net.java.games.input.Component;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;

@@ -1,6 +1,6 @@
 package minecraftflightsimulator.containers;
 
-import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityVehicle;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
@@ -9,8 +9,8 @@ public class GUIParent extends GuiContainer{
 	private static final ResourceLocation background = new ResourceLocation("mfs", "textures/guis/gui_background.png");
 	private ResourceLocation foreground;
 
-	public GUIParent(EntityPlayer player, EntityParent parent, ResourceLocation foreground){
-		super(new ContainerParent(player.inventory, parent));
+	public GUIParent(EntityPlayer player, EntityVehicle vehicle, ResourceLocation foreground){
+		super(new ContainerVehicle(player.inventory, vehicle));
 		this.foreground=foreground;
 		this.allowUserInput=true;
 		this.xSize = 175;

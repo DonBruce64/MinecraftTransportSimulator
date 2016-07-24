@@ -2,8 +2,8 @@ package minecraftflightsimulator.entities.core;
 
 import java.util.List;
 
-import minecraftflightsimulator.helpers.MFSVector;
-import minecraftflightsimulator.helpers.RotationHelper;
+import minecraftflightsimulator.utilities.MFSVector;
+import minecraftflightsimulator.utilities.RotationHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -118,6 +118,10 @@ public abstract class EntityChild extends EntityBase{
 		return worldObj.getBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z)).getCollisionBoundingBoxFromPool(worldObj, 0, 0, 0) != null;
 	}
 	
+	public Entity getRider(){
+		return this.riddenByEntity;
+	}
+	
 	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
@@ -135,6 +139,8 @@ public abstract class EntityChild extends EntityBase{
 		tagCompound.setFloat("offsetX", this.offsetX);
 		tagCompound.setFloat("offsetY", this.offsetY);
 		tagCompound.setFloat("offsetZ", this.offsetZ);
-		tagCompound.setString("parentUUID", this.parentUUID);
+		if(!this.parentUUID.isEmpty()){
+			tagCompound.setString("parentUUID", this.parentUUID);
+		}
 	}
 }

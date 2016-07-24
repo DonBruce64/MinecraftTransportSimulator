@@ -1,9 +1,9 @@
 package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
-import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.models.ModelPropeller;
 import minecraftflightsimulator.models.ModelPropellerBench;
+import minecraftflightsimulator.utilities.RenderHelper;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -35,7 +35,7 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer{
 		}else if(bench.timeLeft > moveEndTime){
 			tableTranslation = 1F*(bench.timeLeft - moveEndTime)/(bench.opTime - 2*moveEndTime) - 0.5F;
 			bodyTranslation = (float) (Math.cos(50*Math.PI*(bench.timeLeft-moveEndTime)/(bench.opTime - 2*moveEndTime))/6 - 1/6F);
-			bitRotation = bench.isOn ? (bitRotation+1)%360 : 0;
+			bitRotation = bench.isOn ? (--bitRotation)%360 : 0;
 		}else if(bench.timeLeft > 0){
 			tableTranslation = -0.5F*bench.timeLeft/moveEndTime;
 			bodyTranslation = 0;

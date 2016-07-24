@@ -3,9 +3,9 @@ package minecraftflightsimulator.planes.Vulcanair;
 import java.awt.Color;
 
 import minecraftflightsimulator.entities.core.EntityPlane;
-import minecraftflightsimulator.helpers.InstrumentHelper;
-import minecraftflightsimulator.helpers.RenderHelper;
 import minecraftflightsimulator.modelrenders.RenderPlane;
+import minecraftflightsimulator.utilities.InstrumentHelper;
+import minecraftflightsimulator.utilities.RenderHelper;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -13,7 +13,6 @@ import org.lwjgl.opengl.GL11;
 public class RenderVulcanair extends RenderPlane{
 	private static final ModelVulcanair model = new ModelVulcanair();
 	private static final ResourceLocation[] exteriorTextures = getExteriorTextures();
-	private static final ResourceLocation interiorTexture = new ResourceLocation("textures/blocks/wool_colored_white.png");
 
 	public RenderVulcanair(){}
 	
@@ -21,16 +20,15 @@ public class RenderVulcanair extends RenderPlane{
 	protected void renderPlane(EntityPlane plane){
 		GL11.glTranslatef(0, 0.75F, 0.12F);
 		GL11.glRotatef(180, 1, 0, 0);
-    	RenderHelper.bindTexture(exteriorTextures[plane.textureOptions > 1 ? 0 : plane.textureOptions]);
-        model.renderPlane();
-        RenderHelper.bindTexture(exteriorTextures[plane.textureOptions > 1 ? 0 : plane.textureOptions]);
+    	RenderHelper.bindTexture(exteriorTextures[plane.textureOptions > 6 ? 0 : plane.textureOptions]);
+        model.renderFuselage();
+        model.renderAilerons(plane.aileronAngle/10F * 0.017453292F);
+        model.renderElevators(plane.elevatorAngle/10F * 0.017453292F);
+        model.renderRudder(plane.rudderAngle/10F * 0.017453292F);
+        model.renderFlaps(plane.flapAngle/10F * 0.017453292F);
         model.renderInterior();
         GL11.glTranslatef(0, -0.75F, -0.12F);
         GL11.glRotatef(180, 1, 0, 0);
-        //model.renderAilerons(plane.aileronAngle/10F * 0.017453292F);
-        //model.renderElevators(plane.elevatorAngle/10F * 0.017453292F);
-        //model.renderRudder(plane.rudderAngle/10F * 0.017453292F);
-        //model.renderFlaps(plane.flapAngle/10F * 0.017453292F);
 	}
 
 	@Override
@@ -53,20 +51,20 @@ public class RenderVulcanair extends RenderPlane{
 		GL11.glScalef(0.00390625F*1.3F, 0.00390625F*1.3F, 0.00390625F*1.3F);
 		for(byte i=0; i<plane.instrumentList.size(); ++i){
 			if(plane.instrumentList.get(i) != null){
-				InstrumentHelper.drawInstrument(plane, (i%5)*62, i<5 ? 0 : 62, plane.instrumentList.get(i).getItemDamage(), false);
+				InstrumentHelper.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, plane.instrumentList.get(i).getItemDamage(), false);
 			}
 		}
-		InstrumentHelper.drawInstrument(plane, 295, -5, 15, false);
-		InstrumentHelper.drawInstrument(plane, 295, 70, 16, false);
-		InstrumentHelper.drawInstrument(plane, 295, 30, 17, false);
+		InstrumentHelper.drawFlyableInstrument(plane, 295, -5, 15, false);
+		InstrumentHelper.drawFlyableInstrument(plane, 295, 70, 16, false);
+		InstrumentHelper.drawFlyableInstrument(plane, 295, 30, 17, false);
 		GL11.glPopMatrix();
 	}
 	
 	private static ResourceLocation[] getExteriorTextures(){
-		ResourceLocation[] texArray = new ResourceLocation[2];
-		int texIndex = 0;
-		texArray[texIndex++] = new ResourceLocation("mfs", "textures/planes/vulcanair/fuselage0.png");
-		texArray[texIndex++] = new ResourceLocation("mfs", "textures/planes/vulcanair/fuselage0.png");
+		ResourceLocation[] texArray = new ResourceLocation[7];
+		for(byte i=0; i<7; ++i){
+			texArray[i] = new ResourceLocation("mfs", "textures/planes/vulcanair/fuselage" + i + ".png");
+		}
 		return texArray;
 	}
 

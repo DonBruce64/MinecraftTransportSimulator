@@ -2,8 +2,7 @@ package minecraftflightsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.core.EntityParent;
-import minecraftflightsimulator.entities.core.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityVehicle;
 import net.minecraft.client.Minecraft;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
@@ -35,11 +34,11 @@ public class BrakePacket implements IMessage{
 
 	public static class BrakePacketHandler implements IMessageHandler<BrakePacket, IMessage> {
 		public IMessage onMessage(BrakePacket message, MessageContext ctx){
-			EntityParent thisEntity;
+			EntityVehicle thisEntity;
 			if(ctx.side==Side.SERVER){
-				thisEntity = (EntityParent) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+				thisEntity = (EntityVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 			}else{
-				thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+				thisEntity = (EntityVehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 			}
 			if(thisEntity!=null){
 				if((message.brakeCode & 2) == 2){
