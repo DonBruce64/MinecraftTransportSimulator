@@ -29,7 +29,6 @@ public abstract class EntityParent extends EntityBase{
 	public EntityParent(World world){
 		super(world);
 		this.setSize(0.75F, 0.75F);
-		this.ignoreFrustumCheck=true;
 		this.preventEntitySpawning = false;
 	}
 	
@@ -45,12 +44,7 @@ public abstract class EntityParent extends EntityBase{
 		super.onEntityUpdate();
 		if(!this.hasUUID()){return;}
 		if(!linked){
-			if(this.ticksExisted>100){
-				System.err.println("KILLING PARENT WITH WRONG NUMBER OF CHILDREN.  WANTED:" + numberChildren + " FOUND:" + children.size() +".");
-				this.setDead();
-			}else{
-				linked = children.size() == numberChildren ? true : false;
-			}
+			linked = children.size() == numberChildren;
 		}else if(!worldObj.isRemote && this.ticksExisted%5==0){
 			MFS.MFSNet.sendToAll(new ServerSyncPacket(getEntityId(), posX, posY, posZ, motionX, motionY, motionZ, rotationPitch, rotationRoll, rotationYaw));
 		}

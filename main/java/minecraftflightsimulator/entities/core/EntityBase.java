@@ -17,6 +17,8 @@ public abstract class EntityBase extends Entity{
 	public EntityBase(World world) {
 		super(world);
 		this.preventEntitySpawning = true;
+		this.ignoreFrustumCheck = true;
+		this.renderDistanceWeight = 100;
 	}
 	
 	public boolean hasUUID(){
