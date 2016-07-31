@@ -1,6 +1,5 @@
 package minecraftflightsimulator.utilities;
 
-import net.minecraft.util.MathHelper;
 
 /**
  * Proxy class used in place of Vec3.
@@ -31,7 +30,7 @@ public class MFSVector {
         double distX = vec2.xCoord - this.xCoord;
         double distY = vec2.yCoord - this.yCoord;
         double distZ = vec2.zCoord - this.zCoord;
-        return (double)MathHelper.sqrt_double(distX * distX + distY * distY + distZ * distZ);
+        return Math.sqrt(distX * distX + distY * distY + distZ * distZ);
     }
 	
     public double dot(MFSVector vec2){
@@ -48,6 +47,6 @@ public class MFSVector {
 	}
 	
     public double getLength(){
-        return (double)MathHelper.sqrt_double(this.xCoord * this.xCoord + this.yCoord * this.yCoord + this.zCoord * this.zCoord);
+        return Math.sqrt(this.xCoord * this.xCoord + this.yCoord * this.yCoord + this.zCoord * this.zCoord);
     }
 }
