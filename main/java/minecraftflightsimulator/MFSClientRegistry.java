@@ -23,8 +23,6 @@ import minecraftflightsimulator.modelrenders.RenderSkid;
 import minecraftflightsimulator.modelrenders.RenderWheel;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
 import minecraftflightsimulator.planes.MC172.RenderMC172;
-import minecraftflightsimulator.planes.Otter.EntityOtter;
-import minecraftflightsimulator.planes.Otter.RenderOtter;
 import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
 import minecraftflightsimulator.planes.PZLP11.RenderPZLP11;
 import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
@@ -52,7 +50,6 @@ public class MFSClientRegistry{
 		RenderingRegistry.registerEntityRenderingHandler(EntityMC172.class, new RenderMC172());
 		RenderingRegistry.registerEntityRenderingHandler(EntityTrimotor.class, new RenderTrimotor());
 		RenderingRegistry.registerEntityRenderingHandler(EntityVulcanair.class, new RenderVulcanair());
-		RenderingRegistry.registerEntityRenderingHandler(EntityOtter.class, new RenderOtter());
 		RenderingRegistry.registerEntityRenderingHandler(EntityPZLP11.class, new RenderPZLP11());
 		
 		RenderingRegistry.registerEntityRenderingHandler(EntitySeat.class, new RenderSeat());

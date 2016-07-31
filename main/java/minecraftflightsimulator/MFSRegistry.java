@@ -41,7 +41,6 @@ import minecraftflightsimulator.packets.general.PropellerBenchTilepdatePacket;
 import minecraftflightsimulator.packets.general.ServerSendDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
-import minecraftflightsimulator.planes.Otter.EntityOtter;
 import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
 import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.planes.Vulcanair.EntityVulcanair;
@@ -62,8 +61,7 @@ public class MFSRegistry{
 	public static final Item planeMC172 = new ItemPlane(EntityMC172.class, 6);
 	public static final Item planePZLP11 = new ItemPlane(EntityPZLP11.class, 1);
 	public static final Item planeVulcanair = new ItemPlane(EntityVulcanair.class, 7);
-	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 1);
-	public static final Item planeOtter = new ItemPlane(EntityOtter.class, 1);
+	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 15);
 	public static final Item seat = new ItemSeat();
 	public static final Item propeller = new ItemPropeller();
 	public static final Item pointerShort = new Item();
@@ -99,8 +97,7 @@ public class MFSRegistry{
 			if(feild.getType().equals(Item.class)){
 				try{
 					Item item = (Item) feild.get(Item.class);
-					if(!item.equals(MFSRegistry.planeOtter) && !item.equals(MFSRegistry.planeTrimotor)){
-					//if(!item.equals(MFSRegistry.planeOtter)){
+					//if(!item.equals(MFSRegistry.planeTrimotor)){
 						if(item.getUnlocalizedName().equals("item.null")){
 							item.setUnlocalizedName(feild.getName().substring(0, 1).toUpperCase() + feild.getName().substring(1));
 						}
@@ -108,7 +105,7 @@ public class MFSRegistry{
 						item.setTextureName("mfs:" + item.getUnlocalizedName().substring(5).toLowerCase());
 						GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
 						itemList.add(item);
-					}
+					//}
 				}catch(Exception e){}
 			}
 		}
