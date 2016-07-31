@@ -19,15 +19,18 @@ import net.minecraft.util.IChatComponent;
 
 public class TileEntityPropellerBench extends TileEntity implements IInventory{
 	public boolean isOn;
-	public short propertyCode = 1120;
+	public short propertyCode;
 	public int timeLeft;
 	public static final int opTime = 1000;
 	
 	private BenchSound benchSound;
-	private ItemStack[] contents = new ItemStack[5];
+	private ItemStack[] contents;
 	private static final ItemStack op1Stack = new ItemStack(MFSRegistry.propeller, 1, 0);
 	
-	public TileEntityPropellerBench(){}
+	public TileEntityPropellerBench(){
+		propertyCode = 1120;
+		contents = new ItemStack[5];
+	}
 	
 	@Override
 	public void updateEntity(){
