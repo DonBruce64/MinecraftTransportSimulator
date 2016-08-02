@@ -97,7 +97,7 @@ public class MFSRegistry{
 			if(feild.getType().equals(Item.class)){
 				try{
 					Item item = (Item) feild.get(Item.class);
-					//if(!item.equals(MFSRegistry.planeTrimotor)){
+					if(!item.equals(MFSRegistry.planeTrimotor)){
 						if(item.getUnlocalizedName().equals("item.null")){
 							item.setUnlocalizedName(feild.getName().substring(0, 1).toUpperCase() + feild.getName().substring(1));
 						}
@@ -105,7 +105,7 @@ public class MFSRegistry{
 						item.setTextureName("mfs:" + item.getUnlocalizedName().substring(5).toLowerCase());
 						GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
 						itemList.add(item);
-					//}
+					}
 				}catch(Exception e){}
 			}
 		}
@@ -133,7 +133,6 @@ public class MFSRegistry{
 		registerEntity(EntityPZLP11.class, null);
 		registerEntity(EntityVulcanair.class, null);
 		registerEntity(EntityTrimotor.class, null);
-		//registerEntity(EntityOtter.class);
 		
 		registerEntity(EntityCore.class, null);
 		registerEntity(EntitySeat.class, seat);
