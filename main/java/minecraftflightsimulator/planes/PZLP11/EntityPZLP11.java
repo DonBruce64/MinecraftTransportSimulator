@@ -2,13 +2,11 @@ package minecraftflightsimulator.planes.PZLP11;
 
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.containers.ContainerVehicle;
-import minecraftflightsimulator.containers.GUIParent;
 import minecraftflightsimulator.containers.SlotFuel;
 import minecraftflightsimulator.containers.SlotItem;
 import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
