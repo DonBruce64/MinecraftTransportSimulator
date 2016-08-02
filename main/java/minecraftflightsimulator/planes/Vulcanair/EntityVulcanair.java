@@ -2,14 +2,12 @@ package minecraftflightsimulator.planes.Vulcanair;
 
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.containers.ContainerVehicle;
-import minecraftflightsimulator.containers.GUIParent;
 import minecraftflightsimulator.containers.SlotFuel;
 import minecraftflightsimulator.containers.SlotItem;
 import minecraftflightsimulator.containers.SlotPassenger;
 import minecraftflightsimulator.containers.SlotPilot;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
@@ -29,7 +27,7 @@ public class EntityVulcanair extends EntityPlane{
 	@Override
 	protected void initPlaneProperties(){
 		hasFlaps = true;
-		maxFuel = 7000;
+		maxFuel = 15000;
 		emptyMass=1230;
 		wingspan=12.0F;
 		wingArea=18.6F;
