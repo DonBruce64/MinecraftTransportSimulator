@@ -2,11 +2,7 @@ package minecraftflightsimulator.models;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
-import net.minecraft.util.MathHelper;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
 public class ModelPropeller extends ModelBase{
     private final float scale=0.0625F;
     private ModelRenderer shaft;
@@ -63,7 +59,7 @@ public class ModelPropeller extends ModelBase{
     public void renderPropellor(int numberBlades, int diameter, float propellerRotation){
     	shaft.rotateAngleZ = propellerRotation;
     	shaft.render(scale);
-    	byte bladeSize = (byte) MathHelper.floor_double(diameter*0.0254*16/2);
+    	byte bladeSize = (byte) Math.floor(diameter*0.0254*16/2);
     	if(bladeSize < 19){
     		for(byte i=0; i<numberBlades; ++i){
     			shortBlades[bladeSize - 12][0].rotateAngleZ = propellerRotation + i*6.283185312F/numberBlades;
