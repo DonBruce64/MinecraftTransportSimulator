@@ -2,10 +2,7 @@ package minecraftflightsimulator.planes.PZLP11;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
 public class ModelPZLP11Rudder extends ModelBase{
 	private static final float scale=0.0625F;
 	

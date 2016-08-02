@@ -2,10 +2,7 @@ package minecraftflightsimulator.planes.Trimotor;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
 public class ModelTrimotor extends ModelBase{
 	private static final float scale=0.0625F;
 	
