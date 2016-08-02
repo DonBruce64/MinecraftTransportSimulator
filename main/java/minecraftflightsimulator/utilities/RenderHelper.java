@@ -6,7 +6,12 @@ import minecraftflightsimulator.MFS;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.entity.Entity;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -21,7 +26,7 @@ public class RenderHelper{
 	public static int hudMode = 2;
 	private static int zoomLevel = 4;
 	private static final String[] rollNames = new String[] {"camRoll", "R", "field_78495_O"};
-  private static final String[] zoomNames = new String[] {"thirdPersonDistance", "thirdPersonDistanceTemp", "field_78490_B", "field_78491_C"};
+	private static final String[] zoomNames = new String[] {"thirdPersonDistance", "thirdPersonDistanceTemp", "field_78490_B", "field_78491_C"};
 	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	private static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
 	
@@ -172,5 +177,26 @@ public class RenderHelper{
      */
     public static  void renderSquareUV(double x1, double x2, double y1, double y2, double z1, double z2, double u, double U, double v, double V, boolean mirror){
     	renderQuadUV(x1, x1, x2, x2, y2, y1, y1, y2, z1, z1, z2, z2, u, U, v, V, mirror);
+    }
+    
+    public static abstract class RenderEntityBase extends Render{
+    	public RenderEntityBase(RenderManager manager){
+            super();
+        }
+    	
+    	@Override
+    	protected ResourceLocation getEntityTexture(Entity propellor){
+    		return null;
+    	}
+    }
+    
+    public static abstract class RenderTileBase extends TileEntitySpecialRenderer{
+    	
+    	@Override
+    	public void renderTileEntityAt(TileEntity tile, double x, double y, double z, float scale){
+    		this.doRender(tile, x, y, z);
+    	}
+    	
+    	protected abstract void doRender(TileEntity tile, double x, double y, double z);
     }
 }

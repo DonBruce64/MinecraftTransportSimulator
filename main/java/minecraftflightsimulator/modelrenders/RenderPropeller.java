@@ -2,25 +2,22 @@ package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.entities.parts.EntityPropeller;
 import minecraftflightsimulator.models.ModelPropeller;
+import minecraftflightsimulator.utilities.RenderHelper.RenderEntityBase;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
-@SideOnly(Side.CLIENT)
-public class RenderPropeller extends Render{
+public class RenderPropeller extends RenderEntityBase{
 	private static final ModelPropeller model = new ModelPropeller();
 	private static final ResourceLocation tierOneTexture = new ResourceLocation("minecraft", "textures/blocks/planks_oak.png");
 	private static final ResourceLocation tierTwoTexture = new ResourceLocation("minecraft", "textures/blocks/iron_block.png");
 	private static final ResourceLocation tierThreeTexture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
 	
-    public RenderPropeller(){
-        super();
+    public RenderPropeller(RenderManager manager){
+        super(manager);
     }
 
 	@Override
@@ -44,10 +41,5 @@ public class RenderPropeller extends Render{
 			model.renderPropellor(propeller.propertyCode%100/10, 70+5*(propeller.propertyCode/1000), -propeller.angularPosition);
 			GL11.glPopMatrix();
 		}
-	}
-
-	@Override
-	protected ResourceLocation getEntityTexture(Entity propellor){
-		return null;
 	}
 }

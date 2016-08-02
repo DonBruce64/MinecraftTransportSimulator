@@ -2,23 +2,20 @@ package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.models.ModelSeat;
-import net.minecraft.client.renderer.entity.Render;
+import minecraftflightsimulator.utilities.RenderHelper.RenderEntityBase;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
-@SideOnly(Side.CLIENT)
-public class RenderSeat extends Render{
+public class RenderSeat extends RenderEntityBase{
 	private static final ModelSeat model = new ModelSeat();
 	private static ResourceLocation[] woodTextures = getWoodTextures();
 	private static ResourceLocation[] woolTextures = getWoolTextures();
 	
-    public RenderSeat(){
-        super();
+    public RenderSeat(RenderManager manager){
+        super(manager);
     }
 
 	@Override
@@ -37,11 +34,6 @@ public class RenderSeat extends Render{
 			model.renderCushion();
 			GL11.glPopMatrix();
 		}
-	}
-
-	@Override
-	protected ResourceLocation getEntityTexture(Entity seat) {
-		return null;
 	}
 	
 	private static ResourceLocation[] getWoodTextures(){

@@ -2,22 +2,19 @@ package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.models.ModelPlaneChest;
-import net.minecraft.client.renderer.entity.Render;
+import minecraftflightsimulator.utilities.RenderHelper.RenderEntityBase;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
-@SideOnly(Side.CLIENT)
-public class RenderPlaneChest extends Render{
+public class RenderPlaneChest extends RenderEntityBase{
 	private static final ModelPlaneChest model = new ModelPlaneChest();
 	private static final ResourceLocation chestTexture = new ResourceLocation("minecraft", "textures/entity/chest/normal.png");
 	
-    public RenderPlaneChest(){
-        super();
+    public RenderPlaneChest(RenderManager manager){
+        super(manager);
     }
 
 	@Override
@@ -34,10 +31,5 @@ public class RenderPlaneChest extends Render{
 			model.renderAll(-chest.lidAngle);
 			GL11.glPopMatrix();
 		}
-	}
-
-	@Override
-	protected ResourceLocation getEntityTexture(Entity seat) {
-		return null;
 	}
 }

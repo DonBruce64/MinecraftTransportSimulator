@@ -2,22 +2,19 @@ package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
+import minecraftflightsimulator.utilities.RenderHelper.RenderEntityBase;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
-@SideOnly(Side.CLIENT)
-public abstract class RenderPlane extends Render{
+public abstract class RenderPlane extends RenderEntityBase{
     protected static final ResourceLocation windowTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 
-    public RenderPlane(){
-    	super();
+    public RenderPlane(RenderManager manager){
+    	super(manager);
     	shadowSize = 0;
     }
     
@@ -96,10 +93,5 @@ public abstract class RenderPlane extends Render{
 		GL11.glEnable(GL11.GL_LIGHTING);
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glPopMatrix();
-	}
-    
-	@Override
-	protected ResourceLocation getEntityTexture(Entity plane) {
-		return null;
 	}
 }

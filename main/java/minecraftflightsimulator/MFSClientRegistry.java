@@ -36,10 +36,12 @@ public class MFSClientRegistry{
 	public static final MFSClientRegistry instance = new MFSClientRegistry();
 	
 	public void preInit(){
-		
+		//versions 1.8.9+
+		//initEntityRenders();
 	}
 	
 	public void init(){
+		//versions 1.7.10 and versions 1.8;
 		initEntityRenders();
 	}
 	
@@ -47,21 +49,21 @@ public class MFSClientRegistry{
 		//MinecraftForgeClient.registerItemRenderer(this.item, new ItemRender());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPropellerBench.class, new RenderPropellerBench());
 		
-		RenderingRegistry.registerEntityRenderingHandler(EntityMC172.class, new RenderMC172());
-		RenderingRegistry.registerEntityRenderingHandler(EntityTrimotor.class, new RenderTrimotor());
-		RenderingRegistry.registerEntityRenderingHandler(EntityVulcanair.class, new RenderVulcanair());
-		RenderingRegistry.registerEntityRenderingHandler(EntityPZLP11.class, new RenderPZLP11());
+		RenderingRegistry.registerEntityRenderingHandler(EntityMC172.class, new RenderMC172(null));
+		RenderingRegistry.registerEntityRenderingHandler(EntityTrimotor.class, new RenderTrimotor(null));
+		RenderingRegistry.registerEntityRenderingHandler(EntityVulcanair.class, new RenderVulcanair(null));
+		RenderingRegistry.registerEntityRenderingHandler(EntityPZLP11.class, new RenderPZLP11(null));
 		
-		RenderingRegistry.registerEntityRenderingHandler(EntitySeat.class, new RenderSeat());
-		RenderingRegistry.registerEntityRenderingHandler(EntityPlaneChest.class, new RenderPlaneChest());
-		RenderingRegistry.registerEntityRenderingHandler(EntityWheelSmall.class, new RenderWheel());
-		RenderingRegistry.registerEntityRenderingHandler(EntityWheelLarge.class, new RenderWheel());
-		RenderingRegistry.registerEntityRenderingHandler(EntitySkid.class, new RenderSkid());
-		RenderingRegistry.registerEntityRenderingHandler(EntityPontoon.class, new RenderPontoon());
-		RenderingRegistry.registerEntityRenderingHandler(EntityPontoonDummy.class, new RenderNull());
-		RenderingRegistry.registerEntityRenderingHandler(EntityPropeller.class, new RenderPropeller());
-		RenderingRegistry.registerEntityRenderingHandler(EntityEngineSmall.class, new RenderEngine());
-		RenderingRegistry.registerEntityRenderingHandler(EntityEngineLarge.class, new RenderEngine());
-		RenderingRegistry.registerEntityRenderingHandler(EntityBase.class, new RenderNull());
+		RenderingRegistry.registerEntityRenderingHandler(EntitySeat.class, new RenderSeat(null));
+		RenderingRegistry.registerEntityRenderingHandler(EntityPlaneChest.class, new RenderPlaneChest(null));
+		RenderingRegistry.registerEntityRenderingHandler(EntityWheelSmall.class, new RenderWheel(null));
+		RenderingRegistry.registerEntityRenderingHandler(EntityWheelLarge.class, new RenderWheel(null));
+		RenderingRegistry.registerEntityRenderingHandler(EntitySkid.class, new RenderSkid(null));
+		RenderingRegistry.registerEntityRenderingHandler(EntityPontoon.class, new RenderPontoon(null));
+		RenderingRegistry.registerEntityRenderingHandler(EntityPontoonDummy.class, new RenderNull(null));
+		RenderingRegistry.registerEntityRenderingHandler(EntityPropeller.class, new RenderPropeller(null));
+		RenderingRegistry.registerEntityRenderingHandler(EntityEngineSmall.class, new RenderEngine(null));
+		RenderingRegistry.registerEntityRenderingHandler(EntityEngineLarge.class, new RenderEngine(null));
+		RenderingRegistry.registerEntityRenderingHandler(EntityBase.class, new RenderNull(null));
 	}
 }

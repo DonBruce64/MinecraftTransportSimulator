@@ -6,6 +6,7 @@ import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.modelrenders.RenderPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
 import minecraftflightsimulator.utilities.RenderHelper;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -25,8 +26,8 @@ public class RenderPZLP11 extends RenderPlane{
 	private static final ResourceLocation elevatorrTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/elevatorr.png");
 	private static final ResourceLocation rudderTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/rudder.png");
     	
-	public RenderPZLP11(){
-		super();
+	public RenderPZLP11(RenderManager manager){
+		super(manager);
 	}
 
 	@Override

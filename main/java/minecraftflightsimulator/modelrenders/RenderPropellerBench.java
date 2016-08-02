@@ -4,13 +4,13 @@ import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.models.ModelPropeller;
 import minecraftflightsimulator.models.ModelPropellerBench;
 import minecraftflightsimulator.utilities.RenderHelper;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import minecraftflightsimulator.utilities.RenderHelper.RenderTileBase;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-public class RenderPropellerBench extends TileEntitySpecialRenderer{
+public class RenderPropellerBench extends RenderTileBase{
 	private static final ModelPropellerBench benchModel = new ModelPropellerBench();
 	private static final ModelPropeller propellerModel = new ModelPropeller();
 	private static final ResourceLocation tierOneTexture = new ResourceLocation("minecraft", "textures/blocks/planks_oak.png");
@@ -25,7 +25,7 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer{
 	private float bitRotation;
 
 	@Override
-	public void renderTileEntityAt(TileEntity tile, double x, double y, double z, float scale){
+	public void doRender(TileEntity tile, double x, double y, double z){
 		this.bench = (TileEntityPropellerBench) tile;
 		
 		if(bench.timeLeft > bench.opTime - moveEndTime){

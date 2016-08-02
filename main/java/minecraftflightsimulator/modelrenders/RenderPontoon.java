@@ -2,23 +2,20 @@ package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.models.ModelPontoon;
+import minecraftflightsimulator.utilities.RenderHelper.RenderEntityBase;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
-@SideOnly(Side.CLIENT)
-public class RenderPontoon extends Render{
+public class RenderPontoon extends RenderEntityBase{
 	private static final ModelPontoon model = new ModelPontoon();
 	private static final ResourceLocation pontoonTexture = new ResourceLocation("minecraft", "textures/blocks/iron_block.png");
 	
-    public RenderPontoon(){
-        super();
+    public RenderPontoon(RenderManager manager){
+        super(manager);
     }
 
 	@Override
@@ -37,10 +34,5 @@ public class RenderPontoon extends Render{
 	        model.render();
 			GL11.glPopMatrix();
 		}
-	}
-
-	@Override
-	protected ResourceLocation getEntityTexture(Entity propellor){
-		return null;
 	}
 }

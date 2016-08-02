@@ -6,6 +6,7 @@ import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.modelrenders.RenderPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
 import minecraftflightsimulator.utilities.RenderHelper;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -14,7 +15,9 @@ public class RenderVulcanair extends RenderPlane{
 	private static final ModelVulcanair model = new ModelVulcanair();
 	private static final ResourceLocation[] exteriorTextures = getExteriorTextures();
 
-	public RenderVulcanair(){}
+	public RenderVulcanair(RenderManager manager){
+		super(manager);
+	}
 	
 	@Override
 	protected void renderPlane(EntityPlane plane){

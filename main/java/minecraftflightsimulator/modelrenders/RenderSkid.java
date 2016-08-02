@@ -2,23 +2,20 @@ package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.entities.parts.EntitySkid;
 import minecraftflightsimulator.models.ModelSkid;
+import minecraftflightsimulator.utilities.RenderHelper.RenderEntityBase;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
-@SideOnly(Side.CLIENT)
-public class RenderSkid extends Render{
+public class RenderSkid extends RenderEntityBase{
 	private static final ModelSkid model = new ModelSkid();
 	private static final ResourceLocation skidTexture = new ResourceLocation("mfs", "textures/parts/skid.png");
 	
-    public RenderSkid(){
-        super();
+    public RenderSkid(RenderManager manager){
+        super(manager);
     }
 
 	@Override
@@ -37,10 +34,5 @@ public class RenderSkid extends Render{
 	        model.render();
 			GL11.glPopMatrix();
 		}
-	}
-
-	@Override
-	protected ResourceLocation getEntityTexture(Entity propellor){
-		return null;
 	}
 }

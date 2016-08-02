@@ -1,24 +1,15 @@
 package minecraftflightsimulator.modelrenders;
 
-import net.minecraft.client.renderer.entity.Render;
+import minecraftflightsimulator.utilities.RenderHelper.RenderEntityBase;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.ResourceLocation;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
-public class RenderNull extends Render{
+public class RenderNull extends RenderEntityBase{
 	
-    public RenderNull(){
-        super();
+    public RenderNull(RenderManager manager){
+        super(manager);
     }
 
 	@Override
-	public void doRender(Entity entity, double x, double y, double z, float yaw,float pitch){		
-	}
-    
-	@Override
-	protected ResourceLocation getEntityTexture(Entity p_110775_1_) {
-		return null;
-	}
+	public void doRender(Entity entity, double x, double y, double z, float yaw,float pitch){}
 }

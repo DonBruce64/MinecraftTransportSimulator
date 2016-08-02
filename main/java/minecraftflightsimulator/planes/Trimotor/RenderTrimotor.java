@@ -6,7 +6,7 @@ import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.modelrenders.RenderPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
 import minecraftflightsimulator.utilities.RenderHelper;
-import net.minecraft.block.material.MapColor;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -20,19 +20,19 @@ public class RenderTrimotor extends RenderPlane{
     private static final ResourceLocation logo2 = new ResourceLocation("mfs", "textures/planes/trimotor/logo2.png");
     private int color;
     
-	public RenderTrimotor(){
-		super();
+	public RenderTrimotor(RenderManager manager){
+		super(manager);
 	}
 
 	@Override
 	protected void renderPlane(EntityPlane plane){		
 		GL11.glTranslatef(0, 0, 1);
 		RenderHelper.bindTexture(sideTexture);
-		//model.renderRegularParts(plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F);
+		model.renderRegularParts(plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F);
 		RenderHelper.bindTexture(rotatedSideTexture);
-		//model.renderRotatedTextureParts(plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F);
+		model.renderRotatedTextureParts(plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F);
 		RenderHelper.bindTexture(detailTexture);
-		color = MapColor.getMapColorForBlockColored(~plane.textureOptions).colorValue;
+		color = getColorForMeta(plane.textureOptions);
 		GL11.glColor3f(((color >> 16) & 255)/255F, ((color >> 8) & 255)/255F, (color & 255)/255F);
 		model.renderColoredParts(plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F);
 		GL11.glColor3f(1, 1, 1);
@@ -105,5 +105,27 @@ public class RenderTrimotor extends RenderPlane{
 		GL11.glRotatef(-90, 1, 0, 0);
 		RenderHelper.drawScaledStringAt(plane.displayName, 7F, 1.2F, -1.57F, 0.1F, Color.black);
 		GL11.glPopMatrix();
+	}
+	
+	private int getColorForMeta(int meta){
+		switch (meta){
+            case 0: return 1644825;
+            case 1: return 10040115;
+            case 2: return 6717235;
+            case 3: return 6704179;
+            case 4: return 3361970;
+            case 5: return 8339378;
+            case 6: return 5013401;
+            case 7: return 10066329;
+            case 8: return 5000268;
+            case 9: return 15892389;
+            case 10: return 8375321;
+            case 11: return 15066419;
+            case 12: return 6724056;
+            case 13: return 11685080;
+            case 14: return 14188339;
+            case 15: return 16777215;
+            default: return 0;
+        }
 	}
 }

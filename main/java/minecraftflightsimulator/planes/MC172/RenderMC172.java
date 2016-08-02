@@ -6,6 +6,7 @@ import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.modelrenders.RenderPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
 import minecraftflightsimulator.utilities.RenderHelper;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -14,7 +15,9 @@ public class RenderMC172 extends RenderPlane{
 	private static final ModelMC172 model = new ModelMC172();
 	private static final ResourceLocation[] planeTextures = getPlaneTextures();
 
-	public RenderMC172(){}
+	public RenderMC172(RenderManager manager){
+		super(manager);
+	}
 	
 	@Override
 	protected void renderPlane(EntityPlane plane){
@@ -70,6 +73,17 @@ public class RenderMC172 extends RenderPlane{
 		InstrumentHelper.drawFlyableInstrument(plane, 232, 80, 17, false);
 		GL11.glPopMatrix();
 	}
+
+	@Override
+	protected void renderMarkings(EntityPlane plane){
+		GL11.glRotatef(180, 1, 0, 0);
+		GL11.glRotatef(105, 0, 1, 0);
+		GL11.glDisable(GL11.GL_LIGHTING);
+		RenderHelper.drawScaledStringAt(plane.displayName, -2.8F, -0.35F, -1.36F, 1F/32F, Color.lightGray);
+		GL11.glRotatef(150, 0, 1, 0);
+		RenderHelper.drawScaledStringAt(plane.displayName, 2.8F, -0.35F, -1.36F, 1F/32F, Color.lightGray);
+		GL11.glEnable(GL11.GL_LIGHTING);
+	}
 	
 	private static ResourceLocation[] getPlaneTextures(){
 		ResourceLocation[] texArray = new ResourceLocation[6];
@@ -81,16 +95,5 @@ public class RenderMC172 extends RenderPlane{
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_acacia.png");
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_big_oak.png");
 		return texArray;
-	}
-
-	@Override
-	protected void renderMarkings(EntityPlane plane){
-		GL11.glRotatef(180, 1, 0, 0);
-		GL11.glRotatef(105, 0, 1, 0);
-		GL11.glDisable(GL11.GL_LIGHTING);
-		RenderHelper.drawScaledStringAt(plane.displayName, -2.8F, -0.35F, -1.36F, 1F/32F, Color.lightGray);
-		GL11.glRotatef(150, 0, 1, 0);
-		RenderHelper.drawScaledStringAt(plane.displayName, 2.8F, -0.35F, -1.36F, 1F/32F, Color.lightGray);
-		GL11.glEnable(GL11.GL_LIGHTING);
 	}
 }

@@ -4,25 +4,22 @@ import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntityEngineLarge;
 import minecraftflightsimulator.models.ModelEngineLarge;
 import minecraftflightsimulator.models.ModelEngineSmall;
+import minecraftflightsimulator.utilities.RenderHelper.RenderEntityBase;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
-@SideOnly(Side.CLIENT)
-public class RenderEngine extends Render{
+public class RenderEngine extends RenderEntityBase{
 	private static final ModelEngineSmall modelSmall = new ModelEngineSmall();
 	private static final ModelEngineLarge modelLarge = new ModelEngineLarge();
 	private static final ResourceLocation smallTexture = new ResourceLocation("mfs", "textures/parts/enginesmall.png");
 	private static final ResourceLocation largeTexture = new ResourceLocation("mfs", "textures/parts/enginelarge.png");
 	
-    public RenderEngine(){
-        super();
+    public RenderEngine(RenderManager manager){
+        super(manager);
     }
 
 	@Override
@@ -48,10 +45,5 @@ public class RenderEngine extends Render{
 			}
 			GL11.glPopMatrix();
 		}
-	}
-
-	@Override
-	protected ResourceLocation getEntityTexture(Entity propellor){
-		return null;
 	}
 }

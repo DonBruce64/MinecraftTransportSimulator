@@ -3,23 +3,20 @@ package minecraftflightsimulator.modelrenders;
 import minecraftflightsimulator.entities.parts.EntityWheel;
 import minecraftflightsimulator.entities.parts.EntityWheelSmall;
 import minecraftflightsimulator.models.ModelWheel;
-import net.minecraft.client.renderer.entity.Render;
+import minecraftflightsimulator.utilities.RenderHelper.RenderEntityBase;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
-@SideOnly(Side.CLIENT)
-public class RenderWheel extends Render{
+public class RenderWheel extends RenderEntityBase{
 	private static final ModelWheel model = new ModelWheel();
 	private static final ResourceLocation innerTexture = new ResourceLocation("minecraft", "textures/blocks/wool_colored_white.png");
 	private static final ResourceLocation outerTexture = new ResourceLocation("minecraft", "textures/blocks/wool_colored_black.png");
 	
-    public RenderWheel(){
-        super();
+    public RenderWheel(RenderManager manager){
+        super(manager);
     }
 
 	@Override
@@ -45,10 +42,5 @@ public class RenderWheel extends Render{
 			}
 			GL11.glPopMatrix();
 		}
-	}
-
-	@Override
-	protected ResourceLocation getEntityTexture(Entity p_110775_1_) {
-		return null;
 	}
 }
