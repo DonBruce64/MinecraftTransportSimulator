@@ -169,7 +169,6 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	
 	@Override
 	public void setDead(){
-		super.setDead();
 		if(!worldObj.isRemote){
 			openInventory();
 			for(int i=1; i<getSizeInventory(); ++i){
@@ -179,6 +178,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 				}
 			}
 		}
+		super.setDead();
 	}
 	
 	public void explodeAtPosition(double x, double y, double z){
