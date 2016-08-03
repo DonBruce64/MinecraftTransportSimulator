@@ -155,8 +155,8 @@ public abstract class EntityFlyable extends EntityVehicle{
 	}
 	
 	@Override
-	public void removeChild(String childUUID){
-		super.removeChild(childUUID);
+	public void removeChild(String childUUID, boolean playBreakSound){
+		super.removeChild(childUUID, playBreakSound);
 		landingGears.remove(childUUID);
 		engines.remove(childUUID);
 		propellers.remove(childUUID);
@@ -232,7 +232,7 @@ public abstract class EntityFlyable extends EntityVehicle{
 					ItemStack stack = getStackInSlot(i);
 					if(stack != null){
 						if(child != null){
-							removeChild(child.UUID);
+							removeChild(child.UUID, false);
 						}
 						if(stack.getItem().equals(MFSRegistry.wheelSmall)){
 							newChild = new EntityWheelSmall(worldObj, this, this.UUID, position[0], position[1], position[2]);
@@ -266,7 +266,7 @@ public abstract class EntityFlyable extends EntityVehicle{
 						addChild(newChild.UUID, newChild, true);
 					}else{
 						if(child != null){
-							removeChild(child.UUID);
+							removeChild(child.UUID, false);
 						}
 					}
 				}
@@ -280,7 +280,7 @@ public abstract class EntityFlyable extends EntityVehicle{
 						setInventorySlotContents(i, null);
 						EntityChild child = getChildAtLocation(partPositions.get(i));
 						if(child != null){
-							removeChild(child.UUID);
+							removeChild(child.UUID, false);
 						}
 					}
 				}
@@ -296,7 +296,7 @@ public abstract class EntityFlyable extends EntityVehicle{
 					if(child != null){
 						if(getStackInSlot(controllerSeatSlot) == null ? true : (i+1 > numberPilotSeats || getStackInSlot(controllerSeatSlot).getItemDamage() != child.propertyCode)){
 							child.setDead();
-							removeChild(child.UUID);
+							removeChild(child.UUID, false);
 						}
 					}
 					if(child == null ? true : child.isDead){
@@ -317,7 +317,7 @@ public abstract class EntityFlyable extends EntityVehicle{
 					if(child != null){
 						if(getStackInSlot(passengerSeatSlot) == null ? true : (i+1 > numberPassengerSeats || getStackInSlot(passengerSeatSlot).getItemDamage() != child.propertyCode || !(child instanceof EntitySeat ^ chests))){
 							child.setDead();
-							removeChild(child.UUID);
+							removeChild(child.UUID, false);
 						}
 					}
 					if(child == null ? true : child.isDead){

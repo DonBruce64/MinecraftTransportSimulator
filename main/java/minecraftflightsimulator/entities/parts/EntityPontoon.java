@@ -1,6 +1,5 @@
 package minecraftflightsimulator.entities.parts;
 
-import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityFlyable;
 import minecraftflightsimulator.entities.core.EntityLandingGear;
 import net.minecraft.entity.Entity;
@@ -34,9 +33,7 @@ public class EntityPontoon extends EntityLandingGear{
 			return;
 		}
 		if(willCollideVerticallyWithOffset(0, 1, 0)){
-			MFS.proxy.playSound(this, "random.break", 2, 1);
-			parent.removeChild(UUID);
-			parent.sendDataToClient();
+			parent.removeChild(UUID, true);
 		}
 	}
 	
@@ -46,7 +43,7 @@ public class EntityPontoon extends EntityLandingGear{
 		if(otherHalf != null){
 			if(!otherHalf.isDead){
 				if(parent != null){
-					this.parent.removeChild(otherHalfUUID);
+					this.parent.removeChild(otherHalfUUID, false);
 				}
 			}
 		}

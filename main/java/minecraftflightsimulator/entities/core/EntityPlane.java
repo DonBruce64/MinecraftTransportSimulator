@@ -314,9 +314,7 @@ public abstract class EntityPlane extends EntityFlyable{
 							this.explodeAtPosition(child.posX, child.posY, child.posZ);
 							return;
 						}else{
-							MFS.proxy.playSound(this, "random.break", 2, 1);
-							removeChild(child.UUID);
-							this.sendDataToClient();
+							removeChild(child.UUID, true);
 						}
 					}else{
 						this.requestDataFromServer();
@@ -479,9 +477,7 @@ public abstract class EntityPlane extends EntityFlyable{
 							this.explodeAtPosition(child.posX, child.posY, child.posZ);
 							return;
 						}else{
-							MFS.proxy.playSound(this, "random.break", 2, 1);
-							removeChild(child.UUID);
-							this.sendDataToClient();
+							removeChild(child.UUID, true);
 						}
 					}else{
 						this.requestDataFromServer();

@@ -57,7 +57,7 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 	protected void explodeEngine(){
 		super.explodeEngine();
 		if(this.propeller != null){
-			this.parent.removeChild(propeller.UUID);
+			this.parent.removeChild(propeller.UUID, false);
 		}
 	}
 	

@@ -75,7 +75,7 @@ public abstract class EntityParent extends EntityBase{
 	public void setDead(){
 		super.setDead();
 		for(EntityChild child : getChildren()){
-			removeChild(child.UUID);
+			removeChild(child.UUID, false);
 		}
 	}
 	
@@ -116,20 +116,23 @@ public abstract class EntityParent extends EntityBase{
 	}
 	
 	/**
-	 * Removes a child from mappings, setting it dead in the process.
+	 * Removes a child from mappings, setting it dead in the process. 
 	 * @param childUUID
 	 */
-	public void removeChild(String childUUID){
+	public void removeChild(String childUUID, boolean playBreakSound){
 		if(children.containsKey(childUUID)){
 			children.remove(childUUID).setDead();
 			--numberChildren;
+		}
+		if(playBreakSound){
+			MFS.proxy.playSound(this, "random.break", 2, 1);
 		}
 	}
 
 	public void moveChildren(){
 		for(EntityChild child : getChildren()){
 			if(child.isDead){
-				removeChild(child.UUID);
+				removeChild(child.UUID, false);
 			}else{
 				MFSVector offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
 				child.setPosition(posX + offset.xCoord, posY + offset.yCoord, posZ + offset.zCoord);

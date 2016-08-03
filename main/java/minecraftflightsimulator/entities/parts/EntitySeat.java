@@ -56,8 +56,8 @@ public class EntitySeat extends EntityChild{
 			}
 		}else if(hadRiderLastTick){
 			hadRiderLastTick=false;
-			if(!worldObj.isRemote){
-				parent.sendDataToClient();
+			if(worldObj.isRemote){
+				requestDataFromServer();
 			}
 		}
 	}

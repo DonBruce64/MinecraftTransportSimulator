@@ -132,7 +132,7 @@ public abstract class EntityEngine extends EntityChild{
 	
 	protected void explodeEngine(){
 		worldObj.newExplosion(this, posX, posY, posZ, 1F, true, true);
-		this.parent.removeChild(this.UUID);
+		this.parent.removeChild(this.UUID, false);
 	}
 	
 	public EngineSound getEngineSound(){
