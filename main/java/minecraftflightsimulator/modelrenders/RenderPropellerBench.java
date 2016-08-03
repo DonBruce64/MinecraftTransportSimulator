@@ -16,7 +16,7 @@ public class RenderPropellerBench extends RenderTileBase{
 	private static final ResourceLocation tierOneTexture = new ResourceLocation("minecraft", "textures/blocks/planks_oak.png");
 	private static final ResourceLocation tierTwoTexture = new ResourceLocation("minecraft", "textures/blocks/iron_block.png");
 	private static final ResourceLocation tierThreeTexture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
-	private static final ResourceLocation benchTexture = new ResourceLocation("textures/blocks/stone.png");
+	private static final ResourceLocation benchTexture = new ResourceLocation("mfs", "textures/parts/propellerbench.png");
 	
 	private static final int moveEndTime = 35;
 	private TileEntityPropellerBench bench;
