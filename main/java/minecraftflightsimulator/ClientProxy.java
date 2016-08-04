@@ -20,18 +20,25 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
+/**Class responsible for performing client-only updates and operations.
+ * Any 
+ * 
+ * @author don_bruce
+ */
 @SideOnly(Side.CLIENT)
 public class ClientProxy extends CommonProxy{	
 	
 	@Override
 	public void preInit(){
 		super.preInit();
-		MFSClientRegistry.instance.preInit();
+		//versions 1.8.9+
+		//MFSClientRegistry.instance.init();
 	}
 	
 	@Override
 	public void init(){
 		super.init();
+		//versions 1.7.10 and versions 1.8;
 		MFSClientRegistry.instance.init();
 		ControlHelper.init();
 		MinecraftForge.EVENT_BUS.register(ClientEventHandler.instance);

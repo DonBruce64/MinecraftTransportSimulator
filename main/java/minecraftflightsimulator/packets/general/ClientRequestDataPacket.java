@@ -27,15 +27,15 @@ public class ClientRequestDataPacket implements IMessage{
 		buf.writeInt(this.id);
 	}
 
-	public static class ClientRequestDataPacketHandler implements IMessageHandler<ClientRequestDataPacket, ServerSendDataPacket> {
+	public static class Handler implements IMessageHandler<ClientRequestDataPacket, ServerDataPacket> {
 		@Override
-		public ServerSendDataPacket onMessage(ClientRequestDataPacket message, MessageContext ctx) {
+		public ServerDataPacket onMessage(ClientRequestDataPacket message, MessageContext ctx) {
 			if(ctx.side==Side.SERVER){
 				EntityBase thisEntity = (EntityBase) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 				if(thisEntity!=null){
 					NBTTagCompound tagCompound = new NBTTagCompound();
 					thisEntity.writeToNBT(tagCompound);
-					return new ServerSendDataPacket(thisEntity.getEntityId(), tagCompound);
+					return new ServerDataPacket(thisEntity.getEntityId(), tagCompound);
 				}
 			}
 			return null;

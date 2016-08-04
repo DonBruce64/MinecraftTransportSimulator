@@ -1,22 +1,130 @@
 package minecraftflightsimulator;
 
+import java.lang.reflect.Field;
+
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
+import minecraftflightsimulator.containers.GUIHandler;
+import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntitySeat;
+import minecraftflightsimulator.packets.general.ChatPacket;
 import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.sounds.EngineSound;
+import net.minecraft.block.Block;
+import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.registry.EntityRegistry;
+import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.relauncher.Side;
 
 
 public class CommonProxy{
+	private static int entityNumber = 0;
+	private static int packetNumber = 0;
 
 	public void preInit(){}
 	
 	public void init(){
 		MFSRegistry.instance.init();
+		NetworkRegistry.INSTANCE.registerGuiHandler(MFS.instance, new GUIHandler());
 	}
-		
+	
+	/**
+	 * Registers the given item and adds it to the creative tab list.
+	 * @param item
+	 */
+	public void registerItem(Item item){
+		item.setCreativeTab(MFS.tabMFS);
+		item.setTextureName("mfs:" + item.getUnlocalizedName().substring(5).toLowerCase());
+		GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
+		MFSRegistry.itemList.add(item);
+	}
+	
+	/**
+	 * Registers the given block and adds it to the creative tab list.
+	 * Also adds the respective TileEntity if the block has one.
+	 * @param block
+	 */
+	public void registerBlock(Block block){
+		GameRegistry.registerBlock(block, block.getUnlocalizedName().substring(5));
+		block.setBlockTextureName("mfs:" + block.getUnlocalizedName().substring(5).toLowerCase());
+		MFSRegistry.itemList.add(Item.getItemFromBlock(block));
+		if(block instanceof ITileEntityProvider){
+			Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
+			GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
+		}
+	}
+
+	/**
+	 * Registers an entity.  Optionally pairs the entity with an item which indicates
+	 * that the item should spawn the entity if the item is in a GUI slot.
+	 * @param entityClass
+	 * @param entityItem
+	 */
+	public void registerEntity(Class entityClass, Item entityItem){
+		if(EntityChild.class.isAssignableFrom(entityClass) && entityItem != null){
+			MFSRegistry.entityItems.put(entityClass, entityItem);
+		}
+		EntityRegistry.registerModEntity(entityClass, entityClass.getName().substring(7), entityNumber++, MFS.MODID, 80, 5, false);
+	}
+	
+	/**
+	 * Registers a packet and its handler on the client and/or the server.
+	 * @param packetClass
+	 * @param handlerClass
+	 * @param client
+	 * @param server
+	 */
+	public <REQ extends IMessage, REPLY extends IMessage> void registerPacket(Class<REQ> packetClass, Class<? extends IMessageHandler<REQ, REPLY>> handlerClass, boolean client, boolean server){
+		if(client)MFS.MFSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.CLIENT);
+		if(server)MFS.MFSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.SERVER);
+	}
+	
+	/**
+	 * Added to make recipes more dynamic.
+	 * Code change in 1.9.4 changes the name for all static block and item object.
+	 * This allows for a universal recipe class system that can be used on any version.
+	 * Note that this should not be used for calls that occur frequently.
+	 * @param name field name (case insensitive)
+	 * @param meta Set to -1 to allow all blocks/items
+	 * @return
+	 */
+	public ItemStack getStackByItemName(String name, int meta){
+		try{
+			for(Field field : Items.class.getFields()){
+				if(field.getName().toLowerCase().equals(name)){
+					Item item = (Item) field.get(Item.class);
+					if(meta == -1){
+						return new ItemStack(item);
+					}else{
+						return new ItemStack(item, 1, meta);
+					}
+				}
+			}
+			for(Field field : Blocks.class.getFields()){
+				if(field.getName().toLowerCase().equals(name)){
+					Block block = (Block) field.get(Block.class);
+					if(meta == -1){
+						return new ItemStack(block, 1, Short.MAX_VALUE);
+					}else{
+						return new ItemStack(block, 1, meta);
+					}
+				}
+			}
+		}catch(Exception e){}
+		System.err.println("ERROR: Invalid item '" + name + "' entered in item lookup function.");
+		return null;
+	}
+	
 	public void playSound(Entity noisyEntity, String soundName, float volume, float pitch){}
 	public void updateSeatedRider(EntitySeat seat, EntityLivingBase rider){}
 	public EngineSound updateEngineSoundAndSmoke(EngineSound sound, EntityEngine engine){return null;}

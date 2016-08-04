@@ -42,7 +42,7 @@ public class ElevatorPacket implements IMessage{
 		buf.writeShort(this.elevatorData);
 	}
 
-	public static class ElevatorPacketHandler implements IMessageHandler<ElevatorPacket, IMessage> {
+	public static class Handler implements IMessageHandler<ElevatorPacket, IMessage> {
 		public IMessage onMessage(ElevatorPacket message, MessageContext ctx) {
 			EntityPlane thisEntity;
 			if(ctx.side==Side.SERVER){

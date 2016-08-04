@@ -32,7 +32,7 @@ public class FlapPacket implements IMessage{
 		buf.writeByte(this.flapAngle);
 	}
 
-	public static class FlapPacketHandler implements IMessageHandler<FlapPacket, IMessage> {
+	public static class Handler implements IMessageHandler<FlapPacket, IMessage> {
 		public IMessage onMessage(FlapPacket message, MessageContext ctx) {
 			EntityPlane thisEntity;
 			if(ctx.side==Side.SERVER){

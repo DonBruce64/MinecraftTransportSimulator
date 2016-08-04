@@ -63,7 +63,7 @@ public class ServerSyncPacket implements IMessage{
 		buf.writeFloat(this.yaw);
 	}
 
-	public static class ServerSyncPacketHandler implements IMessageHandler<ServerSyncPacket, IMessage>{
+	public static class Handler implements IMessageHandler<ServerSyncPacket, IMessage>{
 		@Override
 		public IMessage onMessage(ServerSyncPacket message, MessageContext ctx) {
 			if(ctx.side==Side.CLIENT){

@@ -77,14 +77,14 @@ public class EntityPontoon extends EntityLandingGear{
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound tagCompound){
-		super.readFromNBT(tagCompound);
+	public void loadDataFromNBT(NBTTagCompound tagCompound){
+		super.loadDataFromNBT(tagCompound);
 		this.otherHalfUUID=tagCompound.getString("otherHalfUUID");
 	}
 	
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
-		super.writeToNBT(tagCompound);
+	public void saveDataToNBT(NBTTagCompound tagCompound){
+		super.saveDataToNBT(tagCompound);
 		tagCompound.setString("otherHalfUUID", this.otherHalfUUID);
 	}
 }

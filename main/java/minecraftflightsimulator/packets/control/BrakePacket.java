@@ -32,7 +32,7 @@ public class BrakePacket implements IMessage{
 		buf.writeByte(this.brakeCode);
 	}
 
-	public static class BrakePacketHandler implements IMessageHandler<BrakePacket, IMessage> {
+	public static class Handler implements IMessageHandler<BrakePacket, IMessage> {
 		public IMessage onMessage(BrakePacket message, MessageContext ctx){
 			EntityVehicle thisEntity;
 			if(ctx.side==Side.SERVER){

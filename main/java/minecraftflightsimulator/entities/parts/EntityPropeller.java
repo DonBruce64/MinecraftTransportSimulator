@@ -10,6 +10,7 @@ import minecraftflightsimulator.packets.control.EnginePacket;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraft.world.World;
 
@@ -83,10 +84,10 @@ public class EntityPropeller extends EntityChild{
 	}
 	
 	@Override
-	public boolean hitByEntity(Entity entity){
+	public boolean performAttackAction(DamageSource source, float damage){
 		if(!worldObj.isRemote){
 			if(flyer != null){
-				if(entity instanceof EntityPlayer){
+				if(source.getEntity() instanceof EntityPlayer){
 					MFS.MFSNet.sendToServer(new EnginePacket(flyer.getEntityId(), flyer.getEngineOfHitPropeller(this.UUID)));
 				}
 			}
@@ -95,13 +96,8 @@ public class EntityPropeller extends EntityChild{
 	}
 	
 	@Override
-	public boolean canBeCollidedWith(){
-		return true;
-	}
-	
-	@Override
-	public void readFromNBT(NBTTagCompound tagCompound){
-		super.readFromNBT(tagCompound);
+	public void loadDataFromNBT(NBTTagCompound tagCompound){
+		super.loadDataFromNBT(tagCompound);
 		this.numberBlades=tagCompound.getInteger("numberBlades");
 		this.health=tagCompound.getInteger("health");
 		this.pitch=tagCompound.getInteger("pitch");
@@ -109,8 +105,8 @@ public class EntityPropeller extends EntityChild{
 	}
     
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
-		super.writeToNBT(tagCompound);
+	public void saveDataToNBT(NBTTagCompound tagCompound){
+		super.saveDataToNBT(tagCompound);
 		tagCompound.setInteger("numberBlades", this.numberBlades);
 		tagCompound.setInteger("health", this.health);
 		tagCompound.setInteger("pitch", this.pitch);

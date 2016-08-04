@@ -38,7 +38,7 @@ public class PropellerBenchTilepdatePacket implements IMessage{
 		buf.writeShort(this.propertyCode);
 	}
 
-	public static class CraftingTileUpdatePacketHandler implements IMessageHandler<PropellerBenchTilepdatePacket, PropellerBenchTilepdatePacket> {
+	public static class Handler implements IMessageHandler<PropellerBenchTilepdatePacket, PropellerBenchTilepdatePacket> {
 		public PropellerBenchTilepdatePacket onMessage(PropellerBenchTilepdatePacket message, MessageContext ctx){
 			TileEntityPropellerBench tile;
 			if(ctx.side.isServer()){

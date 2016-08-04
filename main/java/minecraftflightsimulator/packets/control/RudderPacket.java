@@ -42,7 +42,7 @@ public class RudderPacket implements IMessage{
 		buf.writeShort(this.rudderData);
 	}
 
-	public static class RudderPacketHandler implements IMessageHandler<RudderPacket, IMessage> {
+	public static class Handler implements IMessageHandler<RudderPacket, IMessage> {
 		public IMessage onMessage(RudderPacket message, MessageContext ctx) {
 			EntityPlane thisEntity;
 			if(ctx.side==Side.SERVER){

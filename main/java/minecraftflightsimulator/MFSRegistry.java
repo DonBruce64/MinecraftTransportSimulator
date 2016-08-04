@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import minecraftflightsimulator.blocks.BlockPropellerBench;
-import minecraftflightsimulator.blocks.TileEntityPropellerBench;
-import minecraftflightsimulator.containers.GUIHandler;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.parts.EntityEngineLarge;
@@ -38,23 +36,25 @@ import minecraftflightsimulator.packets.general.ChatPacket;
 import minecraftflightsimulator.packets.general.ClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.GUIPacket;
 import minecraftflightsimulator.packets.general.PropellerBenchTilepdatePacket;
-import minecraftflightsimulator.packets.general.ServerSendDataPacket;
+import minecraftflightsimulator.packets.general.ServerDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
 import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
 import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.planes.Vulcanair.EntityVulcanair;
 import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.FluidRegistry;
-import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
-import cpw.mods.fml.relauncher.Side;
 
+/**Main registry class.  This class should be referenced by any class looking for
+ * MFS items or blocks.  Adding new items and blocks is a simple as adding them
+ * as a field; the init method automatically registers all items and blocks in the class.
+ * Recipes should be added using the methods in the CommonProxy, as they allow the class
+ * to be static and work with any MCVersion.
+ * 
+ * @author don_bruce
+ */
 public class MFSRegistry{
 	public static final MFSRegistry instance = new MFSRegistry();
 	
@@ -78,18 +78,13 @@ public class MFSRegistry{
 	
 	public static List<Item> itemList = new ArrayList<Item>();
 	public static Map<Class<? extends EntityChild>, Item> entityItems = new HashMap<Class<? extends EntityChild>, Item>();
-	private static int entityNumber = 0;
-	private static int packetNumber = 0;
 	
 	public void init(){
 		initItems();
 		initBlocks();
-		initTileEntites();
 		initEntites();
 		initPackets();
 		initRecipies();
-		initFuels();
-		NetworkRegistry.INSTANCE.registerGuiHandler(MFS.instance, new GUIHandler());
 	}
 	
 	private void initItems(){
@@ -97,14 +92,11 @@ public class MFSRegistry{
 			if(feild.getType().equals(Item.class)){
 				try{
 					Item item = (Item) feild.get(Item.class);
-					if(!item.equals(MFSRegistry.planeTrimotor)){
+					if(!item.equals(planeTrimotor)){
 						if(item.getUnlocalizedName().equals("item.null")){
 							item.setUnlocalizedName(feild.getName().substring(0, 1).toUpperCase() + feild.getName().substring(1));
 						}
-						item.setCreativeTab(MFS.tabMFS);
-						item.setTextureName("mfs:" + item.getUnlocalizedName().substring(5).toLowerCase());
-						GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
-						itemList.add(item);
+						MFS.proxy.registerItem(item);
 					}
 				}catch(Exception e){}
 			}
@@ -116,283 +108,379 @@ public class MFSRegistry{
 			if(feild.getType().equals(Block.class)){
 				try{
 					Block block = (Block) feild.get(Block.class);
-					GameRegistry.registerBlock(block, block.getUnlocalizedName().substring(5));
-					block.setBlockTextureName("mfs:" + block.getUnlocalizedName().substring(5).toLowerCase());
-					itemList.add(Item.getItemFromBlock(block));
+					MFS.proxy.registerBlock(block);
 				}catch(Exception e){}
 			}
 		}
 	}
 	
-	private void initTileEntites(){
-		registerTileEntity(TileEntityPropellerBench.class);
-	}
-	
 	private void initEntites(){
-		registerEntity(EntityMC172.class, null);
-		registerEntity(EntityPZLP11.class, null);
-		registerEntity(EntityVulcanair.class, null);
-		registerEntity(EntityTrimotor.class, null);
+		MFS.proxy.registerEntity(EntityMC172.class, null);
+		MFS.proxy.registerEntity(EntityPZLP11.class, null);
+		MFS.proxy.registerEntity(EntityVulcanair.class, null);
+		MFS.proxy.registerEntity(EntityTrimotor.class, null);
 		
-		registerEntity(EntityCore.class, null);
-		registerEntity(EntitySeat.class, seat);
-		registerEntity(EntityPlaneChest.class, Item.getItemFromBlock(Blocks.chest));
-		registerEntity(EntityWheelSmall.class, wheelSmall);
-		registerEntity(EntityWheelLarge.class, wheelLarge);
-		registerEntity(EntitySkid.class, skid);
-		registerEntity(EntityPontoon.class, pontoon);
-		registerEntity(EntityPontoonDummy.class, null);
-		registerEntity(EntityPropeller.class, propeller);
-		registerEntity(EntityEngineSmall.class, engineSmall);
-		registerEntity(EntityEngineLarge.class, engineLarge);
-	}
-	
-	private void registerTileEntity(Class tileEntityClass){
-		GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
-	}
-	
-	private void registerEntity(Class entityClass, Item entityItem){
-		if(EntityChild.class.isAssignableFrom(entityClass) && entityItem != null){
-			entityItems.put(entityClass, entityItem);
-		}
-		EntityRegistry.registerModEntity(entityClass, entityClass.getName().substring(7), ++entityNumber, MFS.MODID, 80, 5, false);
+		MFS.proxy.registerEntity(EntityCore.class, null);
+		MFS.proxy.registerEntity(EntitySeat.class, seat);
+		MFS.proxy.registerEntity(EntityPlaneChest.class, MFS.proxy.getStackByItemName("chest", -1).getItem());
+		MFS.proxy.registerEntity(EntityWheelSmall.class, wheelSmall);
+		MFS.proxy.registerEntity(EntityWheelLarge.class, wheelLarge);
+		MFS.proxy.registerEntity(EntitySkid.class, skid);
+		MFS.proxy.registerEntity(EntityPontoon.class, pontoon);
+		MFS.proxy.registerEntity(EntityPontoonDummy.class, null);
+		MFS.proxy.registerEntity(EntityPropeller.class, propeller);
+		MFS.proxy.registerEntity(EntityEngineSmall.class, engineSmall);
+		MFS.proxy.registerEntity(EntityEngineLarge.class, engineLarge);
 	}
 	
 	private void initPackets(){
-		MFS.MFSNet.registerMessage(ChatPacket.ChatPacketHandler.class,  ChatPacket.class, ++packetNumber, Side.CLIENT);
-		MFS.MFSNet.registerMessage(ServerSendDataPacket.ServerSendDataPacketHandler.class,  ServerSendDataPacket.class, ++packetNumber, Side.CLIENT);
-		MFS.MFSNet.registerMessage(ServerSyncPacket.ServerSyncPacketHandler.class,  ServerSyncPacket.class, ++packetNumber, Side.CLIENT);
-		MFS.MFSNet.registerMessage(PropellerBenchTilepdatePacket.CraftingTileUpdatePacketHandler.class,  PropellerBenchTilepdatePacket.class, ++packetNumber, Side.CLIENT);
+		MFS.proxy.registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
+		MFS.proxy.registerPacket(ServerDataPacket.class, ServerDataPacket.Handler.class, true, false);
+		MFS.proxy.registerPacket(ServerSyncPacket.class, ServerSyncPacket.Handler.class, true, false);
 		
-		MFS.MFSNet.registerMessage(GUIPacket.GUIPacketHandler.class,  GUIPacket.class, ++packetNumber, Side.SERVER);
-		MFS.MFSNet.registerMessage(ClientRequestDataPacket.ClientRequestDataPacketHandler.class,  ClientRequestDataPacket.class, ++packetNumber, Side.SERVER);
-		MFS.MFSNet.registerMessage(PropellerBenchTilepdatePacket.CraftingTileUpdatePacketHandler.class,  PropellerBenchTilepdatePacket.class, ++packetNumber, Side.SERVER);
-		
-		MFS.MFSNet.registerMessage(AileronPacket.AileronPacketHandler.class,  AileronPacket.class, ++packetNumber, Side.SERVER);
-		MFS.MFSNet.registerMessage(AileronPacket.AileronPacketHandler.class,  AileronPacket.class, ++packetNumber, Side.CLIENT);
-		MFS.MFSNet.registerMessage(BrakePacket.BrakePacketHandler.class,  BrakePacket.class, ++packetNumber, Side.SERVER);
-		MFS.MFSNet.registerMessage(BrakePacket.BrakePacketHandler.class,  BrakePacket.class, ++packetNumber, Side.CLIENT);
-		MFS.MFSNet.registerMessage(ElevatorPacket.ElevatorPacketHandler.class,  ElevatorPacket.class, ++packetNumber, Side.SERVER);
-		MFS.MFSNet.registerMessage(ElevatorPacket.ElevatorPacketHandler.class,  ElevatorPacket.class, ++packetNumber, Side.CLIENT);
-		MFS.MFSNet.registerMessage(EnginePacket.EnginePacketHandler.class,  EnginePacket.class, ++packetNumber, Side.SERVER);
-		MFS.MFSNet.registerMessage(EnginePacket.EnginePacketHandler.class,  EnginePacket.class, ++packetNumber, Side.CLIENT);
-		MFS.MFSNet.registerMessage(FlapPacket.FlapPacketHandler.class,  FlapPacket.class, ++packetNumber, Side.SERVER);
-		MFS.MFSNet.registerMessage(FlapPacket.FlapPacketHandler.class,  FlapPacket.class, ++packetNumber, Side.CLIENT);
-		MFS.MFSNet.registerMessage(RudderPacket.RudderPacketHandler.class,  RudderPacket.class, ++packetNumber, Side.SERVER);
-		MFS.MFSNet.registerMessage(RudderPacket.RudderPacketHandler.class,  RudderPacket.class, ++packetNumber, Side.CLIENT);
-		MFS.MFSNet.registerMessage(ThrottlePacket.ThrottlePacketHandler.class,  ThrottlePacket.class, ++packetNumber, Side.SERVER);
-		MFS.MFSNet.registerMessage(ThrottlePacket.ThrottlePacketHandler.class,  ThrottlePacket.class, ++packetNumber, Side.CLIENT);
+		MFS.proxy.registerPacket(GUIPacket.class, GUIPacket.Handler.class, false, true);
+		MFS.proxy.registerPacket(ClientRequestDataPacket.class, ClientRequestDataPacket.Handler.class, false, true);
+
+		MFS.proxy.registerPacket(PropellerBenchTilepdatePacket.class, PropellerBenchTilepdatePacket.Handler.class, true, true);
+		MFS.proxy.registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
+		MFS.proxy.registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);
+		MFS.proxy.registerPacket(ElevatorPacket.class, ElevatorPacket.Handler.class, true, true);
+		MFS.proxy.registerPacket(EnginePacket.class, EnginePacket.Handler.class, true, true);
+		MFS.proxy.registerPacket(FlapPacket.class, FlapPacket.Handler.class, true, true);
+		MFS.proxy.registerPacket(RudderPacket.class, RudderPacket.Handler.class, true, true);
+		MFS.proxy.registerPacket(ThrottlePacket.class, ThrottlePacket.Handler.class, true, true);
 	}
 	
+	ItemStack ingotStack = MFS.proxy.getStackByItemName("iron_ingot", -1);
+	ItemStack barsStack = MFS.proxy.getStackByItemName("iron_bars", -1);
+	ItemStack diamondStack = MFS.proxy.getStackByItemName("diamond", -1);
+	ItemStack obsidianStack = MFS.proxy.getStackByItemName("obsidian", -1);
+	ItemStack pistonStack = MFS.proxy.getStackByItemName("piston", -1);
+	ItemStack anyWoolStack = MFS.proxy.getStackByItemName("wool", -1);
+	ItemStack[] coloredWoolStack = new ItemStack[16];
+	ItemStack[] woodSlabStack = new ItemStack[6];
+	ItemStack[] dyeStack = new ItemStack[16];
+	
 	private void initRecipies(){
+		for(byte i=0; i<6; ++i){woodSlabStack[i] = MFS.proxy.getStackByItemName("wooden_slab", i);}
+		for(byte i=0; i<16; ++i){dyeStack[i] = MFS.proxy.getStackByItemName("dye", i);}
+		for(byte i=0; i<16; ++i){coloredWoolStack[i] = MFS.proxy.getStackByItemName("wool", i);}
 		this.initPlaneRecipes();
 		this.initPartRecipes();
 		this.initEngineRecipes();
 		this.initFlightInstrumentRecipes();
 	}
 	
-	private void initPlaneRecipes(){
+	private void initPlaneRecipes(){	
 		//MC172
 		for(int i=0; i<6; ++i){
-			GameRegistry.addRecipe(new ItemStack(MFSRegistry.planeMC172, 1, i),
+			GameRegistry.addRecipe(new ItemStack(planeMC172, 1, i),
 				"AAA",
 				" B ",
 				"ABA",
-				'A', new ItemStack(Blocks.wooden_slab, 1, i), 'B', new ItemStack(Blocks.planks, 1, i));
+				'A', woodSlabStack[i], 
+				'B', MFS.proxy.getStackByItemName("planks", i));
 		}
 		
 		//PZLP11
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.planePZLP11),
+		GameRegistry.addRecipe(new ItemStack(planePZLP11),
 				"AAA",
 				" B ",
 				"ABA",
-				'A', Items.iron_ingot, 'B', Blocks.iron_bars);
+				'A', ingotStack, 
+				'B', barsStack);
 		
 		//Vulcanair
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.planeVulcanair, 1, 0),
+		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 0),
 				"AAA",
 				"CAC",
 				"AAA",
-				'A', Items.iron_ingot, 'C', new ItemStack(Items.dye, 1, 15));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.planeVulcanair, 1, 1),
+				'A', ingotStack, 
+				'C', dyeStack[15]);
+		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 1),
 				"AAA",
 				"CAC",
 				"AAA",
-				'A', Items.iron_ingot, 'C', new ItemStack(Items.dye, 1, 4));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.planeVulcanair, 1, 2),
+				'A', ingotStack, 
+				'C', dyeStack[14]);
+		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 2),
 				"AAA",
 				"CAD",
 				"AAA",
-				'A', Items.iron_ingot, 'C', new ItemStack(Items.dye, 1, 1), 'D', new ItemStack(Items.dye, 1, 7));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.planeVulcanair, 1, 3),
+				'A', ingotStack, 
+				'C', dyeStack[1],
+				'D', dyeStack[7]);
+		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 3),
 				"AAA",
 				"CAC",
 				"AAA",
-				'A', Items.iron_ingot, 'C', new ItemStack(Items.dye, 1, 1));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.planeVulcanair, 1, 4),
+				'A', ingotStack, 
+				'C', dyeStack[1]);
+		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 4),
 				"AAA",
 				"CAC",
 				"AAA",
-				'A', Items.iron_ingot, 'C', new ItemStack(Items.dye, 1, 10));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.planeVulcanair, 1, 5),
+				'A', ingotStack, 
+				'C', dyeStack[10]);
+		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 5),
 				"AAA",
 				"CAC",
 				"AAA",
-				'A', Items.iron_ingot, 'C', new ItemStack(Items.dye, 1, 0));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.planeVulcanair, 1, 6),
+				'A', ingotStack, 
+				'C', dyeStack[0]);
+		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 6),
 				"AAA",
 				"CAD",
 				"AAA",
-				'A', Items.iron_ingot, 'C', new ItemStack(Items.dye, 1, 15), 'D', new ItemStack(Items.dye, 1, 14));
+				'A', ingotStack, 
+				'C', dyeStack[15],
+				'D', dyeStack[14]);
 	}
 	
 	private void initPartRecipes(){
 		//Seat
 		for(int i=0; i<6; ++i){
 			for(int j=0; j<16; ++j){
-				GameRegistry.addRecipe(new ItemStack(MFSRegistry.seat, 1, (i << 4) + j),
+				GameRegistry.addRecipe(new ItemStack(seat, 1, (i << 4) + j),
 					" BA",
 					" BA",
 					"AAA",
-					'A', new ItemStack(Blocks.wooden_slab, 1, i), 'B', new ItemStack(Blocks.wool, 1, j));
+					'A', woodSlabStack[i], 
+					'B', coloredWoolStack[j]);
 			}
 		}
 		
 		//Wheels
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.wheelSmall, 1, 0),
+		GameRegistry.addRecipe(new ItemStack(wheelSmall, 1, 0),
 				"ABA",
 				"ACA",
 				"ABA",
-				'A', Blocks.wool, 'B', new ItemStack(Items.dye, 1, 0), 'C', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.wheelLarge, 1, 1),
+				'A', anyWoolStack, 
+				'B', dyeStack[0], 
+				'C', ingotStack);
+		GameRegistry.addRecipe(new ItemStack(wheelLarge, 1, 1),
 				"ABA",
 				"BCB",
 				"ABA",
-				'A', Blocks.wool, 'B', new ItemStack(Items.dye, 1, 0), 'C', Items.iron_ingot);
+				'A', anyWoolStack, 
+				'B', dyeStack[0], 
+				'C', ingotStack);
 		//Skid
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.skid),
+		GameRegistry.addRecipe(new ItemStack(skid),
 				"A A",
 				" A ",
 				"  A",
-				'A', Blocks.iron_bars);
+				'A', barsStack);
 		//Pontoon
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.pontoon, 2),
+		GameRegistry.addRecipe(new ItemStack(pontoon, 2),
 				"AAA",
 				"BBB",
 				"AAA",
-				'A', Items.iron_ingot, 'B', Blocks.wool);
+				'A', ingotStack, 
+				'B', anyWoolStack);
+		
+		//Propeller bench
+		GameRegistry.addRecipe(new ItemStack(blockPropellerBench),
+				"AAA",
+				" BA",
+				"ACA",
+				'A', ingotStack,
+				'B', diamondStack,
+				'C', MFS.proxy.getStackByItemName("anvil", -1));
+				
 	}
 	
 	private void initEngineRecipes(){
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.engineSmall, 1, 2805),
+		//New engines
+		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 2805),
 				"ABA",
 				"BCB",
 				"ABA",
-				'A', Blocks.piston, 'B', Blocks.obsidian,'C', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.engineSmall, 1, 3007),
+				'A', pistonStack, 
+				'B', obsidianStack,
+				'C', ingotStack);
+		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 3007),
 				"ABA",
 				"BCB",
 				"ABA",
-				'A', Blocks.piston, 'B', Blocks.obsidian,'C', Items.diamond);
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.engineLarge, 1, 2907),
+				'A', pistonStack, 
+				'B', obsidianStack,
+				'C', diamondStack);
+		GameRegistry.addRecipe(new ItemStack(engineLarge, 1, 2907),
 				"ABA",
 				"ACA",
 				"ABA",
-				'A', Blocks.piston, 'B', Blocks.obsidian,'C', Items.iron_ingot);
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.engineLarge, 1, 3210),
+				'A', pistonStack, 
+				'B', obsidianStack,
+				'C', ingotStack);
+		GameRegistry.addRecipe(new ItemStack(engineLarge, 1, 3210),
 				"ABA",
 				"ACA",
 				"ABA",
-				'A', Blocks.piston, 'B', Blocks.obsidian,'C', Items.diamond);
+				'A', pistonStack, 
+				'B', obsidianStack,
+				'C', diamondStack);
+		
+		//Repaired engines
+		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 2805),
+				"B B",
+				" C ",
+				"B B",
+				'B', obsidianStack,
+				'C', new ItemStack(engineSmall, 1, 2805));
+		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 3007),
+				"B B",
+				" C ",
+				"B B",
+				'B', obsidianStack,
+				'C', new ItemStack(engineSmall, 1, 3007));
+		GameRegistry.addRecipe(new ItemStack(engineLarge, 1, 2907),
+				"B B",
+				"BCB",
+				"B B",
+				'B', obsidianStack,
+				'C', new ItemStack(engineLarge, 1, 2907));
+		GameRegistry.addRecipe(new ItemStack(engineLarge, 1, 3210),
+				"B B",
+				"BCB",
+				"B B",
+				'B', obsidianStack,
+				'C', new ItemStack(engineLarge, 1, 3210));
 	}
 	
 	private void initFlightInstrumentRecipes(){
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.flightInstrumentBase, 16),
+		GameRegistry.addRecipe(new ItemStack(flightInstrumentBase, 16),
 				"III",
 				"IGI",
 				"III",
-				'I', Items.iron_ingot, 'G', Blocks.glass_pane);
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.pointerShort),
+				'I', ingotStack, 
+				'G', MFS.proxy.getStackByItemName("glass_pane", -1));
+		
+		GameRegistry.addRecipe(new ItemStack(pointerShort),
 				" WW",
 				" WW",
 				"B  ",
-				'W', new ItemStack(Items.dye, 1, 15), 'B', new ItemStack(Items.dye, 1, 0));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.pointerLong),
+				'W', dyeStack[15], 
+				'B', dyeStack[0]);
+		
+		GameRegistry.addRecipe(new ItemStack(pointerLong),
 				"  W",
 				" W ",
 				"B  ",
-				'W', new ItemStack(Items.dye, 1, 15), 'B', new ItemStack(Items.dye, 1, 0));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.flightInstrument, 1, 0),
+				'W', dyeStack[15], 
+				'B', dyeStack[0]);
+		
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 0),
 				"LLL",
 				"RRR",
 				" B ",
-				'B', MFSRegistry.flightInstrumentBase, 'L', new ItemStack(Items.dye, 1, 4), 'R', new ItemStack(Items.dye, 1, 3));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.flightInstrument, 1, 1),
+				'B', flightInstrumentBase, 
+				'L', dyeStack[4], 
+				'R', dyeStack[3]);
+		
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 1),
 				"WLW",
 				"WSW",
 				" B ",
-				'B', MFSRegistry.flightInstrumentBase, 'L', MFSRegistry.pointerLong, 'S', MFSRegistry.pointerShort, 'W', new ItemStack(Items.dye, 1, 15));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.flightInstrument, 1, 2),
+				'B', flightInstrumentBase, 
+				'L', pointerLong, 
+				'S', pointerShort, 
+				'W', dyeStack[15]);
+		
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 2),
 				" W ",
 				"WIW",
 				" B ",
-				'B', MFSRegistry.flightInstrumentBase, 'I', Items.iron_ingot, 'W', new ItemStack(Items.dye, 1, 15));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.flightInstrument, 1, 3),
+				'B', flightInstrumentBase, 
+				'I', ingotStack, 
+				'W', dyeStack[15]);
+		
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 3),
 				"R W",
 				"YLG",
 				"GBG",
-				'B', MFSRegistry.flightInstrumentBase, 'L', MFSRegistry.pointerLong, 'R', new ItemStack(Items.dye, 1, 1), 'Y', new ItemStack(Items.dye, 1, 11), 'G', new ItemStack(Items.dye, 1, 10), 'W', new ItemStack(Items.dye, 1, 15));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.flightInstrument, 1, 4),
+				'B', flightInstrumentBase, 
+				'L', pointerLong, 
+				'R', dyeStack[1],
+				'Y', dyeStack[11], 
+				'G', dyeStack[10], 
+				'W', dyeStack[15]);
+		
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 4),
 				"   ",
 				"WIW",
 				"WBW",
-				'B', MFSRegistry.flightInstrumentBase, 'I', Items.iron_ingot, 'W', new ItemStack(Items.dye, 1, 15));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.flightInstrument, 1, 5),
+				'B', flightInstrumentBase, 
+				'I', ingotStack, 
+				'W', dyeStack[15]);
+		
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 5),
 				"WWW",
 				" I ",
 				"WBW",
-				'B', MFSRegistry.flightInstrumentBase, 'I', Items.iron_ingot, 'W', new ItemStack(Items.dye, 1, 15));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.flightInstrument, 1, 6),
+				'B', flightInstrumentBase, 
+				'I', ingotStack, 
+				'W', dyeStack[15]);
+		
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 6),
 				"W W",
 				" L ",
 				"WBW",
-				'B', MFSRegistry.flightInstrumentBase, 'L', MFSRegistry.pointerLong, 'W', new ItemStack(Items.dye, 1, 15));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.flightInstrument, 1, 7),
+				'B', flightInstrumentBase, 
+				'L', pointerLong, 
+				'W', dyeStack[15]);
+		
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 7),
 				"RYG",
 				" LG",
 				" B ",
-				'B', MFSRegistry.flightInstrumentBase, 'L', MFSRegistry.pointerLong, 'R', new ItemStack(Items.dye, 1, 1), 'Y', new ItemStack(Items.dye, 1, 11), 'G', new ItemStack(Items.dye, 1, 10), 'W', new ItemStack(Items.dye, 1, 15));
+				'B', flightInstrumentBase, 
+				'L', pointerLong, 
+				'R', dyeStack[1], 
+				'Y', dyeStack[11], 
+				'G', dyeStack[10], 
+				'W', dyeStack[15]);
 		
 		//Instrument 8 does not exist
 		//Instrument 9 does not exist
 		
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.flightInstrument, 1, 10),
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 10),
 				"W W",
 				" L ",
 				"WBR",
-				'B', MFSRegistry.flightInstrumentBase, 'L', MFSRegistry.pointerLong, 'R', new ItemStack(Items.dye, 1, 1), 'W', new ItemStack(Items.dye, 1, 15));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.flightInstrument, 1, 11),
+				'B', flightInstrumentBase, 
+				'L', pointerLong, 
+				'R', dyeStack[1], 
+				'W', dyeStack[15]);
+		
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 11),
 				"RWW",
 				" L ",
 				" B ",
-				'B', MFSRegistry.flightInstrumentBase, 'L', MFSRegistry.pointerLong, 'R', new ItemStack(Items.dye, 1, 1), 'W', new ItemStack(Items.dye, 1, 15));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.flightInstrument, 1, 12),
+				'B', flightInstrumentBase, 
+				'L', pointerLong, 
+				'R', dyeStack[1], 
+				'W', dyeStack[15]);
+		
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 12),
 				" W ",
 				"WLW",
 				" B ",
-				'B', MFSRegistry.flightInstrumentBase, 'L', MFSRegistry.pointerLong, 'W', new ItemStack(Items.dye, 1, 15));
-		GameRegistry.addRecipe(new ItemStack(MFSRegistry.flightInstrument, 1, 13),
+				'B', flightInstrumentBase, 
+				'L', pointerLong, 
+				'W', dyeStack[15]);
+		
+		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 13),
 				"YGR",
 				" L ",
 				" B ",
-				'B', MFSRegistry.flightInstrumentBase, 'L', MFSRegistry.pointerLong, 'Y', new ItemStack(Items.dye, 1, 11), 'G', new ItemStack(Items.dye, 1, 10), 'R', new ItemStack(Items.dye, 1, 1), 'W', new ItemStack(Items.dye, 1, 15));
+				'B', flightInstrumentBase, 
+				'L', pointerLong, 
+				'Y', dyeStack[11], 
+				'G', dyeStack[10], 
+				'R', dyeStack[1], 
+				'W', dyeStack[15]);
+		
 		//Instrument 14 does not exist
-	}
-	
-	private void initFuels(){
-		for(String fluidName : FluidRegistry.getRegisteredFluids().keySet()){
-			MFS.fluidValues.put(fluidName, MFS.config.get("fuels", fluidName, fluidName.equals(FluidRegistry.LAVA.getName()) ? 1.0F : 0.0F).getDouble());
-		}
-		MFS.config.save();
 	}
 }

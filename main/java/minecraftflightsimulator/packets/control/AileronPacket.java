@@ -42,7 +42,7 @@ public class AileronPacket implements IMessage{
 		buf.writeShort(this.aileronData);
 	}
 
-	public static class AileronPacketHandler implements IMessageHandler<AileronPacket, IMessage> {
+	public static class Handler implements IMessageHandler<AileronPacket, IMessage> {
 		public IMessage onMessage(AileronPacket message, MessageContext ctx) {
 			EntityPlane thisEntity;
 			if(ctx.side==Side.SERVER){

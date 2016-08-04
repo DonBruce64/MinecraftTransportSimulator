@@ -28,7 +28,7 @@ public class ChatPacket implements IMessage{
 		ByteBufUtils.writeUTF8String(buf, this.chatMessage);
 	}
 
-	public static class ChatPacketHandler implements IMessageHandler<ChatPacket, IMessage> {
+	public static class Handler implements IMessageHandler<ChatPacket, IMessage> {
 		@Override
 		public IMessage onMessage(ChatPacket message, MessageContext ctx) {
 			if(ctx.side==Side.CLIENT){

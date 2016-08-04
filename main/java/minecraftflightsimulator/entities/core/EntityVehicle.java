@@ -11,7 +11,6 @@ import minecraftflightsimulator.containers.ContainerVehicle;
 import minecraftflightsimulator.containers.GUIParent;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
-import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.items.ItemEngine;
 import minecraftflightsimulator.utilities.MFSVector;
 import net.minecraft.entity.item.EntityItem;
@@ -124,15 +123,8 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	}
 	
 	//Start of custom methods
-	/**
-	 * Handler for all right-clicking actions performed.  May be circumvented by overriding
-	 * the appropriate methods in subclassed child entities.
-	 * @param entityClicked the entity that was clicked
-	 * @param player the player that clicked this entity
-	 * 
-	 * @return whether or not an action occurred.
-	 */
-	public boolean performRightClickAction(EntityBase entityClicked, EntityPlayer player){
+	@Override
+	public boolean performRightClickAction(EntityPlayer player){
 		if(!worldObj.isRemote){
 			if(player.getHeldItem() != null){
 				if(player.getHeldItem().getItem().equals(Items.name_tag)){
@@ -141,19 +133,12 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 					return true;
 				}
 			}
-			if(entityClicked.equals(this)){
-				for(EntityChild child : this.getChildren()){
-					if(child.getEntityBoundingBox().intersectsWith(this.getEntityBoundingBox()) && child instanceof EntitySeat){
-						child.interactFirst(player);
-						return true;
-					}
-				}
-			}
 		}
 		return false;
 	}
 	
-	public boolean performAttackAction(EntityBase attackedEntity, DamageSource source, float damage){
+	@Override
+	public boolean performAttackAction(DamageSource source, float damage){
 		if(!worldObj.isRemote){
 			if(source.getEntity() instanceof EntityPlayer){
 				EntityPlayer attackingPlayer = (EntityPlayer) source.getEntity();
@@ -166,7 +151,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		}
 		return true;
 	}
-	
+
 	@Override
 	public void setDead(){
 		if(!worldObj.isRemote){

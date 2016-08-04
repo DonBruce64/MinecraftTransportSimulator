@@ -32,7 +32,7 @@ public class EnginePacket implements IMessage{
 		buf.writeByte(this.engineCode);
 	}
 
-	public static class EnginePacketHandler implements IMessageHandler<EnginePacket, IMessage> {
+	public static class Handler implements IMessageHandler<EnginePacket, IMessage> {
 		public IMessage onMessage(EnginePacket message, MessageContext ctx){
 			EntityFlyable thisEntity;
 			if(ctx.side==Side.SERVER){

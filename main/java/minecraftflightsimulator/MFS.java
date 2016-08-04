@@ -8,6 +8,7 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.fluids.FluidRegistry;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.Mod.Instance;
@@ -81,6 +82,9 @@ public class MFS {
 		fuelUsageFactor = config.get(config.CATEGORY_GENERAL, "FuelUsageFactor", 1.0F, "Factor times which engines use fuel.  \nChange this if you think engines use fuel too fast or slow.").getDouble();
 		heavyItems = config.get(config.CATEGORY_GENERAL, "HeavyItems", "diamond, iron, gold, coal, ore, stone", "Any item that contains these words will be counted as heavy (double mass) when considering plane mass.  \nChange and tweak to your liking.").getString();
 		propellerDamageFactor = config.get(config.CATEGORY_GENERAL, "PropellerDamageFactor", 1.0F, "Factor for damage caused by a propeller.").getDouble();
+		for(String fluidName : FluidRegistry.getRegisteredFluids().keySet()){
+			MFS.fluidValues.put(fluidName, MFS.config.get("fuels", fluidName, fluidName.equals(FluidRegistry.LAVA.getName()) ? 1.0F : 0.0F).getDouble());
+		}
 		config.save();
 	}
 	

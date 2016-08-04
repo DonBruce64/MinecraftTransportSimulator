@@ -2,10 +2,12 @@ package minecraftflightsimulator.entities.core;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.packets.general.ClientRequestDataPacket;
-import minecraftflightsimulator.packets.general.ServerSendDataPacket;
+import minecraftflightsimulator.packets.general.ServerDataPacket;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -21,6 +23,32 @@ public abstract class EntityBase extends Entity{
 		this.renderDistanceWeight = 100;
 	}
 	
+	@Override
+    public boolean interactFirst(EntityPlayer player){
+		return this.performRightClickAction(player);
+	}
+	/**
+	 * Handler for all right-clicking actions performed.
+	 * @param entityClicked the entity that was clicked
+	 * @param player the player that clicked this entity
+	 * 
+	 * @return whether or not an action occurred.
+	 */
+	public abstract boolean performRightClickAction(EntityPlayer player);
+	
+	@Override
+    public boolean attackEntityFrom(DamageSource source, float damage){
+		return this.performAttackAction(source, damage);
+	}
+	/**
+	 * Handler for all left-clicking actions performed.
+	 * @param entityClicked the entity that was clicked
+	 * @param player the player that clicked this entity
+	 * 
+	 * @return whether or not an action occurred.
+	 */
+	public abstract boolean performAttackAction(DamageSource source, float damage);
+	
 	public boolean hasUUID(){
 		if(this.UUID.equals("")){
 			if(this.worldObj.isRemote){
@@ -32,11 +60,6 @@ public abstract class EntityBase extends Entity{
 				this.UUID=String.valueOf(this.getUniqueID());
 			}
 		}
-		return true;
-	}
-	
-	@Override
-	public boolean canBeCollidedWith(){
 		return true;
 	}
 	
@@ -53,7 +76,7 @@ public abstract class EntityBase extends Entity{
 	public void sendDataToClient(){
 		NBTTagCompound tagCompound = new NBTTagCompound();
 		this.writeToNBT(tagCompound);
-		MFS.MFSNet.sendToAll(new ServerSendDataPacket(this.getEntityId(), tagCompound));
+		MFS.MFSNet.sendToAll(new ServerDataPacket(this.getEntityId(), tagCompound));
 	}
 	
 	public AxisAlignedBB getEntityBoundingBox(){
@@ -67,12 +90,20 @@ public abstract class EntityBase extends Entity{
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
-		this.UUID=tagCompound.getString("UUID");
+		this.loadDataFromNBT(tagCompound);
 	}
+    
+    public void loadDataFromNBT(NBTTagCompound tagCompound){
+    	this.UUID=tagCompound.getString("UUID");
+    }
     
 	@Override
 	public void writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
-		tagCompound.setString("UUID", this.UUID);
+		this.saveDataToNBT(tagCompound);
 	}
+	
+	public void saveDataToNBT(NBTTagCompound tagCompound){
+		tagCompound.setString("UUID", this.UUID);
+    }
 }

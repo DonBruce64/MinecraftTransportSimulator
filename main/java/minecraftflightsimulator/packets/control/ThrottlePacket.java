@@ -32,7 +32,7 @@ public class ThrottlePacket implements IMessage{
 		buf.writeByte(this.throttle);
 	}
 
-	public static class ThrottlePacketHandler implements IMessageHandler<ThrottlePacket, IMessage> {
+	public static class Handler implements IMessageHandler<ThrottlePacket, IMessage> {
 		public IMessage onMessage(ThrottlePacket message, MessageContext ctx) {
 			EntityVehicle thisEntity;
 			if(ctx.side==Side.SERVER){

@@ -27,10 +27,10 @@ public class EntitySeat extends EntityChild{
 	}
 	
 	@Override
-    public boolean interactFirst(EntityPlayer player){
+	public boolean performRightClickAction(EntityPlayer player){
 		if(!worldObj.isRemote){
 			if(this.getRider()==null){
-				player.mountEntity(this);
+				this.setRider(player);
 				return true;
 			}else if(!this.getRider().equals(player)){
 				MFS.MFSNet.sendTo(new ChatPacket("This seat is taken!"), (EntityPlayerMP) player);
@@ -63,30 +63,14 @@ public class EntitySeat extends EntityChild{
 	}
 	
 	@Override
-	public void updateRiderPosition(){
-		if(this.getRider() != null && this.parent != null){
-			MFSVector posVec = RotationHelper.getRotatedPoint(offsetX, (float) (offsetY + this.getRider().getYOffset()), (float) offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
-			this.getRider().setPosition(parent.posX + posVec.xCoord, parent.posY + posVec.yCoord, parent.posZ + posVec.zCoord);
-			this.getRider().motionX = parent.motionX;
-			this.getRider().motionY = parent.motionY;
-			this.getRider().motionZ = parent.motionZ;
-        }
-	}
-	
-	@Override
-	public boolean canBeCollidedWith(){
-		return true;
-	}
-	
-	@Override
-	public void readFromNBT(NBTTagCompound tagCompound){
-		super.readFromNBT(tagCompound);
+	public void loadDataFromNBT(NBTTagCompound tagCompound){
+		super.loadDataFromNBT(tagCompound);
 		this.driver=tagCompound.getBoolean("driver");
 	}
     
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
-		super.writeToNBT(tagCompound);
+	public void saveDataToNBT(NBTTagCompound tagCompound){
+		super.saveDataToNBT(tagCompound);
 		tagCompound.setBoolean("driver", this.driver);
 	}
 }

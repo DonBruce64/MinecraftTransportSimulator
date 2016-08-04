@@ -11,13 +11,13 @@ import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.relauncher.Side;
 
-public class ServerSendDataPacket implements IMessage{
+public class ServerDataPacket implements IMessage{
 	private int id;
 	private NBTTagCompound tagCompound;
 
-	public ServerSendDataPacket() { }
+	public ServerDataPacket() { }
 	
-	public ServerSendDataPacket(int id, NBTTagCompound tagCompound){
+	public ServerDataPacket(int id, NBTTagCompound tagCompound){
 		this.id=id;
 		this.tagCompound=tagCompound;
 	}
@@ -34,9 +34,9 @@ public class ServerSendDataPacket implements IMessage{
 		ByteBufUtils.writeTag(buf, this.tagCompound);
 	}
 
-	public static class ServerSendDataPacketHandler implements IMessageHandler<ServerSendDataPacket, IMessage> {
+	public static class Handler implements IMessageHandler<ServerDataPacket, IMessage> {
 		@Override
-		public IMessage onMessage(ServerSendDataPacket message, MessageContext ctx) {
+		public IMessage onMessage(ServerDataPacket message, MessageContext ctx) {
 			if(ctx.side==Side.CLIENT){
 				EntityBase thisEntity = (EntityBase) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 				if(thisEntity != null){

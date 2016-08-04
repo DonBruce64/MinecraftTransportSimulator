@@ -53,13 +53,13 @@ public abstract class EntityChild extends EntityBase{
 	}
 	
 	@Override
-    public boolean interactFirst(EntityPlayer player){
-		return parent != null ? parent.performRightClickAction(this, player) : false;
+    public boolean performRightClickAction(EntityPlayer player){
+		return parent != null ? parent.performRightClickAction(player) : false;
 	}
 	
 	@Override
-	public boolean attackEntityFrom(DamageSource source, float damage){
-		return parent != null ? parent.performAttackAction(this, source, damage) : false;
+	public boolean performAttackAction(DamageSource source, float damage){
+		return parent != null ? parent.performAttackAction(source, damage) : false;
     }
 	
 	public boolean hasParent(){
@@ -90,6 +90,11 @@ public abstract class EntityChild extends EntityBase{
 		}
 	}
 	
+	@Override
+	public boolean canBeCollidedWith(){
+		return true;
+	}
+	
 	public List getCollidingBlocks(AxisAlignedBB box){
 		return worldObj.func_147461_a(box);
 	}
@@ -118,8 +123,22 @@ public abstract class EntityChild extends EntityBase{
 		return worldObj.getBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z)).getCollisionBoundingBoxFromPool(worldObj, 0, 0, 0) != null;
 	}
 	
+	public void setRider(Entity rider){
+		rider.mountEntity(this);
+	}
+	
 	public Entity getRider(){
 		return this.riddenByEntity;
+	}
+	
+	public void updateRider(){
+		if(this.getRider() != null && this.parent != null){
+			MFSVector posVec = RotationHelper.getRotatedPoint(offsetX, (float) (offsetY + this.getRider().getYOffset()), (float) offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
+			this.getRider().setPosition(parent.posX + posVec.xCoord, parent.posY + posVec.yCoord, parent.posZ + posVec.zCoord);
+			this.getRider().motionX = parent.motionX;
+			this.getRider().motionY = parent.motionY;
+			this.getRider().motionZ = parent.motionZ;
+        }
 	}
 	
 	@Override

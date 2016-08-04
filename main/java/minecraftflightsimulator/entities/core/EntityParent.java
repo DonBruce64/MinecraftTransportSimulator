@@ -8,9 +8,7 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import minecraftflightsimulator.utilities.MFSVector;
 import minecraftflightsimulator.utilities.RotationHelper;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
@@ -53,16 +51,6 @@ public abstract class EntityParent extends EntityBase{
 		prevRotationYaw = rotationYaw;
 	}
 	
-	@Override
-    public boolean interactFirst(EntityPlayer player){
-		return this.performRightClickAction(this, player);
-	}
-	
-	@Override
-    public boolean attackEntityFrom(DamageSource source, float damage){
-		return this.performAttackAction(this, source, damage);
-	}
-	
 	public MFSVector getHeadingVec(){
         float f1 = MathHelper.cos(-this.rotationYaw * 0.017453292F - (float)Math.PI);
         float f2 = MathHelper.sin(-this.rotationYaw * 0.017453292F - (float)Math.PI);
@@ -80,18 +68,6 @@ public abstract class EntityParent extends EntityBase{
 	}
 	
 	//Start of custom methods
-	/**
-	 * Handler for all right-clicking actions performed.
-	 * the appropriate methods in subclassed child entities.
-	 * @param entityClicked the entity that was clicked
-	 * @param player the player that clicked this entity
-	 * 
-	 * @return whether or not an action occurred.
-	 */
-	public abstract boolean performRightClickAction(EntityBase entityClicked, EntityPlayer player);
-	
-	public abstract boolean performAttackAction(EntityBase attackedEntity, DamageSource source, float damage);
-	
 	/**
 	 * Spawns a child and adds a child to all appropriate mappings.
 	 * Set newChild to true if parent needs to keep track of an additional child.
@@ -136,7 +112,7 @@ public abstract class EntityParent extends EntityBase{
 			}else{
 				MFSVector offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
 				child.setPosition(posX + offset.xCoord, posY + offset.yCoord, posZ + offset.zCoord);
-				child.updateRiderPosition();
+				child.updateRider();
 			}
 		}
 	}

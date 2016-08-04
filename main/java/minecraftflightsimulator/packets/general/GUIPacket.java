@@ -27,7 +27,7 @@ public class GUIPacket implements IMessage{
 		buf.writeInt(this.id);
 	}
 
-	public static class GUIPacketHandler implements IMessageHandler<GUIPacket, IMessage> {
+	public static class Handler implements IMessageHandler<GUIPacket, IMessage> {
 		public IMessage onMessage(GUIPacket message, MessageContext ctx){
 			if(ctx.side.isServer()){
 				EntityVehicle vehicle = (EntityVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);

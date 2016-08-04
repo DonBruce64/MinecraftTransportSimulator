@@ -16,6 +16,8 @@ import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
+import cpw.mods.fml.client.registry.ClientRegistry;
+import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -178,6 +180,22 @@ public class RenderHelper{
     public static  void renderSquareUV(double x1, double x2, double y1, double y2, double z1, double z2, double u, double U, double v, double V, boolean mirror){
     	renderQuadUV(x1, x1, x2, x2, y2, y1, y1, y2, z1, z1, z2, z2, u, U, v, V, mirror);
     }
+    
+    public static void registerTileEntityRender(Class<? extends TileEntity> tileEntityClass, Class<? extends RenderTileBase> renderClass){
+		try{
+			ClientRegistry.bindTileEntitySpecialRenderer(tileEntityClass, renderClass.newInstance());
+		}catch(Exception e){
+			System.err.println("ERROR: Could not register TileEntity renderer.  TileEntity will not be visible!");
+		}
+	}
+    
+    public static void registerEntityRender(Class<? extends Entity> entityClass, Class<? extends RenderEntityBase> renderClass){
+		try{
+			RenderingRegistry.registerEntityRenderingHandler(entityClass, renderClass.getConstructor(RenderManager.class).newInstance((Object) null));
+		}catch(Exception e){
+			System.err.println("ERROR: Could not register Entity renderer.  Entity will not be visible!");
+		}
+	}
     
     public static abstract class RenderEntityBase extends Render{
     	public RenderEntityBase(RenderManager manager){
