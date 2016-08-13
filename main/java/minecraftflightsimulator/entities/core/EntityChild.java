@@ -12,6 +12,16 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
+/**Main child class.  This class is the base for all child entities and should be
+ * extended to use the parent-child linking system.  Many helper functions are present
+ * to allow re-directing methods that Mojang/Forge changes frequently (like block detection).
+ * Use {@link EntityParent#addChild(String, EntityChild, boolean)} to add children 
+ * and {@link EntityParent#removeChild(String, boolean)} to kill and remove them.
+ * You may extend {@link EntityParent} to get more functionality with those system.
+ * Beware of children with offsetZ of 0, as they can cause problems with pitch calculations.
+ * 
+ * @author don_bruce
+ */
 public abstract class EntityChild extends EntityBase{	
 	public int propertyCode;
 	public float offsetX;

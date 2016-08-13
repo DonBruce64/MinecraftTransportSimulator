@@ -2,6 +2,11 @@ package minecraftflightsimulator.entities.core;
 
 import net.minecraft.world.World;
 
+/**Core entities are like children except they cannot be removed from a parent.
+ * Used primarily as bounding-box extensions for collision detection and impact calculations.
+ * 
+ * @author don_bruce
+ */
 public class EntityCore extends EntityChild{
 	
 	public EntityCore(World world) {

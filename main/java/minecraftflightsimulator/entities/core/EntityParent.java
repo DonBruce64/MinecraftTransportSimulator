@@ -139,7 +139,16 @@ public abstract class EntityParent extends EntityBase{
 		return null;
 	}
 	
-	public EntityChild[] getChildren(){return children.values().toArray(new EntityChild[children.size()]);}	
+	public EntityChild[] getChildren(){return children.values().toArray(new EntityChild[children.size()]);}
+	
+	/**
+	 * Add new core sets here.  Cores are used to determine collision and are not removable
+	 * (extend {@link EntityChild} to make removable things).  Core sets consist of
+	 * a x, y, z, width, and height parameters.  All parameters are passed into the 
+	 * {@link EntityCore} constructor upon spawn.  This method is used
+	 * by {@link ItemPlane} during use to determine spawn requirements and such.
+	 * @return
+	 */
 	public abstract float[][] getCoreLocations();	
 		
     @Override
