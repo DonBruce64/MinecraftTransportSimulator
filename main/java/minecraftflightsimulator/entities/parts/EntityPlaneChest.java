@@ -8,11 +8,10 @@ public class EntityPlaneChest extends EntityChildInventory{
 	
 	public EntityPlaneChest(World world){
 		super(world);
-		this.setSize(0.75F, 0.75F);
 	}
 	
 	public EntityPlaneChest(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ);
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F);
 	}
 
 	@Override

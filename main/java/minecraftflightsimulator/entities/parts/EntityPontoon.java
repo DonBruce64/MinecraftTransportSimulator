@@ -12,11 +12,10 @@ public class EntityPontoon extends EntityLandingGear{
 	
 	public EntityPontoon(World world){
 		super(world);
-		this.setSize(0.75F, 0.75F);
 	}
 	
 	public EntityPontoon(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ);
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F);
 	}
 	
 	@Override

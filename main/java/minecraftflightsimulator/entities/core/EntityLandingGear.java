@@ -7,7 +7,7 @@ public abstract class EntityLandingGear extends EntityChild{
 		super(world);
 	}
 	
-	public EntityLandingGear(World world, EntityFlyable parent, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, 0);
+	public EntityLandingGear(World world, EntityFlyable parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
+		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, width, height, 0);
 	}
 }

@@ -24,8 +24,8 @@ public abstract class EntityChildInventory extends EntityChild implements IInven
 		super(world);
 	}
 	
-	public EntityChildInventory(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, 0);
+	public EntityChildInventory(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, width, height, 0);
 	}
 	
 	protected abstract String getDisplayName();

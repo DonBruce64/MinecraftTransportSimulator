@@ -11,8 +11,8 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 		super(world);
 	}
 
-	public EntityEngineAircraft(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
+	public EntityEngineAircraft(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height, int propertyCode){
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, width, height, propertyCode);
 	}
 	
 	@Override

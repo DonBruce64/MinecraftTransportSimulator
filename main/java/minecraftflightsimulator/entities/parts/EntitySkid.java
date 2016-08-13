@@ -11,6 +11,6 @@ public class EntitySkid extends EntityLandingGear{
 	}
 	
 	public EntitySkid(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ);
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, 0.3F, 0.3F);
 	}
 }

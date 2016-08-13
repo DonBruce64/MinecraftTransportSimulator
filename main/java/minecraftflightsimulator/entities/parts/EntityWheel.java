@@ -14,8 +14,8 @@ public abstract class EntityWheel extends EntityLandingGear{
 		super(world);
 	}
 	
-	public EntityWheel(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ);
+	public EntityWheel(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, width, height);
 	}
 	
 	@Override

@@ -34,8 +34,8 @@ public abstract class EntityEngine extends EntityChild{
 		super(world);
 	}
 
-	public EntityEngine(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
+	public EntityEngine(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height, int propertyCode){
+		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, width, height, propertyCode);
 		this.maxEngineRPM = (propertyCode/((int) 100))*100;
 		this.fuelConsumption = (propertyCode%100)/10F;
 	}

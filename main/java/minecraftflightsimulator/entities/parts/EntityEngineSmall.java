@@ -7,11 +7,10 @@ public class EntityEngineSmall extends EntityEngineAircraft{
 
 	public EntityEngineSmall(World world){
 		super(world);
-		this.setSize(1.0F, 1.0F);
 	}
 
 	public EntityEngineSmall(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, 1.0F, 1.0F, propertyCode);
 	}
 	
 	@Override

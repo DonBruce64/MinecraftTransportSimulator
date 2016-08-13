@@ -20,7 +20,7 @@ public class EntitySeat extends EntityChild{
 	}
 	
 	public EntitySeat(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode, boolean controller){
-		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
+		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F, propertyCode);
 		this.controller=controller;
 	}
 	

@@ -24,7 +24,7 @@ public abstract class EntityChild extends EntityBase{
 		super(world);
 	}
 	
-	public EntityChild(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+	public EntityChild(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height, int propertyCode){
 		this(world);
 		this.motionX=0;
 		this.motionY=0;
@@ -32,6 +32,7 @@ public abstract class EntityChild extends EntityBase{
 		this.offsetX=offsetX;
 		this.offsetY=offsetY;
 		this.offsetZ=offsetZ;
+		this.setSize(width, height);
 		this.propertyCode=propertyCode;
 		this.UUID=String.valueOf(this.getUniqueID());
 		this.parentUUID=parentUUID;
@@ -45,11 +46,7 @@ public abstract class EntityChild extends EntityBase{
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		if(!hasUUID() || !hasParent()){
-			linked=false;
-		}else{
-			linked=true;
-		}
+		linked = hasUUID() && hasParent();
 	}
 	
 	@Override
@@ -93,6 +90,11 @@ public abstract class EntityChild extends EntityBase{
 	@Override
 	public boolean canBeCollidedWith(){
 		return true;
+	}
+	
+	@Override
+	public AxisAlignedBB getBoundingBox(){
+		return this.getEntityBoundingBox();
 	}
 	
 	public List getCollidingBlocks(AxisAlignedBB box){
@@ -149,6 +151,9 @@ public abstract class EntityChild extends EntityBase{
 		this.offsetY=tagCompound.getFloat("offsetY");
 		this.offsetZ=tagCompound.getFloat("offsetZ");
 		this.parentUUID=tagCompound.getString("parentUUID");
+		this.width=tagCompound.getFloat("width");
+		this.height=tagCompound.getFloat("height");
+    	this.setSize(width, height);
 	}
 	
 	@Override
@@ -158,6 +163,8 @@ public abstract class EntityChild extends EntityBase{
 		tagCompound.setFloat("offsetX", this.offsetX);
 		tagCompound.setFloat("offsetY", this.offsetY);
 		tagCompound.setFloat("offsetZ", this.offsetZ);
+		tagCompound.setFloat("width", this.width);
+		tagCompound.setFloat("height", this.height);
 		if(!this.parentUUID.isEmpty()){
 			tagCompound.setString("parentUUID", this.parentUUID);
 		}

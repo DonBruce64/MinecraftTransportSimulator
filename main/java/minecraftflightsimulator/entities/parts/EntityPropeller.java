@@ -26,11 +26,10 @@ public class EntityPropeller extends EntityChild{
 	
 	public EntityPropeller(World world){
 		super(world);
-		this.setSize(0.8F, 1.0F);
 	}
 	
 	public EntityPropeller(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, 0.8F, 1.0F, propertyCode);
 		if(propertyCode%10==1){
 			this.health = 500;
 		}else if(propertyCode%10==2){

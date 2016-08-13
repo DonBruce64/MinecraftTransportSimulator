@@ -7,11 +7,10 @@ public class EntityEngineLarge extends EntityEngineAircraft{
 
 	public EntityEngineLarge(World world){
 		super(world);
-		this.setSize(1.2F, 1.2F);
 	}
 
 	public EntityEngineLarge(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, 1.2F, 1.2F, propertyCode);
 	}
 	
 	@Override
