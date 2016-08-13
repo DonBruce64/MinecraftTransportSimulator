@@ -4,8 +4,6 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.packets.general.ChatPacket;
-import minecraftflightsimulator.utilities.MFSVector;
-import minecraftflightsimulator.utilities.RotationHelper;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -13,7 +11,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 public class EntitySeat extends EntityChild{
-	public boolean driver;
+	public boolean controller;
 	private boolean hadRiderLastTick;
 	
 	public EntitySeat(World world){
@@ -21,9 +19,9 @@ public class EntitySeat extends EntityChild{
 		this.setSize(0.75F, 0.75F);
 	}
 	
-	public EntitySeat(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode, boolean driver){
+	public EntitySeat(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode, boolean controller){
 		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
-		this.driver=driver;
+		this.controller=controller;
 	}
 	
 	@Override
@@ -65,12 +63,12 @@ public class EntitySeat extends EntityChild{
 	@Override
 	public void loadDataFromNBT(NBTTagCompound tagCompound){
 		super.loadDataFromNBT(tagCompound);
-		this.driver=tagCompound.getBoolean("driver");
+		this.controller=tagCompound.getBoolean("controller");
 	}
     
 	@Override
 	public void saveDataToNBT(NBTTagCompound tagCompound){
 		super.saveDataToNBT(tagCompound);
-		tagCompound.setBoolean("driver", this.driver);
+		tagCompound.setBoolean("controller", this.controller);
 	}
 }

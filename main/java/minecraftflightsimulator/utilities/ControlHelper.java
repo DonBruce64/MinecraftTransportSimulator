@@ -26,10 +26,10 @@ import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-/**
- * Class that handles all control operations.  Keybinding lists are initiated during PreInit.
+/**Class that handles all control operations.
+ * Keybinding lists are initiated during {@link ClientProxy} init.
+ * 
  * @author don_bruce
- *
  */
 @SideOnly(Side.CLIENT)
 public class ControlHelper{

@@ -21,7 +21,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 /**Class responsible for performing client-only updates and operations.
- * Any 
+ * Any version-updatable, client-based method should be put in here.
  * 
  * @author don_bruce
  */
@@ -45,6 +45,10 @@ public class ClientProxy extends CommonProxy{
 		FMLCommonHandler.instance().bus().register(ClientEventHandler.instance);
 	}
 
+	/**
+	 * Updates yaw, pitch, and roll for seated players.  
+	 * Calls {@link ControlHelper} methods after.
+	 */
 	@Override
 	public void updateSeatedRider(EntitySeat seat, EntityLivingBase rider){		
 		rider.renderYawOffset += seat.parent.rotationYaw - seat.parent.prevRotationYaw;
@@ -68,7 +72,7 @@ public class ClientProxy extends CommonProxy{
 		if(rider.equals(Minecraft.getMinecraft().thePlayer)){
 			if(!Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen()){
 				ControlHelper.controlCamera();
-				if(seat.driver){
+				if(seat.controller){
 					if(seat.parent instanceof EntityPlane){
 						ControlHelper.controlPlane((EntityPlane) seat.parent);
 					}
@@ -77,6 +81,10 @@ public class ClientProxy extends CommonProxy{
 		}
 	}
 	
+	/**
+	 * Plays a sound in the same way as World.playSound.
+	 * Placed here for ease of version updates.
+	 */
 	@Override
 	public void playSound(Entity noisyEntity, String soundName, float volume, float pitch){
 		if(noisyEntity.worldObj.isRemote){

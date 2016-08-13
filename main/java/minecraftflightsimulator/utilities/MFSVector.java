@@ -1,10 +1,10 @@
 package minecraftflightsimulator.utilities;
 
-
-/**
- * Proxy class used in place of Vec3.
+/**Proxy class used in place of Vec3.
  * Mojang can't keep their class conventions straight
  * and I'm tired of changing names every update.
+ * 
+ * @author don_bruce
  */
 public class MFSVector {
 	public double xCoord;

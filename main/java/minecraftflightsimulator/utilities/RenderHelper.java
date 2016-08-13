@@ -22,6 +22,13 @@ import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
+/**This class is responsible for most of the legwork of the custom rendering system.
+ * Contains multiple methods for drawing textured quads, as well as custom classes
+ * for models and registration functions.  Texturing functions shouldn't need updating
+ * each MCVersion, but the classes at the end may.
+ * 
+ * @author don_bruce
+ */
 @SideOnly(Side.CLIENT)
 public class RenderHelper{	
 	public static boolean lockedView = true;

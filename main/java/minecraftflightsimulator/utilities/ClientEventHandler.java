@@ -25,8 +25,11 @@ import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-//This class handles rendering/camera edits that need to happen when riding planes.
-//It also calls GUI's up when the player presses the P key.
+/**This class handles rendering/camera edits that need to happen when riding planes.
+ * It also calls GUI's up when the player presses the P key.
+ * 
+ * @author don_bruce
+ */
 @SideOnly(Side.CLIENT)
 public class ClientEventHandler{
 	private static Minecraft minecraft = Minecraft.getMinecraft();	
@@ -77,7 +80,7 @@ public class ClientEventHandler{
 				event.setCanceled(true);
 			}else if(event.type.equals(RenderGameOverlayEvent.ElementType.CHAT)){
 				EntitySeat seat = ((EntitySeat) minecraft.thePlayer.ridingEntity);
-				if(seat.parent instanceof EntityFlyable && seat.driver && (minecraft.gameSettings.thirdPersonView==0 || RenderHelper.hudMode == 1)){
+				if(seat.parent instanceof EntityFlyable && seat.controller && (minecraft.gameSettings.thirdPersonView==0 || RenderHelper.hudMode == 1)){
 					InstrumentHelper.updateAircraftEngineProperties((EntityFlyable) seat.parent);
 					((EntityFlyable) seat.parent).drawHUD(event.resolution.getScaledWidth(), event.resolution.getScaledHeight());
 				}

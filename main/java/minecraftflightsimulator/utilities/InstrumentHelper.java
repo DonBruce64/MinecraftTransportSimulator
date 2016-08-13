@@ -10,6 +10,10 @@ import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
+/**Class responsible for drawing instruments and HUDs.
+ * 
+ * @author don_bruce
+ */
 public class InstrumentHelper{
 	private static final ResourceLocation instrumentTexture = new ResourceLocation("mfs", "textures/instruments.png");
 	private static byte numberEngines;

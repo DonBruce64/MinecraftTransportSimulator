@@ -31,8 +31,9 @@ import minecraftflightsimulator.planes.Vulcanair.EntityVulcanair;
 import minecraftflightsimulator.planes.Vulcanair.RenderVulcanair;
 import minecraftflightsimulator.utilities.RenderHelper;
 
-/**Client registry class.  Add any render that needs registering here.
- * This class is static and will work with any MCVersion.
+/**Client registry class.  Add any render that needs registering here,
+ * and make sure to reference {@link RenderHelper} when calling registry methods.  
+ * This allows the class to work with any MCVersion.
  * 
  * @author don_bruce
  */
