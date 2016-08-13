@@ -92,12 +92,10 @@ public class MFSRegistry{
 			if(feild.getType().equals(Item.class)){
 				try{
 					Item item = (Item) feild.get(Item.class);
-					if(!item.equals(planeTrimotor)){
-						if(item.getUnlocalizedName().equals("item.null")){
-							item.setUnlocalizedName(feild.getName().substring(0, 1).toUpperCase() + feild.getName().substring(1));
-						}
-						MFS.proxy.registerItem(item);
+					if(item.getUnlocalizedName().equals("item.null")){
+						item.setUnlocalizedName(feild.getName().substring(0, 1).toUpperCase() + feild.getName().substring(1));
 					}
+					MFS.proxy.registerItem(item);
 				}catch(Exception e){}
 			}
 		}
