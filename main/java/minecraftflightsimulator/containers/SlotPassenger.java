@@ -1,15 +1,14 @@
 package minecraftflightsimulator.containers;
 
+import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityVehicle;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 
 public class SlotPassenger extends SlotItem{
 	private EntityVehicle vehicle;
 
 	public SlotPassenger(EntityVehicle vehicle, int xDisplayPosition, int yDisplayPosition) {
-		super(vehicle, xDisplayPosition, yDisplayPosition, vehicle.passengerSeatSlot, MFSRegistry.seat, Item.getItemFromBlock(Blocks.chest));
+		super(vehicle, xDisplayPosition, yDisplayPosition, vehicle.passengerSeatSlot, MFSRegistry.seat, MFS.proxy.getStackByItemName("chest", -1).getItem());
 		this.vehicle=vehicle;
 	}
     
