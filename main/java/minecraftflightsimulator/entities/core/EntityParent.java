@@ -112,7 +112,13 @@ public abstract class EntityParent extends EntityBase{
 			}else{
 				MFSVector offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
 				child.setPosition(posX + offset.xCoord, posY + offset.yCoord, posZ + offset.zCoord);
-				child.updateRider();
+				if(child.getRider() != null){
+					MFSVector posVec = RotationHelper.getRotatedPoint(child.offsetX, (float) (child.offsetY + child.getRider().getYOffset()), (float) child.offsetZ, this.rotationPitch, this.rotationYaw, this.rotationRoll);
+					child.getRider().setPosition(this.posX + posVec.xCoord, this.posY + posVec.yCoord, this.posZ + posVec.zCoord);
+					child.getRider().motionX = this.motionX;
+					child.getRider().motionY = this.motionY;
+					child.getRider().motionZ = this.motionZ;
+				}
 			}
 		}
 	}
@@ -133,7 +139,7 @@ public abstract class EntityParent extends EntityBase{
 		return null;
 	}
 	
-	protected EntityChild[] getChildren(){return children.values().toArray(new EntityChild[children.size()]);}	
+	public EntityChild[] getChildren(){return children.values().toArray(new EntityChild[children.size()]);}	
 	public abstract float[][] getCoreLocations();	
 		
     @Override

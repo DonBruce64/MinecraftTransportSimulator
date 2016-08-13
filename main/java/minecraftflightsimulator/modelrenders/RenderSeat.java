@@ -1,39 +1,31 @@
 package minecraftflightsimulator.modelrenders;
 
-import minecraftflightsimulator.entities.parts.EntitySeat;
+import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.models.ModelSeat;
-import minecraftflightsimulator.utilities.RenderHelper.RenderEntityBase;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.entity.Entity;
+import minecraftflightsimulator.utilities.RenderHelper;
+import minecraftflightsimulator.utilities.RenderHelper.RenderChild;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-public class RenderSeat extends RenderEntityBase{
+public class RenderSeat extends RenderChild{
 	private static final ModelSeat model = new ModelSeat();
 	private static ResourceLocation[] woodTextures = getWoodTextures();
 	private static ResourceLocation[] woolTextures = getWoolTextures();
 	
-    public RenderSeat(RenderManager manager){
-        super(manager);
-    }
-
 	@Override
-	public void doRender(Entity entity, double x, double y, double z, float yaw,float pitch){		
-		EntitySeat seat=(EntitySeat) entity;
-		if(seat.parent != null){
-			GL11.glPushMatrix();
-			GL11.glTranslated(x, y, z);
-			GL11.glRotatef(-seat.parent.rotationYaw, 0, 1, 0);
-			GL11.glRotatef(seat.parent.rotationPitch, 1, 0, 0);
-			GL11.glRotatef(seat.parent.rotationRoll, 0, 0, 1);
-	        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-			this.bindTexture(woodTextures[seat.propertyCode >> 4 > 5 ? 0 : seat.propertyCode >> 4]);
-			model.renderFrame();
-			this.bindTexture(woolTextures[seat.propertyCode & 15]);
-			model.renderCushion();
-			GL11.glPopMatrix();
-		}
+	public void renderChildModel(EntityChild child, double x, double y, double z){		
+		GL11.glPushMatrix();
+		GL11.glTranslated(x, y, z);
+		GL11.glRotatef(-child.parent.rotationYaw, 0, 1, 0);
+		GL11.glRotatef(child.parent.rotationPitch, 1, 0, 0);
+		GL11.glRotatef(child.parent.rotationRoll, 0, 0, 1);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderHelper.bindTexture(woodTextures[child.propertyCode >> 4 > 5 ? 0 : child.propertyCode >> 4]);
+		model.renderFrame();
+		RenderHelper.bindTexture(woolTextures[child.propertyCode & 15]);
+		model.renderCushion();
+		GL11.glPopMatrix();
 	}
 	
 	private static ResourceLocation[] getWoodTextures(){

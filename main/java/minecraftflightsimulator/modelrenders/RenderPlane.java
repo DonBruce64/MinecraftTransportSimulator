@@ -1,29 +1,29 @@
 package minecraftflightsimulator.modelrenders;
 
+import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
-import minecraftflightsimulator.utilities.RenderHelper.RenderEntityBase;
+import minecraftflightsimulator.utilities.MFSVector;
+import minecraftflightsimulator.utilities.RenderHelper.RenderParent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-public abstract class RenderPlane extends RenderEntityBase{
+public abstract class RenderPlane extends RenderParent{
     protected static final ResourceLocation windowTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
+    private MFSVector childOffset;
 
     public RenderPlane(RenderManager manager){
     	super(manager);
-    	shadowSize = 0;
     }
     
 	@Override
-	public void doRender(Entity entity, double x, double y, double z, float yaw, float pitch){
-		EntityPlane plane=(EntityPlane) entity;
+	public void renderParentModel(EntityParent parent){
+		EntityPlane plane=(EntityPlane) parent;
 		InstrumentHelper.updateAircraftEngineProperties(plane);
 		GL11.glPushMatrix();
-		GL11.glTranslated(x, y, z);
 		GL11.glRotatef(-plane.rotationYaw, 0, 1, 0);
 		GL11.glRotatef(plane.rotationPitch, 1, 0, 0);
 		GL11.glRotatef(plane.rotationRoll, 0, 0, 1);
@@ -35,7 +35,7 @@ public abstract class RenderPlane extends RenderEntityBase{
         GL11.glPopMatrix();
         
         if(Minecraft.getMinecraft().gameSettings.showDebugInfo){
-        	renderDebugVectors(plane, x, y, z);
+        	renderDebugVectors(plane);
         }
 	}
 	
@@ -44,10 +44,9 @@ public abstract class RenderPlane extends RenderEntityBase{
 	protected abstract void renderConsole(EntityPlane plane);
 	protected abstract void renderMarkings(EntityPlane plane);
 	
-	private void renderDebugVectors(EntityPlane plane, double x, double y, double z){
+	private void renderDebugVectors(EntityPlane plane){
 		double[] debugForces = plane.getDebugForces();
     	GL11.glPushMatrix();
-		GL11.glTranslated(x, y, z);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glDisable(GL11.GL_LIGHTING);
 		

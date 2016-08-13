@@ -1,7 +1,7 @@
 package minecraftflightsimulator;
 
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
-import minecraftflightsimulator.entities.core.EntityBase;
+import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.parts.EntityEngineLarge;
 import minecraftflightsimulator.entities.parts.EntityEngineSmall;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
@@ -13,7 +13,6 @@ import minecraftflightsimulator.entities.parts.EntitySkid;
 import minecraftflightsimulator.entities.parts.EntityWheelLarge;
 import minecraftflightsimulator.entities.parts.EntityWheelSmall;
 import minecraftflightsimulator.modelrenders.RenderEngine;
-import minecraftflightsimulator.modelrenders.RenderNull;
 import minecraftflightsimulator.modelrenders.RenderPlaneChest;
 import minecraftflightsimulator.modelrenders.RenderPontoon;
 import minecraftflightsimulator.modelrenders.RenderPropeller;
@@ -52,21 +51,21 @@ public class MFSClientRegistry{
 	private void initEntityRenders(){
 		//MinecraftForgeClient.registerItemRenderer(this.item, new ItemRender());
 		
-		RenderHelper.registerEntityRender(EntityMC172.class, RenderMC172.class);
-		RenderHelper.registerEntityRender(EntityTrimotor.class, RenderTrimotor.class);
-		RenderHelper.registerEntityRender(EntityVulcanair.class, RenderVulcanair.class);
-		RenderHelper.registerEntityRender(EntityPZLP11.class, RenderPZLP11.class);
+		RenderHelper.registerParentRender(EntityMC172.class, RenderMC172.class);
+		RenderHelper.registerParentRender(EntityTrimotor.class, RenderTrimotor.class);
+		RenderHelper.registerParentRender(EntityVulcanair.class, RenderVulcanair.class);
+		RenderHelper.registerParentRender(EntityPZLP11.class, RenderPZLP11.class);
 		
-		RenderHelper.registerEntityRender(EntitySeat.class, RenderSeat.class);
-		RenderHelper.registerEntityRender(EntityPlaneChest.class, RenderPlaneChest.class);
-		RenderHelper.registerEntityRender(EntityWheelSmall.class, RenderWheel.class);
-		RenderHelper.registerEntityRender(EntityWheelLarge.class, RenderWheel.class);
-		RenderHelper.registerEntityRender(EntitySkid.class, RenderSkid.class);
-		RenderHelper.registerEntityRender(EntityPontoon.class, RenderPontoon.class);
-		RenderHelper.registerEntityRender(EntityPontoonDummy.class, RenderNull.class);
-		RenderHelper.registerEntityRender(EntityPropeller.class, RenderPropeller.class);
-		RenderHelper.registerEntityRender(EntityEngineSmall.class, RenderEngine.class);
-		RenderHelper.registerEntityRender(EntityEngineLarge.class, RenderEngine.class);
-		RenderHelper.registerEntityRender(EntityBase.class, RenderNull.class);
+		RenderHelper.registerChildRender(EntitySeat.class, RenderSeat.class);
+		RenderHelper.registerChildRender(EntityPlaneChest.class, RenderPlaneChest.class);
+		RenderHelper.registerChildRender(EntityWheelSmall.class, RenderWheel.class);
+		RenderHelper.registerChildRender(EntityWheelLarge.class, RenderWheel.class);
+		RenderHelper.registerChildRender(EntitySkid.class, RenderSkid.class);
+		RenderHelper.registerChildRender(EntityPontoon.class, RenderPontoon.class);
+		RenderHelper.registerChildRender(EntityPontoonDummy.class, null);
+		RenderHelper.registerChildRender(EntityPropeller.class, RenderPropeller.class);
+		RenderHelper.registerChildRender(EntityEngineSmall.class, RenderEngine.class);
+		RenderHelper.registerChildRender(EntityEngineLarge.class, RenderEngine.class);
+		RenderHelper.registerChildRender(EntityCore.class, null);
 	}
 }

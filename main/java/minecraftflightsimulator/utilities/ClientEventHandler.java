@@ -39,6 +39,11 @@ public class ClientEventHandler{
 	public void on(TickEvent.ClientTickEvent event){
 		if(minecraft.theWorld != null){
 			if(event.phase.equals(Phase.END)){
+				/*Minecraft skips updating children who were spawned before their parents.
+				 *This forces them to update, but causes them to lag their rendering until
+				 * the next tick.  It's one of the main reasons all the child rendering
+				 * is shoved into custom code.
+				 */
 				for(Object entity : minecraft.theWorld.getLoadedEntityList()){
 					if(entity instanceof EntityParent){
 						((EntityParent) entity).moveChildren();

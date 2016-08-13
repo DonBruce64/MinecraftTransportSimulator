@@ -1,8 +1,13 @@
 package minecraftflightsimulator.utilities;
 
 import java.awt.Color;
+import java.util.HashMap;
+import java.util.Map;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.entities.core.EntityChild;
+import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.parts.EntitySeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.EntityRenderer;
@@ -11,6 +16,7 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 
@@ -38,6 +44,8 @@ public class RenderHelper{
 	private static final String[] zoomNames = new String[] {"thirdPersonDistance", "thirdPersonDistanceTemp", "field_78490_B", "field_78491_C"};
 	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	private static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+	
+	private static Map <Class<? extends EntityChild>, RenderChild> childRenderMap = new HashMap<Class<? extends EntityChild>, RenderChild>();
 	
 	public static void changeCameraZoom(int zoom){
 		if(zoomLevel < 15 && zoom == 1){
@@ -188,6 +196,37 @@ public class RenderHelper{
     	renderQuadUV(x1, x1, x2, x2, y2, y1, y1, y2, z1, z1, z2, z2, u, U, v, V, mirror);
     }
     
+    /**
+     * Helper method to register a parent rendering class with the RenderingRegistry.
+     * @param entityClass
+     * @param renderClass
+     */
+    public static void registerParentRender(Class<? extends EntityParent> entityClass, Class<? extends RenderParent> renderClass){
+		try{
+			RenderingRegistry.registerEntityRenderingHandler(entityClass, renderClass.getConstructor(RenderManager.class).newInstance((Object) null));
+		}catch(Exception e){
+			System.err.println("ERROR: Could not register Parent renderer.  Entity will not be visible!");
+		}
+	}
+    
+    /**
+     * Registers a child part with the RenderHelper child system.  All child parts registered
+     * in here will be rendered directly after their parents, ensuring correct placement.
+     * renderClass may be null to prevent rendering altogether.
+     * @param entityClass
+     * @param renderClass
+     */
+    public static void registerChildRender(Class<? extends EntityChild> entityClass, Class<? extends RenderChild> renderClass){
+    	try{
+    		RenderingRegistry.registerEntityRenderingHandler(entityClass, RenderNull.class.getConstructor(RenderManager.class).newInstance((Object) null));
+    		if(renderClass != null){
+    			childRenderMap.put(entityClass, renderClass.newInstance());
+    		}
+		}catch(Exception e){
+			System.err.println("ERROR: Could not register Child renderer.  Model will not be visible!");
+		}	
+    }
+    
     public static void registerTileEntityRender(Class<? extends TileEntity> tileEntityClass, Class<? extends RenderTileBase> renderClass){
 		try{
 			ClientRegistry.bindTileEntitySpecialRenderer(tileEntityClass, renderClass.newInstance());
@@ -196,23 +235,70 @@ public class RenderHelper{
 		}
 	}
     
-    public static void registerEntityRender(Class<? extends Entity> entityClass, Class<? extends RenderEntityBase> renderClass){
-		try{
-			RenderingRegistry.registerEntityRenderingHandler(entityClass, renderClass.getConstructor(RenderManager.class).newInstance((Object) null));
-		}catch(Exception e){
-			System.err.println("ERROR: Could not register Entity renderer.  Entity will not be visible!");
-		}
-	}
-    
-    public static abstract class RenderEntityBase extends Render{
-    	public RenderEntityBase(RenderManager manager){
+    /**Abstract class for parent rendering.
+     * Renders the parent model, and all child models that have been registered by
+     * {@link registerChildRender}.  Ensures all parts are rendered in the exact
+     * location they should be in as all rendering is done in the same operation.
+     * 
+     * @author don_bruce
+     */
+    public static abstract class RenderParent extends Render{
+    	private boolean playerRiding;
+    	private MFSVector childOffset;
+    	private static EntityPlayer player;
+    	
+    	public RenderParent(RenderManager manager){
             super();
+            shadowSize = 0;
         }
+    	
+    	@Override
+    	public void doRender(Entity entity, double x, double y, double z, float yaw, float pitch){
+    		this.render((EntityParent) entity, x, y, z);
+    	}
+    	
+    	private void render(EntityParent parent, double x, double y, double z){
+    		player = Minecraft.getMinecraft().thePlayer;
+    		GL11.glPushMatrix();
+    		playerRiding = false;
+    		if(player.ridingEntity instanceof EntitySeat){
+    			if(parent.equals(((EntitySeat) player.ridingEntity).parent)){
+    				playerRiding = true;
+    			}
+    		}
+    		//For some reason x, y, z aren't correct.
+    		//Have to do this or put up with shaking while in the plane. 
+    		if(playerRiding){
+    			GL11.glTranslated(parent.posX - player.posX, parent.posY - player.posY, parent.posZ - player.posZ);
+    		}else{
+    			GL11.glTranslated(x, y, z);
+    		}
+    		this.renderParentModel(parent);
+            for(EntityChild child : parent.getChildren()){
+            	if(childRenderMap.get(child.getClass()) != null){
+            		childOffset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
+            		childRenderMap.get(child.getClass()).renderChildModel(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord);
+        		}
+            }
+            GL11.glPopMatrix();
+    	}
+    	
+    	protected abstract void renderParentModel(EntityParent parent);
     	
     	@Override
     	protected ResourceLocation getEntityTexture(Entity propellor){
     		return null;
     	}
+    }
+    
+    /**Abstract class for child rendering.
+     * Register with {@link registerChildRender} to activate rendering in {@link RenderParent}
+     * 
+     * @author don_bruce
+     */
+    public static abstract class RenderChild{
+    	public RenderChild(){}
+    	public abstract void renderChildModel(EntityChild child, double x, double y, double z);
     }
     
     public static abstract class RenderTileBase extends TileEntitySpecialRenderer{
@@ -223,5 +309,15 @@ public class RenderHelper{
     	}
     	
     	protected abstract void doRender(TileEntity tile, double x, double y, double z);
+    }
+    
+    private static class RenderNull extends Render{
+    	public RenderNull(RenderManager manager){
+            super();
+    	}
+    	@Override
+    	public void doRender(Entity entity, double x, double y, double z, float yaw,float pitch){}
+    	@Override
+    	protected ResourceLocation getEntityTexture(Entity entity){return null;}
     }
 }

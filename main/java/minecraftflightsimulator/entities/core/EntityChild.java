@@ -133,14 +133,10 @@ public abstract class EntityChild extends EntityBase{
 		return this.riddenByEntity;
 	}
 	
-	public void updateRider(){
-		if(this.getRider() != null && this.parent != null){
-			MFSVector posVec = RotationHelper.getRotatedPoint(offsetX, (float) (offsetY + this.getRider().getYOffset()), (float) offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
-			this.getRider().setPosition(parent.posX + posVec.xCoord, parent.posY + posVec.yCoord, parent.posZ + posVec.zCoord);
-			this.getRider().motionX = parent.motionX;
-			this.getRider().motionY = parent.motionY;
-			this.getRider().motionZ = parent.motionZ;
-        }
+	@Override
+	public void updateRiderPosition(){
+		//Rider updates are handled by the parent.
+		return;
 	}
 	
 	@Override
