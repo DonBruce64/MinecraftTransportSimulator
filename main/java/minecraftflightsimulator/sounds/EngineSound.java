@@ -38,11 +38,21 @@ public class EngineSound extends DynamicSound{
 			playerPos.set(player.posX, player.posY, player.posZ);
 			soundPos.set(this.xPosF, this.yPosF, this.zPosF);
 			if(engine.parent != null){
-				soundVelocity = (playerPos.distanceTo(soundPos) - playerPos.add(player.motionX, player.motionY, player.motionZ).distanceTo(soundPos.add(engine.parent.motionX, engine.parent.motionY, engine.parent.motionZ)));
-				this.field_147663_c=(float) (engine.engineRPM*(1+soundVelocity/10)/pitchFactor);
-				if(player.ridingEntity instanceof EntitySeat && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
-					this.volume = (float) (originalVolume*0.5);
+				if(player.ridingEntity instanceof EntitySeat){
+					if(engine.parent.equals(((EntitySeat) player.ridingEntity).parent)){
+						this.field_147663_c=(float) (engine.engineRPM/pitchFactor);
+					}else{
+						soundVelocity = (playerPos.distanceTo(soundPos) - playerPos.add(player.motionX, player.motionY, player.motionZ).distanceTo(soundPos.add(engine.parent.motionX, engine.parent.motionY, engine.parent.motionZ)));
+						this.field_147663_c=(float) (engine.engineRPM*(1+soundVelocity/10)/pitchFactor);
+					}
+					if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
+						this.volume = (float) (originalVolume*0.5);
+					}else{
+						this.volume = originalVolume;
+					}
 				}else{
+					soundVelocity = (playerPos.distanceTo(soundPos) - playerPos.add(player.motionX, player.motionY, player.motionZ).distanceTo(soundPos.add(engine.parent.motionX, engine.parent.motionY, engine.parent.motionZ)));
+					this.field_147663_c=(float) (engine.engineRPM*(1+soundVelocity/10)/pitchFactor);
 					this.volume = originalVolume;
 				}
 				playerLastX = player.posX;
