@@ -27,7 +27,7 @@ public class RenderVulcanair extends RenderPlane{
         model.renderFuselage();
         model.renderAilerons(plane.aileronAngle/10F * 0.017453292F);
         model.renderElevators(plane.elevatorAngle/10F * 0.017453292F);
-        model.renderRudder(plane.rudderAngle/10F * 0.017453292F);
+        model.renderRudder(-plane.rudderAngle/10F * 0.017453292F);
         model.renderFlaps(plane.flapAngle/10F * 0.017453292F);
         model.renderInterior();
         GL11.glTranslatef(0, -0.75F, -0.12F);
