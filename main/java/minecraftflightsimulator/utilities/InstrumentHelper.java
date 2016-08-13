@@ -694,6 +694,7 @@ public class InstrumentHelper{
         GL11.glPushMatrix();
         GL11.glColor4f(1, 1, 1, 1);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glLineWidth(2);
         for(float theta=startingAngle; theta<=endingAngle; theta+=angleIncrement){
         	GL11.glBegin(GL11.GL_LINES);
             GL11.glVertex2d(centerX+offset*Math.sin(Math.toRadians(theta)), centerY-offset*Math.cos(Math.toRadians(-theta)));
