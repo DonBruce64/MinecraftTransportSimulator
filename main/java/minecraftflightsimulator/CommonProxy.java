@@ -1,21 +1,16 @@
 package minecraftflightsimulator;
 
-import java.lang.reflect.Field;
-
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.containers.GUIHandler;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntitySeat;
-import minecraftflightsimulator.packets.general.ChatPacket;
 import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.sounds.EngineSound;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -26,7 +21,11 @@ import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-
+/**Contains registration methods used by {@link MFSRegistry} and methods overridden by ClientProxy. 
+ * See the latter for more info on overridden methods.
+ * 
+ * @author don_bruce
+ */
 public class CommonProxy{
 	private static int entityNumber = 0;
 	private static int packetNumber = 0;
@@ -99,30 +98,17 @@ public class CommonProxy{
 	 * @return
 	 */
 	public ItemStack getStackByItemName(String name, int meta){
-		try{
-			for(Field field : Items.class.getFields()){
-				if(field.getName().toLowerCase().equals(name)){
-					Item item = (Item) field.get(Item.class);
-					if(meta == -1){
-						return new ItemStack(item);
-					}else{
-						return new ItemStack(item, 1, meta);
-					}
-				}
+		Item item = (Item) Item.itemRegistry.getObject(name);
+		if(item != null){
+			if(meta == -1){
+				return new ItemStack(item);
+			}else{
+				return new ItemStack(item, 1, meta);
 			}
-			for(Field field : Blocks.class.getFields()){
-				if(field.getName().toLowerCase().equals(name)){
-					Block block = (Block) field.get(Block.class);
-					if(meta == -1){
-						return new ItemStack(block, 1, Short.MAX_VALUE);
-					}else{
-						return new ItemStack(block, 1, meta);
-					}
-				}
-			}
-		}catch(Exception e){}
-		System.err.println("ERROR: Invalid item '" + name + "' entered in item lookup function.");
-		return null;
+		}else{
+			System.err.println("ERROR: Invalid item '" + name + "' entered in item lookup function.");
+			return null;
+		}
 	}
 	
 	public void playSound(Entity noisyEntity, String soundName, float volume, float pitch){}
