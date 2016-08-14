@@ -14,6 +14,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.common.config.Property;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
@@ -36,12 +38,17 @@ public class ClientEventHandler{
 	public static ClientEventHandler instance = new ClientEventHandler();
 	
 	@SubscribeEvent
+	public void on(EntityJoinWorldEvent event){
+		
+	}
+	
+	@SubscribeEvent
 	public void on(TickEvent.ClientTickEvent event){
 		if(minecraft.theWorld != null){
 			if(event.phase.equals(Phase.END)){
 				/*Minecraft skips updating children who were spawned before their parents.
 				 *This forces them to update, but causes them to lag their rendering until
-				 * the next tick.  It's one of the main reasons all the child rendering
+				 * the next tick.  It's one of the main reasons why all the child rendering
 				 * is shoved into custom code.
 				 */
 				for(Object entity : minecraft.theWorld.getLoadedEntityList()){
@@ -52,6 +59,12 @@ public class ClientEventHandler{
 				if(minecraft.thePlayer.ridingEntity == null){
 					RenderHelper.changeCameraRoll(0);
 					RenderHelper.changeCameraZoom(0);
+				}
+				if(MFS.firstRun){
+					minecraft.thePlayer.openGui(MFS.instance, -1, null, 1, 1, 1);
+					MFS.firstRun = false;
+					MFS.config.getCategory(MFS.config.CATEGORY_GENERAL).put("FirstRun", new Property("FirstRun", String.valueOf(MFS.firstRun), Property.Type.BOOLEAN));
+					MFS.config.save();
 				}
 			}
 		}
@@ -77,6 +90,19 @@ public class ClientEventHandler{
 			}
 		}
 	}
+	
+	/*1.8+ method
+	@SubscribeEvent
+	public void on(CameraSetup event){
+		if(Minecraft.getMinecraft().gameSettings.thirdPersonView==0){
+			if(event.entity.ridingEntity instanceof EntitySeat){
+				if(((EntitySeat) event.entity.ridingEntity).parent!=null){
+					event.roll = ((EntitySeat) event.entity.ridingEntity).parent.rotationRoll;
+				}
+			}
+		}
+	}
+	*/
 	
 	@SubscribeEvent
 	public void on(RenderGameOverlayEvent.Pre event){

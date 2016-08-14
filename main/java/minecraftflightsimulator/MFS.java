@@ -27,10 +27,11 @@ public class MFS {
 	public static final String MODNAME="Minecraft Flight Simulator";
 	public static final String MODVER="6.0.0";
 
+	public static boolean firstRun;
 	public static double planeSpeedFactor;
 	public static double fuelUsageFactor;
-	public static String heavyItems;
 	public static double propellerDamageFactor;
+	public static String heavyItems;
 	public static Map<String, Double> fluidValues = new HashMap<String, Double>();
 	
 	public static Configuration config;
@@ -78,10 +79,11 @@ public class MFS {
 	private void initConfigFile(FMLPreInitializationEvent event){
 		config = new Configuration(event.getSuggestedConfigurationFile());
 		config.load();
+		firstRun = config.get(config.CATEGORY_GENERAL, "FirstRun", true).getBoolean();
 		planeSpeedFactor = config.get(config.CATEGORY_GENERAL, "PlaneSpeedFactor", 0.5F, "Factor to apply to plane movement.  \n1 is the realistic value, but this makes planes move too fast for Minecraft. Adjust with caution.").getDouble();
 		fuelUsageFactor = config.get(config.CATEGORY_GENERAL, "FuelUsageFactor", 1.0F, "Factor times which engines use fuel.  \nChange this if you think engines use fuel too fast or slow.").getDouble();
-		heavyItems = config.get(config.CATEGORY_GENERAL, "HeavyItems", "diamond, iron, gold, coal, ore, stone", "Any item that contains these words will be counted as heavy (double mass) when considering plane mass.  \nChange and tweak to your liking.").getString();
 		propellerDamageFactor = config.get(config.CATEGORY_GENERAL, "PropellerDamageFactor", 1.0F, "Factor for damage caused by a propeller.").getDouble();
+		heavyItems = config.get(config.CATEGORY_GENERAL, "HeavyItems", "diamond, iron, gold, coal, ore, stone", "Any item that contains these words will be counted as heavy (double mass) when considering plane mass.  \nChange and tweak to your liking.").getString();
 		for(String fluidName : FluidRegistry.getRegisteredFluids().keySet()){
 			MFS.fluidValues.put(fluidName, MFS.config.get("fuels", fluidName, fluidName.equals(FluidRegistry.LAVA.getName()) ? 1.0F : 0.0F).getDouble());
 		}

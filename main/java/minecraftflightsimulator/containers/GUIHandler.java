@@ -44,8 +44,10 @@ public class GUIHandler implements IGuiHandler{
 				if(world.getBlock(x, y, z) instanceof BlockPropellerBench){
 					return new GUIPropellerBench(player.inventory, (TileEntityPropellerBench) world.getTileEntity(x, y, z));
 				}	
-			}else{
+			}else if(x == 0 && y == 0 && z == 0){
 				return new GUIConfig();
+			}else{
+				return new GUICredits();
 			}
 		}
 		return null;
