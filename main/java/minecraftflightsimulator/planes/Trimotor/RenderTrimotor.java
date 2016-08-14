@@ -85,11 +85,11 @@ public class RenderTrimotor extends RenderPlane{
 	@Override
 	protected void renderMarkings(EntityPlane plane){
 		RenderHelper.bindTexture(logo1);
-		RenderHelper.renderSquare(0.0626, 0.0626, 1.0, 1.8, -10.8, -11.6, false);
-		RenderHelper.renderSquare(-0.0626, -0.0626, 1.0, 1.8, -11.6, -10.8, false);
+		RenderHelper.renderSquare(0.0626, 0.0626, 0.91, 1.91, -10.8, -11.8, false);
+		RenderHelper.renderSquare(-0.0626, -0.0626, 0.91, 1.91, -11.8, -10.8, false);
 		RenderHelper.bindTexture(logo2);
-		RenderHelper.renderSquare(1.26, 0.697869586, 0.0, 0.8, -6.0, -10.0, false);
-		RenderHelper.renderSquare(-0.697869586, -1.26, 0.0, 0.8, -10.0, -6.0, false);
+		RenderHelper.renderSquare(1.26, 0.697869586, 0.0, 1.0, -6.0, -11.0, false);
+		RenderHelper.renderSquare(-0.697869586, -1.26, 0.0, 1.0, -11.0, -6.0, false);
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(0, 2.5F, -11.625F);
