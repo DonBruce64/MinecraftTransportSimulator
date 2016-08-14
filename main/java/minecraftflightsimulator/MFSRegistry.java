@@ -151,6 +151,7 @@ public class MFSRegistry{
 	
 	ItemStack ingotStack = MFS.proxy.getStackByItemName("iron_ingot", -1);
 	ItemStack barsStack = MFS.proxy.getStackByItemName("iron_bars", -1);
+	ItemStack blockStack = MFS.proxy.getStackByItemName("iron_block", -1);
 	ItemStack diamondStack = MFS.proxy.getStackByItemName("diamond", -1);
 	ItemStack obsidianStack = MFS.proxy.getStackByItemName("obsidian", -1);
 	ItemStack pistonStack = MFS.proxy.getStackByItemName("piston", -1);
@@ -233,6 +234,17 @@ public class MFSRegistry{
 				'A', ingotStack, 
 				'C', dyeStack[15],
 				'D', dyeStack[14]);
+		
+		//Trimotor
+		for(byte i=0; i<16; ++i){
+			GameRegistry.addRecipe(new ItemStack(planeTrimotor, 1, i),
+					"AAA",
+					"CB ",
+					"AAA",
+					'A', ingotStack, 
+					'B', blockStack,
+					'D', dyeStack[i]);
+		}
 	}
 	
 	private void initPartRecipes(){
