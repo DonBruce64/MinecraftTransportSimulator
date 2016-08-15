@@ -88,7 +88,7 @@ public class ClientProxy extends CommonProxy{
 	@Override
 	public void playSound(Entity noisyEntity, String soundName, float volume, float pitch){
 		if(noisyEntity.worldObj.isRemote){
-			double soundDistance = Minecraft.getMinecraft().renderViewEntity.getDistance(noisyEntity.posX, noisyEntity.posY, noisyEntity.posZ);
+			double soundDistance = Minecraft.getMinecraft().thePlayer.getDistance(noisyEntity.posX, noisyEntity.posY, noisyEntity.posZ);
 	        PositionedSoundRecord sound = new PositionedSoundRecord(new ResourceLocation(soundName), volume, pitch, (float)noisyEntity.posX, (float)noisyEntity.posY, (float)noisyEntity.posZ);
 	        if(soundDistance > 10.0D){
 	        	Minecraft.getMinecraft().getSoundHandler().playDelayedSound(sound, (int)(soundDistance/2));
