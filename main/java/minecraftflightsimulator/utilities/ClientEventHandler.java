@@ -91,7 +91,7 @@ public class ClientEventHandler{
 		}
 	}
 	
-	/*1.8+ method
+	/*1.8
 	@SubscribeEvent
 	public void on(CameraSetup event){
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView==0){
@@ -102,7 +102,7 @@ public class ClientEventHandler{
 			}
 		}
 	}
-	*/
+	1.8*/
 	
 	@SubscribeEvent
 	public void on(RenderGameOverlayEvent.Pre event){
