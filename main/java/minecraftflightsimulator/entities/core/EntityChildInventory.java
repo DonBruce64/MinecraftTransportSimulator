@@ -28,7 +28,7 @@ public abstract class EntityChildInventory extends EntityChild implements IInven
 		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, width, height, 0);
 	}
 	
-	protected abstract String getDisplayName();
+	protected abstract String getChildInventoryName();
 	
 	@Override
     public boolean performRightClickAction(EntityPlayer player){
@@ -111,7 +111,7 @@ public abstract class EntityChildInventory extends EntityChild implements IInven
 	public int getFieldCount(){return 0;}
 	public int getSizeInventory(){return 27;}
 	public int getInventoryStackLimit(){return 64;}
-	public String getInventoryName(){return StatCollector.translateToLocal(getDisplayName());}
+	public String getInventoryName(){return StatCollector.translateToLocal(getChildInventoryName());}
 	public ItemStack getStackInSlot(int slot){return this.contents[slot];}
 	public ItemStack getStackInSlotOnClosing(int slot){return null;}
 	

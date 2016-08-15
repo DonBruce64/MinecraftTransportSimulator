@@ -15,7 +15,7 @@ public class EntityPlaneChest extends EntityChildInventory{
 	}
 
 	@Override
-	protected String getDisplayName(){
+	protected String getChildInventoryName(){
 		return "entity.mfs.Chest.name";
 	}
 }
