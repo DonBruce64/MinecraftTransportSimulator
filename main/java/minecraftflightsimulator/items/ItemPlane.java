@@ -43,13 +43,19 @@ public class ItemPlane extends Item{
 					if(!player.capabilities.isCreativeMode){
 						--stack.stackSize;
 					}
-					return true;
+					return true;//INS190
+					/*INS190
+					return EnumActionResult.PASS;
+					INS190*/
 				}
 			}catch(Exception e){
 				System.err.println("ERROR SPAWING PLANE!");
 			}
 		}
-		return false;
+		return false;//INS190
+		/*INS190
+		return EnumActionResult.FAIL;
+		INS190*/
 	}
 
 	public boolean canSpawnPlane(World world, EntityPlane plane){

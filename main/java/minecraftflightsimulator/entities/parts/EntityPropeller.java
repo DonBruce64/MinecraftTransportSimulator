@@ -94,9 +94,16 @@ public class EntityPropeller extends EntityChild{
 		return true;
 	}
 	
+	public class EntityDamageSourcePropellor extends EntityDamageSource{
+		public EntityDamageSourcePropellor(String name, Entity transmitter){
+			super(name, transmitter);
+			this.damageType="propellor";
+		}
+	};
+	
 	@Override
-	public void loadDataFromNBT(NBTTagCompound tagCompound){
-		super.loadDataFromNBT(tagCompound);
+	public void readFromNBT(NBTTagCompound tagCompound){
+		super.readFromNBT(tagCompound);
 		this.numberBlades=tagCompound.getInteger("numberBlades");
 		this.health=tagCompound.getInteger("health");
 		this.pitch=tagCompound.getInteger("pitch");
@@ -104,18 +111,11 @@ public class EntityPropeller extends EntityChild{
 	}
     
 	@Override
-	public void saveDataToNBT(NBTTagCompound tagCompound){
-		super.saveDataToNBT(tagCompound);
+	public void writeToNBT(NBTTagCompound tagCompound){
+		super.writeToNBT(tagCompound);
 		tagCompound.setInteger("numberBlades", this.numberBlades);
 		tagCompound.setInteger("health", this.health);
 		tagCompound.setInteger("pitch", this.pitch);
 		tagCompound.setInteger("diameter", this.diameter);
 	}
-	
-	public class EntityDamageSourcePropellor extends EntityDamageSource{
-		public EntityDamageSourcePropellor(String name, Entity transmitter){
-			super(name, transmitter);
-			this.damageType="propellor";
-		}
-	};
 }

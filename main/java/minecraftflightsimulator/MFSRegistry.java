@@ -45,7 +45,6 @@ import minecraftflightsimulator.planes.Vulcanair.EntityVulcanair;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import cpw.mods.fml.common.registry.GameRegistry;
 
 /**Main registry class.  This class should be referenced by any class looking for
  * MFS items or blocks.  Adding new items and blocks is a simple as adding them
@@ -173,7 +172,7 @@ public class MFSRegistry{
 	private void initPlaneRecipes(){	
 		//MC172
 		for(int i=0; i<6; ++i){
-			GameRegistry.addRecipe(new ItemStack(planeMC172, 1, i),
+			MFS.proxy.registerRecpie(new ItemStack(planeMC172, 1, i),
 				"AAA",
 				" B ",
 				"ABA",
@@ -182,7 +181,7 @@ public class MFSRegistry{
 		}
 		
 		//PZLP11
-		GameRegistry.addRecipe(new ItemStack(planePZLP11),
+		MFS.proxy.registerRecpie(new ItemStack(planePZLP11),
 				"AAA",
 				" B ",
 				"ABA",
@@ -190,44 +189,44 @@ public class MFSRegistry{
 				'B', barsStack);
 		
 		//Vulcanair
-		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 0),
+		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 0),
 				"AAA",
 				"CAC",
 				"AAA",
 				'A', ingotStack, 
 				'C', dyeStack[15]);
-		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 1),
+		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 1),
 				"AAA",
 				"CAC",
 				"AAA",
 				'A', ingotStack, 
 				'C', dyeStack[14]);
-		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 2),
+		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 2),
 				"AAA",
 				"CAD",
 				"AAA",
 				'A', ingotStack, 
 				'C', dyeStack[1],
 				'D', dyeStack[7]);
-		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 3),
+		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 3),
 				"AAA",
 				"CAC",
 				"AAA",
 				'A', ingotStack, 
 				'C', dyeStack[1]);
-		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 4),
+		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 4),
 				"AAA",
 				"CAC",
 				"AAA",
 				'A', ingotStack, 
 				'C', dyeStack[10]);
-		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 5),
+		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 5),
 				"AAA",
 				"CAC",
 				"AAA",
 				'A', ingotStack, 
 				'C', dyeStack[0]);
-		GameRegistry.addRecipe(new ItemStack(planeVulcanair, 1, 6),
+		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 6),
 				"AAA",
 				"CAD",
 				"AAA",
@@ -237,7 +236,7 @@ public class MFSRegistry{
 		
 		//Trimotor
 		for(byte i=0; i<16; ++i){
-			GameRegistry.addRecipe(new ItemStack(planeTrimotor, 1, i),
+			MFS.proxy.registerRecpie(new ItemStack(planeTrimotor, 1, i),
 					"AAA",
 					"CB ",
 					"AAA",
@@ -251,7 +250,7 @@ public class MFSRegistry{
 		//Seat
 		for(int i=0; i<6; ++i){
 			for(int j=0; j<16; ++j){
-				GameRegistry.addRecipe(new ItemStack(seat, 1, (i << 4) + j),
+				MFS.proxy.registerRecpie(new ItemStack(seat, 1, (i << 4) + j),
 					" BA",
 					" BA",
 					"AAA",
@@ -261,14 +260,14 @@ public class MFSRegistry{
 		}
 		
 		//Wheels
-		GameRegistry.addRecipe(new ItemStack(wheelSmall, 1, 0),
+		MFS.proxy.registerRecpie(new ItemStack(wheelSmall, 1, 0),
 				"ABA",
 				"ACA",
 				"ABA",
 				'A', anyWoolStack, 
 				'B', dyeStack[0], 
 				'C', ingotStack);
-		GameRegistry.addRecipe(new ItemStack(wheelLarge, 1, 1),
+		MFS.proxy.registerRecpie(new ItemStack(wheelLarge, 1, 1),
 				"ABA",
 				"BCB",
 				"ABA",
@@ -276,13 +275,13 @@ public class MFSRegistry{
 				'B', dyeStack[0], 
 				'C', ingotStack);
 		//Skid
-		GameRegistry.addRecipe(new ItemStack(skid),
+		MFS.proxy.registerRecpie(new ItemStack(skid),
 				"A A",
 				" A ",
 				"  A",
 				'A', barsStack);
 		//Pontoon
-		GameRegistry.addRecipe(new ItemStack(pontoon, 2),
+		MFS.proxy.registerRecpie(new ItemStack(pontoon, 2),
 				"AAA",
 				"BBB",
 				"AAA",
@@ -290,7 +289,7 @@ public class MFSRegistry{
 				'B', anyWoolStack);
 		
 		//Propeller bench
-		GameRegistry.addRecipe(new ItemStack(blockPropellerBench),
+		MFS.proxy.registerRecpie(new ItemStack(blockPropellerBench),
 				"AAA",
 				" BA",
 				"ACA",
@@ -302,28 +301,28 @@ public class MFSRegistry{
 	
 	private void initEngineRecipes(){
 		//New engines
-		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 2805),
+		MFS.proxy.registerRecpie(new ItemStack(engineSmall, 1, 2805),
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', pistonStack, 
 				'B', obsidianStack,
 				'C', ingotStack);
-		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 3007),
+		MFS.proxy.registerRecpie(new ItemStack(engineSmall, 1, 3007),
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', pistonStack, 
 				'B', obsidianStack,
 				'C', diamondStack);
-		GameRegistry.addRecipe(new ItemStack(engineLarge, 1, 2907),
+		MFS.proxy.registerRecpie(new ItemStack(engineLarge, 1, 2907),
 				"ABA",
 				"ACA",
 				"ABA",
 				'A', pistonStack, 
 				'B', obsidianStack,
 				'C', ingotStack);
-		GameRegistry.addRecipe(new ItemStack(engineLarge, 1, 3210),
+		MFS.proxy.registerRecpie(new ItemStack(engineLarge, 1, 3210),
 				"ABA",
 				"ACA",
 				"ABA",
@@ -332,25 +331,25 @@ public class MFSRegistry{
 				'C', diamondStack);
 		
 		//Repaired engines
-		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 2805),
+		MFS.proxy.registerRecpie(new ItemStack(engineSmall, 1, 2805),
 				"B B",
 				" C ",
 				"B B",
 				'B', obsidianStack,
 				'C', new ItemStack(engineSmall, 1, 2805));
-		GameRegistry.addRecipe(new ItemStack(engineSmall, 1, 3007),
+		MFS.proxy.registerRecpie(new ItemStack(engineSmall, 1, 3007),
 				"B B",
 				" C ",
 				"B B",
 				'B', obsidianStack,
 				'C', new ItemStack(engineSmall, 1, 3007));
-		GameRegistry.addRecipe(new ItemStack(engineLarge, 1, 2907),
+		MFS.proxy.registerRecpie(new ItemStack(engineLarge, 1, 2907),
 				"B B",
 				"BCB",
 				"B B",
 				'B', obsidianStack,
 				'C', new ItemStack(engineLarge, 1, 2907));
-		GameRegistry.addRecipe(new ItemStack(engineLarge, 1, 3210),
+		MFS.proxy.registerRecpie(new ItemStack(engineLarge, 1, 3210),
 				"B B",
 				"BCB",
 				"B B",
@@ -359,28 +358,28 @@ public class MFSRegistry{
 	}
 	
 	private void initFlightInstrumentRecipes(){
-		GameRegistry.addRecipe(new ItemStack(flightInstrumentBase, 16),
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrumentBase, 16),
 				"III",
 				"IGI",
 				"III",
 				'I', ingotStack, 
 				'G', MFS.proxy.getStackByItemName("glass_pane", -1));
 		
-		GameRegistry.addRecipe(new ItemStack(pointerShort),
+		MFS.proxy.registerRecpie(new ItemStack(pointerShort),
 				" WW",
 				" WW",
 				"B  ",
 				'W', dyeStack[15], 
 				'B', dyeStack[0]);
 		
-		GameRegistry.addRecipe(new ItemStack(pointerLong),
+		MFS.proxy.registerRecpie(new ItemStack(pointerLong),
 				"  W",
 				" W ",
 				"B  ",
 				'W', dyeStack[15], 
 				'B', dyeStack[0]);
 		
-		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 0),
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 0),
 				"LLL",
 				"RRR",
 				" B ",
@@ -388,7 +387,7 @@ public class MFSRegistry{
 				'L', dyeStack[4], 
 				'R', dyeStack[3]);
 		
-		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 1),
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 1),
 				"WLW",
 				"WSW",
 				" B ",
@@ -397,7 +396,7 @@ public class MFSRegistry{
 				'S', pointerShort, 
 				'W', dyeStack[15]);
 		
-		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 2),
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 2),
 				" W ",
 				"WIW",
 				" B ",
@@ -405,7 +404,7 @@ public class MFSRegistry{
 				'I', ingotStack, 
 				'W', dyeStack[15]);
 		
-		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 3),
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 3),
 				"R W",
 				"YLG",
 				"GBG",
@@ -416,7 +415,7 @@ public class MFSRegistry{
 				'G', dyeStack[10], 
 				'W', dyeStack[15]);
 		
-		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 4),
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 4),
 				"   ",
 				"WIW",
 				"WBW",
@@ -424,7 +423,7 @@ public class MFSRegistry{
 				'I', ingotStack, 
 				'W', dyeStack[15]);
 		
-		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 5),
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 5),
 				"WWW",
 				" I ",
 				"WBW",
@@ -432,7 +431,7 @@ public class MFSRegistry{
 				'I', ingotStack, 
 				'W', dyeStack[15]);
 		
-		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 6),
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 6),
 				"W W",
 				" L ",
 				"WBW",
@@ -440,7 +439,7 @@ public class MFSRegistry{
 				'L', pointerLong, 
 				'W', dyeStack[15]);
 		
-		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 7),
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 7),
 				"RYG",
 				" LG",
 				" B ",
@@ -454,7 +453,7 @@ public class MFSRegistry{
 		//Instrument 8 does not exist
 		//Instrument 9 does not exist
 		
-		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 10),
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 10),
 				"W W",
 				" L ",
 				"WBR",
@@ -463,7 +462,7 @@ public class MFSRegistry{
 				'R', dyeStack[1], 
 				'W', dyeStack[15]);
 		
-		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 11),
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 11),
 				"RWW",
 				" L ",
 				" B ",
@@ -472,7 +471,7 @@ public class MFSRegistry{
 				'R', dyeStack[1], 
 				'W', dyeStack[15]);
 		
-		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 12),
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 12),
 				" W ",
 				"WLW",
 				" B ",
@@ -480,7 +479,7 @@ public class MFSRegistry{
 				'L', pointerLong, 
 				'W', dyeStack[15]);
 		
-		GameRegistry.addRecipe(new ItemStack(flightInstrument, 1, 13),
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 13),
 				"YGR",
 				" L ",
 				" B ",

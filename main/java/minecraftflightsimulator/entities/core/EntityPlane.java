@@ -115,7 +115,7 @@ public abstract class EntityPlane extends EntityFlyable{
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		if(!linked){return;}		
+		if(!linked){return;}
 		refreshGroundedStatuses();
 		getBasicProperties();
 		getForcesAndMotions();

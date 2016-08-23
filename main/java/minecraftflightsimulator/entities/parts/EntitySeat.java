@@ -61,14 +61,14 @@ public class EntitySeat extends EntityChild{
 	}
 	
 	@Override
-	public void loadDataFromNBT(NBTTagCompound tagCompound){
-		super.loadDataFromNBT(tagCompound);
+	public void readFromNBT(NBTTagCompound tagCompound){
+		super.readFromNBT(tagCompound);
 		this.controller=tagCompound.getBoolean("controller");
 	}
     
 	@Override
-	public void saveDataToNBT(NBTTagCompound tagCompound){
-		super.saveDataToNBT(tagCompound);
+	public void writeToNBT(NBTTagCompound tagCompound){
+		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("controller", this.controller);
 	}
 }

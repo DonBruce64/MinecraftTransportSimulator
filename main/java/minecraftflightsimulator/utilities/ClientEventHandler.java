@@ -15,7 +15,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.common.config.Property;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
@@ -36,11 +35,6 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class ClientEventHandler{
 	private static Minecraft minecraft = Minecraft.getMinecraft();	
 	public static ClientEventHandler instance = new ClientEventHandler();
-	
-	@SubscribeEvent
-	public void on(EntityJoinWorldEvent event){
-		
-	}
 	
 	@SubscribeEvent
 	public void on(TickEvent.ClientTickEvent event){
@@ -70,14 +64,58 @@ public class ClientEventHandler{
 		}
 	}
 	
+	/*INS180
+	@SubscribeEvent
+	public void on(TickEvent.RenderTickEvent event){
+		if(event.phase.equals(Phase.START) && minecraft.theWorld != null){
+			for(Object obj : minecraft.theWorld.loadedEntityList){
+				if(obj instanceof EntityParent){
+					((EntityParent) obj).rendered = false;
+				}
+			}
+		}
+	}	
+	
+	@SubscribeEvent
+	public void on(RenderWorldLastEvent event){
+        Entity renderEntity = minecraft.getRenderViewEntity();
+        RenderManager manager = minecraft.getRenderManager();
+		for(Object obj : minecraft.theWorld.loadedEntityList){
+			if(obj instanceof EntityParent){
+				if(!((EntityParent) obj).rendered){
+					GlStateManager.depthFunc(515);
+					minecraft.entityRenderer.enableLightmap();
+					net.minecraft.client.renderer.RenderHelper.enableStandardItemLighting();
+					((EntityParent) obj).rendered = true;
+	                manager.renderEntityStatic((Entity) obj, event.partialTicks, false);
+	                for(EntityChild child : ((EntityParent) obj).getChildren()){
+	                	Entity rider = child.getRider();
+	                	if(child.getRider() != null && !(minecraft.thePlayer.equals(child.getRider()) && minecraft.gameSettings.thirdPersonView == 0)){
+	                		manager.renderEntityStatic(child.getRider(), event.partialTicks, false);
+	                	}
+	                }
+	                net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();
+	                minecraft.entityRenderer.disableLightmap();
+				}
+			}
+		}
+	}
+	INS180*/
+	
 	@SubscribeEvent
 	public void on(RenderPlayerEvent.Pre event){
 		if(event.entityPlayer.ridingEntity instanceof EntitySeat){
 			EntityParent parent = ((EntitySeat) event.entityPlayer.ridingEntity).parent;
 			if(parent!=null){
 				GL11.glPushMatrix();
+				/*INS180
+				GL11.glTranslated(0, event.entityPlayer.getEyeHeight(), 0);
+				INS180*/
 				GL11.glRotated(parent.rotationPitch, Math.cos(parent.rotationYaw  * 0.017453292F), 0, Math.sin(parent.rotationYaw * 0.017453292F));
 				GL11.glRotated(parent.rotationRoll, -Math.sin(parent.rotationYaw  * 0.017453292F), 0, Math.cos(parent.rotationYaw * 0.017453292F));
+				/*INS180
+				GL11.glTranslated(0, -event.entityPlayer.getEyeHeight(), 0);
+				INS180*/
 			}
 		}
 	}
@@ -91,7 +129,7 @@ public class ClientEventHandler{
 		}
 	}
 	
-	/*1.8
+	/*INS180
 	@SubscribeEvent
 	public void on(CameraSetup event){
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView==0){
@@ -102,7 +140,7 @@ public class ClientEventHandler{
 			}
 		}
 	}
-	1.8*/
+	INS180*/
 	
 	@SubscribeEvent
 	public void on(RenderGameOverlayEvent.Pre event){

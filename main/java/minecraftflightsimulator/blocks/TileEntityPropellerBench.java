@@ -19,18 +19,15 @@ import net.minecraft.util.IChatComponent;
 
 public class TileEntityPropellerBench extends TileEntity implements IInventory{
 	public boolean isOn;
-	public short propertyCode;
+	public short propertyCode = 1120;
 	public int timeLeft;
 	public static final int opTime = 1000;
 	
 	private BenchSound benchSound;
-	private ItemStack[] contents;
+	private ItemStack[] contents = new ItemStack[5];
 	private static final ItemStack op1Stack = new ItemStack(MFSRegistry.propeller, 1, 0);
 	
-	public TileEntityPropellerBench(){
-		propertyCode = 1120;
-		contents = new ItemStack[5];
-	}
+	public TileEntityPropellerBench(){}
 	
 	@Override
 	public void updateEntity(){
@@ -91,6 +88,7 @@ public class TileEntityPropellerBench extends TileEntity implements IInventory{
 	public int getInventoryStackLimit(){return 64;}
 	public String getName(){return "";}
 	public String getInventoryName(){return "";}
+	public String getCommandSenderName(){return "";}
 	public IChatComponent getDisplayName(){return null;}
 	public ItemStack getStackInSlot(int slot){return this.contents[slot];}
 	public ItemStack getStackInSlotOnClosing(int slot){return null;}
@@ -146,7 +144,6 @@ public class TileEntityPropellerBench extends TileEntity implements IInventory{
         this.propertyCode = tagCompound.getShort("propertyCode");
         this.timeLeft = tagCompound.getInteger("timeLeft");
         NBTTagList nbttaglist = tagCompound.getTagList("Items", 10);
-        this.contents = new ItemStack[tagCompound.getByte("inventorySize")];
         for (int i = 0; i < nbttaglist.tagCount(); ++i){
             NBTTagCompound nbttagcompound1 = nbttaglist.getCompoundTagAt(i);
             int j = nbttagcompound1.getByte("Slot") & 255;
@@ -162,7 +159,6 @@ public class TileEntityPropellerBench extends TileEntity implements IInventory{
         tagCompound.setBoolean("isOn", this.isOn);
         tagCompound.setShort("propertyCode", this.propertyCode);
         tagCompound.setInteger("timeLeft", this.timeLeft);
-        tagCompound.setByte("inventorySize", (byte) this.getSizeInventory());
         NBTTagList nbttaglist = new NBTTagList();
         for(int i = 0; i < this.contents.length; ++i){
             if (this.contents[i] != null){

@@ -73,7 +73,7 @@ public class CommonProxy{
 		if(EntityChild.class.isAssignableFrom(entityClass) && entityItem != null){
 			MFSRegistry.entityItems.put(entityClass, entityItem);
 		}
-		EntityRegistry.registerModEntity(entityClass, entityClass.getName().substring(7), entityNumber++, MFS.MODID, 80, 5, false);
+		EntityRegistry.registerModEntity(entityClass, entityClass.getSimpleName().substring(6), entityNumber++, MFS.MODID, 80, 5, false);
 	}
 	
 	/**
@@ -86,6 +86,10 @@ public class CommonProxy{
 	public <REQ extends IMessage, REPLY extends IMessage> void registerPacket(Class<REQ> packetClass, Class<? extends IMessageHandler<REQ, REPLY>> handlerClass, boolean client, boolean server){
 		if(client)MFS.MFSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.CLIENT);
 		if(server)MFS.MFSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.SERVER);
+	}
+	
+	public void registerRecpie(ItemStack output, Object...params){
+		GameRegistry.addRecipe(output, params);
 	}
 	
 	/**

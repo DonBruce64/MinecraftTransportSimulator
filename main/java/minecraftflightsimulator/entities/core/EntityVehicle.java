@@ -126,9 +126,9 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	@Override
 	public boolean performRightClickAction(EntityPlayer player){
 		if(!worldObj.isRemote){
-			if(player.getHeldItem() != null){
-				if(player.getHeldItem().getItem().equals(Items.name_tag)){
-					this.displayName = player.getHeldItem().getDisplayName().length() > 12 ? player.getHeldItem().getDisplayName().substring(0, 11) : player.getHeldItem().getDisplayName();
+			if(player.inventory.getCurrentItem() != null){
+				if(player.inventory.getCurrentItem().getItem().equals(Items.name_tag)){
+					this.displayName = player.inventory.getCurrentItem().getDisplayName().length() > 12 ? player.inventory.getCurrentItem().getDisplayName().substring(0, 11) : player.inventory.getCurrentItem().getDisplayName();
 					this.sendDataToClient();
 					return true;
 				}

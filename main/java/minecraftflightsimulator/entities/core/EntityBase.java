@@ -19,8 +19,6 @@ public abstract class EntityBase extends Entity{
 	public EntityBase(World world) {
 		super(world);
 		this.preventEntitySpawning = true;
-		this.ignoreFrustumCheck = true;
-		this.renderDistanceWeight = 100;
 	}
 	
 	@Override
@@ -67,6 +65,9 @@ public abstract class EntityBase extends Entity{
     @SideOnly(Side.CLIENT)
     public void setPositionAndRotation2(double posX, double posY, double posZ, float yaw, float pitch, int p_70056_9_){
     	//Overridden due to stupid tracker behavior.
+    	//Client-side render changes calls put in its place.
+    	this.renderDistanceWeight = 100;
+    	this.ignoreFrustumCheck = true;
     }
 	
 	public void requestDataFromServer(){
@@ -90,20 +91,12 @@ public abstract class EntityBase extends Entity{
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
-		this.loadDataFromNBT(tagCompound);
+		this.UUID=tagCompound.getString("UUID");
 	}
-    
-    public void loadDataFromNBT(NBTTagCompound tagCompound){
-    	this.UUID=tagCompound.getString("UUID");
-    }
     
 	@Override
 	public void writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
-		this.saveDataToNBT(tagCompound);
-	}
-	
-	public void saveDataToNBT(NBTTagCompound tagCompound){
 		tagCompound.setString("UUID", this.UUID);
-    }
+	}
 }

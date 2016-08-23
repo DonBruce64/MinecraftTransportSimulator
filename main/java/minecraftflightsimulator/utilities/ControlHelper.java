@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import minecraftflightsimulator.ClientProxy;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.entities.core.EntityVehicle;

@@ -31,20 +31,18 @@ public class ClientProxy extends CommonProxy{
 	@Override
 	public void preInit(){
 		super.preInit();
-		//versions 1.8.9+
-		//MFSClientRegistry.instance.init();
+		MFSClientRegistry.preInit();
 	}
 	
 	@Override
 	public void init(){
 		super.init();
-		//versions 1.7.10 and versions 1.8;
-		MFSClientRegistry.instance.init();
+		MFSClientRegistry.init();
 		ControlHelper.init();
 		MinecraftForge.EVENT_BUS.register(ClientEventHandler.instance);
 		FMLCommonHandler.instance().bus().register(ClientEventHandler.instance);
 	}
-
+	
 	/**
 	 * Updates yaw, pitch, and roll for seated players.  
 	 * Calls {@link ControlHelper} methods after.

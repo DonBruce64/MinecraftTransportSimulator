@@ -148,8 +148,8 @@ public abstract class EntityEngine extends EntityChild{
 	}
 		
 	@Override
-	public void loadDataFromNBT(NBTTagCompound tagCompound){
-		super.loadDataFromNBT(tagCompound);
+	public void readFromNBT(NBTTagCompound tagCompound){
+		super.readFromNBT(tagCompound);
 		this.engineOn=tagCompound.getBoolean("engineOn");
 		this.maxEngineRPM=tagCompound.getInteger("maxEngineRPM");
 		this.fuelConsumption=tagCompound.getFloat("fuelConsumption");
@@ -159,8 +159,8 @@ public abstract class EntityEngine extends EntityChild{
 	}
 	
 	@Override
-	public void saveDataToNBT(NBTTagCompound tagCompound){
-		super.saveDataToNBT(tagCompound);
+	public void writeToNBT(NBTTagCompound tagCompound){
+		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("engineOn", this.engineOn);
 		tagCompound.setInteger("maxEngineRPM", this.maxEngineRPM);
 		tagCompound.setFloat("fuelConsumption", this.fuelConsumption);

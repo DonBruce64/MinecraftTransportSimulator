@@ -1,10 +1,9 @@
 package minecraftflightsimulator.utilities;
 
 import java.awt.Color;
-import java.util.HashMap;
-import java.util.Map;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.MFSClientRegistry;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.parts.EntitySeat;
@@ -22,8 +21,6 @@ import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.client.registry.ClientRegistry;
-import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -44,8 +41,6 @@ public class RenderHelper{
 	private static final String[] zoomNames = new String[] {"thirdPersonDistance", "thirdPersonDistanceTemp", "field_78490_B", "field_78491_C"};
 	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	private static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-	
-	private static Map <Class<? extends EntityChild>, RenderChild> childRenderMap = new HashMap<Class<? extends EntityChild>, RenderChild>();
 	
 	public static void changeCameraZoom(int zoom){
 		if(zoomLevel < 15 && zoom == 1){
@@ -196,45 +191,6 @@ public class RenderHelper{
     	renderQuadUV(x1, x1, x2, x2, y2, y1, y1, y2, z1, z1, z2, z2, u, U, v, V, mirror);
     }
     
-    /**
-     * Helper method to register a parent rendering class with the RenderingRegistry.
-     * @param entityClass
-     * @param renderClass
-     */
-    public static void registerParentRender(Class<? extends EntityParent> entityClass, Class<? extends RenderParent> renderClass){
-		try{
-			RenderingRegistry.registerEntityRenderingHandler(entityClass, renderClass.getConstructor(RenderManager.class).newInstance((Object) null));
-		}catch(Exception e){
-			System.err.println("ERROR: Could not register Parent renderer.  Entity will not be visible!");
-		}
-	}
-    
-    /**
-     * Registers a child part with the RenderHelper child system.  All child parts registered
-     * in here will be rendered directly after their parents, ensuring correct placement.
-     * renderClass may be null to prevent rendering altogether.
-     * @param entityClass
-     * @param renderClass
-     */
-    public static void registerChildRender(Class<? extends EntityChild> entityClass, Class<? extends RenderChild> renderClass){
-    	try{
-    		RenderingRegistry.registerEntityRenderingHandler(entityClass, RenderNull.class.getConstructor(RenderManager.class).newInstance((Object) null));
-    		if(renderClass != null){
-    			childRenderMap.put(entityClass, renderClass.newInstance());
-    		}
-		}catch(Exception e){
-			System.err.println("ERROR: Could not register Child renderer.  Model will not be visible!");
-		}	
-    }
-    
-    public static void registerTileEntityRender(Class<? extends TileEntity> tileEntityClass, Class<? extends RenderTileBase> renderClass){
-		try{
-			ClientRegistry.bindTileEntitySpecialRenderer(tileEntityClass, renderClass.newInstance());
-		}catch(Exception e){
-			System.err.println("ERROR: Could not register TileEntity renderer.  TileEntity will not be visible!");
-		}
-	}
-    
     /**Abstract class for parent rendering.
      * Renders the parent model, and all child models that have been registered by
      * {@link registerChildRender}.  Ensures all parts are rendered in the exact
@@ -258,6 +214,10 @@ public class RenderHelper{
     	}
     	
     	private void render(EntityParent parent, double x, double y, double z){
+    		/*INS180
+    		if(!parent.rendered && parent.posY >= 255){return;}
+    		INS180*/
+    		parent.rendered = true;
     		player = Minecraft.getMinecraft().thePlayer;
     		GL11.glPushMatrix();
     		playerRiding = false;
@@ -275,9 +235,9 @@ public class RenderHelper{
     		}
     		this.renderParentModel(parent);
             for(EntityChild child : parent.getChildren()){
-            	if(childRenderMap.get(child.getClass()) != null){
+            	if(MFSClientRegistry.childRenderMap.get(child.getClass()) != null){
             		childOffset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
-            		childRenderMap.get(child.getClass()).renderChildModel(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord);
+            		MFSClientRegistry.childRenderMap.get(child.getClass()).renderChildModel(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord);
         		}
             }
             GL11.glPopMatrix();
@@ -311,7 +271,7 @@ public class RenderHelper{
     	protected abstract void doRender(TileEntity tile, double x, double y, double z);
     }
     
-    private static class RenderNull extends Render{
+    public static class RenderNull extends Render{
     	public RenderNull(RenderManager manager){
             super();
     	}

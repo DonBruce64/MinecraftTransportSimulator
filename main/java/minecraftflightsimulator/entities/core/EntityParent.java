@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.items.ItemPlane;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import minecraftflightsimulator.utilities.MFSVector;
 import minecraftflightsimulator.utilities.RotationHelper;
@@ -13,6 +14,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
 public abstract class EntityParent extends EntityBase{
+	public boolean rendered;
 	public byte numberChildren;
 	public float rotationRoll;
 	public float prevRotationRoll;
@@ -113,11 +115,12 @@ public abstract class EntityParent extends EntityBase{
 				MFSVector offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
 				child.setPosition(posX + offset.xCoord, posY + offset.yCoord, posZ + offset.zCoord);
 				if(child.getRider() != null){
-					MFSVector posVec = RotationHelper.getRotatedPoint(child.offsetX, (float) (child.offsetY + child.getRider().getYOffset()), (float) child.offsetZ, this.rotationPitch, this.rotationYaw, this.rotationRoll);
-					child.getRider().setPosition(this.posX + posVec.xCoord, this.posY + posVec.yCoord, this.posZ + posVec.zCoord);
-					child.getRider().motionX = this.motionX;
-					child.getRider().motionY = this.motionY;
-					child.getRider().motionZ = this.motionZ;
+					MFSVector posVec = RotationHelper.getRotatedPoint(child.offsetX, (float) (child.offsetY + child.getRider().getYOffset()), (float) child.offsetZ, this.rotationPitch, this.rotationYaw, this.rotationRoll);//INS180
+					child.getRider().setPosition(this.posX + posVec.xCoord, this.posY + posVec.yCoord, this.posZ + posVec.zCoord);//INS180
+					/*INS180
+					MFSVector posVec = RotationHelper.getRotatedPoint(child.offsetX, (float) (child.offsetY + child.getRider().getYOffset() + child.getRider().height), (float) child.offsetZ, this.rotationPitch, this.rotationYaw, this.rotationRoll);
+					child.getRider().setPosition(this.posX + posVec.xCoord, this.posY + posVec.yCoord - child.getRider().height, this.posZ + posVec.zCoord);
+					INS180*/
 				}
 			}
 		}
