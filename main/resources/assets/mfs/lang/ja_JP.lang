@@ -2,7 +2,7 @@
 
 death.attack.propellor=%1$s がプロペラに当たって千切りになった！.
 death.attack.propellor.player=%1$s が戦いながらプロペラに粉砕されていった！ %2$s
-entity.mfs.Chest.name=機体 Chest
+entity.mfs.PlaneChest.name=機体 Chest
 tile.PropellerBench.name=Propeller Bench
 
 item.MC172.name=MC-172

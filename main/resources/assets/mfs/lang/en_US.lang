@@ -2,7 +2,7 @@
 
 death.attack.propellor=%1$s was shredded by a propellor.
 death.attack.propellor.player=%1$s was was shredded by a propellor while fighting %2$s
-entity.mfs.Chest.name=Plane Chest
+entity.mfs.PlaneChest.name=Plane Chest
 tile.PropellerBench.name=Propeller Bench
 
 item.MC172.name=MC-172
