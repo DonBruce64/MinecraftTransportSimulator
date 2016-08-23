@@ -1,0 +1,24 @@
+#!/bin/bash
+SOURCEPATH="/home/$USER/.minecraft/forge/modfiles"
+cd $SOURCEPATH
+find MinecraftFlightSimulator94 -not -path *.git* -not -type l -not -type d -delete
+cp -rPnu MinecraftFlightSimulator90/main MinecraftFlightSimulator94/
+FILES=$(find MinecraftFlightSimulator94 -not -path *.git* -not -type l -not -type d)
+
+for FILE in ${FILES[*]}; do
+#Global replacements
+if cat $FILE | grep -q "public void writeToNBT"; then
+	sed -i 's/public void writeToNBT/public NBTTagCompound writeToNBT/' $FILE
+  LINES=$(echo $(cat $FILE | wc -l))
+  sed -i "$(($LINES - 1))ireturn tagCompound;" $FILE
+fi
+
+
+#Global deletions
+sed -i '/INS194/d' $FILE
+
+#File-specifc changes
+if echo $FILE | grep -q "TileEntityPropellerBench"; then
+	sed -i 's/Packet getDescriptionPacket()/SPacketUpdateTileEntity getUpdatePacket()/' $FILE
+fi
+done

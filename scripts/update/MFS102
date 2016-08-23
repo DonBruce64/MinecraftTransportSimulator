@@ -1,0 +1,15 @@
+#!/bin/bash
+SOURCEPATH="/home/$USER/.minecraft/forge/modfiles"
+cd $SOURCEPATH
+find MinecraftFlightSimulator102 -not -path *.git* -not -type l -not -type d -delete
+cp -rPnu MinecraftFlightSimulator94/main MinecraftFlightSimulator102/
+FILES=$(find MinecraftFlightSimulator102 -not -path *.git* -not -type l -not -type d)
+
+for FILE in ${FILES[*]}; do
+#Global replacements
+
+#Global deletions
+sed -i '/INS1002/d' $FILE
+
+#File-specifc changes
+done

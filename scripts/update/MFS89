@@ -1,0 +1,38 @@
+#!/bin/bash
+SOURCEPATH="/home/$USER/.minecraft/forge/modfiles"
+cd $SOURCEPATH
+find MinecraftFlightSimulator89 -not -path *.git* -not -type l -not -type d -delete
+cp -rPnu MinecraftFlightSimulator80/main MinecraftFlightSimulator89/
+FILES=$(find MinecraftFlightSimulator89 -not -path *.git* -not -type l -not -type d)
+
+for FILE in ${FILES[*]}; do
+#Global deletions
+sed -i '/INS189/d' $FILE
+
+#File-specifc changes
+if echo $FILE | grep -q "CommonProxy"; then
+	sed -i 's/Item.itemRegistry.getObject/Item.getByNameOrId/' $FILE
+fi
+if echo $FILE | grep -q "ClientProxy"; then
+	sed -i '/FMLCommonHandler/d' $FILE
+fi
+if echo $FILE | grep -q "MFSClientRegistry"; then
+	sed -i '3iimport net.minecraftforge.fml.client.registry.IRenderFactory;' $FILE
+	sed -i '3iimport net.minecraft.client.renderer.entity.Render;' $FILE
+	sed -i '3iimport net.minecraft.client.renderer.entity.RenderManager;' $FILE
+	sed -i '/ModelBakery.addVariantName/d' $FILE
+	sed -i 's/RenderingRegistry.registerEntityRenderingHandler(entityClass, renderClass.getConstructor(RenderManager.class).newInstance(Minecraft.getMinecraft().getRenderManager()));/RenderingRegistry.registerEntityRenderingHandler(entityClass, instance.new MFSRenderingFactory(renderClass));/' $FILE
+	sed -i 's/RenderingRegistry.registerEntityRenderingHandler(entityClass, RenderNull.class.getConstructor(RenderManager.class).newInstance(Minecraft.getMinecraft().getRenderManager()));/RenderingRegistry.registerEntityRenderingHandler(entityClass, instance.new MFSRenderingFactory(RenderNull.class));/' $FILE
+fi
+if echo $FILE | grep -q "TileEntityPropellerBench"; then
+	sed -i '/import net.minecraft.server.gui.IUpdatePlayerListBox;/d' $FILE
+	sed -i 's/IUpdatePlayerListBox/ITickable/' $FILE
+        sed -i '3iimport net.minecraft.util.ITickable;' $FILE
+fi
+if echo $FILE | grep -q "EntityChild"; then
+  sed -i 's/func_147461_a/getCollisionBoxes/' $FILE
+fi
+if echo $FILE | grep -q "ClientEventHandler"; then
+  sed -i '/enableLightmap()/d' $FILE
+fi
+done

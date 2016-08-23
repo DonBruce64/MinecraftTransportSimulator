@@ -1,0 +1,101 @@
+#!/bin/bash
+SOURCEPATH="/home/$USER/.minecraft/forge/modfiles"
+cd $SOURCEPATH
+find MinecraftFlightSimulator90 -not -path *.git* -not -type l -not -type d -delete
+cp -rPnu MinecraftFlightSimulator89/main MinecraftFlightSimulator90/
+FILES=$(find MinecraftFlightSimulator90 -not -path *.git* -not -type l -not -type d)
+
+for FILE in ${FILES[*]}; do
+#Global replacements
+sed -i 's/net.minecraft.util.BlockPos/net.minecraft.util.math.BlockPos/' $FILE
+sed -i 's/net.minecraft.util.MathHelper/net.minecraft.util.math.MathHelper/' $FILE
+sed -i 's/net.minecraft.util.AxisAlignedBB/net.minecraft.util.math.AxisAlignedBB/' $FILE
+sed -i 's/net.minecraft.util.StatCollector/net.minecraft.util.text.translation.I18n/' $FILE
+sed -i 's/StatCollector.translateToLocal/I18n.translateToLocal/' $FILE
+sed -i 's/net.minecraft.util.ChatComponentText;/net.minecraft.util.text.ChatComponentText;/' $FILE
+sed -i 's/ChatComponentText/TextComponentString/' $FILE
+sed -i 's/player.ridingEntity/player.getRidingEntity()/' $FILE
+sed -i 's/Items.iron_ingot/Items.IRON_INGOT/' $FILE
+sed -i 's/Items.redstone/Items.REDSTONE/' $FILE
+sed -i 's/Items.name_tag/Items.NAME_TAG/' $FILE
+sed -i 's/Blocks.planks/Blocks.PLANKS/' $FILE
+sed -i 's/Blocks.obsidian/Blocks.OBSIDIAN/' $FILE
+sed -i 's/Blocks.chest/Blocks.CHEST/' $FILE
+sed -i 's/random.break/item.shield.break/' $FILE
+sed -i 's/random.chestopen/block.chest.open/' $FILE
+sed -i 's/random.chestclose/block.chest.close/' $FILE
+sed -i 's/gui.button.press/ui.button.click/' $FILE
+
+
+#Global deletions
+sed -i '/INS190/d' $FILE
+
+#File-specifc changes
+if echo $FILE | grep -q "MFS"; then
+	sed -i 's/displayAllReleventItems/displayAllRelevantItems/' $FILE
+fi
+if echo $FILE | grep -q "ClientProxy"; then
+	sed -i '3iimport net.minecraft.util.SoundEvent;' $FILE
+	sed -i '3iimport net.minecraft.util.SoundCategory;' $FILE
+	sed -i 's/new PositionedSoundRecord(new ResourceLocation(soundName)/new PositionedSoundRecord(new SoundEvent(new ResourceLocation(soundName)), SoundCategory.MASTER/' $FILE
+fi
+if echo $FILE | grep -q "CommonProxy"; then
+	sed -i '3iimport net.minecraft.util.ResourceLocation;' $FILE
+	sed -i '3iimport net.minecraft.item.ItemBlock;' $FILE
+	sed -i 's/GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));/GameRegistry.register(item.setRegistryName(item.getUnlocalizedName().substring(5)));/' $FILE
+	sed -i 's/GameRegistry.registerBlock(block, block.getUnlocalizedName().substring(5));/GameRegistry.register(block.setRegistryName(block.getUnlocalizedName().substring(5)));\n\t\tGameRegistry.register(new ItemBlock(block).setRegistryName(block.getUnlocalizedName().substring(5)));/' $FILE
+fi
+if echo $FILE | grep -q "MFSClientRegistry"; then
+	sed -i 's/net.minecraft.client.resources.model/net.minecraft.client.renderer.block.model/' $FILE
+fi
+if echo $FILE | grep -q "BlockPropellerBench"; then
+	sed -i '3iimport net.minecraft.util.EnumHand;' $FILE
+	sed -i '3iimport net.minecraft.item.ItemStack;' $FILE
+	sed -i '3iimport net.minecraft.util.EnumBlockRenderType;' $FILE
+  sed -i 's/Material.iron/Material.IRON/' $FILE
+	sed -i 's/public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumFacing side, float hitX, float hitY, float hitZ)/public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ)/' $FILE
+  sed -i 's/public int getRenderType()/public EnumBlockRenderType getRenderType(IBlockState state)/' $FILE
+  sed -i 's/return -1;/return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;/' $FILE
+	sed -i 's/isFullCube()/isFullCube(IBlockState state)/' $FILE
+	sed -i 's/isOpaqueCube()/isOpaqueCube(IBlockState state)/' $FILE
+fi
+if echo $FILE | grep -q "TileEntityPropellerBench"; then
+	sed -i '3iimport net.minecraft.util.text.ITextComponent;' $FILE
+  sed -i 's/IChatComponent getDisplayName()/ITextComponent getDisplayName()/' $FILE
+	sed -i '/IChatComponent/d' $FILE
+	sed -i 's/S35PacketUpdateTileEntity/SPacketUpdateTileEntity/' $FILE
+fi
+if echo $FILE | grep -q "EntityBase"; then
+	sed -i '3iimport net.minecraft.util.EnumHand;' $FILE
+	sed -i '3iimport net.minecraft.item.ItemStack;' $FILE
+  sed -i 's/public boolean interactFirst(EntityPlayer player)/public boolean processInitialInteract(EntityPlayer player, ItemStack stack, EnumHand hand)/' $FILE
+	sed -i 's/setPositionAndRotation2/setPositionAndRotationDirect/' $FILE
+	sed -i 's/this.renderDistanceWeight = 100;/this.setRenderDistanceWeight(100);/' $FILE
+fi
+if echo $FILE | grep -q "EntityChild"; then
+	sed -i 's/getBlock().getMaterial()/getMaterial()/' $FILE
+	sed -i 's/worldObj.getBlockState(pos).getBlock().getCollisionBoundingBox(worldObj, pos, worldObj.getBlockState(pos).getBlock().getDefaultState())/worldObj.getBlockState(pos).getCollisionBoundingBox(worldObj, pos)/' $FILE
+	sed -i 's/rider.mountEntity/rider.startRiding/' $FILE
+	sed -i 's/return this.riddenByEntity;/return !this.getPassengers().isEmpty() ? this.getPassengers().get(0) : null;/' $FILE
+	sed -i 's/public void updateRiderPosition()/public void updatePassenger(Entity passenger)/' $FILE
+fi
+if echo $FILE | grep -q "ItemPlane"; then
+	sed -i '3iimport net.minecraft.util.EnumActionResult;' $FILE
+	sed -i '3iimport net.minecraft.util.EnumHand;' $FILE
+	sed -i 's/public boolean onItemUse(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ)/public EnumActionResult onItemUse(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)/' $FILE
+fi
+if echo $FILE | grep -q "DynamicSound"; then
+	sed -i '3iimport net.minecraft.util.SoundEvent;' $FILE
+	sed -i '3iimport net.minecraft.util.SoundCategory;' $FILE
+	sed -i 's/super(location);/super(new SoundEvent(location), SoundCategory.MASTER);/' $FILE
+fi
+if echo $FILE | grep -q "ClientEventHandler"; then
+	sed -i 's/event.partialTicks/event.getPartialTicks()/' $FILE	
+	sed -i 's/event.entityPlayer./event.getEntityPlayer()./' $FILE
+	sed -i 's/event.type/event.getType()/' $FILE	
+	sed -i 's/event.resolution/event.getResolution()/g' $FILE	
+	sed -i 's/ridingEntity/getRidingEntity()/' $FILE
+	sed -i 's/event.entity./event.getEntity()./' $FILE
+	sed -i 's/event.roll = ((EntitySeat) event.getEntity().getRidingEntity()).parent.rotationRoll;/event.setRoll(((EntitySeat) event.getEntity().getRidingEntity()).parent.rotationRoll);/' $FILE
+fi
+done

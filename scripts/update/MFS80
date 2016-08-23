@@ -1,0 +1,114 @@
+#!/bin/bash
+SOURCEPATH="/home/$USER/.minecraft/forge/modfiles"
+cd $SOURCEPATH
+find MinecraftFlightSimulator80 -not -path *.git* -not -type l -not -type d -delete
+cp -rPnu MinecraftFlightSimulator70/main MinecraftFlightSimulator80/
+FILES=$(find MinecraftFlightSimulator80 -not -path *.git* -not -type l -not -type d)
+
+for FILE in ${FILES[*]}; do
+#Global replacements
+sed -i 's/getWorldObj()/getWorld()/' $FILE
+sed -i 's/new GuiTextField(/&0, /' $FILE
+sed -i 's/super.actionPerformed(buttonClicked);/try{&}catch(Exception e){}/' $FILE
+sed -i 's/super.keyTyped(key, bytecode);/try{&}catch(Exception e){}/' $FILE
+sed -i 's/super.mouseClicked(x, y, p_73864_3_);/try{&}catch(Exception e){}/' $FILE
+sed -i 's/getOffsetBoundingBox/offset/' $FILE
+sed -i 's/Player.getDisplayName()/&.getUnformattedText()/' $FILE
+sed -i 's/player.getDisplayName()/&.getUnformattedText()/' $FILE
+sed -i 's/tile.xCoord/tile.getPos().getX()/' $FILE
+sed -i 's/tile.yCoord/tile.getPos().getY()/' $FILE
+sed -i 's/tile.zCoord/tile.getPos().getZ()/' $FILE
+sed -i 's/message.x, message.y, message.z/new BlockPos(&)/' $FILE
+sed -i 's/renderTileEntityAt(TileEntity tile, double x, double y, double z, float scale/&, int ticks/' $FILE
+sed -i 's/EntityClientPlayerMP/EntityPlayerSP/' $FILE
+sed -i 's/field_147663_c/pitch/' $FILE
+sed -i 's/ContainerChest(player.inventory, (EntityPlaneChest) entity/&, player/' $FILE
+sed -i 's/getBlock(x, y, z)/getBlockState(new BlockPos(x, y, z)).getBlock()/' $FILE
+sed -i 's/getTileEntity(x, y, z)/getTileEntity(new BlockPos(x, y, z))/' $FILE
+sed -i 's/public class GUIHandler/import net.minecraft.util.BlockPos;\n\n&/' $FILE
+sed -i 's/return worldObj.getBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z)).getMaterial().isLiquid();/return worldObj.getBlockState(new BlockPos(x, y, z)).getBlock().getMaterial().isLiquid();/' $FILE
+sed -i 's/return worldObj.getBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z)).getCollisionBoundingBoxFromPool(worldObj, 0, 0, 0) != null;/BlockPos pos = new BlockPos(x, y, z);\n\t\treturn worldObj.getBlockState(pos).getBlock().getCollisionBoundingBox(worldObj, pos, worldObj.getBlockState(pos).getBlock().getDefaultState()) != null;/' $FILE
+sed -i 's/return this.getDistanceFrom/return this.getDistanceSq/' $FILE
+sed -i 's/cpw.mods/net.minecraftforge/' $FILE
+
+#Global deletions
+sed -i '/INS180/d' $FILE
+
+#File-specifc changes
+if echo $FILE | grep -q "ClientProxy"; then
+  sed -i '3iimport net.minecraft.util.EnumParticleTypes;' $FILE
+  sed -i 's/"smoke"/EnumParticleTypes.SMOKE_NORMAL/' $FILE
+  sed -i 's/"largesmoke"/EnumParticleTypes.SMOKE_LARGE/' $FILE
+  sed -i 's/"flame"/EnumParticleTypes.FLAME/' $FILE
+  sed -i '/if(Minecraft.getMinecraft().gameSettings.thirdPersonView==0 && seat.getRider().equals(Minecraft.getMinecraft().thePlayer)){/,+5d' $FILE
+fi
+if echo $FILE | grep -q "CommonProxy"; then
+  sed -i '/setTextureName/d' $FILE
+  sed -i '/setBlockTextureName/d' $FILE
+fi
+if echo $FILE | grep -q "MFSClientRegistry"; then
+	sed -i '3iimport net.minecraft.client.Minecraft;' $FILE
+	sed -i '3iimport net.minecraft.item.Item;' $FILE
+	sed -i '3iimport net.minecraft.client.resources.model.ModelBakery;' $FILE
+	sed -i '3iimport net.minecraft.client.resources.model.ModelResourceLocation;' $FILE
+  sed -i 's/(Object) null/Minecraft.getMinecraft().getRenderManager()/' $FILE
+fi
+if echo $FILE | grep -q "BlockPropellerBench"; then
+  sed -i 's/setBlockName/setUnlocalizedName/' $FILE
+  sed -i 's/onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float hitX, float hitY, float hitZ)/onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumFacing side, float hitX, float hitY, float hitZ)/' $FILE
+  sed -i 's/breakBlock(World world, int x, int y, int z, Block block, int meta)/breakBlock(World world, BlockPos pos, IBlockState state)/' $FILE
+  sed -i 's/breakBlock(world, x, y, z, block, meta)/breakBlock(world, pos, state)/' $FILE
+  sed -i 's/renderAsNormalBlock()/isFullCube()/' $FILE
+  sed -i 's/x, y, z/pos.getX(), pos.getY(), pos.getZ()/' $FILE
+fi
+if echo $FILE | grep -q "TileEntityPropellerBench"; then
+  sed -i '3iimport net.minecraft.server.gui.IUpdatePlayerListBox;' $FILE
+  sed -i 's/S35PacketUpdateTileEntity(xCoord, yCoord, zCoord/S35PacketUpdateTileEntity(pos/' $FILE
+  sed -i 's/func_148857_g/getNbtCompound/' $FILE
+  sed -i 's/extends TileEntity implements IInventory/&, IUpdatePlayerListBox/' $FILE
+  sed -i 's/updateEntity/update/' $FILE
+fi
+if echo $FILE | grep -q "EntityBase"; then
+  sed -i 's/return this.boundingBox;/return super.getEntityBoundingBox();/' $FILE
+  sed -i 's/public void setPositionAndRotation2(double posX, double posY, double posZ, float yaw, float pitch, int p_70056_9_/&, boolean p_180426_10_/' $FILE
+fi
+if echo $FILE | grep -q "EntityChild"; then
+  sed -i 's/public AxisAlignedBB getBoundingBox/public AxisAlignedBB getCollisionBoundingBox/' $FILE
+fi
+if echo $FILE | grep "/Item" | grep -qv "Engine"; then
+	sed -i '/import net.minecraft.client.renderer.texture.IIconRegister;/d' $FILE
+  sed -i '/List<IIcon> iconList/d' $FILE
+  sed -i '/private IIcon\[] icons/d' $FILE
+  sed -i '/this.icons = new/d' $FILE
+  sed -i '/import net.minecraft.util.IIcon;/d' $FILE
+	LINES=$(echo $(cat $FILE | wc -l))
+	START=$(($LINES - 15))
+	END=$(($LINES - 2))
+	sed -i $START,$END'd' $FILE
+fi
+if echo $FILE | grep -q "ItemPlane"; then
+  sed -i 's/onItemUse(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int p_77648_7_, float hitX, float hitY, float hitZ)/onItemUse(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ)/' $FILE
+  sed -i 's/x, y + 1, z/pos.getX(), pos.getY() + 1, pos.getZ()/' $FILE
+fi
+if echo $FILE | grep -q "ClientEventHandler"; then
+  sed -i '3iimport minecraftflightsimulator.entities.core.EntityChild;' $FILE
+  sed -i '3iimport minecraftflightsimulator.entities.core.EntityParent;' $FILE
+  sed -i '3iimport net.minecraft.client.renderer.GlStateManager;' $FILE
+  sed -i '3iimport net.minecraft.client.renderer.entity.RenderManager;' $FILE
+  sed -i '3iimport net.minecraftforge.client.event.RenderWorldLastEvent;' $FILE
+  sed -i '3iimport net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;' $FILE
+  sed -i '/changeCameraRoll/d' $FILE
+fi
+if echo $FILE | grep -q "RenderHelper"; then
+  sed -i 's/Minecraft.getMinecraft().fontRenderer/&Obj/' $FILE
+	sed -i 's/super()/super(manager)/' $FILE
+  sed -i '/public static void changeCameraRoll/,+6d' $FILE
+  sed -i '/rollNames/d' $FILE
+fi
+
+#Global new class imports
+if grep -q "BlockPos" $FILE; then $(sed -i '3iimport net.minecraft.util.BlockPos;' $FILE); fi
+if grep -q "IBlockState" $FILE; then $(sed -i '3iimport net.minecraft.block.state.IBlockState;' $FILE); fi
+if grep -q "EnumFacing" $FILE; then $(sed -i '3iimport net.minecraft.util.EnumFacing;' $FILE); fi
+
+done
