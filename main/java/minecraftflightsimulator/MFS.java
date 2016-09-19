@@ -25,7 +25,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class MFS {
 	public static final String MODID="mfs";
 	public static final String MODNAME="Minecraft Flight Simulator";
-	public static final String MODVER="6.0.0";
+	public static final String MODVER="6.0.1";
 
 	public static boolean firstRun;
 	public static double planeSpeedFactor;

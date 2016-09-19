@@ -310,6 +310,7 @@ public class GUIConfig extends GuiScreen{
 		joystickButton.enabled = guiLevel != 1;
 		confirmButton.enabled = guiLevel == 5;
 		cancelButton.enabled = guiLevel > 2;
+		clearButton.enabled = (guiLevel == 3 || guiLevel == 4);
 		maxTextBox.setVisible(guiLevel == 5);
 		minTextBox.setVisible(guiLevel == 5);
 		maxTextBox.setText("0");
