@@ -4,15 +4,15 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityFlyable;
 import net.minecraft.world.World;
 
-public abstract class EntityEngineAircraft extends EntityEngine{
+public class EntityEngineAircraft extends EntityEngine{
 	protected EntityPropeller propeller;
 
 	public EntityEngineAircraft(World world) {
 		super(world);
 	}
 
-	public EntityEngineAircraft(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height, int propertyCode){
-		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, width, height, propertyCode);
+	public EntityEngineAircraft(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode, EngineTypes type){
+		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, propertyCode, type);
 	}
 	
 	@Override
@@ -61,5 +61,13 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 		}
 	}
 	
-	protected abstract double getPropellerForcePenalty();
+	private double getPropellerForcePenalty(){
+		if(type.equals(EngineTypes.PLANE_SMALL)){
+			return Math.pow(1.9, 3 + (propeller.diameter - 70)/5)/25 - 0.2;
+		}else if(type.equals(EngineTypes.PLANE_LARGE)){
+			return Math.pow(1.5, 3 + (propeller.diameter - 70)/5)/20;
+		}else{
+			return 0;
+		}
+	}
 }

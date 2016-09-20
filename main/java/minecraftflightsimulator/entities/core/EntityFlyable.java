@@ -8,8 +8,7 @@ import java.util.Map;
 
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.parts.EntityEngine;
-import minecraftflightsimulator.entities.parts.EntityEngineLarge;
-import minecraftflightsimulator.entities.parts.EntityEngineSmall;
+import minecraftflightsimulator.entities.parts.EntityEngineAircraft;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPontoonDummy;
@@ -19,6 +18,7 @@ import minecraftflightsimulator.entities.parts.EntitySkid;
 import minecraftflightsimulator.entities.parts.EntityWheel;
 import minecraftflightsimulator.entities.parts.EntityWheelLarge;
 import minecraftflightsimulator.entities.parts.EntityWheelSmall;
+import minecraftflightsimulator.items.ItemEngine;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
@@ -246,14 +246,8 @@ public abstract class EntityFlyable extends EntityVehicle{
 							addChild(pontoonDummy.UUID, pontoonDummy, true);
 						}else if(stack.getItem().equals(MFSRegistry.skid)){
 							newChild = new EntitySkid(worldObj, this, this.UUID, position[0], position[1], position[2]);
-						}else if(stack.getItem().equals(MFSRegistry.engineSmall)){
-							EntityEngine engine = new EntityEngineSmall(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
-							if(stack.hasTagCompound()){
-								engine.hours = stack.getTagCompound().getDouble("hours");
-							}
-							newChild = engine;
-						}else if(stack.getItem().equals(MFSRegistry.engineLarge)){
-							EntityEngine engine = new EntityEngineLarge(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage());
+						}else if(stack.getItem() instanceof ItemEngine){
+							EntityEngine engine = new EntityEngineAircraft(worldObj, this, this.UUID, position[0], position[1], position[2], stack.getItemDamage(), ((ItemEngine) stack.getItem()).type);
 							if(stack.hasTagCompound()){
 								engine.hours = stack.getTagCompound().getDouble("hours");
 							}

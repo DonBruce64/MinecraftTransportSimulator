@@ -1,7 +1,8 @@
 package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.entities.core.EntityChild;
-import minecraftflightsimulator.entities.parts.EntityEngineLarge;
+import minecraftflightsimulator.entities.parts.EntityEngine;
+import minecraftflightsimulator.entities.parts.EntityEngine.EngineTypes;
 import minecraftflightsimulator.models.ModelEngineLarge;
 import minecraftflightsimulator.models.ModelEngineSmall;
 import minecraftflightsimulator.utilities.RenderHelper;
@@ -24,7 +25,7 @@ public class RenderEngine extends RenderChild{
 		GL11.glRotatef(child.parent.rotationPitch, 1, 0, 0);
 		GL11.glRotatef(child.parent.rotationRoll, 0, 0, 1);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-		if(child instanceof EntityEngineLarge){
+		if(((EntityEngine) child).type.equals(EngineTypes.PLANE_LARGE)){
 			GL11.glRotatef(180, 1, 0, 0);
 			GL11.glTranslatef(0, -0.4F, -0.4F);
 			RenderHelper.bindTexture(largeTexture);

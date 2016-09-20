@@ -9,8 +9,8 @@ import java.util.Map;
 import minecraftflightsimulator.blocks.BlockPropellerBench;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityCore;
-import minecraftflightsimulator.entities.parts.EntityEngineLarge;
-import minecraftflightsimulator.entities.parts.EntityEngineSmall;
+import minecraftflightsimulator.entities.parts.EntityEngine.EngineTypes;
+import minecraftflightsimulator.entities.parts.EntityEngineAircraft;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPontoonDummy;
@@ -20,7 +20,6 @@ import minecraftflightsimulator.entities.parts.EntitySkid;
 import minecraftflightsimulator.entities.parts.EntityWheelLarge;
 import minecraftflightsimulator.entities.parts.EntityWheelSmall;
 import minecraftflightsimulator.items.ItemEngine;
-import minecraftflightsimulator.items.ItemEngine.EngineTypes;
 import minecraftflightsimulator.items.ItemFlightInstrument;
 import minecraftflightsimulator.items.ItemPlane;
 import minecraftflightsimulator.items.ItemPropeller;
@@ -71,8 +70,8 @@ public class MFSRegistry{
 	public static final Item wheelLarge = new Item();
 	public static final Item skid = new Item();
 	public static final Item pontoon = new Item();
-	public static final Item engineSmall = new ItemEngine(EngineTypes.SMALL);
-	public static final Item engineLarge = new ItemEngine(EngineTypes.LARGE);
+	public static final Item engineSmall = new ItemEngine(EngineTypes.PLANE_SMALL);
+	public static final Item engineLarge = new ItemEngine(EngineTypes.PLANE_LARGE);
 	public static final Item flightInstrument = new ItemFlightInstrument();
 	public static final Item flightInstrumentBase = new Item();
 	public static final Block blockPropellerBench = new BlockPropellerBench();
@@ -128,8 +127,7 @@ public class MFSRegistry{
 		MFS.proxy.registerEntity(EntityPontoon.class, pontoon);
 		MFS.proxy.registerEntity(EntityPontoonDummy.class, null);
 		MFS.proxy.registerEntity(EntityPropeller.class, propeller);
-		MFS.proxy.registerEntity(EntityEngineSmall.class, engineSmall);
-		MFS.proxy.registerEntity(EntityEngineLarge.class, engineLarge);
+		MFS.proxy.registerEntity(EntityEngineAircraft.class, null);
 	}
 	
 	private void initPackets(){

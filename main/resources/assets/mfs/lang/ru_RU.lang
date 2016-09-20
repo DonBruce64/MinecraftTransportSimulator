@@ -18,8 +18,8 @@ item.WheelLarge.name=Большое колесо
 item.Propeller_0.name=Деревянный пропеллер
 item.Propeller_1.name=Железный пропеллер
 item.Propeller_2.name=Обсидиановый пропеллер
-item.EngineSmall.name=Малый двигатель
-item.EngineLarge.name=Большой двигатель
+item.engine_plane_small.name=Малый двигатель
+item.engine_plane_large.name=Большой двигатель
 
 item.FlightInstrumentBase.name=Базовый индикатор
 item.PointerShort.name=Короткая стрелка

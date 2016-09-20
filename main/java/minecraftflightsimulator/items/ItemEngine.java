@@ -2,6 +2,8 @@ package minecraftflightsimulator.items;
 
 import java.util.List;
 
+import minecraftflightsimulator.MFSRegistry;
+import minecraftflightsimulator.entities.parts.EntityEngine.EngineTypes;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -11,20 +13,35 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 public class ItemEngine extends Item{
-	private final byte type; 
+	public final EngineTypes type; 
 	
 	public ItemEngine(EngineTypes type){
 		this.hasSubtypes=true;
 		this.setMaxStackSize(1);
-		this.type = (byte) type.ordinal();
+		this.type = type;
 	}
 	
-	public static ItemStack createStack(Item engine, int propertyCode, double hours){
-		ItemStack engineStack = new ItemStack(engine, 1, propertyCode);
+	private static Item getStaticItemForType(EngineTypes type){
+		if(type.equals(EngineTypes.PLANE_SMALL)){
+			return MFSRegistry.engineSmall; 
+		}else if(type.equals(EngineTypes.PLANE_LARGE)){
+			return MFSRegistry.engineLarge; 
+		}else{
+			return null;
+		}
+	}
+	
+	public static ItemStack createStack(EngineTypes type, int propertyCode, double hours){
+		ItemStack engineStack = new ItemStack(getStaticItemForType(type), 1, propertyCode);
 		NBTTagCompound tag = new NBTTagCompound();
 		tag.setDouble("hours", hours);
 		engineStack.setTagCompound(tag);
 		return engineStack;
+	}
+	
+	@Override
+	public String getUnlocalizedName(ItemStack stack){
+		return "item.engine_" + ((ItemEngine) stack.getItem()).type.name().toLowerCase();
 	}
 	
 	@Override
@@ -44,23 +61,9 @@ public class ItemEngine extends Item{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List itemList){
-		for(int subtype : EngineTypes.values()[((ItemEngine) item).type].getSubtypes()){
+		for(int subtype : type.getSubtypes()){
 			itemList.add(new ItemStack(item, 1, subtype));
 		}
 		return;
     }
-	
-	public enum EngineTypes{
-		SMALL((short) 2805, (short) 3007), 
-		LARGE((short) 2907, (short) 3210);
-		
-		private short[] subtypes;
-		private EngineTypes(short... subtypes){
-			this.subtypes = subtypes;
-		}
-		
-		public short[] getSubtypes(){
-			return subtypes;
-		}
-	}
 }

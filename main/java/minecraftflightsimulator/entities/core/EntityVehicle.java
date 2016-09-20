@@ -274,12 +274,10 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 			for(int i=1; i<controllerSeatSlot; ++i){
 				EntityChild child = getChildAtLocation(partPositions.get(i));
 				if(child != null){
-					if(MFSRegistry.entityItems.containsKey(child.getClass())){
-						if(child instanceof EntityEngine){
-							setInventorySlotContents(i, ItemEngine.createStack(MFSRegistry.entityItems.get(child.getClass()), child.propertyCode, ((EntityEngine) child).hours));
-						}else{
-							setInventorySlotContents(i, new ItemStack(MFSRegistry.entityItems.get(child.getClass()), 1, child.propertyCode));
-						}
+					if(child instanceof EntityEngine){
+						setInventorySlotContents(i, ItemEngine.createStack(((EntityEngine) child).type, child.propertyCode, ((EntityEngine) child).hours));
+					}else if(MFSRegistry.entityItems.containsKey(child.getClass())){
+						setInventorySlotContents(i, new ItemStack(MFSRegistry.entityItems.get(child.getClass()), 1, child.propertyCode));
 					}
 				}else{
 					setInventorySlotContents(i, null);

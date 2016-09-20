@@ -10,17 +10,13 @@ import net.minecraft.world.World;
 
 public abstract class EntityEngine extends EntityChild{
 	protected EntityVehicle vehicle;
+	
+	public EngineTypes type;
 	public boolean fueled;
 	public int internalFuel;
 	public double engineRPM;
 	public double engineTemp = 20;
 	public double hours;
-	
-	//unique to each class of engine
-	protected byte starterIncrement;
-	protected byte starterPower;
-	protected String engineRunningSoundName;
-	protected String engineCrankingSoundName;
 	
 	//unique to each individual engine
 	protected boolean engineEngaged;
@@ -30,14 +26,15 @@ public abstract class EntityEngine extends EntityChild{
 	protected float fuelConsumption;
 	private EngineSound engineSound;
 
-	public EntityEngine(World world) {
+	public EntityEngine(World world){
 		super(world);
 	}
 
-	public EntityEngine(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height, int propertyCode){
-		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, width, height, propertyCode);
+	public EntityEngine(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode, EngineTypes type){
+		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, type.size, type.size, propertyCode);
 		this.maxEngineRPM = (propertyCode/((int) 100))*100;
 		this.fuelConsumption = (propertyCode%100)/10F;
+		this.type = type;
 	}
 	
 	@Override
@@ -91,18 +88,20 @@ public abstract class EntityEngine extends EntityChild{
 		}
 		
 		if(starterState > 0){
-			if(starterState==starterIncrement){
-				MFS.proxy.playSound(this, "mfs:" + engineCrankingSoundName, 1, 1);
+			if(starterState == type.starterIncrement){
+				MFS.proxy.playSound(this, "mfs:" + type.engineCrankingSoundName, 1, 1);
 			}
 			--starterState;
 			vehicle.fuel -= this.fuelConsumption*MFS.fuelUsageFactor;
 			if(engineRPM < 600){
-				engineRPM = Math.min(engineRPM+starterPower, 600);
+				engineRPM = Math.min(engineRPM+type.starterPower, 600);
 			}else{
-				engineRPM = Math.max(engineRPM-starterPower, 600);
+				engineRPM = Math.max(engineRPM-type.starterPower, 600);
 			}
-		}				
-		engineSound = MFS.proxy.updateEngineSoundAndSmoke(engineSound, this);
+		}
+		if(fueled || internalFuel > 0){
+			engineSound = MFS.proxy.updateEngineSoundAndSmoke(engineSound, this);
+		}
 	}
 	
 	@Override
@@ -126,7 +125,7 @@ public abstract class EntityEngine extends EntityChild{
 	public void startEngine(){
 		engineEngaged = true;
 		if(starterState==0){
-			this.starterState += starterIncrement;
+			this.starterState += type.starterIncrement;
 		}
 	}
 	
@@ -137,7 +136,7 @@ public abstract class EntityEngine extends EntityChild{
 	
 	public EngineSound getEngineSound(){
 		if(worldObj.isRemote){
-			return new EngineSound(new ResourceLocation("mfs:" + engineRunningSoundName), this, 0.5F, 2000F);
+			return new EngineSound(new ResourceLocation("mfs:" + type.engineRunningSoundName), this, 0.5F, 2000F);
 		}else{
 			return null;
 		}
@@ -146,10 +145,38 @@ public abstract class EntityEngine extends EntityChild{
 	public double[] getEngineProperties(){
 		return new double[] {this.engineTemp, this.engineRPM, this.maxEngineRPM};
 	}
+	
+	public enum EngineTypes{
+		PLANE_SMALL((byte) 50, (byte) 4, 1.0F, "small_engine_running", "small_engine_cranking", (short) 2805, (short) 3007), 
+		PLANE_LARGE((byte) 25, (byte) 22, 1.2F, "large_engine_running", "large_engine_cranking", (short) 2907, (short) 3210),
+		HELICOPTER((byte) 100, (byte) 100, 1.2F, "helicopter_engine_running", "helicopter_engine_cranking", (short) 3500, (short) 3700),
+		VEHICLE((byte) 100, (byte) 100, 1.2F, "vehicle_engine_running", "vehicle_engine_cranking", (short) 3500, (short) 3700);
+		//TODO find other sounds
+		
+		public final byte starterIncrement;
+		public final byte starterPower;
+		public final float size;
+		public final String engineRunningSoundName;
+		public final String engineCrankingSoundName;
+		private short[] subtypes;
+		private EngineTypes(byte starterIncrement, byte starterPower, float size, String engineRunningSoundName, String engineCrankingSoundName, short... subtypes){
+			this.starterIncrement = starterIncrement;
+			this.starterPower = starterPower;
+			this.size = size;
+			this.engineRunningSoundName = engineRunningSoundName;
+			this.engineCrankingSoundName = engineCrankingSoundName;
+			this.subtypes = subtypes;
+		}
+		
+		public short[] getSubtypes(){
+			return subtypes;
+		}
+	}
 		
 	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
+		this.type=EngineTypes.values()[tagCompound.getByte("type")];
 		this.engineOn=tagCompound.getBoolean("engineOn");
 		this.maxEngineRPM=tagCompound.getInteger("maxEngineRPM");
 		this.fuelConsumption=tagCompound.getFloat("fuelConsumption");
@@ -161,6 +188,7 @@ public abstract class EntityEngine extends EntityChild{
 	@Override
 	public void writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
+		tagCompound.setByte("type", (byte) this.type.ordinal());
 		tagCompound.setBoolean("engineOn", this.engineOn);
 		tagCompound.setInteger("maxEngineRPM", this.maxEngineRPM);
 		tagCompound.setFloat("fuelConsumption", this.fuelConsumption);

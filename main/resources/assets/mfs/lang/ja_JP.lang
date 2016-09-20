@@ -18,8 +18,8 @@ item.WheelLarge.name=大きい車輪
 item.Propeller_0.name=木のプロペラ
 item.Propeller_1.name=鉄のプロペラ
 item.Propeller_2.name=黒曜石のプロペラ
-item.EngineSmall.name=小さいエンジン
-item.EngineLarge.name=大きいエンジン
+item.engine_plane_small.name=小さいエンジン
+item.engine_plane_large.name=大きいエンジン
 
 item.FlightInstrumentBase.name=計器のフレーム
 item.PointerShort.name=短い針

@@ -18,8 +18,8 @@ item.WheelLarge.name=Large Wheel
 item.Propeller_0.name=Wooden Propeller
 item.Propeller_1.name=Iron Propeller
 item.Propeller_2.name=Obsidian Propeller
-item.EngineSmall.name=Small Engine
-item.EngineLarge.name=Large Engine
+item.engine_plane_small.name=Small Engine
+item.engine_plane_large.name=Large Engine
 
 item.FlightInstrumentBase.name=Flight Instrument Base
 item.PointerShort.name=Short Pointer
