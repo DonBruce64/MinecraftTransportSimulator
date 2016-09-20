@@ -61,13 +61,13 @@ public class GUIConfig extends GuiScreen{
 		guiLeft = (this.width - this.xSize)/2;
 		guiTop = (this.height - this.ySize)/2;
 		
-		keyboardButton = new GuiButton(0, guiLeft + 10, guiTop - 20, 115, 20, "Keyboard");
-		joystickButton = new GuiButton(0, guiLeft + 125, guiTop - 20, 120, 20, "Joystick");
-		upButton = new GuiButton(0, guiLeft + 225, guiTop + 40, 20, 20, "/\\");
-		downButton = new GuiButton(0, guiLeft + 225, guiTop + 155, 20, 20, "\\/");
-		confirmButton = new GuiButton(0, guiLeft + 25, guiTop + 160, 100, 20, "Confirm");
-		cancelButton = new GuiButton(0, guiLeft + 125, guiTop + 160, 100, 20, "Cancel");
-		clearButton = new GuiButton(0, guiLeft + 25, guiTop + 160, 100, 20, "Clear Assignment");
+		buttonList.add(keyboardButton = new GuiButton(0, guiLeft + 10, guiTop - 20, 115, 20, "Keyboard"));
+		buttonList.add(joystickButton = new GuiButton(0, guiLeft + 125, guiTop - 20, 120, 20, "Joystick"));
+		buttonList.add(upButton = new GuiButton(0, guiLeft + 225, guiTop + 40, 20, 20, "/\\"));
+		buttonList.add(downButton = new GuiButton(0, guiLeft + 225, guiTop + 155, 20, 20, "\\/"));
+		buttonList.add(confirmButton = new GuiButton(0, guiLeft + 25, guiTop + 160, 100, 20, "Confirm"));
+		buttonList.add(cancelButton = new GuiButton(0, guiLeft + 125, guiTop + 160, 100, 20, "Cancel"));
+		buttonList.add(clearButton = new GuiButton(0, guiLeft + 25, guiTop + 160, 100, 20, "Clear Assignment"));
 		
 		createAssignmentButtonAt(guiLeft + 85, guiTop + 40, ControlHelper.controls.PITCH.joystickName, analogAssignButtons);
 		createAssignmentButtonAt(guiLeft + 85, guiTop + 60, ControlHelper.controls.ROLL.joystickName, analogAssignButtons);
@@ -90,15 +90,6 @@ public class GUIConfig extends GuiScreen{
 		createAssignmentButtonAt(guiLeft + 165, guiTop + 70,ControlHelper.controls.LOOK_U.joystickName, digitalAssignButtons);
 		createAssignmentButtonAt(guiLeft + 165, guiTop + 90,ControlHelper.controls.LOOK_D.joystickName, digitalAssignButtons);
 		createAssignmentButtonAt(guiLeft + 165, guiTop + 110,ControlHelper.controls.LOOK_ALL.joystickName, digitalAssignButtons);
-		
-		
-		buttonList.add(keyboardButton);
-		buttonList.add(joystickButton);
-		buttonList.add(upButton);
-		buttonList.add(downButton);
-		buttonList.add(confirmButton);
-		buttonList.add(cancelButton);
-		buttonList.add(clearButton);
 		
 		int line = 0;
 		createKeyBoxAt(guiLeft+80, guiTop+10+(line++)*offset, ControlHelper.controls.PITCH.keyboardIncrementName);
