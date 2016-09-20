@@ -92,29 +92,6 @@ public class CommonProxy{
 		GameRegistry.addRecipe(output, params);
 	}
 	
-	/**
-	 * Added to make recipes more dynamic.
-	 * Code change in 1.9.4 changes the name for all static block and item object.
-	 * This allows for a universal recipe class system that can be used on any version.
-	 * Note that this should not be used for calls that occur frequently.
-	 * @param name field name (case insensitive)
-	 * @param meta Set to -1 to allow all blocks/items
-	 * @return
-	 */
-	public ItemStack getStackByItemName(String name, int meta){
-		Item item = (Item) Item.itemRegistry.getObject(name);
-		if(item != null){
-			if(meta == -1){
-				return new ItemStack(item);
-			}else{
-				return new ItemStack(item, 1, meta);
-			}
-		}else{
-			System.err.println("ERROR: Invalid item '" + name + "' entered in item lookup function.");
-			return null;
-		}
-	}
-	
 	public void playSound(Entity noisyEntity, String soundName, float volume, float pitch){}
 	public void updateSeatedRider(EntitySeat seat, EntityLivingBase rider){}
 	public EngineSound updateEngineSoundAndSmoke(EngineSound sound, EntityEngine engine){return null;}

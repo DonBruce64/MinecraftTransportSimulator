@@ -43,6 +43,8 @@ import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
 import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.planes.Vulcanair.EntityVulcanair;
 import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
@@ -119,7 +121,7 @@ public class MFSRegistry{
 		
 		MFS.proxy.registerEntity(EntityCore.class, null);
 		MFS.proxy.registerEntity(EntitySeat.class, seat);
-		MFS.proxy.registerEntity(EntityPlaneChest.class, MFS.proxy.getStackByItemName("chest", -1).getItem());
+		MFS.proxy.registerEntity(EntityPlaneChest.class, new ItemStack(Blocks.chest).getItem());
 		MFS.proxy.registerEntity(EntityWheelSmall.class, wheelSmall);
 		MFS.proxy.registerEntity(EntityWheelLarge.class, wheelLarge);
 		MFS.proxy.registerEntity(EntitySkid.class, skid);
@@ -148,21 +150,7 @@ public class MFSRegistry{
 		MFS.proxy.registerPacket(ThrottlePacket.class, ThrottlePacket.Handler.class, true, true);
 	}
 	
-	ItemStack ingotStack = MFS.proxy.getStackByItemName("iron_ingot", -1);
-	ItemStack barsStack = MFS.proxy.getStackByItemName("iron_bars", -1);
-	ItemStack blockStack = MFS.proxy.getStackByItemName("iron_block", -1);
-	ItemStack diamondStack = MFS.proxy.getStackByItemName("diamond", -1);
-	ItemStack obsidianStack = MFS.proxy.getStackByItemName("obsidian", -1);
-	ItemStack pistonStack = MFS.proxy.getStackByItemName("piston", -1);
-	ItemStack anyWoolStack = MFS.proxy.getStackByItemName("wool", -1);
-	ItemStack[] coloredWoolStack = new ItemStack[16];
-	ItemStack[] woodSlabStack = new ItemStack[6];
-	ItemStack[] dyeStack = new ItemStack[16];
-	
 	private void initRecipies(){
-		for(byte i=0; i<6; ++i){woodSlabStack[i] = MFS.proxy.getStackByItemName("wooden_slab", i);}
-		for(byte i=0; i<16; ++i){dyeStack[i] = MFS.proxy.getStackByItemName("dye", i);}
-		for(byte i=0; i<16; ++i){coloredWoolStack[i] = MFS.proxy.getStackByItemName("wool", i);}
 		this.initPlaneRecipes();
 		this.initPartRecipes();
 		this.initEngineRecipes();
@@ -176,8 +164,8 @@ public class MFSRegistry{
 				"AAA",
 				" B ",
 				"ABA",
-				'A', woodSlabStack[i], 
-				'B', MFS.proxy.getStackByItemName("planks", i));
+				'A', new ItemStack(Blocks.wooden_slab, 1, i), 
+				'B', new ItemStack(Blocks.planks, 1, i));
 		}
 		
 		//PZLP11
@@ -185,54 +173,54 @@ public class MFSRegistry{
 				"AAA",
 				" B ",
 				"ABA",
-				'A', ingotStack, 
-				'B', barsStack);
+				'A', Items.iron_ingot, 
+				'B', Blocks.iron_bars);
 		
 		//Vulcanair
 		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 0),
 				"AAA",
 				"CAC",
 				"AAA",
-				'A', ingotStack, 
-				'C', dyeStack[15]);
+				'A', Items.iron_ingot, 
+				'C', new ItemStack(Items.dye, 1, 15));
 		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 1),
 				"AAA",
 				"CAC",
 				"AAA",
-				'A', ingotStack, 
-				'C', dyeStack[14]);
+				'A', Items.iron_ingot, 
+				'C', new ItemStack(Items.dye, 1, 14));
 		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 2),
 				"AAA",
 				"CAD",
 				"AAA",
-				'A', ingotStack, 
-				'C', dyeStack[1],
-				'D', dyeStack[7]);
+				'A', Items.iron_ingot, 
+				'C', new ItemStack(Items.dye, 1, 1),
+				'D', new ItemStack(Items.dye, 1, 7));
 		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 3),
 				"AAA",
 				"CAC",
 				"AAA",
-				'A', ingotStack, 
-				'C', dyeStack[1]);
+				'A', Items.iron_ingot, 
+				'C', new ItemStack(Items.dye, 1, 1));
 		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 4),
 				"AAA",
 				"CAC",
 				"AAA",
-				'A', ingotStack, 
-				'C', dyeStack[10]);
+				'A', Items.iron_ingot, 
+				'C', new ItemStack(Items.dye, 1, 10));
 		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 5),
 				"AAA",
 				"CAC",
 				"AAA",
-				'A', ingotStack, 
-				'C', dyeStack[0]);
+				'A', Items.iron_ingot, 
+				'C', new ItemStack(Items.dye, 1, 0));
 		MFS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 6),
 				"AAA",
 				"CAD",
 				"AAA",
-				'A', ingotStack, 
-				'C', dyeStack[15],
-				'D', dyeStack[14]);
+				'A', Items.iron_ingot, 
+				'C', new ItemStack(Items.dye, 1, 15),
+				'D', new ItemStack(Items.dye, 1, 14));
 		
 		//Trimotor
 		for(byte i=0; i<16; ++i){
@@ -240,9 +228,9 @@ public class MFSRegistry{
 					"AAA",
 					"CB ",
 					"AAA",
-					'A', ingotStack, 
-					'B', blockStack,
-					'D', dyeStack[i]);
+					'A', Items.iron_ingot, 
+					'B', Blocks.iron_block,
+					'D', new ItemStack(Items.dye, 1, i));
 		}
 	}
 	
@@ -254,48 +242,48 @@ public class MFSRegistry{
 					" BA",
 					" BA",
 					"AAA",
-					'A', woodSlabStack[i], 
-					'B', coloredWoolStack[j]);
+					'A', new ItemStack(Blocks.wooden_slab, 1, i), 
+					'B', new ItemStack(Blocks.wool, 1, j));
 			}
 		}
 		
 		//Wheels
-		MFS.proxy.registerRecpie(new ItemStack(wheelSmall, 1, 0),
+		MFS.proxy.registerRecpie(new ItemStack(wheelSmall),
 				"ABA",
 				"ACA",
 				"ABA",
-				'A', anyWoolStack, 
-				'B', dyeStack[0], 
-				'C', ingotStack);
-		MFS.proxy.registerRecpie(new ItemStack(wheelLarge, 1, 1),
+				'A', Blocks.wool, 
+				'B', new ItemStack(Items.dye, 1, 0), 
+				'C', Items.iron_ingot);
+		MFS.proxy.registerRecpie(new ItemStack(wheelLarge),
 				"ABA",
 				"BCB",
 				"ABA",
-				'A', anyWoolStack, 
-				'B', dyeStack[0], 
-				'C', ingotStack);
+				'A', Blocks.wool, 
+				'B', new ItemStack(Items.dye, 1, 0), 
+				'C', Items.iron_ingot);
 		//Skid
 		MFS.proxy.registerRecpie(new ItemStack(skid),
 				"A A",
 				" A ",
 				"  A",
-				'A', barsStack);
+				'A', Blocks.iron_bars);
 		//Pontoon
 		MFS.proxy.registerRecpie(new ItemStack(pontoon, 2),
 				"AAA",
 				"BBB",
 				"AAA",
-				'A', ingotStack, 
-				'B', anyWoolStack);
+				'A', Items.iron_ingot, 
+				'B', Blocks.wool);
 		
 		//Propeller bench
 		MFS.proxy.registerRecpie(new ItemStack(blockPropellerBench),
 				"AAA",
 				" BA",
 				"ACA",
-				'A', ingotStack,
-				'B', diamondStack,
-				'C', MFS.proxy.getStackByItemName("anvil", -1));
+				'A', Items.iron_ingot,
+				'B', Items.diamond,
+				'C', Blocks.anvil);
 				
 	}
 	
@@ -305,55 +293,55 @@ public class MFSRegistry{
 				"ABA",
 				"BCB",
 				"ABA",
-				'A', pistonStack, 
-				'B', obsidianStack,
-				'C', ingotStack);
+				'A', Blocks.piston, 
+				'B', Blocks.obsidian,
+				'C', Items.iron_ingot);
 		MFS.proxy.registerRecpie(new ItemStack(engineSmall, 1, 3007),
 				"ABA",
 				"BCB",
 				"ABA",
-				'A', pistonStack, 
-				'B', obsidianStack,
-				'C', diamondStack);
+				'A', Blocks.piston, 
+				'B', Blocks.obsidian,
+				'C', Items.diamond);
 		MFS.proxy.registerRecpie(new ItemStack(engineLarge, 1, 2907),
 				"ABA",
 				"ACA",
 				"ABA",
-				'A', pistonStack, 
-				'B', obsidianStack,
-				'C', ingotStack);
+				'A', Blocks.piston, 
+				'B', Blocks.obsidian,
+				'C', Items.iron_ingot);
 		MFS.proxy.registerRecpie(new ItemStack(engineLarge, 1, 3210),
 				"ABA",
 				"ACA",
 				"ABA",
-				'A', pistonStack, 
-				'B', obsidianStack,
-				'C', diamondStack);
+				'A', Blocks.piston, 
+				'B', Blocks.obsidian,
+				'C', Items.diamond);
 		
 		//Repaired engines
 		MFS.proxy.registerRecpie(new ItemStack(engineSmall, 1, 2805),
 				"B B",
 				" C ",
 				"B B",
-				'B', obsidianStack,
+				'B', Blocks.obsidian,
 				'C', new ItemStack(engineSmall, 1, 2805));
 		MFS.proxy.registerRecpie(new ItemStack(engineSmall, 1, 3007),
 				"B B",
 				" C ",
 				"B B",
-				'B', obsidianStack,
+				'B', Blocks.obsidian,
 				'C', new ItemStack(engineSmall, 1, 3007));
 		MFS.proxy.registerRecpie(new ItemStack(engineLarge, 1, 2907),
 				"B B",
 				"BCB",
 				"B B",
-				'B', obsidianStack,
+				'B', Blocks.obsidian,
 				'C', new ItemStack(engineLarge, 1, 2907));
 		MFS.proxy.registerRecpie(new ItemStack(engineLarge, 1, 3210),
 				"B B",
 				"BCB",
 				"B B",
-				'B', obsidianStack,
+				'B', Blocks.obsidian,
 				'C', new ItemStack(engineLarge, 1, 3210));
 	}
 	
@@ -362,30 +350,30 @@ public class MFSRegistry{
 				"III",
 				"IGI",
 				"III",
-				'I', ingotStack, 
-				'G', MFS.proxy.getStackByItemName("glass_pane", -1));
+				'I', Items.iron_ingot, 
+				'G', Blocks.glass_pane);
 		
 		MFS.proxy.registerRecpie(new ItemStack(pointerShort),
 				" WW",
 				" WW",
 				"B  ",
-				'W', dyeStack[15], 
-				'B', dyeStack[0]);
+				'W', new ItemStack(Items.dye, 1, 15), 
+				'B', new ItemStack(Items.dye, 1, 0));
 		
 		MFS.proxy.registerRecpie(new ItemStack(pointerLong),
 				"  W",
 				" W ",
 				"B  ",
-				'W', dyeStack[15], 
-				'B', dyeStack[0]);
+				'W', new ItemStack(Items.dye, 1, 15), 
+				'B', new ItemStack(Items.dye, 1, 0));
 		
 		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 0),
 				"LLL",
 				"RRR",
 				" B ",
 				'B', flightInstrumentBase, 
-				'L', dyeStack[4], 
-				'R', dyeStack[3]);
+				'L', new ItemStack(Items.dye, 1, 4), 
+				'R', new ItemStack(Items.dye, 1, 3));
 		
 		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 1),
 				"WLW",
@@ -394,15 +382,15 @@ public class MFSRegistry{
 				'B', flightInstrumentBase, 
 				'L', pointerLong, 
 				'S', pointerShort, 
-				'W', dyeStack[15]);
+				'W', new ItemStack(Items.dye, 1, 15));
 		
 		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 2),
 				" W ",
 				"WIW",
 				" B ",
 				'B', flightInstrumentBase, 
-				'I', ingotStack, 
-				'W', dyeStack[15]);
+				'I', Items.iron_ingot, 
+				'W', new ItemStack(Items.dye, 1, 15));
 		
 		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 3),
 				"R W",
@@ -410,26 +398,26 @@ public class MFSRegistry{
 				"GBG",
 				'B', flightInstrumentBase, 
 				'L', pointerLong, 
-				'R', dyeStack[1],
-				'Y', dyeStack[11], 
-				'G', dyeStack[10], 
-				'W', dyeStack[15]);
+				'R', new ItemStack(Items.dye, 1, 1),
+				'Y', new ItemStack(Items.dye, 1, 11), 
+				'G', new ItemStack(Items.dye, 1, 10), 
+				'W', new ItemStack(Items.dye, 1, 15));
 		
 		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 4),
 				"   ",
 				"WIW",
 				"WBW",
 				'B', flightInstrumentBase, 
-				'I', ingotStack, 
-				'W', dyeStack[15]);
+				'I', Items.iron_ingot, 
+				'W', new ItemStack(Items.dye, 1, 15));
 		
 		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 5),
 				"WWW",
 				" I ",
 				"WBW",
 				'B', flightInstrumentBase, 
-				'I', ingotStack, 
-				'W', dyeStack[15]);
+				'I', Items.iron_ingot, 
+				'W', new ItemStack(Items.dye, 1, 15));
 		
 		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 6),
 				"W W",
@@ -437,7 +425,7 @@ public class MFSRegistry{
 				"WBW",
 				'B', flightInstrumentBase, 
 				'L', pointerLong, 
-				'W', dyeStack[15]);
+				'W', new ItemStack(Items.dye, 1, 15));
 		
 		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 7),
 				"RYG",
@@ -445,10 +433,10 @@ public class MFSRegistry{
 				" B ",
 				'B', flightInstrumentBase, 
 				'L', pointerLong, 
-				'R', dyeStack[1], 
-				'Y', dyeStack[11], 
-				'G', dyeStack[10], 
-				'W', dyeStack[15]);
+				'R', new ItemStack(Items.dye, 1, 1), 
+				'Y', new ItemStack(Items.dye, 1, 11), 
+				'G', new ItemStack(Items.dye, 1, 10), 
+				'W', new ItemStack(Items.dye, 1, 15));
 		
 		//Instrument 8 does not exist
 		//Instrument 9 does not exist
@@ -459,8 +447,8 @@ public class MFSRegistry{
 				"WBR",
 				'B', flightInstrumentBase, 
 				'L', pointerLong, 
-				'R', dyeStack[1], 
-				'W', dyeStack[15]);
+				'R', new ItemStack(Items.dye, 1, 1), 
+				'W', new ItemStack(Items.dye, 1, 15));
 		
 		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 11),
 				"RWW",
@@ -468,8 +456,8 @@ public class MFSRegistry{
 				" B ",
 				'B', flightInstrumentBase, 
 				'L', pointerLong, 
-				'R', dyeStack[1], 
-				'W', dyeStack[15]);
+				'R', new ItemStack(Items.dye, 1, 1), 
+				'W', new ItemStack(Items.dye, 1, 15));
 		
 		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 12),
 				" W ",
@@ -477,7 +465,7 @@ public class MFSRegistry{
 				" B ",
 				'B', flightInstrumentBase, 
 				'L', pointerLong, 
-				'W', dyeStack[15]);
+				'W', new ItemStack(Items.dye, 1, 15));
 		
 		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 13),
 				"YGR",
@@ -485,10 +473,10 @@ public class MFSRegistry{
 				" B ",
 				'B', flightInstrumentBase, 
 				'L', pointerLong, 
-				'Y', dyeStack[11], 
-				'G', dyeStack[10], 
-				'R', dyeStack[1], 
-				'W', dyeStack[15]);
+				'Y', new ItemStack(Items.dye, 1, 11), 
+				'G', new ItemStack(Items.dye, 1, 10), 
+				'R', new ItemStack(Items.dye, 1, 1), 
+				'W', new ItemStack(Items.dye, 1, 15));
 		
 		//Instrument 14 does not exist
 	}
