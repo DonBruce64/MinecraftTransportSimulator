@@ -58,7 +58,7 @@ public class InstrumentHelper{
 	    	GL11.glPushMatrix();
 	    	GL11.glScalef(0.75F, 0.75F, 0.75F);
 	    	if(flyer.instrumentList.get(0) != null){
-	    		drawFlyableInstrument(flyer, width/4, (height - 24)*4/3, flyer.instrumentList.get(0).getItemDamage(), true);
+	    		drawFlyableInstrument(flyer, width*17/64, (height - 24)*4/3, flyer.instrumentList.get(0).getItemDamage(), true);
 	    	}
 	    	if(flyer.instrumentList.get(4) != null){
 	    		drawFlyableInstrument(flyer, width*17/16, (height - 24)*4/3, flyer.instrumentList.get(4).getItemDamage(), true);
