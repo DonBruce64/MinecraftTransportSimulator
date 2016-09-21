@@ -83,7 +83,6 @@ public class EntityPontoon extends EntityLandingGear{
 		for(int i=MathHelper.floor_double(box.minX); i<MathHelper.floor_double(box.maxX) + 1; ++i){
 			for(int j=MathHelper.floor_double(box.minZ); j<MathHelper.floor_double(box.maxZ) + 1; ++j){
 				for(int k=MathHelper.floor_double(box.minY); k<MathHelper.floor_double(box.maxY) + 1; ++k){
-					System.out.format("X:%d Y:%d Z:%d\n", MathHelper.floor_double(i), MathHelper.floor_double(k), MathHelper.floor_double(j));
 					if(Blocks.waterlily.equals(getBlockAtLocation(i, k, j))){
 						worldObj.setBlockToAir(i, k, j);
 					}
