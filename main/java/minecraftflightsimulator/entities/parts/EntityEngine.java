@@ -147,8 +147,8 @@ public abstract class EntityEngine extends EntityChild{
 	}
 	
 	public enum EngineTypes{
-		PLANE_SMALL((byte) 50, (byte) 4, 1.0F, "small_engine_running", "small_engine_cranking", (short) 2805, (short) 3007), 
-		PLANE_LARGE((byte) 25, (byte) 22, 1.2F, "large_engine_running", "large_engine_cranking", (short) 2907, (short) 3210),
+		PLANE_SMALL((byte) 4, (byte) 50, 1.0F, "small_engine_running", "small_engine_cranking", (short) 2805, (short) 3007), 
+		PLANE_LARGE((byte) 22, (byte) 25, 1.2F, "large_engine_running", "large_engine_cranking", (short) 2907, (short) 3210),
 		HELICOPTER((byte) 100, (byte) 100, 1.2F, "helicopter_engine_running", "helicopter_engine_cranking", (short) 3500, (short) 3700),
 		VEHICLE((byte) 100, (byte) 100, 1.2F, "vehicle_engine_running", "vehicle_engine_cranking", (short) 3500, (short) 3700);
 		//TODO find other sounds
