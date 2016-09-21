@@ -1,6 +1,5 @@
 package minecraftflightsimulator.entities.parts;
 
-import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityFlyable;
 import net.minecraft.world.World;
 
@@ -32,16 +31,6 @@ public class EntityEngineAircraft extends EntityEngine{
 				engineRPM += (vehicle.throttle/100F*(maxEngineRPM) - engineRPM)/10;
 			}
 		}else{
-			if(internalFuel > 0){
-				if(internalFuel == 100){
-					MFS.proxy.playSound(this, "mfs:engine_starting", 1, 1);
-				}
-				if(engineRPM < 100){
-					internalFuel = 0;
-				}else{
-					--internalFuel;
-				}
-			}
 			if(propeller != null){
 				engineRPM = Math.max(engineRPM + (vehicle.velocity - 0.0254*propeller.pitch * engineRPM/60/20)*15 - 10, 0);
 			}else{

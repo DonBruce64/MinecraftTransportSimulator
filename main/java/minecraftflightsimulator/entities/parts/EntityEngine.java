@@ -76,14 +76,26 @@ public abstract class EntityEngine extends EntityChild{
 
 			vehicle.fuel -= this.fuelConsumption*MFS.fuelUsageFactor*engineRPM/maxEngineRPM;
 			if(vehicle.fuel <= 0 || engineRPM < 300 || isLiquidAt(posX, posY, posZ)){
+				MFS.proxy.playSound(this, "mfs:engine_starting", 1, 1);
 				stopEngine(false);
 			}else{
 				fueled = true;
 			}
 		}else{
-			if(engineRPM > 500 && vehicle.fuel > 0 && vehicle.throttle > 5 && engineEngaged && !isLiquidAt(posX, posY + 0.25, posZ)){
-				MFS.proxy.playSound(this, "mfs:engine_starting", 1, 1);
-				engineOn=true;
+			if(engineRPM > 500){
+				if(vehicle.fuel > 0 && vehicle.throttle > 5 && engineEngaged && !isLiquidAt(posX, posY + 0.25, posZ)){
+					MFS.proxy.playSound(this, "mfs:engine_starting", 1, 1);
+					engineOn=true;
+				}
+			}
+			if(internalFuel > 0){
+				if(internalFuel == 100){
+					MFS.proxy.playSound(this, "mfs:engine_starting", 1, 1);
+				}
+				--internalFuel;
+				if(engineRPM < 1000){
+					internalFuel = 0;
+				}
 			}
 		}
 		
@@ -99,9 +111,7 @@ public abstract class EntityEngine extends EntityChild{
 				engineRPM = Math.max(engineRPM-type.starterPower, 600);
 			}
 		}
-		if(fueled || internalFuel > 0){
-			engineSound = MFS.proxy.updateEngineSoundAndSmoke(engineSound, this);
-		}
+		engineSound = MFS.proxy.updateEngineSoundAndSmoke(engineSound, this);
 	}
 	
 	@Override
@@ -109,16 +119,16 @@ public abstract class EntityEngine extends EntityChild{
 		super.setDead();
 		engineOn=false;
 		fueled=false;
-		internalFuel=0;
+		internalFuel = 0;
 		engineSound = MFS.proxy.updateEngineSoundAndSmoke(engineSound, this);
 	}
 	
 	public void stopEngine(boolean switchedOff){
 		engineEngaged = !switchedOff;
 		if(engineOn){
-			internalFuel = 100;
 			engineOn = false;
 			fueled = false;
+			internalFuel = 100;
 		}
 	}
 	
