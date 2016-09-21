@@ -4,6 +4,7 @@ import java.util.List;
 
 import minecraftflightsimulator.utilities.MFSVector;
 import minecraftflightsimulator.utilities.RotationHelper;
+import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -111,28 +112,16 @@ public abstract class EntityChild extends EntityBase{
 		return worldObj.func_147461_a(box);
 	}
 	
-	public boolean isOnGround(){
-		return isBlockAtLocation(posX, posY - 0.05, posZ);
+	protected Block getBlockAtLocation(double x, double y, double z){
+		return worldObj.getBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z));
 	}
 	
 	public boolean isLiquidAt(double x, double y, double z){
-		return worldObj.getBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z)).getMaterial().isLiquid();
+		return getBlockAtLocation(x, y, z).getMaterial().isLiquid();
 	}
 	
-	public boolean isCollidedHorizontally(){
-		return isBlockAtLocation(posX, posY, posZ)
-				|| isBlockAtLocation(posX + this.width, posY, posZ)
-				|| isBlockAtLocation(posX, posY, posZ + this.width)
-				|| isBlockAtLocation(posX + this.width, posY, posZ + this.width);
-	}
-	
-	public boolean willCollideVerticallyWithOffset(double offsetX, double offsetY, double offsetZ){
-		return isBlockAtLocation(posX + offsetX, posY + offsetY, posZ + offsetZ)
-			|| isBlockAtLocation(posX + offsetX, posY + offsetY + this.height, posZ + offsetY);
-	}
-	
-	protected boolean isBlockAtLocation(double x, double y, double z){
-		return worldObj.getBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z)).getCollisionBoundingBoxFromPool(worldObj, 0, 0, 0) != null;
+	public boolean isOnGround(){
+		return !getCollidingBlocks(this.getBoundingBox().getOffsetBoundingBox(0, -0.05, 0)).isEmpty();
 	}
 	
 	public void setRider(Entity rider){

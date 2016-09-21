@@ -60,7 +60,7 @@ public class EntityPropeller extends EntityChild{
 						collidedEntity.attackEntityFrom(new EntityDamageSourcePropellor("propellor", this), (float) (MFS.propellerDamageFactor*engineRPM/500F));
 					}
 				}
-				if(this.isCollidedHorizontally() || this.isOnGround()){
+				if(!this.getCollidingBlocks(this.getBoundingBox().expand(0.1, 0.1, 0.1)).isEmpty()){
 					if(--health<0){
 						MFS.proxy.playSound(this, "random.break", 2, 1);
 						this.setDead();

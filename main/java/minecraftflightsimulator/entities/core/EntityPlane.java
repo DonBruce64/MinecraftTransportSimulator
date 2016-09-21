@@ -398,7 +398,7 @@ public abstract class EntityPlane extends EntityFlyable{
 			for(EntityChild child : getChildren()){
 				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
 				offset = offset.add(posX - child.posX + motionX*MFS.planeSpeedFactor, posY - child.posY + motionY*MFS.planeSpeedFactor, posZ - child.posZ + motionZ*MFS.planeSpeedFactor);
-				if(child.willCollideVerticallyWithOffset(offset.xCoord, offset.yCoord, offset.zCoord)){
+				if(!child.getCollidingBlocks(child.getBoundingBox().getOffsetBoundingBox(offset.xCoord, offset.yCoord, offset.zCoord)).isEmpty()){
 					if(rollChildOffset==0){
 						rollChildOffset = child.offsetX;
 					}else if(Math.signum(rollChildOffset)!=Math.signum(child.offsetX)){
@@ -433,7 +433,7 @@ public abstract class EntityPlane extends EntityFlyable{
 			for(EntityChild child : getChildren()){
 				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);				
 				offset = offset.add(posX - child.posX + motionX*MFS.planeSpeedFactor, posY - child.posY + motionY*MFS.planeSpeedFactor, posZ - child.posZ + motionZ*MFS.planeSpeedFactor);				
-				if(child.willCollideVerticallyWithOffset(offset.xCoord, offset.yCoord, offset.zCoord)){
+				if(!child.getCollidingBlocks(child.getBoundingBox().getOffsetBoundingBox(offset.xCoord, offset.yCoord, offset.zCoord)).isEmpty()){
 					if(child.offsetZ != 0){
 						prevPitchChildOffset = pitchChildOffset;
 						pitchChildOffset = child.offsetZ;

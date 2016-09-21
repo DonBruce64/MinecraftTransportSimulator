@@ -1,14 +1,20 @@
 package minecraftflightsimulator.entities.parts;
 
+import java.util.List;
+
 import minecraftflightsimulator.entities.core.EntityFlyable;
 import minecraftflightsimulator.entities.core.EntityLandingGear;
 import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
 public class EntityPontoon extends EntityLandingGear{
 	protected String otherHalfUUID;
 	protected EntityPontoon otherHalf;
+	private List boxList;
 	
 	public EntityPontoon(World world){
 		super(world);
@@ -31,7 +37,8 @@ public class EntityPontoon extends EntityLandingGear{
 			}
 			return;
 		}
-		if(willCollideVerticallyWithOffset(0, 1, 0)){
+		if(isLiquidAt(posX, posY + 1, posZ)){
+			//Plane dive-bombed into the water.
 			parent.removeChild(UUID, true);
 		}
 	}
@@ -71,10 +78,25 @@ public class EntityPontoon extends EntityLandingGear{
 	}
 	
 	@Override
-	protected boolean isBlockAtLocation(double x, double y, double z){
-		return isLiquidAt(x, y + 0.35, z) ? true : super.isBlockAtLocation(x, y, z);
+	public List getCollidingBlocks(AxisAlignedBB box){
+		//Kill lilypads if present.
+		for(int i=MathHelper.floor_double(box.minX); i<MathHelper.floor_double(box.maxX) + 1; ++i){
+			for(int j=MathHelper.floor_double(box.minZ); j<MathHelper.floor_double(box.maxZ) + 1; ++j){
+				for(int k=MathHelper.floor_double(box.minY); k<MathHelper.floor_double(box.maxY) + 1; ++k){
+					System.out.format("X:%d Y:%d Z:%d\n", MathHelper.floor_double(i), MathHelper.floor_double(k), MathHelper.floor_double(j));
+					if(Blocks.waterlily.equals(getBlockAtLocation(i, k, j))){
+						worldObj.setBlockToAir(i, k, j);
+					}
+				}
+			}
+		}
+		boxList = super.getCollidingBlocks(box);
+		if(isLiquidAt(box.minX + (box.maxX - box.minX)/2, box.minY + (box.maxY - box.minY)/2 , box.minZ + (box.maxZ - box.minZ)/2)){
+			boxList.add(box);
+		}
+		return boxList;
 	}
-	
+
 	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
