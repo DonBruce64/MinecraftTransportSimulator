@@ -18,6 +18,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 
 import org.lwjgl.opengl.GL11;
 
@@ -213,6 +214,14 @@ public class RenderHelper{
     		this.render((EntityParent) entity, x, y, z);
     	}
     	
+    	/**
+    	 * Entities don't render above 255 well in later versions due to the
+    	 * new chunk visibility system.  This code is for the default system
+    	 * only, and will be called directly from Minecraft's rendering
+    	 * system or {@link ClientEventHandler#on(RenderWorldLastEvent)}.
+    	 * The latter method only calls if this method hasn't been called first
+    	 * by Minecraft's system.
+		 **/
     	private void render(EntityParent parent, double x, double y, double z){
     		/*INS180
     		if(!parent.rendered && parent.posY >= 255){return;}

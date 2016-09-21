@@ -3,6 +3,7 @@ package minecraftflightsimulator.utilities;
 import java.awt.Color;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityFlyable;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityVehicle;
@@ -10,10 +11,12 @@ import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.packets.general.GUIPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.config.Property;
 
 import org.lwjgl.input.Keyboard;
@@ -64,9 +67,14 @@ public class ClientEventHandler{
 		}
 	}
 	
-	/*INS180
+	/**
+	 * Resets the rendered state of all parents.  If the parent
+	 * isn't rendered by the default Minecraft engine, then it will be
+	 * rendered in {@link ClientEventHandler#on(RenderWorldLastEvent)}.
+	 */
 	@SubscribeEvent
 	public void on(TickEvent.RenderTickEvent event){
+		/*INS180
 		if(event.phase.equals(Phase.START) && minecraft.theWorld != null){
 			for(Object obj : minecraft.theWorld.loadedEntityList){
 				if(obj instanceof EntityParent){
@@ -74,10 +82,18 @@ public class ClientEventHandler{
 				}
 			}
 		}
+		INS180*/
 	}	
 	
+	/**
+	 * Checks to see if any parents have not been rendered.  Used to
+	 * force rendering of aircraft above the world height limit, as
+	 * newer versions suppress this as part of the chunk visibility
+	 * feature.  Only active in versions 1.8+.
+	 */
 	@SubscribeEvent
 	public void on(RenderWorldLastEvent event){
+		/*INS180
         Entity renderEntity = minecraft.getRenderViewEntity();
         RenderManager manager = minecraft.getRenderManager();
 		for(Object obj : minecraft.theWorld.loadedEntityList){
@@ -99,8 +115,8 @@ public class ClientEventHandler{
 				}
 			}
 		}
+		INS180*/
 	}
-	INS180*/
 	
 	@SubscribeEvent
 	public void on(RenderPlayerEvent.Pre event){
