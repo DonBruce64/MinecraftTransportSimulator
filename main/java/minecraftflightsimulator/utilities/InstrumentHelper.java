@@ -6,6 +6,7 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityFlyable;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.entities.core.EntityVehicle;
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -32,7 +33,8 @@ public class InstrumentHelper{
         }
 	}
 	
-	public static void drawBasicFlyableHUD(EntityFlyable flyer, int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){		
+	public static void drawBasicFlyableHUD(EntityFlyable flyer, int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
+		Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
 		if(RenderHelper.hudMode == 3){
 			drawLowerConsole(width, height, backplateTexture, moldingTexture);
 			for(int i=5; i<flyer.instrumentList.size(); ++i){
@@ -72,6 +74,7 @@ public class InstrumentHelper{
 				}
 			}
 		}
+		Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
 	}
 	
 	public static void drawFlyableInstrument(EntityFlyable flyer, int x, int y, int type, boolean hud){
