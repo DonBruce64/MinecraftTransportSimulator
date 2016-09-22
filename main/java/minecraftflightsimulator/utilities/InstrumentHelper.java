@@ -21,6 +21,7 @@ public class InstrumentHelper{
 	private static double[] engineTemps = new double[4];
 	private static double[] engineRPMs = new double[4];
 	private static int maxEngineRPMs;
+	private static float offset;
 	
 	public static void updateAircraftEngineProperties(EntityFlyable parent){
 		numberEngines = 0;
@@ -48,14 +49,6 @@ public class InstrumentHelper{
 			drawUpperConsole(width, height, backplateTexture, moldingTexture);
 			drawLeftConsole(width, height, backplateTexture, moldingTexture);
 			drawRightConsole(width, height, backplateTexture, moldingTexture);
-			
-			if(flyer instanceof EntityPlane){
-				if(((EntityPlane) flyer).hasFlaps){
-					drawFlapIndicator((EntityPlane) flyer, width/8 - 15, height - 19, true);
-				}
-			}
-	    	drawThrottle(flyer, 7*width/8 + 10, height - 18, true);
-	    	drawParkingBrake(flyer, 15*width/16 + 14, height - 18, true);
 	    	
 	    	GL11.glPushMatrix();
 	    	GL11.glScalef(0.75F, 0.75F, 0.75F);
@@ -66,6 +59,14 @@ public class InstrumentHelper{
 	    		drawFlyableInstrument(flyer, width*17/16, (height - 24)*4/3, flyer.instrumentList.get(4).getItemDamage(), true);
 	    	}
 	    	GL11.glPopMatrix();
+	    	
+			if(flyer instanceof EntityPlane){
+				if(((EntityPlane) flyer).hasFlaps){
+					drawFlapIndicator((EntityPlane) flyer, width/8 - 15, height - 19, true);
+				}
+			}
+	    	drawThrottle(flyer, 7*width/8 + 10, height - 18, true);
+	    	drawParkingBrake(flyer, 15*width/16 + 14, height - 18, true);
 		}
 		if(RenderHelper.hudMode != 0){
 			for(int i=1; i<4; ++i){
@@ -78,34 +79,45 @@ public class InstrumentHelper{
 	}
 	
 	public static void drawFlyableInstrument(EntityFlyable flyer, int x, int y, int type, boolean hud){
+		GL11.glPushMatrix();
+		flyer.lightsOn = flyer.worldObj.getWorldTime() > 12000;
+		if(hud){
+			offset = 0;
+		}else{
+			offset = -0.01F;
+			GL11.glDisable(GL11.GL_LIGHTING);
+		}
+		if(flyer.lightsOn && type < 15){
+			Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+		}
 		if(type == 0){
-			drawAttitudeIndicator(flyer, x, y, hud);
+			drawAttitudeIndicator(flyer, x, y);
 		}else if(type == 1){
-			drawAltimeter(flyer, x, y, hud);
+			drawAltimeter(flyer, x, y);
 		}else if(type == 2){
-			drawHeadingIndicator(flyer, x, y, hud);
+			drawHeadingIndicator(flyer, x, y);
 		}else if(type == 3){
-			drawAirspeedIndicator(flyer, x, y, hud);
+			drawAirspeedIndicator(flyer, x, y);
 		}else if(type == 4){
-			drawTurnCoordinator(flyer, x, y, hud);
+			drawTurnCoordinator(flyer, x, y);
 		}else if(type == 5){
-			drawTurnAndSlipIndicator(flyer, x, y, hud);
+			drawTurnAndSlipIndicator(flyer, x, y);
 		}else if(type == 6){
-			drawVerticalSpeedIndicator(flyer, x, y, hud);
+			drawVerticalSpeedIndicator(flyer, x, y);
 		}else if(type == 7){
-			drawLiftReserveIndicator(flyer, x, y, hud);
+			drawLiftReserveIndicator(flyer, x, y);
 		}else if(type == 8){
 			//DUMMY
 		}else if(type == 9){
 			//DUMMY
 		}else if(type == 10){
-			drawTachometer(flyer, x, y, hud);
+			drawTachometer(flyer, x, y);
 		}else if(type == 11){
-			drawFuelGauge(flyer, x, y, hud);
+			drawFuelGauge(flyer, x, y);
 		}else if(type == 12){
-			drawFuelFlowGauge(flyer, x, y, hud);
+			drawFuelFlowGauge(flyer, x, y);
 		}else if(type == 13){
-			drawEngineTempGauge(flyer, x, y, hud);
+			drawEngineTempGauge(flyer, x, y);
 		}else if(type == 14){
 			//drawOilPressureGauge()
 		}else if(type == 15){
@@ -115,6 +127,23 @@ public class InstrumentHelper{
 		}else if(type == 17){
 			drawFlapIndicator((EntityPlane) flyer, x, y, hud);
 		}
+		
+		if(flyer.lightsOn && type < 15){
+			GL11.glTranslatef(0, 0, 11*offset);
+			if(!hud){
+				GL11.glEnable(GL11.GL_BLEND);
+			}
+			RenderHelper.bindTexture(instrumentTexture);
+			RenderHelper.renderSquareUV(x-30, x+30, y+30, y-30, 0, 0, 0.5, 0.75, 0.25, 0.5, false);
+	        if(!hud){
+	        	GL11.glDisable(GL11.GL_BLEND);
+	        }
+			Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+		}
+		if(!hud){
+        	GL11.glEnable(GL11.GL_LIGHTING);
+        }
+    	GL11.glPopMatrix();
 	}
     
 	private static void drawUpperConsole(int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
@@ -146,8 +175,6 @@ public class InstrumentHelper{
 	private static void drawThrottle(EntityVehicle vehicle, int centerX, int centerY, boolean hud){		
     	RenderHelper.bindTexture(instrumentTexture);
 		if(!hud){
-			GL11.glPushMatrix();
-    		GL11.glDisable(GL11.GL_LIGHTING);
     		RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+5.25, centerY-5.25, 0, 0, 0.75, 0.875, 0.875, 1, false);
     		
     		RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX-1.75, centerX-1.75, centerY-1.75, centerY-1.75, centerY+1.75, centerY+1.75, -7-vehicle.throttle/10F, 0, 0, -7-vehicle.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
@@ -156,8 +183,6 @@ public class InstrumentHelper{
         	RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY+1.75, centerY+1.75, -7-vehicle.throttle/10F, 0, 0, -7-vehicle.throttle/10F, 0.640625, 0.734375, 0.890625, 0.984375, false);
         	
         	RenderHelper.renderSquareUV(centerX-7, centerX+7, centerY+7, centerY-7, -7-vehicle.throttle/10F, -7-vehicle.throttle/10F, 0.75, 0.875, 0.875, 1, true);
-    		GL11.glEnable(GL11.GL_LIGHTING);
-    		GL11.glPopMatrix();
     	}else{
         	RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+0.175, centerY-10.5, 0, 0, 0.75, 0.875, 0.875, 1, false);
         	RenderHelper.renderSquareUV(centerX-1.75, centerX+1.75, centerY+7+vehicle.throttle/10, centerY-7, 0, 0, 0.640625, 0.734375, 0.890625, 0.984375, false);
@@ -169,11 +194,7 @@ public class InstrumentHelper{
     	RenderHelper.bindTexture(instrumentTexture);
     	RenderHelper.renderSquareUV(centerX-11.25, centerX+11.25, centerY+15, centerY-15, 0, 0, 0.515625, 0.609375, 0.875, 1, false);
     	
-    	if(!hud){
-			GL11.glPushMatrix();
-    		GL11.glDisable(GL11.GL_LIGHTING);
-    		GL11.glTranslatef(0, 0, -0.1F);
-    	}
+    	GL11.glTranslatef(0, 0, offset);
     	
         GL11.glPushMatrix();
     	rotationHelper(centerX, centerY, -90);
@@ -192,8 +213,6 @@ public class InstrumentHelper{
         	RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, 0, -7, -7, 0, 0.421875, 0.453125, 0.921875, 0.953125, false);
         	RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
         	RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-8+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-8+plane.flapAngle/25, -7, -7, -7, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
-    		GL11.glEnable(GL11.GL_LIGHTING);
-    		GL11.glPopMatrix();
     	}else{
     		RenderHelper.renderSquareUV(centerX-5.625, centerX+1.875, centerY-0.5+plane.flapAngle/25, centerY-8+plane.flapAngle/25, 0, 0, 0.421875, 0.453125, 0.921875, 0.953125, false);
     	}
@@ -203,8 +222,6 @@ public class InstrumentHelper{
     	RenderHelper.bindTexture(instrumentTexture);
     	
     	if(!hud){
-			GL11.glPushMatrix();
-    		GL11.glDisable(GL11.GL_LIGHTING);
     		RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+5.25, centerY-5.25, 0, 0, 0.75, 0.875, 0.875, 1, false);
         	
     		if(vehicle.parkingBrakeOn || vehicle.brakeOn){        		
@@ -230,8 +247,6 @@ public class InstrumentHelper{
     	        GL11.glTranslatef(0, 0, -2.01F);
     	        drawScaledString("BRAKE", centerX*2-25, centerY*2-4, 0.5F);
         	}
-    		GL11.glEnable(GL11.GL_LIGHTING);
-    		GL11.glPopMatrix();
     	}else{
     		RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+0.175, centerY-10.5, 0, 0, 0.75, 0.875, 0.875, 1, true);
         	if(vehicle.parkingBrakeOn || vehicle.brakeOn){
@@ -250,14 +265,20 @@ public class InstrumentHelper{
     	}
     }
 	
-	private static void drawGaugeBase(int centerX, int centerY){
-    	RenderHelper.bindTexture(instrumentTexture);
-    	RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.75, 1, 0, 0.25, false);
+	private static void drawGaugeBase(EntityVehicle vehicle, int centerX, int centerY){
+		if(vehicle.lightsOn){
+			Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+			RenderHelper.bindTexture(instrumentTexture);
+	    	RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.75, 1, 0, 0.25, false);
+	    	Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+		}else{
+			RenderHelper.bindTexture(instrumentTexture);
+	    	RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.75, 1, 0, 0.25, false);
+		}
     }
     
-	private static void drawAttitudeIndicator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
+	private static void drawAttitudeIndicator(EntityFlyable flyer, int centerX, int centerY){
 		GL11.glPushMatrix();
-		if(!hud){GL11.glDisable(GL11.GL_LIGHTING);}
 		RenderHelper.bindTexture(instrumentTexture);
 		
 		rotationHelper(centerX, centerY, -flyer.rotationRoll);
@@ -269,46 +290,38 @@ public class InstrumentHelper{
 			RenderHelper.renderQuadUV(centerX-20, centerX+20, centerX+20, centerX-20, centerY+20, centerY+20, centerY-20, centerY-20, 0, 0, 0, 0, 0.34375 - flyer.rotationPitch*0.00390625, 0.65625 - 0.00390625*flyer.rotationPitch, 0.53125,  0.84375, false);
 		}
     	
-		if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+		GL11.glTranslatef(0, 0, offset);
     	RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.25, 0.5, 0, 0.25, false);
     	
-    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	GL11.glTranslatef(0, 0, offset);
     	rotationHelper(centerX, centerY, flyer.rotationRoll);
-    	RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.5, 0.75, 0, 0.25, false);
-    	
-    	if(!hud){GL11.glEnable(GL11.GL_LIGHTING);}
+    	if(flyer.lightsOn){
+			Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+			RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.5, 0.75, 0, 0.25, false);
+	    	Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+		}else{
+			RenderHelper.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.5, 0.75, 0, 0.25, false);
+		}
 		GL11.glPopMatrix();
 	}
 	
-	private static void drawAltimeter(EntityFlyable flyer, int centerX, int centerY, boolean hud){
-    	drawGaugeBase(centerX, centerY);
-    	if(!hud){
-			GL11.glPushMatrix();
-    		GL11.glDisable(GL11.GL_LIGHTING);
-    		GL11.glTranslatef(0, 0, -0.1F);
-    	}
+	private static void drawAltimeter(EntityFlyable flyer, int centerX, int centerY){
+    	drawGaugeBase(flyer, centerX, centerY);
+    	GL11.glTranslatef(0, 0, offset);
     	
     	drawScaledString("ALTITUDE", centerX*2-20, centerY*2+14, 0.5F);
         drawDialIncrements(centerX, centerY, -180, 180, 25, 2, 51);
         drawDialIncrements(centerX, centerY, -180, 180, 25, 5, 11);
         drawDialNumbers(centerX, centerY, 0, 320,  17, 0, 1, 9, 0.7F);
-        if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+        GL11.glTranslatef(0, 0, offset);
         drawShortPointer(centerX, centerY, (float) (.36*(flyer.posY - (ControlHelper.seaLevelOffset ? 64 : 0))), 20, 6);
-        if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+        GL11.glTranslatef(0, 0, offset);
         drawLongPointer(centerX, centerY, (float) (3.6*(flyer.posY - (ControlHelper.seaLevelOffset ? 64 : 0))), 35, 3);
-        if(!hud){
-        	GL11.glEnable(GL11.GL_LIGHTING);
-        	GL11.glPopMatrix();
-        }
     }
     
-	private static void drawHeadingIndicator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
-    	drawGaugeBase(centerX, centerY);
-    	if(!hud){
-			GL11.glPushMatrix();
-    		GL11.glDisable(GL11.GL_LIGHTING);
-    		GL11.glTranslatef(0, 0, -0.1F);
-    	}
+	private static void drawHeadingIndicator(EntityFlyable flyer, int centerX, int centerY){
+    	drawGaugeBase(flyer, centerX, centerY);
+    	GL11.glTranslatef(0, 0, offset);
     	
     	RenderHelper.bindTexture(instrumentTexture);
     	RenderHelper.renderSquareUV(centerX-20, centerX+20, centerY+20, centerY-20, 0, 0, 0.75, 1, 0.25, 0.5, false);
@@ -347,50 +360,35 @@ public class InstrumentHelper{
         RenderHelper.drawString("33", centerX-5, centerY-32, Color.WHITE);
         rotationHelper(centerX, centerY, 30);
         GL11.glPopMatrix();
-        if(!hud){
-        	GL11.glEnable(GL11.GL_LIGHTING);
-        	GL11.glPopMatrix();
-        }
     }
     
-	private static void drawAirspeedIndicator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
-    	drawGaugeBase(centerX, centerY);
-		if(!hud){
-			GL11.glPushMatrix();
-    		GL11.glDisable(GL11.GL_LIGHTING);
-    		GL11.glTranslatef(0, 0, -0.1F);
-    	}
+	private static void drawAirspeedIndicator(EntityFlyable flyer, int centerX, int centerY){
+    	drawGaugeBase(flyer, centerX, centerY);
+    	GL11.glTranslatef(0, 0, offset);
 
     	drawScaledString("BLK/S", centerX*2-15, centerY*2+14, 0.5F);
     	drawDialColoring(centerX, centerY, 292.5F, 330, 25, 3, new float[] {1, 0, 0});
     	drawDialColoring(centerX, centerY, 217.5F, 292.5F, 25, 3, new float[] {1, 1, 0});
     	drawDialColoring(centerX, centerY, 105F, 217.5F, 25, 3, new float[] {0, 1, 0});
-    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	GL11.glTranslatef(0, 0, offset);
+    	
     	drawDialIncrements(centerX, centerY, 30, 330, 25, 8, 9);
     	drawDialIncrements(centerX, centerY, 30, 330, 25, 3, 41);
     	drawDialNumbers(centerX, centerY, 30, 330, 15, 0, 10, 4, 0.6F);
     	drawLongPointer(centerX, centerY, (float) (30+7.5*flyer.velocity*MFS.planeSpeedFactor*20), 35, 2);
-    	
-    	if(!hud){
-    		GL11.glEnable(GL11.GL_LIGHTING);
-    		GL11.glPopMatrix();
-    	}
     }
     
-	private static void drawTurnCoordinator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
+	private static void drawTurnCoordinator(EntityFlyable flyer, int centerX, int centerY){
 		RenderHelper.bindTexture(instrumentTexture);
-		drawGaugeBase(centerX, centerY);
+		drawGaugeBase(flyer, centerX, centerY);
 		GL11.glPushMatrix();
-    	if(!hud){
-    		GL11.glDisable(GL11.GL_LIGHTING);
-    		GL11.glTranslatef(0, 0, -0.1F);
-    	}
+		GL11.glTranslatef(0, 0, offset);
     	
     	drawDialIncrements(centerX, centerY, -90, 90, 20, 5, 2);
     	drawDialIncrements(centerX, centerY, -115, 115, 20, 5, 2);
     	
     	RenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+18.75, centerY+6.25, 0, 0, 0.75, 1, 0.5625, 0.625, false);
-    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	GL11.glTranslatef(0, 0, offset);
     	
     	float turn = Math.max(Math.min(((flyer.rotationRoll - flyer.prevRotationRoll)/10 + flyer.rotationYaw - flyer.prevRotationYaw)/0.15F*25F, 50), -50);
     	rotationHelper(centerX, centerY, turn);
@@ -399,26 +397,21 @@ public class InstrumentHelper{
     	
     	double slip = flyer.sideVec.dot(flyer.velocityVec);
     	RenderHelper.renderSquareUV(centerX-2.5 + 20*slip, centerX+2.5 + 20*slip, centerY+15 - Math.abs(slip), centerY+10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
-    	if(!hud){GL11.glTranslatef(0, 0, 0.1F);}
+    	GL11.glTranslatef(0, 0, offset);
 
     	drawScaledString("L", centerX*2-34, centerY*2+20, 0.5F);
     	drawScaledString("R", centerX*2+30, centerY*2+20, 0.5F);
     	drawScaledString("M.J.", centerX*2-8, centerY*2-46, 0.5F);
     	drawScaledString("ELEC", centerX*2-12, centerY*2-36, 0.5F);
     	drawScaledString("2 MIN", centerX*2-14, centerY*2+36, 0.5F);
-
-    	if(!hud){GL11.glEnable(GL11.GL_LIGHTING);}
     	GL11.glPopMatrix();
 	}
 	
-	private static void drawTurnAndSlipIndicator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
+	private static void drawTurnAndSlipIndicator(EntityFlyable flyer, int centerX, int centerY){
 		RenderHelper.bindTexture(instrumentTexture);
-		drawGaugeBase(centerX, centerY);
+		drawGaugeBase(flyer, centerX, centerY);
 		GL11.glPushMatrix();
-    	if(!hud){
-    		GL11.glDisable(GL11.GL_LIGHTING);
-    		GL11.glTranslatef(0, 0, -0.1F);
-    	}
+		GL11.glTranslatef(0, 0, offset);
     	
     	RenderHelper.renderSquareUV(centerX-25, centerX+25, centerY+18.75, centerY+6.25, 0, 0, 0.75, 1, 0.5625, 0.625, false);
     	
@@ -487,26 +480,20 @@ public class InstrumentHelper{
     	GL11.glColor3f(1, 1, 1);
     	GL11.glEnable(GL11.GL_TEXTURE_2D);
     	
-    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	GL11.glTranslatef(0, 0, offset);
     	double slip = flyer.sideVec.dot(flyer.velocityVec);
     	RenderHelper.renderSquareUV(centerX-2.5 + 20*slip, centerX+2.5 + 20*slip, centerY+15 - Math.abs(slip), centerY+10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
-    	if(!hud){GL11.glTranslatef(0, 0, 0.1F);}
+    	GL11.glTranslatef(0, 0, -offset);
 
     	drawScaledString("L", centerX*2-30, centerY*2-30, 0.5F);
     	drawScaledString("R", centerX*2+26, centerY*2-30, 0.5F);
     	drawScaledString("2 MIN", centerX*2-14, centerY*2+36, 0.5F);
-
-    	if(!hud){GL11.glEnable(GL11.GL_LIGHTING);}
     	GL11.glPopMatrix();
 	}
 	
-	private static void drawVerticalSpeedIndicator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
-		drawGaugeBase(centerX, centerY);
-    	if(!hud){
-			GL11.glPushMatrix();
-    		GL11.glDisable(GL11.GL_LIGHTING);
-    		GL11.glTranslatef(0, 0, -0.2F);
-    	}
+	private static void drawVerticalSpeedIndicator(EntityFlyable flyer, int centerX, int centerY){
+		drawGaugeBase(flyer, centerX, centerY);
+		GL11.glTranslatef(0, 0, 2*offset);
 
     	drawScaledString("CLIMB", centerX*2-14, centerY*2-14, 0.5F);
     	drawScaledString("BLK/S", centerX*2-14, centerY*2+10, 0.5F);
@@ -516,22 +503,14 @@ public class InstrumentHelper{
     	drawDialIncrements(centerX, centerY, -132.5F, -47.5F, 25, 3, 11);
     	drawDialIncrements(centerX, centerY, -47.5F, 80, 25, 2, 16);
     	drawDialIncrements(centerX, centerY, -260, -132.5F, 25, 2, 16);
-    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	GL11.glTranslatef(0, 0, offset);
     	drawLongPointer(centerX, centerY, (float) (-90+10.625*flyer.motionY*20), 35, 2);
-    	
-        if(!hud){
-        	GL11.glEnable(GL11.GL_LIGHTING);
-        	GL11.glPopMatrix();
-        }
 	}
 	
-	private static void drawLiftReserveIndicator(EntityFlyable flyer, int centerX, int centerY, boolean hud){
-		drawGaugeBase(centerX, centerY);
+	private static void drawLiftReserveIndicator(EntityFlyable flyer, int centerX, int centerY){
+		drawGaugeBase(flyer, centerX, centerY);
     	GL11.glPushMatrix();
-    	if(!hud){
-    		GL11.glDisable(GL11.GL_LIGHTING);
-    		GL11.glTranslatef(0, 0, -0.1F);
-    	}
+    	GL11.glTranslatef(0, 0, offset);
     	
     	drawScaledString("LIFT RESERVE", centerX*2-32, centerY*2+14, 0.5F);
     	drawDialColoring(centerX, centerY+20, -37, -35, 35, 10, new float[] {0, 0, 0});
@@ -542,7 +521,7 @@ public class InstrumentHelper{
     	drawDialColoring(centerX, centerY+20, -9, 35, 32, 7, new float[] {0, 1, 0});
     	drawDialColoring(centerX, centerY+20, -35, 35, 35, 3, new float[] {1, 1, 1});
     	drawDialColoring(centerX, centerY+20, 35, 37, 35, 10, new float[] {0, 0, 0});
-    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	GL11.glTranslatef(0, 0, offset);
     	
     	GL11.glDisable(GL11.GL_TEXTURE_2D);
     	GL11.glColor3f(0, 0, 0);
@@ -578,42 +557,29 @@ public class InstrumentHelper{
     	GL11.glEnd();
 
         GL11.glEnable(GL11.GL_TEXTURE_2D);
-        if(!hud){GL11.glEnable(GL11.GL_LIGHTING);}
         GL11.glPopMatrix();
 	}
 	
-	private static void drawTachometer(EntityVehicle vehicle, int centerX, int centerY, boolean hud){
-    	drawGaugeBase(centerX, centerY);
-    	if(!hud){
-			GL11.glPushMatrix();
-    		GL11.glDisable(GL11.GL_LIGHTING);
-    		GL11.glTranslatef(0, 0, -0.1F);
-    	}
+	private static void drawTachometer(EntityVehicle vehicle, int centerX, int centerY){
+    	drawGaugeBase(vehicle, centerX, centerY);
+    	GL11.glTranslatef(0, 0, offset);
     	drawScaledString("RPM", centerX*2-10, centerY*2+14, 0.5F);
     	drawDialColoring(centerX, centerY, -135+maxEngineRPMs/10, 165, 25, 4, new float[] {1, 0, 0});
-    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	GL11.glTranslatef(0, 0, offset);
 		drawDialIncrements(centerX, centerY, -135, 165, 25, 5, 61);
 		drawDialIncrements(centerX, centerY, -135, 165, 25, 9, 13);
         drawDialNumbers(centerX, centerY, -135, 165, 13, 0, 5, 6, 0.6F);
         for(byte i=0; i<numberEngines; ++i){
         	drawLongPointer(centerX, centerY, (float) (-135+engineRPMs[i]/10), 30, 3);
-        	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
-        }
-        if(!hud){
-        	GL11.glEnable(GL11.GL_LIGHTING);
-        	GL11.glPopMatrix();
+        	GL11.glTranslatef(0, 0, offset);
         }
     }
 	
 	
     
-	private static void drawFuelGauge(EntityVehicle vehicle, int centerX, int centerY, boolean hud){
-    	drawGaugeBase(centerX, centerY);
-    	if(!hud){
-			GL11.glPushMatrix();
-    		GL11.glDisable(GL11.GL_LIGHTING);
-    		GL11.glTranslatef(0, 0, -0.1F);
-    	}
+	private static void drawFuelGauge(EntityVehicle vehicle, int centerX, int centerY){
+    	drawGaugeBase(vehicle, centerX, centerY);
+    	GL11.glTranslatef(0, 0, offset);
     	
     	drawScaledString("BUCKETS", centerX*2-20, centerY*2+14, 0.5F);
     	drawScaledString("FUEL", centerX*2-10, centerY*2+24, 0.5F);
@@ -622,25 +588,17 @@ public class InstrumentHelper{
     	drawScaledString(String.valueOf(vehicle.maxFuel/1000), centerX*2+35, centerY*2-10, 0.5F);
         drawDialIncrements(centerX, centerY+8, -50, 50, 25, 7, 5);
         drawDialColoring(centerX, centerY+8, -50, 50, 18, 2, new float[] {1, 1, 1});
-        if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+        GL11.glTranslatef(0, 0, offset);
     	drawDialColoring(centerX, centerY+8, -50, -45, 25, 9, new float[] {1, 0, 0});
-    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	GL11.glTranslatef(0, 0, offset);
         drawLongPointer(centerX, centerY+8, (float) (-50+vehicle.fuel/vehicle.maxFuel*100F), 35, 3);
-        if(!hud){
-        	GL11.glEnable(GL11.GL_LIGHTING);
-        	GL11.glPopMatrix();
-        }
     }
 	
 	
 	
-	private static void drawFuelFlowGauge(EntityVehicle vehicle, int centerX, int centerY, boolean hud){
-    	drawGaugeBase(centerX, centerY);
-    	if(!hud){
-			GL11.glPushMatrix();
-    		GL11.glDisable(GL11.GL_LIGHTING);
-    		GL11.glTranslatef(0, 0, -0.1F);
-    	}
+	private static void drawFuelFlowGauge(EntityVehicle vehicle, int centerX, int centerY){
+    	drawGaugeBase(vehicle, centerX, centerY);
+    	GL11.glTranslatef(0, 0, offset);
     	
     	drawScaledString("FUEL", centerX*2-10, centerY*2+14, 0.5F);
     	drawScaledString("FLOW", centerX*2-12, centerY*2+24, 0.5F);
@@ -650,42 +608,30 @@ public class InstrumentHelper{
         drawDialIncrements(centerX, centerY, -135, 135, 25, 5, 9);
         drawDialNumbers(centerX, centerY, -135, 135, 16, 0, 1, 4, 0.6F);
     	drawLongPointer(centerX, centerY, (float) (-135 + vehicle.fuelFlow*20*60*60/1000), 30, 3);
-        if(!hud){
-        	GL11.glEnable(GL11.GL_LIGHTING);
-        	GL11.glPopMatrix();
-        }
     }
 	
-	private static void drawEngineTempGauge(EntityVehicle vehicle, int centerX, int centerY, boolean hud){
-		drawGaugeBase(centerX, centerY);
-    	if(!hud){
-			GL11.glPushMatrix();
-    		GL11.glDisable(GL11.GL_LIGHTING);
-    		GL11.glTranslatef(0, 0, -0.1F);
-    	}
+	private static void drawEngineTempGauge(EntityVehicle vehicle, int centerX, int centerY){
+		drawGaugeBase(vehicle, centerX, centerY);
+		GL11.glTranslatef(0, 0, offset);
     	
     	drawScaledString("TEMP", centerX*2-12, centerY*2+14, 0.5F);
     	drawDialColoring(centerX, centerY, -110.7F, -86.4F, 25, 3, new float[] {1, 1, 0});
     	drawDialColoring(centerX, centerY, -86.4F, 67.5F, 25, 3, new float[] {0, 1, 0});
     	
-    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	GL11.glTranslatef(0, 0, offset);
     	drawDialIncrements(centerX, centerY, -135, 135, 25, 6, 5);
     	drawDialIncrements(centerX, centerY, -135, 135, 25, 3, 21);
     	
-    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	GL11.glTranslatef(0, 0, offset);
     	drawDialColoring(centerX, centerY, 67.0F, 71.0F, 25, 6, new float[] {1, 0, 0});
     	GL11.glColor3f(1, 1, 1);
     	drawDialNumbers(centerX, centerY, -135, 135, 16, 50, 50, 4, 0.5F);
         
-    	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    	GL11.glTranslatef(0, 0, offset);
     	for(byte i=0; i<numberEngines; ++i){
     		drawLongPointer(centerX, centerY, (float) (-135 + ((engineTemps[i]*9F/5F + 32) - 50)*1.35), 30, 3);
-        	if(!hud){GL11.glTranslatef(0, 0, -0.1F);}
+    		GL11.glTranslatef(0, 0, offset);
     	}
-        if(!hud){
-        	GL11.glEnable(GL11.GL_LIGHTING);
-        	GL11.glPopMatrix();
-        }
 	}
     
     /**

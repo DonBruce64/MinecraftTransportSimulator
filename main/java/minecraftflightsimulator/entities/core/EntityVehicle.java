@@ -28,6 +28,7 @@ import net.minecraft.world.World;
 public abstract class EntityVehicle extends EntityParent implements IInventory{
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
+	public boolean lightsOn;
 	public byte textureOptions;
 	public byte throttle;
 	public int maxFuel;
