@@ -26,6 +26,7 @@ public class EntityPZLP11 extends EntityPlane{
 	@Override
 	protected void initPlaneProperties(){
 		hasFlaps = false;
+		hasLights = false;
 		maxFuel = 7000;		
 		emptyMass=1150;
 		wingspan=11.0F;

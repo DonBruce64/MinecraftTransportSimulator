@@ -29,6 +29,7 @@ import minecraftflightsimulator.packets.control.BrakePacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
 import minecraftflightsimulator.packets.control.EnginePacket;
 import minecraftflightsimulator.packets.control.FlapPacket;
+import minecraftflightsimulator.packets.control.LightPacket;
 import minecraftflightsimulator.packets.control.RudderPacket;
 import minecraftflightsimulator.packets.control.ThrottlePacket;
 import minecraftflightsimulator.packets.general.ChatPacket;
@@ -141,6 +142,7 @@ public class MFSRegistry{
 		MFS.proxy.registerPacket(PropellerBenchTilepdatePacket.class, PropellerBenchTilepdatePacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);
+		MFS.proxy.registerPacket(LightPacket.class, LightPacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(ElevatorPacket.class, ElevatorPacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(EnginePacket.class, EnginePacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(FlapPacket.class, FlapPacket.Handler.class, true, true);

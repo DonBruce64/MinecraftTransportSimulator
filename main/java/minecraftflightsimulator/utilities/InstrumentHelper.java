@@ -80,7 +80,6 @@ public class InstrumentHelper{
 	
 	public static void drawFlyableInstrument(EntityFlyable flyer, int x, int y, int type, boolean hud){
 		GL11.glPushMatrix();
-		flyer.lightsOn = flyer.worldObj.getWorldTime() > 12000;
 		if(hud){
 			offset = 0;
 		}else{

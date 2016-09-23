@@ -27,6 +27,7 @@ public class EntityVulcanair extends EntityPlane{
 	@Override
 	protected void initPlaneProperties(){
 		hasFlaps = true;
+		hasLights = true;
 		maxFuel = 15000;
 		emptyMass=1230;
 		wingspan=12.0F;

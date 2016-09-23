@@ -27,6 +27,7 @@ public class EntityMC172 extends EntityPlane{
 	@Override
 	protected void initPlaneProperties(){
 		hasFlaps = true;
+		hasLights = true;
 		maxFuel = 5000;
 		emptyMass=800;
 		wingspan=11.0F;

@@ -13,6 +13,7 @@ import minecraftflightsimulator.packets.control.BrakePacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
 import minecraftflightsimulator.packets.control.EnginePacket;
 import minecraftflightsimulator.packets.control.FlapPacket;
+import minecraftflightsimulator.packets.control.LightPacket;
 import minecraftflightsimulator.packets.control.RudderPacket;
 import minecraftflightsimulator.packets.control.ThrottlePacket;
 import net.java.games.input.Controller;
@@ -36,6 +37,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class ControlHelper{
 	//Internal checkers for keys.
 	private static boolean brakeKeyPressed;
+	private static boolean lightKeyPressed;
 	private static boolean flapKeyPressed;
 	private static boolean camLockKeyPressed;
 	private static boolean changeViewKeyPressed;
@@ -86,6 +88,7 @@ public class ControlHelper{
 		keyboardMap.put(controls.FLAPS_D.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.FLAPS_D.keyboardName, Keyboard.KEY_H).getInt());
 		keyboardMap.put(controls.BRAKE.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.BRAKE.keyboardName, Keyboard.KEY_B).getInt());
 		keyboardMap.put(controls.STARTER.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.STARTER.keyboardName, Keyboard.KEY_M).getInt());
+		keyboardMap.put(controls.LIGHTS.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.LIGHTS.keyboardName, Keyboard.KEY_N).getInt());
 		keyboardMap.put(controls.ZOOM_I.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.ZOOM_I.keyboardName, Keyboard.KEY_PRIOR).getInt());
 		keyboardMap.put(controls.ZOOM_O.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.ZOOM_O.keyboardName, Keyboard.KEY_NEXT).getInt());
 		
@@ -107,6 +110,7 @@ public class ControlHelper{
 		joystickMap.put(controls.FLAPS_D.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.FLAPS_D.joystickName, NULL_COMPONENT).getInt());
 		joystickMap.put(controls.BRAKE.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.BRAKE.joystickName, NULL_COMPONENT).getInt());
 		joystickMap.put(controls.STARTER.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.STARTER.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.LIGHTS.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.LIGHTS.joystickName, NULL_COMPONENT).getInt());
 		joystickMap.put(controls.ZOOM_I.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.ZOOM_I.joystickName, NULL_COMPONENT).getInt());
 		joystickMap.put(controls.ZOOM_O.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.ZOOM_O.joystickName, NULL_COMPONENT).getInt());
 		joystickMap.put(controls.CHANGEVIEW.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.CHANGEVIEW.joystickName, NULL_COMPONENT).getInt());
@@ -300,6 +304,7 @@ public class ControlHelper{
 		checkBrakes(plane);
 		checkStarter(plane);
 		checkThrottle(plane);
+		if(plane.hasLights){checkLights(plane);}
 		if(plane.hasFlaps){checkFlaps(plane);}
 		
 		if(joystickMap.get(controls.ROLL.joystickName) != 999 && joystick != null){
@@ -380,6 +385,17 @@ public class ControlHelper{
 		}
 	}
 	
+	private static void checkLights(EntityVehicle vehicle){
+		if(isControlPressed(controls.LIGHTS)){
+			if(!lightKeyPressed){
+				lightKeyPressed = true;
+				MFS.MFSNet.sendToServer(new LightPacket(vehicle.getEntityId(), isControlPressed(controls.MOD)));
+			}
+		}else{
+			lightKeyPressed = false;
+		}
+	}
+	
 	private static void checkFlaps(EntityPlane plane){
 		if(isControlPressed(controls.FLAPS_U)){
 			if(!flapKeyPressed){
@@ -407,6 +423,7 @@ public class ControlHelper{
 		FLAPS_D("FlapsDown", "FlapsDownKey"),
 		BRAKE("Brake", "BrakeKey"),
 		STARTER("Starter", "StarterKey"),
+		LIGHTS("Lights", "LightsKey"),
 		ZOOM_I("ZoomIn", "ZoomInKey"),
 		ZOOM_O("ZoomOut", "ZoomOutKey"),
 		CHANGEVIEW("ChangeView", ""),

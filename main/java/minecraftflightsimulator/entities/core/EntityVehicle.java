@@ -28,7 +28,9 @@ import net.minecraft.world.World;
 public abstract class EntityVehicle extends EntityParent implements IInventory{
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
+	public boolean hasLights;
 	public boolean lightsOn;
+	public boolean auxLightsOn;
 	public byte textureOptions;
 	public byte throttle;
 	public int maxFuel;
@@ -338,6 +340,8 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		super.readFromNBT(tagCompound);
 		this.brakeOn=tagCompound.getBoolean("brakeOn");
 		this.parkingBrakeOn=tagCompound.getBoolean("parkingBrakeOn");
+		this.lightsOn=tagCompound.getBoolean("lightsOn");
+		this.auxLightsOn=tagCompound.getBoolean("auxLightsOn");
 		this.textureOptions=tagCompound.getByte("textureOptions");
 		this.throttle=tagCompound.getByte("throttle");
 		this.fuel=tagCompound.getDouble("fuel");
@@ -360,6 +364,8 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("brakeOn", this.brakeOn);
 		tagCompound.setBoolean("parkingBrakeOn", this.parkingBrakeOn);
+		tagCompound.setBoolean("lightsOn", this.lightsOn);
+		tagCompound.setBoolean("auxLightsOn", this.auxLightsOn);
 		tagCompound.setByte("textureOptions", this.textureOptions);
 		tagCompound.setByte("throttle", this.throttle);
 		tagCompound.setDouble("fuel", this.fuel);
