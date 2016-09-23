@@ -39,6 +39,11 @@ public class RenderTrimotor extends RenderPlane{
 	}
 	
 	@Override
+	protected void renderLights(EntityPlane plane){
+
+	}
+	
+	@Override
 	protected void renderWindows(EntityPlane plane){
 		RenderHelper.bindTexture(windowTexture);
 		RenderHelper.renderSquare(1.15, 1.00, 0.81, 1.063, 0.04, 0.725, true);

@@ -4,6 +4,7 @@ import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
 import minecraftflightsimulator.utilities.MFSVector;
+import minecraftflightsimulator.utilities.RenderHelper;
 import minecraftflightsimulator.utilities.RenderHelper.RenderParent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -32,6 +33,11 @@ public abstract class RenderPlane extends RenderParent{
         renderWindows(plane);
         renderConsole(plane);
         renderMarkings(plane);
+        if(plane.lightsOn){
+	        Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+	        renderLights(plane);
+	        Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+        }
         GL11.glPopMatrix();
         
         if(Minecraft.getMinecraft().gameSettings.showDebugInfo){
@@ -43,6 +49,7 @@ public abstract class RenderPlane extends RenderParent{
 	protected abstract void renderWindows(EntityPlane plane);
 	protected abstract void renderConsole(EntityPlane plane);
 	protected abstract void renderMarkings(EntityPlane plane);
+	protected abstract void renderLights(EntityPlane plane);
 	
 	private void renderDebugVectors(EntityPlane plane){
 		double[] debugForces = plane.getDebugForces();

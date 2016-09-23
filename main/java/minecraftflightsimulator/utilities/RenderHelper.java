@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 
@@ -192,6 +193,42 @@ public class RenderHelper{
     	renderQuadUV(x1, x1, x2, x2, y2, y1, y1, y2, z1, z1, z2, z2, u, U, v, V, mirror);
     }
     
+    public static void drawCone(double r, double l, double n, boolean reverse){
+		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+		GL11.glVertex3d(0, 0, 0);
+    	if(reverse){
+    		for(float theta=0; theta < 2*Math.PI + 0.1; theta += 2F*Math.PI/n){
+    			GL11.glVertex3d(r*MathHelper.cos(theta), r*MathHelper.sin(theta), l);
+    		}
+    	}else{
+    		for(float theta=(float) (2*Math.PI); theta>=0 - 0.1; theta -= 2F*Math.PI/n){
+    			GL11.glVertex3d(r*MathHelper.cos(theta), r*MathHelper.sin(theta), l);
+    		}
+    	}
+    	GL11.glEnd();
+    }
+    
+    /**
+     * Draws a semi-conical light beam with
+     * an end radius of r. length of l, and n segments.
+     */
+    public static void drawLightBeam(double r, double l, int n){    	
+    	GL11.glPushMatrix();
+    	GL11.glDisable(GL11.GL_TEXTURE_2D);
+    	GL11.glDisable(GL11.GL_LIGHTING);
+    	GL11.glShadeModel(GL11.GL_SMOOTH);
+    	GL11.glEnable(GL11.GL_BLEND);
+    	GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_ONE);
+    	drawCone(r, l, n, false);
+    	drawCone(r, l, n, false);
+    	drawCone(r, l, n, true);
+    	drawCone(r, l, n, true);    	
+    	GL11.glDisable(GL11.GL_BLEND);
+    	GL11.glEnable(GL11.GL_LIGHTING);
+    	GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GL11.glPopMatrix();
+    }
+    
     /**Abstract class for parent rendering.
      * Renders the parent model, and all child models that have been registered by
      * {@link registerChildRender}.  Ensures all parts are rendered in the exact
@@ -242,13 +279,13 @@ public class RenderHelper{
     		}else{
     			GL11.glTranslated(x, y, z);
     		}
-    		this.renderParentModel(parent);
             for(EntityChild child : parent.getChildren()){
             	if(MFSClientRegistry.childRenderMap.get(child.getClass()) != null){
             		childOffset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
             		MFSClientRegistry.childRenderMap.get(child.getClass()).renderChildModel(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord);
         		}
             }
+            this.renderParentModel(parent);
             GL11.glPopMatrix();
     	}
     	

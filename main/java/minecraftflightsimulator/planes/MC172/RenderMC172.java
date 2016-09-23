@@ -30,6 +30,15 @@ public class RenderMC172 extends RenderPlane{
 	}
 
 	@Override
+	protected void renderLights(EntityPlane plane){
+        GL11.glTranslatef(0, -0.25F, 2);
+        GL11.glRotatef(35, 1, 0, 0);
+        RenderHelper.drawLightBeam(10, 10, 20);
+        GL11.glRotatef(-35, 1, 0, 0);
+        GL11.glTranslatef(0, 0.25F, -2);
+	}
+	
+	@Override
 	protected void renderWindows(EntityPlane plane){
 		RenderHelper.bindTexture(windowTexture);
 		RenderHelper.renderQuad(-0.75, -0.75, 0.75, 0.75, 1.625, 0.625, 0.625, 1.625, 0.875, 1.75, 1.75, 0.875, true);
@@ -76,12 +85,14 @@ public class RenderMC172 extends RenderPlane{
 
 	@Override
 	protected void renderMarkings(EntityPlane plane){
+		GL11.glDisable(GL11.GL_LIGHTING);
 		GL11.glRotatef(180, 1, 0, 0);
 		GL11.glRotatef(105, 0, 1, 0);
-		GL11.glDisable(GL11.GL_LIGHTING);
 		RenderHelper.drawScaledStringAt(plane.displayName, -2.8F, -0.35F, -1.36F, 1F/32F, Color.lightGray);
 		GL11.glRotatef(150, 0, 1, 0);
 		RenderHelper.drawScaledStringAt(plane.displayName, 2.8F, -0.35F, -1.36F, 1F/32F, Color.lightGray);
+		GL11.glRotatef(105, 0, 1, 0);
+		GL11.glRotatef(-180, 1, 0, 0);
 		GL11.glEnable(GL11.GL_LIGHTING);
 	}
 	

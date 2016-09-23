@@ -68,6 +68,11 @@ public class RenderPZLP11 extends RenderPlane{
 	}
 	
 	@Override
+	protected void renderLights(EntityPlane plane){
+
+	}
+	
+	@Override
 	protected void renderWindows(EntityPlane plane){
 		RenderHelper.bindTexture(windowTexture);
 		RenderHelper.renderQuad(-0.25, -0.25, 0.25, 0.25, 1.125, 0.88, 0.88, 1.125, -0.75, -0.325, -0.325, -0.75, true);

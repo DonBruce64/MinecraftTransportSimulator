@@ -33,6 +33,11 @@ public class RenderVulcanair extends RenderPlane{
         GL11.glTranslatef(0, -0.75F, -0.12F);
         GL11.glRotatef(180, 1, 0, 0);
 	}
+	
+	@Override
+	protected void renderLights(EntityPlane plane){
+
+	}
 
 	@Override
 	protected void renderWindows(EntityPlane plane){
