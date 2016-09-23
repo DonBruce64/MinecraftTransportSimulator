@@ -64,8 +64,8 @@ public class CommonProxy{
 	}
 
 	/**
-	 * Registers an entity.  Optionally pairs the entity with an item which indicates
-	 * that the item should spawn the entity if the item is in a GUI slot.
+	 * Registers an entity.
+	 * Optionally pairs the entity with an item for GUI operations.
 	 * @param entityClass
 	 * @param entityItem
 	 */

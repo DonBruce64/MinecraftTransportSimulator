@@ -126,7 +126,7 @@ public class MFSRegistry{
 		MFS.proxy.registerEntity(EntityWheelLarge.class, wheelLarge);
 		MFS.proxy.registerEntity(EntitySkid.class, skid);
 		MFS.proxy.registerEntity(EntityPontoon.class, pontoon);
-		MFS.proxy.registerEntity(EntityPontoonDummy.class, null);
+		MFS.proxy.registerEntity(EntityPontoonDummy.class, pontoon);
 		MFS.proxy.registerEntity(EntityPropeller.class, propeller);
 		MFS.proxy.registerEntity(EntityEngineAircraft.class, null);
 	}
