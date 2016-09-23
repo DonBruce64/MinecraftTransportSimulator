@@ -3,7 +3,6 @@ package minecraftflightsimulator.utilities;
 import java.awt.Color;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityFlyable;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityVehicle;
@@ -11,7 +10,6 @@ import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.packets.general.GUIPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
-import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
