@@ -3,6 +3,7 @@ package minecraftflightsimulator.entities.parts;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityVehicle;
+import minecraftflightsimulator.packets.control.EnginePacket;
 import minecraftflightsimulator.sounds.EngineSound;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
@@ -12,16 +13,15 @@ public abstract class EntityEngine extends EntityChild{
 	protected EntityVehicle vehicle;
 	
 	public EngineTypes type;
-	public boolean fueled;
+	public boolean engineOn;
 	public int internalFuel;
 	public double engineRPM;
 	public double engineTemp = 20;
 	public double hours;
 	
-	//unique to each individual engine
 	protected boolean engineEngaged;
-	protected boolean engineOn;
-	protected byte starterState;
+	protected boolean electricStarterEngaged;
+	protected byte starterLevel;
 	protected int maxEngineRPM;
 	protected float fuelConsumption;
 	private EngineSound engineSound;
@@ -77,15 +77,17 @@ public abstract class EntityEngine extends EntityChild{
 			vehicle.fuel -= this.fuelConsumption*MFS.fuelUsageFactor*engineRPM/maxEngineRPM;
 			if(vehicle.fuel <= 0 || engineRPM < 300 || isLiquidAt(posX, posY, posZ)){
 				MFS.proxy.playSound(this, "mfs:engine_starting", 1, 1);
+				vehicle.fuel = 0;
 				stopEngine(false);
-			}else{
-				fueled = true;
 			}
 		}else{
 			if(engineRPM > 500){
 				if(vehicle.fuel > 0 && vehicle.throttle > 5 && engineEngaged && !isLiquidAt(posX, posY + 0.25, posZ)){
 					MFS.proxy.playSound(this, "mfs:engine_starting", 1, 1);
 					engineOn=true;
+					if(!worldObj.isRemote){
+						MFS.MFSNet.sendToAll(new EnginePacket(parent.getEntityId(), (byte) 4, this.getEntityId()));
+					}
 				}
 			}
 			if(internalFuel > 0){
@@ -99,11 +101,14 @@ public abstract class EntityEngine extends EntityChild{
 			}
 		}
 		
-		if(starterState > 0){
-			if(starterState == type.starterIncrement){
+		if(electricStarterEngaged && starterLevel == 0){
+			starterLevel += type.starterIncrement;
+		}
+		if(starterLevel > 0){
+			if(starterLevel == type.starterIncrement){
 				MFS.proxy.playSound(this, "mfs:" + type.engineCrankingSoundName, 1, 1);
 			}
-			--starterState;
+			--starterLevel;
 			vehicle.fuel -= this.fuelConsumption*MFS.fuelUsageFactor;
 			if(engineRPM < 600){
 				engineRPM = Math.min(engineRPM+type.starterPower, 600);
@@ -113,29 +118,35 @@ public abstract class EntityEngine extends EntityChild{
 		}
 		engineSound = MFS.proxy.updateEngineSoundAndSmoke(engineSound, this);
 	}
-	
+
 	@Override
 	public void setDead(){
 		super.setDead();
 		engineOn=false;
-		fueled=false;
 		internalFuel = 0;
 		engineSound = MFS.proxy.updateEngineSoundAndSmoke(engineSound, this);
+	}
+	
+	public void setElectricStarterState(boolean state){
+		if(state){engineEngaged = true;}
+		electricStarterEngaged = state;
+	}
+	
+	public boolean handStartEngine(){
+		if(starterLevel==0){
+			this.starterLevel += type.starterIncrement;
+			engineEngaged = true;
+			return true;
+		}else{
+			return false;
+		}
 	}
 	
 	public void stopEngine(boolean switchedOff){
 		engineEngaged = !switchedOff;
 		if(engineOn){
 			engineOn = false;
-			fueled = false;
 			internalFuel = 100;
-		}
-	}
-	
-	public void startEngine(){
-		engineEngaged = true;
-		if(starterState==0){
-			this.starterState += type.starterIncrement;
 		}
 	}
 	

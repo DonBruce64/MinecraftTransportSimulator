@@ -12,24 +12,28 @@ import cpw.mods.fml.relauncher.Side;
 public class EnginePacket implements IMessage{
 	private int id;
 	private byte engineCode;
+	private int engineID;
 
 	public EnginePacket() { }
 	
-	public EnginePacket(int id, byte engineCode){
+	public EnginePacket(int id, byte engineCode, int engineID){
 		this.id=id;
 		this.engineCode=engineCode;
+		this.engineID=engineID;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		this.id=buf.readInt();
 		this.engineCode=buf.readByte();
+		this.engineID=buf.readInt();
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		buf.writeInt(this.id);
 		buf.writeByte(this.engineCode);
+		buf.writeInt(this.engineID);
 	}
 
 	public static class Handler implements IMessageHandler<EnginePacket, IMessage> {
@@ -41,8 +45,7 @@ public class EnginePacket implements IMessage{
 				thisEntity = (EntityFlyable) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 			}	
 			if(thisEntity!=null){
-				thisEntity.setEngineState(message.engineCode);
-				if(ctx.side==Side.SERVER){
+				if(thisEntity.setEngineState(message.engineCode, message.engineID) && ctx.side==Side.SERVER){
 					MFS.MFSNet.sendToAll(message);
 				}
 			}

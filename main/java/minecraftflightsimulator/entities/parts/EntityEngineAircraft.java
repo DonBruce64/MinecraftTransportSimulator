@@ -21,7 +21,7 @@ public class EntityEngineAircraft extends EntityEngine{
 				
 		propeller = ((EntityFlyable) parent).getPropellerForEngine(this.UUID);
 				
-		if(fueled){
+		if(engineOn){
 			if(propeller != null){
 				engineRPM += (vehicle.throttle/100F*Math.max(maxEngineRPM - hours, maxEngineRPM - 500) - engineRPM)/10 + (vehicle.velocity - 0.0254*propeller.pitch * engineRPM/60/20 - this.getPropellerForcePenalty())*15;
 				if(propeller.diameter > 80 && engineRPM < 300 && vehicle.throttle >= 15){

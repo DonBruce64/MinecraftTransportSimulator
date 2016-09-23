@@ -202,6 +202,58 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		return weight;
 	}
 	
+	/**
+	 * Starts and sets engine states.  Action performed depends on the
+	 * data of the byte.  0 is a hit-start, 1 is a starter engaged, 2 is a
+	 * starter disengaged, a 3 is an engine cutoff, and a 4 is an engineOn
+	 * check signal.  EngineID is only used in a hand-start or engineOn check.
+	 * @return Whether or not the state set was successful.
+	 */
+	public boolean setEngineState(byte engineCode, int engineID){
+		if(engineCode == 0){
+			if(throttle < 15){throttle = 15;}
+			for(EntityChild child : getChildren()){
+				if(child.getEntityId() == engineID){
+					return ((EntityEngine) child).handStartEngine();
+				}
+			}
+			return false;
+		}else if(engineCode == 1){
+			if(throttle < 15){throttle = 15;}
+			for(EntityChild child : getChildren()){
+				if(child instanceof EntityEngine){
+					((EntityEngine) child).setElectricStarterState(true);
+				}
+			}
+			return true;
+		}else if(engineCode == 2){
+			for(EntityChild child : getChildren()){
+				if(child instanceof EntityEngine){
+					((EntityEngine) child).setElectricStarterState(false);
+				}
+			}
+			return true;
+		}else if(engineCode == 3){
+			throttle = 0;
+			for(EntityChild child : getChildren()){
+				if(child instanceof EntityEngine){
+					((EntityEngine) child).stopEngine(true);
+				}
+			}
+			return true;
+		}else if(engineCode == 4){
+			for(EntityChild child : getChildren()){
+				if(child.getEntityId() == engineID){
+					((EntityEngine) child).engineOn = true;
+					return true;
+				}
+			}
+			return false;
+		}else{
+			return false;
+		}
+	}
+	
 	public int getNumberControllerSeats(){return controllerPositions.size();}
 	public int getNumberPassengerSeats(){return passengerPositions.size();}
 	public GUIParent getGUI(EntityPlayer player){return new GUIParent(player, this, new ResourceLocation("mfs", "textures/" + this.getClass().getSuperclass().getSimpleName().substring(6).toLowerCase() + "s/" + this.getClass().getSimpleName().substring(6).toLowerCase() + "/gui.png"));} 

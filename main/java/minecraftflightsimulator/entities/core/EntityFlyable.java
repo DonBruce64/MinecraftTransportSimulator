@@ -164,55 +164,19 @@ public abstract class EntityFlyable extends EntityVehicle{
 		enginePropellers.inverse().remove(childUUID);
 	}
 	
-	//TODO fix bug where client engine starts without server.
-	public void setEngineState(byte engineCode){
-		if(engineCode == 0){
-			throttle = 0;
-			for(EntityEngine engine : getEngines()){
-				engine.stopEngine(true);
-			}
-		}else if(engineCode != 1){
-			if(throttle < 15){throttle = 15;}
-			for(EntityEngine engine : getEngines()){
-				float[] enginePosition = {engine.offsetX, engine.offsetY, engine.offsetZ};
-				if(Arrays.equals(partPositions.get((int) engineCode), enginePosition)){
-					engine.startEngine();
-					return;
-				}
-			}
-		}else{
-			if(throttle < 15){throttle = 15;}
-			for(EntityEngine engine : getEngines()){
-				engine.startEngine();
-			}
-		}
+	public int getEngineIdOfHitPropeller(String propellerUUID){
+		return engines.get(enginePropellers.inverse().get(propellerUUID)).getEntityId();
 	}
 	
 	public List<double[]> getEngineProperties(){
 		List<double[]> properties = new ArrayList<double[]>();
-		for(EntityEngine engine : getEngines()){
+		for(EntityEngine engine : engines.values()){
 			properties.add(engine.getEngineProperties());
 		}
 		return properties;
 	}
 	
-	public byte getEngineOfHitPropeller(String propellerUUID){
-		String engineUUID = enginePropellers.inverse().get(propellerUUID);
-		for(EntityEngine engine : getEngines()){
-			if(engine.UUID.equals(engineUUID)){
-				float[] enginePosition = {engine.offsetX, engine.offsetY, engine.offsetZ};
-				for(int i=6; i<=9; ++i){
-					if(Arrays.equals(enginePosition, partPositions.get(i))){
-						return (byte) i;
-					}
-				}
-			}
-		}
-		return 0;
-	}
-	
 	protected EntityWheel[] getWheels(){return landingGears.values().toArray(new EntityWheel[landingGears.size()]);}
-	protected EntityEngine[] getEngines(){return engines.values().toArray(new EntityEngine[engines.size()]);}
 	protected EntityPropeller[] getPropellers(){return propellers.values().toArray(new EntityPropeller[propellers.size()]);}
 	public EntityPropeller getPropellerForEngine(String engineUUID){return propellers.get(enginePropellers.get(engineUUID));}
 	

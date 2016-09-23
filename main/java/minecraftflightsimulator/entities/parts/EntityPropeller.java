@@ -87,7 +87,12 @@ public class EntityPropeller extends EntityChild{
 		if(!worldObj.isRemote){
 			if(flyer != null){
 				if(source.getEntity() instanceof EntityPlayer){
-					MFS.MFSNet.sendToServer(new EnginePacket(flyer.getEntityId(), flyer.getEngineOfHitPropeller(this.UUID)));
+					int engineID = flyer.getEngineIdOfHitPropeller(this.UUID);
+					if(engineID != 0){
+						if(flyer.setEngineState((byte) 0, engineID)){
+							MFS.MFSNet.sendToAll(new EnginePacket(this.parent.getEntityId(), (byte) 0, engineID));
+						}
+					}
 				}
 			}
 		}

@@ -37,7 +37,7 @@ public class EngineSound extends MovingSound{
 	
 	@Override
 	public void update(){
-		if(engine.fueled || engine.internalFuel > 0){
+		if(engine.engineOn || engine.internalFuel > 0){
 			this.xPosF = (float) player.posX;
 			this.yPosF = (float) player.posY;
 			this.zPosF = (float) player.posZ;

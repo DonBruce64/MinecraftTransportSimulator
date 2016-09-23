@@ -37,6 +37,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class ControlHelper{
 	//Internal checkers for keys.
 	private static boolean brakeKeyPressed;
+	private static boolean starterKeyPressed;
 	private static boolean lightKeyPressed;
 	private static boolean flapKeyPressed;
 	private static boolean camLockKeyPressed;
@@ -347,6 +348,16 @@ public class ControlHelper{
 		}
 	}
 	
+	private static void checkThrottle(EntityVehicle vehicle){
+		if(joystickMap.get(controls.THROTTLE.joystickName) != 999 && joystick != null){
+			MFS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), (byte) (Math.max(50 + getAxisState(controls.THROTTLE, false)/2, throttleKills ? 0 : 15))));
+		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.THROTTLE.keyboardIncrementName))){
+			MFS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), Byte.MAX_VALUE));
+		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.THROTTLE.keyboardDecrementName))){
+			MFS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), Byte.MIN_VALUE));
+		}
+	}
+	
 	private static void checkBrakes(EntityVehicle vehicle){
 		if(isControlPressed(controls.BRAKE)){
 			if(!brakeKeyPressed){
@@ -365,23 +376,21 @@ public class ControlHelper{
 	
 	private static void checkStarter(EntityVehicle vehicle){
 		if(isControlPressed(controls.STARTER)){
-			if(isControlPressed(controls.MOD)){
-				MFS.MFSNet.sendToServer(new EnginePacket(vehicle.getEntityId(), (byte) 0));
-			}else{
-				if(electricStart){
-					MFS.MFSNet.sendToServer(new EnginePacket(vehicle.getEntityId(), (byte) 1));
+			if(!starterKeyPressed){
+				starterKeyPressed = true;
+				if(isControlPressed(controls.MOD)){
+					MFS.MFSNet.sendToServer(new EnginePacket(vehicle.getEntityId(), (byte) 3, 0));
+				}else{
+					if(electricStart){
+						MFS.MFSNet.sendToServer(new EnginePacket(vehicle.getEntityId(), (byte) 1, 0));
+					}
 				}
 			}
-		}
-	}
-	
-	private static void checkThrottle(EntityVehicle vehicle){
-		if(joystickMap.get(controls.THROTTLE.joystickName) != 999 && joystick != null){
-			MFS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), (byte) (Math.max(50 + getAxisState(controls.THROTTLE, false)/2, throttleKills ? 0 : 15))));
-		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.THROTTLE.keyboardIncrementName))){
-			MFS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), Byte.MAX_VALUE));
-		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.THROTTLE.keyboardDecrementName))){
-			MFS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), Byte.MIN_VALUE));
+		}else if(starterKeyPressed){
+			starterKeyPressed = false;
+			if(electricStart){
+				MFS.MFSNet.sendToServer(new EnginePacket(vehicle.getEntityId(), (byte) 2, 0));
+			}
 		}
 	}
 	

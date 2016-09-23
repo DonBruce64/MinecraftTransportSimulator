@@ -104,7 +104,7 @@ public class ClientProxy extends CommonProxy{
 			}else{
 				SoundHandler handler = Minecraft.getMinecraft().getSoundHandler();
 				if(!handler.isSoundPlaying(sound)){
-					if(engine.fueled || engine.internalFuel > 0){
+					if(engine.engineOn || engine.internalFuel > 0){
 						sound = engine.getEngineSound();
 						handler.playSound(sound);
 					}
