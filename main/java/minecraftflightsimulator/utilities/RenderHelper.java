@@ -10,6 +10,8 @@ import minecraftflightsimulator.entities.parts.EntitySeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -218,7 +220,7 @@ public class RenderHelper{
     	GL11.glDisable(GL11.GL_LIGHTING);
     	GL11.glShadeModel(GL11.GL_SMOOTH);
     	GL11.glEnable(GL11.GL_BLEND);
-    	GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_ONE);
+    	GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_ONE_MINUS_DST_COLOR);
     	drawCone(r, l, n, false);
     	drawCone(r, l, n, false);
     	drawCone(r, l, n, true);
