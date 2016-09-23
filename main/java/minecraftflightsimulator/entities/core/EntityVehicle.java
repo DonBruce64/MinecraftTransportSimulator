@@ -204,8 +204,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	
 	public int getNumberControllerSeats(){return controllerPositions.size();}
 	public int getNumberPassengerSeats(){return passengerPositions.size();}
-	//TODO make this work with abstract classes.
-	public GUIParent getGUI(EntityPlayer player){return new GUIParent(player, this, new ResourceLocation("mfs", "textures/planes/" + this.getClass().getSimpleName().substring(6).toLowerCase() + "/gui.png"));} 
+	public GUIParent getGUI(EntityPlayer player){return new GUIParent(player, this, new ResourceLocation("mfs", "textures/" + this.getClass().getSuperclass().getSimpleName().substring(6).toLowerCase() + "s/" + this.getClass().getSimpleName().substring(6).toLowerCase() + "/gui.png"));} 
 	
 	protected abstract void initChildPositions();
 	public abstract void drawHUD(int width, int height);
