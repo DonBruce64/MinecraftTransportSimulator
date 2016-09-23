@@ -68,9 +68,7 @@ public class RenderPZLP11 extends RenderPlane{
 	}
 	
 	@Override
-	protected void renderLights(EntityPlane plane){
-
-	}
+	protected void renderLights(EntityPlane plane){}
 	
 	@Override
 	protected void renderWindows(EntityPlane plane){
