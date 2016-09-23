@@ -36,6 +36,7 @@ public class InstrumentHelper{
 	
 	public static void drawBasicFlyableHUD(EntityFlyable flyer, int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
 		Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+		offset = 0;
 		if(RenderHelper.hudMode == 3){
 			drawLowerConsole(width, height, backplateTexture, moldingTexture);
 			for(int i=5; i<flyer.instrumentList.size(); ++i){
@@ -188,35 +189,7 @@ public class InstrumentHelper{
         	RenderHelper.renderSquareUV(centerX-7, centerX+7, centerY+7+vehicle.throttle/10F, centerY-7+vehicle.throttle/10F, 0, 0, 0.75, 0.875, 0.875, 1, false);
     	}
     }
-    
-	private static void drawFlapIndicator(EntityPlane plane, int centerX, int centerY, boolean hud){
-    	RenderHelper.bindTexture(instrumentTexture);
-    	RenderHelper.renderSquareUV(centerX-11.25, centerX+11.25, centerY+15, centerY-15, 0, 0, 0.515625, 0.609375, 0.875, 1, false);
-    	
-    	GL11.glTranslatef(0, 0, offset);
-    	
-        GL11.glPushMatrix();
-    	rotationHelper(centerX, centerY, -90);
-    	drawScaledString("FLAPS", centerX*2-15, centerY*2-15, 0.5F);
-    	GL11.glPopMatrix();
-    	
-    	GL11.glPushMatrix();
-    	drawScaledString("0", centerX*2+8, centerY*2-16, 0.5F);
-    	drawScaledString("35", centerX*2+8, centerY*2+10, 0.5F);
-    	GL11.glPopMatrix();
-        
-    	RenderHelper.bindTexture(instrumentTexture);
-    	if(!hud){
-    		RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX-5.625, centerX-5.625, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
-    		RenderHelper.renderQuadUV(centerX+1.875, centerX+1.875, centerX+1.875, centerX+1.875, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
-        	RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, 0, -7, -7, 0, 0.421875, 0.453125, 0.921875, 0.953125, false);
-        	RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
-        	RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-8+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-8+plane.flapAngle/25, -7, -7, -7, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
-    	}else{
-    		RenderHelper.renderSquareUV(centerX-5.625, centerX+1.875, centerY-0.5+plane.flapAngle/25, centerY-8+plane.flapAngle/25, 0, 0, 0.421875, 0.453125, 0.921875, 0.953125, false);
-    	}
-    }
-    
+	
 	private static void drawParkingBrake(EntityVehicle vehicle, int centerX, int centerY, boolean hud){
     	RenderHelper.bindTexture(instrumentTexture);
     	
@@ -261,6 +234,34 @@ public class InstrumentHelper{
     	        RenderHelper.renderSquareUV(centerX-22.5, centerX+12.5, centerY+5, centerY-5, 0, 0, 0.2578125, 0.3671875, 0.921875, 0.953125, false);    		
     	        drawScaledString("BRAKE", centerX*2-25, centerY*2-4, 0.5F);
         	}
+    	}
+    }
+    
+	private static void drawFlapIndicator(EntityPlane plane, int centerX, int centerY, boolean hud){
+    	RenderHelper.bindTexture(instrumentTexture);
+    	RenderHelper.renderSquareUV(centerX-11.25, centerX+11.25, centerY+15, centerY-15, 0, 0, 0.515625, 0.609375, 0.875, 1, false);
+    	
+    	GL11.glTranslatef(0, 0, offset);
+    	
+        GL11.glPushMatrix();
+    	rotationHelper(centerX, centerY, -90);
+    	drawScaledString("FLAPS", centerX*2-15, centerY*2-15, 0.5F);
+    	GL11.glPopMatrix();
+    	
+    	GL11.glPushMatrix();
+    	drawScaledString("0", centerX*2+8, centerY*2-16, 0.5F);
+    	drawScaledString("35", centerX*2+8, centerY*2+10, 0.5F);
+    	GL11.glPopMatrix();
+        
+    	RenderHelper.bindTexture(instrumentTexture);
+    	if(!hud){
+    		RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX-5.625, centerX-5.625, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
+    		RenderHelper.renderQuadUV(centerX+1.875, centerX+1.875, centerX+1.875, centerX+1.875, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
+        	RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, centerY-8+plane.flapAngle/25, 0, -7, -7, 0, 0.421875, 0.453125, 0.921875, 0.953125, false);
+        	RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, -7, 0, 0, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
+        	RenderHelper.renderQuadUV(centerX-5.625, centerX-5.625, centerX+1.875, centerX+1.875, centerY-8+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-7+plane.flapAngle/25, centerY-8+plane.flapAngle/25, -7, -7, -7, -7, 0.421875, 0.453125, 0.921875, 0.953125, false);
+    	}else{
+    		RenderHelper.renderSquareUV(centerX-5.625, centerX+1.875, centerY-0.5+plane.flapAngle/25, centerY-8+plane.flapAngle/25, 0, 0, 0.421875, 0.453125, 0.921875, 0.953125, false);
     	}
     }
 	
