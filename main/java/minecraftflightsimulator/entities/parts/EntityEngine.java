@@ -146,7 +146,7 @@ public abstract class EntityEngine extends EntityChild{
 	
 	public EngineSound getEngineSound(){
 		if(worldObj.isRemote){
-			return new EngineSound(new ResourceLocation("mfs:" + type.engineRunningSoundName), this, 0.5F, 2000F);
+			return new EngineSound(new ResourceLocation("mfs:" + type.engineRunningSoundName), this, 2000F);
 		}else{
 			return null;
 		}
