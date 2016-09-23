@@ -83,20 +83,20 @@ public class ServerSyncPacket implements IMessage{
 			}
 			return null;
 		}
-	}
-	
-	private static double rectifyValue(double currentValue, double packetValue, double increment, double cutoff){
-		if(currentValue > packetValue){
-			if(currentValue - packetValue > cutoff){
-				return packetValue;
+		
+		private static double rectifyValue(double currentValue, double packetValue, double increment, double cutoff){
+			if(currentValue > packetValue){
+				if(currentValue - packetValue > cutoff){
+					return packetValue;
+				}else{
+					return currentValue - Math.min(currentValue - packetValue, increment);
+				}
 			}else{
-				return currentValue - Math.min(currentValue - packetValue, increment);
-			}
-		}else{
-			if(packetValue - currentValue > cutoff){
-				return packetValue;
-			}else{
-				return currentValue + Math.min(packetValue - currentValue, increment);
+				if(packetValue - currentValue > cutoff){
+					return packetValue;
+				}else{
+					return currentValue + Math.min(packetValue - currentValue, increment);
+				}
 			}
 		}
 	}
