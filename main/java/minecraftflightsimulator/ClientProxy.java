@@ -1,19 +1,15 @@
 package minecraftflightsimulator;
 
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
-import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.entities.parts.EntityEngine;
-import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.sounds.EngineSound;
 import minecraftflightsimulator.utilities.ClientEventHandler;
 import minecraftflightsimulator.utilities.ControlHelper;
-import minecraftflightsimulator.utilities.RenderHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -41,42 +37,6 @@ public class ClientProxy extends CommonProxy{
 		ControlHelper.init();
 		MinecraftForge.EVENT_BUS.register(ClientEventHandler.instance);
 		FMLCommonHandler.instance().bus().register(ClientEventHandler.instance);
-	}
-	
-	/**
-	 * Updates yaw, pitch, and roll for seated players.  
-	 * Calls {@link ControlHelper} methods after.
-	 */
-	@Override
-	public void updateSeatedRider(EntitySeat seat, EntityLivingBase rider){		
-		rider.renderYawOffset += seat.parent.rotationYaw - seat.parent.prevRotationYaw;
-		if(RenderHelper.lockedView){
-			rider.rotationYaw += seat.parent.rotationYaw - seat.parent.prevRotationYaw;
-			if(seat.parent.rotationPitch > 90 || seat.parent.rotationPitch < -90){
-				rider.rotationPitch -= seat.parent.rotationPitch - seat.parent.prevRotationPitch;
-			}else{
-				rider.rotationPitch += seat.parent.rotationPitch - seat.parent.prevRotationPitch;
-			}
-			if((seat.parent.rotationPitch > 90 || seat.parent.rotationPitch < -90) ^ seat.parent.prevRotationPitch > 90 || seat.parent.prevRotationPitch < -90){
-				//rider.rotationYaw+=180;
-			}
-		}
-		if(Minecraft.getMinecraft().gameSettings.thirdPersonView==0 && seat.getRider().equals(Minecraft.getMinecraft().thePlayer)){
-			RenderHelper.changeCameraRoll(seat.parent.rotationRoll);
-		}else{
-			RenderHelper.changeCameraRoll(0);
-		}
-		
-		if(rider.equals(Minecraft.getMinecraft().thePlayer)){
-			if(!Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen()){
-				ControlHelper.controlCamera();
-				if(seat.controller){
-					if(seat.parent instanceof EntityPlane){
-						ControlHelper.controlPlane((EntityPlane) seat.parent);
-					}
-				}
-			}
-		}
 	}
 	
 	/**

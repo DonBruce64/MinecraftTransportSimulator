@@ -5,6 +5,7 @@ import java.awt.Color;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityFlyable;
 import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.packets.general.GUIPacket;
@@ -54,12 +55,28 @@ public class ClientEventHandler{
 				if(minecraft.thePlayer.ridingEntity == null){
 					RenderHelper.changeCameraRoll(0);
 					RenderHelper.changeCameraZoom(0);
+				}else if(minecraft.thePlayer.ridingEntity instanceof EntitySeat){
+					if(!Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen()){
+						EntitySeat seat = (EntitySeat) minecraft.thePlayer.ridingEntity;
+						ControlHelper.controlCamera();
+						if(seat.controller){
+							if(seat.parent instanceof EntityPlane){
+								ControlHelper.controlPlane((EntityPlane) seat.parent);
+							}
+						}
+					}
 				}
 				if(MFS.firstRun){
 					minecraft.thePlayer.openGui(MFS.instance, -1, null, 1, 1, 1);
 					MFS.firstRun = false;
 					MFS.config.getCategory(MFS.config.CATEGORY_GENERAL).put("FirstRun", new Property("FirstRun", String.valueOf(MFS.firstRun), Property.Type.BOOLEAN));
 					MFS.config.save();
+				}
+			}else if(!minecraft.isGamePaused()){
+				if(minecraft.thePlayer.ridingEntity instanceof EntitySeat){
+					if(((EntitySeat) minecraft.thePlayer.ridingEntity).parent != null){
+						RenderHelper.updateRiderView(minecraft.thePlayer, ((EntitySeat) minecraft.thePlayer.ridingEntity).parent);
+					}
 				}
 			}
 		}

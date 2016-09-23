@@ -3,8 +3,8 @@ package minecraftflightsimulator;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.containers.GUIHandler;
 import minecraftflightsimulator.entities.core.EntityChild;
+import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.parts.EntityEngine;
-import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.sounds.EngineSound;
 import net.minecraft.block.Block;
@@ -93,7 +93,6 @@ public class CommonProxy{
 	}
 	
 	public void playSound(Entity noisyEntity, String soundName, float volume, float pitch){}
-	public void updateSeatedRider(EntitySeat seat, EntityLivingBase rider){}
 	public EngineSound updateEngineSoundAndSmoke(EngineSound sound, EntityEngine engine){return null;}
 	public BenchSound updateBenchSound(BenchSound sound, TileEntityPropellerBench bench){return null;}
 }

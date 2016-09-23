@@ -10,13 +10,12 @@ import minecraftflightsimulator.entities.parts.EntitySeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.EntityRenderer;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MathHelper;
@@ -76,6 +75,29 @@ public class RenderHelper{
 	public static void changeCameraLock(){
 		lockedView = !lockedView;
 		MFS.proxy.playSound(Minecraft.getMinecraft().thePlayer, "gui.button.press", 1, 1);
+	}
+	
+	/**
+	 * Updates yaw, pitch, and roll for seated players.
+	 */
+	public static void updateRiderView(EntityLivingBase rider, EntityParent parent){
+		rider.renderYawOffset += parent.rotationYaw - parent.prevRotationYaw;
+		if(lockedView){
+			rider.rotationYaw += parent.rotationYaw - parent.prevRotationYaw;
+			if(parent.rotationPitch > 90 || parent.rotationPitch < -90){
+				rider.rotationPitch -= parent.rotationPitch - parent.prevRotationPitch;
+			}else{
+				rider.rotationPitch += parent.rotationPitch - parent.prevRotationPitch;
+			}
+			if((parent.rotationPitch > 90 || parent.rotationPitch < -90) ^ parent.prevRotationPitch > 90 || parent.prevRotationPitch < -90){
+				//rider.rotationYaw+=180;
+			}
+		}
+		if(Minecraft.getMinecraft().gameSettings.thirdPersonView==0){
+			changeCameraRoll(parent.rotationRoll);
+		}else{
+			changeCameraRoll(0);
+		}
 	}
 	
 	/**

@@ -47,15 +47,12 @@ public class EntitySeat extends EntityChild{
 		super.onEntityUpdate();
 		if(!linked){return;}
 		
-		if(this.getRider() != null){
-			hadRiderLastTick=true;
-			if(worldObj.isRemote){
-				MFS.proxy.updateSeatedRider(this, (EntityLivingBase) this.getRider());
-			}
-		}else if(hadRiderLastTick){
-			hadRiderLastTick=false;
-			if(worldObj.isRemote){
-				requestDataFromServer();
+		if(!worldObj.isRemote){
+			if(this.getRider() != null){
+				hadRiderLastTick=true;
+			}else if(hadRiderLastTick){
+				hadRiderLastTick=false;			
+					sendDataToClient();
 			}
 		}
 	}

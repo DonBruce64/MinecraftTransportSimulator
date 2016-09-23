@@ -18,6 +18,9 @@ public abstract class EntityParent extends EntityBase{
 	public byte numberChildren;
 	public float rotationRoll;
 	public float prevRotationRoll;
+	public float pitchCorrection;
+	public float yawCorrection;
+	public float rollCorrection;
 	
 	/**
 	 * Map that contains child mappings.  Keyed by child's UUID.
@@ -48,9 +51,10 @@ public abstract class EntityParent extends EntityBase{
 		}else if(!worldObj.isRemote && this.ticksExisted%5==0){
 			MFS.MFSNet.sendToAll(new ServerSyncPacket(getEntityId(), posX, posY, posZ, motionX, motionY, motionZ, rotationPitch, rotationRoll, rotationYaw));
 		}
-		prevRotationRoll = rotationRoll;
-		prevRotationPitch = rotationPitch;
-		prevRotationYaw = rotationYaw;
+		prevRotationRoll = rotationRoll + rollCorrection;
+		prevRotationPitch = rotationPitch + pitchCorrection;
+		prevRotationYaw = rotationYaw + yawCorrection;
+		rollCorrection = pitchCorrection = yawCorrection = 0;
 	}
 	
 	public MFSVector getHeadingVec(){

@@ -1,6 +1,7 @@
 package minecraftflightsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
+import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityParent;
 import net.minecraft.client.Minecraft;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
@@ -75,9 +76,20 @@ public class ServerSyncPacket implements IMessage{
 					thisEntity.motionX = rectifyValue(thisEntity.motionX, message.motionX, 0.01, 0.2);
 					thisEntity.motionY = rectifyValue(thisEntity.motionY, message.motionY, 0.01, 0.2);
 					thisEntity.motionZ = rectifyValue(thisEntity.motionZ, message.motionZ, 0.01, 0.2);
-					thisEntity.rotationPitch = (float) rectifyValue(thisEntity.rotationPitch, message.pitch, 0.01, 5.0);
+					
+					
+					thisEntity.rollCorrection = thisEntity.rotationRoll;
 					thisEntity.rotationRoll = (float) rectifyValue(thisEntity.rotationRoll, message.roll, 0.01, 5.0);
+					thisEntity.rollCorrection -= thisEntity.rotationRoll;
+					
+					thisEntity.pitchCorrection = thisEntity.rotationPitch;
+					thisEntity.rotationPitch = (float) rectifyValue(thisEntity.rotationPitch, message.pitch, 0.01, 5.0);
+					thisEntity.pitchCorrection -= thisEntity.rotationPitch; 
+					
+					thisEntity.yawCorrection = thisEntity.rotationYaw;
 					thisEntity.rotationYaw = (float) rectifyValue(thisEntity.rotationYaw, message.yaw, 0.01, 5.0);
+					thisEntity.yawCorrection -= thisEntity.rotationYaw;
+					
 					thisEntity.moveChildren();
 				}
 			}
