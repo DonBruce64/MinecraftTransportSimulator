@@ -42,21 +42,21 @@ public class TrimPacket implements IMessage{
 			if(thisEntity!=null){
 				if((message.trimCode & 3) == 0){
 					if((message.trimCode >> 3) == 1){
-						if(thisEntity.aileronTrim < 200){
+						if(thisEntity.aileronTrim < 100){
 							++thisEntity.aileronTrim;
 						}
 					}else{
-						if(thisEntity.aileronTrim > -200){
+						if(thisEntity.aileronTrim > -100){
 							--thisEntity.aileronTrim;
 						}
 					}
 				}else if((message.trimCode & 3) == 1){
 					if((message.trimCode >> 3) == 1){
-						if(thisEntity.elevatorTrim < 200){
+						if(thisEntity.elevatorTrim < 150){
 							++thisEntity.elevatorTrim;
 						}
 					}else{
-						if(thisEntity.elevatorTrim > -200){
+						if(thisEntity.elevatorTrim > -150){
 							--thisEntity.elevatorTrim;
 						}
 					}

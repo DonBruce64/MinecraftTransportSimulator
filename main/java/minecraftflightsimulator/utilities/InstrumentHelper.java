@@ -107,7 +107,7 @@ public class InstrumentHelper{
 		}else if(type == 7){
 			drawLiftReserveIndicator(flyer, x, y);
 		}else if(type == 8){
-			//DUMMY
+			drawTrimIndicator(flyer, x, y);
 		}else if(type == 9){
 			//DUMMY
 		}else if(type == 10){
@@ -534,7 +534,7 @@ public class InstrumentHelper{
     	
 
         float angle = (float) Math.max(Math.min(flyer.trackAngle*3 + 20, 35), -35);
-        rotationHelper(centerX, centerY + 20, angle);    	
+        rotationHelper(centerX, centerY + 20, angle);
     	GL11.glColor3f(0, 0, 0);
     	GL11.glBegin(GL11.GL_QUADS);
     	GL11.glVertex2d(centerX - 0.5, centerY - 5);
@@ -560,6 +560,38 @@ public class InstrumentHelper{
         GL11.glPopMatrix();
 	}
 	
+	private static void drawTrimIndicator(EntityFlyable flyer, int centerX, int centerY){
+    	drawGaugeBase(flyer, centerX, centerY);
+    	GL11.glTranslatef(0, 0, offset);
+    	
+    	drawScaledString("TRIM", centerX*2-10, centerY*2+40, 0.5F);
+    	drawScaledString("NOSE", centerX*2-10, centerY*2-49, 0.5F);
+    	drawScaledString("WING", centerX*2-44, centerY*2-13, 0.5F);
+    	drawScaledString("STAB", centerX*2+24, centerY*2-13, 0.5F);
+    	GL11.glTranslatef(0, 0, offset);
+    	
+    	drawDialIncrements(centerX, centerY-10, -135, 135, 10, 3, 9);
+    	drawDialIncrements(centerX-12, centerY+8, -165, -15, 10, 3, 5);
+    	drawDialIncrements(centerX-12, centerY+8, 15, 165, 10, 3, 5);
+    	drawDialIncrements(centerX+12, centerY+8, -45, 225, 10, 3, 7);
+    	GL11.glTranslatef(0, 0, offset);
+    	
+    	drawDialColoring(centerX, centerY-10, -135, 135, 10, 1, new float[] {0, 0.5F, 0});
+    	drawDialColoring(centerX-12, centerY+8, -165, -15, 10, 1, new float[] {0, 0.5F, 0});
+    	drawDialColoring(centerX-12, centerY+8, 15, 165, 10, 1, new float[] {0, 0.5F, 0});
+    	drawDialColoring(centerX+12, centerY+8, -45, 225, 10, 1, new float[] {0, 0.5F, 0});
+    	GL11.glTranslatef(0, 0, offset);
+    	
+    	if(flyer instanceof EntityPlane){
+    		drawLongPointer(centerX, centerY-10, 135F/20F*((EntityPlane) flyer).rudderTrim/10F, 14, 2);
+    		rotationHelper(centerX-12, centerY+8, 75F/10F*((EntityPlane) flyer).aileronTrim/10F + 90);
+    		RenderHelper.renderSquareUV(centerX-13, centerX-11, centerY+8, centerY-4, 0, 0, 0.09375, 0.15625, 0.5, 0.875, false);
+    		RenderHelper.renderSquareUV(centerX-13, centerX-11, centerY+22, centerY+8, 0, 0, 0.09375, 0.15625, 0.875, 0.5, false);
+    		rotationHelper(centerX-12, centerY+8, -(75F/10F*((EntityPlane) flyer).aileronTrim/10F + 90));
+    		drawLongPointer(centerX+12, centerY+8, 135F/15F*((EntityPlane) flyer).elevatorTrim/10F + 90, 14, 2);
+    	}
+    }
+	
 	private static void drawTachometer(EntityVehicle vehicle, int centerX, int centerY){
     	drawGaugeBase(vehicle, centerX, centerY);
     	GL11.glTranslatef(0, 0, offset);
@@ -575,8 +607,6 @@ public class InstrumentHelper{
         }
     }
 	
-	
-    
 	private static void drawFuelGauge(EntityVehicle vehicle, int centerX, int centerY){
     	drawGaugeBase(vehicle, centerX, centerY);
     	GL11.glTranslatef(0, 0, offset);
@@ -593,8 +623,6 @@ public class InstrumentHelper{
     	GL11.glTranslatef(0, 0, offset);
         drawLongPointer(centerX, centerY+8, (float) (-50+vehicle.fuel/vehicle.maxFuel*100F), 35, 3);
     }
-	
-	
 	
 	private static void drawFuelFlowGauge(EntityVehicle vehicle, int centerX, int centerY){
     	drawGaugeBase(vehicle, centerX, centerY);
@@ -699,6 +727,7 @@ public class InstrumentHelper{
 	        GL11.glEnd();	        
 	    }	    
 	    GL11.glEnable(GL11.GL_TEXTURE_2D);
+	    GL11.glColor3f(1, 1, 1);
         GL11.glPopMatrix();
     }
     /**
