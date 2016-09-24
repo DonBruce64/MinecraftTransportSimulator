@@ -16,6 +16,7 @@ import minecraftflightsimulator.packets.control.FlapPacket;
 import minecraftflightsimulator.packets.control.LightPacket;
 import minecraftflightsimulator.packets.control.RudderPacket;
 import minecraftflightsimulator.packets.control.ThrottlePacket;
+import minecraftflightsimulator.packets.control.TrimPacket;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
@@ -311,25 +312,49 @@ public class ControlHelper{
 		if(joystickMap.get(controls.ROLL.joystickName) != 999 && joystick != null){
 			MFS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), getAxisState(controls.ROLL, true)));
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.ROLL.keyboardIncrementName))){
-			MFS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), true, controlSurfaceCooldown));
+			if(isControlPressed(controls.MOD)){
+				MFS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 8));
+			}else{
+				MFS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), true, controlSurfaceCooldown));
+			}
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.ROLL.keyboardDecrementName))){
-			MFS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), false, controlSurfaceCooldown));
+			if(isControlPressed(controls.MOD)){
+				MFS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 0));
+			}else{
+				MFS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), false, controlSurfaceCooldown));
+			}
 		}
 		
 		if(joystickMap.get(controls.PITCH.joystickName) != 999 && joystick != null){
 			MFS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), getAxisState(controls.PITCH, true)));
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.PITCH.keyboardIncrementName))){
-			MFS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), true, controlSurfaceCooldown));
+			if(isControlPressed(controls.MOD)){
+				MFS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 9));
+			}else{
+				MFS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), true, controlSurfaceCooldown));
+			}
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.PITCH.keyboardDecrementName))){
-			MFS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), false, controlSurfaceCooldown));
+			if(isControlPressed(controls.MOD)){
+				MFS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 1));
+			}else{
+				MFS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), false, controlSurfaceCooldown));
+			}
 		}
 		
 		if(joystickMap.get(controls.YAW.joystickName) != 999 && joystick != null){
 			MFS.MFSNet.sendToServer(new RudderPacket(plane.getEntityId(), getAxisState(controls.YAW, true)));
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.YAW.keyboardIncrementName))){
-			MFS.MFSNet.sendToServer(new RudderPacket(plane.getEntityId(), true, controlSurfaceCooldown));
+			if(isControlPressed(controls.MOD)){
+				MFS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 10));
+			}else{
+				MFS.MFSNet.sendToServer(new RudderPacket(plane.getEntityId(), true, controlSurfaceCooldown));
+			}
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.YAW.keyboardDecrementName))){
-			MFS.MFSNet.sendToServer(new RudderPacket(plane.getEntityId(), false, controlSurfaceCooldown));
+			if(isControlPressed(controls.MOD)){
+				MFS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 2));
+			}else{
+				MFS.MFSNet.sendToServer(new RudderPacket(plane.getEntityId(), false, controlSurfaceCooldown));
+			}
 		}
 	}
 	

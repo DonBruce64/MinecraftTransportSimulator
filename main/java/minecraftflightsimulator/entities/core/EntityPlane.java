@@ -24,14 +24,18 @@ import net.minecraft.world.World;
  *
  */
 public abstract class EntityPlane extends EntityFlyable{	
-	//visible plane variables
+	//Visible plane variables
 	public boolean hasFlaps;
 	
-	//note that angle variable should be divided by 10 to get actual angle.
+	//Note that angle variable should be divided by 10 to get actual angle.
 	public short aileronAngle;
 	public short elevatorAngle;
 	public short rudderAngle;
 	public short flapAngle;
+	public short aileronTrim;
+	public short elevatorTrim;
+	public short rudderTrim;
+	
 	public short aileronCooldown;
 	public short elevatorCooldown;
 	public short rudderCooldown;
@@ -46,7 +50,7 @@ public abstract class EntityPlane extends EntityFlyable{
 	protected float elevatorArea;//m^2
 	protected float defaultElevatorAngle;//degrees	
 
-	//internal plane variables
+	//Internal plane variables
 	private boolean hasPontoons;
 	private byte groundedWheels;
 	private byte groundedCores;
@@ -203,9 +207,9 @@ public abstract class EntityPlane extends EntityFlyable{
 		trackAngle = Math.toDegrees(Math.atan2(velocityVec.dot(verticalVec), velocityVec.dot(headingVec)));
 		dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
 		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapAngle/350F);
-		aileronLiftCoeff = getLiftCoeff(aileronAngle/10F, 2);
-		elevatorLiftCoeff = getLiftCoeff(defaultElevatorAngle - trackAngle - elevatorAngle/10F, 2);
-		rudderLiftCoeff = getLiftCoeff(rudderAngle/10F + Math.toDegrees(Math.atan2(velocityVec.dot(sideVec), velocityVec.dot(headingVec))), 2);
+		aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
+		elevatorLiftCoeff = getLiftCoeff(defaultElevatorAngle - trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
+		rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.atan2(velocityVec.dot(sideVec), velocityVec.dot(headingVec))), 2);
 	}
 	
 	private void getForcesAndMotions(){
@@ -535,6 +539,9 @@ public abstract class EntityPlane extends EntityFlyable{
 		this.elevatorAngle=tagCompound.getShort("elevatorAngle");
 		this.rudderAngle=tagCompound.getShort("rudderAngle");
 		this.flapAngle=tagCompound.getShort("flapAngle");
+		this.aileronTrim=tagCompound.getShort("aileronTrim");
+		this.elevatorTrim=tagCompound.getShort("elevatorTrim");
+		this.rudderTrim=tagCompound.getShort("rudderTrim");
 	}
     
 	@Override
@@ -545,5 +552,8 @@ public abstract class EntityPlane extends EntityFlyable{
 		tagCompound.setShort("elevatorAngle", this.elevatorAngle);
 		tagCompound.setShort("rudderAngle", this.rudderAngle);
 		tagCompound.setShort("flapAngle", this.flapAngle);
+		tagCompound.setShort("aileronTrim", this.aileronTrim);
+		tagCompound.setShort("elevatorTrim", this.elevatorTrim);
+		tagCompound.setShort("rudderTrim", this.rudderTrim);
 	}
 }
