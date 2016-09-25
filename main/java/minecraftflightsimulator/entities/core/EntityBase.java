@@ -6,7 +6,6 @@ import minecraftflightsimulator.packets.general.ServerDataPacket;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import cpw.mods.fml.relauncher.Side;
@@ -78,10 +77,6 @@ public abstract class EntityBase extends Entity{
 		NBTTagCompound tagCompound = new NBTTagCompound();
 		this.writeToNBT(tagCompound);
 		MFS.MFSNet.sendToAll(new ServerDataPacket(this.getEntityId(), tagCompound));
-	}
-	
-	public AxisAlignedBB getEntityBoundingBox(){
-		return this.boundingBox;
 	}
 	
 	//Junk methods, forced to pull in.

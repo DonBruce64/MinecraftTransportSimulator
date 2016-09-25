@@ -57,7 +57,7 @@ public abstract class EntityChildInventory extends EntityChild implements IInven
         float f;
         if(!this.worldObj.isRemote && this.numPlayersUsing != 0 && (this.ticksSinceSync + this.posX + this.posY + this.posZ) % 200 == 0){
             this.numPlayersUsing = 0;
-            List list = this.worldObj.getEntitiesWithinAABB(EntityPlayer.class, this.getEntityBoundingBox().expand(5, 5, 5));
+            List list = this.worldObj.getEntitiesWithinAABB(EntityPlayer.class, this.getBoundingBox().expand(5, 5, 5));
             Iterator iterator = list.iterator();
             while (iterator.hasNext()){
                 EntityPlayer entityplayer = (EntityPlayer)iterator.next();

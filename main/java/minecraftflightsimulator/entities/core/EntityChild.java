@@ -1,7 +1,5 @@
 package minecraftflightsimulator.entities.core;
 
-import java.util.List;
-
 import minecraftflightsimulator.utilities.MFSVector;
 import minecraftflightsimulator.utilities.RotationHelper;
 import net.minecraft.block.Block;
@@ -24,6 +22,7 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public abstract class EntityChild extends EntityBase{	
+	public boolean collidesWithLiquids;
 	public int propertyCode;
 	public float offsetX;
 	public float offsetY;
@@ -103,25 +102,49 @@ public abstract class EntityChild extends EntityBase{
 		return true;
 	}
 	
+	protected boolean collidesWithLiqids(){
+		return false;
+	}
+	
+	public boolean isPartCollided(AxisAlignedBB box){
+		int minX = MathHelper.floor_double(box.minX);
+		int maxX = MathHelper.floor_double(box.maxX + 1.0D);
+		int minY = MathHelper.floor_double(box.minY);
+		int maxY = MathHelper.floor_double(box.maxY + 1.0D);
+		int minZ = MathHelper.floor_double(box.minZ);
+		int maxZ = MathHelper.floor_double(box.maxZ + 1.0D);
+
+        for(int i = minX; i < maxX; ++i){
+        	for(int j = minY - 1; j < maxY; ++j){
+        		for(int k = minZ; k < maxZ; ++k){
+        			if(worldObj.blockExists(i, 64, k)){
+	                    Block block = worldObj.getBlock(i, j, k);
+	                    AxisAlignedBB blockBox = block.getCollisionBoundingBoxFromPool(worldObj, i, j, k);
+	                    if(block.getCollisionBoundingBoxFromPool(worldObj, i, j, k) != null && box.intersectsWith(blockBox)){
+	                    	return true;
+	                    }else if(collidesWithLiqids()){
+	                    	if(isLiquidAt(i, j, k)){
+	                    		return true;
+	                    	}
+	                    }
+        			}
+                }
+            }
+        }
+        return false;
+	}
+	
 	@Override
 	public AxisAlignedBB getBoundingBox(){
-		return this.getEntityBoundingBox();
-	}
-	
-	public List getCollidingBlocks(AxisAlignedBB box){
-		return worldObj.func_147461_a(box);
-	}
-	
-	protected Block getBlockAtLocation(double x, double y, double z){
-		return worldObj.getBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z));
+		return this.boundingBox;
 	}
 	
 	public boolean isLiquidAt(double x, double y, double z){
-		return getBlockAtLocation(x, y, z).getMaterial().isLiquid();
+		return worldObj.getBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z)).getMaterial().isLiquid();
 	}
 	
 	public boolean isOnGround(){
-		return !getCollidingBlocks(this.getBoundingBox().getOffsetBoundingBox(0, -0.05, 0)).isEmpty();
+		return isPartCollided(this.getBoundingBox().getOffsetBoundingBox(0, -0.05, 0));
 	}
 	
 	public void setRider(Entity rider){

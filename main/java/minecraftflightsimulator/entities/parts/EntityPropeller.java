@@ -53,14 +53,14 @@ public class EntityPropeller extends EntityChild{
 			angularPosition = (angularVelocity+angularPosition)%6.283185312F;
 		}else{
 			if(engineRPM >= 100){
-				List collidedEntites = worldObj.getEntitiesWithinAABBExcludingEntity(this, this.getEntityBoundingBox());
+				List collidedEntites = worldObj.getEntitiesWithinAABBExcludingEntity(this, this.getBoundingBox());
 				for(int i=0; i < collidedEntites.size(); ++i){
 					Entity collidedEntity = (Entity) collidedEntites.get(i);
 					if(!(collidedEntity instanceof EntityBase)){
 						collidedEntity.attackEntityFrom(new EntityDamageSourcePropellor("propellor", this), (float) (MFS.propellerDamageFactor*engineRPM/500F));
 					}
 				}
-				if(!this.getCollidingBlocks(this.getBoundingBox().expand(0.1, 0.1, 0.1)).isEmpty()){
+				if(isPartCollided(getBoundingBox().expand(0.1, 0.1, 0.1))){
 					if(--health<0){
 						MFS.proxy.playSound(this, "random.break", 2, 1);
 						this.setDead();

@@ -65,7 +65,7 @@ public class ItemPlane extends Item{
 			EntityCore core = new EntityCore(world, plane, plane.UUID, coreLocations[i][0], coreLocations[i][1], coreLocations[i][2], coreLocations[i][3], coreLocations[i][4]);
 			world.spawnEntityInWorld(core);
 			spawnedCores[i] = core;
-			if(!core.getCollidingBlocks(core.getEntityBoundingBox()).isEmpty()){
+			if(core.isPartCollided(core.getBoundingBox())){
 				for(int j=0; j<=i; ++j){
 					spawnedCores[j].setDead();
 				}

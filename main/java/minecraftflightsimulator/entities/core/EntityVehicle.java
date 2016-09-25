@@ -13,6 +13,7 @@ import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.items.ItemEngine;
 import minecraftflightsimulator.utilities.MFSVector;
+import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -21,7 +22,9 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
@@ -53,6 +56,8 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	public static final int instrumentStartSlot = 30;
 	public static final int emptyBucketSlot = 41;
 	public static final int fuelBucketSlot = 42;
+	
+	private List<AxisAlignedBB> collidingBoxes = new ArrayList<AxisAlignedBB>();
 
 	/**
 	 * ItemStack used to store all vehicle items.    Slot rules are as follows:
@@ -167,6 +172,40 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 			}
 		}
 		super.setDead();
+	}
+	
+	protected List<AxisAlignedBB> getChildCollisions(EntityChild child, AxisAlignedBB box){
+		this.collidingBoxes.clear();
+		int minX = MathHelper.floor_double(box.minX);
+		int maxX = MathHelper.floor_double(box.maxX + 1.0D);
+		int minY = MathHelper.floor_double(box.minY);
+		int maxY = MathHelper.floor_double(box.maxY + 1.0D);
+		int minZ = MathHelper.floor_double(box.minZ);
+		int maxZ = MathHelper.floor_double(box.maxZ + 1.0D);
+
+        for(int i = minX; i < maxX; ++i){
+        	for(int j = minY - 1; j < maxY; ++j){
+        		for(int k = minZ; k < maxZ; ++k){
+                    Block block = worldObj.getBlock(i, j, k);
+                    AxisAlignedBB blockBox = block.getCollisionBoundingBoxFromPool(worldObj, i, j, k);
+                    if(block.getCollisionBoundingBoxFromPool(worldObj, i, j, k) != null && box.intersectsWith(blockBox)){
+                    	if(block.getBlockHardness(worldObj, i, j, k) <= 0.2F && velocity > 0.5){
+                    		worldObj.setBlockToAir(i, j, k);
+                    		motionX *= 0.95;
+                    		motionY *= 0.95;
+                    		motionZ *= 0.95;
+                    	}else{
+                    		collidingBoxes.add(block.getCollisionBoundingBoxFromPool(worldObj, i, j, k));
+                    	}
+                    }else if(child.collidesWithLiquids){
+                    	if(child.isLiquidAt(i, j, k)){
+                    		collidingBoxes.add(box);
+                    	}
+                    }
+                }
+            }
+        }
+		return collidingBoxes;
 	}
 	
 	public void explodeAtPosition(double x, double y, double z){

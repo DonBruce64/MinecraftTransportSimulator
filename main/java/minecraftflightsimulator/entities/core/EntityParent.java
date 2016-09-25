@@ -86,7 +86,7 @@ public abstract class EntityParent extends EntityBase{
 			children.put(childUUID, child);
 			if(newChild){
 				++numberChildren;
-				if(!child.getCollidingBlocks(child.getBoundingBox()).isEmpty()){
+				if(child.isPartCollided(child.getBoundingBox())){
 					float boost = Math.max(0, -child.offsetY);
 					this.rotationRoll = 0;
 					this.setPositionAndRotation(posX, posY + boost, posZ, rotationYaw, 0);

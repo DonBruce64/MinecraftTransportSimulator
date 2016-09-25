@@ -102,7 +102,7 @@ public abstract class EntityPlane extends EntityFlyable{
 	private double prevPitchChildOffset;
 	private double prevRollChildOffset;
 	
-	private List collidingBoxes;
+	private List<AxisAlignedBB> collidingBoxes;
 	private AxisAlignedBB newChildBox;
 	private AxisAlignedBB collidingBox;
 	private MFSVector offset;
@@ -289,10 +289,10 @@ public abstract class EntityPlane extends EntityFlyable{
 		for(EntityChild child : getChildren()){
 			xCollisionDepth = 0;
 			zCollisionDepth = 0;
-			newChildBox = child.getEntityBoundingBox().getOffsetBoundingBox(motionX*MFS.planeSpeedFactor, 0, 0);
-			collidingBoxes = child.getCollidingBlocks(newChildBox);
+			newChildBox = child.getBoundingBox().getOffsetBoundingBox(motionX*MFS.planeSpeedFactor, 0, 0);
+			collidingBoxes = this.getChildCollisions(child, newChildBox);
 			for(int i=0; i < collidingBoxes.size(); ++i){
-				collidingBox = (AxisAlignedBB) collidingBoxes.get(i);
+				collidingBox = collidingBoxes.get(i);
 				if(newChildBox.maxX > collidingBox.minX && newChildBox.maxX < collidingBox.maxX){
 					xCollisionDepth = Math.min(collidingBox.minX - newChildBox.maxX, xCollisionDepth);
 				}else if(newChildBox.minX < collidingBox.maxX && newChildBox.minX > collidingBox.minX){
@@ -300,10 +300,10 @@ public abstract class EntityPlane extends EntityFlyable{
 				}
 			}
 			
-			newChildBox = child.getEntityBoundingBox().getOffsetBoundingBox(0, 0, motionZ*MFS.planeSpeedFactor);
-			collidingBoxes = child.getCollidingBlocks(newChildBox);	
+			newChildBox = child.getBoundingBox().getOffsetBoundingBox(0, 0, motionZ*MFS.planeSpeedFactor);
+			collidingBoxes = this.getChildCollisions(child, newChildBox);	
 			for(int i=0; i < collidingBoxes.size(); ++i){
-				collidingBox = (AxisAlignedBB) collidingBoxes.get(i);
+				collidingBox = collidingBoxes.get(i);
 				if(newChildBox.maxZ > collidingBox.minZ && newChildBox.maxZ < collidingBox.maxZ){
 					zCollisionDepth = Math.min(collidingBox.minZ - newChildBox.maxZ, zCollisionDepth);
 				}else if(newChildBox.minZ < collidingBox.maxZ && newChildBox.minZ > collidingBox.minZ){
@@ -348,8 +348,8 @@ public abstract class EntityPlane extends EntityFlyable{
 			yawChildZOffset = 0;
 			for(EntityChild child : getChildren()){				
 				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw + motionYaw, rotationRoll);
-				newChildBox = child.getEntityBoundingBox().getOffsetBoundingBox(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, 0, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor);
-				child.isCollidedHorizontally = !child.getCollidingBlocks(newChildBox).isEmpty();
+				newChildBox = child.getBoundingBox().getOffsetBoundingBox(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, 0, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor);
+				child.isCollidedHorizontally = !this.getChildCollisions(child, newChildBox).isEmpty();
 				if(child.isCollidedHorizontally){
 					if(yawChildXOffset==0){
 						yawChildXOffset = child.offsetX;
@@ -402,7 +402,7 @@ public abstract class EntityPlane extends EntityFlyable{
 			for(EntityChild child : getChildren()){
 				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
 				offset = offset.add(posX - child.posX + motionX*MFS.planeSpeedFactor, posY - child.posY + motionY*MFS.planeSpeedFactor, posZ - child.posZ + motionZ*MFS.planeSpeedFactor);
-				if(!child.getCollidingBlocks(child.getBoundingBox().getOffsetBoundingBox(offset.xCoord, offset.yCoord, offset.zCoord)).isEmpty()){
+				if(!this.getChildCollisions(child, child.getBoundingBox().getOffsetBoundingBox(offset.xCoord, offset.yCoord, offset.zCoord)).isEmpty()){
 					if(rollChildOffset==0){
 						rollChildOffset = child.offsetX;
 					}else if(Math.signum(rollChildOffset)!=Math.signum(child.offsetX)){
@@ -437,7 +437,7 @@ public abstract class EntityPlane extends EntityFlyable{
 			for(EntityChild child : getChildren()){
 				offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);				
 				offset = offset.add(posX - child.posX + motionX*MFS.planeSpeedFactor, posY - child.posY + motionY*MFS.planeSpeedFactor, posZ - child.posZ + motionZ*MFS.planeSpeedFactor);				
-				if(!child.getCollidingBlocks(child.getBoundingBox().getOffsetBoundingBox(offset.xCoord, offset.yCoord, offset.zCoord)).isEmpty()){
+				if(!this.getChildCollisions(child, child.getBoundingBox().getOffsetBoundingBox(offset.xCoord, offset.yCoord, offset.zCoord)).isEmpty()){
 					if(child.offsetZ != 0){
 						prevPitchChildOffset = pitchChildOffset;
 						pitchChildOffset = child.offsetZ;
@@ -464,10 +464,10 @@ public abstract class EntityPlane extends EntityFlyable{
 		for(EntityChild child : getChildren()){
 			yCollisionDepth = 0;
 			offset = RotationHelper.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-			newChildBox = child.getEntityBoundingBox().getOffsetBoundingBox(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, posY + offset.yCoord - child.posY + motionY*MFS.planeSpeedFactor, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor);
-			collidingBoxes = child.getCollidingBlocks(newChildBox);
+			newChildBox = child.getBoundingBox().getOffsetBoundingBox(posX + offset.xCoord - child.posX + motionX*MFS.planeSpeedFactor, posY + offset.yCoord - child.posY + motionY*MFS.planeSpeedFactor, posZ + offset.zCoord - child.posZ + motionZ*MFS.planeSpeedFactor);
+			collidingBoxes = this.getChildCollisions(child, newChildBox);
 			for(int i=0; i < collidingBoxes.size(); ++i){
-				collidingBox = (AxisAlignedBB) collidingBoxes.get(i);
+				collidingBox = collidingBoxes.get(i);
 				if(newChildBox.maxY > collidingBox.minY && newChildBox.maxY < collidingBox.maxY){
 					yCollisionDepth = Math.min(collidingBox.minY - newChildBox.maxY, yCollisionDepth);
 				}else if(newChildBox.minY < collidingBox.maxY && newChildBox.minY > collidingBox.minY){
