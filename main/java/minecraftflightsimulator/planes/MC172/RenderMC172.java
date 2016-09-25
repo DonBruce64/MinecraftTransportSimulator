@@ -30,13 +30,16 @@ public class RenderMC172 extends RenderPlane{
 	}
 
 	@Override
-	protected void renderLights(EntityPlane plane){
+	protected void renderLights(EntityPlane plane){}
+	
+	@Override
+	public void renderAuxLights(EntityPlane plane){
 		if(plane.auxLightsOn){
-	        GL11.glTranslatef(0, -0.25F, 2);
-	        GL11.glRotatef(35, 1, 0, 0);
-	        RenderHelper.drawLightBeam(10, 10, 20);
-	        GL11.glRotatef(-35, 1, 0, 0);
-	        GL11.glTranslatef(0, 0.25F, -2);
+			GL11.glTranslatef(0, -0.25F, 2);
+			GL11.glRotatef(35, 1, 0, 0);
+			RenderHelper.drawLightBeam(7, 10, 20);
+			GL11.glRotatef(-35, 1, 0, 0);
+			GL11.glTranslatef(0, 0.25F, -2);
 		}
 	}
 	

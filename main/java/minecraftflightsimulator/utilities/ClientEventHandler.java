@@ -8,9 +8,11 @@ import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.entities.parts.EntitySeat;
+import minecraftflightsimulator.modelrenders.RenderPlane;
 import minecraftflightsimulator.packets.general.GUIPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -108,6 +110,29 @@ public class ClientEventHandler{
 	 */
 	@SubscribeEvent
 	public void on(RenderWorldLastEvent event){
+		for(Object obj : minecraft.theWorld.loadedEntityList){
+			if(obj instanceof EntityPlane){
+				EntityPlane plane = (EntityPlane) obj;
+				if(plane.auxLightsOn){
+					RenderPlane render = (RenderPlane) RenderManager.instance.getEntityRenderObject(plane);
+					GL11.glPushMatrix();
+					GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+			        
+					//Copied from RenderManager
+			        double d0 = plane.lastTickPosX + (plane.posX - plane.lastTickPosX) * (double)event.partialTicks;
+			        double d1 = plane.lastTickPosY + (plane.posY - plane.lastTickPosY) * (double)event.partialTicks;
+			        double d2 = plane.lastTickPosZ + (plane.posZ - plane.lastTickPosZ) * (double)event.partialTicks;
+			        GL11.glTranslated(d0 - RenderManager.renderPosX, d1 - RenderManager.renderPosY, d2 - RenderManager.renderPosZ);
+					
+			        GL11.glRotatef(-plane.rotationYaw, 0, 1, 0);
+					GL11.glRotatef(plane.rotationPitch, 1, 0, 0);
+					GL11.glRotatef(plane.rotationRoll, 0, 0, 1);
+			        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+					render.renderAuxLights(plane);
+					GL11.glPopMatrix();
+				}
+			}
+		}
 		/*INS180
         Entity renderEntity = minecraft.getRenderViewEntity();
         RenderManager manager = minecraft.getRenderManager();

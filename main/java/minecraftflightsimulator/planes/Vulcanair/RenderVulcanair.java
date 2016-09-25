@@ -36,7 +36,12 @@ public class RenderVulcanair extends RenderPlane{
 	
 	@Override
 	protected void renderLights(EntityPlane plane){
-
+		//TODO add lights
+	}
+	
+	@Override
+	public void renderAuxLights(EntityPlane plane){
+		//TODO add lights
 	}
 
 	@Override

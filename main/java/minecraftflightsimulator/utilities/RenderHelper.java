@@ -166,7 +166,7 @@ public class RenderHelper{
     		GL11.glVertex3d(x1, y1, z1);
     	}
     	GL11.glEnd();
-		GL11.glPopMatrix();
+    	GL11.glPopMatrix();
     }
     
     /**
@@ -238,18 +238,20 @@ public class RenderHelper{
      */
     public static void drawLightBeam(double r, double l, int n){    	
     	GL11.glPushMatrix();
+    	GL11.glColor4f(1, 1, 1, 0.75F);
     	GL11.glDisable(GL11.GL_TEXTURE_2D);
-    	GL11.glDisable(GL11.GL_LIGHTING);
-    	GL11.glShadeModel(GL11.GL_SMOOTH);
     	GL11.glEnable(GL11.GL_BLEND);
-    	GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_ONE_MINUS_DST_COLOR);
+    	//Good general function.
+    	//GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_ONE_MINUS_DST_COLOR);
+    	//Allows changing by changing alpha value.
+    	GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
     	drawCone(r, l, n, false);
     	drawCone(r, l, n, false);
     	drawCone(r, l, n, true);
     	drawCone(r, l, n, true);    	
     	GL11.glDisable(GL11.GL_BLEND);
-    	GL11.glEnable(GL11.GL_LIGHTING);
     	GL11.glEnable(GL11.GL_TEXTURE_2D);
+    	GL11.glColor4f(1, 1, 1, 1);
 		GL11.glPopMatrix();
     }
     

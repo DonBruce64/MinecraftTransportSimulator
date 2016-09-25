@@ -50,6 +50,7 @@ public abstract class RenderPlane extends RenderParent{
 	protected abstract void renderConsole(EntityPlane plane);
 	protected abstract void renderMarkings(EntityPlane plane);
 	protected abstract void renderLights(EntityPlane plane);
+	public abstract void renderAuxLights(EntityPlane plane);
 	
 	private void renderDebugVectors(EntityPlane plane){
 		double[] debugForces = plane.getDebugForces();
