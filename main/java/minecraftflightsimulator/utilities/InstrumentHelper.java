@@ -35,6 +35,8 @@ public class InstrumentHelper{
 	}
 	
 	public static void drawBasicFlyableHUD(EntityFlyable flyer, int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
+		GL11.glPushMatrix();
+		GL11.glColor4f(1, 1, 1, 1);
 		Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
 		offset = 0;
 		if(RenderHelper.hudMode == 3){
@@ -77,6 +79,7 @@ public class InstrumentHelper{
 			}
 		}
 		Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+		GL11.glPopMatrix();
 	}
 	
 	public static void drawFlyableInstrument(EntityFlyable flyer, int x, int y, int type, boolean hud){
