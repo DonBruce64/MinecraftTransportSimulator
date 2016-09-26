@@ -7,6 +7,7 @@ import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.sounds.EngineSound;
+import minecraftflightsimulator.utilities.DamageSources;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.entity.Entity;
@@ -34,6 +35,7 @@ public class CommonProxy{
 	
 	public void init(){
 		MFSRegistry.instance.init();
+		DamageSources.init();
 		NetworkRegistry.INSTANCE.registerGuiHandler(MFS.instance, new GUIHandler());
 	}
 	

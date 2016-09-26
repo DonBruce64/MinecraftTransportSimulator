@@ -3,15 +3,16 @@ package minecraftflightsimulator.entities.parts;
 import java.util.List;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.core.EntityBase;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityFlyable;
 import minecraftflightsimulator.packets.control.EnginePacket;
+import minecraftflightsimulator.utilities.DamageSources;
+import minecraftflightsimulator.utilities.DamageSources.DamageSourcePropellor;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EntityDamageSource;
 import net.minecraft.world.World;
 
 public class EntityPropeller extends EntityChild{
@@ -53,11 +54,17 @@ public class EntityPropeller extends EntityChild{
 			angularPosition = (angularVelocity+angularPosition)%6.283185312F;
 		}else{
 			if(engineRPM >= 100){
-				List collidedEntites = worldObj.getEntitiesWithinAABBExcludingEntity(this, this.getBoundingBox());
-				for(int i=0; i < collidedEntites.size(); ++i){
-					Entity collidedEntity = (Entity) collidedEntites.get(i);
-					if(!(collidedEntity instanceof EntityBase)){
-						collidedEntity.attackEntityFrom(new EntityDamageSourcePropellor("propellor", this), (float) (MFS.propellerDamageFactor*engineRPM/500F));
+				List collidedEntites = worldObj.getEntitiesWithinAABB(EntityLivingBase.class, this.getBoundingBox().expand(0.2, 0.2, 0.2));
+				if(!collidedEntites.isEmpty()){
+					Entity attacker = null;
+					for(EntityChild child : parent.getChildren()){
+						if(child.getRider() != null){
+							attacker = child.getRider();
+							break;
+						}
+					}
+					for(int i=0; i < collidedEntites.size(); ++i){
+						((Entity) collidedEntites.get(i)).attackEntityFrom(new DamageSourcePropellor(attacker), (float) (DamageSources.propellerDamageFactor*engineRPM/500F));
 					}
 				}
 				if(isPartCollided(getBoundingBox().expand(0.1, 0.1, 0.1))){
@@ -98,13 +105,6 @@ public class EntityPropeller extends EntityChild{
 		}
 		return true;
 	}
-	
-	public class EntityDamageSourcePropellor extends EntityDamageSource{
-		public EntityDamageSourcePropellor(String name, Entity transmitter){
-			super(name, transmitter);
-			this.damageType="propellor";
-		}
-	};
 	
 	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){

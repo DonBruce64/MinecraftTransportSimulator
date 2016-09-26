@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
+
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.items.ItemPlane;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
@@ -146,7 +148,7 @@ public abstract class EntityParent extends EntityBase{
 		return null;
 	}
 	
-	public EntityChild[] getChildren(){return children.values().toArray(new EntityChild[children.size()]);}
+	public EntityChild[] getChildren(){return ImmutableList.copyOf(children.values()).toArray(new EntityChild[children.size()]);}
 	
 	/**
 	 * Add new core sets here.  Cores are used to determine collision and are not removable

@@ -6,11 +6,15 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
+import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
 import minecraftflightsimulator.packets.control.RudderPacket;
+import minecraftflightsimulator.utilities.DamageSources;
+import minecraftflightsimulator.utilities.DamageSources.DamageSourcePlaneCrash;
 import minecraftflightsimulator.utilities.MFSVector;
 import minecraftflightsimulator.utilities.RotationHelper;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
@@ -134,6 +138,31 @@ public abstract class EntityPlane extends EntityFlyable{
 			moveChildren();
 			dampenControlSurfaces();
 		}
+	}
+	
+	@Override
+	public void explodeAtPosition(double x, double y, double z){
+		Entity pilot = null;
+		for(EntityChild child : getChildren()){
+			if(child instanceof EntitySeat){
+				if(((EntitySeat) child).controller){
+					if(child.getRider() != null){
+						pilot = child.getRider();
+						break;
+					}
+				}
+			}
+		}
+		for(EntityChild child : getChildren()){
+			if(child.getRider() != null){
+				if(child.getRider().equals(pilot)){
+					child.getRider().attackEntityFrom(new DamageSourcePlaneCrash(null), (float) (DamageSources.crashDamageFactor*velocity*20));
+				}else{
+					child.getRider().attackEntityFrom(new DamageSourcePlaneCrash(pilot), (float) (DamageSources.crashDamageFactor*velocity*20));
+				}
+			}
+		}
+		super.explodeAtPosition(x, y, z);
 	}
 	
 	private double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
