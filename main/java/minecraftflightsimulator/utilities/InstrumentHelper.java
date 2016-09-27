@@ -34,7 +34,7 @@ public class InstrumentHelper{
 	}
 	
 	private static boolean isInstrumentLightOn(EntityFlyable flyer){
-		return flyer.lightsOn && flyer.electricPower > 2;
+		return flyer.lightsOn && flyer.electricPower > 3;
 	}
 	
 	public static void drawBasicFlyableHUD(EntityFlyable flyer, int width, int height, ResourceLocation backplateTexture, ResourceLocation moldingTexture){
@@ -162,14 +162,10 @@ public class InstrumentHelper{
 		
 		if(isInstrumentLightOn(flyer) && type < 15){
 			GL11.glTranslatef(0, 0, 11*offset);
-			if(!hud){
-				GL11.glEnable(GL11.GL_BLEND);
-			}
+			GL11.glEnable(GL11.GL_BLEND);
 			RenderHelper.bindTexture(instrumentTexture);
 			RenderHelper.renderSquareUV(x-30, x+30, y+30, y-30, 0, 0, 0.5, 0.75, 0.25, 0.5, false);
-	        if(!hud){
-	        	GL11.glDisable(GL11.GL_BLEND);
-	        }
+	        GL11.glDisable(GL11.GL_BLEND);
 			Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
 		}
 		if(!hud){
