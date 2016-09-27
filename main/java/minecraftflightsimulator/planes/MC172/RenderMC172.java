@@ -7,7 +7,6 @@ import minecraftflightsimulator.modelrenders.RenderPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
 import minecraftflightsimulator.utilities.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -31,7 +30,7 @@ public class RenderMC172 extends RenderPlane{
 	}
 
 	@Override
-	protected void renderLights(EntityPlane plane){
+	protected void renderStrobeLightCovers(EntityPlane plane){
 		//Landing light case.
 		GL11.glPushMatrix();
 		GL11.glTranslatef(0, -0.375F, 2.157F);
@@ -39,35 +38,45 @@ public class RenderMC172 extends RenderPlane{
 		RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.001, 0.001, true);
 		GL11.glPopMatrix();
 		
+		drawStrobeLightCover(4.5F, 1.625F, 0.8125F, 90);
+		drawStrobeLightCover(-4.5F, 1.625F, 0.8125F, -90);
+		
 		GL11.glPushMatrix();
-		GL11.glTranslatef(4.5F, 1.625F, 0.8125F);
-		GL11.glRotatef(90, 0, 1, 0);
-		drawStrobeLight(plane, 1, 0, 0);
-		GL11.glTranslatef(0, 0, -9F);
-		GL11.glRotatef(180, 0, 1, 0);
-		drawStrobeLight(plane, 0, 1, 0);
-		GL11.glTranslatef(-5.0625F, 0.25F, -4.5F);
-		GL11.glRotatef(-90 + plane.rudderAngle/10F, 0, 1, 0);
-		GL11.glTranslatef(0, 0, 0.5F);
-		drawStrobeLight(plane, 1, 1, 1);
+		GL11.glTranslatef(0F, 1.875F, -4.25F);
+		GL11.glRotatef(180 + plane.rudderAngle/10F, 0, 1, 0);
+		drawStrobeLightCover(0, 0, 0.5F, 0);
 		GL11.glPopMatrix();
 	}
 	
 	@Override
-	public void renderAuxLights(EntityPlane plane){
-		if(plane.lightsOn && plane.auxLightsOn){
+	protected void renderStrobeLights(EntityPlane plane){
+		drawStrobeLight(plane, 4.5F, 1.625F, 0.8125F, 90, 1, 0, 0);
+		drawStrobeLight(plane, -4.5F, 1.625F, 0.8125F, -90, 0, 1, 0);
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(0F, 1.875F, -4.25F);
+		GL11.glRotatef(180 + plane.rudderAngle/10F, 0, 1, 0);
+		drawStrobeLight(plane, 0, 0, 0.5F, 0, 1, 1, 1);
+		GL11.glPopMatrix();
+	}
+	
+	@Override
+	public void renderLights(EntityPlane plane){
+		if(plane.lightsOn && plane.auxLightsOn  && plane.electricPower > 2){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(0, -0.375F, 2.157F);
 			GL11.glDisable(GL11.GL_TEXTURE_2D);
 			GL11.glDisable(GL11.GL_LIGHTING);
-			GL11.glColor3f(1, 1, 1);
+			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glColor4f(1, 1, 1, (float) plane.electricPower/12F);
 			RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0, 0, true);
+			GL11.glDisable(GL11.GL_BLEND);
 			GL11.glPopMatrix();
 			
 			GL11.glPushMatrix();
 			GL11.glTranslatef(0, -0.15F, 2.1F);
 			GL11.glRotatef(35, 1, 0, 0);
-			RenderHelper.drawLightBeam(7, 10, 20, (15F - plane.worldObj.getSunBrightness(1.0F)*plane.worldObj.getFullBlockLightValue(MathHelper.floor_double(plane.posX - 4*MathHelper.sin(plane.rotationYaw * 0.017453292F)), MathHelper.floor_double(plane.posY), MathHelper.floor_double(plane.posZ + 4*MathHelper.cos(plane.rotationYaw * 0.017453292F))))/15F);
+			RenderHelper.drawLightBeam(plane, 7, 10, 20);
 			GL11.glPopMatrix();
 		}
 	}

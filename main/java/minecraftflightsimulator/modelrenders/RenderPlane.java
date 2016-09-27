@@ -3,7 +3,6 @@ package minecraftflightsimulator.modelrenders;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
-import minecraftflightsimulator.utilities.MFSVector;
 import minecraftflightsimulator.utilities.RenderHelper;
 import minecraftflightsimulator.utilities.RenderHelper.RenderParent;
 import net.minecraft.client.Minecraft;
@@ -14,7 +13,6 @@ import org.lwjgl.opengl.GL11;
 
 public abstract class RenderPlane extends RenderParent{
     protected static final ResourceLocation windowTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
-    private MFSVector childOffset;
 
     public RenderPlane(RenderManager manager){
     	super(manager);
@@ -33,26 +31,42 @@ public abstract class RenderPlane extends RenderParent{
         renderWindows(plane);
         renderConsole(plane);
         renderMarkings(plane);
-        renderLights(plane);
+        renderStrobeLightCovers(plane);
+        if(plane.lightsOn){
+        	renderStrobeLights(plane);
+        }
         GL11.glPopMatrix();   
         if(Minecraft.getMinecraft().gameSettings.showDebugInfo){
         	renderDebugVectors(plane);
         }
 	}
 	
-	protected void drawStrobeLight(EntityPlane plane, float red, float green, float blue){
+	protected void drawStrobeLightCover(float x, float y, float z, float rotation){
 		RenderHelper.bindTexture(windowTexture);
+		GL11.glPushMatrix();
+		GL11.glTranslatef(x, y, z);
+		GL11.glRotatef(rotation, 0, 1, 0);
 		RenderHelper.renderSquare(-0.0625, 0.0625, 0, 0.125, 0.0002, 0.0002, false);
-		if(plane.lightsOn && plane.ticksExisted%20 < 3){
-			Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+		GL11.glPopMatrix();
+	}
+	
+	protected void drawStrobeLight(EntityPlane plane, float x, float y, float z, float rotation, float red, float green, float blue){
+		if(plane.lightsOn && plane.ticksExisted%20 < 3 && plane.electricPower > 2){
+			GL11.glPushMatrix();
 			GL11.glDisable(GL11.GL_TEXTURE_2D);
 			GL11.glDisable(GL11.GL_LIGHTING);
-			GL11.glColor3f(red, green, blue);
+			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glTranslatef(x, y, z);
+			GL11.glRotatef(rotation, 0, 1, 0);
+			GL11.glColor4f(red, green, blue, (float) plane.electricPower/12F);
+			Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
 			RenderHelper.renderSquare(-0.0625, 0.0625, 0, 0.125, 0.0001, 0.0001, false);	
-			GL11.glColor3f(1, 1, 1);
+			Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+			GL11.glColor4f(1, 1, 1, 1);
+			GL11.glDisable(GL11.GL_BLEND);
 			GL11.glEnable(GL11.GL_LIGHTING);
 			GL11.glEnable(GL11.GL_TEXTURE_2D);
-			Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+			GL11.glPopMatrix();
 		}
 	}
 	
@@ -60,8 +74,9 @@ public abstract class RenderPlane extends RenderParent{
 	protected abstract void renderWindows(EntityPlane plane);
 	protected abstract void renderConsole(EntityPlane plane);
 	protected abstract void renderMarkings(EntityPlane plane);
-	protected abstract void renderLights(EntityPlane plane);
-	public abstract void renderAuxLights(EntityPlane plane);
+	protected abstract void renderStrobeLightCovers(EntityPlane plane);
+	protected abstract void renderStrobeLights(EntityPlane plane);
+	public abstract void renderLights(EntityPlane plane);
 	
 	private void renderDebugVectors(EntityPlane plane){
 		double[] debugForces = plane.getDebugForces();

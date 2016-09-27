@@ -6,6 +6,7 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSClientRegistry;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -217,6 +218,28 @@ public class RenderHelper{
     	renderQuadUV(x1, x1, x2, x2, y2, y1, y1, y2, z1, z1, z2, z2, u, U, v, V, mirror);
     }
     
+    /**
+     * Draws a semi-conical light beam with
+     * an end radius of r. length of l, and n segments.
+     */
+    public static void drawLightBeam(EntityVehicle vehicle, double r, double l, int n){
+    	float strength = (float) (vehicle.electricPower/12F*(15F - vehicle.worldObj.getSunBrightness(1.0F)*vehicle.worldObj.getFullBlockLightValue(MathHelper.floor_double(vehicle.posX - 4*MathHelper.sin(vehicle.rotationYaw * 0.017453292F)), MathHelper.floor_double(vehicle.posY), MathHelper.floor_double(vehicle.posZ + 4*MathHelper.cos(vehicle.rotationYaw * 0.017453292F))))/15F);
+    	GL11.glPushMatrix();
+    	GL11.glColor4f(1, 1, 1, Math.max(vehicle.electricPower > 4 ? 0.11F : 0, strength));
+    	GL11.glDisable(GL11.GL_TEXTURE_2D);
+    	GL11.glEnable(GL11.GL_BLEND);
+    	//Allows changing by changing alpha value.
+    	GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
+    	drawCone(r, l, n, false);
+    	drawCone(r, l, n, false);
+    	drawCone(r, l, n, true);
+    	drawCone(r, l, n, true);    	
+    	GL11.glDisable(GL11.GL_BLEND);
+    	GL11.glEnable(GL11.GL_TEXTURE_2D);
+    	GL11.glColor4f(1, 1, 1, 1);
+		GL11.glPopMatrix();
+    }
+    
     public static void drawCone(double r, double l, double n, boolean reverse){
 		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
 		GL11.glVertex3d(0, 0, 0);
@@ -230,27 +253,6 @@ public class RenderHelper{
     		}
     	}
     	GL11.glEnd();
-    }
-    
-    /**
-     * Draws a semi-conical light beam with
-     * an end radius of r. length of l, and n segments.
-     */
-    public static void drawLightBeam(double r, double l, int n, float strength){    	
-    	GL11.glPushMatrix();
-    	GL11.glColor4f(1, 1, 1, Math.max(0.11F, strength));
-    	GL11.glDisable(GL11.GL_TEXTURE_2D);
-    	GL11.glEnable(GL11.GL_BLEND);
-    	//Allows changing by changing alpha value.
-    	GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
-    	drawCone(r, l, n, false);
-    	drawCone(r, l, n, false);
-    	drawCone(r, l, n, true);
-    	drawCone(r, l, n, true);    	
-    	GL11.glDisable(GL11.GL_BLEND);
-    	GL11.glEnable(GL11.GL_TEXTURE_2D);
-    	GL11.glColor4f(1, 1, 1, 1);
-		GL11.glPopMatrix();
     }
     
     /**Abstract class for parent rendering.

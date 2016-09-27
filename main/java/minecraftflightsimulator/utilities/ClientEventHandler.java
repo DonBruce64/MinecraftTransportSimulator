@@ -111,9 +111,9 @@ public class ClientEventHandler{
 	@SubscribeEvent
 	public void on(RenderWorldLastEvent event){
 		for(Object obj : minecraft.theWorld.loadedEntityList){
-			if(obj instanceof EntityPlane){
+			if(obj instanceof EntityVehicle){
 				EntityPlane plane = (EntityPlane) obj;
-				if(plane.auxLightsOn){
+				if(plane.lightsOn && plane.auxLightsOn){
 					RenderPlane render = (RenderPlane) RenderManager.instance.getEntityRenderObject(plane);
 					GL11.glPushMatrix();
 					GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
@@ -128,7 +128,7 @@ public class ClientEventHandler{
 					GL11.glRotatef(plane.rotationPitch, 1, 0, 0);
 					GL11.glRotatef(plane.rotationRoll, 0, 0, 1);
 			        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-					render.renderAuxLights(plane);
+					render.renderLights(plane);
 					GL11.glPopMatrix();
 				}
 			}

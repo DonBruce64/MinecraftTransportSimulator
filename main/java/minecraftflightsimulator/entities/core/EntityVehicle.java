@@ -40,6 +40,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	public double fuel;
 	public double prevFuel;
 	public double fuelFlow;
+	public double electricPower = 12;
 	public double velocity;
 	public double airDensity;
 	public double trackAngle;
@@ -128,6 +129,17 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		if(fuel < 0){fuel = 0;}
 		fuelFlow = prevFuel - fuel;
 		prevFuel = fuel;
+		if(fuelFlow != 0){
+			electricPower = Math.min(12, electricPower+=0.01);
+		}
+		if(electricPower > 2){
+			if(lightsOn){
+				electricPower -= 0.001;
+				if(auxLightsOn){
+					electricPower -= 0.005;
+				}
+			}
+		}
 	}
 	
 	//Start of custom methods
@@ -435,6 +447,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		this.textureOptions=tagCompound.getByte("textureOptions");
 		this.throttle=tagCompound.getByte("throttle");
 		this.fuel=tagCompound.getDouble("fuel");
+		this.electricPower=tagCompound.getDouble("electricPower");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayName=tagCompound.getString("displayName");
 		for(int i=0; i<10; ++i){
@@ -459,6 +472,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		tagCompound.setByte("textureOptions", this.textureOptions);
 		tagCompound.setByte("throttle", this.throttle);
 		tagCompound.setDouble("fuel", this.fuel);
+		tagCompound.setDouble("electricPower", this.electricPower);
 		tagCompound.setString("ownerName", this.ownerName);
 		tagCompound.setString("displayName", this.displayName);
 		for(int i=0; i<instrumentList.size(); ++i){

@@ -102,13 +102,22 @@ public abstract class EntityEngine extends EntityChild{
 		}
 		
 		if(electricStarterEngaged && starterLevel == 0){
-			starterLevel += type.starterIncrement;
+			if(vehicle.electricPower > 6){
+				starterLevel += type.starterIncrement;
+			}
 		}
 		if(starterLevel > 0){
 			if(starterLevel == type.starterIncrement){
-				MFS.proxy.playSound(this, "mfs:" + type.engineCrankingSoundName, 1, 1);
+				if(vehicle.electricPower > 8){
+					MFS.proxy.playSound(this, "mfs:" + type.engineCrankingSoundName, 1, 1);
+				}else{
+					MFS.proxy.playSound(this, "mfs:" + type.engineCrankingSoundName, 1, (float) (vehicle.electricPower/8F));
+				}
 			}
 			--starterLevel;
+			if(electricStarterEngaged){
+				vehicle.electricPower -= 0.1F;
+			}
 			vehicle.fuel -= this.fuelConsumption*MFS.fuelUsageFactor;
 			if(engineRPM < 600){
 				engineRPM = Math.min(engineRPM+type.starterPower, 600);
