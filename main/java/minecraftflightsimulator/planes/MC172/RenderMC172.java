@@ -67,7 +67,7 @@ public class RenderMC172 extends RenderPlane{
 			GL11.glPushMatrix();
 			GL11.glTranslatef(0, -0.15F, 2.1F);
 			GL11.glRotatef(35, 1, 0, 0);
-			RenderHelper.drawLightBeam(7, 10, 20, (15F - plane.worldObj.getSunBrightness(1.0F)*plane.worldObj.getFullBlockLightValue(MathHelper.floor_double(plane.posX), MathHelper.floor_double(plane.posY), MathHelper.floor_double(plane.posZ)))/15F);
+			RenderHelper.drawLightBeam(7, 10, 20, (15F - plane.worldObj.getSunBrightness(1.0F)*plane.worldObj.getFullBlockLightValue(MathHelper.floor_double(plane.posX - 4*MathHelper.sin(plane.rotationYaw * 0.017453292F)), MathHelper.floor_double(plane.posY), MathHelper.floor_double(plane.posZ + 4*MathHelper.cos(plane.rotationYaw * 0.017453292F))))/15F);
 			GL11.glPopMatrix();
 		}
 	}
