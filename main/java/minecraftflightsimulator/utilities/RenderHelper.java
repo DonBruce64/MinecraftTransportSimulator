@@ -236,13 +236,11 @@ public class RenderHelper{
      * Draws a semi-conical light beam with
      * an end radius of r. length of l, and n segments.
      */
-    public static void drawLightBeam(double r, double l, int n){    	
+    public static void drawLightBeam(double r, double l, int n, float strength){    	
     	GL11.glPushMatrix();
-    	GL11.glColor4f(1, 1, 1, 0.75F);
+    	GL11.glColor4f(1, 1, 1, strength);
     	GL11.glDisable(GL11.GL_TEXTURE_2D);
     	GL11.glEnable(GL11.GL_BLEND);
-    	//Good general function.
-    	//GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_ONE_MINUS_DST_COLOR);
     	//Allows changing by changing alpha value.
     	GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
     	drawCone(r, l, n, false);

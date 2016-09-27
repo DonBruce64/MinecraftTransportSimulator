@@ -33,16 +33,27 @@ public abstract class RenderPlane extends RenderParent{
         renderWindows(plane);
         renderConsole(plane);
         renderMarkings(plane);
-        if(plane.lightsOn){
-	        Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
-	        renderLights(plane);
-	        Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
-        }
-        GL11.glPopMatrix();
-        
+        renderLights(plane);
+        GL11.glPopMatrix();   
         if(Minecraft.getMinecraft().gameSettings.showDebugInfo){
         	renderDebugVectors(plane);
         }
+	}
+	
+	protected void drawStrobeLight(EntityPlane plane, float red, float green, float blue){
+		RenderHelper.bindTexture(windowTexture);
+		RenderHelper.renderSquare(-0.0625, 0.0625, 0, 0.125, 0.0002, 0.0002, false);
+		if(plane.lightsOn && plane.ticksExisted%20 < 3){
+			Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			GL11.glDisable(GL11.GL_LIGHTING);
+			GL11.glColor3f(red, green, blue);
+			RenderHelper.renderSquare(-0.0625, 0.0625, 0, 0.125, 0.0001, 0.0001, false);	
+			GL11.glColor3f(1, 1, 1);
+			GL11.glEnable(GL11.GL_LIGHTING);
+			GL11.glEnable(GL11.GL_TEXTURE_2D);
+			Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+		}
 	}
 	
 	protected abstract void renderPlane(EntityPlane plane);

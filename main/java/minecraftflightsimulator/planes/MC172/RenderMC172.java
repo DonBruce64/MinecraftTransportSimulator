@@ -7,6 +7,7 @@ import minecraftflightsimulator.modelrenders.RenderPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
 import minecraftflightsimulator.utilities.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
@@ -30,16 +31,44 @@ public class RenderMC172 extends RenderPlane{
 	}
 
 	@Override
-	protected void renderLights(EntityPlane plane){}
+	protected void renderLights(EntityPlane plane){
+		//Landing light case.
+		GL11.glPushMatrix();
+		GL11.glTranslatef(0, -0.375F, 2.157F);
+		RenderHelper.bindTexture(windowTexture);
+		RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.001, 0.001, true);
+		GL11.glPopMatrix();
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(4.5F, 1.625F, 0.8125F);
+		GL11.glRotatef(90, 0, 1, 0);
+		drawStrobeLight(plane, 1, 0, 0);
+		GL11.glTranslatef(0, 0, -9F);
+		GL11.glRotatef(180, 0, 1, 0);
+		drawStrobeLight(plane, 0, 1, 0);
+		GL11.glTranslatef(-5.0625F, 0.25F, -4.5F);
+		GL11.glRotatef(-90 + plane.rudderAngle/10F, 0, 1, 0);
+		GL11.glTranslatef(0, 0, 0.5F);
+		drawStrobeLight(plane, 1, 1, 1);
+		GL11.glPopMatrix();
+	}
 	
 	@Override
 	public void renderAuxLights(EntityPlane plane){
-		if(plane.auxLightsOn){
-			GL11.glTranslatef(0, -0.25F, 2);
+		if(plane.lightsOn && plane.auxLightsOn){
+			GL11.glPushMatrix();
+			GL11.glTranslatef(0, -0.375F, 2.157F);
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			GL11.glDisable(GL11.GL_LIGHTING);
+			GL11.glColor3f(1, 1, 1);
+			RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0, 0, true);
+			GL11.glPopMatrix();
+			
+			GL11.glPushMatrix();
+			GL11.glTranslatef(0, -0.15F, 2.1F);
 			GL11.glRotatef(35, 1, 0, 0);
-			RenderHelper.drawLightBeam(7, 10, 20);
-			GL11.glRotatef(-35, 1, 0, 0);
-			GL11.glTranslatef(0, 0.25F, -2);
+			RenderHelper.drawLightBeam(7, 10, 20, (15F - plane.worldObj.getSunBrightness(1.0F)*plane.worldObj.getFullBlockLightValue(MathHelper.floor_double(plane.posX), MathHelper.floor_double(plane.posY), MathHelper.floor_double(plane.posZ)))/15F);
+			GL11.glPopMatrix();
 		}
 	}
 	
