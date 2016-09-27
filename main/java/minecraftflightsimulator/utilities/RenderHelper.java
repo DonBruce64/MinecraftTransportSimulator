@@ -238,7 +238,7 @@ public class RenderHelper{
      */
     public static void drawLightBeam(double r, double l, int n, float strength){    	
     	GL11.glPushMatrix();
-    	GL11.glColor4f(1, 1, 1, strength);
+    	GL11.glColor4f(1, 1, 1, Math.max(0.11F, strength));
     	GL11.glDisable(GL11.GL_TEXTURE_2D);
     	GL11.glEnable(GL11.GL_BLEND);
     	//Allows changing by changing alpha value.
