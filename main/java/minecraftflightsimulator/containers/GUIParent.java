@@ -7,7 +7,7 @@ import net.minecraft.util.ResourceLocation;
 
 public class GUIParent extends GuiContainer{
 	private static final ResourceLocation background = new ResourceLocation("mfs", "textures/guis/gui_background.png");
-	private ResourceLocation foreground;
+	private final ResourceLocation foreground;
 
 	public GUIParent(EntityPlayer player, EntityVehicle vehicle, ResourceLocation foreground){
 		super(new ContainerVehicle(player.inventory, vehicle));
