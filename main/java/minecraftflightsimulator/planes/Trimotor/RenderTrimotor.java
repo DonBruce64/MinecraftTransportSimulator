@@ -52,9 +52,7 @@ public class RenderTrimotor extends RenderPlane{
 	}
 	
 	@Override
-	protected void renderStrobeLights(EntityPlane plane){
-		//TODO add lights
-	}
+	protected void renderStrobeLights(EntityPlane plane){}
 	
 	@Override
 	public void renderLights(EntityPlane plane){
