@@ -35,7 +35,7 @@ public class RenderMC172 extends RenderPlane{
 		GL11.glPushMatrix();
 		GL11.glTranslatef(0, -0.375F, 2.157F);
 		RenderHelper.bindTexture(windowTexture);
-		RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.001, 0.001, true);
+		RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.001, 0.001, false);
 		GL11.glPopMatrix();
 		
 		drawStrobeLightCover(4.5F, 1.625F, 0.8125F, 90);

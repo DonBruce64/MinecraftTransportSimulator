@@ -35,18 +35,53 @@ public class RenderVulcanair extends RenderPlane{
 	}
 	
 	@Override
-	protected void renderStrobeLightCovers(EntityPlane plane){
+	protected void renderStrobeLightCovers(EntityPlane plane){		
+		//Landing light case.
+		GL11.glPushMatrix();
+		GL11.glTranslatef(0, -1.5F, 4.890625F);
+		GL11.glColor3f(1, 1, 1);
+		RenderHelper.bindTexture(windowTexture);
+		RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.001, 0.001, false);
+		GL11.glPopMatrix();
 		
+		drawStrobeLightCover(7.25F, 0.1875F, 0.8125F, 90);
+		drawStrobeLightCover(-7.25F, 0.1875F, 0.8125F, -90);
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(0F, 2.125F, -5.25F);
+		GL11.glRotatef(180 + plane.rudderAngle/10F, 0, 1, 0);
+		drawStrobeLightCover(0, 0, 0.375F, 0);
+		GL11.glPopMatrix();
 	}
 	
 	@Override
 	protected void renderStrobeLights(EntityPlane plane){
-		//TODO add lights
+		drawStrobeLight(plane, 7.25F, 0.1875F, 0.8125F,  90, 1, 0, 0);
+		drawStrobeLight(plane, -7.25F, 0.1875F, 0.8125F, -90, 0, 1, 0);
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(0F, 2.125F, -5.25F);
+		GL11.glRotatef(180 + plane.rudderAngle/10F, 0, 1, 0);
+		drawStrobeLight(plane, 0, 0, 0.375F, 0, 1, 1, 1);
+		GL11.glPopMatrix();
 	}
 	
 	@Override
 	public void renderLights(EntityPlane plane){
-		//TODO add lights
+		if(plane.lightsOn && plane.auxLightsOn  && plane.electricPower > 2){
+			GL11.glPushMatrix();
+			GL11.glTranslatef(0, 0F, 5.130625F);
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			GL11.glDisable(GL11.GL_LIGHTING);
+			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glColor4f(1, 1, 1, (float) plane.electricPower/12F);
+			RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0, 0, true);;
+			GL11.glDisable(GL11.GL_BLEND);
+			GL11.glTranslatef(0, 0.20F, -0.1F);
+			GL11.glRotatef(35, 1, 0, 0);
+			RenderHelper.drawLightBeam(plane, 7, 10, 20);
+			GL11.glPopMatrix();
+		}
 	}
 
 	@Override
@@ -88,6 +123,7 @@ public class RenderVulcanair extends RenderPlane{
 
 	@Override
 	protected void renderMarkings(EntityPlane plane){
+		GL11.glPushMatrix();
 		GL11.glRotatef(180, 1, 0, 0);
 		GL11.glRotatef(102, 0, 1, 0);
 		GL11.glDisable(GL11.GL_LIGHTING);
@@ -96,5 +132,6 @@ public class RenderVulcanair extends RenderPlane{
 		GL11.glRotatef(156, 0, 1, 0);
 		RenderHelper.drawScaledStringAt(plane.displayName, 2.2F/1.5F, 0.2F/1.5F, -1.25F/1.5F, 1F/32F, Color.black);
 		GL11.glEnable(GL11.GL_LIGHTING);
+		GL11.glPopMatrix();
 	}
 }

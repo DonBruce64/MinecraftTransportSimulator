@@ -44,6 +44,7 @@ public abstract class RenderPlane extends RenderParent{
 	protected void drawStrobeLightCover(float x, float y, float z, float rotation){
 		RenderHelper.bindTexture(windowTexture);
 		GL11.glPushMatrix();
+		GL11.glColor3f(1, 1, 1);
 		GL11.glTranslatef(x, y, z);
 		GL11.glRotatef(rotation, 0, 1, 0);
 		RenderHelper.renderSquare(-0.0625, 0.0625, 0, 0.125, 0.0002, 0.0002, false);
