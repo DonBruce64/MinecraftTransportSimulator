@@ -68,7 +68,7 @@ public class RenderPZLP11 extends RenderPlane{
 	}
 	
 	@Override
-	protected void renderStrobeLightCovers(EntityPlane plane){}
+	protected void renderLightCovers(EntityPlane plane){}
 	
 	@Override
 	protected void renderStrobeLights(EntityPlane plane){}

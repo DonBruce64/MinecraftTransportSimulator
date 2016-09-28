@@ -102,13 +102,13 @@ public abstract class EntityEngine extends EntityChild{
 		}
 		
 		if(electricStarterEngaged && starterLevel == 0){
-			if(vehicle.electricPower > 6){
+			if(vehicle.electricPower > 2){
 				starterLevel += type.starterIncrement;
 			}
 		}
 		if(starterLevel > 0){
 			if(starterLevel == type.starterIncrement){
-				if(vehicle.electricPower > 8){
+				if(vehicle.electricPower > 6 || !electricStarterEngaged){
 					MFS.proxy.playSound(this, "mfs:" + type.engineCrankingSoundName, 1, 1);
 				}else{
 					MFS.proxy.playSound(this, "mfs:" + type.engineCrankingSoundName, 1, (float) (vehicle.electricPower/8F));
@@ -116,7 +116,7 @@ public abstract class EntityEngine extends EntityChild{
 			}
 			--starterLevel;
 			if(electricStarterEngaged){
-				vehicle.electricPower -= 0.1F;
+				vehicle.electricPower -= 0.01F;
 			}
 			vehicle.fuel -= this.fuelConsumption*MFS.fuelUsageFactor;
 			if(engineRPM < 600){

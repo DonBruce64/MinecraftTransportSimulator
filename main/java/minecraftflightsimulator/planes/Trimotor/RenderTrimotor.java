@@ -39,8 +39,16 @@ public class RenderTrimotor extends RenderPlane{
 	}
 	
 	@Override
-	protected void renderStrobeLightCovers(EntityPlane plane){
-		
+	protected void renderLightCovers(EntityPlane plane){
+		//Landing light cover2.
+		GL11.glPushMatrix();
+		GL11.glColor3f(1, 1, 1);
+		RenderHelper.bindTexture(windowTexture);
+		GL11.glTranslatef(4.75F, 1.25F, 0.0F);
+		RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.002, 0.002, false);
+		GL11.glTranslatef(-9.5F, 0, 0);
+		RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.002, 0.002, false);
+		GL11.glPopMatrix();
 	}
 	
 	@Override
@@ -50,7 +58,31 @@ public class RenderTrimotor extends RenderPlane{
 	
 	@Override
 	public void renderLights(EntityPlane plane){
-		//TODO add lights
+		if(plane.lightsOn && plane.auxLightsOn  && plane.electricPower > 2){
+			GL11.glPushMatrix();
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			GL11.glDisable(GL11.GL_LIGHTING);
+			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glColor4f(1, 1, 1, (float) plane.electricPower/12F);
+			GL11.glTranslatef(4.75F, 1.25F, 1.0F);
+			RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.001, 0.001, false);
+			GL11.glTranslatef(-9.5F, 0, 0);
+			RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.001, 0.001, false);
+			GL11.glDisable(GL11.GL_BLEND);
+			GL11.glPopMatrix();
+			
+			GL11.glPushMatrix();
+			GL11.glTranslatef(4.75F, 1.5F, 0.9F);
+			GL11.glRotatef(45, 1, 0, 0);
+			RenderHelper.drawLightBeam(plane, 7, 15, 20);
+			GL11.glPopMatrix();
+			
+			GL11.glPushMatrix();
+			GL11.glTranslatef(-4.75F, 1.5F, 0.9F);
+			GL11.glRotatef(45, 1, 0, 0);
+			RenderHelper.drawLightBeam(plane, 7, 15, 20);
+			GL11.glPopMatrix();
+		}
 	}
 	
 	@Override

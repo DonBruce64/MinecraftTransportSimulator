@@ -30,8 +30,8 @@ public class RenderMC172 extends RenderPlane{
 	}
 
 	@Override
-	protected void renderStrobeLightCovers(EntityPlane plane){
-		//Landing light case.
+	protected void renderLightCovers(EntityPlane plane){
+		//Landing light cover.
 		GL11.glPushMatrix();
 		GL11.glTranslatef(0, -0.375F, 2.157F);
 		RenderHelper.bindTexture(windowTexture);

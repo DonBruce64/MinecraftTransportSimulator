@@ -31,7 +31,7 @@ public abstract class RenderPlane extends RenderParent{
         renderWindows(plane);
         renderConsole(plane);
         renderMarkings(plane);
-        renderStrobeLightCovers(plane);
+        renderLightCovers(plane);
         if(plane.lightsOn){
         	renderStrobeLights(plane);
         }
@@ -75,7 +75,7 @@ public abstract class RenderPlane extends RenderParent{
 	protected abstract void renderWindows(EntityPlane plane);
 	protected abstract void renderConsole(EntityPlane plane);
 	protected abstract void renderMarkings(EntityPlane plane);
-	protected abstract void renderStrobeLightCovers(EntityPlane plane);
+	protected abstract void renderLightCovers(EntityPlane plane);
 	protected abstract void renderStrobeLights(EntityPlane plane);
 	public abstract void renderLights(EntityPlane plane);
 	

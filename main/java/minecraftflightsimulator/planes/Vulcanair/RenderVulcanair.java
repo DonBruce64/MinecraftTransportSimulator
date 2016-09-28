@@ -35,8 +35,8 @@ public class RenderVulcanair extends RenderPlane{
 	}
 	
 	@Override
-	protected void renderStrobeLightCovers(EntityPlane plane){		
-		//Landing light case.
+	protected void renderLightCovers(EntityPlane plane){		
+		//Landing light cover.
 		GL11.glPushMatrix();
 		GL11.glTranslatef(0, -1.5F, 4.890625F);
 		GL11.glColor3f(1, 1, 1);
@@ -75,7 +75,7 @@ public class RenderVulcanair extends RenderPlane{
 			GL11.glDisable(GL11.GL_LIGHTING);
 			GL11.glEnable(GL11.GL_BLEND);
 			GL11.glColor4f(1, 1, 1, (float) plane.electricPower/12F);
-			RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0, 0, true);;
+			RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0, 0, false);
 			GL11.glDisable(GL11.GL_BLEND);
 			GL11.glTranslatef(0, 0.20F, -0.1F);
 			GL11.glRotatef(35, 1, 0, 0);
