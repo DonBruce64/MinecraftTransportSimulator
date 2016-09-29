@@ -69,7 +69,7 @@ public class RenderMC172 extends RenderPlane{
 			GL11.glDisable(GL11.GL_LIGHTING);
 			GL11.glEnable(GL11.GL_BLEND);
 			GL11.glColor4f(1, 1, 1, (float) plane.electricPower/12F);
-			RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0, 0, true);
+			RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0, 0, false);
 			GL11.glDisable(GL11.GL_BLEND);
 			GL11.glPopMatrix();
 			

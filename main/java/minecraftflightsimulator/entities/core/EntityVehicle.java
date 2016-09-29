@@ -5,13 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.containers.ContainerVehicle;
 import minecraftflightsimulator.containers.GUIParent;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.items.ItemEngine;
+import minecraftflightsimulator.utilities.CommonConfig;
 import minecraftflightsimulator.utilities.MFSVector;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
@@ -247,7 +247,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		for(int i=0; i<inventory.getSizeInventory(); ++i){
 			ItemStack stack = inventory.getStackInSlot(i);
 			if(stack != null){
-				weight += 1.2F*stack.stackSize/stack.getMaxStackSize()*(MFS.heavyItems.contains(stack.getItem().getUnlocalizedName().substring(5)) ? 2 : 1);
+				weight += 1.2F*stack.stackSize/stack.getMaxStackSize()*(CommonConfig.getStringConfig("HeavyItems").contains(stack.getItem().getUnlocalizedName().substring(5)) ? 2 : 1);
 			}
 		}
 		return weight;

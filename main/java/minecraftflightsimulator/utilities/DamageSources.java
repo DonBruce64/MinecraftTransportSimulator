@@ -1,6 +1,5 @@
 package minecraftflightsimulator.utilities;
 
-import minecraftflightsimulator.MFS;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ChatComponentTranslation;
@@ -8,15 +7,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.IChatComponent;
 
 public class DamageSources{
-	public static double propellerDamageFactor;
-	public static double crashDamageFactor;
 	
-	public static void init(){
-		propellerDamageFactor = MFS.config.get(MFS.config.CATEGORY_GENERAL, "PropellerDamageFactor", 1.0F, "Factor for damage caused by a propeller.").getDouble();
-		crashDamageFactor = MFS.config.get(MFS.config.CATEGORY_GENERAL, "CrashDamageFactor", 1.0F, "Factor for damage caused by plane crashes.").getDouble();
-		MFS.config.save();
-	}
-
 	private static class DamageSourceMFS extends DamageSource{
 		//Source of the damage.  This will be the vehicle controller or the player who shot the gun.
 		private final Entity playerResponsible;

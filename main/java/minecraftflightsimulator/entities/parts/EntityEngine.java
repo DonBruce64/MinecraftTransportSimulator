@@ -5,6 +5,7 @@ import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.packets.control.EnginePacket;
 import minecraftflightsimulator.sounds.EngineSound;
+import minecraftflightsimulator.utilities.CommonConfig;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -74,7 +75,7 @@ public abstract class EntityEngine extends EntityChild{
 				}
 			}
 
-			vehicle.fuel -= this.fuelConsumption*MFS.fuelUsageFactor*engineRPM/maxEngineRPM;
+			vehicle.fuel -= this.fuelConsumption*CommonConfig.getDoubleConfig("FuelUsageFactor")*engineRPM/maxEngineRPM;
 			if(vehicle.fuel <= 0 || engineRPM < 300 || isLiquidAt(posX, posY, posZ)){
 				MFS.proxy.playSound(this, "mfs:engine_starting", 1, 1);
 				vehicle.fuel = 0;
@@ -118,7 +119,7 @@ public abstract class EntityEngine extends EntityChild{
 			if(electricStarterEngaged){
 				vehicle.electricPower -= 0.01F;
 			}
-			vehicle.fuel -= this.fuelConsumption*MFS.fuelUsageFactor;
+			vehicle.fuel -= this.fuelConsumption*CommonConfig.getDoubleConfig("FuelUsageFactor");
 			if(engineRPM < 600){
 				engineRPM = Math.min(engineRPM+type.starterPower, 600);
 			}else{

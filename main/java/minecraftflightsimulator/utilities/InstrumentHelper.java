@@ -2,7 +2,6 @@ package minecraftflightsimulator.utilities;
 
 import java.awt.Color;
 
-import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityFlyable;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import net.minecraft.client.Minecraft;
@@ -223,9 +222,9 @@ public class InstrumentHelper{
         drawDialIncrements(centerX, centerY, -180, 180, 25, 5, 11);
         drawDialNumbers(centerX, centerY, 0, 320,  17, 0, 1, 9, 0.7F);
         GL11.glTranslatef(0, 0, offset);
-        drawShortPointer(centerX, centerY, (float) (.36*(flyer.posY - (ControlHelper.seaLevelOffset ? 64 : 0))), 20, 6);
+        drawShortPointer(centerX, centerY, (float) (.36*(flyer.posY - (ClientConfig.getBooleanConfig("SeaLevelOffset")  ? 64 : 0))), 20, 6);
         GL11.glTranslatef(0, 0, offset);
-        drawLongPointer(centerX, centerY, (float) (3.6*(flyer.posY - (ControlHelper.seaLevelOffset ? 64 : 0))), 35, 3);
+        drawLongPointer(centerX, centerY, (float) (3.6*(flyer.posY - (ClientConfig.getBooleanConfig("SeaLevelOffset")  ? 64 : 0))), 35, 3);
     }
     
 	private static void drawHeadingIndicator(EntityFlyable flyer, int centerX, int centerY){
@@ -284,7 +283,7 @@ public class InstrumentHelper{
     	drawDialIncrements(centerX, centerY, 30, 330, 25, 8, 9);
     	drawDialIncrements(centerX, centerY, 30, 330, 25, 3, 41);
     	drawDialNumbers(centerX, centerY, 30, 330, 15, 0, 10, 4, 0.6F);
-    	drawLongPointer(centerX, centerY, (float) (30+7.5*flyer.velocity*MFS.planeSpeedFactor*20), 35, 2);
+    	drawLongPointer(centerX, centerY, (float) (30+7.5*flyer.velocity*CommonConfig.getDoubleConfig("PlaneSpeedFactor")*20), 35, 2);
     }
     
 	private static void drawTurnCoordinator(EntityFlyable flyer, int centerX, int centerY){

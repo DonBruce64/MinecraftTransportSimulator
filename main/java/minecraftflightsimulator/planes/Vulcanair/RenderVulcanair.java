@@ -77,7 +77,10 @@ public class RenderVulcanair extends RenderPlane{
 			GL11.glColor4f(1, 1, 1, (float) plane.electricPower/12F);
 			RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0, 0, false);
 			GL11.glDisable(GL11.GL_BLEND);
-			GL11.glTranslatef(0, 0.20F, -0.1F);
+			GL11.glPopMatrix();
+			
+			GL11.glPushMatrix();
+			GL11.glTranslatef(0, 0.20F, 5.030625F);
 			GL11.glRotatef(35, 1, 0, 0);
 			RenderHelper.drawLightBeam(plane, 7, 10, 20);
 			GL11.glPopMatrix();

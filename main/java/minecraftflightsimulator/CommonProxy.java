@@ -3,18 +3,18 @@ package minecraftflightsimulator;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.containers.GUIHandler;
 import minecraftflightsimulator.entities.core.EntityChild;
-import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.sounds.EngineSound;
-import minecraftflightsimulator.utilities.DamageSources;
+import minecraftflightsimulator.utilities.CommonConfig;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
@@ -31,11 +31,12 @@ public class CommonProxy{
 	private static int entityNumber = 0;
 	private static int packetNumber = 0;
 
-	public void preInit(){}
+	public void preInit(FMLPreInitializationEvent event){
+		CommonConfig.init(event.getSuggestedConfigurationFile());
+	}
 	
-	public void init(){
+	public void init(FMLInitializationEvent event){
 		MFSRegistry.instance.init();
-		DamageSources.init();
 		NetworkRegistry.INSTANCE.registerGuiHandler(MFS.instance, new GUIHandler());
 	}
 	

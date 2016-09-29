@@ -1,7 +1,7 @@
 package minecraftflightsimulator.containers;
 
-import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityVehicle;
+import minecraftflightsimulator.utilities.CommonConfig;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -23,9 +23,7 @@ public class SlotFuel extends SlotItem{
     		fluidStack = FluidContainerRegistry.getFluidForFilledItem(stack);
     	}
     	if(fluidStack != null){
-			if(MFS.fluidValues.containsKey(fluidStack.getFluid().getName())){
-				return MFS.fluidValues.get(fluidStack.getFluid().getName()) > 0;
-			}
+    		return CommonConfig.getFuelValue(fluidStack.getFluid().getName()) > 0;
 		}
     	return false;
     }
@@ -39,8 +37,8 @@ public class SlotFuel extends SlotItem{
 	    			FluidStack fluidStack = ((IFluidContainerItem) stack.getItem()).getFluid(stack);
 	    			if(fluidStack != null){
 	    				if(fluidStack.getFluid() != null){
-	    					if(MFS.fluidValues.containsKey(fluidStack.getFluid().getName())){
-	    						double fuelValue = MFS.fluidValues.get(fluidStack.getFluid().getName());
+	    					if(CommonConfig.getFuelValue(fluidStack.getFluid().getName()) > 0){
+	    						double fuelValue = CommonConfig.getFuelValue(fluidStack.getFluid().getName());
 	    						FluidStack drainedFluid = ((IFluidContainerItem) stack.getItem()).drain(stack, (int) ((vehicle.maxFuel - vehicle.fuel)*fuelValue), true);
 	    						vehicle.fuel += drainedFluid.amount;
 	    						vehicle.setInventorySlotContents(vehicle.emptyBucketSlot, stack);
@@ -58,8 +56,8 @@ public class SlotFuel extends SlotItem{
     					return;
     				}
     			}
-    			if(MFS.fluidValues.containsKey(fluidStack.getFluid().getName())){
-    				double fuelValue = MFS.fluidValues.get(fluidStack.getFluid().getName());  
+    			if(CommonConfig.getFuelValue(fluidStack.getFluid().getName()) > 0){
+    				double fuelValue = CommonConfig.getFuelValue(fluidStack.getFluid().getName());  
     				if((vehicle.fuel + fluidStack.amount*fuelValue) - 100 < vehicle.maxFuel){
     					vehicle.fuel = Math.min(vehicle.fuel + fluidStack.amount*fuelValue, vehicle.maxFuel);
     					if(vehicle.getStackInSlot(vehicle.emptyBucketSlot) != null){

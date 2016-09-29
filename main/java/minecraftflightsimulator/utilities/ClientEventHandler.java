@@ -18,7 +18,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.common.config.Property;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
@@ -68,11 +67,9 @@ public class ClientEventHandler{
 						}
 					}
 				}
-				if(MFS.firstRun){
+				if(ClientConfig.getBooleanConfig("FirstRun")){
+					ClientConfig.setBooleanConfig("FirstRun", false);
 					minecraft.thePlayer.openGui(MFS.instance, -1, null, 1, 1, 1);
-					MFS.firstRun = false;
-					MFS.config.getCategory(MFS.config.CATEGORY_GENERAL).put("FirstRun", new Property("FirstRun", String.valueOf(MFS.firstRun), Property.Type.BOOLEAN));
-					MFS.config.save();
 				}
 			}else if(!minecraft.isGamePaused()){
 				if(minecraft.thePlayer.ridingEntity instanceof EntitySeat){

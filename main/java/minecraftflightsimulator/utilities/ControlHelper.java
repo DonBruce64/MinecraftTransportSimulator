@@ -30,7 +30,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 /**Class that handles all control operations.
- * Keybinding lists are initiated during {@link ClientProxy} init.
+ * Keybinding lists are initiated during the {@link ClientProxy} init method.
  * 
  * @author don_bruce
  */
@@ -50,16 +50,9 @@ public class ControlHelper{
 	private static final int NULL_COMPONENT = 999;
 	private static final String KEYBOARD_CONFIG = "keyboard";
 	private static final String JOYSTICK_CONFIG = "joystick";
-	private static final String CLIENTSIDE_CONFIG = "clientconfig";
 
 	//Configurations and data arrays
 	public static KeyBinding configKey;
-	public static boolean seaLevelOffset;
-	private static boolean throttleKills;
-	private static boolean electricStart;
-	private static byte joystickForceFactor;
-	private static short controlSurfaceCooldown;
-	private static double joystickDeadZone;
 	private static Controller joystick;
 	private static Map<String, Integer> keyboardMap = new HashMap<String, Integer>();
 	private static Map<String, Integer> joystickMap = new HashMap<String, Integer>();
@@ -67,34 +60,26 @@ public class ControlHelper{
 	public static void init(){
 		configKey = new KeyBinding("key.config", Keyboard.KEY_P, "key.categories.mfs");
 		ClientRegistry.registerKeyBinding(configKey);
-	
-		throttleKills = MFS.config.get(CLIENTSIDE_CONFIG, "ThrottleKills", false, "Whether or not the throttle can be put to zero and kill the engine.  \nOnly valid for joysticks.").getBoolean();
-		seaLevelOffset = MFS.config.get(CLIENTSIDE_CONFIG, "SeaLevelOffset", false, "Does altimiter read zero at Y=64 instead of Y=0?").getBoolean();
-		electricStart = MFS.config.get(CLIENTSIDE_CONFIG, "ElectricStart", true, "Is the starter enabled? \nIf not, players must hit propellers to start them").getBoolean();
-		joystickForceFactor = (byte) MFS.config.get(CLIENTSIDE_CONFIG, "JoystickForceFactor", 15, "Factor by which joystick inputs are multiplied.  \nThis controls how quickly the control surfaces change.", 1, Byte.MAX_VALUE).getInt();
-		controlSurfaceCooldown = (short) MFS.config.get(CLIENTSIDE_CONFIG, "ControlSurfaceCooldown", 4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.  \nThis is not used when using a joystick.", 0, Short.MAX_VALUE).getInt();
-		joystickDeadZone = MFS.config.get(CLIENTSIDE_CONFIG, "DeadZone", 0.03D, "Dead zone for joystick axis.  \nMFS will always use the greater of this value and the value provided by the computer.").getDouble();
-		MFS.config.save();
 		
-		keyboardMap.put(controls.MOD.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.MOD.keyboardName, Keyboard.KEY_RSHIFT).getInt());
-		keyboardMap.put(controls.CAM.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.CAM.keyboardName, Keyboard.KEY_RCONTROL).getInt());
-		keyboardMap.put(controls.PITCH.keyboardIncrementName, MFS.config.get(KEYBOARD_CONFIG, controls.PITCH.keyboardIncrementName, Keyboard.KEY_S).getInt());
-		keyboardMap.put(controls.PITCH.keyboardDecrementName, MFS.config.get(KEYBOARD_CONFIG, controls.PITCH.keyboardDecrementName, Keyboard.KEY_W).getInt());
-		keyboardMap.put(controls.ROLL.keyboardIncrementName, MFS.config.get(KEYBOARD_CONFIG, controls.ROLL.keyboardIncrementName, Keyboard.KEY_D).getInt());
-		keyboardMap.put(controls.ROLL.keyboardDecrementName, MFS.config.get(KEYBOARD_CONFIG, controls.ROLL.keyboardDecrementName, Keyboard.KEY_A).getInt());
-		keyboardMap.put(controls.YAW.keyboardIncrementName, MFS.config.get(KEYBOARD_CONFIG, controls.YAW.keyboardIncrementName, Keyboard.KEY_L).getInt());
-		keyboardMap.put(controls.YAW.keyboardDecrementName, MFS.config.get(KEYBOARD_CONFIG, controls.YAW.keyboardDecrementName, Keyboard.KEY_J).getInt());
-		keyboardMap.put(controls.THROTTLE.keyboardIncrementName, MFS.config.get(KEYBOARD_CONFIG, controls.THROTTLE.keyboardIncrementName, Keyboard.KEY_I).getInt());
-		keyboardMap.put(controls.THROTTLE.keyboardDecrementName, MFS.config.get(KEYBOARD_CONFIG, controls.THROTTLE.keyboardDecrementName, Keyboard.KEY_K).getInt());
-		keyboardMap.put(controls.FLAPS_U.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.FLAPS_U.keyboardName, Keyboard.KEY_Y).getInt());
-		keyboardMap.put(controls.FLAPS_D.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.FLAPS_D.keyboardName, Keyboard.KEY_H).getInt());
-		keyboardMap.put(controls.BRAKE.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.BRAKE.keyboardName, Keyboard.KEY_B).getInt());
-		keyboardMap.put(controls.STARTER.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.STARTER.keyboardName, Keyboard.KEY_M).getInt());
-		keyboardMap.put(controls.LIGHTS.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.LIGHTS.keyboardName, Keyboard.KEY_N).getInt());
-		keyboardMap.put(controls.ZOOM_I.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.ZOOM_I.keyboardName, Keyboard.KEY_PRIOR).getInt());
-		keyboardMap.put(controls.ZOOM_O.keyboardName, MFS.config.get(KEYBOARD_CONFIG, controls.ZOOM_O.keyboardName, Keyboard.KEY_NEXT).getInt());
+		keyboardMap.put(controls.MOD.keyboardName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.MOD.keyboardName, Keyboard.KEY_RSHIFT).getInt());
+		keyboardMap.put(controls.CAM.keyboardName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.CAM.keyboardName, Keyboard.KEY_RCONTROL).getInt());
+		keyboardMap.put(controls.PITCH.keyboardIncrementName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.PITCH.keyboardIncrementName, Keyboard.KEY_S).getInt());
+		keyboardMap.put(controls.PITCH.keyboardDecrementName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.PITCH.keyboardDecrementName, Keyboard.KEY_W).getInt());
+		keyboardMap.put(controls.ROLL.keyboardIncrementName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.ROLL.keyboardIncrementName, Keyboard.KEY_D).getInt());
+		keyboardMap.put(controls.ROLL.keyboardDecrementName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.ROLL.keyboardDecrementName, Keyboard.KEY_A).getInt());
+		keyboardMap.put(controls.YAW.keyboardIncrementName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.YAW.keyboardIncrementName, Keyboard.KEY_L).getInt());
+		keyboardMap.put(controls.YAW.keyboardDecrementName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.YAW.keyboardDecrementName, Keyboard.KEY_J).getInt());
+		keyboardMap.put(controls.THROTTLE.keyboardIncrementName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.THROTTLE.keyboardIncrementName, Keyboard.KEY_I).getInt());
+		keyboardMap.put(controls.THROTTLE.keyboardDecrementName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.THROTTLE.keyboardDecrementName, Keyboard.KEY_K).getInt());
+		keyboardMap.put(controls.FLAPS_U.keyboardName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.FLAPS_U.keyboardName, Keyboard.KEY_Y).getInt());
+		keyboardMap.put(controls.FLAPS_D.keyboardName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.FLAPS_D.keyboardName, Keyboard.KEY_H).getInt());
+		keyboardMap.put(controls.BRAKE.keyboardName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.BRAKE.keyboardName, Keyboard.KEY_B).getInt());
+		keyboardMap.put(controls.STARTER.keyboardName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.STARTER.keyboardName, Keyboard.KEY_M).getInt());
+		keyboardMap.put(controls.LIGHTS.keyboardName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.LIGHTS.keyboardName, Keyboard.KEY_N).getInt());
+		keyboardMap.put(controls.ZOOM_I.keyboardName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.ZOOM_I.keyboardName, Keyboard.KEY_PRIOR).getInt());
+		keyboardMap.put(controls.ZOOM_O.keyboardName, CommonConfig.config.get(KEYBOARD_CONFIG, controls.ZOOM_O.keyboardName, Keyboard.KEY_NEXT).getInt());
 		
-		String joystickName = MFS.config.get(JOYSTICK_CONFIG, "JoystickName", "", "Name of the joystick controller.  \nChanged to match selection in control GUI.").getString();
+		String joystickName = CommonConfig.config.get(JOYSTICK_CONFIG, "JoystickName", "").getString();
 		for(Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()){
 			if(controller.getName().equals(joystickName)){
 				joystick = controller;
@@ -102,35 +87,35 @@ public class ControlHelper{
 			}
 		}
 		
-		joystickMap.put(controls.MOD.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.MOD.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.CAM.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.CAM.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.PITCH.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.PITCH.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.ROLL.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.ROLL.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.YAW.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.YAW.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.THROTTLE.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.THROTTLE.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.FLAPS_U.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.FLAPS_U.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.FLAPS_D.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.FLAPS_D.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.BRAKE.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.BRAKE.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.STARTER.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.STARTER.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.LIGHTS.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.LIGHTS.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.ZOOM_I.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.ZOOM_I.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.ZOOM_O.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.ZOOM_O.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.CHANGEVIEW.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.CHANGEVIEW.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.LOOK_L.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.LOOK_L.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.LOOK_R.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.LOOK_R.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.LOOK_U.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.LOOK_U.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.LOOK_D.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.LOOK_D.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(controls.LOOK_ALL.joystickName, MFS.config.get(JOYSTICK_CONFIG, controls.LOOK_ALL.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.MOD.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.MOD.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.CAM.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.CAM.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.PITCH.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.PITCH.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.ROLL.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.ROLL.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.YAW.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.YAW.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.THROTTLE.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.THROTTLE.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.FLAPS_U.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.FLAPS_U.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.FLAPS_D.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.FLAPS_D.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.BRAKE.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.BRAKE.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.STARTER.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.STARTER.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.LIGHTS.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.LIGHTS.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.ZOOM_I.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.ZOOM_I.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.ZOOM_O.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.ZOOM_O.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.CHANGEVIEW.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.CHANGEVIEW.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.LOOK_L.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.LOOK_L.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.LOOK_R.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.LOOK_R.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.LOOK_U.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.LOOK_U.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.LOOK_D.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.LOOK_D.joystickName, NULL_COMPONENT).getInt());
+		joystickMap.put(controls.LOOK_ALL.joystickName, CommonConfig.config.get(JOYSTICK_CONFIG, controls.LOOK_ALL.joystickName, NULL_COMPONENT).getInt());
 		
-		controls.PITCH.joystickMaxTravel = MFS.config.get(JOYSTICK_CONFIG, controls.PITCH.joystickName+"maxtravel", 1D).getDouble();
-		controls.PITCH.joystickMinTravel = MFS.config.get(JOYSTICK_CONFIG, controls.PITCH.joystickName+"mintravel", -1D).getDouble();
-		controls.ROLL.joystickMaxTravel = MFS.config.get(JOYSTICK_CONFIG, controls.ROLL.joystickName+"maxtravel", 1D).getDouble();
-		controls.ROLL.joystickMinTravel = MFS.config.get(JOYSTICK_CONFIG, controls.ROLL.joystickName+"mintravel", -1D).getDouble();
-		controls.YAW.joystickMaxTravel = MFS.config.get(JOYSTICK_CONFIG, controls.YAW.joystickName+"maxtravel", 1D).getDouble();
-		controls.YAW.joystickMinTravel = MFS.config.get(JOYSTICK_CONFIG, controls.YAW.joystickName+"mintravel", -1D).getDouble();
-		controls.THROTTLE.joystickMaxTravel = MFS.config.get(JOYSTICK_CONFIG, controls.THROTTLE.joystickName+"maxtravel", 1D).getDouble();
-		controls.THROTTLE.joystickMinTravel = MFS.config.get(JOYSTICK_CONFIG, controls.THROTTLE.joystickName+"mintravel", -1D).getDouble();
-	}
+		controls.PITCH.joystickMaxTravel = CommonConfig.config.get(JOYSTICK_CONFIG, controls.PITCH.joystickName+"maxtravel", 1D).getDouble();
+		controls.PITCH.joystickMinTravel = CommonConfig.config.get(JOYSTICK_CONFIG, controls.PITCH.joystickName+"mintravel", -1D).getDouble();
+		controls.ROLL.joystickMaxTravel = CommonConfig.config.get(JOYSTICK_CONFIG, controls.ROLL.joystickName+"maxtravel", 1D).getDouble();
+		controls.ROLL.joystickMinTravel = CommonConfig.config.get(JOYSTICK_CONFIG, controls.ROLL.joystickName+"mintravel", -1D).getDouble();
+		controls.YAW.joystickMaxTravel = CommonConfig.config.get(JOYSTICK_CONFIG, controls.YAW.joystickName+"maxtravel", 1D).getDouble();
+		controls.YAW.joystickMinTravel = CommonConfig.config.get(JOYSTICK_CONFIG, controls.YAW.joystickName+"mintravel", -1D).getDouble();
+		controls.THROTTLE.joystickMaxTravel = CommonConfig.config.get(JOYSTICK_CONFIG, controls.THROTTLE.joystickName+"maxtravel", 1D).getDouble();
+		controls.THROTTLE.joystickMinTravel = CommonConfig.config.get(JOYSTICK_CONFIG, controls.THROTTLE.joystickName+"mintravel", -1D).getDouble();
+	}	
 	
 	public static String getKeyboardKeyname(String keyname){
 		return Keyboard.getKeyName(keyboardMap.get(keyname));
@@ -147,8 +132,8 @@ public class ControlHelper{
 	
 	public static void setKeyboardKey(String keyname, int bytecode){
 		keyboardMap.put(keyname, bytecode);
-		MFS.config.getCategory(KEYBOARD_CONFIG).put(keyname, new Property(keyname, String.valueOf(bytecode), Property.Type.INTEGER));
-		MFS.config.save();
+		CommonConfig.config.getCategory(KEYBOARD_CONFIG).put(keyname, new Property(keyname, String.valueOf(bytecode), Property.Type.INTEGER));
+		CommonConfig.config.save();
 	}
 	
 	public static void setJoystickControl(String keyname, int componentId){
@@ -160,11 +145,11 @@ public class ControlHelper{
 		}
 		if(joystickMap.containsKey(currentMapping)){
 			joystickMap.put(currentMapping, NULL_COMPONENT);
-			MFS.config.getCategory(JOYSTICK_CONFIG).put(currentMapping, new Property(currentMapping, String.valueOf(NULL_COMPONENT), Property.Type.INTEGER));
+			CommonConfig.config.getCategory(JOYSTICK_CONFIG).put(currentMapping, new Property(currentMapping, String.valueOf(NULL_COMPONENT), Property.Type.INTEGER));
 		}			
 		joystickMap.put(keyname, componentId);
-		MFS.config.getCategory(JOYSTICK_CONFIG).put(keyname, new Property(keyname, String.valueOf(componentId), Property.Type.INTEGER));
-		MFS.config.save();
+		CommonConfig.config.getCategory(JOYSTICK_CONFIG).put(keyname, new Property(keyname, String.valueOf(componentId), Property.Type.INTEGER));
+		CommonConfig.config.save();
 	}
 	
 	public static void setAxisBounds(String axisName, double minBound, double maxBound){
@@ -172,16 +157,16 @@ public class ControlHelper{
 			if(control.joystickName.equals(axisName)){
 				control.joystickMinTravel = minBound;
 				control.joystickMaxTravel = maxBound;
-				MFS.config.getCategory(JOYSTICK_CONFIG).put(control.joystickName+"maxtravel", new Property(control.joystickName+"maxtravel", String.valueOf(control.joystickMaxTravel), Property.Type.DOUBLE));
-				MFS.config.getCategory(JOYSTICK_CONFIG).put(control.joystickName+"mintravel", new Property(control.joystickName+"mintravel", String.valueOf(control.joystickMinTravel), Property.Type.DOUBLE));
+				CommonConfig.config.getCategory(JOYSTICK_CONFIG).put(control.joystickName+"maxtravel", new Property(control.joystickName+"maxtravel", String.valueOf(control.joystickMaxTravel), Property.Type.DOUBLE));
+				CommonConfig.config.getCategory(JOYSTICK_CONFIG).put(control.joystickName+"mintravel", new Property(control.joystickName+"mintravel", String.valueOf(control.joystickMinTravel), Property.Type.DOUBLE));
 			}
 		}
 	}
 	
 	public static void setJoystick(Controller controller){
 		joystick = controller;
-		if(!joystick.getName().equals(MFS.config.get(CLIENTSIDE_CONFIG, "JoystickName", "").getString())){
-			MFS.config.getCategory(CLIENTSIDE_CONFIG).put("JoystickName", new Property("JoystickName", joystick.getName(), Property.Type.STRING));
+		if(!joystick.getName().equals(CommonConfig.config.get(JOYSTICK_CONFIG, "JoystickName", ""))){
+			CommonConfig.config.getCategory(JOYSTICK_CONFIG).put("JoystickName", new Property("JoystickName", joystick.getName(), Property.Type.STRING));
 			for(String joystickControl : joystickMap.keySet()){
 				setJoystickControl(joystickControl, NULL_COMPONENT);
 			}
@@ -208,16 +193,16 @@ public class ControlHelper{
 	
 	private static short getAxisState(ControlHelper.controls control, boolean controlSurface){
 		float pollValue = joystick.getComponents()[joystickMap.get(control.joystickName)].getPollData();
-		if(Math.abs(pollValue) > joystick.getComponents()[joystickMap.get(control.joystickName)].getDeadZone() && Math.abs(pollValue) > joystickDeadZone){
+		if(Math.abs(pollValue) > joystick.getComponents()[joystickMap.get(control.joystickName)].getDeadZone() && Math.abs(pollValue) > ClientConfig.getDoubleConfig("JoystickDeadZone")){
 			if(pollValue < 0){
 				if(controlSurface){
-					return (short) (-350*Math.pow(2, joystickForceFactor*pollValue/control.joystickMinTravel - joystickForceFactor));
+					return (short) (-350*Math.pow(2, ClientConfig.getIntegerConfig("JoystickForceFactor")*pollValue/control.joystickMinTravel - ClientConfig.getIntegerConfig("JoystickForceFactor")));
 				}else{
 					return (short) (-100*pollValue/control.joystickMinTravel);
 				}
 			}else{
 				if(controlSurface){
-					return (short) (350*Math.pow(2, joystickForceFactor*pollValue/control.joystickMaxTravel - joystickForceFactor));
+					return (short) (350*Math.pow(2, ClientConfig.getIntegerConfig("JoystickForceFactor")*pollValue/control.joystickMaxTravel - ClientConfig.getIntegerConfig("JoystickForceFactor")));
 				}else{
 					return (short) (100*pollValue/control.joystickMaxTravel);
 				}
@@ -315,13 +300,13 @@ public class ControlHelper{
 			if(isControlPressed(controls.MOD)){
 				MFS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 8));
 			}else{
-				MFS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), true, controlSurfaceCooldown));
+				MFS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), true, (short) ClientConfig.getIntegerConfig("ControlSurfaceCooldown")));
 			}
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.ROLL.keyboardDecrementName))){
 			if(isControlPressed(controls.MOD)){
 				MFS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 0));
 			}else{
-				MFS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), false, controlSurfaceCooldown));
+				MFS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), false, (short) ClientConfig.getIntegerConfig("ControlSurfaceCooldown")));
 			}
 		}
 		
@@ -331,13 +316,13 @@ public class ControlHelper{
 			if(isControlPressed(controls.MOD)){
 				MFS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 9));
 			}else{
-				MFS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), true, controlSurfaceCooldown));
+				MFS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), true, (short) ClientConfig.getIntegerConfig("ControlSurfaceCooldown")));
 			}
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.PITCH.keyboardDecrementName))){
 			if(isControlPressed(controls.MOD)){
 				MFS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 1));
 			}else{
-				MFS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), false, controlSurfaceCooldown));
+				MFS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), false, (short) ClientConfig.getIntegerConfig("ControlSurfaceCooldown")));
 			}
 		}
 		
@@ -347,13 +332,13 @@ public class ControlHelper{
 			if(isControlPressed(controls.MOD)){
 				MFS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 10));
 			}else{
-				MFS.MFSNet.sendToServer(new RudderPacket(plane.getEntityId(), true, controlSurfaceCooldown));
+				MFS.MFSNet.sendToServer(new RudderPacket(plane.getEntityId(), true, (short) ClientConfig.getIntegerConfig("ControlSurfaceCooldown")));
 			}
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.YAW.keyboardDecrementName))){
 			if(isControlPressed(controls.MOD)){
 				MFS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 2));
 			}else{
-				MFS.MFSNet.sendToServer(new RudderPacket(plane.getEntityId(), false, controlSurfaceCooldown));
+				MFS.MFSNet.sendToServer(new RudderPacket(plane.getEntityId(), false, (short) ClientConfig.getIntegerConfig("ControlSurfaceCooldown")));
 			}
 		}
 	}
@@ -375,7 +360,7 @@ public class ControlHelper{
 	
 	private static void checkThrottle(EntityVehicle vehicle){
 		if(joystickMap.get(controls.THROTTLE.joystickName) != 999 && joystick != null){
-			MFS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), (byte) (Math.max(50 + getAxisState(controls.THROTTLE, false)/2, throttleKills ? 0 : 15))));
+			MFS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), (byte) (Math.max(50 + getAxisState(controls.THROTTLE, false)/2, ClientConfig.getBooleanConfig("ThrottleKills") ? 0 : 15))));
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.THROTTLE.keyboardIncrementName))){
 			MFS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), Byte.MAX_VALUE));
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.THROTTLE.keyboardDecrementName))){
@@ -406,14 +391,14 @@ public class ControlHelper{
 				if(isControlPressed(controls.MOD)){
 					MFS.MFSNet.sendToServer(new EnginePacket(vehicle.getEntityId(), (byte) 3, 0));
 				}else{
-					if(electricStart){
+					if(ClientConfig.getBooleanConfig("ElectricStart")){
 						MFS.MFSNet.sendToServer(new EnginePacket(vehicle.getEntityId(), (byte) 1, 0));
 					}
 				}
 			}
 		}else if(starterKeyPressed){
 			starterKeyPressed = false;
-			if(electricStart){
+			if(ClientConfig.getBooleanConfig("ElectricStart")){
 				MFS.MFSNet.sendToServer(new EnginePacket(vehicle.getEntityId(), (byte) 2, 0));
 			}
 		}
