@@ -68,7 +68,7 @@ public class ClientEventHandler{
 					}
 				}
 				if(ClientConfig.getBooleanConfig("FirstRun")){
-					ClientConfig.setBooleanConfig("FirstRun", false);
+					ClientConfig.setBooleanConfig("FirstRun", true);
 					minecraft.thePlayer.openGui(MFS.instance, -1, null, 1, 1, 1);
 				}
 			}else if(!minecraft.isGamePaused()){
