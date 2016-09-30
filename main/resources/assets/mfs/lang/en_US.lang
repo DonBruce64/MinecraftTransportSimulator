@@ -62,6 +62,8 @@ item.FlightInstrument13.name=Engine Temperature Gauge
 item.FlightInstrument13.description=Indicates engine temperature.
 item.FlightInstrument14.name=Oil Pressure Gauge
 item.FlightInstrument14.description=Indicates oil pressure (NO USE).
+item.FlightInstrument15.name=Electrical Gauge
+item.FlightInstrument15.description=Indicates electrical power and usage.
 
 itemGroup.tabMFS=Minecraft Flight Simulator
 key.categories.mfs=Minecraft Flight Simulator

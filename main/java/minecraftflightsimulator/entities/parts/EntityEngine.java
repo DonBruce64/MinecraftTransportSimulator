@@ -58,6 +58,7 @@ public abstract class EntityEngine extends EntityChild{
 		}
 		
 		engineTemp -= (engineTemp - (20*(1 - posY/400)))*(0.25 + vehicle.velocity/2F)/100F/2F;
+		vehicle.electricUsage -= 0.01*engineRPM/maxEngineRPM;
 		if(engineOn){
 			engineTemp += engineRPM/5000F/2F;
 			hours += 0.001;
@@ -117,9 +118,9 @@ public abstract class EntityEngine extends EntityChild{
 			}
 			--starterLevel;
 			if(electricStarterEngaged){
-				vehicle.electricPower -= 0.01F;
+				vehicle.electricUsage += 0.01F;
+				vehicle.fuel -= this.fuelConsumption*CommonConfig.getDoubleConfig("FuelUsageFactor");
 			}
-			vehicle.fuel -= this.fuelConsumption*CommonConfig.getDoubleConfig("FuelUsageFactor");
 			if(engineRPM < 600){
 				engineRPM = Math.min(engineRPM+type.starterPower, 600);
 			}else{

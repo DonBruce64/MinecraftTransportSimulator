@@ -3,6 +3,7 @@ package minecraftflightsimulator.items;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecraftflightsimulator.utilities.InstrumentHelper;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -28,7 +29,7 @@ public class ItemFlightInstrument extends Item{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List itemList){
-		for(int i=0; i<15; ++i){
+		for(int i=0; i<InstrumentHelper.AircraftGauges.values().length; ++i){
 			if(i==9 || i==14){continue;}
 			itemList.add(new ItemStack(item, 1, i));
 		}
@@ -42,7 +43,7 @@ public class ItemFlightInstrument extends Item{
     @Override
     @SideOnly(Side.CLIENT)
     public void registerIcons(IIconRegister register){
-    	for(int i=0; i<15; ++i){
+    	for(int i=0; i<InstrumentHelper.AircraftGauges.values().length; ++i){
     		iconList.add(register.registerIcon("mfs:flightinstrument" + i));
     	}
     }

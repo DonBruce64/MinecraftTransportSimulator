@@ -5,6 +5,8 @@ import java.awt.Color;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.modelrenders.RenderPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
+import minecraftflightsimulator.utilities.InstrumentHelper.AircraftControls;
+import minecraftflightsimulator.utilities.InstrumentHelper.AircraftGauges;
 import minecraftflightsimulator.utilities.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
@@ -92,12 +94,12 @@ public class RenderPZLP11 extends RenderPlane{
 		GL11.glScalef(0.00390625F*1F, 0.00390625F*1F, 0.00390625F*1F);
 		for(byte i=0; i<plane.instrumentList.size(); ++i){
 			if(plane.instrumentList.get(i) != null){
-				InstrumentHelper.drawFlyableInstrument(plane, (i%5)*60, i<5 ? 0 : 62, plane.instrumentList.get(i).getItemDamage(), false);
+				InstrumentHelper.drawFlyableInstrument(plane, (i%5)*60, i<5 ? 0 : 62, AircraftGauges.values()[plane.instrumentList.get(i).getItemDamage()], false);
 			}
 		}
 		GL11.glScalef(2F, 2F, 2F);
-		InstrumentHelper.drawFlyableInstrument(plane, 32, 52, 15, false);
-		InstrumentHelper.drawFlyableInstrument(plane, 96, 52, 16, false);
+		InstrumentHelper.drawFlyableControl(plane, 32, 52, AircraftControls.THROTTLE, false);
+		InstrumentHelper.drawFlyableControl(plane, 96, 52, AircraftControls.BRAKE, false);
 		GL11.glPopMatrix();
 	}
 

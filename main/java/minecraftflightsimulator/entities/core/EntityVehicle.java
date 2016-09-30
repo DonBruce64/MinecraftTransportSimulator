@@ -31,9 +31,9 @@ import net.minecraft.world.World;
 public abstract class EntityVehicle extends EntityParent implements IInventory{
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
-	public boolean hasLights;
 	public boolean lightsOn;
 	public boolean auxLightsOn;
+	public byte numberLights;
 	public byte textureOptions;
 	public byte throttle;
 	public int maxFuel;
@@ -41,6 +41,8 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	public double prevFuel;
 	public double fuelFlow;
 	public double electricPower = 12;
+	public double electricUsage;
+	public double electricFlow;
 	public double velocity;
 	public double airDensity;
 	public double trackAngle;
@@ -129,17 +131,17 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		if(fuel < 0){fuel = 0;}
 		fuelFlow = prevFuel - fuel;
 		prevFuel = fuel;
-		if(fuelFlow != 0){
-			electricPower = Math.min(12, electricPower+=0.01);
-		}
 		if(electricPower > 2){
 			if(lightsOn){
-				electricPower -= 0.001;
+				electricUsage += 0.001;
 				if(auxLightsOn){
-					electricPower -= 0.005;
+					electricUsage += 0.001*(numberLights - 0);
 				}
 			}
 		}
+		electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
+		electricFlow = electricUsage;
+		electricUsage = 0;
 	}
 	
 	//Start of custom methods

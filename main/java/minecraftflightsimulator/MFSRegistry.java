@@ -488,5 +488,14 @@ public class MFSRegistry{
 				'W', new ItemStack(Items.dye, 1, 15));
 		
 		//Instrument 14 does not exist
+		
+		MFS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 15),
+				"   ",
+				"LGL",
+				"RB ",
+				'B', flightInstrumentBase, 
+				'L', pointerLong,  
+				'G', new ItemStack(Items.dye, 1, 10), 
+				'R', new ItemStack(Items.dye, 1, 1));
 	}
 }

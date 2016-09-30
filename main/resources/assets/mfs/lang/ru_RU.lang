@@ -62,6 +62,8 @@ item.FlightInstrument13.name=Датчик температуры двигате�
 item.FlightInstrument13.description=Показывает температуру двигателя
 item.FlightInstrument14.name=Датчик давления масла
 item.FlightInstrument14.description=Показывает давление масла (не использовать).
+item.FlightInstrument15.name=Electrical Gauge
+item.FlightInstrument15.description=Indicates electrical power and usage.
 
 itemGroup.tabMFS=Minecraft Симулятор полета
 key.categories.mfs=Minecraft Симулятор полета

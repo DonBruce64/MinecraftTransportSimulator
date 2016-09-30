@@ -5,6 +5,8 @@ import java.awt.Color;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.modelrenders.RenderPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
+import minecraftflightsimulator.utilities.InstrumentHelper.AircraftControls;
+import minecraftflightsimulator.utilities.InstrumentHelper.AircraftGauges;
 import minecraftflightsimulator.utilities.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
@@ -119,11 +121,11 @@ public class RenderTrimotor extends RenderPlane{
 		GL11.glScalef(0.00390625F*1.3F, 0.00390625F*1.3F, 0.00390625F*1.3F);
 		for(byte i=0; i<plane.instrumentList.size(); ++i){
 			if(plane.instrumentList.get(i) != null){
-				InstrumentHelper.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, plane.instrumentList.get(i).getItemDamage(), false);
+				InstrumentHelper.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, AircraftGauges.values()[plane.instrumentList.get(i).getItemDamage()], false);
 			}
 		}
-		InstrumentHelper.drawFlyableInstrument(plane, 290, -5, 15, false);
-		InstrumentHelper.drawFlyableInstrument(plane, 290, 70, 16, false);
+		InstrumentHelper.drawFlyableControl(plane, 290, -5, AircraftControls.THROTTLE, false);
+		InstrumentHelper.drawFlyableControl(plane, 290, 70, AircraftControls.BRAKE, false);
 		GL11.glPopMatrix();
 	}
 

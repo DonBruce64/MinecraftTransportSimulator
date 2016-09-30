@@ -27,7 +27,7 @@ public class EntityTrimotor extends EntityPlane{
 	@Override
 	protected void initPlaneProperties(){
 		hasFlaps = false;
-		hasLights = true;
+		numberLights = 3;
 		maxFuel = 25000;
 		emptyMass=3000;
 		wingspan=22.6F;

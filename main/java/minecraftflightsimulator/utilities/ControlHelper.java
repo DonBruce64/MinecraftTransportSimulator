@@ -291,7 +291,7 @@ public class ControlHelper{
 		checkBrakes(plane);
 		checkStarter(plane);
 		checkThrottle(plane);
-		if(plane.hasLights){checkLights(plane);}
+		if(plane.numberLights > 0){checkLights(plane);}
 		if(plane.hasFlaps){checkFlaps(plane);}
 		
 		if(joystickMap.get(controls.ROLL.joystickName) != 999 && joystick != null){

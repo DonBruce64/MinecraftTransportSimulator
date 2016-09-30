@@ -9,10 +9,14 @@ import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+
 /**Class responsible for drawing instruments and HUDs.
  * 
  * @author don_bruce
  */
+@SideOnly(Side.CLIENT)
 public class InstrumentHelper{
 	private static final ResourceLocation instrumentTexture = new ResourceLocation("mfs", "textures/instruments.png");
 	private static byte numberEngines;
@@ -45,7 +49,7 @@ public class InstrumentHelper{
 			drawLowerConsole(width, height, backplateTexture, moldingTexture);
 			for(int i=5; i<flyer.instrumentList.size(); ++i){
 				if(flyer.instrumentList.get(i) != null){
-					drawFlyableInstrument(flyer, (5*(i-5)+6)*width/32, height - 32, flyer.instrumentList.get(i).getItemDamage(), true);
+					drawFlyableInstrument(flyer, (5*(i-5)+6)*width/32, height - 32, AircraftGauges.values()[flyer.instrumentList.get(i).getItemDamage()], true);
 				}
 			}
 			height -= 64;
@@ -58,10 +62,10 @@ public class InstrumentHelper{
 	    	GL11.glPushMatrix();
 	    	GL11.glScalef(0.75F, 0.75F, 0.75F);
 	    	if(flyer.instrumentList.get(0) != null){
-	    		drawFlyableInstrument(flyer, width*17/64, (height - 24)*4/3, flyer.instrumentList.get(0).getItemDamage(), true);
+	    		drawFlyableInstrument(flyer, width*17/64, (height - 24)*4/3, AircraftGauges.values()[flyer.instrumentList.get(0).getItemDamage()], true);
 	    	}
 	    	if(flyer.instrumentList.get(4) != null){
-	    		drawFlyableInstrument(flyer, width*17/16, (height - 24)*4/3, flyer.instrumentList.get(4).getItemDamage(), true);
+	    		drawFlyableInstrument(flyer, width*17/16, (height - 24)*4/3, AircraftGauges.values()[flyer.instrumentList.get(4).getItemDamage()], true);
 	    	}
 	    	GL11.glPopMatrix();
 	    	
@@ -76,7 +80,7 @@ public class InstrumentHelper{
 		if(RenderHelper.hudMode != 0){
 			for(int i=1; i<4; ++i){
 				if(flyer.instrumentList.get(i) != null){
-					drawFlyableInstrument(flyer, (5*i+6)*width/32, height - 32, flyer.instrumentList.get(i).getItemDamage(), true);
+					drawFlyableInstrument(flyer, (5*i+6)*width/32, height - 32, AircraftGauges.values()[flyer.instrumentList.get(i).getItemDamage()], true);
 				}
 			}
 		}
@@ -110,7 +114,7 @@ public class InstrumentHelper{
     	RenderHelper.renderQuadUV(0, 0, width, width, height-64, height, height, height-64, 0, 0, 0, 0, 0, 6, 0, 1, false);
     }
 	
-	public static void drawFlyableInstrument(EntityFlyable flyer, int x, int y, int type, boolean hud){
+	public static void drawFlyableInstrument(EntityFlyable flyer, int x, int y, AircraftGauges type, boolean hud){
 		GL11.glPushMatrix();
 		if(hud){
 			offset = 0;
@@ -118,48 +122,27 @@ public class InstrumentHelper{
 			offset = -0.01F;
 			GL11.glDisable(GL11.GL_LIGHTING);
 		}
-		if(isInstrumentLightOn(flyer) && type < 15){
+		if(isInstrumentLightOn(flyer)){
 			Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
 		}
-		if(type == 0){
-			drawAttitudeIndicator(flyer, x, y);
-		}else if(type == 1){
-			drawAltimeter(flyer, x, y);
-		}else if(type == 2){
-			drawHeadingIndicator(flyer, x, y);
-		}else if(type == 3){
-			drawAirspeedIndicator(flyer, x, y);
-		}else if(type == 4){
-			drawTurnCoordinator(flyer, x, y);
-		}else if(type == 5){
-			drawTurnAndSlipIndicator(flyer, x, y);
-		}else if(type == 6){
-			drawVerticalSpeedIndicator(flyer, x, y);
-		}else if(type == 7){
-			drawLiftReserveIndicator(flyer, x, y);
-		}else if(type == 8){
-			drawTrimIndicator(flyer, x, y);
-		}else if(type == 9){
-			//DUMMY
-		}else if(type == 10){
-			drawTachometer(flyer, x, y);
-		}else if(type == 11){
-			drawFuelGauge(flyer, x, y);
-		}else if(type == 12){
-			drawFuelFlowGauge(flyer, x, y);
-		}else if(type == 13){
-			drawEngineTempGauge(flyer, x, y);
-		}else if(type == 14){
-			//drawOilPressureGauge()
-		}else if(type == 15){
-			drawThrottle(flyer, x, y, hud);
-		}else if(type == 16){
-			drawParkingBrake(flyer, x, y, hud);
-		}else if(type == 17){
-			drawFlapIndicator((EntityPlane) flyer, x, y, hud);
+		switch (type){
+			case ATTITUDE: drawAttitudeIndicator(flyer, x, y); break;
+			case ALTIMETER: drawAltimeter(flyer, x, y); break;
+			case HEADING: drawHeadingIndicator(flyer, x, y); break;
+			case AIRSPEED: drawAirspeedIndicator(flyer, x, y); break;
+			case TURNCOORD: drawTurnCoordinator(flyer, x, y); break;
+			case TURNSLIP: drawTurnAndSlipIndicator(flyer, x, y); break;
+			case VERTICALSPEED: drawVerticalSpeedIndicator(flyer, x, y); break;
+			case LIFTRESERVE: drawLiftReserveIndicator(flyer, x, y); break;
+			case TRIM: drawTrimIndicator(flyer, x, y); break;
+			case DUMMY: break;
+			case TACHOMETER: drawTachometer(flyer, x, y); break;
+			case FUELQTY: drawFuelGauge(flyer, x, y); break;
+			case FUELFLOW: drawFuelFlowGauge(flyer, x, y); break;
+			case ENGINETEMP: drawEngineTempGauge(flyer, x, y); break;
+			case ELECTRIC: drawElectricalGauge(flyer, x, y); break;
 		}
-		
-		if(isInstrumentLightOn(flyer) && type < 15){
+		if(isInstrumentLightOn(flyer)){
 			GL11.glTranslatef(0, 0, 11*offset);
 			GL11.glEnable(GL11.GL_BLEND);
 			RenderHelper.bindTexture(instrumentTexture);
@@ -171,6 +154,23 @@ public class InstrumentHelper{
         	GL11.glEnable(GL11.GL_LIGHTING);
         }
     	GL11.glPopMatrix();
+	}
+	
+	public static void drawFlyableControl(EntityFlyable flyer, int x, int y, AircraftControls type, boolean hud){
+		if(hud){
+			offset = 0;
+		}else{
+			offset = -0.01F;
+			GL11.glDisable(GL11.GL_LIGHTING);
+		}
+		switch (type){
+			case THROTTLE: drawThrottle(flyer, x, y, hud); break;
+			case BRAKE: drawParkingBrake(flyer, x, y, hud); break;
+			case FLAPS: drawFlapIndicator((EntityPlane) flyer, x, y, hud); break;
+		}
+		if(!hud){
+        	GL11.glEnable(GL11.GL_LIGHTING);
+        }
 	}
     
 	private static void drawGaugeBase(EntityFlyable flyer, int centerX, int centerY){
@@ -570,6 +570,38 @@ public class InstrumentHelper{
     	}
 	}
 	
+	private static void drawElectricalGauge(EntityFlyable flyer, int centerX, int centerY){
+		drawGaugeBase(flyer, centerX, centerY);
+		GL11.glTranslatef(0, 0, offset);
+    	
+		drawDialColoring(centerX - 17, centerY, 48.75F, 76.25F, 16, 3, new float[] {0, 1, 0});
+		drawDialColoring(centerX - 17, centerY, 124.375F, 145F, 16, 3, new float[] {1, 0, 0});
+		GL11.glTranslatef(0, 0, offset);
+		
+
+    	drawDialIncrements(centerX - 17, centerY, 35, 145, 16, 3, 5);
+    	drawDialIncrements(centerX + 17, centerY, -145, -35, 16, 3, 5);
+    	drawScaledString("16", centerX*2-32, centerY*2 - 30, 0.5F);
+    	drawScaledString("8", centerX*2-18, centerY*2 - 3, 0.5F);
+    	drawScaledString("0", centerX*2-28, centerY*2 + 22, 0.5F);
+    	drawScaledString("+2", centerX*2+22, centerY*2 - 30, 0.5F);
+    	drawScaledString("0", centerX*2+12, centerY*2 - 3, 0.5F);
+    	drawScaledString("-2", centerX*2+22, centerY*2 + 22, 0.5F);
+    	GL11.glTranslatef(0, 0, offset);
+    	
+    	drawLongPointer(centerX - 17, centerY, (float) (145 - 6.875F*flyer.electricPower), 26, 2);
+    	drawLongPointer(centerX + 17, centerY, (float) (-90 - 27.5F*Math.min(flyer.electricFlow*100F, 2)), 26, 2);
+    	GL11.glTranslatef(0, 0, offset);
+    	
+    	drawScaledString("V", centerX*2-40, centerY*2 - 10, 0.5F);
+    	drawScaledString("M", centerX*2-40, centerY*2, 0.5F);
+    	drawScaledString("J", centerX*2-40, centerY*2 + 10, 0.5F);
+    	drawScaledString("A", centerX*2+38, centerY*2 - 10, 0.5F);
+    	drawScaledString("M", centerX*2+38, centerY*2, 0.5F);
+    	drawScaledString("P", centerX*2+38, centerY*2 + 10, 0.5F);
+    	GL11.glTranslatef(0, 0, offset);
+	}
+	
 	private static void drawThrottle(EntityFlyable flyer, int centerX, int centerY, boolean hud){		
     	RenderHelper.bindTexture(instrumentTexture);
 		if(!hud){
@@ -774,6 +806,31 @@ public class InstrumentHelper{
         GL11.glTranslatef(x, y, 0);
         GL11.glRotatef(angle, 0, 0, 1);
         GL11.glTranslatef(-x, -y, 0);
+    }
+
+    public enum AircraftGauges{
+    	ATTITUDE,
+    	ALTIMETER,
+    	HEADING,
+    	AIRSPEED,
+    	TURNCOORD,
+    	TURNSLIP,
+    	VERTICALSPEED,
+    	LIFTRESERVE,
+    	TRIM,
+    	DUMMY,
+    	TACHOMETER,
+    	FUELQTY,
+    	FUELFLOW,
+    	ENGINETEMP,
+    	OILPRESSURE,
+    	ELECTRIC;
+    }
+    
+    public enum AircraftControls{
+    	THROTTLE,
+    	BRAKE,
+    	FLAPS;
     }
 }
 
