@@ -3,6 +3,7 @@ package minecraftflightsimulator.utilities;
 import java.awt.Color;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityFlyable;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityPlane;
@@ -67,8 +68,8 @@ public class ClientEventHandler{
 						}
 					}
 				}
-				if(!ClientConfig.getBooleanConfig("FirstRun")){
-					ClientConfig.setBooleanConfig("FirstRun", true);
+				if(ConfigSystem.getBooleanConfig("FirstRun")){
+					ConfigSystem.setClientConfig("FirstRun", false);
 					minecraft.thePlayer.openGui(MFS.instance, -1, null, 1, 1, 1);
 				}
 			}else if(!minecraft.isGamePaused()){
@@ -88,7 +89,6 @@ public class ClientEventHandler{
 	 */
 	@SubscribeEvent
 	public void on(TickEvent.RenderTickEvent event){
-		/*INS180
 		if(event.phase.equals(Phase.START) && minecraft.theWorld != null){
 			for(Object obj : minecraft.theWorld.loadedEntityList){
 				if(obj instanceof EntityParent){
@@ -96,30 +96,33 @@ public class ClientEventHandler{
 				}
 			}
 		}
-		INS180*/
 	}	
 	
 	/**
 	 * Checks to see if any parents have not been rendered.  Used to
 	 * force rendering of aircraft above the world height limit, as
 	 * newer versions suppress this as part of the chunk visibility
-	 * feature.  Only active in versions 1.8+.
+	 * feature.
 	 */
 	@SubscribeEvent
 	public void on(RenderWorldLastEvent event){
+        RenderManager manager = RenderManager.instance;
+        Entity renderEntity = minecraft.renderViewEntity;
 		for(Object obj : minecraft.theWorld.loadedEntityList){
 			if(obj instanceof EntityVehicle){
 				EntityPlane plane = (EntityPlane) obj;
 				if(plane.lightsOn && plane.auxLightsOn){
-					RenderPlane render = (RenderPlane) RenderManager.instance.getEntityRenderObject(plane);
+					RenderPlane render = (RenderPlane) manager.getEntityRenderObject(plane);
 					GL11.glPushMatrix();
 					GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-			        
-					//Copied from RenderManager
-			        double d0 = plane.lastTickPosX + (plane.posX - plane.lastTickPosX) * (double)event.partialTicks;
+					
+					double d0 = plane.lastTickPosX + (plane.posX - plane.lastTickPosX) * (double)event.partialTicks;
 			        double d1 = plane.lastTickPosY + (plane.posY - plane.lastTickPosY) * (double)event.partialTicks;
 			        double d2 = plane.lastTickPosZ + (plane.posZ - plane.lastTickPosZ) * (double)event.partialTicks;
-			        GL11.glTranslated(d0 - RenderManager.renderPosX, d1 - RenderManager.renderPosY, d2 - RenderManager.renderPosZ);
+					double d3 = minecraft.thePlayer.lastTickPosX + (minecraft.thePlayer.posX - minecraft.thePlayer.lastTickPosX) * (double)event.partialTicks;
+			        double d4 = minecraft.thePlayer.lastTickPosY + (minecraft.thePlayer.posY - minecraft.thePlayer.lastTickPosY) * (double)event.partialTicks;
+			        double d5 = minecraft.thePlayer.lastTickPosZ + (minecraft.thePlayer.posZ - minecraft.thePlayer.lastTickPosZ) * (double)event.partialTicks;
+			        GL11.glTranslated(d0 - d3, d1 - d4, d2 - d5);
 					
 			        GL11.glRotatef(-plane.rotationYaw, 0, 1, 0);
 					GL11.glRotatef(plane.rotationPitch, 1, 0, 0);
@@ -130,14 +133,13 @@ public class ClientEventHandler{
 				}
 			}
 		}
-		/*INS180
-        Entity renderEntity = minecraft.getRenderViewEntity();
-        RenderManager manager = minecraft.getRenderManager();
 		for(Object obj : minecraft.theWorld.loadedEntityList){
 			if(obj instanceof EntityParent){
 				if(!((EntityParent) obj).rendered){
+					/*INS180
 					GlStateManager.depthFunc(515);
-					minecraft.entityRenderer.enableLightmap();
+					INS180*/
+					minecraft.entityRenderer.enableLightmap(0);
 					net.minecraft.client.renderer.RenderHelper.enableStandardItemLighting();
 					((EntityParent) obj).rendered = true;
 	                manager.renderEntityStatic((Entity) obj, event.partialTicks, false);
@@ -148,11 +150,10 @@ public class ClientEventHandler{
 	                	}
 	                }
 	                net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();
-	                minecraft.entityRenderer.disableLightmap();
+	                minecraft.entityRenderer.disableLightmap(0);
 				}
 			}
 		}
-		INS180*/
 	}
 	
 	@SubscribeEvent

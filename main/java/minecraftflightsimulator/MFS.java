@@ -52,6 +52,12 @@ public class MFS {
 	    }
 	};
 	
+	/*INS194
+	public MFS(){
+		FluidRegistry.enableUniversalBucket();
+	}
+	INS194*/
+	
 	@EventHandler
 	public void PreInit(FMLPreInitializationEvent event){
 		proxy.preInit(event);

@@ -6,7 +6,7 @@ import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.sounds.EngineSound;
-import minecraftflightsimulator.utilities.CommonConfig;
+import minecraftflightsimulator.utilities.ConfigSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.entity.Entity;
@@ -32,7 +32,7 @@ public class CommonProxy{
 	private static int packetNumber = 0;
 
 	public void preInit(FMLPreInitializationEvent event){
-		CommonConfig.init(event.getSuggestedConfigurationFile());
+		ConfigSystem.initCommon(event.getSuggestedConfigurationFile());
 	}
 	
 	public void init(FMLInitializationEvent event){

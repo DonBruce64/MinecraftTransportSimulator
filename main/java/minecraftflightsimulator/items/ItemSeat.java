@@ -26,7 +26,7 @@ public class ItemSeat extends Item{
 			}
 		}
     }
-	
+	//DEL180START
     @Override
     @SideOnly(Side.CLIENT)
     public void registerIcons(IIconRegister register){
@@ -40,4 +40,5 @@ public class ItemSeat extends Item{
     public IIcon getIconFromDamage(int damage){
         return this.icons[damage > 95 ? 0 : damage];
     }
+    //DEL180END
 }

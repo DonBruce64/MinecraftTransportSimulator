@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import minecraftflightsimulator.utilities.ClientConfig;
+import minecraftflightsimulator.utilities.ConfigSystem;
 import minecraftflightsimulator.utilities.ControlHelper;
 import net.java.games.input.Component;
 import net.java.games.input.Controller;
@@ -91,9 +91,9 @@ public class GUIConfig extends GuiScreen{
 	private void initConfigControls(){
 		int line = 0;
 		int xOffset = 140;
-		buttonList.add(throttleKillsButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ClientConfig.getBooleanConfig("ThrottleKills"))));
-		buttonList.add(seaLevelOffsetButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ClientConfig.getBooleanConfig("SeaLevelOffset"))));
-		buttonList.add(electricStartButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ClientConfig.getBooleanConfig("ElectricStart"))));
+		buttonList.add(throttleKillsButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("ThrottleKills"))));
+		buttonList.add(seaLevelOffsetButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("SeaLevelOffset"))));
+		buttonList.add(electricStartButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("ElectricStart"))));
 		configureButtons.add(throttleKillsButton);
 		configureButtons.add(seaLevelOffsetButton);
 		configureButtons.add(electricStartButton);
@@ -361,14 +361,14 @@ public class GUIConfig extends GuiScreen{
 		}else if(buttonClicked.equals(joystickButton)){
 			guiLevel = GUILevels.JS_SELECT;
 		}else if(buttonClicked.equals(throttleKillsButton)){
-			ClientConfig.setBooleanConfig("ThrottleKills", !Boolean.valueOf(throttleKillsButton.displayString));
-			throttleKillsButton.displayString = String.valueOf(ClientConfig.getBooleanConfig("ThrottleKills"));
+			ConfigSystem.setClientConfig("ThrottleKills", !Boolean.valueOf(throttleKillsButton.displayString));
+			throttleKillsButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("ThrottleKills"));
 		}else if(buttonClicked.equals(seaLevelOffsetButton)){
-			ClientConfig.setBooleanConfig("SeaLevelOffset", !Boolean.valueOf(seaLevelOffsetButton.displayString));
-			seaLevelOffsetButton.displayString = String.valueOf(ClientConfig.getBooleanConfig("SeaLevelOffset"));
+			ConfigSystem.setClientConfig("SeaLevelOffset", !Boolean.valueOf(seaLevelOffsetButton.displayString));
+			seaLevelOffsetButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("SeaLevelOffset"));
 		}else if(buttonClicked.equals(electricStartButton)){
-			ClientConfig.setBooleanConfig("ElectricStart", !Boolean.valueOf(electricStartButton.displayString));
-			electricStartButton.displayString = String.valueOf(ClientConfig.getBooleanConfig("ElectricStart"));
+			ConfigSystem.setClientConfig("ElectricStart", !Boolean.valueOf(electricStartButton.displayString));
+			electricStartButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("ElectricStart"));
 		}else if(joystickButtons.contains(buttonClicked)){
 			guiLevel = GUILevels.JS_BUTTON;
 			ControlHelper.setJoystick(joysticks[joystickButtons.indexOf(buttonClicked)]);

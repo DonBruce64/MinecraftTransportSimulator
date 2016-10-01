@@ -4,8 +4,8 @@ import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.sounds.EngineSound;
-import minecraftflightsimulator.utilities.ClientConfig;
 import minecraftflightsimulator.utilities.ClientEventHandler;
+import minecraftflightsimulator.utilities.ConfigSystem;
 import minecraftflightsimulator.utilities.ControlHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -30,7 +30,7 @@ public class ClientProxy extends CommonProxy{
 	@Override
 	public void preInit(FMLPreInitializationEvent event){
 		super.preInit(event);
-		ClientConfig.init();
+		ConfigSystem.initClient();
 		MFSClientRegistry.preInit();
 	}
 	

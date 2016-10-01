@@ -6,7 +6,7 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityFlyable;
 import minecraftflightsimulator.packets.control.EnginePacket;
-import minecraftflightsimulator.utilities.CommonConfig;
+import minecraftflightsimulator.utilities.ConfigSystem;
 import minecraftflightsimulator.utilities.DamageSources.DamageSourcePropellor;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -64,7 +64,9 @@ public class EntityPropeller extends EntityChild{
 						}
 					}
 					for(int i=0; i < collidedEntites.size(); ++i){
-						((Entity) collidedEntites.get(i)).attackEntityFrom(new DamageSourcePropellor(attacker), (float) (CommonConfig.getDoubleConfig("PropellerDamageFactor")*engineRPM/500F));
+						if(!(((Entity) collidedEntites.get(i)).ridingEntity instanceof EntitySeat)){
+							((Entity) collidedEntites.get(i)).attackEntityFrom(new DamageSourcePropellor(attacker), (float) (ConfigSystem.getDoubleConfig("PropellerDamageFactor")*engineRPM/500F));
+						}
 					}
 				}
 				if(isPartCollided(getBoundingBox().expand(0.1, 0.1, 0.1))){

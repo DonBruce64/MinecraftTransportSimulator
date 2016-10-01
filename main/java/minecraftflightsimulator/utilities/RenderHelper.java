@@ -64,7 +64,7 @@ public class RenderHelper{
 			throw new RuntimeException(e);
 		}
 	}
-	
+	//DEL180START
 	public static void changeCameraRoll(float roll){
 		try{
 			ObfuscationReflectionHelper.setPrivateValue(EntityRenderer.class, Minecraft.getMinecraft().entityRenderer, roll, rollNames);
@@ -72,6 +72,7 @@ public class RenderHelper{
 			System.err.println("ERROR IN AIRCRAFT ROLL REFLECTION!");
 		}
 	}
+	//DEL180END
 	
 	public static void changeCameraLock(){
 		lockedView = !lockedView;
@@ -94,11 +95,13 @@ public class RenderHelper{
 				//rider.rotationYaw+=180;
 			}
 		}
+		//DEL180START
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView==0){
 			changeCameraRoll(parent.rotationRoll);
 		}else{
 			changeCameraRoll(0);
 		}
+		//DEL180END
 	}
 	
 	/**
@@ -223,7 +226,12 @@ public class RenderHelper{
      * an end radius of r. length of l, and n segments.
      */
     public static void drawLightBeam(EntityVehicle vehicle, double r, double l, int n){
-    	float strength = (float) (vehicle.electricPower/12F*(15F - vehicle.worldObj.getSunBrightness(1.0F)*vehicle.worldObj.getFullBlockLightValue(MathHelper.floor_double(vehicle.posX - 4*MathHelper.sin(vehicle.rotationYaw * 0.017453292F)), MathHelper.floor_double(vehicle.posY), MathHelper.floor_double(vehicle.posZ + 4*MathHelper.cos(vehicle.rotationYaw * 0.017453292F))))/15F);
+    	//DEL180START
+    	float strength = (float) (vehicle.electricPower/12F*(15F - vehicle.worldObj.getSunBrightness(1.0F)*vehicle.worldObj.getBlockLightValue_do(MathHelper.floor_double(vehicle.posX - 4*MathHelper.sin(vehicle.rotationYaw * 0.017453292F)), MathHelper.floor_double(vehicle.posY), MathHelper.floor_double(vehicle.posZ + 4*MathHelper.cos(vehicle.rotationYaw * 0.017453292F)), false))/15F);
+    	//DEL180END
+    	/*INS180
+    	float strength = (float) (vehicle.electricPower/12F*(15F - vehicle.worldObj.getSunBrightness(1.0F)*vehicle.worldObj.getLight(new BlockPos(vehicle.posX - 4*MathHelper.sin(vehicle.rotationYaw * 0.017453292F), vehicle.posY, vehicle.posZ + 4*MathHelper.cos(vehicle.rotationYaw * 0.017453292F)), false)));
+    	INS180*/
     	GL11.glPushMatrix();
     	GL11.glColor4f(1, 1, 1, Math.max(vehicle.electricPower > 4 ? 0.11F : 0, strength));
     	GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -233,7 +241,8 @@ public class RenderHelper{
     	drawCone(r, l, n, false);
     	drawCone(r, l, n, false);
     	drawCone(r, l, n, true);
-    	drawCone(r, l, n, true);    	
+    	drawCone(r, l, n, true);
+    	GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ZERO);
     	GL11.glDisable(GL11.GL_BLEND);
     	GL11.glEnable(GL11.GL_TEXTURE_2D);
     	GL11.glColor4f(1, 1, 1, 1);
@@ -286,9 +295,7 @@ public class RenderHelper{
     	 * by Minecraft's system.
 		 **/
     	private void render(EntityParent parent, double x, double y, double z){
-    		/*INS180
     		if(!parent.rendered && parent.posY >= 255){return;}
-    		INS180*/
     		parent.rendered = true;
     		player = Minecraft.getMinecraft().thePlayer;
     		GL11.glPushMatrix();

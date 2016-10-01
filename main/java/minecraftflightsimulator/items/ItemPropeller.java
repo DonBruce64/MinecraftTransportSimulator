@@ -48,7 +48,7 @@ public class ItemPropeller extends Item{
         itemList.add(new ItemStack(item, 1, 9132));
         itemList.add(new ItemStack(item, 1, 9142));
     }
-	
+	//DEL180START
     @Override
     @SideOnly(Side.CLIENT)
     public void registerIcons(IIconRegister register){
@@ -62,4 +62,5 @@ public class ItemPropeller extends Item{
     public IIcon getIconFromDamage(int damage){
         return this.icons[damage%10 > 2 ? 0 : damage%10];
     }
+    //DEL180END
 }

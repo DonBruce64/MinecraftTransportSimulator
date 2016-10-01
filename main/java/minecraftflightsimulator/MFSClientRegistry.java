@@ -32,6 +32,7 @@ import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.planes.Trimotor.RenderTrimotor;
 import minecraftflightsimulator.planes.Vulcanair.EntityVulcanair;
 import minecraftflightsimulator.planes.Vulcanair.RenderVulcanair;
+import minecraftflightsimulator.utilities.InstrumentHelper;
 import minecraftflightsimulator.utilities.RenderHelper.RenderChild;
 import minecraftflightsimulator.utilities.RenderHelper.RenderNull;
 import minecraftflightsimulator.utilities.RenderHelper.RenderParent;
@@ -91,7 +92,7 @@ public class MFSClientRegistry{
 		registerItemSeries(MFSRegistry.planeVulcanair, 7);
 		registerItemSeries(MFSRegistry.planeTrimotor, 15);
 		registerItemSeries(MFSRegistry.seat, 96);
-		registerItemSeries(MFSRegistry.flightInstrument, 15);
+		registerItemSeries(MFSRegistry.flightInstrument, InstrumentHelper.AircraftGauges.values().length);
 		registerItemSeriesWithAltName(MFSRegistry.engineSmall, Short.MAX_VALUE, "");
 		registerItemSeriesWithAltName(MFSRegistry.engineLarge, Short.MAX_VALUE, "");
 		

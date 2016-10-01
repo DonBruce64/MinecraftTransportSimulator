@@ -117,17 +117,29 @@ public abstract class EntityChild extends EntityBase{
         for(int i = minX; i < maxX; ++i){
         	for(int j = minY - 1; j < maxY; ++j){
         		for(int k = minZ; k < maxZ; ++k){
-        			if(worldObj.blockExists(i, 64, k)){
-	                    Block block = worldObj.getBlock(i, j, k);
-	                    AxisAlignedBB blockBox = block.getCollisionBoundingBoxFromPool(worldObj, i, j, k);
-	                    if(block.getCollisionBoundingBoxFromPool(worldObj, i, j, k) != null && box.intersectsWith(blockBox)){
-	                    	return true;
-	                    }else if(collidesWithLiqids()){
-	                    	if(isLiquidAt(i, j, k)){
-	                    		return true;
-	                    	}
-	                    }
-        			}
+        			//DEL180START
+                    Block block = worldObj.getBlock(i, j, k);
+                    AxisAlignedBB blockBox = block.getCollisionBoundingBoxFromPool(worldObj, i, j, k);
+                    if(blockBox != null && box.intersectsWith(blockBox)){
+                    	return true;
+                    }else if(collidesWithLiqids()){
+                    	if(isLiquidAt(i, j, k)){
+                    		return true;
+                    	}
+                    }
+                    //DEL180END
+                    /*INS180
+                    BlockPos pos = new BlockPos(i, j, k);
+        			IBlockState state = worldObj.getBlockState(pos);
+                    AxisAlignedBB blockBox = state.getBlock().getCollisionBoundingBox(worldObj, pos, state);
+                    if(blockBox != null && box.intersectsWith(blockBox)){
+                    	return true;
+                    }else if(collidesWithLiquids){
+                    	if(isLiquidAt(i, j, k)){
+                    		return true;
+                    	}
+                    } 
+                     INS180*/
                 }
             }
         }

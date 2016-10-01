@@ -39,7 +39,7 @@ public class ItemFlightInstrument extends Item{
 	public void addInformation(ItemStack item, EntityPlayer player, List list, boolean p_77624_4_){
 		list.add(StatCollector.translateToLocal("item.FlightInstrument" + item.getItemDamage() + ".description"));
 	}
-	
+	//DEL180START
     @Override
     @SideOnly(Side.CLIENT)
     public void registerIcons(IIconRegister register){
@@ -53,4 +53,5 @@ public class ItemFlightInstrument extends Item{
     public IIcon getIconFromDamage(int damage){
     	return iconList.get(damage);
     }
+    //DEL180END
 }

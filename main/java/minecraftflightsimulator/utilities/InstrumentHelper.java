@@ -84,6 +84,7 @@ public class InstrumentHelper{
 				}
 			}
 		}
+		GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
 		GL11.glPopMatrix();
 	}
@@ -145,9 +146,10 @@ public class InstrumentHelper{
 		if(isInstrumentLightOn(flyer)){
 			GL11.glTranslatef(0, 0, 11*offset);
 			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
 			RenderHelper.bindTexture(instrumentTexture);
 			RenderHelper.renderSquareUV(x-30, x+30, y+30, y-30, 0, 0, 0.5, 0.75, 0.25, 0.5, false);
-	        GL11.glDisable(GL11.GL_BLEND);
+			GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ZERO);
 			Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
 		}
 		if(!hud){
@@ -222,9 +224,9 @@ public class InstrumentHelper{
         drawDialIncrements(centerX, centerY, -180, 180, 25, 5, 11);
         drawDialNumbers(centerX, centerY, 0, 320,  17, 0, 1, 9, 0.7F);
         GL11.glTranslatef(0, 0, offset);
-        drawShortPointer(centerX, centerY, (float) (.36*(flyer.posY - (ClientConfig.getBooleanConfig("SeaLevelOffset")  ? 64 : 0))), 20, 6);
+        drawShortPointer(centerX, centerY, (float) (.36*(flyer.posY - (ConfigSystem.getBooleanConfig("SeaLevelOffset") ? 64 : 0))), 20, 6);
         GL11.glTranslatef(0, 0, offset);
-        drawLongPointer(centerX, centerY, (float) (3.6*(flyer.posY - (ClientConfig.getBooleanConfig("SeaLevelOffset")  ? 64 : 0))), 35, 3);
+        drawLongPointer(centerX, centerY, (float) (3.6*(flyer.posY - (ConfigSystem.getBooleanConfig("SeaLevelOffset") ? 64 : 0))), 35, 3);
     }
     
 	private static void drawHeadingIndicator(EntityFlyable flyer, int centerX, int centerY){
@@ -283,7 +285,7 @@ public class InstrumentHelper{
     	drawDialIncrements(centerX, centerY, 30, 330, 25, 8, 9);
     	drawDialIncrements(centerX, centerY, 30, 330, 25, 3, 41);
     	drawDialNumbers(centerX, centerY, 30, 330, 15, 0, 10, 4, 0.6F);
-    	drawLongPointer(centerX, centerY, (float) (30+7.5*flyer.velocity*CommonConfig.getDoubleConfig("PlaneSpeedFactor")*20), 35, 2);
+    	drawLongPointer(centerX, centerY, (float) (30+7.5*flyer.velocity*ConfigSystem.getDoubleConfig("PlaneSpeedFactor")*20), 35, 2);
     }
     
 	private static void drawTurnCoordinator(EntityFlyable flyer, int centerX, int centerY){

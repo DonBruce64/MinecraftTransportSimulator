@@ -11,7 +11,7 @@ import minecraftflightsimulator.containers.GUIParent;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.items.ItemEngine;
-import minecraftflightsimulator.utilities.CommonConfig;
+import minecraftflightsimulator.utilities.ConfigSystem;
 import minecraftflightsimulator.utilities.MFSVector;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
@@ -40,7 +40,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	public double fuel;
 	public double prevFuel;
 	public double fuelFlow;
-	public double electricPower = 12;
+	public double electricPower;
 	public double electricUsage;
 	public double electricFlow;
 	public double velocity;
@@ -106,6 +106,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		for(int i=0; i<10; ++i){
 			instrumentList.add(null);
 		}
+		electricPower = 12;
 	}
 	
 	public EntityVehicle(World world, float posX, float posY, float posZ, float playerRotation){
@@ -113,6 +114,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		for(int i=0; i<10; ++i){
 			instrumentList.add(null);
 		}
+		electricPower = 12;
 	}
 	
 	@Override
@@ -200,22 +202,43 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
         for(int i = minX; i < maxX; ++i){
         	for(int j = minY - 1; j < maxY; ++j){
         		for(int k = minZ; k < maxZ; ++k){
+        			//DEL180START
                     Block block = worldObj.getBlock(i, j, k);
                     AxisAlignedBB blockBox = block.getCollisionBoundingBoxFromPool(worldObj, i, j, k);
-                    if(block.getCollisionBoundingBoxFromPool(worldObj, i, j, k) != null && box.intersectsWith(blockBox)){
+                    if(blockBox != null && box.intersectsWith(blockBox)){
                     	if(block.getBlockHardness(worldObj, i, j, k) <= 0.2F && velocity > 0.5){
                     		worldObj.setBlockToAir(i, j, k);
                     		motionX *= 0.95;
                     		motionY *= 0.95;
                     		motionZ *= 0.95;
                     	}else{
-                    		collidingBoxes.add(block.getCollisionBoundingBoxFromPool(worldObj, i, j, k));
+                    		collidingBoxes.add(blockBox);
                     	}
                     }else if(child.collidesWithLiquids){
                     	if(child.isLiquidAt(i, j, k)){
                     		collidingBoxes.add(box);
                     	}
                     }
+                  //DEL180END
+                  /*INS180
+					BlockPos pos = new BlockPos(i, j, k);
+        			IBlockState state = worldObj.getBlockState(pos);
+                    AxisAlignedBB blockBox = state.getBlock().getCollisionBoundingBox(worldObj, pos, state);
+                    if(blockBox != null && box.intersectsWith(blockBox)){
+                    	if(state.getBlock().getBlockHardness(worldObj, pos) <= 0.2F && velocity > 0.5){
+                    		worldObj.setBlockToAir(pos);
+                    		motionX *= 0.95;
+                    		motionY *= 0.95;
+                    		motionZ *= 0.95;
+                    	}else{
+                    		collidingBoxes.add(blockBox);
+                    	}
+                    }else if(child.collidesWithLiquids){
+                    	if(child.isLiquidAt(i, j, k)){
+                    		collidingBoxes.add(box);
+                    	}
+                    }
+                  INS180*/
                 }
             }
         }
@@ -249,7 +272,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		for(int i=0; i<inventory.getSizeInventory(); ++i){
 			ItemStack stack = inventory.getStackInSlot(i);
 			if(stack != null){
-				weight += 1.2F*stack.stackSize/stack.getMaxStackSize()*(CommonConfig.getStringConfig("HeavyItems").contains(stack.getItem().getUnlocalizedName().substring(5)) ? 2 : 1);
+				weight += 1.2F*stack.stackSize/stack.getMaxStackSize()*(ConfigSystem.getStringConfig("HeavyItems").contains(stack.getItem().getUnlocalizedName().substring(5)) ? 2 : 1);
 			}
 		}
 		return weight;

@@ -84,7 +84,7 @@ public class ItemPlane extends Item{
 			itemList.add(new ItemStack(item, 1, i));
 		}
     }
-	
+	//DEL180START
     @Override
     @SideOnly(Side.CLIENT)
     public void registerIcons(IIconRegister register){
@@ -98,4 +98,5 @@ public class ItemPlane extends Item{
     public IIcon getIconFromDamage(int damage){
         return this.icons[damage > numberTypes ? 0 : damage];
     }
+    //DEL180END
 }
