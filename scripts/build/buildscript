@@ -5,13 +5,13 @@ FORGEVERSION[80]="1.8-11.14.3.1502"
 FORGEVERSION[89]="1.8.9-11.15.1.1722"
 FORGEVERSION[90]="1.9-12.16.0.1865-1.9"
 FORGEVERSION[94]="1.9.4-12.17.0.1957"
-FORGEVERSION[102]="1.10.2-12.18.1.2011"
+FORGEVERSION[102]="1.10.2-12.18.1.2094"
 #Used only with newer forge versions
 FORGEMAPPING[80]="stable_18"
 FORGEMAPPING[89]="stable_22"
 FORGEMAPPING[90]="stable_24"
 FORGEMAPPING[94]="stable_26"
-FORGEMAPPING[102]="snapshot_20160823"
+FORGEMAPPING[102]="snapshot_20160518"
 
 #Change mod parameters here
 MAINPATH="/home/$USER/.minecraft/forge/moddingEnvironments/"
@@ -38,7 +38,7 @@ COUNT=0
 echo "Found the following versions:"
 printf "%-2s  %-10s %-10s\n" "##" "VERSION" "DIRECTORY"
 for FOLDER in ${DIRLIST[*]}; do
-	VER=${FOLDER:$(expr index "$FOLDER" "$PREFIX") + 2}
+	VER=${FOLDER:$(expr index "$FOLDER" "$PREFIX") + ${#PREFIX} - 1}
 	if [ -z $VER ]; then
 		VERSIONS[$COUNT]=000
 	else
@@ -59,6 +59,7 @@ then
 fi
 
 COUNT=0
+CURRENTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 while [ $COUNT -lt $NUMDIRS ]; do
 	VER=${VERSIONS[$COUNT]}
 	if ! [ -z $COMPVER ]; then
@@ -103,6 +104,6 @@ while [ $COUNT -lt $NUMDIRS ]; do
 	fi
 	cd ${DIRLIST[$COUNT]}
 	./gradlew build
-	cd ..
+	cd $CURRENTDIR
 	let COUNT=$COUNT+1
 done

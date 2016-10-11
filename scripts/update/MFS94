@@ -1,23 +1,35 @@
 #!/bin/bash
-SOURCEPATH="/home/$USER/.minecraft/forge/modfiles"
+SOURCEPATH="/home/$USER/.minecraft/forge/moddingEnvironments"
 cd $SOURCEPATH
-find MinecraftFlightSimulator94 -not -path *.git* -not -type l -not -type d -delete
-cp -rPnu MinecraftFlightSimulator90/main MinecraftFlightSimulator94/
-FILES=$(find MinecraftFlightSimulator94 -not -path *.git* -not -type l -not -type d)
+find MFS94/src -not -path *.git* -not -type l -not -type d -delete
+cp -rPnu MFS90/src/main MFS94/src/
+FILES=$(find MFS94/src -not -path *.git* -not -type l -not -type d)
 
 for FILE in ${FILES[*]}; do
-#Global replacements
+#Global changes
+sed -i '/INS194/d' $FILE
+sed -i '/DEL194START/,/DEL194END/d' $FILE
 if cat $FILE | grep -q "public void writeToNBT"; then
 	sed -i 's/public void writeToNBT/public NBTTagCompound writeToNBT/' $FILE
   LINES=$(echo $(cat $FILE | wc -l))
   sed -i "$(($LINES - 1))ireturn tagCompound;" $FILE
 fi
 
-
-#Global deletions
-sed -i '/INS194/d' $FILE
-
 #File-specifc changes
+if echo $FILE | grep -q "MFS"; then
+	sed -i '3iimport net.minecraftforge.fluids.FluidRegistry;' $FILE
+fi
+if echo $FILE | grep -q "SlotFuel"; then
+  sed -i '/import net.minecraftforge.fluids.FluidContainerRegistry;/d' $FILE
+  sed -i '/import net.minecraftforge.fluids.FluidStack;/d' $FILE
+  sed -i '/import net.minecraftforge.fluids.IFluidContainerItem;/d' $FILE
+ 	sed -i '3iimport net.minecraftforge.common.capabilities.ICapabilityProvider;' $FILE
+	sed -i '3iimport net.minecraftforge.fluids.FluidRegistry;' $FILE
+	sed -i '3iimport net.minecraftforge.fluids.FluidStack;' $FILE
+	sed -i '3iimport net.minecraftforge.fluids.capability.ItemFluidContainer;' $FILE
+	sed -i '3iimport net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;' $FILE
+	sed -i '3iimport net.minecraftforge.fluids.capability.wrappers.FluidBucketWrapper;' $FILE
+fi
 if echo $FILE | grep -q "TileEntityPropellerBench"; then
 	sed -i 's/Packet getDescriptionPacket()/SPacketUpdateTileEntity getUpdatePacket()/' $FILE
 fi
