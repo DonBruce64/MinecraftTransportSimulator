@@ -22,7 +22,6 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public abstract class EntityChild extends EntityBase{	
-	public boolean collidesWithLiquids;
 	public int propertyCode;
 	public float offsetX;
 	public float offsetY;
@@ -102,7 +101,7 @@ public abstract class EntityChild extends EntityBase{
 		return true;
 	}
 	
-	protected boolean collidesWithLiqids(){
+	public boolean collidesWithLiquids(){
 		return false;
 	}
 	
@@ -122,7 +121,7 @@ public abstract class EntityChild extends EntityBase{
                     AxisAlignedBB blockBox = block.getCollisionBoundingBoxFromPool(worldObj, i, j, k);
                     if(blockBox != null && box.intersectsWith(blockBox)){
                     	return true;
-                    }else if(collidesWithLiqids()){
+                    }else if(collidesWithLiquids()){
                     	if(isLiquidAt(i, j, k)){
                     		return true;
                     	}
@@ -134,7 +133,7 @@ public abstract class EntityChild extends EntityBase{
                     AxisAlignedBB blockBox = state.getBlock().getCollisionBoundingBox(worldObj, pos, state);
                     if(blockBox != null && box.intersectsWith(blockBox)){
                     	return true;
-                    }else if(collidesWithLiquids){
+                    }else if(collidesWithLiqids()){
                     	if(isLiquidAt(i, j, k)){
                     		return true;
                     	}

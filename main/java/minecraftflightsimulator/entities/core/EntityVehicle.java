@@ -214,7 +214,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
                     	}else{
                     		collidingBoxes.add(blockBox);
                     	}
-                    }else if(child.collidesWithLiquids){
+                    }else if(child.collidesWithLiquids()){
                     	if(child.isLiquidAt(i, j, k)){
                     		collidingBoxes.add(box);
                     	}

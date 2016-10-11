@@ -53,7 +53,7 @@ public class EntityPontoon extends EntityLandingGear{
 	}
 	
 	@Override
-	public boolean collidesWithLiqids(){
+	public boolean collidesWithLiquids(){
 		return true;
 	}
 	
