@@ -78,7 +78,7 @@ public class SlotFuel extends SlotItem{
     	ICapabilityProvider capabilities = stack.getItem().initCapabilities(stack, stack.getTagCompound());
     	if(capabilities instanceof FluidBucketWrapper){
     		FluidBucketWrapper bucket = (FluidBucketWrapper) capabilities;
-    		return ConfigSystem.getFuelValue(FluidRegistry.getFluidName(bucket.getFluid())) > 0;
+    		return bucket.getFluid() != null ? ConfigSystem.getFuelValue(FluidRegistry.getFluidName(bucket.getFluid())) > 0 : false;
     	}else if(stack.getItem() instanceof ItemFluidContainer){
     		FluidHandlerItemStack handlerStack = (FluidHandlerItemStack) capabilities;
     		return ConfigSystem.getFuelValue(FluidRegistry.getFluidName(handlerStack.getFluid())) > 0;
