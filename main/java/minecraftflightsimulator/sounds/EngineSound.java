@@ -38,13 +38,13 @@ public class EngineSound extends MovingSound{
 	@Override
 	public void update(){
 		if(engine.engineOn || engine.internalFuel > 0){
-			this.xPosF = (float) player.posX;
-			this.yPosF = (float) player.posY;
-			this.zPosF = (float) player.posZ;
+			this.xPosF = (float) engine.posX;
+			this.yPosF = (float) engine.posY;
+			this.zPosF = (float) engine.posZ;
 			playerPos.set(player.posX, player.posY, player.posZ);
 			enginePos.set(engine.posX, engine.posY, engine.posZ);
 			if(engine.parent != null){
-				if(isPlayerRidingEnginesPlane(player)){
+				if(player.ridingEntity instanceof EntitySeat){
 					if(engine.parent.equals(((EntitySeat) player.ridingEntity).parent)){
 						this.field_147663_c=(float) (engine.engineRPM/pitchFactor);
 					}else{
@@ -68,14 +68,5 @@ public class EngineSound extends MovingSound{
 		}else{
 			this.donePlaying=true;
 		}
-	}
-	
-	private boolean isPlayerRidingEnginesPlane(EntityPlayer player){
-		if(player.ridingEntity instanceof EntitySeat){
-			if(engine.parent.equals(((EntitySeat) player.ridingEntity).parent)){
-				return true;
-			}
-		}
-		return false;
 	}
 }
