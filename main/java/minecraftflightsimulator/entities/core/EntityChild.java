@@ -133,7 +133,7 @@ public abstract class EntityChild extends EntityBase{
                     AxisAlignedBB blockBox = state.getBlock().getCollisionBoundingBox(worldObj, pos, state);
                     if(blockBox != null && box.intersectsWith(blockBox)){
                     	return true;
-                    }else if(collidesWithLiqids()){
+                    }else if(collidesWithLiquids()){
                     	if(isLiquidAt(i, j, k)){
                     		return true;
                     	}
