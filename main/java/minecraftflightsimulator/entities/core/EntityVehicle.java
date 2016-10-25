@@ -60,6 +60,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	public static final int emptyBucketSlot = 41;
 	public static final int fuelBucketSlot = 42;
 	
+	private byte playersInInv;
 	private List<AxisAlignedBB> collidingBoxes = new ArrayList<AxisAlignedBB>();
 
 	/**
@@ -342,12 +343,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	//Start of IInventory section
 	public void markDirty(){}
 	public void clear(){}
-	public void setField(int id, int value){}
-	public void openInventory(){this.openInventory(null);}
-	public void openInventory(EntityPlayer player){loadInventory();}
-	public void closeInventory(){this.closeInventory(null);}
-    public void closeInventory(EntityPlayer player){saveInventory();}
-    
+	public void setField(int id, int value){}    
 	public boolean hasCustomInventoryName(){return false;}
 	public boolean isUseableByPlayer(EntityPlayer player){return player.getDistanceToEntity(this) < 5;}
 	public boolean isItemValidForSlot(int slot, ItemStack stack){return false;}
@@ -358,6 +354,17 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	public String getInventoryName(){return "Vehicle Inventory";}
 	public ItemStack getStackInSlot(int slot){return compenentItems[slot];}
 	public ItemStack getStackInSlotOnClosing(int slot){return null;}
+	
+	public void openInventory(){
+		//Need to update inventory status if a second player is present.
+		if(playersInInv > 0){saveInventory();}
+			++playersInInv;
+			loadInventory();
+		}
+	public void closeInventory(){
+		--playersInInv;
+		saveInventory();
+	}
 	
 	public void setInventorySlotContents(int slot, ItemStack stack){
 		if(!worldObj.isRemote){
@@ -456,7 +463,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	}
 
 	/**
-	 * Saves inventory after closing.
+	 * Saves inventory.
 	 * New items are found by checking to see if itemChanged is true for that slot.
 	 * This must be implemented on subclasses to define component spawning behavior.
 	 */
