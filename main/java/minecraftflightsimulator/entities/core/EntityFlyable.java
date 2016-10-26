@@ -244,7 +244,7 @@ public abstract class EntityFlyable extends EntityVehicle{
 				}
 			}
 
-			//Next, spawn new seats
+			//Next, spawn new seats and chests.
 			if(itemChanged[controllerSeatSlot]){
 				int numberPilotSeats = getStackInSlot(controllerSeatSlot) == null ? 0 : getStackInSlot(controllerSeatSlot).stackSize;
 				for(int i=0; i<controllerPositions.size(); ++i){
@@ -285,6 +285,26 @@ public abstract class EntityFlyable extends EntityVehicle{
 							}else{
 								newChild = new EntitySeat(worldObj, this, this.UUID, position[0], position[1], position[2], getStackInSlot(passengerSeatSlot).getItemDamage(), false);
 							}
+							addChild(newChild.UUID, newChild, true);
+						}
+					}
+				}
+			}
+			
+			if(itemChanged[cargoSlot]){
+				int numberChests = getStackInSlot(cargoSlot) == null ? 0 : getStackInSlot(cargoSlot).stackSize;
+				for(int i=passengerPositions.size(); i>0; --i){
+					float[] position = passengerPositions.get(i);
+					EntityChild child = getChildAtLocation(position);
+					if(child != null){
+						if(getStackInSlot(cargoSlot) == null ? true : passengerPositions.size()-i+1 > numberChests){
+							child.setDead();
+							removeChild(child.UUID, false);
+						}
+					}
+					if(child == null ? true : child.isDead){
+						if(passengerPositions.size()-i+1 <= numberChests){
+							newChild = new EntityPlaneChest(worldObj, this, this.UUID, position[0], position[1], position[2]);
 							addChild(newChild.UUID, newChild, true);
 						}
 					}

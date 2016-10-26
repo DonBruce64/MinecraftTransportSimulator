@@ -14,6 +14,8 @@ public class SlotPassenger extends SlotItem{
 	}
     
     public int getSlotStackLimit(){
-        return vehicle.getNumberPassengerSeats();
+    	ItemStack cargoStack = vehicle.getStackInSlot(vehicle.cargoSlot);
+    	byte numberChests = (byte) (cargoStack != null ? cargoStack.stackSize : 0);
+    	return vehicle.getNumberPassengerSeats() - numberChests;
     }
 }

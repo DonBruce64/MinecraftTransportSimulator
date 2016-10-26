@@ -10,6 +10,7 @@ import minecraftflightsimulator.containers.ContainerVehicle;
 import minecraftflightsimulator.containers.GUIParent;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntityPlaneChest;
+import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.items.ItemEngine;
 import minecraftflightsimulator.utilities.ConfigSystem;
 import minecraftflightsimulator.utilities.MFSVector;
@@ -56,9 +57,10 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	
 	public static final int controllerSeatSlot = 28;
 	public static final int passengerSeatSlot = 29;
-	public static final int instrumentStartSlot = 30;
-	public static final int emptyBucketSlot = 41;
-	public static final int fuelBucketSlot = 42;
+	public static final int cargoSlot = 30;
+	public static final int instrumentStartSlot = 40;
+	public static final int emptyBucketSlot = 50;
+	public static final int fuelBucketSlot = 52;
 	
 	private byte playersInInv;
 	private List<AxisAlignedBB> collidingBoxes = new ArrayList<AxisAlignedBB>();
@@ -333,6 +335,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	
 	public int getNumberControllerSeats(){return controllerPositions.size();}
 	public int getNumberPassengerSeats(){return passengerPositions.size();}
+	
 	public GUIParent getGUI(EntityPlayer player){return new GUIParent(player, this, new ResourceLocation("mfs", "textures/" + this.getClass().getSuperclass().getSimpleName().substring(6).toLowerCase() + "s/" + this.getClass().getSimpleName().substring(6).toLowerCase() + "/gui.png"));} 
 	
 	protected abstract void initChildPositions();
@@ -411,6 +414,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 			for(int i=1; i<controllerSeatSlot; ++i){
 				EntityChild child = getChildAtLocation(partPositions.get(i));
 				if(child != null){
+					//TODO make this an extended class.
 					if(child instanceof EntityEngine){
 						setInventorySlotContents(i, ItemEngine.createStack(((EntityEngine) child).type, child.propertyCode, ((EntityEngine) child).hours));
 					}else if(MFSRegistry.entityItems.containsKey(child.getClass())){
@@ -421,44 +425,38 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 				}
 			}
 			
-			//Next, get seats inputed
-			int numberControllerSeats = 0;
-			int controllerPropertyCode = 0;
-			for(int i=0; i<controllerPositions.size(); ++i){
-				EntityChild child = getChildAtLocation(controllerPositions.get(i));
-				if(child != null){
-					++numberControllerSeats;
-					controllerPropertyCode = child.propertyCode;
-				}
-			}
-			if(numberControllerSeats > 0){
-				setInventorySlotContents(controllerSeatSlot, new ItemStack(MFSRegistry.seat, numberControllerSeats, controllerPropertyCode));
-			}
-			
-			int numberPassengerSeats = 0;
-			int passengerPropertyCode = 0;
-			boolean chests = false;
-			for(int i=0; i<passengerPositions.size(); ++i){
-				EntityChild child = getChildAtLocation(passengerPositions.get(i));
-				if(child != null){
-					++numberPassengerSeats;
-					passengerPropertyCode = child.propertyCode;
-					chests = child instanceof EntityPlaneChest;
-				}
-			}
-			if(numberPassengerSeats > 0){
-				if(chests){
-					setInventorySlotContents(passengerSeatSlot, new ItemStack(Item.getItemFromBlock(Blocks.chest), numberPassengerSeats));
-				}else{
-					setInventorySlotContents(passengerSeatSlot, new ItemStack(MFSRegistry.seat, numberPassengerSeats, passengerPropertyCode));
-				}
-			}
+			//Next, get seats and cargo positions.
+			setSeats(controllerPositions, controllerSeatSlot, false);
+			setSeats(passengerPositions, passengerSeatSlot, false);
+			setSeats(passengerPositions, cargoSlot, true);
 			
 			//Finally, do instrument and bucket things.  Also clear changes.
 			for(int i=0; i<10; ++i){
 				setInventorySlotContents(i+instrumentStartSlot,  instrumentList.get(i));
 			}
 			itemChanged = new boolean[fuelBucketSlot+1];
+		}
+	}
+	
+	private void setSeats(List<float[]> positionList, int itemSlot, boolean reverseOrder){
+		int numberPresent = 0;
+		int propertyCode = 0;
+		EntityChild child = null;
+		for(int i = reverseOrder ? positionList.size() : 0; reverseOrder ? i > 0 : i < positionList.size(); i = reverseOrder ? --i : ++i){
+			child = getChildAtLocation(positionList.get(i));
+			if(child != null){
+				++numberPresent;
+				propertyCode = child.propertyCode;
+			}
+		}
+		if(numberPresent > 0){
+			if(child instanceof EntitySeat){
+				setInventorySlotContents(itemSlot, new ItemStack(MFSRegistry.seat, numberPresent, propertyCode));
+			}else if(child instanceof EntityPlaneChest){
+				setInventorySlotContents(itemSlot, new ItemStack(MFSRegistry.seat, numberPresent, propertyCode));
+			}else{
+				setInventorySlotContents(itemSlot, null);
+			}
 		}
 	}
 

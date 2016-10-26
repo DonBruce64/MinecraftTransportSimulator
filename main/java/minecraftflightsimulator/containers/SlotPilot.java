@@ -12,10 +12,6 @@ public class SlotPilot extends SlotItem{
 		super(vehicle, xDisplayPosition, yDisplayPosition, vehicle.controllerSeatSlot, MFSRegistry.seat);
 		this.vehicle = vehicle;
 	}
-	
-    public boolean isItemValid(ItemStack item){
-    	return item.getItem() instanceof ItemSeat;
-    }
     
     public int getSlotStackLimit(){
         return vehicle.getNumberControllerSeats();
