@@ -2,6 +2,7 @@ package minecraftflightsimulator.blocks;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
+import minecraftflightsimulator.packets.general.PropellerBenchSyncPacket;
 import minecraftflightsimulator.sounds.BenchSound;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -23,6 +24,7 @@ public class TileEntityPropellerBench extends TileEntity implements IInventory{
 	public int timeLeft;
 	public static final int opTime = 1000;
 	
+	private boolean firstTickOnClient = true;
 	private BenchSound benchSound;
 	private ItemStack[] contents = new ItemStack[5];
 	private static final ItemStack op1Stack = new ItemStack(MFSRegistry.propeller, 1, 0);
@@ -31,6 +33,12 @@ public class TileEntityPropellerBench extends TileEntity implements IInventory{
 	
 	@Override
 	public void updateEntity(){
+		if(worldObj.isRemote && firstTickOnClient){
+			firstTickOnClient = false;
+			MFS.MFSNet.sendToServer(new PropellerBenchSyncPacket(this));
+			return;
+		}
+		
 		if(!isMaterialCorrect() || !isMaterialSufficient()){
 			timeLeft = 0;
 			isOn = false;

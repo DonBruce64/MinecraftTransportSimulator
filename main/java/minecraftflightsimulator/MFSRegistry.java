@@ -36,7 +36,8 @@ import minecraftflightsimulator.packets.control.TrimPacket;
 import minecraftflightsimulator.packets.general.ChatPacket;
 import minecraftflightsimulator.packets.general.ClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.GUIPacket;
-import minecraftflightsimulator.packets.general.PropellerBenchTilepdatePacket;
+import minecraftflightsimulator.packets.general.PropellerBenchSyncPacket;
+import minecraftflightsimulator.packets.general.PropellerBenchUpdatePacket;
 import minecraftflightsimulator.packets.general.ServerDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
@@ -140,7 +141,9 @@ public class MFSRegistry{
 		MFS.proxy.registerPacket(GUIPacket.class, GUIPacket.Handler.class, false, true);
 		MFS.proxy.registerPacket(ClientRequestDataPacket.class, ClientRequestDataPacket.Handler.class, false, true);
 
-		MFS.proxy.registerPacket(PropellerBenchTilepdatePacket.class, PropellerBenchTilepdatePacket.Handler.class, true, true);
+		MFS.proxy.registerPacket(PropellerBenchUpdatePacket.class, PropellerBenchUpdatePacket.Handler.class, true, true);
+		MFS.proxy.registerPacket(PropellerBenchSyncPacket.class, PropellerBenchSyncPacket.Handler.class, false, true);
+		
 		MFS.proxy.registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(ElevatorPacket.class, ElevatorPacket.Handler.class, true, true);

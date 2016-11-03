@@ -7,15 +7,15 @@ import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 
-public class PropellerBenchTilepdatePacket implements IMessage{
+public class PropellerBenchUpdatePacket implements IMessage{
 	private int x;
 	private int y;
 	private int z;
 	private short propertyCode;
 
-	public PropellerBenchTilepdatePacket() {}
+	public PropellerBenchUpdatePacket() {}
 	
-	public PropellerBenchTilepdatePacket(TileEntityPropellerBench tile, short propertyCode){
+	public PropellerBenchUpdatePacket(TileEntityPropellerBench tile, short propertyCode){
 		this.x = tile.xCoord;
 		this.y = tile.yCoord;
 		this.z = tile.zCoord;
@@ -38,8 +38,8 @@ public class PropellerBenchTilepdatePacket implements IMessage{
 		buf.writeShort(this.propertyCode);
 	}
 
-	public static class Handler implements IMessageHandler<PropellerBenchTilepdatePacket, PropellerBenchTilepdatePacket> {
-		public PropellerBenchTilepdatePacket onMessage(PropellerBenchTilepdatePacket message, MessageContext ctx){
+	public static class Handler implements IMessageHandler<PropellerBenchUpdatePacket, PropellerBenchUpdatePacket> {
+		public PropellerBenchUpdatePacket onMessage(PropellerBenchUpdatePacket message, MessageContext ctx){
 			TileEntityPropellerBench tile;
 			if(ctx.side.isServer()){
 				tile = (TileEntityPropellerBench) ctx.getServerHandler().playerEntity.worldObj.getTileEntity(message.x, message.y, message.z);

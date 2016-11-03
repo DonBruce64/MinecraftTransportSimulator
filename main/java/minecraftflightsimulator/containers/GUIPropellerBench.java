@@ -4,7 +4,7 @@ import java.awt.Color;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
-import minecraftflightsimulator.packets.general.PropellerBenchTilepdatePacket;
+import minecraftflightsimulator.packets.general.PropellerBenchUpdatePacket;
 import minecraftflightsimulator.utilities.RenderHelper;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -155,10 +155,10 @@ public class GUIPropellerBench extends GuiContainer{
 			if(propPitch>55)propPitch-=3;
 		}else if(buttonClicked.equals(powerButton)){
 			if(tile.isOn){
-				MFS.MFSNet.sendToServer(new PropellerBenchTilepdatePacket(tile, (short) 0));
+				MFS.MFSNet.sendToServer(new PropellerBenchUpdatePacket(tile, (short) 0));
 			}else{
 				if(tile.isMaterialCorrect() && tile.isMaterialSufficient() && tile.getStackInSlot(3) == null){
-					MFS.MFSNet.sendToServer(new PropellerBenchTilepdatePacket(tile, (short) -tile.opTime));
+					MFS.MFSNet.sendToServer(new PropellerBenchUpdatePacket(tile, (short) -tile.opTime));
 				}
 			}
 			return;
@@ -168,6 +168,6 @@ public class GUIPropellerBench extends GuiContainer{
 		tier2Button.enabled = propType != 2;
 		tier3Button.enabled = propType != 3;
 
-		MFS.MFSNet.sendToServer(new PropellerBenchTilepdatePacket(tile, (short) ((propDiameter - 70)/5*1000 + (propPitch-55)/3*100 + propBlades*10 + (propType - 1))));
+		MFS.MFSNet.sendToServer(new PropellerBenchUpdatePacket(tile, (short) ((propDiameter - 70)/5*1000 + (propPitch-55)/3*100 + propBlades*10 + (propType - 1))));
 	}
 }
