@@ -182,7 +182,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	@Override
 	public void setDead(){
 		if(!worldObj.isRemote){
-			openInventory();
+			loadInventory();
 			for(int i=1; i<getSizeInventory(); ++i){
 				ItemStack item = getStackInSlot(i);
 				if(item != null){
