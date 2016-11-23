@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableList;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.items.ItemPlane;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
+import minecraftflightsimulator.utilities.ConfigSystem;
 import minecraftflightsimulator.utilities.MFSVector;
 import minecraftflightsimulator.utilities.RotationHelper;
 import net.minecraft.nbt.NBTTagCompound;
@@ -50,7 +51,7 @@ public abstract class EntityParent extends EntityBase{
 		if(!this.hasUUID()){return;}
 		if(!linked){
 			linked = children.size() == numberChildren;
-		}else if(!worldObj.isRemote && this.ticksExisted%5==0){
+		}else if(!worldObj.isRemote && this.ticksExisted%ConfigSystem.getIntegerConfig("SyncDelay")==0){
 			MFS.MFSNet.sendToAll(new ServerSyncPacket(getEntityId(), posX, posY, posZ, motionX, motionY, motionZ, rotationPitch, rotationRoll, rotationYaw));
 		}
 		prevRotationRoll = rotationRoll + rollCorrection;

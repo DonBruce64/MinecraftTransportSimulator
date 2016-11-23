@@ -1,8 +1,8 @@
 package minecraftflightsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
-import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.utilities.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
@@ -70,24 +70,27 @@ public class ServerSyncPacket implements IMessage{
 			if(ctx.side==Side.CLIENT){
 				EntityParent thisEntity = (EntityParent) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 				if(thisEntity != null){
-					thisEntity.posX = rectifyValue(thisEntity.posX, message.posX, 0.01, 10);
-					thisEntity.posY = rectifyValue(thisEntity.posY, message.posY, 0.01, 10);
-					thisEntity.posZ = rectifyValue(thisEntity.posZ, message.posZ, 0.01, 10);
-					thisEntity.motionX = rectifyValue(thisEntity.motionX, message.motionX, 0.01, 0.2);
-					thisEntity.motionY = rectifyValue(thisEntity.motionY, message.motionY, 0.01, 0.2);
-					thisEntity.motionZ = rectifyValue(thisEntity.motionZ, message.motionZ, 0.01, 0.2);
+					byte syncThreshold = (byte) ConfigSystem.getIntegerConfig("SyncThreshold");
+					float syncIncrement = (float) ConfigSystem.getDoubleConfig("IncrementalMovement");
+
+					thisEntity.posX = rectifyValue(thisEntity.posX, message.posX, syncIncrement, syncThreshold);
+					thisEntity.posY = rectifyValue(thisEntity.posY, message.posY, syncIncrement, syncThreshold);
+					thisEntity.posZ = rectifyValue(thisEntity.posZ, message.posZ, syncIncrement, syncThreshold);
 					
+					thisEntity.motionX = rectifyValue(thisEntity.motionX, message.motionX, syncIncrement, syncThreshold/25);
+					thisEntity.motionY = rectifyValue(thisEntity.motionY, message.motionY, syncIncrement, syncThreshold/25);
+					thisEntity.motionZ = rectifyValue(thisEntity.motionZ, message.motionZ, syncIncrement, syncThreshold/25);
 					
 					thisEntity.rollCorrection = thisEntity.rotationRoll;
-					thisEntity.rotationRoll = (float) rectifyValue(thisEntity.rotationRoll, message.roll, 0.01, 5.0);
+					thisEntity.rotationRoll = (float) rectifyValue(thisEntity.rotationRoll, message.roll, syncIncrement, syncThreshold);
 					thisEntity.rollCorrection -= thisEntity.rotationRoll;
 					
 					thisEntity.pitchCorrection = thisEntity.rotationPitch;
-					thisEntity.rotationPitch = (float) rectifyValue(thisEntity.rotationPitch, message.pitch, 0.01, 5.0);
+					thisEntity.rotationPitch = (float) rectifyValue(thisEntity.rotationPitch, message.pitch, syncIncrement, syncThreshold);
 					thisEntity.pitchCorrection -= thisEntity.rotationPitch; 
 					
 					thisEntity.yawCorrection = thisEntity.rotationYaw;
-					thisEntity.rotationYaw = (float) rectifyValue(thisEntity.rotationYaw, message.yaw, 0.01, 5.0);
+					thisEntity.rotationYaw = (float) rectifyValue(thisEntity.rotationYaw, message.yaw, syncIncrement, syncThreshold);
 					thisEntity.yawCorrection -= thisEntity.rotationYaw;
 					
 					thisEntity.moveChildren();
