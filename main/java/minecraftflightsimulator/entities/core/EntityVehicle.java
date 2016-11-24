@@ -336,6 +336,10 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	public int getNumberControllerSeats(){return controllerPositions.size();}
 	public int getNumberPassengerSeats(){return passengerPositions.size();}
 	
+	/**
+	 * Gets the GUI background for the specific vehicle.
+	 * GUI texture location is based on the class name and the superclass name.
+	 */
 	public GUIParent getGUI(EntityPlayer player){return new GUIParent(player, this, new ResourceLocation("mfs", "textures/" + this.getClass().getSuperclass().getSimpleName().substring(6).toLowerCase() + "s/" + this.getClass().getSimpleName().substring(6).toLowerCase() + "/gui.png"));} 
 	
 	protected abstract void initChildPositions();
