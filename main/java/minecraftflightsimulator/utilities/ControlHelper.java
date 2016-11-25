@@ -53,6 +53,7 @@ public class ControlHelper{
 
 	//Configurations and data arrays
 	public static KeyBinding configKey;
+	private static String joystickName;
 	private static Controller joystick;
 	private static Map<String, Integer> keyboardMap = new HashMap<String, Integer>();
 	private static Map<String, Integer> joystickMap = new HashMap<String, Integer>();
@@ -79,7 +80,7 @@ public class ControlHelper{
 		keyboardMap.put(controls.ZOOM_I.keyboardName, ConfigSystem.config.get(KEYBOARD_CONFIG, controls.ZOOM_I.keyboardName, Keyboard.KEY_PRIOR).getInt());
 		keyboardMap.put(controls.ZOOM_O.keyboardName, ConfigSystem.config.get(KEYBOARD_CONFIG, controls.ZOOM_O.keyboardName, Keyboard.KEY_NEXT).getInt());
 		
-		String joystickName = ConfigSystem.config.get(JOYSTICK_CONFIG, "JoystickName", "").getString();
+		joystickName = ConfigSystem.config.get(JOYSTICK_CONFIG, "JoystickName", "").getString();
 		for(Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()){
 			if(controller.getName() != null){
 				if(controller.getName().equals(joystickName)){
@@ -166,13 +167,13 @@ public class ControlHelper{
 	}
 	
 	public static void setJoystick(Controller controller){
-		joystick = controller;
-		if(!joystick.getName().equals(ConfigSystem.config.get(JOYSTICK_CONFIG, "JoystickName", "").getString())){
+		if(!joystick.getName().equals(joystickName)){
 			ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put("JoystickName", new Property("JoystickName", joystick.getName(), Property.Type.STRING));
 			for(String joystickControl : joystickMap.keySet()){
 				setJoystickControl(joystickControl, NULL_COMPONENT);
 			}
 		}
+		joystick = controller;
 	}
 	
 	public static Controller getJoystick(){
