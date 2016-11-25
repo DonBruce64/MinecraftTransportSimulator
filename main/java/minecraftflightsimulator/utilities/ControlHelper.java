@@ -81,9 +81,11 @@ public class ControlHelper{
 		
 		String joystickName = ConfigSystem.config.get(JOYSTICK_CONFIG, "JoystickName", "").getString();
 		for(Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()){
-			if(controller.getName().equals(joystickName)){
-				joystick = controller;
-				break;
+			if(controller.getName() != null){
+				if(controller.getName().equals(joystickName)){
+					joystick = controller;
+					break;
+				}
 			}
 		}
 		
