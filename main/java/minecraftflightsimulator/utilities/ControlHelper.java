@@ -167,7 +167,7 @@ public class ControlHelper{
 	
 	public static void setJoystick(Controller controller){
 		joystick = controller;
-		if(!joystick.getName().equals(ConfigSystem.config.get(JOYSTICK_CONFIG, "JoystickName", ""))){
+		if(!joystick.getName().equals(ConfigSystem.config.get(JOYSTICK_CONFIG, "JoystickName", "").getString())){
 			ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put("JoystickName", new Property("JoystickName", joystick.getName(), Property.Type.STRING));
 			for(String joystickControl : joystickMap.keySet()){
 				setJoystickControl(joystickControl, NULL_COMPONENT);
