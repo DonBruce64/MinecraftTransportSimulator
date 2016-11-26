@@ -114,7 +114,7 @@ public abstract class EntityChild extends EntityBase{
 		int maxZ = MathHelper.floor_double(box.maxZ + 1.0D);
 
         for(int i = minX; i < maxX; ++i){
-        	for(int j = minY - 1; j < maxY; ++j){
+        	for(int j = minY; j < maxY; ++j){
         		for(int k = minZ; k < maxZ; ++k){
         			//DEL180START
                     Block block = worldObj.getBlock(i, j, k);

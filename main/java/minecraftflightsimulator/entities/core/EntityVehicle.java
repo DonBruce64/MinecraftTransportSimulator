@@ -203,7 +203,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		int maxZ = MathHelper.floor_double(box.maxZ + 1.0D);
 
         for(int i = minX; i < maxX; ++i){
-        	for(int j = minY - 1; j < maxY; ++j){
+        	for(int j = minY; j < maxY; ++j){
         		for(int k = minZ; k < maxZ; ++k){
         			//DEL180START
                     Block block = worldObj.getBlock(i, j, k);
@@ -219,7 +219,8 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
                     	}
                     }else if(child.collidesWithLiquids()){
                     	if(child.isLiquidAt(i, j, k)){
-                    		collidingBoxes.add(box);
+                    		blockBox = AxisAlignedBB.getBoundingBox(i, j, k, i+1, j+1, k+1);
+                    		collidingBoxes.add(blockBox);
                     	}
                     }
                   //DEL180END
@@ -446,7 +447,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		int numberPresent = 0;
 		int propertyCode = 0;
 		EntityChild child = null;
-		for(int i = reverseOrder ? positionList.size() : 0; reverseOrder ? i > 0 : i < positionList.size(); i = reverseOrder ? --i : ++i){
+		for(int i = reverseOrder ? positionList.size() - 1 : 0; reverseOrder ? i >= 0 : i < positionList.size(); i = reverseOrder ? --i : ++i){
 			child = getChildAtLocation(positionList.get(i));
 			if(child != null){
 				++numberPresent;
