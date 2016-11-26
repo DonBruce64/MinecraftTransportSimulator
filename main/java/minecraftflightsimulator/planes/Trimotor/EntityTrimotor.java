@@ -107,9 +107,9 @@ public class EntityTrimotor extends EntityPlane{
 	
 	@Override
 	public void initVehicleContainerSlots(ContainerVehicle container){
-		container.addSlotToContainer(new SlotItem(this, 80, 113, 1, MFSRegistry.wheelLarge));
-		container.addSlotToContainer(new SlotItem(this, 44, 113, 2, MFSRegistry.wheelLarge));
-		container.addSlotToContainer(new SlotItem(this, 62, 113, 4, MFSRegistry.wheelLarge));
+		container.addSlotToContainer(new SlotItem(this, 62, 113, 1, MFSRegistry.wheelLarge));
+		container.addSlotToContainer(new SlotItem(this, 80, 113, 2, MFSRegistry.wheelLarge));
+		container.addSlotToContainer(new SlotItem(this, 44, 113, 4, MFSRegistry.wheelLarge));
 		container.addSlotToContainer(new SlotItem(this, 131, 63, 6, MFSRegistry.engineLarge));
 		container.addSlotToContainer(new SlotItem(this, 118, 37, 7, MFSRegistry.engineLarge));
 		container.addSlotToContainer(new SlotItem(this, 118, 89, 8, MFSRegistry.engineLarge));
