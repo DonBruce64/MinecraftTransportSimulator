@@ -3,7 +3,7 @@ package minecraftflightsimulator.entities.core;
 import java.util.List;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.parts.EntityPlaneChest;
+import minecraftflightsimulator.entities.parts.EntityChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
 import minecraftflightsimulator.entities.parts.EntitySeat;
@@ -213,8 +213,8 @@ public abstract class EntityPlane extends EntityFlyable{
 				}else{
 					addedMass = 100;
 				}
-			}else if(child instanceof EntityPlaneChest){
-				addedMass = calculateInventoryWeight((EntityPlaneChest) child);
+			}else if(child instanceof EntityChest){
+				addedMass = calculateInventoryWeight((EntityChest) child);
 			}else if(child instanceof EntityPropeller){
 				addedMass = 50*(child.propertyCode%10);
 			}

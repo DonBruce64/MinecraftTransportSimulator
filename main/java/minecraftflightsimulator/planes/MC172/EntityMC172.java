@@ -4,8 +4,7 @@ import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.containers.ContainerVehicle;
 import minecraftflightsimulator.containers.SlotFuel;
 import minecraftflightsimulator.containers.SlotItem;
-import minecraftflightsimulator.containers.SlotPassenger;
-import minecraftflightsimulator.containers.SlotPilot;
+import minecraftflightsimulator.containers.SlotLoadable;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
 import net.minecraft.util.ResourceLocation;
@@ -46,7 +45,7 @@ public class EntityMC172 extends EntityPlane{
 		addEnginePosition(new float[]{0, -0.3F, 1.65F});
 		addPropellerPosition(new float[]{0, -0.375F, 2.5F});
 		addControllerPosition(new float[]{0, -.1F, 0});
-		addPassengerPosition(new float[]{0, -.1F, -1});
+		addMixedPosition(new float[]{0, -.1F, -1});
 	}
 	
 	@Override
@@ -80,8 +79,8 @@ public class EntityMC172 extends EntityPlane{
 		container.addSlotToContainer(new SlotItem(this, 68, 113, 4, MFSRegistry.wheelSmall, MFSRegistry.pontoon));
 		container.addSlotToContainer(new SlotItem(this, 131, 66, 6, MFSRegistry.engineSmall));
 		container.addSlotToContainer(new SlotItem(this, 150, 66, 10, MFSRegistry.propeller));
-		container.addSlotToContainer(new SlotPilot(this, 110, 66));
-		container.addSlotToContainer(new SlotPassenger(this, 92, 66));
+		container.addSlotToContainer(new SlotLoadable(this, 110, 66, SlotLoadable.SeatTypes.CONTROLLER));
+		container.addSlotToContainer(new SlotLoadable(this, 92, 66, SlotLoadable.SeatTypes.FORWARD_MIXED));
 		container.addSlotToContainer(new SlotItem(this, 7, 113, this.emptyBucketSlot));
 		container.addSlotToContainer(new SlotFuel(this, 7, 73));
 		for(int i=0; i<10; ++i){

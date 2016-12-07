@@ -27,13 +27,17 @@ public class GUIPacket implements IMessage{
 		buf.writeInt(this.id);
 	}
 
-	public static class Handler implements IMessageHandler<GUIPacket, IMessage> {
-		public IMessage onMessage(GUIPacket message, MessageContext ctx){
+	public static class Handler implements IMessageHandler<GUIPacket, ChatPacket> {
+		public ChatPacket onMessage(GUIPacket message, MessageContext ctx){
 			if(ctx.side.isServer()){
 				EntityVehicle vehicle = (EntityVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 				EntityPlayer player = ctx.getServerHandler().playerEntity;
 				if(player.getDistanceToEntity(vehicle) < 5){
-					player.openGui(MFS.instance, vehicle.getEntityId(), vehicle.worldObj, 0, 0, 0);
+					if(vehicle.playerInInv.equals("")){
+						player.openGui(MFS.instance, vehicle.getEntityId(), vehicle.worldObj, 0, 0, 0);
+					}else{
+						return new ChatPacket("This vehicle is currently being worked on by " + vehicle.playerInInv + "!");
+					}
     			}
 			}
 			return null;

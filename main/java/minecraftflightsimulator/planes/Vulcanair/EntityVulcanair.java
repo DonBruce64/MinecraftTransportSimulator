@@ -4,8 +4,7 @@ import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.containers.ContainerVehicle;
 import minecraftflightsimulator.containers.SlotFuel;
 import minecraftflightsimulator.containers.SlotItem;
-import minecraftflightsimulator.containers.SlotPassenger;
-import minecraftflightsimulator.containers.SlotPilot;
+import minecraftflightsimulator.containers.SlotLoadable;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
 import net.minecraft.util.ResourceLocation;
@@ -48,8 +47,8 @@ public class EntityVulcanair extends EntityPlane{
 		addPropellerPosition(new float[]{2.69F, 1.15F, 2.07F});
 		addPropellerPosition(new float[]{-2.69F, 1.15F, 2.07F});
 		addControllerPosition(new float[]{0, 0.1F, 2.37F});
-		addPassengerPosition(new float[]{0, 0.1F, 1.245F});
-		addPassengerPosition(new float[]{0, 0.1F, 0.12F});
+		addMixedPosition(new float[]{0, 0.1F, 1.245F});
+		addMixedPosition(new float[]{0, 0.1F, 0.12F});
 	}
 	
 	@Override
@@ -88,8 +87,9 @@ public class EntityVulcanair extends EntityPlane{
 		container.addSlotToContainer(new SlotItem(this, 111, 84, 7, MFSRegistry.engineSmall));
 		container.addSlotToContainer(new SlotItem(this, 130, 40, 10, MFSRegistry.propeller));
 		container.addSlotToContainer(new SlotItem(this, 130, 84, 11, MFSRegistry.propeller));
-		container.addSlotToContainer(new SlotPilot(this, 118, 62));
-		container.addSlotToContainer(new SlotPassenger(this, 101, 62));
+		container.addSlotToContainer(new SlotLoadable(this, 118, 62, SlotLoadable.SeatTypes.CONTROLLER));
+		container.addSlotToContainer(new SlotLoadable(this, 101, 62, SlotLoadable.SeatTypes.FORWARD_MIXED));
+		container.addSlotToContainer(new SlotLoadable(this, 84, 62, SlotLoadable.SeatTypes.AFT_MIXED));
 		container.addSlotToContainer(new SlotItem(this, 7, 113, this.emptyBucketSlot));
 		container.addSlotToContainer(new SlotFuel(this, 7, 73));
 		for(int i=0; i<10; ++i){

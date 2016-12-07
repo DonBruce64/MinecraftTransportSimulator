@@ -18,7 +18,12 @@ public class SlotItem extends Slot{
     public boolean isItemValid(ItemStack itemStack){
     	for(Item validItem : validItems){
     		if(itemStack.getItem().equals(validItem)){
-    			return true;
+    			if(this.getStack() != null){
+    				if(!this.getStack().isItemEqual(itemStack) || this.getStack().getItemDamage() != itemStack.getItemDamage()){
+    					return false;
+    				}
+    			}
+    			return getSlotStackLimit() > 0;
     		}
     	}
     	return false;

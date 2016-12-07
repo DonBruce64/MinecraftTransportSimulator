@@ -4,8 +4,7 @@ import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.containers.ContainerVehicle;
 import minecraftflightsimulator.containers.SlotFuel;
 import minecraftflightsimulator.containers.SlotItem;
-import minecraftflightsimulator.containers.SlotPassenger;
-import minecraftflightsimulator.containers.SlotPilot;
+import minecraftflightsimulator.containers.SlotLoadable;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
 import net.minecraft.util.ResourceLocation;
@@ -51,18 +50,18 @@ public class EntityTrimotor extends EntityPlane{
 		addPropellerPosition(new float[]{-2.875F, -0.535F, 1.36F});
 		addControllerPosition(new float[]{0.5F, -.3F, 1.55F});
 		addControllerPosition(new float[]{-0.5F, -.3F, 1.55F});
-		addPassengerPosition(new float[]{0.625F, -0.7F, 0.5F});
-		addPassengerPosition(new float[]{-0.625F, -0.7F, 0.5F});
-		addPassengerPosition(new float[]{0.625F, -0.7F, -0.6F});
-		addPassengerPosition(new float[]{-0.625F, -0.7F, -0.6F});
-		addPassengerPosition(new float[]{0.625F, -0.7F, -1.6F});
-		addPassengerPosition(new float[]{-0.625F, -0.7F, -1.6F});
-		addPassengerPosition(new float[]{0.625F, -0.7F, -2.6F});
-		addPassengerPosition(new float[]{-0.625F, -0.7F, -2.6F});
-		addPassengerPosition(new float[]{0.625F, -0.7F, -3.6F});
-		addPassengerPosition(new float[]{-0.625F, -0.7F, -3.6F});
-		addPassengerPosition(new float[]{0.625F, -0.7F, -4.6F});
-		addPassengerPosition(new float[]{-0.625F, -0.7F, -4.6F});
+		addMixedPosition(new float[]{0.625F, -0.7F, 0.5F});
+		addMixedPosition(new float[]{-0.625F, -0.7F, 0.5F});
+		addMixedPosition(new float[]{0.625F, -0.7F, -0.6F});
+		addMixedPosition(new float[]{-0.625F, -0.7F, -0.6F});
+		addMixedPosition(new float[]{0.625F, -0.7F, -1.6F});
+		addMixedPosition(new float[]{-0.625F, -0.7F, -1.6F});
+		addMixedPosition(new float[]{0.625F, -0.7F, -2.6F});
+		addMixedPosition(new float[]{-0.625F, -0.7F, -2.6F});
+		addMixedPosition(new float[]{0.625F, -0.7F, -3.6F});
+		addMixedPosition(new float[]{-0.625F, -0.7F, -3.6F});
+		addMixedPosition(new float[]{0.625F, -0.7F, -4.6F});
+		addMixedPosition(new float[]{-0.625F, -0.7F, -4.6F});
 	}
 	
 	@Override
@@ -116,8 +115,9 @@ public class EntityTrimotor extends EntityPlane{
 		container.addSlotToContainer(new SlotItem(this, 150, 63, 10, MFSRegistry.propeller));
 		container.addSlotToContainer(new SlotItem(this, 137, 37, 11, MFSRegistry.propeller));
 		container.addSlotToContainer(new SlotItem(this, 137, 89, 12, MFSRegistry.propeller));
-		container.addSlotToContainer(new SlotPilot(this, 107, 63));
-		container.addSlotToContainer(new SlotPassenger(this, 89, 63));
+		container.addSlotToContainer(new SlotLoadable(this, 110, 63, SlotLoadable.SeatTypes.CONTROLLER));
+		container.addSlotToContainer(new SlotLoadable(this, 92, 63, SlotLoadable.SeatTypes.FORWARD_MIXED));
+		container.addSlotToContainer(new SlotLoadable(this, 74, 63, SlotLoadable.SeatTypes.AFT_MIXED));
 		container.addSlotToContainer(new SlotItem(this, 7, 113, this.emptyBucketSlot));
 		container.addSlotToContainer(new SlotFuel(this, 7, 73));
 		for(int i=0; i<10; ++i){

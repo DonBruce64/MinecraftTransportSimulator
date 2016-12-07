@@ -11,7 +11,7 @@ import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.parts.EntityEngine.EngineTypes;
 import minecraftflightsimulator.entities.parts.EntityEngineAircraft;
-import minecraftflightsimulator.entities.parts.EntityPlaneChest;
+import minecraftflightsimulator.entities.parts.EntityChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPontoonDummy;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
@@ -80,6 +80,10 @@ public class MFSRegistry{
 	public static final Block blockPropellerBench = new BlockPropellerBench();
 	
 	public static List<Item> itemList = new ArrayList<Item>();
+	/**
+	 * Maps child classes to the items that spawn them.
+	 * Useful for inventory operations.
+	 */
 	public static Map<Class<? extends EntityChild>, Item> entityItems = new HashMap<Class<? extends EntityChild>, Item>();
 	
 	public void init(){
@@ -123,7 +127,7 @@ public class MFSRegistry{
 		
 		MFS.proxy.registerEntity(EntityCore.class, null);
 		MFS.proxy.registerEntity(EntitySeat.class, seat);
-		MFS.proxy.registerEntity(EntityPlaneChest.class, new ItemStack(Blocks.chest).getItem());
+		MFS.proxy.registerEntity(EntityChest.class, new ItemStack(Blocks.chest).getItem());
 		MFS.proxy.registerEntity(EntityWheelSmall.class, wheelSmall);
 		MFS.proxy.registerEntity(EntityWheelLarge.class, wheelLarge);
 		MFS.proxy.registerEntity(EntitySkid.class, skid);

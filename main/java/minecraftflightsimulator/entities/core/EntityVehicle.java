@@ -8,10 +8,10 @@ import java.util.Map;
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.containers.ContainerVehicle;
 import minecraftflightsimulator.containers.GUIParent;
+import minecraftflightsimulator.entities.parts.EntityChest;
 import minecraftflightsimulator.entities.parts.EntityEngine;
-import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntitySeat;
-import minecraftflightsimulator.items.ItemEngine;
+import minecraftflightsimulator.items.IItemNBT;
 import minecraftflightsimulator.utilities.ConfigSystem;
 import minecraftflightsimulator.utilities.MFSVector;
 import net.minecraft.block.Block;
@@ -47,6 +47,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	public double velocity;
 	public double airDensity;
 	public double trackAngle;
+	public String playerInInv = "";
 	public String ownerName="MFS";
 	public String displayName="";
 	
@@ -55,14 +56,15 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	public MFSVector verticalVec = new MFSVector(0, 0, 0);
 	public MFSVector sideVec = new MFSVector(0, 0, 0);
 	
-	public static final int controllerSeatSlot = 28;
-	public static final int passengerSeatSlot = 29;
+	public static final int controllerSlot = 28;
+	public static final int passengerSlot = 29;
 	public static final int cargoSlot = 30;
+	public static final int forwardMixedSlot = 31;
+	public static final int aftMixedSlot = 32;
 	public static final int instrumentStartSlot = 40;
 	public static final int emptyBucketSlot = 50;
 	public static final int fuelBucketSlot = 52;
 	
-	private byte playersInInv;
 	private List<AxisAlignedBB> collidingBoxes = new ArrayList<AxisAlignedBB>();
 
 	/**
@@ -88,9 +90,10 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	 */
 	protected Map<Integer, float[]> partPositions;
 
-	protected List<float[]> controllerPositions;
-	
-	protected List<float[]> passengerPositions;
+	private List<float[]> controllerPositions;
+	private List<float[]> passengerPositions;
+	private List<float[]> cargoPositions;
+	private List<float[]> mixedPositions;
 	
 	/**
 	 * Map that contains child mappings.  Keyed by child's UUID.
@@ -125,6 +128,8 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		partPositions = new HashMap<Integer, float[]>();
 		controllerPositions = new ArrayList<float[]>();
 		passengerPositions = new ArrayList<float[]>();
+		cargoPositions = new ArrayList<float[]>();
+		mixedPositions = new ArrayList<float[]>();
 		this.initChildPositions();
 	}
 	
@@ -182,7 +187,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	@Override
 	public void setDead(){
 		if(!worldObj.isRemote){
-			loadInventory();
+			loadInventory("");
 			for(int i=1; i<getSizeInventory(); ++i){
 				ItemStack item = getStackInSlot(i);
 				if(item != null){
@@ -269,7 +274,17 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	
 	protected void addPassengerPosition(float[] coords){
 		passengerPositions.add(coords);
-	}	
+	}
+
+	protected void addCargorPosition(float[] coords){
+		cargoPositions.add(coords);
+	}
+	
+	protected void addMixedPosition(float[] coords){
+		mixedPositions.add(coords);
+	}
+	
+
 	
 	public static float calculateInventoryWeight(IInventory inventory){
 		float weight = 0;
@@ -334,8 +349,11 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		}
 	}
 	
-	public int getNumberControllerSeats(){return controllerPositions.size();}
-	public int getNumberPassengerSeats(){return passengerPositions.size();}
+	public int getControllerCapacity(){return controllerPositions.size();}
+	public int getPassengerCapacity(){return passengerPositions.size();}
+	public int getCargoCapacity(){return cargoPositions.size();}
+	public int getForwardMixedCapacity(){return getStackInSlot(aftMixedSlot) != null ? mixedPositions.size() - getStackInSlot(aftMixedSlot).stackSize : mixedPositions.size();}
+	public int getAftMixedCapacity(){return getStackInSlot(forwardMixedSlot) != null ? mixedPositions.size() - getStackInSlot(forwardMixedSlot).stackSize : mixedPositions.size();}
 	
 	/**
 	 * Gets the GUI background for the specific vehicle.
@@ -349,9 +367,11 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	
 	
 	//Start of IInventory section
-	public void markDirty(){}
 	public void clear(){}
-	public void setField(int id, int value){}    
+	public void markDirty(){}
+	public void openInventory(){}
+	public void closeInventory(){}
+	public void setField(int id, int value){}
 	public boolean hasCustomInventoryName(){return false;}
 	public boolean isUseableByPlayer(EntityPlayer player){return player.getDistanceToEntity(this) < 5;}
 	public boolean isItemValidForSlot(int slot, ItemStack stack){return false;}
@@ -362,17 +382,6 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	public String getInventoryName(){return "Vehicle Inventory";}
 	public ItemStack getStackInSlot(int slot){return compenentItems[slot];}
 	public ItemStack getStackInSlotOnClosing(int slot){return null;}
-	
-	public void openInventory(){
-		//Need to update inventory status if a second player is present.
-		if(playersInInv > 0){saveInventory();}
-			++playersInInv;
-			loadInventory();
-		}
-	public void closeInventory(){
-		--playersInInv;
-		saveInventory();
-	}
 	
 	public void setInventorySlotContents(int slot, ItemStack stack){
 		if(!worldObj.isRemote){
@@ -412,18 +421,21 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 	
 	/**
 	 * Loads inventory upon opening.  Needs to run each opening to account for broken parts.
+	 * Requires a player name to hold until inventory is closed.  This is to prevent multiple
+	 * players from accessing it and causing de-syncs.  A hack, I know, but I don't
+	 * know how to fix it.
 	 */
-	public void loadInventory(){
+	public void loadInventory(String playerName){
 		if(!worldObj.isRemote){
 			//First, match part positions to slots.
-			for(int i=1; i<controllerSeatSlot; ++i){
+			for(int i=1; i<controllerSlot; ++i){
 				EntityChild child = getChildAtLocation(partPositions.get(i));
 				if(child != null){
-					//TODO make this an extended class.
-					if(child instanceof EntityEngine){
-						setInventorySlotContents(i, ItemEngine.createStack(((EntityEngine) child).type, child.propertyCode, ((EntityEngine) child).hours));
-					}else if(MFSRegistry.entityItems.containsKey(child.getClass())){
-						setInventorySlotContents(i, new ItemStack(MFSRegistry.entityItems.get(child.getClass()), 1, child.propertyCode));
+					Item childItem = MFSRegistry.entityItems.get(child.getClass());
+					if(child instanceof IItemNBT){
+						setInventorySlotContents(i, ((IItemNBT) childItem).createStackFromEntity(child));
+					}else{
+						setInventorySlotContents(i, new ItemStack(childItem, 1, child.propertyCode));
 					}
 				}else{
 					setInventorySlotContents(i, null);
@@ -431,9 +443,10 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 			}
 			
 			//Next, get seats and cargo positions.
-			setSeats(controllerPositions, controllerSeatSlot, false);
-			setSeats(passengerPositions, passengerSeatSlot, false);
-			setSeats(passengerPositions, cargoSlot, true);
+			setLoadableSlot(controllerPositions, controllerSlot);
+			setLoadableSlot(passengerPositions, passengerSlot);
+			setLoadableSlot(cargoPositions, cargoSlot);
+			setMixedSlots();
 			
 			//Finally, do instrument and bucket things.  Also clear changes.
 			for(int i=0; i<10; ++i){
@@ -443,32 +456,165 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		}
 	}
 	
-	private void setSeats(List<float[]> positionList, int itemSlot, boolean reverseOrder){
-		int numberPresent = 0;
-		int propertyCode = 0;
-		EntityChild child = null;
-		for(int i = reverseOrder ? positionList.size() - 1 : 0; reverseOrder ? i >= 0 : i < positionList.size(); i = reverseOrder ? --i : ++i){
-			child = getChildAtLocation(positionList.get(i));
+	/**
+	 * Sets the contents of the slot to the children located at the points in
+	 * positionList.  Used to set seats and chests in the inventory given
+	 * a list of places they could be.  Only used for regular slots, not
+	 * the mixed slots.
+	 */
+	private void setLoadableSlot(List<float[]> positionList, int itemSlot){
+		ItemStack stack = null;
+		for(float[] coords : positionList){
+			EntityChild child = getChildAtLocation(coords);
 			if(child != null){
-				++numberPresent;
-				propertyCode = child.propertyCode;
-			}
-		}
-		if(numberPresent > 0){
-			if(child instanceof EntitySeat){
-				setInventorySlotContents(itemSlot, new ItemStack(MFSRegistry.seat, numberPresent, propertyCode));
-			}else if(child instanceof EntityPlaneChest){
-				setInventorySlotContents(itemSlot, new ItemStack(MFSRegistry.seat, numberPresent, propertyCode));
-			}else{
-				setInventorySlotContents(itemSlot, null);
+				if(stack == null){
+					stack = new ItemStack(MFSRegistry.entityItems.get(child), 1, child.propertyCode);
+				}else{
+					++stack.stackSize;
+				}
 			}
 		}
 	}
-
+	
 	/**
-	 * Saves inventory.
+	 * Sets the two mixed slots that can be either chests or seats.
+	 */
+	private void setMixedSlots(){
+		EntityChild forwardChild = null;
+		EntityChild aftChild = null;
+		int forwardSpots = 0;
+		int aftSpots = 0;
+		boolean firstSlot = true;
+		
+		for(float[] coords : mixedPositions){
+			EntityChild currentChild = getChildAtLocation(coords);
+			if(currentChild != null){
+				if(forwardChild == null && firstSlot){
+					forwardChild = currentChild;
+				}else if(!currentChild.equals(forwardChild) && aftChild == null){
+					aftChild = currentChild;
+				}
+				if(forwardChild != null && aftChild == null){
+					++forwardSpots;
+				}else if(aftChild != null){
+					++aftSpots;
+				}
+			}
+			firstSlot = false;
+		}
+		
+		if(forwardChild != null){
+			setInventorySlotContents(forwardMixedSlot, new ItemStack(MFSRegistry.entityItems.get(forwardChild), forwardSpots, forwardChild.propertyCode));
+		}else{
+			setInventorySlotContents(forwardMixedSlot, null);
+		}
+		
+		if(aftChild != null){
+			setInventorySlotContents(aftMixedSlot, new ItemStack(MFSRegistry.entityItems.get(aftChild), aftSpots, aftChild.propertyCode));
+		}else{
+			setInventorySlotContents(aftMixedSlot, null);
+		}
+	}
+	
+	/**
+	 * Spawns all loadable items and removes extra entities 
+	 * if a loadable slot lost items.
+	 */
+	protected void spawnLoadableContents(){
+		spawnLoadablesFromPositions(controllerPositions, controllerSlot);
+		spawnLoadablesFromPositions(passengerPositions, passengerSlot);
+		spawnLoadablesFromPositions(cargoPositions, cargoSlot);
+
+		ItemStack[] spawnedItemData = new ItemStack[mixedPositions.size()];
+		ItemStack[] mixedItemData = new ItemStack[mixedPositions.size()];
+		ItemStack forwardStack = getStackInSlot(forwardMixedSlot);
+		ItemStack aftStack = getStackInSlot(aftMixedSlot);
+		
+		for(int i=0; i<mixedPositions.size(); ++i){
+			EntityChild child = getChildAtLocation(mixedPositions.get(i));
+			spawnedItemData[i] = child != null ? new ItemStack(MFSRegistry.entityItems.get(child), 1, child.propertyCode) : null;
+		}
+		if(forwardStack != null){
+			for(int i=0; i<forwardStack.stackSize; ++i){
+				mixedItemData[i] = forwardStack;
+			}
+		}
+		if(aftStack != null){
+			for(int i=mixedPositions.size() - 1; i>mixedPositions.size() - 1 - aftStack.stackSize; --i){
+				mixedItemData[i] = aftStack;
+			}
+		}
+		
+		for(int i=0; i<mixedPositions.size(); ++i){
+			float[] coords = mixedPositions.get(i);
+			if(mixedItemData[i] != null || spawnedItemData[i] != null){
+				if(mixedItemData[i] != null){
+					if(spawnedItemData[i] != null){
+						if(mixedItemData[i].isItemEqual(spawnedItemData[i]) && mixedItemData[i].getItemDamage() == spawnedItemData[i].getItemDamage()){
+							continue;
+						}else{
+							getChildAtLocation(coords).setDead();
+						}
+					}
+					if(mixedItemData[i].getItem().equals(MFSRegistry.seat)){
+						EntityChild newChild = new EntitySeat(worldObj, this, this.UUID, coords[0], coords[1], coords[2], mixedItemData[i].getItemDamage(), false);
+						addChild(newChild.UUID, newChild, true);
+					}else if(mixedItemData[i].getItem().equals(Item.getItemFromBlock(Blocks.chest))){
+						EntityChild newChild = new EntityChest(worldObj, this, this.UUID, coords[0], coords[1], coords[2]);
+						addChild(newChild.UUID, newChild, true);
+					}
+				}else{
+					getChildAtLocation(mixedPositions.get(i)).setDead();
+				}
+			}
+		}
+	}
+	
+	
+	private void spawnLoadablesFromPositions(List<float[]> positionList, int itemSlot){
+		ItemStack stack = getStackInSlot(itemSlot);
+		for(int i=0; i<positionList.size(); ++i){
+			float[] coords = positionList.get(i);
+			EntityChild child = getChildAtLocation(coords);
+			if(stack != null){
+				if(child != null){
+					if(stack.stackSize <= i){
+						child.setDead();
+					}else{
+						if(child.propertyCode != stack.getItemDamage()){
+							child.setDead();
+						}
+						if(stack.getItem().equals(MFSRegistry.seat)){
+							EntityChild newChild = new EntitySeat(worldObj, this, this.UUID, coords[0], coords[1], coords[2], getStackInSlot(itemSlot).getItemDamage(), itemSlot == controllerSlot);
+							addChild(newChild.UUID, newChild, true);
+						}else if(stack.getItem().equals(Item.getItemFromBlock(Blocks.chest))){
+							EntityChild newChild = new EntityChest(worldObj, this, this.UUID, coords[0], coords[1], coords[2]);
+							addChild(newChild.UUID, newChild, true);
+						}
+					}	
+				}else{
+					if(stack.stackSize > i){
+						if(stack.getItem().equals(MFSRegistry.seat)){
+							EntityChild newChild = new EntitySeat(worldObj, this, this.UUID, coords[0], coords[1], coords[2], getStackInSlot(itemSlot).getItemDamage(), itemSlot == controllerSlot);
+							addChild(newChild.UUID, newChild, true);
+						}else if(stack.getItem().equals(Item.getItemFromBlock(Blocks.chest))){
+							EntityChild newChild = new EntityChest(worldObj, this, this.UUID, coords[0], coords[1], coords[2]);
+							addChild(newChild.UUID, newChild, true);
+						}
+					}
+				}
+			}else{
+				if(child != null){
+					child.setDead();
+				}				
+			}
+		}
+	}
+	
+	/**
+	 * Called on container close to save inventory.
 	 * New items are found by checking to see if itemChanged is true for that slot.
-	 * This must be implemented on subclasses to define component spawning behavior.
+	 * This should be implemented on subclasses to define component spawning behavior.
 	 */
     public abstract void saveInventory();
 	

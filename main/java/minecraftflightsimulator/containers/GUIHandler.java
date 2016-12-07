@@ -3,7 +3,7 @@ package minecraftflightsimulator.containers;
 import minecraftflightsimulator.blocks.BlockPropellerBench;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.entities.core.EntityVehicle;
-import minecraftflightsimulator.entities.parts.EntityPlaneChest;
+import minecraftflightsimulator.entities.parts.EntityChest;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -19,8 +19,8 @@ public class GUIHandler implements IGuiHandler{
 			Entity entity = world.getEntityByID(ID);
 			if(entity instanceof EntityVehicle){
 				return new ContainerVehicle(player.inventory, (EntityVehicle) entity);
-			}else if(entity instanceof EntityPlaneChest){
-				return new ContainerChest(player.inventory, (EntityPlaneChest) entity);
+			}else if(entity instanceof EntityChest){
+				return new ContainerChest(player.inventory, (EntityChest) entity);
 			}
 		}else{
 			if(world.getBlock(x, y, z) instanceof BlockPropellerBench){
@@ -36,8 +36,8 @@ public class GUIHandler implements IGuiHandler{
 			Entity entity = world.getEntityByID(ID);
 			if(entity instanceof EntityVehicle){
 				return ((EntityVehicle) entity).getGUI(player);
-			}else if(entity instanceof EntityPlaneChest){
-				return  new GuiChest(player.inventory, (EntityPlaneChest) entity);
+			}else if(entity instanceof EntityChest){
+				return  new GuiChest(player.inventory, (EntityChest) entity);
 			}
 		}else{
 			if(world != null){

@@ -9,19 +9,15 @@ import java.util.Map;
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntityEngineAircraft;
-import minecraftflightsimulator.entities.parts.EntityPlaneChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPontoonDummy;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
-import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.entities.parts.EntitySkid;
 import minecraftflightsimulator.entities.parts.EntityWheel;
 import minecraftflightsimulator.entities.parts.EntityWheelLarge;
 import minecraftflightsimulator.entities.parts.EntityWheelSmall;
 import minecraftflightsimulator.items.ItemEngine;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
@@ -134,7 +130,7 @@ public abstract class EntityFlyable extends EntityVehicle{
 		}else if(child instanceof EntityEngine){
 			engines.put(childUUID, (EntityEngine) child);
 			float[] childOffset = new float[]{child.offsetX, child.offsetY, child.offsetZ};
-			for(int i=1; i<controllerSeatSlot; ++i){
+			for(int i=1; i<controllerSlot; ++i){
 				if(Arrays.equals(childOffset, partPositions.get(i))){
 					if(getChildAtLocation(partPositions.get(i+4)) != null){
 						enginePropellers.forcePut(childUUID, getChildAtLocation(partPositions.get(i+4)).UUID);
@@ -144,7 +140,7 @@ public abstract class EntityFlyable extends EntityVehicle{
 		}else if(child instanceof EntityPropeller){
 			propellers.put(childUUID, (EntityPropeller) child);
 			float[] childOffset = new float[]{child.offsetX, child.offsetY, child.offsetZ};
-			for(int i=1; i<controllerSeatSlot; ++i){
+			for(int i=1; i<controllerSlot; ++i){
 				if(Arrays.equals(childOffset, partPositions.get(i))){
 					if(getChildAtLocation(partPositions.get(i-4)) != null){
 						enginePropellers.forcePut(getChildAtLocation(partPositions.get(i-4)).UUID, childUUID);
@@ -189,7 +185,7 @@ public abstract class EntityFlyable extends EntityVehicle{
 			float boostAmount = 0;
 			
 			//First, spawn components
-			for(int i=1; i<controllerSeatSlot; ++i){
+			for(int i=1; i<controllerSlot; ++i){
 				if(itemChanged[i]){
 					float[] position = partPositions.get(i);
 					EntityChild child = getChildAtLocation(partPositions.get(i));
@@ -245,71 +241,7 @@ public abstract class EntityFlyable extends EntityVehicle{
 			}
 
 			//Next, spawn new seats and chests.
-			if(itemChanged[controllerSeatSlot]){
-				int numberPilotSeats = getStackInSlot(controllerSeatSlot) == null ? 0 : getStackInSlot(controllerSeatSlot).stackSize;
-				for(int i=0; i<controllerPositions.size(); ++i){
-					float[] position = controllerPositions.get(i);
-					EntityChild child = getChildAtLocation(position);
-					
-					if(child != null){
-						if(getStackInSlot(controllerSeatSlot) == null ? true : (i+1 > numberPilotSeats || getStackInSlot(controllerSeatSlot).getItemDamage() != child.propertyCode)){
-							child.setDead();
-							removeChild(child.UUID, false);
-						}
-					}
-					if(child == null ? true : child.isDead){
-						if(i+1 <= numberPilotSeats){
-							newChild = new EntitySeat(worldObj, this, this.UUID, position[0], position[1], position[2], getStackInSlot(controllerSeatSlot).getItemDamage(), true);
-							addChild(newChild.UUID, newChild, true);
-						}
-					}
-				}
-			}
-			
-			if(itemChanged[passengerSeatSlot]){
-				int numberPassengerSeats = getStackInSlot(passengerSeatSlot) == null ? 0 : getStackInSlot(passengerSeatSlot).stackSize;
-				boolean chests = getStackInSlot(passengerSeatSlot) == null ? false : (getStackInSlot(passengerSeatSlot).getItem().equals(Item.getItemFromBlock(Blocks.chest)) ? true : false);
-				for(int i=0; i<passengerPositions.size(); ++i){
-					float[] position = passengerPositions.get(i);
-					EntityChild child = getChildAtLocation(position);
-					if(child != null){
-						if(getStackInSlot(passengerSeatSlot) == null ? true : (i+1 > numberPassengerSeats || getStackInSlot(passengerSeatSlot).getItemDamage() != child.propertyCode || !(child instanceof EntitySeat ^ chests))){
-							child.setDead();
-							removeChild(child.UUID, false);
-						}
-					}
-					if(child == null ? true : child.isDead){
-						if(i+1 <= numberPassengerSeats){
-							if(chests){ 
-								newChild = new EntityPlaneChest(worldObj, this, this.UUID, position[0], position[1], position[2]);
-							}else{
-								newChild = new EntitySeat(worldObj, this, this.UUID, position[0], position[1], position[2], getStackInSlot(passengerSeatSlot).getItemDamage(), false);
-							}
-							addChild(newChild.UUID, newChild, true);
-						}
-					}
-				}
-			}
-			
-			if(itemChanged[cargoSlot]){
-				int numberChests = getStackInSlot(cargoSlot) == null ? 0 : getStackInSlot(cargoSlot).stackSize;
-				for(int i=passengerPositions.size(); i>0; --i){
-					float[] position = passengerPositions.get(i);
-					EntityChild child = getChildAtLocation(position);
-					if(child != null){
-						if(getStackInSlot(cargoSlot) == null ? true : passengerPositions.size()-i+1 > numberChests){
-							child.setDead();
-							removeChild(child.UUID, false);
-						}
-					}
-					if(child == null ? true : child.isDead){
-						if(passengerPositions.size()-i+1 <= numberChests){
-							newChild = new EntityPlaneChest(worldObj, this, this.UUID, position[0], position[1], position[2]);
-							addChild(newChild.UUID, newChild, true);
-						}
-					}
-				}
-			}
+			this.spawnLoadableContents();
 			
 			//Finally, do instrument and bucket things
 			for(int i=0; i<10; ++i){

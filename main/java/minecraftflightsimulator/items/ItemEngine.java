@@ -3,6 +3,8 @@ package minecraftflightsimulator.items;
 import java.util.List;
 
 import minecraftflightsimulator.MFSRegistry;
+import minecraftflightsimulator.entities.core.EntityChild;
+import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntityEngine.EngineTypes;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -12,7 +14,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class ItemEngine extends Item{
+public class ItemEngine extends Item implements IItemNBT{
 	public final EngineTypes type; 
 	
 	public ItemEngine(EngineTypes type){
@@ -27,14 +29,16 @@ public class ItemEngine extends Item{
 		}else if(type.equals(EngineTypes.PLANE_LARGE)){
 			return MFSRegistry.engineLarge; 
 		}else{
+			System.err.println("AN ENGINE WITHOUT A TYPE IS BEING ACCESSED.  THINGS MAY GO BADLY.");
 			return null;
 		}
 	}
 	
-	public static ItemStack createStack(EngineTypes type, int propertyCode, double hours){
-		ItemStack engineStack = new ItemStack(getStaticItemForType(type), 1, propertyCode);
+	public ItemStack createStackFromEntity(EntityChild entity){
+		EntityEngine engine = (EntityEngine) entity;
+		ItemStack engineStack = new ItemStack(getStaticItemForType(engine.type), 1, engine.propertyCode);
 		NBTTagCompound tag = new NBTTagCompound();
-		tag.setDouble("hours", hours);
+		tag.setDouble("hours", engine.hours);
 		engineStack.setTagCompound(tag);
 		return engineStack;
 	}

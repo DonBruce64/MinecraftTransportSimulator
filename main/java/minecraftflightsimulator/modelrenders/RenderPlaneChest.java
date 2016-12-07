@@ -1,7 +1,7 @@
 package minecraftflightsimulator.modelrenders;
 
 import minecraftflightsimulator.entities.core.EntityChild;
-import minecraftflightsimulator.entities.parts.EntityPlaneChest;
+import minecraftflightsimulator.entities.parts.EntityChest;
 import minecraftflightsimulator.models.ModelPlaneChest;
 import minecraftflightsimulator.utilities.RenderHelper;
 import minecraftflightsimulator.utilities.RenderHelper.RenderChild;
@@ -22,7 +22,7 @@ public class RenderPlaneChest extends RenderChild{
 		GL11.glRotatef(-child.parent.rotationRoll, 0, 0, 1);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 		RenderHelper.bindTexture(chestTexture);
-		model.renderAll(-((EntityPlaneChest) child).lidAngle);
+		model.renderAll(-((EntityChest) child).lidAngle);
 		GL11.glPopMatrix();
 	}
 }

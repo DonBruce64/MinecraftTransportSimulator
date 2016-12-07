@@ -12,7 +12,7 @@ public class ContainerVehicle extends Container{
 	
 	public ContainerVehicle(InventoryPlayer invPlayer, EntityVehicle vehicle){
 		this.vehicle = vehicle;
-		vehicle.loadInventory();
+		vehicle.loadInventory(invPlayer.player.getDisplayName());
         for(int j=0; j<3; ++j){
             for(int k=0; k<9; ++k){
                 this.addSlotToContainer(new Slot(invPlayer, k + j * 9 + 9, 8 + k * 18, 103 + j * 18 + 18*2 + 1));
@@ -38,6 +38,7 @@ public class ContainerVehicle extends Container{
 	public void onContainerClosed(EntityPlayer player){
 		super.onContainerClosed(player);
 		vehicle.saveInventory();
+		vehicle.playerInInv = "";
 	}
 	
 	@Override

@@ -4,7 +4,7 @@ import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.containers.ContainerVehicle;
 import minecraftflightsimulator.containers.SlotFuel;
 import minecraftflightsimulator.containers.SlotItem;
-import minecraftflightsimulator.containers.SlotPilot;
+import minecraftflightsimulator.containers.SlotLoadable;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.utilities.InstrumentHelper;
 import net.minecraft.util.ResourceLocation;
@@ -79,7 +79,7 @@ public class EntityPZLP11 extends EntityPlane{
 		container.addSlotToContainer(new SlotItem(this, 50, 113, 4, MFSRegistry.wheelLarge, MFSRegistry.pontoon));
 		container.addSlotToContainer(new SlotItem(this, 131, 62, 6, MFSRegistry.engineLarge));
 		container.addSlotToContainer(new SlotItem(this, 149, 62, 10, MFSRegistry.propeller));
-		container.addSlotToContainer(new SlotPilot(this, 113, 62));
+		container.addSlotToContainer(new SlotLoadable(this, 113, 62, SlotLoadable.SeatTypes.CONTROLLER));
 		container.addSlotToContainer(new SlotItem(this, 7, 113, this.emptyBucketSlot));
 		container.addSlotToContainer(new SlotFuel(this, 7, 73));
 		for(byte i=0; i<6; ++i){

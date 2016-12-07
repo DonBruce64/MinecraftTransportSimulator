@@ -8,7 +8,7 @@ import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.parts.EntityEngineAircraft;
-import minecraftflightsimulator.entities.parts.EntityPlaneChest;
+import minecraftflightsimulator.entities.parts.EntityChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPontoonDummy;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
@@ -74,7 +74,7 @@ public class MFSClientRegistry{
 		registerParentRender(EntityPZLP11.class, RenderPZLP11.class);
 		
 		registerChildRender(EntitySeat.class, RenderSeat.class);
-		registerChildRender(EntityPlaneChest.class, RenderPlaneChest.class);
+		registerChildRender(EntityChest.class, RenderPlaneChest.class);
 		registerChildRender(EntityWheelSmall.class, RenderWheel.class);
 		registerChildRender(EntityWheelLarge.class, RenderWheel.class);
 		registerChildRender(EntitySkid.class, RenderSkid.class);

@@ -10,7 +10,7 @@ death.attack.planecrash.null.player=%1$s got distracted while fighting %2$s and 
 death.attack.planecrash.player.null=%2$s crashed their plane and killed %1$s.
 death.attack.planecrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash the plane.
 
-entity.mfs.PlaneChest.name=Сундук самолета
+entity.mfs.PlaneChest.name=Сундук
 tile.PropellerBench.name=Propeller Bench
 
 item.MC172.name=MC-172
