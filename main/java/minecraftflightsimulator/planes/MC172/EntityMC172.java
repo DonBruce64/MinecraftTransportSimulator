@@ -93,7 +93,7 @@ public class EntityMC172 extends EntityPlane{
 		int texIndex = 0;
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/log_oak.png");
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/log_spruce.png");
-		texArray[texIndex++] = new ResourceLocation("textures/blocks/log_spruce.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/log_birch.png");
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/log_jungle.png");
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/log_acacia.png");
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/log_big_oak.png");
@@ -105,7 +105,7 @@ public class EntityMC172 extends EntityPlane{
 		int texIndex = 0;
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_oak.png");
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_spruce.png");
-		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_spruce.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_birch.png");
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_jungle.png");
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_acacia.png");
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_big_oak.png");

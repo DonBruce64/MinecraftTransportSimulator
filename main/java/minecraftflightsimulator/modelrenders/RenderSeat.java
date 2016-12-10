@@ -32,8 +32,8 @@ public class RenderSeat extends RenderChild{
 		ResourceLocation[] texArray = new ResourceLocation[6];
 		int texIndex = 0;
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_oak.png");
-		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_birch.png");
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_spruce.png");
+		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_birch.png");
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_jungle.png");
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_acacia.png");
 		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_big_oak.png");
