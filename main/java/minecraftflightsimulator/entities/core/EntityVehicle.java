@@ -493,10 +493,16 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		for(float[] coords : mixedPositions){
 			EntityChild currentChild = getChildAtLocation(coords);
 			if(currentChild != null && !currentChild.isDead){
-				if(forwardChild == null && firstSlot){
-					forwardChild = currentChild;
-				}else if((!currentChild.getClass().equals(forwardChild.getClass()) || currentChild.propertyCode != forwardChild.propertyCode) && aftChild == null){
-					aftChild = currentChild;
+				if(forwardChild == null){
+					if(firstSlot){
+						forwardChild = currentChild;
+					}else if(aftChild == null){
+						aftChild = currentChild;
+					}
+				}else{
+					if((!currentChild.getClass().equals(forwardChild.getClass()) || currentChild.propertyCode != forwardChild.propertyCode) && aftChild == null){
+						aftChild = currentChild;
+					}
 				}
 				if(forwardChild != null && aftChild == null){
 					++forwardSpots;
