@@ -33,4 +33,7 @@ fi
 if echo $FILE | grep -q "TileEntityPropellerBench"; then
 	sed -i 's/Packet getDescriptionPacket()/SPacketUpdateTileEntity getUpdatePacket()/' $FILE
 fi
+if echo $FILE | grep -q "PropellerBenchSyncPacket"; then
+  sed -i 's/getDescriptionPacket/getUpdatePacket/' $FILE
+fi
 done
