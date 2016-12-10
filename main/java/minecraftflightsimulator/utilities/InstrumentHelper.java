@@ -635,9 +635,9 @@ public class InstrumentHelper{
             	RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY+1.75, centerY+1.75, -20, 0, 0, -20, 0.640625, 0.734375, 0.890625, 0.984375, false);
         		
         		RenderHelper.renderQuadUV(centerX-5, centerX+5, centerX+5, centerX-5, centerY+25, centerY+25, centerY-10, centerY-10, -20, -20, -20, -20, 0.2578125, 0.3671875, 0.921875, 0.953125, false);
-    	        GL11.glTranslatef(0, 0, -20.01F);
     	        
     	        GL11.glPushMatrix();
+    	        GL11.glTranslatef(0, 0, -20.01F);
     	    	rotationHelper(centerX, centerY, -90);
     	    	drawScaledString("BRAKE", centerX*2-30, centerY*2-4, 0.5F);
     	    	GL11.glPopMatrix();
@@ -648,8 +648,11 @@ public class InstrumentHelper{
             	RenderHelper.renderQuadUV(centerX-1.75, centerX-1.75, centerX+1.75, centerX+1.75, centerY+1.75, centerY+1.75, centerY+1.75, centerY+1.75, -2, 0, 0, -2, 0.640625, 0.734375, 0.890625, 0.984375, false);
         		
     	        RenderHelper.renderSquareUV(centerX-22.5, centerX+12.5, centerY+5, centerY-5, -2, -2, 0.2578125, 0.3671875, 0.921875, 0.953125, false);    		
+    	        
+    	        GL11.glPushMatrix();
     	        GL11.glTranslatef(0, 0, -2.01F);
     	        drawScaledString("BRAKE", centerX*2-25, centerY*2-4, 0.5F);
+    	        GL11.glPopMatrix();
         	}
     	}else{
     		RenderHelper.renderSquareUV(centerX-5.25, centerX+5.25, centerY+0.175, centerY-10.5, 0, 0, 0.75, 0.875, 0.875, 1, true);
