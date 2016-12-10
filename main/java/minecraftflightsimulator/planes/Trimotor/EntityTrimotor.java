@@ -115,9 +115,9 @@ public class EntityTrimotor extends EntityPlane{
 		container.addSlotToContainer(new SlotItem(this, 150, 63, 10, MFSRegistry.propeller));
 		container.addSlotToContainer(new SlotItem(this, 137, 37, 11, MFSRegistry.propeller));
 		container.addSlotToContainer(new SlotItem(this, 137, 89, 12, MFSRegistry.propeller));
-		container.addSlotToContainer(new SlotLoadable(this, 110, 63, SlotLoadable.SeatTypes.CONTROLLER));
-		container.addSlotToContainer(new SlotLoadable(this, 92, 63, SlotLoadable.SeatTypes.FORWARD_MIXED));
-		container.addSlotToContainer(new SlotLoadable(this, 74, 63, SlotLoadable.SeatTypes.AFT_MIXED));
+		container.addSlotToContainer(new SlotLoadable(this, 107, 63, SlotLoadable.SeatTypes.CONTROLLER));
+		container.addSlotToContainer(new SlotLoadable(this, 89, 63, SlotLoadable.SeatTypes.FORWARD_MIXED));
+		container.addSlotToContainer(new SlotLoadable(this, 71, 63, SlotLoadable.SeatTypes.AFT_MIXED));
 		container.addSlotToContainer(new SlotItem(this, 7, 113, this.emptyBucketSlot));
 		container.addSlotToContainer(new SlotFuel(this, 7, 73));
 		for(int i=0; i<10; ++i){
