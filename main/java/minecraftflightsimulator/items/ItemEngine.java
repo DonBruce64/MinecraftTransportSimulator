@@ -24,14 +24,12 @@ public class ItemEngine extends Item implements IItemNBT{
 	}
 	
 	private static Item getStaticItemForType(EngineTypes type){
-		if(type.equals(EngineTypes.PLANE_SMALL)){
-			return MFSRegistry.engineSmall; 
-		}else if(type.equals(EngineTypes.PLANE_LARGE)){
-			return MFSRegistry.engineLarge; 
-		}else{
-			System.err.println("AN ENGINE WITHOUT A TYPE IS BEING ACCESSED.  THINGS MAY GO BADLY.");
-			return null;
+		switch (type){
+			case PLANE_SMALL: return MFSRegistry.engineSmall;
+			case PLANE_LARGE: return MFSRegistry.engineLarge;
 		}
+		System.err.println("AN ENGINE WITHOUT A TYPE IS BEING ACCESSED.  THINGS MAY GO BADLY.");
+		return null;
 	}
 	
 	public ItemStack createStackFromEntity(EntityChild entity){

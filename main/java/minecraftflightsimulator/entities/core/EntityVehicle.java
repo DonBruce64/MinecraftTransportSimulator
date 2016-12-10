@@ -12,6 +12,7 @@ import minecraftflightsimulator.entities.parts.EntityChest;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.items.IItemNBT;
+import minecraftflightsimulator.items.ItemEngine;
 import minecraftflightsimulator.utilities.ConfigSystem;
 import minecraftflightsimulator.utilities.MFSVector;
 import net.minecraft.block.Block;
@@ -430,12 +431,14 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 			//First, match part positions to slots.
 			for(int i=1; i<controllerSlot; ++i){
 				EntityChild child = getChildAtLocation(partPositions.get(i));
-				if(child != null){
+				if(child != null && !child.isDead){
 					Item childItem = MFSRegistry.entityItems.get(child.getClass());
-					if(child instanceof IItemNBT){
+					if(childItem instanceof IItemNBT){
 						setInventorySlotContents(i, ((IItemNBT) childItem).createStackFromEntity(child));
-					}else{
+					}else if(childItem != null){
 						setInventorySlotContents(i, new ItemStack(childItem, 1, child.propertyCode));
+					}else if(child instanceof EntityEngine){
+						setInventorySlotContents(i, ((ItemEngine) MFSRegistry.engineSmall).createStackFromEntity(child));
 					}
 				}else{
 					setInventorySlotContents(i, null);
@@ -466,14 +469,15 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		ItemStack stack = null;
 		for(float[] coords : positionList){
 			EntityChild child = getChildAtLocation(coords);
-			if(child != null){
+			if(child != null && !child.isDead){
 				if(stack == null){
-					stack = new ItemStack(MFSRegistry.entityItems.get(child), 1, child.propertyCode);
+					stack = new ItemStack(MFSRegistry.entityItems.get(child.getClass()), 1, child.propertyCode);
 				}else{
 					++stack.stackSize;
 				}
 			}
 		}
+		setInventorySlotContents(itemSlot, stack);
 	}
 	
 	/**
@@ -488,10 +492,10 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		
 		for(float[] coords : mixedPositions){
 			EntityChild currentChild = getChildAtLocation(coords);
-			if(currentChild != null){
+			if(currentChild != null && !currentChild.isDead){
 				if(forwardChild == null && firstSlot){
 					forwardChild = currentChild;
-				}else if(!currentChild.equals(forwardChild) && aftChild == null){
+				}else if((!currentChild.getClass().equals(forwardChild.getClass()) || currentChild.propertyCode != forwardChild.propertyCode) && aftChild == null){
 					aftChild = currentChild;
 				}
 				if(forwardChild != null && aftChild == null){
@@ -504,13 +508,13 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		}
 		
 		if(forwardChild != null){
-			setInventorySlotContents(forwardMixedSlot, new ItemStack(MFSRegistry.entityItems.get(forwardChild), forwardSpots, forwardChild.propertyCode));
+			setInventorySlotContents(forwardMixedSlot, new ItemStack(MFSRegistry.entityItems.get(forwardChild.getClass()), forwardSpots, forwardChild.propertyCode));
 		}else{
 			setInventorySlotContents(forwardMixedSlot, null);
 		}
 		
 		if(aftChild != null){
-			setInventorySlotContents(aftMixedSlot, new ItemStack(MFSRegistry.entityItems.get(aftChild), aftSpots, aftChild.propertyCode));
+			setInventorySlotContents(aftMixedSlot, new ItemStack(MFSRegistry.entityItems.get(aftChild.getClass()), aftSpots, aftChild.propertyCode));
 		}else{
 			setInventorySlotContents(aftMixedSlot, null);
 		}
@@ -532,7 +536,7 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 		
 		for(int i=0; i<mixedPositions.size(); ++i){
 			EntityChild child = getChildAtLocation(mixedPositions.get(i));
-			spawnedItemData[i] = child != null ? new ItemStack(MFSRegistry.entityItems.get(child), 1, child.propertyCode) : null;
+			spawnedItemData[i] = child != null ? new ItemStack(MFSRegistry.entityItems.get(child.getClass()), 1, child.propertyCode) : null;
 		}
 		if(forwardStack != null){
 			for(int i=0; i<forwardStack.stackSize; ++i){
@@ -577,19 +581,19 @@ public abstract class EntityVehicle extends EntityParent implements IInventory{
 			float[] coords = positionList.get(i);
 			EntityChild child = getChildAtLocation(coords);
 			if(stack != null){
-				if(child != null){
+				if(child != null && !child.isDead){
 					if(stack.stackSize <= i){
 						child.setDead();
 					}else{
 						if(child.propertyCode != stack.getItemDamage()){
 							child.setDead();
-						}
-						if(stack.getItem().equals(MFSRegistry.seat)){
-							EntityChild newChild = new EntitySeat(worldObj, this, this.UUID, coords[0], coords[1], coords[2], getStackInSlot(itemSlot).getItemDamage(), itemSlot == controllerSlot);
-							addChild(newChild.UUID, newChild, true);
-						}else if(stack.getItem().equals(Item.getItemFromBlock(Blocks.chest))){
-							EntityChild newChild = new EntityChest(worldObj, this, this.UUID, coords[0], coords[1], coords[2]);
-							addChild(newChild.UUID, newChild, true);
+							if(stack.getItem().equals(MFSRegistry.seat)){
+								EntityChild newChild = new EntitySeat(worldObj, this, this.UUID, coords[0], coords[1], coords[2], getStackInSlot(itemSlot).getItemDamage(), itemSlot == controllerSlot);
+								addChild(newChild.UUID, newChild, true);
+							}else if(stack.getItem().equals(Item.getItemFromBlock(Blocks.chest))){
+								EntityChild newChild = new EntityChest(worldObj, this, this.UUID, coords[0], coords[1], coords[2]);
+								addChild(newChild.UUID, newChild, true);
+							}
 						}
 					}	
 				}else{
