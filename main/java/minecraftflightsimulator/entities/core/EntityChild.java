@@ -72,9 +72,6 @@ public abstract class EntityChild extends EntityBase{
 		if(this.parent==null){
 			if(ticksExisted==1 || ticksExisted%10==0){
 				this.linkToParent();
-			}else if(this.ticksExisted>100){
-				System.err.println("KILLING ORPHANED CHILD!");
-				this.setDead();
 			}
 			return false;
 		}
