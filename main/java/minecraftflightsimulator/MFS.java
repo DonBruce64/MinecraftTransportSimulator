@@ -21,7 +21,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class MFS {
 	public static final String MODID="mfs";
 	public static final String MODNAME="Minecraft Flight Simulator";
-	public static final String MODVER="7.1.1";
+	public static final String MODVER="7.1.2";
 	
 	@Instance(value = MFS.MODID)
 	public static MFS instance;
