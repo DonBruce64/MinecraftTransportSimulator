@@ -1,18 +1,18 @@
 package minecraftflightsimulator.planes.PZLP11;
 
-import minecraftflightsimulator.MFSRegistry;
-import minecraftflightsimulator.containers.ContainerVehicle;
-import minecraftflightsimulator.containers.SlotFuel;
-import minecraftflightsimulator.containers.SlotItem;
-import minecraftflightsimulator.containers.SlotLoadable;
 import minecraftflightsimulator.entities.core.EntityPlane;
-import minecraftflightsimulator.utilities.InstrumentHelper;
+import minecraftflightsimulator.entities.parts.EntityEngineAircraft;
+import minecraftflightsimulator.entities.parts.EntityPontoon;
+import minecraftflightsimulator.entities.parts.EntitySeat;
+import minecraftflightsimulator.entities.parts.EntitySkid;
+import minecraftflightsimulator.entities.parts.EntityWheel;
+import minecraftflightsimulator.rendering.VehicleHUDs;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class EntityPZLP11 extends EntityPlane{
 	private static final ResourceLocation backplateTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/hud_backplate.png");
-	private static final ResourceLocation moldingTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/hud_moulding.png");
+	private static final ResourceLocation mouldingTexture = new ResourceLocation("mfs", "textures/planes/pzlp11/hud_moulding.png");
 	
 	public EntityPZLP11(World world){
 		super(world);
@@ -24,9 +24,9 @@ public class EntityPZLP11 extends EntityPlane{
 	}
 
 	@Override
-	protected void initPlaneProperties(){
-		hasFlaps = false;
-		numberLights = 0;
+	protected void initProperties(){
+		lightSetup = 0;
+		numberPowerfulLights = 0;
 		maxFuel = 7000;		
 		emptyMass=1150;
 		wingspan=11.0F;
@@ -38,19 +38,26 @@ public class EntityPZLP11 extends EntityPlane{
 	}
 	
 	@Override
-	protected void initChildPositions(){
-		addCenterGearPosition(new float[]{0F, -0.3F, -5.25F});
-		addLeftGearPosition(new float[]{-1.4F, -1.8F, 0.375F});
-		addRightGearPosition(new float[]{1.4F, -1.8F, 0.375F});
-		addEnginePosition(new float[]{0, -0.3F, 0.65F});
-		addPropellerPosition(new float[]{0, -0.375F, 1.65F});
-		addControllerPosition(new float[]{0, -.1F, -1.3F});
+	protected void initProhibitedInstruments(){
+		this.instruments.put((byte) 0, (byte) -1);
+		this.instruments.put((byte) 4, (byte) -1);
+		this.instruments.put((byte) 5, (byte) -1);
+		this.instruments.put((byte) 9, (byte) -1);
+	}
+	
+	@Override
+	protected void initPartData(){
+		this.partData.add(new PartData(0F, -0.3F, -5.25F,  EntitySkid.class));
+		this.partData.add(new PartData(-1.4F, -1.8F, 0.375F, EntityWheel.EntityWheelLarge.class, EntityPontoon.class));
+		this.partData.add(new PartData(1.4F, -1.8F, 0.375F, EntityWheel.EntityWheelLarge.class, EntityPontoon.class));
+		this.partData.add(new PartData(0, -0.3F, 0.65F, false, false, 1, EntityEngineAircraft.class));
+		this.partData.add(new PartData(0, -.1F, -1.3F, false, true, -1, EntitySeat.class));
 	}
 	
 	@Override
 	public float[][] getCoreLocations(){
 		return new float[][]{
-			{0, -0.3F, 1, 1, 1},
+			{0, -0.3F, 0.5F, 1, 1},
 			{0, -0.3F, -0.25F, 1, 1},
 			{0, 0F, -2.5F, 1, 0.75F},
 			{0, 0F, -3.75F, 1, 0.75F},
@@ -68,22 +75,17 @@ public class EntityPZLP11 extends EntityPlane{
 	}
 	
 	@Override
-	public void drawHUD(int width, int height){
-		InstrumentHelper.drawBasicFlyableHUD(this, width, height, backplateTexture, moldingTexture);
+	public ResourceLocation getBackplateTexture(){
+		return backplateTexture;
 	}
 	
 	@Override
-	public void initVehicleContainerSlots(ContainerVehicle container){
-		container.addSlotToContainer(new SlotItem(this, 86, 113, 2, MFSRegistry.wheelLarge, MFSRegistry.pontoon));
-		container.addSlotToContainer(new SlotItem(this, 68, 113, 1, MFSRegistry.skid));
-		container.addSlotToContainer(new SlotItem(this, 50, 113, 4, MFSRegistry.wheelLarge, MFSRegistry.pontoon));
-		container.addSlotToContainer(new SlotItem(this, 131, 62, 6, MFSRegistry.engineLarge));
-		container.addSlotToContainer(new SlotItem(this, 149, 62, 10, MFSRegistry.propeller));
-		container.addSlotToContainer(new SlotLoadable(this, 113, 62, SlotLoadable.SeatTypes.CONTROLLER));
-		container.addSlotToContainer(new SlotItem(this, 7, 113, this.emptyBucketSlot));
-		container.addSlotToContainer(new SlotFuel(this, 7, 73));
-		for(byte i=0; i<6; ++i){
-			container.addSlotToContainer(new SlotItem(this, 7 + 18*(i%3), i < 3 ? 7 : 25, (i < 3 ? i + 1 : i + 3 ) + instrumentStartSlot, MFSRegistry.flightInstrument));
-		}
+	public ResourceLocation getMouldingTexture(){
+		return mouldingTexture;
+	}
+	
+	@Override
+	public void drawHUD(int width, int height){
+		VehicleHUDs.drawPlaneHUD(this, width, height);
 	}
 }

@@ -1,51 +1,56 @@
 package minecraftflightsimulator.packets.control;
 
-import io.netty.buffer.ByteBuf;
-import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.entities.core.EntityFlyable;
-import net.minecraft.client.Minecraft;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.relauncher.Side;
+import io.netty.buffer.ByteBuf;
+import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.entities.core.EntityVehicle;
+import minecraftflightsimulator.entities.parts.EntityEngine;
+import net.minecraft.client.Minecraft;
 
 public class EnginePacket implements IMessage{
 	private int id;
-	private byte engineCode;
 	private int engineID;
+	private byte engineCode;
 
 	public EnginePacket() { }
 	
-	public EnginePacket(int id, byte engineCode, int engineID){
+	public EnginePacket(int id, int engineID, byte engineCode){
 		this.id=id;
-		this.engineCode=engineCode;
 		this.engineID=engineID;
+		this.engineCode=engineCode;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		this.id=buf.readInt();
-		this.engineCode=buf.readByte();
 		this.engineID=buf.readInt();
+		this.engineCode=buf.readByte();
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		buf.writeInt(this.id);
-		buf.writeByte(this.engineCode);
 		buf.writeInt(this.engineID);
+		buf.writeByte(this.engineCode);
 	}
 
 	public static class Handler implements IMessageHandler<EnginePacket, IMessage> {
 		public IMessage onMessage(EnginePacket message, MessageContext ctx){
-			EntityFlyable thisEntity;
+			EntityVehicle vehicle;
+			EntityEngine engine;
 			if(ctx.side==Side.SERVER){
-				thisEntity = (EntityFlyable) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+				vehicle = (EntityVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+				engine = (EntityEngine) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.engineID);
 			}else{
-				thisEntity = (EntityFlyable) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+				vehicle = (EntityVehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+				engine = (EntityEngine) Minecraft.getMinecraft().theWorld.getEntityByID(message.engineID);
 			}	
-			if(thisEntity!=null){
-				if(thisEntity.setEngineState(message.engineCode, message.engineID) && ctx.side==Side.SERVER){
+			if(vehicle != null && engine != null){
+				vehicle.handleEngineSignal(engine, message.engineCode);
+				if(ctx.side==Side.SERVER){
 					MFS.MFSNet.sendToAll(message);
 				}
 			}

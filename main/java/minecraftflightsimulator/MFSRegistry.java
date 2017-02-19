@@ -9,21 +9,22 @@ import java.util.Map;
 import minecraftflightsimulator.blocks.BlockPropellerBench;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityCore;
+import minecraftflightsimulator.entities.parts.EntityChest;
 import minecraftflightsimulator.entities.parts.EntityEngine.EngineTypes;
 import minecraftflightsimulator.entities.parts.EntityEngineAircraft;
-import minecraftflightsimulator.entities.parts.EntityChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPontoonDummy;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.entities.parts.EntitySkid;
-import minecraftflightsimulator.entities.parts.EntityWheelLarge;
-import minecraftflightsimulator.entities.parts.EntityWheelSmall;
+import minecraftflightsimulator.entities.parts.EntityWheel;
 import minecraftflightsimulator.items.ItemEngine;
 import minecraftflightsimulator.items.ItemFlightInstrument;
 import minecraftflightsimulator.items.ItemPlane;
 import minecraftflightsimulator.items.ItemPropeller;
 import minecraftflightsimulator.items.ItemSeat;
+import minecraftflightsimulator.items.ItemWrench;
+import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.BrakePacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
@@ -35,11 +36,12 @@ import minecraftflightsimulator.packets.control.ThrottlePacket;
 import minecraftflightsimulator.packets.control.TrimPacket;
 import minecraftflightsimulator.packets.general.ChatPacket;
 import minecraftflightsimulator.packets.general.ClientRequestDataPacket;
-import minecraftflightsimulator.packets.general.GUIPacket;
+import minecraftflightsimulator.packets.general.InstrumentFlyerPacket;
 import minecraftflightsimulator.packets.general.PropellerBenchSyncPacket;
 import minecraftflightsimulator.packets.general.PropellerBenchUpdatePacket;
 import minecraftflightsimulator.packets.general.ServerDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
+import minecraftflightsimulator.planes.Comanche.EntityComanche;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
 import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
 import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
@@ -65,26 +67,31 @@ public class MFSRegistry{
 	public static final Item planePZLP11 = new ItemPlane(EntityPZLP11.class, 1);
 	public static final Item planeVulcanair = new ItemPlane(EntityVulcanair.class, 7);
 	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 15);
+	public static final Item planeComanche = new ItemPlane(EntityComanche.class, 1);
+	
 	public static final Item seat = new ItemSeat();
 	public static final Item propeller = new ItemPropeller();
-	public static final Item pointerShort = new Item();
-	public static final Item pointerLong = new Item();
+	public static final Item engine = new ItemEngine();
 	public static final Item wheelSmall = new Item();
 	public static final Item wheelLarge = new Item();
 	public static final Item skid = new Item();
 	public static final Item pontoon = new Item();
-	public static final Item engineSmall = new ItemEngine(EngineTypes.PLANE_SMALL);
-	public static final Item engineLarge = new ItemEngine(EngineTypes.PLANE_LARGE);
 	public static final Item flightInstrument = new ItemFlightInstrument();
+	public static final Item pointerShort = new Item();
+	public static final Item pointerLong = new Item();
 	public static final Item flightInstrumentBase = new Item();
-	public static final Block blockPropellerBench = new BlockPropellerBench();
+	public static final Item wrench = new ItemWrench();
+	public static final Item flightManual = new Item();
+	
+	public static final Block propellerBench = new BlockPropellerBench();
 	
 	public static List<Item> itemList = new ArrayList<Item>();
+	
 	/**
 	 * Maps child classes to the items that spawn them.
 	 * Useful for inventory operations.
 	 */
-	public static Map<Class<? extends EntityChild>, Item> entityItems = new HashMap<Class<? extends EntityChild>, Item>();
+	public static Map<Item, Class<? extends EntityChild>> entityItems = new HashMap<Item, Class<? extends EntityChild>>();
 	
 	public void init(){
 		initItems();
@@ -100,7 +107,7 @@ public class MFSRegistry{
 				try{
 					Item item = (Item) feild.get(Item.class);
 					if(item.getUnlocalizedName().equals("item.null")){
-						item.setUnlocalizedName(feild.getName().substring(0, 1).toUpperCase() + feild.getName().substring(1));
+						item.setUnlocalizedName(feild.getName().toLowerCase());
 					}
 					MFS.proxy.registerItem(item);
 				}catch(Exception e){}
@@ -113,6 +120,9 @@ public class MFSRegistry{
 			if(feild.getType().equals(Block.class)){
 				try{
 					Block block = (Block) feild.get(Block.class);
+					if(block.getUnlocalizedName().equals("tile.null")){
+						block.setBlockName(feild.getName().toLowerCase());
+					}
 					MFS.proxy.registerBlock(block);
 				}catch(Exception e){}
 			}
@@ -120,21 +130,22 @@ public class MFSRegistry{
 	}
 	
 	private void initEntites(){
-		MFS.proxy.registerEntity(EntityMC172.class, null);
-		MFS.proxy.registerEntity(EntityPZLP11.class, null);
-		MFS.proxy.registerEntity(EntityVulcanair.class, null);
-		MFS.proxy.registerEntity(EntityTrimotor.class, null);
+		MFS.proxy.registerEntity(EntityMC172.class);
+		MFS.proxy.registerEntity(EntityPZLP11.class);
+		MFS.proxy.registerEntity(EntityVulcanair.class);
+		MFS.proxy.registerEntity(EntityTrimotor.class);
+		MFS.proxy.registerEntity(EntityComanche.class);
 		
-		MFS.proxy.registerEntity(EntityCore.class, null);
-		MFS.proxy.registerEntity(EntitySeat.class, seat);
-		MFS.proxy.registerEntity(EntityChest.class, new ItemStack(Blocks.chest).getItem());
-		MFS.proxy.registerEntity(EntityWheelSmall.class, wheelSmall);
-		MFS.proxy.registerEntity(EntityWheelLarge.class, wheelLarge);
-		MFS.proxy.registerEntity(EntitySkid.class, skid);
-		MFS.proxy.registerEntity(EntityPontoon.class, pontoon);
-		MFS.proxy.registerEntity(EntityPontoonDummy.class, pontoon);
-		MFS.proxy.registerEntity(EntityPropeller.class, propeller);
-		MFS.proxy.registerEntity(EntityEngineAircraft.class, null);
+		MFS.proxy.registerChildEntity(EntityCore.class, null);
+		MFS.proxy.registerChildEntity(EntitySeat.class, seat);
+		MFS.proxy.registerChildEntity(EntityChest.class, ItemStackHelper.getItemByName("chest"));
+		MFS.proxy.registerChildEntity(EntityWheel.EntityWheelSmall.class, wheelSmall);
+		MFS.proxy.registerChildEntity(EntityWheel.EntityWheelLarge.class, wheelLarge);
+		MFS.proxy.registerChildEntity(EntitySkid.class, skid);
+		MFS.proxy.registerChildEntity(EntityPontoon.class, pontoon);
+		MFS.proxy.registerChildEntity(EntityPontoonDummy.class, pontoon);
+		MFS.proxy.registerChildEntity(EntityPropeller.class, propeller);
+		MFS.proxy.registerChildEntity(EntityEngineAircraft.class, engine);
 	}
 	
 	private void initPackets(){
@@ -142,9 +153,9 @@ public class MFSRegistry{
 		MFS.proxy.registerPacket(ServerDataPacket.class, ServerDataPacket.Handler.class, true, false);
 		MFS.proxy.registerPacket(ServerSyncPacket.class, ServerSyncPacket.Handler.class, true, false);
 		
-		MFS.proxy.registerPacket(GUIPacket.class, GUIPacket.Handler.class, false, true);
-		MFS.proxy.registerPacket(ClientRequestDataPacket.class, ClientRequestDataPacket.Handler.class, false, true);
+		MFS.proxy.registerPacket(ClientRequestDataPacket.class, ClientRequestDataPacket.Handler.class, true, false);
 
+		MFS.proxy.registerPacket(InstrumentFlyerPacket.class, InstrumentFlyerPacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(PropellerBenchUpdatePacket.class, PropellerBenchUpdatePacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(PropellerBenchSyncPacket.class, PropellerBenchSyncPacket.Handler.class, false, true);
 		
@@ -286,7 +297,7 @@ public class MFSRegistry{
 				'B', Blocks.wool);
 		
 		//Propeller bench
-		MFS.proxy.registerRecpie(new ItemStack(blockPropellerBench),
+		MFS.proxy.registerRecpie(new ItemStack(propellerBench),
 				"AAA",
 				" BA",
 				"ACA",
@@ -298,60 +309,60 @@ public class MFSRegistry{
 	
 	private void initEngineRecipes(){
 		//New engines
-		MFS.proxy.registerRecpie(new ItemStack(engineSmall, 1, 2805),
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[0]),
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.piston, 
 				'B', Blocks.obsidian,
 				'C', Items.iron_ingot);
-		MFS.proxy.registerRecpie(new ItemStack(engineSmall, 1, 3007),
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[1]),
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.piston, 
 				'B', Blocks.obsidian,
 				'C', Items.diamond);
-		MFS.proxy.registerRecpie(new ItemStack(engineLarge, 1, 2907),
-				"ABA",
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[0]),
 				"ACA",
-				"ABA",
+				"ACA",
+				"ACA",
 				'A', Blocks.piston, 
 				'B', Blocks.obsidian,
 				'C', Items.iron_ingot);
-		MFS.proxy.registerRecpie(new ItemStack(engineLarge, 1, 3210),
-				"ABA",
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[1]),
 				"ACA",
-				"ABA",
+				"ACA",
+				"ACA",
 				'A', Blocks.piston, 
 				'B', Blocks.obsidian,
 				'C', Items.diamond);
 		
 		//Repaired engines
-		MFS.proxy.registerRecpie(new ItemStack(engineSmall, 1, 2805),
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[0]),
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.obsidian,
-				'C', new ItemStack(engineSmall, 1, 2805));
-		MFS.proxy.registerRecpie(new ItemStack(engineSmall, 1, 3007),
+				'C', ItemEngine.getItemStackForType(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[0]));
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[1]),
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.obsidian,
-				'C', new ItemStack(engineSmall, 1, 3007));
-		MFS.proxy.registerRecpie(new ItemStack(engineLarge, 1, 2907),
+				'C', ItemEngine.getItemStackForType(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[1]));
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[0]),
 				"B B",
 				"BCB",
 				"B B",
 				'B', Blocks.obsidian,
-				'C', new ItemStack(engineLarge, 1, 2907));
-		MFS.proxy.registerRecpie(new ItemStack(engineLarge, 1, 3210),
+				'C', ItemEngine.getItemStackForType(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[0]));
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[1]),
 				"B B",
 				"BCB",
 				"B B",
 				'B', Blocks.obsidian,
-				'C', new ItemStack(engineLarge, 1, 3210));
+				'C', ItemEngine.getItemStackForType(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[1]));
 	}
 	
 	private void initFlightInstrumentRecipes(){

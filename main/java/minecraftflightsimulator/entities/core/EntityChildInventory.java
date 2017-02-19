@@ -31,7 +31,7 @@ public abstract class EntityChildInventory extends EntityChild implements IInven
 	protected abstract String getChildInventoryName();
 	
 	@Override
-    public boolean performRightClickAction(EntityPlayer player){
+    public boolean performRightClickAction(EntityBase clicked, EntityPlayer player){
 		player.openGui(MFS.instance, this.getEntityId(), worldObj, (int) posX, (int) posY, (int) posZ);
 		return false;
     }

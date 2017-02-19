@@ -2,30 +2,35 @@ package minecraftflightsimulator.planes.Vulcanair;
 
 import java.awt.Color;
 
+import org.lwjgl.opengl.GL11;
+
 import minecraftflightsimulator.entities.core.EntityPlane;
-import minecraftflightsimulator.modelrenders.RenderPlane;
-import minecraftflightsimulator.utilities.InstrumentHelper;
-import minecraftflightsimulator.utilities.InstrumentHelper.AircraftControls;
-import minecraftflightsimulator.utilities.InstrumentHelper.AircraftGauges;
-import minecraftflightsimulator.utilities.RenderHelper;
+import minecraftflightsimulator.rendering.AircraftInstruments;
+import minecraftflightsimulator.rendering.AircraftInstruments.AircraftControls;
+import minecraftflightsimulator.rendering.AircraftInstruments.AircraftGauges;
+import minecraftflightsimulator.rendering.modelrenders.RenderPlane;
+import minecraftflightsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
-
-import org.lwjgl.opengl.GL11;
 
 public class RenderVulcanair extends RenderPlane{
 	private static final ModelVulcanair model = new ModelVulcanair();
 	private static final ResourceLocation[] exteriorTextures = getExteriorTextures();
+	private static final float[] offset = new float[]{0, 0.75F, 0.12F};
 
 	public RenderVulcanair(RenderManager manager){
 		super(manager);
 	}
 	
 	@Override
+	protected float[] getRenderOffset(){
+		return offset;
+	}
+	
+	@Override
 	protected void renderPlane(EntityPlane plane){
-		GL11.glTranslatef(0, 0.75F, 0.12F);
 		GL11.glRotatef(180, 1, 0, 0);
-    	RenderHelper.bindTexture(exteriorTextures[plane.textureOptions > 6 ? 0 : plane.textureOptions]);
+		GL11DrawSystem.bindTexture(exteriorTextures[plane.textureOptions > 6 ? 0 : plane.textureOptions]);
         model.renderFuselage();
         model.renderAilerons(plane.aileronAngle/10F * 0.017453292F);
         model.renderElevators(plane.elevatorAngle/10F * 0.017453292F);
@@ -35,70 +40,17 @@ public class RenderVulcanair extends RenderPlane{
         GL11.glTranslatef(0, -0.75F, -0.12F);
         GL11.glRotatef(180, 1, 0, 0);
 	}
-	
-	@Override
-	protected void renderLightCovers(EntityPlane plane){		
-		//Landing light cover.
-		GL11.glPushMatrix();
-		GL11.glTranslatef(0, -1.5F, 4.890625F);
-		GL11.glColor3f(1, 1, 1);
-		RenderHelper.bindTexture(windowTexture);
-		RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.001, 0.001, false);
-		GL11.glPopMatrix();
-		
-		drawStrobeLightCover(7.25F, 0.1875F, 0.8125F, 90);
-		drawStrobeLightCover(-7.25F, 0.1875F, 0.8125F, -90);
-		
-		GL11.glPushMatrix();
-		GL11.glTranslatef(0F, 2.125F, -5.25F);
-		GL11.glRotatef(180 + plane.rudderAngle/10F, 0, 1, 0);
-		drawStrobeLightCover(0, 0, 0.375F, 0);
-		GL11.glPopMatrix();
-	}
-	
-	@Override
-	protected void renderStrobeLights(EntityPlane plane){
-		drawStrobeLight(plane, 7.25F, 0.1875F, 0.8125F,  90, 1, 0, 0);
-		drawStrobeLight(plane, -7.25F, 0.1875F, 0.8125F, -90, 0, 1, 0);
-		
-		GL11.glPushMatrix();
-		GL11.glTranslatef(0F, 2.125F, -5.25F);
-		GL11.glRotatef(180 + plane.rudderAngle/10F, 0, 1, 0);
-		drawStrobeLight(plane, 0, 0, 0.375F, 0, 1, 1, 1);
-		GL11.glPopMatrix();
-	}
-	
-	@Override
-	public void renderLights(EntityPlane plane){
-		if(plane.lightsOn && plane.auxLightsOn  && plane.electricPower > 2){
-			GL11.glPushMatrix();
-			GL11.glTranslatef(0, 0F, 5.130625F);
-			GL11.glDisable(GL11.GL_TEXTURE_2D);
-			GL11.glDisable(GL11.GL_LIGHTING);
-			GL11.glEnable(GL11.GL_BLEND);
-			GL11.glColor4f(1, 1, 1, (float) plane.electricPower/12F);
-			RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0, 0, false);
-			GL11.glDisable(GL11.GL_BLEND);
-			GL11.glPopMatrix();
-			
-			GL11.glPushMatrix();
-			GL11.glTranslatef(0, 0.20F, 5.030625F);
-			GL11.glRotatef(35, 1, 0, 0);
-			RenderHelper.drawLightBeam(plane, 7, 10, 20);
-			GL11.glPopMatrix();
-		}
-	}
 
 	@Override
 	protected void renderWindows(EntityPlane plane){
-		RenderHelper.bindTexture(windowTexture);		
-		RenderHelper.renderQuad(-0.95, -0.95, 0.95, 0.95, 0.08, -0.45, -0.45, 0.08, 2.12, 2.9, 2.9, 2.12, true);		
-		RenderHelper.renderQuadUVCustom(-0.95, -0.95, -0.95, -0.95, 0.08, 0.08, -0.58, -0.58, 1.69, 2.02, 3, 1.69, 0, 0.25, 1, 0, 0, 0, 1, 1, false);
-		RenderHelper.renderQuadUVCustom(-0.95, -0.95, -0.95, -0.95, 0.08, 0.08, -0.58, -0.58, 2.02, 1.69, 1.69, 3, 0.75, 1, 1, 0, 0, 0, 1, 1, false);
-		RenderHelper.renderQuadUVCustom(0.95, 0.95, 0.95, 0.95, 0.08, 0.08, -0.58, -0.58, 1.69, 2.02, 3, 1.69, 0, 0.25, 1, 0, 0, 0, 1, 1, false);
-		RenderHelper.renderQuadUVCustom(0.95, 0.95, 0.95, 0.95, 0.08, 0.08, -0.58, -0.58, 2.02, 1.69, 1.69, 3, 0.75, 1, 1, 0, 0, 0, 1, 1, false);
-		RenderHelper.renderSquare(-0.95, -0.95, -0.58, 0.08, -0.12, 1.135, true);
-		RenderHelper.renderSquare(0.95, 0.95, -0.58, 0.08, -0.12, 1.135, true);
+		GL11DrawSystem.bindTexture(GL11DrawSystem.glassTexture);		
+		GL11DrawSystem.renderQuad(-0.95, -0.95, 0.95, 0.95, 0.08, -0.45, -0.45, 0.08, 2.12, 2.9, 2.9, 2.12, true);		
+		GL11DrawSystem.renderQuadUVCustom(-0.95, -0.95, -0.95, -0.95, 0.08, 0.08, -0.58, -0.58, 1.69, 2.02, 3, 1.69, 0, 0.25, 1, 0, 0, 0, 1, 1, false);
+		GL11DrawSystem.renderQuadUVCustom(-0.95, -0.95, -0.95, -0.95, 0.08, 0.08, -0.58, -0.58, 2.02, 1.69, 1.69, 3, 0.75, 1, 1, 0, 0, 0, 1, 1, false);
+		GL11DrawSystem.renderQuadUVCustom(0.95, 0.95, 0.95, 0.95, 0.08, 0.08, -0.58, -0.58, 1.69, 2.02, 3, 1.69, 0, 0.25, 1, 0, 0, 0, 1, 1, false);
+		GL11DrawSystem.renderQuadUVCustom(0.95, 0.95, 0.95, 0.95, 0.08, 0.08, -0.58, -0.58, 2.02, 1.69, 1.69, 3, 0.75, 1, 1, 0, 0, 0, 1, 1, false);
+		GL11DrawSystem.renderSquare(-0.95, -0.95, -0.58, 0.08, -0.12, 1.135, true);
+		GL11DrawSystem.renderSquare(0.95, 0.95, -0.58, 0.08, -0.12, 1.135, true);
 	}
 
 	@Override
@@ -107,23 +59,13 @@ public class RenderVulcanair extends RenderPlane{
 		GL11.glTranslatef(0.7F, -0.7F, 2.8F);
 		GL11.glRotatef(180, 0, 0, 1);
 		GL11.glScalef(0.00390625F*1.3F, 0.00390625F*1.3F, 0.00390625F*1.3F);
-		for(byte i=0; i<plane.instrumentList.size(); ++i){
-			if(plane.instrumentList.get(i) != null){
-				InstrumentHelper.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, AircraftGauges.values()[plane.instrumentList.get(i).getItemDamage()], false);
-			}
+		for(byte i=0; i<10; ++i){
+			AircraftInstruments.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) -1);
 		}
-		InstrumentHelper.drawFlyableControl(plane, 295, -5, AircraftControls.THROTTLE, false);
-		InstrumentHelper.drawFlyableControl(plane, 295, 70, AircraftControls.BRAKE, false);
-		InstrumentHelper.drawFlyableControl(plane, 295, 30, AircraftControls.FLAPS, false);
+		AircraftInstruments.drawFlyableControl(plane, 295, -5, AircraftControls.THROTTLE, false);
+		AircraftInstruments.drawFlyableControl(plane, 295, 70, AircraftControls.BRAKE, false);
+		AircraftInstruments.drawFlyableControl(plane, 295, 30, AircraftControls.FLAPS, false);
 		GL11.glPopMatrix();
-	}
-	
-	private static ResourceLocation[] getExteriorTextures(){
-		ResourceLocation[] texArray = new ResourceLocation[7];
-		for(byte i=0; i<7; ++i){
-			texArray[i] = new ResourceLocation("mfs", "textures/planes/vulcanair/fuselage" + i + ".png");
-		}
-		return texArray;
 	}
 
 	@Override
@@ -133,10 +75,96 @@ public class RenderVulcanair extends RenderPlane{
 		GL11.glRotatef(102, 0, 1, 0);
 		GL11.glDisable(GL11.GL_LIGHTING);
 		GL11.glScalef(1.5F, 1.5F, 1.5F);
-		RenderHelper.drawScaledStringAt(plane.displayName, -2.2F/1.5F, 0.2F/1.5F, -1.25F/1.5F, 1F/32F, Color.black);
+		GL11DrawSystem.drawScaledStringAt(plane.displayName, -2.2F/1.5F, 0.2F/1.5F, -1.25F/1.5F, 1F/32F, Color.black);
 		GL11.glRotatef(156, 0, 1, 0);
-		RenderHelper.drawScaledStringAt(plane.displayName, 2.2F/1.5F, 0.2F/1.5F, -1.25F/1.5F, 1F/32F, Color.black);
+		GL11DrawSystem.drawScaledStringAt(plane.displayName, 2.2F/1.5F, 0.2F/1.5F, -1.25F/1.5F, 1F/32F, Color.black);
 		GL11.glEnable(GL11.GL_LIGHTING);
 		GL11.glPopMatrix();
+	}
+	
+	@Override
+	protected void renderNavigationLights(EntityPlane plane, float brightness){
+		GL11.glPushMatrix();
+		GL11.glTranslatef(7.25F, 0.40625F, 0.25F);
+		GL11.glRotatef(-90, 0, 0, 1);
+		GL11DrawSystem.drawBulbLight(1, 0, 0, brightness, 0.125F, 0.03125F);
+		GL11.glPopMatrix();
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(-7.25F, 0.40625F, 0.25F);
+		GL11.glRotatef(90, 0, 0, 1);
+		GL11DrawSystem.drawBulbLight(0, 1, 0, brightness, 0.125F, 0.03125F);
+		GL11.glPopMatrix();
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(0F, 2.25F, -5.245F);
+		GL11.glRotatef(180 + plane.rudderAngle/10F, 0, 1, 0);
+		GL11.glTranslatef(0, 0, 0.3175F);
+		GL11DrawSystem.drawBulbLight(1, 1, 1, brightness, 0.125F, 0.03125F);
+		GL11.glPopMatrix();
+	}
+
+	@Override
+	protected void renderStrobeLights(EntityPlane plane, float brightness){
+		GL11.glPushMatrix();
+		GL11.glTranslatef(7.25F, 0.40625F, 0.125F);
+		GL11.glRotatef(-90, 0, 0, 1);
+		GL11DrawSystem.drawBulbLight(1, 1, 1, plane.ticksExisted%20 < 3 ? brightness : 0, 0.125F, 0.03125F);
+		GL11.glPopMatrix();
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(-7.25F, 0.40625F, 0.125F);
+		GL11.glRotatef(90, 0, 0, 1);
+		GL11DrawSystem.drawBulbLight(1, 1, 1, plane.ticksExisted%20 < 3 ? brightness : 0, 0.125F, 0.03125F);
+		GL11.glPopMatrix();
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(0F, 2.25F, -4.75F);
+		GL11DrawSystem.drawBulbLight(1, 0, 0, plane.ticksExisted%20 < 3 ? brightness : 0, 0.125F, 0.03125F);
+		GL11.glPopMatrix();
+	}
+
+	@Override
+	protected void renderTaxiLights(EntityPlane plane, float brightness){
+		GL11.glPushMatrix();
+		GL11.glTranslatef(4.375F, 0.1875F, 0.88F);
+		GL11DrawSystem.drawLight(1, 1, 1, brightness, 0.125F);
+		GL11.glPopMatrix();
+	}
+	
+	@Override
+	protected void renderLandingLights(EntityPlane plane, float brightness){
+		GL11.glPushMatrix();
+		GL11.glTranslatef(4.5F, 0.1875F, 0.88F);
+		GL11DrawSystem.drawLight(1, 1, 1, brightness, 0.125F);
+		GL11.glPopMatrix();
+	}
+	
+	@Override
+	public void renderTaxiBeam(EntityPlane plane){
+		GL11.glPushMatrix();
+		GL11.glTranslatef(4.40625F, 1.8125F, 1.0625F);
+		GL11.glRotatef(30, 1, 0, 0);
+		GL11.glRotatef(-25, 0, 1, 0);
+		GL11DrawSystem.drawLightBeam(plane, 2.25, 10, 20, false);
+		GL11.glPopMatrix();
+	}
+
+	@Override
+	public void renderLandingBeam(EntityPlane plane){
+		GL11.glPushMatrix();
+		GL11.glTranslatef(4.53125F, 1.8125F, 1.0625F);
+		GL11.glRotatef(30, 1, 0, 0);
+		GL11.glRotatef(-18, 0, 1, 0);
+		GL11DrawSystem.drawLightBeam(plane, 5, 15, 20, true);
+		GL11.glPopMatrix();
+	}
+	
+	private static ResourceLocation[] getExteriorTextures(){
+		ResourceLocation[] texArray = new ResourceLocation[7];
+		for(byte i=0; i<7; ++i){
+			texArray[i] = new ResourceLocation("mfs", "textures/planes/vulcanair/fuselage" + i + ".png");
+		}
+		return texArray;
 	}
 }

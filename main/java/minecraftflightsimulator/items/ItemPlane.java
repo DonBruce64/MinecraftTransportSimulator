@@ -2,8 +2,11 @@ package minecraftflightsimulator.items;
 
 import java.util.List;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.core.EntityPlane;
+import minecraftflightsimulator.minecrafthelpers.AABBHelper;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -11,8 +14,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class ItemPlane extends Item{
 	private Class<? extends EntityPlane> plane;
@@ -21,7 +22,7 @@ public class ItemPlane extends Item{
 	
 	public ItemPlane(Class<? extends EntityPlane> plane, int numberSubtypes){
 		super();
-		this.setUnlocalizedName(plane.getSimpleName().substring(6));
+		this.setUnlocalizedName(plane.getSimpleName().substring(6).toLowerCase());
 		this.plane = plane;
 		this.numberTypes = numberSubtypes;
 		this.icons = new IIcon[numberSubtypes];
@@ -50,6 +51,7 @@ public class ItemPlane extends Item{
 				}
 			}catch(Exception e){
 				System.err.println("ERROR SPAWING PLANE!");
+				e.printStackTrace();
 			}
 		}
 		return false;//INS190
@@ -65,7 +67,7 @@ public class ItemPlane extends Item{
 			EntityCore core = new EntityCore(world, plane, plane.UUID, coreLocations[i][0], coreLocations[i][1], coreLocations[i][2], coreLocations[i][3], coreLocations[i][4]);
 			world.spawnEntityInWorld(core);
 			spawnedCores[i] = core;
-			if(core.isPartCollided(core.getBoundingBox())){
+			if(!AABBHelper.getCollidingBlockBoxes(world, core.getBoundingBox(), core.collidesWithLiquids()).isEmpty()){
 				for(int j=0; j<=i; ++j){
 					spawnedCores[j].setDead();
 				}

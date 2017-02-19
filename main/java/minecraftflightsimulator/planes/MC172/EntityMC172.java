@@ -1,12 +1,12 @@
 package minecraftflightsimulator.planes.MC172;
 
-import minecraftflightsimulator.MFSRegistry;
-import minecraftflightsimulator.containers.ContainerVehicle;
-import minecraftflightsimulator.containers.SlotFuel;
-import minecraftflightsimulator.containers.SlotItem;
-import minecraftflightsimulator.containers.SlotLoadable;
 import minecraftflightsimulator.entities.core.EntityPlane;
-import minecraftflightsimulator.utilities.InstrumentHelper;
+import minecraftflightsimulator.entities.parts.EntityChest;
+import minecraftflightsimulator.entities.parts.EntityEngineAircraft;
+import minecraftflightsimulator.entities.parts.EntityPontoon;
+import minecraftflightsimulator.entities.parts.EntitySeat;
+import minecraftflightsimulator.entities.parts.EntityWheel;
+import minecraftflightsimulator.rendering.VehicleHUDs;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
@@ -24,9 +24,10 @@ public class EntityMC172 extends EntityPlane{
 	}
 
 	@Override
-	protected void initPlaneProperties(){
+	protected void initProperties(){
 		hasFlaps = true;
-		numberLights = 2;
+		lightSetup = 15;
+		numberPowerfulLights = 1;
 		maxFuel = 5000;
 		emptyMass=800;
 		wingspan=11.0F;
@@ -38,14 +39,16 @@ public class EntityMC172 extends EntityPlane{
 	}
 	
 	@Override
-	protected void initChildPositions(){
-		addCenterGearPosition(new float[]{0, -1F, 1.7F});
-		addLeftGearPosition(new float[]{-1.65F, -1F, 0});
-		addRightGearPosition(new float[]{1.65F, -1F, 0});
-		addEnginePosition(new float[]{0, -0.3F, 1.65F});
-		addPropellerPosition(new float[]{0, -0.375F, 2.5F});
-		addControllerPosition(new float[]{0, -.1F, 0});
-		addMixedPosition(new float[]{0, -.1F, -1});
+	protected void initProhibitedInstruments(){}
+	
+	@Override
+	protected void initPartData(){
+		this.partData.add(new PartData(0, -1F, 1.7F, true, false, -1, EntityWheel.EntityWheelSmall.class));
+		this.partData.add(new PartData(-1.65F, -1F, 0, EntityWheel.EntityWheelSmall.class, EntityPontoon.class));
+		this.partData.add(new PartData(1.65F, -1F, 0,  EntityWheel.EntityWheelSmall.class, EntityPontoon.class));
+		this.partData.add(new PartData(0, -0.3F, 1.65F, false, false, 0, EntityEngineAircraft.class));
+		this.partData.add(new PartData(0, -.1F, 0, false, true, -1, EntitySeat.class));
+		this.partData.add(new PartData(0, -.1F, -1, EntitySeat.class, EntityChest.class));
 	}
 	
 	@Override
@@ -68,24 +71,18 @@ public class EntityMC172 extends EntityPlane{
 	}
 	
 	@Override
-	public void drawHUD(int width, int height){
-		InstrumentHelper.drawBasicFlyableHUD(this, width, height, backplateTextures[this.textureOptions], mouldingTextures[this.textureOptions]);
+	public ResourceLocation getBackplateTexture(){
+		return backplateTextures[this.textureOptions];
 	}
 	
 	@Override
-	public void initVehicleContainerSlots(ContainerVehicle container){
-		container.addSlotToContainer(new SlotItem(this, 86, 113, 1, MFSRegistry.wheelSmall));
-		container.addSlotToContainer(new SlotItem(this, 50, 113, 2, MFSRegistry.wheelSmall, MFSRegistry.pontoon));
-		container.addSlotToContainer(new SlotItem(this, 68, 113, 4, MFSRegistry.wheelSmall, MFSRegistry.pontoon));
-		container.addSlotToContainer(new SlotItem(this, 131, 66, 6, MFSRegistry.engineSmall));
-		container.addSlotToContainer(new SlotItem(this, 150, 66, 10, MFSRegistry.propeller));
-		container.addSlotToContainer(new SlotLoadable(this, 110, 66, SlotLoadable.SeatTypes.CONTROLLER));
-		container.addSlotToContainer(new SlotLoadable(this, 92, 66, SlotLoadable.SeatTypes.FORWARD_MIXED));
-		container.addSlotToContainer(new SlotItem(this, 7, 113, this.emptyBucketSlot));
-		container.addSlotToContainer(new SlotFuel(this, 7, 73));
-		for(int i=0; i<10; ++i){
-			container.addSlotToContainer(new SlotItem(this, 7 + 18*(i%5), i < 5 ? 7 : 25, i + instrumentStartSlot, MFSRegistry.flightInstrument));
-		}
+	public ResourceLocation getMouldingTexture(){
+		return mouldingTextures[this.textureOptions];
+	}
+	
+	@Override
+	public void drawHUD(int width, int height){
+		VehicleHUDs.drawPlaneHUD(this, width, height);
 	}
 	
 	private static ResourceLocation[] getMouldingTextures(){

@@ -1,7 +1,10 @@
 package minecraftflightsimulator.entities.parts;
 
 import minecraftflightsimulator.entities.core.EntityChildInventory;
+import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityVehicle;
+import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 public class EntityChest extends EntityChildInventory{
@@ -10,10 +13,18 @@ public class EntityChest extends EntityChildInventory{
 		super(world);
 	}
 	
-	public EntityChest(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F);
+	public EntityChest(World world, EntityParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+		super(world, (EntityVehicle) vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F);
 	}
 
+	@Override
+	public void setNBTFromStack(ItemStack stack){}
+
+	@Override
+	public ItemStack getItemStack(){
+		return new ItemStack(ItemStackHelper.getItemByName("chest"));
+	}
+	
 	@Override
 	protected String getChildInventoryName(){
 		return "entity.mfs.Chest.name";

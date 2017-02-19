@@ -1177,8 +1177,8 @@ public class ModelVulcanair extends ModelBase{
     Aileron_2.mirror = true;
     setRotation(Aileron_2, 0F, 0F, 0F);
     Rudder_ = new ModelRenderer(this, 37, 162);
-    Rudder_.addBox(0F, 0F, 0F, 2, 36, 6);
-    Rudder_.setRotationPoint(-1F, -48F, 82F);
+    Rudder_.addBox(-1F, 0F, 0F, 2, 36, 6);
+    Rudder_.setRotationPoint(0F, -48F, 82F);
     Rudder_.setTextureSize(512, 256);
     Rudder_.mirror = true;
     setRotation(Rudder_, 0F, 0F, 0F);

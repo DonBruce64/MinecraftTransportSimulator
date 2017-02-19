@@ -13,8 +13,6 @@ public class BlockPropellerBench extends BlockContainer{
 
 	public BlockPropellerBench(){
 		super(Material.iron);
-		this.setBlockName("PropellerBench");
-		this.setCreativeTab(MFS.tabMFS);
 	}
 	
 	@Override

@@ -1,12 +1,12 @@
 package minecraftflightsimulator.planes.Vulcanair;
 
-import minecraftflightsimulator.MFSRegistry;
-import minecraftflightsimulator.containers.ContainerVehicle;
-import minecraftflightsimulator.containers.SlotFuel;
-import minecraftflightsimulator.containers.SlotItem;
-import minecraftflightsimulator.containers.SlotLoadable;
 import minecraftflightsimulator.entities.core.EntityPlane;
-import minecraftflightsimulator.utilities.InstrumentHelper;
+import minecraftflightsimulator.entities.parts.EntityChest;
+import minecraftflightsimulator.entities.parts.EntityEngineAircraft;
+import minecraftflightsimulator.entities.parts.EntityPontoon;
+import minecraftflightsimulator.entities.parts.EntitySeat;
+import minecraftflightsimulator.entities.parts.EntityWheel;
+import minecraftflightsimulator.rendering.VehicleHUDs;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
@@ -24,9 +24,10 @@ public class EntityVulcanair extends EntityPlane{
 	}
 
 	@Override
-	protected void initPlaneProperties(){
+	protected void initProperties(){
 		hasFlaps = true;
-		numberLights = 2;
+		lightSetup = 15;
+		numberPowerfulLights = 1;
 		maxFuel = 15000;
 		emptyMass=1230;
 		wingspan=12.0F;
@@ -38,19 +39,20 @@ public class EntityVulcanair extends EntityPlane{
 	}
 	
 	@Override
-	protected void initChildPositions(){
-		addCenterGearPosition(new float[]{0, -0.75F, 4.62F});
-		addLeftGearPosition(new float[]{-1.75F, -0.75F, 0});
-		addRightGearPosition(new float[]{1.75F, -0.75F, 0F});
-		addEnginePosition(new float[]{2.69F, 1.25F, 1.17F});
-		addEnginePosition(new float[]{-2.69F, 1.25F, 1.17F});
-		addPropellerPosition(new float[]{2.69F, 1.15F, 2.07F});
-		addPropellerPosition(new float[]{-2.69F, 1.15F, 2.07F});
-		addControllerPosition(new float[]{0, 0.1F, 2.37F});
-		addMixedPosition(new float[]{0, 0.1F, 1.245F});
-		addMixedPosition(new float[]{0, 0.1F, 0.12F});
-	}
+	protected void initProhibitedInstruments(){}
 	
+	@Override
+	protected void initPartData(){
+		this.partData.add(new PartData(0, -0.75F, 4.62F, true, false, -1, EntityWheel.EntityWheelSmall.class));
+		this.partData.add(new PartData(-1.75F, -0.75F, 0, EntityWheel.EntityWheelSmall.class, EntityPontoon.class));
+		this.partData.add(new PartData(1.75F, -0.75F, 0F,  EntityWheel.EntityWheelSmall.class, EntityPontoon.class));
+		this.partData.add(new PartData(2.69F, 1.25F, 1.17F, false, false, 0, EntityEngineAircraft.class));
+		this.partData.add(new PartData(-2.69F, 1.25F, 1.17F, false, false, 0, EntityEngineAircraft.class));
+		this.partData.add(new PartData(0, 0.1F, 2.37F, false, true, -1, EntitySeat.class));
+		this.partData.add(new PartData(0, 0.1F, 1.245F, EntitySeat.class, EntityChest.class));
+		this.partData.add(new PartData(0, 0.1F, 0.12F, EntitySeat.class, EntityChest.class));
+	}
+
 	@Override
 	public float[][] getCoreLocations(){
 		return new float[][]{
@@ -72,29 +74,20 @@ public class EntityVulcanair extends EntityPlane{
 			{6.5F, 1.7F, 0.25F, 1.75F, 0.125F}
 		};
 	}
-	
+
 	@Override
-	public void drawHUD(int width, int height){
-		InstrumentHelper.drawBasicFlyableHUD(this, width, height, backplateTexture, mouldingTextures[this.textureOptions]);
+	public ResourceLocation getBackplateTexture(){
+		return backplateTexture;
 	}
 	
 	@Override
-	public void initVehicleContainerSlots(ContainerVehicle container){
-		container.addSlotToContainer(new SlotItem(this, 86, 113, 1, MFSRegistry.wheelSmall));
-		container.addSlotToContainer(new SlotItem(this, 50, 113, 2, MFSRegistry.wheelSmall, MFSRegistry.pontoon));
-		container.addSlotToContainer(new SlotItem(this, 68, 113, 4, MFSRegistry.wheelSmall, MFSRegistry.pontoon));
-		container.addSlotToContainer(new SlotItem(this, 111, 40, 6, MFSRegistry.engineSmall));
-		container.addSlotToContainer(new SlotItem(this, 111, 84, 7, MFSRegistry.engineSmall));
-		container.addSlotToContainer(new SlotItem(this, 130, 40, 10, MFSRegistry.propeller));
-		container.addSlotToContainer(new SlotItem(this, 130, 84, 11, MFSRegistry.propeller));
-		container.addSlotToContainer(new SlotLoadable(this, 118, 62, SlotLoadable.SeatTypes.CONTROLLER));
-		container.addSlotToContainer(new SlotLoadable(this, 101, 62, SlotLoadable.SeatTypes.FORWARD_MIXED));
-		container.addSlotToContainer(new SlotLoadable(this, 84, 62, SlotLoadable.SeatTypes.AFT_MIXED));
-		container.addSlotToContainer(new SlotItem(this, 7, 113, this.emptyBucketSlot));
-		container.addSlotToContainer(new SlotFuel(this, 7, 73));
-		for(int i=0; i<10; ++i){
-			container.addSlotToContainer(new SlotItem(this, 7 + 18*(i%5), i < 5 ? 7 : 25, i + instrumentStartSlot, MFSRegistry.flightInstrument));
-		}
+	public ResourceLocation getMouldingTexture(){
+		return mouldingTextures[this.textureOptions];
+	}
+	
+	@Override
+	public void drawHUD(int width, int height){
+		VehicleHUDs.drawPlaneHUD(this, width, height);
 	}
 	
 	private static ResourceLocation[] getMouldingTextures(){

@@ -1,5 +1,7 @@
 package minecraftflightsimulator.entities.core;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.packets.general.ClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.ServerDataPacket;
@@ -8,8 +10,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public abstract class EntityBase extends Entity{
 	public boolean linked;
@@ -22,7 +22,7 @@ public abstract class EntityBase extends Entity{
 	
 	@Override
     public boolean interactFirst(EntityPlayer player){
-		return this.performRightClickAction(player);
+		return this.performRightClickAction(this, player);
 	}
 	/**
 	 * Handler for all right-clicking actions performed.
@@ -31,7 +31,7 @@ public abstract class EntityBase extends Entity{
 	 * 
 	 * @return whether or not an action occurred.
 	 */
-	public abstract boolean performRightClickAction(EntityPlayer player);
+	public abstract boolean performRightClickAction(EntityBase clicked, EntityPlayer player);
 	
 	@Override
     public boolean attackEntityFrom(DamageSource source, float damage){
@@ -67,6 +67,12 @@ public abstract class EntityBase extends Entity{
     	//Client-side render changes calls put in its place.
     	this.renderDistanceWeight = 100;
     	this.ignoreFrustumCheck = true;
+    }
+    
+    //Note that entities do NOT render in every pass.  This just ensures the render code gets called.
+    @Override
+    public boolean shouldRenderInPass(int pass){
+    	return true;
     }
 	
 	public void requestDataFromServer(){

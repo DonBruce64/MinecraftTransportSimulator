@@ -46,7 +46,7 @@ public class ThrottlePacket implements IMessage{
 						++thisEntity.throttle;
 					}
 				}else if(message.throttle == Byte.MIN_VALUE){
-					if(thisEntity.throttle > 15){
+					if(thisEntity.throttle > 0){
 						--thisEntity.throttle;
 					}
 				}else{

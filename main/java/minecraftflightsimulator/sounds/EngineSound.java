@@ -2,7 +2,7 @@ package minecraftflightsimulator.sounds;
 
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntitySeat;
-import minecraftflightsimulator.utilities.MFSVector;
+import minecraftflightsimulator.utilites.MFSVector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.entity.player.EntityPlayer;
@@ -37,7 +37,7 @@ public class EngineSound extends MovingSound{
 	
 	@Override
 	public void update(){
-		if(engine.engineOn || engine.internalFuel > 0){
+		if(engine.state.running || engine.internalFuel > 0){
 			this.xPosF = (float) engine.posX;
 			this.yPosF = (float) engine.posY;
 			this.zPosF = (float) engine.posZ;
@@ -46,10 +46,10 @@ public class EngineSound extends MovingSound{
 			if(engine.parent != null){
 				if(player.ridingEntity instanceof EntitySeat){
 					if(engine.parent.equals(((EntitySeat) player.ridingEntity).parent)){
-						this.field_147663_c=(float) (engine.engineRPM/pitchFactor);
+						this.field_147663_c=(float) (engine.RPM/pitchFactor);
 					}else{
 						soundVelocity = (playerPos.distanceTo(enginePos) - playerPos.add(player.motionX, player.motionY, player.motionZ).distanceTo(enginePos.add(engine.parent.motionX, engine.parent.motionY, engine.parent.motionZ)));
-						this.field_147663_c=(float) (engine.engineRPM*(1+soundVelocity/10)/pitchFactor);
+						this.field_147663_c=(float) (engine.RPM*(1+soundVelocity/10)/pitchFactor);
 					}
 					if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
 						this.volume = 0.5F;
@@ -58,8 +58,8 @@ public class EngineSound extends MovingSound{
 					}
 				}else{
 					soundVelocity = (playerPos.distanceTo(enginePos) - playerPos.add(player.motionX, player.motionY, player.motionZ).distanceTo(enginePos.add(engine.parent.motionX, engine.parent.motionY, engine.parent.motionZ)));
-					this.field_147663_c=(float) (engine.engineRPM*(1+soundVelocity/10)/pitchFactor);
-					this.volume = (float) (30*engine.engineRPM/pitchFactor/playerPos.distanceTo(enginePos));
+					this.field_147663_c=(float) (engine.RPM*(1+soundVelocity/10)/pitchFactor);
+					this.volume = (float) (30*engine.RPM/pitchFactor/playerPos.distanceTo(enginePos));
 				}
 				playerLastX = player.posX;
 				playerLastY = player.posY;

@@ -2,7 +2,7 @@ package minecraftflightsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.entities.core.EntityParent;
-import minecraftflightsimulator.utilities.ConfigSystem;
+import minecraftflightsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;

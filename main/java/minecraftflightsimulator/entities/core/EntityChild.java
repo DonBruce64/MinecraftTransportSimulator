@@ -1,27 +1,31 @@
 package minecraftflightsimulator.entities.core;
 
-import minecraftflightsimulator.utilities.MFSVector;
-import minecraftflightsimulator.utilities.RotationHelper;
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
+import minecraftflightsimulator.minecrafthelpers.AABBHelper;
+import minecraftflightsimulator.minecrafthelpers.EntityHelper;
+import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
+import minecraftflightsimulator.systems.RotationSystem;
+import minecraftflightsimulator.utilites.MFSVector;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
 /**Main child class.  This class is the base for all child entities and should be
- * extended to use the parent-child linking system.  Many helper functions are present
- * to allow re-directing methods that Mojang/Forge changes frequently (like block detection).
+ * extended to use the parent-child linking system.
  * Use {@link EntityParent#addChild(String, EntityChild, boolean)} to add children 
  * and {@link EntityParent#removeChild(String, boolean)} to kill and remove them.
- * You may extend {@link EntityParent} to get more functionality with those system.
+ * You may extend {@link EntityParent} to get more functionality with those systems.
  * Beware of children with offsetZ of 0, as they can cause problems with pitch calculations.
+ * Also note that all childeren must have a constructor of the form: 
+ * public EntityChild(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height, int propertyCode)
  * 
  * @author don_bruce
  */
 public abstract class EntityChild extends EntityBase{	
+	/** Integer for storing data about color, type, and other things.*/
 	public int propertyCode;
 	public float offsetX;
 	public float offsetY;
@@ -45,7 +49,7 @@ public abstract class EntityChild extends EntityBase{
 		this.propertyCode=propertyCode;
 		this.UUID=String.valueOf(this.getUniqueID());
 		this.parentUUID=parentUUID;
-		MFSVector offset = RotationHelper.getRotatedPoint(offsetX, offsetY, offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
+		MFSVector offset = RotationSystem.getRotatedPoint(offsetX, offsetY, offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
 		this.setPositionAndRotation(parent.posX+offset.xCoord, parent.posY+offset.yCoord, parent.posZ+offset.zCoord, parent.rotationYaw, parent.rotationPitch);
 	}
 	
@@ -59,14 +63,46 @@ public abstract class EntityChild extends EntityBase{
 	}
 	
 	@Override
-    public boolean performRightClickAction(EntityPlayer player){
-		return parent != null ? parent.performRightClickAction(player) : false;
+    public boolean performRightClickAction(EntityBase clicked, EntityPlayer player){
+		return parent != null ? parent.performRightClickAction(clicked, player) : false;
 	}
 	
 	@Override
 	public boolean performAttackAction(DamageSource source, float damage){
-		return parent != null ? parent.performAttackAction(source, damage) : false;
+		if(isDamageWrench(source)){
+			return true;
+		}else{
+			return parent != null ? parent.performAttackAction(source, damage) : false;
+		}
     }
+	
+	/**Checks to see if damage came from a player holding a wrench.
+	 * Removes the entity if so, dropping the entity as an item.
+	 * Called each attack before deciding whether or not to forward damage to the parent.
+	 * If overriding {@link performAttackAction} make sure to call this or wrenches won't work!
+	 */
+	protected boolean isDamageWrench(DamageSource source){
+		if(!worldObj.isRemote){
+			if(source.getEntity() instanceof EntityPlayer){
+				if(PlayerHelper.isPlayerHoldingWrench((EntityPlayer) source.getEntity())){
+					ItemStack droppedItem = this.getItemStack();
+					worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, droppedItem));
+					parent.removeChild(UUID, false);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	/**Sets the NBT of the entity to that of the stack.
+	 */
+	public abstract void setNBTFromStack(ItemStack stack);
+	
+	/**Gets an ItemStack that represents the entity.
+	 * This should be called when removing the entity from the world to return an item.
+	 */
+	public abstract ItemStack getItemStack();
 	
 	public boolean hasParent(){
 		if(this.parent==null){
@@ -79,22 +115,17 @@ public abstract class EntityChild extends EntityBase{
 	}
 	
 	private void linkToParent(){
-		for(int i=0; i<this.worldObj.loadedEntityList.size(); ++i){
-			Entity entity = (Entity) this.worldObj.loadedEntityList.get(i);
-			if(entity instanceof EntityParent){
-				EntityParent parent =  (EntityParent) entity;
-				if(parent.UUID != null){
-					if(parent.UUID.equals(this.parentUUID)){
-						parent.addChild(this.UUID, this, false);
-						this.parent=parent;
-					}
-				}
-			}
+		EntityBase entity = EntityHelper.getEntityByMFSUUID(worldObj, (this.parentUUID));
+		if(entity != null){
+			EntityParent parent =  (EntityParent) entity;
+			parent.addChild(this.UUID, this, false);
+			this.parent=parent;
 		}
 	}
 	
 	@Override
 	public boolean canBeCollidedWith(){
+		//This gets overridden to do collisions with players.
 		return true;
 	}
 	
@@ -102,65 +133,14 @@ public abstract class EntityChild extends EntityBase{
 		return false;
 	}
 	
-	public boolean isPartCollided(AxisAlignedBB box){
-		int minX = MathHelper.floor_double(box.minX);
-		int maxX = MathHelper.floor_double(box.maxX + 1.0D);
-		int minY = MathHelper.floor_double(box.minY);
-		int maxY = MathHelper.floor_double(box.maxY + 1.0D);
-		int minZ = MathHelper.floor_double(box.minZ);
-		int maxZ = MathHelper.floor_double(box.maxZ + 1.0D);
-
-        for(int i = minX; i < maxX; ++i){
-        	for(int j = minY; j < maxY; ++j){
-        		for(int k = minZ; k < maxZ; ++k){
-        			//DEL180START
-                    Block block = worldObj.getBlock(i, j, k);
-                    AxisAlignedBB blockBox = block.getCollisionBoundingBoxFromPool(worldObj, i, j, k);
-                    if(blockBox != null && box.intersectsWith(blockBox)){
-                    	return true;
-                    }else if(collidesWithLiquids()){
-                    	if(isLiquidAt(i, j, k)){
-                    		return true;
-                    	}
-                    }
-                    //DEL180END
-                    /*INS180
-                    BlockPos pos = new BlockPos(i, j, k);
-        			IBlockState state = worldObj.getBlockState(pos);
-                    AxisAlignedBB blockBox = state.getBlock().getCollisionBoundingBox(worldObj, pos, state);
-                    if(blockBox != null && box.intersectsWith(blockBox)){
-                    	return true;
-                    }else if(collidesWithLiquids()){
-                    	if(isLiquidAt(i, j, k)){
-                    		return true;
-                    	}
-                    } 
-                     INS180*/
-                }
-            }
-        }
-        return false;
-	}
-	
 	@Override
 	public AxisAlignedBB getBoundingBox(){
+		//This gets overridden to do collisions with players.
 		return this.boundingBox;
 	}
 	
-	public boolean isLiquidAt(double x, double y, double z){
-		return worldObj.getBlock(MathHelper.floor_double(x), MathHelper.floor_double(y), MathHelper.floor_double(z)).getMaterial().isLiquid();
-	}
-	
 	public boolean isOnGround(){
-		return isPartCollided(this.getBoundingBox().getOffsetBoundingBox(0, -0.05, 0));
-	}
-	
-	public void setRider(Entity rider){
-		rider.mountEntity(this);
-	}
-	
-	public Entity getRider(){
-		return this.riddenByEntity;
+		return !AABBHelper.getCollidingBlockBoxes(worldObj, AABBHelper.getOffsetEntityBoundingBox(this, 0, -0.05F, 0), this.collidesWithLiquids()).isEmpty();
 	}
 	
 	@Override

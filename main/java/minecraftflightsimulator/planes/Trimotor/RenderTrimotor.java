@@ -2,16 +2,16 @@ package minecraftflightsimulator.planes.Trimotor;
 
 import java.awt.Color;
 
+import org.lwjgl.opengl.GL11;
+
 import minecraftflightsimulator.entities.core.EntityPlane;
-import minecraftflightsimulator.modelrenders.RenderPlane;
-import minecraftflightsimulator.utilities.InstrumentHelper;
-import minecraftflightsimulator.utilities.InstrumentHelper.AircraftControls;
-import minecraftflightsimulator.utilities.InstrumentHelper.AircraftGauges;
-import minecraftflightsimulator.utilities.RenderHelper;
+import minecraftflightsimulator.rendering.AircraftInstruments;
+import minecraftflightsimulator.rendering.AircraftInstruments.AircraftControls;
+import minecraftflightsimulator.rendering.AircraftInstruments.AircraftGauges;
+import minecraftflightsimulator.rendering.modelrenders.RenderPlane;
+import minecraftflightsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
-
-import org.lwjgl.opengl.GL11;
 
 public class RenderTrimotor extends RenderPlane{
 	private static final ModelTrimotor model = new ModelTrimotor();
@@ -20,6 +20,7 @@ public class RenderTrimotor extends RenderPlane{
     private static final ResourceLocation detailTexture = new ResourceLocation("minecraft", "textures/blocks/stone.png");
     private static final ResourceLocation logo1 = new ResourceLocation("mfs", "textures/planes/trimotor/logo1.png");
     private static final ResourceLocation logo2 = new ResourceLocation("mfs", "textures/planes/trimotor/logo2.png");
+    private static final float[] offset = new float[]{0, 0, 1.5F};
     private int color;
     
 	public RenderTrimotor(RenderManager manager){
@@ -27,130 +28,171 @@ public class RenderTrimotor extends RenderPlane{
 	}
 
 	@Override
-	protected void renderPlane(EntityPlane plane){		
-		GL11.glTranslatef(0, 0, 1);
-		RenderHelper.bindTexture(sideTexture);
+	protected float[] getRenderOffset(){
+		return offset;
+	}
+	
+	@Override
+	protected void renderPlane(EntityPlane plane){
+		GL11DrawSystem.bindTexture(sideTexture);
 		model.renderRegularParts(plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F);
-		RenderHelper.bindTexture(rotatedSideTexture);
+		GL11DrawSystem.bindTexture(rotatedSideTexture);
 		model.renderRotatedTextureParts(plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F);
-		RenderHelper.bindTexture(detailTexture);
+		GL11DrawSystem.bindTexture(detailTexture);
 		color = getColorForMeta(plane.textureOptions);
 		GL11.glColor3f(((color >> 16) & 255)/255F, ((color >> 8) & 255)/255F, (color & 255)/255F);
 		model.renderColoredParts(plane.aileronAngle/10F * 0.017453292F, plane.elevatorAngle/10F * 0.017453292F, plane.rudderAngle/10F * 0.017453292F);
-		GL11.glColor3f(1, 1, 1);
-	}
-	
-	@Override
-	protected void renderLightCovers(EntityPlane plane){
-		//Landing light cover2.
-		GL11.glPushMatrix();
-		GL11.glColor3f(1, 1, 1);
-		RenderHelper.bindTexture(windowTexture);
-		GL11.glTranslatef(4.75F, 1.25F, 0.0F);
-		RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.002, 0.002, false);
-		GL11.glTranslatef(-9.5F, 0, 0);
-		RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.002, 0.002, false);
-		GL11.glPopMatrix();
-	}
-	
-	@Override
-	protected void renderStrobeLights(EntityPlane plane){}
-	
-	@Override
-	public void renderLights(EntityPlane plane){
-		if(plane.lightsOn && plane.auxLightsOn  && plane.electricPower > 2){
-			GL11.glPushMatrix();
-			GL11.glDisable(GL11.GL_TEXTURE_2D);
-			GL11.glDisable(GL11.GL_LIGHTING);
-			GL11.glEnable(GL11.GL_BLEND);
-			GL11.glColor4f(1, 1, 1, (float) plane.electricPower/12F);
-			GL11.glTranslatef(4.75F, 1.25F, 1.0F);
-			RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.001, 0.001, false);
-			GL11.glTranslatef(-9.5F, 0, 0);
-			RenderHelper.renderSquare(-0.125, 0.125, 0, 0.25, 0.001, 0.001, false);
-			GL11.glDisable(GL11.GL_BLEND);
-			GL11.glPopMatrix();
-			
-			GL11.glPushMatrix();
-			GL11.glTranslatef(4.75F, 1.5F, 0.9F);
-			GL11.glRotatef(45, 1, 0, 0);
-			RenderHelper.drawLightBeam(plane, 7, 15, 20);
-			GL11.glPopMatrix();
-			
-			GL11.glPushMatrix();
-			GL11.glTranslatef(-4.75F, 1.5F, 0.9F);
-			GL11.glRotatef(45, 1, 0, 0);
-			RenderHelper.drawLightBeam(plane, 7, 15, 20);
-			GL11.glPopMatrix();
-		}
 	}
 	
 	@Override
 	protected void renderWindows(EntityPlane plane){
-		RenderHelper.bindTexture(windowTexture);
-		RenderHelper.renderSquare(1.15, 1.00, 0.81, 1.063, 0.04, 0.725, true);
-		RenderHelper.renderSquare(-1.15, -1.00, 0.81, 1.063, 0.04, 0.725, true);
-		RenderHelper.renderSquare(0.99, 0.89, 0.69, 1.063, 0.775, 1.24, true);
-		RenderHelper.renderSquare(-0.99, -0.89, 0.69, 1.063, 0.775, 1.24, true);
-		RenderHelper.renderSquare(0.83, 0.05, 0.69, 1.063, 1.28, 1.65, true);
-		RenderHelper.renderSquare(-0.83, -0.05, 0.69, 1.063, 1.28, 1.65, true);
-		RenderHelper.renderTriangle(0.063, 0.063, 0.72, 1.15, 1.15, 1.15, 1.6, 1.31, 1.31, true);
-		RenderHelper.renderTriangle(-0.063, -0.063, -0.72, 1.15, 1.15, 1.15, 1.6, 1.31, 1.31, true);
-		RenderHelper.renderQuad(0.5, 0.063, 0.063, 0.5, 1.2, 1.2, 1.2, 1.2, 1.25, 1.25, 0.75, 0.75, true);
-		RenderHelper.renderQuad(-0.5, -0.063, -0.063, -0.5, 1.2, 1.2, 1.2, 1.2, 1.25, 1.25, 0.75, 0.75, true);
+		GL11DrawSystem.bindTexture(GL11DrawSystem.glassTexture);
+		GL11DrawSystem.renderSquare(1.15, 1.00, 0.81, 1.063, 0.04, 0.725, true);
+		GL11DrawSystem.renderSquare(-1.15, -1.00, 0.81, 1.063, 0.04, 0.725, true);
+		GL11DrawSystem.renderSquare(0.99, 0.89, 0.69, 1.063, 0.775, 1.24, true);
+		GL11DrawSystem.renderSquare(-0.99, -0.89, 0.69, 1.063, 0.775, 1.24, true);
+		GL11DrawSystem.renderSquare(0.83, 0.05, 0.69, 1.063, 1.28, 1.65, true);
+		GL11DrawSystem.renderSquare(-0.83, -0.05, 0.69, 1.063, 1.28, 1.65, true);
+		GL11DrawSystem.renderTriangle(0.063, 0.063, 0.72, 1.15, 1.15, 1.15, 1.6, 1.31, 1.31, true);
+		GL11DrawSystem.renderTriangle(-0.063, -0.063, -0.72, 1.15, 1.15, 1.15, 1.6, 1.31, 1.31, true);
+		GL11DrawSystem.renderQuad(0.5, 0.063, 0.063, 0.5, 1.2, 1.2, 1.2, 1.2, 1.25, 1.25, 0.75, 0.75, true);
+		GL11DrawSystem.renderQuad(-0.5, -0.063, -0.063, -0.5, 1.2, 1.2, 1.2, 1.2, 1.25, 1.25, 0.75, 0.75, true);
 		
-		RenderHelper.renderSquare(1.2, 1.2, 0.06, 0.44, -0.94, -0.05, true);
-		RenderHelper.renderSquare(-1.2, -1.2, 0.06, 0.44, -0.94, -0.05, true);
-		RenderHelper.renderSquare(1.2, 1.2, 0.06, 0.44, -1.94, -1.05, true);
-		RenderHelper.renderSquare(-1.2, -1.2, 0.06, 0.44, -1.94, -1.05, true);
-		RenderHelper.renderSquare(1.2, 1.2, 0.06, 0.44, -2.94, -2.05, true);
-		RenderHelper.renderSquare(-1.2, -1.2, 0.06, 0.44, -2.94, -2.05, true);
-		RenderHelper.renderSquare(1.2, 1.2, 0.06, 0.44, -3.94, -3.05, true);
-		RenderHelper.renderSquare(-1.2, -1.2, 0.06, 0.44, -3.94, -3.05, true);
-		RenderHelper.renderSquare(1.2, 1.2, 0.06, 0.44, -4.94, -4.05, true);
-		RenderHelper.renderSquare(-1.2, -1.2, 0.06, 0.44, -4.94, -4.05, true);
-		RenderHelper.renderSquare(1.2, 1.2, 0.06, 0.44, -5.94, -5.05, true);
-		RenderHelper.renderSquare(-1.2, -1.2, 0.06, 0.44, -5.94, -5.05, true);
+		GL11DrawSystem.renderSquare(1.2, 1.2, 0.06, 0.44, -0.94, -0.05, true);
+		GL11DrawSystem.renderSquare(-1.2, -1.2, 0.06, 0.44, -0.94, -0.05, true);
+		GL11DrawSystem.renderSquare(1.2, 1.2, 0.06, 0.44, -1.94, -1.05, true);
+		GL11DrawSystem.renderSquare(-1.2, -1.2, 0.06, 0.44, -1.94, -1.05, true);
+		GL11DrawSystem.renderSquare(1.2, 1.2, 0.06, 0.44, -2.94, -2.05, true);
+		GL11DrawSystem.renderSquare(-1.2, -1.2, 0.06, 0.44, -2.94, -2.05, true);
+		GL11DrawSystem.renderSquare(1.2, 1.2, 0.06, 0.44, -3.94, -3.05, true);
+		GL11DrawSystem.renderSquare(-1.2, -1.2, 0.06, 0.44, -3.94, -3.05, true);
+		GL11DrawSystem.renderSquare(1.2, 1.2, 0.06, 0.44, -4.94, -4.05, true);
+		GL11DrawSystem.renderSquare(-1.2, -1.2, 0.06, 0.44, -4.94, -4.05, true);
+		GL11DrawSystem.renderSquare(1.2, 1.2, 0.06, 0.44, -5.94, -5.05, true);
+		GL11DrawSystem.renderSquare(-1.2, -1.2, 0.06, 0.44, -5.94, -5.05, true);
 	}
 
 	@Override
 	protected void renderConsole(EntityPlane plane){
+		//Main console
 		GL11.glPushMatrix();
 		GL11.glTranslatef(0.68F, 0.4F, 1.25F);
 		GL11.glRotatef(180, 0, 0, 1);
 		GL11.glScalef(0.00390625F*1.3F, 0.00390625F*1.3F, 0.00390625F*1.3F);
-		for(byte i=0; i<plane.instrumentList.size(); ++i){
-			if(plane.instrumentList.get(i) != null){
-				InstrumentHelper.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, AircraftGauges.values()[plane.instrumentList.get(i).getItemDamage()], false);
-			}
+		for(byte i=0; i<10; ++i){
+			AircraftInstruments.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) -1);
 		}
-		InstrumentHelper.drawFlyableControl(plane, 290, -5, AircraftControls.THROTTLE, false);
-		InstrumentHelper.drawFlyableControl(plane, 290, 70, AircraftControls.BRAKE, false);
+		AircraftInstruments.drawFlyableControl(plane, 290, -5, AircraftControls.THROTTLE, false);
+		AircraftInstruments.drawFlyableControl(plane, 290, 70, AircraftControls.BRAKE, false);
+		GL11.glPopMatrix();
+		
+		//Cabin altimeter
+		GL11.glPushMatrix();
+		GL11.glTranslatef(-0.75F, 0.75F, -0.07F);
+		GL11.glRotatef(180, 0, 0, 1);
+		GL11.glScalef(0.00390625F*1.25F, 0.00390625F*1.25F, 0.00390625F*1.25F);
+		AircraftInstruments.drawFlyableInstrument(plane, 0, 0, (byte) AircraftGauges.ALTIMETER.ordinal(), false, (byte) -1);
 		GL11.glPopMatrix();
 	}
 
 	@Override
 	protected void renderMarkings(EntityPlane plane){
-		RenderHelper.bindTexture(logo1);
-		RenderHelper.renderSquare(0.0626, 0.0626, 0.91, 1.91, -10.8, -11.8, false);
-		RenderHelper.renderSquare(-0.0626, -0.0626, 0.91, 1.91, -11.8, -10.8, false);
-		RenderHelper.bindTexture(logo2);
-		RenderHelper.renderSquare(1.26, 0.697869586, 0.0, 1.0, -6.0, -11.0, false);
-		RenderHelper.renderSquare(-0.697869586, -1.26, 0.0, 1.0, -11.0, -6.0, false);
+		GL11.glPushMatrix();
+		GL11DrawSystem.bindTexture(logo1);
+		GL11DrawSystem.renderSquare(0.0626, 0.0626, 0.91, 1.91, -10.8, -11.8, false);
+		GL11DrawSystem.renderSquare(-0.0626, -0.0626, 0.91, 1.91, -11.8, -10.8, false);
+		GL11DrawSystem.bindTexture(logo2);
+		GL11DrawSystem.renderSquare(1.26, 0.697869586, 0.0, 1.0, -6.0, -11.0, false);
+		GL11DrawSystem.renderSquare(-0.697869586, -1.26, 0.0, 1.0, -11.0, -6.0, false);
+		GL11.glPopMatrix();
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(0, 2.5F, -11.625F);
 		GL11.glRotatef(180, 1, 0, 0);
 		GL11.glRotatef(90 - plane.rudderAngle/10F, 0, 1, 0);
-		RenderHelper.drawScaledStringAt(plane.displayName, -0F, -0F, -0.0313F, 0.01F, Color.black);
+		GL11DrawSystem.drawScaledStringAt(plane.displayName, -0F, -0F, -0.0313F, 0.01F, Color.black);
 		GL11.glRotatef(180, 0, 1, 0);
-		RenderHelper.drawScaledStringAt(plane.displayName, -0F, -0F, -0.0313F, 0.01F, Color.black);
+		GL11DrawSystem.drawScaledStringAt(plane.displayName, -0F, -0F, -0.0313F, 0.01F, Color.black);
 		GL11.glPopMatrix();
 		
 		GL11.glPushMatrix();
 		GL11.glRotatef(180, 0, 0, 1);
 		GL11.glRotatef(-90, 1, 0, 0);
-		RenderHelper.drawScaledStringAt(plane.displayName, 7F, 1.2F, -1.57F, 0.1F, Color.black);
+		GL11DrawSystem.drawScaledStringAt(plane.displayName, 7F, 1.2F, -1.57F, 0.1F, Color.black);
+		GL11.glPopMatrix();
+	}
+
+	@Override
+	protected void renderNavigationLights(EntityPlane plane, float brightness){
+		GL11.glPushMatrix();
+		GL11.glTranslatef(11.125F, 1.53125F, -0.5F);
+		GL11.glRotatef(-90, 0, 0, 1);
+		GL11DrawSystem.drawBulbLight(1, 0, 0, brightness, 0.0625F, 0.03125F);
+		GL11.glPopMatrix();
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(-11.125F, 1.53125F, -0.5F);
+		GL11.glRotatef(90, 0, 0, 1);
+		GL11DrawSystem.drawBulbLight(0, 1, 0, brightness, 0.0625F, 0.03125F);
+		GL11.glPopMatrix();
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(0, 2.5625F, -11.625F);
+		GL11.glRotatef(180 + plane.rudderAngle/10F, 0, 1, 0);
+		GL11DrawSystem.drawBulbLight(1, 1, 1, brightness, 0.0625F, 0.03125F);
+		GL11.glPopMatrix();
+	}
+
+	@Override
+	protected void renderStrobeLights(EntityPlane plane, float brightness){}
+	
+	@Override
+	protected void renderTaxiLights(EntityPlane plane, float brightness){
+		GL11.glPushMatrix();
+		GL11.glTranslatef(-0.5F, -1, 0.375F);
+		GL11DrawSystem.drawLight(1, 1, 1, brightness, 0.125F);
+		GL11.glTranslatef(1F, 0, 0);
+		GL11DrawSystem.drawLight(1, 1, 1, brightness, 0.125F);
+		GL11.glPopMatrix();
+	}
+	
+	@Override
+	protected void renderLandingLights(EntityPlane plane, float brightness){
+		GL11.glPushMatrix();
+		GL11.glTranslatef(-4.75F, 1.25F, 0);
+		GL11DrawSystem.drawLight(1, 1, 1, brightness, 0.25F);
+		GL11.glTranslatef(9.5F, 0, 0);
+		GL11DrawSystem.drawLight(1, 1, 1, brightness, 0.25F);
+		GL11.glPopMatrix();
+	}
+
+	@Override
+	public void renderTaxiBeam(EntityPlane plane){
+		GL11.glPushMatrix();
+		GL11.glTranslatef(-0.5F, -0.9F, 1.85F);
+		GL11.glRotatef(57, 1, 0, 0);
+		GL11DrawSystem.drawLightBeam(plane, 3, 5, 20, false);
+		GL11.glPopMatrix();
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(0.5F, -0.9F, 1.85F);
+		GL11.glRotatef(57, 1, 0, 0);
+		GL11DrawSystem.drawLightBeam(plane, 3, 5, 20, false);
+		GL11.glPopMatrix();
+	}
+
+	@Override
+	public void renderLandingBeam(EntityPlane plane){
+		GL11.glPushMatrix();
+		GL11.glTranslatef(4.75F, 1.5F, 1.4F);
+		GL11.glRotatef(45, 1, 0, 0);
+		GL11DrawSystem.drawLightBeam(plane, 7, 15, 20, true);
+		GL11.glPopMatrix();
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(-4.75F, 1.5F, 1.4F);
+		GL11.glRotatef(45, 1, 0, 0);
+		GL11DrawSystem.drawLightBeam(plane, 7, 15, 20, true);
 		GL11.glPopMatrix();
 	}
 	

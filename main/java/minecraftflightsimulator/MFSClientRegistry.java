@@ -3,27 +3,22 @@ package minecraftflightsimulator;
 import java.util.HashMap;
 import java.util.Map;
 
+import cpw.mods.fml.client.registry.ClientRegistry;
+import cpw.mods.fml.client.registry.RenderingRegistry;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.core.EntityParent;
-import minecraftflightsimulator.entities.parts.EntityEngineAircraft;
 import minecraftflightsimulator.entities.parts.EntityChest;
+import minecraftflightsimulator.entities.parts.EntityEngineAircraft;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPontoonDummy;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.entities.parts.EntitySkid;
-import minecraftflightsimulator.entities.parts.EntityWheelLarge;
-import minecraftflightsimulator.entities.parts.EntityWheelSmall;
-import minecraftflightsimulator.modelrenders.RenderEngine;
-import minecraftflightsimulator.modelrenders.RenderPlaneChest;
-import minecraftflightsimulator.modelrenders.RenderPontoon;
-import minecraftflightsimulator.modelrenders.RenderPropeller;
-import minecraftflightsimulator.modelrenders.RenderPropellerBench;
-import minecraftflightsimulator.modelrenders.RenderSeat;
-import minecraftflightsimulator.modelrenders.RenderSkid;
-import minecraftflightsimulator.modelrenders.RenderWheel;
+import minecraftflightsimulator.entities.parts.EntityWheel;
+import minecraftflightsimulator.planes.Comanche.EntityComanche;
+import minecraftflightsimulator.planes.Comanche.RenderComanche;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
 import minecraftflightsimulator.planes.MC172.RenderMC172;
 import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
@@ -32,15 +27,20 @@ import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.planes.Trimotor.RenderTrimotor;
 import minecraftflightsimulator.planes.Vulcanair.EntityVulcanair;
 import minecraftflightsimulator.planes.Vulcanair.RenderVulcanair;
-import minecraftflightsimulator.utilities.InstrumentHelper;
-import minecraftflightsimulator.utilities.RenderHelper.RenderChild;
-import minecraftflightsimulator.utilities.RenderHelper.RenderNull;
-import minecraftflightsimulator.utilities.RenderHelper.RenderParent;
-import minecraftflightsimulator.utilities.RenderHelper.RenderTileBase;
+import minecraftflightsimulator.rendering.modelrenders.RenderEngine;
+import minecraftflightsimulator.rendering.modelrenders.RenderPlaneChest;
+import minecraftflightsimulator.rendering.modelrenders.RenderPontoon;
+import minecraftflightsimulator.rendering.modelrenders.RenderPropeller;
+import minecraftflightsimulator.rendering.modelrenders.RenderPropellerBench;
+import minecraftflightsimulator.rendering.modelrenders.RenderSeat;
+import minecraftflightsimulator.rendering.modelrenders.RenderSkid;
+import minecraftflightsimulator.rendering.modelrenders.RenderWheel;
+import minecraftflightsimulator.systems.RenderSystem.RenderChild;
+import minecraftflightsimulator.systems.RenderSystem.RenderNull;
+import minecraftflightsimulator.systems.RenderSystem.RenderParent;
+import minecraftflightsimulator.systems.RenderSystem.RenderTileBase;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.tileentity.TileEntity;
-import cpw.mods.fml.client.registry.ClientRegistry;
-import cpw.mods.fml.client.registry.RenderingRegistry;
 
 public class MFSClientRegistry{
 	private static final MFSClientRegistry instance = new MFSClientRegistry();
@@ -72,11 +72,12 @@ public class MFSClientRegistry{
 		registerParentRender(EntityTrimotor.class, RenderTrimotor.class);
 		registerParentRender(EntityVulcanair.class, RenderVulcanair.class);
 		registerParentRender(EntityPZLP11.class, RenderPZLP11.class);
+		registerParentRender(EntityComanche.class, RenderComanche.class);
 		
 		registerChildRender(EntitySeat.class, RenderSeat.class);
 		registerChildRender(EntityChest.class, RenderPlaneChest.class);
-		registerChildRender(EntityWheelSmall.class, RenderWheel.class);
-		registerChildRender(EntityWheelLarge.class, RenderWheel.class);
+		registerChildRender(EntityWheel.EntityWheelSmall.class, RenderWheel.class);
+		registerChildRender(EntityWheel.EntityWheelLarge.class, RenderWheel.class);
 		registerChildRender(EntitySkid.class, RenderSkid.class);
 		registerChildRender(EntityPontoon.class, RenderPontoon.class);
 		registerChildRender(EntityPontoonDummy.class, null);
@@ -85,16 +86,18 @@ public class MFSClientRegistry{
 		registerChildRender(EntityCore.class, null);
 	}
 	
+	
+	//TODO make sure this works with 1.8 and up.
 	/*INS180	
   private static void initItemRenders(){
 		registerItemSeries(MFSRegistry.planeMC172, 6);
 		registerItemSeries(MFSRegistry.planePZLP11, 1);
 		registerItemSeries(MFSRegistry.planeVulcanair, 7);
 		registerItemSeries(MFSRegistry.planeTrimotor, 15);
+		registerItemSeries(MFSRegistry.planeVans, 15);
 		registerItemSeries(MFSRegistry.seat, 96);
 		registerItemSeries(MFSRegistry.flightInstrument, InstrumentHelper.AircraftGauges.values().length);
-		registerItemSeriesWithAltName(MFSRegistry.engineSmall, Short.MAX_VALUE, "");
-		registerItemSeriesWithAltName(MFSRegistry.engineLarge, Short.MAX_VALUE, "");
+		registerItemSeries(MFSRegistry.engine, EntityEngine.EngineTypes.values().length);
 		
 		ModelResourceLocation[] propellerNames = new ModelResourceLocation[Short.MAX_VALUE];
 		for(int i=0; i<propellerNames.length; ++i){

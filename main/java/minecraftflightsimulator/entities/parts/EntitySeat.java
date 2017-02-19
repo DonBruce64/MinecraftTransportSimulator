@@ -1,16 +1,22 @@
 package minecraftflightsimulator.entities.parts;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.MFSRegistry;
+import minecraftflightsimulator.entities.core.EntityBase;
 import minecraftflightsimulator.entities.core.EntityChild;
-import minecraftflightsimulator.entities.core.EntityVehicle;
+import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.minecrafthelpers.EntityHelper;
+import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.packets.general.ChatPacket;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 public class EntitySeat extends EntityChild{
-	public boolean controller;
+	public boolean isController;
 	private boolean hadRiderLastTick;
 	
 	public EntitySeat(World world){
@@ -18,19 +24,27 @@ public class EntitySeat extends EntityChild{
 		this.setSize(0.75F, 0.75F);
 	}
 	
-	public EntitySeat(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode, boolean controller){
-		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F, propertyCode);
-		this.controller=controller;
+	public EntitySeat(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F, propertyCode);
+	}
+
+	@Override
+	public void setNBTFromStack(ItemStack stack){}
+
+	@Override
+	public ItemStack getItemStack(){
+		return new ItemStack(MFSRegistry.seat);
 	}
 	
 	@Override
-	public boolean performRightClickAction(EntityPlayer player){
+	public boolean performRightClickAction(EntityBase clicked, EntityPlayer player){
 		if(!worldObj.isRemote){
-			if(this.getRider()==null){
-				this.setRider(player);
+			Entity rider = EntityHelper.getRider(this);
+			if(rider==null){
+				EntityHelper.setRider(player, this);
 				return true;
-			}else if(!this.getRider().equals(player)){
-				MFS.MFSNet.sendTo(new ChatPacket("This seat is taken!"), (EntityPlayerMP) player);
+			}else if(!rider.equals(player)){
+				MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.failure.seattaken")), (EntityPlayerMP) player);
 			}
 		}
 		return false;
@@ -40,31 +54,20 @@ public class EntitySeat extends EntityChild{
 	public boolean canRiderInteract(){
 		return true;
 	}
-
-	@Override
-	public void onEntityUpdate(){
-		super.onEntityUpdate();
-		if(!linked){return;}
-		
-		if(!worldObj.isRemote){
-			if(this.getRider() != null){
-				hadRiderLastTick=true;
-			}else if(hadRiderLastTick){
-				hadRiderLastTick=false;			
-					sendDataToClient();
-			}
-		}
+	
+	public void setController(){
+		this.isController = true;
 	}
 	
 	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
-		this.controller=tagCompound.getBoolean("controller");
+		this.isController=tagCompound.getBoolean("isController");
 	}
     
 	@Override
 	public void writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
-		tagCompound.setBoolean("controller", this.controller);
+		tagCompound.setBoolean("isController", this.isController);
 	}
 }

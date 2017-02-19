@@ -2,13 +2,18 @@ package minecraftflightsimulator.entities.parts;
 
 import java.util.List;
 
-import minecraftflightsimulator.entities.core.EntityFlyable;
-import minecraftflightsimulator.entities.core.EntityLandingGear;
+import minecraftflightsimulator.MFSRegistry;
+import minecraftflightsimulator.entities.core.EntityGroundDevice;
+import minecraftflightsimulator.entities.core.EntityParent;
+import minecraftflightsimulator.entities.core.EntityVehicle;
+import minecraftflightsimulator.minecrafthelpers.BlockHelper;
+import minecraftflightsimulator.minecrafthelpers.EntityHelper;
 import net.minecraft.entity.Entity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-public class EntityPontoon extends EntityLandingGear{
+public class EntityPontoon extends EntityGroundDevice{
 	protected String otherHalfUUID;
 	protected EntityPontoon otherHalf;
 	private List boxList;
@@ -17,8 +22,16 @@ public class EntityPontoon extends EntityLandingGear{
 		super(world);
 	}
 	
-	public EntityPontoon(World world, EntityFlyable flyer, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, flyer, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F);
+	public EntityPontoon(World world, EntityParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+		super(world, (EntityVehicle) vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F, 0.1F, 2.5F);
+	}
+	
+	@Override
+	public void setNBTFromStack(ItemStack stack){}
+
+	@Override
+	public ItemStack getItemStack(){
+		return new ItemStack(MFSRegistry.pontoon);
 	}
 	
 	@Override
@@ -34,7 +47,7 @@ public class EntityPontoon extends EntityLandingGear{
 			}
 			return;
 		}
-		if(isLiquidAt(posX, posY + 1, posZ)){
+		if(BlockHelper.isPositionInLiquid(worldObj, posX, posY + 1, posZ)){
 			//Plane dive-bombed into the water.
 			parent.removeChild(UUID, true);
 		}
@@ -58,16 +71,9 @@ public class EntityPontoon extends EntityLandingGear{
 	}
 	
 	private void linkToOtherHalf(){
-		for(int i=0; i<this.worldObj.loadedEntityList.size(); ++i){
-			Entity entity = (Entity) this.worldObj.loadedEntityList.get(i);
-			if(entity instanceof EntityPontoon){
-				EntityPontoon otherHalf =  (EntityPontoon) entity;
-				if(otherHalf.UUID != null){
-					if(otherHalf.UUID.equals(this.otherHalfUUID)){
-						this.otherHalf=otherHalf;
-					}
-				}
-			}
+		Entity entity = EntityHelper.getEntityByMFSUUID(worldObj, otherHalfUUID);
+		if(entity != null){
+			this.otherHalf=(EntityPontoon) entity;
 		}
 	}
 	

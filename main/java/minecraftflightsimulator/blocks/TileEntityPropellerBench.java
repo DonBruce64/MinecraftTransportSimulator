@@ -2,155 +2,94 @@ package minecraftflightsimulator.blocks;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
+import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.packets.general.PropellerBenchSyncPacket;
 import minecraftflightsimulator.sounds.BenchSound;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.Packet;
-import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.IChatComponent;
+import net.minecraft.world.World;
 
-public class TileEntityPropellerBench extends TileEntity implements IInventory{
-	public boolean isOn;
-	public short propertyCode = 1120;
-	public int timeLeft;
-	public static final int opTime = 1000;
-	
-	private boolean firstTickOnClient = true;
+public class TileEntityPropellerBench extends TileEntity{
+	private byte propellerType = 0;
+	private byte numberBlades = 2;
+	private byte pitch = 64;
+	private byte diameter = 70;
+	private byte iron = 0;
+	private byte redstone = 0;
+	private byte propMaterialQty = 0;
+	private long timeOperationFinished = 0;
+	private ItemStack propellerOnBench = null;
 	private BenchSound benchSound;
-	private ItemStack[] contents = new ItemStack[5];
-	private static final ItemStack op1Stack = new ItemStack(MFSRegistry.propeller, 1, 0);
 	
-	public TileEntityPropellerBench(){}
+	public TileEntityPropellerBench(){
+		super();
+	}
+	
+	@Override
+    public void setWorldObj(World world){
+        this.worldObj = world;
+        if(worldObj.isRemote){
+        	MFS.MFSNet.sendToServer(new PropellerBenchSyncPacket(this));
+        }
+    }
 	
 	@Override
 	public void updateEntity(){
-		if(worldObj.isRemote && firstTickOnClient){
-			firstTickOnClient = false;
-			MFS.MFSNet.sendToServer(new PropellerBenchSyncPacket(this));
-			return;
-		}
-		
-		if(!isMaterialCorrect() || !isMaterialSufficient()){
-			timeLeft = 0;
-			isOn = false;
-		}
-		if(isOn){
-			if(timeLeft > 0){
-				if(timeLeft%200 == 0){
-					if(getStackInSlot(2) != null){
-						decrStackSize(2, 1);
-					}else{
-						isOn = false;
-						return;
-					}
-				}
+		if(timeOperationFinished == worldObj.getTotalWorldTime()){
+			timeOperationFinished = 0;
+			propellerOnBench = new ItemStack(MFSRegistry.propeller);
+			NBTTagCompound stackTag = new NBTTagCompound();
+			stackTag.setInteger("model", (diameter - 70)/5*1000 + (pitch - 55)/3*100 + numberBlades*10 + propellerType);
+			stackTag.setInteger("numberBlades", numberBlades);
+			stackTag.setInteger("pitch", pitch);
+			stackTag.setInteger("diameter", diameter);
+			if(propellerType%10==1){
+				stackTag.setFloat("health", 500);
+			}else if(propellerType%10==2){
+				stackTag.setFloat("health", 1000);
 			}else{
-				isOn = false;
-				this.decrStackSize(0, 1);
-				this.decrStackSize(1, 70+5*(propertyCode/1000) < 90 ? (propertyCode%100/10) : (propertyCode%100/10)*2);
-				this.setInventorySlotContents(3, new ItemStack(MFSRegistry.propeller, 1, propertyCode));
-				return;
+				stackTag.setFloat("health", 100);
 			}
-			--timeLeft;
+			//TODO send to SFX system.
+			ItemStackHelper.setStackNBT(propellerOnBench, stackTag);
 		}
 		benchSound = MFS.proxy.updateBenchSound(benchSound, this);
 	}
 	
-	public boolean isMaterialCorrect(){
-		switch(propertyCode%10){
-			case(0): return getStackInSlot(1) != null ? getStackInSlot(1).getItem().equals(Item.getItemFromBlock(Blocks.planks)) : false;
-			case(1): return getStackInSlot(1) != null ? getStackInSlot(1).getItem().equals(Items.iron_ingot) : false;
-			case(2): return getStackInSlot(1) != null ? getStackInSlot(1).getItem().equals(Item.getItemFromBlock(Blocks.obsidian)) : false;
-			default: return false;
+	public boolean isRunning(){
+		return timeOperationFinished != 0 && timeOperationFinished > worldObj.getTotalWorldTime();
+	}
+	
+	public Item getMaterialItem(){
+		switch(propellerType){
+			case(0): return ItemStackHelper.getItemByName("planks");
+			case(1): return ItemStackHelper.getItemByName("iron_ingot");
+			case(2): return ItemStackHelper.getItemByName("obsidian");
+			default: return null;
 		}
 	}
 	
-	public boolean isMaterialSufficient(){
-		return getStackInSlot(0) != null && (getStackInSlot(1) != null ? (getStackInSlot(1).stackSize >= (70+5*(propertyCode/1000) < 90 ? (propertyCode%100/10) : (propertyCode%100/10)*2)) : false);
+	public byte getQtyRequiredMaterial(){
+		return (byte) (diameter < 90 ? numberBlades : numberBlades*2);
 	}
-	
-	public void markDirty(){super.markDirty();}
-	public void clear(){}
-	public void setField(int id, int value){}
-	public void openInventory(){this.openInventory(null);}
-	public void openInventory(EntityPlayer player){}
-	public void closeInventory(){this.closeInventory(null);}
-	public void closeInventory(EntityPlayer player){}
-
-	public boolean hasCustomName(){return false;}    
-	public boolean hasCustomInventoryName(){return false;}
-	public boolean isUseableByPlayer(EntityPlayer player){return this.getDistanceFrom(player.posX, player.posY, player.posZ) <= 64;}
-	public boolean isItemValidForSlot(int slot, ItemStack stack){return true;}
-	public int getField(int id){return 0;}
-	public int getFieldCount(){return 0;}
-	public int getSizeInventory(){return contents.length;}
-	public int getInventoryStackLimit(){return 64;}
-	public String getName(){return "";}
-	public String getInventoryName(){return "";}
-	public String getCommandSenderName(){return "";}
-	public IChatComponent getDisplayName(){return null;}
-	public ItemStack getStackInSlot(int slot){return this.contents[slot];}
-	public ItemStack getStackInSlotOnClosing(int slot){return null;}
-	
-    public void setInventorySlotContents(int slot, ItemStack item){
-        this.contents[slot] = item;
-        if(item != null && item.stackSize > this.getInventoryStackLimit()){
-            item.stackSize = this.getInventoryStackLimit();
-        }
-    }
-	
-    public ItemStack decrStackSize(int slot, int number){
-        if(this.contents[slot] != null){
-            ItemStack itemstack;
-            if(this.contents[slot].stackSize <= number){
-                itemstack = this.contents[slot];
-                this.contents[slot] = null;
-                return itemstack;
-            }else{
-                itemstack = this.contents[slot].splitStack(number);
-                if(this.contents[slot].stackSize == 0){
-                    this.contents[slot] = null;
-                }
-                return itemstack;
-            }
-        }else{
-            return null;
-        }
-    }
-    
-    public ItemStack removeStackFromSlot(int index){
-		ItemStack removedStack = getStackInSlot(index);
-		setInventorySlotContents(index, null);
-		return removedStack;
-	}
-    
-    @Override
-    public Packet getDescriptionPacket() {
-        NBTTagCompound tagCompound = new NBTTagCompound();
-        writeToNBT(tagCompound);
-        return new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, 1, tagCompound);
-    }
-    
-    @Override
-    public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt){
-    	this.readFromNBT(pkt.func_148857_g());
-    }
 	
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
-        this.isOn = tagCompound.getBoolean("isOn");
-        this.propertyCode = tagCompound.getShort("propertyCode");
-        this.timeLeft = tagCompound.getInteger("timeLeft");
+    	private ItemStack propellerOnBench = null;
+    	this.propellerType = tagCompound.getByte("propellerType");
+    	this.numberBlades = tagCompound.getByte("numberBlades");
+    	this.pitch = tagCompound.getByte("pitch");
+    	this.diameter = tagCompound.getByte("diameter");
+    	this.iron = tagCompound.getByte("iron");
+    	this.redstone = tagCompound.getByte("redstone");
+    	this.propMaterialQty = tagCompound.getByte("propMaterialQty");
+    	this.timeOperationFinished = tagCompound.getLong("timeOperationFinished");
+    	this.propellerOnBench = tagCompound.getByte("propellerOnBench");
+
         NBTTagList nbttaglist = tagCompound.getTagList("Items", 10);
         for (int i = 0; i < nbttaglist.tagCount(); ++i){
             NBTTagCompound nbttagcompound1 = nbttaglist.getCompoundTagAt(i);
