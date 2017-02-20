@@ -2,10 +2,13 @@ package minecraftflightsimulator.blocks;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
+import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
+import minecraftflightsimulator.packets.general.ChatPacket;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
@@ -18,10 +21,21 @@ public class BlockPropellerBench extends BlockContainer{
 	@Override
 	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float hitX, float hitY, float hitZ){
 		if(player.getDistance(x, y, z) < 5){
+			TileEntityPropellerBench bench = (TileEntityPropellerBench) BlockHelper.getTileEntityFromCoords(world, x, y, z);
 			if(!world.isRemote && player.isSneaking()){
-				((TileEntityPropellerBench) BlockHelper.getTileEntityFromCoords(world, x, y, z)).dropPropellerAt(player.posX, player.posY, player.posZ);
-			}else if(world.isRemote && !player.isSneaking()){
-				MFS.proxy.openGUI(BlockHelper.getTileEntityFromCoords(world, x, y, z), player);
+				bench.dropPropellerAt(player.posX, player.posY, player.posZ);
+			}else if(!player.isSneaking()){
+				if(bench.getPropellerOnBench() == null){
+					if(bench.timeOperationFinished == 0){
+						if(world.isRemote){
+							MFS.proxy.openGUI(BlockHelper.getTileEntityFromCoords(world, x, y, z), player);
+						}
+					}else if(!world.isRemote){
+						MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.failure.propellerbenchworking")), (EntityPlayerMP) player);
+					}
+				}else if(!world.isRemote){
+					MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.failure.propellerbenchfull")), (EntityPlayerMP) player);
+				}
 			}
 		}
 		return true;

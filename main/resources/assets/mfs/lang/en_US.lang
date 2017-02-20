@@ -12,7 +12,8 @@ death.attack.planecrash.player.player=%1$s got distracted while fighting %2$s an
 
 interact.failure.seattaken=This seat is taken!
 interact.failure.propellertoobig=This propeller is too big for this engine!
-interact.failure.benchinuse=Someone is using this bench!
+interact.failure.propellerbenchworking=This propeller bench is currently busy.
+interact.failure.propellerbenchfull=Please remove the propeller from the bench before making another.
 interact.failure.gaspumptoofar=The gas pump is too far away from the vehicle.  The pump should be no less than 16 blocks away.
 interact.failure.gaspumpwrongside=The gas pump is on the wrong side of the vehicle.  The pump should be on the right. 
 

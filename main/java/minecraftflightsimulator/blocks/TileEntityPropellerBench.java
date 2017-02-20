@@ -17,9 +17,10 @@ public class TileEntityPropellerBench extends TileEntity{
 	private byte numberBlades = 2;
 	private byte pitch = 64;
 	private byte diameter = 70;
-	private long timeOperationFinished = 0;
 	private ItemStack propellerOnBench = null;
 	private BenchSound benchSound;
+	
+	public long timeOperationFinished = 0;
 	
 	public TileEntityPropellerBench(){
 		super();
