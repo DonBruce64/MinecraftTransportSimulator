@@ -11,10 +11,10 @@ import cpw.mods.fml.relauncher.Side;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.parts.EntityEngine;
-import minecraftflightsimulator.guis.GUIHandler;
 import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.sounds.EngineSound;
 import minecraftflightsimulator.systems.ConfigSystem;
+import minecraftflightsimulator.systems.ForgeContainerGUISystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.entity.Entity;
@@ -38,7 +38,7 @@ public class CommonProxy{
 	
 	public void init(FMLInitializationEvent event){
 		MFSRegistry.instance.init();
-		NetworkRegistry.INSTANCE.registerGuiHandler(MFS.instance, new GUIHandler());
+		NetworkRegistry.INSTANCE.registerGuiHandler(MFS.instance, new ForgeContainerGUISystem());
 	}
 	
 	/**
@@ -107,7 +107,7 @@ public class CommonProxy{
 		GameRegistry.addRecipe(output, params);
 	}
 	
-	public void openInstrumentGUI(Entity entityClicked, EntityPlayer clicker){}
+	public void openGUI(Object clicked, EntityPlayer clicker){}
 	public void playSound(Entity noisyEntity, String soundName, float volume, float pitch){}
 	public EngineSound updateEngineSoundAndSmoke(EngineSound sound, EntityEngine engine){return null;}
 	public BenchSound updateBenchSound(BenchSound sound, TileEntityPropellerBench bench){return null;}

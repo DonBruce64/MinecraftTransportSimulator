@@ -10,6 +10,7 @@ import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.guis.GUIInstrumentsFlyer;
+import minecraftflightsimulator.guis.GUIPropellerBench;
 import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.sounds.EngineSound;
 import minecraftflightsimulator.systems.ClientEventSystem;
@@ -48,9 +49,11 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	@Override
-	public void openInstrumentGUI(Entity entityClicked, EntityPlayer clicker){
-		if(entityClicked instanceof EntityPlane){
-			FMLCommonHandler.instance().showGuiScreen(new GUIInstrumentsFlyer((EntityVehicle) entityClicked, clicker));
+	public void openGUI(Object clicked, EntityPlayer clicker){
+		if(clicked instanceof EntityPlane){
+			FMLCommonHandler.instance().showGuiScreen(new GUIInstrumentsFlyer((EntityVehicle) clicked, clicker));
+		}else if(clicked instanceof TileEntityPropellerBench){
+			FMLCommonHandler.instance().showGuiScreen(new GUIPropellerBench((TileEntityPropellerBench) clicked, clicker));
 		}
 	}
 	

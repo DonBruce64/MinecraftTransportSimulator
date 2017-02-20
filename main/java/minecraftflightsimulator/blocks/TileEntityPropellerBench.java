@@ -5,10 +5,10 @@ import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.packets.general.PropellerBenchSyncPacket;
 import minecraftflightsimulator.sounds.BenchSound;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
@@ -17,9 +17,6 @@ public class TileEntityPropellerBench extends TileEntity{
 	private byte numberBlades = 2;
 	private byte pitch = 64;
 	private byte diameter = 70;
-	private byte iron = 0;
-	private byte redstone = 0;
-	private byte propMaterialQty = 0;
 	private long timeOperationFinished = 0;
 	private ItemStack propellerOnBench = null;
 	private BenchSound benchSound;
@@ -76,45 +73,41 @@ public class TileEntityPropellerBench extends TileEntity{
 		return (byte) (diameter < 90 ? numberBlades : numberBlades*2);
 	}
 	
+	public ItemStack getPropellerOnBench(){
+		return propellerOnBench;
+	}
+	
+	public void dropPropellerAt(double x, double y, double z){
+		if(propellerOnBench != null){
+			worldObj.spawnEntityInWorld(new EntityItem(worldObj, x, y, z, propellerOnBench));
+			propellerOnBench = null;
+		}
+	}
+	
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
-    	private ItemStack propellerOnBench = null;
     	this.propellerType = tagCompound.getByte("propellerType");
     	this.numberBlades = tagCompound.getByte("numberBlades");
     	this.pitch = tagCompound.getByte("pitch");
     	this.diameter = tagCompound.getByte("diameter");
-    	this.iron = tagCompound.getByte("iron");
-    	this.redstone = tagCompound.getByte("redstone");
-    	this.propMaterialQty = tagCompound.getByte("propMaterialQty");
     	this.timeOperationFinished = tagCompound.getLong("timeOperationFinished");
-    	this.propellerOnBench = tagCompound.getByte("propellerOnBench");
-
-        NBTTagList nbttaglist = tagCompound.getTagList("Items", 10);
-        for (int i = 0; i < nbttaglist.tagCount(); ++i){
-            NBTTagCompound nbttagcompound1 = nbttaglist.getCompoundTagAt(i);
-            int j = nbttagcompound1.getByte("Slot") & 255;
-            if(j >= 0 && j < this.contents.length){
-                this.contents[j] = ItemStack.loadItemStackFromNBT(nbttagcompound1);
-            }
-        }
+    	NBTTagCompound itemTag = tagCompound.getCompoundTag("propellerOnBench");
+    	if(itemTag != null){
+    		this.propellerOnBench = ItemStack.loadItemStackFromNBT(itemTag);
+    	}
     }
     
 	@Override
     public void writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
-        tagCompound.setBoolean("isOn", this.isOn);
-        tagCompound.setShort("propertyCode", this.propertyCode);
-        tagCompound.setInteger("timeLeft", this.timeLeft);
-        NBTTagList nbttaglist = new NBTTagList();
-        for(int i = 0; i < this.contents.length; ++i){
-            if (this.contents[i] != null){
-                NBTTagCompound nbttagcompound1 = new NBTTagCompound();
-                nbttagcompound1.setByte("Slot", (byte)i);
-                this.contents[i].writeToNBT(nbttagcompound1);
-                nbttaglist.appendTag(nbttagcompound1);
-            }
+        tagCompound.setByte("propellerType", propellerType);
+        tagCompound.setByte("numberBlades", numberBlades);
+        tagCompound.setByte("pitch", pitch);
+        tagCompound.setByte("diameter", diameter);
+        tagCompound.setLong("timeOperationFinished", timeOperationFinished);
+        if(propellerOnBench != null){
+        	tagCompound.setTag("propellerOnBench", propellerOnBench.writeToNBT(new NBTTagCompound()));
         }
-        tagCompound.setTag("Items", nbttaglist);
     }
 }

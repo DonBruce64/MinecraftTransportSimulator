@@ -10,7 +10,7 @@ import minecraftflightsimulator.packets.general.PropellerBenchUpdatePacket;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -42,7 +42,7 @@ public class GUIPropellerBench extends GuiContainer{
 	private byte propPitch;
 	private byte propDiameter;
 	
-	public GUIPropellerBench(InventoryPlayer invPlayer, TileEntityPropellerBench tile){
+	public GUIPropellerBench(TileEntityPropellerBench tile, EntityPlayer player){
 		super(new ContainerPropellerBench(invPlayer, tile));
 		this.allowUserInput=true;
 		this.xSize = 226;
