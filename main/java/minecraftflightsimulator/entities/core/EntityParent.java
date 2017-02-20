@@ -149,7 +149,7 @@ public abstract class EntityParent extends EntityBase{
 			ItemStack heldStack = PlayerHelper.getHeldStack(player);
 			if(heldStack != null){
 				if(ItemStackHelper.getItemFromStack(heldStack).equals(MFSRegistry.wrench)){
-					MFS.proxy.openInstrumentGUI(this, player);
+					MFS.proxy.openGUI(this, player);
 					return true;
 				}
 			}
