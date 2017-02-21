@@ -1,5 +1,7 @@
 package minecraftflightsimulator.entities.parts;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityChild;
@@ -8,13 +10,17 @@ import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.sounds.EngineSound;
 import minecraftflightsimulator.systems.ConfigSystem;
+import minecraftflightsimulator.systems.SFXSystem;
+import minecraftflightsimulator.systems.SFXSystem.SFXEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.MovingSound;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
-public abstract class EntityEngine extends EntityChild{
+public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	protected EntityVehicle vehicle;
 	
 	//NBT data
@@ -98,14 +104,14 @@ public abstract class EntityEngine extends EntityChild{
 			}
 			if(source.isExplosion()){
 				hours += damage*10;
-				oilLeak = Math.random() > ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
-				fuelLeak = Math.random() > ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
-				brokenStarter = Math.random() > 0.05;
+				oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
+				fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
+				brokenStarter = Math.random() < 0.05;
 			}else{
 				hours += damage;
 				if(source.isProjectile()){
-					oilLeak = Math.random() > ConfigSystem.getDoubleConfig("EngineLeakProbability");
-					fuelLeak = Math.random() > ConfigSystem.getDoubleConfig("EngineLeakProbability");
+					oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
+					fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
 				}
 			}
 			this.sendDataToClient();
@@ -240,15 +246,7 @@ public abstract class EntityEngine extends EntityChild{
 				}
 			}
 		}
-		engineSound = MFS.proxy.updateEngineSoundAndSmoke(engineSound, this);
-	}
-
-	@Override
-	public void setDead(){
-		super.setDead();
-		state = EngineStates.ENGINE_OFF;
-		internalFuel = 0;
-		engineSound = MFS.proxy.updateEngineSoundAndSmoke(engineSound, this);
+		MFS.proxy.updateSFXEntity(this, worldObj);
 	}
 	
 	public void setMagnetoStatus(boolean on){
@@ -346,17 +344,59 @@ public abstract class EntityEngine extends EntityChild{
 		this.parent.removeChild(this.UUID, false);
 	}
 	
-	public EngineSound getEngineSound(){
-		if(worldObj.isRemote){
-			if(type != null){
-				return new EngineSound(new ResourceLocation("mfs:" + type.engineRunningSoundName), this, 2000F);
-			}
-		}
-		return null;
-	}
-	
 	public static int getMaxSafeRPM(int maxRPM){
 		return (maxRPM - (maxRPM - 2500)/2);
+	}
+	
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public MovingSound getNewSound(){
+		return type != null ? new EngineSound(new ResourceLocation("mfs:" + type.engineRunningSoundName), this, 2000F) : null;
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public MovingSound getCurrentSound(){
+		return engineSound;
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public void setCurrentSound(MovingSound sound){
+		engineSound = (EngineSound) sound;
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public boolean shouldSoundBePlaying(){
+		return (state.running || internalFuel > 0) && !isDead;
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public void spawnParticles(){
+		//TODO add drips here.
+		if(Minecraft.getMinecraft().effectRenderer != null){
+			if(temp > engineOverheatTemp1){
+				Minecraft.getMinecraft().theWorld.spawnParticle("smoke", posX, posY + 0.5, posZ, 0, 0.15, 0);
+				if(temp > engineOverheatTemp2){
+					Minecraft.getMinecraft().theWorld.spawnParticle("largesmoke", posX, posY + 0.5, posZ, 0, 0.15, 0);
+				}
+			}
+			if(parent != null){
+				if(oilLeak){
+					if(ticksExisted%20 == 0){
+						Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.OilDropParticleFX(worldObj, posX - 0.25*Math.sin(Math.toRadians(parent.rotationYaw)), posY, posZ + 0.25*Math.cos(Math.toRadians(parent.rotationYaw))));
+					}
+				}
+				if(fuelLeak){
+					if((ticksExisted + 5)%20 == 0){
+						Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.FuelDropParticleFX(worldObj, posX, posY, posZ));
+					}
+				}
+			}
+		}
 	}
 	
 	public enum EngineTypes{

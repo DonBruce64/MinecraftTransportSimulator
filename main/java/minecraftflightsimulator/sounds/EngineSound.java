@@ -37,7 +37,7 @@ public class EngineSound extends MovingSound{
 	
 	@Override
 	public void update(){
-		if(engine.state.running || engine.internalFuel > 0){
+		if(engine.shouldSoundBePlaying()){
 			this.xPosF = (float) engine.posX;
 			this.yPosF = (float) engine.posY;
 			this.zPosF = (float) engine.posZ;
@@ -67,6 +67,7 @@ public class EngineSound extends MovingSound{
 			}
 		}else{
 			this.donePlaying=true;
+			engine.setCurrentSound(null);
 		}
 	}
 }

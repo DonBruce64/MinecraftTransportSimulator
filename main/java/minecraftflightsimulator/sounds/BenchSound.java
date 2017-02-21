@@ -21,5 +21,8 @@ public class BenchSound extends MovingSound{
 	@Override
 	public void update(){
 		this.donePlaying = bench.isInvalid() ? true : !bench.isRunning();
+		if(donePlaying){
+			bench.setCurrentSound(null);
+		}
 	}
 }

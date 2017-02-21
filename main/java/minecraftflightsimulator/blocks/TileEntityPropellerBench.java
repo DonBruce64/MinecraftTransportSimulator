@@ -1,17 +1,21 @@
 package minecraftflightsimulator.blocks;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.packets.general.PropellerBenchSyncPacket;
 import minecraftflightsimulator.sounds.BenchSound;
+import minecraftflightsimulator.systems.SFXSystem.SFXEntity;
+import net.minecraft.client.audio.MovingSound;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-public class TileEntityPropellerBench extends TileEntity{
+public class TileEntityPropellerBench extends TileEntity implements SFXEntity{
 	public byte propellerType = 0;
 	public byte numberBlades = 2;
 	public byte pitch = 64;
@@ -49,10 +53,9 @@ public class TileEntityPropellerBench extends TileEntity{
 			}else{
 				stackTag.setFloat("health", 100);
 			}
-			//TODO send to SFX system.
 			ItemStackHelper.setStackNBT(propellerOnBench, stackTag);
 		}
-		benchSound = MFS.proxy.updateBenchSound(benchSound, this);
+		MFS.proxy.updateSFXEntity(this, worldObj);
 	}
 	
 	public boolean isRunning(){
@@ -70,6 +73,34 @@ public class TileEntityPropellerBench extends TileEntity{
 			MFS.MFSNet.sendToAll(new PropellerBenchSyncPacket(this));
 		}
 	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public MovingSound getNewSound(){
+		return new BenchSound(this);
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public MovingSound getCurrentSound(){
+		return benchSound;
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public void setCurrentSound(MovingSound sound){
+		benchSound = (BenchSound) sound;
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public boolean shouldSoundBePlaying(){
+		return this.isRunning();
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public void spawnParticles(){}
 	
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){

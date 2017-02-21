@@ -8,13 +8,10 @@ import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
-import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.entities.core.EntityChild;
-import minecraftflightsimulator.entities.parts.EntityEngine;
-import minecraftflightsimulator.sounds.BenchSound;
-import minecraftflightsimulator.sounds.EngineSound;
 import minecraftflightsimulator.systems.ConfigSystem;
 import minecraftflightsimulator.systems.ForgeContainerGUISystem;
+import minecraftflightsimulator.systems.SFXSystem.SFXEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.entity.Entity;
@@ -22,6 +19,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.World;
 
 /**Contains registration methods used by {@link MFSRegistry} and methods overridden by ClientProxy. 
  * See the latter for more info on overridden methods.
@@ -109,6 +107,5 @@ public class CommonProxy{
 	
 	public void openGUI(Object clicked, EntityPlayer clicker){}
 	public void playSound(Entity noisyEntity, String soundName, float volume, float pitch){}
-	public EngineSound updateEngineSoundAndSmoke(EngineSound sound, EntityEngine engine){return null;}
-	public BenchSound updateBenchSound(BenchSound sound, TileEntityPropellerBench bench){return null;}
+	public void updateSFXEntity(SFXEntity entity, World world){}
 }
