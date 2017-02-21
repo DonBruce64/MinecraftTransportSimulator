@@ -39,13 +39,12 @@ public class TileEntityPropellerBench extends TileEntity{
 			timeOperationFinished = 0;
 			propellerOnBench = new ItemStack(MFSRegistry.propeller, 1, propellerType);
 			NBTTagCompound stackTag = new NBTTagCompound();
-			stackTag.setInteger("model", (diameter - 70)/5*1000 + (pitch - 55)/3*100 + numberBlades*10 + propellerType);
 			stackTag.setInteger("numberBlades", numberBlades);
 			stackTag.setInteger("pitch", pitch);
 			stackTag.setInteger("diameter", diameter);
-			if(propellerType%10==1){
+			if(propellerType==1){
 				stackTag.setFloat("health", 500);
-			}else if(propellerType%10==2){
+			}else if(propellerType==2){
 				stackTag.setFloat("health", 1000);
 			}else{
 				stackTag.setFloat("health", 100);

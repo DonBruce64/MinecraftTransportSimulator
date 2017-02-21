@@ -1,5 +1,6 @@
 package minecraftflightsimulator.items;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import cpw.mods.fml.relauncher.Side;
@@ -32,7 +33,6 @@ public class ItemPropeller extends Item{
 	@Override
 	public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean p_77624_4_){
 		NBTTagCompound stackTag = ItemStackHelper.getStackNBT(stack);
-		list.add(PlayerHelper.getTranslatedText("info.item.propeller.model") + stackTag.getInteger("model"));
 		list.add(PlayerHelper.getTranslatedText("info.item.propeller.numberBlades") + stackTag.getInteger("numberBlades"));
 		list.add(PlayerHelper.getTranslatedText("info.item.propeller.pitch") + stackTag.getInteger("pitch"));
 		list.add(PlayerHelper.getTranslatedText("info.item.propeller.diameter") + stackTag.getInteger("diameter"));
@@ -42,17 +42,30 @@ public class ItemPropeller extends Item{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List itemList){
-		int[] modelList = new int[]{1520, 1530, 1540, 1521, 1531, 1541, 9521, 1522, 1532, 1542, 9522, 9532, 9542};
-		for(int model : modelList){
-			ItemStack propellerStack = new ItemStack(MFSRegistry.propeller, 1, model%10);
+		List<Byte[]> propellerList = new ArrayList<Byte[]>();
+		propellerList.add(new Byte[]{0, 2, 70, 75});
+		propellerList.add(new Byte[]{0, 3, 70, 75});
+		propellerList.add(new Byte[]{0, 4, 70, 75});
+		propellerList.add(new Byte[]{1, 2, 70, 75});
+		propellerList.add(new Byte[]{1, 3, 70, 75});
+		propellerList.add(new Byte[]{1, 4, 70, 75});
+		propellerList.add(new Byte[]{1, 2, 70, 115});
+		propellerList.add(new Byte[]{2, 2, 70, 75});
+		propellerList.add(new Byte[]{2, 3, 70, 75});
+		propellerList.add(new Byte[]{2, 4, 70, 75});
+		propellerList.add(new Byte[]{2, 2, 70, 115});
+		propellerList.add(new Byte[]{2, 3, 70, 115});
+		propellerList.add(new Byte[]{2, 4, 70, 115});
+		
+		for(Byte[] propellerProperties : propellerList){
+			ItemStack propellerStack = new ItemStack(MFSRegistry.propeller, 1, propellerProperties[0]);
 			NBTTagCompound stackTag = new NBTTagCompound();
-			stackTag.setInteger("model", model);
-			stackTag.setInteger("numberBlades", model%100/10);
-			stackTag.setInteger("pitch", 55+3*(model%1000/100));
-			stackTag.setInteger("diameter", 70+5*(model/1000));
-			if(model%10==1){
+			stackTag.setInteger("numberBlades", propellerProperties[1]);
+			stackTag.setInteger("pitch", propellerProperties[2]);
+			stackTag.setInteger("diameter", propellerProperties[3]);
+			if(propellerProperties[0]==1){
 				stackTag.setFloat("health", 500);
-			}else if(model%10==2){
+			}else if(propellerProperties[0]==2){
 				stackTag.setFloat("health", 1000);
 			}else{
 				stackTag.setFloat("health", 100);

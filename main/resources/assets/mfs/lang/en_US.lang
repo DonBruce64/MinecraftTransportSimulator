@@ -37,12 +37,10 @@ gui.instruments.idle=Select an instrument.
 gui.instruments.decide=Click an instrument to add, or CLEAR to remove.
 gui.instruments.fault=This instrument cannot go here!
 
-info.item.propeller.model=Model # 
 info.item.propeller.numberBlades=Blades: 
 info.item.propeller.pitch=Pitch: 
 info.item.propeller.diameter=Diameter: 
 info.item.propeller.health=Health: 
-info.item.engine.model=Model # 
 info.item.engine.maxrpm=Max Possible RPM: 
 info.item.engine.maxsaferpm=Max safe RPM: 
 info.item.engine.fuelconsumption=Fuel consumption (mb/t):
