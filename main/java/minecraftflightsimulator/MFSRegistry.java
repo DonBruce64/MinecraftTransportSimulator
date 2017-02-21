@@ -35,8 +35,9 @@ import minecraftflightsimulator.packets.control.RudderPacket;
 import minecraftflightsimulator.packets.control.ThrottlePacket;
 import minecraftflightsimulator.packets.control.TrimPacket;
 import minecraftflightsimulator.packets.general.ChatPacket;
-import minecraftflightsimulator.packets.general.ClientRequestDataPacket;
+import minecraftflightsimulator.packets.general.EntityClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.InstrumentFlyerPacket;
+import minecraftflightsimulator.packets.general.PropellerBenchClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.PropellerBenchSyncPacket;
 import minecraftflightsimulator.packets.general.ServerDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
@@ -152,7 +153,8 @@ public class MFSRegistry{
 		MFS.proxy.registerPacket(ServerDataPacket.class, ServerDataPacket.Handler.class, true, false);
 		MFS.proxy.registerPacket(ServerSyncPacket.class, ServerSyncPacket.Handler.class, true, false);
 		
-		MFS.proxy.registerPacket(ClientRequestDataPacket.class, ClientRequestDataPacket.Handler.class, false, true);
+		MFS.proxy.registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
+		MFS.proxy.registerPacket(PropellerBenchClientRequestDataPacket.class, PropellerBenchClientRequestDataPacket.Handler.class, false, true);
 
 		MFS.proxy.registerPacket(InstrumentFlyerPacket.class, InstrumentFlyerPacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(PropellerBenchSyncPacket.class, PropellerBenchSyncPacket.Handler.class, true, true);

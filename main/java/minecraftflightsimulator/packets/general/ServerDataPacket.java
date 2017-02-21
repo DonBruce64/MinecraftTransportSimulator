@@ -1,15 +1,14 @@
 package minecraftflightsimulator.packets.general;
 
+import cpw.mods.fml.common.network.ByteBufUtils;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.entities.core.EntityBase;
 import minecraftflightsimulator.entities.core.EntityParent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
-import cpw.mods.fml.common.network.ByteBufUtils;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import cpw.mods.fml.relauncher.Side;
 
 public class ServerDataPacket implements IMessage{
 	private int id;
@@ -37,7 +36,7 @@ public class ServerDataPacket implements IMessage{
 	public static class Handler implements IMessageHandler<ServerDataPacket, IMessage> {
 		@Override
 		public IMessage onMessage(ServerDataPacket message, MessageContext ctx) {
-			if(ctx.side==Side.CLIENT){
+			if(ctx.side.isClient()){
 				EntityBase thisEntity = (EntityBase) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 				if(thisEntity != null){
 					thisEntity.readFromNBT(message.tagCompound);

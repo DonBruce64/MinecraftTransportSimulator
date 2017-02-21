@@ -3,7 +3,7 @@ package minecraftflightsimulator.entities.core;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.packets.general.ClientRequestDataPacket;
+import minecraftflightsimulator.packets.general.EntityClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.ServerDataPacket;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -76,7 +76,7 @@ public abstract class EntityBase extends Entity{
     }
 	
 	public void requestDataFromServer(){
-		MFS.MFSNet.sendToServer(new ClientRequestDataPacket(this.getEntityId()));
+		MFS.MFSNet.sendToServer(new EntityClientRequestDataPacket(this.getEntityId()));
 	}
 	
 	public void sendDataToClient(){

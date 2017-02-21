@@ -1,19 +1,18 @@
 package minecraftflightsimulator.packets.general;
 
-import io.netty.buffer.ByteBuf;
-import minecraftflightsimulator.entities.core.EntityBase;
-import net.minecraft.nbt.NBTTagCompound;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import cpw.mods.fml.relauncher.Side;
+import io.netty.buffer.ByteBuf;
+import minecraftflightsimulator.entities.core.EntityBase;
+import net.minecraft.nbt.NBTTagCompound;
 
-public class ClientRequestDataPacket implements IMessage{
+public class EntityClientRequestDataPacket implements IMessage{
 	private int id;
 
-	public ClientRequestDataPacket() { }
+	public EntityClientRequestDataPacket() { }
 	
-	public ClientRequestDataPacket(int id){
+	public EntityClientRequestDataPacket(int id){
 		this.id=id;
 	}
 	
@@ -27,10 +26,10 @@ public class ClientRequestDataPacket implements IMessage{
 		buf.writeInt(this.id);
 	}
 
-	public static class Handler implements IMessageHandler<ClientRequestDataPacket, ServerDataPacket> {
+	public static class Handler implements IMessageHandler<EntityClientRequestDataPacket, ServerDataPacket> {
 		@Override
-		public ServerDataPacket onMessage(ClientRequestDataPacket message, MessageContext ctx) {
-			if(ctx.side==Side.SERVER){
+		public ServerDataPacket onMessage(EntityClientRequestDataPacket message, MessageContext ctx) {
+			if(ctx.side.isServer()){
 				EntityBase thisEntity = (EntityBase) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 				if(thisEntity!=null){
 					NBTTagCompound tagCompound = new NBTTagCompound();

@@ -1,13 +1,12 @@
 package minecraftflightsimulator.packets.general;
 
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import cpw.mods.fml.relauncher.Side;
 
 public class ServerSyncPacket implements IMessage{
 	private int id;
@@ -67,7 +66,7 @@ public class ServerSyncPacket implements IMessage{
 	public static class Handler implements IMessageHandler<ServerSyncPacket, IMessage>{
 		@Override
 		public IMessage onMessage(ServerSyncPacket message, MessageContext ctx) {
-			if(ctx.side==Side.CLIENT){
+			if(ctx.side.isClient()){
 				EntityParent thisEntity = (EntityParent) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 				if(thisEntity != null){
 					byte syncThreshold = (byte) ConfigSystem.getIntegerConfig("SyncThreshold");

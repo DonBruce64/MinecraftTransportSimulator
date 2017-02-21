@@ -3,7 +3,6 @@ package minecraftflightsimulator.packets.general;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import cpw.mods.fml.relauncher.Side;
 import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
@@ -48,7 +47,7 @@ public class InstrumentFlyerPacket implements IMessage{
 		public IMessage onMessage(InstrumentFlyerPacket message, MessageContext ctx){
 			EntityVehicle vehicle;
 			EntityPlayer player;
-			if(ctx.side==Side.SERVER){
+			if(ctx.side.isServer()){
 				vehicle = (EntityVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 				player = (EntityPlayer) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.player);
 			}else{
@@ -64,7 +63,7 @@ public class InstrumentFlyerPacket implements IMessage{
 							}
 						}
 						vehicle.instruments.remove(message.instrumentToChange);
-						if(ctx.side==Side.SERVER){
+						if(ctx.side.isServer()){
 							MFS.MFSNet.sendToAll(message);
 						}
 					}
@@ -83,7 +82,7 @@ public class InstrumentFlyerPacket implements IMessage{
 										}
 									}
 									vehicle.instruments.put(message.instrumentToChange, message.instrumentToChangeTo);
-									if(ctx.side==Side.SERVER){
+									if(ctx.side.isServer()){
 										MFS.MFSNet.sendToAll(message);
 									}
 								}
@@ -91,7 +90,7 @@ public class InstrumentFlyerPacket implements IMessage{
 						}
 					}else{
 						vehicle.instruments.put(message.instrumentToChange, message.instrumentToChangeTo);
-						if(ctx.side==Side.SERVER){
+						if(ctx.side.isServer()){
 							MFS.MFSNet.sendToAll(message);
 						}
 					}
