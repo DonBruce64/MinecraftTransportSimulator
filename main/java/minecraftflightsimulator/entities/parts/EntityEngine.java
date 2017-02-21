@@ -376,7 +376,6 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void spawnParticles(){
-		//TODO add drips here.
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			if(temp > engineOverheatTemp1){
 				Minecraft.getMinecraft().theWorld.spawnParticle("smoke", posX, posY + 0.5, posZ, 0, 0.15, 0);
