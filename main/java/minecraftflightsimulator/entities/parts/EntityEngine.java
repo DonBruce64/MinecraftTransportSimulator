@@ -28,7 +28,6 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	public boolean oilLeak;
 	public boolean fuelLeak;
 	public boolean brokenStarter;
-	public int model;
 	public int maxRPM;
 	public int maxSafeRPM;
 	public float fuelConsumption;
@@ -73,7 +72,6 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		oilLeak=stackNBT.getBoolean("oilLeak");
 		fuelLeak=stackNBT.getBoolean("fuelLeak");
 		brokenStarter=stackNBT.getBoolean("brokenStarter");
-		model = stackNBT.getInteger("model");
 		hours = stackNBT.getDouble("hours");
 		maxRPM = stackNBT.getInteger("maxRPM");
 		maxSafeRPM = stackNBT.getInteger("maxSafeRPM");
@@ -87,7 +85,6 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		tag.setBoolean("oilLeak", this.oilLeak);
 		tag.setBoolean("fuelLeak", this.fuelLeak);
 		tag.setBoolean("brokenStarter", this.brokenStarter);
-		tag.setInteger("model", model);
 		tag.setInteger("maxRPM", maxRPM);
 		tag.setInteger("maxSafeRPM", maxSafeRPM);
 		tag.setFloat("fuelConsumption", fuelConsumption);
@@ -399,10 +396,10 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	}
 	
 	public enum EngineTypes{
-		PLANE_SMALL((byte) 4, (byte) 50, 1.0F, "small_engine_running", "small_engine_cranking", (short) 2703, (short) 2904), 
-		PLANE_LARGE((byte) 22, (byte) 25, 1.2F, "large_engine_running", "large_engine_cranking", (short) 2005, (short) 2407),
-		HELICOPTER((byte) 100, (byte) 100, 1.2F, "helicopter_engine_running", "helicopter_engine_cranking", (short) 3500, (short) 3700),
-		VEHICLE((byte) 100, (byte) 100, 1.2F, "vehicle_engine_running", "vehicle_engine_cranking", (short) 3500, (short) 3700);
+		PLANE_SMALL((byte) 4, (byte) 50, 1.0F, "small_engine_running", "small_engine_cranking", new EngineProperties[]{new EngineProperties(2700, 0.3F), new EngineProperties(2900, 0.4F)}), 
+		PLANE_LARGE((byte) 22, (byte) 25, 1.2F, "large_engine_running", "large_engine_cranking", new EngineProperties[]{new EngineProperties(2000, 0.5F), new EngineProperties(2400, 0.7F)}),
+		HELICOPTER((byte) 100, (byte) 100, 1.2F, "helicopter_engine_running", "helicopter_engine_cranking", new EngineProperties[]{new EngineProperties(500, 0.1F), new EngineProperties(600, 0.15F)}),
+		VEHICLE((byte) 100, (byte) 100, 1.2F, "vehicle_engine_running", "vehicle_engine_cranking", new EngineProperties[]{new EngineProperties(5500, 0.2F), new EngineProperties(6500, 0.4F)});
 		//TODO find other sounds
 		
 		public final byte starterIncrement;
@@ -410,14 +407,24 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		public final float size;
 		public final String engineRunningSoundName;
 		public final String engineCrankingSoundName;
-		public final short[] defaultSubtypes;
-		private EngineTypes(byte starterIncrement, byte starterPower, float size, String engineRunningSoundName, String engineCrankingSoundName, short... defaultSubtypes){
+		public final EngineProperties[] defaultSubtypes;
+		private EngineTypes(byte starterIncrement, byte starterPower, float size, String engineRunningSoundName, String engineCrankingSoundName, EngineProperties[] defaultSubtypes){
 			this.starterIncrement = starterIncrement;
 			this.starterPower = starterPower;
 			this.size = size;
 			this.engineRunningSoundName = engineRunningSoundName;
 			this.engineCrankingSoundName = engineCrankingSoundName;
 			this.defaultSubtypes = defaultSubtypes;
+		}
+		
+		public static class EngineProperties{
+			public final int maxRPM;
+			public final float fuelConsumption;
+			
+			public EngineProperties(int maxRPM, float fuelConsumption){
+				this.maxRPM = maxRPM;
+				this.fuelConsumption = fuelConsumption;
+			}
 		}
 	}
 	
@@ -456,7 +463,6 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		this.oilLeak=tagCompound.getBoolean("oilLeak");
 		this.fuelLeak=tagCompound.getBoolean("fuelLeak");
 		this.brokenStarter=tagCompound.getBoolean("brokenStarter");
-		this.model=tagCompound.getInteger("model");
 		this.maxRPM=tagCompound.getInteger("maxRPM");
 		this.maxSafeRPM=tagCompound.getInteger("maxSafeRPM");
 		this.fuelConsumption=tagCompound.getFloat("fuelConsumption");
@@ -474,7 +480,6 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		tagCompound.setBoolean("oilLeak", this.oilLeak);
 		tagCompound.setBoolean("fuelLeak", this.fuelLeak);
 		tagCompound.setBoolean("brokenStarter", this.brokenStarter);
-		tagCompound.setInteger("model", this.model);
 		tagCompound.setInteger("maxRPM", this.maxRPM);
 		tagCompound.setInteger("maxSafeRPM", this.maxSafeRPM);
 		tagCompound.setFloat("fuelConsumption", this.fuelConsumption);

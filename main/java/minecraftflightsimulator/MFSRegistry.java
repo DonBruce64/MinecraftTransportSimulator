@@ -309,28 +309,28 @@ public class MFSRegistry{
 	
 	private void initEngineRecipes(){
 		//New engines
-		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[0]),
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[0]),
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.piston, 
 				'B', Blocks.obsidian,
 				'C', Items.iron_ingot);
-		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[1]),
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[1]),
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.piston, 
 				'B', Blocks.obsidian,
 				'C', Items.diamond);
-		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[0]),
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[0]),
 				"ACA",
 				"ACA",
 				"ACA",
 				'A', Blocks.piston, 
 				'B', Blocks.obsidian,
 				'C', Items.iron_ingot);
-		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[1]),
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[1]),
 				"ACA",
 				"ACA",
 				"ACA",
@@ -339,30 +339,30 @@ public class MFSRegistry{
 				'C', Items.diamond);
 		
 		//Repaired engines
-		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[0]),
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[0]),
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.obsidian,
-				'C', ItemEngine.getItemStackForType(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[0]));
-		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[1]),
+				'C', ItemEngine.getItemStackForProperties(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[0]));
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[1]),
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.obsidian,
-				'C', ItemEngine.getItemStackForType(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[1]));
-		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[0]),
+				'C', ItemEngine.getItemStackForProperties(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[1]));
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[0]),
 				"B B",
 				"BCB",
 				"B B",
 				'B', Blocks.obsidian,
-				'C', ItemEngine.getItemStackForType(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[0]));
-		MFS.proxy.registerRecpie(ItemEngine.getItemStackForType(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[1]),
+				'C', ItemEngine.getItemStackForProperties(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[0]));
+		MFS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[1]),
 				"B B",
 				"BCB",
 				"B B",
 				'B', Blocks.obsidian,
-				'C', ItemEngine.getItemStackForType(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[1]));
+				'C', ItemEngine.getItemStackForProperties(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[1]));
 	}
 	
 	private void initFlightInstrumentRecipes(){

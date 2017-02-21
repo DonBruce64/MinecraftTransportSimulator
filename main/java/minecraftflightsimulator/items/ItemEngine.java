@@ -8,6 +8,7 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntityEngine.EngineTypes;
+import minecraftflightsimulator.entities.parts.EntityEngine.EngineTypes.EngineProperties;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -38,7 +39,6 @@ public class ItemEngine extends Item{
 		if(stackTag.getFloat("fuelConsumption") == 0){
 			list.add(EnumChatFormatting.DARK_PURPLE + PlayerHelper.getTranslatedText("info.item.engine.creative"));
 		}
-		list.add(PlayerHelper.getTranslatedText("info.item.engine.model") + stackTag.getInteger("model"));
 		list.add(PlayerHelper.getTranslatedText("info.item.engine.maxrpm") + stackTag.getInteger("maxRPM"));
 		list.add(PlayerHelper.getTranslatedText("info.item.engine.maxsaferpm") + stackTag.getInteger("maxSafeRPM"));
 		list.add(PlayerHelper.getTranslatedText("info.item.engine.fuelconsumption") + stackTag.getFloat("fuelConsumption"));
@@ -54,17 +54,12 @@ public class ItemEngine extends Item{
 		}
 	}
 	
-	public static ItemStack getItemStackForType(EngineTypes type, short subtype){
+	public static ItemStack getItemStackForProperties(EngineTypes type, EngineProperties properties){
 		ItemStack engineStack = new ItemStack(MFSRegistry.engine, 1, type.ordinal());
-		int model = subtype;
-		int maxEngineRPM = (model/((int) 100))*100;
-		int maxSafeRPM = EntityEngine.getMaxSafeRPM(maxEngineRPM);
-		float fuelConsumption = (model%100)/10F;
 		NBTTagCompound stackTag = new NBTTagCompound();
-		stackTag.setInteger("model", model);
-		stackTag.setInteger("maxRPM", maxEngineRPM);
-		stackTag.setInteger("maxSafeRPM", maxSafeRPM);
-		stackTag.setFloat("fuelConsumption",fuelConsumption);
+		stackTag.setInteger("maxRPM", properties.maxRPM);
+		stackTag.setInteger("maxSafeRPM", EntityEngine.getMaxSafeRPM(properties.maxRPM));
+		stackTag.setFloat("fuelConsumption", properties.fuelConsumption);
 		stackTag.setDouble("hours", 0);
 		ItemStackHelper.setStackNBT(engineStack, stackTag);
 		return engineStack;
@@ -74,12 +69,12 @@ public class ItemEngine extends Item{
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List itemList){
 		for(EngineTypes type : EngineTypes.values()){
-			short subtype = 0;
+			EngineProperties properties = null;
 			for(byte i=0; i<type.defaultSubtypes.length; ++i){
-				subtype = type.defaultSubtypes[i];
-				itemList.add(getItemStackForType(type, subtype));
+				properties = type.defaultSubtypes[i];
+				itemList.add(getItemStackForProperties(type, properties));
 			}
-			itemList.add(getItemStackForType(type, (short) (subtype - subtype%100)));
+			itemList.add(getItemStackForProperties(type, new EngineProperties(properties.maxRPM, 0.0F)));
 		}
     }
 	//DEL180START
