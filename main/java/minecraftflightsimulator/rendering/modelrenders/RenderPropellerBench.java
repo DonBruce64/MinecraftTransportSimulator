@@ -32,7 +32,6 @@ public class RenderPropellerBench extends RenderTileBase{
 			if(bench.getWorldObj().getTotalWorldTime() != lastOperationTime){
 				//Only update table on each tick.  MUCH simpler this way.
 				lastOperationTime = bench.getWorldObj().getTotalWorldTime();
-				System.out.println(timeLeft);
 				if(timeLeft > 955){
 					tableTranslationX -= 0.5F/50F;
 					tableTranslationZ += 0.2F/50F;

@@ -36,8 +36,6 @@ public class TileEntityPropellerBench extends TileEntity{
 	@Override
 	public void updateEntity(){
 		if(timeOperationFinished == worldObj.getTotalWorldTime()){
-			timeOperationFinished = worldObj.getTotalWorldTime() + 1000;
-			/*
 			timeOperationFinished = 0;
 			propellerOnBench = new ItemStack(MFSRegistry.propeller, 1, propellerType);
 			NBTTagCompound stackTag = new NBTTagCompound();
@@ -54,7 +52,6 @@ public class TileEntityPropellerBench extends TileEntity{
 			}
 			//TODO send to SFX system.
 			ItemStackHelper.setStackNBT(propellerOnBench, stackTag);
-			*/
 		}
 		benchSound = MFS.proxy.updateBenchSound(benchSound, this);
 	}
