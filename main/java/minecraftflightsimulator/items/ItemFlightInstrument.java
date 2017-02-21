@@ -1,6 +1,5 @@
 package minecraftflightsimulator.items;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import cpw.mods.fml.relauncher.Side;
@@ -15,7 +14,7 @@ import net.minecraft.util.IIcon;
 import net.minecraft.util.StatCollector;
 
 public class ItemFlightInstrument extends Item{
-	private static List<IIcon> iconList = new ArrayList<IIcon>();
+	private IIcon[] icons = new IIcon[AircraftInstruments.AircraftGauges.values().length];
 	
 	public ItemFlightInstrument(){
 		this.hasSubtypes = true;
@@ -43,14 +42,14 @@ public class ItemFlightInstrument extends Item{
     @SideOnly(Side.CLIENT)
     public void registerIcons(IIconRegister register){
     	for(int i=0; i<AircraftInstruments.AircraftGauges.values().length; ++i){
-    		iconList.add(register.registerIcon("mfs:flightinstrument" + i));
+    		icons[0] = register.registerIcon("mfs:flightinstrument" + i);
     	}
     }
     
     @Override
     @SideOnly(Side.CLIENT)
     public IIcon getIconFromDamage(int damage){
-    	return iconList.get(damage);
+    	return this.icons[damage > AircraftInstruments.AircraftGauges.values().length ? 0 : damage];
     }
     //DEL180END
 }
