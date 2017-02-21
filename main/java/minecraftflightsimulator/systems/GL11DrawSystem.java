@@ -33,6 +33,7 @@ public final class GL11DrawSystem{
 	 */
 	public static void drawString(String string, int x, int y, Color color){
 		fontRenderer.drawString(string, x, y, color.getRGB());
+		GL11.glColor3f(1, 1, 1);
 	}
 	
 	/**
