@@ -20,10 +20,6 @@ public class BenchSound extends MovingSound{
 	
 	@Override
 	public void update(){
-		if(bench.isInvalid()){
-			this.donePlaying = true;
-		}else{
-			this.donePlaying = !bench.isOn;
-		}
+		this.donePlaying = bench.isInvalid() ? true : !bench.isRunning();
 	}
 }

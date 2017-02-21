@@ -38,7 +38,6 @@ import minecraftflightsimulator.packets.general.ChatPacket;
 import minecraftflightsimulator.packets.general.ClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.InstrumentFlyerPacket;
 import minecraftflightsimulator.packets.general.PropellerBenchSyncPacket;
-import minecraftflightsimulator.packets.general.PropellerBenchUpdatePacket;
 import minecraftflightsimulator.packets.general.ServerDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import minecraftflightsimulator.planes.Comanche.EntityComanche;
@@ -156,8 +155,7 @@ public class MFSRegistry{
 		MFS.proxy.registerPacket(ClientRequestDataPacket.class, ClientRequestDataPacket.Handler.class, false, true);
 
 		MFS.proxy.registerPacket(InstrumentFlyerPacket.class, InstrumentFlyerPacket.Handler.class, true, true);
-		MFS.proxy.registerPacket(PropellerBenchUpdatePacket.class, PropellerBenchUpdatePacket.Handler.class, true, true);
-		MFS.proxy.registerPacket(PropellerBenchSyncPacket.class, PropellerBenchSyncPacket.Handler.class, false, true);
+		MFS.proxy.registerPacket(PropellerBenchSyncPacket.class, PropellerBenchSyncPacket.Handler.class, true, true);
 		
 		MFS.proxy.registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);

@@ -4,10 +4,8 @@ import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import cpw.mods.fml.relauncher.Side;
 import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
-import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 
@@ -44,13 +42,16 @@ public class PropellerBenchSyncPacket implements IMessage{
 
 	public static class Handler implements IMessageHandler<PropellerBenchSyncPacket, IMessage> {
 		public IMessage onMessage(PropellerBenchSyncPacket message, MessageContext ctx){
-			if(ctx.side==Side.CLIENT){
-				TileEntityPropellerBench bench = (TileEntityPropellerBench) BlockHelper.getTileEntityFromCoords(Minecraft.getMinecraft().theWorld, message.x, message.y, message.z);
-				if(bench != null){
-					bench.readFromNBT(message.tag);
-				}
+			TileEntityPropellerBench bench;
+			if(ctx.side.isServer()){
+				bench = (TileEntityPropellerBench) ctx.getServerHandler().playerEntity.worldObj.getTileEntity(message.x, message.y, message.z);
+			}else{
+				bench = (TileEntityPropellerBench) Minecraft.getMinecraft().theWorld.getTileEntity(message.x, message.y, message.z);
 			}
-			return null;
+			if(bench != null){
+				bench.readFromNBT(message.tag);
+			}
+			return ctx.side.isServer() ? message : null;
 		}
 	}	
 }

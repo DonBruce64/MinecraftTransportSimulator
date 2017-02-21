@@ -6,21 +6,20 @@ import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.packets.general.PropellerBenchSyncPacket;
 import minecraftflightsimulator.sounds.BenchSound;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 public class TileEntityPropellerBench extends TileEntity{
-	private byte propellerType = 0;
-	private byte numberBlades = 2;
-	private byte pitch = 64;
-	private byte diameter = 70;
+	public byte propellerType = 0;
+	public byte numberBlades = 2;
+	public byte pitch = 64;
+	public byte diameter = 70;
+	public long timeOperationFinished = 0;
+	
 	private ItemStack propellerOnBench = null;
 	private BenchSound benchSound;
-	
-	public long timeOperationFinished = 0;
 	
 	public TileEntityPropellerBench(){
 		super();
@@ -37,8 +36,10 @@ public class TileEntityPropellerBench extends TileEntity{
 	@Override
 	public void updateEntity(){
 		if(timeOperationFinished == worldObj.getTotalWorldTime()){
+			timeOperationFinished = worldObj.getTotalWorldTime() + 1000;
+			/*
 			timeOperationFinished = 0;
-			propellerOnBench = new ItemStack(MFSRegistry.propeller);
+			propellerOnBench = new ItemStack(MFSRegistry.propeller, 1, propellerType);
 			NBTTagCompound stackTag = new NBTTagCompound();
 			stackTag.setInteger("model", (diameter - 70)/5*1000 + (pitch - 55)/3*100 + numberBlades*10 + propellerType);
 			stackTag.setInteger("numberBlades", numberBlades);
@@ -53,25 +54,13 @@ public class TileEntityPropellerBench extends TileEntity{
 			}
 			//TODO send to SFX system.
 			ItemStackHelper.setStackNBT(propellerOnBench, stackTag);
+			*/
 		}
 		benchSound = MFS.proxy.updateBenchSound(benchSound, this);
 	}
 	
 	public boolean isRunning(){
 		return timeOperationFinished != 0 && timeOperationFinished > worldObj.getTotalWorldTime();
-	}
-	
-	public Item getMaterialItem(){
-		switch(propellerType){
-			case(0): return ItemStackHelper.getItemByName("planks");
-			case(1): return ItemStackHelper.getItemByName("iron_ingot");
-			case(2): return ItemStackHelper.getItemByName("obsidian");
-			default: return null;
-		}
-	}
-	
-	public byte getQtyRequiredMaterial(){
-		return (byte) (diameter < 90 ? numberBlades : numberBlades*2);
 	}
 	
 	public ItemStack getPropellerOnBench(){
@@ -82,6 +71,7 @@ public class TileEntityPropellerBench extends TileEntity{
 		if(propellerOnBench != null){
 			worldObj.spawnEntityInWorld(new EntityItem(worldObj, x, y, z, propellerOnBench));
 			propellerOnBench = null;
+			MFS.MFSNet.sendToAll(new PropellerBenchSyncPacket(this));
 		}
 	}
 	

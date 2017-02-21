@@ -18,30 +18,45 @@ public class RenderPropellerBench extends RenderTileBase{
 	private static final ResourceLocation tierThreeTexture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
 	private static final ResourceLocation benchTexture = new ResourceLocation("mfs", "textures/parts/propellerbench.png");
 	
-	private static final int moveEndTime = 35;
 	private TileEntityPropellerBench bench;
-	private float tableTranslation;
-	private float bodyTranslation;
+	private float tableTranslationX;
+	private float tableTranslationZ;
 	private float bitRotation;
+	private float lastOperationTime;
 
 	@Override
 	public void doRender(TileEntity tile, double x, double y, double z){
 		this.bench = (TileEntityPropellerBench) tile;
-		
-		if(bench.timeLeft > bench.opTime - moveEndTime){
-			tableTranslation = 0.5F*(moveEndTime - bench.timeLeft%(bench.opTime-moveEndTime))/moveEndTime;
-			bodyTranslation = 0;
-			bitRotation = 0;
-		}else if(bench.timeLeft > moveEndTime){
-			tableTranslation = 1F*(bench.timeLeft - moveEndTime)/(bench.opTime - 2*moveEndTime) - 0.5F;
-			bodyTranslation = (float) (Math.cos(50*Math.PI*(bench.timeLeft-moveEndTime)/(bench.opTime - 2*moveEndTime))/6 - 1/6F);
-			bitRotation = bench.isOn ? (--bitRotation)%360 : 0;
-		}else if(bench.timeLeft > 0){
-			tableTranslation = -0.5F*bench.timeLeft/moveEndTime;
-			bodyTranslation = 0;
-			bitRotation = 0;
+		if(bench.isRunning()){
+			short timeLeft = (short) (bench.timeOperationFinished - bench.getWorldObj().getTotalWorldTime());
+			if(bench.getWorldObj().getTotalWorldTime() != lastOperationTime){
+				//Only update table on each tick.  MUCH simpler this way.
+				lastOperationTime = bench.getWorldObj().getTotalWorldTime();
+				System.out.println(timeLeft);
+				if(timeLeft > 955){
+					tableTranslationX -= 0.5F/50F;
+					tableTranslationZ += 0.2F/50F;
+				}else if(timeLeft > 45){
+					if(timeLeft%100 >= 45 && timeLeft%100 <= 55){
+						tableTranslationZ -= 0.05F/10F;
+					}else{
+						if((timeLeft + 50)%200 >= 100){
+							tableTranslationX += 0.5F/50F;
+						}else{
+							tableTranslationX -= 0.5F/50F;
+						}
+					}
+				}else{
+					tableTranslationX -= 0.5F/50F;
+					tableTranslationZ += 0.35F/45F;
+				}
+			}else if(timeLeft > 45 && timeLeft <= 955){
+				bitRotation = (--bitRotation)%360;
+			}
 		}else{
-			tableTranslation = bodyTranslation = bitRotation = 0;
+			tableTranslationX = 0;
+			tableTranslationZ = 0;
+			bitRotation = 0;
 		}
 		
 		GL11.glPushMatrix();
@@ -49,44 +64,64 @@ public class RenderPropellerBench extends RenderTileBase{
 		GL11.glRotatef(180, 1, 0, 0);
 		GL11DrawSystem.bindTexture(benchTexture);
 		benchModel.renderBase();
-		GL11.glTranslatef(tableTranslation, 0, 0);
+		GL11.glTranslatef(tableTranslationX, 0, tableTranslationZ);
 		benchModel.renderTable();
 		renderMaterial(bench);
-		GL11.glTranslatef(-tableTranslation, 0, bodyTranslation);
+		GL11DrawSystem.bindTexture(benchTexture);
+		GL11.glTranslatef(-tableTranslationX, 0, -tableTranslationZ);
+		GL11.glTranslatef(0, 0, -0.25F);
 		benchModel.renderBody();
 		benchModel.renderBit(bitRotation);
 		GL11.glPopMatrix();
 	}
 
-	private static void renderMaterial(TileEntityPropellerBench bench){
-		switch(bench.propertyCode%10){
+	private void renderMaterial(TileEntityPropellerBench bench){
+		switch(bench.propellerType){
 			case 0: GL11DrawSystem.bindTexture(tierOneTexture); break;
 			case 1: GL11DrawSystem.bindTexture(tierTwoTexture); break;
 			case 2: GL11DrawSystem.bindTexture(tierThreeTexture); break;
 		}
 		
-		if(bench.timeLeft > moveEndTime){
-			float progress;
-			if(bench.timeLeft > bench.opTime - moveEndTime){
-				progress = 0;
+		short timeLeft = (short) (bench.timeOperationFinished - bench.getWorldObj().getTotalWorldTime());
+		//short timeLeft = 710;
+		GL11.glPushMatrix();
+		GL11.glTranslatef(0.5F, -0.8F, 0);
+		if(timeLeft > 955){
+			GL11DrawSystem.renderSquare(0.5, -0.5, 0, 0.24, 0.25, 0.25, false);
+			GL11DrawSystem.renderSquare(-0.5, -0.5, 0, 0.24, 0.25, 1, false);
+			GL11DrawSystem.renderSquare(0.5, 0.5, 0, 0.24, 1, 0.25, false);
+			GL11DrawSystem.renderSquare(-0.5, 0.5, 0, 0.24, 1, 1, false);
+			GL11DrawSystem.renderQuad(-0.5, -0.5, 0.5, 0.5, 0, 0, 0, 0, 1, 0.25, 0.25, 1, false);
+		}else if(timeLeft > 50){
+			//Rear part
+			if(timeLeft > 150){
+				GL11DrawSystem.renderSquare(-0.5, 0.5, 0, 0.24, 1, 1, false);
 			}else{
-				progress = 1F*(bench.opTime - bench.timeLeft - 2*moveEndTime)/(bench.opTime - 2*moveEndTime); 
+				GL11DrawSystem.renderSquareUV(-0.5, (timeLeft - 50)/100F - 0.5, 0, 0.24, 1, 1, 0, (timeLeft - 50)/100F, 0, 1, false);
 			}
-			GL11DrawSystem.renderSquare(progress, progress, -0.8, -0.56, 0.25, 1, false);
-			GL11DrawSystem.renderSquareUV(progress, 1, -0.8, -0.56, 1, 1, progress, 1, 0, 1, false);
-			GL11DrawSystem.renderSquareUV(1, progress, -0.8, -0.56, 0.25, 0.25, 0, 1 - progress, 0, 1, false);
-			GL11DrawSystem.renderSquare(1, 1, -0.8, -0.56, 1, 0.25, false);
-			GL11DrawSystem.renderQuadUV(progress,  progress, 1, 1, -0.8, -0.8, -0.8, -0.8, 1, 0.25, 0.25, 1, progress, 1, 0, 1, false);
+			//Inner part
+			if(timeLeft > 150){
+				GL11DrawSystem.renderSquare(0.5, -0.5, 0, 0.24, 0.5 - tableTranslationZ, 0.5 - tableTranslationZ, false);
+			}else{
+				GL11DrawSystem.renderSquareUV(-tableTranslationX, -0.5, 0, 0.24, 1, 1, 0.5 + tableTranslationX, 1, 0, 1, false);
+			}
+			
+			//Front part
+			if((timeLeft + 50)%200 >= 100){
+				GL11DrawSystem.renderSquareUV(-tableTranslationX, -0.5, 0, 0.24, 0.4 - tableTranslationZ, 0.4 - tableTranslationZ, 0.5 + tableTranslationX, 1, 0, 1, false);
+			}else{
+				GL11DrawSystem.renderSquareUV(0.5, -tableTranslationX, 0, 0.24, 0.4 - tableTranslationZ, 0.4 - tableTranslationZ, 0, 0.5 + tableTranslationX, 0, 1, false);				
+			}
+		}else{
+			if((timeLeft >= 0 && bench.isRunning()) || bench.getPropellerOnBench() != null){
+				GL11.glPushMatrix();
+				GL11.glTranslatef(0.5F, 0.1F, 0.75F);
+				GL11.glRotatef(270, 1, 0, 0);
+				GL11.glScalef(0.25F, 0.25F, 0.25F);
+				propellerModel.renderPropeller(bench.numberBlades, bench.diameter, 0);
+				GL11.glPopMatrix();
+			}
 		}
-		
-		if(bench.timeLeft > 0 || (bench.timeLeft == 0 && bench.isOn) || bench.getStackInSlot(3) != null){
-			GL11.glPushMatrix();
-			GL11.glTranslatef(0.5F, -0.7F, 0.75F);
-			GL11.glRotatef(270, 1, 0, 0);
-			GL11.glScalef(0.25F, 0.25F, 0.25F);
-			propellerModel.renderPropeller(bench.propertyCode%100/10, 70+5*(bench.propertyCode/1000), 0);
-			GL11.glPopMatrix();
-		}
-		GL11DrawSystem.bindTexture(benchTexture);
+		GL11.glPopMatrix();
 	}
 }

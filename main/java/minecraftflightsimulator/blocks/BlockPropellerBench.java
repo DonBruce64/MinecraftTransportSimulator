@@ -16,25 +16,23 @@ public class BlockPropellerBench extends BlockContainer{
 
 	public BlockPropellerBench(){
 		super(Material.iron);
+		this.setHardness(5.0F);
+		this.setResistance(10.0F);
 	}
 	
 	@Override
 	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float hitX, float hitY, float hitZ){
 		if(player.getDistance(x, y, z) < 5){
 			TileEntityPropellerBench bench = (TileEntityPropellerBench) BlockHelper.getTileEntityFromCoords(world, x, y, z);
-			if(!world.isRemote && player.isSneaking()){
-				bench.dropPropellerAt(player.posX, player.posY, player.posZ);
-			}else if(!player.isSneaking()){
-				if(bench.getPropellerOnBench() == null){
-					if(bench.timeOperationFinished == 0){
-						if(world.isRemote){
-							MFS.proxy.openGUI(BlockHelper.getTileEntityFromCoords(world, x, y, z), player);
-						}
-					}else if(!world.isRemote){
-						MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.failure.propellerbenchworking")), (EntityPlayerMP) player);
-					}
-				}else if(!world.isRemote){
-					MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.failure.propellerbenchfull")), (EntityPlayerMP) player);
+			if(!world.isRemote){
+				if(bench.getPropellerOnBench() != null){
+					bench.dropPropellerAt(player.posX, player.posY, player.posZ);
+				}else if(bench.isRunning()){
+					MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.failure.propellerbenchworking")), (EntityPlayerMP) player);
+				}
+			}else{
+				if(!bench.isRunning() && bench.getPropellerOnBench() == null){
+					MFS.proxy.openGUI(BlockHelper.getTileEntityFromCoords(world, x, y, z), player);
 				}
 			}
 		}
