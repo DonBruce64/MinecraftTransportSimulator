@@ -38,13 +38,15 @@ public class GUIConfig extends GuiScreen{
 	private Component[] joystickComponents;
 	
 	private GuiButton configButton;
-	private GuiButton keyboardButton1;
-	private GuiButton keyboardButton2;
+	private GuiButton planeButton;
+	private GuiButton helicopterButton;
+	private GuiButton vehicleButton;
 	private GuiButton joystickButton;
 	
 	private GuiButton throttleKillsButton;
 	private GuiButton seaLevelOffsetButton;
 	private GuiButton electricStartButton;
+	private GuiButton xaerosCompatibilityButton;
 	private GuiTextField joystickForceFactor;
 	private GuiTextField controlSurfaceCooldown;
 	private GuiTextField joystickDeadZone;
@@ -63,8 +65,9 @@ public class GUIConfig extends GuiScreen{
 	private List<GuiButton> analogAssignButtons = new ArrayList<GuiButton>();
 	private List<GuiButton> digitalAssignButtons = new ArrayList<GuiButton>();
 	private Map<String, GuiTextField> configureBoxes = new HashMap<String, GuiTextField>();
-	private Map<String, GuiTextField> keyboard1Boxes = new HashMap<String, GuiTextField>();
-	private Map<String, GuiTextField> keyboard2Boxes = new HashMap<String, GuiTextField>();
+	private Map<String, GuiTextField> planeBoxes = new HashMap<String, GuiTextField>();
+	private Map<String, GuiTextField> helicopterBoxes = new HashMap<String, GuiTextField>();
+	private Map<String, GuiTextField> vehicleBoxes = new HashMap<String, GuiTextField>();
 	
 	public GUIConfig(){
 		this.allowUserInput=true;
@@ -74,14 +77,14 @@ public class GUIConfig extends GuiScreen{
 	public void initGui(){
 		guiLeft = (this.width - this.xSize)/2;
 		guiTop = (this.height - this.ySize)/2;
-		buttonList.add(configButton = new GuiButton(0, guiLeft + 10, guiTop - 20, 50, 20, "Config"));
-		buttonList.add(keyboardButton1 = new GuiButton(0, guiLeft + 60, guiTop - 20, 70, 20, "Keyboard1"));
-		buttonList.add(keyboardButton2 = new GuiButton(0, guiLeft + 130, guiTop - 20, 70, 20, "Keyboard2"));
-		buttonList.add(joystickButton = new GuiButton(0, guiLeft + 200, guiTop - 20, 55, 20, "Joystick"));
-		guiLevel = GUILevels.KEYBOARD1;
+		buttonList.add(configButton = new GuiButton(0, guiLeft + 0, guiTop - 20, 50, 20, "Config"));
+		buttonList.add(planeButton = new GuiButton(0, guiLeft + 50, guiTop - 20, 50, 20, "Plane"));
+		buttonList.add(helicopterButton = new GuiButton(0, guiLeft + 100, guiTop - 20, 50, 20, "Heli"));
+		buttonList.add(vehicleButton = new GuiButton(0, guiLeft + 150, guiTop - 20, 50, 20, "Vehicle"));
+		buttonList.add(joystickButton = new GuiButton(0, guiLeft + 200, guiTop - 20, 56, 20, "Joystick"));
+		guiLevel = GUILevels.PLANE;
 		initConfigControls();
-		initKeyboard1Controls();
-		initKeyboard2Controls();
+		initPlaneControls();
 		initJoysticks();
 		initJoystickButtonList();
 		initJoystickControls();
@@ -91,15 +94,16 @@ public class GUIConfig extends GuiScreen{
 	private void initConfigControls(){
 		int line = 0;
 		int xOffset = 140;
-		buttonList.add(throttleKillsButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("ThrottleKills"))));
-		buttonList.add(seaLevelOffsetButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("SeaLevelOffset"))));
-		buttonList.add(electricStartButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("ElectricStart"))));
-		configureButtons.add(throttleKillsButton);
-		configureButtons.add(seaLevelOffsetButton);
-		configureButtons.add(electricStartButton);
+		configureButtons.add(throttleKillsButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("ThrottleKills"))));
+		configureButtons.add(seaLevelOffsetButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("SeaLevelOffset"))));
+		configureButtons.add(electricStartButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("ElectricStart"))));
+		configureButtons.add(xaerosCompatibilityButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("XaerosCompatibility"))));
+		for(GuiButton button : configureButtons){
+			buttonList.add(button);
+		}
 	}
 	
-	private void initKeyboard1Controls(){
+	private void initPlaneControls(){
 		int line = 0;
 		int xOffset = 80;
 		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.PITCH.keyboardIncrementName);
@@ -110,22 +114,21 @@ public class GUIConfig extends GuiScreen{
 		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.YAW.keyboardDecrementName);
 		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.THROTTLE.keyboardIncrementName);
 		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.THROTTLE.keyboardDecrementName);
-		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.FLAPS_U.keyboardName);
-		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.FLAPS_D.keyboardName);
 		
 		line = 0;
 		xOffset = 200;
+		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.FLAPS_U.keyboardName);
+		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.FLAPS_D.keyboardName);
 		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.BRAKE.keyboardName);
 		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.PANEL.keyboardName);
 		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.ZOOM_I.keyboardName);
 		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.ZOOM_O.keyboardName);
+		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.CAM.keyboardName);
+		createKeyBox1At(guiLeft+xOffset, guiTop+10+(line++)*offset, ControlSystem.controls.MOD.keyboardName);
 	}
 	
-	private void initKeyboard2Controls(){
-		int line = 0;
-		int xOffset = 80;
-		keyboard2Boxes.put(ControlSystem.controls.CAM.keyboardName, new GuiTextField(fontRendererObj, guiLeft+xOffset, guiTop+10+(line++)*offset, 60, 15));
-		keyboard2Boxes.put(ControlSystem.controls.MOD.keyboardName, new GuiTextField(fontRendererObj, guiLeft+xOffset, guiTop+10+(line++)*offset, 60, 15));
+	private void initHelicopterControls(){
+		
 	}
 	
 	private void initJoysticks(){
@@ -184,15 +187,18 @@ public class GUIConfig extends GuiScreen{
 		this.mc.getTextureManager().bindTexture(background);
 		drawTexturedModalRect(guiLeft, guiTop, 0, 0, xSize, ySize);
 		configButton.drawButton(mc, mouseX, mouseY);
-		keyboardButton1.drawButton(mc, mouseX, mouseY);
-		keyboardButton2.drawButton(mc, mouseX, mouseY);
+		planeButton.drawButton(mc, mouseX, mouseY);
+		helicopterButton.drawButton(mc, mouseX, mouseY);
+		vehicleButton.drawButton(mc, mouseX, mouseY);
 		joystickButton.drawButton(mc, mouseX, mouseY);
 		if(guiLevel.equals(GUILevels.CONFIG)){
 			drawConfigScreen(mouseX, mouseY);
-		}else if(guiLevel.equals(GUILevels.KEYBOARD1)){
-			drawKeyboardScreen1(mouseX, mouseY);
-		}else if(guiLevel.equals(GUILevels.KEYBOARD2)){
-			drawKeyboardScreen2(mouseX, mouseY);
+		}else if(guiLevel.equals(GUILevels.PLANE)){
+			drawPlaneScreen(mouseX, mouseY);
+		}else if(guiLevel.equals(GUILevels.HELICOPTER)){
+			drawHelicopterScreen(mouseX, mouseY);
+		}else if(guiLevel.equals(GUILevels.VEHICLE)){
+			drawVehicleScreen(mouseX, mouseY);
 		}else if(guiLevel.equals(GUILevels.JS_SELECT)){
 			drawJoystickSelectionScreen(mouseX, mouseY);
 		}else if(guiLevel.equals(GUILevels.JS_BUTTON)){
@@ -215,10 +221,12 @@ public class GUIConfig extends GuiScreen{
 		fontRendererObj.drawStringWithShadow("Throttle Kills:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
 		fontRendererObj.drawStringWithShadow("Sea Level Offset:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
 		fontRendererObj.drawStringWithShadow("Electric Start:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
+		fontRendererObj.drawStringWithShadow("Xaeros Compatibility:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
 		
 		throttleKillsButton.drawButton(mc, mouseX, mouseY);
 		seaLevelOffsetButton.drawButton(mc, mouseX, mouseY);
 		electricStartButton.drawButton(mc, mouseX, mouseY);
+		xaerosCompatibilityButton.drawButton(mc, mouseX, mouseY);
 		
 		if(isPointInRegion(throttleKillsButton.xPosition, throttleKillsButton.xPosition + throttleKillsButton.width, throttleKillsButton.yPosition, throttleKillsButton.yPosition + throttleKillsButton.height, mouseX, mouseY)){
 			drawHoveringText(Arrays.asList(new String[] {"Can setting a joystick throttle", "to zero kill the engine?"}), mouseX, mouseY, fontRendererObj);
@@ -226,13 +234,13 @@ public class GUIConfig extends GuiScreen{
 			drawHoveringText(Arrays.asList(new String[] {"Does altimeter display 0", "at average sea level", "instead of Y=0?"}), mouseX, mouseY, fontRendererObj);
 		}else if(isPointInRegion(electricStartButton.xPosition, electricStartButton.xPosition + electricStartButton.width, electricStartButton.yPosition, electricStartButton.yPosition + electricStartButton.height, mouseX, mouseY)){
 			drawHoveringText(Arrays.asList(new String[] {"Enable electric starter?", "If disabled players must", "start engines by hand."}), mouseX, mouseY, fontRendererObj);
+		}else if(isPointInRegion(xaerosCompatibilityButton.xPosition, xaerosCompatibilityButton.xPosition + xaerosCompatibilityButton.width, xaerosCompatibilityButton.yPosition, xaerosCompatibilityButton.yPosition + xaerosCompatibilityButton.height, mouseX, mouseY)){
+			drawHoveringText(Arrays.asList(new String[] {"Enable Xaeros Minimap Compatibility?", "This allows Xaeros Minimap to be shown,", "but makes the hotbar render over the HUD."}), mouseX, mouseY, fontRendererObj);
 		}
-		
 	}
 	
-	private void drawKeyboardScreen1(int mouseX, int mouseY){
-		int line = 0;
-		for(Entry<String, GuiTextField> entry : keyboard1Boxes.entrySet()){
+	private void drawPlaneScreen(int mouseX, int mouseY){
+		for(Entry<String, GuiTextField> entry : planeBoxes.entrySet()){
 			entry.getValue().setText(ControlSystem.getKeyboardKeyname(entry.getKey()));
 			fontRendererObj.drawStringWithShadow(entry.getKey().substring(0, entry.getKey().length() - 3) + ":", entry.getValue().xPosition - 70, entry.getValue().yPosition + 2, Color.WHITE.getRGB());
 			if(entry.getValue().isFocused()){
@@ -240,41 +248,34 @@ public class GUIConfig extends GuiScreen{
 			}
 			entry.getValue().drawTextBox();
 		}
-	}
-	
-	private void drawKeyboardScreen2(int mouseX, int mouseY){
-		int line = 0;
+		int line = 8;
 		int xOffset = 10;
-		for(Entry<String, GuiTextField> entry : keyboard2Boxes.entrySet()){
-			entry.getValue().setText(ControlSystem.getKeyboardKeyname(entry.getKey()));
-			fontRendererObj.drawStringWithShadow(entry.getKey().substring(0, entry.getKey().length() - 3) + ":", entry.getValue().xPosition - 70, entry.getValue().yPosition + 2, Color.WHITE.getRGB());
-			if(entry.getValue().isFocused()){
-				entry.getValue().setText("");
-			}
-			entry.getValue().drawTextBox();
-			++line;
-		}
-		int line2 = line;
-		fontRendererObj.drawStringWithShadow("RollTrimL:", guiLeft+xOffset, guiTop+15+(line)*offset, Color.WHITE.getRGB());
-		fontRendererObj.drawString(ControlSystem.getKeyboardKeyname(ControlSystem.controls.MOD.keyboardName) + "+" +  ControlSystem.getKeyboardKeyname(ControlSystem.controls.ROLL.keyboardDecrementName), guiLeft+xOffset+60, guiTop+15+(line++)*offset, Color.BLACK.getRGB());
-		fontRendererObj.drawStringWithShadow("PitchTrimD:", guiLeft+xOffset, guiTop+15+(line)*offset, Color.WHITE.getRGB());
-		fontRendererObj.drawString(ControlSystem.getKeyboardKeyname(ControlSystem.controls.MOD.keyboardName) + "+" +  ControlSystem.getKeyboardKeyname(ControlSystem.controls.PITCH.keyboardDecrementName), guiLeft+xOffset+60, guiTop+15+(line++)*offset, Color.BLACK.getRGB());
-		fontRendererObj.drawStringWithShadow("YawTrimL:", guiLeft+xOffset, guiTop+15+(line)*offset, Color.WHITE.getRGB());
-		fontRendererObj.drawString(ControlSystem.getKeyboardKeyname(ControlSystem.controls.MOD.keyboardName) + "+" +  ControlSystem.getKeyboardKeyname(ControlSystem.controls.YAW.keyboardDecrementName), guiLeft+xOffset+60, guiTop+15+(line++)*offset, Color.BLACK.getRGB());
-		++line;
 		fontRendererObj.drawStringWithShadow("ParkBrake:", guiLeft+xOffset, guiTop+15+(line)*offset, Color.WHITE.getRGB());
 		fontRendererObj.drawString(ControlSystem.getKeyboardKeyname(ControlSystem.controls.MOD.keyboardName) + "+" +  ControlSystem.getKeyboardKeyname(ControlSystem.controls.BRAKE.keyboardName), guiLeft+xOffset+60, guiTop+15+(line++)*offset, Color.BLACK.getRGB());
 		fontRendererObj.drawStringWithShadow("HUDMode:", guiLeft+xOffset, guiTop+15+(line)*offset, Color.WHITE.getRGB());
 		fontRendererObj.drawString(ControlSystem.getKeyboardKeyname(ControlSystem.controls.MOD.keyboardName) + "+" +  ControlSystem.getKeyboardKeyname(ControlSystem.controls.CAM.keyboardName), guiLeft+xOffset+60, guiTop+15+(line++)*offset, Color.BLACK.getRGB());
-		
-		xOffset = 130;
-		line = line2;
-		fontRendererObj.drawStringWithShadow("RollTrimR:", guiLeft+xOffset, guiTop+15+(line)*offset, Color.WHITE.getRGB());
-		fontRendererObj.drawString(ControlSystem.getKeyboardKeyname(ControlSystem.controls.MOD.keyboardName) + "+" +  ControlSystem.getKeyboardKeyname(ControlSystem.controls.ROLL.keyboardIncrementName), guiLeft+xOffset+60, guiTop+15+(line++)*offset, Color.BLACK.getRGB());
-		fontRendererObj.drawStringWithShadow("PitchTrimU:", guiLeft+xOffset, guiTop+15+(line)*offset, Color.WHITE.getRGB());
-		fontRendererObj.drawString(ControlSystem.getKeyboardKeyname(ControlSystem.controls.MOD.keyboardName) + "+" +  ControlSystem.getKeyboardKeyname(ControlSystem.controls.PITCH.keyboardIncrementName), guiLeft+xOffset+60, guiTop+15+(line++)*offset, Color.BLACK.getRGB());
-		fontRendererObj.drawStringWithShadow("YawTrimR:", guiLeft+xOffset, guiTop+15+(line)*offset, Color.WHITE.getRGB());
-		fontRendererObj.drawString(ControlSystem.getKeyboardKeyname(ControlSystem.controls.MOD.keyboardName) + "+" +  ControlSystem.getKeyboardKeyname(ControlSystem.controls.YAW.keyboardIncrementName), guiLeft+xOffset+60, guiTop+15+(line++)*offset, Color.BLACK.getRGB());
+	}
+	
+	private void drawHelicopterScreen(int mouseX, int mouseY){
+		for(Entry<String, GuiTextField> entry : helicopterBoxes.entrySet()){
+			entry.getValue().setText(ControlSystem.getKeyboardKeyname(entry.getKey()));
+			fontRendererObj.drawStringWithShadow(entry.getKey().substring(0, entry.getKey().length() - 3) + ":", entry.getValue().xPosition - 70, entry.getValue().yPosition + 2, Color.WHITE.getRGB());
+			if(entry.getValue().isFocused()){
+				entry.getValue().setText("");
+			}
+			entry.getValue().drawTextBox();
+		}
+	}
+	
+	private void drawVehicleScreen(int mouseX, int mouseY){
+		for(Entry<String, GuiTextField> entry : vehicleBoxes.entrySet()){
+			entry.getValue().setText(ControlSystem.getKeyboardKeyname(entry.getKey()));
+			fontRendererObj.drawStringWithShadow(entry.getKey().substring(0, entry.getKey().length() - 3) + ":", entry.getValue().xPosition - 70, entry.getValue().yPosition + 2, Color.WHITE.getRGB());
+			if(entry.getValue().isFocused()){
+				entry.getValue().setText("");
+			}
+			entry.getValue().drawTextBox();
+		}
 	}
 	
 	private void drawJoystickSelectionScreen(int mouseX, int mouseY){
@@ -349,10 +350,12 @@ public class GUIConfig extends GuiScreen{
 			return;
 		}else if(buttonClicked.equals(configButton)){
 			guiLevel = GUILevels.CONFIG;
-		}else if(buttonClicked.equals(keyboardButton1)){
-			guiLevel = GUILevels.KEYBOARD1;
-		}else if(buttonClicked.equals(keyboardButton2)){
-			guiLevel = GUILevels.KEYBOARD2;
+		}else if(buttonClicked.equals(planeButton)){
+			guiLevel = GUILevels.PLANE;
+		}else if(buttonClicked.equals(helicopterButton)){
+			guiLevel = GUILevels.HELICOPTER;
+		}else if(buttonClicked.equals(vehicleButton)){
+			guiLevel = GUILevels.VEHICLE;
 		}else if(buttonClicked.equals(joystickButton)){
 			guiLevel = GUILevels.JS_SELECT;
 		}else if(buttonClicked.equals(throttleKillsButton)){
@@ -364,6 +367,9 @@ public class GUIConfig extends GuiScreen{
 		}else if(buttonClicked.equals(electricStartButton)){
 			ConfigSystem.setClientConfig("ElectricStart", !Boolean.valueOf(electricStartButton.displayString));
 			electricStartButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("ElectricStart"));
+		}else if(buttonClicked.equals(xaerosCompatibilityButton)){
+			ConfigSystem.setClientConfig("XaerosCompatibility", !Boolean.valueOf(xaerosCompatibilityButton.displayString));
+			xaerosCompatibilityButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("XaerosCompatibility"));
 		}else if(joystickButtons.contains(buttonClicked)){
 			guiLevel = GUILevels.JS_BUTTON;
 			ControlSystem.setJoystick(joysticks[joystickButtons.indexOf(buttonClicked)]);
@@ -402,11 +408,14 @@ public class GUIConfig extends GuiScreen{
 		for(GuiButton button : configureButtons){
 			button.enabled = guiLevel.equals(GUILevels.CONFIG);
 		}
-		for(GuiTextField box : keyboard1Boxes.values()){
-			box.setEnabled(guiLevel.equals(GUILevels.KEYBOARD1));
+		for(GuiTextField box : planeBoxes.values()){
+			box.setEnabled(guiLevel.equals(GUILevels.PLANE));
 		}
-		for(GuiTextField box : keyboard2Boxes.values()){
-			box.setEnabled(guiLevel.equals(GUILevels.KEYBOARD2));
+		for(GuiTextField box : helicopterBoxes.values()){
+			box.setEnabled(guiLevel.equals(GUILevels.HELICOPTER));
+		}
+		for(GuiTextField box : vehicleBoxes.values()){
+			box.setEnabled(guiLevel.equals(GUILevels.VEHICLE));
 		}
 		for(GuiButton button : joystickButtons){
 			button.enabled = guiLevel.equals(GUILevels.JS_SELECT);
@@ -424,8 +433,9 @@ public class GUIConfig extends GuiScreen{
 		upButton.enabled = guiLevel.equals(GUILevels.JS_BUTTON);
 		downButton.enabled = guiLevel.equals(GUILevels.JS_BUTTON);
 		configButton.enabled = !guiLevel.equals(GUILevels.CONFIG);
-		keyboardButton1.enabled = !guiLevel.equals(GUILevels.KEYBOARD1);
-		keyboardButton2.enabled = !guiLevel.equals(GUILevels.KEYBOARD2);
+		planeButton.enabled = !guiLevel.equals(GUILevels.PLANE);
+		helicopterButton.enabled = !guiLevel.equals(GUILevels.HELICOPTER);
+		vehicleButton.enabled = !guiLevel.equals(GUILevels.VEHICLE);
 		joystickButton.enabled = !guiLevel.equals(GUILevels.JS_SELECT);
 		cancelButton.enabled = guiLevel.equals(GUILevels.JS_ANALOG) || guiLevel.equals(GUILevels.JS_DIGITAL) || guiLevel.equals(GUILevels.JS_CALIBRATION);
 		clearButton.enabled = guiLevel.equals(GUILevels.JS_ANALOG) || guiLevel.equals(GUILevels.JS_DIGITAL);
@@ -439,12 +449,12 @@ public class GUIConfig extends GuiScreen{
     @Override
     protected void mouseClicked(int x, int y, int button){
     	super.mouseClicked(x, y, button);
-    	for(GuiTextField box : keyboard1Boxes.values()){
+    	for(GuiTextField box : planeBoxes.values()){
     		if(box.getVisible()){
     			box.mouseClicked(x, y, button);
     		}
     	}
-    	for(GuiTextField box : keyboard2Boxes.values()){
+    	for(GuiTextField box : helicopterBoxes.values()){
     		if(box.getVisible()){
     			box.mouseClicked(x, y, button);
     		}
@@ -457,7 +467,7 @@ public class GUIConfig extends GuiScreen{
     	if(bytecode==1){
             return;
         }
-    	for(Entry<String, GuiTextField> entry : keyboard1Boxes.entrySet()){
+    	for(Entry<String, GuiTextField> entry : planeBoxes.entrySet()){
     		if(entry.getValue().isFocused()){
     			entry.getValue().setText(Keyboard.getKeyName(bytecode));
     			ControlSystem.setKeyboardKey(entry.getKey(), bytecode);
@@ -465,7 +475,15 @@ public class GUIConfig extends GuiScreen{
     			return;
     		}
     	}
-    	for(Entry<String, GuiTextField> entry : keyboard2Boxes.entrySet()){
+    	for(Entry<String, GuiTextField> entry : helicopterBoxes.entrySet()){
+    		if(entry.getValue().isFocused()){
+    			entry.getValue().setText(Keyboard.getKeyName(bytecode));
+    			ControlSystem.setKeyboardKey(entry.getKey(), bytecode);
+    			entry.getValue().setFocused(false);
+    			return;
+    		}
+    	}
+    	for(Entry<String, GuiTextField> entry : vehicleBoxes.entrySet()){
     		if(entry.getValue().isFocused()){
     			entry.getValue().setText(Keyboard.getKeyName(bytecode));
     			ControlSystem.setKeyboardKey(entry.getKey(), bytecode);
@@ -485,14 +503,15 @@ public class GUIConfig extends GuiScreen{
     
 	private GuiTextField createKeyBox1At(int posX, int posY, String keyname){
 		GuiTextField box = new GuiTextField(fontRendererObj, posX, posY, 40, 15);
-		keyboard1Boxes.put(keyname, box);
+		planeBoxes.put(keyname, box);
 		return box;
 	}
 	
 	private enum GUILevels{
 		CONFIG,
-		KEYBOARD1,
-		KEYBOARD2,
+		PLANE,
+		VEHICLE,
+		HELICOPTER,
 		JS_SELECT,
 		JS_BUTTON,
 		JS_DIGITAL,

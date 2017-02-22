@@ -224,9 +224,8 @@ public final class ClientEventSystem{
 	@SubscribeEvent
 	public void on(RenderGameOverlayEvent.Pre event){
 		if(minecraft.thePlayer.ridingEntity instanceof EntitySeat){
-			//TODO Figure out why Xaeros minimap doesn't work here.
 			if(event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
-				event.setCanceled(true);
+				event.setCanceled(!ConfigSystem.getBooleanConfig("XaerosCompatibility"));
 			}else if(event.type.equals(RenderGameOverlayEvent.ElementType.CHAT)){
 				if(playerLastSeat != null){
 					if(playerLastSeat.parent instanceof EntityVehicle && playerLastSeat.isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
