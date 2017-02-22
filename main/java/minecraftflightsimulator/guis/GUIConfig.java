@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 
 import org.lwjgl.input.Keyboard;
 
+import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.systems.ConfigSystem;
 import minecraftflightsimulator.systems.ControlSystem;
 import net.java.games.input.Component;
@@ -77,11 +78,11 @@ public class GUIConfig extends GuiScreen{
 	public void initGui(){
 		guiLeft = (this.width - this.xSize)/2;
 		guiTop = (this.height - this.ySize)/2;
-		buttonList.add(configButton = new GuiButton(0, guiLeft + 0, guiTop - 20, 50, 20, "Config"));
-		buttonList.add(planeButton = new GuiButton(0, guiLeft + 50, guiTop - 20, 50, 20, "Plane"));
-		buttonList.add(helicopterButton = new GuiButton(0, guiLeft + 100, guiTop - 20, 50, 20, "Heli"));
-		buttonList.add(vehicleButton = new GuiButton(0, guiLeft + 150, guiTop - 20, 50, 20, "Vehicle"));
-		buttonList.add(joystickButton = new GuiButton(0, guiLeft + 200, guiTop - 20, 56, 20, "Joystick"));
+		buttonList.add(configButton = new GuiButton(0, guiLeft + 0, guiTop - 20, 50, 20, PlayerHelper.getTranslatedText("gui.config.title.config")));
+		buttonList.add(planeButton = new GuiButton(0, guiLeft + 50, guiTop - 20, 50, 20, PlayerHelper.getTranslatedText("gui.config.title.plane")));
+		buttonList.add(helicopterButton = new GuiButton(0, guiLeft + 100, guiTop - 20, 50, 20, PlayerHelper.getTranslatedText("gui.config.title.heli")));
+		buttonList.add(vehicleButton = new GuiButton(0, guiLeft + 150, guiTop - 20, 50, 20, PlayerHelper.getTranslatedText("gui.config.title.vehicle")));
+		buttonList.add(joystickButton = new GuiButton(0, guiLeft + 200, guiTop - 20, 56, 20, PlayerHelper.getTranslatedText("gui.config.title.joystick")));
 		guiLevel = GUILevels.PLANE;
 		initConfigControls();
 		initPlaneControls();
@@ -151,9 +152,9 @@ public class GUIConfig extends GuiScreen{
 	private void initJoystickControls(){
 		buttonList.add(upButton = new GuiButton(0, guiLeft + 225, guiTop + 40, 20, 20, "/\\"));
 		buttonList.add(downButton = new GuiButton(0, guiLeft + 225, guiTop + 155, 20, 20, "\\/"));
-		buttonList.add(confirmButton = new GuiButton(0, guiLeft + 25, guiTop + 160, 100, 20, "Confirm"));
-		buttonList.add(cancelButton = new GuiButton(0, guiLeft + 125, guiTop + 160, 100, 20, "Cancel"));
-		buttonList.add(clearButton = new GuiButton(0, guiLeft + 25, guiTop + 160, 100, 20, "Clear Assignment"));
+		buttonList.add(confirmButton = new GuiButton(0, guiLeft + 25, guiTop + 160, 100, 20, PlayerHelper.getTranslatedText("gui.config.joystick.confirm")));
+		buttonList.add(cancelButton = new GuiButton(0, guiLeft + 125, guiTop + 160, 100, 20, PlayerHelper.getTranslatedText("gui.config.joystick.cancel")));
+		buttonList.add(clearButton = new GuiButton(0, guiLeft + 25, guiTop + 160, 100, 20, PlayerHelper.getTranslatedText("gui.config.joystick.clear")));
 		
 		createAssignmentButtonAt(guiLeft + 85, guiTop + 40, ControlSystem.controls.PITCH.joystickName, analogAssignButtons);
 		createAssignmentButtonAt(guiLeft + 85, guiTop + 60, ControlSystem.controls.ROLL.joystickName, analogAssignButtons);
@@ -279,38 +280,39 @@ public class GUIConfig extends GuiScreen{
 	}
 	
 	private void drawJoystickSelectionScreen(int mouseX, int mouseY){
-		fontRendererObj.drawString("Chose a joystick:", guiLeft+10, guiTop+10, Color.BLACK.getRGB());
-		fontRendererObj.drawString("Name:", guiLeft+10, guiTop+25, Color.BLACK.getRGB());
-		fontRendererObj.drawString("Type:", guiLeft+140, guiTop+25, Color.BLACK.getRGB());
-		fontRendererObj.drawString("Rumble:", guiLeft+200, guiTop+25, Color.BLACK.getRGB());
+		
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.select"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.name"), guiLeft+10, guiTop+25, Color.BLACK.getRGB());
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.type"), guiLeft+140, guiTop+25, Color.BLACK.getRGB());
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.rumble"), guiLeft+200, guiTop+25, Color.BLACK.getRGB());
 		for(int i=0; i<joysticks.length; ++i){
 			joystickButtons.get(i).drawButton(mc, mouseX, mouseY);
 			fontRendererObj.drawString(joysticks[i].getName().substring(0, joysticks[i].getName().length() > 20 ? 20 : joysticks[i].getName().length()), guiLeft+10, guiTop+44+15*i, Color.WHITE.getRGB());
 			fontRendererObj.drawString(joysticks[i].getType().toString(), guiLeft+140, guiTop+44+15*i, Color.WHITE.getRGB());
-			fontRendererObj.drawString(joysticks[i].getRumblers().length > 0 ? "Yes" : "No", guiLeft+200, guiTop+44+15*i, Color.WHITE.getRGB());
+			fontRendererObj.drawString(joysticks[i].getRumblers().length > 0 ? "X" : "", guiLeft+200, guiTop+44+15*i, Color.WHITE.getRGB());
 		}
 	}
 	
 	private void drawJoystickButtonScreen(int mouseX, int mouseY){
 		upButton.drawButton(mc, mouseX, mouseY);
 		downButton.drawButton(mc, mouseX, mouseY);
-		fontRendererObj.drawString("Now we need to map buttons.", guiLeft+10, guiTop+10, Color.BLACK.getRGB());
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.domap"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
 		fontRendererObj.drawString("#", guiLeft+10, guiTop+25, Color.BLACK.getRGB());
-		fontRendererObj.drawString("Name:", guiLeft+25, guiTop+25, Color.BLACK.getRGB());
-		fontRendererObj.drawString("Analog:", guiLeft+90, guiTop+25, Color.BLACK.getRGB());
-		fontRendererObj.drawString("Assigned to:", guiLeft+140, guiTop+25, Color.BLACK.getRGB());
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.name"), guiLeft+25, guiTop+25, Color.BLACK.getRGB());
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.analog"), guiLeft+90, guiTop+25, Color.BLACK.getRGB());
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.assignment"), guiLeft+140, guiTop+25, Color.BLACK.getRGB());
 		for(int i=0; i<9 && i<joystickComponents.length && i+scrollSpot<joystickComponents.length; ++i){
 			joystickConfigureButtons.get(i).drawButton(mc, mouseX, mouseY);
 			fontRendererObj.drawString(String.valueOf(i+scrollSpot+1), guiLeft+10, guiTop+44+15*i, Color.WHITE.getRGB());
 			fontRendererObj.drawString(joystickComponents[i+scrollSpot].getName().substring(0, joystickComponents[i+scrollSpot].getName().length() > 15 ? 15 : joystickComponents[i+scrollSpot].getName().length()), guiLeft+25, guiTop+44+15*i, Color.WHITE.getRGB());
-			fontRendererObj.drawString(joystickComponents[i+scrollSpot].isAnalog() ? "Yes" : "No", guiLeft+100, guiTop+44+15*i, Color.WHITE.getRGB());
+			fontRendererObj.drawString(joystickComponents[i+scrollSpot].isAnalog() ? "X" : "", guiLeft+100, guiTop+44+15*i, Color.WHITE.getRGB());
 			fontRendererObj.drawString(ControlSystem.getJoystickControlName(i+scrollSpot), guiLeft+140, guiTop+44+15*i, Color.WHITE.getRGB());
 		}
 	}
 	
 	private void drawJoystickDigitalScreen(int mouseX, int mouseY){
-		fontRendererObj.drawString("Choose what gets mapped to this button.", guiLeft+10, guiTop+10, Color.BLACK.getRGB());
-		fontRendererObj.drawString("This DIGITAL button can control:", guiLeft+10, guiTop+20, Color.BLACK.getRGB());
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.choosemap"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.selectdigital"), guiLeft+10, guiTop+20, Color.BLACK.getRGB());
 		for(GuiButton button : digitalAssignButtons){
 			button.drawButton(mc, mouseX, mouseY);
 		}
@@ -319,8 +321,8 @@ public class GUIConfig extends GuiScreen{
 	}
 	
 	private void drawJoystickAnalogScreen(int mouseX, int mouseY){
-		fontRendererObj.drawString("Choose what gets mapped to this button.", guiLeft+10, guiTop+10, Color.BLACK.getRGB());
-		fontRendererObj.drawString("This ANALOG button can control:", guiLeft+10, guiTop+20, Color.BLACK.getRGB());
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.choosemap"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.selectanalog"), guiLeft+10, guiTop+20, Color.BLACK.getRGB());
 		for(GuiButton button : analogAssignButtons){
 			button.drawButton(mc, mouseX, mouseY);
 		}
@@ -329,8 +331,8 @@ public class GUIConfig extends GuiScreen{
 	}
 	
 	private void drawJoystickCalibrationScreen(int mouseX, int mouseY){
-		fontRendererObj.drawString("Move the axis until the numbers stop changing.", guiLeft+10, guiTop+10, Color.BLACK.getRGB());
-		fontRendererObj.drawString("Then hit confirm to save settings.", guiLeft+10, guiTop+20, Color.BLACK.getRGB());
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.calibrate1"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
+		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.calibrate2"), guiLeft+10, guiTop+20, Color.BLACK.getRGB());
 		ControlSystem.getJoystick().poll();
 		if(joystickComponents[joystickComponentId].getPollData() > 0){
 			maxTextBox.setText(String.valueOf(Math.max(Double.valueOf(maxTextBox.getText()), joystickComponents[joystickComponentId].getPollData())));

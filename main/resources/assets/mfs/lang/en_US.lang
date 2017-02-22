@@ -37,6 +37,27 @@ gui.instruments.idle=Select an instrument.
 gui.instruments.decide=Click an instrument to add, or CLEAR to remove.
 gui.instruments.fault=This instrument cannot go here!
 
+gui.config.title.config=CONFIG
+gui.config.title.plane=PLANE
+gui.config.title.heli=HELI
+gui.config.title.vehicle=VEHICLE
+gui.config.title.joystick=JOYSTICK
+gui.config.joystick.confirm=Confirm
+gui.config.joystick.cancel=Cancel
+gui.config.joystick.clear=Clear Assignment
+gui.config.joystick.select=Chose a joystick:
+gui.config.joystick.name=Name:
+gui.config.joystick.type=Type:
+gui.config.joystick.rumble=Rumble:
+gui.config.joystick.analog=Analog:
+gui.config.joystick.assignment=Assigned to:
+gui.config.joystick.domap=Now we need to map buttons.
+gui.config.joystick.choosemap=Choose what gets mapped to this button.
+gui.config.joystick.selectdigital=This DIGITAL button can control:
+gui.config.joystick.selectanalog=This ANALOG button can control:
+gui.config.joystick.calibrate1=Move the axis until the numbers stop changing.
+gui.config.joystick.calibrate2=Then hit confirm to save settings.
+
 info.item.propeller.numberBlades=Blades: 
 info.item.propeller.pitch=Pitch: 
 info.item.propeller.diameter=Diameter: 
