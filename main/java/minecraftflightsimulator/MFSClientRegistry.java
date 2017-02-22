@@ -5,6 +5,7 @@ import java.util.Map;
 
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.RenderingRegistry;
+import cpw.mods.fml.common.Loader;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityCore;
@@ -47,18 +48,18 @@ public class MFSClientRegistry{
 	public static Map <Class<? extends EntityChild>, RenderChild> childRenderMap = new HashMap<Class<? extends EntityChild>, RenderChild>();
 
 	public static void preInit(){
-		/*INS189
-		initTileEntityRenderers();
-		initEntityRenders();
-		INS189*/
+		if(!(Loader.MC_VERSION.equals("1.7.10") || Loader.MC_VERSION.equals("1.8"))){
+			initTileEntityRenderers();
+			initEntityRenders();
+		}
 	}
 	
 	public static void init(){
-		initTileEntityRenderers();
-		initEntityRenders();//INS189
-		/*INS180
+		if(Loader.MC_VERSION.equals("1.7.10") || Loader.MC_VERSION.equals("1.8")){
+			initTileEntityRenderers();
+			initEntityRenders();
+		}
 		initItemRenders();
-		INS180*/
 	}
 	
 	private static void initTileEntityRenderers(){
@@ -88,8 +89,9 @@ public class MFSClientRegistry{
 	
 	
 	//TODO make sure this works with 1.8 and up.
-	/*INS180	
+		
   private static void initItemRenders(){
+	  	/*INS180
 		registerItemSeries(MFSRegistry.planeMC172, 6);
 		registerItemSeries(MFSRegistry.planePZLP11, 1);
 		registerItemSeries(MFSRegistry.planeVulcanair, 7);
@@ -118,8 +120,9 @@ public class MFSClientRegistry{
 		registerItemRender(MFSRegistry.pointerLong);
 		registerItemRender(MFSRegistry.flightInstrumentBase);
 		registerItemRender(Item.getItemFromBlock(MFSRegistry.blockPropellerBench));
+		INS180*/
 	}
-	INS180*/
+	
 	
     
     /**
