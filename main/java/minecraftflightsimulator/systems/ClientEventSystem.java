@@ -21,6 +21,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
@@ -179,19 +180,28 @@ public final class ClientEventSystem{
 	
 	@SubscribeEvent
 	public void on(RenderPlayerEvent.Pre event){
-		//TODO Get this working with more than 1 player.
 		if(event.entityPlayer.ridingEntity instanceof EntitySeat){
 			EntityParent parent = ((EntitySeat) event.entityPlayer.ridingEntity).parent;
 			if(parent!=null){
 				GL11.glPushMatrix();
-				/*INS180
-				GL11.glTranslated(0, event.entityPlayer.getEyeHeight(), 0);
-				INS180*/
-				GL11.glRotated(parent.rotationPitch, Math.cos(parent.rotationYaw  * 0.017453292F), 0, Math.sin(parent.rotationYaw * 0.017453292F));
-				GL11.glRotated(parent.rotationRoll, -Math.sin(parent.rotationYaw  * 0.017453292F), 0, Math.cos(parent.rotationYaw * 0.017453292F));
-				/*INS180
-				GL11.glTranslated(0, -event.entityPlayer.getEyeHeight(), 0);
-				INS180*/
+				if(!event.entityPlayer.equals(minecraft.thePlayer)){
+					EntityPlayer masterPlayer = Minecraft.getMinecraft().thePlayer;
+					EntityPlayer renderedPlayer = event.entityPlayer;
+					float playerDistanceX = (float) (renderedPlayer.posX - masterPlayer.posX);
+					float playerDistanceY = (float) (renderedPlayer.posY - masterPlayer.posY);
+					float playerDistanceZ = (float) (renderedPlayer.posZ - masterPlayer.posZ);
+					GL11.glTranslatef(playerDistanceX, playerDistanceY, playerDistanceZ);	
+					GL11.glTranslated(0, masterPlayer.getEyeHeight(), 0);
+					GL11.glRotated(parent.rotationPitch, Math.cos(parent.rotationYaw  * 0.017453292F), 0, Math.sin(parent.rotationYaw * 0.017453292F));
+					GL11.glRotated(parent.rotationRoll, -Math.sin(parent.rotationYaw  * 0.017453292F), 0, Math.cos(parent.rotationYaw * 0.017453292F));
+					GL11.glTranslated(0, -masterPlayer.getEyeHeight(), 0);
+					GL11.glTranslatef(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
+				}else{
+					GL11.glTranslated(0, event.entityPlayer.getEyeHeight(), 0);
+					GL11.glRotated(parent.rotationPitch, Math.cos(parent.rotationYaw  * 0.017453292F), 0, Math.sin(parent.rotationYaw * 0.017453292F));
+					GL11.glRotated(parent.rotationRoll, -Math.sin(parent.rotationYaw  * 0.017453292F), 0, Math.cos(parent.rotationYaw * 0.017453292F));
+					GL11.glTranslated(0, -event.entityPlayer.getEyeHeight(), 0);
+				}
 			}
 		}
 	}
