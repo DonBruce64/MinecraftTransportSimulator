@@ -223,7 +223,7 @@ public class GUIConfig extends GuiScreen{
 		if(isPointInRegion(throttleKillsButton.xPosition, throttleKillsButton.xPosition + throttleKillsButton.width, throttleKillsButton.yPosition, throttleKillsButton.yPosition + throttleKillsButton.height, mouseX, mouseY)){
 			drawHoveringText(Arrays.asList(new String[] {"Can setting a joystick throttle", "to zero kill the engine?"}), mouseX, mouseY, fontRendererObj);
 		}else if(isPointInRegion(seaLevelOffsetButton.xPosition, seaLevelOffsetButton.xPosition + seaLevelOffsetButton.width, seaLevelOffsetButton.yPosition, seaLevelOffsetButton.yPosition + seaLevelOffsetButton.height, mouseX, mouseY)){
-			drawHoveringText(Arrays.asList(new String[] {"Does altimeter display 0", "at Y=64 instead of Y=0?"}), mouseX, mouseY, fontRendererObj);
+			drawHoveringText(Arrays.asList(new String[] {"Does altimeter display 0", "at average sea level", "instead of Y=0?"}), mouseX, mouseY, fontRendererObj);
 		}else if(isPointInRegion(electricStartButton.xPosition, electricStartButton.xPosition + electricStartButton.width, electricStartButton.yPosition, electricStartButton.yPosition + electricStartButton.height, mouseX, mouseY)){
 			drawHoveringText(Arrays.asList(new String[] {"Enable electric starter?", "If disabled players must", "start engines by hand."}), mouseX, mouseY, fontRendererObj);
 		}

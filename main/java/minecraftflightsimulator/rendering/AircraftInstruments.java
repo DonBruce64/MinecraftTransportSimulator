@@ -128,8 +128,8 @@ public final class AircraftInstruments{
         drawDialIncrements(centerX, centerY, -180, 180, 25, 2, 51);
         drawDialIncrements(centerX, centerY, -180, 180, 25, 5, 11);
         drawDialNumbers(centerX, centerY, 0, 320,  17, 0, 1, 9, 0.7F);
-        drawShortPointer(centerX, centerY, (float) (.36*(vehicle.posY - (ConfigSystem.getBooleanConfig("SeaLevelOffset") ? 64 : 0))), 20, 6);
-        drawLongPointer(centerX, centerY, (float) (3.6*(vehicle.posY - (ConfigSystem.getBooleanConfig("SeaLevelOffset") ? 64 : 0))), 35, 3);
+        drawShortPointer(centerX, centerY, (float) (.36*(vehicle.posY - (ConfigSystem.getBooleanConfig("SeaLevelOffset") ? vehicle.worldObj.provider.getAverageGroundLevel() : 0))), 20, 6);
+        drawLongPointer(centerX, centerY, (float) (3.6*(vehicle.posY - (ConfigSystem.getBooleanConfig("SeaLevelOffset") ? vehicle.worldObj.provider.getAverageGroundLevel() : 0))), 35, 3);
     }
     
 	private static void drawHeadingIndicator(EntityVehicle vehicle, int centerX, int centerY, boolean lighted){
