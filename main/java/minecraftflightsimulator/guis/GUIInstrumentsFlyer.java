@@ -62,6 +62,11 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 
 	@Override
     public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
+		if(vehicle.isDead || player.getDistance(vehicle.posX, vehicle.posY, vehicle.posZ) > 20){
+			mc.thePlayer.closeScreen();
+			return;
+		}
+		
 		this.drawDefaultBackground();
 		GL11.glPushMatrix();
 		GL11.glScalef(0.5F, 0.5F, 0.5F);
