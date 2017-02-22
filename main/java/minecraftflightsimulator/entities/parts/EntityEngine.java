@@ -101,14 +101,14 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 			}
 			if(source.isExplosion()){
 				hours += damage*10;
-				oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
-				fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
-				brokenStarter = Math.random() < 0.05;
+				if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
+				if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
+				if(!brokenStarter)brokenStarter = Math.random() < 0.05;
 			}else{
 				hours += damage;
 				if(source.isProjectile()){
-					oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
-					fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
+					if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
+					if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
 				}
 			}
 			this.sendDataToClient();
