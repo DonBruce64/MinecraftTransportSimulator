@@ -42,7 +42,7 @@ public class ItemFlightInstrument extends Item{
     @SideOnly(Side.CLIENT)
     public void registerIcons(IIconRegister register){
     	for(int i=0; i<AircraftInstruments.AircraftGauges.values().length; ++i){
-    		icons[0] = register.registerIcon("mfs:flightinstrument" + i);
+    		icons[i] = register.registerIcon("mfs:flightinstrument" + i);
     	}
     }
     
