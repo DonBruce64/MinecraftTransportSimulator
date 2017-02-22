@@ -98,7 +98,7 @@ public class ItemPlane extends Item{
     @Override
     @SideOnly(Side.CLIENT)
     public IIcon getIconFromDamage(int damage){
-        return this.icons[damage > numberTypes ? 0 : damage];
+        return this.icons[damage >= numberTypes ? 0 : damage];
     }
     //DEL180END
 }
