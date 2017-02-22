@@ -79,6 +79,11 @@ public class GUIPropellerBench extends GuiScreen{
 	@Override
     public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
 		super.drawScreen(mouseX, mouseY, renderPartialTicks);
+		if(bench.isRunning()){
+			mc.thePlayer.closeScreen();
+			return;
+		}
+		
 		propellerMaterialQty = bench.diameter < 90 ? bench.numberBlades : bench.numberBlades*2;
 		this.getPlayerMaterials();
 		GL11.glColor3f(1, 1, 1); //Not sure why buttons make this grey, but whatever...
