@@ -10,11 +10,9 @@ import minecraftflightsimulator.rendering.AircraftInstruments.AircraftControls;
 import minecraftflightsimulator.rendering.modelrenders.RenderPlane;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.util.ResourceLocation;
 
 public class RenderMC172 extends RenderPlane{
 	private static final ModelMC172 model = new ModelMC172();
-	private static final ResourceLocation[] planeTextures = getPlaneTextures();
 
 	public RenderMC172(RenderManager manager){
 		super(manager);
@@ -27,7 +25,7 @@ public class RenderMC172 extends RenderPlane{
 	
 	@Override
 	protected void renderPlane(EntityPlane plane){
-		GL11DrawSystem.bindTexture(planeTextures[plane.textureOptions > 5 ? 0 : plane.textureOptions]);
+		GL11DrawSystem.bindTexture(plane.getBackplateTexture());
         model.renderPlane();
         model.renderAilerons(plane.aileronAngle/10F * 0.017453292F);
         model.renderElevators(plane.elevatorAngle/10F * 0.017453292F);
@@ -166,17 +164,5 @@ public class RenderMC172 extends RenderPlane{
 		GL11.glRotatef(-15, 0, 1, 0);
 		GL11DrawSystem.drawLightBeam(plane, 5, 9, 20, true);
 		GL11.glPopMatrix();
-	}
-	
-	private static ResourceLocation[] getPlaneTextures(){
-		ResourceLocation[] texArray = new ResourceLocation[6];
-		int texIndex = 0;
-		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_oak.png");
-		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_spruce.png");
-		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_birch.png");
-		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_jungle.png");
-		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_acacia.png");
-		texArray[texIndex++] = new ResourceLocation("textures/blocks/planks_big_oak.png");
-		return texArray;
 	}
 }
