@@ -3,7 +3,8 @@ package minecraftflightsimulator.entities.parts;
 import minecraftflightsimulator.entities.core.EntityChildInventory;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityVehicle;
-import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
@@ -22,7 +23,7 @@ public class EntityChest extends EntityChildInventory{
 
 	@Override
 	public ItemStack getItemStack(){
-		return new ItemStack(ItemStackHelper.getItemByName("chest"));
+		return new ItemStack(Item.getItemFromBlock(Blocks.chest));
 	}
 	
 	@Override

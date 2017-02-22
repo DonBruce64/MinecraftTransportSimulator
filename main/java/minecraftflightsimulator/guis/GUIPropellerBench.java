@@ -13,6 +13,9 @@ import minecraftflightsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
@@ -200,13 +203,13 @@ public class GUIPropellerBench extends GuiScreen{
 		}else{
 			for(ItemStack stack : player.inventory.mainInventory){
 				if(stack != null){
-					if(ItemStackHelper.getItemFromStack(stack).equals(ItemStackHelper.getItemByName("planks"))){
+					if(ItemStackHelper.getItemFromStack(stack).equals(Item.getItemFromBlock(Blocks.planks))){
 						numberPlayerPlanks+=ItemStackHelper.getStackSize(stack);
-					}else if(ItemStackHelper.getItemFromStack(stack).equals(ItemStackHelper.getItemByName("iron_ingot"))){
+					}else if(ItemStackHelper.getItemFromStack(stack).equals(Items.iron_ingot)){
 						numberPlayerIronIngots+=ItemStackHelper.getStackSize(stack);
-					}else if(ItemStackHelper.getItemFromStack(stack).equals(ItemStackHelper.getItemByName("obsidian"))){
+					}else if(ItemStackHelper.getItemFromStack(stack).equals(Item.getItemFromBlock(Blocks.obsidian))){
 						numberPlayerObsidian+=ItemStackHelper.getStackSize(stack);
-					}else if(ItemStackHelper.getItemFromStack(stack).equals(ItemStackHelper.getItemByName("redstone"))){
+					}else if(ItemStackHelper.getItemFromStack(stack).equals(Items.redstone)){
 						numberPlayerRedstone+=ItemStackHelper.getStackSize(stack);
 					}
 				}

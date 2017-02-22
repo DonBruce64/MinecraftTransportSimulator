@@ -24,7 +24,6 @@ import minecraftflightsimulator.items.ItemPlane;
 import minecraftflightsimulator.items.ItemPropeller;
 import minecraftflightsimulator.items.ItemSeat;
 import minecraftflightsimulator.items.ItemWrench;
-import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.BrakePacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
@@ -138,7 +137,7 @@ public class MFSRegistry{
 		
 		MFS.proxy.registerChildEntity(EntityCore.class, null);
 		MFS.proxy.registerChildEntity(EntitySeat.class, seat);
-		MFS.proxy.registerChildEntity(EntityChest.class, ItemStackHelper.getItemByName("chest"));
+		MFS.proxy.registerChildEntity(EntityChest.class, Item.getItemFromBlock(Blocks.chest));
 		MFS.proxy.registerChildEntity(EntityWheel.EntityWheelSmall.class, wheelSmall);
 		MFS.proxy.registerChildEntity(EntityWheel.EntityWheelLarge.class, wheelLarge);
 		MFS.proxy.registerChildEntity(EntitySkid.class, skid);

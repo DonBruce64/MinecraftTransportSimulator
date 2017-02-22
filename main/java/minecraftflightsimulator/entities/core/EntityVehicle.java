@@ -17,6 +17,7 @@ import minecraftflightsimulator.systems.ConfigSystem;
 import minecraftflightsimulator.utilites.MFSVector;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -111,7 +112,7 @@ public abstract class EntityVehicle extends EntityParent{
 	public boolean performRightClickAction(EntityBase clicked, EntityPlayer player){
 		if(!worldObj.isRemote){
 			if(PlayerHelper.getHeldStack(player) != null){
-				if(ItemStackHelper.getItemFromStack(PlayerHelper.getHeldStack(player)).equals(ItemStackHelper.getItemByName("name_tag"))){
+				if(ItemStackHelper.getItemFromStack(PlayerHelper.getHeldStack(player)).equals(Items.name_tag)){
 					this.displayName = PlayerHelper.getHeldStack(player).getDisplayName().length() > 12 ? PlayerHelper.getHeldStack(player).getDisplayName().substring(0, 11) : PlayerHelper.getHeldStack(player).getDisplayName();
 					this.sendDataToClient();
 					return true;
