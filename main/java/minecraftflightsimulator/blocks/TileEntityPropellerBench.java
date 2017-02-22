@@ -5,6 +5,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
+import minecraftflightsimulator.packets.general.PropellerBenchClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.PropellerBenchSyncPacket;
 import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.systems.SFXSystem.SFXEntity;
@@ -13,7 +14,6 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
 
 public class TileEntityPropellerBench extends TileEntity implements SFXEntity{
 	public byte propellerType = 0;
@@ -30,10 +30,10 @@ public class TileEntityPropellerBench extends TileEntity implements SFXEntity{
 	}
 	
 	@Override
-    public void setWorldObj(World world){
-        this.worldObj = world;
+    public void validate(){
+		super.validate();
         if(worldObj.isRemote){
-        	MFS.MFSNet.sendToServer(new PropellerBenchSyncPacket(this));
+        	MFS.MFSNet.sendToServer(new PropellerBenchClientRequestDataPacket(this));
         }
     }
 	

@@ -39,7 +39,7 @@ public class PropellerBenchClientRequestDataPacket implements IMessage{
 				TileEntityPropellerBench bench = (TileEntityPropellerBench) ctx.getServerHandler().playerEntity.worldObj.getTileEntity(message.x, message.y, message.z);
 				if(bench != null){
 					return new PropellerBenchSyncPacket(bench);
-				}	
+				}
 			}
 			return null;
 		}
