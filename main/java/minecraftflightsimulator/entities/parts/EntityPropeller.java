@@ -79,11 +79,11 @@ public class EntityPropeller extends EntityChild{
 								}
 							}
 						}
+						return true;
 					}
-				}else{
-					damagePropeller(damage);
 				}
 			}
+			damagePropeller(damage);
 		}
 		return true;
 	}
