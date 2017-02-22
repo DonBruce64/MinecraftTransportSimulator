@@ -65,9 +65,8 @@ public final class RenderSystem{
     				playerRiding = true;
     			}
     		}
-    		//For some reason x, y, z aren't correct.
+    		//x, y, and z aren't correct here due to the delayed update system.
     		//Have to do this or put up with shaking while in the plane.
-    		//TODO figure out why they don't work.  Look at partialticks.
     		if(playerRiding){
     			GL11.glTranslated(parent.posX - player.posX, parent.posY - player.posY, parent.posZ - player.posZ);
     		}else{
