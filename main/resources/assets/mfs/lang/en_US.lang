@@ -16,19 +16,33 @@ interact.failure.propellerbenchworking=This propeller bench is currently busy.
 interact.failure.gaspumptoofar=The gas pump is too far away from the vehicle.  The pump should be no less than 16 blocks away.
 interact.failure.gaspumpwrongside=The gas pump is on the wrong side of the vehicle.  The pump should be on the right. 
 
-gui.panel.magneto=MAG
-gui.panel.starter=START
-gui.panel.navigationlights=NAV
-gui.panel.strobelights=STROBE
-gui.panel.taxilights=TAXI
-gui.panel.landinglights=LAND
-gui.panel.gearup=GEAR UP
-gui.panel.geardown=GEAR DOWN
-gui.panel.pitchtrim=PITCH
-gui.panel.yawtrim=YAW
-gui.panel.rolltrim=ROLL
-gui.panel.up=UP
-gui.panel.down=DN
+input.key.mod=Mod
+input.key.camlock=CamLock
+input.key.pitchu=PitchUp
+input.key.pitchd=PitchDown
+input.key.rollr=RollRight
+input.key.rolll=RollLeft
+input.key.yawr=YawRight
+input.key.yawl=YawLeft
+input.key.throttleu=ThrottleUp
+input.key.throttled=ThrottleDown
+input.key.flapsu=FlapsUp
+input.key.flapsd=FlapsDown
+input.key.brake=Brake
+input.key.panel=Panel
+input.key.zoomi=ZoomIn
+input.key.zoomo=ZoomOut
+
+input.joystick.pitch=Pitch
+input.joystick.roll=Roll
+input.joystick.yaw=Yaw
+input.joystick.throttle=Throttle
+input.joystick.changeview=ChangeView
+input.joystick.lookl=LookLeft
+input.joystick.lookr=LookRight
+input.joystick.looku=LookUp
+input.joystick.lookd=LookDown
+input.joystick.looka=LookDirectional
 
 gui.instruments.main=Main Instruments
 gui.instruments.control=Control Panel
@@ -73,9 +87,6 @@ info.item.engine.creative=Creative: Uses no fuel
 info.item.wrench.use=Use on vehicle to change instruments.
 info.item.wrench.attack=Attack a part to remove.
 info.item.wrench.sneakattack=Sneak-attack to remove vehicle.
-
-entity.mfs.Chest.name=Chest
-tile.propellerbench.name=Propeller Bench
 
 item.mc172.name=MC-172
 item.pzlp11.name=PZL P.11
@@ -131,6 +142,9 @@ item.flightinstrument14.name=Oil Pressure Gauge
 item.flightinstrument14.description=Indicates oil pressure.
 item.flightinstrument15.name=Electrical Gauge
 item.flightinstrument15.description=Indicates electrical power and usage.
+
+entity.mfs.Chest.name=Chest
+tile.propellerbench.name=Propeller Bench
 
 itemGroup.tabMFS=Minecraft Flight Simulator
 key.categories.mfs=Minecraft Flight Simulator

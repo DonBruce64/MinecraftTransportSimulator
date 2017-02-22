@@ -243,7 +243,7 @@ public class GUIConfig extends GuiScreen{
 	private void drawPlaneScreen(int mouseX, int mouseY){
 		for(Entry<String, GuiTextField> entry : planeBoxes.entrySet()){
 			entry.getValue().setText(ControlSystem.getKeyboardKeyname(entry.getKey()));
-			fontRendererObj.drawStringWithShadow(entry.getKey().substring(0, entry.getKey().length() - 3) + ":", entry.getValue().xPosition - 70, entry.getValue().yPosition + 2, Color.WHITE.getRGB());
+			fontRendererObj.drawStringWithShadow(entry.getKey() + ":", entry.getValue().xPosition - 70, entry.getValue().yPosition + 2, Color.WHITE.getRGB());
 			if(entry.getValue().isFocused()){
 				entry.getValue().setText("");
 			}
@@ -260,7 +260,7 @@ public class GUIConfig extends GuiScreen{
 	private void drawHelicopterScreen(int mouseX, int mouseY){
 		for(Entry<String, GuiTextField> entry : helicopterBoxes.entrySet()){
 			entry.getValue().setText(ControlSystem.getKeyboardKeyname(entry.getKey()));
-			fontRendererObj.drawStringWithShadow(entry.getKey().substring(0, entry.getKey().length() - 3) + ":", entry.getValue().xPosition - 70, entry.getValue().yPosition + 2, Color.WHITE.getRGB());
+			fontRendererObj.drawStringWithShadow(entry.getKey() + ":", entry.getValue().xPosition - 70, entry.getValue().yPosition + 2, Color.WHITE.getRGB());
 			if(entry.getValue().isFocused()){
 				entry.getValue().setText("");
 			}
@@ -271,7 +271,7 @@ public class GUIConfig extends GuiScreen{
 	private void drawVehicleScreen(int mouseX, int mouseY){
 		for(Entry<String, GuiTextField> entry : vehicleBoxes.entrySet()){
 			entry.getValue().setText(ControlSystem.getKeyboardKeyname(entry.getKey()));
-			fontRendererObj.drawStringWithShadow(entry.getKey().substring(0, entry.getKey().length() - 3) + ":", entry.getValue().xPosition - 70, entry.getValue().yPosition + 2, Color.WHITE.getRGB());
+			fontRendererObj.drawStringWithShadow(entry.getKey() + ":", entry.getValue().xPosition - 70, entry.getValue().yPosition + 2, Color.WHITE.getRGB());
 			if(entry.getValue().isFocused()){
 				entry.getValue().setText("");
 			}

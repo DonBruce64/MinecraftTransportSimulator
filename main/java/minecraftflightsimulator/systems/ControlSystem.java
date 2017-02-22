@@ -13,6 +13,7 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.guis.GUIPanelFlyer;
+import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.BrakePacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
@@ -415,24 +416,24 @@ public final class ControlSystem{
 	}
 	
 	public enum controls{
-		MOD("Mod", "ModKey"),
-		CAM("CamLock", "CamLockKey"),
-		PITCH("Pitch", "PitchUpKey", "PitchDownKey"),
-		ROLL("Roll", "RollRightKey", "RollLeftKey"),
-		YAW("Yaw", "YawRightKey", "YawLeftKey"),
-		THROTTLE("Throttle", "ThrottleUpKey", "ThrottleDownKey"),
-		FLAPS_U("FlapsUp", "FlapsUpKey"),
-		FLAPS_D("FlapsDown", "FlapsDownKey"),
-		BRAKE("Brake", "BrakeKey"),
-		PANEL("Panel", "PanelKey"),
-		ZOOM_I("ZoomIn", "ZoomInKey"),
-		ZOOM_O("ZoomOut", "ZoomOutKey"),
-		CHANGEVIEW("ChangeView", ""),
-		LOOK_L("LookLeft", ""),
-		LOOK_R("LookRight", ""),
-		LOOK_U("LookUp", ""),
-		LOOK_D("LookDown", ""),
-		LOOK_ALL("LookDirectional", "")
+		MOD(PlayerHelper.getTranslatedText("input.key.mod"), false),
+		CAM(PlayerHelper.getTranslatedText("input.key.camlock"), false),
+		PITCH(PlayerHelper.getTranslatedText("input.joystick.pitch"), PlayerHelper.getTranslatedText("input.key.pitchu"), PlayerHelper.getTranslatedText("input.key.pitchd")),
+		ROLL(PlayerHelper.getTranslatedText("input.joystick.roll"), PlayerHelper.getTranslatedText("input.key.rollr"), PlayerHelper.getTranslatedText("input.key.rolll")),
+		YAW(PlayerHelper.getTranslatedText("input.joystick.yaw"), PlayerHelper.getTranslatedText("input.key.yawr"), PlayerHelper.getTranslatedText("input.key.yawl")),
+		THROTTLE(PlayerHelper.getTranslatedText("input.joystick.throttle"), PlayerHelper.getTranslatedText("input.key.throttleu"), PlayerHelper.getTranslatedText("input.key.throttled")),
+		FLAPS_U(PlayerHelper.getTranslatedText("input.key.flapsu"), false),
+		FLAPS_D(PlayerHelper.getTranslatedText("input.key.flapsd"), false),
+		BRAKE(PlayerHelper.getTranslatedText("input.key.brake"), false),
+		PANEL(PlayerHelper.getTranslatedText("input.key.panel"), false),
+		ZOOM_I(PlayerHelper.getTranslatedText("input.key.zoomi"), false),
+		ZOOM_O(PlayerHelper.getTranslatedText("input.key.zoomo"), false),
+		CHANGEVIEW(PlayerHelper.getTranslatedText("input.joystick.changeview"), true),
+		LOOK_L(PlayerHelper.getTranslatedText("input.joystick.lookl"), true),
+		LOOK_R(PlayerHelper.getTranslatedText("input.joystick.lookr"), true),
+		LOOK_U(PlayerHelper.getTranslatedText("input.joystick.looku"), true),
+		LOOK_D(PlayerHelper.getTranslatedText("input.joystick.lookd"), true),
+		LOOK_ALL(PlayerHelper.getTranslatedText("input.joystick.looka"), true)
 		;
 		
 		public final String keyboardName;
@@ -442,8 +443,8 @@ public final class ControlSystem{
 		public double joystickMaxTravel = 1;
 		public double joystickMinTravel = -1;
 		
-		private controls(String joystick, String keyboard){
-			this(joystick, keyboard, keyboard);
+		private controls(String name, boolean joystickOnly){
+			this(name, joystickOnly ? "" : name, joystickOnly ? "" : name);
 		}
 		private controls(String joystick, String keyboardIncrement, String keyboardDecrement){
 			this.joystickName = joystick;
