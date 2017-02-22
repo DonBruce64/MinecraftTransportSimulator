@@ -13,6 +13,7 @@ import minecraftflightsimulator.packets.control.LightPacket;
 import minecraftflightsimulator.rendering.AircraftInstruments;
 import minecraftflightsimulator.rendering.VehicleHUDs;
 import minecraftflightsimulator.systems.CameraSystem;
+import minecraftflightsimulator.systems.ConfigSystem;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -32,6 +33,7 @@ public class GUIPanelFlyer extends GuiScreen{
 	private final ResourceLocation moldingTexture;
 	private final EntityVehicle vehicle;
 	private final EntityEngine[] engines;
+	private final boolean electricStartEnabled = ConfigSystem.getBooleanConfig("ElectricStart");
 	
 	private byte lastEngineStarted;
 	
@@ -62,8 +64,10 @@ public class GUIPanelFlyer extends GuiScreen{
 		for(byte i=0; i<engines.length; ++i){
 			GL11DrawSystem.bindTexture(engines[i] != null ? (engines[i].state.magnetoOn ? toggleOn : toggleOff) : toggleOff);
 			GL11DrawSystem.renderSquare((2+i)*width/(2 + engines.length)-18, (2+i)*width/(2 + engines.length)-2, height-12+8, height-12-8, 0, 0, false);
-			GL11DrawSystem.bindTexture(engines[i] != null ? (engines[i].state.esOn ? toggleOn : toggleOff) : toggleOff);
-			GL11DrawSystem.renderSquare((2+i)*width/(2 + engines.length)+2, (2+i)*width/(2 + engines.length)+18, height-12+8, height-12-8, 0, 0, false);
+			if(electricStartEnabled){
+				GL11DrawSystem.bindTexture(engines[i] != null ? (engines[i].state.esOn ? toggleOn : toggleOff) : toggleOff);
+				GL11DrawSystem.renderSquare((2+i)*width/(2 + engines.length)+2, (2+i)*width/(2 + engines.length)+18, height-12+8, height-12-8, 0, 0, false);
+			}
 		}
 		for(byte i=1; i<=4; ++i){
 			if(((vehicle.lightSetup & 1<<(i-1)) == 1<<(i-1))){
@@ -73,7 +77,9 @@ public class GUIPanelFlyer extends GuiScreen{
 		}
 		for(byte i=0; i<engines.length; ++i){
 			GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.magneto"), (2+i)*width/(2 + engines.length)-12, height-26, 0, 0.6F, Color.WHITE);
-			GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.starter"), (2+i)*width/(2 + engines.length)+12, height-26, 0, 0.6F, Color.WHITE);
+			if(electricStartEnabled){
+				GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.starter"), (2+i)*width/(2 + engines.length)+12, height-26, 0, 0.6F, Color.WHITE);
+			}
 		}
 		for(byte i=1; i<=4; ++i){
 			if(((vehicle.lightSetup & 1<<(i-1)) == 1<<(i-1))){
@@ -122,22 +128,23 @@ public class GUIPanelFlyer extends GuiScreen{
 						if(x >= (2+i)*width/(2 + engines.length)-18 && x <= (2+i)*width/(2 + engines.length)-2){
 							MFS.MFSNet.sendToServer(new EnginePacket(engines[i].parent.getEntityId(), engines[i].getEntityId(), engines[i].state.magnetoOn ? (byte) 0 : (byte) 1));
 						}else if(x >= (2+i)*width/(2 + engines.length)+2 && x <= (2+i)*width/(2 + engines.length)+18){
-							if(!engines[i].state.esOn){
-								MFS.MFSNet.sendToServer(new EnginePacket(engines[i].parent.getEntityId(), engines[i].getEntityId(), (byte) 3));
+							if(electricStartEnabled){
+								if(!engines[i].state.esOn){
+									MFS.MFSNet.sendToServer(new EnginePacket(engines[i].parent.getEntityId(), engines[i].getEntityId(), (byte) 3));
+								}
+								lastEngineStarted = i;
 							}
-							lastEngineStarted = i;
 						}
 					}
 				}
 			}
-			
 		}
 	}
 	
 	@Override
 	protected void mouseMovedOrUp(int mouseX, int mouseY, int actionType){
 	    if(actionType == 0){
-	    	if(lastEngineStarted != -1){
+	    	if(lastEngineStarted != -1 && electricStartEnabled){
 	    		MFS.MFSNet.sendToServer(new EnginePacket(engines[lastEngineStarted].parent.getEntityId(), engines[lastEngineStarted].getEntityId(), (byte) 2));
 	    	}
 	    }
