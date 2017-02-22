@@ -162,8 +162,8 @@ public final class ControlSystem{
 	}
 	
 	public static void setJoystick(Controller controller){
-		if(!joystick.getName().equals(joystickName)){
-			ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put("JoystickName", new Property("JoystickName", joystick.getName(), Property.Type.STRING));
+		if(!controller.getName().equals(joystickName)){
+			ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put("JoystickName", new Property("JoystickName", controller.getName(), Property.Type.STRING));
 			for(String joystickControl : joystickMap.keySet()){
 				setJoystickControl(joystickControl, NULL_COMPONENT);
 			}
