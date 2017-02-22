@@ -162,8 +162,13 @@ public abstract class EntityParent extends EntityBase{
 		super.onEntityUpdate();
 		if(!this.hasUUID()){return;}
 		if(!linked){
-			//TODO add slack for when parts disappear.
 			linked = children.size() == numberChildren;
+			//Sometimes parts don't load right.  Need to reset the number of children then.
+			if(!linked && ticksExisted == 100 && children.size() == numberChildren - 1){
+				System.err.println("A PART HAS FAILED TO LOAD! SKIPPNG!");
+				numberChildren = (byte) children.size();
+				linked = true;
+			}	
 		}else if(!worldObj.isRemote && this.ticksExisted%ConfigSystem.getIntegerConfig("SyncDelay")==0){
 			MFS.MFSNet.sendToAll(new ServerSyncPacket(getEntityId(), posX, posY, posZ, motionX, motionY, motionZ, rotationPitch, rotationRoll, rotationYaw));
 		}
