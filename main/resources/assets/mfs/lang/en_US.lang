@@ -44,6 +44,13 @@ input.joystick.looku=LookUp
 input.joystick.lookd=LookDown
 input.joystick.looka=LookDirectional
 
+gui.panel.navigationlights=NAV
+gui.panel.strobelights=STROBE
+gui.panel.taxilights=TAXI
+gui.panel.landinglights=LAND
+gui.panel.magneto=MAG
+gui.panel.starter=START
+
 gui.instruments.main=Main Instruments
 gui.instruments.control=Control Panel
 gui.instruments.clear=CLEAR
