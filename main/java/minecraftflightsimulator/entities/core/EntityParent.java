@@ -164,8 +164,14 @@ public abstract class EntityParent extends EntityBase{
 		if(!linked){
 			linked = children.size() == numberChildren;
 			//Sometimes parts don't load right.  Need to reset the number of children then.
-			if(!linked && ticksExisted == 100 && children.size() == numberChildren - 1){
-				System.err.println("A PART HAS FAILED TO LOAD! SKIPPNG!");
+			if(!linked && ticksExisted == 100){
+				if(children.size() == numberChildren - 1){
+					System.err.println("A PART HAS FAILED TO LOAD!  SKIPPNG!");
+				}else if(children.size() == numberChildren + 1){
+					System.err.println("AN EXTRA PART HAS BEEN LOADED!  ADDING!");
+				}else{
+					return;
+				}
 				numberChildren = (byte) children.size();
 				linked = true;
 			}	
