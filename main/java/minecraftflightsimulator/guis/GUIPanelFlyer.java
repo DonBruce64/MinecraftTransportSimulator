@@ -54,11 +54,12 @@ public class GUIPanelFlyer extends GuiScreen{
 			mc.thePlayer.closeScreen();
 			return;
 		}
+		boolean lighted = VehicleHUDs.areLightsOn(vehicle);
 		
 		CameraSystem.disableHUD = true;
 		VehicleHUDs.startHUDDraw(vehicle);
 		VehicleHUDs.drawPanelPanel(width, height);
-		if(VehicleHUDs.areLightsOn(vehicle)){
+		if(lighted){
 			Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
 		}
 		for(byte i=0; i<engines.length; ++i){
@@ -76,21 +77,21 @@ public class GUIPanelFlyer extends GuiScreen{
 			}
 		}
 		for(byte i=0; i<engines.length; ++i){
-			GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.magneto"), (2+i)*width/(2 + engines.length)-12, height-26, 0, 0.6F, Color.WHITE);
+			GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.magneto"), (2+i)*width/(2 + engines.length)-12, height-26, 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 			if(electricStartEnabled){
-				GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.starter"), (2+i)*width/(2 + engines.length)+12, height-26, 0, 0.6F, Color.WHITE);
+				GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.starter"), (2+i)*width/(2 + engines.length)+12, height-26, 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 			}
 		}
 		for(byte i=1; i<=4; ++i){
 			if(((vehicle.lightSetup & 1<<(i-1)) == 1<<(i-1))){
 				if(i==1){
-					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.navigationlights"), width/10-10, height-126+(i*25), 0, 0.6F, Color.WHITE);
+					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.navigationlights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 				}else if(i==2){
-					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.strobelights"), width/10-10, height-126+(i*25), 0, 0.6F, Color.WHITE);
+					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.strobelights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 				}else if(i==3){
-					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.taxilights"), width/10-10, height-126+(i*25), 0, 0.6F, Color.WHITE);
+					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.taxilights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 				}else if(i==4){
-					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.landinglights"), width/10-10, height-126+(i*25), 0, 0.6F, Color.WHITE);
+					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.landinglights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 				}
 			}
 		}
