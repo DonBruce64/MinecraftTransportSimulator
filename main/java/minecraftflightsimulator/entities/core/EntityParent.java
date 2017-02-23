@@ -228,9 +228,12 @@ public abstract class EntityParent extends EntityBase{
 					this.rotationRoll = 0;
 					this.setPositionAndRotation(posX, posY + boost, posZ, rotationYaw, 0);
 					child.setPosition(posX + child.offsetX, posY + child.offsetY + boost, posZ + child.offsetZ);
-					//Sometimes this can happen if the vehicle rotates and shoves something under the ground.
-					if(!AABBHelper.getCollidingBlockBoxes(worldObj, AABBHelper.getEntityBoundingBox(child), child.collidesWithLiquids()).isEmpty()){
-						this.setPositionAndRotation(posX, posY + 1, posZ, rotationYaw, 0);
+					
+					//Sometimes children can break off if the vehicle rotates and shoves something under the ground.
+					for(EntityChild testChild : this.children.values()){
+						if(!AABBHelper.getCollidingBlockBoxes(worldObj, AABBHelper.getEntityBoundingBox(testChild), testChild.collidesWithLiquids()).isEmpty()){
+							this.setPositionAndRotation(posX, posY + 1, posZ, rotationYaw, 0);
+						}
 					}
 				}
 				worldObj.spawnEntityInWorld(child);
