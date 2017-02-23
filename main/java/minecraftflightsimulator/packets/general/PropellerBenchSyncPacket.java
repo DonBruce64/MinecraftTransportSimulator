@@ -5,6 +5,7 @@ import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
+import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
@@ -51,7 +52,10 @@ public class PropellerBenchSyncPacket implements IMessage{
 			if(bench != null){
 				bench.readFromNBT(message.tag);
 			}
-			return ctx.side.isServer() ? message : null;
+			if(ctx.side.isServer()){
+				MFS.MFSNet.sendToAll(message);
+			}
+			return null;
 		}
 	}	
 }
