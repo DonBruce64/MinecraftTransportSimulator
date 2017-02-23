@@ -7,6 +7,7 @@ import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityPlane;
+import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.minecrafthelpers.AABBHelper;
 import minecraftflightsimulator.minecrafthelpers.EntityHelper;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
@@ -70,12 +71,14 @@ public class EntityPropeller extends EntityChild{
 				return true;
 			}
 			if(parent != null){
-				if(source.getEntity() instanceof EntityPlayer){
+				if(source.getEntity() instanceof EntityPlayer){					
 					if(PlayerHelper.getHeldStack((EntityPlayer) source.getEntity()) == null){
 						for(EntityChild child : parent.getChildren()){
 							if(child instanceof EntityEngineAircraft){
 								if(this.equals(((EntityEngineAircraft) child).propeller)){
-									MFS.MFSNet.sendToServer(new EnginePacket(parent.getEntityId(), engine.getEntityId(), (byte) 4));
+									System.out.println("HIT");
+									((EntityVehicle) parent).handleEngineSignal(engine, (byte) 4);
+									MFS.MFSNet.sendToAll(new EnginePacket(parent.getEntityId(), engine.getEntityId(), (byte) 4));
 								}
 							}
 						}
