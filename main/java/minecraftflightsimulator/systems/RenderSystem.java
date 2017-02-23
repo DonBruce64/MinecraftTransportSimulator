@@ -75,7 +75,7 @@ public final class RenderSystem{
             for(EntityChild child : parent.getChildren()){
             	if(MFSClientRegistry.childRenderMap.get(child.getClass()) != null){
             		childOffset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
-            		MFSClientRegistry.childRenderMap.get(child.getClass()).renderChildModel(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord);
+            		MFSClientRegistry.childRenderMap.get(child.getClass()).render(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord, partialTicks);
         		}
             }
             this.renderParentModel(parent, partialTicks);
@@ -97,7 +97,7 @@ public final class RenderSystem{
      */
     public static abstract class RenderChild{
     	public RenderChild(){}
-    	public abstract void renderChildModel(EntityChild child, double x, double y, double z);
+    	public abstract void render(EntityChild child, double x, double y, double z, float partialTicks);
     }
     
     public static abstract class RenderTileBase extends TileEntitySpecialRenderer{

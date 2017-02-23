@@ -16,8 +16,7 @@ public class RenderPropeller extends RenderChild{
 	private static final ResourceLocation tierThreeTexture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
 
 	@Override
-	public void renderChildModel(EntityChild child, double x, double y, double z){		
-		
+	public void render(EntityChild child, double x, double y, double z, float partialTicks){
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glRotatef(180-child.parent.rotationYaw, 0, 1, 0);
@@ -32,7 +31,7 @@ public class RenderPropeller extends RenderChild{
 			GL11DrawSystem.bindTexture(tierOneTexture);
 		}
 		
-		model.renderPropeller(((EntityPropeller) child).numberBlades, ((EntityPropeller) child).diameter, -((EntityPropeller) child).angularPosition);
+		model.renderPropeller(((EntityPropeller) child).numberBlades, ((EntityPropeller) child).diameter, -((EntityPropeller) child).angularPosition - ((EntityPropeller) child).angularVelocity*partialTicks);
 		GL11.glPopMatrix();
 	}
 }

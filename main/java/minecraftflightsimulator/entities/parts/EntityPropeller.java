@@ -112,8 +112,8 @@ public class EntityPropeller extends EntityChild{
 		}
 		
 		if(worldObj.isRemote){
-			angularVelocity = (float) (0.8F*Math.atan(engine.RPM/250F));
-			angularPosition = (angularVelocity+angularPosition)%6.283185312F;
+			angularVelocity = (float) (360*engine.RPM/60F/20F/150F);
+			angularPosition += angularVelocity;
 		}else{
 			if(engine.RPM >= 100){
 				List<Entity> collidedEntites = EntityHelper.getEntitiesThatCollideWithBox(worldObj, EntityLivingBase.class, AABBHelper.getOffsetEntityBoundingBox(this, 0.2F, 0.2F, 0.2F));

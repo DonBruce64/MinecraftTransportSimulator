@@ -13,7 +13,7 @@ public class RenderPontoon extends RenderChild{
 	private static final ResourceLocation pontoonTexture = new ResourceLocation("minecraft", "textures/blocks/iron_block.png");
 
 	@Override
-	public void renderChildModel(EntityChild child, double x, double y, double z){		
+	public void render(EntityChild child, double x, double y, double z, float partialTicks){		
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glRotatef(180, 1, 0, 0);

@@ -14,7 +14,7 @@ public class RenderPlaneChest extends RenderChild{
 	private static final ResourceLocation chestTexture = new ResourceLocation("minecraft", "textures/entity/chest/normal.png");
 
 	@Override
-	public void renderChildModel(EntityChild child, double x, double y, double z){
+	public void render(EntityChild child, double x, double y, double z, float partialTicks){
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glRotatef(-child.parent.rotationYaw, 0, 1, 0);

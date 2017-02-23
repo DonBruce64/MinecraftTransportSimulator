@@ -15,7 +15,7 @@ public class RenderWheel extends RenderChild{
 	private static final ResourceLocation outerTexture = new ResourceLocation("minecraft", "textures/blocks/wool_colored_black.png");
 
 	@Override
-	public void renderChildModel(EntityChild child, double x, double y, double z) {
+	public void render(EntityChild child, double x, double y, double z, float partialTicks){
 		EntityWheel wheel = (EntityWheel) child;
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
@@ -28,17 +28,17 @@ public class RenderWheel extends RenderChild{
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 		if(wheel instanceof EntityWheel.EntityWheelSmall){
 			GL11DrawSystem.bindTexture(innerTexture);
-			model.renderSmallInnerWheel(wheel.angularPosition);
+			model.renderSmallInnerWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);
 			if(!wheel.isFlat){
 				GL11DrawSystem.bindTexture(outerTexture);
-				model.renderSmallOuterWheel(wheel.angularPosition);
+				model.renderSmallOuterWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);
 			}
 		}else{
 			GL11DrawSystem.bindTexture(innerTexture);
-			model.renderLargeInnerWheel(wheel.angularPosition);
+			model.renderLargeInnerWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);
 			if(!wheel.isFlat){
 				GL11DrawSystem.bindTexture(outerTexture);
-				model.renderLargeOuterWheel(wheel.angularPosition);
+				model.renderLargeOuterWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);
 			}
 		}
 		GL11.glPopMatrix();
