@@ -64,6 +64,8 @@ public class ServerSyncPacket implements IMessage{
 	}
 
 	public static class Handler implements IMessageHandler<ServerSyncPacket, IMessage>{
+		private static boolean forced;
+		
 		@Override
 		public IMessage onMessage(ServerSyncPacket message, MessageContext ctx) {
 			if(ctx.side.isClient()){
@@ -71,6 +73,7 @@ public class ServerSyncPacket implements IMessage{
 				if(thisEntity != null){
 					byte syncThreshold = (byte) ConfigSystem.getIntegerConfig("SyncThreshold");
 					float syncIncrement = (float) ConfigSystem.getDoubleConfig("IncrementalMovement");
+					forced = false;
 
 					thisEntity.posX = rectifyValue(thisEntity.posX, message.posX, syncIncrement, syncThreshold);
 					thisEntity.posY = rectifyValue(thisEntity.posY, message.posY, syncIncrement, syncThreshold);
@@ -93,6 +96,10 @@ public class ServerSyncPacket implements IMessage{
 					thisEntity.yawCorrection -= thisEntity.rotationYaw;
 					
 					thisEntity.moveChildren();
+					
+					if(forced){
+						thisEntity.requestDataFromServer();
+					}
 				}
 			}
 			return null;
@@ -101,12 +108,14 @@ public class ServerSyncPacket implements IMessage{
 		private static double rectifyValue(double currentValue, double packetValue, double increment, double cutoff){
 			if(currentValue > packetValue){
 				if(currentValue - packetValue > cutoff){
+					forced = true;
 					return packetValue;
 				}else{
 					return currentValue - Math.min(currentValue - packetValue, increment);
 				}
 			}else{
 				if(packetValue - currentValue > cutoff){
+					forced = true;
 					return packetValue;
 				}else{
 					return currentValue + Math.min(packetValue - currentValue, increment);
