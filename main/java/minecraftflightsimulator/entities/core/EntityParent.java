@@ -231,8 +231,9 @@ public abstract class EntityParent extends EntityBase{
 					
 					//Sometimes children can break off if the vehicle rotates and shoves something under the ground.
 					for(EntityChild testChild : this.children.values()){
-						if(!AABBHelper.getCollidingBlockBoxes(worldObj, AABBHelper.getEntityBoundingBox(testChild), testChild.collidesWithLiquids()).isEmpty()){
+						if(!AABBHelper.getCollidingBlockBoxes(worldObj, AABBHelper.getOffsetEntityBoundingBox(testChild, 0, boost, 0), testChild.collidesWithLiquids()).isEmpty()){
 							this.setPositionAndRotation(posX, posY + 1, posZ, rotationYaw, 0);
+							break;
 						}
 					}
 				}
