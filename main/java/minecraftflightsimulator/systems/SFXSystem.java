@@ -37,7 +37,7 @@ public final class SFXSystem{
 	public static void doSFX(SFXEntity entity, World world){
 		if(world.isRemote){
 			soundHandler = Minecraft.getMinecraft().getSoundHandler();
-			if(entity.shouldSoundBePlaying() && entity.getCurrentSound() == null){
+			if(entity.shouldSoundBePlaying() && (entity.getCurrentSound() == null || !soundHandler.isSoundPlaying(entity.getCurrentSound()))){
 				entity.setCurrentSound(entity.getNewSound());
 				soundHandler.playSound(entity.getCurrentSound());
 			}
