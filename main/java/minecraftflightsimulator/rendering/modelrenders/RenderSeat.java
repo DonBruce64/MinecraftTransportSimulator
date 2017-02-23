@@ -10,8 +10,9 @@ import net.minecraft.util.ResourceLocation;
 
 public class RenderSeat extends RenderChild{
 	private static final ModelSeat model = new ModelSeat();
-	private static ResourceLocation[] woodTextures = getWoodTextures();
-	private static ResourceLocation[] woolTextures = getWoolTextures();
+	private static final ResourceLocation[] woodTextures = getWoodTextures();
+	private static final ResourceLocation[] woolTextures = getWoolTextures();
+	private static final ResourceLocation leatherTexture = new ResourceLocation("mfs", "textures/parts/leather.png");
 	//TODO add leather seats.
 	
 	@Override
@@ -22,9 +23,13 @@ public class RenderSeat extends RenderChild{
 		GL11.glRotatef(child.parent.rotationPitch, 1, 0, 0);
 		GL11.glRotatef(child.parent.rotationRoll, 0, 0, 1);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        GL11DrawSystem.bindTexture(woodTextures[child.propertyCode >> 4 > 5 ? 0 : child.propertyCode >> 4]);
+        GL11DrawSystem.bindTexture(woodTextures[child.propertyCode%6]);
 		model.renderFrame();
-		GL11DrawSystem.bindTexture(woolTextures[child.propertyCode & 15]);
+		if(child.propertyCode < 96){
+			GL11DrawSystem.bindTexture(woolTextures[child.propertyCode/6]);
+		}else{
+			GL11DrawSystem.bindTexture(leatherTexture);
+		}
 		model.renderCushion();
 		GL11.glPopMatrix();
 	}

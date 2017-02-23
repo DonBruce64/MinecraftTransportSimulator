@@ -254,16 +254,22 @@ public class MFSRegistry{
 	}
 	
 	private void initPartRecipes(){
-		//Seat
+		//Seats
+		for(int i=0; i<96; ++i){
+			MFS.proxy.registerRecpie(new ItemStack(seat, 1, i),
+				" BA",
+				" BA",
+				"AAA",
+				'A', new ItemStack(Blocks.wooden_slab, 1, i%6), 
+				'B', new ItemStack(Blocks.wool, 1, i/6));
+		}
 		for(int i=0; i<6; ++i){
-			for(int j=0; j<16; ++j){
-				MFS.proxy.registerRecpie(new ItemStack(seat, 1, (i << 4) + j),
-					" BA",
-					" BA",
-					"AAA",
-					'A', new ItemStack(Blocks.wooden_slab, 1, i), 
-					'B', new ItemStack(Blocks.wool, 1, j));
-			}
+			MFS.proxy.registerRecpie(new ItemStack(seat, 1, 96 + i),
+				" BA",
+				" BA",
+				"AAA",
+				'A', new ItemStack(Blocks.wooden_slab, 1, i%6), 
+				'B', new ItemStack(Items.leather));
 		}
 		
 		//Wheels

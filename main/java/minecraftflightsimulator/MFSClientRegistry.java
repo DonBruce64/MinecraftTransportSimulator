@@ -97,7 +97,7 @@ public class MFSClientRegistry{
 		registerItemSeries(MFSRegistry.planeVulcanair, 7);
 		registerItemSeries(MFSRegistry.planeTrimotor, 15);
 		registerItemSeries(MFSRegistry.planeVans, 15);
-		registerItemSeries(MFSRegistry.seat, 96);
+		registerItemSeries(MFSRegistry.seat, 102);
 		registerItemSeries(MFSRegistry.flightInstrument, InstrumentHelper.AircraftGauges.values().length);
 		registerItemSeries(MFSRegistry.engine, EntityEngine.EngineTypes.values().length);
 		
