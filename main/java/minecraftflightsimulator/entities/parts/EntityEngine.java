@@ -8,6 +8,7 @@ import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
+import minecraftflightsimulator.packets.control.EnginePacket;
 import minecraftflightsimulator.sounds.EngineSound;
 import minecraftflightsimulator.systems.ConfigSystem;
 import minecraftflightsimulator.systems.SFXSystem;
@@ -203,11 +204,9 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 				setFire(10);
 			}
 			
-			if(hours > 200){
+			if(hours > 200 && !worldObj.isRemote){
 				if(Math.random() < hours/(200*1200)){
-					RPM -= 100;
-					//TODO get sputter sound.
-					MFS.proxy.playSound(this, "mfs:engine_sputter", 1, 1);
+					this.backfireEngine();
 				}
 			}
 
@@ -304,6 +303,15 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		}
 		starterLevel += type.starterIncrement;
 		MFS.proxy.playSound(this, "mfs:" + type.engineCrankingSoundName, 1, 1);
+	}
+	
+	public void backfireEngine(){
+		RPM -= 100;
+		//TODO get sputter sound.
+		MFS.proxy.playSound(this, "mfs:engine_sputter", 1, 1);
+		if(!worldObj.isRemote){
+			MFS.MFSNet.sendToAll(new EnginePacket(this.parent.getEntityId(), this.getEntityId(), (byte) 5));
+		}
 	}
 	
 	private void startEngine(){

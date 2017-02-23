@@ -224,6 +224,7 @@ public abstract class EntityVehicle extends EntityParent{
 			case 2: engine.setElectricStarterStatus(false); break;
 			case 3: engine.setElectricStarterStatus(true); break;
 			case 4: engine.handStartEngine(); break;
+			case 5: engine.backfireEngine(); break;
 		}
 	}
 	
