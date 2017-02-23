@@ -76,7 +76,6 @@ public class EntityPropeller extends EntityChild{
 						for(EntityChild child : parent.getChildren()){
 							if(child instanceof EntityEngineAircraft){
 								if(this.equals(((EntityEngineAircraft) child).propeller)){
-									System.out.println("HIT");
 									((EntityVehicle) parent).handleEngineSignal(engine, (byte) 4);
 									MFS.MFSNet.sendToAll(new EnginePacket(parent.getEntityId(), engine.getEntityId(), (byte) 4));
 								}
