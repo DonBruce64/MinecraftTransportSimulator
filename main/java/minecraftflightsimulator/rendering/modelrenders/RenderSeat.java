@@ -13,7 +13,6 @@ public class RenderSeat extends RenderChild{
 	private static final ResourceLocation[] woodTextures = getWoodTextures();
 	private static final ResourceLocation[] woolTextures = getWoolTextures();
 	private static final ResourceLocation leatherTexture = new ResourceLocation("mfs", "textures/parts/leather.png");
-	//TODO add leather seats.
 	
 	@Override
 	public void render(EntityChild child, double x, double y, double z, float partialTicks){		
