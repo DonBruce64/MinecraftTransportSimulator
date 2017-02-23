@@ -9,6 +9,7 @@ import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.packets.general.ChatPacket;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -72,6 +73,19 @@ public class EntityEngineAircraft extends EntityEngine{
 				RPM = Math.max(RPM + (vehicle.velocity - 0.0254*propeller.pitch * RPM/60/20)*15 - 10, 0);
 			}else{
 				RPM = Math.max(RPM - 10, 0);
+			}
+		}
+	}
+	
+	@Override
+	public void setDead(){
+		super.setDead();
+		if(propeller != null && !worldObj.isRemote){
+			worldObj.spawnEntityInWorld(new EntityItem(worldObj, propeller.posX, propeller.posY, propeller.posZ, propeller.getItemStack()));
+			if(parent != null){
+				parent.removeChild(propeller.UUID, false);
+			}else if(propeller.parent != null){
+				propeller.parent.removeChild(propeller.UUID, false);
 			}
 		}
 	}
