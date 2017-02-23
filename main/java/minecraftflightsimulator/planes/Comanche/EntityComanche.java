@@ -33,8 +33,8 @@ public class EntityComanche extends EntityPlane{
 		wingArea=16.5F;
 		tailDistance=4.125F;
 		rudderArea=0.7F;
-		elevatorArea=1.0F;
-		defaultElevatorAngle=-10F;
+		elevatorArea=2.0F;
+		defaultElevatorAngle=-7.5F;
 	}
 	
 	@Override
