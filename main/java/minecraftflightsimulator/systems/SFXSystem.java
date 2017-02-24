@@ -2,6 +2,7 @@ package minecraftflightsimulator.systems;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import minecraftflightsimulator.entities.core.EntityVehicle;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSound;
@@ -21,6 +22,7 @@ public final class SFXSystem{
 	 */
 	public static void playSound(Entity noisyEntity, String soundName, float volume, float pitch){
 		if(noisyEntity.worldObj.isRemote){
+			volume = isPlayerInsideVehicle() ? volume*0.5F : volume;
 			double soundDistance = Minecraft.getMinecraft().thePlayer.getDistance(noisyEntity.posX, noisyEntity.posY, noisyEntity.posZ);
 	        PositionedSoundRecord sound = new PositionedSoundRecord(new ResourceLocation(soundName), volume, pitch, (float)noisyEntity.posX, (float)noisyEntity.posY, (float)noisyEntity.posZ);
 	        if(soundDistance > 10.0D){
@@ -43,6 +45,17 @@ public final class SFXSystem{
 			}
 			entity.spawnParticles();
 		}
+	}
+	
+	public static boolean isPlayerInsideVehicle(){
+		if(ClientEventSystem.playerLastSeat != null){
+			if(ClientEventSystem.playerLastSeat.parent != null){
+				if(!((EntityVehicle) ClientEventSystem.playerLastSeat.parent).openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	public static class OilDropParticleFX extends EntityDropParticleFX{

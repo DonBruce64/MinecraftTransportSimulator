@@ -34,8 +34,9 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
  */
 public final class ClientEventSystem{
 	public static ClientEventSystem instance = new ClientEventSystem();
+	/**The last seat a player was in.  If null, this means the player is not in a seat.*/
+	public static EntitySeat playerLastSeat = null;
 	private static Minecraft minecraft = Minecraft.getMinecraft();
-	private static EntitySeat playerLastSeat = null;
 	
 	/**
 	 * Checks on world load to see if player has loaded the mod before.

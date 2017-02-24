@@ -1,6 +1,7 @@
 package minecraftflightsimulator.sounds;
 
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
+import minecraftflightsimulator.systems.SFXSystem;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.util.ResourceLocation;
 
@@ -20,6 +21,7 @@ public class BenchSound extends MovingSound{
 	
 	@Override
 	public void update(){
+		this.volume = SFXSystem.isPlayerInsideVehicle() ? 0.5F : 1.0F;
 		this.donePlaying = bench.isInvalid() ? true : !bench.isRunning();
 		if(donePlaying){
 			bench.setCurrentSound(null);

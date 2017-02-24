@@ -29,6 +29,7 @@ import net.minecraft.world.World;
 public abstract class EntityVehicle extends EntityParent{
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
+	public boolean openTop;
 	public byte lightSetup;
 	public byte numberPowerfulLights;
 	public byte lightStatus;
@@ -291,6 +292,7 @@ public abstract class EntityVehicle extends EntityParent{
 		super.readFromNBT(tagCompound);
 		this.brakeOn=tagCompound.getBoolean("brakeOn");
 		this.parkingBrakeOn=tagCompound.getBoolean("parkingBrakeOn");
+		this.openTop=tagCompound.getBoolean("openTop");
 		this.lightStatus=tagCompound.getByte("lightStatus");
 		this.textureOptions=tagCompound.getByte("textureOptions");
 		this.throttle=tagCompound.getByte("throttle");
@@ -311,6 +313,7 @@ public abstract class EntityVehicle extends EntityParent{
 		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("brakeOn", this.brakeOn);
 		tagCompound.setBoolean("parkingBrakeOn", this.parkingBrakeOn);
+		tagCompound.setBoolean("openTop", this.openTop);
 		tagCompound.setByte("lightStatus", this.lightStatus);
 		tagCompound.setByte("textureOptions", this.textureOptions);
 		tagCompound.setByte("throttle", this.throttle);

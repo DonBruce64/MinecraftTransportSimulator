@@ -25,6 +25,7 @@ public class EntityPZLP11 extends EntityPlane{
 
 	@Override
 	protected void initProperties(){
+		openTop = true;
 		lightSetup = 0;
 		numberPowerfulLights = 0;
 		maxFuel = 7000;		

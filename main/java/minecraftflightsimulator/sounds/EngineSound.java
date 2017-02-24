@@ -2,6 +2,7 @@ package minecraftflightsimulator.sounds;
 
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntitySeat;
+import minecraftflightsimulator.systems.SFXSystem;
 import minecraftflightsimulator.utilites.MFSVector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSound;
@@ -51,7 +52,7 @@ public class EngineSound extends MovingSound{
 						soundVelocity = (playerPos.distanceTo(enginePos) - playerPos.add(player.motionX, player.motionY, player.motionZ).distanceTo(enginePos.add(engine.parent.motionX, engine.parent.motionY, engine.parent.motionZ)));
 						this.field_147663_c=(float) (engine.RPM*(1+soundVelocity/10)/pitchFactor);
 					}
-					if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
+					if(SFXSystem.isPlayerInsideVehicle()){
 						this.volume = 0.5F;
 					}else{
 						this.volume = 1;
