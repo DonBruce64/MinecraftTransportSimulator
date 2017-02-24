@@ -36,6 +36,7 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	
 	//Runtime data
 	public EngineStates state;
+	public boolean backfired;
 	public byte starterLevel;
 	public int internalFuel;
 	public double fuelFlow;
@@ -123,7 +124,6 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		if(!linked){return;}
 		vehicle = (EntityVehicle) this.parent;
 		fuelFlow = 0;
-		
 		if(isBurning()){
 			hours += 0.1;
 			if(BlockHelper.isPositionInLiquid(worldObj, posX, posY + 0.25, posZ)){
@@ -170,8 +170,6 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 				RPM = Math.max(RPM-type.starterPower, 600);
 			}
 		}
-		//Idle 100-110
-		//Use 140-150
 		
 		ambientTemp = 25*worldObj.getBiomeGenForCoords((int) this.posX, (int) this.posZ).temperature - 5*(Math.pow(2, posY/400) - 1);
 		coolingFactor = 0.001 + vehicle.velocity/500F;
@@ -205,7 +203,7 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 			}
 			
 			if(hours > 200 && !worldObj.isRemote){
-				if(Math.random() < hours/(200*1200)){
+				if(Math.random() < hours/10000){
 					this.backfireEngine();
 				}
 			}
@@ -307,10 +305,11 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	
 	public void backfireEngine(){
 		RPM -= 100;
-		//TODO get sputter sound.
-		MFS.proxy.playSound(this, "mfs:engine_sputter", 1, 1);
 		if(!worldObj.isRemote){
 			MFS.MFSNet.sendToAll(new EnginePacket(this.parent.getEntityId(), this.getEntityId(), (byte) 5));
+		}else{
+			MFS.proxy.playSound(this, "mfs:engine_sputter", 1, 1);
+			backfired = true;
 		}
 	}
 	
@@ -398,6 +397,12 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 					if((ticksExisted + 5)%20 == 0){
 						Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.FuelDropParticleFX(worldObj, posX, posY, posZ));
 					}
+				}
+			}
+			if(backfired){
+				backfired = false;
+				for(byte i=0; i<5; ++i){
+					Minecraft.getMinecraft().theWorld.spawnParticle("largesmoke", posX, posY + 0.5, posZ, Math.random()*0.15, 0.15, Math.random()*0.15);
 				}
 			}
 		}
