@@ -18,6 +18,7 @@ public class BlockPropellerBench extends BlockContainer{
 		super(Material.iron);
 		this.setHardness(5.0F);
 		this.setResistance(10.0F);
+		this.setCreativeTab(MFS.tabMFS);
 	}
 	
 	@Override

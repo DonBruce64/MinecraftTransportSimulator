@@ -56,7 +56,6 @@ public class CommonProxy{
 	 * @param block
 	 */
 	public void registerBlock(Block block){
-		block.setCreativeTab(MFS.tabMFS);
 		block.setBlockTextureName("mfs:" + block.getUnlocalizedName().substring(5).toLowerCase());
 		GameRegistry.registerBlock(block, block.getUnlocalizedName().substring(5));
 		MFSRegistry.itemList.add(Item.getItemFromBlock(block));
