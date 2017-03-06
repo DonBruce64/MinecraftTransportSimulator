@@ -30,7 +30,7 @@ public class RenderVulcanair extends RenderPlane{
 	@Override
 	protected void renderPlane(EntityPlane plane){
 		GL11.glRotatef(180, 1, 0, 0);
-		GL11DrawSystem.bindTexture(exteriorTextures[plane.textureOptions > 6 ? 0 : plane.textureOptions]);
+		GL11DrawSystem.bindTexture(exteriorTextures[plane.textureOptions > exteriorTextures.length ? 0 : plane.textureOptions]);
         model.renderFuselage();
         model.renderAilerons(plane.aileronAngle/10F * 0.017453292F);
         model.renderElevators(plane.elevatorAngle/10F * 0.017453292F);
