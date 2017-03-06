@@ -10,7 +10,7 @@ import net.minecraft.util.ResourceLocation;
 
 public class RenderComanche extends RenderPlane{
 	private static final ModelComanche model = new ModelComanche();
-	private static ResourceLocation texture = new ResourceLocation("mfs", "textures/planes/comanche/fuselage.png");
+	private static final ResourceLocation[] exteriorTextures = getExteriorTextures();
 
 	public RenderComanche(RenderManager manager){
 		super(manager);
@@ -25,7 +25,7 @@ public class RenderComanche extends RenderPlane{
 	protected void renderPlane(EntityPlane plane){
 		GL11.glTranslatef(0, 0F, 0F);
 		GL11.glRotatef(180, 1, 0, 0);
-		GL11DrawSystem.bindTexture(texture);
+		GL11DrawSystem.bindTexture(exteriorTextures[plane.textureOptions > exteriorTextures.length ? 0 : plane.textureOptions]);
         model.renderFuselage();
         model.renderAilerons(plane.aileronAngle/10F * 0.017453292F);
         model.renderElevators(plane.elevatorAngle/10F * 0.017453292F);
@@ -89,5 +89,13 @@ public class RenderComanche extends RenderPlane{
 	public void renderLandingBeam(EntityPlane plane) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	private static ResourceLocation[] getExteriorTextures(){
+		ResourceLocation[] texArray = new ResourceLocation[7];
+		for(byte i=0; i<4; ++i){
+			texArray[i] = new ResourceLocation("mfs", "textures/planes/comanche/fuselage" + i + ".png");
+		}
+		return texArray;
 	}
 }

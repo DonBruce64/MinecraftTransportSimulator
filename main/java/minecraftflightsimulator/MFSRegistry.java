@@ -66,7 +66,7 @@ public class MFSRegistry{
 	public static final Item planePZLP11 = new ItemPlane(EntityPZLP11.class, 1);
 	public static final Item planeVulcanair = new ItemPlane(EntityVulcanair.class, 7);
 	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 15);
-	public static final Item planeComanche = new ItemPlane(EntityComanche.class, 1);
+	public static final Item planeComanche = new ItemPlane(EntityComanche.class, 4);
 	
 	public static final Item seat = new ItemSeat();
 	public static final Item propeller = new ItemPropeller();
