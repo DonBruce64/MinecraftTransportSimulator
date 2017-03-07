@@ -7,6 +7,7 @@ import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.Loader;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
+import minecraftflightsimulator.blocks.TileEntityRail;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.core.EntityParent;
@@ -33,6 +34,7 @@ import minecraftflightsimulator.rendering.modelrenders.RenderPlaneChest;
 import minecraftflightsimulator.rendering.modelrenders.RenderPontoon;
 import minecraftflightsimulator.rendering.modelrenders.RenderPropeller;
 import minecraftflightsimulator.rendering.modelrenders.RenderPropellerBench;
+import minecraftflightsimulator.rendering.modelrenders.RenderRail;
 import minecraftflightsimulator.rendering.modelrenders.RenderSeat;
 import minecraftflightsimulator.rendering.modelrenders.RenderSkid;
 import minecraftflightsimulator.rendering.modelrenders.RenderWheel;
@@ -64,6 +66,7 @@ public class MFSClientRegistry{
 	
 	private static void initTileEntityRenderers(){
 		registerTileEntityRender(TileEntityPropellerBench.class, RenderPropellerBench.class);
+		registerTileEntityRender(TileEntityRail.class, RenderRail.class);
 	}
 	
 	private static void initEntityRenders(){

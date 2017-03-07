@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import minecraftflightsimulator.blocks.BlockPropellerBench;
+import minecraftflightsimulator.blocks.BlockRail;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.parts.EntityChest;
@@ -22,6 +23,7 @@ import minecraftflightsimulator.items.ItemEngine;
 import minecraftflightsimulator.items.ItemFlightInstrument;
 import minecraftflightsimulator.items.ItemPlane;
 import minecraftflightsimulator.items.ItemPropeller;
+import minecraftflightsimulator.items.ItemRailWand;
 import minecraftflightsimulator.items.ItemSeat;
 import minecraftflightsimulator.items.ItemWrench;
 import minecraftflightsimulator.packets.control.AileronPacket;
@@ -36,8 +38,8 @@ import minecraftflightsimulator.packets.control.TrimPacket;
 import minecraftflightsimulator.packets.general.ChatPacket;
 import minecraftflightsimulator.packets.general.EntityClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.InstrumentFlyerPacket;
-import minecraftflightsimulator.packets.general.PropellerBenchClientRequestDataPacket;
-import minecraftflightsimulator.packets.general.PropellerBenchSyncPacket;
+import minecraftflightsimulator.packets.general.TileEntityClientRequestDataPacket;
+import minecraftflightsimulator.packets.general.TileEntitySyncPacket;
 import minecraftflightsimulator.packets.general.ServerDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import minecraftflightsimulator.planes.Comanche.EntityComanche;
@@ -81,8 +83,10 @@ public class MFSRegistry{
 	public static final Item flightInstrumentBase = new Item();
 	public static final Item wrench = new ItemWrench();
 	public static final Item flightManual = new Item();
+	public static final Item railWand = new ItemRailWand();
 	
 	public static final Block propellerBench = new BlockPropellerBench();
+	public static final Block rail = new BlockRail();
 	
 	public static List<Item> itemList = new ArrayList<Item>();
 	
@@ -153,10 +157,10 @@ public class MFSRegistry{
 		MFS.proxy.registerPacket(ServerSyncPacket.class, ServerSyncPacket.Handler.class, true, false);
 		
 		MFS.proxy.registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
-		MFS.proxy.registerPacket(PropellerBenchClientRequestDataPacket.class, PropellerBenchClientRequestDataPacket.Handler.class, false, true);
+		MFS.proxy.registerPacket(TileEntityClientRequestDataPacket.class, TileEntityClientRequestDataPacket.Handler.class, false, true);
 
 		MFS.proxy.registerPacket(InstrumentFlyerPacket.class, InstrumentFlyerPacket.Handler.class, true, true);
-		MFS.proxy.registerPacket(PropellerBenchSyncPacket.class, PropellerBenchSyncPacket.Handler.class, true, true);
+		MFS.proxy.registerPacket(TileEntitySyncPacket.class, TileEntitySyncPacket.Handler.class, true, true);
 		
 		MFS.proxy.registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);
