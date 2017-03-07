@@ -8,7 +8,7 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
-import minecraftflightsimulator.packets.general.PropellerBenchSyncPacket;
+import minecraftflightsimulator.packets.general.TileEntitySyncPacket;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -188,11 +188,11 @@ public class GUIPropellerBench extends GuiScreen{
 			bench.diameter-=5;
 		}else if(buttonClicked.equals(startButton)){
 			bench.timeOperationFinished = bench.getWorldObj().getTotalWorldTime() + 1000;
-			MFS.MFSNet.sendToServer(new PropellerBenchSyncPacket(bench));
+			MFS.MFSNet.sendToServer(new TileEntitySyncPacket(bench));
 			mc.thePlayer.closeScreen();
 			return;
 		}
-		MFS.MFSNet.sendToServer(new PropellerBenchSyncPacket(bench));
+		MFS.MFSNet.sendToServer(new TileEntitySyncPacket(bench));
 	}
 	
 	private void getPlayerMaterials(){

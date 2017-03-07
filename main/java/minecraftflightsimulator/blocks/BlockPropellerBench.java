@@ -50,7 +50,7 @@ public class BlockPropellerBench extends BlockContainer{
 	
 	@Override
 	public TileEntity createNewTileEntity(World world, int metadata){
-		return new TileEntityPropellerBench();
+		return new TileEntity();
 	}
 	
 	@Override

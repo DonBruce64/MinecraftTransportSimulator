@@ -6,19 +6,19 @@ import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 
-public class PropellerBenchSyncPacket implements IMessage{
+public class TileEntitySyncPacket implements IMessage{
 	private int x;
 	private int y;
 	private int z;
 	private NBTTagCompound tag = new NBTTagCompound();
 
-	public PropellerBenchSyncPacket() {}
+	public TileEntitySyncPacket() {}
 	
-	public PropellerBenchSyncPacket(TileEntityPropellerBench tile){
+	public TileEntitySyncPacket(TileEntity tile){
 		this.x = tile.xCoord;
 		this.y = tile.yCoord;
 		this.z = tile.zCoord;
@@ -41,16 +41,16 @@ public class PropellerBenchSyncPacket implements IMessage{
 		ByteBufUtils.writeTag(buf, tag);
 	}
 
-	public static class Handler implements IMessageHandler<PropellerBenchSyncPacket, IMessage> {
-		public IMessage onMessage(PropellerBenchSyncPacket message, MessageContext ctx){
-			TileEntityPropellerBench bench;
+	public static class Handler implements IMessageHandler<TileEntitySyncPacket, IMessage> {
+		public IMessage onMessage(TileEntitySyncPacket message, MessageContext ctx){
+			TileEntity tile;
 			if(ctx.side.isServer()){
-				bench = (TileEntityPropellerBench) ctx.getServerHandler().playerEntity.worldObj.getTileEntity(message.x, message.y, message.z);
+				tile = ctx.getServerHandler().playerEntity.worldObj.getTileEntity(message.x, message.y, message.z);
 			}else{
-				bench = (TileEntityPropellerBench) Minecraft.getMinecraft().theWorld.getTileEntity(message.x, message.y, message.z);
+				tile = Minecraft.getMinecraft().theWorld.getTileEntity(message.x, message.y, message.z);
 			}
-			if(bench != null){
-				bench.readFromNBT(message.tag);
+			if(tile != null){
+				tile.readFromNBT(message.tag);
 			}
 			if(ctx.side.isServer()){
 				MFS.MFSNet.sendToAll(message);
