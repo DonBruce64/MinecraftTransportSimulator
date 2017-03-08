@@ -36,7 +36,6 @@ public class RenderRail extends RenderTileBase{
 			}
 		}
 		
-		//Render rail.
 		if(rail.curve != null){
 			float[] currentPoint;
 			float currentAngle;
@@ -77,9 +76,8 @@ public class RenderRail extends RenderTileBase{
 				GL11.glEnable(GL11.GL_BLEND);
 				GL11.glColor4f(0, 1, 0, 0.25F);
 			}
-				
-			//First render rails.
-			//Before we do that, we need to get all the points on top of the ties where the rails go.
+			
+			//Before we can render, we need to get all the points on top of the ties where the rails go.
 			List<float[]> texPoints = new ArrayList<float[]>();
 			final float offset = 0.65F;
 			for(float f=0; f <= rail.curve.pathLength; f += offset){
@@ -157,23 +155,18 @@ public class RenderRail extends RenderTileBase{
 			//These are quad strips, which makes contiguous rails easy!
 			GL11.glPushMatrix();
 			GL11DrawSystem.bindTexture(railTexture);
-			drawRailSegment(texPoints, 12F/16F, 10F/16F, 4F/16F, 4F/16F, 10F/16F, 12F/16F);//Top
-			drawRailSegment(texPoints, 12F/16F, 12F/16F, 3F/16F, 4F/16F, 9F/16F, 10F/16F);//Outer-top-side
-			drawRailSegment(texPoints, 11.5F/16F, 12F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F);//Outer-top-under
-			drawRailSegment(texPoints, 11.5F/16F, 11.5F/16F, 1F/16F, 3F/16F, 6F/16F, 8F/16F);//Outer-middle
-			drawRailSegment(texPoints, 13.5F/16F, 11.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F);//Outer-bottom-top
-			drawRailSegment(texPoints, 13.5F/16F, 13.5F/16F, 0F/16F, 1F/16F, 3F/16F, 4F/16F);//Outer-bottom-side
-			drawRailSegment(texPoints, 8.5F/16F, 13.5F/16F, 0.0F, 0.0F, 0.0F, 3F/16F);//Bottom
-			drawRailSegment(texPoints, 8.5F/16F, 8.5F/16F, 1F/16F, 0F/16F, 3F/16F, 4F/16F);//Inner-bottom-side
-			drawRailSegment(texPoints, 10.5F/16F, 8.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F);//Inner-bottom-top
-			drawRailSegment(texPoints, 10.5F/16F, 10.5F/16F, 3F/16F, 1F/16F, 6F/16F, 8F/16F);//Inner-middle
-			drawRailSegment(texPoints, 10F/16F, 10.5F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F);//Inner-top-under
-			drawRailSegment(texPoints, 10F/16F, 10F/16F, 4F/16F, 3F/16F, 9F/16F, 10F/16F);//Inner-top-side
-			
-			//drawRailSegment(texPoints, -0.75F, -0.75F, 0.1875F, 0.0F);
-			//drawRailSegment(texPoints, -0.625F, -0.625F, 0.0F, 0.1875F);
-			//drawRailSegment(texPoints, -0.625F, -0.75F, 0.1875F, 0.1875F);
-			//drawRailSegment(texPoints, -0.75F, -0.625F, 0.0F, 0.0F);
+			drawRailSegment(texPoints, 13F/16F, 11F/16F, 4F/16F, 4F/16F, 10F/16F, 12F/16F);//Top
+			drawRailSegment(texPoints, 13F/16F, 13F/16F, 3F/16F, 4F/16F, 9F/16F, 10F/16F);//Outer-top-side
+			drawRailSegment(texPoints, 12.5F/16F, 13F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F);//Outer-top-under
+			drawRailSegment(texPoints, 12.5F/16F, 12.5F/16F, 1F/16F, 3F/16F, 6F/16F, 8F/16F);//Outer-middle
+			drawRailSegment(texPoints, 14.5F/16F, 12.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F);//Outer-bottom-top
+			drawRailSegment(texPoints, 14.5F/16F, 14.5F/16F, 0F/16F, 1F/16F, 3F/16F, 4F/16F);//Outer-bottom-side
+			drawRailSegment(texPoints, 9.5F/16F, 14.5F/16F, 0.0F, 0.0F, 0.0F, 3F/16F);//Bottom
+			drawRailSegment(texPoints, 9.5F/16F, 9.5F/16F, 1F/16F, 0F/16F, 3F/16F, 4F/16F);//Inner-bottom-side
+			drawRailSegment(texPoints, 11.5F/16F, 9.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F);//Inner-bottom-top
+			drawRailSegment(texPoints, 11.5F/16F, 11.5F/16F, 3F/16F, 1F/16F, 6F/16F, 8F/16F);//Inner-middle
+			drawRailSegment(texPoints, 11F/16F, 11.5F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F);//Inner-top-under
+			drawRailSegment(texPoints, 11F/16F, 11F/16F, 4F/16F, 3F/16F, 9F/16F, 10F/16F);//Inner-top-side
 			GL11.glPopMatrix();
 
 			GL11.glPopMatrix();
