@@ -13,6 +13,7 @@ public class BlockRail extends BlockContainer{
 		super(Material.iron);
 		this.setHardness(5.0F);
 		this.setResistance(10.0F);
+		this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.25F, 1.0F);
 	}
 	
 	@Override
