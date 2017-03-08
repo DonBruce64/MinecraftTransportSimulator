@@ -16,11 +16,13 @@ import net.minecraft.util.ResourceLocation;
 
 public class RenderRail extends RenderTileBase{
 	private static final ModelRailTie model = new ModelRailTie();
+	private static final ResourceLocation tieSidesTexture = new ResourceLocation("textures/blocks/log_big_oak.png");
+	private static final ResourceLocation tieEndsTexture = new ResourceLocation("textures/blocks/log_big_oak_top.png");
+	private static final ResourceLocation railTexture = new ResourceLocation("mfs", "textures/blocks/rail.png");
 
 	@Override
 	protected void doRender(TileEntity tile, double x, double y, double z){
 		TileEntityRail rail = (TileEntityRail) tile;
-		//System.out.println(BlockHelper.getBlockLight(rail.getWorldObj(), rail.xCoord, rail.yCoord, rail.zCoord));
 		
 		//Ensure rail hasn't already been rendered.
 		if(!rail.isPrimary){
@@ -123,11 +125,7 @@ public class RenderRail extends RenderTileBase{
 				GL11.glTranslatef(texPoints.get(0)[0], texPoints.get(0)[1] - 0.1875F, texPoints.get(0)[2]);
 				GL11.glRotatef(90 + startConnector.curve.getYawAngleAt(0) - 180F, 0, 1, 0);
 				GL11.glRotatef(startConnector.curve.getPitchAngleAt(0), 0, 0, 1);
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, texPoints.get(0)[6]%65536, texPoints.get(0)[6]/65536);
-				GL11DrawSystem.bindTexture(new ResourceLocation("textures/blocks/log_big_oak.png"));
-				model.renderTieInner();
-				GL11DrawSystem.bindTexture(new ResourceLocation("textures/blocks/log_big_oak_top.png"));
-				model.renderTieOuter();
+				renderTie(texPoints.get(0)[6]);
 				GL11.glPopMatrix();
 			}
 			//If we have an end connector, render it now.
@@ -136,11 +134,7 @@ public class RenderRail extends RenderTileBase{
 				GL11.glTranslatef(texPoints.get(texPoints.size() - 1)[0], texPoints.get(texPoints.size() - 1)[1] - 0.1875F, texPoints.get(texPoints.size() - 1)[2]);
 				GL11.glRotatef(90 + endConnector.curve.getYawAngleAt(0), 0, 1, 0);
 				GL11.glRotatef(endConnector.curve.getPitchAngleAt(0), 0, 0, 1);
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, texPoints.get(texPoints.size() - 1)[6]%65536, texPoints.get(texPoints.size() - 1)[6]/65536);
-				GL11DrawSystem.bindTexture(new ResourceLocation("textures/blocks/log_big_oak.png"));
-				model.renderTieInner();
-				GL11DrawSystem.bindTexture(new ResourceLocation("textures/blocks/log_big_oak_top.png"));
-				model.renderTieOuter();
+				renderTie(texPoints.get(texPoints.size() - 1)[6]);
 				GL11.glPopMatrix();
 			}
 			//Now render the rest of the ties.
@@ -155,30 +149,26 @@ public class RenderRail extends RenderTileBase{
 					GL11.glRotatef(90 + rail.curve.getYawAngleAt(i*offset/rail.curve.pathLength), 0, 1, 0);
 					GL11.glRotatef(rail.curve.getPitchAngleAt(i*offset/rail.curve.pathLength), 0, 0, 1);
 				}
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, texPoints.get(i)[6]%65536, texPoints.get(i)[6]/65536);
-				GL11DrawSystem.bindTexture(new ResourceLocation("textures/blocks/log_big_oak.png"));
-				model.renderTieInner();
-				GL11DrawSystem.bindTexture(new ResourceLocation("textures/blocks/log_big_oak_top.png"));
-				model.renderTieOuter();
+				renderTie(texPoints.get(i)[6]);
 				GL11.glPopMatrix();
 			}
 			
 			//Now to render the rails.
 			//These are quad strips, which makes contiguous rails easy!
 			GL11.glPushMatrix();
-			GL11DrawSystem.bindTexture(new ResourceLocation("textures/blocks/iron_block.png"));
-			drawRailSegment(texPoints, 12F/16F, 10F/16F, 4F/16F, 4F/16F);//Top
-			drawRailSegment(texPoints, 12F/16F, 12F/16F, 3F/16F, 4F/16F);//Outer-top-side
-			drawRailSegment(texPoints, 11.5F/16F, 12F/16F, 3F/16F, 3F/16F);//Outer-top-under
-			drawRailSegment(texPoints, 11.5F/16F, 11.5F/16F, 1F/16F, 3F/16F);//Outer-middle
-			drawRailSegment(texPoints, 13.5F/16F, 11.5F/16F, 1F/16F, 1F/16F);//Outer-bottom-top
-			drawRailSegment(texPoints, 13.5F/16F, 13.5F/16F, 0F/16F, 1F/16F);//Outer-bottom-side
-			drawRailSegment(texPoints, 8.5F/16F, 13.5F/16F, 0.0F, 0.0F);//Bottom
-			drawRailSegment(texPoints, 8.5F/16F, 8.5F/16F, 1F/16F, 0F/16F);//Inner-bottom-side
-			drawRailSegment(texPoints, 10.5F/16F, 8.5F/16F, 1F/16F, 1F/16F);//Inner-bottom-top
-			drawRailSegment(texPoints, 10.5F/16F, 10.5F/16F, 3F/16F, 1F/16F);//Inner-middle
-			drawRailSegment(texPoints, 10F/16F, 10.5F/16F, 3F/16F, 3F/16F);//Inner-top-under
-			drawRailSegment(texPoints, 10F/16F, 10F/16F, 4F/16F, 3F/16F);//Inner-top-side
+			GL11DrawSystem.bindTexture(railTexture);
+			drawRailSegment(texPoints, 12F/16F, 10F/16F, 4F/16F, 4F/16F, 10F/16F, 12F/16F);//Top
+			drawRailSegment(texPoints, 12F/16F, 12F/16F, 3F/16F, 4F/16F, 9F/16F, 10F/16F);//Outer-top-side
+			drawRailSegment(texPoints, 11.5F/16F, 12F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F);//Outer-top-under
+			drawRailSegment(texPoints, 11.5F/16F, 11.5F/16F, 1F/16F, 3F/16F, 6F/16F, 8F/16F);//Outer-middle
+			drawRailSegment(texPoints, 13.5F/16F, 11.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F);//Outer-bottom-top
+			drawRailSegment(texPoints, 13.5F/16F, 13.5F/16F, 0F/16F, 1F/16F, 3F/16F, 4F/16F);//Outer-bottom-side
+			drawRailSegment(texPoints, 8.5F/16F, 13.5F/16F, 0.0F, 0.0F, 0.0F, 3F/16F);//Bottom
+			drawRailSegment(texPoints, 8.5F/16F, 8.5F/16F, 1F/16F, 0F/16F, 3F/16F, 4F/16F);//Inner-bottom-side
+			drawRailSegment(texPoints, 10.5F/16F, 8.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F);//Inner-bottom-top
+			drawRailSegment(texPoints, 10.5F/16F, 10.5F/16F, 3F/16F, 1F/16F, 6F/16F, 8F/16F);//Inner-middle
+			drawRailSegment(texPoints, 10F/16F, 10.5F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F);//Inner-top-under
+			drawRailSegment(texPoints, 10F/16F, 10F/16F, 4F/16F, 3F/16F, 9F/16F, 10F/16F);//Inner-top-side
 			
 			//drawRailSegment(texPoints, -0.75F, -0.75F, 0.1875F, 0.0F);
 			//drawRailSegment(texPoints, -0.625F, -0.625F, 0.0F, 0.1875F);
@@ -193,22 +183,30 @@ public class RenderRail extends RenderTileBase{
 		}
 	}
 	
-	private static void drawRailSegment(List<float[]> texPoints, float w1, float w2, float h1, float h2){
+	private static void renderTie(float brightness){
+		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, brightness%65536, brightness/65536);
+		GL11DrawSystem.bindTexture(tieSidesTexture);
+		model.renderTieInner();
+		GL11DrawSystem.bindTexture(tieEndsTexture);
+		model.renderTieOuter();
+	}
+	
+	private static void drawRailSegment(List<float[]> texPoints, float w1, float w2, float h1, float h2, float t1, float t2){
 		GL11.glBegin(GL11.GL_QUAD_STRIP);
 		for(float[] point : texPoints){
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, point[6]%65536, point[6]/65536);
-			GL11.glTexCoord2d(0, point[5]);
+			GL11.glTexCoord2d(point[5], t1);
 			GL11.glVertex3d(point[0] + w1*point[3], point[1] + h1, point[2] + w1*point[4]);
-			GL11.glTexCoord2d(1, point[5]);
+			GL11.glTexCoord2d(point[5], t2);
 			GL11.glVertex3d(point[0] + w2*point[3], point[1] + h2, point[2] + w2*point[4]);
 		}
 		GL11.glEnd();
 		GL11.glBegin(GL11.GL_QUAD_STRIP);
 		for(float[] point : texPoints){
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, point[6]%65536, point[6]/65536);
-			GL11.glTexCoord2d(0, point[5]);
+			GL11.glTexCoord2d(point[5], t1);
 			GL11.glVertex3d(point[0] - w2*point[3], point[1] + h2, point[2] - w2*point[4]);
-			GL11.glTexCoord2d(1, point[5]);
+			GL11.glTexCoord2d(point[5], t2);
 			GL11.glVertex3d(point[0] - w1*point[3], point[1] + h1, point[2] - w1*point[4]);
 		}
 		GL11.glEnd();
