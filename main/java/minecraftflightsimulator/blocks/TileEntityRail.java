@@ -1,5 +1,8 @@
 package minecraftflightsimulator.blocks;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.MFS;
@@ -13,6 +16,7 @@ public class TileEntityRail extends TileEntity{
 	public boolean renderedLastPass;
 	public boolean isPrimary;
 	public MFSCurve curve;
+	private List<int[]> dummyTracks = new ArrayList<int[]>();
 	
 	public TileEntityRail(){
 		super();
@@ -21,6 +25,15 @@ public class TileEntityRail extends TileEntity{
 	public TileEntityRail(int[] startPoint, int[] endPoint, float startAngle, float endAngle, boolean isPrimary){
 		curve = new MFSCurve(startPoint, endPoint, startAngle, endAngle);
 		this.isPrimary = isPrimary;
+	}
+	
+	public boolean isHologram(){
+		return dummyTracks.isEmpty();
+	}
+	
+	public boolean setDummyTracks(){
+		
+		return true;
 	}
 	
 	@Override

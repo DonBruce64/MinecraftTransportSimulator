@@ -10,6 +10,14 @@ death.attack.planecrash.null.player=%1$s got distracted while fighting %2$s and 
 death.attack.planecrash.player.null=%2$s crashed their plane and killed %1$s.
 death.attack.planecrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash the plane.
 
+interact.wand.info.set1=First position set.
+interact.wand.info.set2=Second position set.
+interact.wand.info.clear=Positions cleared.
+interact.wand.info.spawn=Spawning track.
+interact.wand.failure.block=There are blocks in the way!  Clear them first.
+interact.wand.failure.distance=The two positions are too far away.
+interact.wand.failuer.materials=You lack the materials to build this track.
+
 interact.failure.seattaken=This seat is taken!
 interact.failure.propellertoobig=This propeller is too big for this engine!
 interact.failure.propellerbenchworking=This propeller bench is currently busy.

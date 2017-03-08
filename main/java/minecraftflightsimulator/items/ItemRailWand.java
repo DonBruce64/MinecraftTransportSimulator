@@ -3,9 +3,13 @@ package minecraftflightsimulator.items;
 import java.util.HashMap;
 import java.util.Map;
 
+import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.blocks.TileEntityRail;
+import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
+import minecraftflightsimulator.packets.general.ChatPacket;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -20,7 +24,7 @@ public class ItemRailWand extends Item{
 			if(player.isSneaking()){
 				firstPosition.remove(player);
 				secondPosition.remove(player);
-				System.out.println("CLEAR");
+				MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.wand.info.clear")), (EntityPlayerMP) player);
 			}else if(firstPosition.containsKey(player) && secondPosition.containsKey(player)){
 				world.setBlock(firstPosition.get(player)[0], firstPosition.get(player)[1], firstPosition.get(player)[2], MFSRegistry.rail);
 				world.setBlock(secondPosition.get(player)[0], secondPosition.get(player)[1], secondPosition.get(player)[2], MFSRegistry.rail);
@@ -30,14 +34,17 @@ public class ItemRailWand extends Item{
 				world.setTileEntity(secondPosition.get(player)[0], secondPosition.get(player)[1], secondPosition.get(player)[2], new TileEntityRail(secondPosition.get(player), firstPosition.get(player), secondPosition.get(player)[3], firstPosition.get(player)[3], false));
 				firstPosition.remove(player);
 				secondPosition.remove(player);
-				System.out.println("SPAWN");
-				
+				MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.wand.info.spawn")), (EntityPlayerMP) player);
 			}else if(firstPosition.containsKey(player)){
-				secondPosition.put(player, new int[]{x, y + 1, z, (int) 45*Math.round(player.rotationYaw%360/45)});
-				System.out.println("SECOND");
+				if(Math.sqrt(Math.pow(x - firstPosition.get(player)[0], 2) + Math.pow(y - firstPosition.get(player)[1], 2) + Math.pow(z - firstPosition.get(player)[2], 2)) > 125){
+					MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.wand.failure.distance")), (EntityPlayerMP) player);
+				}else{
+					secondPosition.put(player, new int[]{x, y + 1, z, (int) 45*Math.round(player.rotationYaw%360/45)});
+					MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.wand.info.set2")), (EntityPlayerMP) player);
+				}
 			}else{
 				firstPosition.put(player, new int[]{x, y + 1, z, (int) 45*Math.round(player.rotationYaw%360/45)});
-				System.out.println("FIRST");
+				MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.wand.info.set1")), (EntityPlayerMP) player);
 			}
 		}
 		return false;

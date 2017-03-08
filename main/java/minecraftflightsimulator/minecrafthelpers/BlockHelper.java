@@ -37,4 +37,8 @@ public final class BlockHelper {
 		return world.getLight(new BlockPos(x, y, z), false); 
 		INS180*/
 	}
+	
+	public static float getRenderLight(World world, int x, int y, int z){
+		return world.getLightBrightnessForSkyBlocks(x, y, z, 0);
+	}
 }

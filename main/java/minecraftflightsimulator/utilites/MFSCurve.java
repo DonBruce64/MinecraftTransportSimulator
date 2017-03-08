@@ -8,6 +8,8 @@ package minecraftflightsimulator.utilites;
  * @author don_bruce
  */
 public class MFSCurve{
+	private static final byte curveIncrement = 16;
+	
 	public final float startAngle;
 	public final float endAngle;
 	public final float pathLength;
@@ -33,7 +35,7 @@ public class MFSCurve{
 		float[] pathPointsY = getPathPoints(startPoint[1], endPoint[1], cpStart[1], cpEnd[1], pathLength);
 		float[] pathPointsZ = getPathPoints(startPoint[2], endPoint[2], cpStart[2], cpEnd[2], pathLength);
 		
-		pathPoints = new float[Math.round(pathLength*16) + 1][3];
+		pathPoints = new float[Math.round(pathLength*curveIncrement) + 1][3];
 		for(int i=0; i<pathPoints.length; ++i){
 			pathPoints[i][0] = pathPointsX[i];
 			pathPoints[i][1] = pathPointsY[i];
@@ -42,21 +44,20 @@ public class MFSCurve{
 	}
 	
 	public float[] getPointAt(float segment){
-		return pathPoints[Math.round(segment*pathLength*16)];
+		return pathPoints[Math.round(segment*pathLength*curveIncrement)];
 	}
 	
 	public float[] getNextPointFromVelocity(float segment, float velocity){
-		if(Math.round((segment + velocity/pathLength)*pathLength*16) > pathPoints.length){
+		if(Math.round((segment + velocity/pathLength)*pathLength*curveIncrement) > pathPoints.length){
 			return null;
 		}else{
-			return pathPoints[Math.round((segment + velocity/pathLength)*pathLength*16)];
+			return pathPoints[Math.round((segment + velocity/pathLength)*pathLength*curveIncrement)];
 		}
 	}
 	
 	public float getYawAngleAt(float segment){
-		int pointIndex = Math.round(segment*pathLength*16);
-		float point[] = pathPoints[pointIndex];
-		if(pointIndex + 1 == pathPoints.length){
+		int pointIndex = Math.round(segment*pathLength*curveIncrement);
+		if(pointIndex + 1 >= pathPoints.length){
 			return (endAngle + 180)%360;
 		}else{
 			return (float) Math.toDegrees(Math.atan2(pathPoints[pointIndex + 1][0] - pathPoints[pointIndex][0], pathPoints[pointIndex + 1][2] - pathPoints[pointIndex][2]));
@@ -64,8 +65,7 @@ public class MFSCurve{
 	}
 	
 	public float getPitchAngleAt(float segment){
-		int pointIndex = Math.round(segment*pathLength*16);
-		float point[] = pathPoints[pointIndex];
+		int pointIndex = Math.round(segment*pathLength*curveIncrement);
 		if(pointIndex + 1 == pathPoints.length){
 			return 0;
 		}else{
@@ -82,7 +82,7 @@ public class MFSCurve{
 	}
 	
 	private static float[] getPathPoints(float startPoint, float endPoint, float cpStart, float cpEnd, float pathLength){
-		float[] points = new float[Math.round(pathLength*16) + 1];
+		float[] points = new float[Math.round(pathLength*curveIncrement) + 1];
 		float t;
 		for(int i=0; i<points.length; ++i){
 			t = i/(points.length*1F);
