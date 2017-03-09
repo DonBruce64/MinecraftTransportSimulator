@@ -5,6 +5,8 @@ import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
@@ -14,6 +16,12 @@ public class BlockSurveyFlag extends BlockContainer{
 		super(Material.wood);
 		this.setCreativeTab(MFS.tabMFS);
 		this.setBlockBounds(0.4375F, 0.0F, 0.4375F, 0.5625F, 1F, 0.5625F);
+	}
+	
+	@Override
+	public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase entity, ItemStack stack){
+		super.onBlockPlacedBy(world, x, y, z, entity, stack);
+		((TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(world, x, y, z)).angle = 45*Math.round(entity.rotationYaw%360/45);
 	}
 	
 	@Override
