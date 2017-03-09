@@ -14,7 +14,7 @@ interact.wand.info.set1=First position set.
 interact.wand.info.set2=Second position set.
 interact.wand.info.clear=Positions cleared.
 interact.wand.info.spawn=Spawning track.
-interact.wand.failure.block=There are blocks in the way!  Clear them first.
+interact.wand.failure.blockage=There is a block in the way at
 interact.wand.failure.distance=The two positions are too far away.
 interact.wand.failuer.materials=You lack the materials to build this track.
 

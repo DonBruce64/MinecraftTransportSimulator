@@ -1,5 +1,6 @@
 package minecraftflightsimulator.blocks;
 
+import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
@@ -7,32 +8,23 @@ import net.minecraft.block.material.Material;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-public class BlockRail extends BlockContainer{
+public class BlockSurveyFlag extends BlockContainer{
 	
-	public BlockRail(){
-		super(Material.iron);
-		this.setHardness(5.0F);
-		this.setResistance(10.0F);
-		this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.25F, 1.0F);
+	public BlockSurveyFlag(){
+		super(Material.wood);
+		this.setCreativeTab(MFS.tabMFS);
+		this.setBlockBounds(0.4375F, 0.0F, 0.4375F, 0.5625F, 1F, 0.5625F);
 	}
 	
 	@Override
 	public void breakBlock(World world, int x, int y, int z, Block block, int meta){
-		TileEntityRail rail = (TileEntityRail) BlockHelper.getTileEntityFromCoords(world, x, y, z);
-		if(rail != null){
-			if(rail.curve != null){
-				int otherX = (int) (rail.curve.endPoint[0] - 0.5F);
-				int otherY = (int) rail.curve.endPoint[1];
-				int otherZ = (int) (rail.curve.endPoint[2] - 0.5F);
-				super.breakBlock(world, x, y, z, block, meta);
-				BlockHelper.setBlockToAir(world, otherX, otherY, otherZ);
-			}
-		}
+		((TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(world, x, y, z)).clearFlagLinking();
+		super.breakBlock(world, x, y, z, block, meta);
 	}
 	
 	@Override
 	public TileEntity createNewTileEntity(World world, int metadata){
-		return new TileEntityRail();
+		return new TileEntitySurveyFlag();
 	}
 	
 	@Override

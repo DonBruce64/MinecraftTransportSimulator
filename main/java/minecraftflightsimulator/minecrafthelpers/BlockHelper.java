@@ -17,6 +17,10 @@ public final class BlockHelper {
 		return block.getMaterial().isLiquid();
 	}
 	
+	public static boolean canPlaceBlockAt(World world, int x, int y, int z){
+		return world.getBlock(x, y, z).canPlaceBlockAt(world, x, y, z);
+	}
+	
 	public static void setBlockToAir(World world, int x, int y, int z){
 		world.setBlockToAir(x, y, z);
 	}

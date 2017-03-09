@@ -8,7 +8,7 @@ import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.rendering.AircraftInstruments;
 import minecraftflightsimulator.rendering.AircraftInstruments.AircraftControls;
 import minecraftflightsimulator.rendering.AircraftInstruments.AircraftGauges;
-import minecraftflightsimulator.rendering.modelrenders.RenderPlane;
+import minecraftflightsimulator.rendering.renders.parts.RenderPlane;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;

@@ -9,14 +9,15 @@ package minecraftflightsimulator.utilites;
  */
 public class MFSCurve{
 	private static final byte curveIncrement = 16;
-	
 	public final float startAngle;
 	public final float endAngle;
 	public final float pathLength;
-	public final float[] startPoint;
-	public final float[] endPoint;
+	public final int[] blockStartPoint;
+	public final int[] blockEndPoint;
 	
 	private final float cpDist;
+	private final float[] startPoint;
+	private final float[] endPoint;
 	private final float[] cpStart;
 	private final float[] cpEnd;
 	private final float[][] pathPoints;
@@ -24,6 +25,8 @@ public class MFSCurve{
 	public MFSCurve(int[] sp, int[] ep, float sa, float ea){
 		this.startAngle = sa;
 		this.endAngle = ea;
+		this.blockStartPoint = sp;
+		this.blockEndPoint = ep;
 		this.startPoint = new float[]{sp[0] + 0.5F, sp[1], sp[2] + 0.5F};
 		this.endPoint = new float[]{ep[0] + 0.5F, ep[1], ep[2] + 0.5F};
 		cpDist = (float) Math.sqrt(Math.pow(endPoint[0] - startPoint[0], 2) + Math.pow(endPoint[1] - startPoint[1], 2) + Math.pow(endPoint[2] - startPoint[2], 2))/2F;

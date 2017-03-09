@@ -1,10 +1,10 @@
-package minecraftflightsimulator.rendering.modelrenders;
+package minecraftflightsimulator.rendering.renders.blocks;
 
 import org.lwjgl.opengl.GL11;
 
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
-import minecraftflightsimulator.rendering.partmodels.ModelPropeller;
-import minecraftflightsimulator.rendering.partmodels.ModelPropellerBench;
+import minecraftflightsimulator.rendering.models.blocks.ModelPropellerBench;
+import minecraftflightsimulator.rendering.models.parts.ModelPropeller;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import minecraftflightsimulator.systems.RenderSystem.RenderTileBase;
 import net.minecraft.tileentity.TileEntity;

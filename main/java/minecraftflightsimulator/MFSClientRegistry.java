@@ -7,7 +7,8 @@ import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.Loader;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
-import minecraftflightsimulator.blocks.TileEntityRail;
+import minecraftflightsimulator.blocks.TileEntitySurveyFlag;
+import minecraftflightsimulator.blocks.TileEntityTrack;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.core.EntityParent;
@@ -29,15 +30,16 @@ import minecraftflightsimulator.planes.Trimotor.EntityTrimotor;
 import minecraftflightsimulator.planes.Trimotor.RenderTrimotor;
 import minecraftflightsimulator.planes.Vulcanair.EntityVulcanair;
 import minecraftflightsimulator.planes.Vulcanair.RenderVulcanair;
-import minecraftflightsimulator.rendering.modelrenders.RenderEngine;
-import minecraftflightsimulator.rendering.modelrenders.RenderPlaneChest;
-import minecraftflightsimulator.rendering.modelrenders.RenderPontoon;
-import minecraftflightsimulator.rendering.modelrenders.RenderPropeller;
-import minecraftflightsimulator.rendering.modelrenders.RenderPropellerBench;
-import minecraftflightsimulator.rendering.modelrenders.RenderRail;
-import minecraftflightsimulator.rendering.modelrenders.RenderSeat;
-import minecraftflightsimulator.rendering.modelrenders.RenderSkid;
-import minecraftflightsimulator.rendering.modelrenders.RenderWheel;
+import minecraftflightsimulator.rendering.renders.blocks.RenderPropellerBench;
+import minecraftflightsimulator.rendering.renders.blocks.RenderSurveyFlag;
+import minecraftflightsimulator.rendering.renders.blocks.RenderTrack;
+import minecraftflightsimulator.rendering.renders.parts.RenderEngine;
+import minecraftflightsimulator.rendering.renders.parts.RenderPlaneChest;
+import minecraftflightsimulator.rendering.renders.parts.RenderPontoon;
+import minecraftflightsimulator.rendering.renders.parts.RenderPropeller;
+import minecraftflightsimulator.rendering.renders.parts.RenderSeat;
+import minecraftflightsimulator.rendering.renders.parts.RenderSkid;
+import minecraftflightsimulator.rendering.renders.parts.RenderWheel;
 import minecraftflightsimulator.systems.RenderSystem.RenderChild;
 import minecraftflightsimulator.systems.RenderSystem.RenderNull;
 import minecraftflightsimulator.systems.RenderSystem.RenderParent;
@@ -66,7 +68,8 @@ public class MFSClientRegistry{
 	
 	private static void initTileEntityRenderers(){
 		registerTileEntityRender(TileEntityPropellerBench.class, RenderPropellerBench.class);
-		registerTileEntityRender(TileEntityRail.class, RenderRail.class);
+		registerTileEntityRender(TileEntitySurveyFlag.class, RenderSurveyFlag.class);
+		registerTileEntityRender(TileEntityTrack.class, RenderTrack.class);
 	}
 	
 	private static void initEntityRenders(){

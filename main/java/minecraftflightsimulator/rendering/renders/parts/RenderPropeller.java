@@ -1,10 +1,10 @@
-package minecraftflightsimulator.rendering.modelrenders;
+package minecraftflightsimulator.rendering.renders.parts;
 
 import org.lwjgl.opengl.GL11;
 
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
-import minecraftflightsimulator.rendering.partmodels.ModelPropeller;
+import minecraftflightsimulator.rendering.models.parts.ModelPropeller;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import minecraftflightsimulator.systems.RenderSystem.RenderChild;
 import net.minecraft.util.ResourceLocation;

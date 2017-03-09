@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import minecraftflightsimulator.blocks.BlockPropellerBench;
-import minecraftflightsimulator.blocks.BlockRail;
+import minecraftflightsimulator.blocks.BlockSurveyFlag;
+import minecraftflightsimulator.blocks.BlockTrack;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.parts.EntityChest;
@@ -38,10 +39,10 @@ import minecraftflightsimulator.packets.control.TrimPacket;
 import minecraftflightsimulator.packets.general.ChatPacket;
 import minecraftflightsimulator.packets.general.EntityClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.InstrumentFlyerPacket;
-import minecraftflightsimulator.packets.general.TileEntityClientRequestDataPacket;
-import minecraftflightsimulator.packets.general.TileEntitySyncPacket;
 import minecraftflightsimulator.packets.general.ServerDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
+import minecraftflightsimulator.packets.general.TileEntityClientRequestDataPacket;
+import minecraftflightsimulator.packets.general.TileEntitySyncPacket;
 import minecraftflightsimulator.planes.Comanche.EntityComanche;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
 import minecraftflightsimulator.planes.PZLP11.EntityPZLP11;
@@ -83,10 +84,11 @@ public class MFSRegistry{
 	public static final Item flightInstrumentBase = new Item();
 	public static final Item wrench = new ItemWrench();
 	public static final Item flightManual = new Item();
-	public static final Item railWand = new ItemRailWand();
-	
 	public static final Block propellerBench = new BlockPropellerBench();
-	public static final Block rail = new BlockRail();
+	
+	public static final Item railWand = new ItemRailWand();
+	public static final Block track = new BlockTrack();
+	public static final Block surveyFlag = new BlockSurveyFlag();
 	
 	public static List<Item> itemList = new ArrayList<Item>();
 	

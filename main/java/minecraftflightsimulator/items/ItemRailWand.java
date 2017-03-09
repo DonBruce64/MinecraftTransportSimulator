@@ -5,7 +5,7 @@ import java.util.Map;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
-import minecraftflightsimulator.blocks.TileEntityRail;
+import minecraftflightsimulator.blocks.TileEntityTrack;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.packets.general.ChatPacket;
 import net.minecraft.entity.player.EntityPlayer;
@@ -26,12 +26,12 @@ public class ItemRailWand extends Item{
 				secondPosition.remove(player);
 				MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.wand.info.clear")), (EntityPlayerMP) player);
 			}else if(firstPosition.containsKey(player) && secondPosition.containsKey(player)){
-				world.setBlock(firstPosition.get(player)[0], firstPosition.get(player)[1], firstPosition.get(player)[2], MFSRegistry.rail);
-				world.setBlock(secondPosition.get(player)[0], secondPosition.get(player)[1], secondPosition.get(player)[2], MFSRegistry.rail);
+				world.setBlock(firstPosition.get(player)[0], firstPosition.get(player)[1], firstPosition.get(player)[2], MFSRegistry.track);
+				world.setBlock(secondPosition.get(player)[0], secondPosition.get(player)[1], secondPosition.get(player)[2], MFSRegistry.track);
 				world.markBlockForUpdate(firstPosition.get(player)[0], firstPosition.get(player)[1], firstPosition.get(player)[2]);
 				world.markBlockForUpdate(secondPosition.get(player)[0], secondPosition.get(player)[1], secondPosition.get(player)[2]);
-				world.setTileEntity(firstPosition.get(player)[0], firstPosition.get(player)[1], firstPosition.get(player)[2], new TileEntityRail(firstPosition.get(player), secondPosition.get(player), firstPosition.get(player)[3], secondPosition.get(player)[3], true));
-				world.setTileEntity(secondPosition.get(player)[0], secondPosition.get(player)[1], secondPosition.get(player)[2], new TileEntityRail(secondPosition.get(player), firstPosition.get(player), secondPosition.get(player)[3], firstPosition.get(player)[3], false));
+				world.setTileEntity(firstPosition.get(player)[0], firstPosition.get(player)[1], firstPosition.get(player)[2], new TileEntityTrack(firstPosition.get(player), secondPosition.get(player), firstPosition.get(player)[3], secondPosition.get(player)[3], true));
+				world.setTileEntity(secondPosition.get(player)[0], secondPosition.get(player)[1], secondPosition.get(player)[2], new TileEntityTrack(secondPosition.get(player), firstPosition.get(player), secondPosition.get(player)[3], firstPosition.get(player)[3], false));
 				firstPosition.remove(player);
 				secondPosition.remove(player);
 				MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.wand.info.spawn")), (EntityPlayerMP) player);
