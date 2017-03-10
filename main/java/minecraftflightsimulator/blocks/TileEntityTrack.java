@@ -66,9 +66,13 @@ public class TileEntityTrack extends TileEntity{
 	@Override
     public void writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
-        tagCompound.setBoolean("isPrimary", this.isPrimary);
-        tagCompound.setFloat("startAngle", curve.startAngle);
-        tagCompound.setFloat("endAngle", curve.endAngle);
-        tagCompound.setIntArray("endPoint", curve.blockEndPoint);
+        if(curve != null){
+	        tagCompound.setBoolean("isPrimary", this.isPrimary);
+	        tagCompound.setFloat("startAngle", curve.startAngle);
+	        tagCompound.setFloat("endAngle", curve.endAngle);
+	        tagCompound.setIntArray("endPoint", curve.blockEndPoint);
+        }else{
+        	this.invalidate();
+        }
     }
 }
