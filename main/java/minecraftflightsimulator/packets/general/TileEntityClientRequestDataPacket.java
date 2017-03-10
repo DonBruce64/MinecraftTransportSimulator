@@ -4,6 +4,7 @@ import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
+import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import net.minecraft.tileentity.TileEntity;
 
 public class TileEntityClientRequestDataPacket implements IMessage{
@@ -36,7 +37,7 @@ public class TileEntityClientRequestDataPacket implements IMessage{
 	public static class Handler implements IMessageHandler<TileEntityClientRequestDataPacket, TileEntitySyncPacket> {
 		public TileEntitySyncPacket onMessage(TileEntityClientRequestDataPacket message, MessageContext ctx){
 			if(ctx.side.isServer()){
-				TileEntity tile = ctx.getServerHandler().playerEntity.worldObj.getTileEntity(message.x, message.y, message.z);
+				TileEntity tile = BlockHelper.getTileEntityFromCoords(ctx.getServerHandler().playerEntity.worldObj, message.x, message.y, message.z);
 				if(tile != null){
 					return new TileEntitySyncPacket(tile);
 				}
