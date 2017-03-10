@@ -10,7 +10,6 @@ import org.lwjgl.opengl.GL11;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityVehicle;
-import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.packets.general.InstrumentFlyerPacket;
 import minecraftflightsimulator.rendering.AircraftInstruments.AircraftGauges;
@@ -18,7 +17,6 @@ import minecraftflightsimulator.rendering.VehicleHUDs;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 public class GUIInstrumentsFlyer extends GuiScreen{
@@ -164,17 +162,11 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 				}
 			}
 			boolean[] hasInstrument = new boolean[AircraftGauges.values().length];
-			if(player.capabilities.isCreativeMode){
-				for(byte i=0; i<AircraftGauges.values().length; ++i){
+			for(byte i=0; i<AircraftGauges.values().length; ++i){
+				if(player.capabilities.isCreativeMode){
 					hasInstrument[i] = true;
-				}
-			}else{
-				for(ItemStack stack : player.inventory.mainInventory){
-					if(stack != null){
-						if(ItemStackHelper.getItemFromStack(stack).equals(MFSRegistry.flightInstrument)){
-							hasInstrument[ItemStackHelper.getItemDamage(stack)] = true;
-						}
-					}
+				}else{
+					hasInstrument[i] = PlayerHelper.getQtyOfItemInInventory(MFSRegistry.flightInstrument, i, player) > 0;
 				}
 			}
 			for(byte i=0; i<AircraftGauges.values().length; ++i){
@@ -211,17 +203,11 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 			}
 		}else{
 			boolean[] hasInstrument = new boolean[AircraftGauges.values().length];
-			if(player.capabilities.isCreativeMode){
-				for(byte i=0; i<AircraftGauges.values().length; ++i){
+			for(byte i=0; i<AircraftGauges.values().length; ++i){
+				if(player.capabilities.isCreativeMode){
 					hasInstrument[i] = true;
-				}
-			}else{
-				for(ItemStack stack : player.inventory.mainInventory){
-					if(stack != null){
-						if(ItemStackHelper.getItemFromStack(stack).equals(MFSRegistry.flightInstrument)){
-							hasInstrument[ItemStackHelper.getItemDamage(stack)] = true;
-						}
-					}
+				}else{
+					hasInstrument[i] = PlayerHelper.getQtyOfItemInInventory(MFSRegistry.flightInstrument, i, player) > 0;
 				}
 			}
 			for(byte i=0; i<AircraftGauges.values().length; ++i){

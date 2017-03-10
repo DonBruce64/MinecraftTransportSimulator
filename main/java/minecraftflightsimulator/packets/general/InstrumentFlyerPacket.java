@@ -7,7 +7,7 @@ import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityVehicle;
-import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
+import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -69,23 +69,11 @@ public class InstrumentFlyerPacket implements IMessage{
 					}
 				}else{
 					if(!player.capabilities.isCreativeMode){
-						for(int i=0; i<player.inventory.mainInventory.length; ++i){
-							ItemStack stack = player.inventory.mainInventory[i];
-							if(stack != null){
-								if(ItemStackHelper.getItemFromStack(stack).equals(MFSRegistry.flightInstrument)){
-									if(ItemStackHelper.getItemDamage(stack) == message.instrumentToChangeTo){
-										if(ItemStackHelper.getStackSize(stack) == 1){
-											player.inventory.mainInventory[i] = null;
-										}else{
-											//We could decrement here, but 1.11 mucks up the ItemStack system so we don't.
-											player.inventory.mainInventory[i] = new ItemStack(ItemStackHelper.getItemFromStack(stack), ItemStackHelper.getStackSize(stack) - 1, ItemStackHelper.getItemDamage(stack));
-										}
-									}
-									vehicle.instruments.put(message.instrumentToChange, message.instrumentToChangeTo);
-									if(ctx.side.isServer()){
-										MFS.MFSNet.sendToAll(message);
-									}
-								}
+						if(PlayerHelper.getQtyOfItemInInventory(MFSRegistry.flightInstrument, message.instrumentToChangeTo, player) > 0){
+							PlayerHelper.removeQtyOfItemInInventory(MFSRegistry.flightInstrument, 1, message.instrumentToChangeTo, player);
+							vehicle.instruments.put(message.instrumentToChange, message.instrumentToChangeTo);
+							if(ctx.side.isServer()){
+								MFS.MFSNet.sendToAll(message);
 							}
 						}
 					}else{
