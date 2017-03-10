@@ -2,7 +2,6 @@ package minecraftflightsimulator.blocks;
 
 import java.util.Random;
 
-import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import net.minecraft.block.Block;
@@ -22,7 +21,6 @@ public class BlockTrack extends BlockContainer{
 		super(Material.iron);
 		this.setHardness(5.0F);
 		this.setResistance(10.0F);
-		this.setCreativeTab(MFS.tabMFS);
 		this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.25F, 1.0F);
 	}
 	
