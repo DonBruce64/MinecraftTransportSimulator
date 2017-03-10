@@ -86,10 +86,16 @@ public class MFSCurve{
 	
 	private static float[] getPathPoints(float startPoint, float endPoint, float cpStart, float cpEnd, float pathLength){
 		float[] points = new float[Math.round(pathLength*curveIncrement) + 1];
-		float t;
-		for(int i=0; i<points.length; ++i){
-			t = i/(points.length*1F);
-			points[i] = (float) (Math.pow(1-t, 3)*startPoint + 3*Math.pow(1-t, 2)*t*cpStart + 3*(1-t)*Math.pow(t, 2)*cpEnd + Math.pow(t, 3)*endPoint);
+		if(startPoint == endPoint){
+			for(int i=0; i<points.length; ++i){
+				points[i] = startPoint;
+			}
+		}else{
+			float t;
+			for(int i=0; i<points.length; ++i){
+				t = i/(points.length*1F);
+				points[i] = (float) (Math.pow(1-t, 3)*startPoint + 3*Math.pow(1-t, 2)*t*cpStart + 3*(1-t)*Math.pow(t, 2)*cpEnd + Math.pow(t, 3)*endPoint);
+			}
 		}
 		return points;
 	}
