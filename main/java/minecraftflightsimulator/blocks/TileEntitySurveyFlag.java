@@ -86,7 +86,7 @@ public class TileEntitySurveyFlag extends TileEntity{
 				if(BlockHelper.canPlaceBlockAt(worldObj, offset[0], offset[1], offset[2])){
 					blockList.add(new int[] {offset[0], offset[1], offset[2], (int) (currentPoint[1]%1)*16});
 				}else{
-					if(!Arrays.equals(linkedCurve.blockEndPoint, offset)){
+					if(!(Arrays.equals(linkedCurve.blockStartPoint, offset) || Arrays.equals(linkedCurve.blockEndPoint, offset))){
 						return offset;
 					}
 				}
