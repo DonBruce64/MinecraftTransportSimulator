@@ -19,8 +19,8 @@ import net.minecraft.world.World;
 
 public class RenderTrack extends RenderTileBase{
 	private static final ModelTrackTie model = new ModelTrackTie();
-	private static final ResourceLocation tieTexture = new ResourceLocation("mfs", "textures/blocks/tie.png");
-	private static final ResourceLocation railTexture = new ResourceLocation("mfs", "textures/blocks/rail.png");
+	private static final ResourceLocation tieTexture = new ResourceLocation("mfs", "textures/blockmodels/tie.png");
+	private static final ResourceLocation railTexture = new ResourceLocation("mfs", "textures/blockmodels/rail.png");
 
 	@Override
 	protected void doRender(TileEntity tile, double x, double y, double z){

@@ -11,9 +11,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 
 public class RenderSurveyFlag extends RenderTileBase{
-	private static final ModelSurveyFlag flagModel = new ModelSurveyFlag();
-	private static final ResourceLocation flagPoleTexture = new ResourceLocation("textures/blocks/planks_oak.png");
-	private static final ResourceLocation flagFlagTexture = new ResourceLocation("textures/blocks/wool_colored_red.png");
+	private static final ModelSurveyFlag model = new ModelSurveyFlag();
+	private static final ResourceLocation texture = new ResourceLocation("mfs", "textures/blockmodels/surveyflag.png");
 
 	@Override
 	protected void doRender(TileEntity tile, double x, double y, double z){
@@ -23,11 +22,10 @@ public class RenderSurveyFlag extends RenderTileBase{
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(0.5F, 0, 0.5F);
-		GL11.glRotatef(-flag.angle, 0, 1, 0);
-		GL11DrawSystem.bindTexture(flagPoleTexture);
-		flagModel.renderPole();
-		GL11DrawSystem.bindTexture(flagFlagTexture);
-		flagModel.renderFlag();
+		//GL11.glRotatef(180, 0, 0, 1);
+		GL11.glRotatef(180 - flag.angle, 0, 1, 0);
+		GL11DrawSystem.bindTexture(texture);
+		model.render();
 		GL11.glPopMatrix();
 		
 		if(flag.linkedCurve != null){
