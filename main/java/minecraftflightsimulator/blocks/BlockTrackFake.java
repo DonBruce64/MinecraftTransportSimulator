@@ -11,6 +11,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 public class BlockTrackFake extends BlockContainer{
@@ -19,6 +20,12 @@ public class BlockTrackFake extends BlockContainer{
 		super(Material.iron);
 		this.setHardness(5.0F);
 		this.setResistance(10.0F);
+	}
+	
+	@Override
+	public void setBlockBoundsBasedOnState(IBlockAccess access, int x, int y, int z){
+		TileEntityTrackFake tile = (TileEntityTrackFake) access.getTileEntity(x, y, z);
+		this.setBlockBounds(0, 0, 0, 1, tile.height, 1);
 	}
 	
 	@Override
