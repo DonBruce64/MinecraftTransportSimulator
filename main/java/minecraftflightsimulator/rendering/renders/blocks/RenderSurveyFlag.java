@@ -41,11 +41,7 @@ public class RenderSurveyFlag extends RenderTileBase{
 					}
 				}
 			}
-			
-
-			GL11.glEnable(GL11.GL_BLEND);
-			GL11.glColor4f(0, 1, 0, 0.25F);
-			RenderTrack.renderTrackSegmentFromCurve(flag.getWorldObj(), flag.linkedCurve);
+			RenderTrack.renderTrackSegmentFromCurve(flag.getWorldObj(), flag.linkedCurve, true);
 			if(flag.isPrimary){
 				flag.renderedLastPass = true;
 			}

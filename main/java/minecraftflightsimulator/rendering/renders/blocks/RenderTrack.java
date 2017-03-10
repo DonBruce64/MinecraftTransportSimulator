@@ -44,7 +44,7 @@ public class RenderTrack extends RenderTileBase{
 		if(track.curve != null){
 			GL11.glPushMatrix();
 			GL11.glTranslated(x, y, z);
-			renderTrackSegmentFromCurve(track.getWorldObj(), track.curve);
+			renderTrackSegmentFromCurve(track.getWorldObj(), track.curve, false);
 			if(track.isPrimary){
 				track.renderedLastPass = true;
 			}
@@ -55,7 +55,7 @@ public class RenderTrack extends RenderTileBase{
 	/**
 	 * This can be called to render track anywhere in the code, not just from this class.
 	 */
-	public static void renderTrackSegmentFromCurve(World world, MFSCurve curve){
+	public static void renderTrackSegmentFromCurve(World world, MFSCurve curve, boolean holographic){
 		float[] currentPoint;
 		float currentAngle;
 		
@@ -133,13 +133,17 @@ public class RenderTrack extends RenderTileBase{
 		}
 		
 		//Now that we have all the points, it's time to render.
+		if(holographic){
+			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glColor4f(0, 1, 0, 0.25F);
+		}
 		//If we have a start connector, render it now.
 		if(startConnector != null){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(texPoints.get(0)[0], texPoints.get(0)[1] - 0.1875F, texPoints.get(0)[2]);
 			GL11.glRotatef(startConnector.curve.getYawAngleAt(0) - 180F, 0, 1, 0);
 			GL11.glRotatef(startConnector.curve.getPitchAngleAt(0), 1, 0, 0);
-			renderTie(texPoints.get(0)[6]);
+			renderTie(texPoints.get(0)[6], holographic);
 			GL11.glPopMatrix();
 		}
 		//If we have an end connector, render it now.
@@ -148,7 +152,7 @@ public class RenderTrack extends RenderTileBase{
 			GL11.glTranslatef(texPoints.get(texPoints.size() - 1)[0], texPoints.get(texPoints.size() - 1)[1] - 0.1875F, texPoints.get(texPoints.size() - 1)[2]);
 			GL11.glRotatef(endConnector.curve.getYawAngleAt(0), 0, 1, 0);
 			GL11.glRotatef(endConnector.curve.getPitchAngleAt(0), 1, 0, 0);
-			renderTie(texPoints.get(texPoints.size() - 1)[6]);
+			renderTie(texPoints.get(texPoints.size() - 1)[6], holographic);
 			GL11.glPopMatrix();
 		}
 		//Now render the rest of the ties.
@@ -163,7 +167,7 @@ public class RenderTrack extends RenderTileBase{
 				GL11.glRotatef(curve.getYawAngleAt(i*offset/curve.pathLength), 0, 1, 0);
 				GL11.glRotatef(curve.getPitchAngleAt(i*offset/curve.pathLength), 1, 0, 0);
 			}
-			renderTie(texPoints.get(i)[6]);
+			renderTie(texPoints.get(i)[6], holographic);
 			GL11.glPopMatrix();
 		}
 		
@@ -171,31 +175,33 @@ public class RenderTrack extends RenderTileBase{
 		//These are quad strips, which makes contiguous rails easy!
 		GL11.glPushMatrix();
 		GL11DrawSystem.bindTexture(railTexture);
-		drawRailSegment(texPoints, 13F/16F, 11F/16F, 4F/16F, 4F/16F, 10F/16F, 12F/16F);//Top
-		drawRailSegment(texPoints, 13F/16F, 13F/16F, 3F/16F, 4F/16F, 9F/16F, 10F/16F);//Outer-top-side
-		drawRailSegment(texPoints, 12.5F/16F, 13F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F);//Outer-top-under
-		drawRailSegment(texPoints, 12.5F/16F, 12.5F/16F, 1F/16F, 3F/16F, 6F/16F, 8F/16F);//Outer-middle
-		drawRailSegment(texPoints, 14.5F/16F, 12.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F);//Outer-bottom-top
-		drawRailSegment(texPoints, 14.5F/16F, 14.5F/16F, 0F/16F, 1F/16F, 3F/16F, 4F/16F);//Outer-bottom-side
-		drawRailSegment(texPoints, 9.5F/16F, 14.5F/16F, 0.0F, 0.0F, 0.0F, 3F/16F);//Bottom
-		drawRailSegment(texPoints, 9.5F/16F, 9.5F/16F, 1F/16F, 0F/16F, 3F/16F, 4F/16F);//Inner-bottom-side
-		drawRailSegment(texPoints, 11.5F/16F, 9.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F);//Inner-bottom-top
-		drawRailSegment(texPoints, 11.5F/16F, 11.5F/16F, 3F/16F, 1F/16F, 6F/16F, 8F/16F);//Inner-middle
-		drawRailSegment(texPoints, 11F/16F, 11.5F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F);//Inner-top-under
-		drawRailSegment(texPoints, 11F/16F, 11F/16F, 4F/16F, 3F/16F, 9F/16F, 10F/16F);//Inner-top-side
+		drawRailSegment(texPoints, 13F/16F, 11F/16F, 4F/16F, 4F/16F, 10F/16F, 12F/16F, holographic);//Top
+		drawRailSegment(texPoints, 13F/16F, 13F/16F, 3F/16F, 4F/16F, 9F/16F, 10F/16F, holographic);//Outer-top-side
+		drawRailSegment(texPoints, 12.5F/16F, 13F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F, holographic);//Outer-top-under
+		drawRailSegment(texPoints, 12.5F/16F, 12.5F/16F, 1F/16F, 3F/16F, 6F/16F, 8F/16F, holographic);//Outer-middle
+		drawRailSegment(texPoints, 14.5F/16F, 12.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F, holographic);//Outer-bottom-top
+		drawRailSegment(texPoints, 14.5F/16F, 14.5F/16F, 0F/16F, 1F/16F, 3F/16F, 4F/16F, holographic);//Outer-bottom-side
+		drawRailSegment(texPoints, 9.5F/16F, 14.5F/16F, 0.0F, 0.0F, 0.0F, 3F/16F, holographic);//Bottom
+		drawRailSegment(texPoints, 9.5F/16F, 9.5F/16F, 1F/16F, 0F/16F, 3F/16F, 4F/16F, holographic);//Inner-bottom-side
+		drawRailSegment(texPoints, 11.5F/16F, 9.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F, holographic);//Inner-bottom-top
+		drawRailSegment(texPoints, 11.5F/16F, 11.5F/16F, 3F/16F, 1F/16F, 6F/16F, 8F/16F, holographic);//Inner-middle
+		drawRailSegment(texPoints, 11F/16F, 11.5F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F, holographic);//Inner-top-under
+		drawRailSegment(texPoints, 11F/16F, 11F/16F, 4F/16F, 3F/16F, 9F/16F, 10F/16F, holographic);//Inner-top-side
 		GL11.glPopMatrix();
 	}
 	
-	private static void renderTie(float brightness){
-		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, brightness%65536, brightness/65536);
+	private static void renderTie(float brightness, boolean holographic){
+		if(!holographic){
+			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, brightness%65536, brightness/65536);
+		}
 		GL11DrawSystem.bindTexture(tieTexture);
 		model.render();
 	}
 	
-	private static void drawRailSegment(List<float[]> texPoints, float w1, float w2, float h1, float h2, float t1, float t2){
+	private static void drawRailSegment(List<float[]> texPoints, float w1, float w2, float h1, float h2, float t1, float t2, boolean holographic){
 		GL11.glBegin(GL11.GL_QUAD_STRIP);
 		for(float[] point : texPoints){
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, point[6]%65536, point[6]/65536);
+			if(!holographic)OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, point[6]%65536, point[6]/65536);
 			GL11.glTexCoord2d(point[5], t2);
 			GL11.glVertex3d(point[0] + w1*point[3], point[1] + h1, point[2] + w1*point[4]);
 			GL11.glTexCoord2d(point[5], t1);
@@ -204,7 +210,7 @@ public class RenderTrack extends RenderTileBase{
 		GL11.glEnd();
 		GL11.glBegin(GL11.GL_QUAD_STRIP);
 		for(float[] point : texPoints){
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, point[6]%65536, point[6]/65536);
+			if(!holographic)OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, point[6]%65536, point[6]/65536);
             GL11.glTexCoord2d(point[5], t1);
 			GL11.glVertex3d(point[0] - w2*point[3], point[1] + h2, point[2] - w2*point[4]);
 			GL11.glTexCoord2d(point[5], t2);
