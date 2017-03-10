@@ -85,6 +85,7 @@ public class MFSRegistry{
 	public static final Item flightInstrumentBase = new Item();
 	public static final Item wrench = new ItemWrench();
 	public static final Item flightManual = new Item();
+	
 	public static final Block propellerBench = new BlockPropellerBench();
 	
 	public static final Item track = new Item();
@@ -163,7 +164,7 @@ public class MFSRegistry{
 		
 		MFS.proxy.registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
 		MFS.proxy.registerPacket(TileEntityClientRequestDataPacket.class, TileEntityClientRequestDataPacket.Handler.class, false, true);
-		MFS.proxy.registerPacket(TileEntityFakeTrackHeightPacket.class, TileEntityFakeTrackHeightPacket.Handler.class, false, true);
+		MFS.proxy.registerPacket(TileEntityFakeTrackHeightPacket.class, TileEntityFakeTrackHeightPacket.Handler.class, true, true);
 
 		MFS.proxy.registerPacket(InstrumentFlyerPacket.class, InstrumentFlyerPacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(TileEntitySyncPacket.class, TileEntitySyncPacket.Handler.class, true, true);
