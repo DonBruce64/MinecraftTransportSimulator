@@ -10,14 +10,16 @@ death.attack.planecrash.null.player=%1$s got distracted while fighting %2$s and 
 death.attack.planecrash.player.null=%2$s crashed their plane and killed %1$s.
 death.attack.planecrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash the plane.
 
-interact.wand.info.set1=First position set.
-interact.wand.info.set2=Second position set.
-interact.wand.info.clear=Positions cleared.
-interact.wand.info.spawn=Spawning track.
-interact.wand.failure.blockage=There is a block in the way at
-interact.wand.failure.distance=The two positions are too far away.
-interact.wand.failuer.materials=You lack the materials to build this track.
-
+interact.flag.info.set=First flag set.
+interact.flag.info.link=Flags linked.
+interact.flag.info.unlink=Flags un-linked.
+interact.flag.info.clear=First flag cleared.
+interact.flag.failure.dimension=Flags must be in the same dimension.
+interact.flag.failure.distance=The two flags are too far away.  The max distance between flags is 128.
+interact.flag.failure.nolink=This flag is not linked to another flag.
+interact.flag.failure.materials=You lack the required materials to build this track.  You need:
+interact.flag.failure.blockage=There is a block in the way at:
+ 
 interact.failure.seattaken=This seat is taken!
 interact.failure.propellertoobig=This propeller is too big for this engine!
 interact.failure.propellerbenchworking=This propeller bench is currently busy.

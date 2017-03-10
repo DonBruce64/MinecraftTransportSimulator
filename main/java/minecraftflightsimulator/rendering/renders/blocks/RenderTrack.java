@@ -61,22 +61,26 @@ public class RenderTrack extends RenderTileBase{
 		for(byte i=-1; i<=1; ++i){
 			for(byte j=-1; j<=1; ++j){
 				if(!(i == 0 && j == 0)){
-					TileEntity testTile = BlockHelper.getTileEntityFromCoords(world, curve.blockStartPoint[0], curve.blockStartPoint[1], curve.blockStartPoint[2]);
+					TileEntity testTile = BlockHelper.getTileEntityFromCoords(world, curve.blockStartPoint[0] + i, curve.blockStartPoint[1], curve.blockStartPoint[2] + j);
 					if(testTile != null){
 						if(testTile instanceof TileEntityTrack){
 							if(((TileEntityTrack) testTile).curve != null){
-								if((360 + ((TileEntityTrack) testTile).curve.startAngle)%360 ==  (360 + 180 + curve.startAngle)%360){
-									startConnector = (TileEntityTrack) testTile;
+								if((360 + ((TileEntityTrack) testTile).curve.startAngle)%360 == (360 + 180 + curve.startAngle)%360){
+									if(!(curve.blockStartPoint[0] + i == curve.blockEndPoint[0] && curve.blockStartPoint[1] == curve.blockEndPoint[1] && curve.blockStartPoint[2] + j == curve.blockEndPoint[2])){
+										startConnector = (TileEntityTrack) testTile;
+									}
 								}
 							}
 						}
 					}
-					testTile = BlockHelper.getTileEntityFromCoords(world, curve.blockEndPoint[0], curve.blockEndPoint[1], curve.blockEndPoint[2]);
+					testTile = BlockHelper.getTileEntityFromCoords(world, curve.blockEndPoint[0] + i, curve.blockEndPoint[1], curve.blockEndPoint[2] + j);
 					if(testTile != null){
 						if(testTile instanceof TileEntityTrack){
 							if(((TileEntityTrack) testTile).curve != null){
-								if((360 + ((TileEntityTrack) testTile).curve.startAngle)%360 ==  (360 + 180 + curve.endAngle)%360){
-									endConnector = (TileEntityTrack) testTile;
+								if((360 + ((TileEntityTrack) testTile).curve.startAngle)%360 == (360 + 180 + curve.endAngle)%360){
+									if(!(curve.blockEndPoint[0] + i == curve.blockStartPoint[0] && curve.blockEndPoint[1] == curve.blockStartPoint[1] && curve.blockEndPoint[2] + j == curve.blockStartPoint[2])){
+										endConnector = (TileEntityTrack) testTile;
+									}
 								}
 							}
 						}
@@ -84,7 +88,7 @@ public class RenderTrack extends RenderTileBase{
 				}
 			}
 		}
-		
+
 		//Before we can render, we need to get all the points on top of the ties where the rails go.
 		List<float[]> texPoints = new ArrayList<float[]>();
 		final float offset = 0.65F;
@@ -130,7 +134,7 @@ public class RenderTrack extends RenderTileBase{
 			GL11.glPushMatrix();
 			GL11.glTranslatef(texPoints.get(0)[0], texPoints.get(0)[1] - 0.1875F, texPoints.get(0)[2]);
 			GL11.glRotatef(startConnector.curve.getYawAngleAt(0) - 180F, 0, 1, 0);
-			GL11.glRotatef(startConnector.curve.getPitchAngleAt(0), 0, 0, 1);
+			GL11.glRotatef(startConnector.curve.getPitchAngleAt(0), 1, 0, 0);
 			renderTie(texPoints.get(0)[6]);
 			GL11.glPopMatrix();
 		}
@@ -139,7 +143,7 @@ public class RenderTrack extends RenderTileBase{
 			GL11.glPushMatrix();
 			GL11.glTranslatef(texPoints.get(texPoints.size() - 1)[0], texPoints.get(texPoints.size() - 1)[1] - 0.1875F, texPoints.get(texPoints.size() - 1)[2]);
 			GL11.glRotatef(endConnector.curve.getYawAngleAt(0), 0, 1, 0);
-			GL11.glRotatef(endConnector.curve.getPitchAngleAt(0), 0, 0, 1);
+			GL11.glRotatef(endConnector.curve.getPitchAngleAt(0), 1, 0, 0);
 			renderTie(texPoints.get(texPoints.size() - 1)[6]);
 			GL11.glPopMatrix();
 		}
@@ -150,10 +154,10 @@ public class RenderTrack extends RenderTileBase{
 			GL11.glTranslatef(texPoints.get(i)[0], texPoints.get(i)[1] - 0.1875F, texPoints.get(i)[2]);
 			if(startConnector != null){
 				GL11.glRotatef(curve.getYawAngleAt((i - 1)*offset/curve.pathLength), 0, 1, 0);
-				GL11.glRotatef(curve.getPitchAngleAt((i - 1)*offset/curve.pathLength), 0, 0, 1);
+				GL11.glRotatef(curve.getPitchAngleAt((i - 1)*offset/curve.pathLength), 1, 0, 0);
 			}else{
 				GL11.glRotatef(curve.getYawAngleAt(i*offset/curve.pathLength), 0, 1, 0);
-				GL11.glRotatef(curve.getPitchAngleAt(i*offset/curve.pathLength), 0, 0, 1);
+				GL11.glRotatef(curve.getPitchAngleAt(i*offset/curve.pathLength), 1, 0, 0);
 			}
 			renderTie(texPoints.get(i)[6]);
 			GL11.glPopMatrix();

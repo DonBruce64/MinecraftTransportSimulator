@@ -20,12 +20,15 @@ public class RenderSurveyFlag extends RenderTileBase{
 		TileEntitySurveyFlag flag = (TileEntitySurveyFlag) tile;
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
+		
+		GL11.glPushMatrix();
 		GL11.glTranslatef(0.5F, 0, 0.5F);
 		GL11.glRotatef(-flag.angle, 0, 1, 0);
 		GL11DrawSystem.bindTexture(flagPoleTexture);
 		flagModel.renderPole();
 		GL11DrawSystem.bindTexture(flagFlagTexture);
 		flagModel.renderFlag();
+		GL11.glPopMatrix();
 		
 		if(flag.linkedCurve != null){
 			//Ensure flag hologram hasn't already been rendered.
@@ -33,6 +36,7 @@ public class RenderSurveyFlag extends RenderTileBase{
 				TileEntitySurveyFlag otherEnd = (TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(flag.getWorldObj(), flag.linkedCurve.blockEndPoint[0], flag.linkedCurve.blockEndPoint[1], flag.linkedCurve.blockEndPoint[2]);
 				if(otherEnd != null){
 					if(otherEnd.renderedLastPass){
+						GL11.glPopMatrix();
 						return;
 					}
 				}

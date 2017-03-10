@@ -24,7 +24,6 @@ import minecraftflightsimulator.items.ItemEngine;
 import minecraftflightsimulator.items.ItemFlightInstrument;
 import minecraftflightsimulator.items.ItemPlane;
 import minecraftflightsimulator.items.ItemPropeller;
-import minecraftflightsimulator.items.ItemRailWand;
 import minecraftflightsimulator.items.ItemSeat;
 import minecraftflightsimulator.items.ItemWrench;
 import minecraftflightsimulator.packets.control.AileronPacket;
@@ -86,7 +85,6 @@ public class MFSRegistry{
 	public static final Item flightManual = new Item();
 	public static final Block propellerBench = new BlockPropellerBench();
 	
-	public static final Item railWand = new ItemRailWand();
 	public static final Block track = new BlockTrack();
 	public static final Block surveyFlag = new BlockSurveyFlag();
 	

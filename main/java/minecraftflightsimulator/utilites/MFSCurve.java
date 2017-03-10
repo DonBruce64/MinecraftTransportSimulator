@@ -61,8 +61,7 @@ public class MFSCurve{
 	public float getYawAngleAt(float segment){
 		int pointIndex = Math.round(segment*pathLength*curveIncrement);
 		if(pointIndex + 1 >= pathPoints.length){
-			//Technically this should be mirror of endAngle, but the trigonometry doesn't work out that way.
-			return endAngle;
+			return (180 + endAngle)%360;
 		}else{
 			return (float) Math.toDegrees(Math.atan2(pathPoints[pointIndex + 1][0] - pathPoints[pointIndex][0], pathPoints[pointIndex + 1][2] - pathPoints[pointIndex][2]));
 		}
