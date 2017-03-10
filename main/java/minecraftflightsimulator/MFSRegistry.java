@@ -9,6 +9,7 @@ import java.util.Map;
 import minecraftflightsimulator.blocks.BlockPropellerBench;
 import minecraftflightsimulator.blocks.BlockSurveyFlag;
 import minecraftflightsimulator.blocks.BlockTrack;
+import minecraftflightsimulator.blocks.BlockTrackFake;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.parts.EntityChest;
@@ -41,6 +42,7 @@ import minecraftflightsimulator.packets.general.InstrumentFlyerPacket;
 import minecraftflightsimulator.packets.general.ServerDataPacket;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
 import minecraftflightsimulator.packets.general.TileEntityClientRequestDataPacket;
+import minecraftflightsimulator.packets.general.TileEntityFakeTrackHeightPacket;
 import minecraftflightsimulator.packets.general.TileEntitySyncPacket;
 import minecraftflightsimulator.planes.Comanche.EntityComanche;
 import minecraftflightsimulator.planes.MC172.EntityMC172;
@@ -85,7 +87,10 @@ public class MFSRegistry{
 	public static final Item flightManual = new Item();
 	public static final Block propellerBench = new BlockPropellerBench();
 	
-	public static final Block track = new BlockTrack();
+	public static final Item track = new Item();
+	
+	public static final Block blockTrack = new BlockTrack();
+	public static final Block blockTrackFake = new BlockTrackFake();
 	public static final Block surveyFlag = new BlockSurveyFlag();
 	
 	public static List<Item> itemList = new ArrayList<Item>();
@@ -158,6 +163,7 @@ public class MFSRegistry{
 		
 		MFS.proxy.registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
 		MFS.proxy.registerPacket(TileEntityClientRequestDataPacket.class, TileEntityClientRequestDataPacket.Handler.class, false, true);
+		MFS.proxy.registerPacket(TileEntityFakeTrackHeightPacket.class, TileEntityFakeTrackHeightPacket.Handler.class, false, true);
 
 		MFS.proxy.registerPacket(InstrumentFlyerPacket.class, InstrumentFlyerPacket.Handler.class, true, true);
 		MFS.proxy.registerPacket(TileEntitySyncPacket.class, TileEntitySyncPacket.Handler.class, true, true);

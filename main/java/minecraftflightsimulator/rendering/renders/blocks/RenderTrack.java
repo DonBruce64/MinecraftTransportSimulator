@@ -6,6 +6,7 @@ import java.util.List;
 import org.lwjgl.opengl.GL11;
 
 import minecraftflightsimulator.blocks.TileEntityTrack;
+import minecraftflightsimulator.blocks.TileEntityTrackFake;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import minecraftflightsimulator.rendering.models.blocks.ModelTrackTie;
 import minecraftflightsimulator.systems.GL11DrawSystem;
@@ -23,6 +24,9 @@ public class RenderTrack extends RenderTileBase{
 
 	@Override
 	protected void doRender(TileEntity tile, double x, double y, double z){
+		if(tile instanceof TileEntityTrackFake){
+			return;
+		}
 		TileEntityTrack track = (TileEntityTrack) tile;
 		
 		//Ensure rail hasn't already been rendered.
