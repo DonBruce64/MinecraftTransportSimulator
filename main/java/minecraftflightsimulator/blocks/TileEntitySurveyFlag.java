@@ -7,6 +7,7 @@ import java.util.List;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import minecraftflightsimulator.packets.general.TileEntityClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.TileEntitySyncPacket;
@@ -36,11 +37,6 @@ public class TileEntitySurveyFlag extends TileEntity{
         	MFS.MFSNet.sendToServer(new TileEntityClientRequestDataPacket(this));
         }
     }
-	
-	@Override
-	public void updateEntity(){
-		super.updateEntity();
-	}
 	
 	public void linkToFlag(int[] linkedFlagCoords, boolean isPrimary){
 		if(linkedCurve != null){
@@ -92,7 +88,29 @@ public class TileEntitySurveyFlag extends TileEntity{
 				}
 			}
 		}
-		//TODO spawn TES and blocks.
+		
+		int[] masterLocation = new int[]{this.xCoord, this.yCoord, this.zCoord};
+		for(int[] blockData : blockList){
+			worldObj.setBlock(blockData[0], blockData[1], blockData[2], MFSRegistry.blockTrackFake);			
+			worldObj.markBlockForUpdate(blockData[0], blockData[1], blockData[2]);			
+			worldObj.setTileEntity(blockData[0], blockData[1], blockData[2], new TileEntityTrackFake(Math.max(blockData[3]/16F, 0.25F), masterLocation));
+		}
+		MFSCurve curve = linkedCurve;
+		MFSCurve otherFlagCurve = ((TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(worldObj, linkedCurve.blockEndPoint[0], linkedCurve.blockEndPoint[1], linkedCurve.blockEndPoint[2])).linkedCurve;
+		boolean primary = isPrimary;
+		
+		worldObj.setBlock(curve.blockStartPoint[0], curve.blockStartPoint[1], curve.blockStartPoint[2], MFSRegistry.blockTrack);
+		worldObj.setBlock(curve.blockEndPoint[0], curve.blockEndPoint[1], curve.blockEndPoint[2], MFSRegistry.blockTrack);
+		
+		worldObj.markBlockForUpdate(curve.blockStartPoint[0], curve.blockStartPoint[1], curve.blockStartPoint[2]);
+		worldObj.markBlockForUpdate(curve.blockEndPoint[0], curve.blockEndPoint[1], curve.blockEndPoint[2]);
+		
+		TileEntityTrack startTile = new TileEntityTrack(curve, primary);
+		TileEntityTrack endTile = new TileEntityTrack(otherFlagCurve, !primary);
+		startTile.setDummyTracks(blockList);
+		endTile.setDummyTracks(blockList);
+		worldObj.setTileEntity(curve.blockStartPoint[0], curve.blockStartPoint[1], curve.blockStartPoint[2], startTile);
+		worldObj.setTileEntity(curve.blockEndPoint[0], curve.blockEndPoint[1], curve.blockEndPoint[2], endTile);
 		return null;
 	}
 	

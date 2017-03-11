@@ -28,6 +28,14 @@ public class TileEntityTrack extends TileEntity{
 		this.isPrimary = isPrimary;
 	}
 	
+	public void setDummyTracks(List<int[]> dummyTracks){
+		this.dummyTracks = dummyTracks;
+	}
+	
+	public List<int[]> getDummyTracks(){
+		return this.dummyTracks;
+	}
+	
 	public void removeDummyTracks(){
 		this.invalidate();
 		for(int[] track : dummyTracks){

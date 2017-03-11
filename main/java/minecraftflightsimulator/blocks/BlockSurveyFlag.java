@@ -7,6 +7,7 @@ import java.util.Map;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
+import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.packets.general.ChatPacket;
 import net.minecraft.block.Block;
@@ -15,7 +16,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -39,10 +39,10 @@ public class BlockSurveyFlag extends BlockContainer{
 				MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.flag.info.unlink")), (EntityPlayerMP) player);
 				return false;
 			}else if(PlayerHelper.getHeldStack(player) != null){
-				if(PlayerHelper.getHeldStack(player).getItem().equals(Item.getItemFromBlock(MFSRegistry.track))){
+				if(PlayerHelper.getHeldStack(player).getItem().equals(MFSRegistry.track)){
 					if(tile.linkedCurve != null){
 						if(!PlayerHelper.isPlayerCreative(player)){
-							if(PlayerHelper.getQtyOfItemInInventory(Item.getItemFromBlock(MFSRegistry.track), (short) 0, player) < Math.round(tile.linkedCurve.pathLength)){
+							if(PlayerHelper.getQtyOfItemInInventory(MFSRegistry.track, (short) ItemStackHelper.getItemDamage(PlayerHelper.getHeldStack(player)), player) < Math.round(tile.linkedCurve.pathLength)){
 								MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.flag.failure.materials") + " " + String.valueOf((int) Math.round(tile.linkedCurve.pathLength))), (EntityPlayerMP) player);
 								return true;
 							}
@@ -51,19 +51,8 @@ public class BlockSurveyFlag extends BlockContainer{
 						if(blockingBlock != null){
 							MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.flag.failure.blockage") + " X:" + blockingBlock[0] + " Y:" + blockingBlock[1] + " Z:" + blockingBlock[2]), (EntityPlayerMP) player);
 						}else{
-							TileEntitySurveyFlag likedFlag = (TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(world, tile.linkedCurve.blockEndPoint[0], tile.linkedCurve.blockEndPoint[1], tile.linkedCurve.blockEndPoint[2]);
-							
-							world.setBlock(tile.linkedCurve.blockStartPoint[0], tile.linkedCurve.blockStartPoint[1], tile.linkedCurve.blockStartPoint[2], MFSRegistry.track);
-							world.setBlock(likedFlag.linkedCurve.blockStartPoint[0], likedFlag.linkedCurve.blockStartPoint[1], likedFlag.linkedCurve.blockStartPoint[2], MFSRegistry.track);
-							
-							world.markBlockForUpdate(tile.linkedCurve.blockStartPoint[0], tile.linkedCurve.blockStartPoint[1], tile.linkedCurve.blockStartPoint[2]);
-							world.markBlockForUpdate(likedFlag.linkedCurve.blockStartPoint[0], likedFlag.linkedCurve.blockStartPoint[1], likedFlag.linkedCurve.blockStartPoint[2]);
-							
-							world.setTileEntity(tile.linkedCurve.blockStartPoint[0], tile.linkedCurve.blockStartPoint[1], tile.linkedCurve.blockStartPoint[2], new TileEntityTrack(tile.linkedCurve, tile.isPrimary));						
-							world.setTileEntity(likedFlag.linkedCurve.blockStartPoint[0], likedFlag.linkedCurve.blockStartPoint[1], likedFlag.linkedCurve.blockStartPoint[2], new TileEntityTrack(likedFlag.linkedCurve, likedFlag.isPrimary));
-							
 							if(!PlayerHelper.isPlayerCreative(player)){
-								PlayerHelper.removeQtyOfItemInInventory(Item.getItemFromBlock(MFSRegistry.track), (short) 0, (short) Math.round(tile.linkedCurve.pathLength), player);
+								PlayerHelper.removeQtyOfItemInInventory(MFSRegistry.track, ItemStackHelper.getItemDamage(PlayerHelper.getHeldStack(player)), (short) Math.round(tile.linkedCurve.pathLength), player);
 							}
 						}
 					}else{
