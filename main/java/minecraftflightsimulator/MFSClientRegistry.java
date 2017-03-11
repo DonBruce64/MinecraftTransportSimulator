@@ -9,7 +9,6 @@ import cpw.mods.fml.common.Loader;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
 import minecraftflightsimulator.blocks.TileEntitySurveyFlag;
 import minecraftflightsimulator.blocks.TileEntityTrack;
-import minecraftflightsimulator.blocks.TileEntityTrackFake;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityCore;
 import minecraftflightsimulator.entities.core.EntityParent;
@@ -71,7 +70,6 @@ public class MFSClientRegistry{
 		registerTileEntityRender(TileEntityPropellerBench.class, RenderPropellerBench.class);
 		registerTileEntityRender(TileEntitySurveyFlag.class, RenderSurveyFlag.class);
 		registerTileEntityRender(TileEntityTrack.class, RenderTrack.class);
-		registerTileEntityRender(TileEntityTrackFake.class, RenderTrack.class);
 	}
 	
 	private static void initEntityRenders(){

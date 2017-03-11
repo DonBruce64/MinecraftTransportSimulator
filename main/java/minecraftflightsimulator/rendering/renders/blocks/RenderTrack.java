@@ -6,7 +6,6 @@ import java.util.List;
 import org.lwjgl.opengl.GL11;
 
 import minecraftflightsimulator.blocks.TileEntityTrack;
-import minecraftflightsimulator.blocks.TileEntityTrackFake;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import minecraftflightsimulator.rendering.models.blocks.ModelTrackTie;
 import minecraftflightsimulator.systems.GL11DrawSystem;
@@ -21,12 +20,10 @@ public class RenderTrack extends RenderTileBase{
 	private static final ModelTrackTie model = new ModelTrackTie();
 	private static final ResourceLocation tieTexture = new ResourceLocation("mfs", "textures/blockmodels/tie.png");
 	private static final ResourceLocation railTexture = new ResourceLocation("mfs", "textures/blockmodels/rail.png");
-
+	private static final ResourceLocation ballastTexture = new ResourceLocation("mfs", "textures/blocks/ballast.png");
+	
 	@Override
 	protected void doRender(TileEntity tile, double x, double y, double z){
-		if(tile instanceof TileEntityTrackFake){
-			return;
-		}
 		TileEntityTrack track = (TileEntityTrack) tile;
 		
 		//Ensure rail hasn't already been rendered.
@@ -49,6 +46,11 @@ public class RenderTrack extends RenderTileBase{
 				track.renderedLastPass = true;
 			}
 			GL11.glPopMatrix();
+		}
+		
+		//Now render fake tracks with ballast.
+		for(int[] fakeData : track.getDummyTracks()){
+			
 		}
 	}
 	

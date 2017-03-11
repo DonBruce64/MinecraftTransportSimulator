@@ -1,20 +1,20 @@
 package minecraftflightsimulator.blocks;
 
+import java.util.List;
 import java.util.Random;
 
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BlockTrackFake extends BlockContainer{
+public class BlockTrackFake extends Block{
 
 	public BlockTrackFake(){
 		super(Material.iron);
@@ -23,9 +23,12 @@ public class BlockTrackFake extends BlockContainer{
 	}
 	
 	@Override
-	public void setBlockBoundsBasedOnState(IBlockAccess access, int x, int y, int z){
-		TileEntityTrackFake tile = (TileEntityTrackFake) access.getTileEntity(x, y, z);
+	public void addCollisionBoxesToList(World world, int x, int y, int z, AxisAlignedBB box, List list, Entity entity){
+		TileEntityTrackFake tile = (TileEntityTrackFake) BlockHelper.getTileEntityFromCoords(world, x, y, z);
+		System.out.println("BOUNDS");
+		//TODO not called unless block is highlighted.
 		this.setBlockBounds(0, 0, 0, 1, tile.height, 1);
+		super.addCollisionBoxesToList(world, x, y, z, box, list, entity);
 	}
 	
 	@Override
@@ -46,18 +49,8 @@ public class BlockTrackFake extends BlockContainer{
     }
 	
 	@Override
-	public TileEntity createNewTileEntity(World world, int metadata){
-		return new TileEntityTrackFake();
-	}
-	
-	@Override
     public int getRenderType(){
         return -1;
-    }
-	
-	@Override
-    public boolean renderAsNormalBlock(){
-        return false;
     }
 	
 	@Override
