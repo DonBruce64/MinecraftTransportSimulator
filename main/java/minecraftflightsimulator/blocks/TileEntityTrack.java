@@ -17,7 +17,7 @@ public class TileEntityTrack extends TileEntity{
 	public boolean renderedLastPass;
 	public boolean isPrimary;
 	public MFSCurve curve;
-	private List<int[]> dummyTracks = new ArrayList<int[]>();
+	private List<int[]> fakeTracks = new ArrayList<int[]>();
 	
 	public TileEntityTrack(){
 		super();
@@ -28,19 +28,20 @@ public class TileEntityTrack extends TileEntity{
 		this.isPrimary = isPrimary;
 	}
 	
-	public void setDummyTracks(List<int[]> dummyTracks){
-		this.dummyTracks = dummyTracks;
+	public void setFakeTracks(List<int[]> fakeTracks){
+		this.fakeTracks = fakeTracks;
 	}
 	
-	public List<int[]> getDummyTracks(){
-		return this.dummyTracks;
+	public List<int[]> getFakeTracks(){
+		return this.fakeTracks;
 	}
 	
-	public void removeDummyTracks(){
+	public void removeFakeTracks(){
 		this.invalidate();
-		for(int[] track : dummyTracks){
+		for(int[] track : fakeTracks){
 			BlockHelper.setBlockToAir(worldObj, track[0], track[1], track[2]);
 		}
+		BlockTrackFake.overrideBreakingBlocks = false;
 	}
 	
 	@Override
@@ -69,6 +70,15 @@ public class TileEntityTrack extends TileEntity{
         if(tagCompound.getIntArray("endPoint").length != 0){
         	curve = new MFSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, tagCompound.getIntArray("endPoint"), tagCompound.getFloat("startAngle"), tagCompound.getFloat("endAngle"));
         }
+        
+        this.fakeTracks.clear();
+        int[] fakeXCoords = tagCompound.getIntArray("fakeXCoords");
+        int[] fakeYCoords = tagCompound.getIntArray("fakeYCoords");
+        int[] fakeZCoords = tagCompound.getIntArray("fakeZCoords");
+        int[] fakeHeights = tagCompound.getIntArray("fakeHeights");
+        for(int i=0; i<fakeXCoords.length; ++i){
+        	fakeTracks.add(new int[]{fakeXCoords[i], fakeYCoords[i], fakeZCoords[i], fakeHeights[i]});
+        }
     }
     
 	@Override
@@ -82,5 +92,20 @@ public class TileEntityTrack extends TileEntity{
         }else{
         	this.invalidate();
         }
+        
+        int[] fakeXCoords = new int[fakeTracks.size()];
+        int[] fakeYCoords = new int[fakeTracks.size()];
+        int[] fakeZCoords = new int[fakeTracks.size()];
+        int[] fakeHeights = new int[fakeTracks.size()];
+        for(int i=0;i<fakeTracks.size(); ++i){
+        	fakeXCoords[i] = fakeTracks.get(i)[0];
+        	fakeYCoords[i] = fakeTracks.get(i)[1];
+        	fakeZCoords[i] = fakeTracks.get(i)[2];
+        	fakeHeights[i] = fakeTracks.get(i)[3];
+        }
+        tagCompound.setIntArray("fakeXCoords", fakeXCoords);
+        tagCompound.setIntArray("fakeYCoords", fakeYCoords);
+        tagCompound.setIntArray("fakeZCoords", fakeZCoords);
+        tagCompound.setIntArray("fakeHeights", fakeHeights);
     }
 }

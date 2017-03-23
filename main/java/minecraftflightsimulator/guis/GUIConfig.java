@@ -44,7 +44,6 @@ public class GUIConfig extends GuiScreen{
 	private GuiButton vehicleButton;
 	private GuiButton joystickButton;
 	
-	private GuiButton throttleKillsButton;
 	private GuiButton seaLevelOffsetButton;
 	private GuiButton electricStartButton;
 	private GuiButton xaerosCompatibilityButton;
@@ -95,7 +94,6 @@ public class GUIConfig extends GuiScreen{
 	private void initConfigControls(){
 		int line = 0;
 		int xOffset = 140;
-		configureButtons.add(throttleKillsButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("ThrottleKills"))));
 		configureButtons.add(seaLevelOffsetButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("SeaLevelOffset"))));
 		configureButtons.add(electricStartButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("ElectricStart"))));
 		configureButtons.add(xaerosCompatibilityButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("XaerosCompatibility"))));
@@ -224,14 +222,11 @@ public class GUIConfig extends GuiScreen{
 		fontRendererObj.drawStringWithShadow("Electric Start:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
 		fontRendererObj.drawStringWithShadow("Xaeros Compatibility:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
 		
-		throttleKillsButton.drawButton(mc, mouseX, mouseY);
 		seaLevelOffsetButton.drawButton(mc, mouseX, mouseY);
 		electricStartButton.drawButton(mc, mouseX, mouseY);
 		xaerosCompatibilityButton.drawButton(mc, mouseX, mouseY);
 		
-		if(isPointInRegion(throttleKillsButton.xPosition, throttleKillsButton.xPosition + throttleKillsButton.width, throttleKillsButton.yPosition, throttleKillsButton.yPosition + throttleKillsButton.height, mouseX, mouseY)){
-			drawHoveringText(Arrays.asList(new String[] {"Can setting a joystick throttle", "to zero kill the engine?"}), mouseX, mouseY, fontRendererObj);
-		}else if(isPointInRegion(seaLevelOffsetButton.xPosition, seaLevelOffsetButton.xPosition + seaLevelOffsetButton.width, seaLevelOffsetButton.yPosition, seaLevelOffsetButton.yPosition + seaLevelOffsetButton.height, mouseX, mouseY)){
+		if(isPointInRegion(seaLevelOffsetButton.xPosition, seaLevelOffsetButton.xPosition + seaLevelOffsetButton.width, seaLevelOffsetButton.yPosition, seaLevelOffsetButton.yPosition + seaLevelOffsetButton.height, mouseX, mouseY)){
 			drawHoveringText(Arrays.asList(new String[] {"Does altimeter display 0", "at average sea level", "instead of Y=0?"}), mouseX, mouseY, fontRendererObj);
 		}else if(isPointInRegion(electricStartButton.xPosition, electricStartButton.xPosition + electricStartButton.width, electricStartButton.yPosition, electricStartButton.yPosition + electricStartButton.height, mouseX, mouseY)){
 			drawHoveringText(Arrays.asList(new String[] {"Enable electric starter?", "If disabled players must", "start engines by hand."}), mouseX, mouseY, fontRendererObj);
@@ -360,9 +355,6 @@ public class GUIConfig extends GuiScreen{
 			guiLevel = GUILevels.VEHICLE;
 		}else if(buttonClicked.equals(joystickButton)){
 			guiLevel = GUILevels.JS_SELECT;
-		}else if(buttonClicked.equals(throttleKillsButton)){
-			ConfigSystem.setClientConfig("ThrottleKills", !Boolean.valueOf(throttleKillsButton.displayString));
-			throttleKillsButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("ThrottleKills"));
 		}else if(buttonClicked.equals(seaLevelOffsetButton)){
 			ConfigSystem.setClientConfig("SeaLevelOffset", !Boolean.valueOf(seaLevelOffsetButton.displayString));
 			seaLevelOffsetButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("SeaLevelOffset"));

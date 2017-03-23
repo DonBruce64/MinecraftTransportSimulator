@@ -36,7 +36,7 @@ public class BlockTrack extends BlockContainer{
 						world.spawnEntityInWorld(new EntityItem(world, x, y, z, new ItemStack(MFSRegistry.track, tracksInItem, metadata)));
 						numberTracks -= tracksInItem;
 					}
-					track.removeDummyTracks();
+					track.removeFakeTracks();
 				}
 				int otherX = track.curve.blockEndPoint[0];
 				int otherY = track.curve.blockEndPoint[1];

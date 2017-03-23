@@ -359,7 +359,7 @@ public final class ControlSystem{
 	
 	private static void checkThrottle(EntityVehicle vehicle){
 		if(joystickMap.get(controls.THROTTLE.joystickName) != 999 && joystick != null){
-			MFS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), (byte) (Math.max(50 + getAxisState(controls.THROTTLE, false)/2, ConfigSystem.getBooleanConfig("ThrottleKills") ? 0 : 15))));
+			MFS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), (byte) (50 + getAxisState(controls.THROTTLE, false)/2)));
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.THROTTLE.keyboardIncrementName))){
 			MFS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), Byte.MAX_VALUE));
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.THROTTLE.keyboardDecrementName))){

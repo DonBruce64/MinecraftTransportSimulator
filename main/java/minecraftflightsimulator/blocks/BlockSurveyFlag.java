@@ -47,7 +47,7 @@ public class BlockSurveyFlag extends BlockContainer{
 								return true;
 							}
 						}
-						int[] blockingBlock = tile.setDummyTracks();
+						int[] blockingBlock = tile.spawnDummyTracks();
 						if(blockingBlock != null){
 							MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.flag.failure.blockage") + " X:" + blockingBlock[0] + " Y:" + blockingBlock[1] + " Z:" + blockingBlock[2]), (EntityPlayerMP) player);
 						}else{

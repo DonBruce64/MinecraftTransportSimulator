@@ -1,12 +1,12 @@
-package minecraftflightsimulator.rendering.renders.parts;
+package minecraftflightsimulator.rendering.partrenders;
 
 import org.lwjgl.opengl.GL11;
 
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntityEngine.EngineTypes;
-import minecraftflightsimulator.rendering.models.parts.ModelEngineLarge;
-import minecraftflightsimulator.rendering.models.parts.ModelEngineSmall;
+import minecraftflightsimulator.rendering.partmodels.ModelEngineLarge;
+import minecraftflightsimulator.rendering.partmodels.ModelEngineSmall;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import minecraftflightsimulator.systems.RenderSystem.RenderChild;
 import net.minecraft.util.ResourceLocation;

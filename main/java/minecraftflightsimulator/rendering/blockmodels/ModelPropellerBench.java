@@ -1,4 +1,4 @@
-package minecraftflightsimulator.rendering.models.blocks;
+package minecraftflightsimulator.rendering.blockmodels;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;

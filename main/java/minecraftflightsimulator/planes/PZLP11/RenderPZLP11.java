@@ -7,7 +7,7 @@ import org.lwjgl.opengl.GL11;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.rendering.AircraftInstruments;
 import minecraftflightsimulator.rendering.AircraftInstruments.AircraftControls;
-import minecraftflightsimulator.rendering.renders.parts.RenderPlane;
+import minecraftflightsimulator.rendering.partrenders.RenderPlane;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;

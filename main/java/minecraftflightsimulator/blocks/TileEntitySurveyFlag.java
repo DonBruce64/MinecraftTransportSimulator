@@ -60,40 +60,57 @@ public class TileEntitySurveyFlag extends TileEntity{
 		}
 	}
 	
-	public int[] setDummyTracks(){
+	/**
+	 * Spawns dummy tracks based on flag linking.  Returns null if successful or
+	 * the coordinates of the location where an existing block is if not.
+	 * 
+	 */
+	public int[] spawnDummyTracks(){
 		float[] currentPoint;		
 		float currentAngle;
 		float currentSin;
 		float currentCos;
 		
-		//First make sure blocks can be placed.
 		List<int[]> blockList = new ArrayList<int[]>();
-		for(short i=0; i <= linkedCurve.pathLength; ++i){
-			currentPoint = linkedCurve.getPointAt(i/linkedCurve.pathLength);
-			currentAngle = 90 + linkedCurve.getYawAngleAt(i/linkedCurve.pathLength);
+		for(float f=0; f <= linkedCurve.pathLength; f = Math.min(f + 0.25F, linkedCurve.pathLength)){
+			currentPoint = linkedCurve.getPointAt(f/linkedCurve.pathLength);
+			currentAngle = linkedCurve.getYawAngleAt(f/linkedCurve.pathLength);
 			currentSin = (float) Math.sin(Math.toRadians(currentAngle));
 			currentCos = (float) Math.cos(Math.toRadians(currentAngle));
 
 			int[] offset = new int[3];
 			for(byte j=-1; j<=1; ++j){
-				offset[0] = (int) (currentPoint[0] + j*currentSin);
-				offset[1] = (int) currentPoint[1];
-				offset[2] = (int) (currentPoint[2] + j*currentCos);
+				offset[0] = (int) Math.round(currentPoint[0] - 0.5 + j*currentCos);
+				offset[1] = (int) Math.floor(currentPoint[1] + 0.01);
+				offset[2] = (int) Math.round(currentPoint[2] - 0.5 - j*currentSin);
 				if(BlockHelper.canPlaceBlockAt(worldObj, offset[0], offset[1], offset[2])){
-					blockList.add(new int[] {offset[0], offset[1], offset[2], (int) (currentPoint[1]%1)*16});
+					boolean isBlockInList = false;
+					for(int[] coords : blockList){
+						if(coords[0] == offset[0] && coords[2] == offset[2]){
+							isBlockInList = true;
+							break;
+						}
+					}
+					if(!isBlockInList){
+						blockList.add(new int[] {offset[0], offset[1], offset[2], (int) Math.max(((currentPoint[1] + 0.01)%1)*16, 1)});
+					}
 				}else{
 					if(!(Arrays.equals(linkedCurve.blockStartPoint, offset) || Arrays.equals(linkedCurve.blockEndPoint, offset))){
 						return offset;
 					}
 				}
 			}
+			if(f == linkedCurve.pathLength){
+				break;
+			}
 		}
 		
 		int[] masterLocation = new int[]{this.xCoord, this.yCoord, this.zCoord};
+		BlockTrackFake.overrideBreakingBlocks = true;
 		for(int[] blockData : blockList){
-			worldObj.setBlock(blockData[0], blockData[1], blockData[2], MFSRegistry.blockTrackFake);			
+			worldObj.setBlock(blockData[0], blockData[1], blockData[2], MFSRegistry.blockTrackFake);
+			BlockHelper.setBlockMetadata(worldObj, blockData[0], blockData[1], blockData[2], (byte) Math.max(blockData[3], 4));
 			worldObj.markBlockForUpdate(blockData[0], blockData[1], blockData[2]);			
-			worldObj.setTileEntity(blockData[0], blockData[1], blockData[2], new TileEntityTrackFake(Math.max(blockData[3]/16F, 0.25F), masterLocation));
 		}
 		MFSCurve curve = linkedCurve;
 		MFSCurve otherFlagCurve = ((TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(worldObj, linkedCurve.blockEndPoint[0], linkedCurve.blockEndPoint[1], linkedCurve.blockEndPoint[2])).linkedCurve;
@@ -107,10 +124,11 @@ public class TileEntitySurveyFlag extends TileEntity{
 		
 		TileEntityTrack startTile = new TileEntityTrack(curve, primary);
 		TileEntityTrack endTile = new TileEntityTrack(otherFlagCurve, !primary);
-		startTile.setDummyTracks(blockList);
-		endTile.setDummyTracks(blockList);
+		startTile.setFakeTracks(blockList);
+		endTile.setFakeTracks(blockList);
 		worldObj.setTileEntity(curve.blockStartPoint[0], curve.blockStartPoint[1], curve.blockStartPoint[2], startTile);
 		worldObj.setTileEntity(curve.blockEndPoint[0], curve.blockEndPoint[1], curve.blockEndPoint[2], endTile);
+		BlockTrackFake.overrideBreakingBlocks = false;
 		return null;
 	}
 	

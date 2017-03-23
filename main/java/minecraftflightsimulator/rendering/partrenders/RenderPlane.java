@@ -1,4 +1,4 @@
-package minecraftflightsimulator.rendering.renders.parts;
+package minecraftflightsimulator.rendering.partrenders;
 
 import org.lwjgl.opengl.GL11;
 

@@ -1,4 +1,4 @@
-package minecraftflightsimulator.rendering.renders.blocks;
+package minecraftflightsimulator.rendering.blockrenders;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +7,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecraftflightsimulator.blocks.TileEntityTrack;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
-import minecraftflightsimulator.rendering.models.blocks.ModelTrackTie;
+import minecraftflightsimulator.rendering.blockmodels.ModelTrackTie;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import minecraftflightsimulator.systems.RenderSystem.RenderTileBase;
 import minecraftflightsimulator.utilites.MFSCurve;
@@ -41,16 +41,39 @@ public class RenderTrack extends RenderTileBase{
 		if(track.curve != null){
 			GL11.glPushMatrix();
 			GL11.glTranslated(x, y, z);
+			
+			GL11.glPushMatrix();
 			renderTrackSegmentFromCurve(track.getWorldObj(), track.curve, false);
+			GL11.glPopMatrix();
+			
 			if(track.isPrimary){
 				track.renderedLastPass = true;
 			}
-			GL11.glPopMatrix();
-		}
-		
-		//Now render fake tracks with ballast.
-		for(int[] fakeData : track.getDummyTracks()){
 			
+			/*
+			//CAUSES OVER 20FPS LOSS.  DO NOT USE EXCEPT FOR TESTING!
+			GL11DrawSystem.bindTexture(ballastTexture);
+			//Render master tracks with ballast.
+			GL11.glPushMatrix();
+			float lightValue = BlockHelper.getRenderLight(track.getWorldObj(), (int) Math.ceil(track.curve.blockStartPoint[0]), (int) Math.ceil(track.curve.blockStartPoint[1]), (int) Math.ceil(track.curve.blockStartPoint[2]));
+			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightValue%65536, lightValue/65536);
+			drawBallastBox(1F/16F);
+			GL11.glTranslatef(track.curve.blockEndPoint[0] - track.curve.blockStartPoint[0], track.curve.blockEndPoint[1] - track.curve.blockStartPoint[1], track.curve.blockEndPoint[2] - track.curve.blockStartPoint[2]);
+			lightValue = BlockHelper.getRenderLight(track.getWorldObj(), (int) Math.ceil(track.curve.blockEndPoint[0]), (int) Math.ceil(track.curve.blockEndPoint[1]), (int) Math.ceil(track.curve.blockEndPoint[2]));
+			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightValue%65536, lightValue/65536);
+			drawBallastBox(1F/16F);
+			GL11.glPopMatrix();
+			
+			//Render fake tracks with ballast.
+			for(int[] fakeData : track.getFakeTracks()){
+				GL11.glPushMatrix();
+				GL11.glTranslatef(fakeData[0] - track.curve.blockStartPoint[0], fakeData[1] - track.curve.blockStartPoint[1], fakeData[2] - track.curve.blockStartPoint[2]);
+				lightValue = BlockHelper.getRenderLight(track.getWorldObj(), (int) Math.ceil(fakeData[0]), (int) Math.ceil(fakeData[1]), (int) Math.ceil(fakeData[2]));
+				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightValue%65536, lightValue/65536);
+				drawBallastBox(fakeData[3]/16F);
+				GL11.glPopMatrix();
+			}*/
+			GL11.glPopMatrix();
 		}
 	}
 	
@@ -177,18 +200,18 @@ public class RenderTrack extends RenderTileBase{
 		//These are quad strips, which makes contiguous rails easy!
 		GL11.glPushMatrix();
 		GL11DrawSystem.bindTexture(railTexture);
-		drawRailSegment(texPoints, 13F/16F, 11F/16F, 4F/16F, 4F/16F, 10F/16F, 12F/16F, holographic);//Top
-		drawRailSegment(texPoints, 13F/16F, 13F/16F, 3F/16F, 4F/16F, 9F/16F, 10F/16F, holographic);//Outer-top-side
-		drawRailSegment(texPoints, 12.5F/16F, 13F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F, holographic);//Outer-top-under
-		drawRailSegment(texPoints, 12.5F/16F, 12.5F/16F, 1F/16F, 3F/16F, 6F/16F, 8F/16F, holographic);//Outer-middle
-		drawRailSegment(texPoints, 14.5F/16F, 12.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F, holographic);//Outer-bottom-top
-		drawRailSegment(texPoints, 14.5F/16F, 14.5F/16F, 0F/16F, 1F/16F, 3F/16F, 4F/16F, holographic);//Outer-bottom-side
-		drawRailSegment(texPoints, 9.5F/16F, 14.5F/16F, 0.0F, 0.0F, 0.0F, 3F/16F, holographic);//Bottom
-		drawRailSegment(texPoints, 9.5F/16F, 9.5F/16F, 1F/16F, 0F/16F, 3F/16F, 4F/16F, holographic);//Inner-bottom-side
-		drawRailSegment(texPoints, 11.5F/16F, 9.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F, holographic);//Inner-bottom-top
-		drawRailSegment(texPoints, 11.5F/16F, 11.5F/16F, 3F/16F, 1F/16F, 6F/16F, 8F/16F, holographic);//Inner-middle
-		drawRailSegment(texPoints, 11F/16F, 11.5F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F, holographic);//Inner-top-under
-		drawRailSegment(texPoints, 11F/16F, 11F/16F, 4F/16F, 3F/16F, 9F/16F, 10F/16F, holographic);//Inner-top-side
+		drawRailSegment(texPoints, 16F/16F, 14F/16F, 4F/16F, 4F/16F, 10F/16F, 12F/16F, holographic);//Top
+		drawRailSegment(texPoints, 16F/16F, 16F/16F, 3F/16F, 4F/16F, 9F/16F, 10F/16F, holographic);//Outer-top-side
+		drawRailSegment(texPoints, 15.5F/16F, 16F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F, holographic);//Outer-top-under
+		drawRailSegment(texPoints, 15.5F/16F, 15.5F/16F, 1F/16F, 3F/16F, 6F/16F, 8F/16F, holographic);//Outer-middle
+		drawRailSegment(texPoints, 17.5F/16F, 15.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F, holographic);//Outer-bottom-top
+		drawRailSegment(texPoints, 17.5F/16F, 17.5F/16F, 0F/16F, 1F/16F, 3F/16F, 4F/16F, holographic);//Outer-bottom-side
+		drawRailSegment(texPoints, 12.5F/16F, 17.5F/16F, 0.0F, 0.0F, 0.0F, 3F/16F, holographic);//Bottom
+		drawRailSegment(texPoints, 12.5F/16F, 12.5F/16F, 1F/16F, 0F/16F, 3F/16F, 4F/16F, holographic);//Inner-bottom-side
+		drawRailSegment(texPoints, 14.5F/16F, 12.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F, holographic);//Inner-bottom-top
+		drawRailSegment(texPoints, 14.5F/16F, 14.5F/16F, 3F/16F, 1F/16F, 6F/16F, 8F/16F, holographic);//Inner-middle
+		drawRailSegment(texPoints, 14F/16F, 14.5F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F, holographic);//Inner-top-under
+		drawRailSegment(texPoints, 14F/16F, 14F/16F, 4F/16F, 3F/16F, 9F/16F, 10F/16F, holographic);//Inner-top-side
 		GL11.glPopMatrix();
 	}
 	
@@ -219,5 +242,14 @@ public class RenderTrack extends RenderTileBase{
 			GL11.glVertex3d(point[0] - w1*point[3], point[1] + h1, point[2] - w1*point[4]);
 		}
 		GL11.glEnd();
+	}
+	
+	private static void drawBallastBox(float height){
+		GL11DrawSystem.renderSquare(0, 0, -0.01, height, 0, 1, false);
+		GL11DrawSystem.renderSquare(1, 0, -0.01, height, 0, 0, false);
+		GL11DrawSystem.renderSquare(0, 1, -0.01, height, 1, 1, false);
+		GL11DrawSystem.renderSquare(1, 1, -0.01, height, 1, 0, false);
+		GL11DrawSystem.renderQuad(0, 0, 1, 1, height, height, height, height, 0, 1, 1, 0, false);
+		GL11DrawSystem.renderQuad(1, 1, 0, 0, -0.01, -0.01, -0.01, -0.01, 0, 1, 1, 0, false);
 	}
 }

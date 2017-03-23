@@ -7,8 +7,10 @@ import minecraftflightsimulator.packets.general.ChatPacket;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
@@ -41,6 +43,16 @@ public class BlockPropellerBench extends BlockContainer{
 	}
 	
 	@Override
+	public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase entity, ItemStack stack){
+		super.onBlockPlacedBy(world, x, y, z, entity, stack);
+		float yaw = entity.rotationYaw;
+		while(yaw < 0){
+			yaw += 360;
+		}
+		((TileEntityPropellerBench) BlockHelper.getTileEntityFromCoords(world, x, y, z)).benchRotation = (byte) Math.round(yaw%360/45);
+	}
+	
+	@Override
     public void breakBlock(World world, int x, int y, int z, Block block, int meta){
 		if(!world.isRemote){
 			((TileEntityPropellerBench) BlockHelper.getTileEntityFromCoords(world, x, y, z)).dropPropellerAt(x, y, z);
@@ -50,7 +62,7 @@ public class BlockPropellerBench extends BlockContainer{
 	
 	@Override
 	public TileEntity createNewTileEntity(World world, int metadata){
-		return new TileEntity();
+		return new TileEntityPropellerBench();
 	}
 	
 	@Override

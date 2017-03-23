@@ -1,10 +1,10 @@
-package minecraftflightsimulator.rendering.renders.blocks;
+package minecraftflightsimulator.rendering.blockrenders;
 
 import org.lwjgl.opengl.GL11;
 
 import minecraftflightsimulator.blocks.TileEntitySurveyFlag;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
-import minecraftflightsimulator.rendering.models.blocks.ModelSurveyFlag;
+import minecraftflightsimulator.rendering.blockmodels.ModelSurveyFlag;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import minecraftflightsimulator.systems.RenderSystem.RenderTileBase;
 import net.minecraft.tileentity.TileEntity;
@@ -22,7 +22,6 @@ public class RenderSurveyFlag extends RenderTileBase{
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(0.5F, 0, 0.5F);
-		//GL11.glRotatef(180, 0, 0, 1);
 		GL11.glRotatef(180 - flag.angle, 0, 1, 0);
 		GL11DrawSystem.bindTexture(texture);
 		model.render();
