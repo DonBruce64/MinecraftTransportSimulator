@@ -19,7 +19,7 @@ public class EntityComanche extends EntityPlane{
 	
 	public EntityComanche(World world, float posX, float posY, float posZ, float rotation, int textureCode){
 		super(world, posX, posY, posZ, rotation, textureCode);
-		this.displayName = "Wolfvanox";
+		this.displayName = "MFS.WOLF";
 	}
 
 	@Override

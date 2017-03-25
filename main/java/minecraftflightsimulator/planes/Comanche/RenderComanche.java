@@ -1,5 +1,7 @@
 package minecraftflightsimulator.planes.Comanche;
 
+import java.awt.Color;
+
 import org.lwjgl.opengl.GL11;
 
 import minecraftflightsimulator.entities.core.EntityPlane;
@@ -37,9 +39,9 @@ public class RenderComanche extends RenderPlane{
 	@Override
 	protected void renderWindows(EntityPlane plane){
 		GL11DrawSystem.bindTexture(GL11DrawSystem.glassTexture);
-		GL11DrawSystem.renderQuad(-0.85, -0.85, 0.85, 0.85, 1.875, 1.1875, 1.1875, 1.875, 0.625, 1.25, 1.25, 0.625, true);
-		GL11DrawSystem.renderTriangle(0.85, 0.85, 0.85, 1.875, 1.1875, 1.1875, 0.625, 0.625, 1.25, true);
-		GL11DrawSystem.renderTriangle(-0.85, -0.85, -0.85, 1.875, 1.1875, 1.1875, 0.625, 0.625, 1.25, true);
+		GL11DrawSystem.renderQuad(-0.85, -0.85, 0.85, 0.85, 1.875, 1.1875, 1.1875, 1.875, 0.625, 1.5, 1.5, 0.625, true);
+		GL11DrawSystem.renderTriangle(0.85, 0.85, 0.85, 1.875, 1.1875, 1.1875, 0.625, 0.625, 1.5, true);
+		GL11DrawSystem.renderTriangle(-0.85, -0.85, -0.85, 1.875, 1.1875, 1.1875, 0.625, 0.625, 1.5, true);
 		GL11DrawSystem.renderSquare(0.85, 0.85, 1.1875, 1.875, -0.625, 0.5625, true);
 		GL11DrawSystem.renderSquare(-0.85, -0.85, 1.1875, 1.875, -0.625, 0.5625, true);
 		GL11DrawSystem.renderSquare(0.85, 0.85, 1.1875, 1.875, -1.8125, -0.6875, true);
@@ -57,7 +59,14 @@ public class RenderComanche extends RenderPlane{
 	@Override
 	protected void renderMarkings(EntityPlane plane){
 		GL11.glPushMatrix();
-
+		GL11.glRotatef(180, 1, 0, 0);
+		GL11.glRotatef(90, 0, 1, 0);
+		GL11.glDisable(GL11.GL_LIGHTING);
+		GL11.glScalef(1.5F, 1.5F, 1.5F);
+		GL11DrawSystem.drawScaledStringAt(plane.displayName, 0F/1.5F, -1.15F/1.5F, -0.878F/1.5F, 1F/32F, Color.black);
+		GL11.glRotatef(180, 0, 1, 0);
+		GL11DrawSystem.drawScaledStringAt(plane.displayName, 0F/1.5F, -1.15F/1.5F, -0.876F/1.5F, 1F/32F, Color.black);
+		GL11.glEnable(GL11.GL_LIGHTING);
 		GL11.glPopMatrix();
 	}
 	
