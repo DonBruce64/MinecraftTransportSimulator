@@ -26,7 +26,7 @@ public class EntityComanche extends EntityPlane{
 	protected void initProperties(){
 		hasFlaps = true;
 		lightSetup = 15;
-		numberPowerfulLights = 1;
+		numberPowerfulLights = 2;
 		maxFuel = 10000;
 		emptyMass=1030;
 		wingspan=11.2F;
