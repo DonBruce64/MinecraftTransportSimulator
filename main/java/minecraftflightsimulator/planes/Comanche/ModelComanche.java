@@ -1119,14 +1119,14 @@ public class ModelComanche extends ModelBase{
     HRTail_3.mirror = true;
     setRotation(HRTail_3, 0F, 0F, 0F);
     Rudder_1 = new ModelRenderer(this, 155, 196);
-    Rudder_1.addBox(0F, -27F, 0F, 2, 27, 6);
-    Rudder_1.setRotationPoint(-1F, -25F, 84F);
+    Rudder_1.addBox(-1F, -27F, 0F, 2, 27, 6);
+    Rudder_1.setRotationPoint(0F, -25F, 84F);
     Rudder_1.setTextureSize(64, 32);
     Rudder_1.mirror = true;
     setRotation(Rudder_1, 0F, 0F, 0F);
     Rudder_2 = new ModelRenderer(this, 149, 216);
-    Rudder_2.addBox(0F, -29F, -3F, 2, 2, 9);
-    Rudder_2.setRotationPoint(-1F, -25F, 84F);
+    Rudder_2.addBox(-1F, -29F, -3F, 2, 2, 9);
+    Rudder_2.setRotationPoint(0F, -25F, 84F);
     Rudder_2.setTextureSize(64, 32);
     Rudder_2.mirror = true;
     setRotation(Rudder_2, 0F, 0F, 0F);
