@@ -320,7 +320,7 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		}else if(state.equals(EngineStates.MAGNETO_ON_ES_ON)){
 			state = EngineStates.RUNNING_ES_ON;
 		}else if(state.equals(EngineStates.MAGNETO_ON_HS_ON)){
-			state = EngineStates.RUNNING_HS_ON;
+			state = EngineStates.RUNNING;
 		}
 		starterLevel = 0;
 		oilPressure = 60;
