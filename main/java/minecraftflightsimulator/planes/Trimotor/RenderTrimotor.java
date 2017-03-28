@@ -82,8 +82,40 @@ public class RenderTrimotor extends RenderPlane{
 		for(byte i=0; i<10; ++i){
 			AircraftInstruments.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) -1);
 		}
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(35F, 25F, 0);
+		GL11.glScalef(1F/1.3F, 1F/1.3F, 1F/1.3F);
+		//Center engine
+		for(byte i=20; i<24; ++i){
+			AircraftInstruments.drawFlyableInstrument(plane, 30 + (i-20)*60, 124, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) 1);
+		}
+		GL11.glPopMatrix();
+		
 		AircraftInstruments.drawFlyableControl(plane, 290, -5, AircraftControls.THROTTLE, false);
 		AircraftInstruments.drawFlyableControl(plane, 290, 70, AircraftControls.BRAKE, false);
+		GL11.glPopMatrix();
+		
+		//Left engine
+		GL11.glPushMatrix();
+		GL11.glTranslatef(2.374F, 0.25F, -0.75F);
+		GL11.glRotatef(180, 0, 0, 1);
+		GL11.glRotatef(-90, 0, 1, 0);
+		GL11.glScalef(0.00390625F*1.0F, 0.00390625F*1.0F, 0.00390625F*1.0F);
+		for(byte i=10; i<14; ++i){
+			AircraftInstruments.drawFlyableInstrument(plane, 0, (i-10)*62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) 0);
+		}
+		GL11.glPopMatrix();
+		
+		//Right engine
+		GL11.glPushMatrix();
+		GL11.glTranslatef(-2.374F, 0.25F, -0.75F);
+		GL11.glRotatef(180, 0, 0, 1);
+		GL11.glRotatef(90, 0, 1, 0);
+		GL11.glScalef(0.00390625F*1.0F, 0.00390625F*1.0F, 0.00390625F*1.0F);
+		for(byte i=30; i<34; ++i){
+			AircraftInstruments.drawFlyableInstrument(plane, 0, (i-30)*62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) 2);
+		}
 		GL11.glPopMatrix();
 		
 		//Cabin altimeter

@@ -49,29 +49,23 @@ public class RenderMC172 extends RenderPlane{
 	@Override
 	protected void renderConsole(EntityPlane plane){
 		GL11.glPushMatrix();
-		GL11.glTranslatef(0.92F, 0.35F, 0.715F);
+		GL11.glTranslatef(0.60F, 0.35F, 0.715F);
 		GL11.glRotatef(180, 0, 0, 1);
-		GL11.glScalef(0.00390625F*1.5F, 0.00390625F*1.5F, 0.00390625F*1.5F);
+		GL11.glScalef(0.00390625F*1.0F, 0.00390625F*1.0F, 0.00390625F*1.0F);
 		for(byte i=0; i<10; ++i){
-			if(i==0 || i==5){
-				GL11.glPushMatrix();
-				GL11.glRotatef(-90, 0, 1, 0);
-				GL11.glTranslatef(-80, 0, -30);
-				GL11.glScalef(0.75F, 0.75F, 0.75F);
-				AircraftInstruments.drawFlyableInstrument(plane, 72 + (i%5)*62, i<5 ? -10 : 52, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) -1);
-				GL11.glPopMatrix();
-			}else if(i==4 || i==9){
-				GL11.glPushMatrix();
-				GL11.glScalef(0.75F, 0.75F, 0.75F);
-				AircraftInstruments.drawFlyableInstrument(plane, 72 + (i%5)*62, i<5 ? -10 : 52, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) -1);
-				GL11.glPopMatrix();
-			}else{
-				AircraftInstruments.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) -1);
-			}
+			AircraftInstruments.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) -1);
 		}
-		AircraftInstruments.drawFlyableControl(plane, 272, -5, AircraftControls.THROTTLE, false);
-		AircraftInstruments.drawFlyableControl(plane, 272, 60, AircraftControls.BRAKE, false);
-		AircraftInstruments.drawFlyableControl(plane, 232, 80, AircraftControls.FLAPS, false);
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(320F, -10F, 0);
+		GL11.glScalef(0.5F, 0.5F, 0.5F);
+		for(byte i=10; i<14; ++i){
+			AircraftInstruments.drawFlyableInstrument(plane, 0, (i-10)*62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) 0);
+		}
+		GL11.glPopMatrix();
+		AircraftInstruments.drawFlyableControl(plane, 290, -5, AircraftControls.THROTTLE, false);
+		AircraftInstruments.drawFlyableControl(plane, 290, 75, AircraftControls.BRAKE, false);
+		AircraftInstruments.drawFlyableControl(plane, 290, 35, AircraftControls.FLAPS, false);
 		GL11.glPopMatrix();
 	}
 

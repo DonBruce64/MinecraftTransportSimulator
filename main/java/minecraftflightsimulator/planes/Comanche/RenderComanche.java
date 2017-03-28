@@ -5,6 +5,8 @@ import java.awt.Color;
 import org.lwjgl.opengl.GL11;
 
 import minecraftflightsimulator.entities.core.EntityPlane;
+import minecraftflightsimulator.rendering.AircraftInstruments;
+import minecraftflightsimulator.rendering.AircraftInstruments.AircraftControls;
 import minecraftflightsimulator.rendering.partrenders.RenderPlane;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -39,9 +41,9 @@ public class RenderComanche extends RenderPlane{
 	@Override
 	protected void renderWindows(EntityPlane plane){
 		GL11DrawSystem.bindTexture(GL11DrawSystem.glassTexture);
-		GL11DrawSystem.renderQuad(-0.85, -0.85, 0.85, 0.85, 1.875, 1.1875, 1.1875, 1.875, 0.625, 1.5, 1.5, 0.625, true);
-		GL11DrawSystem.renderTriangle(0.85, 0.85, 0.85, 1.875, 1.1875, 1.1875, 0.625, 0.625, 1.5, true);
-		GL11DrawSystem.renderTriangle(-0.85, -0.85, -0.85, 1.875, 1.1875, 1.1875, 0.625, 0.625, 1.5, true);
+		GL11DrawSystem.renderQuad(-0.85, -0.85, 0.85, 0.85, 2, 1.1875, 1.1875, 2, 0.625, 1.5, 1.5, 0.625, true);
+		GL11DrawSystem.renderTriangle(0.85, 0.85, 0.85, 2, 1.1875, 1.1875, 0.625, 0.625, 1.5, true);
+		GL11DrawSystem.renderTriangle(-0.85, -0.85, -0.85, 2, 1.1875, 1.1875, 0.625, 0.625, 1.5, true);
 		GL11DrawSystem.renderSquare(0.85, 0.85, 1.1875, 1.875, -0.625, 0.5625, true);
 		GL11DrawSystem.renderSquare(-0.85, -0.85, 1.1875, 1.875, -0.625, 0.5625, true);
 		GL11DrawSystem.renderSquare(0.85, 0.85, 1.1875, 1.875, -1.8125, -0.6875, true);
@@ -51,7 +53,26 @@ public class RenderComanche extends RenderPlane{
 	@Override
 	protected void renderConsole(EntityPlane plane){
 		GL11.glPushMatrix();
-
+		GL11.glTranslatef(0.615F, 1.05F, 0.624F);
+		GL11.glRotatef(180, 0, 0, 1);
+		GL11.glScalef(0.00390625F*1.0F, 0.00390625F*1.0F, 0.00390625F*1.0F);
+		for(byte i=0; i<10; ++i){
+			if(plane.instruments.get(i) == null || plane.instruments.get(i) != -1){
+				AircraftInstruments.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) -1);
+			}
+		}
+		GL11.glPushMatrix();
+		GL11.glTranslatef(235F, 0, 0);
+		GL11.glScalef(0.5F, 0.5F, 0.5F);
+		for(byte j=0; j<2; ++j){
+			for(byte i=0; i<4; ++i){
+				AircraftInstruments.drawFlyableInstrument(plane, j*124 + (i%2)*62, i<2 ? 0 : 62, plane.instruments.get((byte) (i+10+j*10)) != null ? plane.instruments.get((byte) (i+10+j*10)) : -1, false, j);
+			}
+		}
+		GL11.glPopMatrix();
+		AircraftInstruments.drawFlyableControl(plane, 230, 70, AircraftControls.THROTTLE, false);
+		AircraftInstruments.drawFlyableControl(plane, 330, 70, AircraftControls.BRAKE, false);
+		AircraftInstruments.drawFlyableControl(plane, 260, 70, AircraftControls.FLAPS, false);
 		GL11.glPopMatrix();
 	}
 

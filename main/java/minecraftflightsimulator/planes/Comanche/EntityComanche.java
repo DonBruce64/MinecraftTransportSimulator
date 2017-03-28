@@ -38,7 +38,10 @@ public class EntityComanche extends EntityPlane{
 	}
 	
 	@Override
-	protected void initProhibitedInstruments(){}
+	protected void initProhibitedInstruments(){
+		this.instruments.put((byte) 4, (byte) -1);
+		this.instruments.put((byte) 9, (byte) -1);
+	}
 	
 	@Override
 	protected void initPartData(){

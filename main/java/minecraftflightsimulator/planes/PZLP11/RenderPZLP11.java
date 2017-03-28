@@ -92,9 +92,18 @@ public class RenderPZLP11 extends RenderPlane{
 				AircraftInstruments.drawFlyableInstrument(plane, (i%5)*60, i<5 ? 0 : 62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) -1);
 			}
 		}
-		GL11.glScalef(2F, 2F, 2F);
-		AircraftInstruments.drawFlyableControl(plane, 32, 52, AircraftControls.THROTTLE, false);
-		AircraftInstruments.drawFlyableControl(plane, 96, 52, AircraftControls.BRAKE, false);
+		
+
+		GL11.glPushMatrix();
+		GL11.glTranslatef(75F, 115F, 0);
+		GL11.glScalef(0.5F, 0.5F, 0.5F);
+		for(byte i=10; i<14; ++i){
+			AircraftInstruments.drawFlyableInstrument(plane, (i%4)*62, 0, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) 0);
+		}
+		GL11.glPopMatrix();
+
+		AircraftInstruments.drawFlyableControl(plane, 44, 112, AircraftControls.THROTTLE, false);
+		AircraftInstruments.drawFlyableControl(plane, 196, 112, AircraftControls.BRAKE, false);
 		GL11.glPopMatrix();
 	}
 

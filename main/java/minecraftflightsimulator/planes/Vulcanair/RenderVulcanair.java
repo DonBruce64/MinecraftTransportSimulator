@@ -56,15 +56,24 @@ public class RenderVulcanair extends RenderPlane{
 	@Override
 	protected void renderConsole(EntityPlane plane){
 		GL11.glPushMatrix();
-		GL11.glTranslatef(0.7F, -0.7F, 2.8F);
+		GL11.glTranslatef(0.7F, -0.6F, 2.8F);
 		GL11.glRotatef(180, 0, 0, 1);
-		GL11.glScalef(0.00390625F*1.3F, 0.00390625F*1.3F, 0.00390625F*1.3F);
+		GL11.glScalef(0.00390625F*1.0F, 0.00390625F*1.0F, 0.00390625F*1.0F);
 		for(byte i=0; i<10; ++i){
 			AircraftInstruments.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) -1);
 		}
-		AircraftInstruments.drawFlyableControl(plane, 295, -5, AircraftControls.THROTTLE, false);
-		AircraftInstruments.drawFlyableControl(plane, 295, 70, AircraftControls.BRAKE, false);
-		AircraftInstruments.drawFlyableControl(plane, 295, 30, AircraftControls.FLAPS, false);
+		GL11.glPushMatrix();
+		GL11.glTranslatef(310F, -10F, 0);
+		GL11.glScalef(0.5F, 0.5F, 0.5F);
+		for(byte j=0; j<2; ++j){
+			for(byte i=0; i<4; ++i){
+				AircraftInstruments.drawFlyableInstrument(plane, 62 + (i%2)*62, (i/2)*62 + j*124, plane.instruments.get((byte) (i+10+j*10)) != null ? plane.instruments.get((byte) (i+10+j*10)) : -1, false, j);
+			}
+		}
+		GL11.glPopMatrix();
+		AircraftInstruments.drawFlyableControl(plane, 300, -15, AircraftControls.THROTTLE, false);
+		AircraftInstruments.drawFlyableControl(plane, 300, 60, AircraftControls.BRAKE, false);
+		AircraftInstruments.drawFlyableControl(plane, 300, 20, AircraftControls.FLAPS, false);
 		GL11.glPopMatrix();
 	}
 
