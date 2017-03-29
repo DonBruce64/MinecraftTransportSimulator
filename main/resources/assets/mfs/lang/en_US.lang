@@ -91,7 +91,8 @@ gui.config.joystick.calibrate2=Then hit confirm to save settings.
 
 info.item.propeller.numberBlades=Blades: 
 info.item.propeller.pitch=Pitch: 
-info.item.propeller.diameter=Diameter: 
+info.item.propeller.diameter=Diameter:
+info.item.propeller.maxrpm=Max RPM: 
 info.item.propeller.health=Health: 
 info.item.engine.maxrpm=Max Possible RPM: 
 info.item.engine.maxsaferpm=Max safe RPM: 

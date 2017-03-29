@@ -36,6 +36,7 @@ public class ItemPropeller extends Item{
 		list.add(PlayerHelper.getTranslatedText("info.item.propeller.numberBlades") + stackTag.getInteger("numberBlades"));
 		list.add(PlayerHelper.getTranslatedText("info.item.propeller.pitch") + stackTag.getInteger("pitch"));
 		list.add(PlayerHelper.getTranslatedText("info.item.propeller.diameter") + stackTag.getInteger("diameter"));
+		list.add(PlayerHelper.getTranslatedText("info.item.propeller.maxrpm") + Math.round(60*340.29/(0.0254*Math.PI*stackTag.getInteger("diameter"))));
 		list.add(PlayerHelper.getTranslatedText("info.item.propeller.health") + stackTag.getFloat("health"));
 	}
 	
