@@ -2,12 +2,12 @@ package minecraftflightsimulator.entities.parts;
 
 import java.util.List;
 
-import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityGroundDevice;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import minecraftflightsimulator.minecrafthelpers.EntityHelper;
+import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -31,7 +31,7 @@ public class EntityPontoon extends EntityGroundDevice{
 
 	@Override
 	public ItemStack getItemStack(){
-		return new ItemStack(MFSRegistry.pontoon);
+		return new ItemStack(MTSRegistry.pontoon);
 	}
 	
 	@Override

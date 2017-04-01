@@ -1,9 +1,9 @@
 package minecraftflightsimulator.sounds;
 
+import minecraftflightsimulator.baseclasses.MTSVector;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.systems.SFXSystem;
-import minecraftflightsimulator.utilites.MFSVector;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.entity.player.EntityPlayer;
@@ -14,8 +14,8 @@ public class EngineSound extends MovingSound{
 	private final EntityPlayer player;
 	private final float pitchFactor;
 	
-	private MFSVector playerPos = new MFSVector(0, 0, 0);
-	private MFSVector enginePos = new MFSVector(0, 0, 0);
+	private MTSVector playerPos = new MTSVector(0, 0, 0);
+	private MTSVector enginePos = new MTSVector(0, 0, 0);
 	private double playerLastX;
 	private double playerLastY;
 	private double playerLastZ;

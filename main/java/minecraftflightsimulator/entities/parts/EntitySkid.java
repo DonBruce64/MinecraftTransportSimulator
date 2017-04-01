@@ -1,9 +1,9 @@
 package minecraftflightsimulator.entities.parts;
 
-import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityGroundDevice;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityVehicle;
+import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
@@ -22,6 +22,6 @@ public class EntitySkid extends EntityGroundDevice{
 
 	@Override
 	public ItemStack getItemStack(){
-		return new ItemStack(MFSRegistry.skid);
+		return new ItemStack(MTSRegistry.skid);
 	}
 }

@@ -21,19 +21,17 @@ public class RenderEngine extends RenderChild{
 	public void render(EntityChild child, double x, double y, double z, float partialTicks){		
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
-		GL11.glRotatef(-child.parent.rotationYaw, 0, 1, 0);
+		GL11.glRotatef(180, 1, 0, 0);
+		GL11.glRotatef(child.parent.rotationYaw, 0, 1, 0);
 		GL11.glRotatef(child.parent.rotationPitch, 1, 0, 0);
-		GL11.glRotatef(child.parent.rotationRoll, 0, 0, 1);
+		GL11.glRotatef(-child.parent.rotationRoll, 0, 0, 1);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GL11.glTranslatef(0, -((EntityEngine) child).type.size/2, 0);
 		if(((EntityEngine) child).type.equals(EngineTypes.PLANE_LARGE)){
-			GL11.glRotatef(180, 1, 0, 0);
-			GL11.glTranslatef(0, -0.4F, -0.4F);
 			GL11DrawSystem.bindTexture(largeTexture);
 			modelLarge.render();
 		}else{
 			GL11DrawSystem.bindTexture(smallTexture);
-			GL11.glRotatef(180, 1, 0, 0);
-			GL11.glTranslatef(0, -0.4F, -0.0F);
 			modelSmall.render();
 		}
 		GL11.glPopMatrix();

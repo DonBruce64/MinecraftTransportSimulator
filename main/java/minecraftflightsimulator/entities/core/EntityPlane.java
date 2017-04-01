@@ -1,6 +1,7 @@
 package minecraftflightsimulator.entities.core;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.baseclasses.MTSVector;
 import minecraftflightsimulator.entities.parts.EntityChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
@@ -9,10 +10,9 @@ import minecraftflightsimulator.minecrafthelpers.EntityHelper;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
 import minecraftflightsimulator.packets.control.RudderPacket;
+import minecraftflightsimulator.registry.MTSDamageSources.DamageSourceCrash;
 import minecraftflightsimulator.systems.ConfigSystem;
 import minecraftflightsimulator.systems.RotationSystem;
-import minecraftflightsimulator.utilites.DamageSources.DamageSourcePlaneCrash;
-import minecraftflightsimulator.utilites.MFSVector;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -108,7 +108,7 @@ public abstract class EntityPlane extends EntityVehicle{
 	private Entity rider;
 	private AxisAlignedBB newChildBox;
 	private AxisAlignedBB collidingBox;
-	private MFSVector offset;
+	private MTSVector offset;
 	
 	public EntityPlane(World world){
 		super(world);
@@ -155,9 +155,9 @@ public abstract class EntityPlane extends EntityVehicle{
 		for(EntityChild child : getChildren()){
 			if(EntityHelper.getRider(child) != null){
 				if(EntityHelper.getRider(child).equals(pilot)){
-					EntityHelper.getRider(child).attackEntityFrom(new DamageSourcePlaneCrash(null), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
+					EntityHelper.getRider(child).attackEntityFrom(new DamageSourceCrash(null, "plane"), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
 				}else{
-					EntityHelper.getRider(child).attackEntityFrom(new DamageSourcePlaneCrash(pilot), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
+					EntityHelper.getRider(child).attackEntityFrom(new DamageSourceCrash(pilot, "plane"), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
 				}
 			}
 		}
@@ -312,7 +312,7 @@ public abstract class EntityPlane extends EntityVehicle{
 			motionYaw += 7*velocityVec.dot(sideVec) + rudderAngle/(350*(0.5 + velocity*velocity));
 			updateHeadingVec();
 			double groundSpeed = Math.hypot(motionX, motionZ);
-			MFSVector groundVec = headingVec.add(0, -headingVec.yCoord, 0).normalize();
+			MTSVector groundVec = headingVec.add(0, -headingVec.yCoord, 0).normalize();
 			motionX = groundVec.xCoord * groundSpeed;
 			motionZ = groundVec.zCoord * groundSpeed;
 		}

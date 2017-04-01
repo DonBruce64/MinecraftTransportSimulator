@@ -1,6 +1,6 @@
 package minecraftflightsimulator.minecrafthelpers;
 
-import minecraftflightsimulator.MFSRegistry;
+import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -21,7 +21,7 @@ public final class PlayerHelper{
 	}
 	
 	public static boolean isPlayerHoldingWrench(EntityPlayer player){
-		return getHeldStack(player) != null ? ItemStackHelper.getItemFromStack(getHeldStack(player)).equals(MFSRegistry.wrench) : false;
+		return getHeldStack(player) != null ? ItemStackHelper.getItemFromStack(getHeldStack(player)).equals(MTSRegistry.wrench) : false;
 	}
 	
 	public static int getQtyOfItemInInventory(Item item, short damage, EntityPlayer player){

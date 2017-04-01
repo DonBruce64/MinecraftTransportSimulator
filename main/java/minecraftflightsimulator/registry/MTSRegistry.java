@@ -1,4 +1,4 @@
-package minecraftflightsimulator;
+package minecraftflightsimulator.registry;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.blocks.BlockPropellerBench;
 import minecraftflightsimulator.blocks.BlockSurveyFlag;
 import minecraftflightsimulator.blocks.BlockTrack;
@@ -62,36 +63,36 @@ import net.minecraft.item.ItemStack;
  * 
  * @author don_bruce
  */
-public class MFSRegistry{
-	public static final MFSRegistry instance = new MFSRegistry();
+public class MTSRegistry{
+	public static final MTSRegistry instance = new MTSRegistry();
 	
-	public static final Item planeMC172 = new ItemPlane(EntityMC172.class, 6);
-	public static final Item planePZLP11 = new ItemPlane(EntityPZLP11.class, 1);
-	public static final Item planeVulcanair = new ItemPlane(EntityVulcanair.class, 7);
-	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 15);
-	public static final Item planeComanche = new ItemPlane(EntityComanche.class, 4);
+	public static final Item planeMC172 = new ItemPlane(EntityMC172.class, 6).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item planePZLP11 = new ItemPlane(EntityPZLP11.class, 1).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item planeVulcanair = new ItemPlane(EntityVulcanair.class, 7).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 15).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item planeComanche = new ItemPlane(EntityComanche.class, 4).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	
-	public static final Item seat = new ItemSeat();
-	public static final Item propeller = new ItemPropeller();
-	public static final Item engine = new ItemEngine();
-	public static final Item wheelSmall = new Item();
-	public static final Item wheelLarge = new Item();
-	public static final Item skid = new Item();
-	public static final Item pontoon = new Item();
-	public static final Item flightInstrument = new ItemFlightInstrument();
-	public static final Item pointerShort = new Item();
-	public static final Item pointerLong = new Item();
-	public static final Item flightInstrumentBase = new Item();
-	public static final Item wrench = new ItemWrench();
-	public static final Item flightManual = new Item();
+	public static final Item seat = new ItemSeat().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item propeller = new ItemPropeller().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item engine = new ItemEngine().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item wheelSmall = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item wheelLarge = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item skid = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item pontoon = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item flightInstrument = new ItemFlightInstrument().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item pointerShort = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item pointerLong = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item flightInstrumentBase = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item wrench = new ItemWrench().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item flightManual = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	
-	public static final Block propellerBench = new BlockPropellerBench();
+	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	
-	public static final Item track = new Item();
+	public static final Item track = new Item().setCreativeTab(MTSCreativeTabs.tabMTSTrains);
 	
 	public static final Block blockTrack = new BlockTrack();
 	public static final Block blockTrackFake = new BlockTrackFake();
-	public static final Block surveyFlag = new BlockSurveyFlag();
+	public static final Block surveyFlag = new BlockSurveyFlag().setCreativeTab(MTSCreativeTabs.tabMTSTrains);
 	
 	public static List<Item> itemList = new ArrayList<Item>();
 	

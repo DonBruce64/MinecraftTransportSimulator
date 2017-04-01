@@ -5,12 +5,12 @@ import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 
+import minecraftflightsimulator.baseclasses.MTSCurve;
 import minecraftflightsimulator.blocks.TileEntityTrack;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import minecraftflightsimulator.rendering.blockmodels.ModelTrackTie;
 import minecraftflightsimulator.systems.GL11DrawSystem;
 import minecraftflightsimulator.systems.RenderSystem.RenderTileBase;
-import minecraftflightsimulator.utilites.MFSCurve;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -80,7 +80,7 @@ public class RenderTrack extends RenderTileBase{
 	/**
 	 * This can be called to render track anywhere in the code, not just from this class.
 	 */
-	public static void renderTrackSegmentFromCurve(World world, MFSCurve curve, boolean holographic){
+	public static void renderTrackSegmentFromCurve(World world, MTSCurve curve, boolean holographic){
 		float[] currentPoint;
 		float currentAngle;
 		

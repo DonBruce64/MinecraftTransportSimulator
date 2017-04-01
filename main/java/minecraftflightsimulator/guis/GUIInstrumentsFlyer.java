@@ -8,10 +8,10 @@ import java.util.Map.Entry;
 import org.lwjgl.opengl.GL11;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.packets.general.InstrumentFlyerPacket;
+import minecraftflightsimulator.registry.MTSRegistry;
 import minecraftflightsimulator.rendering.AircraftInstruments.AircraftGauges;
 import minecraftflightsimulator.rendering.VehicleHUDs;
 import minecraftflightsimulator.systems.GL11DrawSystem;
@@ -166,7 +166,7 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 				if(player.capabilities.isCreativeMode){
 					hasInstrument[i] = true;
 				}else{
-					hasInstrument[i] = PlayerHelper.getQtyOfItemInInventory(MFSRegistry.flightInstrument, i, player) > 0;
+					hasInstrument[i] = PlayerHelper.getQtyOfItemInInventory(MTSRegistry.flightInstrument, i, player) > 0;
 				}
 			}
 			for(byte i=0; i<AircraftGauges.values().length; ++i){
@@ -207,7 +207,7 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 				if(player.capabilities.isCreativeMode){
 					hasInstrument[i] = true;
 				}else{
-					hasInstrument[i] = PlayerHelper.getQtyOfItemInInventory(MFSRegistry.flightInstrument, i, player) > 0;
+					hasInstrument[i] = PlayerHelper.getQtyOfItemInInventory(MTSRegistry.flightInstrument, i, player) > 0;
 				}
 			}
 			for(byte i=0; i<AircraftGauges.values().length; ++i){

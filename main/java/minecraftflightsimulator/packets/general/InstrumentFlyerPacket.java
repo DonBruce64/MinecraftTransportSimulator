@@ -5,9 +5,9 @@ import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
+import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -58,7 +58,7 @@ public class InstrumentFlyerPacket implements IMessage{
 				if(message.instrumentToChangeTo == -1){
 					if(vehicle.instruments.containsKey(message.instrumentToChange)){
 						if(!player.capabilities.isCreativeMode){
-							if(!player.inventory.addItemStackToInventory(new ItemStack(MFSRegistry.flightInstrument, 1, vehicle.instruments.get(message.instrumentToChange)))){
+							if(!player.inventory.addItemStackToInventory(new ItemStack(MTSRegistry.flightInstrument, 1, vehicle.instruments.get(message.instrumentToChange)))){
 								return null;
 							}
 						}
@@ -69,8 +69,8 @@ public class InstrumentFlyerPacket implements IMessage{
 					}
 				}else{
 					if(!player.capabilities.isCreativeMode){
-						if(PlayerHelper.getQtyOfItemInInventory(MFSRegistry.flightInstrument, message.instrumentToChangeTo, player) > 0){
-							PlayerHelper.removeQtyOfItemInInventory(MFSRegistry.flightInstrument, 1, message.instrumentToChangeTo, player);
+						if(PlayerHelper.getQtyOfItemInInventory(MTSRegistry.flightInstrument, message.instrumentToChangeTo, player) > 0){
+							PlayerHelper.removeQtyOfItemInInventory(MTSRegistry.flightInstrument, 1, message.instrumentToChangeTo, player);
 							vehicle.instruments.put(message.instrumentToChange, message.instrumentToChangeTo);
 							if(ctx.side.isServer()){
 								MFS.MFSNet.sendToAll(message);

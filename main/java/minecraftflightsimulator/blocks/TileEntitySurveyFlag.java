@@ -7,36 +7,23 @@ import java.util.List;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.MFSRegistry;
+import minecraftflightsimulator.baseclasses.MTSBlock;
+import minecraftflightsimulator.baseclasses.MTSCurve;
+import minecraftflightsimulator.baseclasses.MTSTileEntity;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
-import minecraftflightsimulator.packets.general.TileEntityClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.TileEntitySyncPacket;
-import minecraftflightsimulator.utilites.MFSCurve;
+import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 
-public class TileEntitySurveyFlag extends TileEntity{
+public class TileEntitySurveyFlag extends MTSTileEntity{
 	public boolean renderedLastPass;
 	public boolean isPrimary;
-	public float angle;
-	public MFSCurve linkedCurve;
+	public MTSCurve linkedCurve;
 		
 	public TileEntitySurveyFlag(){
 		super();
 	}
-	
-	public TileEntitySurveyFlag(float angle){
-		this.angle = angle;
-	}
-	
-	@Override
-    public void validate(){
-		super.validate();
-        if(worldObj.isRemote){
-        	MFS.MFSNet.sendToServer(new TileEntityClientRequestDataPacket(this));
-        }
-    }
 	
 	public void linkToFlag(int[] linkedFlagCoords, boolean isPrimary){
 		if(linkedCurve != null){
@@ -44,7 +31,7 @@ public class TileEntitySurveyFlag extends TileEntity{
 		}
 		this.isPrimary = isPrimary;
 		TileEntitySurveyFlag linkedFlag = ((TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(worldObj, linkedFlagCoords[0], linkedFlagCoords[1], linkedFlagCoords[2]));
-		linkedCurve = new MFSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, linkedFlagCoords, angle, linkedFlag.angle);
+		linkedCurve = new MTSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, linkedFlagCoords, rotation, linkedFlag.rotation);
 		MFS.MFSNet.sendToAll(new TileEntitySyncPacket(this));
 	}
 	
@@ -108,16 +95,16 @@ public class TileEntitySurveyFlag extends TileEntity{
 		int[] masterLocation = new int[]{this.xCoord, this.yCoord, this.zCoord};
 		BlockTrackFake.overrideBreakingBlocks = true;
 		for(int[] blockData : blockList){
-			worldObj.setBlock(blockData[0], blockData[1], blockData[2], MFSRegistry.blockTrackFake);
-			BlockHelper.setBlockMetadata(worldObj, blockData[0], blockData[1], blockData[2], (byte) Math.max(blockData[3], 4));
+			worldObj.setBlock(blockData[0], blockData[1], blockData[2], MTSRegistry.blockTrackFake);
+			((MTSBlock) MTSRegistry.blockTrackFake).setBlockMetadata(worldObj, blockData[0], blockData[1], blockData[2], (byte) Math.max(blockData[3], 4));
 			worldObj.markBlockForUpdate(blockData[0], blockData[1], blockData[2]);			
 		}
-		MFSCurve curve = linkedCurve;
-		MFSCurve otherFlagCurve = ((TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(worldObj, linkedCurve.blockEndPoint[0], linkedCurve.blockEndPoint[1], linkedCurve.blockEndPoint[2])).linkedCurve;
+		MTSCurve curve = linkedCurve;
+		MTSCurve otherFlagCurve = ((TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(worldObj, linkedCurve.blockEndPoint[0], linkedCurve.blockEndPoint[1], linkedCurve.blockEndPoint[2])).linkedCurve;
 		boolean primary = isPrimary;
 		
-		worldObj.setBlock(curve.blockStartPoint[0], curve.blockStartPoint[1], curve.blockStartPoint[2], MFSRegistry.blockTrack);
-		worldObj.setBlock(curve.blockEndPoint[0], curve.blockEndPoint[1], curve.blockEndPoint[2], MFSRegistry.blockTrack);
+		worldObj.setBlock(curve.blockStartPoint[0], curve.blockStartPoint[1], curve.blockStartPoint[2], MTSRegistry.blockTrack);
+		worldObj.setBlock(curve.blockEndPoint[0], curve.blockEndPoint[1], curve.blockEndPoint[2], MTSRegistry.blockTrack);
 		
 		worldObj.markBlockForUpdate(curve.blockStartPoint[0], curve.blockStartPoint[1], curve.blockStartPoint[2]);
 		worldObj.markBlockForUpdate(curve.blockEndPoint[0], curve.blockEndPoint[1], curve.blockEndPoint[2]);
@@ -147,10 +134,9 @@ public class TileEntitySurveyFlag extends TileEntity{
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
         this.isPrimary = tagCompound.getBoolean("isPrimary");
-        this.angle = tagCompound.getFloat("angle");
         int[] linkedFlagCoords = tagCompound.getIntArray("linkedFlagCoords");
         if(tagCompound.getIntArray("linkedFlagCoords").length != 0){
-        	linkedCurve = new MFSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, linkedFlagCoords, tagCompound.getFloat("angle"), tagCompound.getFloat("linkedFlagAngle"));
+        	linkedCurve = new MTSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, linkedFlagCoords, tagCompound.getFloat("rotation"), tagCompound.getFloat("linkedFlagAngle"));
         }else{
         	linkedCurve = null;
         }
@@ -160,7 +146,6 @@ public class TileEntitySurveyFlag extends TileEntity{
     public void writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
         tagCompound.setBoolean("isPrimary", this.isPrimary);
-        tagCompound.setFloat("angle", angle);
         if(linkedCurve != null){
         	tagCompound.setIntArray("linkedFlagCoords", linkedCurve.blockEndPoint);
         	tagCompound.setFloat("linkedFlagAngle", linkedCurve.endAngle);

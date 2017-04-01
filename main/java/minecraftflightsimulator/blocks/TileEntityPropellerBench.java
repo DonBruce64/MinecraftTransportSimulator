@@ -3,20 +3,18 @@ package minecraftflightsimulator.blocks;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.MFSRegistry;
+import minecraftflightsimulator.baseclasses.MTSTileEntity;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
-import minecraftflightsimulator.packets.general.TileEntityClientRequestDataPacket;
 import minecraftflightsimulator.packets.general.TileEntitySyncPacket;
+import minecraftflightsimulator.registry.MTSRegistry;
 import minecraftflightsimulator.sounds.BenchSound;
 import minecraftflightsimulator.systems.SFXSystem.SFXEntity;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 
-public class TileEntityPropellerBench extends TileEntity implements SFXEntity{
-	public byte benchRotation;
+public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity{
 	public byte propellerType = 0;
 	public byte numberBlades = 2;
 	public byte pitch = 64;
@@ -31,18 +29,10 @@ public class TileEntityPropellerBench extends TileEntity implements SFXEntity{
 	}
 	
 	@Override
-    public void validate(){
-		super.validate();
-        if(worldObj.isRemote){
-        	MFS.MFSNet.sendToServer(new TileEntityClientRequestDataPacket(this));
-        }
-    }
-	
-	@Override
 	public void updateEntity(){
 		if(timeOperationFinished == worldObj.getTotalWorldTime()){
 			timeOperationFinished = 0;
-			propellerOnBench = new ItemStack(MFSRegistry.propeller, 1, propellerType);
+			propellerOnBench = new ItemStack(MTSRegistry.propeller, 1, propellerType);
 			NBTTagCompound stackTag = new NBTTagCompound();
 			stackTag.setInteger("numberBlades", numberBlades);
 			stackTag.setInteger("pitch", pitch);
@@ -106,7 +96,6 @@ public class TileEntityPropellerBench extends TileEntity implements SFXEntity{
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
-        this.benchRotation = tagCompound.getByte("benchRotation");
     	this.propellerType = tagCompound.getByte("propellerType");
     	this.numberBlades = tagCompound.getByte("numberBlades");
     	this.pitch = tagCompound.getByte("pitch");
@@ -121,7 +110,6 @@ public class TileEntityPropellerBench extends TileEntity implements SFXEntity{
 	@Override
     public void writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
-        tagCompound.setByte("benchRotation", benchRotation);
         tagCompound.setByte("propellerType", propellerType);
         tagCompound.setByte("numberBlades", numberBlades);
         tagCompound.setByte("pitch", pitch);

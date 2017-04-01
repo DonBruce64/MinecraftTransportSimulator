@@ -9,6 +9,7 @@ import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import minecraftflightsimulator.entities.core.EntityChild;
+import minecraftflightsimulator.registry.MTSRegistry;
 import minecraftflightsimulator.systems.ConfigSystem;
 import minecraftflightsimulator.systems.ForgeContainerGUISystem;
 import minecraftflightsimulator.systems.SFXSystem.SFXEntity;
@@ -21,7 +22,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-/**Contains registration methods used by {@link MFSRegistry} and methods overridden by ClientProxy. 
+/**Contains registration methods used by {@link MTSRegistry} and methods overridden by ClientProxy. 
  * See the latter for more info on overridden methods.
  * 
  * @author don_bruce
@@ -35,7 +36,7 @@ public class CommonProxy{
 	}
 	
 	public void init(FMLInitializationEvent event){
-		MFSRegistry.instance.init();
+		MTSRegistry.instance.init();
 		NetworkRegistry.INSTANCE.registerGuiHandler(MFS.instance, new ForgeContainerGUISystem());
 	}
 	
@@ -44,10 +45,9 @@ public class CommonProxy{
 	 * @param item
 	 */
 	public void registerItem(Item item){
-		item.setCreativeTab(MFS.tabMFS);
 		item.setTextureName("mfs:" + item.getUnlocalizedName().substring(5).toLowerCase());
 		GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
-		MFSRegistry.itemList.add(item);
+		MTSRegistry.itemList.add(item);
 	}
 	
 	/**
@@ -58,7 +58,7 @@ public class CommonProxy{
 	public void registerBlock(Block block){
 		block.setBlockTextureName("mfs:" + block.getUnlocalizedName().substring(5).toLowerCase());
 		GameRegistry.registerBlock(block, block.getUnlocalizedName().substring(5));
-		MFSRegistry.itemList.add(Item.getItemFromBlock(block));
+		MTSRegistry.itemList.add(Item.getItemFromBlock(block));
 		if(block instanceof ITileEntityProvider){
 			Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
 			GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
@@ -83,7 +83,7 @@ public class CommonProxy{
 	 */
 	public void registerChildEntity(Class<? extends EntityChild> entityClass, Item entityItem){
 		if(entityItem != null){
-			MFSRegistry.entityItems.put(entityItem, entityClass);
+			MTSRegistry.entityItems.put(entityItem, entityClass);
 		}
 		registerEntity(entityClass);
 	}

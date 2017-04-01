@@ -1,13 +1,13 @@
 package minecraftflightsimulator.entities.parts;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityBase;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.minecrafthelpers.EntityHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.packets.general.ChatPacket;
+import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -33,7 +33,7 @@ public class EntitySeat extends EntityChild{
 
 	@Override
 	public ItemStack getItemStack(){
-		return new ItemStack(MFSRegistry.seat);
+		return new ItemStack(MTSRegistry.seat);
 	}
 	
 	@Override

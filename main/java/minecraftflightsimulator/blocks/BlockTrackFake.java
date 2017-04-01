@@ -4,42 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import minecraftflightsimulator.baseclasses.MTSBlock;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
+import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
-public class BlockTrackFake extends Block{
+public class BlockTrackFake extends MTSBlock{
 	public static boolean overrideBreakingBlocks = false;
 	private static List<int[]> blockCheckCoords = new ArrayList<int[]>();
 
 	public BlockTrackFake(){
-		super(Material.iron);
-		this.setHardness(5.0F);
-		this.setResistance(10.0F);
-	}
-	
-	@Override
-	public void addCollisionBoxesToList(World world, int x, int y, int z, AxisAlignedBB box, List list, Entity entity){
-		byte metadata = BlockHelper.getBlockMetadata(world, x, y, z);
-		this.setBlockBounds(0, 0, 0, 1, metadata/16F, 1);
-		super.addCollisionBoxesToList(world, x, y, z, box, list, entity);
-	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public AxisAlignedBB getSelectedBoundingBoxFromPool(World world, int x, int y, int z){
-		byte metadata = BlockHelper.getBlockMetadata(world, x, y, z);
-		this.setBlockBounds(0, 0, 0, 1, metadata/16F, 1);
-		return super.getSelectedBoundingBoxFromPool(world, x, y, z);
+		super(Material.iron, 5.0F, 10.0F);
 	}
 	
 	@Override
@@ -81,7 +62,7 @@ public class BlockTrackFake extends Block{
 		}
 		super.breakBlock(world, x, y, z, block, metadata);
 	}
-	
+
 	@Override
     public Item getItemDropped(int metadata, Random rand, int fortune){
         return null;
@@ -89,21 +70,21 @@ public class BlockTrackFake extends Block{
 	
 	@Override
 	public ItemStack getPickBlock(MovingObjectPosition target, World world, int x, int y, int z, EntityPlayer player){
-        return null;
+		 return new ItemStack(MTSRegistry.track);
     }
-	
+
 	@Override
-    public int getRenderType(){
-        return -1;
-    }
-	
+	protected boolean isBlock3D(){
+		return true;
+	}
+
 	@Override
-    public boolean renderAsNormalBlock(){
-        return false;
-    }
-	
+	protected void setDefaultBlockBounds(){
+		this.setBlockBounds(0, 0, 0, 1, 1, 1);
+	}
+
 	@Override
-	public boolean isOpaqueCube(){
-		return false;
+	protected void setBlockBoundsFromMetadata(int metadata){
+		this.setBlockBounds(0, 0, 0, 1, metadata/16F, 1);
 	}
 }

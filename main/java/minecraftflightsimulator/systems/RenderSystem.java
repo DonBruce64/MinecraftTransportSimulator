@@ -2,11 +2,11 @@ package minecraftflightsimulator.systems;
 
 import org.lwjgl.opengl.GL11;
 
-import minecraftflightsimulator.MFSClientRegistry;
+import minecraftflightsimulator.baseclasses.MTSVector;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.parts.EntitySeat;
-import minecraftflightsimulator.utilites.MFSVector;
+import minecraftflightsimulator.registry.MTSClientRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -33,7 +33,7 @@ public final class RenderSystem{
      */
     public static abstract class RenderParent extends Render{
     	private boolean playerRiding;
-    	private MFSVector childOffset;
+    	private MTSVector childOffset;
     	private static EntityPlayer player;
     	
     	public RenderParent(RenderManager manager){
@@ -73,9 +73,9 @@ public final class RenderSystem{
     			GL11.glTranslated(x, y, z);
     		}
             for(EntityChild child : parent.getChildren()){
-            	if(MFSClientRegistry.childRenderMap.get(child.getClass()) != null){
+            	if(MTSClientRegistry.childRenderMap.get(child.getClass()) != null){
             		childOffset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
-            		MFSClientRegistry.childRenderMap.get(child.getClass()).render(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord, partialTicks);
+            		MTSClientRegistry.childRenderMap.get(child.getClass()).render(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord, partialTicks);
         		}
             }
             this.renderParentModel(parent, partialTicks);

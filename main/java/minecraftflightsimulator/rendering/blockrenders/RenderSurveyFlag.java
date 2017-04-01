@@ -22,7 +22,7 @@ public class RenderSurveyFlag extends RenderTileBase{
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(0.5F, 0, 0.5F);
-		GL11.glRotatef(180 - flag.angle, 0, 1, 0);
+		GL11.glRotatef(180 - flag.rotation, 0, 1, 0);
 		GL11DrawSystem.bindTexture(texture);
 		model.render();
 		GL11.glPopMatrix();

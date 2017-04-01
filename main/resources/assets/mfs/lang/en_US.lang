@@ -10,6 +10,11 @@ death.attack.planecrash.null.player=%1$s got distracted while fighting %2$s and 
 death.attack.planecrash.player.null=%2$s crashed their plane and killed %1$s.
 death.attack.planecrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash the plane.
 
+death.attack.traincrash.null.null=%1$s died in a train crash.
+death.attack.traincrash.null.player=%1$s got distracted while fighting %2$s and died in a train crash.
+death.attack.traincrash.player.null=%2$s crashed their train and killed %1$s.
+death.attack.traincrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash the train.
+
 interact.flag.info.set=First flag set.
 interact.flag.info.link=Flags linked.
 interact.flag.info.unlink=Flags un-linked.

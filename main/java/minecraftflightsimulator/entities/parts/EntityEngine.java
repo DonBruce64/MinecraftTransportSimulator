@@ -3,12 +3,12 @@ package minecraftflightsimulator.entities.parts;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.packets.control.EnginePacket;
+import minecraftflightsimulator.registry.MTSRegistry;
 import minecraftflightsimulator.sounds.EngineSound;
 import minecraftflightsimulator.systems.ConfigSystem;
 import minecraftflightsimulator.systems.SFXSystem;
@@ -82,7 +82,7 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	
 	@Override
 	public ItemStack getItemStack(){
-		ItemStack engineStack = new ItemStack(MFSRegistry.engine, 1, type.ordinal());
+		ItemStack engineStack = new ItemStack(MTSRegistry.engine, 1, type.ordinal());
 		NBTTagCompound tag = new NBTTagCompound();
 		tag.setBoolean("oilLeak", this.oilLeak);
 		tag.setBoolean("fuelLeak", this.fuelLeak);
@@ -412,7 +412,8 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		PLANE_SMALL((byte) 4, (byte) 50, 1.0F, "small_engine_running", "small_engine_cranking", new EngineProperties[]{new EngineProperties(2700, 0.3F), new EngineProperties(2900, 0.4F)}), 
 		PLANE_LARGE((byte) 22, (byte) 25, 1.2F, "large_engine_running", "large_engine_cranking", new EngineProperties[]{new EngineProperties(2000, 0.5F), new EngineProperties(2400, 0.7F)}),
 		HELICOPTER((byte) 100, (byte) 100, 1.2F, "helicopter_engine_running", "helicopter_engine_cranking", new EngineProperties[]{new EngineProperties(500, 0.1F), new EngineProperties(600, 0.15F)}),
-		VEHICLE((byte) 100, (byte) 100, 1.2F, "vehicle_engine_running", "vehicle_engine_cranking", new EngineProperties[]{new EngineProperties(5500, 0.2F), new EngineProperties(6500, 0.4F)});
+		VEHICLE((byte) 100, (byte) 100, 1.2F, "vehicle_engine_running", "vehicle_engine_cranking", new EngineProperties[]{new EngineProperties(5500, 0.2F), new EngineProperties(6500, 0.4F)}),
+		TRAIN((byte) 100, (byte) 100, 1.2F, "train_engine_running", "train_engine_cranking", new EngineProperties[]{new EngineProperties(900, 0.2F)});
 		//TODO find other sounds
 		
 		public final byte starterIncrement;

@@ -1,10 +1,5 @@
 package minecraftflightsimulator;
 
-import java.util.List;
-
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.Mod.Instance;
@@ -14,8 +9,6 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 @Mod(modid = MFS.MODID, name = MFS.MODNAME, version = MFS.MODVER)
 public class MFS {
@@ -28,29 +21,6 @@ public class MFS {
 	public static final SimpleNetworkWrapper MFSNet = NetworkRegistry.INSTANCE.newSimpleChannel("MFSNet");
 	@SidedProxy(clientSide="minecraftflightsimulator.ClientProxy", serverSide="minecraftflightsimulator.CommonProxy")
 	public static CommonProxy proxy;
-	public static final CreativeTabs tabMFS = new CreativeTabs("tabMFS") {
-	    @Override
-		@SideOnly(Side.CLIENT)
-	    public Item getTabIconItem() {
-	    	return MFSRegistry.planeMC172;
-	    }
-	    
-	    @Override
-	    @SideOnly(Side.CLIENT)
-	    public void displayAllReleventItems(List givenList){
-	    	super.displayAllReleventItems(givenList);
-	    	ItemStack[] itemArray = (ItemStack[]) givenList.toArray(new ItemStack[givenList.size()]); 
-	    	int currentIndex = 0;
-	    	for(int i=0; i<MFSRegistry.itemList.size(); ++i){
-	    		for(int j=0; j<givenList.size(); ++j){
-	    			if(MFSRegistry.itemList.get(i).equals(itemArray[j].getItem())){
-	    				givenList.set(currentIndex++, itemArray[j]);
-	    			}else{
-	    			}
-	    		}
-	    	}
-	    }
-	};
 	
 	/*INS194
 	public MFS(){

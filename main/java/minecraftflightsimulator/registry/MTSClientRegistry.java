@@ -1,4 +1,4 @@
-package minecraftflightsimulator;
+package minecraftflightsimulator.registry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,8 +47,8 @@ import minecraftflightsimulator.systems.RenderSystem.RenderTileBase;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.tileentity.TileEntity;
 
-public class MFSClientRegistry{
-	private static final MFSClientRegistry instance = new MFSClientRegistry();
+public class MTSClientRegistry{
+	private static final MTSClientRegistry instance = new MTSClientRegistry();
 	public static Map <Class<? extends EntityChild>, RenderChild> childRenderMap = new HashMap<Class<? extends EntityChild>, RenderChild>();
 
 	public static void preInit(){

@@ -89,7 +89,7 @@ public class RenderPropellerBench extends RenderTileBase{
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glTranslatef(0.5F, 0F, 0.5F);
-		GL11.glRotatef(180 - 45*bench.benchRotation, 0, 1, 0);
+		GL11.glRotatef(180 - 45*bench.rotation, 0, 1, 0);
 		GL11.glTranslatef(-0.5F, 0F, -0.5F);
 		GL11.glTranslatef(0, 0.44F, 1.25F);
 		GL11.glRotatef(180, 1, 0, 0);

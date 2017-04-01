@@ -2,8 +2,8 @@ package minecraftflightsimulator.blocks;
 
 import java.util.Random;
 
-import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
+import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
@@ -33,7 +33,7 @@ public class BlockTrack extends BlockContainer{
 					int numberTracks = (int) track.curve.pathLength;
 					while(numberTracks > 0){
 						int tracksInItem = Math.min(numberTracks, 64);
-						world.spawnEntityInWorld(new EntityItem(world, x, y, z, new ItemStack(MFSRegistry.track, tracksInItem, metadata)));
+						world.spawnEntityInWorld(new EntityItem(world, x, y, z, new ItemStack(MTSRegistry.track, tracksInItem, metadata)));
 						numberTracks -= tracksInItem;
 					}
 					track.removeFakeTracks();

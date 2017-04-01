@@ -13,14 +13,6 @@ public final class BlockHelper {
 		return getBlockFromCoords(world, x, y, z).getBlockHardness(world, x, y, z);
 	}
 	
-	public static byte getBlockMetadata(World world, int x, int y, int z){
-		return (byte) world.getBlockMetadata(x, y, z);
-	}
-	
-	public static void setBlockMetadata(World world, int x, int y, int z, byte metadata){
-		world.setBlockMetadataWithNotify(x, y, z, metadata, 3);
-	}
-	
 	public static boolean isBlockLiquid(Block block){
 		return block.getMaterial().isLiquid();
 	}

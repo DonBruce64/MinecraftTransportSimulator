@@ -7,14 +7,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.MFSRegistry;
+import minecraftflightsimulator.baseclasses.MTSVector;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.minecrafthelpers.AABBHelper;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
+import minecraftflightsimulator.registry.MTSRegistry;
 import minecraftflightsimulator.systems.ConfigSystem;
-import minecraftflightsimulator.utilites.MFSVector;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -53,10 +53,10 @@ public abstract class EntityVehicle extends EntityParent{
 	 **/
 	public Map<Byte, Byte> instruments;
 	
-	public MFSVector velocityVec = new MFSVector(0, 0, 0);
-	public MFSVector headingVec = new MFSVector(0, 0, 0);
-	public MFSVector verticalVec = new MFSVector(0, 0, 0);
-	public MFSVector sideVec = new MFSVector(0, 0, 0);
+	public MTSVector velocityVec = new MTSVector(0, 0, 0);
+	public MTSVector headingVec = new MTSVector(0, 0, 0);
+	public MTSVector verticalVec = new MTSVector(0, 0, 0);
+	public MTSVector sideVec = new MTSVector(0, 0, 0);
 	
 	private Map<AxisAlignedBB, Integer[]> collisionMap = new HashMap<AxisAlignedBB, Integer[]>();
 	protected List<AxisAlignedBB> collidingBoxes = new ArrayList<AxisAlignedBB>();
@@ -157,7 +157,7 @@ public abstract class EntityVehicle extends EntityParent{
 				}
 			}
 			for(Byte instrumentNumber : instruments.values()){
-				ItemStack stack = new ItemStack(MFSRegistry.flightInstrument, 1, instrumentNumber);
+				ItemStack stack = new ItemStack(MTSRegistry.flightInstrument, 1, instrumentNumber);
 				worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
 			}
 		}

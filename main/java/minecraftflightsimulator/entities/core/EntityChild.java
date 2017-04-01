@@ -1,10 +1,10 @@
 package minecraftflightsimulator.entities.core;
 
+import minecraftflightsimulator.baseclasses.MTSVector;
 import minecraftflightsimulator.minecrafthelpers.AABBHelper;
 import minecraftflightsimulator.minecrafthelpers.EntityHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.systems.RotationSystem;
-import minecraftflightsimulator.utilites.MFSVector;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -49,7 +49,7 @@ public abstract class EntityChild extends EntityBase{
 		this.propertyCode=propertyCode;
 		this.UUID=String.valueOf(this.getUniqueID());
 		this.parentUUID=parentUUID;
-		MFSVector offset = RotationSystem.getRotatedPoint(offsetX, offsetY, offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
+		MTSVector offset = RotationSystem.getRotatedPoint(offsetX, offsetY, offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
 		this.setPositionAndRotation(parent.posX+offset.xCoord, parent.posY+offset.yCoord, parent.posZ+offset.zCoord, parent.rotationYaw, parent.rotationPitch);
 	}
 	

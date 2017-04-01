@@ -1,7 +1,6 @@
 package minecraftflightsimulator.entities.parts;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityBase;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityPlane;
@@ -9,6 +8,7 @@ import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.packets.general.ChatPacket;
+import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -34,13 +34,13 @@ public class EntityEngineAircraft extends EntityEngine{
 		if(!worldObj.isRemote){
 			ItemStack playerStack = PlayerHelper.getHeldStack(player);
 			if(playerStack != null){
-				if(MFSRegistry.propeller.equals(ItemStackHelper.getItemFromStack(playerStack)) && propeller == null){
+				if(MTSRegistry.propeller.equals(ItemStackHelper.getItemFromStack(playerStack)) && propeller == null){
 					if(this.parent != null){
 						if(ItemStackHelper.getStackNBT(playerStack).getInteger("diameter") > 80 && this.type.equals(EngineTypes.PLANE_SMALL)){
 							MFS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.failure.propellertoobig")), (EntityPlayerMP) player);
 							return false;
 						}
-						propeller = new EntityPropeller(worldObj, (EntityPlane) parent, parent.UUID, offsetX, offsetY, offsetZ + 0.9F, ItemStackHelper.getItemDamage(playerStack));
+						propeller = new EntityPropeller(worldObj, (EntityPlane) parent, parent.UUID, offsetX, offsetY + (this.height - 1)/2F, offsetZ + 0.9F, ItemStackHelper.getItemDamage(playerStack));
 						propeller.setNBTFromStack(playerStack);
 						propeller.engineUUID = this.UUID;
 						parent.addChild(propeller.UUID, propeller, true);

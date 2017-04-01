@@ -1,6 +1,6 @@
 package minecraftflightsimulator.systems;
 
-import minecraftflightsimulator.utilites.MFSVector;
+import minecraftflightsimulator.baseclasses.MTSVector;
 
 /**Lots of math here.  Move along, nothing to see.
  * 
@@ -28,7 +28,7 @@ public final class RotationSystem{
 	 * @param roll The roll of the aircraft (in degrees).
 	 * @return A Vec3 with the rotated points.
 	 */
-	public static MFSVector getRotatedPoint(float x, float y, float z, float pitch, float yaw, float roll){
+	public static MTSVector getRotatedPoint(float x, float y, float z, float pitch, float yaw, float roll){
 		d1 = Math.cos(pitch * 0.017453292F);//A
 		d2 = Math.sin(pitch * 0.017453292F);//B
 		d3 = Math.cos(yaw * 0.017453292F);//C
@@ -38,7 +38,7 @@ public final class RotationSystem{
 		d7 = x*(d3*d5-d2*d4*d6) + y*(-d2*d4*d5-d3*d6) + z*(-d1*d4);
 		d8 = x*(d1*d6)          + y*(d1*d5)           + z*(-d2);
 		d9 = x*(d4*d5+d2*d3*d6) + y*(d2*d3*d5-d4*d6)  + z*(d1*d3);
-		return new MFSVector(d7, d8, d9);
+		return new MTSVector(d7, d8, d9);
 	}
 	
 	/**
@@ -49,14 +49,14 @@ public final class RotationSystem{
 	 * @param roll The roll of the aircraft (in degrees).
 	 * @return A Vec3 with the rotated unit vector.
 	 */
-	public static MFSVector getRotatedY(float pitch, float yaw, float roll){
+	public static MTSVector getRotatedY(float pitch, float yaw, float roll){
 		d1 = Math.cos(pitch * 0.017453292F);
 		d2 = Math.sin(pitch * 0.017453292F);
 		d3 = Math.cos(yaw * 0.017453292F);
 		d4 = Math.sin(yaw * 0.017453292F);
 		d5 = Math.cos(roll * 0.017453292F);
 		d6 = Math.sin(roll * 0.017453292F);
-		return new MFSVector((-d3*d6 - d2*d4*d5), (d1*d5), (d2*d3*d5 - d4*d6));
+		return new MTSVector((-d3*d6 - d2*d4*d5), (d1*d5), (d2*d3*d5 - d4*d6));
 	}
 	
 	/*For reference, here are the rotation matrixes.

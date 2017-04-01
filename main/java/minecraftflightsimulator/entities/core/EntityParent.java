@@ -11,7 +11,7 @@ import com.google.common.collect.ImmutableList;
 
 import cpw.mods.fml.common.Loader;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.MFSRegistry;
+import minecraftflightsimulator.baseclasses.MTSVector;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.items.ItemPlane;
 import minecraftflightsimulator.minecrafthelpers.AABBHelper;
@@ -19,9 +19,9 @@ import minecraftflightsimulator.minecrafthelpers.EntityHelper;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.packets.general.ServerSyncPacket;
+import minecraftflightsimulator.registry.MTSRegistry;
 import minecraftflightsimulator.systems.ConfigSystem;
 import minecraftflightsimulator.systems.RotationSystem;
-import minecraftflightsimulator.utilites.MFSVector;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -82,11 +82,11 @@ public abstract class EntityParent extends EntityBase{
 		if(!worldObj.isRemote){
 			ItemStack heldStack = PlayerHelper.getHeldStack(player);
 			if(heldStack != null){
-				if(ItemStackHelper.getItemFromStack(heldStack).equals(MFSRegistry.wrench)){
+				if(ItemStackHelper.getItemFromStack(heldStack).equals(MTSRegistry.wrench)){
 					return false;
 				}
 				//Verify that the item is registered as a spawnable part.
-				Class<? extends EntityChild> childClassToSpawn = MFSRegistry.entityItems.get(ItemStackHelper.getItemFromStack(heldStack));
+				Class<? extends EntityChild> childClassToSpawn = MTSRegistry.entityItems.get(ItemStackHelper.getItemFromStack(heldStack));
 				if(childClassToSpawn != null){
 					//Now find the closest spot to put it.
 					EntityChild childClicked = (EntityChild) clicked;
@@ -148,7 +148,7 @@ public abstract class EntityParent extends EntityBase{
 		}else{
 			ItemStack heldStack = PlayerHelper.getHeldStack(player);
 			if(heldStack != null){
-				if(ItemStackHelper.getItemFromStack(heldStack).equals(MFSRegistry.wrench)){
+				if(ItemStackHelper.getItemFromStack(heldStack).equals(MTSRegistry.wrench)){
 					MFS.proxy.openGUI(this, player);
 					return true;
 				}
@@ -261,15 +261,15 @@ public abstract class EntityParent extends EntityBase{
 			if(child.isDead){
 				removeChild(child.UUID, false);
 			}else{
-				MFSVector offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
+				MTSVector offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
 				child.setPosition(posX + offset.xCoord, posY + offset.yCoord, posZ + offset.zCoord);
 				Entity rider = EntityHelper.getRider(child);
 				if(rider != null){
 					if(Loader.MC_VERSION.equals("1.7.10")){
-						MFSVector posVec = RotationSystem.getRotatedPoint(child.offsetX, (float) (child.offsetY + rider.getYOffset()), (float) child.offsetZ, this.rotationPitch, this.rotationYaw, this.rotationRoll);
+						MTSVector posVec = RotationSystem.getRotatedPoint(child.offsetX, (float) (child.offsetY + rider.getYOffset()), (float) child.offsetZ, this.rotationPitch, this.rotationYaw, this.rotationRoll);
 						rider.setPosition(this.posX + posVec.xCoord, this.posY + posVec.yCoord, this.posZ + posVec.zCoord);
 					}else{
-						MFSVector posVec = RotationSystem.getRotatedPoint(child.offsetX, (float) (child.offsetY + rider.getYOffset() + rider.height), (float) child.offsetZ, this.rotationPitch, this.rotationYaw, this.rotationRoll);
+						MTSVector posVec = RotationSystem.getRotatedPoint(child.offsetX, (float) (child.offsetY + rider.getYOffset() + rider.height), (float) child.offsetZ, this.rotationPitch, this.rotationYaw, this.rotationRoll);
 						rider.setPosition(this.posX + posVec.xCoord, this.posY + posVec.yCoord - rider.height, this.posZ + posVec.zCoord);
 					}
 					

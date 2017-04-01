@@ -1,4 +1,4 @@
-package minecraftflightsimulator.utilites;
+package minecraftflightsimulator.baseclasses;
 
 /**Curve class used for rails.
  * Needs two points and two angles.
@@ -7,7 +7,7 @@ package minecraftflightsimulator.utilites;
  * 
  * @author don_bruce
  */
-public class MFSCurve{
+public class MTSCurve{
 	private static final byte curveIncrement = 16;
 	public final float startAngle;
 	public final float endAngle;
@@ -22,7 +22,7 @@ public class MFSCurve{
 	private final float[] cpEnd;
 	private final float[][] pathPoints;
 	
-	public MFSCurve(int[] sp, int[] ep, float sa, float ea){
+	public MTSCurve(int[] sp, int[] ep, float sa, float ea){
 		this.startAngle = sa;
 		this.endAngle = ea;
 		this.blockStartPoint = sp;

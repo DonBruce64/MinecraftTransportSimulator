@@ -10,6 +10,7 @@ import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.guis.GUIInstrumentsFlyer;
 import minecraftflightsimulator.guis.GUIPropellerBench;
+import minecraftflightsimulator.registry.MTSClientRegistry;
 import minecraftflightsimulator.systems.ClientEventSystem;
 import minecraftflightsimulator.systems.ConfigSystem;
 import minecraftflightsimulator.systems.ControlSystem;
@@ -32,13 +33,13 @@ public class ClientProxy extends CommonProxy{
 	public void preInit(FMLPreInitializationEvent event){
 		super.preInit(event);
 		ConfigSystem.initClient();
-		MFSClientRegistry.preInit();
+		MTSClientRegistry.preInit();
 	}
 	
 	@Override
 	public void init(FMLInitializationEvent event){
 		super.init(event);
-		MFSClientRegistry.init();
+		MTSClientRegistry.init();
 		ControlSystem.init();
 		MinecraftForge.EVENT_BUS.register(ClientEventSystem.instance);
 		FMLCommonHandler.instance().bus().register(ClientEventSystem.instance);

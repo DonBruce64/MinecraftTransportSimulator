@@ -5,12 +5,12 @@ import java.util.List;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.entities.parts.EntityEngine.EngineTypes;
 import minecraftflightsimulator.entities.parts.EntityEngine.EngineTypes.EngineProperties;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
+import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -55,7 +55,7 @@ public class ItemEngine extends Item{
 	}
 	
 	public static ItemStack getItemStackForProperties(EngineTypes type, EngineProperties properties){
-		ItemStack engineStack = new ItemStack(MFSRegistry.engine, 1, type.ordinal());
+		ItemStack engineStack = new ItemStack(MTSRegistry.engine, 1, type.ordinal());
 		NBTTagCompound stackTag = new NBTTagCompound();
 		stackTag.setInteger("maxRPM", properties.maxRPM);
 		stackTag.setInteger("maxSafeRPM", EntityEngine.getMaxSafeRPM(properties.maxRPM));

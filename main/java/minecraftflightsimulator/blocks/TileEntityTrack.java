@@ -5,25 +5,23 @@ import java.util.List;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.baseclasses.MTSCurve;
+import minecraftflightsimulator.baseclasses.MTSTileEntity;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
-import minecraftflightsimulator.packets.general.TileEntityClientRequestDataPacket;
-import minecraftflightsimulator.utilites.MFSCurve;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 
-public class TileEntityTrack extends TileEntity{
+public class TileEntityTrack extends MTSTileEntity{
 	public boolean renderedLastPass;
 	public boolean isPrimary;
-	public MFSCurve curve;
+	public MTSCurve curve;
 	private List<int[]> fakeTracks = new ArrayList<int[]>();
 	
 	public TileEntityTrack(){
 		super();
 	}
 	
-	public TileEntityTrack(MFSCurve curve, boolean isPrimary){
+	public TileEntityTrack(MTSCurve curve, boolean isPrimary){
 		this.curve = curve;
 		this.isPrimary = isPrimary;
 	}
@@ -45,14 +43,6 @@ public class TileEntityTrack extends TileEntity{
 	}
 	
 	@Override
-    public void validate(){
-		super.validate();
-        if(worldObj.isRemote){
-        	MFS.MFSNet.sendToServer(new TileEntityClientRequestDataPacket(this));
-        }
-    }
-	
-	@Override
 	public AxisAlignedBB getRenderBoundingBox(){
 		return INFINITE_EXTENT_AABB;
 	}
@@ -68,7 +58,7 @@ public class TileEntityTrack extends TileEntity{
         super.readFromNBT(tagCompound);
         this.isPrimary = tagCompound.getBoolean("isPrimary");
         if(tagCompound.getIntArray("endPoint").length != 0){
-        	curve = new MFSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, tagCompound.getIntArray("endPoint"), tagCompound.getFloat("startAngle"), tagCompound.getFloat("endAngle"));
+        	curve = new MTSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, tagCompound.getIntArray("endPoint"), tagCompound.getFloat("startAngle"), tagCompound.getFloat("endAngle"));
         }
         
         this.fakeTracks.clear();

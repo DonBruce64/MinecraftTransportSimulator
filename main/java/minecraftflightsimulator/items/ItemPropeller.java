@@ -6,9 +6,9 @@ import java.util.List;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
+import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -59,7 +59,7 @@ public class ItemPropeller extends Item{
 		propellerList.add(new Byte[]{2, 4, 70, 115});
 		
 		for(Byte[] propellerProperties : propellerList){
-			ItemStack propellerStack = new ItemStack(MFSRegistry.propeller, 1, propellerProperties[0]);
+			ItemStack propellerStack = new ItemStack(MTSRegistry.propeller, 1, propellerProperties[0]);
 			NBTTagCompound stackTag = new NBTTagCompound();
 			stackTag.setInteger("numberBlades", propellerProperties[1]);
 			stackTag.setInteger("pitch", propellerProperties[2]);

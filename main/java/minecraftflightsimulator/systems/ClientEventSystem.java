@@ -8,7 +8,6 @@ import cpw.mods.fml.common.gameevent.InputEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
-import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityPlane;
@@ -17,6 +16,7 @@ import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.guis.GUIConfig;
 import minecraftflightsimulator.guis.GUICredits;
 import minecraftflightsimulator.minecrafthelpers.EntityHelper;
+import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -47,7 +47,7 @@ public final class ClientEventSystem{
 		if(ConfigSystem.getBooleanConfig("FirstRun")){
 			ConfigSystem.setClientConfig("FirstRun", false);
 			FMLCommonHandler.instance().showGuiScreen(new GUICredits());
-			event.player.inventory.addItemStackToInventory(new ItemStack(MFSRegistry.flightManual));
+			event.player.inventory.addItemStackToInventory(new ItemStack(MTSRegistry.flightManual));
 		}
 	}
 	

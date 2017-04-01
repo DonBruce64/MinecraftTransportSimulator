@@ -3,7 +3,6 @@ package minecraftflightsimulator.entities.parts;
 import java.util.List;
 
 import minecraftflightsimulator.MFS;
-import minecraftflightsimulator.MFSRegistry;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityPlane;
@@ -13,8 +12,9 @@ import minecraftflightsimulator.minecrafthelpers.EntityHelper;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.packets.control.EnginePacket;
+import minecraftflightsimulator.registry.MTSRegistry;
+import minecraftflightsimulator.registry.MTSDamageSources.DamageSourcePropellor;
 import minecraftflightsimulator.systems.ConfigSystem;
-import minecraftflightsimulator.utilites.DamageSources.DamageSourcePropellor;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -54,7 +54,7 @@ public class EntityPropeller extends EntityChild{
 	
 	@Override
 	public ItemStack getItemStack(){
-		ItemStack propellerStack = new ItemStack(MFSRegistry.propeller, 1, propertyCode);
+		ItemStack propellerStack = new ItemStack(MTSRegistry.propeller, 1, propertyCode);
 		NBTTagCompound tag = new NBTTagCompound();
 		tag.setInteger("numberBlades", numberBlades);
 		tag.setInteger("pitch", pitch);
