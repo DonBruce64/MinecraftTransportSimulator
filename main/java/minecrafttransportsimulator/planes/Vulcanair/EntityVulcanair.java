@@ -48,8 +48,8 @@ public class EntityVulcanair extends EntityPlane{
 		this.partData.add(new PartData(0, -0.75F, 4.62F, true, false, -1, EntityWheel.EntityWheelSmall.class));
 		this.partData.add(new PartData(-1.75F, -0.75F, 0, EntityWheel.EntityWheelSmall.class, EntityPontoon.class));
 		this.partData.add(new PartData(1.75F, -0.75F, 0F,  EntityWheel.EntityWheelSmall.class, EntityPontoon.class));
-		this.partData.add(new PartData(2.69F, 1.25F, 1.17F, false, false, 0, EntityEngineAircraft.class));
-		this.partData.add(new PartData(-2.69F, 1.25F, 1.17F, false, false, 0, EntityEngineAircraft.class));
+		this.partData.add(new PartData(2.69F, 1.15F, 1.17F, false, false, 0, EntityEngineAircraft.class));
+		this.partData.add(new PartData(-2.69F, 1.15F, 1.17F, false, false, 0, EntityEngineAircraft.class));
 		this.partData.add(new PartData(0, 0.1F, 2.37F, false, true, -1, EntitySeat.class));
 		this.partData.add(new PartData(0, 0.1F, 1.245F, EntitySeat.class, EntityChest.class));
 		this.partData.add(new PartData(0, 0.1F, 0.12F, EntitySeat.class, EntityChest.class));

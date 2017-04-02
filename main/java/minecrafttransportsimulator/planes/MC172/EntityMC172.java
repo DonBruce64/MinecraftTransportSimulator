@@ -46,7 +46,7 @@ public class EntityMC172 extends EntityPlane{
 		this.partData.add(new PartData(0, -1F, 1.7F, true, false, -1, EntityWheel.EntityWheelSmall.class));
 		this.partData.add(new PartData(-1.65F, -1F, 0, EntityWheel.EntityWheelSmall.class, EntityPontoon.class));
 		this.partData.add(new PartData(1.65F, -1F, 0,  EntityWheel.EntityWheelSmall.class, EntityPontoon.class));
-		this.partData.add(new PartData(0, -0.3F, 1.65F, false, false, 0, EntityEngineAircraft.class));
+		this.partData.add(new PartData(0, -0.4F, 1.65F, false, false, 0, EntityEngineAircraft.class));
 		this.partData.add(new PartData(0, -.1F, 0, false, true, -1, EntitySeat.class));
 		this.partData.add(new PartData(0, -.1F, -1, EntitySeat.class, EntityChest.class));
 	}
