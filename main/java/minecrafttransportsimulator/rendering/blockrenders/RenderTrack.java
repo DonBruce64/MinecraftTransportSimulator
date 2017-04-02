@@ -200,18 +200,18 @@ public class RenderTrack extends RenderTileBase{
 		//These are quad strips, which makes contiguous rails easy!
 		GL11.glPushMatrix();
 		GL11DrawSystem.bindTexture(railTexture);
-		drawRailSegment(texPoints, 16F/16F, 14F/16F, 4F/16F, 4F/16F, 10F/16F, 12F/16F, holographic);//Top
-		drawRailSegment(texPoints, 16F/16F, 16F/16F, 3F/16F, 4F/16F, 9F/16F, 10F/16F, holographic);//Outer-top-side
-		drawRailSegment(texPoints, 15.5F/16F, 16F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F, holographic);//Outer-top-under
-		drawRailSegment(texPoints, 15.5F/16F, 15.5F/16F, 1F/16F, 3F/16F, 6F/16F, 8F/16F, holographic);//Outer-middle
-		drawRailSegment(texPoints, 17.5F/16F, 15.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F, holographic);//Outer-bottom-top
-		drawRailSegment(texPoints, 17.5F/16F, 17.5F/16F, 0F/16F, 1F/16F, 3F/16F, 4F/16F, holographic);//Outer-bottom-side
-		drawRailSegment(texPoints, 12.5F/16F, 17.5F/16F, 0.0F, 0.0F, 0.0F, 3F/16F, holographic);//Bottom
-		drawRailSegment(texPoints, 12.5F/16F, 12.5F/16F, 1F/16F, 0F/16F, 3F/16F, 4F/16F, holographic);//Inner-bottom-side
-		drawRailSegment(texPoints, 14.5F/16F, 12.5F/16F, 1F/16F, 1F/16F, 4F/16F, 5.5F/16F, holographic);//Inner-bottom-top
-		drawRailSegment(texPoints, 14.5F/16F, 14.5F/16F, 3F/16F, 1F/16F, 6F/16F, 8F/16F, holographic);//Inner-middle
-		drawRailSegment(texPoints, 14F/16F, 14.5F/16F, 3F/16F, 3F/16F, 8F/16F, 8.5F/16F, holographic);//Inner-top-under
-		drawRailSegment(texPoints, 14F/16F, 14F/16F, 4F/16F, 3F/16F, 9F/16F, 10F/16F, holographic);//Inner-top-side
+		drawRailSegment(texPoints, 12.5F/16F, 17.5F/16F, 0.0F, 0.0F, 0.0F, 3F/19F, holographic);//Bottom
+		drawRailSegment(texPoints, 17.5F/16F, 17.5F/16F, 0F/16F, 1F/16F, 3F/19F, 4F/19F, holographic);//Outer-bottom-side
+		drawRailSegment(texPoints, 17.5F/16F, 15.5F/16F, 1F/16F, 1F/16F, 4F/19F, 5.5F/19F, holographic);//Outer-bottom-top
+		drawRailSegment(texPoints, 15.5F/16F, 15.5F/16F, 1F/16F, 3F/16F, 6F/19F, 8F/19F, holographic);//Outer-middle
+		drawRailSegment(texPoints, 15.5F/16F, 16F/16F, 3F/16F, 3F/16F, 8F/19F, 8.5F/19F, holographic);//Outer-top-under
+		drawRailSegment(texPoints, 16F/16F, 16F/16F, 3F/16F, 4F/16F, 9F/19F, 10F/19F, holographic);//Outer-top-side
+		drawRailSegment(texPoints, 16F/16F, 14F/16F, 4F/16F, 4F/16F, 10F/19F, 12F/19F, holographic);//Top
+		drawRailSegment(texPoints, 14F/16F, 14F/16F, 4F/16F, 3F/16F, 12F/19F, 13F/19F, holographic);//Inner-top-side
+		drawRailSegment(texPoints, 14F/16F, 14.5F/16F, 3F/16F, 3F/16F, 13F/19F, 13.5F/19F, holographic);//Inner-top-under
+		drawRailSegment(texPoints, 14.5F/16F, 14.5F/16F, 3F/16F, 1F/16F, 14F/19F, 16F/19F, holographic);//Inner-middle
+		drawRailSegment(texPoints, 14.5F/16F, 12.5F/16F, 1F/16F, 1F/16F, 16F/19F, 17.5F/19F, holographic);//Inner-bottom-top
+		drawRailSegment(texPoints, 12.5F/16F, 12.5F/16F, 1F/16F, 0F/16F, 18F/19F, 19F/19F, holographic);//Inner-bottom-side
 		GL11.glPopMatrix();
 	}
 	
