@@ -68,12 +68,18 @@ public class BlockSurveyFlag extends MTSBlockTileEntity{
 					MTS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.flag.failure.distance")), (EntityPlayerMP) player);
 					resetMaps(player);
 				}else{
-					TileEntitySurveyFlag firstFlag = (TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(world, firstPosition.get(player)[0], firstPosition.get(player)[1], firstPosition.get(player)[2]);
-					TileEntitySurveyFlag secondFlag = (TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(world, x, y, z);
-					firstFlag.linkToFlag(new int[]{x, y, z}, true);
-					secondFlag.linkToFlag(firstPosition.get(player), false);
-					MTS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.flag.info.link")), (EntityPlayerMP) player);
-					resetMaps(player);
+					//Make sure flag has not been removed since linking.
+					if(BlockHelper.getTileEntityFromCoords(world, firstPosition.get(player)[0], firstPosition.get(player)[1], firstPosition.get(player)[2]) instanceof TileEntitySurveyFlag){
+						TileEntitySurveyFlag firstFlag = (TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(world, firstPosition.get(player)[0], firstPosition.get(player)[1], firstPosition.get(player)[2]);
+						TileEntitySurveyFlag secondFlag = (TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(world, x, y, z);
+						firstFlag.linkToFlag(new int[]{x, y, z}, true);
+						secondFlag.linkToFlag(firstPosition.get(player), false);
+						MTS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.flag.info.link")), (EntityPlayerMP) player);
+						resetMaps(player);
+					}else{
+						MTS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.flag.info.clear")), (EntityPlayerMP) player);
+						resetMaps(player);
+					}
 				}
 			}else{
 				firstPosition.put(player, new int[]{x, y, z});
