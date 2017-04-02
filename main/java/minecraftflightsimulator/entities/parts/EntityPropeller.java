@@ -103,7 +103,7 @@ public class EntityPropeller extends EntityChild{
 		super.onUpdate();
 		if(!linked){return;}
 		if(engine == null){
-			engine = (EntityEngineAircraft) EntityHelper.getEntityByMFSUUID(worldObj, engineUUID);
+			engine = (EntityEngineAircraft) EntityHelper.getEntityByUUID(worldObj, engineUUID);
 			if(engine != null){
 				engine.propeller = this;
 			}else{

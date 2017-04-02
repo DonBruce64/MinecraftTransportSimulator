@@ -5,7 +5,7 @@ import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
-import minecraftflightsimulator.entities.core.EntityBase;
+import minecraftflightsimulator.dataclasses.MTSEntity;
 import minecraftflightsimulator.entities.core.EntityParent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
@@ -37,7 +37,7 @@ public class ServerDataPacket implements IMessage{
 		@Override
 		public IMessage onMessage(ServerDataPacket message, MessageContext ctx) {
 			if(ctx.side.isClient()){
-				EntityBase thisEntity = (EntityBase) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+				MTSEntity thisEntity = (MTSEntity) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 				if(thisEntity != null){
 					thisEntity.readFromNBT(message.tagCompound);
 					if(thisEntity instanceof EntityParent){

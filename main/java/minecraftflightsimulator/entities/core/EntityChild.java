@@ -1,6 +1,7 @@
 package minecraftflightsimulator.entities.core;
 
 import minecraftflightsimulator.baseclasses.MTSVector;
+import minecraftflightsimulator.dataclasses.MTSEntity;
 import minecraftflightsimulator.minecrafthelpers.AABBHelper;
 import minecraftflightsimulator.minecrafthelpers.EntityHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
@@ -24,7 +25,7 @@ import net.minecraft.world.World;
  * 
  * @author don_bruce
  */
-public abstract class EntityChild extends EntityBase{	
+public abstract class EntityChild extends EntityMultipartBase{	
 	/** Integer for storing data about color, type, and other things.*/
 	public int propertyCode;
 	public float offsetX;
@@ -63,7 +64,7 @@ public abstract class EntityChild extends EntityBase{
 	}
 	
 	@Override
-    public boolean performRightClickAction(EntityBase clicked, EntityPlayer player){
+    public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
 		return parent != null ? parent.performRightClickAction(clicked, player) : false;
 	}
 	
@@ -115,7 +116,7 @@ public abstract class EntityChild extends EntityBase{
 	}
 	
 	private void linkToParent(){
-		EntityBase entity = EntityHelper.getEntityByMFSUUID(worldObj, (this.parentUUID));
+		MTSEntity entity = EntityHelper.getEntityByUUID(worldObj, (this.parentUUID));
 		if(entity != null){
 			EntityParent parent =  (EntityParent) entity;
 			parent.addChild(this.UUID, this, false);

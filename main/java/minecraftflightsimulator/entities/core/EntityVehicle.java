@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.baseclasses.MTSVector;
+import minecraftflightsimulator.dataclasses.MTSEntity;
 import minecraftflightsimulator.dataclasses.MTSRegistry;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.minecrafthelpers.AABBHelper;
@@ -110,7 +111,7 @@ public abstract class EntityVehicle extends EntityParent{
 	
 	//Start of custom methods
 	@Override
-	public boolean performRightClickAction(EntityBase clicked, EntityPlayer player){
+	public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
 		if(!worldObj.isRemote){
 			if(PlayerHelper.getHeldStack(player) != null){
 				if(ItemStackHelper.getItemFromStack(PlayerHelper.getHeldStack(player)).equals(Items.name_tag)){

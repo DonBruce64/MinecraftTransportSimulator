@@ -1,8 +1,8 @@
 package minecraftflightsimulator.entities.parts;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.dataclasses.MTSEntity;
 import minecraftflightsimulator.dataclasses.MTSRegistry;
-import minecraftflightsimulator.entities.core.EntityBase;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.minecrafthelpers.EntityHelper;
@@ -37,7 +37,7 @@ public class EntitySeat extends EntityChild{
 	}
 	
 	@Override
-	public boolean performRightClickAction(EntityBase clicked, EntityPlayer player){
+	public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
 		if(!worldObj.isRemote){
 			Entity rider = EntityHelper.getRider(this);
 			if(rider==null){

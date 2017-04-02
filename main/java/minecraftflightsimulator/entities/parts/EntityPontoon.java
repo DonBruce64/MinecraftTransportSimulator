@@ -71,7 +71,7 @@ public class EntityPontoon extends EntityGroundDevice{
 	}
 	
 	private void linkToOtherHalf(){
-		Entity entity = EntityHelper.getEntityByMFSUUID(worldObj, otherHalfUUID);
+		Entity entity = EntityHelper.getEntityByUUID(worldObj, otherHalfUUID);
 		if(entity != null){
 			this.otherHalf=(EntityPontoon) entity;
 		}

@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableList;
 import cpw.mods.fml.common.Loader;
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.baseclasses.MTSVector;
+import minecraftflightsimulator.dataclasses.MTSEntity;
 import minecraftflightsimulator.dataclasses.MTSRegistry;
 import minecraftflightsimulator.entities.parts.EntitySeat;
 import minecraftflightsimulator.items.ItemPlane;
@@ -28,7 +29,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-public abstract class EntityParent extends EntityBase{
+public abstract class EntityParent extends EntityMultipartBase{
 	public boolean rendered;
 	public byte numberChildren;
 	public float rotationRoll;
@@ -72,7 +73,7 @@ public abstract class EntityParent extends EntityBase{
 	}
 	
 	@Override
-	public boolean performRightClickAction(EntityBase clicked, EntityPlayer player){
+	public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
 		//No in-use changes for sneaky sneaks!
 		if(player.ridingEntity instanceof EntitySeat){
 			if(this.equals(((EntitySeat) player.ridingEntity).parent)){

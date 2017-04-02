@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.dataclasses.MTSEntity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -31,7 +32,7 @@ public abstract class EntityChildInventory extends EntityChild implements IInven
 	protected abstract String getChildInventoryName();
 	
 	@Override
-    public boolean performRightClickAction(EntityBase clicked, EntityPlayer player){
+    public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
 		player.openGui(MFS.instance, this.getEntityId(), worldObj, (int) posX, (int) posY, (int) posZ);
 		return false;
     }

@@ -4,7 +4,7 @@ import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
-import minecraftflightsimulator.entities.core.EntityBase;
+import minecraftflightsimulator.dataclasses.MTSEntity;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class EntityClientRequestDataPacket implements IMessage{
@@ -30,7 +30,7 @@ public class EntityClientRequestDataPacket implements IMessage{
 		@Override
 		public ServerDataPacket onMessage(EntityClientRequestDataPacket message, MessageContext ctx) {
 			if(ctx.side.isServer()){
-				EntityBase thisEntity = (EntityBase) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+				MTSEntity thisEntity = (MTSEntity) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 				if(thisEntity!=null){
 					NBTTagCompound tagCompound = new NBTTagCompound();
 					thisEntity.writeToNBT(tagCompound);

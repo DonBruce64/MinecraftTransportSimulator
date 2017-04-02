@@ -2,7 +2,7 @@ package minecraftflightsimulator.minecrafthelpers;
 
 import java.util.List;
 
-import minecraftflightsimulator.entities.core.EntityBase;
+import minecraftflightsimulator.entities.core.EntityMultipartBase;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
@@ -10,11 +10,11 @@ import net.minecraft.world.World;
 
 public final class EntityHelper{
 	
-	public static EntityBase getEntityByMFSUUID(World world, String UUID){
+	public static EntityMultipartBase getEntityByUUID(World world, String UUID){
 		for(Object obj : world.loadedEntityList){
-			if(obj instanceof EntityBase){
-				if(UUID.equals(((EntityBase) obj).UUID)){
-					return (EntityBase) obj;
+			if(obj instanceof EntityMultipartBase){
+				if(UUID.equals(((EntityMultipartBase) obj).UUID)){
+					return (EntityMultipartBase) obj;
 				}
 			}
 		}

@@ -1,8 +1,8 @@
 package minecraftflightsimulator.entities.parts;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.dataclasses.MTSEntity;
 import minecraftflightsimulator.dataclasses.MTSRegistry;
-import minecraftflightsimulator.entities.core.EntityBase;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.entities.core.EntityVehicle;
@@ -30,7 +30,7 @@ public class EntityEngineAircraft extends EntityEngine{
 	}
 	
 	@Override
-    public boolean performRightClickAction(EntityBase clicked, EntityPlayer player){
+    public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
 		if(!worldObj.isRemote){
 			ItemStack playerStack = PlayerHelper.getHeldStack(player);
 			if(playerStack != null){

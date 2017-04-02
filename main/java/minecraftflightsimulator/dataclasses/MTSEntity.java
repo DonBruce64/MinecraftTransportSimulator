@@ -1,4 +1,4 @@
-package minecraftflightsimulator.entities.core;
+package minecraftflightsimulator.dataclasses;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -11,11 +11,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
-public abstract class EntityBase extends Entity{
-	public boolean linked;
-	public String UUID = "";
+public abstract class MTSEntity extends Entity{
 	
-	public EntityBase(World world) {
+	public MTSEntity(World world){
 		super(world);
 		this.preventEntitySpawning = true;
 	}
@@ -31,7 +29,7 @@ public abstract class EntityBase extends Entity{
 	 * 
 	 * @return whether or not an action occurred.
 	 */
-	public abstract boolean performRightClickAction(EntityBase clicked, EntityPlayer player);
+	public abstract boolean performRightClickAction(MTSEntity clicked, EntityPlayer player);
 	
 	@Override
     public boolean attackEntityFrom(DamageSource source, float damage){
@@ -45,20 +43,6 @@ public abstract class EntityBase extends Entity{
 	 * @return whether or not an action occurred.
 	 */
 	public abstract boolean performAttackAction(DamageSource source, float damage);
-	
-	public boolean hasUUID(){
-		if(this.UUID.equals("")){
-			if(this.worldObj.isRemote){
-				if(this.ticksExisted==1 || this.ticksExisted%10==0){
-					this.requestDataFromServer();
-				}
-				return false;
-			}else{
-				this.UUID=String.valueOf(this.getUniqueID());
-			}
-		}
-		return true;
-	}
 	
     @Override
     @SideOnly(Side.CLIENT)
@@ -88,16 +72,4 @@ public abstract class EntityBase extends Entity{
 	//Junk methods, forced to pull in.
 	protected void readEntityFromNBT(NBTTagCompound p_70037_1_){}
 	protected void writeEntityToNBT(NBTTagCompound p_70014_1_){}
-	
-    @Override
-	public void readFromNBT(NBTTagCompound tagCompound){
-		super.readFromNBT(tagCompound);
-		this.UUID=tagCompound.getString("UUID");
-	}
-    
-	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
-		super.writeToNBT(tagCompound);
-		tagCompound.setString("UUID", this.UUID);
-	}
 }
