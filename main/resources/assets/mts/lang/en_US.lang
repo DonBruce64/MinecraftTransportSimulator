@@ -1,0 +1,174 @@
+#Translated by don_bruce
+
+death.attack.propellor.null.null=%1$s was shredded by a propeller.
+death.attack.propellor.null.player=%1$s was was shredded by a propeller while fighting %2$s
+death.attack.propellor.player.null=%1$s was killed by %2$s using a propeller.
+death.attack.propellor.player.player=%1$s was was killed by %2$s using propeller while fighting %3$s
+
+death.attack.planecrash.null.null=%1$s died in a plane crash.
+death.attack.planecrash.null.player=%1$s got distracted while fighting %2$s and died in a plane crash.
+death.attack.planecrash.player.null=%2$s crashed their plane and killed %1$s.
+death.attack.planecrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash the plane.
+
+death.attack.traincrash.null.null=%1$s died in a train crash.
+death.attack.traincrash.null.player=%1$s got distracted while fighting %2$s and died in a train crash.
+death.attack.traincrash.player.null=%2$s crashed their train and killed %1$s.
+death.attack.traincrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash the train.
+
+interact.flag.info.set=First flag set.
+interact.flag.info.link=Flags linked.
+interact.flag.info.unlink=Flags un-linked.
+interact.flag.info.clear=First flag cleared.
+interact.flag.failure.dimension=Flags must be in the same dimension.
+interact.flag.failure.distance=The two flags are too far away.  The max distance between flags is 128.
+interact.flag.failure.nolink=This flag is not linked to another flag.
+interact.flag.failure.materials=You lack the required materials to build this track.  You need:
+interact.flag.failure.blockage=There is a block in the way at:
+ 
+interact.failure.seattaken=This seat is taken!
+interact.failure.propellertoobig=This propeller is too big for this engine!
+interact.failure.propellerbenchworking=This propeller bench is currently busy.
+interact.failure.gaspumptoofar=The gas pump is too far away from the vehicle.  The pump should be no less than 16 blocks away.
+interact.failure.gaspumpwrongside=The gas pump is on the wrong side of the vehicle.  The pump should be on the right. 
+
+input.key.mod=Mod
+input.key.camlock=CamLock
+input.key.pitchu=PitchUp
+input.key.pitchd=PitchDown
+input.key.rollr=RollRight
+input.key.rolll=RollLeft
+input.key.yawr=YawRight
+input.key.yawl=YawLeft
+input.key.throttleu=ThrottleUp
+input.key.throttled=ThrottleDown
+input.key.flapsu=FlapsUp
+input.key.flapsd=FlapsDown
+input.key.brake=Brake
+input.key.panel=Panel
+input.key.zoomi=ZoomIn
+input.key.zoomo=ZoomOut
+
+input.joystick.pitch=Pitch
+input.joystick.roll=Roll
+input.joystick.yaw=Yaw
+input.joystick.throttle=Throttle
+input.joystick.changeview=ChangeView
+input.joystick.lookl=LookLeft
+input.joystick.lookr=LookRight
+input.joystick.looku=LookUp
+input.joystick.lookd=LookDown
+input.joystick.looka=LookDirectional
+
+gui.panel.navigationlights=NAV
+gui.panel.strobelights=STROBE
+gui.panel.taxilights=TAXI
+gui.panel.landinglights=LAND
+gui.panel.magneto=MAG
+gui.panel.starter=START
+
+gui.instruments.main=Main Instruments
+gui.instruments.control=Control Panel
+gui.instruments.clear=CLEAR
+gui.instruments.idle=Select an instrument.
+gui.instruments.decide=Click an instrument to add, or CLEAR to remove.
+gui.instruments.fault=This instrument cannot go here!
+
+gui.config.title.config=CONFIG
+gui.config.title.plane=PLANE
+gui.config.title.heli=HELI
+gui.config.title.vehicle=VEHICLE
+gui.config.title.joystick=JOYSTICK
+gui.config.joystick.confirm=Confirm
+gui.config.joystick.cancel=Cancel
+gui.config.joystick.clear=Clear Assignment
+gui.config.joystick.select=Chose a joystick:
+gui.config.joystick.name=Name:
+gui.config.joystick.type=Type:
+gui.config.joystick.rumble=Rumble:
+gui.config.joystick.analog=Analog:
+gui.config.joystick.assignment=Assigned to:
+gui.config.joystick.domap=Now we need to map buttons.
+gui.config.joystick.choosemap=Choose what gets mapped to this button.
+gui.config.joystick.selectdigital=This DIGITAL button can control:
+gui.config.joystick.selectanalog=This ANALOG button can control:
+gui.config.joystick.calibrate1=Move the axis until the numbers stop changing.
+gui.config.joystick.calibrate2=Then hit confirm to save settings.
+
+info.item.propeller.numberBlades=Blades: 
+info.item.propeller.pitch=Pitch: 
+info.item.propeller.diameter=Diameter:
+info.item.propeller.maxrpm=Max RPM: 
+info.item.propeller.health=Health: 
+info.item.engine.maxrpm=Max Possible RPM: 
+info.item.engine.maxsaferpm=Max safe RPM: 
+info.item.engine.fuelconsumption=Fuel consumption (mb/t):
+info.item.engine.hours=Runtime hours:
+info.item.engine.oilleak=Has an oil leak!
+info.item.engine.fuelleak=Has a fuel leak!
+info.item.engine.brokenstarter=Electric starter is broken!
+info.item.engine.creative=Creative: Uses no fuel
+info.item.wrench.use=Use on vehicle to change instruments.
+info.item.wrench.attack=Attack a part to remove.
+info.item.wrench.sneakattack=Sneak-attack to remove vehicle.
+
+item.mc172.name=MC-172
+item.pzlp11.name=PZL P.11
+item.vulcanair.name=Vulcanair
+item.otter.name=Twin Otter
+item.trimotor.name=Trimotor
+item.seat.name=Seat
+item.skid.name=Skid
+item.pontoon.name=Pontoon
+item.wheelsmall.name=Small Wheel
+item.wheellarge.name=Large Wheel
+item.propeller0.name=Wooden Propeller
+item.propeller1.name=Iron Propeller
+item.propeller2.name=Obsidian Propeller
+item.engine0.name=Small Airplane Engine
+item.engine1.name=Large Airplane Engine
+item.engine2.name=Helicopter Engine
+item.engine3.name=Car Engine
+
+item.wrench.name=Wrench
+item.flightinstrumentbase.name=Flight Instrument Base
+item.pointershort.name=Short Instrument Pointer
+item.pointerlong.name=Long Instrument Pointer
+item.flightinstrument0.name=Attitude Indicator
+item.flightinstrument0.description=Indicates where the plane is pointing.
+item.flightinstrument1.name=Altimeter
+item.flightinstrument1.description=Indicates height.
+item.flightinstrument2.name=Heading Indicator
+item.flightinstrument2.description=Indicates heading direction.
+item.flightinstrument3.name=Airspeed Indicator
+item.flightinstrument3.description=Indicates speed.
+item.flightinstrument4.name=Turn Coordinator
+item.flightinstrument4.description=Indicates bank rate and slip.
+item.flightinstrument5.name=Turn and Slip Indicator
+item.flightinstrument5.description=Indicates turn rate and slip.
+item.flightinstrument6.name=Vertical Speed Indicator
+item.flightinstrument6.description=Indicates climb rate.
+item.flightinstrument7.name=Lift Reserve Indicator
+item.flightinstrument7.description=Indicates lift potential.
+item.flightinstrument8.name=Trim Indicator
+item.flightinstrument8.description=Indicates trim positions.
+item.flightinstrument9.name=DUMMY
+item.flightinstrument9.description=
+item.flightinstrument10.name=Tachometer
+item.flightinstrument10.description=Indicates engine speeds.
+item.flightinstrument11.name=Fuel Gauge
+item.flightinstrument11.description=Indicates fuel.
+item.flightinstrument12.name=Fuel Flow Gauge
+item.flightinstrument12.description=Indicates fuel consumption rate.
+item.flightinstrument13.name=Engine Temperature Gauge
+item.flightinstrument13.description=Indicates engine temperature.
+item.flightinstrument14.name=Oil Pressure Gauge
+item.flightinstrument14.description=Indicates oil pressure.
+item.flightinstrument15.name=Electrical Gauge
+item.flightinstrument15.description=Indicates electrical power and usage.
+
+entity.mts.Chest.name=Chest
+tile.propellerbench.name=Propeller Bench
+
+itemGroup.tabMFS=Minecraft Flight Simulator
+key.categories.mts=Minecraft Flight Simulator
+key.config=Open configuration screen 

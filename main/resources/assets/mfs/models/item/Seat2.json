@@ -1,6 +1,0 @@
-{
-    "parent": "mfs:item/Basic",
-    "textures": {
-        "layer0": "mfs:items/seat2"
-    }
-}

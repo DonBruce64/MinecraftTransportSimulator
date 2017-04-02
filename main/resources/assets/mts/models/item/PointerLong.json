@@ -1,0 +1,6 @@
+{
+    "parent": "mts:item/Basic",
+    "textures": {
+        "layer0": "mts:items/pointerlong"
+    }
+}

@@ -1,0 +1,71 @@
+#Translated by Minddao
+
+death.attack.propellor.null.null=%1$s was shredded by a propeller.
+death.attack.propellor.null.player=%1$s was was shredded by a propeller while fighting %2$s
+death.attack.propellor.player.null=%1$s was killed by %2$s using a propeller.
+death.attack.propellor.player.player=%1$s was was killed by %2$s using propeller while fighting %3$s
+
+death.attack.planecrash.null.null=%1$s died in a plane crash.
+death.attack.planecrash.null.player=%1$s got distracted while fighting %2$s and died in a plane crash.
+death.attack.planecrash.player.null=%2$s crashed their plane and killed %1$s.
+death.attack.planecrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash the plane.
+
+entity.mts.PlaneChest.name=Сундук
+tile.PropellerBench.name=Propeller Bench
+
+item.MC172.name=MC-172
+item.PZLP11.name=PZL P.11
+item.Vulcanair.name=Vulcanair
+item.Otter.name=Турбовинтовой
+item.Trimotor.name=Трехмоторный
+item.Seat.name=Cиденье
+item.Skid.name=Задняя подставка
+item.Pontoon.name=Водная лыжа
+item.WheelSmall.name=Малое колесо
+item.WheelLarge.name=Большое колесо
+item.Propeller_0.name=Деревянный пропеллер
+item.Propeller_1.name=Железный пропеллер
+item.Propeller_2.name=Обсидиановый пропеллер
+item.engine_plane_small.name=Малый двигатель
+item.engine_plane_large.name=Большой двигатель
+
+item.FlightInstrumentBase.name=Базовый индикатор
+item.PointerShort.name=Короткая стрелка
+item.PointerLong.name=Длинная стрелка
+item.FlightInstrument0.name=Авиагоризонт
+item.FlightInstrument0.description=Показывает положение самолета
+item.FlightInstrument1.name=Высотометр
+item.FlightInstrument1.description=Показывает высоту
+item.FlightInstrument2.name=Указатель курса
+item.FlightInstrument2.description=Показывает направление самолета
+item.FlightInstrument3.name=Спидометр
+item.FlightInstrument3.description=Показывает скорость
+item.FlightInstrument4.name=Указатель крена
+item.FlightInstrument4.description=Показывает угол крена
+item.FlightInstrument5.name=Указатель поворота и скольжения
+item.FlightInstrument5.description=Показывает угол поворота и крена
+item.FlightInstrument6.name=Вариометр
+item.FlightInstrument6.description=Показывает скорость подъема
+item.FlightInstrument7.name=Индикатор перегрузок
+item.FlightInstrument7.description=Показывает чило Маха
+item.FlightInstrument8.name=Trim Indicator
+item.FlightInstrument8.description=Indicates trim positions.
+item.FlightInstrument9.name=DUMMY
+item.FlightInstrument9.description=
+item.FlightInstrument10.name=Тахометр
+item.FlightInstrument10.description=Показывает обороты двигателя
+item.FlightInstrument11.name=Датчик топлика
+item.FlightInstrument11.description=Показывает уровень топлива
+item.FlightInstrument12.name=Датчик расхода топлива
+item.FlightInstrument12.description=Показывает расход топлива
+item.FlightInstrument13.name=Датчик температуры двигателя
+item.FlightInstrument13.description=Показывает температуру двигателя
+item.FlightInstrument14.name=Датчик давления масла
+item.FlightInstrument14.description=Показывает давление масла (не использовать).
+item.FlightInstrument15.name=Electrical Gauge
+item.FlightInstrument15.description=Indicates electrical power and usage.
+
+itemGroup.tabMTSPlanes=Minecraft Симулятор полета
+itemGroup.tabMTSTrains=Minecraft Симулятор полета
+key.categories.mts=Minecraft Симулятор полета
+key.config=Открыть интерфейс самолета/ Управление 
