@@ -157,7 +157,6 @@ public class RenderTrack extends RenderTileBase{
 				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
 			});
 		}
-		
 		//Now that we have all the points, it's time to render.
 		if(holographic){
 			GL11.glEnable(GL11.GL_BLEND);

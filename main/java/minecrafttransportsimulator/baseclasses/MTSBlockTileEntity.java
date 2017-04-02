@@ -28,7 +28,7 @@ public abstract class MTSBlockTileEntity extends MTSBlock implements ITileEntity
 		while(yaw < 0){
 			yaw += 360;
 		}
-		((MTSTileEntity) BlockHelper.getTileEntityFromCoords(world, x, y, z)).rotation = (byte) Math.round(yaw%360/45);
+		((MTSTileEntity) BlockHelper.getTileEntityFromCoords(world, x, y, z)).rotation = Math.round(yaw%360/45) == 8 ? 0 : (byte) Math.round(yaw%360/45);
 	}
 	
 	@Override

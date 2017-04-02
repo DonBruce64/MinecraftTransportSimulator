@@ -31,7 +31,7 @@ public class TileEntitySurveyFlag extends MTSTileEntity{
 		}
 		this.isPrimary = isPrimary;
 		TileEntitySurveyFlag linkedFlag = ((TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(worldObj, linkedFlagCoords[0], linkedFlagCoords[1], linkedFlagCoords[2]));
-		linkedCurve = new MTSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, linkedFlagCoords, rotation, linkedFlag.rotation);
+		linkedCurve = new MTSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, linkedFlagCoords, rotation*45, linkedFlag.rotation*45);
 		MTS.MFSNet.sendToAll(new TileEntitySyncPacket(this));
 	}
 	
@@ -136,7 +136,7 @@ public class TileEntitySurveyFlag extends MTSTileEntity{
         this.isPrimary = tagCompound.getBoolean("isPrimary");
         int[] linkedFlagCoords = tagCompound.getIntArray("linkedFlagCoords");
         if(tagCompound.getIntArray("linkedFlagCoords").length != 0){
-        	linkedCurve = new MTSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, linkedFlagCoords, tagCompound.getFloat("rotation"), tagCompound.getFloat("linkedFlagAngle"));
+        	linkedCurve = new MTSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, linkedFlagCoords, this.rotation*45, tagCompound.getFloat("linkedFlagAngle"));
         }else{
         	linkedCurve = null;
         }
