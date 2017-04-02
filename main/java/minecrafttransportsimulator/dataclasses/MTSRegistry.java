@@ -14,6 +14,7 @@ import minecrafttransportsimulator.blocks.BlockTrackFake;
 import minecrafttransportsimulator.entities.core.EntityChild;
 import minecrafttransportsimulator.entities.core.EntityCore;
 import minecrafttransportsimulator.entities.parts.EntityChest;
+import minecrafttransportsimulator.entities.parts.EntityEngine.EngineTypes;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraft;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPontoonDummy;
@@ -21,7 +22,6 @@ import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
-import minecrafttransportsimulator.entities.parts.EntityEngine.EngineTypes;
 import minecrafttransportsimulator.items.ItemEngine;
 import minecrafttransportsimulator.items.ItemFlightInstrument;
 import minecrafttransportsimulator.items.ItemPlane;
@@ -56,8 +56,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 /**Main registry class.  This class should be referenced by any class looking for
- * MFS items or blocks.  Adding new items and blocks is a simple as adding them
- * as a field; the init method automatically registers all items and blocks in the class.
+ * MTS items or blocks.  Adding new items and blocks is a simple as adding them
+ * as a field; the init method automatically registers all items and blocks in the class
+ * and orders them according to the order in which they were declared.
  * Recipes should be added using the methods in the CommonProxy, as they allow the class
  * to be static and work with any MCVersion.
  * 

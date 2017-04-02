@@ -169,6 +169,7 @@ item.flightinstrument15.description=Indicates electrical power and usage.
 entity.mts.Chest.name=Chest
 tile.propellerbench.name=Propeller Bench
 
-itemGroup.tabMFS=Minecraft Flight Simulator
-key.categories.mts=Minecraft Flight Simulator
+itemGroup.tabMTSPlanes=Minecraft Flight Simulator
+itemGroup.tabMTSTrains=Minecraft Train Simulator
+key.categories.mts=Minecraft Transport Simulator
 key.config=Open configuration screen 
