@@ -11,7 +11,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class EntityComanche extends EntityPlane{
-	private static final ResourceLocation backplateTexture = new ResourceLocation("textures/blocks/wool_colored_white.png");
+	private static final ResourceLocation[] backplateTextures = getBackplateTextures();
 	private static final ResourceLocation[] mouldingTextures = getMouldingTextures();
 	
 	public EntityComanche(World world){
@@ -86,7 +86,7 @@ public class EntityComanche extends EntityPlane{
 	
 	@Override
 	public ResourceLocation getBackplateTexture(){
-		return backplateTexture;
+		return backplateTextures[this.textureOptions];
 	}
 	
 	@Override
@@ -99,11 +99,18 @@ public class EntityComanche extends EntityPlane{
 		VehicleHUDs.drawPlaneHUD(this, width, height);
 	}
 	
+	private static ResourceLocation[] getBackplateTextures(){
+		ResourceLocation[] texArray = new ResourceLocation[7];
+		for(byte i=0; i<4; ++i){
+			texArray[i] = new ResourceLocation(MTS.MODID, "textures/planes/comanche/backplate" + i + ".png");
+		}
+		return texArray;
+	}
+	
 	private static ResourceLocation[] getMouldingTextures(){
 		ResourceLocation[] texArray = new ResourceLocation[7];
-		for(byte i=0; i<7; ++i){
-			//TODO make this match plane.
-			texArray[i] = new ResourceLocation(MTS.MODID, "textures/planes/vulcanair/moulding" + i + ".png");
+		for(byte i=0; i<4; ++i){
+			texArray[i] = new ResourceLocation(MTS.MODID, "textures/planes/comanche/moulding" + i + ".png");
 		}
 		return texArray;
 	}
