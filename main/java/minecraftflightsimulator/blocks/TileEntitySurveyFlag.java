@@ -10,9 +10,9 @@ import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.baseclasses.MTSBlock;
 import minecraftflightsimulator.baseclasses.MTSCurve;
 import minecraftflightsimulator.baseclasses.MTSTileEntity;
+import minecraftflightsimulator.dataclasses.MTSRegistry;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import minecraftflightsimulator.packets.general.TileEntitySyncPacket;
-import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
 

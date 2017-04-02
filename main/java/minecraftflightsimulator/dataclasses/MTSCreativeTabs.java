@@ -1,4 +1,4 @@
-package minecraftflightsimulator.registry;
+package minecraftflightsimulator.dataclasses;
 
 import java.util.List;
 

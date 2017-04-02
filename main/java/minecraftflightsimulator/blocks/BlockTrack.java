@@ -2,8 +2,8 @@ package minecraftflightsimulator.blocks;
 
 import java.util.Random;
 
+import minecraftflightsimulator.dataclasses.MTSRegistry;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
-import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;

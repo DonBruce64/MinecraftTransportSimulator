@@ -8,12 +8,12 @@ import java.util.Map.Entry;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.baseclasses.MTSVector;
+import minecraftflightsimulator.dataclasses.MTSRegistry;
 import minecraftflightsimulator.entities.parts.EntityEngine;
 import minecraftflightsimulator.minecrafthelpers.AABBHelper;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
-import minecraftflightsimulator.registry.MTSRegistry;
 import minecraftflightsimulator.systems.ConfigSystem;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;

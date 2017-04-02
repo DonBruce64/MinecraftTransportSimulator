@@ -3,6 +3,8 @@ package minecraftflightsimulator.entities.parts;
 import java.util.List;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.dataclasses.MTSRegistry;
+import minecraftflightsimulator.dataclasses.MTSDamageSources.DamageSourcePropellor;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityPlane;
@@ -12,8 +14,6 @@ import minecraftflightsimulator.minecrafthelpers.EntityHelper;
 import minecraftflightsimulator.minecrafthelpers.ItemStackHelper;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.packets.control.EnginePacket;
-import minecraftflightsimulator.registry.MTSRegistry;
-import minecraftflightsimulator.registry.MTSDamageSources.DamageSourcePropellor;
 import minecraftflightsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;

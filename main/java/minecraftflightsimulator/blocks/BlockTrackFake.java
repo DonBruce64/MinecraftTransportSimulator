@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Random;
 
 import minecraftflightsimulator.baseclasses.MTSBlock;
+import minecraftflightsimulator.dataclasses.MTSRegistry;
 import minecraftflightsimulator.minecrafthelpers.BlockHelper;
-import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;

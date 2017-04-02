@@ -1,6 +1,6 @@
 package minecraftflightsimulator.minecrafthelpers;
 
-import minecraftflightsimulator.registry.MTSRegistry;
+import minecraftflightsimulator.dataclasses.MTSRegistry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;

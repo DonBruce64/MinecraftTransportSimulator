@@ -1,4 +1,4 @@
-package minecraftflightsimulator.registry;
+package minecraftflightsimulator.dataclasses;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;

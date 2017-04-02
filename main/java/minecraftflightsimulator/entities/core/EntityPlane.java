@@ -2,6 +2,7 @@ package minecraftflightsimulator.entities.core;
 
 import minecraftflightsimulator.MFS;
 import minecraftflightsimulator.baseclasses.MTSVector;
+import minecraftflightsimulator.dataclasses.MTSDamageSources.DamageSourceCrash;
 import minecraftflightsimulator.entities.parts.EntityChest;
 import minecraftflightsimulator.entities.parts.EntityPontoon;
 import minecraftflightsimulator.entities.parts.EntityPropeller;
@@ -10,7 +11,6 @@ import minecraftflightsimulator.minecrafthelpers.EntityHelper;
 import minecraftflightsimulator.packets.control.AileronPacket;
 import minecraftflightsimulator.packets.control.ElevatorPacket;
 import minecraftflightsimulator.packets.control.RudderPacket;
-import minecraftflightsimulator.registry.MTSDamageSources.DamageSourceCrash;
 import minecraftflightsimulator.systems.ConfigSystem;
 import minecraftflightsimulator.systems.RotationSystem;
 import net.minecraft.entity.Entity;

@@ -8,10 +8,10 @@ import java.util.Map.Entry;
 import org.lwjgl.opengl.GL11;
 
 import minecraftflightsimulator.MFS;
+import minecraftflightsimulator.dataclasses.MTSRegistry;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.minecrafthelpers.PlayerHelper;
 import minecraftflightsimulator.packets.general.InstrumentFlyerPacket;
-import minecraftflightsimulator.registry.MTSRegistry;
 import minecraftflightsimulator.rendering.AircraftInstruments.AircraftGauges;
 import minecraftflightsimulator.rendering.VehicleHUDs;
 import minecraftflightsimulator.systems.GL11DrawSystem;

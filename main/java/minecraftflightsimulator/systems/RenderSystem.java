@@ -3,10 +3,10 @@ package minecraftflightsimulator.systems;
 import org.lwjgl.opengl.GL11;
 
 import minecraftflightsimulator.baseclasses.MTSVector;
+import minecraftflightsimulator.dataclasses.MTSRegistryClient;
 import minecraftflightsimulator.entities.core.EntityChild;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.parts.EntitySeat;
-import minecraftflightsimulator.registry.MTSClientRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -73,9 +73,9 @@ public final class RenderSystem{
     			GL11.glTranslated(x, y, z);
     		}
             for(EntityChild child : parent.getChildren()){
-            	if(MTSClientRegistry.childRenderMap.get(child.getClass()) != null){
+            	if(MTSRegistryClient.childRenderMap.get(child.getClass()) != null){
             		childOffset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
-            		MTSClientRegistry.childRenderMap.get(child.getClass()).render(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord, partialTicks);
+            		MTSRegistryClient.childRenderMap.get(child.getClass()).render(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord, partialTicks);
         		}
             }
             this.renderParentModel(parent, partialTicks);

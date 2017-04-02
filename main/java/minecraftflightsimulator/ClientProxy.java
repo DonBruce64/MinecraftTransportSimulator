@@ -6,11 +6,11 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import minecraftflightsimulator.blocks.TileEntityPropellerBench;
+import minecraftflightsimulator.dataclasses.MTSRegistryClient;
 import minecraftflightsimulator.entities.core.EntityPlane;
 import minecraftflightsimulator.entities.core.EntityVehicle;
 import minecraftflightsimulator.guis.GUIInstrumentsFlyer;
 import minecraftflightsimulator.guis.GUIPropellerBench;
-import minecraftflightsimulator.registry.MTSClientRegistry;
 import minecraftflightsimulator.systems.ClientEventSystem;
 import minecraftflightsimulator.systems.ConfigSystem;
 import minecraftflightsimulator.systems.ControlSystem;
@@ -33,13 +33,13 @@ public class ClientProxy extends CommonProxy{
 	public void preInit(FMLPreInitializationEvent event){
 		super.preInit(event);
 		ConfigSystem.initClient();
-		MTSClientRegistry.preInit();
+		MTSRegistryClient.preInit();
 	}
 	
 	@Override
 	public void init(FMLInitializationEvent event){
 		super.init(event);
-		MTSClientRegistry.init();
+		MTSRegistryClient.init();
 		ControlSystem.init();
 		MinecraftForge.EVENT_BUS.register(ClientEventSystem.instance);
 		FMLCommonHandler.instance().bus().register(ClientEventSystem.instance);

@@ -1,9 +1,9 @@
 package minecraftflightsimulator.entities.parts;
 
+import minecraftflightsimulator.dataclasses.MTSRegistry;
 import minecraftflightsimulator.entities.core.EntityGroundDevice;
 import minecraftflightsimulator.entities.core.EntityParent;
 import minecraftflightsimulator.entities.core.EntityVehicle;
-import minecraftflightsimulator.registry.MTSRegistry;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
