@@ -12,7 +12,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class EntityVulcanair extends EntityPlane{
-	//TODO make this match plane texture.
 	private static final ResourceLocation[] backplateTextures = getBackplateTextures();
 	private static final ResourceLocation[] mouldingTextures = getMouldingTextures();
 	
