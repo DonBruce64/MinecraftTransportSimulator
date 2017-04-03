@@ -42,9 +42,14 @@ public class RenderComanche extends RenderPlane{
 	@Override
 	protected void renderWindows(EntityPlane plane){
 		GL11DrawSystem.bindTexture(GL11DrawSystem.glassTexture);
-		GL11DrawSystem.renderQuad(-0.85, -0.85, 0.85, 0.85, 2, 1.1875, 1.1875, 2, 0.625, 1.5, 1.5, 0.625, true);
-		GL11DrawSystem.renderTriangle(0.85, 0.85, 0.85, 2, 1.1875, 1.1875, 0.625, 0.625, 1.5, true);
-		GL11DrawSystem.renderTriangle(-0.85, -0.85, -0.85, 2, 1.1875, 1.1875, 0.625, 0.625, 1.5, true);
+		GL11DrawSystem.renderQuad(-0.85, -0.85, 0.85, 0.85, 1.90625, 1.1875, 1.1875, 1.90625, 0.75, 1.5, 1.5, 0.75, true);
+		GL11DrawSystem.renderTriangleUV(0.85, 0.85, 0.85, 1.90625, 1.1875, 1.1875, 0.75, 0.75, 1.5, 0.143, 1, 0, 1, true);
+		GL11DrawSystem.renderTriangleUV(-0.85, -0.85, -0.85, 1.90625, 1.1875, 1.1875, 0.75, 0.75, 1.5, 0.143, 1, 0, 1, true);
+		GL11DrawSystem.renderSquareUV(-0.85, -0.85, 1.1875, 1.90625, 0.625, 0.75, 0, 0.143, 0, 1, false);
+		GL11DrawSystem.renderSquareUV(-0.85, -0.85, 1.1875, 1.90625, 0.75, 0.625, 0.143, 0, 0, 1, false);
+		GL11DrawSystem.renderSquareUV(0.85, 0.85, 1.1875, 1.90625, 0.625, 0.75, 0, 0.143, 0, 1, false);
+		GL11DrawSystem.renderSquareUV(0.85, 0.85, 1.1875, 1.90625, 0.75, 0.625, 0.143, 0, 0, 1, false);
+		
 		GL11DrawSystem.renderSquare(0.85, 0.85, 1.1875, 1.875, -0.625, 0.5625, true);
 		GL11DrawSystem.renderSquare(-0.85, -0.85, 1.1875, 1.875, -0.625, 0.5625, true);
 		GL11DrawSystem.renderSquare(0.85, 0.85, 1.1875, 1.875, -1.8125, -0.6875, true);
