@@ -13,7 +13,7 @@ import net.minecraft.world.World;
 
 public class EntityVulcanair extends EntityPlane{
 	//TODO make this match plane texture.
-	private static final ResourceLocation backplateTexture = new ResourceLocation("textures/blocks/wool_colored_white.png");
+	private static final ResourceLocation[] backplateTextures = getBackplateTextures();
 	private static final ResourceLocation[] mouldingTextures = getMouldingTextures();
 	
 	public EntityVulcanair(World world){
@@ -79,7 +79,7 @@ public class EntityVulcanair extends EntityPlane{
 
 	@Override
 	public ResourceLocation getBackplateTexture(){
-		return backplateTexture;
+		return backplateTextures[this.textureOptions];
 	}
 	
 	@Override
@@ -90,6 +90,14 @@ public class EntityVulcanair extends EntityPlane{
 	@Override
 	public void drawHUD(int width, int height){
 		VehicleHUDs.drawPlaneHUD(this, width, height);
+	}
+
+	private static ResourceLocation[] getBackplateTextures(){
+		ResourceLocation[] texArray = new ResourceLocation[7];
+		for(byte i=0; i<7; ++i){
+			texArray[i] = new ResourceLocation(MTS.MODID, "textures/planes/vulcanair/backplate" + i + ".png");
+		}
+		return texArray;
 	}
 	
 	private static ResourceLocation[] getMouldingTextures(){
