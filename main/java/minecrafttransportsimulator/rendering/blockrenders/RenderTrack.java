@@ -220,6 +220,7 @@ public class RenderTrack extends RenderTileBase{
 			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, brightness%65536, brightness/65536);
 		}
 		GL11DrawSystem.bindTexture(tieTexture);
+		GL11.glRotatef(180, 1, 0, 0);
 		model.render();
 	}
 	
