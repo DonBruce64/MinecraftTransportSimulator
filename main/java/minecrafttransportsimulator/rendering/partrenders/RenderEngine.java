@@ -4,8 +4,8 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityChild;
-import minecrafttransportsimulator.entities.parts.EntityEngine;
-import minecrafttransportsimulator.entities.parts.EntityEngine.EngineTypes;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
 import minecrafttransportsimulator.rendering.partmodels.ModelEngineLarge;
 import minecrafttransportsimulator.rendering.partmodels.ModelEngineSmall;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
@@ -27,13 +27,13 @@ public class RenderEngine extends RenderChild{
 		GL11.glRotatef(child.parent.rotationPitch, 1, 0, 0);
 		GL11.glRotatef(-child.parent.rotationRoll, 0, 0, 1);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        GL11.glTranslatef(0, -((EntityEngine) child).type.size/2, 0);
-		if(((EntityEngine) child).type.equals(EngineTypes.PLANE_LARGE)){
-			GL11DrawSystem.bindTexture(largeTexture);
-			modelLarge.render();
-		}else{
+        GL11.glTranslatef(0, -child.height/2, 0);
+		if(child instanceof EntityEngineAircraftSmall){
 			GL11DrawSystem.bindTexture(smallTexture);
 			modelSmall.render();
+		}else if(child instanceof EntityEngineAircraftLarge){
+			GL11DrawSystem.bindTexture(largeTexture);
+			modelLarge.render();
 		}
 		GL11.glPopMatrix();
 	}

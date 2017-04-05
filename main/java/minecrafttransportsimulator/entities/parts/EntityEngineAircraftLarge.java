@@ -1,0 +1,58 @@
+package minecrafttransportsimulator.entities.parts;
+
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.entities.core.EntityParent;
+import minecrafttransportsimulator.entities.core.EntityVehicle;
+import net.minecraft.item.Item;
+import net.minecraft.world.World;
+
+public class EntityEngineAircraftLarge extends EntityEngineAircraft{
+	public EntityEngineAircraftLarge(World world){
+		super(world);
+	}
+	
+	public EntityEngineAircraftLarge(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+		super(world, (EntityVehicle) parent, parentUUID, offsetX, offsetY, offsetZ);
+	}
+
+	@Override
+	protected float getSize(){
+		return 1.2F;
+	}
+
+	@Override
+	protected byte getStarterPower(){
+		return 25;
+	}
+
+	@Override
+	protected byte getStarterIncrement(){
+		return 22;
+	}
+
+	@Override
+	protected String getCrankingSoundName(){
+		return "large_engine_cranking";
+	}
+
+	@Override
+	protected String getStartingSoundName(){
+		//TODO find another sound for large engines.
+		return "engine_starting";
+	}
+
+	@Override
+	protected String getRunningSoundName(){
+		return "large_engine_running";
+	}
+
+	@Override
+	protected Item getEngineItem(){
+		return MTSRegistry.engineAircraftLarge;
+	}
+
+	@Override
+	protected boolean isSmall(){
+		return false;
+	}
+}

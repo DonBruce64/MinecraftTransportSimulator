@@ -3,7 +3,6 @@ package minecrafttransportsimulator.entities.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.core.EntityParent;
 import minecrafttransportsimulator.entities.core.EntityPlane;
 import minecrafttransportsimulator.entities.core.EntityVehicle;
 import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
@@ -15,7 +14,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-public class EntityEngineAircraft extends EntityEngine{
+public abstract class EntityEngineAircraft extends EntityEngine{
 	public EntityPropeller propeller;
 	private double engineTargetRPM;
 	private double engineRPMDifference;
@@ -25,8 +24,8 @@ public class EntityEngineAircraft extends EntityEngine{
 		super(world);
 	}
 
-	public EntityEngineAircraft(World world, EntityParent plane, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, (EntityVehicle) plane, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
+	public EntityEngineAircraft(World world, EntityVehicle plane, String parentUUID, float offsetX, float offsetY, float offsetZ){
+		super(world, plane, parentUUID, offsetX, offsetY, offsetZ, 0);
 	}
 	
 	@Override
@@ -36,7 +35,7 @@ public class EntityEngineAircraft extends EntityEngine{
 			if(playerStack != null){
 				if(MTSRegistry.propeller.equals(ItemStackHelper.getItemFromStack(playerStack)) && propeller == null){
 					if(this.parent != null){
-						if(ItemStackHelper.getStackNBT(playerStack).getInteger("diameter") > 80 && this.type.equals(EngineTypes.PLANE_SMALL)){
+						if(ItemStackHelper.getStackNBT(playerStack).getInteger("diameter") > 80 && this instanceof EntityEngineAircraftSmall){
 							MTS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.failure.propellertoobig")), (EntityPlayerMP) player);
 							return false;
 						}
@@ -101,4 +100,6 @@ public class EntityEngineAircraft extends EntityEngine{
 	private double getPropellerForcePenalty(){
 		return Math.pow(1.25, 3 + (propeller.diameter - 70)/5)/10;
 	}
+	
+	protected abstract boolean isSmall();
 }

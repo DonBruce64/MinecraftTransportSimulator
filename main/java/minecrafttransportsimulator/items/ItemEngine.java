@@ -4,33 +4,22 @@ import java.util.List;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
-import minecrafttransportsimulator.entities.parts.EntityEngine.EngineTypes;
-import minecrafttransportsimulator.entities.parts.EntityEngine.EngineTypes.EngineProperties;
 import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
 import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
-import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.IIcon;
 
-public class ItemEngine extends Item{
-	private IIcon[] icons = new IIcon[EngineTypes.values().length];
+public abstract class ItemEngine extends Item{
 	
 	public ItemEngine(){
 		this.hasSubtypes=true;
 		this.setMaxStackSize(1);
-	}
-	
-	@Override
-	public String getUnlocalizedName(ItemStack stack){
-		return "item." + this.getClass().getSimpleName().substring(4).toLowerCase() + ItemStackHelper.getItemDamage(stack);
 	}
 	
 	@Override
@@ -54,42 +43,46 @@ public class ItemEngine extends Item{
 		}
 	}
 	
-	public static ItemStack getItemStackForProperties(EngineTypes type, EngineProperties properties){
-		ItemStack engineStack = new ItemStack(MTSRegistry.engine, 1, type.ordinal());
-		NBTTagCompound stackTag = new NBTTagCompound();
-		stackTag.setInteger("maxRPM", properties.maxRPM);
-		stackTag.setInteger("maxSafeRPM", EntityEngine.getMaxSafeRPM(properties.maxRPM));
-		stackTag.setFloat("fuelConsumption", properties.fuelConsumption);
-		stackTag.setDouble("hours", 0);
-		ItemStackHelper.setStackNBT(engineStack, stackTag);
-		return engineStack;
-	}
-	
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List itemList){
-		for(EngineTypes type : EngineTypes.values()){
-			EngineProperties properties = null;
-			for(byte i=0; i<type.defaultSubtypes.length; ++i){
-				properties = type.defaultSubtypes[i];
-				itemList.add(getItemStackForProperties(type, properties));
-			}
-			itemList.add(getItemStackForProperties(type, new EngineProperties(properties.maxRPM, 0.0F)));
+		for(ItemStack stack : this.getAllPossibleStacks()){
+			itemList.add(stack);
 		}
     }
-	//DEL180START
-    @Override
-    @SideOnly(Side.CLIENT)
-    public void registerIcons(IIconRegister register){
-    	for(int i=0; i<EngineTypes.values().length; ++i){
-    		icons[i] = register.registerIcon(MTS.MODID + ":" + this.getClass().getSimpleName().substring(4).toLowerCase() + i);
-    	}
-    }
-    
-    @Override
-    @SideOnly(Side.CLIENT)
-    public IIcon getIconFromDamage(int damage){
-        return this.icons[damage >= EngineTypes.values().length ? 0 : damage];
-    }
-    //DEL180END
+	
+	private static ItemStack getStackWithData(Item item, int maxRPM, float fuelConsumption){
+		ItemStack stack = new ItemStack(item);
+		NBTTagCompound stackTag = new NBTTagCompound();
+		stackTag.setInteger("maxRPM", maxRPM);
+		stackTag.setInteger("maxSafeRPM", EntityEngine.getMaxSafeRPM(maxRPM));
+		stackTag.setFloat("fuelConsumption", fuelConsumption);
+		stackTag.setDouble("hours", 0);
+		ItemStackHelper.setStackNBT(stack, stackTag);
+		return stack;
+	}
+	
+	public abstract ItemStack[] getAllPossibleStacks();
+	
+	public static class ItemEngineAircraftSmall extends ItemEngine{
+		@Override
+		public ItemStack[] getAllPossibleStacks(){
+			ItemStack[] stacks = new ItemStack[3];
+			stacks[0] = getStackWithData(MTSRegistry.engineAircraftSmall, 2700, 0.3F);
+			stacks[1] = getStackWithData(MTSRegistry.engineAircraftSmall, 2900, 0.4F);
+			stacks[2] = getStackWithData(MTSRegistry.engineAircraftSmall, 2900, 0.0F);
+			return stacks;
+		}
+	}
+	
+	public static class ItemEngineAircraftLarge extends ItemEngine{
+		@Override
+		public ItemStack[] getAllPossibleStacks() {
+			ItemStack[] stacks = new ItemStack[3];
+			stacks[0] = getStackWithData(MTSRegistry.engineAircraftLarge, 2000, 0.5F);
+			stacks[1] = getStackWithData(MTSRegistry.engineAircraftLarge, 2400, 0.7F);
+			stacks[2] = getStackWithData(MTSRegistry.engineAircraftLarge, 2400, 0.0F);
+			return stacks;
+		}
+	}
 }

@@ -3,7 +3,6 @@ package minecrafttransportsimulator.entities.parts;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityChild;
 import minecrafttransportsimulator.entities.core.EntityVehicle;
 import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
@@ -15,6 +14,7 @@ import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSound;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -25,7 +25,6 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	protected EntityVehicle vehicle;
 	
 	//NBT data
-	public EngineTypes type;
 	public boolean oilLeak;
 	public boolean fuelLeak;
 	public boolean brokenStarter;
@@ -63,8 +62,9 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	}
 
 	public EntityEngine(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, EngineTypes.values()[propertyCode].size, EngineTypes.values()[propertyCode].size, propertyCode);
-		this.type = EngineTypes.values()[propertyCode];
+		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, 0, 0, propertyCode);
+		//Set size here as we can't do it in the super constructor.
+		this.setSize(getSize(), getSize());
 		this.state = EngineStates.ENGINE_OFF;
 	}
 	
@@ -82,7 +82,7 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	
 	@Override
 	public ItemStack getItemStack(){
-		ItemStack engineStack = new ItemStack(MTSRegistry.engine, 1, type.ordinal());
+		ItemStack engineStack = new ItemStack(this.getEngineItem());
 		NBTTagCompound tag = new NBTTagCompound();
 		tag.setBoolean("oilLeak", this.oilLeak);
 		tag.setBoolean("fuelLeak", this.fuelLeak);
@@ -141,11 +141,11 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		if(state.esOn){
 			if(starterLevel == 0){
 				if(vehicle.electricPower > 2){
-					starterLevel += type.starterIncrement;
+					starterLevel += this.getStarterIncrement();
 					if(vehicle.electricPower > 6){
-						MTS.proxy.playSound(this, MTS.MODID + ":" + type.engineCrankingSoundName, 1, 1);
+						MTS.proxy.playSound(this, MTS.MODID + ":" + this.getCrankingSoundName(), 1, 1);
 					}else{
-						MTS.proxy.playSound(this, MTS.MODID + ":" + type.engineCrankingSoundName, 1, (float) (vehicle.electricPower/8F));
+						MTS.proxy.playSound(this, MTS.MODID + ":" + this.getCrankingSoundName(), 1, (float) (vehicle.electricPower/8F));
 					}
 				}
 			}
@@ -165,9 +165,9 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		if(starterLevel > 0){
 			--starterLevel;
 			if(RPM < 600){
-				RPM = Math.min(RPM+type.starterPower, 600);
+				RPM = Math.min(RPM + this.getStarterPower(), 600);
 			}else{
-				RPM = Math.max(RPM-type.starterPower, 600);
+				RPM = Math.max(RPM - this.getStarterPower(), 600);
 			}
 		}
 		
@@ -299,8 +299,8 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		}else{
 			return;
 		}
-		starterLevel += type.starterIncrement;
-		MTS.proxy.playSound(this, MTS.MODID + ":" + type.engineCrankingSoundName, 1, 1);
+		starterLevel += this.getStarterIncrement();
+		MTS.proxy.playSound(this, MTS.MODID + ":" + this.getCrankingSoundName(), 1, 1);
 	}
 	
 	public void backfireEngine(){
@@ -351,12 +351,11 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	public static int getMaxSafeRPM(int maxRPM){
 		return (maxRPM - (maxRPM - 2500)/2);
 	}
-	
 
 	@Override
 	@SideOnly(Side.CLIENT)
 	public MovingSound getNewSound(){
-		return type != null ? new EngineSound(new ResourceLocation(MTS.MODID + ":" + type.engineRunningSoundName), this, 2000F) : null;
+		return new EngineSound(new ResourceLocation(MTS.MODID + ":" + this.getRunningSoundName()), this, 2000F);
 	}
 
 	@Override
@@ -408,9 +407,8 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		}
 	}
 	
+	/*
 	public enum EngineTypes{
-		PLANE_SMALL((byte) 4, (byte) 50, 1.0F, "small_engine_running", "small_engine_cranking", new EngineProperties[]{new EngineProperties(2700, 0.3F), new EngineProperties(2900, 0.4F)}), 
-		PLANE_LARGE((byte) 22, (byte) 25, 1.2F, "large_engine_running", "large_engine_cranking", new EngineProperties[]{new EngineProperties(2000, 0.5F), new EngineProperties(2400, 0.7F)}),
 		HELICOPTER((byte) 100, (byte) 100, 1.2F, "helicopter_engine_running", "helicopter_engine_cranking", new EngineProperties[]{new EngineProperties(500, 0.1F), new EngineProperties(600, 0.15F)}),
 		VEHICLE((byte) 100, (byte) 100, 1.2F, "vehicle_engine_running", "vehicle_engine_cranking", new EngineProperties[]{new EngineProperties(5500, 0.2F), new EngineProperties(6500, 0.4F)}),
 		TRAIN((byte) 100, (byte) 100, 1.2F, "train_engine_running", "train_engine_cranking", new EngineProperties[]{new EngineProperties(900, 0.2F)});
@@ -431,20 +429,18 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 			this.defaultSubtypes = defaultSubtypes;
 		}
 		
-		public static class EngineProperties{
-			public final int maxRPM;
-			public final float fuelConsumption;
-			
-			public EngineProperties(int maxRPM, float fuelConsumption){
-				this.maxRPM = maxRPM;
-				this.fuelConsumption = fuelConsumption;
-			}
-		}
-	}
+
+	}*/
 	
-	/**
-	 * Engine states have 5 components.  Magneto, electric starter, hand starter, power status, and drowned out.
-	 */
+	
+	protected abstract float getSize();
+	protected abstract byte getStarterPower();
+	protected abstract byte getStarterIncrement();
+	protected abstract String getCrankingSoundName();
+	protected abstract String getStartingSoundName();
+	protected abstract String getRunningSoundName();
+	protected abstract Item getEngineItem();
+	
 	public enum EngineStates{
 		ENGINE_OFF(false, false, false, false),
 		MAGNETO_ON_STARTERS_OFF(true, false, false, false),
@@ -472,7 +468,6 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
-		this.type=EngineTypes.values()[tagCompound.getByte("type")];
 		this.state=EngineStates.values()[tagCompound.getByte("state")];
 		this.oilLeak=tagCompound.getBoolean("oilLeak");
 		this.fuelLeak=tagCompound.getBoolean("fuelLeak");
@@ -489,7 +484,6 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	@Override
 	public void writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
-		tagCompound.setByte("type", (byte) this.type.ordinal());
 		tagCompound.setByte("state", (byte) this.state.ordinal());
 		tagCompound.setBoolean("oilLeak", this.oilLeak);
 		tagCompound.setBoolean("fuelLeak", this.fuelLeak);

@@ -13,7 +13,8 @@ import minecrafttransportsimulator.entities.core.EntityChild;
 import minecrafttransportsimulator.entities.core.EntityCore;
 import minecrafttransportsimulator.entities.core.EntityParent;
 import minecrafttransportsimulator.entities.parts.EntityChest;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraft;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPontoonDummy;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
@@ -89,7 +90,8 @@ public class MTSRegistryClient{
 		registerChildRender(EntityPontoon.class, RenderPontoon.class);
 		registerChildRender(EntityPontoonDummy.class, null);
 		registerChildRender(EntityPropeller.class, RenderPropeller.class);
-		registerChildRender(EntityEngineAircraft.class, RenderEngine.class);
+		registerChildRender(EntityEngineAircraftSmall.class, RenderEngine.class);
+		registerChildRender(EntityEngineAircraftLarge.class, RenderEngine.class);
 		registerChildRender(EntityCore.class, null);
 	}
 	

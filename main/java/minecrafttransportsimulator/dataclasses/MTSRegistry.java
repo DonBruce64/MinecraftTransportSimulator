@@ -14,8 +14,8 @@ import minecrafttransportsimulator.blocks.BlockTrackFake;
 import minecrafttransportsimulator.entities.core.EntityChild;
 import minecrafttransportsimulator.entities.core.EntityCore;
 import minecrafttransportsimulator.entities.parts.EntityChest;
-import minecrafttransportsimulator.entities.parts.EntityEngine.EngineTypes;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraft;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPontoonDummy;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
@@ -23,6 +23,8 @@ import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
 import minecrafttransportsimulator.items.ItemEngine;
+import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftLarge;
+import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftSmall;
 import minecrafttransportsimulator.items.ItemFlightInstrument;
 import minecrafttransportsimulator.items.ItemPlane;
 import minecrafttransportsimulator.items.ItemPropeller;
@@ -75,7 +77,8 @@ public class MTSRegistry{
 	
 	public static final Item seat = new ItemSeat().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item propeller = new ItemPropeller().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item engine = new ItemEngine().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item engineAircraftSmall = new ItemEngineAircraftSmall().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item engineAircraftLarge = new ItemEngineAircraftLarge().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item wheelSmall = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item wheelLarge = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item skid = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
@@ -155,7 +158,8 @@ public class MTSRegistry{
 		MTS.proxy.registerChildEntity(EntityPontoon.class, pontoon);
 		MTS.proxy.registerChildEntity(EntityPontoonDummy.class, pontoon);
 		MTS.proxy.registerChildEntity(EntityPropeller.class, propeller);
-		MTS.proxy.registerChildEntity(EntityEngineAircraft.class, engine);
+		MTS.proxy.registerChildEntity(EntityEngineAircraftSmall.class, engineAircraftSmall);
+		MTS.proxy.registerChildEntity(EntityEngineAircraftLarge.class, engineAircraftLarge);
 	}
 	
 	private void initPackets(){
@@ -325,28 +329,28 @@ public class MTSRegistry{
 	
 	private void initEngineRecipes(){
 		//New engines
-		MTS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[0]),
+		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.piston, 
 				'B', Blocks.obsidian,
 				'C', Items.iron_ingot);
-		MTS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[1]),
+		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.piston, 
 				'B', Blocks.obsidian,
 				'C', Items.diamond);
-		MTS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[0]),
+		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
 				"ACA",
 				"ACA",
 				"ACA",
 				'A', Blocks.piston, 
 				'B', Blocks.obsidian,
 				'C', Items.iron_ingot);
-		MTS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[1]),
+		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
 				"ACA",
 				"ACA",
 				"ACA",
@@ -355,30 +359,30 @@ public class MTSRegistry{
 				'C', Items.diamond);
 		
 		//Repaired engines
-		MTS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[0]),
+		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.obsidian,
-				'C', ItemEngine.getItemStackForProperties(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[0]));
-		MTS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[1]),
+				'C', ((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0]);
+		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.obsidian,
-				'C', ItemEngine.getItemStackForProperties(EngineTypes.PLANE_SMALL, EngineTypes.PLANE_SMALL.defaultSubtypes[1]));
-		MTS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[0]),
+				'C', ((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1]);
+		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
 				"B B",
 				"BCB",
 				"B B",
 				'B', Blocks.obsidian,
-				'C', ItemEngine.getItemStackForProperties(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[0]));
-		MTS.proxy.registerRecpie(ItemEngine.getItemStackForProperties(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[1]),
+				'C', ((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0]);
+		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
 				"B B",
 				"BCB",
 				"B B",
 				'B', Blocks.obsidian,
-				'C', ItemEngine.getItemStackForProperties(EngineTypes.PLANE_LARGE, EngineTypes.PLANE_LARGE.defaultSubtypes[1]));
+				'C', ((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1]);
 	}
 	
 	private void initFlightInstrumentRecipes(){

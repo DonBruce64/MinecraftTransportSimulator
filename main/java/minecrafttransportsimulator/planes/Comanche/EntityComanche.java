@@ -3,7 +3,7 @@ package minecrafttransportsimulator.planes.Comanche;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityChest;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraft;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
 import minecrafttransportsimulator.rendering.VehicleHUDs;
@@ -49,8 +49,8 @@ public class EntityComanche extends EntityPlane{
 		this.partData.add(new PartData(0, -0.75F, 2.35F, true, false, -1, EntityWheel.EntityWheelSmall.class));
 		this.partData.add(new PartData(-1.85F, -0.6F, -0.35F, EntityWheel.EntityWheelSmall.class));
 		this.partData.add(new PartData(1.85F, -0.6F, -0.35F,  EntityWheel.EntityWheelSmall.class));
-		this.partData.add(new PartData(2.5F, -0.05F, 1.47F, false, false, 0, EntityEngineAircraft.class));
-		this.partData.add(new PartData(-2.5F, -0.05F, 1.47F, false, false, 0, EntityEngineAircraft.class));
+		this.partData.add(new PartData(2.5F, -0.05F, 1.47F, false, false, 0, EntityEngineAircraftSmall.class));
+		this.partData.add(new PartData(-2.5F, -0.05F, 1.47F, false, false, 0, EntityEngineAircraftSmall.class));
 		this.partData.add(new PartData(0, 0.5F, -0.05F, false, true, -1, EntitySeat.class));
 		this.partData.add(new PartData(0, 0.5F, -1.3F, EntitySeat.class, EntityChest.class));
 	}

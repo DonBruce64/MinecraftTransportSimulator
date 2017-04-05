@@ -2,7 +2,7 @@ package minecrafttransportsimulator.planes.MC172;
 
 import minecrafttransportsimulator.entities.core.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityChest;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraft;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
@@ -46,7 +46,7 @@ public class EntityMC172 extends EntityPlane{
 		this.partData.add(new PartData(0, -1F, 1.7F, true, false, -1, EntityWheel.EntityWheelSmall.class));
 		this.partData.add(new PartData(-1.65F, -1F, 0, EntityWheel.EntityWheelSmall.class, EntityPontoon.class));
 		this.partData.add(new PartData(1.65F, -1F, 0,  EntityWheel.EntityWheelSmall.class, EntityPontoon.class));
-		this.partData.add(new PartData(0, -0.4F, 1.65F, false, false, 0, EntityEngineAircraft.class));
+		this.partData.add(new PartData(0, -0.4F, 1.65F, false, false, 0, EntityEngineAircraftSmall.class));
 		this.partData.add(new PartData(0, -.1F, 0, false, true, -1, EntitySeat.class));
 		this.partData.add(new PartData(0, -.1F, -1, EntitySeat.class, EntityChest.class));
 	}
