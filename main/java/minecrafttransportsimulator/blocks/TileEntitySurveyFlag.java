@@ -69,7 +69,7 @@ public class TileEntitySurveyFlag extends MTSTileEntity{
 			for(byte j=-1; j<=1; ++j){
 				offset[0] = (int) Math.round(currentPoint[0] - 0.5 + j*currentCos);
 				offset[1] = (int) Math.floor(currentPoint[1] + 0.01);
-				offset[2] = (int) Math.round(currentPoint[2] - 0.5 - j*currentSin);
+				offset[2] = (int) Math.round(currentPoint[2] - 0.5 + j*currentSin);
 				if(BlockHelper.canPlaceBlockAt(worldObj, offset[0], offset[1], offset[2])){
 					boolean isBlockInList = false;
 					for(int[] coords : blockList){
@@ -109,8 +109,8 @@ public class TileEntitySurveyFlag extends MTSTileEntity{
 		worldObj.markBlockForUpdate(curve.blockStartPoint[0], curve.blockStartPoint[1], curve.blockStartPoint[2]);
 		worldObj.markBlockForUpdate(curve.blockEndPoint[0], curve.blockEndPoint[1], curve.blockEndPoint[2]);
 		
-		TileEntityTrack startTile = new TileEntityTrack(curve, primary);
-		TileEntityTrack endTile = new TileEntityTrack(otherFlagCurve, !primary);
+		TileEntityTrack startTile = new TileEntityTrack(curve);
+		TileEntityTrack endTile = new TileEntityTrack(otherFlagCurve);
 		startTile.setFakeTracks(blockList);
 		endTile.setFakeTracks(blockList);
 		worldObj.setTileEntity(curve.blockStartPoint[0], curve.blockStartPoint[1], curve.blockStartPoint[2], startTile);

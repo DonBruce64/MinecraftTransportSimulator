@@ -1,27 +1,19 @@
 package minecrafttransportsimulator.blocks;
 
-import java.util.Random;
-
+import minecrafttransportsimulator.baseclasses.MTSBlockTileEntity;
+import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
-public class BlockTrack extends BlockContainer{
+public class BlockTrack extends MTSBlockTileEntity{
 	
 	public BlockTrack(){
-		super(Material.iron);
-		this.setHardness(5.0F);
-		this.setResistance(10.0F);
-		this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.25F, 1.0F);
+		super(Material.iron, 5.0F, 10.0F);
 	}
 	
 	@Override
@@ -29,7 +21,7 @@ public class BlockTrack extends BlockContainer{
 		TileEntityTrack track = (TileEntityTrack) BlockHelper.getTileEntityFromCoords(world, x, y, z);
 		if(track != null){
 			if(track.curve != null){
-				if(track.isPrimary && !world.isRemote){
+				if(!world.isRemote){
 					int numberTracks = (int) track.curve.pathLength;
 					while(numberTracks > 0){
 						int tracksInItem = Math.min(numberTracks, 64);
@@ -46,34 +38,24 @@ public class BlockTrack extends BlockContainer{
 			}
 		}
 	}
-	
+
 	@Override
-    public Item getItemDropped(int metadata, Random rand, int fortune){
-        return null;
-    }
-	
-	@Override
-	public ItemStack getPickBlock(MovingObjectPosition target, World world, int x, int y, int z, EntityPlayer player){
-        return null;
-    }
-	
-	@Override
-	public TileEntity createNewTileEntity(World world, int metadata){
+	public MTSTileEntity getTileEntity(){
 		return new TileEntityTrack();
 	}
-	
+
 	@Override
-    public int getRenderType(){
-        return -1;
-    }
-	
+	protected boolean isBlock3D(){
+		return true;
+	}
+
 	@Override
-    public boolean renderAsNormalBlock(){
-        return false;
-    }
-	
+	protected void setDefaultBlockBounds(){
+		this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.25F, 1.0F);
+	}
+
 	@Override
-	public boolean isOpaqueCube(){
-		return false;
+	protected void setBlockBoundsFromMetadata(int metadata){
+		this.setDefaultBlockBounds();
 	}
 }

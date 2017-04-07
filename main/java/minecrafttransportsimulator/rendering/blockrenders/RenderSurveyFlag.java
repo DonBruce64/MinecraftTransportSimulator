@@ -39,7 +39,7 @@ public class RenderSurveyFlag extends RenderTileBase{
 					}
 				}
 			}
-			RenderTrack.renderTrackSegmentFromCurve(flag.getWorldObj(), flag.linkedCurve, true);
+			RenderTrack.renderTrackSegmentFromCurve(flag.getWorldObj(), flag.linkedCurve, true, null, null);
 			if(flag.isPrimary){
 				flag.renderedLastPass = true;
 			}

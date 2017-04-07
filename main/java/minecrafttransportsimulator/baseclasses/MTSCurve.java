@@ -29,7 +29,7 @@ public class MTSCurve{
 		this.blockEndPoint = ep;
 		this.startPoint = new float[]{sp[0] + 0.5F, sp[1], sp[2] + 0.5F};
 		this.endPoint = new float[]{ep[0] + 0.5F, ep[1], ep[2] + 0.5F};
-		cpDist = (float) Math.sqrt(Math.pow(endPoint[0] - startPoint[0], 2) + Math.pow(endPoint[1] - startPoint[1], 2) + Math.pow(endPoint[2] - startPoint[2], 2))/2F;
+		cpDist = (float) Math.sqrt(Math.pow(endPoint[0] - startPoint[0], 2) + Math.pow(endPoint[1] - startPoint[1], 2) + Math.pow(endPoint[2] - startPoint[2], 2))/3F;
 		cpStart = new float[]{(float) (startPoint[0] - Math.sin(Math.toRadians(startAngle))*cpDist), startPoint[1], (float) (startPoint[2] + Math.cos(Math.toRadians(startAngle))*cpDist)};
 		cpEnd = new float[]{(float) (endPoint[0] - Math.sin(Math.toRadians(endAngle))*cpDist), endPoint[1], (float) (endPoint[2] + Math.cos(Math.toRadians(endAngle))*cpDist)};
 
@@ -60,19 +60,18 @@ public class MTSCurve{
 	
 	public float getYawAngleAt(float segment){
 		int pointIndex = Math.round(segment*pathLength*curveIncrement);
-		if(pointIndex + 1 >= pathPoints.length){
+		if(pointIndex + 1 == pathPoints.length){
 			pointIndex = pathPoints.length - 2;
 		}
-		return (float) Math.toDegrees(Math.atan2(pathPoints[pointIndex + 1][0] - pathPoints[pointIndex][0], pathPoints[pointIndex + 1][2] - pathPoints[pointIndex][2]));
+		return (float) (360 + Math.toDegrees(Math.atan2(pathPoints[pointIndex][0] - pathPoints[pointIndex + 1][0], pathPoints[pointIndex + 1][2] - pathPoints[pointIndex][2])))%360;
 	}
 	
 	public float getPitchAngleAt(float segment){
 		int pointIndex = Math.round(segment*pathLength*curveIncrement);
 		if(pointIndex + 1 == pathPoints.length){
-			return 0;
-		}else{
-			return (float) -Math.toDegrees(Math.atan((pathPoints[pointIndex + 1][1] - pathPoints[pointIndex][1])/Math.hypot(pathPoints[pointIndex + 1][0] - pathPoints[pointIndex][0], pathPoints[pointIndex + 1][2] - pathPoints[pointIndex][2])));
+			pointIndex = pathPoints.length - 2;
 		}
+		return (float) -Math.toDegrees(Math.atan((pathPoints[pointIndex + 1][1] - pathPoints[pointIndex][1])/Math.hypot(pathPoints[pointIndex + 1][0] - pathPoints[pointIndex][0], pathPoints[pointIndex + 1][2] - pathPoints[pointIndex][2])));
 	}
 	
 	private static float getPathLength(float[] startPoint, float[] endPoint, float[] cpStart, float[] cpEnd, float cpDist){

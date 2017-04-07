@@ -13,7 +13,8 @@ import net.minecraft.util.AxisAlignedBB;
 
 public class TileEntityTrack extends MTSTileEntity{
 	public boolean renderedLastPass;
-	public boolean isPrimary;
+	public boolean hasTriedToConnectToOtherSegment;
+	public TileEntityTrack connectedTrack;
 	public MTSCurve curve;
 	private List<int[]> fakeTracks = new ArrayList<int[]>();
 	
@@ -21,9 +22,8 @@ public class TileEntityTrack extends MTSTileEntity{
 		super();
 	}
 	
-	public TileEntityTrack(MTSCurve curve, boolean isPrimary){
+	public TileEntityTrack(MTSCurve curve){
 		this.curve = curve;
-		this.isPrimary = isPrimary;
 	}
 	
 	public void setFakeTracks(List<int[]> fakeTracks){
@@ -56,7 +56,6 @@ public class TileEntityTrack extends MTSTileEntity{
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
-        this.isPrimary = tagCompound.getBoolean("isPrimary");
         if(tagCompound.getIntArray("endPoint").length != 0){
         	curve = new MTSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, tagCompound.getIntArray("endPoint"), tagCompound.getFloat("startAngle"), tagCompound.getFloat("endAngle"));
         }
@@ -75,7 +74,6 @@ public class TileEntityTrack extends MTSTileEntity{
     public void writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
         if(curve != null){
-	        tagCompound.setBoolean("isPrimary", this.isPrimary);
 	        tagCompound.setFloat("startAngle", curve.startAngle);
 	        tagCompound.setFloat("endAngle", curve.endAngle);
 	        tagCompound.setIntArray("endPoint", curve.blockEndPoint);
