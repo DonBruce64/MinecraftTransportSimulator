@@ -18,21 +18,21 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class RenderTrack extends RenderTileBase{
-	private static final ModelTrackTie model = new ModelTrackTie();
+	private static final ModelTrackTie modelTie = new ModelTrackTie();
 	private static final ResourceLocation tieTexture = new ResourceLocation(MTS.MODID, "textures/blockmodels/tie.png");
 	private static final ResourceLocation railTexture = new ResourceLocation(MTS.MODID, "textures/blockmodels/rail.png");
 	private static final ResourceLocation ballastTexture = new ResourceLocation(MTS.MODID, "textures/blocks/ballast.png");
 
-	private static final float bottomInnerX = 12.5F/16F;
-	private static final float bottomOuterX = 17.5F/16F;
+	private static final float bottomInnerX = 11.5F/16F;
+	private static final float bottomOuterX = 16.5F/16F;
 	private static final float bottomLowerY = 0F/16F;
 	private static final float bottomUpperY = 1F/16F;
 	
-	private static final float middleInnerX = 14.5F/16F;
-	private static final float middleOuterX = 15.5F/16F;
+	private static final float middleInnerX = 13.5F/16F;
+	private static final float middleOuterX = 14.5F/16F;
 	
-	private static final float upperInnerX = 14F/16F;
-	private static final float upperOuterX = 16F/16F;
+	private static final float upperInnerX = 13F/16F;
+	private static final float upperOuterX = 15F/16F;
 	private static final float upperLowerY = 3F/16F;
 	private static final float upperUpperY = 4F/16F;
 	
@@ -367,7 +367,7 @@ public class RenderTrack extends RenderTileBase{
 		GL11DrawSystem.bindTexture(tieTexture);
 		GL11.glRotatef(180, 1, 0, 0);
 		GL11.glTranslatef(0, 0, -0.1875F);
-		model.render();
+		modelTie.render();
 	}
 	
 	private static void drawRailSegment(List<float[]> texPoints, float w1, float w2, float h1, float h2, float t1, float t2, boolean holographic){

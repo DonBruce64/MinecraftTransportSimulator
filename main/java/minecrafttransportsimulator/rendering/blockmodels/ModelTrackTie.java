@@ -12,7 +12,7 @@ public class ModelTrackTie extends ModelBase{
     	textureWidth = 110;
     	textureHeight = 10;
     	tie = new ModelRenderer(this, 0, 0);
-    	tie.addBox(-24F, -3F, 0F, 48, 3, 6);
+    	tie.addBox(-22F, -3F, -3F, 44, 3, 6);
     	tie.setRotationPoint(0F, 0F, 0F);
     	tie.setTextureSize(110, 10);
     }    
