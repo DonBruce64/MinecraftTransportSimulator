@@ -40,6 +40,10 @@ public class RenderTrack extends RenderTileBase{
 	protected void doRender(TileEntity tile, double x, double y, double z){
 		TileEntityTrack track = (TileEntityTrack) tile;
 		if(track.curve != null){
+			if(!(BlockHelper.getTileEntityFromCoords(track.getWorldObj(), track.curve.blockEndPoint[0], track.curve.blockEndPoint[1], track.curve.blockEndPoint[2]) instanceof TileEntityTrack)){
+				//Sometimes the TE's don't break evenly.  Make sure this doesn't happen and we try to render a flag here.
+				return;
+			}
 			TileEntityTrack otherEnd = (TileEntityTrack) BlockHelper.getTileEntityFromCoords(track.getWorldObj(), track.curve.blockEndPoint[0], track.curve.blockEndPoint[1], track.curve.blockEndPoint[2]);
 			
 			//Quick check to see if connection is still valid.
