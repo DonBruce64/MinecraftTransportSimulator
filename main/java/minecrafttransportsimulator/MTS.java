@@ -14,7 +14,7 @@ import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="8.0.0-ALPHA-5";
+	public static final String MODVER="8.0.0-ALPHA-6";
 	
 	@Instance(value = MTS.MODID)
 	public static MTS instance;
