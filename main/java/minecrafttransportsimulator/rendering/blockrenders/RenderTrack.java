@@ -22,6 +22,19 @@ public class RenderTrack extends RenderTileBase{
 	private static final ResourceLocation tieTexture = new ResourceLocation(MTS.MODID, "textures/blockmodels/tie.png");
 	private static final ResourceLocation railTexture = new ResourceLocation(MTS.MODID, "textures/blockmodels/rail.png");
 	private static final ResourceLocation ballastTexture = new ResourceLocation(MTS.MODID, "textures/blocks/ballast.png");
+
+	private static final float bottomInnerX = 12.5F/16F;
+	private static final float bottomOuterX = 17.5F/16F;
+	private static final float bottomLowerY = 0F/16F;
+	private static final float bottomUpperY = 1F/16F;
+	
+	private static final float middleInnerX = 14.5F/16F;
+	private static final float middleOuterX = 15.5F/16F;
+	
+	private static final float upperInnerX = 14F/16F;
+	private static final float upperOuterX = 16F/16F;
+	private static final float upperLowerY = 3F/16F;
+	private static final float upperUpperY = 4F/16F;
 	
 	@Override
 	protected void doRender(TileEntity tile, double x, double y, double z){
@@ -140,20 +153,23 @@ public class RenderTrack extends RenderTileBase{
 		//First get information about what connectors need rendering.
 		boolean renderStartTie = false;
 		boolean renderStartRail = false;
+		boolean renderStartRailExtra = false;
 		TileEntityTrack startConnectorMaster = null;
 		if(startConnector != null){
-			if(startConnector.curve != null){
-				renderStartRail = true;
+			if(startConnector.curve != null){	
 				if(!startConnector.renderedLastPass){
 					//Start connecter is the end of a rail.  Test for tie space.
 					startConnectorMaster = (TileEntityTrack) BlockHelper.getTileEntityFromCoords(world, startConnector.curve.blockEndPoint[0], startConnector.curve.blockEndPoint[1], startConnector.curve.blockEndPoint[2]);
 					if(startConnectorMaster != null){
 						if(startConnectorMaster.curve != null){
+							renderStartRailExtra = true;
 							if(startConnectorMaster.curve.pathLength%offset > offset/2){
 								renderStartTie = true;
 							}
 						}
 					}
+				}else{
+					renderStartRail = true;
 				}
 			}
 		}
@@ -164,48 +180,30 @@ public class RenderTrack extends RenderTileBase{
 		TileEntityTrack endConnectorMaster = null;
 		if(endConnector != null){
 			if(endConnector.curve != null){
-				renderEndRail = true;
 				if(!endConnector.renderedLastPass){
 					//End connecter is the end of a rail.  Test for tie space.
 					endConnectorMaster = (TileEntityTrack) BlockHelper.getTileEntityFromCoords(world, endConnector.curve.blockEndPoint[0], endConnector.curve.blockEndPoint[1], endConnector.curve.blockEndPoint[2]);
 					if(endConnectorMaster != null){
 						if(endConnectorMaster.curve != null){
 							renderEndRailExtra = true;
-							if(endConnectorMaster.curve.pathLength%offset > offset/2){
+							if(endConnectorMaster.curve.pathLength%offset + curve.pathLength%offset > offset/2){
 								renderEndTie = true;
 							}
 						}
 					}
+				}else{
+					renderEndRail = true;
 				}
 			}
 		}	
 		
 		//Get an extra start rail segment if needed.
-		if(renderStartTie){
+		if(renderStartRailExtra){
 			//Get the remainder of what rails have not been rendered and add that point.
 			float lastPointOnCurve = (startConnectorMaster.curve.pathLength - (startConnectorMaster.curve.pathLength%offset))/startConnectorMaster.curve.pathLength;
 			currentPoint = startConnectorMaster.curve.getCachedPointAt(lastPointOnCurve);
 			currentAngle = startConnectorMaster.curve.getCachedYawAngleAt(lastPointOnCurve);
-			texPoints.add(new float[]{
-				currentPoint[0] - curve.blockStartPoint[0],
-				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
-				currentPoint[2] - curve.blockStartPoint[2],
-				(float) Math.sin(Math.toRadians(currentAngle)),
-				(float) Math.cos(Math.toRadians(currentAngle)),
-				(float) (0),
-				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
-			});
-			currentPoint = startConnector.curve.getCachedPointAt(0);
-			textureOffset += Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(0)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(0)[2]);
-		}
-		
-		//Get a start tie or rail if needed.
-		if(renderStartTie || renderStartRail){
-			currentPoint = startConnector.curve.getCachedPointAt(0);
-			currentAngle = curve.getCachedYawAngleAt(0);//Same angle, so why risk a trig error?
-			if(renderStartTie){
-				textureOffset += Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(0)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(0)[2]);
-			}
+			textureOffset = (float) -(Math.hypot(currentPoint[0] - startConnector.curve.blockStartPoint[0], currentPoint[2] - startConnector.curve.blockStartPoint[2]) + Math.hypot(startConnector.curve.blockStartPoint[0] - curve.blockStartPoint[0], startConnector.curve.blockStartPoint[2] - curve.blockStartPoint[2]));
 			texPoints.add(new float[]{
 				currentPoint[0] - curve.blockStartPoint[0],
 				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
@@ -215,14 +213,33 @@ public class RenderTrack extends RenderTileBase{
 				(float) (textureOffset),
 				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
 			});
-			currentPoint = curve.getCachedPointAt(0);
-			textureOffset += Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(texPoints.size() - 1)[2]);
+		}
+		
+		//Get a start tie if needed.
+		if(renderStartTie || (renderStartRail && !renderStartRailExtra)){
+			currentPoint = startConnector.curve.getCachedPointAt(0);
+			currentAngle = (startConnector.curve.getCachedYawAngleAt(0) +180)%360;
+			textureOffset = (float) -Math.hypot(currentPoint[0] - curve.blockStartPoint[0], currentPoint[2] - curve.blockStartPoint[2]);
+			texPoints.add(new float[]{
+				currentPoint[0] - curve.blockStartPoint[0],
+				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
+				currentPoint[2] - curve.blockStartPoint[2],
+				(float) Math.sin(Math.toRadians(currentAngle)),
+				(float) Math.cos(Math.toRadians(currentAngle)),
+				(float) (textureOffset),
+				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
+			});
 		}
 
 		//Get the regular ties and rails.
 		for(float f=0; f <= curve.pathLength; f += offset){
 			currentPoint = curve.getCachedPointAt(f/curve.pathLength);
 			currentAngle = curve.getCachedYawAngleAt(f/curve.pathLength);
+			if(f != 0){
+				textureOffset += (float) Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(texPoints.size() - 1)[2]);
+			}else{
+				textureOffset = 0;
+			}
 			texPoints.add(new float[]{
 				currentPoint[0] - curve.blockStartPoint[0],
 				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
@@ -232,13 +249,13 @@ public class RenderTrack extends RenderTileBase{
 				(float) (textureOffset),
 				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
 			});
-			textureOffset += Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(texPoints.size() - 1)[2]);
 		}
 		
-		//Get an end tie or rail if needed.
+		//Get an end tie if needed.
 		if(renderEndTie || (renderEndRail && !renderEndRailExtra)){
 			currentPoint = endConnector.curve.getCachedPointAt(0);
 			currentAngle = endConnector.curve.startAngle;
+			textureOffset += (float) Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(texPoints.size() - 1)[2]);
 			texPoints.add(new float[]{
 				currentPoint[0] - curve.blockStartPoint[0],
 				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
@@ -247,23 +264,23 @@ public class RenderTrack extends RenderTileBase{
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
 				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
-			});
-			textureOffset += Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(texPoints.size() - 1)[2]);
+			});			
 		}
 		
 		//Get an extra end rail segment if needed.
-		if(renderEndTie || renderEndRailExtra){
+		if(renderEndRailExtra){
 			//Get the remainder of what rails have not been rendered and add that point.
 			float lastPointOnCurve = (endConnectorMaster.curve.pathLength - (endConnectorMaster.curve.pathLength%offset))/endConnectorMaster.curve.pathLength;
 			currentPoint = endConnectorMaster.curve.getCachedPointAt(lastPointOnCurve);
 			currentAngle = (endConnectorMaster.curve.getCachedYawAngleAt(lastPointOnCurve) + 180)%360;
+			textureOffset += (float) Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(texPoints.size() - 1)[2]);
 			texPoints.add(new float[]{
 				currentPoint[0] - curve.blockStartPoint[0],
 				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
 				currentPoint[2] - curve.blockStartPoint[2],
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
-				(float) (0),
+				(float) (textureOffset),
 				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
 			});
 		}
@@ -292,8 +309,8 @@ public class RenderTrack extends RenderTileBase{
 		}
 		
 		//Now render the ties, making sure to avoid the start and end connectors.
-		byte startIndex = (byte) (renderStartTie ? 2 : (renderStartRail ? 1 : 0));
-		for(short i = startIndex; i < texPoints.size() - (renderEndTie ? 2 : (renderEndRailExtra || renderEndRail ? 1 : 0)); ++i){
+		byte startIndex = (byte) (renderStartTie ? 2 : (renderStartRail || renderStartRailExtra ? 1 : 0));
+		for(short i = startIndex; i < texPoints.size() - (renderEndTie ? 2 : ((renderEndRail || renderEndRailExtra) ? 1 : 0)); ++i){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(texPoints.get(i)[0], texPoints.get(i)[1] - 0.1875F, texPoints.get(i)[2]);
 			GL11.glRotatef(-curve.getCachedYawAngleAt((i - startIndex)*offset/curve.pathLength), 0, 1, 0);
@@ -303,22 +320,40 @@ public class RenderTrack extends RenderTileBase{
 		}
 		
 		//Now to render the rails.
-		//These use all the points so no special logic is required.
+		//These use all the points so no special logic is required.		
 		GL11.glPushMatrix();
 		GL11DrawSystem.bindTexture(railTexture);
-		drawRailSegment(texPoints, 12.5F/16F, 17.5F/16F, 0.0F, 0.0F, 0.0F, 3F/19F, holographic);//Bottom
-		drawRailSegment(texPoints, 17.5F/16F, 17.5F/16F, 0F/16F, 1F/16F, 3F/19F, 4F/19F, holographic);//Outer-bottom-side
-		drawRailSegment(texPoints, 17.5F/16F, 15.5F/16F, 1F/16F, 1F/16F, 4F/19F, 5.5F/19F, holographic);//Outer-bottom-top
-		drawRailSegment(texPoints, 15.5F/16F, 15.5F/16F, 1F/16F, 3F/16F, 6F/19F, 8F/19F, holographic);//Outer-middle
-		drawRailSegment(texPoints, 15.5F/16F, 16F/16F, 3F/16F, 3F/16F, 8F/19F, 8.5F/19F, holographic);//Outer-top-under
-		drawRailSegment(texPoints, 16F/16F, 16F/16F, 3F/16F, 4F/16F, 9F/19F, 10F/19F, holographic);//Outer-top-side
-		drawRailSegment(texPoints, 16F/16F, 14F/16F, 4F/16F, 4F/16F, 10F/19F, 12F/19F, holographic);//Top
-		drawRailSegment(texPoints, 14F/16F, 14F/16F, 4F/16F, 3F/16F, 12F/19F, 13F/19F, holographic);//Inner-top-side
-		drawRailSegment(texPoints, 14F/16F, 14.5F/16F, 3F/16F, 3F/16F, 13F/19F, 13.5F/19F, holographic);//Inner-top-under
-		drawRailSegment(texPoints, 14.5F/16F, 14.5F/16F, 3F/16F, 1F/16F, 14F/19F, 16F/19F, holographic);//Inner-middle
-		drawRailSegment(texPoints, 14.5F/16F, 12.5F/16F, 1F/16F, 1F/16F, 16F/19F, 17.5F/19F, holographic);//Inner-bottom-top
-		drawRailSegment(texPoints, 12.5F/16F, 12.5F/16F, 1F/16F, 0F/16F, 18F/19F, 19F/19F, holographic);//Inner-bottom-side
+		drawRailSegment(texPoints, bottomInnerX, bottomOuterX, bottomLowerY, bottomLowerY, 0.0F, 3F/19F, holographic);//Bottom
+		drawRailSegment(texPoints, bottomOuterX, bottomOuterX, bottomLowerY, bottomUpperY, 3F/19F, 4F/19F, holographic);//Outer-bottom-side
+		drawRailSegment(texPoints, bottomOuterX, middleOuterX, bottomUpperY, bottomUpperY, 4F/19F, 5.5F/19F, holographic);//Outer-bottom-top
+		drawRailSegment(texPoints, middleOuterX, middleOuterX, bottomUpperY, upperLowerY, 6F/19F, 8F/19F, holographic);//Outer-middle
+		drawRailSegment(texPoints, middleOuterX, upperOuterX, upperLowerY, upperLowerY, 8F/19F, 8.5F/19F, holographic);//Outer-top-under
+		drawRailSegment(texPoints, upperOuterX, upperOuterX, upperLowerY, upperUpperY, 9F/19F, 10F/19F, holographic);//Outer-top-side
+		drawRailSegment(texPoints, upperOuterX, upperInnerX, upperUpperY, upperUpperY, 10F/19F, 12F/19F, holographic);//Top
+		drawRailSegment(texPoints, upperInnerX, upperInnerX, upperUpperY, upperLowerY, 12F/19F, 13F/19F, holographic);//Inner-top-side
+		drawRailSegment(texPoints, upperInnerX, middleInnerX, upperLowerY, upperLowerY, 13F/19F, 13.5F/19F, holographic);//Inner-top-under
+		drawRailSegment(texPoints, middleInnerX, middleInnerX, upperLowerY, bottomUpperY, 14F/19F, 16F/19F, holographic);//Inner-middle
+		drawRailSegment(texPoints, middleInnerX, bottomInnerX, bottomUpperY, bottomUpperY, 16F/19F, 17.5F/19F, holographic);//Inner-bottom-top
+		drawRailSegment(texPoints, bottomInnerX, bottomInnerX, bottomUpperY, bottomLowerY, 18F/19F, 19F/19F, holographic);//Inner-bottom-side
 		GL11.glPopMatrix();
+		
+		//Finally, render a end cap on rails if there's no connection.
+		//Note that if another rail connects with this one, the cap will still be rendered.
+		//Not a big deal in the grand scheme of things.
+		
+		if(!renderStartRail){
+			GL11.glPushMatrix();
+			GL11.glTranslatef(texPoints.get(0)[0], texPoints.get(0)[1], texPoints.get(0)[2]);
+			drawRailEndCaps(texPoints.get(0), holographic);
+			GL11.glPopMatrix();
+		}
+		if(!renderEndRail){
+			GL11.glPushMatrix();
+			GL11.glTranslatef(texPoints.get(texPoints.size() - 1)[0], texPoints.get(texPoints.size() - 1)[1], texPoints.get(texPoints.size() - 1)[2]);
+			GL11.glRotatef(180, 0, 1, 0);
+			drawRailEndCaps(texPoints.get(texPoints.size() - 1), holographic);
+			GL11.glPopMatrix();
+		}
 	}
 	
 	private static void renderTie(float brightness, boolean holographic){
@@ -350,6 +385,67 @@ public class RenderTrack extends RenderTileBase{
 			GL11.glVertex3d(point[0] - w1*point[4], point[1] + h1, point[2] - w1*point[3]);
 		}
 		GL11.glEnd();
+	}
+	
+	private static void drawRailEndCaps(float[] texPoint, boolean holographic){
+		GL11.glPushMatrix();
+		GL11.glBegin(GL11.GL_QUADS);
+			if(!holographic)OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, texPoint[6]%65536, texPoint[6]/65536);
+			GL11.glTexCoord2d(0F/19F, 6F/19F);
+			GL11.glVertex3d(bottomOuterX*texPoint[4], bottomLowerY, bottomOuterX*texPoint[3]);
+			GL11.glTexCoord2d(5F/19F, 6F/19F);
+			GL11.glVertex3d(bottomInnerX*texPoint[4], bottomLowerY, bottomInnerX*texPoint[3]);
+			GL11.glTexCoord2d(5F/19F, 7F/19F);
+			GL11.glVertex3d(bottomInnerX*texPoint[4], bottomUpperY, bottomInnerX*texPoint[3]);
+			GL11.glTexCoord2d(0F/19F, 7F/19F);
+			GL11.glVertex3d(bottomOuterX*texPoint[4], bottomUpperY, bottomOuterX*texPoint[3]);
+			
+			GL11.glTexCoord2d(0F/19F, 7F/19F);
+			GL11.glVertex3d(middleOuterX*texPoint[4], bottomUpperY, middleOuterX*texPoint[3]);
+			GL11.glTexCoord2d(1F/19F, 7F/19F);
+			GL11.glVertex3d(middleInnerX*texPoint[4], bottomUpperY, middleInnerX*texPoint[3]);
+			GL11.glTexCoord2d(1F/19F, 9F/19F);
+			GL11.glVertex3d(middleInnerX*texPoint[4], upperLowerY, middleInnerX*texPoint[3]);
+			GL11.glTexCoord2d(0F/19F, 9F/19F);
+			GL11.glVertex3d(middleOuterX*texPoint[4], upperLowerY, middleOuterX*texPoint[3]);
+			
+			GL11.glTexCoord2d(0F/19F, 9F/19F);
+			GL11.glVertex3d(upperOuterX*texPoint[4], upperLowerY, upperOuterX*texPoint[3]);
+			GL11.glTexCoord2d(2F/19F, 9F/19F);
+			GL11.glVertex3d(upperInnerX*texPoint[4], upperLowerY, upperInnerX*texPoint[3]);
+			GL11.glTexCoord2d(2F/19F, 10F/19F);
+			GL11.glVertex3d(upperInnerX*texPoint[4], upperUpperY, upperInnerX*texPoint[3]);
+			GL11.glTexCoord2d(0F/19F, 10F/19F);
+			GL11.glVertex3d(upperOuterX*texPoint[4], upperUpperY, upperOuterX*texPoint[3]);
+
+			GL11.glTexCoord2d(5F/19F, 6F/19F);
+			GL11.glVertex3d(-bottomInnerX*texPoint[4], bottomLowerY, -bottomInnerX*texPoint[3]);
+			GL11.glTexCoord2d(0F/19F, 6F/19F);
+			GL11.glVertex3d(-bottomOuterX*texPoint[4], bottomLowerY, -bottomOuterX*texPoint[3]);
+			GL11.glTexCoord2d(0F/19F, 7F/19F);
+			GL11.glVertex3d(-bottomOuterX*texPoint[4], bottomUpperY, -bottomOuterX*texPoint[3]);
+			GL11.glTexCoord2d(5F/19F, 7F/19F);
+			GL11.glVertex3d(-bottomInnerX*texPoint[4], bottomUpperY, -bottomInnerX*texPoint[3]);
+			
+			GL11.glTexCoord2d(1F/19F, 7F/19F);
+			GL11.glVertex3d(-middleInnerX*texPoint[4], bottomUpperY, -middleInnerX*texPoint[3]);
+			GL11.glTexCoord2d(0F/19F, 7F/19F);
+			GL11.glVertex3d(-middleOuterX*texPoint[4], bottomUpperY, -middleOuterX*texPoint[3]);
+			GL11.glTexCoord2d(0F/19F, 9F/19F);
+			GL11.glVertex3d(-middleOuterX*texPoint[4], upperLowerY, -middleOuterX*texPoint[3]);
+			GL11.glTexCoord2d(1F/19F, 9F/19F);
+			GL11.glVertex3d(-middleInnerX*texPoint[4], upperLowerY, -middleInnerX*texPoint[3]);
+			
+			GL11.glTexCoord2d(2F/19F, 9F/19F);
+			GL11.glVertex3d(-upperInnerX*texPoint[4], upperLowerY, -upperInnerX*texPoint[3]);
+			GL11.glTexCoord2d(0F/19F, 9F/19F);
+			GL11.glVertex3d(-upperOuterX*texPoint[4], upperLowerY, -upperOuterX*texPoint[3]);
+			GL11.glTexCoord2d(0F/19F, 10F/19F);
+			GL11.glVertex3d(-upperOuterX*texPoint[4], upperUpperY, -upperOuterX*texPoint[3]);
+			GL11.glTexCoord2d(2F/19F, 10F/19F);
+			GL11.glVertex3d(-upperInnerX*texPoint[4], upperUpperY, -upperInnerX*texPoint[3]);
+		GL11.glEnd();
+		GL11.glPopMatrix();
 	}
 	
 	private static void drawBallastBox(float height){
