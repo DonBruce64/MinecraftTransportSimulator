@@ -25,6 +25,7 @@ public class BlockTrackFake extends MTSBlock{
 	
 	@Override
 	public void breakBlock(World world, int x, int y, int z, Block block, int metadata){
+		//TODO get this working and make track not give double drops.
 		if(!overrideBreakingBlocks){
 			//Add current block to list.
 			blockCheckCoords.add(new int[]{x, y, z});
