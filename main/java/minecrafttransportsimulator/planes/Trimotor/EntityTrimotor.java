@@ -42,14 +42,14 @@ public class EntityTrimotor extends EntityPlane{
 	
 	@Override
 	protected void initPartData(){
-		this.partData.add(new PartData(0, 0F, -10.5F, true, false, -1, EntityWheel.EntityWheelLarge.class));
+		this.partData.add(new PartData(0, 0F, -10.5F, true, false, EntityWheel.EntityWheelLarge.class));
 		this.partData.add(new PartData(-2.875F, -2.3F, 0.8F, EntityWheel.EntityWheelLarge.class));
 		this.partData.add(new PartData(2.875F, -2.3F, 0.8F, EntityWheel.EntityWheelLarge.class));
-		this.partData.add(new PartData(2.875F, -0.46F, 0.86F, false, false, 1, EntityEngineAircraftLarge.class));
-		this.partData.add(new PartData(0, -0.46F, 3.56F, false, false, 1, EntityEngineAircraftLarge.class));
-		this.partData.add(new PartData(-2.875F, -0.46F, 0.86F, false, false, 1, EntityEngineAircraftLarge.class));
-		this.partData.add(new PartData(0.5F, -.3F, 2.05F, false, true, -1, EntitySeat.class));
-		this.partData.add(new PartData(-0.5F, -.3F, 2.05F, false, true, -1, EntitySeat.class));
+		this.partData.add(new PartData(2.875F, -0.46F, 0.86F, false, false, EntityEngineAircraftLarge.class));
+		this.partData.add(new PartData(0, -0.46F, 3.56F, false, false, EntityEngineAircraftLarge.class));
+		this.partData.add(new PartData(-2.875F, -0.46F, 0.86F, false, false, EntityEngineAircraftLarge.class));
+		this.partData.add(new PartData(0.5F, -.3F, 2.05F, false, true, EntitySeat.class));
+		this.partData.add(new PartData(-0.5F, -.3F, 2.05F, false, true, EntitySeat.class));
 		this.partData.add(new PartData(0.625F, -0.7F, 1F, EntitySeat.class, EntityChest.class));
 		this.partData.add(new PartData(-0.625F, -0.7F, 1F, EntitySeat.class, EntityChest.class));
 		this.partData.add(new PartData(0.625F, -0.7F, -0.1F, EntitySeat.class, EntityChest.class));

@@ -46,12 +46,12 @@ public class EntityComanche extends EntityPlane{
 	
 	@Override
 	protected void initPartData(){
-		this.partData.add(new PartData(0, -0.75F, 2.35F, true, false, -1, EntityWheel.EntityWheelSmall.class));
+		this.partData.add(new PartData(0, -0.75F, 2.35F, true, false, EntityWheel.EntityWheelSmall.class));
 		this.partData.add(new PartData(-1.85F, -0.6F, -0.35F, EntityWheel.EntityWheelSmall.class));
 		this.partData.add(new PartData(1.85F, -0.6F, -0.35F,  EntityWheel.EntityWheelSmall.class));
-		this.partData.add(new PartData(2.5F, -0.05F, 1.47F, false, false, 0, EntityEngineAircraftSmall.class));
-		this.partData.add(new PartData(-2.5F, -0.05F, 1.47F, false, false, 0, EntityEngineAircraftSmall.class));
-		this.partData.add(new PartData(0, 0.5F, -0.05F, false, true, -1, EntitySeat.class));
+		this.partData.add(new PartData(2.5F, -0.05F, 1.47F, false, false, EntityEngineAircraftSmall.class));
+		this.partData.add(new PartData(-2.5F, -0.05F, 1.47F, false, false, EntityEngineAircraftSmall.class));
+		this.partData.add(new PartData(0, 0.5F, -0.05F, false, true, EntitySeat.class));
 		this.partData.add(new PartData(0, 0.5F, -1.3F, EntitySeat.class, EntityChest.class));
 	}
 	

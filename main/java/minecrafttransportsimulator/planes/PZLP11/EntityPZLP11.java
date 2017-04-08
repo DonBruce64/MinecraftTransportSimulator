@@ -52,8 +52,8 @@ public class EntityPZLP11 extends EntityPlane{
 		this.partData.add(new PartData(0F, -0.3F, -5.25F,  EntitySkid.class));
 		this.partData.add(new PartData(-1.4F, -1.8F, 0.375F, EntityWheel.EntityWheelLarge.class, EntityPontoon.class));
 		this.partData.add(new PartData(1.4F, -1.8F, 0.375F, EntityWheel.EntityWheelLarge.class, EntityPontoon.class));
-		this.partData.add(new PartData(0, -0.3F, 0.65F, false, false, 1, EntityEngineAircraftLarge.class));
-		this.partData.add(new PartData(0, -.1F, -1.3F, false, true, -1, EntitySeat.class));
+		this.partData.add(new PartData(0, -0.3F, 0.65F, false, false, EntityEngineAircraftLarge.class));
+		this.partData.add(new PartData(0, -.1F, -1.3F, false, true, EntitySeat.class));
 	}
 	
 	@Override

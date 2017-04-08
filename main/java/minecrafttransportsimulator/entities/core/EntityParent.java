@@ -96,27 +96,25 @@ public abstract class EntityParent extends EntityMultipartBase{
 					for(PartData data : partData){
 						for(Class<? extends EntityChild> dataClass : data.acceptableClasses){
 							if(dataClass.equals(childClassToSpawn)){
-								if(data.metadata == -1 || data.metadata == ItemStackHelper.getItemDamage(heldStack)){
-									float distance = (float) Math.hypot(childClicked.offsetX - data.offsetX, childClicked.offsetZ - data.offsetZ);
-									if(distance < closestPosition){
-										//Make sure a part doesn't exist already.
-										boolean childPresent = false;
-										for(EntityChild child : children.values()){
-											if(child.offsetX == data.offsetX && child.offsetY == data.offsetY && child.offsetZ == data.offsetZ){
+								float distance = (float) Math.hypot(childClicked.offsetX - data.offsetX, childClicked.offsetZ - data.offsetZ);
+								if(distance < closestPosition){
+									//Make sure a part doesn't exist already.
+									boolean childPresent = false;
+									for(EntityChild child : children.values()){
+										if(child.offsetX == data.offsetX && child.offsetY == data.offsetY && child.offsetZ == data.offsetZ){
+											childPresent = true;
+											break;
+										}else if(child instanceof EntityGroundDevice){
+											if(child.offsetX == data.alternateOffsetX && child.offsetY == data.alternateOffsetY && child.offsetZ == data.alternateOffsetZ){
 												childPresent = true;
 												break;
-											}else if(child instanceof EntityGroundDevice){
-												if(child.offsetX == data.alternateOffsetX && child.offsetY == data.alternateOffsetY && child.offsetZ == data.alternateOffsetZ){
-													childPresent = true;
-													break;
-												}
 											}
 										}
-										if(!childPresent){
-											closestPosition = distance;
-											dataToSpawn = data;
-										}
-									}	
+									}
+									if(!childPresent){
+										closestPosition = distance;
+										dataToSpawn = data;
+									}
 								}
 							}
 						}					
@@ -304,7 +302,6 @@ public abstract class EntityParent extends EntityMultipartBase{
 	protected class PartData{
 		public final boolean rotatesWithYaw;
 		public final boolean isController;
-		public final int metadata;
 		public final float offsetX;
 		public final float offsetY;
 		public final float offsetZ;
@@ -313,10 +310,9 @@ public abstract class EntityParent extends EntityMultipartBase{
 		public final float alternateOffsetZ;
 		public final Class<? extends EntityChild>[] acceptableClasses;
 		
-		public PartData(float offsetX, float offsetY, float offsetZ, boolean rotatesWithYaw, boolean isController, int metadata, float alternateOffsetX, float alternateOffsetY, float alternateOffsetZ, Class<? extends EntityChild>... acceptableClasses){
+		public PartData(float offsetX, float offsetY, float offsetZ, boolean rotatesWithYaw, boolean isController, float alternateOffsetX, float alternateOffsetY, float alternateOffsetZ, Class<? extends EntityChild>... acceptableClasses){
 			this.rotatesWithYaw = rotatesWithYaw;
 			this.isController = isController;
-			this.metadata = metadata;
 			this.offsetX = offsetX;
 			this.offsetY = offsetY;
 			this.offsetZ = offsetZ;
@@ -326,12 +322,12 @@ public abstract class EntityParent extends EntityMultipartBase{
 			this.acceptableClasses = acceptableClasses;
 		}
 		
-		public PartData(float offsetX, float offsetY, float offsetZ, boolean rotatesWithYaw, boolean isController, int metadata, Class<? extends EntityChild>... acceptableClasses){
-			this(offsetX, offsetY, offsetZ, rotatesWithYaw, isController, metadata, offsetX, offsetY, offsetZ, acceptableClasses);
+		public PartData(float offsetX, float offsetY, float offsetZ, boolean rotatesWithYaw, boolean isController, Class<? extends EntityChild>... acceptableClasses){
+			this(offsetX, offsetY, offsetZ, rotatesWithYaw, isController, offsetX, offsetY, offsetZ, acceptableClasses);
 		}
 		
 		public PartData(float offsetX, float offsetY, float offsetZ, Class<? extends EntityChild>... acceptableClasses){
-			this(offsetX, offsetY, offsetZ, false, false, -1, acceptableClasses);
+			this(offsetX, offsetY, offsetZ, false, false, acceptableClasses);
 		}
 	}
 }
