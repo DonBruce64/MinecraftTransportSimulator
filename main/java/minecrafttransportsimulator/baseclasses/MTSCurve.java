@@ -8,7 +8,6 @@ package minecrafttransportsimulator.baseclasses;
  * @author don_bruce
  */
 public class MTSCurve{
-	private static final byte curveIncrement = 16;
 	public final float startAngle;
 	public final float endAngle;
 	public final float pathLength;
@@ -20,7 +19,9 @@ public class MTSCurve{
 	private final float[] endPoint;
 	private final float[] cpStart;
 	private final float[] cpEnd;
-	private final float[][] pathPoints;
+	
+	private static final byte cachedCurveIncrement = 16;
+	private final float[][] cachedPathPoints;
 	
 	public MTSCurve(int[] sp, int[] ep, float sa, float ea){
 		this.startAngle = sa;
@@ -34,44 +35,44 @@ public class MTSCurve{
 		cpEnd = new float[]{(float) (endPoint[0] - Math.sin(Math.toRadians(endAngle))*cpDist), endPoint[1], (float) (endPoint[2] + Math.cos(Math.toRadians(endAngle))*cpDist)};
 
 		this.pathLength = getPathLength(startPoint, endPoint, cpStart, cpEnd, cpDist);
-		float[] pathPointsX = getPathPoints(startPoint[0], endPoint[0], cpStart[0], cpEnd[0], pathLength);
-		float[] pathPointsY = getPathPoints(startPoint[1], endPoint[1], cpStart[1], cpEnd[1], pathLength);
-		float[] pathPointsZ = getPathPoints(startPoint[2], endPoint[2], cpStart[2], cpEnd[2], pathLength);
+		float[] pathPointsX = getAxisCachedPathPoints(startPoint[0], endPoint[0], cpStart[0], cpEnd[0], pathLength);
+		float[] pathPointsY = getAxisCachedPathPoints(startPoint[1], endPoint[1], cpStart[1], cpEnd[1], pathLength);
+		float[] pathPointsZ = getAxisCachedPathPoints(startPoint[2], endPoint[2], cpStart[2], cpEnd[2], pathLength);
 		
-		pathPoints = new float[Math.round(pathLength*curveIncrement) + 1][3];
-		for(int i=0; i<pathPoints.length; ++i){
-			pathPoints[i][0] = pathPointsX[i];
-			pathPoints[i][1] = pathPointsY[i];
-			pathPoints[i][2] = pathPointsZ[i];
+		cachedPathPoints = new float[Math.round(pathLength*cachedCurveIncrement) + 1][3];
+		for(int i=0; i<cachedPathPoints.length; ++i){
+			cachedPathPoints[i][0] = pathPointsX[i];
+			cachedPathPoints[i][1] = pathPointsY[i];
+			cachedPathPoints[i][2] = pathPointsZ[i];
 		}
 	}
 	
 	public float[] getPointAt(float segment){
-		return pathPoints[Math.round(segment*pathLength*curveIncrement)];
+		return new float[]{
+			(float) (Math.pow(1-segment, 3)*startPoint[0] + 3*Math.pow(1-segment, 2)*segment*cpStart[0] + 3*(1-segment)*Math.pow(segment, 2)*cpEnd[0] + Math.pow(segment, 3)*endPoint[0]),
+			(float) (Math.pow(1-segment, 3)*startPoint[0] + 3*Math.pow(1-segment, 2)*segment*cpStart[0] + 3*(1-segment)*Math.pow(segment, 2)*cpEnd[0] + Math.pow(segment, 3)*endPoint[0]),
+			(float) (Math.pow(1-segment, 3)*startPoint[0] + 3*Math.pow(1-segment, 2)*segment*cpStart[0] + 3*(1-segment)*Math.pow(segment, 2)*cpEnd[0] + Math.pow(segment, 3)*endPoint[0])
+		};
 	}
 	
-	public float[] getNextPointFromVelocity(float segment, float velocity){
-		if(Math.round((segment + velocity/pathLength)*pathLength*curveIncrement) > pathPoints.length){
-			return null;
-		}else{
-			return pathPoints[Math.round((segment + velocity/pathLength)*pathLength*curveIncrement)];
-		}
+	public float[] getCachedPointAt(float segment){
+		return cachedPathPoints[Math.round(segment*pathLength*cachedCurveIncrement)];
 	}
 	
-	public float getYawAngleAt(float segment){
-		int pointIndex = Math.round(segment*pathLength*curveIncrement);
-		if(pointIndex + 1 == pathPoints.length){
-			pointIndex = pathPoints.length - 2;
+	public float getCachedYawAngleAt(float segment){
+		int pointIndex = Math.round(segment*pathLength*cachedCurveIncrement);
+		if(pointIndex + 1 == cachedPathPoints.length){
+			pointIndex = cachedPathPoints.length - 2;
 		}
-		return (float) (360 + Math.toDegrees(Math.atan2(pathPoints[pointIndex][0] - pathPoints[pointIndex + 1][0], pathPoints[pointIndex + 1][2] - pathPoints[pointIndex][2])))%360;
+		return (float) (360 + Math.toDegrees(Math.atan2(cachedPathPoints[pointIndex][0] - cachedPathPoints[pointIndex + 1][0], cachedPathPoints[pointIndex + 1][2] - cachedPathPoints[pointIndex][2])))%360;
 	}
 	
-	public float getPitchAngleAt(float segment){
-		int pointIndex = Math.round(segment*pathLength*curveIncrement);
-		if(pointIndex + 1 == pathPoints.length){
-			pointIndex = pathPoints.length - 2;
+	public float getCachedPitchAngleAt(float segment){
+		int pointIndex = Math.round(segment*pathLength*cachedCurveIncrement);
+		if(pointIndex + 1 == cachedPathPoints.length){
+			pointIndex = cachedPathPoints.length - 2;
 		}
-		return (float) -Math.toDegrees(Math.atan((pathPoints[pointIndex + 1][1] - pathPoints[pointIndex][1])/Math.hypot(pathPoints[pointIndex + 1][0] - pathPoints[pointIndex][0], pathPoints[pointIndex + 1][2] - pathPoints[pointIndex][2])));
+		return (float) -Math.toDegrees(Math.atan((cachedPathPoints[pointIndex + 1][1] - cachedPathPoints[pointIndex][1])/Math.hypot(cachedPathPoints[pointIndex + 1][0] - cachedPathPoints[pointIndex][0], cachedPathPoints[pointIndex + 1][2] - cachedPathPoints[pointIndex][2])));
 	}
 	
 	private static float getPathLength(float[] startPoint, float[] endPoint, float[] cpStart, float[] cpEnd, float cpDist){
@@ -82,8 +83,8 @@ public class MTSCurve{
 		return (dist1 + dist2 + dist3 + dist4)/2;
 	}
 	
-	private static float[] getPathPoints(float startPoint, float endPoint, float cpStart, float cpEnd, float pathLength){
-		float[] points = new float[Math.round(pathLength*curveIncrement) + 1];
+	private static float[] getAxisCachedPathPoints(float startPoint, float endPoint, float cpStart, float cpEnd, float pathLength){
+		float[] points = new float[Math.round(pathLength*cachedCurveIncrement) + 1];
 		if(startPoint == endPoint){
 			for(int i=0; i<points.length; ++i){
 				points[i] = startPoint;

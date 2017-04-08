@@ -60,8 +60,8 @@ public class TileEntitySurveyFlag extends MTSTileEntity{
 		
 		List<int[]> blockList = new ArrayList<int[]>();
 		for(float f=0; f <= linkedCurve.pathLength; f = Math.min(f + 0.25F, linkedCurve.pathLength)){
-			currentPoint = linkedCurve.getPointAt(f/linkedCurve.pathLength);
-			currentAngle = linkedCurve.getYawAngleAt(f/linkedCurve.pathLength);
+			currentPoint = linkedCurve.getCachedPointAt(f/linkedCurve.pathLength);
+			currentAngle = linkedCurve.getCachedYawAngleAt(f/linkedCurve.pathLength);
 			currentSin = (float) Math.sin(Math.toRadians(currentAngle));
 			currentCos = (float) Math.cos(Math.toRadians(currentAngle));
 

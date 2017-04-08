@@ -184,8 +184,8 @@ public class RenderTrack extends RenderTileBase{
 		if(renderStartTie){
 			//Get the remainder of what rails have not been rendered and add that point.
 			float lastPointOnCurve = (startConnectorMaster.curve.pathLength - (startConnectorMaster.curve.pathLength%offset))/startConnectorMaster.curve.pathLength;
-			currentPoint = startConnectorMaster.curve.getPointAt(lastPointOnCurve);
-			currentAngle = startConnectorMaster.curve.getYawAngleAt(lastPointOnCurve);
+			currentPoint = startConnectorMaster.curve.getCachedPointAt(lastPointOnCurve);
+			currentAngle = startConnectorMaster.curve.getCachedYawAngleAt(lastPointOnCurve);
 			texPoints.add(new float[]{
 				currentPoint[0] - curve.blockStartPoint[0],
 				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
@@ -195,14 +195,14 @@ public class RenderTrack extends RenderTileBase{
 				(float) (0),
 				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
 			});
-			currentPoint = startConnector.curve.getPointAt(0);
+			currentPoint = startConnector.curve.getCachedPointAt(0);
 			textureOffset += Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(0)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(0)[2]);
 		}
 		
 		//Get a start tie or rail if needed.
 		if(renderStartTie || renderStartRail){
-			currentPoint = startConnector.curve.getPointAt(0);
-			currentAngle = curve.getYawAngleAt(0);//Same angle, so why risk a trig error?
+			currentPoint = startConnector.curve.getCachedPointAt(0);
+			currentAngle = curve.getCachedYawAngleAt(0);//Same angle, so why risk a trig error?
 			if(renderStartTie){
 				textureOffset += Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(0)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(0)[2]);
 			}
@@ -215,14 +215,14 @@ public class RenderTrack extends RenderTileBase{
 				(float) (textureOffset),
 				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
 			});
-			currentPoint = curve.getPointAt(0);
+			currentPoint = curve.getCachedPointAt(0);
 			textureOffset += Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(texPoints.size() - 1)[2]);
 		}
 
 		//Get the regular ties and rails.
 		for(float f=0; f <= curve.pathLength; f += offset){
-			currentPoint = curve.getPointAt(f/curve.pathLength);
-			currentAngle = curve.getYawAngleAt(f/curve.pathLength);
+			currentPoint = curve.getCachedPointAt(f/curve.pathLength);
+			currentAngle = curve.getCachedYawAngleAt(f/curve.pathLength);
 			texPoints.add(new float[]{
 				currentPoint[0] - curve.blockStartPoint[0],
 				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
@@ -237,7 +237,7 @@ public class RenderTrack extends RenderTileBase{
 		
 		//Get an end tie or rail if needed.
 		if(renderEndTie || (renderEndRail && !renderEndRailExtra)){
-			currentPoint = endConnector.curve.getPointAt(0);
+			currentPoint = endConnector.curve.getCachedPointAt(0);
 			currentAngle = endConnector.curve.startAngle;
 			texPoints.add(new float[]{
 				currentPoint[0] - curve.blockStartPoint[0],
@@ -255,8 +255,8 @@ public class RenderTrack extends RenderTileBase{
 		if(renderEndTie || renderEndRailExtra){
 			//Get the remainder of what rails have not been rendered and add that point.
 			float lastPointOnCurve = (endConnectorMaster.curve.pathLength - (endConnectorMaster.curve.pathLength%offset))/endConnectorMaster.curve.pathLength;
-			currentPoint = endConnectorMaster.curve.getPointAt(lastPointOnCurve);
-			currentAngle = (endConnectorMaster.curve.getYawAngleAt(lastPointOnCurve) + 180)%360;
+			currentPoint = endConnectorMaster.curve.getCachedPointAt(lastPointOnCurve);
+			currentAngle = (endConnectorMaster.curve.getCachedYawAngleAt(lastPointOnCurve) + 180)%360;
 			texPoints.add(new float[]{
 				currentPoint[0] - curve.blockStartPoint[0],
 				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
@@ -296,8 +296,8 @@ public class RenderTrack extends RenderTileBase{
 		for(short i = startIndex; i < texPoints.size() - (renderEndTie ? 2 : (renderEndRailExtra || renderEndRail ? 1 : 0)); ++i){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(texPoints.get(i)[0], texPoints.get(i)[1] - 0.1875F, texPoints.get(i)[2]);
-			GL11.glRotatef(-curve.getYawAngleAt((i - startIndex)*offset/curve.pathLength), 0, 1, 0);
-			GL11.glRotatef(curve.getPitchAngleAt((i - startIndex)*offset/curve.pathLength), 1, 0, 0);
+			GL11.glRotatef(-curve.getCachedYawAngleAt((i - startIndex)*offset/curve.pathLength), 0, 1, 0);
+			GL11.glRotatef(curve.getCachedPitchAngleAt((i - startIndex)*offset/curve.pathLength), 1, 0, 0);
 			renderTie(texPoints.get(i)[6], holographic);
 			GL11.glPopMatrix();
 		}
