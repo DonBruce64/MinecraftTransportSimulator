@@ -22,21 +22,23 @@ public class BlockTrack extends MTSBlockTileEntity{
 		if(track != null){
 			if(track.curve != null){
 				if(!world.isRemote){
-					int numberTracks = (int) track.curve.pathLength;
-					while(numberTracks > 0){
-						int tracksInItem = Math.min(numberTracks, 64);
-						world.spawnEntityInWorld(new EntityItem(world, x, y, z, new ItemStack(MTSRegistry.track, tracksInItem, metadata)));
-						numberTracks -= tracksInItem;
+					TileEntityTrack otherEnd = (TileEntityTrack) BlockHelper.getTileEntityFromCoords(world, track.curve.blockEndPoint[0], track.curve.blockEndPoint[1], track.curve.blockEndPoint[2]);
+					if(otherEnd != null){
+						int numberTracks = (int) track.curve.pathLength;
+						while(numberTracks > 0){
+							int tracksInItem = Math.min(numberTracks, 64);
+							world.spawnEntityInWorld(new EntityItem(world, x, y, z, new ItemStack(MTSRegistry.track, tracksInItem, metadata)));
+							numberTracks -= tracksInItem;
+						}
+						track.removeFakeTracks();
+						super.breakBlock(world, x, y, z, block, metadata);
+						BlockHelper.setBlockToAir(world, otherEnd.xCoord, otherEnd.yCoord, otherEnd.zCoord);
+						return;
 					}
-					track.removeFakeTracks();
 				}
-				int otherX = track.curve.blockEndPoint[0];
-				int otherY = track.curve.blockEndPoint[1];
-				int otherZ = track.curve.blockEndPoint[2];
-				super.breakBlock(world, x, y, z, block, metadata);
-				BlockHelper.setBlockToAir(world, otherX, otherY, otherZ);
 			}
 		}
+		super.breakBlock(world, x, y, z, block, metadata);
 	}
 
 	@Override

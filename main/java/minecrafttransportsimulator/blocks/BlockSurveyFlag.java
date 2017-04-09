@@ -14,8 +14,10 @@ import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 public class BlockSurveyFlag extends MTSBlockTileEntity{
@@ -27,20 +29,30 @@ public class BlockSurveyFlag extends MTSBlockTileEntity{
 	}
 	
 	@Override
+	public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase entity, ItemStack stack){
+		super.onBlockPlacedBy(world, x, y, z, entity, stack);
+		if(entity instanceof EntityPlayer){
+			linkFlags(world, x, y, z, (EntityPlayer) entity);
+		}
+	}
+	
+	
+	@Override
 	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float hitX, float hitY, float hitZ){
+		linkFlags(world, x, y, z, player);
+		return true;
+	}
+	
+	private void linkFlags(World world, int x, int y, int z, EntityPlayer player){
 		if(!world.isRemote){
 			TileEntitySurveyFlag tile = ((TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(world, x, y, z));
-			if(player.isSneaking()){
-				tile.clearFlagLinking();
-				MTS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.flag.info.unlink")), (EntityPlayerMP) player);
-				return false;
-			}else if(PlayerHelper.getHeldStack(player) != null){
+			if(!player.isSneaking() && PlayerHelper.getHeldStack(player) != null){
 				if(PlayerHelper.getHeldStack(player).getItem().equals(MTSRegistry.track)){
 					if(tile.linkedCurve != null){
 						if(!PlayerHelper.isPlayerCreative(player)){
 							if(PlayerHelper.getQtyOfItemInInventory(MTSRegistry.track, (short) ItemStackHelper.getItemDamage(PlayerHelper.getHeldStack(player)), player) < Math.round(tile.linkedCurve.pathLength)){
 								MTS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.flag.failure.materials") + " " + String.valueOf((int) Math.round(tile.linkedCurve.pathLength))), (EntityPlayerMP) player);
-								return true;
+								return;
 							}
 						}
 						int[] blockingBlock = tile.spawnDummyTracks();
@@ -54,7 +66,7 @@ public class BlockSurveyFlag extends MTSBlockTileEntity{
 					}else{
 						MTS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.flag.failure.nolink")), (EntityPlayerMP) player);
 					}
-					return true;
+					return;
 				}
 			}
 			if(firstPosition.containsKey(player)){
@@ -87,7 +99,6 @@ public class BlockSurveyFlag extends MTSBlockTileEntity{
 				MTS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.flag.info.set")), (EntityPlayerMP) player);
 			}
 		}
-		return true;
 	}
 	
 	private static final void resetMaps(EntityPlayer player){

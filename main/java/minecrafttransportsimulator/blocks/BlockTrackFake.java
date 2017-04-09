@@ -34,27 +34,34 @@ public class BlockTrackFake extends MTSBlock{
 					for(byte k=-1; k<=1; ++k){
 						//Make sure we aren't checking the current block.
 						if(!(i==0 && j==0 && k==0)){
-							//Make sure the block hasn't been already checked.
+							boolean skipCheck = false;
 							for(int[] coords : blockCheckCoords){
 								if(x + i == coords[0] && y + j == coords[1] && z + k == coords[2]){
 									//Block already checked.
-									return;
+									skipCheck = true;
+									break;
+								}else if(Math.hypot(x + i - coords[0], z + k - coords[2]) > 150){
+									//Block is too far to be a possible match.
+									skipCheck = true;
+									break;
 								}
 							}
-							if(BlockHelper.getTileEntityFromCoords(world, x + i, y + j, z + k) instanceof TileEntityTrack){
-								//Found a track TE.  See if it's the parent for this fake track block.
-								for(int[] track : ((TileEntityTrack) BlockHelper.getTileEntityFromCoords(world, x + i, y + j, z + k)).getFakeTracks()){
-									if(track[0] == x && track[1] == y && track[2] == z){
-										//Track TE contains this fake track.  Set master track block to air and hand off breaking.
-										overrideBreakingBlocks = true;
-										BlockHelper.setBlockToAir(world, x + i, y + j, z + k);
-										blockCheckCoords.clear();
-										return;
+							if(!skipCheck){
+								if(BlockHelper.getTileEntityFromCoords(world, x + i, y + j, z + k) instanceof TileEntityTrack){
+									//Found a track TE.  See if it's the parent for this fake track block.
+									for(int[] track : ((TileEntityTrack) BlockHelper.getTileEntityFromCoords(world, x + i, y + j, z + k)).getFakeTracks()){
+										if(track[0] == x && track[1] == y && track[2] == z){
+											//Track TE contains this fake track.  Set master track block to air and hand off breaking.
+											overrideBreakingBlocks = true;
+											BlockHelper.setBlockToAir(world, x + i, y + j, z + k);
+											blockCheckCoords.clear();
+											return;
+										}
 									}
+								}else if(BlockHelper.getBlockFromCoords(world, x + i, y + j, z + k) instanceof BlockTrackFake){
+									//Found another fake track.  Call it's break code to pass on the message.
+									this.breakBlock(world, x + i, y + j, z + k, block, metadata);
 								}
-							}else if(BlockHelper.getBlockFromCoords(world, x, y, z) instanceof BlockTrackFake){
-								//Found another fake track.  Call it's break code to pass on the message.
-								((BlockTrackFake) BlockHelper.getBlockFromCoords(world, x, y, z)).breakBlock(world, x, y, z, block, metadata);
 							}
 						}
 					}

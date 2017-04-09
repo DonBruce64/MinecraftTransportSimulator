@@ -17,8 +17,7 @@ death.attack.traincrash.player.player=%1$s got distracted while fighting %2$s an
 
 interact.flag.info.set=First flag set.
 interact.flag.info.link=Flags linked.
-interact.flag.info.unlink=Flags un-linked.
-interact.flag.info.clear=First flag cleared.
+interact.flag.info.clear=First flag un-set.
 interact.flag.failure.dimension=Flags must be in the same dimension.
 interact.flag.failure.distance=The two flags are too far away.  The max distance between flags is 128.
 interact.flag.failure.nolink=This flag is not linked to another flag.
