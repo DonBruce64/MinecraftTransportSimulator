@@ -45,7 +45,7 @@ public final class PlayerHelper{
 			if(stack != null){
 				if(ItemStackHelper.getItemFromStack(stack).equals(item)){
 					if(ItemStackHelper.getItemDamage(stack) == damage){
-						if(ItemStackHelper.getStackSize(stack) >= qtyToRemove){
+						if(ItemStackHelper.getStackSize(stack) <= qtyToRemove){
 							qtyToRemove -= ItemStackHelper.getStackSize(stack);
 							player.inventory.mainInventory[i] = null;
 						}else{
