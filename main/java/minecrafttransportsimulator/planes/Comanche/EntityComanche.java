@@ -52,6 +52,10 @@ public class EntityComanche extends EntityPlane{
 		this.instruments.put((byte) 11, (byte) 0);
 		this.instruments.put((byte) 12, (byte) 0);
 		this.instruments.put((byte) 13, (byte) 0);
+		this.instruments.put((byte) 20, (byte) 0);
+		this.instruments.put((byte) 21, (byte) 0);
+		this.instruments.put((byte) 22, (byte) 0);
+		this.instruments.put((byte) 23, (byte) 0);
 	}
 	
 	@Override
