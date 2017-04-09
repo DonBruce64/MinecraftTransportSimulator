@@ -32,6 +32,7 @@ public class RenderEngine extends RenderChild{
 			GL11DrawSystem.bindTexture(smallTexture);
 			modelSmall.render();
 		}else if(child instanceof EntityEngineAircraftLarge){
+			GL11.glTranslatef(0, 0, -0.2F);
 			GL11DrawSystem.bindTexture(largeTexture);
 			modelLarge.render();
 		}
