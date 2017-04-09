@@ -70,19 +70,19 @@ public class MTSRegistry{
 	public static final MTSRegistry instance = new MTSRegistry();
 	
 	public static final Item planeMC172 = new ItemPlane(EntityMC172.class, 6).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item planePZLP11 = new ItemPlane(EntityPZLP11.class, 1).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item planeVulcanair = new ItemPlane(EntityVulcanair.class, 7).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 15).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item planeComanche = new ItemPlane(EntityComanche.class, 4).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item planePZLP11 = new ItemPlane(EntityPZLP11.class, 1).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 15).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	
-	public static final Item seat = new ItemSeat().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item propeller = new ItemPropeller().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item engineAircraftSmall = new ItemEngineAircraftSmall().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item engineAircraftLarge = new ItemEngineAircraftLarge().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item wheelSmall = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item wheelLarge = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item skid = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item pontoon = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item engineAircraftSmall = new ItemEngineAircraftSmall().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item engineAircraftLarge = new ItemEngineAircraftLarge().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item propeller = new ItemPropeller().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item seat = new ItemSeat().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item flightInstrument = new ItemFlightInstrument().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item pointerShort = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item pointerLong = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
