@@ -58,8 +58,8 @@ public final class VehicleHUDs{
 	
 	private static void drawMiddleFlyableGauges(EntityVehicle vehicle, int width, int height){
 		for(byte i=1; i<4; ++i){
-			if(vehicle.instruments.get(i) == null || vehicle.instruments.get(i) != -1){
-				AircraftInstruments.drawFlyableInstrument(vehicle, (5*i+6)*width/32, height - 32, vehicle.instruments.get(i) != null ? vehicle.instruments.get(i) : -1, true, (byte) -1);
+			if(vehicle.instruments.get(i) != null){
+				AircraftInstruments.drawFlyableInstrument(vehicle, (5*i+6)*width/32, height - 32, vehicle.instruments.get(i), true, (byte) -1);
 			}
 		}
 	}
@@ -67,19 +67,19 @@ public final class VehicleHUDs{
 	private static void drawOuterFlyableGauges(EntityVehicle vehicle, int width, int height){
 		GL11.glPushMatrix();
     	GL11.glScalef(0.75F, 0.75F, 0.75F);
-    	if(vehicle.instruments.get((byte) 0) == null || vehicle.instruments.get((byte) 0) != -1){
-    		AircraftInstruments.drawFlyableInstrument(vehicle, width*17/64, (height - 24)*4/3, vehicle.instruments.get((byte) 0) != null ? vehicle.instruments.get((byte) 0) : -1, true, (byte) -1);
+    	if(vehicle.instruments.get((byte) 0) != null){
+    		AircraftInstruments.drawFlyableInstrument(vehicle, width*17/64, (height - 24)*4/3, vehicle.instruments.get((byte) 0), true, (byte) -1);
     	}
-    	if(vehicle.instruments.get((byte) 4) == null || vehicle.instruments.get((byte) 4) != -1){
-    		AircraftInstruments.drawFlyableInstrument(vehicle, width*17/16, (height - 24)*4/3, vehicle.instruments.get((byte) 4) != null ? vehicle.instruments.get((byte) 4) : -1, true, (byte) -1);
+    	if(vehicle.instruments.get((byte) 4) != null){
+    		AircraftInstruments.drawFlyableInstrument(vehicle, width*17/16, (height - 24)*4/3, vehicle.instruments.get((byte) 4), true, (byte) -1);
     	}
     	GL11.glPopMatrix();
 	}
 	
 	private static void drawLowerFlyableGauges(EntityVehicle vehicle, int width, int height){
 		for(byte i=5; i<10; ++i){
-			if(vehicle.instruments.get(i) == null || vehicle.instruments.get(i) != -1){
-				AircraftInstruments.drawFlyableInstrument(vehicle, (5*(i-5)+6)*width/32, height - 32, vehicle.instruments.get(i) != null ? vehicle.instruments.get(i) : -1, true, (byte) -1);
+			if(vehicle.instruments.get(i) != null){
+				AircraftInstruments.drawFlyableInstrument(vehicle, (5*(i-5)+6)*width/32, height - 32, vehicle.instruments.get(i), true, (byte) -1);
 			}
 		}
 	}

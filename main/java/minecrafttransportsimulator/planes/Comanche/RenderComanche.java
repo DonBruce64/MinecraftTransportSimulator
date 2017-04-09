@@ -63,8 +63,8 @@ public class RenderComanche extends RenderPlane{
 		GL11.glRotatef(180, 0, 0, 1);
 		GL11.glScalef(0.00390625F*1.0F, 0.00390625F*1.0F, 0.00390625F*1.0F);
 		for(byte i=0; i<10; ++i){
-			if(plane.instruments.get(i) == null || plane.instruments.get(i) != -1){
-				AircraftInstruments.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) -1);
+			if(plane.instruments.get(i) != null){
+				AircraftInstruments.drawFlyableInstrument(plane, (i%5)*62, i<5 ? 0 : 62, plane.instruments.get(i), false, (byte) -1);
 			}
 		}
 		GL11.glPushMatrix();
@@ -72,7 +72,7 @@ public class RenderComanche extends RenderPlane{
 		GL11.glScalef(0.5F, 0.5F, 0.5F);
 		for(byte j=0; j<2; ++j){
 			for(byte i=0; i<4; ++i){
-				AircraftInstruments.drawFlyableInstrument(plane, j*124 + (i%2)*62, i<2 ? 0 : 62, plane.instruments.get((byte) (i+10+j*10)) != null ? plane.instruments.get((byte) (i+10+j*10)) : -1, false, j);
+				AircraftInstruments.drawFlyableInstrument(plane, j*124 + (i%2)*62, i<2 ? 0 : 62, plane.instruments.get((byte) (i+10+j*10)), false, j);
 			}
 		}
 		GL11.glPopMatrix();

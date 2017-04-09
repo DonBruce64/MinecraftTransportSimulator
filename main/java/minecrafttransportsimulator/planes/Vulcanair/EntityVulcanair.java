@@ -40,7 +40,26 @@ public class EntityVulcanair extends EntityPlane{
 	}
 	
 	@Override
-	protected void initProhibitedInstruments(){}
+	protected void initInstruments(){
+		this.instruments.put((byte) 0, (byte) 0);
+		this.instruments.put((byte) 1, (byte) 0);
+		this.instruments.put((byte) 2, (byte) 0);
+		this.instruments.put((byte) 3, (byte) 0);
+		this.instruments.put((byte) 4, (byte) 0);
+		this.instruments.put((byte) 5, (byte) 0);
+		this.instruments.put((byte) 6, (byte) 0);
+		this.instruments.put((byte) 7, (byte) 0);
+		this.instruments.put((byte) 8, (byte) 0);
+		this.instruments.put((byte) 9, (byte) 0);
+		this.instruments.put((byte) 10, (byte) 0);
+		this.instruments.put((byte) 11, (byte) 0);
+		this.instruments.put((byte) 12, (byte) 0);
+		this.instruments.put((byte) 13, (byte) 0);
+		this.instruments.put((byte) 20, (byte) 0);
+		this.instruments.put((byte) 21, (byte) 0);
+		this.instruments.put((byte) 22, (byte) 0);
+		this.instruments.put((byte) 23, (byte) 0);
+	}
 	
 	@Override
 	protected void initPartData(){

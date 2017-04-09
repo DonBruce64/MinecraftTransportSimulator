@@ -86,7 +86,6 @@ public class MTSRegistry{
 	public static final Item flightInstrument = new ItemFlightInstrument().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item pointerShort = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item pointerLong = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item flightInstrumentBase = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item wrench = new ItemWrench().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item flightManual = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	
@@ -385,14 +384,7 @@ public class MTSRegistry{
 				'C', ((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1]);
 	}
 	
-	private void initFlightInstrumentRecipes(){
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrumentBase, 16),
-				"III",
-				"IGI",
-				"III",
-				'I', Items.iron_ingot, 
-				'G', Blocks.glass_pane);
-		
+	private void initFlightInstrumentRecipes(){		
 		MTS.proxy.registerRecpie(new ItemStack(pointerShort),
 				" WW",
 				" WW",
@@ -407,131 +399,136 @@ public class MTSRegistry{
 				'W', new ItemStack(Items.dye, 1, 15), 
 				'B', new ItemStack(Items.dye, 1, 0));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 0),
+		
+		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 16, 0),
+				"III",
+				"IGI",
+				"III",
+				'I', Items.iron_ingot, 
+				'G', Blocks.glass_pane);
+		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 1),
 				"LLL",
 				"RRR",
 				" B ",
-				'B', flightInstrumentBase, 
+				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', new ItemStack(Items.dye, 1, 4), 
 				'R', new ItemStack(Items.dye, 1, 3));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 1),
+		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 2),
 				"WLW",
 				"WSW",
 				" B ",
-				'B', flightInstrumentBase, 
+				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
 				'S', pointerShort, 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 2),
+		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 3),
 				" W ",
 				"WIW",
 				" B ",
-				'B', flightInstrumentBase, 
+				'B', new ItemStack(flightInstrument, 1, 0), 
 				'I', Items.iron_ingot, 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 3),
+		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 4),
 				"R W",
 				"YLG",
 				"GBG",
-				'B', flightInstrumentBase, 
+				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
 				'R', new ItemStack(Items.dye, 1, 1),
 				'Y', new ItemStack(Items.dye, 1, 11), 
 				'G', new ItemStack(Items.dye, 1, 10), 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 4),
+		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 5),
 				"   ",
 				"WIW",
 				"WBW",
-				'B', flightInstrumentBase, 
-				'I', Items.iron_ingot, 
-				'W', new ItemStack(Items.dye, 1, 15));
-		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 5),
-				"WWW",
-				" I ",
-				"WBW",
-				'B', flightInstrumentBase, 
+				'B', new ItemStack(flightInstrument, 1, 0), 
 				'I', Items.iron_ingot, 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
 		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 6),
-				"W W",
-				" L ",
+				"WWW",
+				" I ",
 				"WBW",
-				'B', flightInstrumentBase, 
-				'L', pointerLong, 
+				'B', new ItemStack(flightInstrument, 1, 0), 
+				'I', Items.iron_ingot, 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
 		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 7),
+				"W W",
+				" L ",
+				"WBW",
+				'B', new ItemStack(flightInstrument, 1, 0), 
+				'L', pointerLong, 
+				'W', new ItemStack(Items.dye, 1, 15));
+		
+		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 8),
 				"RYG",
 				" LG",
 				" B ",
-				'B', flightInstrumentBase, 
+				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
 				'R', new ItemStack(Items.dye, 1, 1), 
 				'Y', new ItemStack(Items.dye, 1, 11), 
 				'G', new ItemStack(Items.dye, 1, 10), 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 8),
+		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 9),
 				"GLG",
 				"LGL",
 				" B ",
-				'B', flightInstrumentBase, 
+				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
 				'G', new ItemStack(Items.dye, 1, 10));
 
-		//Instrument 9 does not exist
+		//Instrument 10 does not exist
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 10),
+		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 11),
 				"W W",
 				" L ",
 				"WBR",
-				'B', flightInstrumentBase, 
-				'L', pointerLong, 
-				'R', new ItemStack(Items.dye, 1, 1), 
-				'W', new ItemStack(Items.dye, 1, 15));
-		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 11),
-				"RWW",
-				" L ",
-				" B ",
-				'B', flightInstrumentBase, 
+				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
 				'R', new ItemStack(Items.dye, 1, 1), 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
 		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 12),
-				" W ",
-				"WLW",
+				"RWW",
+				" L ",
 				" B ",
-				'B', flightInstrumentBase, 
+				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
+				'R', new ItemStack(Items.dye, 1, 1), 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
 		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 13),
+				" W ",
+				"WLW",
+				" B ",
+				'B', new ItemStack(flightInstrument, 1, 0), 
+				'L', pointerLong, 
+				'W', new ItemStack(Items.dye, 1, 15));
+		
+		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 14),
 				"YGR",
 				" L ",
 				" B ",
-				'B', flightInstrumentBase, 
+				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
 				'Y', new ItemStack(Items.dye, 1, 11), 
 				'G', new ItemStack(Items.dye, 1, 10), 
 				'R', new ItemStack(Items.dye, 1, 1), 
 				'W', new ItemStack(Items.dye, 1, 15));
-		
-		//Instrument 14 does not exist
-		
+				
 		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 15),
 				"   ",
 				"LGL",
 				"RB ",
-				'B', flightInstrumentBase, 
+				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong,  
 				'G', new ItemStack(Items.dye, 1, 10), 
 				'R', new ItemStack(Items.dye, 1, 1));

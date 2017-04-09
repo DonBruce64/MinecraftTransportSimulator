@@ -55,14 +55,14 @@ public class InstrumentFlyerPacket implements IMessage{
 				player = (EntityPlayer) Minecraft.getMinecraft().theWorld.getEntityByID(message.player);
 			}
 			if(vehicle != null && player != null){
-				if(message.instrumentToChangeTo == -1){
+				if(message.instrumentToChangeTo == 0){
 					if(vehicle.instruments.containsKey(message.instrumentToChange)){
 						if(!player.capabilities.isCreativeMode){
 							if(!player.inventory.addItemStackToInventory(new ItemStack(MTSRegistry.flightInstrument, 1, vehicle.instruments.get(message.instrumentToChange)))){
 								return null;
 							}
 						}
-						vehicle.instruments.remove(message.instrumentToChange);
+						vehicle.instruments.put(message.instrumentToChange, message.instrumentToChangeTo);
 						if(ctx.side.isServer()){
 							MTS.MFSNet.sendToAll(message);
 						}
@@ -87,5 +87,4 @@ public class InstrumentFlyerPacket implements IMessage{
 			return null;
 		}
 	}
-
 }

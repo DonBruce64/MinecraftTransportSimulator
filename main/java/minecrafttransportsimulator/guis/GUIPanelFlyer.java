@@ -99,10 +99,10 @@ public class GUIPanelFlyer extends GuiScreen{
 			GL11.glPushMatrix();
 			GL11.glTranslatef((2+i)*width/(2 + engines.length), height - 72, 0);
 			GL11.glScalef(0.60F, 0.60F, 0.60F);
-			AircraftInstruments.drawFlyableInstrument(vehicle, -30, -30, vehicle.instruments.get((byte) (i*10 + 10)) != null ? vehicle.instruments.get((byte) (i*10 + 10)) : -1, true, i);
-			AircraftInstruments.drawFlyableInstrument(vehicle, 30, -30, vehicle.instruments.get((byte) (i*10 + 11)) != null ? vehicle.instruments.get((byte) (i*10 + 11)) : -1, true, i);
-			AircraftInstruments.drawFlyableInstrument(vehicle, -30, 30, vehicle.instruments.get((byte) (i*10 + 12)) != null ? vehicle.instruments.get((byte) (i*10 + 12)) : -1, true, i);
-			AircraftInstruments.drawFlyableInstrument(vehicle, 30, 30, vehicle.instruments.get((byte) (i*10 + 13)) != null ? vehicle.instruments.get((byte) (i*10 + 13)) : -1, true, i);
+			AircraftInstruments.drawFlyableInstrument(vehicle, -30, -30, vehicle.instruments.get((byte) (i*10 + 10)), true, i);
+			AircraftInstruments.drawFlyableInstrument(vehicle, 30, -30, vehicle.instruments.get((byte) (i*10 + 11)), true, i);
+			AircraftInstruments.drawFlyableInstrument(vehicle, -30, 30, vehicle.instruments.get((byte) (i*10 + 12)), true, i);
+			AircraftInstruments.drawFlyableInstrument(vehicle, 30, 30, vehicle.instruments.get((byte) (i*10 + 13)), true, i);
 			GL11.glPopMatrix();
 		}
 

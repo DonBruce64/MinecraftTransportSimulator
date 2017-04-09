@@ -14,10 +14,10 @@ import net.minecraft.util.ResourceLocation;
 
 public final class AircraftInstruments{
 	private static final ResourceLocation instrumentTexture = new ResourceLocation(MTS.MODID, "textures/instruments_aircraft.png");
+	public static final ResourceLocation[] gauges = getGaugeTextures();
 	
 	/**
 	 * Call this to draw aircraft gauges.
-	 * Instrument code can be -1 to draw a blank gauge.
 	 * EngineNumber can be -1 to draw a uni-gauge.
 	 */
 	public static void drawFlyableInstrument(EntityVehicle vehicle, int x, int y, byte instrumentCode, boolean hud, byte engineNumber){
@@ -34,6 +34,7 @@ public final class AircraftInstruments{
 		}
 		if(instrumentCode != -1){
 			switch (AircraftGauges.values()[instrumentCode]){
+				case BLANK: drawGaugeBase(vehicle, x, y, lighted); break; 
 				case ATTITUDE: drawAttitudeIndicator(vehicle, x, y, lighted); break;
 				case ALTIMETER: drawAltimeter(vehicle, x, y, lighted); break;
 				case HEADING: drawHeadingIndicator(vehicle, x, y, lighted); break;
@@ -761,6 +762,7 @@ public final class AircraftInstruments{
     }
 
     public enum AircraftGauges{
+    	BLANK,
     	ATTITUDE,
     	ALTIMETER,
     	HEADING,
@@ -784,5 +786,13 @@ public final class AircraftInstruments{
     	BRAKE,
     	FLAPS;
     }
+    
+	private static ResourceLocation[] getGaugeTextures(){
+		ResourceLocation[] texArray = new ResourceLocation[AircraftGauges.values().length];
+		for(byte i=0; i<texArray.length; ++i){
+			texArray[i] = new ResourceLocation(MTS.MODID, "textures/items/flightinstrument" + String.valueOf(i) + ".png");
+		}
+		return texArray;
+	}
 }
 

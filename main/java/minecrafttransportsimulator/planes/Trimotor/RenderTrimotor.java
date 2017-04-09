@@ -89,7 +89,7 @@ public class RenderTrimotor extends RenderPlane{
 		GL11.glScalef(1F/1.3F, 1F/1.3F, 1F/1.3F);
 		//Center engine
 		for(byte i=20; i<24; ++i){
-			AircraftInstruments.drawFlyableInstrument(plane, 30 + (i-20)*60, 124, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) 1);
+			AircraftInstruments.drawFlyableInstrument(plane, 30 + (i-20)*60, 124, plane.instruments.get(i), false, (byte) 1);
 		}
 		GL11.glPopMatrix();
 		
@@ -104,7 +104,7 @@ public class RenderTrimotor extends RenderPlane{
 		GL11.glRotatef(-90, 0, 1, 0);
 		GL11.glScalef(0.00390625F*1.0F, 0.00390625F*1.0F, 0.00390625F*1.0F);
 		for(byte i=10; i<14; ++i){
-			AircraftInstruments.drawFlyableInstrument(plane, 0, (i-10)*62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) 0);
+			AircraftInstruments.drawFlyableInstrument(plane, 0, (i-10)*62, plane.instruments.get(i), false, (byte) 0);
 		}
 		GL11.glPopMatrix();
 		
@@ -115,7 +115,7 @@ public class RenderTrimotor extends RenderPlane{
 		GL11.glRotatef(90, 0, 1, 0);
 		GL11.glScalef(0.00390625F*1.0F, 0.00390625F*1.0F, 0.00390625F*1.0F);
 		for(byte i=30; i<34; ++i){
-			AircraftInstruments.drawFlyableInstrument(plane, 0, (i-30)*62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) 2);
+			AircraftInstruments.drawFlyableInstrument(plane, 0, (i-30)*62, plane.instruments.get(i), false, (byte) 2);
 		}
 		GL11.glPopMatrix();
 		

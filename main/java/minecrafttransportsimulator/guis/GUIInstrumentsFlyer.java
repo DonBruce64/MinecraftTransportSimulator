@@ -12,17 +12,14 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityVehicle;
 import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
 import minecrafttransportsimulator.packets.general.InstrumentFlyerPacket;
-import minecrafttransportsimulator.rendering.VehicleHUDs;
+import minecrafttransportsimulator.rendering.AircraftInstruments;
 import minecrafttransportsimulator.rendering.AircraftInstruments.AircraftGauges;
+import minecrafttransportsimulator.rendering.VehicleHUDs;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ResourceLocation;
 
 public class GUIInstrumentsFlyer extends GuiScreen{
-	private static final ResourceLocation emptyGauge = new ResourceLocation(MTS.MODID, "textures/items/flightinstrumentbase.png");
-	private static final ResourceLocation[] gauges = getGaugeTextures();
-	
 	private final EntityVehicle vehicle;
 	private final EntityPlayer player;
 	private final byte numberEngineBays;
@@ -42,13 +39,21 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 	
 	@Override
 	public void initGui(){
-		gaugeCoords.put(new Float[]{width*17/64*0.5F*0.75F, (height - 88)*4/3*0.5F*0.75F}, (byte) 0);
-		for(byte i=1; i<4; ++i){
-			gaugeCoords.put(new Float[]{(5*i+6)*width/32*0.5F, (height-96)*0.5F}, i);
+		if(vehicle.instruments.get((byte) 0) != null){
+			gaugeCoords.put(new Float[]{width*17/64*0.5F*0.75F, (height - 88)*4/3*0.5F*0.75F}, (byte) 0);
 		}
-		gaugeCoords.put(new Float[]{width*17/16*0.5F*0.75F, (height - 88)*4/3*0.5F*0.75F}, (byte) 4);
+		for(byte i=1; i<4; ++i){
+			if(vehicle.instruments.get(i) != null){
+				gaugeCoords.put(new Float[]{(5*i+6)*width/32*0.5F, (height-96)*0.5F}, i);
+			}
+		}
+		if(vehicle.instruments.get((byte) 4) != null){
+			gaugeCoords.put(new Float[]{width*17/16*0.5F*0.75F, (height - 88)*4/3*0.5F*0.75F}, (byte) 4);
+		}
 		for(byte i=5; i<10; ++i){
-			gaugeCoords.put(new Float[]{(5*(i-5)+6)*width/32*0.5F, (height-32)*0.5F}, i);
+			if(vehicle.instruments.get(i) != null){
+				gaugeCoords.put(new Float[]{(5*(i-5)+6)*width/32*0.5F, (height-32)*0.5F}, i);
+			}
 		}
 		for(byte i=0; i<numberEngineBays; ++i){
 			gaugeCoords.put(new Float[]{((2+i)*width/(2 + numberEngineBays) + width - 15)*0.5F, (height - 72 - 15)*0.5F}, (byte) (10*i+10));
@@ -71,27 +76,29 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 		VehicleHUDs.startHUDDraw(vehicle);
 		height-=64;
 		VehicleHUDs.drawLeftPlanePanel(width, height);
-		if(vehicle.instruments.get((byte) 0) == null || vehicle.instruments.get((byte) 0) != -1){
+		if(vehicle.instruments.get((byte) 0) != null){
 			GL11.glPushMatrix();
 			GL11.glScalef(0.75F, 0.75F, 0.75F);
-			GL11DrawSystem.bindTexture(vehicle.instruments.get((byte) 0) == null ? emptyGauge : gauges[vehicle.instruments.get((byte) 0)]);
+			GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) 0)]);
 			GL11DrawSystem.renderSquare(width*17/64-20, width*17/64+20, (height - 24)*4/3+20, (height - 24)*4/3-20, 0, 0, false);
 			GL11.glPopMatrix();
 		}
 		
 		VehicleHUDs.drawUpperPlanePanel(width, height);
 		for(byte i=1; i<4; ++i){
-			GL11.glPushMatrix();
-			GL11DrawSystem.bindTexture(vehicle.instruments.get((byte) i) == null ? emptyGauge : gauges[vehicle.instruments.get((byte) i)]);
-			GL11DrawSystem.renderSquare((5*i+6)*width/32-20, (5*i+6)*width/32+20, height-32+20, height-32-20, 0, 0, false);
-			GL11.glPopMatrix();
+			if(vehicle.instruments.get(i) != null){
+				GL11.glPushMatrix();
+				GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) i)]);
+				GL11DrawSystem.renderSquare((5*i+6)*width/32-20, (5*i+6)*width/32+20, height-32+20, height-32-20, 0, 0, false);
+				GL11.glPopMatrix();
+			}
 		}
 		
 		VehicleHUDs.drawRightPlanePanel(width, height);
-		if(vehicle.instruments.get((byte) 4) == null || vehicle.instruments.get((byte) 4) != -1){
+		if(vehicle.instruments.get((byte) 4) != null){
 			GL11.glPushMatrix();
 			GL11.glScalef(0.75F, 0.75F, 0.75F);
-			GL11DrawSystem.bindTexture(vehicle.instruments.get((byte) 4) == null ? emptyGauge : gauges[vehicle.instruments.get((byte) 4)]);
+			GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) 4)]);
 			GL11DrawSystem.renderSquare(width*17/16-20, width*17/16+20, (height - 24)*4/3+20, (height - 24)*4/3-20, 0, 0, false);
 			GL11.glPopMatrix();
 		}
@@ -99,9 +106,9 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 		height+=64;
 		VehicleHUDs.drawLowerPlanePanel(width, height);
 		for(byte i=5; i<10; ++i){
-	    	if(vehicle.instruments.get(i) == null || vehicle.instruments.get(i) != -1){
+	    	if(vehicle.instruments.get(i) != null){
 				GL11.glPushMatrix();
-				GL11DrawSystem.bindTexture(vehicle.instruments.get((byte) i) == null ? emptyGauge : gauges[vehicle.instruments.get((byte) i)]);
+				GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) i)]);
 				GL11DrawSystem.renderSquare((5*(i-5)+6)*width/32-20, (5*(i-5)+6)*width/32+20, height-32+20, height-32-20, 0, 0, false);
 				GL11.glPopMatrix();
 	    	}
@@ -115,13 +122,13 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 			GL11.glPushMatrix();
 			GL11.glTranslatef((2+i)*width/(2 + numberEngineBays), height - 72, 0);
 			GL11.glScalef(0.60F, 0.60F, 0.60F);
-	    	GL11DrawSystem.bindTexture(vehicle.instruments.get((byte) (i*10 + 10)) == null ? emptyGauge : gauges[vehicle.instruments.get((byte) (i*10 + 10))]);
+	    	GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) (i*10 + 10))]);
 	    	GL11DrawSystem.renderSquare(-60, 0, 0, -60, 0, 0, false);
-	    	GL11DrawSystem.bindTexture(vehicle.instruments.get((byte) (i*10 + 11)) == null ? emptyGauge : gauges[vehicle.instruments.get((byte) (i*10 + 11))]);
+	    	GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) (i*10 + 11))]);
 	    	GL11DrawSystem.renderSquare(0, 60, 0, -60, 0, 0, false);
-	    	GL11DrawSystem.bindTexture(vehicle.instruments.get((byte) (i*10 + 12)) == null ? emptyGauge : gauges[vehicle.instruments.get((byte) (i*10 + 12))]);
+	    	GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) (i*10 + 12))]);
 	    	GL11DrawSystem.renderSquare(-60, 0, 60, 0, 0, 0, false);
-	    	GL11DrawSystem.bindTexture(vehicle.instruments.get((byte) (i*10 + 13)) == null ? emptyGauge : gauges[vehicle.instruments.get((byte) (i*10 + 13))]);
+	    	GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) (i*10 + 13))]);
 	    	GL11DrawSystem.renderSquare(0, 60, 60, 0, 0, 0, false);
 			GL11.glPopMatrix();
 		}
@@ -162,26 +169,26 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 				}
 			}
 			boolean[] hasInstrument = new boolean[AircraftGauges.values().length];
-			for(byte i=0; i<AircraftGauges.values().length; ++i){
+			for(byte i=1; i<AircraftGauges.values().length; ++i){
 				if(player.capabilities.isCreativeMode){
 					hasInstrument[i] = true;
 				}else{
 					hasInstrument[i] = PlayerHelper.getQtyOfItemInInventory(MTSRegistry.flightInstrument, i, player) > 0;
 				}
 			}
-			for(byte i=0; i<AircraftGauges.values().length; ++i){
+			for(byte i=1; i<AircraftGauges.values().length; ++i){
 				if(hasInstrument[i]){
 					GL11.glPushMatrix();
-					GL11DrawSystem.bindTexture(gauges[i]);
-					if(i<8){
-						GL11DrawSystem.renderSquare((i%8+1)*width/19-10, (i%8+1)*width/19+10, height*0.7 + 10, height*0.7 - 10, 0, 0, false);
+					GL11DrawSystem.bindTexture(AircraftInstruments.gauges[i]);
+					if(i<9){
+						GL11DrawSystem.renderSquare(((i-1)%8+1)*width/19-10, ((i-1)%8+1)*width/19+10, height*0.7 + 10, height*0.7 - 10, 0, 0, false);
 					}else{
-						GL11DrawSystem.renderSquare((i%8+1)*width/19-10, (i%8+1)*width/19+10, height*0.9 + 10, height*0.9 - 10, 0, 0, false);
+						GL11DrawSystem.renderSquare(((i-1)%8+1)*width/19-10, ((i-1)%8+1)*width/19+10, height*0.9 + 10, height*0.9 - 10, 0, 0, false);
 					}
 					GL11.glPopMatrix();
 				}
 			}
-			GL11DrawSystem.bindTexture(emptyGauge);
+			GL11DrawSystem.bindTexture(AircraftInstruments.gauges[0]);
 			GL11DrawSystem.renderSquare(width/2, width/2+height*0.2, height*0.9, height*0.7, 0, 0, false);
 			GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.instruments.clear"), width/2+height*0.1F, height*0.775F, 0, 1.0F, Color.WHITE);
 		}
@@ -203,18 +210,18 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 			}
 		}else{
 			boolean[] hasInstrument = new boolean[AircraftGauges.values().length];
-			for(byte i=0; i<AircraftGauges.values().length; ++i){
+			for(byte i=1; i<AircraftGauges.values().length; ++i){
 				if(player.capabilities.isCreativeMode){
 					hasInstrument[i] = true;
 				}else{
 					hasInstrument[i] = PlayerHelper.getQtyOfItemInInventory(MTSRegistry.flightInstrument, i, player) > 0;
 				}
 			}
-			for(byte i=0; i<AircraftGauges.values().length; ++i){
-				if(x >= (i%8+1)*width/19-10 && x <= (i%8+1)*width/19+10){
-					if(y >= height*(i < 8 ? 0.7 : 0.9) - 10 && y <= height*(i < 8 ? 0.7 : 0.9) + 10){
+			for(byte i=1; i<AircraftGauges.values().length; ++i){
+				if(x >= ((i-1)%8+1)*width/19-10 && x <= ((i-1)%8+1)*width/19+10){
+					if(y >= height*((i-1) < 8 ? 0.7 : 0.9) - 10 && y <= height*((i-1) < 8 ? 0.7 : 0.9) + 10){
 						if(hasInstrument[i]){
-							if(lastInstrumentClicked >= 10 && i != 10 && i != 12 && i != 13 && i != 14){
+							if(i != 11 && i != 13 && i != 14 && i != 15){
 								fault = true;
 								return;
 							}else{
@@ -230,7 +237,9 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 				}
 			}
 			if(x >= width/2 && x<= width/2+height*0.2 && y >= height*0.7 && y <= height*0.9){
-				MTS.MFSNet.sendToServer(new InstrumentFlyerPacket(vehicle.getEntityId(), player.getEntityId(), lastInstrumentClicked, (byte) -1));
+				if(vehicle.instruments.get(lastInstrumentClicked) != 0){
+					MTS.MFSNet.sendToServer(new InstrumentFlyerPacket(vehicle.getEntityId(), player.getEntityId(), lastInstrumentClicked, (byte) 0));
+				}
 			}
 			lastClickedX = 0;
 			lastClickedY = 0;
@@ -241,13 +250,5 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 	@Override
 	public boolean doesGuiPauseGame(){
 		return false;
-	}
-	
-	private static ResourceLocation[] getGaugeTextures(){
-		ResourceLocation[] texArray = new ResourceLocation[AircraftGauges.values().length];
-		for(byte i=0; i<texArray.length; ++i){
-			texArray[i] = new ResourceLocation(MTS.MODID, "textures/items/flightinstrument" + String.valueOf(i) + ".png");
-		}
-		return texArray;
 	}
 }

@@ -89,8 +89,8 @@ public class RenderPZLP11 extends RenderPlane{
 		GL11.glRotatef(180, 0, 0, 1);
 		GL11.glScalef(0.00390625F*1F, 0.00390625F*1F, 0.00390625F*1F);
 		for(byte i=0; i<10; ++i){
-			if(plane.instruments.get(i) == null || plane.instruments.get(i) != -1){
-				AircraftInstruments.drawFlyableInstrument(plane, (i%5)*60, i<5 ? 0 : 62, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) -1);
+			if(plane.instruments.get(i) != null){
+				AircraftInstruments.drawFlyableInstrument(plane, (i%5)*60, i<5 ? 0 : 62, plane.instruments.get(i), false, (byte) -1);
 			}
 		}
 		
@@ -99,7 +99,7 @@ public class RenderPZLP11 extends RenderPlane{
 		GL11.glTranslatef(75F, 115F, 0);
 		GL11.glScalef(0.5F, 0.5F, 0.5F);
 		for(byte i=10; i<14; ++i){
-			AircraftInstruments.drawFlyableInstrument(plane, (i%4)*62, 0, plane.instruments.get(i) != null ? plane.instruments.get(i) : -1, false, (byte) 0);
+			AircraftInstruments.drawFlyableInstrument(plane, (i%4)*62, 0, plane.instruments.get(i), false, (byte) 0);
 		}
 		GL11.glPopMatrix();
 

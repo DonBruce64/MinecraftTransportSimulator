@@ -49,8 +49,8 @@ public abstract class EntityVehicle extends EntityParent{
 	public String displayName="";
 	
 	/**Map of instrument slots to type.
-	 *Setting a slot to -1 prevents instruments from being placed there.
-	 *Note that this is different than the -1 you give the instrument draw systems!
+	 * If there's not a key for a slot, it doesn't exist.
+	 * Note than engines use slots 10-14, 20-24, 30-34, and 40-44.
 	 **/
 	public Map<Byte, Byte> instruments;
 	
@@ -78,11 +78,11 @@ public abstract class EntityVehicle extends EntityParent{
 		super.entityInit();
 		initProperties();
 		instruments = new HashMap<Byte, Byte>();
-		initProhibitedInstruments();
+		initInstruments();
 	}
 	
 	protected abstract void initProperties();
-	protected abstract void initProhibitedInstruments();
+	protected abstract void initInstruments();
 	
 	@Override
 	public void onEntityUpdate(){
@@ -158,8 +158,10 @@ public abstract class EntityVehicle extends EntityParent{
 				}
 			}
 			for(Byte instrumentNumber : instruments.values()){
-				ItemStack stack = new ItemStack(MTSRegistry.flightInstrument, 1, instrumentNumber);
-				worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
+				if(instrumentNumber != 0){
+					ItemStack stack = new ItemStack(MTSRegistry.flightInstrument, 1, instrumentNumber);
+					worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
+				}
 			}
 		}
 		super.setDead();
