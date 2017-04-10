@@ -61,7 +61,6 @@ public class GUIConfig extends GuiScreen{
 	private GuiTextField minTextBox;
 	
 	private List<GuiButton> configureButtons = new ArrayList<GuiButton>();
-	private List<GuiButton> joystickButtons = new ArrayList<GuiButton>();
 	private List<GuiButton> joystickConfigureButtons = new ArrayList<GuiButton>();
 	private List<GuiButton> analogAssignButtons = new ArrayList<GuiButton>();
 	private List<GuiButton> digitalAssignButtons = new ArrayList<GuiButton>();
@@ -69,6 +68,7 @@ public class GUIConfig extends GuiScreen{
 	private Map<String, GuiTextField> planeBoxes = new HashMap<String, GuiTextField>();
 	private Map<String, GuiTextField> helicopterBoxes = new HashMap<String, GuiTextField>();
 	private Map<String, GuiTextField> vehicleBoxes = new HashMap<String, GuiTextField>();
+	private Map<GuiButton, Byte> joystickButtons = new HashMap<GuiButton, Byte>();
 	
 	public GUIConfig(){
 		this.allowUserInput=true;
@@ -95,6 +95,7 @@ public class GUIConfig extends GuiScreen{
 	private void initConfigControls(){
 		int line = 0;
 		int xOffset = 140;
+		//TOOD add other configs.
 		configureButtons.add(seaLevelOffsetButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("SeaLevelOffset"))));
 		configureButtons.add(electricStartButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("ElectricStart"))));
 		configureButtons.add(xaerosCompatibilityButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("XaerosCompatibility"))));
@@ -133,10 +134,17 @@ public class GUIConfig extends GuiScreen{
 	
 	private void initJoysticks(){
 		joysticks = ControllerEnvironment.getDefaultEnvironment().getControllers();
-		for(int i=0;i<joysticks.length;i++){
-			joystickButtons.add(new GuiButton(0, guiLeft + 5, guiTop + 40 + 15*i, 240, 15, ""));
-			buttonList.add(joystickButtons.get(i));
-			joystickButtons.get(i).enabled = false;
+		byte jsNumber = 0;
+		byte jsIndex = 0;
+		for(Controller joystick : joysticks){
+			if(!joystick.getType().equals(Controller.Type.MOUSE) && !joystick.getType().equals(Controller.Type.KEYBOARD)){
+				GuiButton jsButton = new GuiButton(0, guiLeft + 5, guiTop + 40 + 15*jsNumber, 240, 15, "");
+				joystickButtons.put(jsButton, jsIndex);
+				buttonList.add(jsButton);
+				jsButton.enabled = false;
+				++jsNumber;
+			}
+			++jsIndex;
 		}
 	}
 	
@@ -218,7 +226,6 @@ public class GUIConfig extends GuiScreen{
 	
 	private void drawConfigScreen(int mouseX, int mouseY){
 		int line = 0;
-		fontRendererObj.drawStringWithShadow("Throttle Kills:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
 		fontRendererObj.drawStringWithShadow("Sea Level Offset:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
 		fontRendererObj.drawStringWithShadow("Electric Start:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
 		fontRendererObj.drawStringWithShadow("Xaeros Compatibility:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
@@ -281,11 +288,18 @@ public class GUIConfig extends GuiScreen{
 		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.name"), guiLeft+10, guiTop+25, Color.BLACK.getRGB());
 		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.type"), guiLeft+140, guiTop+25, Color.BLACK.getRGB());
 		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.rumble"), guiLeft+200, guiTop+25, Color.BLACK.getRGB());
-		for(int i=0; i<joysticks.length; ++i){
-			joystickButtons.get(i).drawButton(mc, mouseX, mouseY);
-			fontRendererObj.drawString(joysticks[i].getName().substring(0, joysticks[i].getName().length() > 20 ? 20 : joysticks[i].getName().length()), guiLeft+10, guiTop+44+15*i, Color.WHITE.getRGB());
-			fontRendererObj.drawString(joysticks[i].getType().toString(), guiLeft+140, guiTop+44+15*i, Color.WHITE.getRGB());
-			fontRendererObj.drawString(joysticks[i].getRumblers().length > 0 ? "X" : "", guiLeft+200, guiTop+44+15*i, Color.WHITE.getRGB());
+		
+		for(GuiButton jsButton : joystickButtons.keySet()){
+			jsButton.drawButton(mc, mouseX, mouseY);
+		}
+		
+		byte jsCount = 0;
+		for(GuiButton jsButton : joystickButtons.keySet()){
+			byte jsNumber = joystickButtons.get(jsButton);
+			fontRendererObj.drawString(joysticks[jsNumber].getName().substring(0, joysticks[jsNumber].getName().length() > 20 ? 20 : joysticks[jsNumber].getName().length()), guiLeft+10, guiTop+44+15*jsCount, Color.WHITE.getRGB());
+			fontRendererObj.drawString(joysticks[jsNumber].getType().toString(), guiLeft+140, guiTop+44+15*jsCount, Color.WHITE.getRGB());
+			fontRendererObj.drawString(joysticks[jsNumber].getRumblers().length > 0 ? "X" : "", guiLeft+200, guiTop+44+15*jsCount, Color.WHITE.getRGB());
+			++jsCount;
 		}
 	}
 	
@@ -365,9 +379,9 @@ public class GUIConfig extends GuiScreen{
 		}else if(buttonClicked.equals(xaerosCompatibilityButton)){
 			ConfigSystem.setClientConfig("XaerosCompatibility", !Boolean.valueOf(xaerosCompatibilityButton.displayString));
 			xaerosCompatibilityButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("XaerosCompatibility"));
-		}else if(joystickButtons.contains(buttonClicked)){
+		}else if(joystickButtons.containsKey(buttonClicked)){
 			guiLevel = GUILevels.JS_BUTTON;
-			ControlSystem.setJoystick(joysticks[joystickButtons.indexOf(buttonClicked)]);
+			ControlSystem.setJoystick(joysticks[joystickButtons.get(buttonClicked)]);
 			joystickComponents = ControlSystem.getJoystick().getComponents();
 		}else if(joystickConfigureButtons.contains(buttonClicked)){
 			joystickComponentId = joystickConfigureButtons.indexOf(buttonClicked) + scrollSpot;
@@ -412,7 +426,7 @@ public class GUIConfig extends GuiScreen{
 		for(GuiTextField box : vehicleBoxes.values()){
 			box.setEnabled(guiLevel.equals(GUILevels.VEHICLE));
 		}
-		for(GuiButton button : joystickButtons){
+		for(GuiButton button : joystickButtons.keySet()){
 			button.enabled = guiLevel.equals(GUILevels.JS_SELECT);
 		}
 		for(GuiButton button : joystickConfigureButtons){
