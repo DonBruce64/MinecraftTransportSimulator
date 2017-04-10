@@ -121,6 +121,10 @@ public final class ClientEventSystem{
 							if((playerLastSeat.parent.rotationPitch > 90 || playerLastSeat.parent.rotationPitch < -90) ^ playerLastSeat.parent.prevRotationPitch > 90 || playerLastSeat.parent.prevRotationPitch < -90){
 								//rider.rotationYaw+=180;
 							}
+							if(ConfigSystem.getBooleanConfig("MouseYoke") && playerLastSeat.isController){
+								minecraft.thePlayer.rotationYaw = playerLastSeat.parent.rotationYaw;
+								minecraft.thePlayer.rotationPitch = playerLastSeat.parent.rotationPitch;
+							}
 						}
 					}
 				}
@@ -185,7 +189,7 @@ public final class ClientEventSystem{
 			EntityParent parent = ((EntitySeat) event.entityPlayer.ridingEntity).parent;
 			if(parent!=null){
 				GL11.glPushMatrix();
-				if(!event.entityPlayer.equals(minecraft.thePlayer)){
+				if(!event.entityPlayer.equals(minecraft.thePlayer)){					
 					EntityPlayer masterPlayer = Minecraft.getMinecraft().thePlayer;
 					EntityPlayer renderedPlayer = event.entityPlayer;
 					float playerDistanceX = (float) (renderedPlayer.posX - masterPlayer.posX);

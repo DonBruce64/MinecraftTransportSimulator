@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -53,6 +54,8 @@ public final class ControlSystem{
 	public static KeyBinding configKey;
 	private static String joystickName;
 	private static Controller joystick;
+	private static short mousePosX = 0;
+	private static short mousePosY = 0;
 	private static Map<String, Integer> keyboardMap = new HashMap<String, Integer>();
 	private static Map<String, Integer> joystickMap = new HashMap<String, Integer>();
 	
@@ -289,41 +292,57 @@ public final class ControlSystem{
 				joystick = null;
 			}
 		}
+		
 		checkHUD();
 		checkBrakes(plane);
 		checkThrottle(plane);
 		if(plane.hasFlaps){checkFlaps(plane);}
 		checkPanel(plane, controller);
 		
-		if(joystickMap.get(controls.ROLL.joystickName) != 999 && joystick != null){
-			MTS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), getAxisState(controls.ROLL, true)));
-		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.ROLL.keyboardIncrementName))){
-			if(isControlPressed(controls.MOD)){
-				MTS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 8));
-			}else{
-				MTS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+		if(ConfigSystem.getBooleanConfig("MouseYoke")){
+			if(CameraSystem.lockedView){
+				int dx = Mouse.getDX();
+				int dy = Mouse.getDY();
+				if(Math.abs(dx) < 100){
+					mousePosX = (short) Math.max(Math.min(mousePosX + dx/5F, 350), -350);
+				}
+				if(Math.abs(dy) < 100){
+					mousePosY = (short) Math.max(Math.min(mousePosY - dy, 350), -350);
+				}
+				MTS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), mousePosX));
+				MTS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), mousePosY));
 			}
-		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.ROLL.keyboardDecrementName))){
-			if(isControlPressed(controls.MOD)){
-				MTS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 0));
-			}else{
-				MTS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+		}else{
+			if(joystickMap.get(controls.ROLL.joystickName) != 999 && joystick != null){
+				MTS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), getAxisState(controls.ROLL, true)));
+			}else if(Keyboard.isKeyDown(keyboardMap.get(controls.ROLL.keyboardIncrementName))){
+				if(isControlPressed(controls.MOD)){
+					MTS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 8));
+				}else{
+					MTS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+				}
+			}else if(Keyboard.isKeyDown(keyboardMap.get(controls.ROLL.keyboardDecrementName))){
+				if(isControlPressed(controls.MOD)){
+					MTS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 0));
+				}else{
+					MTS.MFSNet.sendToServer(new AileronPacket(plane.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+				}
 			}
-		}
-		
-		if(joystickMap.get(controls.PITCH.joystickName) != 999 && joystick != null){
-			MTS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), getAxisState(controls.PITCH, true)));
-		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.PITCH.keyboardIncrementName))){
-			if(isControlPressed(controls.MOD)){
-				MTS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 9));
-			}else{
-				MTS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-			}
-		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.PITCH.keyboardDecrementName))){
-			if(isControlPressed(controls.MOD)){
-				MTS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 1));
-			}else{
-				MTS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+			
+			if(joystickMap.get(controls.PITCH.joystickName) != 999 && joystick != null){
+				MTS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), getAxisState(controls.PITCH, true)));
+			}else if(Keyboard.isKeyDown(keyboardMap.get(controls.PITCH.keyboardIncrementName))){
+				if(isControlPressed(controls.MOD)){
+					MTS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 9));
+				}else{
+					MTS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+				}
+			}else if(Keyboard.isKeyDown(keyboardMap.get(controls.PITCH.keyboardDecrementName))){
+				if(isControlPressed(controls.MOD)){
+					MTS.MFSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 1));
+				}else{
+					MTS.MFSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+				}
 			}
 		}
 		

@@ -48,6 +48,7 @@ public class GUIConfig extends GuiScreen{
 	private GuiButton seaLevelOffsetButton;
 	private GuiButton electricStartButton;
 	private GuiButton xaerosCompatibilityButton;
+	private GuiButton mouseYokeButton;
 	private GuiTextField joystickForceFactor;
 	private GuiTextField controlSurfaceCooldown;
 	private GuiTextField joystickDeadZone;
@@ -99,6 +100,7 @@ public class GUIConfig extends GuiScreen{
 		configureButtons.add(seaLevelOffsetButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("SeaLevelOffset"))));
 		configureButtons.add(electricStartButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("ElectricStart"))));
 		configureButtons.add(xaerosCompatibilityButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("XaerosCompatibility"))));
+		configureButtons.add(mouseYokeButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig("MouseYoke"))));
 		for(GuiButton button : configureButtons){
 			buttonList.add(button);
 		}
@@ -229,10 +231,11 @@ public class GUIConfig extends GuiScreen{
 		fontRendererObj.drawStringWithShadow("Sea Level Offset:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
 		fontRendererObj.drawStringWithShadow("Electric Start:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
 		fontRendererObj.drawStringWithShadow("Xaeros Compatibility:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
+		fontRendererObj.drawStringWithShadow("Mouse Yoke:", guiLeft+10, guiTop+15+(line++)*20, Color.WHITE.getRGB());
 		
-		seaLevelOffsetButton.drawButton(mc, mouseX, mouseY);
-		electricStartButton.drawButton(mc, mouseX, mouseY);
-		xaerosCompatibilityButton.drawButton(mc, mouseX, mouseY);
+		for(GuiButton button : configureButtons){
+			button.drawButton(mc, mouseX, mouseY);
+		}
 		
 		if(isPointInRegion(seaLevelOffsetButton.xPosition, seaLevelOffsetButton.xPosition + seaLevelOffsetButton.width, seaLevelOffsetButton.yPosition, seaLevelOffsetButton.yPosition + seaLevelOffsetButton.height, mouseX, mouseY)){
 			drawHoveringText(Arrays.asList(new String[] {"Does altimeter display 0", "at average sea level", "instead of Y=0?"}), mouseX, mouseY, fontRendererObj);
@@ -240,6 +243,8 @@ public class GUIConfig extends GuiScreen{
 			drawHoveringText(Arrays.asList(new String[] {"Enable electric starter?", "If disabled players must", "start engines by hand."}), mouseX, mouseY, fontRendererObj);
 		}else if(isPointInRegion(xaerosCompatibilityButton.xPosition, xaerosCompatibilityButton.xPosition + xaerosCompatibilityButton.width, xaerosCompatibilityButton.yPosition, xaerosCompatibilityButton.yPosition + xaerosCompatibilityButton.height, mouseX, mouseY)){
 			drawHoveringText(Arrays.asList(new String[] {"Enable Xaeros Minimap Compatibility?", "This allows Xaeros Minimap to be shown,", "but makes the hotbar render over the HUD."}), mouseX, mouseY, fontRendererObj);
+		}else if(isPointInRegion(mouseYokeButton.xPosition, mouseYokeButton.xPosition + mouseYokeButton.width, mouseYokeButton.yPosition, mouseYokeButton.yPosition + mouseYokeButton.height, mouseX, mouseY)){
+			drawHoveringText(Arrays.asList(new String[] {"Enable Mouse Yoke?", "Prevents looking around unless unlocked.", "Think MCHeli controls."}), mouseX, mouseY, fontRendererObj);
 		}
 	}
 	
@@ -379,6 +384,9 @@ public class GUIConfig extends GuiScreen{
 		}else if(buttonClicked.equals(xaerosCompatibilityButton)){
 			ConfigSystem.setClientConfig("XaerosCompatibility", !Boolean.valueOf(xaerosCompatibilityButton.displayString));
 			xaerosCompatibilityButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("XaerosCompatibility"));
+		}else if(buttonClicked.equals(mouseYokeButton)){
+			ConfigSystem.setClientConfig("MouseYoke", !Boolean.valueOf(mouseYokeButton.displayString));
+			mouseYokeButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("MouseYoke"));
 		}else if(joystickButtons.containsKey(buttonClicked)){
 			guiLevel = GUILevels.JS_BUTTON;
 			ControlSystem.setJoystick(joysticks[joystickButtons.get(buttonClicked)]);
