@@ -73,21 +73,6 @@ public class RenderTrack extends RenderTileBase{
 			renderTrackSegmentFromCurve(track.getWorldObj(), track.curve, false, track.connectedTrack, otherEnd != null ? otherEnd.connectedTrack : null);
 			GL11.glPopMatrix();
 			
-			GL11.glPushMatrix();
-			GL11DrawSystem.bindTexture(ballastTexture);
-			if(track.connectedTrack != null && (otherEnd == null || otherEnd.connectedTrack == null)){
-				GL11.glColor3f(1, 0, 0);
-			}else if(track.connectedTrack == null && (otherEnd != null && otherEnd.connectedTrack != null)){
-				GL11.glColor3f(0, 1, 0);
-			}else if(track.connectedTrack != null && (otherEnd != null && otherEnd.connectedTrack != null)){
-				GL11.glColor3f(0, 0, 1);
-			}
-			GL11DrawSystem.renderSquare(0.25, 0.75, 0, 3, 0.25, 0.25, true);
-			GL11DrawSystem.renderSquare(0.25, 0.75, 0, 3, 0.75, 0.75, true);
-			GL11DrawSystem.renderSquare(0.25, 0.25, 0, 3, 0.25, 0.75, true);
-			GL11DrawSystem.renderSquare(0.75, 0.75, 0, 3, 0.25, 0.75, true);
-			GL11.glPopMatrix();
-			
 			/*
 			//CAUSES OVER 20FPS LOSS.  DO NOT USE EXCEPT FOR TESTING!
 			GL11DrawSystem.bindTexture(ballastTexture);
