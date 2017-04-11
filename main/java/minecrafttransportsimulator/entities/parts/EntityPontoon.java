@@ -23,6 +23,14 @@ public class EntityPontoon extends EntityGroundDevice{
 	}
 	
 	public EntityPontoon(World world, EntityParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+		this(world, vehicle, parentUUID, offsetX, offsetY, offsetZ);
+		this.otherHalf = new EntityPontoonDummy(world, vehicle, parentUUID, offsetX, offsetY, offsetZ - 2);
+		this.setOtherHalf(otherHalf);
+		otherHalf.setOtherHalf(this);
+		vehicle.addChild(this.otherHalfUUID, otherHalf, true);
+	}
+	
+	protected EntityPontoon(World world, EntityParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ){
 		super(world, (EntityVehicle) vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F, 0.1F, 2.5F);
 	}
 	
@@ -95,5 +103,28 @@ public class EntityPontoon extends EntityGroundDevice{
 	public void writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setString("otherHalfUUID", this.otherHalfUUID);
+	}
+	
+	public static class EntityPontoonDummy extends EntityPontoon{
+		public EntityPontoonDummy(World world){
+			super(world);
+		}
+		
+		public EntityPontoonDummy(World world, EntityParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+			this(world, vehicle, parentUUID, offsetX, offsetY, offsetZ);
+			this.otherHalf = new EntityPontoon(world, vehicle, parentUUID, offsetX, offsetY, offsetZ + 2);
+			this.setOtherHalf(otherHalf);
+			otherHalf.setOtherHalf(this);
+			vehicle.addChild(this.otherHalfUUID, otherHalf, true);
+		}
+		
+		public EntityPontoonDummy(World world, EntityParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ){
+			super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ);
+		}
+		
+		@Override
+		public ItemStack getItemStack(){
+			return null;
+		}
 	}
 }

@@ -83,7 +83,7 @@ public class CommonProxy{
 	 */
 	public void registerChildEntity(Class<? extends EntityChild> entityClass, Item entityItem){
 		if(entityItem != null){
-			MTSRegistry.entityItems.put(entityItem, entityClass);
+			MTSRegistry.entityItems.put(entityClass, entityItem);
 		}
 		registerEntity(entityClass);
 	}

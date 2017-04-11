@@ -25,6 +25,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -86,61 +87,64 @@ public abstract class EntityParent extends EntityMultipartBase{
 				if(ItemStackHelper.getItemFromStack(heldStack).equals(MTSRegistry.wrench)){
 					return false;
 				}
-				//Verify that the item is registered as a spawnable part.
-				Class<? extends EntityChild> childClassToSpawn = MTSRegistry.entityItems.get(ItemStackHelper.getItemFromStack(heldStack));
-				if(childClassToSpawn != null){
-					//Now find the closest spot to put it.
-					EntityChild childClicked = (EntityChild) clicked;
-					PartData dataToSpawn = null;
-					float closestPosition = 9999;
-					for(PartData data : partData){
-						for(Class<? extends EntityChild> dataClass : data.acceptableClasses){
-							if(dataClass.equals(childClassToSpawn)){
-								float distance = (float) Math.hypot(childClicked.offsetX - data.offsetX, childClicked.offsetZ - data.offsetZ);
-								if(distance < closestPosition){
-									//Make sure a part doesn't exist already.
-									boolean childPresent = false;
-									for(EntityChild child : children.values()){
-										if(child.offsetX == data.offsetX && child.offsetY == data.offsetY && child.offsetZ == data.offsetZ){
+				
+				Item heldItem = ItemStackHelper.getItemFromStack(heldStack);
+				EntityChild childClicked = (EntityChild) clicked;
+				Class<? extends EntityChild> childClassToSpawn = null;
+				PartData dataToSpawn = null;
+				float closestPosition = 9999;
+				//Look though the part data to find the class that goes with the held item.
+				for(PartData data : partData){
+					for(Class partClass : data.acceptableClasses){
+						if(heldItem.equals(MTSRegistry.entityItems.get(partClass))){
+							//The held item can spawn a part.t.
+							//Now find the closest spot to put it.
+							float distance = (float) Math.hypot(childClicked.offsetX - data.offsetX, childClicked.offsetZ - data.offsetZ);
+							if(distance < closestPosition){
+								//Make sure a part doesn't exist already.
+								boolean childPresent = false;
+								for(EntityChild child : children.values()){
+									if(child.offsetX == data.offsetX && child.offsetY == data.offsetY && child.offsetZ == data.offsetZ){
+										childPresent = true;
+										break;
+									}else if(child instanceof EntityGroundDevice){
+										if(child.offsetX == data.alternateOffsetX && child.offsetY == data.alternateOffsetY && child.offsetZ == data.alternateOffsetZ){
 											childPresent = true;
 											break;
-										}else if(child instanceof EntityGroundDevice){
-											if(child.offsetX == data.alternateOffsetX && child.offsetY == data.alternateOffsetY && child.offsetZ == data.alternateOffsetZ){
-												childPresent = true;
-												break;
-											}
 										}
 									}
-									if(!childPresent){
-										closestPosition = distance;
-										dataToSpawn = data;
-									}
+								}
+								if(!childPresent){
+									closestPosition = distance;
+									dataToSpawn = data;
+									childClassToSpawn = partClass;
 								}
 							}
-						}					
-					}
-					if(dataToSpawn != null){
-						//We have the correct class, now time to spawn it.
-						try{
-							Constructor<? extends EntityChild> construct = childClassToSpawn.getConstructor(World.class, EntityParent.class, String.class, float.class, float.class, float.class, int.class);
-							EntityChild newChild = construct.newInstance(worldObj, this, this.UUID, dataToSpawn.offsetX, dataToSpawn.offsetY, dataToSpawn.offsetZ, ItemStackHelper.getItemDamage(heldStack));
-							newChild.setNBTFromStack(heldStack);
-							if(newChild instanceof EntityGroundDevice){
-								float[] extendedCoords = new float[]{dataToSpawn.offsetX, dataToSpawn.offsetY, dataToSpawn.offsetZ};
-								float[] retractedCoords = new float[]{dataToSpawn.alternateOffsetX, dataToSpawn.alternateOffsetY, dataToSpawn.alternateOffsetZ};
-								boolean retractable = !Arrays.equals(retractedCoords, extendedCoords);
-								((EntityGroundDevice) newChild).setExtraProperties(dataToSpawn.rotatesWithYaw, retractable, extendedCoords, retractedCoords);
-							}else if(dataToSpawn.isController){
-								((EntitySeat) newChild).setController();
-							}
-							this.addChild(newChild.UUID, newChild, true);
-							if(!PlayerHelper.isPlayerCreative(player)){
-								PlayerHelper.removeItemFromHand(player, 1);
-							}
-							return true;
-						}catch(Exception e){
-							System.err.println("ERROR SPAWING PART!");
 						}
+					}
+				}
+				if(dataToSpawn != null){
+					//We have a part, now time to spawn it.
+					try{
+						Constructor<? extends EntityChild> construct = childClassToSpawn.getConstructor(World.class, EntityParent.class, String.class, float.class, float.class, float.class, int.class);
+						EntityChild newChild = construct.newInstance(worldObj, this, this.UUID, dataToSpawn.offsetX, dataToSpawn.offsetY, dataToSpawn.offsetZ, ItemStackHelper.getItemDamage(heldStack));
+						newChild.setNBTFromStack(heldStack);
+						if(newChild instanceof EntityGroundDevice){
+							float[] extendedCoords = new float[]{dataToSpawn.offsetX, dataToSpawn.offsetY, dataToSpawn.offsetZ};
+							float[] retractedCoords = new float[]{dataToSpawn.alternateOffsetX, dataToSpawn.alternateOffsetY, dataToSpawn.alternateOffsetZ};
+							boolean retractable = !Arrays.equals(retractedCoords, extendedCoords);
+							((EntityGroundDevice) newChild).setExtraProperties(dataToSpawn.rotatesWithYaw, retractable, extendedCoords, retractedCoords);
+						}else if(dataToSpawn.isController){
+							((EntitySeat) newChild).setController();
+						}
+						this.addChild(newChild.UUID, newChild, true);
+						if(!PlayerHelper.isPlayerCreative(player)){
+							PlayerHelper.removeItemFromHand(player, 1);
+						}
+						return true;
+					}catch(Exception e){
+						System.err.println("ERROR SPAWING PART!");
+						e.printStackTrace();
 					}
 				}
 			}

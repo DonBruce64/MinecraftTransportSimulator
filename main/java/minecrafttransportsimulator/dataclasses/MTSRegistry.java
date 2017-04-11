@@ -17,7 +17,6 @@ import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
-import minecrafttransportsimulator.entities.parts.EntityPontoonDummy;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
@@ -101,9 +100,9 @@ public class MTSRegistry{
 	
 	/**
 	 * Maps child classes to the items that spawn them.
-	 * Useful for inventory operations.
+	 * Used for part spawning operations.
 	 */
-	public static Map<Item, Class<? extends EntityChild>> entityItems = new HashMap<Item, Class<? extends EntityChild>>();
+	public static Map<Class<? extends EntityChild>, Item> entityItems = new HashMap<Class<? extends EntityChild>, Item>();
 	
 	public void init(){
 		initItems();
@@ -155,7 +154,7 @@ public class MTSRegistry{
 		MTS.proxy.registerChildEntity(EntityWheel.EntityWheelLarge.class, wheelLarge);
 		MTS.proxy.registerChildEntity(EntitySkid.class, skid);
 		MTS.proxy.registerChildEntity(EntityPontoon.class, pontoon);
-		MTS.proxy.registerChildEntity(EntityPontoonDummy.class, pontoon);
+		MTS.proxy.registerChildEntity(EntityPontoon.EntityPontoonDummy.class, pontoon);
 		MTS.proxy.registerChildEntity(EntityPropeller.class, propeller);
 		MTS.proxy.registerChildEntity(EntityEngineAircraftSmall.class, engineAircraftSmall);
 		MTS.proxy.registerChildEntity(EntityEngineAircraftLarge.class, engineAircraftLarge);
