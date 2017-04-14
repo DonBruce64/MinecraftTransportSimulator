@@ -13,6 +13,7 @@ import minecrafttransportsimulator.blocks.BlockTrack;
 import minecrafttransportsimulator.blocks.BlockTrackFake;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.main.EntityCore;
+import minecrafttransportsimulator.entities.parts.EntityBogie;
 import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
@@ -91,6 +92,9 @@ public class MTSRegistry{
 	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	
 	public static final Item track = new Item().setCreativeTab(MTSCreativeTabs.tabMTSTrains);
+	public static final Item bogie = new Item().setCreativeTab(MTSCreativeTabs.tabMTSTrains);
+	//public static final Item engineLocomotive = new ItemEngineLocomotive().setCreativeTab(MTSCreativeTabs.tabMTSTrains);
+	//public static final Item sd70 = new ItemMultipartMoving(EntitySD70.class, 1).setCreativeTab(MTSCreativeTabs.tabMTSTrains);
 	
 	public static final Block blockTrack = new BlockTrack();
 	public static final Block blockTrackFake = new BlockTrackFake();
@@ -158,6 +162,8 @@ public class MTSRegistry{
 		MTS.proxy.registerChildEntity(EntityPropeller.class, propeller);
 		MTS.proxy.registerChildEntity(EntityEngineAircraftSmall.class, engineAircraftSmall);
 		MTS.proxy.registerChildEntity(EntityEngineAircraftLarge.class, engineAircraftLarge);
+		
+		MTS.proxy.registerChildEntity(EntityBogie.class, bogie);
 	}
 	
 	private void initPackets(){

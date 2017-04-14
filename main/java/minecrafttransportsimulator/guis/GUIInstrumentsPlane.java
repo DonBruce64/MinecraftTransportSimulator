@@ -221,7 +221,7 @@ public class GUIInstrumentsPlane extends GuiScreen{
 				if(x >= ((i-1)%8+1)*width/19-10 && x <= ((i-1)%8+1)*width/19+10){
 					if(y >= height*((i-1) < 8 ? 0.7 : 0.9) - 10 && y <= height*((i-1) < 8 ? 0.7 : 0.9) + 10){
 						if(hasInstrument[i]){
-							if(i != 11 && i != 13 && i != 14 && i != 15){
+							if(lastInstrumentClicked > 10 && (i != 11 && i != 13 && i != 14 && i != 15)){
 								fault = true;
 								return;
 							}else{

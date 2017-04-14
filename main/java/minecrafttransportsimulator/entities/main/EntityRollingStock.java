@@ -12,4 +12,16 @@ public abstract class EntityRollingStock extends EntityMultipartMoving{
 	public EntityRollingStock(World world, float posX, float posY, float posZ, float rotation, byte textureOptions){
 		super(world, posX, posY, posZ, rotation, textureOptions);
 	}
+	
+	@Override
+	public void onEntityUpdate(){
+		super.onEntityUpdate();
+		if(!linked){return;}
+		
+	}
+	
+	@Override
+	protected float getExplosionStrength(){
+		return 0;
+	}
 }
