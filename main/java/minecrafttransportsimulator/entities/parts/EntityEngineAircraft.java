@@ -3,8 +3,7 @@ package minecrafttransportsimulator.entities.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.core.EntityPlane;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
 import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
 import minecrafttransportsimulator.packets.general.ChatPacket;
@@ -24,7 +23,7 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 		super(world);
 	}
 
-	public EntityEngineAircraft(World world, EntityVehicle plane, String parentUUID, float offsetX, float offsetY, float offsetZ){
+	public EntityEngineAircraft(World world, EntityPlane plane, String parentUUID, float offsetX, float offsetY, float offsetZ){
 		super(world, plane, parentUUID, offsetX, offsetY, offsetZ, 0);
 	}
 	

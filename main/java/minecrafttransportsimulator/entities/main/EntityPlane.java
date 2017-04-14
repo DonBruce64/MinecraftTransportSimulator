@@ -1,8 +1,10 @@
-package minecrafttransportsimulator.entities.core;
+package minecrafttransportsimulator.entities.main;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSDamageSources.DamageSourceCrash;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
@@ -26,7 +28,7 @@ import net.minecraft.world.World;
  * @author don_bruce
  *
  */
-public abstract class EntityPlane extends EntityVehicle{	
+public abstract class EntityPlane extends EntityMultipartVehicle{	
 	//Visible plane variables
 	public boolean hasFlaps;
 	
@@ -43,9 +45,12 @@ public abstract class EntityPlane extends EntityVehicle{
 	public short elevatorCooldown;
 	public short rudderCooldown;
 	
+	public MTSVector velocityVec = new MTSVector(0, 0, 0);
+	public MTSVector headingVec = new MTSVector(0, 0, 0);
+	public MTSVector verticalVec = new MTSVector(0, 0, 0);
+	public MTSVector sideVec = new MTSVector(0, 0, 0);
+	
 	//Defined plane properties
-	protected int fuelCapcacity;//1 bucket is 100 units
-	protected float emptyMass;//kg
 	protected float wingspan;//m
 	protected float wingArea;//m^2
 	protected float tailDistance;//m away from center of lift
@@ -114,9 +119,8 @@ public abstract class EntityPlane extends EntityVehicle{
 		super(world);
 	}
 	
-	public EntityPlane(World world, float posX, float posY, float posZ, float rotation, int textureCode){
-		super(world, posX, posY, posZ, rotation);
-		this.textureOptions=(byte) textureCode;
+	public EntityPlane(World world, float posX, float posY, float posZ, float rotation, byte textureOptions){
+		super(world, posX, posY, posZ, rotation, textureOptions);
 	}
 	
 	@Override
@@ -142,7 +146,7 @@ public abstract class EntityPlane extends EntityVehicle{
 	@Override
 	public void explodeAtPosition(double x, double y, double z){
 		Entity pilot = null;
-		for(EntityChild child : getChildren()){
+		for(EntityMultipartChild child : getChildren()){
 			if(child instanceof EntitySeat){
 				if(((EntitySeat) child).isController){
 					if(EntityHelper.getRider(child) != null){
@@ -152,7 +156,7 @@ public abstract class EntityPlane extends EntityVehicle{
 				}
 			}
 		}
-		for(EntityChild child : getChildren()){
+		for(EntityMultipartChild child : getChildren()){
 			if(EntityHelper.getRider(child) != null){
 				if(EntityHelper.getRider(child).equals(pilot)){
 					EntityHelper.getRider(child).attackEntityFrom(new DamageSourceCrash(null, "plane"), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
@@ -178,10 +182,18 @@ public abstract class EntityPlane extends EntityVehicle{
 		}
 	}
 	
+	private void updateHeadingVec(){
+        double f1 = Math.cos(-this.rotationYaw * 0.017453292F - (float)Math.PI);
+        double f2 = Math.sin(-this.rotationYaw * 0.017453292F - (float)Math.PI);
+        double f3 = -Math.cos(-this.rotationPitch * 0.017453292F);
+        double f4 = Math.sin(-this.rotationPitch * 0.017453292F);
+        headingVec.set((f2 * f3), f4, (f1 * f3));
+   	}
+	
 	private void refreshGroundedStatuses(){
 		//TODO set this up with physics.
 		brakeDistance = groundedWheels = groundedCores = 0;
-		for(EntityChild child : getChildren()){
+		for(EntityMultipartChild child : getChildren()){
 			if(child instanceof EntityGroundDevice){
 				if(!child.isDead){
 					if(child.isOnGround()){
@@ -205,7 +217,7 @@ public abstract class EntityPlane extends EntityVehicle{
 	private void getBasicProperties(){		
 		currentCOG = 1;
 		currentMass = (float) (emptyMass + fuel/50);
-		for(EntityChild child : getChildren()){
+		for(EntityMultipartChild child : getChildren()){
 			addedMass = 0;
 			rider = EntityHelper.getRider(child);
 			if(rider != null){
@@ -244,7 +256,7 @@ public abstract class EntityPlane extends EntityVehicle{
 	
 	private void getForcesAndMotions(){
 		thrustForce = thrustTorque = 0;
-		for(EntityChild child : getChildren()){
+		for(EntityMultipartChild child : getChildren()){
 			if(!child.isDead){
 				if(child instanceof EntityPropeller){
 					thrust = ((EntityPropeller) child).getThrustForce();
@@ -319,10 +331,10 @@ public abstract class EntityPlane extends EntityVehicle{
 	}
 	
 	private void adjustXZMovement(){
-		for(EntityChild child : getChildren()){
+		for(EntityMultipartChild child : getChildren()){
 			xCollisionDepth = 0;
 			zCollisionDepth = 0;
-			newChildBox = child.getBoundingBox().getOffsetBoundingBox(motionX*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), 0, 0);
+			newChildBox = child.getBoundingBox().getOffsetBoundingBox(motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), 0, 0);
 			collidingBoxes = this.getChildCollisions(child, newChildBox);
 			for(int i=0; i < collidingBoxes.size(); ++i){
 				collidingBox = collidingBoxes.get(i);
@@ -333,7 +345,7 @@ public abstract class EntityPlane extends EntityVehicle{
 				}
 			}
 			
-			newChildBox = child.getBoundingBox().getOffsetBoundingBox(0, 0, motionZ*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"));
+			newChildBox = child.getBoundingBox().getOffsetBoundingBox(0, 0, motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
 			collidingBoxes = this.getChildCollisions(child, newChildBox);	
 			for(int i=0; i < collidingBoxes.size(); ++i){
 				collidingBox = collidingBoxes.get(i);
@@ -359,14 +371,14 @@ public abstract class EntityPlane extends EntityVehicle{
 					continue;
 				}
 				if(motionX > 0){
-					motionX = Math.max(motionX + xCollisionDepth/ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), 0);
+					motionX = Math.max(motionX + xCollisionDepth/ConfigSystem.getDoubleConfig("SpeedFactor"), 0);
 				}else{
-					motionX = Math.min(motionX + xCollisionDepth/ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), 0);
+					motionX = Math.min(motionX + xCollisionDepth/ConfigSystem.getDoubleConfig("SpeedFactor"), 0);
 				}
 				if(motionZ > 0){
-					motionZ = Math.max(motionZ + zCollisionDepth/ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), 0);
+					motionZ = Math.max(motionZ + zCollisionDepth/ConfigSystem.getDoubleConfig("SpeedFactor"), 0);
 				}else{
-					motionZ = Math.min(motionZ + zCollisionDepth/ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), 0);
+					motionZ = Math.min(motionZ + zCollisionDepth/ConfigSystem.getDoubleConfig("SpeedFactor"), 0);
 				}
 			}
 		}
@@ -379,9 +391,9 @@ public abstract class EntityPlane extends EntityVehicle{
 		do{
 			yawChildXOffset = 0;
 			yawChildZOffset = 0;
-			for(EntityChild child : getChildren()){				
+			for(EntityMultipartChild child : getChildren()){				
 				offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw + motionYaw, rotationRoll);
-				newChildBox = child.getBoundingBox().getOffsetBoundingBox(posX + offset.xCoord - child.posX + motionX*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), 0, posZ + offset.zCoord - child.posZ + motionZ*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"));
+				newChildBox = child.getBoundingBox().getOffsetBoundingBox(posX + offset.xCoord - child.posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), 0, posZ + offset.zCoord - child.posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
 				child.isCollidedHorizontally = !this.getChildCollisions(child, newChildBox).isEmpty();
 				if(child.isCollidedHorizontally){
 					if(yawChildXOffset==0){
@@ -432,9 +444,9 @@ public abstract class EntityPlane extends EntityVehicle{
 		originalMotionRoll = motionRoll;
 		do{
 			rollChildOffset = 0;
-			for(EntityChild child : getChildren()){
+			for(EntityMultipartChild child : getChildren()){
 				offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-				offset = offset.add(posX - child.posX + motionX*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), posY - child.posY + motionY*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), posZ - child.posZ + motionZ*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"));
+				offset = offset.add(posX - child.posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY - child.posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ - child.posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
 				if(!this.getChildCollisions(child, child.getBoundingBox().getOffsetBoundingBox(offset.xCoord, offset.yCoord, offset.zCoord)).isEmpty()){
 					if(rollChildOffset==0){
 						rollChildOffset = child.offsetX;
@@ -467,9 +479,9 @@ public abstract class EntityPlane extends EntityVehicle{
 		originalMotionPitch = motionPitch;
 		do{
 			pitchChildOffset = 0;
-			for(EntityChild child : getChildren()){
+			for(EntityMultipartChild child : getChildren()){
 				offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);				
-				offset = offset.add(posX - child.posX + motionX*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), posY - child.posY + motionY*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), posZ - child.posZ + motionZ*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"));				
+				offset = offset.add(posX - child.posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY - child.posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ - child.posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));				
 				if(!this.getChildCollisions(child, child.getBoundingBox().getOffsetBoundingBox(offset.xCoord, offset.yCoord, offset.zCoord)).isEmpty()){
 					if(child.offsetZ != 0){
 						prevPitchChildOffset = pitchChildOffset;
@@ -494,10 +506,10 @@ public abstract class EntityPlane extends EntityVehicle{
 			}
 		}while(pitchChildOffset != 0);
 		
-		for(EntityChild child : getChildren()){
+		for(EntityMultipartChild child : getChildren()){
 			yCollisionDepth = 0;
 			offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-			newChildBox = child.getBoundingBox().getOffsetBoundingBox(posX + offset.xCoord - child.posX + motionX*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), posY + offset.yCoord - child.posY + motionY*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), posZ + offset.zCoord - child.posZ + motionZ*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"));
+			newChildBox = child.getBoundingBox().getOffsetBoundingBox(posX + offset.xCoord - child.posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY + offset.yCoord - child.posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ + offset.zCoord - child.posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
 			collidingBoxes = this.getChildCollisions(child, newChildBox);
 			for(int i=0; i < collidingBoxes.size(); ++i){
 				collidingBox = collidingBoxes.get(i);
@@ -521,7 +533,7 @@ public abstract class EntityPlane extends EntityVehicle{
 					}
 					continue;
 				}
-				motionY += yCollisionDepth/ConfigSystem.getDoubleConfig("PlaneSpeedFactor");
+				motionY += yCollisionDepth/ConfigSystem.getDoubleConfig("SpeedFactor");
 			}
 		}
 	}
@@ -530,7 +542,7 @@ public abstract class EntityPlane extends EntityVehicle{
 		rotationRoll += motionRoll;
 		rotationPitch = (motionPitch + rotationPitch)%360;
 		rotationYaw += motionYaw;
-		setPosition(posX + motionX*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), posY + motionY*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"), posZ + motionZ*ConfigSystem.getDoubleConfig("PlaneSpeedFactor"));
+		setPosition(posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
 	}
 
 	private void dampenControlSurfaces(){

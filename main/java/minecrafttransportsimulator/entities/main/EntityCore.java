@@ -1,5 +1,7 @@
-package minecrafttransportsimulator.entities.core;
+package minecrafttransportsimulator.entities.main;
 
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
@@ -9,13 +11,13 @@ import net.minecraft.world.World;
  * 
  * @author don_bruce
  */
-public class EntityCore extends EntityChild{
+public class EntityCore extends EntityMultipartChild{
 	
 	public EntityCore(World world) {
 		super(world);
 	}
 
-	public EntityCore(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
+	public EntityCore(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
 		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, width, height, 0);
 	}
 

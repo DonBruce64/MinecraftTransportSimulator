@@ -6,7 +6,7 @@ import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.dataclasses.MTSEntity;
-import minecrafttransportsimulator.entities.core.EntityParent;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 
@@ -40,8 +40,8 @@ public class ServerDataPacket implements IMessage{
 				MTSEntity thisEntity = (MTSEntity) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 				if(thisEntity != null){
 					thisEntity.readFromNBT(message.tagCompound);
-					if(thisEntity instanceof EntityParent){
-						((EntityParent) thisEntity).moveChildren();
+					if(thisEntity instanceof EntityMultipartParent){
+						((EntityMultipartParent) thisEntity).moveChildren();
 					}
 				}
 			}

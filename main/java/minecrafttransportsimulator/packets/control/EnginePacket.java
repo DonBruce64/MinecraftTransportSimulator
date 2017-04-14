@@ -6,7 +6,7 @@ import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.relauncher.Side;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
 import net.minecraft.client.Minecraft;
 
@@ -39,13 +39,13 @@ public class EnginePacket implements IMessage{
 
 	public static class Handler implements IMessageHandler<EnginePacket, IMessage> {
 		public IMessage onMessage(EnginePacket message, MessageContext ctx){
-			EntityVehicle vehicle;
+			EntityMultipartVehicle vehicle;
 			EntityEngine engine;
 			if(ctx.side==Side.SERVER){
-				vehicle = (EntityVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+				vehicle = (EntityMultipartVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 				engine = (EntityEngine) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.engineID);
 			}else{
-				vehicle = (EntityVehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+				vehicle = (EntityMultipartVehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 				engine = (EntityEngine) Minecraft.getMinecraft().theWorld.getEntityByID(message.engineID);
 			}	
 			if(vehicle != null && engine != null){

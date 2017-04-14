@@ -16,29 +16,29 @@ import net.minecraft.world.World;
 
 /**Main child class.  This class is the base for all child entities and should be
  * extended to use the parent-child linking system.
- * Use {@link EntityParent#addChild(String, EntityChild, boolean)} to add children 
- * and {@link EntityParent#removeChild(String, boolean)} to kill and remove them.
- * You may extend {@link EntityParent} to get more functionality with those systems.
+ * Use {@link EntityMultipartParent#addChild(String, EntityMultipartChild, boolean)} to add children 
+ * and {@link EntityMultipartParent#removeChild(String, boolean)} to kill and remove them.
+ * You may extend {@link EntityMultipartParent} to get more functionality with those systems.
  * Beware of children with offsetZ of 0, as they can cause problems with pitch calculations.
- * Also note that all childeren must have a constructor of the form: 
+ * Also note that all children must have a constructor of the form: 
  * public EntityChild(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height, int propertyCode)
  * 
  * @author don_bruce
  */
-public abstract class EntityChild extends EntityMultipartBase{	
+public abstract class EntityMultipartChild extends EntityMultipartBase{	
 	/** Integer for storing data about color, type, and other things.*/
 	public int propertyCode;
 	public float offsetX;
 	public float offsetY;
 	public float offsetZ;
-	public EntityParent parent;
+	public EntityMultipartParent parent;
 	protected String parentUUID;
 	
-	public EntityChild(World world) {
+	public EntityMultipartChild(World world) {
 		super(world);
 	}
 	
-	public EntityChild(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height, int propertyCode){
+	public EntityMultipartChild(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height, int propertyCode){
 		this(world);
 		this.motionX=0;
 		this.motionY=0;
@@ -101,7 +101,7 @@ public abstract class EntityChild extends EntityMultipartBase{
 	public abstract void setNBTFromStack(ItemStack stack);
 	
 	/**Gets an ItemStack that represents the entity.
-	 * This should be called when removing the entity from the world to return an item.
+	 * This is called when removing the entity from the world to return an item.
 	 */
 	public abstract ItemStack getItemStack();
 	
@@ -118,7 +118,7 @@ public abstract class EntityChild extends EntityMultipartBase{
 	private void linkToParent(){
 		MTSEntity entity = EntityHelper.getEntityByUUID(worldObj, (this.parentUUID));
 		if(entity != null){
-			EntityParent parent =  (EntityParent) entity;
+			EntityMultipartParent parent =  (EntityMultipartParent) entity;
 			parent.addChild(this.UUID, this, false);
 			this.parent=parent;
 		}

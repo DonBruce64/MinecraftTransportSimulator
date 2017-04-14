@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.entities.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityChildInventory;
-import minecrafttransportsimulator.entities.core.EntityParent;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
+import minecrafttransportsimulator.entities.main.EntityChildInventory;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -15,8 +15,8 @@ public class EntityChest extends EntityChildInventory{
 		super(world);
 	}
 	
-	public EntityChest(World world, EntityParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, (EntityVehicle) vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F);
+	public EntityChest(World world, EntityMultipartParent moving, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+		super(world, (EntityMultipartMoving) moving, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F);
 	}
 
 	@Override

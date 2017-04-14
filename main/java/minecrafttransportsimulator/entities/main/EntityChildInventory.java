@@ -1,10 +1,12 @@
-package minecrafttransportsimulator.entities.core;
+package minecrafttransportsimulator.entities.main;
 
 import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSEntity;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -14,7 +16,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
-public abstract class EntityChildInventory extends EntityChild implements IInventory{
+public abstract class EntityChildInventory extends EntityMultipartChild implements IInventory{
     public float lidAngle;
     public float prevLidAngle;
     public int numPlayersUsing;
@@ -25,8 +27,8 @@ public abstract class EntityChildInventory extends EntityChild implements IInven
 		super(world);
 	}
 	
-	public EntityChildInventory(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
-		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, width, height, 0);
+	public EntityChildInventory(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
+		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, width, height, 0);
 	}
 	
 	protected abstract String getChildInventoryName();

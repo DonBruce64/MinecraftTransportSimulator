@@ -9,18 +9,18 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
-import minecrafttransportsimulator.packets.general.InstrumentFlyerPacket;
+import minecrafttransportsimulator.packets.general.InstrumentPlanePacket;
 import minecrafttransportsimulator.rendering.AircraftInstruments;
 import minecrafttransportsimulator.rendering.AircraftInstruments.AircraftGauges;
-import minecrafttransportsimulator.rendering.VehicleHUDs;
+import minecrafttransportsimulator.rendering.PlaneHUD;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 
-public class GUIInstrumentsFlyer extends GuiScreen{
-	private final EntityVehicle vehicle;
+public class GUIInstrumentsPlane extends GuiScreen{
+	private final EntityPlane plane;
 	private final EntityPlayer player;
 	private final byte numberEngineBays;
 	private final Map<Float[], Byte> gaugeCoords;
@@ -30,28 +30,28 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 	private int lastClickedX;
 	private int lastClickedY;
 	
-	public GUIInstrumentsFlyer(EntityVehicle vehicle, EntityPlayer player){
-		this.vehicle = vehicle;
+	public GUIInstrumentsPlane(EntityPlane plane, EntityPlayer player){
+		this.plane = plane;
 		this.player = player;
-		numberEngineBays = vehicle.getNumberEngineBays();
+		numberEngineBays = plane.getNumberEngineBays();
 		gaugeCoords = new HashMap<Float[], Byte>();
 	}
 	
 	@Override
 	public void initGui(){
-		if(vehicle.instruments.get((byte) 0) != null){
+		if(plane.instruments.get((byte) 0) != null){
 			gaugeCoords.put(new Float[]{width*17/64*0.5F*0.75F, (height - 88)*4/3*0.5F*0.75F}, (byte) 0);
 		}
 		for(byte i=1; i<4; ++i){
-			if(vehicle.instruments.get(i) != null){
+			if(plane.instruments.get(i) != null){
 				gaugeCoords.put(new Float[]{(5*i+6)*width/32*0.5F, (height-96)*0.5F}, i);
 			}
 		}
-		if(vehicle.instruments.get((byte) 4) != null){
+		if(plane.instruments.get((byte) 4) != null){
 			gaugeCoords.put(new Float[]{width*17/16*0.5F*0.75F, (height - 88)*4/3*0.5F*0.75F}, (byte) 4);
 		}
 		for(byte i=5; i<10; ++i){
-			if(vehicle.instruments.get(i) != null){
+			if(plane.instruments.get(i) != null){
 				gaugeCoords.put(new Float[]{(5*(i-5)+6)*width/32*0.5F, (height-32)*0.5F}, i);
 			}
 		}
@@ -65,7 +65,7 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 
 	@Override
     public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
-		if(vehicle.isDead || player.getDistance(vehicle.posX, vehicle.posY, vehicle.posZ) > 20){
+		if(plane.isDead || player.getDistance(plane.posX, plane.posY, plane.posZ) > 20){
 			mc.thePlayer.closeScreen();
 			return;
 		}
@@ -73,42 +73,42 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 		this.drawDefaultBackground();
 		GL11.glPushMatrix();
 		GL11.glScalef(0.5F, 0.5F, 0.5F);
-		VehicleHUDs.startHUDDraw(vehicle);
+		PlaneHUD.startHUDDraw(plane);
 		height-=64;
-		VehicleHUDs.drawLeftPlanePanel(width, height);
-		if(vehicle.instruments.get((byte) 0) != null){
+		PlaneHUD.drawLeftPlanePanel(width, height);
+		if(plane.instruments.get((byte) 0) != null){
 			GL11.glPushMatrix();
 			GL11.glScalef(0.75F, 0.75F, 0.75F);
-			GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) 0)]);
+			GL11DrawSystem.bindTexture(AircraftInstruments.gauges[plane.instruments.get((byte) 0)]);
 			GL11DrawSystem.renderSquare(width*17/64-20, width*17/64+20, (height - 24)*4/3+20, (height - 24)*4/3-20, 0, 0, false);
 			GL11.glPopMatrix();
 		}
 		
-		VehicleHUDs.drawUpperPlanePanel(width, height);
+		PlaneHUD.drawUpperPlanePanel(width, height);
 		for(byte i=1; i<4; ++i){
-			if(vehicle.instruments.get(i) != null){
+			if(plane.instruments.get(i) != null){
 				GL11.glPushMatrix();
-				GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) i)]);
+				GL11DrawSystem.bindTexture(AircraftInstruments.gauges[plane.instruments.get((byte) i)]);
 				GL11DrawSystem.renderSquare((5*i+6)*width/32-20, (5*i+6)*width/32+20, height-32+20, height-32-20, 0, 0, false);
 				GL11.glPopMatrix();
 			}
 		}
 		
-		VehicleHUDs.drawRightPlanePanel(width, height);
-		if(vehicle.instruments.get((byte) 4) != null){
+		PlaneHUD.drawRightPlanePanel(width, height);
+		if(plane.instruments.get((byte) 4) != null){
 			GL11.glPushMatrix();
 			GL11.glScalef(0.75F, 0.75F, 0.75F);
-			GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) 4)]);
+			GL11DrawSystem.bindTexture(AircraftInstruments.gauges[plane.instruments.get((byte) 4)]);
 			GL11DrawSystem.renderSquare(width*17/16-20, width*17/16+20, (height - 24)*4/3+20, (height - 24)*4/3-20, 0, 0, false);
 			GL11.glPopMatrix();
 		}
 		
 		height+=64;
-		VehicleHUDs.drawLowerPlanePanel(width, height);
+		PlaneHUD.drawLowerPlanePanel(width, height);
 		for(byte i=5; i<10; ++i){
-	    	if(vehicle.instruments.get(i) != null){
+	    	if(plane.instruments.get(i) != null){
 				GL11.glPushMatrix();
-				GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) i)]);
+				GL11DrawSystem.bindTexture(AircraftInstruments.gauges[plane.instruments.get((byte) i)]);
 				GL11DrawSystem.renderSquare((5*(i-5)+6)*width/32-20, (5*(i-5)+6)*width/32+20, height-32+20, height-32-20, 0, 0, false);
 				GL11.glPopMatrix();
 	    	}
@@ -116,23 +116,23 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 		
 
 		GL11.glTranslatef(width, 0, 0);
-		VehicleHUDs.drawPanelPanel(width, height);
-		byte numberEngineBays = vehicle.getNumberEngineBays();
+		PlaneHUD.drawPanelPanel(width, height);
+		byte numberEngineBays = plane.getNumberEngineBays();
 		for(byte i=0; i<numberEngineBays; ++i){
 			GL11.glPushMatrix();
 			GL11.glTranslatef((2+i)*width/(2 + numberEngineBays), height - 72, 0);
 			GL11.glScalef(0.60F, 0.60F, 0.60F);
-	    	GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) (i*10 + 10))]);
+	    	GL11DrawSystem.bindTexture(AircraftInstruments.gauges[plane.instruments.get((byte) (i*10 + 10))]);
 	    	GL11DrawSystem.renderSquare(-60, 0, 0, -60, 0, 0, false);
-	    	GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) (i*10 + 11))]);
+	    	GL11DrawSystem.bindTexture(AircraftInstruments.gauges[plane.instruments.get((byte) (i*10 + 11))]);
 	    	GL11DrawSystem.renderSquare(0, 60, 0, -60, 0, 0, false);
-	    	GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) (i*10 + 12))]);
+	    	GL11DrawSystem.bindTexture(AircraftInstruments.gauges[plane.instruments.get((byte) (i*10 + 12))]);
 	    	GL11DrawSystem.renderSquare(-60, 0, 60, 0, 0, 0, false);
-	    	GL11DrawSystem.bindTexture(AircraftInstruments.gauges[vehicle.instruments.get((byte) (i*10 + 13))]);
+	    	GL11DrawSystem.bindTexture(AircraftInstruments.gauges[plane.instruments.get((byte) (i*10 + 13))]);
 	    	GL11DrawSystem.renderSquare(0, 60, 60, 0, 0, 0, false);
 			GL11.glPopMatrix();
 		}
-		VehicleHUDs.endHUDDraw();
+		PlaneHUD.endHUDDraw();
 		GL11.glPopMatrix();
 		
 		if(lastClickedX != 0 && lastClickedY != 0){
@@ -156,7 +156,7 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 		GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.instruments.main"), width/4, 32, 0, 1.5F, Color.WHITE);
 		GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.instruments.control"), 3*width/4, 32, 0, 1.5F, Color.WHITE);
 		if(lastInstrumentClicked == -1){
-			if(vehicle.ticksExisted%40 >= 20){
+			if(plane.ticksExisted%40 >= 20){
 				GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.instruments.idle"), width/2, height/2 + 32, 0, 1.5F, Color.WHITE);
 			}
 		}else{
@@ -164,7 +164,7 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 			if(!fault){
 				GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.instruments.decide"), width/2, height/2 + 8, 0, 1.5F, Color.WHITE);
 			}else{
-				if(vehicle.ticksExisted%20 >= 10){
+				if(plane.ticksExisted%20 >= 10){
 					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.instruments.fault"), width/2, height/2 + 8, 0, 1.5F, Color.RED);
 				}
 			}
@@ -227,7 +227,7 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 							}else{
 								fault = false;
 							}
-							MTS.MFSNet.sendToServer(new InstrumentFlyerPacket(vehicle.getEntityId(), player.getEntityId(), lastInstrumentClicked, i));
+							MTS.MFSNet.sendToServer(new InstrumentPlanePacket(plane.getEntityId(), player.getEntityId(), lastInstrumentClicked, i));
 							lastClickedX = 0;
 							lastClickedY = 0;
 							lastInstrumentClicked = -1;
@@ -237,8 +237,8 @@ public class GUIInstrumentsFlyer extends GuiScreen{
 				}
 			}
 			if(x >= width/2 && x<= width/2+height*0.2 && y >= height*0.7 && y <= height*0.9){
-				if(vehicle.instruments.get(lastInstrumentClicked) != 0){
-					MTS.MFSNet.sendToServer(new InstrumentFlyerPacket(vehicle.getEntityId(), player.getEntityId(), lastInstrumentClicked, (byte) 0));
+				if(plane.instruments.get(lastInstrumentClicked) != 0){
+					MTS.MFSNet.sendToServer(new InstrumentPlanePacket(plane.getEntityId(), player.getEntityId(), lastInstrumentClicked, (byte) 0));
 				}
 			}
 			lastClickedX = 0;

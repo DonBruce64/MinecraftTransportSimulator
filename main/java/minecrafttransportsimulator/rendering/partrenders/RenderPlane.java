@@ -2,8 +2,8 @@ package minecrafttransportsimulator.rendering.partrenders;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.entities.core.EntityParent;
-import minecrafttransportsimulator.entities.core.EntityPlane;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.systems.RenderSystem.RenderParent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -18,7 +18,7 @@ public abstract class RenderPlane extends RenderParent{
     }
     
 	@Override
-	public void renderParentModel(EntityParent parent, float partialTicks){
+	public void renderParentModel(EntityMultipartParent parent, float partialTicks){
 		EntityPlane plane=(EntityPlane) parent;
 		GL11.glPushMatrix();
 		GL11.glRotatef(-plane.rotationYaw, 0, 1, 0);

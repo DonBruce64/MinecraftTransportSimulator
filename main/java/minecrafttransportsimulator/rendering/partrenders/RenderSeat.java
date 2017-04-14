@@ -3,7 +3,7 @@ package minecrafttransportsimulator.rendering.partrenders;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.rendering.partmodels.ModelSeat;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
 import minecrafttransportsimulator.systems.RenderSystem.RenderChild;
@@ -16,7 +16,7 @@ public class RenderSeat extends RenderChild{
 	private static final ResourceLocation leatherTexture = new ResourceLocation(MTS.MODID, "textures/parts/leather.png");
 	
 	@Override
-	public void render(EntityChild child, double x, double y, double z, float partialTicks){		
+	public void render(EntityMultipartChild child, double x, double y, double z, float partialTicks){		
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glRotatef(-child.parent.rotationYaw, 0, 1, 0);

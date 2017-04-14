@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.planes.Trimotor;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityPlane;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
-import minecrafttransportsimulator.rendering.VehicleHUDs;
+import minecrafttransportsimulator.rendering.PlaneHUD;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
@@ -18,8 +18,8 @@ public class EntityTrimotor extends EntityPlane{
 		super(world);
 	}
 	
-	public EntityTrimotor(World world, float posX, float posY, float posZ, float rotation, int textureCode){
-		super(world, posX, posY, posZ, rotation, textureCode);
+	public EntityTrimotor(World world, float posX, float posY, float posZ, float rotation, byte textureOptions){
+		super(world, posX, posY, posZ, rotation, textureOptions);
 		this.displayName = "DB32-1204-UL";
 	}
 
@@ -27,7 +27,7 @@ public class EntityTrimotor extends EntityPlane{
 	protected void initProperties(){
 		lightSetup = 13;
 		numberPowerfulLights = 2;
-		maxFuel = 25000;
+		fuelCapacity = 25000;
 		emptyMass=3000;
 		wingspan=22.6F;
 		wingArea=70.0F;
@@ -134,6 +134,6 @@ public class EntityTrimotor extends EntityPlane{
 	
 	@Override
 	public void drawHUD(int width, int height){
-		VehicleHUDs.drawPlaneHUD(this, width, height);
+		PlaneHUD.drawPlaneHUD(this, width, height);
 	}
 }

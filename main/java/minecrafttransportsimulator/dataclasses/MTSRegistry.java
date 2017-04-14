@@ -11,8 +11,8 @@ import minecrafttransportsimulator.blocks.BlockPropellerBench;
 import minecrafttransportsimulator.blocks.BlockSurveyFlag;
 import minecrafttransportsimulator.blocks.BlockTrack;
 import minecrafttransportsimulator.blocks.BlockTrackFake;
-import minecrafttransportsimulator.entities.core.EntityChild;
-import minecrafttransportsimulator.entities.core.EntityCore;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.main.EntityCore;
 import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
@@ -25,7 +25,7 @@ import minecrafttransportsimulator.items.ItemEngine;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftLarge;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftSmall;
 import minecrafttransportsimulator.items.ItemFlightInstrument;
-import minecrafttransportsimulator.items.ItemPlane;
+import minecrafttransportsimulator.items.ItemMultipartMoving;
 import minecrafttransportsimulator.items.ItemPropeller;
 import minecrafttransportsimulator.items.ItemSeat;
 import minecrafttransportsimulator.items.ItemWrench;
@@ -40,7 +40,7 @@ import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.packets.general.EntityClientRequestDataPacket;
-import minecrafttransportsimulator.packets.general.InstrumentFlyerPacket;
+import minecrafttransportsimulator.packets.general.InstrumentPlanePacket;
 import minecrafttransportsimulator.packets.general.ServerDataPacket;
 import minecrafttransportsimulator.packets.general.ServerSyncPacket;
 import minecrafttransportsimulator.packets.general.TileEntityClientRequestDataPacket;
@@ -68,11 +68,11 @@ import net.minecraft.item.ItemStack;
 public class MTSRegistry{
 	public static final MTSRegistry instance = new MTSRegistry();
 	
-	public static final Item planeMC172 = new ItemPlane(EntityMC172.class, 6).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item planeVulcanair = new ItemPlane(EntityVulcanair.class, 7).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item planeComanche = new ItemPlane(EntityComanche.class, 4).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item planePZLP11 = new ItemPlane(EntityPZLP11.class, 1).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item planeTrimotor = new ItemPlane(EntityTrimotor.class, 15).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item planeMC172 = new ItemMultipartMoving(EntityMC172.class, 6).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item planeVulcanair = new ItemMultipartMoving(EntityVulcanair.class, 7).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item planeComanche = new ItemMultipartMoving(EntityComanche.class, 4).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item planePZLP11 = new ItemMultipartMoving(EntityPZLP11.class, 1).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item planeTrimotor = new ItemMultipartMoving(EntityTrimotor.class, 15).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	
 	public static final Item wheelSmall = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item wheelLarge = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
@@ -102,7 +102,7 @@ public class MTSRegistry{
 	 * Maps child classes to the items that spawn them.
 	 * Used for part spawning operations.
 	 */
-	public static Map<Class<? extends EntityChild>, Item> entityItems = new HashMap<Class<? extends EntityChild>, Item>();
+	public static Map<Class<? extends EntityMultipartChild>, Item> entityItems = new HashMap<Class<? extends EntityMultipartChild>, Item>();
 	
 	public void init(){
 		initItems();
@@ -168,7 +168,7 @@ public class MTSRegistry{
 		MTS.proxy.registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
 		MTS.proxy.registerPacket(TileEntityClientRequestDataPacket.class, TileEntityClientRequestDataPacket.Handler.class, false, true);
 
-		MTS.proxy.registerPacket(InstrumentFlyerPacket.class, InstrumentFlyerPacket.Handler.class, true, true);
+		MTS.proxy.registerPacket(InstrumentPlanePacket.class, InstrumentPlanePacket.Handler.class, true, true);
 		MTS.proxy.registerPacket(TileEntitySyncPacket.class, TileEntitySyncPacket.Handler.class, true, true);
 		
 		MTS.proxy.registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);

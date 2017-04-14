@@ -3,8 +3,8 @@ package minecrafttransportsimulator.entities.parts;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityChild;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
 import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
 import minecrafttransportsimulator.packets.control.EnginePacket;
@@ -21,8 +21,8 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
-public abstract class EntityEngine extends EntityChild implements SFXEntity{
-	protected EntityVehicle vehicle;
+public abstract class EntityEngine extends EntityMultipartChild implements SFXEntity{
+	protected EntityMultipartVehicle vehicle;
 	
 	//NBT data
 	public boolean oilLeak;
@@ -61,7 +61,7 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 		super(world);
 	}
 
-	public EntityEngine(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+	public EntityEngine(World world, EntityMultipartVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, 0, 0, propertyCode);
 		//Set size here as we can't do it in the super constructor.
 		this.setSize(getSize(), getSize());
@@ -122,7 +122,7 @@ public abstract class EntityEngine extends EntityChild implements SFXEntity{
 	public void onUpdate(){
 		super.onUpdate();
 		if(!linked){return;}
-		vehicle = (EntityVehicle) this.parent;
+		vehicle = (EntityMultipartVehicle) this.parent;
 		fuelFlow = 0;
 		if(isBurning()){
 			hours += 0.1;

@@ -6,58 +6,40 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSVector;
-import minecrafttransportsimulator.dataclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
-import minecrafttransportsimulator.minecrafthelpers.AABBHelper;
-import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
-import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
-import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
-public abstract class EntityVehicle extends EntityParent{
-	public boolean brakeOn;
-	public boolean parkingBrakeOn;
-	public boolean openTop;
+/**This class is tailored for moving vehicles such as planes, trains, and automobiles.
+ * Contains numerous methods for gauges, HUDs, and fuel systems.
+ * Essentially, if it has parts and an engine, use this.
+ * 
+ * @author don_bruce
+ */
+public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	public byte lightSetup;
 	public byte numberPowerfulLights;
 	public byte lightStatus;
-	public byte textureOptions;
 	public byte throttle;
-	public int maxFuel;
+	public int fuelCapacity;
+	public float emptyMass;
 	public double fuel;
 	public double electricPower = 12;
 	public double electricUsage;
 	public double electricFlow;
-	public double velocity;
 	public double airDensity;
 	public double trackAngle;
-	public double health;
-	public String ownerName=MTS.MODID;
-	public String displayName="";
 	
 	/**Map of instrument slots to type.
 	 * If there's not a key for a slot, it doesn't exist.
-	 * Note than engines use slots 10-14, 20-24, 30-34, and 40-44.
+	 * Note that engines use slots 10-14, 20-24, 30-34, and 40-44.
 	 **/
 	public Map<Byte, Byte> instruments;
-	
-	public MTSVector velocityVec = new MTSVector(0, 0, 0);
-	public MTSVector headingVec = new MTSVector(0, 0, 0);
-	public MTSVector verticalVec = new MTSVector(0, 0, 0);
-	public MTSVector sideVec = new MTSVector(0, 0, 0);
 	
 	private Map<AxisAlignedBB, Integer[]> collisionMap = new HashMap<AxisAlignedBB, Integer[]>();
 	protected List<AxisAlignedBB> collidingBoxes = new ArrayList<AxisAlignedBB>();
@@ -65,12 +47,12 @@ public abstract class EntityVehicle extends EntityParent{
 	private byte numberEngineBays = 0;
 	private Map<Byte, EntityEngine> engineByNumber = new HashMap<Byte, EntityEngine>();
 	
-	public EntityVehicle(World world){
+	public EntityMultipartVehicle(World world){
 		super(world);
 	}
 	
-	public EntityVehicle(World world, float posX, float posY, float posZ, float playerRotation){
-		super(world, posX, posY, posZ, playerRotation);
+	public EntityMultipartVehicle(World world, float posX, float posY, float posZ, float playerRotation, byte textureOptions){
+		super(world, posX, posY, posZ, playerRotation, textureOptions);
 	}
 	
 	@Override
@@ -108,55 +90,10 @@ public abstract class EntityVehicle extends EntityParent{
 		electricFlow = electricUsage;
 		electricUsage = 0;
 	}
-	
-	//Start of custom methods
-	@Override
-	public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
-		if(!worldObj.isRemote){
-			if(PlayerHelper.getHeldStack(player) != null){
-				if(ItemStackHelper.getItemFromStack(PlayerHelper.getHeldStack(player)).equals(Items.name_tag)){
-					this.displayName = PlayerHelper.getHeldStack(player).getDisplayName().length() > 12 ? PlayerHelper.getHeldStack(player).getDisplayName().substring(0, 11) : PlayerHelper.getHeldStack(player).getDisplayName();
-					this.sendDataToClient();
-					return true;
-				}
-			}
-		}
-		return super.performRightClickAction(clicked, player);
-	}
-	
-	@Override
-	public boolean performAttackAction(DamageSource source, float damage){
-		if(!worldObj.isRemote){
-			if(source.getEntity() instanceof EntityPlayer){
-				EntityPlayer attackingPlayer = (EntityPlayer) source.getEntity();
-				if(attackingPlayer.isSneaking()){
-					if(attackingPlayer.capabilities.isCreativeMode || attackingPlayer.getDisplayName().endsWith(this.ownerName)){
-						this.setDead();
-						return true;
-					}
-				}
-			}
-			if(!this.equals(source.getEntity())){
-				if(!this.isDead){
-					health -= damage;
-					if(health <= 0){
-						this.explodeAtPosition(this.posX, this.posY, this.posZ);
-					}
-				}
-			}
-		}
-		return true;
-	}
 
 	@Override
 	public void setDead(){
 		if(!worldObj.isRemote){
-			for(EntityChild child : this.getChildren()){
-				ItemStack stack = child.getItemStack();
-				if(stack != null){
-					worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
-				}
-			}
 			for(Byte instrumentNumber : instruments.values()){
 				if(instrumentNumber != 0){
 					ItemStack stack = new ItemStack(MTSRegistry.flightInstrument, 1, instrumentNumber);
@@ -167,50 +104,9 @@ public abstract class EntityVehicle extends EntityParent{
 		super.setDead();
 	}
 	
-	protected List<AxisAlignedBB> getChildCollisions(EntityChild child, AxisAlignedBB box){
-		//Need to contract the box because sometimes the slight error in math causes issues.
-		collisionMap = AABBHelper.getCollidingBlockBoxes(worldObj, box.contract(0.01F, 0.01F,  0.01F), child.collidesWithLiquids());
-		collidingBoxes.clear();
-		if(!collisionMap.isEmpty()){
-			for(Entry<AxisAlignedBB, Integer[]> entry : collisionMap.entrySet()){
-				float hardness = BlockHelper.getBlockHardness(worldObj, entry.getValue()[0], entry.getValue()[1], entry.getValue()[2]);
-				if(hardness  <= 0.2F && hardness >= 0){
-					BlockHelper.setBlockToAir(worldObj, entry.getValue()[0], entry.getValue()[1], entry.getValue()[2]);
-            		motionX *= 0.95;
-            		motionY *= 0.95;
-            		motionZ *= 0.95;
-				}else{
-					collidingBoxes.add(entry.getKey());
-				}
-			}
-		}
-		return collidingBoxes;
-	}
-	
-	public void explodeAtPosition(double x, double y, double z){
-		this.setDead();
-		if(ConfigSystem.getBooleanConfig("PlaneExplosions")){
-			worldObj.newExplosion(this, x, y, z, (float) (fuel/1000 + 1F), true, true);
-		}
-	}
-	
-	public void updateHeadingVec(){
-        double f1 = Math.cos(-this.rotationYaw * 0.017453292F - (float)Math.PI);
-        double f2 = Math.sin(-this.rotationYaw * 0.017453292F - (float)Math.PI);
-        double f3 = -Math.cos(-this.rotationPitch * 0.017453292F);
-        double f4 = Math.sin(-this.rotationPitch * 0.017453292F);
-        headingVec.set((f2 * f3), f4, (f1 * f3));
-   	}
-	
-	public static float calculateInventoryWeight(IInventory inventory){
-		float weight = 0;
-		for(int i=0; i<inventory.getSizeInventory(); ++i){
-			ItemStack stack = inventory.getStackInSlot(i);
-			if(stack != null){
-				weight += 1.2F*stack.stackSize/stack.getMaxStackSize()*(ConfigSystem.getStringConfig("HeavyItems").contains(ItemStackHelper.getItemFromStack(stack).getUnlocalizedName().substring(5)) ? 2 : 1);
-			}
-		}
-		return weight;
+	@Override
+	protected float getExplosionStrength(){
+		return (float) (fuel/1000 + 1F);
 	}
 	
 	/**
@@ -239,7 +135,7 @@ public abstract class EntityVehicle extends EntityParent{
 	public byte getNumberEngineBays(){
 		if(numberEngineBays == 0){
 			for(PartData data : this.partData){
-				for(Class<? extends EntityChild> aClass : data.acceptableClasses){
+				for(Class<? extends EntityMultipartChild> aClass : data.acceptableClasses){
 					if(EntityEngine.class.isAssignableFrom(aClass)){
 						++numberEngineBays;
 					}
@@ -266,9 +162,9 @@ public abstract class EntityVehicle extends EntityParent{
 		//We use array notation here to keep with Java standards.
 		byte engineNumber = 0;
 		for(PartData data : this.partData){
-			for(Class<? extends EntityChild> aClass : data.acceptableClasses){
+			for(Class<? extends EntityMultipartChild> aClass : data.acceptableClasses){
 				if(EntityEngine.class.isAssignableFrom(aClass)){
-					for(EntityChild child : this.getChildren()){
+					for(EntityMultipartChild child : this.getChildren()){
 						if(child instanceof EntityEngine){
 							if(child.offsetX == data.offsetX && child.offsetY == data.offsetY && child.offsetZ == data.offsetZ){
 								engineByNumber.put(engineNumber, (EntityEngine) child);
@@ -293,16 +189,10 @@ public abstract class EntityVehicle extends EntityParent{
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
-		this.brakeOn=tagCompound.getBoolean("brakeOn");
-		this.parkingBrakeOn=tagCompound.getBoolean("parkingBrakeOn");
-		this.openTop=tagCompound.getBoolean("openTop");
 		this.lightStatus=tagCompound.getByte("lightStatus");
-		this.textureOptions=tagCompound.getByte("textureOptions");
 		this.throttle=tagCompound.getByte("throttle");
 		this.fuel=tagCompound.getDouble("fuel");
 		this.electricPower=tagCompound.getDouble("electricPower");
-		this.ownerName=tagCompound.getString("ownerName");
-		this.displayName=tagCompound.getString("displayName");
 		
 		byte[] instrumentSlots = tagCompound.getByteArray("instrumentSlots");
 		byte[] instrumentTypes = tagCompound.getByteArray("instrumentTypes");
@@ -314,16 +204,10 @@ public abstract class EntityVehicle extends EntityParent{
 	@Override
 	public void writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
-		tagCompound.setBoolean("brakeOn", this.brakeOn);
-		tagCompound.setBoolean("parkingBrakeOn", this.parkingBrakeOn);
-		tagCompound.setBoolean("openTop", this.openTop);
 		tagCompound.setByte("lightStatus", this.lightStatus);
-		tagCompound.setByte("textureOptions", this.textureOptions);
 		tagCompound.setByte("throttle", this.throttle);
 		tagCompound.setDouble("fuel", this.fuel);
 		tagCompound.setDouble("electricPower", this.electricPower);
-		tagCompound.setString("ownerName", this.ownerName);
-		tagCompound.setString("displayName", this.displayName);
 		
 		byte[] instrumentSlots = new byte[instruments.size()];
 		byte[] instrumentTypes = new byte[instruments.size()];

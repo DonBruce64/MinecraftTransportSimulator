@@ -4,8 +4,8 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
-import minecrafttransportsimulator.entities.core.EntityChild;
-import minecrafttransportsimulator.entities.core.EntityParent;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.Render;
@@ -43,7 +43,7 @@ public final class RenderSystem{
     	
     	@Override
     	public void doRender(Entity entity, double x, double y, double z, float yaw, float partialTicks){
-    		this.render((EntityParent) entity, x, y, z, partialTicks);
+    		this.render((EntityMultipartParent) entity, x, y, z, partialTicks);
     	}
     	
     	/**
@@ -54,7 +54,7 @@ public final class RenderSystem{
     	 * The latter method only calls if this method hasn't been called first
     	 * by Minecraft's system.
 		 **/
-    	private void render(EntityParent parent, double x, double y, double z, float partialTicks){
+    	private void render(EntityMultipartParent parent, double x, double y, double z, float partialTicks){
     		if(!parent.rendered && parent.posY >= 255){return;}
     		parent.rendered = true;
     		player = Minecraft.getMinecraft().thePlayer;
@@ -72,7 +72,7 @@ public final class RenderSystem{
     		}else{
     			GL11.glTranslated(x, y, z);
     		}
-            for(EntityChild child : parent.getChildren()){
+            for(EntityMultipartChild child : parent.getChildren()){
             	if(MTSRegistryClient.childRenderMap.get(child.getClass()) != null){
             		childOffset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
             		MTSRegistryClient.childRenderMap.get(child.getClass()).render(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord, partialTicks);
@@ -82,7 +82,7 @@ public final class RenderSystem{
             GL11.glPopMatrix();
     	}
     	
-    	protected abstract void renderParentModel(EntityParent parent, float partialTicks);
+    	protected abstract void renderParentModel(EntityMultipartParent parent, float partialTicks);
     	
     	@Override
     	protected ResourceLocation getEntityTexture(Entity propellor){
@@ -97,7 +97,7 @@ public final class RenderSystem{
      */
     public static abstract class RenderChild{
     	public RenderChild(){}
-    	public abstract void render(EntityChild child, double x, double y, double z, float partialTicks);
+    	public abstract void render(EntityMultipartChild child, double x, double y, double z, float partialTicks);
     }
     
     public static abstract class RenderTileBase extends TileEntitySpecialRenderer{

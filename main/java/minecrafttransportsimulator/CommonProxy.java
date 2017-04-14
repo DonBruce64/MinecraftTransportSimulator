@@ -9,7 +9,7 @@ import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.core.EntityChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ForgeContainerGUISystem;
 import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
@@ -81,7 +81,7 @@ public class CommonProxy{
 	 * @param entityClass
 	 * @param entityItem
 	 */
-	public void registerChildEntity(Class<? extends EntityChild> entityClass, Item entityItem){
+	public void registerChildEntity(Class<? extends EntityMultipartChild> entityClass, Item entityItem){
 		if(entityItem != null){
 			MTSRegistry.entityItems.put(entityClass, entityItem);
 		}

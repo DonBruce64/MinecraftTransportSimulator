@@ -3,8 +3,8 @@ package minecrafttransportsimulator.entities.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.core.EntityChild;
-import minecrafttransportsimulator.entities.core.EntityParent;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.minecrafthelpers.EntityHelper;
 import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
 import minecrafttransportsimulator.packets.general.ChatPacket;
@@ -15,7 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-public class EntitySeat extends EntityChild{
+public class EntitySeat extends EntityMultipartChild{
 	public boolean isController;
 	private boolean hadRiderLastTick;
 	
@@ -24,7 +24,7 @@ public class EntitySeat extends EntityChild{
 		this.setSize(0.75F, 0.75F);
 	}
 	
-	public EntitySeat(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+	public EntitySeat(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F, propertyCode);
 	}
 

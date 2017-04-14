@@ -9,10 +9,9 @@ import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.core.EntityChild;
-import minecrafttransportsimulator.entities.core.EntityParent;
-import minecrafttransportsimulator.entities.core.EntityPlane;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.guis.GUIConfig;
 import minecrafttransportsimulator.guis.GUICredits;
@@ -67,8 +66,8 @@ public final class ClientEventSystem{
 				 * is shoved into custom code.
 				 */
 				for(Object entity : minecraft.theWorld.getLoadedEntityList()){
-					if(entity instanceof EntityParent){
-						((EntityParent) entity).moveChildren();
+					if(entity instanceof EntityMultipartParent){
+						((EntityMultipartParent) entity).moveChildren();
 					}
 				}
 				
@@ -141,8 +140,8 @@ public final class ClientEventSystem{
 	public void on(TickEvent.RenderTickEvent event){
 		if(event.phase.equals(Phase.START) && minecraft.theWorld != null){
 			for(Object obj : minecraft.theWorld.loadedEntityList){
-				if(obj instanceof EntityParent){
-					((EntityParent) obj).rendered = false;
+				if(obj instanceof EntityMultipartParent){
+					((EntityMultipartParent) obj).rendered = false;
 				}
 			}
 		}
@@ -160,17 +159,17 @@ public final class ClientEventSystem{
 	public void on(RenderWorldLastEvent event){
         RenderManager manager = RenderManager.instance;		
 		for(Object obj : minecraft.theWorld.loadedEntityList){
-			if(obj instanceof EntityParent){
-				if(!((EntityParent) obj).rendered){
+			if(obj instanceof EntityMultipartParent){
+				if(!((EntityMultipartParent) obj).rendered){
 					/*INS180
 					GlStateManager.depthFunc(515);
 					INS180*/
 					minecraft.entityRenderer.enableLightmap(0);
 					RenderHelper.enableStandardItemLighting();
-					((EntityParent) obj).rendered = true;
+					((EntityMultipartParent) obj).rendered = true;
 	                manager.renderEntityStatic((Entity) obj, event.partialTicks, false);
 	                
-	                for(EntityChild child : ((EntityParent) obj).getChildren()){
+	                for(EntityMultipartChild child : ((EntityMultipartParent) obj).getChildren()){
 	                	Entity rider = EntityHelper.getRider(child);
 	                	if(rider != null && !(minecraft.thePlayer.equals(rider) && minecraft.gameSettings.thirdPersonView == 0)){
 	                		manager.renderEntityStatic(rider, event.partialTicks, false);
@@ -186,7 +185,7 @@ public final class ClientEventSystem{
 	@SubscribeEvent
 	public void on(RenderPlayerEvent.Pre event){
 		if(event.entityPlayer.ridingEntity instanceof EntitySeat){
-			EntityParent parent = ((EntitySeat) event.entityPlayer.ridingEntity).parent;
+			EntityMultipartParent parent = ((EntitySeat) event.entityPlayer.ridingEntity).parent;
 			if(parent!=null){
 				GL11.glPushMatrix();
 				if(!event.entityPlayer.equals(minecraft.thePlayer)){					
@@ -234,7 +233,7 @@ public final class ClientEventSystem{
 	INS180*/
 	
 	/**
-	 * Renders HUDs for Vehicles.
+	 * Renders HUDs for Planes.
 	 */
 	@SubscribeEvent
 	public void on(RenderGameOverlayEvent.Pre event){
@@ -243,8 +242,8 @@ public final class ClientEventSystem{
 				event.setCanceled(!ConfigSystem.getBooleanConfig("XaerosCompatibility"));
 			}else if(event.type.equals(RenderGameOverlayEvent.ElementType.CHAT)){
 				if(playerLastSeat != null){
-					if(playerLastSeat.parent instanceof EntityVehicle && playerLastSeat.isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
-						((EntityVehicle) playerLastSeat.parent).drawHUD(event.resolution.getScaledWidth(), event.resolution.getScaledHeight());
+					if(playerLastSeat.parent instanceof EntityPlane && playerLastSeat.isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
+						((EntityPlane) playerLastSeat.parent).drawHUD(event.resolution.getScaledWidth(), event.resolution.getScaledHeight());
 					}
 				}
 			}

@@ -3,12 +3,12 @@ package minecrafttransportsimulator.entities.parts;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.MTSDamageSources.DamageSourcePropellor;
-import minecrafttransportsimulator.entities.core.EntityChild;
-import minecrafttransportsimulator.entities.core.EntityParent;
-import minecrafttransportsimulator.entities.core.EntityPlane;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.minecrafthelpers.AABBHelper;
 import minecrafttransportsimulator.minecrafthelpers.EntityHelper;
 import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
@@ -23,7 +23,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
-public class EntityPropeller extends EntityChild{
+public class EntityPropeller extends EntityMultipartChild{
 	public int numberBlades;
 	public int pitch;
 	public int diameter;
@@ -39,7 +39,7 @@ public class EntityPropeller extends EntityChild{
 		super(world);
 	}
 	
-	public EntityPropeller(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+	public EntityPropeller(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, 0.8F, 1.0F, propertyCode);		
 	}
 	
@@ -73,10 +73,10 @@ public class EntityPropeller extends EntityChild{
 			if(parent != null){
 				if(source.getEntity() instanceof EntityPlayer){					
 					if(PlayerHelper.getHeldStack((EntityPlayer) source.getEntity()) == null){
-						for(EntityChild child : parent.getChildren()){
+						for(EntityMultipartChild child : parent.getChildren()){
 							if(child instanceof EntityEngineAircraft){
 								if(this.equals(((EntityEngineAircraft) child).propeller)){
-									((EntityVehicle) parent).handleEngineSignal(engine, (byte) 4);
+									((EntityMultipartVehicle) parent).handleEngineSignal(engine, (byte) 4);
 									MTS.MFSNet.sendToAll(new EnginePacket(parent.getEntityId(), engine.getEntityId(), (byte) 4));
 								}
 							}
@@ -119,7 +119,7 @@ public class EntityPropeller extends EntityChild{
 				List<Entity> collidedEntites = EntityHelper.getEntitiesThatCollideWithBox(worldObj, EntityLivingBase.class, AABBHelper.getOffsetEntityBoundingBox(this, 0.2F, 0.2F, 0.2F));
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
-					for(EntityChild child : parent.getChildren()){
+					for(EntityMultipartChild child : parent.getChildren()){
 						if(child instanceof EntitySeat){
 							if(((EntitySeat) child).isController){
 								if(EntityHelper.getRider(child) != null){

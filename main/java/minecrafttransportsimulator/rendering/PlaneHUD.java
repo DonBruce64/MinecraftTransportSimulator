@@ -2,15 +2,14 @@ package minecrafttransportsimulator.rendering;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.entities.core.EntityPlane;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.rendering.AircraftInstruments.AircraftControls;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 
-public final class VehicleHUDs{
+public final class PlaneHUD{
 	private static ResourceLocation backplateTexture;
 	private static ResourceLocation moldingTexture;
 	
@@ -38,12 +37,12 @@ public final class VehicleHUDs{
 		endHUDDraw();
 	}
 	
-	public static void startHUDDraw(EntityVehicle vehicle){
+	public static void startHUDDraw(EntityPlane plane){
 		GL11.glPushMatrix();
 		GL11.glColor4f(1, 1, 1, 1);
 		Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
-		backplateTexture = vehicle.getBackplateTexture();
-		moldingTexture = vehicle.getMouldingTexture();
+		backplateTexture = plane.getBackplateTexture();
+		moldingTexture = plane.getMouldingTexture();
 	}
 	
 	public static void endHUDDraw(){
@@ -52,34 +51,34 @@ public final class VehicleHUDs{
 		GL11.glPopMatrix();
 	}
 	
-	public static boolean areLightsOn(EntityVehicle vehicle){
-		return (vehicle.lightStatus & 1) == 1 && vehicle.electricPower > 3;
+	public static boolean areLightsOn(EntityPlane plane){
+		return (plane.lightStatus & 1) == 1 && plane.electricPower > 3;
 	}
 	
-	private static void drawMiddleFlyableGauges(EntityVehicle vehicle, int width, int height){
+	private static void drawMiddleFlyableGauges(EntityPlane plane, int width, int height){
 		for(byte i=1; i<4; ++i){
-			if(vehicle.instruments.get(i) != null){
-				AircraftInstruments.drawFlyableInstrument(vehicle, (5*i+6)*width/32, height - 32, vehicle.instruments.get(i), true, (byte) -1);
+			if(plane.instruments.get(i) != null){
+				AircraftInstruments.drawFlyableInstrument(plane, (5*i+6)*width/32, height - 32, plane.instruments.get(i), true, (byte) -1);
 			}
 		}
 	}
 	
-	private static void drawOuterFlyableGauges(EntityVehicle vehicle, int width, int height){
+	private static void drawOuterFlyableGauges(EntityPlane plane, int width, int height){
 		GL11.glPushMatrix();
     	GL11.glScalef(0.75F, 0.75F, 0.75F);
-    	if(vehicle.instruments.get((byte) 0) != null){
-    		AircraftInstruments.drawFlyableInstrument(vehicle, width*17/64, (height - 24)*4/3, vehicle.instruments.get((byte) 0), true, (byte) -1);
+    	if(plane.instruments.get((byte) 0) != null){
+    		AircraftInstruments.drawFlyableInstrument(plane, width*17/64, (height - 24)*4/3, plane.instruments.get((byte) 0), true, (byte) -1);
     	}
-    	if(vehicle.instruments.get((byte) 4) != null){
-    		AircraftInstruments.drawFlyableInstrument(vehicle, width*17/16, (height - 24)*4/3, vehicle.instruments.get((byte) 4), true, (byte) -1);
+    	if(plane.instruments.get((byte) 4) != null){
+    		AircraftInstruments.drawFlyableInstrument(plane, width*17/16, (height - 24)*4/3, plane.instruments.get((byte) 4), true, (byte) -1);
     	}
     	GL11.glPopMatrix();
 	}
 	
-	private static void drawLowerFlyableGauges(EntityVehicle vehicle, int width, int height){
+	private static void drawLowerFlyableGauges(EntityPlane plane, int width, int height){
 		for(byte i=5; i<10; ++i){
-			if(vehicle.instruments.get(i) != null){
-				AircraftInstruments.drawFlyableInstrument(vehicle, (5*(i-5)+6)*width/32, height - 32, vehicle.instruments.get(i), true, (byte) -1);
+			if(plane.instruments.get(i) != null){
+				AircraftInstruments.drawFlyableInstrument(plane, (5*(i-5)+6)*width/32, height - 32, plane.instruments.get(i), true, (byte) -1);
 			}
 		}
 	}

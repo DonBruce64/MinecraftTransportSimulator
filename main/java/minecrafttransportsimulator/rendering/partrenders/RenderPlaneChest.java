@@ -2,7 +2,7 @@ package minecrafttransportsimulator.rendering.partrenders;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.entities.core.EntityChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.rendering.partmodels.ModelPlaneChest;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
@@ -14,7 +14,7 @@ public class RenderPlaneChest extends RenderChild{
 	private static final ResourceLocation chestTexture = new ResourceLocation("minecraft", "textures/entity/chest/normal.png");
 
 	@Override
-	public void render(EntityChild child, double x, double y, double z, float partialTicks){
+	public void render(EntityMultipartChild child, double x, double y, double z, float partialTicks){
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glRotatef(-child.parent.rotationYaw, 0, 1, 0);

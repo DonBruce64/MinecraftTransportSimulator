@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.entities.parts;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.core.EntityGroundDevice;
-import minecrafttransportsimulator.entities.core.EntityParent;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
+import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -14,14 +14,14 @@ public abstract class EntityWheel extends EntityGroundDevice{
 	public float angularPosition;
 	public float angularVelocity;
 	protected float wheelDiameter;
-	private EntityVehicle vehicle;
+	private EntityMultipartMoving moving;
 	
 	public EntityWheel(World world){
 		super(world);
 	}
 	
-	public EntityWheel(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
-		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, width, height, 0.01F, 0.5F);
+	public EntityWheel(World world, EntityMultipartMoving moving, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
+		super(world, moving, parentUUID, offsetX, offsetY, offsetZ, width, height, 0.01F, 0.5F);
 	}
 	
 	@Override
@@ -46,12 +46,12 @@ public abstract class EntityWheel extends EntityGroundDevice{
 	public void onUpdate(){
 		super.onUpdate();
 		if(!linked){return;}
-		vehicle = (EntityVehicle) this.parent;
+		moving = (EntityMultipartMoving) this.parent;
 		if(worldObj.isRemote){
 			if(this.isOnGround()){
-				angularVelocity = (float) (vehicle.velocity/wheelDiameter);
+				angularVelocity = (float) (moving.velocity/wheelDiameter);
 			}else{
-				if(vehicle.brakeOn || vehicle.parkingBrakeOn){
+				if(moving.brakeOn || moving.parkingBrakeOn){
 					angularVelocity = 0;
 				}else if(angularVelocity>0){
 					angularVelocity = (float) Math.max(angularVelocity - 0.05, 0);
@@ -89,8 +89,8 @@ public abstract class EntityWheel extends EntityGroundDevice{
 			this.wheelDiameter=0.4375F;
 		}
 		
-		public EntityWheelSmall(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-			super(world, (EntityVehicle) parent, parentUUID, offsetX, offsetY, offsetZ, 0.5F, 0.5F);
+		public EntityWheelSmall(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+			super(world, (EntityMultipartMoving) parent, parentUUID, offsetX, offsetY, offsetZ, 0.5F, 0.5F);
 		}
 
 		@Override
@@ -105,8 +105,8 @@ public abstract class EntityWheel extends EntityGroundDevice{
 			this.wheelDiameter=0.6875F;
 		}
 		
-		public EntityWheelLarge(World world, EntityParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-			super(world, (EntityVehicle) parent, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F);
+		public EntityWheelLarge(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+			super(world, (EntityMultipartMoving) parent, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F);
 		}
 
 		@Override

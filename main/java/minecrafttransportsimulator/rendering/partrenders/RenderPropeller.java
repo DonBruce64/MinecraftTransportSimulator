@@ -2,7 +2,7 @@ package minecrafttransportsimulator.rendering.partrenders;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.entities.core.EntityChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.rendering.partmodels.ModelPropeller;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
@@ -16,7 +16,7 @@ public class RenderPropeller extends RenderChild{
 	private static final ResourceLocation tierThreeTexture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
 
 	@Override
-	public void render(EntityChild child, double x, double y, double z, float partialTicks){
+	public void render(EntityMultipartChild child, double x, double y, double z, float partialTicks){
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glRotatef(180-child.parent.rotationYaw, 0, 1, 0);

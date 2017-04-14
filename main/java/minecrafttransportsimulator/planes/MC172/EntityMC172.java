@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.planes.MC172;
 
-import minecrafttransportsimulator.entities.core.EntityPlane;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
-import minecrafttransportsimulator.rendering.VehicleHUDs;
+import minecrafttransportsimulator.rendering.PlaneHUD;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
@@ -18,8 +18,8 @@ public class EntityMC172 extends EntityPlane{
 		super(world);
 	}
 	
-	public EntityMC172(World world, float posX, float posY, float posZ, float rotation, int textureCode){
-		super(world, posX, posY, posZ, rotation, textureCode);
+	public EntityMC172(World world, float posX, float posY, float posZ, float rotation, byte textureOptions){
+		super(world, posX, posY, posZ, rotation, textureOptions);
 		this.displayName = "MFS";
 	}
 
@@ -28,7 +28,7 @@ public class EntityMC172 extends EntityPlane{
 		hasFlaps = true;
 		lightSetup = 15;
 		numberPowerfulLights = 1;
-		maxFuel = 5000;
+		fuelCapacity = 5000;
 		emptyMass=800;
 		wingspan=11.0F;
 		wingArea=16.0F;
@@ -97,7 +97,7 @@ public class EntityMC172 extends EntityPlane{
 	
 	@Override
 	public void drawHUD(int width, int height){
-		VehicleHUDs.drawPlaneHUD(this, width, height);
+		PlaneHUD.drawPlaneHUD(this, width, height);
 	}
 	
 	private static ResourceLocation[] getMouldingTextures(){

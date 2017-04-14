@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.planes.Vulcanair;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityPlane;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
-import minecrafttransportsimulator.rendering.VehicleHUDs;
+import minecrafttransportsimulator.rendering.PlaneHUD;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
@@ -19,8 +19,8 @@ public class EntityVulcanair extends EntityPlane{
 		super(world);
 	}
 	
-	public EntityVulcanair(World world, float posX, float posY, float posZ, float rotation, int textureCode){
-		super(world, posX, posY, posZ, rotation, textureCode);
+	public EntityVulcanair(World world, float posX, float posY, float posZ, float rotation, byte textureOptions){
+		super(world, posX, posY, posZ, rotation, textureOptions);
 		this.displayName = "Wolfvanox";
 	}
 
@@ -29,7 +29,7 @@ public class EntityVulcanair extends EntityPlane{
 		hasFlaps = true;
 		lightSetup = 15;
 		numberPowerfulLights = 1;
-		maxFuel = 15000;
+		fuelCapacity = 15000;
 		emptyMass=1230;
 		wingspan=12.0F;
 		wingArea=18.6F;
@@ -107,7 +107,7 @@ public class EntityVulcanair extends EntityPlane{
 	
 	@Override
 	public void drawHUD(int width, int height){
-		VehicleHUDs.drawPlaneHUD(this, width, height);
+		PlaneHUD.drawPlaneHUD(this, width, height);
 	}
 
 	private static ResourceLocation[] getBackplateTextures(){

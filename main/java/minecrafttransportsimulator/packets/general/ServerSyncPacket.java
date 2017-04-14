@@ -4,7 +4,7 @@ import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.core.EntityParent;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 
@@ -69,7 +69,7 @@ public class ServerSyncPacket implements IMessage{
 		@Override
 		public IMessage onMessage(ServerSyncPacket message, MessageContext ctx) {
 			if(ctx.side.isClient()){
-				EntityParent thisEntity = (EntityParent) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+				EntityMultipartParent thisEntity = (EntityMultipartParent) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 				if(thisEntity != null){
 					byte syncThreshold = (byte) ConfigSystem.getIntegerConfig("SyncThreshold");
 					float syncIncrement = (float) ConfigSystem.getDoubleConfig("IncrementalMovement");

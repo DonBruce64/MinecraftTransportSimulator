@@ -5,7 +5,7 @@ import java.awt.Color;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityPlane;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.rendering.AircraftInstruments;
 import minecrafttransportsimulator.rendering.AircraftInstruments.AircraftControls;
 import minecrafttransportsimulator.rendering.AircraftInstruments.AircraftGauges;

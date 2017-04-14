@@ -5,13 +5,13 @@ import java.awt.Color;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
 import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
 import minecrafttransportsimulator.packets.control.EnginePacket;
 import minecrafttransportsimulator.packets.control.LightPacket;
 import minecrafttransportsimulator.rendering.AircraftInstruments;
-import minecrafttransportsimulator.rendering.VehicleHUDs;
+import minecrafttransportsimulator.rendering.PlaneHUD;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
@@ -24,41 +24,41 @@ import net.minecraft.util.ResourceLocation;
  * 
  * @author don_bruce
  */
-public class GUIPanelFlyer extends GuiScreen{
+public class GUIPanelPlane extends GuiScreen{
 	private static final ResourceLocation toggleOn = new ResourceLocation("textures/blocks/redstone_lamp_on.png");
 	private static final ResourceLocation toggleOff = new ResourceLocation("textures/blocks/redstone_lamp_off.png");
 	private static final float[] blackColor = new float[]{0,0,0};
 	
 	private final ResourceLocation backplateTexture;
 	private final ResourceLocation moldingTexture;
-	private final EntityVehicle vehicle;
+	private final EntityPlane plane;
 	private final EntityEngine[] engines;
 	private final boolean electricStartEnabled = ConfigSystem.getBooleanConfig("ElectricStart");
 	
 	private byte lastEngineStarted;
 	
-	public GUIPanelFlyer(EntityVehicle vehicle){
+	public GUIPanelPlane(EntityPlane plane){
 		super();
-		this.vehicle = vehicle;
-		this.backplateTexture = vehicle.getBackplateTexture();
-		this.moldingTexture = vehicle.getMouldingTexture();
-		engines = new EntityEngine[vehicle.getNumberEngineBays()];
+		this.plane = plane;
+		this.backplateTexture = plane.getBackplateTexture();
+		this.moldingTexture = plane.getMouldingTexture();
+		engines = new EntityEngine[plane.getNumberEngineBays()];
 		for(byte i=0; i<engines.length; ++i){
-			engines[i] = vehicle.getEngineByNumber(i);
+			engines[i] = plane.getEngineByNumber(i);
 		}
 	}
 	
 	@Override
     public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
-		if(vehicle.isDead){
+		if(plane.isDead){
 			mc.thePlayer.closeScreen();
 			return;
 		}
-		boolean lighted = VehicleHUDs.areLightsOn(vehicle);
+		boolean lighted = PlaneHUD.areLightsOn(plane);
 		
 		CameraSystem.disableHUD = true;
-		VehicleHUDs.startHUDDraw(vehicle);
-		VehicleHUDs.drawPanelPanel(width, height);
+		PlaneHUD.startHUDDraw(plane);
+		PlaneHUD.drawPanelPanel(width, height);
 		if(lighted){
 			Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
 		}
@@ -71,8 +71,8 @@ public class GUIPanelFlyer extends GuiScreen{
 			}
 		}
 		for(byte i=1; i<=4; ++i){
-			if(((vehicle.lightSetup & 1<<(i-1)) == 1<<(i-1))){
-				GL11DrawSystem.bindTexture(((vehicle.lightStatus & 1<<(i-1)) == 1<<(i-1)) ? toggleOn : toggleOff);
+			if(((plane.lightSetup & 1<<(i-1)) == 1<<(i-1))){
+				GL11DrawSystem.bindTexture(((plane.lightStatus & 1<<(i-1)) == 1<<(i-1)) ? toggleOn : toggleOff);
 				GL11DrawSystem.renderSquare(width/10-18, width/10, height-104+(i*25), height-120+i*25, 0, 0, false);
 			}
 		}
@@ -83,7 +83,7 @@ public class GUIPanelFlyer extends GuiScreen{
 			}
 		}
 		for(byte i=1; i<=4; ++i){
-			if(((vehicle.lightSetup & 1<<(i-1)) == 1<<(i-1))){
+			if(((plane.lightSetup & 1<<(i-1)) == 1<<(i-1))){
 				if(i==1){
 					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.navigationlights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 				}else if(i==2){
@@ -99,14 +99,14 @@ public class GUIPanelFlyer extends GuiScreen{
 			GL11.glPushMatrix();
 			GL11.glTranslatef((2+i)*width/(2 + engines.length), height - 72, 0);
 			GL11.glScalef(0.60F, 0.60F, 0.60F);
-			AircraftInstruments.drawFlyableInstrument(vehicle, -30, -30, vehicle.instruments.get((byte) (i*10 + 10)), true, i);
-			AircraftInstruments.drawFlyableInstrument(vehicle, 30, -30, vehicle.instruments.get((byte) (i*10 + 11)), true, i);
-			AircraftInstruments.drawFlyableInstrument(vehicle, -30, 30, vehicle.instruments.get((byte) (i*10 + 12)), true, i);
-			AircraftInstruments.drawFlyableInstrument(vehicle, 30, 30, vehicle.instruments.get((byte) (i*10 + 13)), true, i);
+			AircraftInstruments.drawFlyableInstrument(plane, -30, -30, plane.instruments.get((byte) (i*10 + 10)), true, i);
+			AircraftInstruments.drawFlyableInstrument(plane, 30, -30, plane.instruments.get((byte) (i*10 + 11)), true, i);
+			AircraftInstruments.drawFlyableInstrument(plane, -30, 30, plane.instruments.get((byte) (i*10 + 12)), true, i);
+			AircraftInstruments.drawFlyableInstrument(plane, 30, 30, plane.instruments.get((byte) (i*10 + 13)), true, i);
 			GL11.glPopMatrix();
 		}
 
-		VehicleHUDs.endHUDDraw();
+		PlaneHUD.endHUDDraw();
 	}
 	
 	@Override
@@ -116,9 +116,9 @@ public class GUIPanelFlyer extends GuiScreen{
 			mc.thePlayer.closeScreen();
 		}else if(x >= width/10-18 && x <= width/10-2){
 			for(byte i=1; i<=4; ++i){
-				if(((vehicle.lightSetup & 1<<(i-1)) == 1<<(i-1))){
+				if(((plane.lightSetup & 1<<(i-1)) == 1<<(i-1))){
 					if(y >= height-120+(i*25) && y <= height-104+i*25){
-						MTS.MFSNet.sendToServer(new LightPacket(vehicle.getEntityId(), (byte) (1<<(i-1))));
+						MTS.MFSNet.sendToServer(new LightPacket(plane.getEntityId(), (byte) (1<<(i-1))));
 					}
 				}
 			}

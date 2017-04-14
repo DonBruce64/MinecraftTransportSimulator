@@ -3,7 +3,7 @@ package minecrafttransportsimulator.rendering.partrenders;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
 import minecrafttransportsimulator.rendering.partmodels.ModelEngineLarge;
@@ -19,7 +19,7 @@ public class RenderEngine extends RenderChild{
 	private static final ResourceLocation largeTexture = new ResourceLocation(MTS.MODID, "textures/parts/enginelarge.png");
 
 	@Override
-	public void render(EntityChild child, double x, double y, double z, float partialTicks){		
+	public void render(EntityMultipartChild child, double x, double y, double z, float partialTicks){		
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glRotatef(180, 1, 0, 0);

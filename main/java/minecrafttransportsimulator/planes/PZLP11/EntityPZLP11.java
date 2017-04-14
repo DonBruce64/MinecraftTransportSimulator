@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.planes.PZLP11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityPlane;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
-import minecrafttransportsimulator.rendering.VehicleHUDs;
+import minecrafttransportsimulator.rendering.PlaneHUD;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
@@ -19,8 +19,8 @@ public class EntityPZLP11 extends EntityPlane{
 		super(world);
 	}
 	
-	public EntityPZLP11(World world, float posX, float posY, float posZ, float rotation, int textureCode){
-		super(world, posX, posY, posZ, rotation, textureCode);
+	public EntityPZLP11(World world, float posX, float posY, float posZ, float rotation, byte textureOptions){
+		super(world, posX, posY, posZ, rotation, textureOptions);
 		this.displayName = "MAX 4H70 M";
 	}
 
@@ -29,7 +29,7 @@ public class EntityPZLP11 extends EntityPlane{
 		openTop = true;
 		lightSetup = 0;
 		numberPowerfulLights = 0;
-		maxFuel = 7000;		
+		fuelCapacity = 7000;		
 		emptyMass=1150;
 		wingspan=11.0F;
 		wingArea=18.0F;
@@ -94,6 +94,6 @@ public class EntityPZLP11 extends EntityPlane{
 	
 	@Override
 	public void drawHUD(int width, int height){
-		VehicleHUDs.drawPlaneHUD(this, width, height);
+		PlaneHUD.drawPlaneHUD(this, width, height);
 	}
 }

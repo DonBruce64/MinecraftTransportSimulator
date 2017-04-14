@@ -2,7 +2,7 @@ package minecrafttransportsimulator.systems;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSound;
@@ -50,7 +50,7 @@ public final class SFXSystem{
 	public static boolean isPlayerInsideVehicle(){
 		if(ClientEventSystem.playerLastSeat != null){
 			if(ClientEventSystem.playerLastSeat.parent != null){
-				if(!((EntityVehicle) ClientEventSystem.playerLastSeat.parent).openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
+				if(!((EntityMultipartMoving) ClientEventSystem.playerLastSeat.parent).openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
 					return true;
 				}
 			}

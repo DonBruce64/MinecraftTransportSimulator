@@ -2,7 +2,7 @@ package minecrafttransportsimulator.rendering.partrenders;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.entities.core.EntityChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
 import minecrafttransportsimulator.rendering.partmodels.ModelWheel;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
@@ -15,7 +15,7 @@ public class RenderWheel extends RenderChild{
 	private static final ResourceLocation outerTexture = new ResourceLocation("minecraft", "textures/blocks/wool_colored_black.png");
 
 	@Override
-	public void render(EntityChild child, double x, double y, double z, float partialTicks){
+	public void render(EntityMultipartChild child, double x, double y, double z, float partialTicks){
 		EntityWheel wheel = (EntityWheel) child;
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);

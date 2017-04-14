@@ -7,9 +7,8 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
-import minecrafttransportsimulator.entities.core.EntityPlane;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
-import minecrafttransportsimulator.guis.GUIInstrumentsFlyer;
+import minecrafttransportsimulator.entities.main.EntityPlane;
+import minecrafttransportsimulator.guis.GUIInstrumentsPlane;
 import minecrafttransportsimulator.guis.GUIPropellerBench;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -48,7 +47,7 @@ public class ClientProxy extends CommonProxy{
 	@Override
 	public void openGUI(Object clicked, EntityPlayer clicker){
 		if(clicked instanceof EntityPlane){
-			FMLCommonHandler.instance().showGuiScreen(new GUIInstrumentsFlyer((EntityVehicle) clicked, clicker));
+			FMLCommonHandler.instance().showGuiScreen(new GUIInstrumentsPlane((EntityPlane) clicked, clicker));
 		}else if(clicked instanceof TileEntityPropellerBench){
 			FMLCommonHandler.instance().showGuiScreen(new GUIPropellerBench((TileEntityPropellerBench) clicked, clicker));
 		}

@@ -4,7 +4,7 @@ import java.awt.Color;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -144,7 +144,7 @@ public final class GL11DrawSystem{
      * Draws a semi-conical light beam with
      * an end radius of r. length of l, and n segments.
      */
-    public static void drawLightBeam(EntityVehicle vehicle, double r, double l, int n, boolean highPower){
+    public static void drawLightBeam(EntityMultipartVehicle vehicle, double r, double l, int n, boolean highPower){
     	float strength = (float) (vehicle.electricPower/12F*(15F - vehicle.worldObj.getSunBrightness(1.0F)*BlockHelper.getBlockLight(vehicle.worldObj, (int) Math.floor(vehicle.posX - 4*Math.sin(vehicle.rotationYaw * 0.017453292F)), (int) Math.floor(vehicle.posY), (int) Math.floor(vehicle.posZ + 4*Math.cos(vehicle.rotationYaw * 0.017453292F))))/15F);
     	GL11.glPushMatrix();
     	GL11.glColor4f(1, 1, 1, Math.min(vehicle.electricPower > 4 ? 1.0F : 0, strength));

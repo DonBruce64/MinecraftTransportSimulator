@@ -6,7 +6,7 @@ import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.relauncher.Side;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import net.minecraft.client.Minecraft;
 
 public class LightPacket implements IMessage{
@@ -34,11 +34,11 @@ public class LightPacket implements IMessage{
 
 	public static class Handler implements IMessageHandler<LightPacket, IMessage> {
 		public IMessage onMessage(LightPacket message, MessageContext ctx){
-			EntityVehicle thisEntity;
+			EntityMultipartVehicle thisEntity;
 			if(ctx.side==Side.SERVER){
-				thisEntity = (EntityVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+				thisEntity = (EntityMultipartVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 			}else{
-				thisEntity = (EntityVehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+				thisEntity = (EntityMultipartVehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 			}
 			if(thisEntity!=null){
 				//Toggle the light in the specified slot.

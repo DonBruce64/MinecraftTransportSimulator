@@ -2,7 +2,7 @@ package minecrafttransportsimulator.rendering.partrenders;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.entities.core.EntityChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.rendering.partmodels.ModelPontoon;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
 import minecrafttransportsimulator.systems.RenderSystem.RenderChild;
@@ -13,7 +13,7 @@ public class RenderPontoon extends RenderChild{
 	private static final ResourceLocation pontoonTexture = new ResourceLocation("minecraft", "textures/blocks/iron_block.png");
 
 	@Override
-	public void render(EntityChild child, double x, double y, double z, float partialTicks){		
+	public void render(EntityMultipartChild child, double x, double y, double z, float partialTicks){		
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glRotatef(180, 1, 0, 0);

@@ -9,9 +9,9 @@ import cpw.mods.fml.common.Loader;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.blocks.TileEntitySurveyFlag;
 import minecrafttransportsimulator.blocks.TileEntityTrack;
-import minecrafttransportsimulator.entities.core.EntityChild;
-import minecrafttransportsimulator.entities.core.EntityCore;
-import minecrafttransportsimulator.entities.core.EntityParent;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
+import minecrafttransportsimulator.entities.main.EntityCore;
 import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
@@ -49,7 +49,7 @@ import net.minecraft.tileentity.TileEntity;
 
 public class MTSRegistryClient{
 	private static final MTSRegistryClient instance = new MTSRegistryClient();
-	public static Map <Class<? extends EntityChild>, RenderChild> childRenderMap = new HashMap<Class<? extends EntityChild>, RenderChild>();
+	public static Map <Class<? extends EntityMultipartChild>, RenderChild> childRenderMap = new HashMap<Class<? extends EntityMultipartChild>, RenderChild>();
 
 	public static void preInit(){
 		if(!(Loader.MC_VERSION.equals("1.7.10") || Loader.MC_VERSION.equals("1.8"))){
@@ -137,7 +137,7 @@ public class MTSRegistryClient{
      * @param entityClass
      * @param renderClass
      */
-    public static void registerParentRender(Class<? extends EntityParent> entityClass, Class<? extends RenderParent> renderClass){
+    public static void registerParentRender(Class<? extends EntityMultipartParent> entityClass, Class<? extends RenderParent> renderClass){
 		try{
 			RenderingRegistry.registerEntityRenderingHandler(entityClass, renderClass.getConstructor(RenderManager.class).newInstance((Object) null));
 		}catch(Exception e){
@@ -152,7 +152,7 @@ public class MTSRegistryClient{
      * @param entityClass
      * @param renderClass
      */
-    public static void registerChildRender(Class<? extends EntityChild> entityClass, Class<? extends RenderChild> renderClass){
+    public static void registerChildRender(Class<? extends EntityMultipartChild> entityClass, Class<? extends RenderChild> renderClass){
     	try{
     		RenderingRegistry.registerEntityRenderingHandler(entityClass, RenderNull.class.getConstructor(RenderManager.class).newInstance((Object) null));
     		if(renderClass != null){

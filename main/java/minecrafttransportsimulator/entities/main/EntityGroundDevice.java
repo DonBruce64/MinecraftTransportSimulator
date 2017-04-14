@@ -1,5 +1,7 @@
-package minecrafttransportsimulator.entities.core;
+package minecrafttransportsimulator.entities.main;
 
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
@@ -8,8 +10,8 @@ import net.minecraft.world.World;
  * 
  * @author don_bruce
  */
-public abstract class EntityGroundDevice extends EntityChild{
-	public boolean turnsWithVehicle;
+public abstract class EntityGroundDevice extends EntityMultipartChild{
+	public boolean turnsWithMover;
 	public boolean isRetractable;
 	public boolean isRetracted;
 	public float motiveFriction;
@@ -25,8 +27,8 @@ public abstract class EntityGroundDevice extends EntityChild{
 		super(world);
 	}
 	
-	public EntityGroundDevice(World world, EntityVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height, float motiveFriction, float lateralFriction){
-		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, width, height, 0);
+	public EntityGroundDevice(World world, EntityMultipartMoving mover, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height, float motiveFriction, float lateralFriction){
+		super(world, mover, parentUUID, offsetX, offsetY, offsetZ, width, height, 0);
 		this.motiveFriction = motiveFriction;
 		this.lateralFriction = lateralFriction;
 	}
@@ -39,8 +41,8 @@ public abstract class EntityGroundDevice extends EntityChild{
 	 * @param extendedCoords
 	 * @param retractedCoords
 	 */
-	public void setExtraProperties(boolean turnsWithVehicle, boolean retractable, float[] extendedCoords, float[] retractedCoords){
-		this.turnsWithVehicle = turnsWithVehicle;
+	public void setExtraProperties(boolean turnsWithMover, boolean retractable, float[] extendedCoords, float[] retractedCoords){
+		this.turnsWithMover = turnsWithMover;
 		this.isRetractable = retractable;
 		if(retractable){
 			this.extendedX = extendedCoords[0];
@@ -55,7 +57,7 @@ public abstract class EntityGroundDevice extends EntityChild{
 	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
-		this.turnsWithVehicle=tagCompound.getBoolean("turnsWithVehicle");
+		this.turnsWithMover=tagCompound.getBoolean("turnsWithVehicle");
 		this.isRetractable=tagCompound.getBoolean("isRetractable");
 		this.isRetracted=tagCompound.getBoolean("isRetracted");
 		this.motiveFriction=tagCompound.getFloat("motiveFriction");
@@ -73,7 +75,7 @@ public abstract class EntityGroundDevice extends EntityChild{
 	@Override
 	public void writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
-		tagCompound.setBoolean("turnsWithVehicle", this.turnsWithVehicle);
+		tagCompound.setBoolean("turnsWithVehicle", this.turnsWithMover);
 		tagCompound.setBoolean("isRetractable", this.isRetractable);
 		tagCompound.setBoolean("isRetracted", this.isRetracted);
 		tagCompound.setFloat("motiveFriction", this.motiveFriction);

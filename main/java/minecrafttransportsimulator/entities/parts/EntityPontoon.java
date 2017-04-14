@@ -3,9 +3,9 @@ package minecrafttransportsimulator.entities.parts;
 import java.util.List;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.core.EntityGroundDevice;
-import minecrafttransportsimulator.entities.core.EntityParent;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
 import minecrafttransportsimulator.minecrafthelpers.EntityHelper;
 import net.minecraft.entity.Entity;
@@ -22,7 +22,7 @@ public class EntityPontoon extends EntityGroundDevice{
 		super(world);
 	}
 	
-	public EntityPontoon(World world, EntityParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+	public EntityPontoon(World world, EntityMultipartParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		this(world, vehicle, parentUUID, offsetX, offsetY, offsetZ);
 		this.otherHalf = new EntityPontoonDummy(world, vehicle, parentUUID, offsetX, offsetY, offsetZ - 2);
 		this.setOtherHalf(otherHalf);
@@ -30,8 +30,8 @@ public class EntityPontoon extends EntityGroundDevice{
 		vehicle.addChild(this.otherHalfUUID, otherHalf, true);
 	}
 	
-	protected EntityPontoon(World world, EntityParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, (EntityVehicle) vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F, 0.1F, 2.5F);
+	protected EntityPontoon(World world, EntityMultipartParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ){
+		super(world, (EntityMultipartVehicle) vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F, 0.1F, 2.5F);
 	}
 	
 	@Override
@@ -110,7 +110,7 @@ public class EntityPontoon extends EntityGroundDevice{
 			super(world);
 		}
 		
-		public EntityPontoonDummy(World world, EntityParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+		public EntityPontoonDummy(World world, EntityMultipartParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 			this(world, vehicle, parentUUID, offsetX, offsetY, offsetZ);
 			this.otherHalf = new EntityPontoon(world, vehicle, parentUUID, offsetX, offsetY, offsetZ + 2);
 			this.setOtherHalf(otherHalf);
@@ -118,7 +118,7 @@ public class EntityPontoon extends EntityGroundDevice{
 			vehicle.addChild(this.otherHalfUUID, otherHalf, true);
 		}
 		
-		public EntityPontoonDummy(World world, EntityParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ){
+		public EntityPontoonDummy(World world, EntityMultipartParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ){
 			super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ);
 		}
 		

@@ -11,9 +11,9 @@ import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
 import minecrafttransportsimulator.ClientProxy;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityPlane;
-import minecrafttransportsimulator.entities.core.EntityVehicle;
-import minecrafttransportsimulator.guis.GUIPanelFlyer;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.entities.main.EntityPlane;
+import minecrafttransportsimulator.guis.GUIPanelPlane;
 import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.BrakePacket;
@@ -379,7 +379,7 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void checkThrottle(EntityVehicle vehicle){
+	private static void checkThrottle(EntityMultipartVehicle vehicle){
 		if(joystickMap.get(controls.THROTTLE.joystickName) != 999 && joystick != null){
 			MTS.MFSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), (byte) (50 + getAxisState(controls.THROTTLE, false)/2)));
 		}else if(Keyboard.isKeyDown(keyboardMap.get(controls.THROTTLE.keyboardIncrementName))){
@@ -389,7 +389,7 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void checkBrakes(EntityVehicle vehicle){
+	private static void checkBrakes(EntityMultipartVehicle vehicle){
 		if(isControlPressed(controls.BRAKE)){
 			if(!brakeKeyPressed){
 				brakeKeyPressed = true;
@@ -421,13 +421,13 @@ public final class ControlSystem{
 		}
 	}
 
-	private static void checkPanel(EntityVehicle vehicle, EntityPlayer controller){
+	private static void checkPanel(EntityPlane plane, EntityPlayer controller){
 		if(isControlPressed(controls.PANEL)){
 			if(!panelKeyPressed){
 				panelKeyPressed = true;
 				if(Minecraft.getMinecraft().currentScreen == null){
-					FMLCommonHandler.instance().showGuiScreen(new GUIPanelFlyer(vehicle));
-				}else if(Minecraft.getMinecraft().currentScreen.getClass().equals(GUIPanelFlyer.class)){
+					FMLCommonHandler.instance().showGuiScreen(new GUIPanelPlane(plane));
+				}else if(Minecraft.getMinecraft().currentScreen.getClass().equals(GUIPanelPlane.class)){
 					Minecraft.getMinecraft().displayGuiScreen((GuiScreen)null);
 					Minecraft.getMinecraft().setIngameFocus();
 				}
