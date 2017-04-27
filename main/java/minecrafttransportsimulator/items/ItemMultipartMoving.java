@@ -35,7 +35,7 @@ public class ItemMultipartMoving extends Item{
 		if(!world.isRemote){
 			EntityMultipartMoving newEntity;
 			try{
-				newEntity = EntityMultipartMoving.class.getConstructor(World.class, float.class, float.class, float.class, float.class, byte.class).newInstance(world, x, y + 1, z, player.rotationYaw, (byte) stack.getItemDamage());
+				newEntity = moving.getConstructor(World.class, float.class, float.class, float.class, float.class, byte.class).newInstance(world, x, y + 1, z, player.rotationYaw, (byte) stack.getItemDamage());
 				float minHeight = 0;
 				for(float[] coreCoords : newEntity.getCoreLocations()){
 					minHeight = -coreCoords[1] > minHeight ? -coreCoords[1] : minHeight;

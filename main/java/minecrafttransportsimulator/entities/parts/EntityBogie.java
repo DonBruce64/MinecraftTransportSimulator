@@ -40,11 +40,7 @@ public abstract class EntityBogie extends EntityMultipartChild{
 			}
 			angularPosition += angularVelocity;
 		}
-	}
-	
-	@Override
-	public ItemStack getItemStack(){
-		return new ItemStack(MTSRegistry.bogie);
+		
 	}
 	
 	public static class EntityBogieLocomotive extends EntityBogie{
@@ -60,7 +56,7 @@ public abstract class EntityBogie extends EntityMultipartChild{
 
 		@Override
 		public ItemStack getItemStack(){
-			return new ItemStack(MTSRegistry.wheelSmall);
+			return new ItemStack(MTSRegistry.bogie);
 		}
 	}
 }
