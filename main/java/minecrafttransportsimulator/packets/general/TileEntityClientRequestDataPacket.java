@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -15,9 +15,9 @@ public class TileEntityClientRequestDataPacket implements IMessage{
 	public TileEntityClientRequestDataPacket() {}
 	
 	public TileEntityClientRequestDataPacket(TileEntity tile){
-		this.x = tile.xCoord;
-		this.y = tile.yCoord;
-		this.z = tile.zCoord;
+		this.x = tile.getPos().getX();
+		this.y = tile.getPos().getY();
+		this.z = tile.getPos().getZ();
 	}
 	
 	@Override
@@ -37,7 +37,7 @@ public class TileEntityClientRequestDataPacket implements IMessage{
 	public static class Handler implements IMessageHandler<TileEntityClientRequestDataPacket, TileEntitySyncPacket> {
 		public TileEntitySyncPacket onMessage(TileEntityClientRequestDataPacket message, MessageContext ctx){
 			if(ctx.side.isServer()){
-				TileEntity tile = BlockHelper.getTileEntityFromCoords(ctx.getServerHandler().playerEntity.worldObj, message.x, message.y, message.z);
+				TileEntity tile = ctx.getServerHandler().playerEntity.worldObj.getTileEntity(new BlockPos(message.x, message.y, message.z));
 				if(tile != null){
 					return new TileEntitySyncPacket(tile);
 				}

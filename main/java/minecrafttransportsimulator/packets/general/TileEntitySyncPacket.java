@@ -5,6 +5,7 @@ import minecrafttransportsimulator.MTS;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -19,9 +20,9 @@ public class TileEntitySyncPacket implements IMessage{
 	public TileEntitySyncPacket() {}
 	
 	public TileEntitySyncPacket(TileEntity tile){
-		this.x = tile.xCoord;
-		this.y = tile.yCoord;
-		this.z = tile.zCoord;
+		this.x = tile.getPos().getX();
+		this.y = tile.getPos().getY();
+		this.z = tile.getPos().getZ();
 		tile.writeToNBT(tag);
 	}
 	
@@ -45,10 +46,9 @@ public class TileEntitySyncPacket implements IMessage{
 		public IMessage onMessage(TileEntitySyncPacket message, MessageContext ctx){
 			TileEntity tile;
 			if(ctx.side.isServer()){
-				tile = ctx.getServerHandler().playerEntity.worldObj.getTileEntity(message.x, message.y, message.z);
+				tile = ctx.getServerHandler().playerEntity.worldObj.getTileEntity(new BlockPos(message.x, message.y, message.z));
 			}else{
-				//Cannot send this to the helper as it errors out when theWorld is called server-side init.
-				tile = Minecraft.getMinecraft().theWorld.getTileEntity(message.x, message.y, message.z);
+				tile = Minecraft.getMinecraft().theWorld.getTileEntity(new BlockPos(message.x, message.y, message.z));
 			}
 			if(tile != null){
 				tile.readFromNBT(message.tag);
