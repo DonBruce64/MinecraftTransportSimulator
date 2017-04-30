@@ -3,23 +3,18 @@ package minecrafttransportsimulator.items;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
-import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
-import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.IIcon;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ItemPropeller extends Item{
-	private IIcon[] icons = new IIcon[3];
-
+	
 	public ItemPropeller(){
 		this.hasSubtypes=true;
 		this.setMaxStackSize(1);
@@ -27,17 +22,18 @@ public class ItemPropeller extends Item{
 	
 	@Override
 	public String getUnlocalizedName(ItemStack stack){
-		return "item." + this.getClass().getSimpleName().substring(4).toLowerCase() + ItemStackHelper.getItemDamage(stack);
+		return "item." + this.getClass().getSimpleName().substring(4).toLowerCase() + stack.getItemDamage();
 	}
 	
 	@Override
+	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean p_77624_4_){
-		NBTTagCompound stackTag = ItemStackHelper.getStackNBT(stack);
-		list.add(PlayerHelper.getTranslatedText("info.item.propeller.numberBlades") + stackTag.getInteger("numberBlades"));
-		list.add(PlayerHelper.getTranslatedText("info.item.propeller.pitch") + stackTag.getInteger("pitch"));
-		list.add(PlayerHelper.getTranslatedText("info.item.propeller.diameter") + stackTag.getInteger("diameter"));
-		list.add(PlayerHelper.getTranslatedText("info.item.propeller.maxrpm") + Math.round(60*340.29/(0.0254*Math.PI*stackTag.getInteger("diameter"))));
-		list.add(PlayerHelper.getTranslatedText("info.item.propeller.health") + stackTag.getFloat("health"));
+		NBTTagCompound stackTag = stack.getTagCompound();
+		list.add(I18n.format("info.item.propeller.numberBlades") + stackTag.getInteger("numberBlades"));
+		list.add(I18n.format("info.item.propeller.pitch") + stackTag.getInteger("pitch"));
+		list.add(I18n.format("info.item.propeller.diameter") + stackTag.getInteger("diameter"));
+		list.add(I18n.format("info.item.propeller.maxrpm") + Math.round(60*340.29/(0.0254*Math.PI*stackTag.getInteger("diameter"))));
+		list.add(I18n.format("info.item.propeller.health") + stackTag.getFloat("health"));
 	}
 	
 	@Override
@@ -71,23 +67,8 @@ public class ItemPropeller extends Item{
 			}else{
 				stackTag.setFloat("health", 100);
 			}
-			ItemStackHelper.setStackNBT(propellerStack, stackTag);
+			propellerStack.setTagCompound(stackTag);
 			itemList.add(propellerStack);
 		}
     }
-	//DEL180START
-    @Override
-    @SideOnly(Side.CLIENT)
-    public void registerIcons(IIconRegister register){
-    	for(int i=0; i<3; ++i){
-    		icons[i] = register.registerIcon(MTS.MODID + ":" + this.getClass().getSimpleName().substring(4).toLowerCase() + i);
-    	}
-    }
-    
-    @Override
-    @SideOnly(Side.CLIENT)
-    public IIcon getIconFromDamage(int damage){
-        return this.icons[damage%10 > 2 ? 0 : damage%10];
-    }
-    //DEL180END
 }
