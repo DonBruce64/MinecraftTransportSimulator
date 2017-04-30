@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -31,7 +31,7 @@ public class ChatPacket implements IMessage{
 		@Override
 		public IMessage onMessage(ChatPacket message, MessageContext ctx) {
 			if(ctx.side.isClient()){
-				Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(message.chatMessage));
+				Minecraft.getMinecraft().thePlayer.addChatMessage(new TextComponentString(message.chatMessage));
 			}
 			return null;
 		}
