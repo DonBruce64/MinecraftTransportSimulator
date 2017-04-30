@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.main.EntityPlane;
-import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -58,26 +57,36 @@ public class InstrumentPlanePacket implements IMessage{
 				if(message.instrumentToChangeTo == 0){
 					if(plane.instruments.containsKey(message.instrumentToChange)){
 						if(!player.capabilities.isCreativeMode){
-							if(!player.inventory.addItemStackToInventory(new ItemStack(MTSRegistry.flightInstrument, 1, plane.instruments.get(message.instrumentToChange)))){
+							if(!player.inventory.addItemStackToInventory(new ItemStack(MTSRegistry.flightInstrument, 1, plane.instruments.get(message.instrumentToChange).currentInstrument))){
 								return null;
 							}
 						}
-						plane.instruments.put(message.instrumentToChange, message.instrumentToChangeTo);
+						plane.instruments.get(message.instrumentToChange).currentInstrument = message.instrumentToChangeTo;
 						if(ctx.side.isServer()){
 							MTS.MFSNet.sendToAll(message);
 						}
 					}
 				}else{
 					if(!player.capabilities.isCreativeMode){
-						if(PlayerHelper.getQtyOfItemInInventory(MTSRegistry.flightInstrument, message.instrumentToChangeTo, player) > 0){
-							PlayerHelper.removeQtyOfItemInInventory(MTSRegistry.flightInstrument, 1, message.instrumentToChangeTo, player);
-							plane.instruments.put(message.instrumentToChange, message.instrumentToChangeTo);
+						if(player.inventory.hasItemStack(new ItemStack(MTSRegistry.flightInstrument, 1, message.instrumentToChangeTo))){
+							for(byte i=0; i<player.inventory.getSizeInventory(); ++i){
+								if(player.inventory.getStackInSlot(i) != null){
+									if(player.inventory.getStackInSlot(i).getItem().equals(MTSRegistry.flightInstrument)){
+										if(player.inventory.getStackInSlot(i).stackSize > 1){
+											--player.inventory.getStackInSlot(i).stackSize;
+										}else{
+											player.inventory.removeStackFromSlot(i);
+										}
+									}
+								}
+							}
+							plane.instruments.get(message.instrumentToChange).currentInstrument = message.instrumentToChangeTo;
 							if(ctx.side.isServer()){
 								MTS.MFSNet.sendToAll(message);
 							}
 						}
 					}else{
-						plane.instruments.put(message.instrumentToChange, message.instrumentToChangeTo);
+						plane.instruments.get(message.instrumentToChange).currentInstrument = message.instrumentToChangeTo;
 						if(ctx.side.isServer()){
 							MTS.MFSNet.sendToAll(message);
 						}
