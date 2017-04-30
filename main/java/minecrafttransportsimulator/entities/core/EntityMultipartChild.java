@@ -29,7 +29,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	/** Can a rider of this child send inputs to the parent.*/
 	public boolean isController;
 	/** Does this child rotate in-sync with the yaw changes of the parent.*/
-	public boolean turnsWithParent;
+	public boolean turnsWithSteer;
 	/** Integer for storing data about color, type, and other things.*/
 	public int propertyCode;
 	public float offsetX;
@@ -54,9 +54,6 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 		MTSVector offset = RotationSystem.getRotatedPoint(offsetX, offsetY, offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
 		this.setPositionAndRotation(parent.posX+offset.xCoord, parent.posY+offset.yCoord, parent.posZ+offset.zCoord, parent.rotationYaw, parent.rotationPitch);
 	}
-	
-	@Override
-	protected void entityInit(){}
 	
 	@Override
 	public void onEntityUpdate(){
@@ -163,15 +160,15 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 		this.isController = true;
 	}
 	
-	public void setTurnsWithMover(boolean turnsWithParent){
-		this.turnsWithParent = turnsWithParent;
+	public void setTurnsWithSteer(boolean turnsWithSteer){
+		this.turnsWithSteer = turnsWithSteer;
 	}
 	
 	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
 		this.isController=tagCompound.getBoolean("isController");
-		this.turnsWithParent=tagCompound.getBoolean("turnsWithParent");
+		this.turnsWithSteer=tagCompound.getBoolean("turnsWithSteer");
 		this.propertyCode=tagCompound.getInteger("propertyCode");
 		this.offsetX=tagCompound.getFloat("offsetX");
 		this.offsetY=tagCompound.getFloat("offsetY");
@@ -186,7 +183,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	public void writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("isController", this.isController);
-		tagCompound.setBoolean("turnsWithParent", this.turnsWithParent);
+		tagCompound.setBoolean("turnsWithSteer", this.turnsWithSteer);
 		tagCompound.setInteger("propertyCode", this.propertyCode);
 		tagCompound.setFloat("offsetX", this.offsetX);
 		tagCompound.setFloat("offsetY", this.offsetY);

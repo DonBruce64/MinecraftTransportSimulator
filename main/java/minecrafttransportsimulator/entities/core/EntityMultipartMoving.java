@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.core;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -7,6 +8,8 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSEntity;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.minecrafthelpers.AABBHelper;
 import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
 import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
@@ -17,6 +20,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
@@ -24,7 +28,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 /**General moving entity class.  This provides a basic set of variables and functions for moving entities.
  * Simple things like texture and display names are included, as well as standards for removal of this
- * entity based on names and damage.
+ * entity based on names and damage.  This is the most basic class used for custom multipart entities.
  * 
  * @author don_bruce
  */
@@ -38,6 +42,15 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	public String name="";
 	public String ownerName=MTS.MODID;
 	public String displayText="";
+	
+	/**
+	 * Array containing part data for spawnable parts.
+	 * This is populated after instantiation and may not be ready right after spawning.
+	 * Data comes from {@link PackParserSystem} when {@link #writeToNBT(NBTTagCompound)} is called.
+	 * Means there is a slight lag client-side for the population of this field, so do NOT
+	 * assume it is populated on the client!
+	 */
+	protected List<PartData> partData;
 			
 	public EntityMultipartMoving(World world){
 		super(world);
@@ -46,6 +59,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	public EntityMultipartMoving(World world, float posX, float posY, float posZ, float playerRotation, String name){
 		super(world, posX, posY, posZ, playerRotation);
 		this.name = name;
+		//This only gets done at the beginning when the entity is first spawned.
 		this.displayText = PackParserSystem.getStringProperty(name, "defaultDisplayText");
 		//Make sure all data for the PackParser in the NBT methods is inited now that we have a name.
 		NBTTagCompound tempTag = new NBTTagCompound();
@@ -77,15 +91,75 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	@Override
 	public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
 		if(!worldObj.isRemote){
-			if(PlayerHelper.getHeldStack(player) != null){
+			if(player.ridingEntity instanceof EntitySeat){
+				if(this.equals(((EntitySeat) player.ridingEntity).parent)){
+					//No in-use changes for sneaky sneaks!
+					return false;
+				}
+			}else if(PlayerHelper.getHeldStack(player) != null){
 				if(ItemStackHelper.getItemFromStack(PlayerHelper.getHeldStack(player)).equals(Items.name_tag)){
 					this.displayText = PlayerHelper.getHeldStack(player).getDisplayName().length() > this.displayTextMaxLength ? PlayerHelper.getHeldStack(player).getDisplayName().substring(0, this.displayTextMaxLength - 1) : PlayerHelper.getHeldStack(player).getDisplayName();
 					this.sendDataToClient();
 					return true;
+				}else if(PlayerHelper.isPlayerHoldingWrench(player)){
+					return false;
+				}else{
+					ItemStack heldStack = PlayerHelper.getHeldStack(player);
+					Item heldItem = ItemStackHelper.getItemFromStack(heldStack);
+					EntityMultipartChild childClicked = (EntityMultipartChild) clicked;	
+					PartData dataToSpawn = null;
+					float closestPosition = 9999;
+					
+					//Look though the part data to find the class that goes with the held item.
+					for(PartData data : partData){
+						for(String partName : data.validNames){
+							if(heldItem.getUnlocalizedName().equals(partName)){
+								//The held item can spawn a part.
+								//Now find the closest spot to put it.
+								float distance = (float) Math.hypot(childClicked.offsetX - data.offsetX, childClicked.offsetZ - data.offsetZ);
+								if(distance < closestPosition){
+									//Make sure a part doesn't exist already.
+									boolean childPresent = false;
+									for(EntityMultipartChild child : this.getChildren()){
+										if(child.offsetX == data.offsetX && child.offsetY == data.offsetY && child.offsetZ == data.offsetZ){
+											childPresent = true;
+											break;
+										}
+									}
+									if(!childPresent){
+										closestPosition = distance;
+										dataToSpawn = data;
+									}
+								}
+							}
+						}
+					}
+					
+					if(dataToSpawn != null){
+						//We have a part, now time to spawn it.
+						try{
+							Constructor<? extends EntityMultipartChild> construct = MTSRegistry.partClasses.get(heldItem.getUnlocalizedName()).getConstructor(World.class, EntityMultipartParent.class, String.class, float.class, float.class, float.class, int.class);
+							EntityMultipartChild newChild = construct.newInstance(worldObj, this, this.UUID, dataToSpawn.offsetX, dataToSpawn.offsetY, dataToSpawn.offsetZ, ItemStackHelper.getItemDamage(heldStack));
+							newChild.setNBTFromStack(heldStack);
+							newChild.setTurnsWithSteer(dataToSpawn.turnsWithSteer);
+							newChild.setController(dataToSpawn.isController);
+							this.addChild(newChild.UUID, newChild, true);
+							if(!PlayerHelper.isPlayerCreative(player)){
+								PlayerHelper.removeItemFromHand(player, 1);
+							}
+							return true;
+						}catch(Exception e){
+							System.err.println("ERROR SPAWING PART!");
+							e.printStackTrace();
+						}
+					}
 				}
 			}
+		}else if(PlayerHelper.isPlayerHoldingWrench(player)){
+			MTS.proxy.openGUI(this, player);
+			return true;
 		}
-		return super.performRightClickAction(clicked, player);
+		return false;
 	}
 	
 	@Override
@@ -177,6 +251,30 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		
 		this.openTop = PackParserSystem.getBooleanProperty(name, "openTop");
 		this.displayTextMaxLength = PackParserSystem.getIntegerProperty(name, "displayTextMaxLength").byteValue();
+		
+		partData = new ArrayList<PartData>();
+		for(byte i=0; i<=99; ++i){
+			if(PackParserSystem.doesPropertyExist(name, "part" + i)){
+				String data = PackParserSystem.getStringProperty(name, "part" + i);
+				float posX = Float.valueOf(data.substring(data.indexOf('=') + 1, data.indexOf(',') - 1));
+				data = data.substring(data.indexOf(',') + 1);
+				float posY = Float.valueOf(data.substring(0, data.indexOf(',') - 1));
+				data = data.substring(data.indexOf(',') + 1);
+				float posZ = Float.valueOf(data.substring(0, data.indexOf(',') - 1));
+				data = data.substring(data.indexOf(',') + 1);
+				boolean turnsWithSteer = Boolean.valueOf(data.substring(0, data.indexOf(',') - 1));
+				data = data.substring(data.indexOf(',') + 1);
+				boolean isController = Boolean.valueOf(data.substring(0, data.indexOf(',') - 1));
+				data = data.substring(data.indexOf(',') + 1);
+				List<String> validNames = new ArrayList<String>();
+				while(data.indexOf(',') != -1){
+					validNames.add(data.substring(0, data.indexOf(',') - 1));
+					data = data.substring(data.indexOf(',') + 1);
+				}
+				validNames.add(data.substring(0, data.indexOf(';') - 1));
+				partData.add(new PartData(posX, posY, posZ, turnsWithSteer, isController, validNames.toArray(new String[0])));
+			}
+		}
 	}
     
 	@Override
@@ -187,5 +285,29 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		tagCompound.setString("name", this.name);
 		tagCompound.setString("ownerName", this.ownerName);
 		tagCompound.setString("displayText", this.displayText);
+	}
+	
+	/**This class contains data for parts that can be attached to or are attached to this parent.
+	 * These are added by the data parsed by the {@link PackParserSystem}.
+	 * Data is used during item clicks to determine the part to spawn.
+	 * 
+	 *@author don_bruce
+	 */
+	protected class PartData{
+		public final float offsetX;
+		public final float offsetY;
+		public final float offsetZ;
+		public final boolean turnsWithSteer;
+		public final boolean isController;
+		public final String[] validNames;
+		
+		public PartData(float offsetX, float offsetY, float offsetZ, boolean turnsWithSteer, boolean isController, String... validNames){
+			this.turnsWithSteer = turnsWithSteer;
+			this.isController = isController;
+			this.offsetX = offsetX;
+			this.offsetY = offsetY;
+			this.offsetZ = offsetZ;
+			this.validNames = validNames;
+		}
 	}
 }

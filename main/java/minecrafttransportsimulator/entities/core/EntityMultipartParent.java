@@ -1,34 +1,25 @@
 package minecrafttransportsimulator.entities.core;
 
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 
 import cpw.mods.fml.common.Loader;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.baseclasses.MTSVector;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.minecrafthelpers.AABBHelper;
 import minecrafttransportsimulator.minecrafthelpers.EntityHelper;
-import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
-import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
 import minecrafttransportsimulator.packets.general.ServerSyncPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 /**Main parent class.  All entities that have parts should extend this class.
  * It is responsible for part management, checks, rendering and other functions.
+ * It is NOT responsible for custom data sets, spawnable operations, and the like.
+ * That should be done in sub-classes as different implementations may be desired.
  * 
  * @author don_bruce
  */
@@ -48,14 +39,6 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 	 */
 	private Map<String, EntityMultipartChild> children = new HashMap<String, EntityMultipartChild>();
 	
-	/**
-	 * Array containing locations of all parts.
-	 * All parts should be initialized in entity's {@link initPartData} method.
-	 * Note that core entities should NOT be put here, as they're
-	 * directly linked to the parent and can't be added manually.
-	 */
-	protected List<PartData> partData;
-	
 	public EntityMultipartParent(World world){
 		super(world);
 		this.setSize(0.75F, 0.75F);
@@ -66,96 +49,6 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 		this(world);
 		this.setPositionAndRotation(posX, posY, posZ, playerRotation-90, 0);
 		this.UUID=String.valueOf(this.getUniqueID());
-	}
-	
-	@Override
-	protected void entityInit(){
-		partData = new ArrayList<PartData>();
-		this.initPartData();
-	}
-	
-	/**
-	 * Called from {@link EntityInit}, this is where all part data sets should be added.
-	 * Method should be called by the final subclass of this class.
-	 * Note that the order in which engines are added determines their number in the 
-	 * HUD and other areas.
-	 */
-	protected abstract void initPartData();
-	
-	@Override
-	public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
-		//No in-use changes for sneaky sneaks!
-		if(player.ridingEntity instanceof EntitySeat){
-			if(this.equals(((EntitySeat) player.ridingEntity).parent)){
-				return false;
-			}
-		}
-		if(!worldObj.isRemote){
-			ItemStack heldStack = PlayerHelper.getHeldStack(player);
-			if(heldStack != null){
-				if(ItemStackHelper.getItemFromStack(heldStack).equals(MTSRegistry.wrench)){
-					return false;
-				}
-				
-				Item heldItem = ItemStackHelper.getItemFromStack(heldStack);
-				EntityMultipartChild childClicked = (EntityMultipartChild) clicked;
-				Class<? extends EntityMultipartChild> childClassToSpawn = null;
-				PartData dataToSpawn = null;
-				float closestPosition = 9999;
-				//Look though the part data to find the class that goes with the held item.
-				for(PartData data : partData){
-					for(Class partClass : data.acceptableClasses){
-						if(heldItem.equals(MTSRegistry.entityItems.get(partClass))){
-							//The held item can spawn a part.t.
-							//Now find the closest spot to put it.
-							float distance = (float) Math.hypot(childClicked.offsetX - data.offsetX, childClicked.offsetZ - data.offsetZ);
-							if(distance < closestPosition){
-								//Make sure a part doesn't exist already.
-								boolean childPresent = false;
-								for(EntityMultipartChild child : children.values()){
-									if(child.offsetX == data.offsetX && child.offsetY == data.offsetY && child.offsetZ == data.offsetZ){
-										childPresent = true;
-										break;
-									}
-								}
-								if(!childPresent){
-									closestPosition = distance;
-									dataToSpawn = data;
-									childClassToSpawn = partClass;
-								}
-							}
-						}
-					}
-				}
-				if(dataToSpawn != null){
-					//We have a part, now time to spawn it.
-					try{
-						Constructor<? extends EntityMultipartChild> construct = childClassToSpawn.getConstructor(World.class, EntityMultipartParent.class, String.class, float.class, float.class, float.class, int.class);
-						EntityMultipartChild newChild = construct.newInstance(worldObj, this, this.UUID, dataToSpawn.offsetX, dataToSpawn.offsetY, dataToSpawn.offsetZ, ItemStackHelper.getItemDamage(heldStack));
-						newChild.setNBTFromStack(heldStack);
-						newChild.setTurnsWithMover(dataToSpawn.rotatesWithYaw);
-						newChild.setController(dataToSpawn.isController);
-						this.addChild(newChild.UUID, newChild, true);
-						if(!PlayerHelper.isPlayerCreative(player)){
-							PlayerHelper.removeItemFromHand(player, 1);
-						}
-						return true;
-					}catch(Exception e){
-						System.err.println("ERROR SPAWING PART!");
-						e.printStackTrace();
-					}
-				}
-			}
-		}else{
-			ItemStack heldStack = PlayerHelper.getHeldStack(player);
-			if(heldStack != null){
-				if(ItemStackHelper.getItemFromStack(heldStack).equals(MTSRegistry.wrench)){
-					MTS.proxy.openGUI(this, player);
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 	
 	@Override
@@ -274,33 +167,5 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 		super.writeToNBT(tagCompound);
 		tagCompound.setByte("numberChildren", this.numberChildren);
 		tagCompound.setFloat("rotationRoll", this.rotationRoll);
-	}
-	
-	/**This class contains data for parts that can be attached to or are attached to this parent.
-	 * A set of these classes must be added upon init of the parent.
-	 * The parent then looks to see if any linked parts match this list, and note it as so.
-	 * 
-	 *@author don_bruce
-	 */
-	protected class PartData{
-		public final boolean rotatesWithYaw;
-		public final boolean isController;
-		public final float offsetX;
-		public final float offsetY;
-		public final float offsetZ;
-		public final Class<? extends EntityMultipartChild>[] acceptableClasses;
-		
-		public PartData(float offsetX, float offsetY, float offsetZ, boolean rotatesWithYaw, boolean isController, Class<? extends EntityMultipartChild>... acceptableClasses){
-			this.rotatesWithYaw = rotatesWithYaw;
-			this.isController = isController;
-			this.offsetX = offsetX;
-			this.offsetY = offsetY;
-			this.offsetZ = offsetZ;
-			this.acceptableClasses = acceptableClasses;
-		}
-		
-		public PartData(float offsetX, float offsetY, float offsetZ, Class<? extends EntityMultipartChild>... acceptableClasses){
-			this(offsetX, offsetY, offsetZ, false, false, acceptableClasses);
-		}
 	}
 }

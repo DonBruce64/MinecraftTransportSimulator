@@ -10,6 +10,11 @@ import java.util.Map;
 
 import minecrafttransportsimulator.MTS;
 
+/**Class responsible for parsing content pack data.  Gets properties from the text files that other parts
+ * of the code can use.
+ * 
+ * @author don_bruce
+ */
 public final class PackParserSystem{
 	private static Map<String, Map<String, String>> propertyMap = new HashMap<String, Map<String, String>>();
 
@@ -32,6 +37,10 @@ public final class PackParserSystem{
 				}
 			}
 		}
+	}
+	
+	public static String[] getAllRegisteredNames(){
+		return propertyMap.keySet().toArray(new String[0]);
 	}
 	
 	public static boolean doesPropertyExist(String entityName, String propertyName){

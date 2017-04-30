@@ -12,6 +12,7 @@ import minecrafttransportsimulator.blocks.TileEntityTrack;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.main.EntityCore;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
@@ -20,20 +21,11 @@ import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
-import minecrafttransportsimulator.planes.Comanche.EntityComanche;
-import minecrafttransportsimulator.planes.Comanche.RenderComanche;
-import minecrafttransportsimulator.planes.MC172.EntityMC172;
-import minecrafttransportsimulator.planes.MC172.RenderMC172;
-import minecrafttransportsimulator.planes.PZLP11.EntityPZLP11;
-import minecrafttransportsimulator.planes.PZLP11.RenderPZLP11;
-import minecrafttransportsimulator.planes.Trimotor.EntityTrimotor;
-import minecrafttransportsimulator.planes.Trimotor.RenderTrimotor;
-import minecrafttransportsimulator.planes.Vulcanair.EntityVulcanair;
-import minecrafttransportsimulator.planes.Vulcanair.RenderVulcanair;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPropellerBench;
 import minecrafttransportsimulator.rendering.blockrenders.RenderSurveyFlag;
 import minecrafttransportsimulator.rendering.blockrenders.RenderTrack;
 import minecrafttransportsimulator.rendering.partrenders.RenderEngine;
+import minecrafttransportsimulator.rendering.partrenders.RenderPlane;
 import minecrafttransportsimulator.rendering.partrenders.RenderPlaneChest;
 import minecrafttransportsimulator.rendering.partrenders.RenderPontoon;
 import minecrafttransportsimulator.rendering.partrenders.RenderPropeller;
@@ -74,12 +66,7 @@ public class MTSRegistryClient{
 	
 	private static void initEntityRenders(){
 		//MinecraftForgeClient.registerItemRenderer(this.item, new ItemRender());
-		
-		registerParentRender(EntityMC172.class, RenderMC172.class);
-		registerParentRender(EntityTrimotor.class, RenderTrimotor.class);
-		registerParentRender(EntityVulcanair.class, RenderVulcanair.class);
-		registerParentRender(EntityPZLP11.class, RenderPZLP11.class);
-		registerParentRender(EntityComanche.class, RenderComanche.class);
+		registerParentRender(EntityPlane.class, RenderPlane.class);
 		
 		registerChildRender(EntitySeat.class, RenderSeat.class);
 		registerChildRender(EntityChest.class, RenderPlaneChest.class);

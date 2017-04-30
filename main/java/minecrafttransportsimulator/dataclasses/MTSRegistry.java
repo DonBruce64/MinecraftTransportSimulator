@@ -6,6 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.registry.EntityRegistry;
+import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.relauncher.Side;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
 import minecrafttransportsimulator.blocks.BlockSurveyFlag;
@@ -13,6 +18,7 @@ import minecrafttransportsimulator.blocks.BlockTrack;
 import minecrafttransportsimulator.blocks.BlockTrackFake;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.main.EntityCore;
+import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityBogie;
 import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
@@ -26,7 +32,6 @@ import minecrafttransportsimulator.items.ItemEngine;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftLarge;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftSmall;
 import minecrafttransportsimulator.items.ItemFlightInstrument;
-import minecrafttransportsimulator.items.ItemMultipartMoving;
 import minecrafttransportsimulator.items.ItemPropeller;
 import minecrafttransportsimulator.items.ItemSeat;
 import minecrafttransportsimulator.items.ItemWrench;
@@ -46,34 +51,25 @@ import minecrafttransportsimulator.packets.general.ServerDataPacket;
 import minecrafttransportsimulator.packets.general.ServerSyncPacket;
 import minecrafttransportsimulator.packets.general.TileEntityClientRequestDataPacket;
 import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
-import minecrafttransportsimulator.planes.Comanche.EntityComanche;
-import minecrafttransportsimulator.planes.MC172.EntityMC172;
-import minecrafttransportsimulator.planes.PZLP11.EntityPZLP11;
-import minecrafttransportsimulator.planes.Trimotor.EntityTrimotor;
-import minecrafttransportsimulator.planes.Vulcanair.EntityVulcanair;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
+import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 
 /**Main registry class.  This class should be referenced by any class looking for
  * MTS items or blocks.  Adding new items and blocks is a simple as adding them
  * as a field; the init method automatically registers all items and blocks in the class
  * and orders them according to the order in which they were declared.
- * Recipes should be added using the methods in the CommonProxy, as they allow the class
- * to be static and work with any MCVersion.
+ * This calls the {@link PackParserSystem} to get the custom vehicles from there.
  * 
  * @author don_bruce
  */
 public class MTSRegistry{
 	public static final MTSRegistry instance = new MTSRegistry();
-	
-	public static final Item planeMC172 = new ItemMultipartMoving(EntityMC172.class, 6).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item planeVulcanair = new ItemMultipartMoving(EntityVulcanair.class, 7).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item planeComanche = new ItemMultipartMoving(EntityComanche.class, 4).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item planePZLP11 = new ItemMultipartMoving(EntityPZLP11.class, 1).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item planeTrimotor = new ItemMultipartMoving(EntityTrimotor.class, 15).setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	
 	public static final Item wheelSmall = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item wheelLarge = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
@@ -88,32 +84,32 @@ public class MTSRegistry{
 	public static final Item pointerLong = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item wrench = new ItemWrench().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item flightManual = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	
 	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	
 	public static final Item track = new Item().setCreativeTab(MTSCreativeTabs.tabMTSTrains);
 	public static final Item bogie = new Item().setCreativeTab(MTSCreativeTabs.tabMTSTrains);
-	//public static final Item engineLocomotive = new ItemEngineLocomotive().setCreativeTab(MTSCreativeTabs.tabMTSTrains);
-	//public static final Item sd70 = new ItemMultipartMoving(EntitySD70.class, 1).setCreativeTab(MTSCreativeTabs.tabMTSTrains);
-	
 	public static final Block blockTrack = new BlockTrack();
 	public static final Block blockTrackFake = new BlockTrackFake();
 	public static final Block surveyFlag = new BlockSurveyFlag().setCreativeTab(MTSCreativeTabs.tabMTSTrains);
 	
+	private static int entityNumber = 0;
+	private static int packetNumber = 0;
 	public static List<Item> itemList = new ArrayList<Item>();
+	/**Maps child class names to classes for quicker lookup during spawn operations.*/
+	public static Map<String, Class<? extends EntityMultipartChild>> partClasses = new HashMap<String, Class<? extends EntityMultipartChild>>();
 	
-	/**
-	 * Maps child classes to the items that spawn them.
-	 * Used for part spawning operations.
-	 */
-	public static Map<Class<? extends EntityMultipartChild>, Item> entityItems = new HashMap<Class<? extends EntityMultipartChild>, Item>();
-	
+	/**All run-time things go here.**/
 	public void init(){
+		initCustomEntities();
 		initItems();
 		initBlocks();
 		initEntites();
 		initPackets();
 		initRecipies();
+	}
+	
+	private void initCustomEntities(){
+		
 	}
 	
 	private void initItems(){
@@ -124,7 +120,7 @@ public class MTSRegistry{
 					if(item.getUnlocalizedName().equals("item.null")){
 						item.setUnlocalizedName(feild.getName().toLowerCase());
 					}
-					MTS.proxy.registerItem(item);
+					registerItem(item);
 				}catch(Exception e){}
 			}
 		}
@@ -138,144 +134,62 @@ public class MTSRegistry{
 					if(block.getUnlocalizedName().equals("tile.null")){
 						block.setBlockName(feild.getName().toLowerCase());
 					}
-					MTS.proxy.registerBlock(block);
+					registerBlock(block);
 				}catch(Exception e){}
 			}
 		}
 	}
 	
 	private void initEntites(){
-		MTS.proxy.registerEntity(EntityMC172.class);
-		MTS.proxy.registerEntity(EntityPZLP11.class);
-		MTS.proxy.registerEntity(EntityVulcanair.class);
-		MTS.proxy.registerEntity(EntityTrimotor.class);
-		MTS.proxy.registerEntity(EntityComanche.class);
+		registerEntity(EntityPlane.class);
 		
-		MTS.proxy.registerChildEntity(EntityCore.class, null);
-		MTS.proxy.registerChildEntity(EntitySeat.class, seat);
-		MTS.proxy.registerChildEntity(EntityChest.class, Item.getItemFromBlock(Blocks.chest));
-		MTS.proxy.registerChildEntity(EntityWheel.EntityWheelSmall.class, wheelSmall);
-		MTS.proxy.registerChildEntity(EntityWheel.EntityWheelLarge.class, wheelLarge);
-		MTS.proxy.registerChildEntity(EntitySkid.class, skid);
-		MTS.proxy.registerChildEntity(EntityPontoon.class, pontoon);
-		MTS.proxy.registerChildEntity(EntityPontoon.EntityPontoonDummy.class, pontoon);
-		MTS.proxy.registerChildEntity(EntityPropeller.class, propeller);
-		MTS.proxy.registerChildEntity(EntityEngineAircraftSmall.class, engineAircraftSmall);
-		MTS.proxy.registerChildEntity(EntityEngineAircraftLarge.class, engineAircraftLarge);
+		registerChildEntity(EntityCore.class, null);
+		registerChildEntity(EntitySeat.class, seat);
+		registerChildEntity(EntityChest.class, Item.getItemFromBlock(Blocks.chest));
+		registerChildEntity(EntityWheel.EntityWheelSmall.class, wheelSmall);
+		registerChildEntity(EntityWheel.EntityWheelLarge.class, wheelLarge);
+		registerChildEntity(EntitySkid.class, skid);
+		registerChildEntity(EntityPontoon.class, pontoon);
+		registerChildEntity(EntityPontoon.EntityPontoonDummy.class, pontoon);
+		registerChildEntity(EntityPropeller.class, propeller);
+		registerChildEntity(EntityEngineAircraftSmall.class, engineAircraftSmall);
+		registerChildEntity(EntityEngineAircraftLarge.class, engineAircraftLarge);
 		
-		MTS.proxy.registerChildEntity(EntityBogie.class, bogie);
+		registerChildEntity(EntityBogie.class, bogie);
 	}
 	
 	private void initPackets(){
-		MTS.proxy.registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
-		MTS.proxy.registerPacket(ServerDataPacket.class, ServerDataPacket.Handler.class, true, false);
-		MTS.proxy.registerPacket(ServerSyncPacket.class, ServerSyncPacket.Handler.class, true, false);
+		registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
+		registerPacket(ServerDataPacket.class, ServerDataPacket.Handler.class, true, false);
+		registerPacket(ServerSyncPacket.class, ServerSyncPacket.Handler.class, true, false);
 		
-		MTS.proxy.registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
-		MTS.proxy.registerPacket(TileEntityClientRequestDataPacket.class, TileEntityClientRequestDataPacket.Handler.class, false, true);
+		registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
+		registerPacket(TileEntityClientRequestDataPacket.class, TileEntityClientRequestDataPacket.Handler.class, false, true);
 
-		MTS.proxy.registerPacket(InstrumentPlanePacket.class, InstrumentPlanePacket.Handler.class, true, true);
-		MTS.proxy.registerPacket(TileEntitySyncPacket.class, TileEntitySyncPacket.Handler.class, true, true);
+		registerPacket(InstrumentPlanePacket.class, InstrumentPlanePacket.Handler.class, true, true);
+		registerPacket(TileEntitySyncPacket.class, TileEntitySyncPacket.Handler.class, true, true);
 		
-		MTS.proxy.registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
-		MTS.proxy.registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);
-		MTS.proxy.registerPacket(ElevatorPacket.class, ElevatorPacket.Handler.class, true, true);
-		MTS.proxy.registerPacket(EnginePacket.class, EnginePacket.Handler.class, true, true);
-		MTS.proxy.registerPacket(FlapPacket.class, FlapPacket.Handler.class, true, true);
-		MTS.proxy.registerPacket(LightPacket.class, LightPacket.Handler.class, true, true);
-		MTS.proxy.registerPacket(RudderPacket.class, RudderPacket.Handler.class, true, true);
-		MTS.proxy.registerPacket(ThrottlePacket.class, ThrottlePacket.Handler.class, true, true);
-		MTS.proxy.registerPacket(TrimPacket.class, TrimPacket.Handler.class, true, true);
+		registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
+		registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);
+		registerPacket(ElevatorPacket.class, ElevatorPacket.Handler.class, true, true);
+		registerPacket(EnginePacket.class, EnginePacket.Handler.class, true, true);
+		registerPacket(FlapPacket.class, FlapPacket.Handler.class, true, true);
+		registerPacket(LightPacket.class, LightPacket.Handler.class, true, true);
+		registerPacket(RudderPacket.class, RudderPacket.Handler.class, true, true);
+		registerPacket(ThrottlePacket.class, ThrottlePacket.Handler.class, true, true);
+		registerPacket(TrimPacket.class, TrimPacket.Handler.class, true, true);
 	}
 	
 	private void initRecipies(){
-		this.initPlaneRecipes();
 		this.initPartRecipes();
 		this.initEngineRecipes();
 		this.initFlightInstrumentRecipes();
 	}
 	
-	private void initPlaneRecipes(){	
-		//MC172
-		for(int i=0; i<6; ++i){
-			MTS.proxy.registerRecpie(new ItemStack(planeMC172, 1, i),
-				"AAA",
-				" B ",
-				"ABA",
-				'A', new ItemStack(Blocks.wooden_slab, 1, i), 
-				'B', new ItemStack(Blocks.planks, 1, i));
-		}
-		
-		//PZLP11
-		MTS.proxy.registerRecpie(new ItemStack(planePZLP11),
-				"AAA",
-				" B ",
-				"ABA",
-				'A', Items.iron_ingot, 
-				'B', Blocks.iron_bars);
-		
-		//Vulcanair
-		MTS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 0),
-				"AAA",
-				"CAC",
-				"AAA",
-				'A', Items.iron_ingot, 
-				'C', new ItemStack(Items.dye, 1, 15));
-		MTS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 1),
-				"AAA",
-				"CAC",
-				"AAA",
-				'A', Items.iron_ingot, 
-				'C', new ItemStack(Items.dye, 1, 14));
-		MTS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 2),
-				"AAA",
-				"CAD",
-				"AAA",
-				'A', Items.iron_ingot, 
-				'C', new ItemStack(Items.dye, 1, 1),
-				'D', new ItemStack(Items.dye, 1, 7));
-		MTS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 3),
-				"AAA",
-				"CAC",
-				"AAA",
-				'A', Items.iron_ingot, 
-				'C', new ItemStack(Items.dye, 1, 1));
-		MTS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 4),
-				"AAA",
-				"CAC",
-				"AAA",
-				'A', Items.iron_ingot, 
-				'C', new ItemStack(Items.dye, 1, 10));
-		MTS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 5),
-				"AAA",
-				"CAC",
-				"AAA",
-				'A', Items.iron_ingot, 
-				'C', new ItemStack(Items.dye, 1, 0));
-		MTS.proxy.registerRecpie(new ItemStack(planeVulcanair, 1, 6),
-				"AAA",
-				"CAD",
-				"AAA",
-				'A', Items.iron_ingot, 
-				'C', new ItemStack(Items.dye, 1, 15),
-				'D', new ItemStack(Items.dye, 1, 14));
-		
-		//Trimotor
-		for(byte i=0; i<16; ++i){
-			MTS.proxy.registerRecpie(new ItemStack(planeTrimotor, 1, i),
-					"AAA",
-					"CB ",
-					"AAA",
-					'A', Items.iron_ingot, 
-					'B', Blocks.iron_block,
-					'D', new ItemStack(Items.dye, 1, i));
-		}
-	}
-	
 	private void initPartRecipes(){
 		//Seats
 		for(int i=0; i<96; ++i){
-			MTS.proxy.registerRecpie(new ItemStack(seat, 1, i),
+			registerRecpie(new ItemStack(seat, 1, i),
 				" BA",
 				" BA",
 				"AAA",
@@ -283,7 +197,7 @@ public class MTSRegistry{
 				'B', new ItemStack(Blocks.wool, 1, i/6));
 		}
 		for(int i=0; i<6; ++i){
-			MTS.proxy.registerRecpie(new ItemStack(seat, 1, 96 + i),
+			registerRecpie(new ItemStack(seat, 1, 96 + i),
 				" BA",
 				" BA",
 				"AAA",
@@ -292,14 +206,14 @@ public class MTSRegistry{
 		}
 		
 		//Wheels
-		MTS.proxy.registerRecpie(new ItemStack(wheelSmall),
+		registerRecpie(new ItemStack(wheelSmall),
 				"ABA",
 				"ACA",
 				"ABA",
 				'A', Blocks.wool, 
 				'B', new ItemStack(Items.dye, 1, 0), 
 				'C', Items.iron_ingot);
-		MTS.proxy.registerRecpie(new ItemStack(wheelLarge),
+		registerRecpie(new ItemStack(wheelLarge),
 				"ABA",
 				"BCB",
 				"ABA",
@@ -307,13 +221,13 @@ public class MTSRegistry{
 				'B', new ItemStack(Items.dye, 1, 0), 
 				'C', Items.iron_ingot);
 		//Skid
-		MTS.proxy.registerRecpie(new ItemStack(skid),
+		registerRecpie(new ItemStack(skid),
 				"A A",
 				" A ",
 				"  A",
 				'A', Blocks.iron_bars);
 		//Pontoon
-		MTS.proxy.registerRecpie(new ItemStack(pontoon, 2),
+		registerRecpie(new ItemStack(pontoon, 2),
 				"AAA",
 				"BBB",
 				"AAA",
@@ -321,7 +235,7 @@ public class MTSRegistry{
 				'B', Blocks.wool);
 		
 		//Propeller bench
-		MTS.proxy.registerRecpie(new ItemStack(propellerBench),
+		registerRecpie(new ItemStack(propellerBench),
 				"AAA",
 				" BA",
 				"ACA",
@@ -333,28 +247,28 @@ public class MTSRegistry{
 	
 	private void initEngineRecipes(){
 		//New engines
-		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
+		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.piston, 
 				'B', Blocks.obsidian,
 				'C', Items.iron_ingot);
-		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
+		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.piston, 
 				'B', Blocks.obsidian,
 				'C', Items.diamond);
-		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
+		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
 				"ACA",
 				"ACA",
 				"ACA",
 				'A', Blocks.piston, 
 				'B', Blocks.obsidian,
 				'C', Items.iron_ingot);
-		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
+		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
 				"ACA",
 				"ACA",
 				"ACA",
@@ -363,25 +277,25 @@ public class MTSRegistry{
 				'C', Items.diamond);
 		
 		//Repaired engines
-		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
+		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.obsidian,
 				'C', ((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0]);
-		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
+		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.obsidian,
 				'C', ((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1]);
-		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
+		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
 				"B B",
 				"BCB",
 				"B B",
 				'B', Blocks.obsidian,
 				'C', ((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0]);
-		MTS.proxy.registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
+		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
 				"B B",
 				"BCB",
 				"B B",
@@ -390,14 +304,14 @@ public class MTSRegistry{
 	}
 	
 	private void initFlightInstrumentRecipes(){		
-		MTS.proxy.registerRecpie(new ItemStack(pointerShort),
+		registerRecpie(new ItemStack(pointerShort),
 				" WW",
 				" WW",
 				"B  ",
 				'W', new ItemStack(Items.dye, 1, 15), 
 				'B', new ItemStack(Items.dye, 1, 0));
 		
-		MTS.proxy.registerRecpie(new ItemStack(pointerLong),
+		registerRecpie(new ItemStack(pointerLong),
 				"  W",
 				" W ",
 				"B  ",
@@ -405,13 +319,13 @@ public class MTSRegistry{
 				'B', new ItemStack(Items.dye, 1, 0));
 		
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 16, 0),
+		registerRecpie(new ItemStack(flightInstrument, 16, 0),
 				"III",
 				"IGI",
 				"III",
 				'I', Items.iron_ingot, 
 				'G', Blocks.glass_pane);
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 1),
+		registerRecpie(new ItemStack(flightInstrument, 1, 1),
 				"LLL",
 				"RRR",
 				" B ",
@@ -419,7 +333,7 @@ public class MTSRegistry{
 				'L', new ItemStack(Items.dye, 1, 4), 
 				'R', new ItemStack(Items.dye, 1, 3));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 2),
+		registerRecpie(new ItemStack(flightInstrument, 1, 2),
 				"WLW",
 				"WSW",
 				" B ",
@@ -428,7 +342,7 @@ public class MTSRegistry{
 				'S', pointerShort, 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 3),
+		registerRecpie(new ItemStack(flightInstrument, 1, 3),
 				" W ",
 				"WIW",
 				" B ",
@@ -436,7 +350,7 @@ public class MTSRegistry{
 				'I', Items.iron_ingot, 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 4),
+		registerRecpie(new ItemStack(flightInstrument, 1, 4),
 				"R W",
 				"YLG",
 				"GBG",
@@ -447,7 +361,7 @@ public class MTSRegistry{
 				'G', new ItemStack(Items.dye, 1, 10), 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 5),
+		registerRecpie(new ItemStack(flightInstrument, 1, 5),
 				"   ",
 				"WIW",
 				"WBW",
@@ -455,7 +369,7 @@ public class MTSRegistry{
 				'I', Items.iron_ingot, 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 6),
+		registerRecpie(new ItemStack(flightInstrument, 1, 6),
 				"WWW",
 				" I ",
 				"WBW",
@@ -463,7 +377,7 @@ public class MTSRegistry{
 				'I', Items.iron_ingot, 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 7),
+		registerRecpie(new ItemStack(flightInstrument, 1, 7),
 				"W W",
 				" L ",
 				"WBW",
@@ -471,7 +385,7 @@ public class MTSRegistry{
 				'L', pointerLong, 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 8),
+		registerRecpie(new ItemStack(flightInstrument, 1, 8),
 				"RYG",
 				" LG",
 				" B ",
@@ -482,7 +396,7 @@ public class MTSRegistry{
 				'G', new ItemStack(Items.dye, 1, 10), 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 9),
+		registerRecpie(new ItemStack(flightInstrument, 1, 9),
 				"GLG",
 				"LGL",
 				" B ",
@@ -492,7 +406,7 @@ public class MTSRegistry{
 
 		//Instrument 10 does not exist
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 11),
+		registerRecpie(new ItemStack(flightInstrument, 1, 11),
 				"W W",
 				" L ",
 				"WBR",
@@ -501,7 +415,7 @@ public class MTSRegistry{
 				'R', new ItemStack(Items.dye, 1, 1), 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 12),
+		registerRecpie(new ItemStack(flightInstrument, 1, 12),
 				"RWW",
 				" L ",
 				" B ",
@@ -510,7 +424,7 @@ public class MTSRegistry{
 				'R', new ItemStack(Items.dye, 1, 1), 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 13),
+		registerRecpie(new ItemStack(flightInstrument, 1, 13),
 				" W ",
 				"WLW",
 				" B ",
@@ -518,7 +432,7 @@ public class MTSRegistry{
 				'L', pointerLong, 
 				'W', new ItemStack(Items.dye, 1, 15));
 		
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 14),
+		registerRecpie(new ItemStack(flightInstrument, 1, 14),
 				"YGR",
 				" L ",
 				" B ",
@@ -529,7 +443,7 @@ public class MTSRegistry{
 				'R', new ItemStack(Items.dye, 1, 1), 
 				'W', new ItemStack(Items.dye, 1, 15));
 				
-		MTS.proxy.registerRecpie(new ItemStack(flightInstrument, 1, 15),
+		registerRecpie(new ItemStack(flightInstrument, 1, 15),
 				"   ",
 				"LGL",
 				"RB ",
@@ -537,5 +451,71 @@ public class MTSRegistry{
 				'L', pointerLong,  
 				'G', new ItemStack(Items.dye, 1, 10), 
 				'R', new ItemStack(Items.dye, 1, 1));
+	}
+	
+	
+	/**
+	 * Registers the given item and adds it to the creative tab list.
+	 * @param item
+	 */
+	private static void registerItem(Item item){
+		item.setTextureName(MTS.MODID + ":" + item.getUnlocalizedName().substring(5).toLowerCase());
+		GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
+		MTSRegistry.itemList.add(item);
+	}
+	
+	/**
+	 * Registers the given block and adds it to the creative tab list.
+	 * Also adds the respective TileEntity if the block has one.
+	 * @param block
+	 */
+	private static void registerBlock(Block block){
+		block.setBlockTextureName(MTS.MODID + ":" + block.getUnlocalizedName().substring(5).toLowerCase());
+		GameRegistry.registerBlock(block, block.getUnlocalizedName().substring(5));
+		MTSRegistry.itemList.add(Item.getItemFromBlock(block));
+		if(block instanceof ITileEntityProvider){
+			Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
+			GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
+		}
+	}
+
+	/**
+	 * Registers an entity.
+	 * Optionally pairs the entity with an item for GUI operations.
+	 * @param entityClass
+	 * @param entityItem
+	 */
+	private static void registerEntity(Class entityClass){
+		EntityRegistry.registerModEntity(entityClass, entityClass.getSimpleName().substring(6), entityNumber++, MTS.MODID, 80, 5, false);
+	}
+	
+	/**
+	 * Registers a child entity.
+	 * Optionally pairs the entity with an item for GUI operations.
+	 * Note that the name of the item is what name you should use in the {@link PackParserSystem}
+	 * @param entityClass
+	 * @param entityItem
+	 */
+	private static void registerChildEntity(Class<? extends EntityMultipartChild> entityClass, Item entityItem){
+		if(entityItem != null){
+			partClasses.put(entityItem.getUnlocalizedName(), entityClass);
+		}
+		registerEntity(entityClass);
+	}
+	
+	/**
+	 * Registers a packet and its handler on the client and/or the server.
+	 * @param packetClass
+	 * @param handlerClass
+	 * @param client
+	 * @param server
+	 */
+	private static <REQ extends IMessage, REPLY extends IMessage> void registerPacket(Class<REQ> packetClass, Class<? extends IMessageHandler<REQ, REPLY>> handlerClass, boolean client, boolean server){
+		if(client)MTS.MFSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.CLIENT);
+		if(server)MTS.MFSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.SERVER);
+	}
+	
+	private static void registerRecpie(ItemStack output, Object...params){
+		GameRegistry.addRecipe(output, params);
 	}
 }

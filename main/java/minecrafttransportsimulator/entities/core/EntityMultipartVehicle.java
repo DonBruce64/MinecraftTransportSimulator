@@ -114,8 +114,8 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	public byte getNumberEngineBays(){
 		if(numberEngineBays == 0){
 			for(PartData data : this.partData){
-				for(Class<? extends EntityMultipartChild> aClass : data.acceptableClasses){
-					if(EntityEngine.class.isAssignableFrom(aClass)){
+				for(String name : data.validNames){
+					if(name.contains("engine")){
 						++numberEngineBays;
 					}
 				}
@@ -141,8 +141,8 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		//We use array notation here to keep with Java standards.
 		byte engineNumber = 0;
 		for(PartData data : this.partData){
-			for(Class<? extends EntityMultipartChild> aClass : data.acceptableClasses){
-				if(EntityEngine.class.isAssignableFrom(aClass)){
+			for(String name : data.validNames){
+				if(name.contains("engine")){
 					for(EntityMultipartChild child : this.getChildren()){
 						if(child instanceof EntityEngine){
 							if(child.offsetX == data.offsetX && child.offsetY == data.offsetY && child.offsetZ == data.offsetZ){
@@ -177,7 +177,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		for(byte i=0; i<=99; ++i){
 			if(PackParserSystem.doesPropertyExist(name, "vehicleInstrument" + i)){
 				Float[] data = PackParserSystem.getFloatArrayProperty(name, "vehicleInstrument" + i);
-				Instrument instrument = new Instrument(data[0], data[1], data[2], data[3], data[4], data[5], data[6].byteValue());
+				instruments.put(i, new Instrument(data[0], data[1], data[2], data[3], data[4], data[5], data[6].byteValue()));
 			}
 		}
 		

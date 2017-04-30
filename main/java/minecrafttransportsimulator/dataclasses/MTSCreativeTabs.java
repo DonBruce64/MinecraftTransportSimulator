@@ -35,7 +35,7 @@ public abstract class MTSCreativeTabs extends CreativeTabs{
 	    @Override
 		@SideOnly(Side.CLIENT)
 	    public Item getTabIconItem(){
-	    	return MTSRegistry.planeMC172;
+	    	return MTSRegistry.engineAircraftLarge;
 	    }
 	};
 	

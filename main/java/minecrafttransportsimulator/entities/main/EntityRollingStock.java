@@ -9,8 +9,8 @@ public abstract class EntityRollingStock extends EntityMultipartMoving{
 		super(world);
 	}
 	
-	public EntityRollingStock(World world, float posX, float posY, float posZ, float rotation, byte textureOptions){
-		super(world, posX, posY, posZ, rotation, textureOptions);
+	public EntityRollingStock(World world, float posX, float posY, float posZ, float rotation, String name){
+		super(world, posX, posY, posZ, rotation, name);
 	}
 	
 	@Override

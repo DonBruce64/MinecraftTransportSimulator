@@ -6,6 +6,7 @@ import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.main.EntityRollingStock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public abstract class EntityBogie extends EntityMultipartChild{
@@ -20,6 +21,11 @@ public abstract class EntityBogie extends EntityMultipartChild{
 	
 	public EntityBogie(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
 		super(world, (EntityRollingStock) parent, parentUUID, offsetX, offsetY, offsetZ, width, height, 0);
+	}
+	
+	@Override
+	protected boolean attackChild(DamageSource source, float damage){
+		return false;
 	}
 
 	@Override

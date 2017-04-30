@@ -72,6 +72,7 @@ public abstract class MTSEntity extends Entity{
 	}
 	
 	//Junk methods, forced to pull in.
+	protected void entityInit(){}
 	protected void readEntityFromNBT(NBTTagCompound p_70037_1_){}
 	protected void writeEntityToNBT(NBTTagCompound p_70014_1_){}
 }
