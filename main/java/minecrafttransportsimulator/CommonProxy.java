@@ -12,6 +12,7 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ForgeContainerGUISystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -33,6 +34,7 @@ public class CommonProxy{
 
 	public void preInit(FMLPreInitializationEvent event){
 		ConfigSystem.initCommon(event.getSuggestedConfigurationFile());
+		PackParserSystem.init();
 	}
 	
 	public void init(FMLInitializationEvent event){

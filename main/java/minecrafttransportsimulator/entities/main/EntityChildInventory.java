@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSEntity;
+import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import net.minecraft.entity.item.EntityItem;

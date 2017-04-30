@@ -65,28 +65,23 @@ public class EntityPropeller extends EntityMultipartChild{
 	}
 	
 	@Override
-	public boolean performAttackAction(DamageSource source, float damage){
-		if(!worldObj.isRemote){
-			if(isDamageWrench(source)){
-				return true;
-			}
-			if(parent != null){
-				if(source.getEntity() instanceof EntityPlayer){					
-					if(PlayerHelper.getHeldStack((EntityPlayer) source.getEntity()) == null){
-						for(EntityMultipartChild child : parent.getChildren()){
-							if(child instanceof EntityEngineAircraft){
-								if(this.equals(((EntityEngineAircraft) child).propeller)){
-									((EntityMultipartVehicle) parent).handleEngineSignal(engine, (byte) 4);
-									MTS.MFSNet.sendToAll(new EnginePacket(parent.getEntityId(), engine.getEntityId(), (byte) 4));
-								}
+	protected boolean attackChild(DamageSource source, float damage){
+		if(parent != null){
+			if(source.getEntity() instanceof EntityPlayer){					
+				if(PlayerHelper.getHeldStack((EntityPlayer) source.getEntity()) == null){
+					for(EntityMultipartChild child : parent.getChildren()){
+						if(child instanceof EntityEngineAircraft){
+							if(this.equals(((EntityEngineAircraft) child).propeller)){
+								((EntityMultipartVehicle) parent).handleEngineSignal(engine, (byte) 4);
+								MTS.MFSNet.sendToAll(new EnginePacket(parent.getEntityId(), engine.getEntityId(), (byte) 4));
 							}
 						}
-						return true;
 					}
+					return true;
 				}
 			}
-			damagePropeller(damage);
 		}
+		damagePropeller(damage);
 		return true;
 	}
 	

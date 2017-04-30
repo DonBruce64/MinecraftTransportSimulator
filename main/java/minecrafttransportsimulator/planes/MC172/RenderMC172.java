@@ -74,9 +74,9 @@ public class RenderMC172 extends RenderPlane{
 		GL11.glDisable(GL11.GL_LIGHTING);
 		GL11.glRotatef(180, 1, 0, 0);
 		GL11.glRotatef(105, 0, 1, 0);
-		GL11DrawSystem.drawScaledStringAt(plane.displayName, -2.8F, -0.35F, -1.36F, 1F/32F, Color.lightGray);
+		GL11DrawSystem.drawScaledStringAt(plane.displayText, -2.8F, -0.35F, -1.36F, 1F/32F, Color.lightGray);
 		GL11.glRotatef(150, 0, 1, 0);
-		GL11DrawSystem.drawScaledStringAt(plane.displayName, 2.8F, -0.35F, -1.36F, 1F/32F, Color.lightGray);
+		GL11DrawSystem.drawScaledStringAt(plane.displayText, 2.8F, -0.35F, -1.36F, 1F/32F, Color.lightGray);
 		GL11.glRotatef(105, 0, 1, 0);
 		GL11.glRotatef(-180, 1, 0, 0);
 		GL11.glEnable(GL11.GL_LIGHTING);

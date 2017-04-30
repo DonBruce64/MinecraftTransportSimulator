@@ -5,7 +5,7 @@ import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.dataclasses.MTSEntity;
+import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;

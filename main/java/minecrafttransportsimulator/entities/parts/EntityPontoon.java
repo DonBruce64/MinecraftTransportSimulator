@@ -11,6 +11,7 @@ import minecrafttransportsimulator.minecrafthelpers.EntityHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public class EntityPontoon extends EntityGroundDevice{
@@ -59,6 +60,11 @@ public class EntityPontoon extends EntityGroundDevice{
 			//Plane dive-bombed into the water.
 			parent.removeChild(UUID, true);
 		}
+	}
+	
+	@Override
+	protected boolean attackChild(DamageSource source, float damage){
+		return true;
 	}
 	
 	@Override

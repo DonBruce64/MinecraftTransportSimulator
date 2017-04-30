@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.entities.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSEntity;
+import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;

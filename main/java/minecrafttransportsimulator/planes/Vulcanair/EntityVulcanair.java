@@ -21,7 +21,7 @@ public class EntityVulcanair extends EntityPlane{
 	
 	public EntityVulcanair(World world, float posX, float posY, float posZ, float rotation, byte textureOptions){
 		super(world, posX, posY, posZ, rotation, textureOptions);
-		this.displayName = "Wolfvanox";
+		this.displayText = "Wolfvanox";
 	}
 
 	@Override
@@ -74,7 +74,7 @@ public class EntityVulcanair extends EntityPlane{
 	}
 
 	@Override
-	public float[][] getCoreLocations(){
+	public float[][] getCollisionBoxes(){
 		return new float[][]{
 			{0, -0.3F, 4F, 1, 1},
 			{0, 1.0F, -4.5F, 1, 0.5F},

@@ -143,15 +143,15 @@ public class RenderTrimotor extends RenderPlane{
 		GL11.glTranslatef(0, 2.5F, -11.625F);
 		GL11.glRotatef(180, 1, 0, 0);
 		GL11.glRotatef(90 - plane.rudderAngle/10F, 0, 1, 0);
-		GL11DrawSystem.drawScaledStringAt(plane.displayName, -0F, -0F, -0.0313F, 0.01F, Color.black);
+		GL11DrawSystem.drawScaledStringAt(plane.displayText, -0F, -0F, -0.0313F, 0.01F, Color.black);
 		GL11.glRotatef(180, 0, 1, 0);
-		GL11DrawSystem.drawScaledStringAt(plane.displayName, -0F, -0F, -0.0313F, 0.01F, Color.black);
+		GL11DrawSystem.drawScaledStringAt(plane.displayText, -0F, -0F, -0.0313F, 0.01F, Color.black);
 		GL11.glPopMatrix();
 		
 		GL11.glPushMatrix();
 		GL11.glRotatef(180, 0, 0, 1);
 		GL11.glRotatef(-90, 1, 0, 0);
-		GL11DrawSystem.drawScaledStringAt(plane.displayName, 7F, 1.2F, -1.57F, 0.1F, Color.black);
+		GL11DrawSystem.drawScaledStringAt(plane.displayText, 7F, 1.2F, -1.57F, 0.1F, Color.black);
 		GL11.glPopMatrix();
 	}
 

@@ -20,7 +20,7 @@ public class EntityTrimotor extends EntityPlane{
 	
 	public EntityTrimotor(World world, float posX, float posY, float posZ, float rotation, byte textureOptions){
 		super(world, posX, posY, posZ, rotation, textureOptions);
-		this.displayName = "DB32-1204-UL";
+		this.displayText = "DB32-1204-UL";
 	}
 
 	@Override
@@ -88,7 +88,7 @@ public class EntityTrimotor extends EntityPlane{
 	}
 	
 	@Override
-	public float[][] getCoreLocations(){
+	public float[][] getCollisionBoxes(){
 		return new float[][]{
 			{0, -0.5F, 2.75F, 1, 1},
 			{-3F, -0.5F, 0F, 1, 1},

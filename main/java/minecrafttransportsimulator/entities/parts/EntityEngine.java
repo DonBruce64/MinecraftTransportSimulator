@@ -96,27 +96,22 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	}
 	
 	@Override
-	public boolean performAttackAction(DamageSource source, float damage){
-		if(!worldObj.isRemote){
-			if(isDamageWrench(source)){
-				return true;
+	protected boolean attackChild(DamageSource source, float damage){
+		if(source.isExplosion()){
+			hours += damage*10;
+			if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
+			if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
+			if(!brokenStarter)brokenStarter = Math.random() < 0.05;
+		}else{
+			hours += damage;
+			if(source.isProjectile()){
+				if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
+				if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
 			}
-			if(source.isExplosion()){
-				hours += damage*10;
-				if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
-				if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
-				if(!brokenStarter)brokenStarter = Math.random() < 0.05;
-			}else{
-				hours += damage;
-				if(source.isProjectile()){
-					if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
-					if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
-				}
-			}
-			this.sendDataToClient();
 		}
+		this.sendDataToClient();
 		return true;
-    }
+	}
 	
 	@Override
 	public void onUpdate(){

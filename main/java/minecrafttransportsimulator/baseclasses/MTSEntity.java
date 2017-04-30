@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.dataclasses;
+package minecrafttransportsimulator.baseclasses;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -53,10 +53,12 @@ public abstract class MTSEntity extends Entity{
     	this.ignoreFrustumCheck = true;
     }
     
-    //Note that entities do NOT render in every pass.  This just ensures the render code gets called.
+    //Do not render entities this way.  Use custom render system instead.
+    //This way requires lots of code changes due to the new render systems.
+    //None of which are any good at doing efficient rendering anyways.
     @Override
     public boolean shouldRenderInPass(int pass){
-    	return true;
+    	return false;
     }
 	
 	public void requestDataFromServer(){

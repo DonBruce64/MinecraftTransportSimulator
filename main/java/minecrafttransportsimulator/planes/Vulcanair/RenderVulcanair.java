@@ -84,9 +84,9 @@ public class RenderVulcanair extends RenderPlane{
 		GL11.glRotatef(102, 0, 1, 0);
 		GL11.glDisable(GL11.GL_LIGHTING);
 		GL11.glScalef(1.5F, 1.5F, 1.5F);
-		GL11DrawSystem.drawScaledStringAt(plane.displayName, -2.2F/1.5F, 0.2F/1.5F, -1.25F/1.5F, 1F/32F, Color.black);
+		GL11DrawSystem.drawScaledStringAt(plane.displayText, -2.2F/1.5F, 0.2F/1.5F, -1.25F/1.5F, 1F/32F, Color.black);
 		GL11.glRotatef(156, 0, 1, 0);
-		GL11DrawSystem.drawScaledStringAt(plane.displayName, 2.2F/1.5F, 0.2F/1.5F, -1.25F/1.5F, 1F/32F, Color.black);
+		GL11DrawSystem.drawScaledStringAt(plane.displayText, 2.2F/1.5F, 0.2F/1.5F, -1.25F/1.5F, 1F/32F, Color.black);
 		GL11.glEnable(GL11.GL_LIGHTING);
 		GL11.glPopMatrix();
 	}

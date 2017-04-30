@@ -1,18 +1,15 @@
 package minecrafttransportsimulator.entities.core;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 /**This class is tailored for moving vehicles such as planes, trains, and automobiles.
@@ -22,12 +19,12 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
-	public byte lightSetup;
 	public byte numberPowerfulLights;
-	public byte lightStatus;
 	public byte throttle;
+	public int lightSetup;
+	public int lightStatus;
 	public int fuelCapacity;
-	public float emptyMass;
+	public int emptyMass;
 	public double fuel;
 	public double electricPower = 12;
 	public double electricUsage;
@@ -35,15 +32,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	public double airDensity;
 	public double trackAngle;
 	
-	/**Map of instrument slots to type.
-	 * If there's not a key for a slot, it doesn't exist.
-	 * Note that engines use slots 10-14, 20-24, 30-34, and 40-44.
-	 **/
-	public Map<Byte, Byte> instruments;
-	
-	private Map<AxisAlignedBB, Integer[]> collisionMap = new HashMap<AxisAlignedBB, Integer[]>();
-	protected List<AxisAlignedBB> collidingBoxes = new ArrayList<AxisAlignedBB>();
-	
+	public Map<Byte, Instrument> instruments;
 	private byte numberEngineBays = 0;
 	private Map<Byte, EntityEngine> engineByNumber = new HashMap<Byte, EntityEngine>();
 	
@@ -51,20 +40,9 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		super(world);
 	}
 	
-	public EntityMultipartVehicle(World world, float posX, float posY, float posZ, float playerRotation, byte textureOptions){
-		super(world, posX, posY, posZ, playerRotation, textureOptions);
+	public EntityMultipartVehicle(World world, float posX, float posY, float posZ, float playerRotation, String name){
+		super(world, posX, posY, posZ, playerRotation, name);
 	}
-	
-	@Override
-	protected void entityInit(){
-		super.entityInit();
-		initProperties();
-		instruments = new HashMap<Byte, Byte>();
-		initInstruments();
-	}
-	
-	protected abstract void initProperties();
-	protected abstract void initInstruments();
 	
 	@Override
 	public void onEntityUpdate(){
@@ -94,9 +72,9 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	@Override
 	public void setDead(){
 		if(!worldObj.isRemote){
-			for(Byte instrumentNumber : instruments.values()){
-				if(instrumentNumber != 0){
-					ItemStack stack = new ItemStack(MTSRegistry.flightInstrument, 1, instrumentNumber);
+			for(Instrument instrument : instruments.values()){
+				if(instrument.currentInstrument != 0){
+					ItemStack stack = new ItemStack(MTSRegistry.flightInstrument, 1, instrument.currentInstrument);
 					worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
 				}
 			}
@@ -116,6 +94,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	 * 2 is electric starter off.
 	 * 3 is electric starter on.
 	 * 4 is hand starter on.
+	 * 5 is a backfire from a high-hour engine.
 	 */
 	public void handleEngineSignal(EntityEngine engine, byte signal){
 		switch (signal){
@@ -182,42 +161,70 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		return (lightBank & this.lightStatus) != 0 ? (electricPower > 2 ? (float) electricPower/12F : 0) : 0;
 	}
 	
-	public abstract ResourceLocation getBackplateTexture();
-	public abstract ResourceLocation getMouldingTexture();
-	public abstract void drawHUD(int width, int height);
-	
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
-		this.lightStatus=tagCompound.getByte("lightStatus");
 		this.throttle=tagCompound.getByte("throttle");
+		this.lightStatus=tagCompound.getInteger("lightStatus");
 		this.fuel=tagCompound.getDouble("fuel");
 		this.electricPower=tagCompound.getDouble("electricPower");
+		
+		this.lightSetup = PackParserSystem.getIntegerProperty(name, "lightSetup");
+		this.numberPowerfulLights = PackParserSystem.getIntegerProperty(name, "numberPowerfulLights").byteValue();
+		this.fuelCapacity = PackParserSystem.getIntegerProperty(name, "fuelCapacity");
+		this.emptyMass = PackParserSystem.getIntegerProperty(name, "emptyMass");
+		
+		for(byte i=0; i<=99; ++i){
+			if(PackParserSystem.doesPropertyExist(name, "vehicleInstrument" + i)){
+				Float[] data = PackParserSystem.getFloatArrayProperty(name, "vehicleInstrument" + i);
+				Instrument instrument = new Instrument(data[0], data[1], data[2], data[3], data[4], data[5], data[6].byteValue());
+			}
+		}
 		
 		byte[] instrumentSlots = tagCompound.getByteArray("instrumentSlots");
 		byte[] instrumentTypes = tagCompound.getByteArray("instrumentTypes");
 		for(byte i = 0; i<instrumentSlots.length; ++i){
-			instruments.put(instrumentSlots[i], instrumentTypes[i]);
+			instruments.get(instrumentSlots[i]).currentInstrument = instrumentTypes[i];
 		}
 	}
     
 	@Override
 	public void writeToNBT(NBTTagCompound tagCompound){
-		super.writeToNBT(tagCompound);
-		tagCompound.setByte("lightStatus", this.lightStatus);
+		super.writeToNBT(tagCompound);		
 		tagCompound.setByte("throttle", this.throttle);
+		tagCompound.setInteger("lightStatus", this.lightStatus);
 		tagCompound.setDouble("fuel", this.fuel);
 		tagCompound.setDouble("electricPower", this.electricPower);
 		
 		byte[] instrumentSlots = new byte[instruments.size()];
 		byte[] instrumentTypes = new byte[instruments.size()];
 		byte i = 0;
-		for(Entry<Byte, Byte> instrument : instruments.entrySet()){
+		for(Entry<Byte, Instrument> instrument : instruments.entrySet()){
 			instrumentSlots[i] = instrument.getKey();
-			instrumentTypes[i] =  instrument.getValue();
+			instrumentTypes[i] =  instrument.getValue().currentInstrument;
 			++i;
 		}
 		tagCompound.setByteArray("instrumentSlots", instrumentSlots);
 		tagCompound.setByteArray("instrumentTypes", instrumentTypes);
+	}
+	
+	public static final class Instrument{
+		public final float xPos;
+		public final float yPos;
+		public final float zPos;
+		public final float xRot;
+		public final float yRot;
+		public final float zRot;
+		public byte currentInstrument;
+		
+		Instrument(float xPos, float yPos, float zPos, float xRot, float yRot, float zRot, byte defaultInstrument){
+			this.xPos = xPos;
+			this.yPos = yPos;
+			this.zPos = zPos;
+			this.xRot = xRot;
+			this.yRot = yRot;
+			this.zRot = zRot;
+			this.currentInstrument = defaultInstrument;
+		}
 	}
 }

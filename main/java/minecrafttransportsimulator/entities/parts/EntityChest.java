@@ -7,6 +7,7 @@ import minecrafttransportsimulator.entities.main.EntityChildInventory;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public class EntityChest extends EntityChildInventory{
@@ -17,6 +18,11 @@ public class EntityChest extends EntityChildInventory{
 	
 	public EntityChest(World world, EntityMultipartParent moving, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		super(world, (EntityMultipartMoving) moving, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F);
+	}
+	
+	@Override
+	protected boolean attackChild(DamageSource source, float damage){
+		return false;
 	}
 
 	@Override

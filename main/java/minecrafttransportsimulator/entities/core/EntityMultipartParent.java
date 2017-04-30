@@ -2,7 +2,6 @@ package minecrafttransportsimulator.entities.core;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,13 +10,10 @@ import com.google.common.collect.ImmutableList;
 
 import cpw.mods.fml.common.Loader;
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.baseclasses.MTSVector;
-import minecrafttransportsimulator.dataclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.main.EntityCore;
-import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
-import minecrafttransportsimulator.items.ItemMultipartMoving;
 import minecrafttransportsimulator.minecrafthelpers.AABBHelper;
 import minecrafttransportsimulator.minecrafthelpers.EntityHelper;
 import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
@@ -38,16 +34,12 @@ import net.minecraft.world.World;
  */
 public abstract class EntityMultipartParent extends EntityMultipartBase{
 	public boolean rendered;
+	public byte numberChildren;
 	public float rotationRoll;
 	public float prevRotationRoll;
-	
-	
-	
-	private byte numberChildren;
 	public float pitchCorrection;
 	public float yawCorrection;
-	public float rollCorrection;
-	
+	public float rollCorrection;	
 	
 	/**
 	 * Map that contains child mappings.  Keyed by child's UUID.
@@ -74,7 +66,6 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 		this(world);
 		this.setPositionAndRotation(posX, posY, posZ, playerRotation-90, 0);
 		this.UUID=String.valueOf(this.getUniqueID());
-		this.numberChildren=(byte) this.getCoreLocations().length;
 	}
 	
 	@Override
@@ -82,6 +73,14 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 		partData = new ArrayList<PartData>();
 		this.initPartData();
 	}
+	
+	/**
+	 * Called from {@link EntityInit}, this is where all part data sets should be added.
+	 * Method should be called by the final subclass of this class.
+	 * Note that the order in which engines are added determines their number in the 
+	 * HUD and other areas.
+	 */
+	protected abstract void initPartData();
 	
 	@Override
 	public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
@@ -117,11 +116,6 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 									if(child.offsetX == data.offsetX && child.offsetY == data.offsetY && child.offsetZ == data.offsetZ){
 										childPresent = true;
 										break;
-									}else if(child instanceof EntityGroundDevice){
-										if(child.offsetX == data.alternateOffsetX && child.offsetY == data.alternateOffsetY && child.offsetZ == data.alternateOffsetZ){
-											childPresent = true;
-											break;
-										}
 									}
 								}
 								if(!childPresent){
@@ -139,14 +133,8 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 						Constructor<? extends EntityMultipartChild> construct = childClassToSpawn.getConstructor(World.class, EntityMultipartParent.class, String.class, float.class, float.class, float.class, int.class);
 						EntityMultipartChild newChild = construct.newInstance(worldObj, this, this.UUID, dataToSpawn.offsetX, dataToSpawn.offsetY, dataToSpawn.offsetZ, ItemStackHelper.getItemDamage(heldStack));
 						newChild.setNBTFromStack(heldStack);
-						if(newChild instanceof EntityGroundDevice){
-							float[] extendedCoords = new float[]{dataToSpawn.offsetX, dataToSpawn.offsetY, dataToSpawn.offsetZ};
-							float[] retractedCoords = new float[]{dataToSpawn.alternateOffsetX, dataToSpawn.alternateOffsetY, dataToSpawn.alternateOffsetZ};
-							boolean retractable = !Arrays.equals(retractedCoords, extendedCoords);
-							((EntityGroundDevice) newChild).setExtraProperties(dataToSpawn.rotatesWithYaw, retractable, extendedCoords, retractedCoords);
-						}else if(dataToSpawn.isController){
-							((EntitySeat) newChild).setController();
-						}
+						newChild.setTurnsWithMover(dataToSpawn.rotatesWithYaw);
+						newChild.setController(dataToSpawn.isController);
 						this.addChild(newChild.UUID, newChild, true);
 						if(!PlayerHelper.isPlayerCreative(player)){
 							PlayerHelper.removeItemFromHand(player, 1);
@@ -204,25 +192,6 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 			removeChild(child.UUID, false);
 		}
 	}
-	
-	//Start of custom methods
-	/**
-	 * Add new core sets here.  Cores are used to determine collision and are not removable
-	 * (extend {@link EntityMultipartChild} to make removable things).  Core sets consist of
-	 * a x, y, z, width, and height parameters.  All parameters are passed into the 
-	 * {@link EntityCore} constructor upon spawn.  This method is used
-	 * by {@link ItemMultipartMoving} during use to determine spawn requirements and such.
-	 * @return
-	 */
-	public abstract float[][] getCoreLocations();
-	
-	/**
-	 * Called from {@link EntityInit}, this is where all part data sets should be added.
-	 * Method should be called by the final subclass of this class.
-	 * Note that the order in which engines are added determines their number in the 
-	 * HUD and other areas.
-	 */
-	protected abstract void initPartData();
 	
 	/**
 	 * Spawns a child and adds a child to all appropriate mappings.
@@ -319,25 +288,15 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 		public final float offsetX;
 		public final float offsetY;
 		public final float offsetZ;
-		public final float alternateOffsetX;
-		public final float alternateOffsetY;
-		public final float alternateOffsetZ;
 		public final Class<? extends EntityMultipartChild>[] acceptableClasses;
 		
-		public PartData(float offsetX, float offsetY, float offsetZ, boolean rotatesWithYaw, boolean isController, float alternateOffsetX, float alternateOffsetY, float alternateOffsetZ, Class<? extends EntityMultipartChild>... acceptableClasses){
+		public PartData(float offsetX, float offsetY, float offsetZ, boolean rotatesWithYaw, boolean isController, Class<? extends EntityMultipartChild>... acceptableClasses){
 			this.rotatesWithYaw = rotatesWithYaw;
 			this.isController = isController;
 			this.offsetX = offsetX;
 			this.offsetY = offsetY;
 			this.offsetZ = offsetZ;
-			this.alternateOffsetX = alternateOffsetX;
-			this.alternateOffsetY = alternateOffsetY;
-			this.alternateOffsetZ = alternateOffsetZ;
 			this.acceptableClasses = acceptableClasses;
-		}
-		
-		public PartData(float offsetX, float offsetY, float offsetZ, boolean rotatesWithYaw, boolean isController, Class<? extends EntityMultipartChild>... acceptableClasses){
-			this(offsetX, offsetY, offsetZ, rotatesWithYaw, isController, offsetX, offsetY, offsetZ, acceptableClasses);
 		}
 		
 		public PartData(float offsetX, float offsetY, float offsetZ, Class<? extends EntityMultipartChild>... acceptableClasses){

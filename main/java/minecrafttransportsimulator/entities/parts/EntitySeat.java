@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.entities.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSEntity;
+import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
@@ -13,11 +13,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public class EntitySeat extends EntityMultipartChild{
-	public boolean isController;
-	private boolean hadRiderLastTick;
 	
 	public EntitySeat(World world){
 		super(world);
@@ -49,14 +48,15 @@ public class EntitySeat extends EntityMultipartChild{
 		}
 		return false;
     }
+
+	@Override
+	protected boolean attackChild(DamageSource source, float damage){
+		return false;
+	}
 	
 	@Override
 	public boolean canRiderInteract(){
 		return true;
-	}
-	
-	public void setController(){
-		this.isController = true;
 	}
 	
 	@Override

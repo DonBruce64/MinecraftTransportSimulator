@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.entities.core;
 
-import minecrafttransportsimulator.dataclasses.MTSEntity;
+import minecrafttransportsimulator.baseclasses.MTSEntity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 

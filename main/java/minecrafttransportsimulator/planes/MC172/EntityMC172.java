@@ -20,22 +20,22 @@ public class EntityMC172 extends EntityPlane{
 	
 	public EntityMC172(World world, float posX, float posY, float posZ, float rotation, byte textureOptions){
 		super(world, posX, posY, posZ, rotation, textureOptions);
-		this.displayName = "MFS";
+		//this.displayName = "MFS";
 	}
 
 	@Override
 	protected void initProperties(){
-		hasFlaps = true;
-		lightSetup = 15;
-		numberPowerfulLights = 1;
-		fuelCapacity = 5000;
-		emptyMass=800;
-		wingspan=11.0F;
-		wingArea=16.0F;
-		tailDistance=7;
-		rudderArea=1.5F;
-		elevatorArea=3.0F;
-		defaultElevatorAngle=-5F;
+		//hasFlaps = true;
+		//lightSetup = 15;
+		//numberPowerfulLights = 1;
+		//fuelCapacity = 5000;
+		//emptyMass=800;
+		//wingspan=11.0F;
+		//wingArea=16.0F;
+		//tailDistance=7;
+		//rudderArea=1.5F;
+		//elevatorArea=3.0F;
+		//defaultElevatorAngle=-5F;
 	}
 	
 	@Override
@@ -58,6 +58,7 @@ public class EntityMC172 extends EntityPlane{
 	
 	@Override
 	protected void initPartData(){
+		this.getEntityString()
 		this.partData.add(new PartData(0, -1F, 1.7F, true, false, EntityWheel.EntityWheelSmall.class));
 		this.partData.add(new PartData(-1.65F, -1F, 0, EntityWheel.EntityWheelSmall.class, EntityPontoon.EntityPontoonDummy.class));
 		this.partData.add(new PartData(1.65F, -1F, 0,  EntityWheel.EntityWheelSmall.class, EntityPontoon.EntityPontoonDummy.class));

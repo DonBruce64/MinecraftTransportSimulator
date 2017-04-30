@@ -27,6 +27,11 @@ public class EntityCore extends EntityMultipartChild{
     }
 	
 	@Override
+	protected boolean attackChild(DamageSource source, float damage){
+		return false;
+	}
+	
+	@Override
 	public void setNBTFromStack(ItemStack stack){}
 
 	@Override

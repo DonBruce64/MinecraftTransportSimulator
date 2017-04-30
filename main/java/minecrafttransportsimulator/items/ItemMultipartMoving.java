@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.items;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
-import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.main.EntityCore;
 import minecrafttransportsimulator.minecrafthelpers.AABBHelper;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -37,12 +37,13 @@ public class ItemMultipartMoving extends Item{
 			try{
 				newEntity = moving.getConstructor(World.class, float.class, float.class, float.class, float.class, byte.class).newInstance(world, x, y + 1, z, player.rotationYaw, (byte) stack.getItemDamage());
 				float minHeight = 0;
-				for(float[] coreCoords : newEntity.getCoreLocations()){
+				for(Float[] coreCoords : newEntity.getCollisionBoxes()){
 					minHeight = -coreCoords[1] > minHeight ? -coreCoords[1] : minHeight;
 				}
 				newEntity.posY += minHeight;
 				newEntity.ownerName = player.getDisplayName();
-				if(canSpawnParent(world, newEntity)){
+				if(canSpawn(world, newEntity)){
+					newEntity.numberChildren = (byte) newEntity.getCollisionBoxes().size();
 					if(!player.capabilities.isCreativeMode){
 						--stack.stackSize;
 					}
@@ -62,22 +63,22 @@ public class ItemMultipartMoving extends Item{
 		INS190*/
 	}
 
-	public static boolean canSpawnParent(World world, EntityMultipartParent parent){
-		float[][] coreLocations = parent.getCoreLocations();
-		EntityCore[] spawnedCores = new EntityCore[coreLocations.length];
-		for(int i=0; i<coreLocations.length; ++i){
-			EntityCore core = new EntityCore(world, parent, parent.UUID, coreLocations[i][0], coreLocations[i][1], coreLocations[i][2], coreLocations[i][3], coreLocations[i][4]);
-			world.spawnEntityInWorld(core);
-			spawnedCores[i] = core;
-			if(!AABBHelper.getCollidingBlockBoxes(world, core.getBoundingBox(), core.collidesWithLiquids()).isEmpty()){
-				for(int j=0; j<=i; ++j){
-					spawnedCores[j].setDead();
+	public static boolean canSpawn(World world, EntityMultipartMoving mover){
+		List<Float[]> coreLocations = mover.getCollisionBoxes();
+		List<EntityCore> spawnedCores = new ArrayList<EntityCore>();
+		for(Float[] location : coreLocations){
+			EntityCore newCore = new EntityCore(world, mover, mover.UUID, location[0], location[1], location[2], location[3], location[4]);
+			world.spawnEntityInWorld(newCore);
+			spawnedCores.add(newCore);
+			if(!AABBHelper.getCollidingBlockBoxes(world, newCore.getBoundingBox(), newCore.collidesWithLiquids()).isEmpty()){
+				for(EntityCore spawnedCore : spawnedCores){
+					spawnedCore.setDead();
 				}
-				parent.setDead();
+				mover.setDead();
 				return false;
 			}
 		}
-		world.spawnEntityInWorld(parent);
+		world.spawnEntityInWorld(mover);
 		return true;
 	}
 	

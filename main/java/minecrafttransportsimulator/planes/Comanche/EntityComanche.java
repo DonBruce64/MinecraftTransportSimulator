@@ -20,7 +20,7 @@ public class EntityComanche extends EntityPlane{
 	
 	public EntityComanche(World world, float posX, float posY, float posZ, float rotation, byte textureOptions){
 		super(world, posX, posY, posZ, rotation, textureOptions);
-		this.displayName = "MFS.WOLF";
+		this.displayText = "MFS.WOLF";
 	}
 
 	@Override
@@ -70,7 +70,7 @@ public class EntityComanche extends EntityPlane{
 	}
 	
 	@Override
-	public float[][] getCoreLocations(){
+	public float[][] getCollisionBoxes(){
 		return new float[][]{
 			{-1.75F, 1.3F, -5.25F,  1, 0.125F},
 			{-0.6F, 1.3F, -5.25F,  1, 0.125F},

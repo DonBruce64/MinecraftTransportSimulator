@@ -1,18 +1,18 @@
 package minecrafttransportsimulator.entities.core;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSEntity;
+import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.minecrafthelpers.AABBHelper;
 import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
 import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
 import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -29,41 +29,45 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public abstract class EntityMultipartMoving extends EntityMultipartParent{
+	public boolean openTop;
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
-	public boolean openTop;
-	//TODO set this on all planes.
-	public byte maxTextLength;
-	public byte textureOptions;
+	public byte displayTextMaxLength;
 	public double velocity;
 	public double health;
+	public String name="";
 	public String ownerName=MTS.MODID;
-	public String displayName="";
-	
-	private Map<AxisAlignedBB, Integer[]> collisionMap = new HashMap<AxisAlignedBB, Integer[]>();
-	protected List<AxisAlignedBB> collidingBoxes = new ArrayList<AxisAlignedBB>();
-		
+	public String displayText="";
+			
 	public EntityMultipartMoving(World world){
 		super(world);
 	}
 	
-	public EntityMultipartMoving(World world, float posX, float posY, float posZ, float playerRotation, byte textureOptions){
+	public EntityMultipartMoving(World world, float posX, float posY, float posZ, float playerRotation, String name){
 		super(world, posX, posY, posZ, playerRotation);
-		this.textureOptions = textureOptions;
-	}
-	
-	@Override
-	protected void entityInit(){
-		super.entityInit();
-		initProperties();
+		this.name = name;
+		this.displayText = PackParserSystem.getStringProperty(name, "defaultDisplayText");
+		//Make sure all data for the PackParser in the NBT methods is inited now that we have a name.
+		NBTTagCompound tempTag = new NBTTagCompound();
+		this.writeEntityToNBT(tempTag);
+		this.readFromNBT(tempTag);
 	}
 	
 	/**
-	 * Used to init the properties of this multi-part entity.
-	 * Should be called by the last subclass.
+	 * Gets a list of collision boxes used for player and entity collisions.
+	 * Used once during spawning, where these boxes are turned into {@link #EntityCore}s
 	 */
-	protected abstract void initProperties();
-	
+	public List<Float[]> getCollisionBoxes(){
+		List<Float[]> boxList = new ArrayList<Float[]>();
+		for(byte i=0; i<=99; ++i){
+			if(PackParserSystem.doesPropertyExist(this.name, "collisionBox" + i)){
+				Float[] data = PackParserSystem.getFloatArrayProperty(this.name, "collisionBox" + i);
+				boxList.add(new Float[]{data[0], data[1], data[2], data[3], data[4]});
+			}
+		}
+		return boxList;
+	}
+		
 	/**
 	 * Gets the strength of an explosion when this entity is destroyed.
 	 * Is not used if explosions are disabled in the config.
@@ -75,7 +79,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		if(!worldObj.isRemote){
 			if(PlayerHelper.getHeldStack(player) != null){
 				if(ItemStackHelper.getItemFromStack(PlayerHelper.getHeldStack(player)).equals(Items.name_tag)){
-					this.displayName = PlayerHelper.getHeldStack(player).getDisplayName().length() > this.maxTextLength ? PlayerHelper.getHeldStack(player).getDisplayName().substring(0, this.maxTextLength - 1) : PlayerHelper.getHeldStack(player).getDisplayName();
+					this.displayText = PlayerHelper.getHeldStack(player).getDisplayName().length() > this.displayTextMaxLength ? PlayerHelper.getHeldStack(player).getDisplayName().substring(0, this.displayTextMaxLength - 1) : PlayerHelper.getHeldStack(player).getDisplayName();
 					this.sendDataToClient();
 					return true;
 				}
@@ -121,10 +125,10 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		super.setDead();
 	}
 	
-	protected List<AxisAlignedBB> getChildCollisions(EntityMultipartChild child, AxisAlignedBB box){
+	protected void getChildCollisions(EntityMultipartChild child, AxisAlignedBB box, List<AxisAlignedBB> boxList){
 		//Need to contract the box because sometimes the slight error in math causes issues.
-		collisionMap = AABBHelper.getCollidingBlockBoxes(worldObj, box.contract(0.01F, 0.01F,  0.01F), child.collidesWithLiquids());
-		collidingBoxes.clear();
+		Map<AxisAlignedBB, Integer[]> collisionMap = AABBHelper.getCollidingBlockBoxes(worldObj, box.contract(0.01F, 0.01F,  0.01F), child.collidesWithLiquids());
+		boxList.clear();
 		if(!collisionMap.isEmpty()){
 			for(Entry<AxisAlignedBB, Integer[]> entry : collisionMap.entrySet()){
 				float hardness = BlockHelper.getBlockHardness(worldObj, entry.getValue()[0], entry.getValue()[1], entry.getValue()[2]);
@@ -134,11 +138,10 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
             		motionY *= 0.95;
             		motionZ *= 0.95;
 				}else{
-					collidingBoxes.add(entry.getKey());
+					boxList.add(entry.getKey());
 				}
 			}
 		}
-		return collidingBoxes;
 	}
 	
 	public void explodeAtPosition(double x, double y, double z){
@@ -168,10 +171,12 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		super.readFromNBT(tagCompound);
 		this.parkingBrakeOn=tagCompound.getBoolean("parkingBrakeOn");
 		this.brakeOn=tagCompound.getBoolean("brakeOn");
-		this.openTop=tagCompound.getBoolean("openTop");
-		this.textureOptions=tagCompound.getByte("textureOptions");
+		this.name=tagCompound.getString("name");
 		this.ownerName=tagCompound.getString("ownerName");
-		this.displayName=tagCompound.getString("displayName");
+		this.displayText=tagCompound.getString("displayText");
+		
+		this.openTop = PackParserSystem.getBooleanProperty(name, "openTop");
+		this.displayTextMaxLength = PackParserSystem.getIntegerProperty(name, "displayTextMaxLength").byteValue();
 	}
     
 	@Override
@@ -179,9 +184,8 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("brakeOn", this.brakeOn);
 		tagCompound.setBoolean("parkingBrakeOn", this.parkingBrakeOn);
-		tagCompound.setBoolean("openTop", this.openTop);
-		tagCompound.setByte("textureOptions", this.textureOptions);
+		tagCompound.setString("name", this.name);
 		tagCompound.setString("ownerName", this.ownerName);
-		tagCompound.setString("displayName", this.displayName);
+		tagCompound.setString("displayText", this.displayText);
 	}
 }

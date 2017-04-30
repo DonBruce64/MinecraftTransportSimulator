@@ -28,19 +28,14 @@ public abstract class EntityWheel extends EntityGroundDevice{
 	public void setNBTFromStack(ItemStack stack){}
 	
 	@Override
-	public boolean performAttackAction(DamageSource source, float damage){
-		if(!worldObj.isRemote){
-			if(isDamageWrench(source)){
-				return true;
-			}
-			if(!isFlat){
-				if(source.isExplosion() || Math.random() < 0.1){
-					setFlat();
-				}
+	protected boolean attackChild(DamageSource source, float damage){
+		if(!isFlat){
+			if(source.isExplosion() || Math.random() < 0.1){
+				setFlat();
 			}
 		}
 		return true;
-    }
+	}
 	
 	@Override
 	public void onUpdate(){

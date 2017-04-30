@@ -21,7 +21,7 @@ public class EntityPZLP11 extends EntityPlane{
 	
 	public EntityPZLP11(World world, float posX, float posY, float posZ, float rotation, byte textureOptions){
 		super(world, posX, posY, posZ, rotation, textureOptions);
-		this.displayName = "MAX 4H70 M";
+		this.displayText = "MAX 4H70 M";
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public class EntityPZLP11 extends EntityPlane{
 	}
 	
 	@Override
-	public float[][] getCoreLocations(){
+	public float[][] getCollisionBoxes(){
 		return new float[][]{
 			{0, -0.3F, 0.5F, 1, 1},
 			{0, -0.3F, -0.25F, 1, 1},
