@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.systems;
 
-import cpw.mods.fml.common.network.IGuiHandler;
 import minecrafttransportsimulator.entities.parts.EntityChest;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.network.IGuiHandler;
 
 public class ForgeContainerGUISystem implements IGuiHandler{
 

@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.blocks;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -13,6 +11,8 @@ import net.minecraft.client.audio.MovingSound;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity{
 	public byte propellerType = 0;

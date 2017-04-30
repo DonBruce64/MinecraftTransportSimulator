@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.baseclasses;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.packets.general.EntityClientRequestDataPacket;
 import minecrafttransportsimulator.packets.general.ServerDataPacket;
@@ -10,6 +8,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public abstract class MTSEntity extends Entity{
 	

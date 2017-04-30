@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 
-import cpw.mods.fml.common.Loader;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.minecrafthelpers.AABBHelper;

@@ -3,9 +3,6 @@ package minecrafttransportsimulator.dataclasses;
 import java.util.HashMap;
 import java.util.Map;
 
-import cpw.mods.fml.client.registry.ClientRegistry;
-import cpw.mods.fml.client.registry.RenderingRegistry;
-import cpw.mods.fml.common.Loader;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.blocks.TileEntitySurveyFlag;
 import minecrafttransportsimulator.blocks.TileEntityTrack;
@@ -38,6 +35,8 @@ import minecrafttransportsimulator.systems.RenderSystem.RenderParent;
 import minecrafttransportsimulator.systems.RenderSystem.RenderTileBase;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
 
 public class MTSRegistryClient{
 	private static final MTSRegistryClient instance = new MTSRegistryClient();

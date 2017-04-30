@@ -3,13 +3,13 @@ package minecrafttransportsimulator.blocks;
 import java.util.ArrayList;
 import java.util.List;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import minecrafttransportsimulator.baseclasses.MTSCurve;
 import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class TileEntityTrack extends MTSTileEntity{
 	public boolean renderedLastPass;

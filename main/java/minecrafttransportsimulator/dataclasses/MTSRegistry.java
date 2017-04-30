@@ -6,11 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.registry.EntityRegistry;
-import cpw.mods.fml.common.registry.GameRegistry;
-import cpw.mods.fml.relauncher.Side;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
 import minecrafttransportsimulator.blocks.BlockSurveyFlag;
@@ -59,6 +54,11 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
+import net.minecraftforge.fml.common.registry.EntityRegistry;
+import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.relauncher.Side;
 
 /**Main registry class.  This class should be referenced by any class looking for
  * MTS items or blocks.  Adding new items and blocks is a simple as adding them
@@ -109,7 +109,11 @@ public class MTSRegistry{
 	}
 	
 	private void initCustomEntities(){
-		
+		for(String name : PackParserSystem.getAllRegisteredNames()){
+			if(PackParserSystem.getStringProperty(name, "type").equals("Plane")){
+				
+			}
+		}
 	}
 	
 	private void initItems(){

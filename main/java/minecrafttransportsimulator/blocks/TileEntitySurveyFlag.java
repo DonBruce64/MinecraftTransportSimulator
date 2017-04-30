@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSBlock;
 import minecrafttransportsimulator.baseclasses.MTSCurve;
@@ -14,7 +12,9 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
 import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class TileEntitySurveyFlag extends MTSTileEntity{
 	public boolean renderedLastPass;

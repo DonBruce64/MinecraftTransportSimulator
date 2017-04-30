@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.systems;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
@@ -12,6 +10,8 @@ import net.minecraft.client.particle.EntityDropParticleFX;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public final class SFXSystem{
 	private static SoundHandler soundHandler;

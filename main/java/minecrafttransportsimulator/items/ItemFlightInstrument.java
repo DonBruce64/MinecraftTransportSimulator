@@ -2,8 +2,6 @@ package minecrafttransportsimulator.items;
 
 import java.util.List;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.rendering.AircraftInstruments;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -13,6 +11,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.StatCollector;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ItemFlightInstrument extends Item{
 	private IIcon[] icons = new IIcon[AircraftInstruments.AircraftGauges.values().length];
