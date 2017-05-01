@@ -16,8 +16,8 @@ public abstract class MTSCreativeTabs extends CreativeTabs{
 
 	@Override
     @SideOnly(Side.CLIENT)
-    public void displayAllReleventItems(List givenList){
-    	super.displayAllReleventItems(givenList);
+    public void displayAllRelevantItems(List givenList){
+    	super.displayAllRelevantItems(givenList);
     	ItemStack[] itemArray = (ItemStack[]) givenList.toArray(new ItemStack[givenList.size()]); 
     	int currentIndex = 0;
     	for(int i=0; i<MTSRegistry.itemList.size(); ++i){
