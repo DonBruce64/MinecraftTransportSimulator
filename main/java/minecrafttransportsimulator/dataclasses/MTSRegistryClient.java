@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.dataclasses;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.blocks.TileEntitySurveyFlag;
 import minecrafttransportsimulator.blocks.TileEntityTrack;
@@ -10,25 +7,11 @@ import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.main.EntityCore;
 import minecrafttransportsimulator.entities.main.EntityPlane;
-import minecrafttransportsimulator.entities.parts.EntityChest;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
-import minecrafttransportsimulator.entities.parts.EntityPontoon;
-import minecrafttransportsimulator.entities.parts.EntityPropeller;
-import minecrafttransportsimulator.entities.parts.EntitySeat;
-import minecrafttransportsimulator.entities.parts.EntitySkid;
-import minecrafttransportsimulator.entities.parts.EntityWheel;
+import minecrafttransportsimulator.entities.parts.*;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPropellerBench;
 import minecrafttransportsimulator.rendering.blockrenders.RenderSurveyFlag;
 import minecrafttransportsimulator.rendering.blockrenders.RenderTrack;
-import minecrafttransportsimulator.rendering.partrenders.RenderEngine;
-import minecrafttransportsimulator.rendering.partrenders.RenderPlane;
-import minecrafttransportsimulator.rendering.partrenders.RenderPlaneChest;
-import minecrafttransportsimulator.rendering.partrenders.RenderPontoon;
-import minecrafttransportsimulator.rendering.partrenders.RenderPropeller;
-import minecrafttransportsimulator.rendering.partrenders.RenderSeat;
-import minecrafttransportsimulator.rendering.partrenders.RenderSkid;
-import minecrafttransportsimulator.rendering.partrenders.RenderWheel;
+import minecrafttransportsimulator.rendering.partrenders.*;
 import minecrafttransportsimulator.systems.RenderSystem.RenderChild;
 import minecrafttransportsimulator.systems.RenderSystem.RenderNull;
 import minecrafttransportsimulator.systems.RenderSystem.RenderParent;
@@ -37,6 +20,10 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.fml.common.Loader;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MTSRegistryClient{
 	private static final MTSRegistryClient instance = new MTSRegistryClient();
@@ -54,7 +41,6 @@ public class MTSRegistryClient{
 			initTileEntityRenderers();
 			initEntityRenders();
 		}
-		initItemRenders();
 	}
 	
 	private static void initTileEntityRenderers(){
@@ -79,43 +65,6 @@ public class MTSRegistryClient{
 		registerChildRender(EntityEngineAircraftLarge.class, RenderEngine.class);
 		registerChildRender(EntityCore.class, null);
 	}
-	
-	
-	//TODO make sure this works with 1.8 and up.
-		
-  private static void initItemRenders(){
-	  	/*INS180
-		registerItemSeries(MFSRegistry.planeMC172, 6);
-		registerItemSeries(MFSRegistry.planePZLP11, 1);
-		registerItemSeries(MFSRegistry.planeVulcanair, 7);
-		registerItemSeries(MFSRegistry.planeTrimotor, 15);
-		registerItemSeries(MFSRegistry.planeVans, 15);
-		registerItemSeries(MFSRegistry.seat, 102);
-		registerItemSeries(MFSRegistry.flightInstrument, InstrumentHelper.AircraftGauges.values().length);
-		registerItemSeries(MFSRegistry.engine, EntityEngine.EngineTypes.values().length);
-		
-		ModelResourceLocation[] propellerNames = new ModelResourceLocation[Short.MAX_VALUE];
-		for(int i=0; i<propellerNames.length; ++i){
-			propellerNames[i] = registerItemRenderWithAltName(MFSRegistry.propeller, i, i%10 < 3 ? String.valueOf(i%10) : "0");
-		}
-		INS180*/
-		/*INS189
-		ModelBakery.registerItemVariants(MFSRegistry.propeller, propellerNames);
-		INS189*/
-		/*INS180
-		String[] modelNames = new String[propellerNames.length]; for(int i=0; i<modelNames.length; ++i){modelNames[i]=propellerNames[i].getResourceDomain() + ":"+propellerNames[i].getResourcePath();};ModelBakery.addVariantName(MFSRegistry.propeller, modelNames);
-		
-		registerItemRender(MFSRegistry.wheelSmall);
-		registerItemRender(MFSRegistry.wheelLarge);
-		registerItemRender(MFSRegistry.skid);
-		registerItemRender(MFSRegistry.pontoon);
-		registerItemRender(MFSRegistry.pointerShort);
-		registerItemRender(MFSRegistry.pointerLong);
-		registerItemRender(MFSRegistry.flightInstrumentBase);
-		registerItemRender(Item.getItemFromBlock(MFSRegistry.blockPropellerBench));
-		INS180*/
-	}
-	
 	
     
     /**
@@ -156,68 +105,4 @@ public class MTSRegistryClient{
 			System.err.println("ERROR: Could not register TileEntity renderer.  TileEntity will not be visible!");
 		}
 	}
-	
-	/*INS180
-	private static void registerItemSeries(Item item, int metaNumber){
-		ModelResourceLocation[] names = new ModelResourceLocation[metaNumber];
-		for(int i=0; i<metaNumber; ++i){
-			names[i] = registerItemRender(item, i);
-		}
-		INS180*/
-		/*INS189
-		ModelBakery.registerItemVariants(item, names);
-		INS189*/
-		/*INS180
-		String[] modelNames = new String[names.length]; for(int i=0; i<modelNames.length; ++i){modelNames[i]=names[i].getResourceDomain() + ":"+names[i].getResourcePath();};ModelBakery.addVariantName(item, modelNames);
-		
-	}
-	
-	private static void registerItemSeriesWithAltName(Item item, int metaNumber, String altName){
-		ModelResourceLocation[] names = new ModelResourceLocation[metaNumber];
-		for(int i=0; i<metaNumber; ++i){
-			names[i] = registerItemRenderWithAltName(item, i, altName);
-		}
-		INS180*/
-		/*INS189
-		ModelBakery.registerItemVariants(item, names);
-		INS189*/
-		/*INS180
-		String[] modelNames = new String[names.length]; for(int i=0; i<modelNames.length; ++i){modelNames[i]=names[i].getResourceDomain() + ":"+names[i].getResourcePath();};ModelBakery.addVariantName(item, modelNames);
-	}
-	
-	private static void registerItemRender(Item item){
-	    Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, 0, new ModelResourceLocation(MFS.MODID + ":" + item.getUnlocalizedName().substring(5), "inventory"));
-	}
-	
-	private static ModelResourceLocation registerItemRender(Item item, int itemMeta){
-		ModelResourceLocation location = new ModelResourceLocation(MFS.MODID + ":" + item.getUnlocalizedName().substring(5) + String.valueOf(itemMeta), "inventory");
-	    Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, itemMeta, location);
-	    return location;
-	}
-	
-	private static ModelResourceLocation registerItemRenderWithAltName(Item item, int itemMeta, String altName){
-		ModelResourceLocation location = new ModelResourceLocation(MFS.MODID + ":" + item.getUnlocalizedName().substring(5) + altName, "inventory");
-	    Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, itemMeta, location);
-	    return location;
-	}
-	INS180*/
-    
-    /*INS189
-	private class MFSRenderingFactory implements IRenderFactory{
-		private final Class<? extends Render> entityRender;
-		public MFSRenderingFactory(Class<? extends Render>  entityRender){
-			this.entityRender = entityRender;
-		}
-		
-		@Override
-		public Render createRenderFor(RenderManager manager){
-			try{
-				return entityRender.getConstructor(RenderManager.class).newInstance(manager);
-			}catch(Exception e){
-				e.printStackTrace();
-				return null;
-			}
-		}
-	};	
-	INS189*/
 }

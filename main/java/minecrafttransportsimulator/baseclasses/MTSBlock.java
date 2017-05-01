@@ -8,6 +8,8 @@ import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.List;
 
@@ -37,6 +39,7 @@ public abstract class MTSBlock extends Block{
 	}
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public AxisAlignedBB getSelectedBoundingBox(IBlockState state, World world, BlockPos pos) {
 		this.setBlockBoundsFromMetadata(world.getBlockState(pos));
 		return super.getSelectedBoundingBox(state, world, pos);

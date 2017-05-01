@@ -131,12 +131,12 @@ public class MTSRegistry{
 	}
 	
 	private void initBlocks(){
-		for(Field feild : this.getClass().getFields()){
-			if(feild.getType().equals(Block.class)){
+		for(Field field : this.getClass().getFields()){
+			if(field.getType().equals(Block.class)){
 				try{
-					Block block = (Block) feild.get(Block.class);
+					Block block = (Block) field.get(Block.class);
 					if(block.getUnlocalizedName().equals("tile.null")){
-						block.setBlockName(feild.getName().toLowerCase());
+						block.setUnlocalizedName(field.getName().toLowerCase());
 					}
 					registerBlock(block);
 				}catch(Exception e){}
@@ -149,7 +149,7 @@ public class MTSRegistry{
 		
 		registerChildEntity(EntityCore.class, null);
 		registerChildEntity(EntitySeat.class, seat);
-		registerChildEntity(EntityChest.class, Item.getItemFromBlock(Blocks.chest));
+		registerChildEntity(EntityChest.class, Item.getItemFromBlock(Blocks.CHEST));
 		registerChildEntity(EntityWheel.EntityWheelSmall.class, wheelSmall);
 		registerChildEntity(EntityWheel.EntityWheelLarge.class, wheelLarge);
 		registerChildEntity(EntitySkid.class, skid);
@@ -197,16 +197,16 @@ public class MTSRegistry{
 				" BA",
 				" BA",
 				"AAA",
-				'A', new ItemStack(Blocks.wooden_slab, 1, i%6), 
-				'B', new ItemStack(Blocks.wool, 1, i/6));
+				'A', new ItemStack(Blocks.WOODEN_SLAB, 1, i%6),
+				'B', new ItemStack(Blocks.WOOL, 1, i/6));
 		}
 		for(int i=0; i<6; ++i){
 			registerRecpie(new ItemStack(seat, 1, 96 + i),
 				" BA",
 				" BA",
 				"AAA",
-				'A', new ItemStack(Blocks.wooden_slab, 1, i%6), 
-				'B', new ItemStack(Items.leather));
+				'A', new ItemStack(Blocks.WOODEN_SLAB, 1, i%6),
+				'B', new ItemStack(Items.LEATHER));
 		}
 		
 		//Wheels
@@ -214,38 +214,38 @@ public class MTSRegistry{
 				"ABA",
 				"ACA",
 				"ABA",
-				'A', Blocks.wool, 
-				'B', new ItemStack(Items.dye, 1, 0), 
-				'C', Items.iron_ingot);
+				'A', Blocks.WOOL,
+				'B', new ItemStack(Items.DYE, 1, 0),
+				'C', Items.IRON_INGOT);
 		registerRecpie(new ItemStack(wheelLarge),
 				"ABA",
 				"BCB",
 				"ABA",
-				'A', Blocks.wool, 
-				'B', new ItemStack(Items.dye, 1, 0), 
-				'C', Items.iron_ingot);
+				'A', Blocks.WOOL,
+				'B', new ItemStack(Items.DYE, 1, 0),
+				'C', Items.IRON_INGOT);
 		//Skid
 		registerRecpie(new ItemStack(skid),
 				"A A",
 				" A ",
 				"  A",
-				'A', Blocks.iron_bars);
+				'A', Blocks.IRON_BARS);
 		//Pontoon
 		registerRecpie(new ItemStack(pontoon, 2),
 				"AAA",
 				"BBB",
 				"AAA",
-				'A', Items.iron_ingot, 
-				'B', Blocks.wool);
+				'A', Items.IRON_INGOT,
+				'B', Blocks.WOOL);
 		
 		//Propeller bench
 		registerRecpie(new ItemStack(propellerBench),
 				"AAA",
 				" BA",
 				"ACA",
-				'A', Items.iron_ingot,
-				'B', Items.diamond,
-				'C', Blocks.anvil);
+				'A', Items.IRON_INGOT,
+				'B', Items.DIAMOND,
+				'C', Blocks.ANVIL);
 				
 	}
 	
@@ -255,55 +255,55 @@ public class MTSRegistry{
 				"ABA",
 				"BCB",
 				"ABA",
-				'A', Blocks.piston, 
-				'B', Blocks.obsidian,
-				'C', Items.iron_ingot);
+				'A', Blocks.PISTON,
+				'B', Blocks.OBSIDIAN,
+				'C', Items.IRON_INGOT);
 		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
 				"ABA",
 				"BCB",
 				"ABA",
-				'A', Blocks.piston, 
-				'B', Blocks.obsidian,
-				'C', Items.diamond);
+				'A', Blocks.PISTON,
+				'B', Blocks.OBSIDIAN,
+				'C', Items.DIAMOND);
 		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
 				"ACA",
 				"ACA",
 				"ACA",
-				'A', Blocks.piston, 
-				'B', Blocks.obsidian,
-				'C', Items.iron_ingot);
+				'A', Blocks.PISTON,
+				'B', Blocks.OBSIDIAN,
+				'C', Items.IRON_INGOT);
 		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
 				"ACA",
 				"ACA",
 				"ACA",
-				'A', Blocks.piston, 
-				'B', Blocks.obsidian,
-				'C', Items.diamond);
+				'A', Blocks.PISTON,
+				'B', Blocks.OBSIDIAN,
+				'C', Items.DIAMOND);
 		
 		//Repaired engines
 		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
 				"B B",
 				" C ",
 				"B B",
-				'B', Blocks.obsidian,
+				'B', Blocks.OBSIDIAN,
 				'C', ((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0]);
 		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
 				"B B",
 				" C ",
 				"B B",
-				'B', Blocks.obsidian,
+				'B', Blocks.OBSIDIAN,
 				'C', ((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1]);
 		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
 				"B B",
 				"BCB",
 				"B B",
-				'B', Blocks.obsidian,
+				'B', Blocks.OBSIDIAN,
 				'C', ((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0]);
 		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
 				"B B",
 				"BCB",
 				"B B",
-				'B', Blocks.obsidian,
+				'B', Blocks.OBSIDIAN,
 				'C', ((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1]);
 	}
 	
@@ -312,30 +312,30 @@ public class MTSRegistry{
 				" WW",
 				" WW",
 				"B  ",
-				'W', new ItemStack(Items.dye, 1, 15), 
-				'B', new ItemStack(Items.dye, 1, 0));
+				'W', new ItemStack(Items.DYE, 1, 15),
+				'B', new ItemStack(Items.DYE, 1, 0));
 		
 		registerRecpie(new ItemStack(pointerLong),
 				"  W",
 				" W ",
 				"B  ",
-				'W', new ItemStack(Items.dye, 1, 15), 
-				'B', new ItemStack(Items.dye, 1, 0));
+				'W', new ItemStack(Items.DYE, 1, 15),
+				'B', new ItemStack(Items.DYE, 1, 0));
 		
 		
 		registerRecpie(new ItemStack(flightInstrument, 16, 0),
 				"III",
 				"IGI",
 				"III",
-				'I', Items.iron_ingot, 
-				'G', Blocks.glass_pane);
+				'I', Items.IRON_INGOT,
+				'G', Blocks.GLASS_PANE);
 		registerRecpie(new ItemStack(flightInstrument, 1, 1),
 				"LLL",
 				"RRR",
 				" B ",
 				'B', new ItemStack(flightInstrument, 1, 0), 
-				'L', new ItemStack(Items.dye, 1, 4), 
-				'R', new ItemStack(Items.dye, 1, 3));
+				'L', new ItemStack(Items.DYE, 1, 4),
+				'R', new ItemStack(Items.DYE, 1, 3));
 		
 		registerRecpie(new ItemStack(flightInstrument, 1, 2),
 				"WLW",
@@ -344,15 +344,15 @@ public class MTSRegistry{
 				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
 				'S', pointerShort, 
-				'W', new ItemStack(Items.dye, 1, 15));
+				'W', new ItemStack(Items.DYE, 1, 15));
 		
 		registerRecpie(new ItemStack(flightInstrument, 1, 3),
 				" W ",
 				"WIW",
 				" B ",
 				'B', new ItemStack(flightInstrument, 1, 0), 
-				'I', Items.iron_ingot, 
-				'W', new ItemStack(Items.dye, 1, 15));
+				'I', Items.IRON_INGOT,
+				'W', new ItemStack(Items.DYE, 1, 15));
 		
 		registerRecpie(new ItemStack(flightInstrument, 1, 4),
 				"R W",
@@ -360,26 +360,26 @@ public class MTSRegistry{
 				"GBG",
 				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
-				'R', new ItemStack(Items.dye, 1, 1),
-				'Y', new ItemStack(Items.dye, 1, 11), 
-				'G', new ItemStack(Items.dye, 1, 10), 
-				'W', new ItemStack(Items.dye, 1, 15));
+				'R', new ItemStack(Items.DYE, 1, 1),
+				'Y', new ItemStack(Items.DYE, 1, 11),
+				'G', new ItemStack(Items.DYE, 1, 10),
+				'W', new ItemStack(Items.DYE, 1, 15));
 		
 		registerRecpie(new ItemStack(flightInstrument, 1, 5),
 				"   ",
 				"WIW",
 				"WBW",
 				'B', new ItemStack(flightInstrument, 1, 0), 
-				'I', Items.iron_ingot, 
-				'W', new ItemStack(Items.dye, 1, 15));
+				'I', Items.IRON_INGOT,
+				'W', new ItemStack(Items.DYE, 1, 15));
 		
 		registerRecpie(new ItemStack(flightInstrument, 1, 6),
 				"WWW",
 				" I ",
 				"WBW",
 				'B', new ItemStack(flightInstrument, 1, 0), 
-				'I', Items.iron_ingot, 
-				'W', new ItemStack(Items.dye, 1, 15));
+				'I', Items.IRON_INGOT,
+				'W', new ItemStack(Items.DYE, 1, 15));
 		
 		registerRecpie(new ItemStack(flightInstrument, 1, 7),
 				"W W",
@@ -387,7 +387,7 @@ public class MTSRegistry{
 				"WBW",
 				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
-				'W', new ItemStack(Items.dye, 1, 15));
+				'W', new ItemStack(Items.DYE, 1, 15));
 		
 		registerRecpie(new ItemStack(flightInstrument, 1, 8),
 				"RYG",
@@ -395,10 +395,10 @@ public class MTSRegistry{
 				" B ",
 				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
-				'R', new ItemStack(Items.dye, 1, 1), 
-				'Y', new ItemStack(Items.dye, 1, 11), 
-				'G', new ItemStack(Items.dye, 1, 10), 
-				'W', new ItemStack(Items.dye, 1, 15));
+				'R', new ItemStack(Items.DYE, 1, 1),
+				'Y', new ItemStack(Items.DYE, 1, 11),
+				'G', new ItemStack(Items.DYE, 1, 10),
+				'W', new ItemStack(Items.DYE, 1, 15));
 		
 		registerRecpie(new ItemStack(flightInstrument, 1, 9),
 				"GLG",
@@ -406,7 +406,7 @@ public class MTSRegistry{
 				" B ",
 				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
-				'G', new ItemStack(Items.dye, 1, 10));
+				'G', new ItemStack(Items.DYE, 1, 10));
 
 		//Instrument 10 does not exist
 		
@@ -416,8 +416,8 @@ public class MTSRegistry{
 				"WBR",
 				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
-				'R', new ItemStack(Items.dye, 1, 1), 
-				'W', new ItemStack(Items.dye, 1, 15));
+				'R', new ItemStack(Items.DYE, 1, 1),
+				'W', new ItemStack(Items.DYE, 1, 15));
 		
 		registerRecpie(new ItemStack(flightInstrument, 1, 12),
 				"RWW",
@@ -425,8 +425,8 @@ public class MTSRegistry{
 				" B ",
 				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
-				'R', new ItemStack(Items.dye, 1, 1), 
-				'W', new ItemStack(Items.dye, 1, 15));
+				'R', new ItemStack(Items.DYE, 1, 1),
+				'W', new ItemStack(Items.DYE, 1, 15));
 		
 		registerRecpie(new ItemStack(flightInstrument, 1, 13),
 				" W ",
@@ -434,7 +434,7 @@ public class MTSRegistry{
 				" B ",
 				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
-				'W', new ItemStack(Items.dye, 1, 15));
+				'W', new ItemStack(Items.DYE, 1, 15));
 		
 		registerRecpie(new ItemStack(flightInstrument, 1, 14),
 				"YGR",
@@ -442,10 +442,10 @@ public class MTSRegistry{
 				" B ",
 				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong, 
-				'Y', new ItemStack(Items.dye, 1, 11), 
-				'G', new ItemStack(Items.dye, 1, 10), 
-				'R', new ItemStack(Items.dye, 1, 1), 
-				'W', new ItemStack(Items.dye, 1, 15));
+				'Y', new ItemStack(Items.DYE, 1, 11),
+				'G', new ItemStack(Items.DYE, 1, 10),
+				'R', new ItemStack(Items.DYE, 1, 1),
+				'W', new ItemStack(Items.DYE, 1, 15));
 				
 		registerRecpie(new ItemStack(flightInstrument, 1, 15),
 				"   ",
@@ -453,8 +453,8 @@ public class MTSRegistry{
 				"RB ",
 				'B', new ItemStack(flightInstrument, 1, 0), 
 				'L', pointerLong,  
-				'G', new ItemStack(Items.dye, 1, 10), 
-				'R', new ItemStack(Items.dye, 1, 1));
+				'G', new ItemStack(Items.DYE, 1, 10),
+				'R', new ItemStack(Items.DYE, 1, 1));
 	}
 	
 	
@@ -487,7 +487,6 @@ public class MTSRegistry{
 	 * Registers an entity.
 	 * Optionally pairs the entity with an item for GUI operations.
 	 * @param entityClass
-	 * @param entityItem
 	 */
 	private static void registerEntity(Class entityClass){
 		EntityRegistry.registerModEntity(entityClass, entityClass.getSimpleName().substring(6), entityNumber++, MTS.MODID, 80, 5, false);
