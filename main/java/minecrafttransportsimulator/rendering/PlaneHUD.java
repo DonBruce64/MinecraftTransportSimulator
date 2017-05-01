@@ -40,7 +40,7 @@ public final class PlaneHUD{
 	public static void startHUDDraw(EntityPlane plane){
 		GL11.glPushMatrix();
 		GL11.glColor4f(1, 1, 1, 1);
-		Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+		Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		backplateTexture = plane.getBackplateTexture();
 		moldingTexture = plane.getMouldingTexture();
 	}

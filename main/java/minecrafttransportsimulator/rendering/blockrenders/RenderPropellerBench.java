@@ -45,9 +45,9 @@ public class RenderPropellerBench extends RenderTileBase{
 		
 		if(bench.isRunning()){
 			short timeLeft = (short) (bench.timeOperationFinished - bench.getWorldObj().getTotalWorldTime());
-			if(bench.getWorldObj().getTotalWorldTime() != benchOffsets[3]){
+			if(bench.getWorld().getTotalWorldTime() != benchOffsets[3]){
 				//Only update table on each tick.  MUCH simpler this way.
-				benchOffsets[3] = bench.getWorldObj().getTotalWorldTime();
+				benchOffsets[3] = bench.getWorld().getTotalWorldTime();
 				if(timeLeft > 955){
 					benchOffsets[0] -= 0.5F/45F;
 					benchOffsets[1] += 0.2F/45F;
@@ -114,7 +114,7 @@ public class RenderPropellerBench extends RenderTileBase{
 			case 2: GL11DrawSystem.bindTexture(tierThreeTexture); break;
 		}
 		
-		short timeLeft = (short) (bench.timeOperationFinished - bench.getWorldObj().getTotalWorldTime());
+		short timeLeft = (short) (bench.timeOperationFinished - bench.getWorld().getTotalWorldTime());
 		if(bench.isRunning()){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(0.5F, -0.8F, -0.03125F);

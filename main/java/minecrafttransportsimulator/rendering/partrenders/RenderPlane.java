@@ -49,7 +49,7 @@ public abstract class RenderPlane extends RenderParent{
 	
 	private void renderLightBeams(EntityPlane plane){
     	GL11.glPushMatrix();
-    	Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+    	Minecraft.getMinecraft().entityRenderer.disableLightmap();
     	if(MinecraftForgeClient.getRenderPass() == -1){
     		GL11.glTranslated(-renderOffset[0], -renderOffset[1], -renderOffset[2]);
         }
@@ -59,7 +59,7 @@ public abstract class RenderPlane extends RenderParent{
     	if((plane.lightStatus & 8) == 8){
     		renderLandingBeam(plane);
     	}
-    	Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+    	Minecraft.getMinecraft().entityRenderer.enableLightmap();
     	GL11.glPopMatrix();
 	}
 	

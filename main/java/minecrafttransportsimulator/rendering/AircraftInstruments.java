@@ -1,15 +1,14 @@
 package minecrafttransportsimulator.rendering;
 
-import java.awt.Color;
-
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.opengl.GL11;
+
+import java.awt.*;
 
 public final class AircraftInstruments{
 	private static final ResourceLocation instrumentTexture = new ResourceLocation(MTS.MODID, "textures/instruments_aircraft.png");
@@ -29,7 +28,7 @@ public final class AircraftInstruments{
 			GL11.glDisable(GL11.GL_LIGHTING);
 		}
 		if(lighted){
-			Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+			Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		}
 		if(instrumentCode != -1){
 			switch (AircraftGauges.values()[instrumentCode]){
@@ -60,7 +59,7 @@ public final class AircraftInstruments{
 			GL11DrawSystem.bindTexture(instrumentTexture);
 			GL11DrawSystem.renderSquareUV(x-30, x+30, y+30, y-30, 0, 0, 0.5, 0.75, 0.25, 0.5, false);
 			GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ZERO);
-			Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		}
 		if(!hud){
 			GL11.glDepthMask(true);
@@ -87,10 +86,10 @@ public final class AircraftInstruments{
     
 	private static void drawGaugeBase(EntityPlane plane, int centerX, int centerY, boolean lighted){
 		if(lighted){
-			Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 			GL11DrawSystem.bindTexture(instrumentTexture);
 	    	GL11DrawSystem.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.75, 1, 0, 0.25, false);
-	    	Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+	    	Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		}else{
 			GL11DrawSystem.bindTexture(instrumentTexture);
 	    	GL11DrawSystem.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.75, 1, 0, 0.25, false);
@@ -114,9 +113,9 @@ public final class AircraftInstruments{
     	
     	rotationHelper(centerX, centerY, plane.rotationRoll);
     	if(lighted){
-			Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 			GL11DrawSystem.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.5, 0.75, 0, 0.25, false);
-	    	Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+	    	Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		}else{
 			GL11DrawSystem.renderSquareUV(centerX-30, centerX+30, centerY+30, centerY-30, 0, 0, 0.5, 0.75, 0, 0.25, false);
 		}

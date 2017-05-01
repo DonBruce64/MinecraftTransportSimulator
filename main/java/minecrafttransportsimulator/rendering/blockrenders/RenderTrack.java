@@ -1,21 +1,20 @@
 package minecrafttransportsimulator.rendering.blockrenders;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSCurve;
 import minecrafttransportsimulator.blocks.TileEntityTrack;
-import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
 import minecrafttransportsimulator.rendering.blockmodels.ModelTrackTie;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
 import minecrafttransportsimulator.systems.RenderSystem.RenderTileBase;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.lwjgl.opengl.GL11;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RenderTrack extends RenderTileBase{
 	private static final ModelTrackTie modelTie = new ModelTrackTie();
@@ -40,11 +39,12 @@ public class RenderTrack extends RenderTileBase{
 	protected void doRender(TileEntity tile, double x, double y, double z){
 		TileEntityTrack track = (TileEntityTrack) tile;
 		if(track.curve != null){
-			if(!(BlockHelper.getTileEntityFromCoords(track.getWorldObj(), track.curve.blockEndPoint[0], track.curve.blockEndPoint[1], track.curve.blockEndPoint[2]) instanceof TileEntityTrack)){
+			TileEntity trackTileEntity = track.getWorld().getTileEntity(new BlockPos(track.curve.blockEndPoint[0], track.curve.blockEndPoint[1], track.curve.blockEndPoint[2]));
+			if(!(trackTileEntity instanceof TileEntityTrack)){
 				//Sometimes the TE's don't break evenly.  Make sure this doesn't happen and we try to render a flag here.
 				return;
 			}
-			TileEntityTrack otherEnd = (TileEntityTrack) BlockHelper.getTileEntityFromCoords(track.getWorldObj(), track.curve.blockEndPoint[0], track.curve.blockEndPoint[1], track.curve.blockEndPoint[2]);
+			TileEntityTrack otherEnd = (TileEntityTrack) trackTileEntity;
 			
 			//Quick check to see if connection is still valid.
 			if(track.connectedTrack != null){
@@ -70,7 +70,7 @@ public class RenderTrack extends RenderTileBase{
 			GL11.glPushMatrix();
 			GL11.glTranslated(x, y, z);
 			GL11.glPushMatrix();
-			renderTrackSegmentFromCurve(track.getWorldObj(), track.curve, false, track.connectedTrack, otherEnd != null ? otherEnd.connectedTrack : null);
+			renderTrackSegmentFromCurve(track.getWorld(), track.curve, false, track.connectedTrack, otherEnd != null ? otherEnd.connectedTrack : null);
 			GL11.glPopMatrix();
 			
 			/*
@@ -104,7 +104,7 @@ public class RenderTrack extends RenderTileBase{
 		for(byte i=-1; i<=1; ++i){
 			for(byte j=-1; j<=1; ++j){
 				if(!(i == 0 && j == 0)){
-					TileEntity testTile = BlockHelper.getTileEntityFromCoords(track.getWorldObj(), track.curve.blockStartPoint[0] + i, track.curve.blockStartPoint[1], track.curve.blockStartPoint[2] + j);
+					TileEntity testTile = track.getWorld().getTileEntity(new BlockPos(track.curve.blockStartPoint[0] + i, track.curve.blockStartPoint[1], track.curve.blockStartPoint[2] + j));
 					if(testTile instanceof TileEntityTrack){
 						if(((TileEntityTrack) testTile).curve != null){
 							if(((TileEntityTrack) testTile).curve.startAngle == (180 + track.curve.startAngle)%360){
@@ -148,7 +148,7 @@ public class RenderTrack extends RenderTileBase{
 			if(startConnector.curve != null){	
 				if(!startConnector.renderedLastPass){
 					//Start connecter is the end of a rail.  Test for tie space.
-					startConnectorMaster = (TileEntityTrack) BlockHelper.getTileEntityFromCoords(world, startConnector.curve.blockEndPoint[0], startConnector.curve.blockEndPoint[1], startConnector.curve.blockEndPoint[2]);
+					startConnectorMaster = (TileEntityTrack) world.getTileEntity(new BlockPos(startConnector.curve.blockEndPoint[0], startConnector.curve.blockEndPoint[1], startConnector.curve.blockEndPoint[2]));
 					if(startConnectorMaster != null){
 						if(startConnectorMaster.curve != null){
 							renderStartRailExtra = true;
@@ -171,7 +171,7 @@ public class RenderTrack extends RenderTileBase{
 			if(endConnector.curve != null){
 				if(!endConnector.renderedLastPass){
 					//End connecter is the end of a rail.  Test for tie space.
-					endConnectorMaster = (TileEntityTrack) BlockHelper.getTileEntityFromCoords(world, endConnector.curve.blockEndPoint[0], endConnector.curve.blockEndPoint[1], endConnector.curve.blockEndPoint[2]);
+					endConnectorMaster = (TileEntityTrack) world.getTileEntity(new BlockPos(endConnector.curve.blockEndPoint[0], endConnector.curve.blockEndPoint[1], endConnector.curve.blockEndPoint[2]));
 					if(endConnectorMaster != null){
 						if(endConnectorMaster.curve != null){
 							renderEndRailExtra = true;
@@ -200,7 +200,7 @@ public class RenderTrack extends RenderTileBase{
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
-				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
+				world.getLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])))
 			});
 		}
 		
@@ -216,7 +216,7 @@ public class RenderTrack extends RenderTileBase{
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
-				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
+                world.getLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])))
 			});
 		}
 
@@ -236,7 +236,7 @@ public class RenderTrack extends RenderTileBase{
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
-				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
+                world.getLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])))
 			});
 		}
 		
@@ -252,7 +252,7 @@ public class RenderTrack extends RenderTileBase{
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
-				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
+                world.getLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])))
 			});			
 		}
 		
@@ -270,7 +270,7 @@ public class RenderTrack extends RenderTileBase{
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
-				BlockHelper.getRenderLight(world, (int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2]))
+                world.getLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])))
 			});
 		}
 		
