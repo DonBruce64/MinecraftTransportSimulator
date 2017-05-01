@@ -1,0 +1,216 @@
+#This is a sample file for MTS.
+#Use this file as a template to create your own vehicles!
+#This file is never loaded by the MTS system, so you can do whatever you want with it.
+
+#Pound signs (#) are comments, so you can put as many of them as you want in here.
+#You can also leave blank lines.  MTS don't care.
+#MTS DOES care if you don't have = signs or ; near your properties.  Make sure to do that, OK?
+
+
+#--------------------#
+#CORE THINGS
+#Before you do anything, you need to tell MTS what you are making.  Acceptable values here would be
+#plane, rollingstock, locomotive, car, helicopter, etc.
+#If your thing doesn't load, it may be the value you are specifying has not be coded yet.
+#A good sign this is the case is the lack of a corresponding vehicle from the MTS team being present in the offical pack.
+type=plane;
+
+#You'll also want to add an item texture so you can actually see the thing in the inventory rather than a purple checker.
+itemTexture=sample/ITEM.png
+
+
+#--------------------#
+#MAKING MOVING THINGS
+#The most basic thing you can make in MTS is something that moves.
+#Engines are not needed for these things, so there's a few things that don't need to be added for these guys.
+
+#The first thing you need for your moving thing is a name.
+#This name is what you will use to /give yourself the item for the thing, as well as how the system looks it up in the registry.
+#Because of this, a lowercase name with no spaces is HIGHLY recommended.
+name=myawesomething;
+
+#The second name we will need is the display name of the item.  This is what shows up in the inventory.
+#Due to not being able to add .lang files for add-ons, the name you chose will be the same no matter what language is running.
+#Keep this in mind if you decide to release a content pack.
+itemDisplayName=My Awesome Thing;
+
+#There is one more name you need.  And this is the default display name that is on the side of the thing.
+#This is the text that comes standard with the Thing when it is spawned.
+defaultDisplayText=Awesome;
+
+#What happens if someone tries to put a long word on that Thing?  We don't want it to run off the end.
+#Let's make a maximum length of the text that a user can put to stop this, shall we?
+#Length is in characters, BTW.
+displayTextMaxLength=7;
+
+#One last thing we need to know is whether or not your Thing has an open top.
+#This way we can be sure that sounds transmit correctly when players are riding it.
+openTop=false;
+
+
+#--------------------#
+#MAKING MOTORIZED THINGS
+#Most of the time you'll want to make something that can take a motor and be controlled.
+#If this is the case, then you'll need to define a few more things for MTS to get you going.
+#The first is the setup of the lights on the vehicle.  This one is a bit odd, so bear with me.
+#There are 4 light levels in vehicles.  Each light level corresponds to things on that vehicle.
+#With planes, light level 1 is the navigation lights, 2 is the strobe lights, 3 is the taxi lights, and 4 are the landing lights.
+#With trains, there's only one light level, and that is 1.
+#In gereral, the more light levels there are, the more lights that are present on the vehicle.
+#That being said, you don't have to have ALL the light levels.  The PZL plane has no levels, and the Trimotor doesn't have level 2.
+#To define what lights a vehicle has, you need to give it the appropriate binary level.
+#Here are some examples:
+
+#No lights
+#lightSetup=0000
+
+#All lights
+#lightSetup=1111
+
+#All lights except level 2
+#lightSetup=1101
+
+#You see where we are going with this, right?
+#If you get confused, just look at the other files for other vehicles and see what they are set to.
+
+#The next thing we need to know is how many powerful lights are on the vehicle.
+#These lights should only be turned on when level 4 is active, so if you don't have any level 4 lights leave this as 0.
+#Howerver, if you have lights like landing lights, train long-range beams, or car overhead lights, be sure to count them here
+#as they need to take extra battery power to be realistic.
+numberPowerfulLights=2
+
+#Now that lights are done, it's time for fuel.  How many mB (milliBuckets, or 1/1000 of a bucket) can this vehicle hold?
+#Below is a 5-bucket vehicle.
+fuelCapacity=5000
+
+#Finally, we need to know the weight of the vehicle.  In kg, please.
+emptyMass=500
+
+#The last thing that you get with a vehicle is instruments.
+#Entries should be of the form vehicleInstrumentX=, where X is the slot the instrument is supposed to go into.
+#Each instrument has a position where it renders on the vehicle, a rotation it renders at, and a default instrument number, in that order.
+#So the format is vehicleInstrumentX=xPos, yPos, zPos, xRot, yRot, zRot, defaultInstrument;
+#For 99% of the instruments you'll want a default number of 0 (blank gauge);
+#However, you can force an instrument into a slot by giving it a number other than 0 here.
+#Any forced instrument comes with the vehicle, can be changed in the HUD if it's slot is 0-10 (HUD slots).
+#Additionally, instrument slots 10-14, 20-24, 30-34, and 40-44 are reserved for engine gauges on HUDs.
+#Slots higher than that (50-54, 60-64, etc.) are also used for engines, but won't render in the HUD or GUI and MUST be forced here.
+#Though why you would need more than 4 engines on anything is beyond me....
+#Oh, and you're limited to a max instrument slot of 99.  Just so you know.
+vehicleInstrument0=-0.2, 0.3, 0, 0, 0, 0, 0;
+vehicleInstrument1=0, 0.3, 0, 0, 0, 0, 0;
+vehicleInstrument2=0.2, 0.3, 0, 0, 0, 0, 0;
+vehicleInstrument3=0.2, 0.0, 0, 0, 0, 0, 1;
+#etc. etc.
+
+
+#--------------------#
+#MAKING PLANES
+#Planes are simply motorized things with wings.
+#They have a few extra properties that you need to define, but they aren't nearly as complicated as the other properties.
+
+#First off, does the plane have flaps?  Some planes don't have them, so we have the option here.
+hasFlaps=true;
+
+#Below are some dimensional properties of the plane.  Just fill em out to the best of your ability.
+#All dimensions are in meters.
+wingspan=11.0;
+wingArea=16.0;
+tailDistance=7.0;
+rudderArea=1.5;
+elevatorArea=3.0;
+
+#This last property defines how much of a 'tilt' the plane will have on it's own.  Play with it and find a happy medium.
+defaultElevatorAngle=-5.0;
+
+
+#--------------------#
+#FINAL PROPERTIES
+#Now that everything about your moving thing has been set up, it's time to add the final parts.
+#By this I mean the actual parts.  Wheels, seats, collision boxes, basically everything you can interact with.
+
+#First off we need to get the collision boxes in.  Those are used to make sure players can't walk through the plane.
+#The form of these boxes is collisionBoxX=xPos, yPos, zPos, height, width;
+#Like Instruments, you can only have 99.
+collisionBox0=0, -0.3, 1.5, 1, 1;
+collisionBox1=0, -0.3, -2.75, 1, 1;
+collisionBox2=0, -0.3F, -4.25, 1, 1;
+
+#The last thing you need to do is add parts.
+#Different parts go to different vehicles, so make sure to not to do something dumb, like, I don't know, put a pontoon on a train?
+#Also, if you aren't making a motorized vehicle don't add engines.  Should be obvious.
+#Part additions follow the format of partX=posX, posY, posZ, turnsWithSteer, isControler, name1, name2, ...
+#Where turnsWithSteer makes it turn when the yaw or steering wheel is turned, and isController allows rider to control the vehicle.
+#The names on the end determine what parts can go at this position.  Sometimes you want multiple options.  Like a seat or a chest.
+#This allows you to have dynamic spots in your vehicle rather than two seprerate vehicles.
+#Just note that while you can set a wheel to be a controller, you can't ride it.  Keeps people from making hidding control parts.
+#Oh, and pontoondummy is simply the aft portion of a pontoon.  You can use this to determing how pontoons mount on your vehicle.
+#Again, 99 is the max number here.
+part0=0, -1, 1.7, true, false, wheelsmall;
+part1=-1.65, -1, 0, false, false, wheelsmall, pontoondummy;
+part2=1.65, -1, 0, false, false, whellsmall, pontoondummy;
+part3=0, -0.4, 1.65, false, false, engineaircraftsmall;
+part4=0, -.1, 0, false, true, seat;
+part5=0, -.1, -1, false, false, seat, chest;
+
+
+#--------------------#
+#RENDERING
+#Now that you have defined a thing, you need to render it.  The model should have the same filename as this txt file.
+#MTS supports Java models exported by Techne, Tabula, FCModeler, or any of the other model maker things.
+#Just put the Java model in here with the same name as this file and call it a day.
+#There are some requirements, however, if you want parts to animate.  These will be discussed below.
+#The texture for this model can either be a texture file you make, or one that is already in Minecraft.
+#You can even use modded textures this way, should you chose to make a plane like the MC-172 but out of custom wood.
+#If you want to do this, specify the EXACT name of the texture, including the mod ID.
+#Go into the jar file to make sure the path is correct, and use / not \ for the seperator.
+#Not all mods use a universal format, so make dang sure you have this right before coming to me!
+
+#Regular setup using file in this folder
+usecustommodeltexture=false;
+modelTexture=sample/MODEL.png;
+
+#Custom setup, using Forestry as an example.
+usecustommodeltexture=true;
+modelTexture=forestry:textures/blocks/wood/bark.mahogany.png;
+
+#You may find that your model doesn't line up with the center of the entity.
+#This is because you didn't make 0,0,0 as the center of the model.
+#While this will get you evil looks from me, I understand that it's not fun to move everything to make this work.
+#Because of this, you can set an offset here to translate the model prior to rendering.
+#Use this to move the model in-game rather than in-file
+modelOffset=0.0,0.1,-0.5;
+
+#You may also find that Techne is a peice of junk, and your models will render upside-down.
+#If this is the case, set the below to true to flip them.
+flipModel=false
+
+#If you're rendering a vehicle, you'll need to have textures for the HUD.
+#This is what renders when you're in the pilot's/driver's/engineer's seat.
+#For this we need two 16x16 textures.  One for the backplate of the HUD, the other for the moulding that goes around the edge.
+#Like the model texture, these textures can be customized to use a vanilla/modded texture.
+useCustomBackplateTexture=false
+backplateTexture=sample/BACKPLATE.png
+useCustomMouldingTexture=false
+customMouldingTexture=sample/MOULDING.png
+
+#Normally MTS uses the two textures to render the HUD by repeating them across the screen.
+#If you want to use a larger image instead and have a more complex HUD, set this to true.
+#Note that the top 1/2 of the backplate will be rendered as the top of the HUD.
+#The other 1/2 will be rendered as the panel.  Take this into consideration when making a full-size texture.
+isHUDImageFull=false
+
+#Now that you have the main model rendered, it's time to add the little details.
+#The first thing you may want to add is windows.
+#Windows are defined by a 12-number line.  In this case the line is in the form of:
+#windowX=x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4;
+#You don't have to make all the points in the same spot.  You can even duplicate points to make triangles.
+#Just watch what points you duplicate.  Textures be trippy if you do the wrong ones.
+window0=-0.75, -0.75, 0.75, 0.75, 1.625, 0.625, 0.625, 1.625, 0.875, 1.75, 1.75, 0.875;
+window1=-0.8, -0.525, 0.525, 0.8, 1.625, 0.625, 0.625, 1.625, -0.5, -2.1, -2.1, -0.5;
+
+#Remember that text you set up way up there?  Yeah, now it's time to tell MC where to put it.
+#You can have multiple places where the text is rendered, just add more lines.
+#Below is a 6-digit set of numbers that specify the position and rotation of the text string.
+#The format is: X, Y, Z, rotationX, rotationY, rotationZ, with rotations in degrees.
+displayTextPosRot0=4.5, 2.0, -6.654, 0, 160, 0;
