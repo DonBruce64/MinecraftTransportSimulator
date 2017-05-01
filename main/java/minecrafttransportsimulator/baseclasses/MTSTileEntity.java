@@ -23,8 +23,11 @@ public abstract class MTSTileEntity extends TileEntity{
     }
     
 	@Override
-    public void writeToNBT(NBTTagCompound tagCompound){
+    public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
         tagCompound.setByte("rotation", rotation);
+        return tagCompound;
     }
+
+
 }

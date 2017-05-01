@@ -1,14 +1,15 @@
 package minecrafttransportsimulator.baseclasses;
 
-import java.util.List;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+
+import java.util.List;
 
 public abstract class MTSBlock extends Block{
 
@@ -23,41 +24,32 @@ public abstract class MTSBlock extends Block{
 		
 	protected abstract void setDefaultBlockBounds();
 	
-	protected abstract void setBlockBoundsFromMetadata(int metadata);
-	
-	protected int getBlockMetadata(World world, int x, int y, int z){
-		return world.getBlockMetadata(x, y, z);
-	}
-	
-	public void setBlockMetadata(World world, int x, int y, int z, int metadata){
-		world.setBlockMetadataWithNotify(x, y, z, metadata, 3);
+	protected abstract void setBlockBoundsFromMetadata(IBlockState state);
+
+	public void setBlockMetadata(World world, BlockPos pos, IBlockState blockState){
+		world.setBlockState(pos, blockState);
 	}
 
 	@Override
-	public void addCollisionBoxesToList(World world, int x, int y, int z, AxisAlignedBB box, List list, Entity entity){
-		this.setBlockBoundsFromMetadata(this.getBlockMetadata(world, x, y, z));
-		super.addCollisionBoxesToList(world, x, y, z, box, list, entity);
+	public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB box, List<AxisAlignedBB> collidingBoxes, Entity entity) {
+		this.setBlockBoundsFromMetadata(world.getBlockState(pos));
+		super.addCollisionBoxToList(state, world, pos, box, collidingBoxes, entity);
 	}
-	
+
 	@Override
-	@SideOnly(Side.CLIENT)
-	public AxisAlignedBB getSelectedBoundingBoxFromPool(World world, int x, int y, int z){
-		this.setBlockBoundsFromMetadata(this.getBlockMetadata(world, x, y, z));
-		return super.getSelectedBoundingBoxFromPool(world, x, y, z);
+	public AxisAlignedBB getSelectedBoundingBox(IBlockState state, World world, BlockPos pos) {
+		this.setBlockBoundsFromMetadata(world.getBlockState(pos));
+		return super.getSelectedBoundingBox(state, world, pos);
 	}
-	
+
 	@Override
-    public int getRenderType(){
-        return isBlock3D() ? -1 : super.getRenderType();
-    }
-	
+	public EnumBlockRenderType getRenderType(IBlockState state) {
+		return isBlock3D() ? EnumBlockRenderType.INVISIBLE : super.getRenderType(state);
+	}
+
 	@Override
-    public boolean renderAsNormalBlock(){
-        return !isBlock3D();
-    }
-	
-	@Override
-	public boolean isOpaqueCube(){
+	public boolean isOpaqueCube(IBlockState state) {
 		return !isBlock3D();
 	}
+
 }
