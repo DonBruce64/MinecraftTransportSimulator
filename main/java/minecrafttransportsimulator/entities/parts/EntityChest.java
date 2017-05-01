@@ -30,7 +30,7 @@ public class EntityChest extends EntityChildInventory{
 
 	@Override
 	public ItemStack getItemStack(){
-		return new ItemStack(Item.getItemFromBlock(Blocks.chest));
+		return new ItemStack(Item.getItemFromBlock(Blocks.CHEST));
 	}
 	
 	@Override

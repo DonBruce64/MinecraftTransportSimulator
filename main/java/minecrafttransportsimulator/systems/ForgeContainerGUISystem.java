@@ -15,7 +15,7 @@ public class ForgeContainerGUISystem implements IGuiHandler{
 		if(ID != -1){
 			Entity entity = world.getEntityByID(ID);
 			if(entity instanceof EntityChest){
-				return new ContainerChest(player.inventory, (EntityChest) entity);
+				return new ContainerChest(player.inventory, (EntityChest) entity, player);
 			}
 		}
 		return null;

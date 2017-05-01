@@ -45,15 +45,5 @@ public final class CameraSystem{
 		lockedView = !lockedView;
 		MTS.proxy.playSound(Minecraft.getMinecraft().thePlayer, "gui.button.press", 1, 1);
 	}
-	
-	//DEL180START
-	//Event system is used in 1.8+ for roll.
-	public static void changeCameraRoll(float roll){
-		try{
-			ObfuscationReflectionHelper.setPrivateValue(EntityRenderer.class, Minecraft.getMinecraft().entityRenderer, roll, rollNames);
-		}catch (Exception e){
-			System.err.println("ERROR IN AIRCRAFT ROLL REFLECTION!");
-		}
-	}
-	//DEL180END
+
 }

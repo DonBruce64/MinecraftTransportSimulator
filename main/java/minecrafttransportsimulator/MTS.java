@@ -1,7 +1,6 @@
 package minecrafttransportsimulator;
 
-import java.io.File;
-
+import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -11,6 +10,8 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+
+import java.io.File;
 
 @Mod(modid = MTS.MODID, name = MTS.MODNAME, version = MTS.MODVER)
 public class MTS {
@@ -25,12 +26,10 @@ public class MTS {
 	@SidedProxy(clientSide="minecrafttransportsimulator.ClientProxy", serverSide="minecrafttransportsimulator.CommonProxy")
 	public static CommonProxy proxy;
 	
-	/*INS194
-	public MFS(){
+	public MTS(){
 		FluidRegistry.enableUniversalBucket();
 	}
-	INS194*/
-	
+
 	@EventHandler
 	public void PreInit(FMLPreInitializationEvent event){
 		proxy.preInit(event);
