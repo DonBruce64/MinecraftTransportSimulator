@@ -1,12 +1,16 @@
 package minecrafttransportsimulator.baseclasses;
 
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.packets.general.EntityClientRequestDataPacket;
 import minecrafttransportsimulator.packets.general.ServerDataPacket;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -19,7 +23,7 @@ public abstract class MTSEntity extends Entity{
 	}
 	
 	@Override
-    public boolean interactFirst(EntityPlayer player){
+	 public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
 		return this.performRightClickAction(this, player);
 	}
 	/**
@@ -46,16 +50,17 @@ public abstract class MTSEntity extends Entity{
 	
     @Override
     @SideOnly(Side.CLIENT)
-    public void setPositionAndRotation2(double posX, double posY, double posZ, float yaw, float pitch, int p_70056_9_){
+    public void setPositionAndRotationDirect(double posX, double posY, double posZ, float yaw, float pitch, int posRotationIncrements, boolean teleport){
     	//Overridden due to stupid tracker behavior.
     	//Client-side render changes calls put in its place.
-    	this.renderDistanceWeight = 100;
+    	this.setRenderDistanceWeight(100);
     	this.ignoreFrustumCheck = true;
     }
     
     //Do not render entities this way.  Use custom render system instead.
     //This way requires lots of code changes due to the new render systems.
     //None of which are any good at doing efficient rendering anyways.
+    //Also allows for parsed models and stuff.
     @Override
     public boolean shouldRenderInPass(int pass){
     	return false;
