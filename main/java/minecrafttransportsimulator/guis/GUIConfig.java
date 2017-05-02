@@ -1,17 +1,6 @@
 package minecrafttransportsimulator.guis;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.lwjgl.input.Keyboard;
-
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import net.java.games.input.Component;
@@ -20,7 +9,15 @@ import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.input.Keyboard;
+
+import java.awt.*;
+import java.io.IOException;
+import java.util.*;
+import java.util.List;
+import java.util.Map.Entry;
 
 public class GUIConfig extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/wide_blank.png");
@@ -79,11 +76,11 @@ public class GUIConfig extends GuiScreen{
 	public void initGui(){
 		guiLeft = (this.width - this.xSize)/2;
 		guiTop = (this.height - this.ySize)/2;
-		buttonList.add(configButton = new GuiButton(0, guiLeft + 0, guiTop - 20, 50, 20, PlayerHelper.getTranslatedText("gui.config.title.config")));
-		buttonList.add(planeButton = new GuiButton(0, guiLeft + 50, guiTop - 20, 50, 20, PlayerHelper.getTranslatedText("gui.config.title.plane")));
-		buttonList.add(helicopterButton = new GuiButton(0, guiLeft + 100, guiTop - 20, 50, 20, PlayerHelper.getTranslatedText("gui.config.title.heli")));
-		buttonList.add(vehicleButton = new GuiButton(0, guiLeft + 150, guiTop - 20, 50, 20, PlayerHelper.getTranslatedText("gui.config.title.vehicle")));
-		buttonList.add(joystickButton = new GuiButton(0, guiLeft + 200, guiTop - 20, 56, 20, PlayerHelper.getTranslatedText("gui.config.title.joystick")));
+		buttonList.add(configButton = new GuiButton(0, guiLeft + 0, guiTop - 20, 50, 20, I18n.format("gui.config.title.config")));
+		buttonList.add(planeButton = new GuiButton(0, guiLeft + 50, guiTop - 20, 50, 20, I18n.format("gui.config.title.plane")));
+		buttonList.add(helicopterButton = new GuiButton(0, guiLeft + 100, guiTop - 20, 50, 20, I18n.format("gui.config.title.heli")));
+		buttonList.add(vehicleButton = new GuiButton(0, guiLeft + 150, guiTop - 20, 50, 20, I18n.format("gui.config.title.vehicle")));
+		buttonList.add(joystickButton = new GuiButton(0, guiLeft + 200, guiTop - 20, 56, 20, I18n.format("gui.config.title.joystick")));
 		guiLevel = GUILevels.PLANE;
 		initConfigControls();
 		initPlaneControls();
@@ -161,9 +158,9 @@ public class GUIConfig extends GuiScreen{
 	private void initJoystickControls(){
 		buttonList.add(upButton = new GuiButton(0, guiLeft + 225, guiTop + 40, 20, 20, "/\\"));
 		buttonList.add(downButton = new GuiButton(0, guiLeft + 225, guiTop + 155, 20, 20, "\\/"));
-		buttonList.add(confirmButton = new GuiButton(0, guiLeft + 25, guiTop + 160, 100, 20, PlayerHelper.getTranslatedText("gui.config.joystick.confirm")));
-		buttonList.add(cancelButton = new GuiButton(0, guiLeft + 125, guiTop + 160, 100, 20, PlayerHelper.getTranslatedText("gui.config.joystick.cancel")));
-		buttonList.add(clearButton = new GuiButton(0, guiLeft + 25, guiTop + 160, 100, 20, PlayerHelper.getTranslatedText("gui.config.joystick.clear")));
+		buttonList.add(confirmButton = new GuiButton(0, guiLeft + 25, guiTop + 160, 100, 20, I18n.format("gui.config.joystick.confirm")));
+		buttonList.add(cancelButton = new GuiButton(0, guiLeft + 125, guiTop + 160, 100, 20, I18n.format("gui.config.joystick.cancel")));
+		buttonList.add(clearButton = new GuiButton(0, guiLeft + 25, guiTop + 160, 100, 20, I18n.format("gui.config.joystick.clear")));
 		
 		createAssignmentButtonAt(guiLeft + 85, guiTop + 40, ControlSystem.controls.PITCH.joystickName, analogAssignButtons);
 		createAssignmentButtonAt(guiLeft + 85, guiTop + 60, ControlSystem.controls.ROLL.joystickName, analogAssignButtons);
@@ -289,10 +286,10 @@ public class GUIConfig extends GuiScreen{
 	
 	private void drawJoystickSelectionScreen(int mouseX, int mouseY){
 		
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.select"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.name"), guiLeft+10, guiTop+25, Color.BLACK.getRGB());
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.type"), guiLeft+140, guiTop+25, Color.BLACK.getRGB());
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.rumble"), guiLeft+200, guiTop+25, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.select"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.name"), guiLeft+10, guiTop+25, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.type"), guiLeft+140, guiTop+25, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.rumble"), guiLeft+200, guiTop+25, Color.BLACK.getRGB());
 		
 		for(GuiButton jsButton : joystickButtons.keySet()){
 			jsButton.drawButton(mc, mouseX, mouseY);
@@ -311,11 +308,11 @@ public class GUIConfig extends GuiScreen{
 	private void drawJoystickButtonScreen(int mouseX, int mouseY){
 		upButton.drawButton(mc, mouseX, mouseY);
 		downButton.drawButton(mc, mouseX, mouseY);
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.domap"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.domap"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
 		fontRendererObj.drawString("#", guiLeft+10, guiTop+25, Color.BLACK.getRGB());
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.name"), guiLeft+25, guiTop+25, Color.BLACK.getRGB());
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.analog"), guiLeft+90, guiTop+25, Color.BLACK.getRGB());
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.assignment"), guiLeft+140, guiTop+25, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.name"), guiLeft+25, guiTop+25, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.analog"), guiLeft+90, guiTop+25, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.assignment"), guiLeft+140, guiTop+25, Color.BLACK.getRGB());
 		for(int i=0; i<9 && i<joystickComponents.length && i+scrollSpot<joystickComponents.length; ++i){
 			joystickConfigureButtons.get(i).drawButton(mc, mouseX, mouseY);
 			fontRendererObj.drawString(String.valueOf(i+scrollSpot+1), guiLeft+10, guiTop+44+15*i, Color.WHITE.getRGB());
@@ -326,8 +323,8 @@ public class GUIConfig extends GuiScreen{
 	}
 	
 	private void drawJoystickDigitalScreen(int mouseX, int mouseY){
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.choosemap"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.selectdigital"), guiLeft+10, guiTop+20, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.choosemap"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.selectdigital"), guiLeft+10, guiTop+20, Color.BLACK.getRGB());
 		for(GuiButton button : digitalAssignButtons){
 			button.drawButton(mc, mouseX, mouseY);
 		}
@@ -336,8 +333,8 @@ public class GUIConfig extends GuiScreen{
 	}
 	
 	private void drawJoystickAnalogScreen(int mouseX, int mouseY){
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.choosemap"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.selectanalog"), guiLeft+10, guiTop+20, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.choosemap"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.selectanalog"), guiLeft+10, guiTop+20, Color.BLACK.getRGB());
 		for(GuiButton button : analogAssignButtons){
 			button.drawButton(mc, mouseX, mouseY);
 		}
@@ -346,8 +343,8 @@ public class GUIConfig extends GuiScreen{
 	}
 	
 	private void drawJoystickCalibrationScreen(int mouseX, int mouseY){
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.calibrate1"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
-		fontRendererObj.drawString(PlayerHelper.getTranslatedText("gui.config.joystick.calibrate2"), guiLeft+10, guiTop+20, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.calibrate1"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.config.joystick.calibrate2"), guiLeft+10, guiTop+20, Color.BLACK.getRGB());
 		ControlSystem.getJoystick().poll();
 		if(joystickComponents[joystickComponentId].getPollData() > 0){
 			maxTextBox.setText(String.valueOf(Math.max(Double.valueOf(maxTextBox.getText()), joystickComponents[joystickComponentId].getPollData())));
@@ -362,63 +359,67 @@ public class GUIConfig extends GuiScreen{
 	
 	@Override
     protected void actionPerformed(GuiButton buttonClicked){
-		super.actionPerformed(buttonClicked);
-		if(changedThisTick){
-			return;
-		}else if(buttonClicked.equals(configButton)){
-			guiLevel = GUILevels.CONFIG;
-		}else if(buttonClicked.equals(planeButton)){
-			guiLevel = GUILevels.PLANE;
-		}else if(buttonClicked.equals(helicopterButton)){
-			guiLevel = GUILevels.HELICOPTER;
-		}else if(buttonClicked.equals(vehicleButton)){
-			guiLevel = GUILevels.VEHICLE;
-		}else if(buttonClicked.equals(joystickButton)){
-			guiLevel = GUILevels.JS_SELECT;
-		}else if(buttonClicked.equals(seaLevelOffsetButton)){
-			ConfigSystem.setClientConfig("SeaLevelOffset", !Boolean.valueOf(seaLevelOffsetButton.displayString));
-			seaLevelOffsetButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("SeaLevelOffset"));
-		}else if(buttonClicked.equals(electricStartButton)){
-			ConfigSystem.setClientConfig("ElectricStart", !Boolean.valueOf(electricStartButton.displayString));
-			electricStartButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("ElectricStart"));
-		}else if(buttonClicked.equals(xaerosCompatibilityButton)){
-			ConfigSystem.setClientConfig("XaerosCompatibility", !Boolean.valueOf(xaerosCompatibilityButton.displayString));
-			xaerosCompatibilityButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("XaerosCompatibility"));
-		}else if(buttonClicked.equals(mouseYokeButton)){
-			ConfigSystem.setClientConfig("MouseYoke", !Boolean.valueOf(mouseYokeButton.displayString));
-			mouseYokeButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("MouseYoke"));
-		}else if(joystickButtons.containsKey(buttonClicked)){
-			guiLevel = GUILevels.JS_BUTTON;
-			ControlSystem.setJoystick(joysticks[joystickButtons.get(buttonClicked)]);
-			joystickComponents = ControlSystem.getJoystick().getComponents();
-		}else if(joystickConfigureButtons.contains(buttonClicked)){
-			joystickComponentId = joystickConfigureButtons.indexOf(buttonClicked) + scrollSpot;
-			guiLevel = joystickComponents[joystickComponentId].isAnalog() ? GUILevels.JS_ANALOG : GUILevels.JS_DIGITAL;
-		}else if(digitalAssignButtons.contains(buttonClicked)){
-			guiLevel = GUILevels.JS_BUTTON;
-			ControlSystem.setJoystickControl(buttonClicked.displayString, joystickComponentId);
-		}else if(analogAssignButtons.contains(buttonClicked)){
-			guiLevel = GUILevels.JS_CALIBRATION;
-			controlName = buttonClicked.displayString;
-		}else if(buttonClicked.equals(clearButton)){
-			if(guiLevel.equals(GUILevels.JS_ANALOG)){
-				ControlSystem.setAxisBounds(ControlSystem.getJoystickControlName(joystickComponentId), -1, 1);
+		try {
+			super.actionPerformed(buttonClicked);
+			if(changedThisTick){
+				return;
+			}else if(buttonClicked.equals(configButton)){
+				guiLevel = GUILevels.CONFIG;
+			}else if(buttonClicked.equals(planeButton)){
+				guiLevel = GUILevels.PLANE;
+			}else if(buttonClicked.equals(helicopterButton)){
+				guiLevel = GUILevels.HELICOPTER;
+			}else if(buttonClicked.equals(vehicleButton)){
+				guiLevel = GUILevels.VEHICLE;
+			}else if(buttonClicked.equals(joystickButton)){
+				guiLevel = GUILevels.JS_SELECT;
+			}else if(buttonClicked.equals(seaLevelOffsetButton)){
+				ConfigSystem.setClientConfig("SeaLevelOffset", !Boolean.valueOf(seaLevelOffsetButton.displayString));
+				seaLevelOffsetButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("SeaLevelOffset"));
+			}else if(buttonClicked.equals(electricStartButton)){
+				ConfigSystem.setClientConfig("ElectricStart", !Boolean.valueOf(electricStartButton.displayString));
+				electricStartButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("ElectricStart"));
+			}else if(buttonClicked.equals(xaerosCompatibilityButton)){
+				ConfigSystem.setClientConfig("XaerosCompatibility", !Boolean.valueOf(xaerosCompatibilityButton.displayString));
+				xaerosCompatibilityButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("XaerosCompatibility"));
+			}else if(buttonClicked.equals(mouseYokeButton)){
+				ConfigSystem.setClientConfig("MouseYoke", !Boolean.valueOf(mouseYokeButton.displayString));
+				mouseYokeButton.displayString = String.valueOf(ConfigSystem.getBooleanConfig("MouseYoke"));
+			}else if(joystickButtons.containsKey(buttonClicked)){
+				guiLevel = GUILevels.JS_BUTTON;
+				ControlSystem.setJoystick(joysticks[joystickButtons.get(buttonClicked)]);
+				joystickComponents = ControlSystem.getJoystick().getComponents();
+			}else if(joystickConfigureButtons.contains(buttonClicked)){
+				joystickComponentId = joystickConfigureButtons.indexOf(buttonClicked) + scrollSpot;
+				guiLevel = joystickComponents[joystickComponentId].isAnalog() ? GUILevels.JS_ANALOG : GUILevels.JS_DIGITAL;
+			}else if(digitalAssignButtons.contains(buttonClicked)){
+				guiLevel = GUILevels.JS_BUTTON;
+				ControlSystem.setJoystickControl(buttonClicked.displayString, joystickComponentId);
+			}else if(analogAssignButtons.contains(buttonClicked)){
+				guiLevel = GUILevels.JS_CALIBRATION;
+				controlName = buttonClicked.displayString;
+			}else if(buttonClicked.equals(clearButton)){
+				if(guiLevel.equals(GUILevels.JS_ANALOG)){
+					ControlSystem.setAxisBounds(ControlSystem.getJoystickControlName(joystickComponentId), -1, 1);
+				}
+				guiLevel = GUILevels.JS_BUTTON;
+				ControlSystem.setJoystickControl(ControlSystem.getJoystickControlName(joystickComponentId), ControlSystem.getNullComponent());
+			}else if(buttonClicked.equals(upButton)){
+				scrollSpot = Math.max(scrollSpot - 9, 0);
+			}else if(buttonClicked.equals(downButton)){
+				scrollSpot = Math.min(scrollSpot + 9, joystickComponents.length - joystickComponents.length%9);
+			}else if(buttonClicked.equals(confirmButton)){
+				guiLevel = GUILevels.JS_BUTTON;
+				ControlSystem.setAxisBounds(controlName, Double.valueOf(minTextBox.getText()), Double.valueOf(maxTextBox.getText()));
+				ControlSystem.setJoystickControl(controlName, joystickComponentId);
+			}else if(buttonClicked.equals(cancelButton)){
+				guiLevel = GUILevels.JS_BUTTON;
 			}
-			guiLevel = GUILevels.JS_BUTTON;
-			ControlSystem.setJoystickControl(ControlSystem.getJoystickControlName(joystickComponentId), ControlSystem.getNullComponent());
-		}else if(buttonClicked.equals(upButton)){
-			scrollSpot = Math.max(scrollSpot - 9, 0);
-		}else if(buttonClicked.equals(downButton)){
-			scrollSpot = Math.min(scrollSpot + 9, joystickComponents.length - joystickComponents.length%9);
-		}else if(buttonClicked.equals(confirmButton)){
-			guiLevel = GUILevels.JS_BUTTON;
-			ControlSystem.setAxisBounds(controlName, Double.valueOf(minTextBox.getText()), Double.valueOf(maxTextBox.getText()));
-			ControlSystem.setJoystickControl(controlName, joystickComponentId);
-		}else if(buttonClicked.equals(cancelButton)){
-			guiLevel = GUILevels.JS_BUTTON;
+			setButtonStatesByLevel();
+			changedThisTick = true;
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		setButtonStatesByLevel();
-		changedThisTick = true;
 	}
 
 	private void setButtonStatesByLevel(){

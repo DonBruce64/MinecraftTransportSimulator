@@ -1,12 +1,5 @@
 package minecrafttransportsimulator.guis;
 
-import java.awt.Color;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.main.EntityPlane;
@@ -17,7 +10,14 @@ import minecrafttransportsimulator.rendering.AircraftInstruments.AircraftGauges;
 import minecrafttransportsimulator.rendering.PlaneHUD;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
+import org.lwjgl.opengl.GL11;
+
+import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class GUIInstrumentsPlane extends GuiScreen{
 	private final EntityPlane plane;
@@ -153,19 +153,19 @@ public class GUIInstrumentsPlane extends GuiScreen{
 		
 		GL11.glPushMatrix();
 		GL11.glDisable(GL11.GL_BLEND);
-		GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.instruments.main"), width/4, 32, 0, 1.5F, Color.WHITE);
-		GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.instruments.control"), 3*width/4, 32, 0, 1.5F, Color.WHITE);
+		GL11DrawSystem.drawScaledStringAt(I18n.format("gui.instruments.main"), width/4, 32, 0, 1.5F, Color.WHITE);
+		GL11DrawSystem.drawScaledStringAt(I18n.format("gui.instruments.control"), 3*width/4, 32, 0, 1.5F, Color.WHITE);
 		if(lastInstrumentClicked == -1){
 			if(plane.ticksExisted%40 >= 20){
-				GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.instruments.idle"), width/2, height/2 + 32, 0, 1.5F, Color.WHITE);
+				GL11DrawSystem.drawScaledStringAt(I18n.format("gui.instruments.idle"), width/2, height/2 + 32, 0, 1.5F, Color.WHITE);
 			}
 		}else{
 			GL11DrawSystem.drawScaledStringAt(String.valueOf(lastInstrumentClicked), 10, 5, 0, 1.5F, Color.WHITE);
 			if(!fault){
-				GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.instruments.decide"), width/2, height/2 + 8, 0, 1.5F, Color.WHITE);
+				GL11DrawSystem.drawScaledStringAt(I18n.format("gui.instruments.decide"), width/2, height/2 + 8, 0, 1.5F, Color.WHITE);
 			}else{
 				if(plane.ticksExisted%20 >= 10){
-					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.instruments.fault"), width/2, height/2 + 8, 0, 1.5F, Color.RED);
+					GL11DrawSystem.drawScaledStringAt(I18n.format("gui.instruments.fault"), width/2, height/2 + 8, 0, 1.5F, Color.RED);
 				}
 			}
 			boolean[] hasInstrument = new boolean[AircraftGauges.values().length];
@@ -190,7 +190,7 @@ public class GUIInstrumentsPlane extends GuiScreen{
 			}
 			GL11DrawSystem.bindTexture(AircraftInstruments.gauges[0]);
 			GL11DrawSystem.renderSquare(width/2, width/2+height*0.2, height*0.9, height*0.7, 0, 0, false);
-			GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.instruments.clear"), width/2+height*0.1F, height*0.775F, 0, 1.0F, Color.WHITE);
+			GL11DrawSystem.drawScaledStringAt(I18n.format("gui.instruments.clear"), width/2+height*0.1F, height*0.775F, 0, 1.0F, Color.WHITE);
 		}
 		GL11.glPopMatrix();
 	}

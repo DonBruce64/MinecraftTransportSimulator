@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import net.minecraft.client.resources.I18n;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
@@ -438,26 +439,26 @@ public final class ControlSystem{
 	}
 	
 	public enum controls{
-		MOD(PlayerHelper.getTranslatedText("input.key.mod"), false),
-		CAM(PlayerHelper.getTranslatedText("input.key.camlock"), false),
-		PITCH(PlayerHelper.getTranslatedText("input.joystick.pitch"), PlayerHelper.getTranslatedText("input.key.pitchu"), PlayerHelper.getTranslatedText("input.key.pitchd")),
-		ROLL(PlayerHelper.getTranslatedText("input.joystick.roll"), PlayerHelper.getTranslatedText("input.key.rollr"), PlayerHelper.getTranslatedText("input.key.rolll")),
-		YAW(PlayerHelper.getTranslatedText("input.joystick.yaw"), PlayerHelper.getTranslatedText("input.key.yawr"), PlayerHelper.getTranslatedText("input.key.yawl")),
-		THROTTLE(PlayerHelper.getTranslatedText("input.joystick.throttle"), PlayerHelper.getTranslatedText("input.key.throttleu"), PlayerHelper.getTranslatedText("input.key.throttled")),
-		FLAPS_U(PlayerHelper.getTranslatedText("input.key.flapsu"), false),
-		FLAPS_D(PlayerHelper.getTranslatedText("input.key.flapsd"), false),
-		BRAKE(PlayerHelper.getTranslatedText("input.key.brake"), false),
-		PANEL(PlayerHelper.getTranslatedText("input.key.panel"), false),
-		ZOOM_I(PlayerHelper.getTranslatedText("input.key.zoomi"), false),
-		ZOOM_O(PlayerHelper.getTranslatedText("input.key.zoomo"), false),
-		CHANGEVIEW(PlayerHelper.getTranslatedText("input.joystick.changeview"), true),
-		LOOK_L(PlayerHelper.getTranslatedText("input.joystick.lookl"), true),
-		LOOK_R(PlayerHelper.getTranslatedText("input.joystick.lookr"), true),
-		LOOK_U(PlayerHelper.getTranslatedText("input.joystick.looku"), true),
-		LOOK_D(PlayerHelper.getTranslatedText("input.joystick.lookd"), true),
-		LOOK_ALL(PlayerHelper.getTranslatedText("input.joystick.looka"), true)
+		MOD(I18n.format("input.key.mod"), false),
+		CAM(I18n.format("input.key.camlock"), false),
+		PITCH(I18n.format("input.joystick.pitch"), I18n.format("input.key.pitchu"), I18n.format("input.key.pitchd")),
+		ROLL(I18n.format("input.joystick.roll"), I18n.format("input.key.rollr"), I18n.format("input.key.rolll")),
+		YAW(I18n.format("input.joystick.yaw"), I18n.format("input.key.yawr"), I18n.format("input.key.yawl")),
+		THROTTLE(I18n.format("input.joystick.throttle"), I18n.format("input.key.throttleu"), I18n.format("input.key.throttled")),
+		FLAPS_U(I18n.format("input.key.flapsu"), false),
+		FLAPS_D(I18n.format("input.key.flapsd"), false),
+		BRAKE(I18n.format("input.key.brake"), false),
+		PANEL(I18n.format("input.key.panel"), false),
+		ZOOM_I(I18n.format("input.key.zoomi"), false),
+		ZOOM_O(I18n.format("input.key.zoomo"), false),
+		CHANGEVIEW(I18n.format("input.joystick.changeview"), true),
+		LOOK_L(I18n.format("input.joystick.lookl"), true),
+		LOOK_R(I18n.format("input.joystick.lookr"), true),
+		LOOK_U(I18n.format("input.joystick.looku"), true),
+		LOOK_D(I18n.format("input.joystick.lookd"), true),
+		LOOK_ALL(I18n.format("input.joystick.looka"), true)
 		;
-		
+
 		public final String keyboardName;
 		public final String keyboardIncrementName;
 		public final String keyboardDecrementName;

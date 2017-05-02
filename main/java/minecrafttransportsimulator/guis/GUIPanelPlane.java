@@ -1,13 +1,8 @@
 package minecrafttransportsimulator.guis;
 
-import java.awt.Color;
-
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
-import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
 import minecrafttransportsimulator.packets.control.EnginePacket;
 import minecrafttransportsimulator.packets.control.LightPacket;
 import minecrafttransportsimulator.rendering.AircraftInstruments;
@@ -17,7 +12,11 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.opengl.GL11;
+
+import java.awt.*;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * Used for controlling engines, lights, trim, and other things.
@@ -77,21 +76,21 @@ public class GUIPanelPlane extends GuiScreen{
 			}
 		}
 		for(byte i=0; i<engines.length; ++i){
-			GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.magneto"), (2+i)*width/(2 + engines.length)-12, height-26, 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
+			GL11DrawSystem.drawScaledStringAt(I18n.format("gui.panel.magneto"), (2+i)*width/(2 + engines.length)-12, height-26, 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 			if(electricStartEnabled){
-				GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.starter"), (2+i)*width/(2 + engines.length)+12, height-26, 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
+				GL11DrawSystem.drawScaledStringAt(I18n.format("gui.panel.starter"), (2+i)*width/(2 + engines.length)+12, height-26, 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 			}
 		}
 		for(byte i=1; i<=4; ++i){
 			if(((plane.lightSetup & 1<<(i-1)) == 1<<(i-1))){
 				if(i==1){
-					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.navigationlights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
+					GL11DrawSystem.drawScaledStringAt(I18n.format("gui.panel.navigationlights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 				}else if(i==2){
-					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.strobelights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
+					GL11DrawSystem.drawScaledStringAt(I18n.format("gui.panel.strobelights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 				}else if(i==3){
-					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.taxilights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
+					GL11DrawSystem.drawScaledStringAt(I18n.format("gui.panel.taxilights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 				}else if(i==4){
-					GL11DrawSystem.drawScaledStringAt(PlayerHelper.getTranslatedText("gui.panel.landinglights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
+					GL11DrawSystem.drawScaledStringAt(I18n.format("gui.panel.landinglights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 				}
 			}
 		}

@@ -1,23 +1,22 @@
 package minecrafttransportsimulator.guis;
 
-import java.awt.Color;
-
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
-import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
 import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.opengl.GL11;
+
+import java.awt.*;
 
 public class GUIPropellerBench extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/long_blank.png");
@@ -114,9 +113,9 @@ public class GUIPropellerBench extends GuiScreen{
 		GL11DrawSystem.bindTexture(obsidianPropellerIcon);
 		GL11DrawSystem.renderSquare(guiLeft + 70, guiLeft + 86, guiTop + 28, guiTop + 12, 0, 0, false);
 		
-		GL11DrawSystem.drawString(PlayerHelper.getTranslatedText("info.item.propeller.numberBlades"), guiLeft + 20, guiTop + 40, Color.BLACK);
-		GL11DrawSystem.drawString(PlayerHelper.getTranslatedText("info.item.propeller.pitch"), guiLeft + 65, guiTop + 40, Color.BLACK);
-		GL11DrawSystem.drawString(PlayerHelper.getTranslatedText("info.item.propeller.diameter"), guiLeft + 110, guiTop + 40, Color.BLACK);
+		GL11DrawSystem.drawString(I18n.format("info.item.propeller.numberBlades"), guiLeft + 20, guiTop + 40, Color.BLACK);
+		GL11DrawSystem.drawString(I18n.format("info.item.propeller.pitch"), guiLeft + 65, guiTop + 40, Color.BLACK);
+		GL11DrawSystem.drawString(I18n.format("info.item.propeller.diameter"), guiLeft + 110, guiTop + 40, Color.BLACK);
 		
 		GL11.glPushMatrix();
 		GL11.glScalef(2, 2, 2);
