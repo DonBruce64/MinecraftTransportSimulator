@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
-import net.minecraft.client.particle.EntityDropParticleFX;
+import net.minecraft.client.particle.ParticleDrip;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -50,7 +50,7 @@ public final class SFXSystem{
 	public static boolean isPlayerInsideVehicle(){
 		if(ClientEventSystem.playerLastSeat != null){
 			if(ClientEventSystem.playerLastSeat.parent != null){
-				if(!((EntityMultipartMoving) ClientEventSystem.playerLastSeat.parent).isOpenTop() && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
+				if(!((EntityMultipartMoving) ClientEventSystem.playerLastSeat.parent).openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
 					return true;
 				}
 			}
@@ -58,9 +58,9 @@ public final class SFXSystem{
 		return false;
 	}
 	
-	public static class OilDropParticleFX extends EntityDropParticleFX{
+	public static class OilDropParticleFX extends ParticleDrip{
 		public OilDropParticleFX(World world, double posX, double posY, double posZ){
-			super(world, posX, posY, posZ, Material.lava);
+			super(world, posX, posY, posZ, Material.LAVA);
 		}
 		
 		@Override
@@ -70,9 +70,9 @@ public final class SFXSystem{
 		}
 	}
 	
-	public static class FuelDropParticleFX extends EntityDropParticleFX{
+	public static class FuelDropParticleFX extends ParticleDrip{
 		public FuelDropParticleFX(World world, double posX, double posY, double posZ){
-			super(world, posX, posY, posZ, Material.lava);
+			super(world, posX, posY, posZ, Material.LAVA);
 		}
 	}
 	

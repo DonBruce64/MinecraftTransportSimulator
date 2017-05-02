@@ -1,22 +1,20 @@
 package minecrafttransportsimulator.systems;
 
-import java.awt.Color;
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.imageio.ImageIO;
-
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import org.lwjgl.opengl.GL11;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**This class is responsible for most of the legwork of the custom rendering system.
  * Contains multiple methods for drawing textured quads and the like.
@@ -25,7 +23,7 @@ import net.minecraft.util.ResourceLocation;
  */
 public final class GL11DrawSystem{
 	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
-	private static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+	private static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
 	private static final Map<String, ResourceLocation> mtsTextureArray = new HashMap<String, ResourceLocation>();
 	
 	public static final ResourceLocation glassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
@@ -174,7 +172,8 @@ public final class GL11DrawSystem{
      * an end radius of r. length of l, and n segments.
      */
     public static void drawLightBeam(EntityMultipartVehicle vehicle, double r, double l, int n, boolean highPower){
-    	float strength = (float) (vehicle.electricPower/12F*(15F - vehicle.worldObj.getSunBrightness(1.0F)*BlockHelper.getBlockLight(vehicle.worldObj, (int) Math.floor(vehicle.posX - 4*Math.sin(vehicle.rotationYaw * 0.017453292F)), (int) Math.floor(vehicle.posY), (int) Math.floor(vehicle.posZ + 4*Math.cos(vehicle.rotationYaw * 0.017453292F))))/15F);
+		int blockLight = vehicle.worldObj.getLight(new BlockPos((int) Math.floor(vehicle.posX - 4*Math.sin(vehicle.rotationYaw * 0.017453292F)), (int) Math.floor(vehicle.posY), (int) Math.floor(vehicle.posZ + 4*Math.cos(vehicle.rotationYaw * 0.017453292F))));
+    	float strength = (float) (vehicle.electricPower/12F*(15F - vehicle.worldObj.getSunBrightness(1.0F)*blockLight)/15F);
     	GL11.glPushMatrix();
     	GL11.glColor4f(1, 1, 1, Math.min(vehicle.electricPower > 4 ? 1.0F : 0, strength));
     	GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -230,7 +229,7 @@ public final class GL11DrawSystem{
 		GL11.glDisable(GL11.GL_LIGHTING);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glColor4f(red, green, blue, alpha);
-		Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+		Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		
 		//Light render
 		GL11.glPushMatrix();
@@ -238,7 +237,7 @@ public final class GL11DrawSystem{
 		GL11.glPopMatrix();
 		
 		//Light post operations.
-		Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+		Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		GL11.glColor4f(1, 1, 1, 1);
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_LIGHTING);
@@ -271,7 +270,7 @@ public final class GL11DrawSystem{
 		GL11.glDisable(GL11.GL_LIGHTING);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glColor4f(red, green, blue, alpha);
-		Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+		Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		
 		//Light render
 		GL11.glPushMatrix();
@@ -286,7 +285,7 @@ public final class GL11DrawSystem{
 		GL11.glPopMatrix();
 		
 		//Light post operations.
-		Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+		Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		GL11.glColor4f(1, 1, 1, 1);
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_LIGHTING);
