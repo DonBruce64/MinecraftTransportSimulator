@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.baseclasses;
 
+import net.minecraft.util.math.BlockPos;
+
 /**Curve class used for rails.
  * Needs two points and two angles.
  * Note that this uses Minecraft's coordinate system
@@ -11,8 +13,8 @@ public class MTSCurve{
 	public final float startAngle;
 	public final float endAngle;
 	public final float pathLength;
-	public final int[] blockStartPoint;
-	public final int[] blockEndPoint;
+	public final BlockPos blockStartPos;
+	public final BlockPos blockEndPos;
 	
 	private final float cpDist;
 	private final float[] startPoint;
@@ -23,13 +25,13 @@ public class MTSCurve{
 	private static final byte cachedCurveIncrement = 16;
 	private final float[][] cachedPathPoints;
 	
-	public MTSCurve(int[] sp, int[] ep, float sa, float ea){
+	public MTSCurve(BlockPos sp, BlockPos ep, float sa, float ea){
 		this.startAngle = sa;
 		this.endAngle = ea;
-		this.blockStartPoint = sp;
-		this.blockEndPoint = ep;
-		this.startPoint = new float[]{sp[0] + 0.5F, sp[1], sp[2] + 0.5F};
-		this.endPoint = new float[]{ep[0] + 0.5F, ep[1], ep[2] + 0.5F};
+		this.blockStartPos = sp;
+		this.blockEndPos = ep;
+		this.startPoint = new float[]{sp.getX() + 0.5F, sp.getY(), sp.getZ() + 0.5F};
+		this.endPoint = new float[]{ep.getX() + 0.5F, ep.getY(), ep.getZ() + 0.5F};
 		cpDist = (float) Math.sqrt(Math.pow(endPoint[0] - startPoint[0], 2) + Math.pow(endPoint[1] - startPoint[1], 2) + Math.pow(endPoint[2] - startPoint[2], 2))/3F;
 		cpStart = new float[]{(float) (startPoint[0] - Math.sin(Math.toRadians(startAngle))*cpDist), startPoint[1], (float) (startPoint[2] + Math.cos(Math.toRadians(startAngle))*cpDist)};
 		cpEnd = new float[]{(float) (endPoint[0] - Math.sin(Math.toRadians(endAngle))*cpDist), endPoint[1], (float) (endPoint[2] + Math.cos(Math.toRadians(endAngle))*cpDist)};

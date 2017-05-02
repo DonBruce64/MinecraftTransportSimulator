@@ -1,18 +1,17 @@
 package minecrafttransportsimulator.blocks;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSBlock;
 import minecrafttransportsimulator.baseclasses.MTSCurve;
 import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
 import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -25,21 +24,20 @@ public class TileEntitySurveyFlag extends MTSTileEntity{
 		super();
 	}
 	
-	public void linkToFlag(int[] linkedFlagCoords, boolean isPrimary){
+	public void linkToFlag(BlockPos linkedFlagPos, boolean isPrimary){
 		if(linkedCurve != null){
-			((TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(worldObj, linkedCurve.blockEndPoint[0], linkedCurve.blockEndPoint[1], linkedCurve.blockEndPoint[2])).clearFlagLinking();
+			((TileEntitySurveyFlag) worldObj.getTileEntity(linkedCurve.blockEndPos)).clearFlagLinking();
 		}
 		this.isPrimary = isPrimary;
-		TileEntitySurveyFlag linkedFlag = ((TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(worldObj, linkedFlagCoords[0], linkedFlagCoords[1], linkedFlagCoords[2]));
-		linkedCurve = new MTSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, linkedFlagCoords, rotation*45, linkedFlag.rotation*45);
+		TileEntitySurveyFlag linkedFlag = ((TileEntitySurveyFlag) worldObj.getTileEntity(linkedFlagPos));
+		linkedCurve = new MTSCurve(this.pos, linkedFlagPos, rotation*45, linkedFlag.rotation*45);
 		MTS.MFSNet.sendToAll(new TileEntitySyncPacket(this));
 	}
 	
 	public void clearFlagLinking(){
 		if(linkedCurve != null){
-			int[] linkedFlagCoords = linkedCurve.blockEndPoint;
 			linkedCurve = null;
-			TileEntitySurveyFlag linkedFlag = ((TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(worldObj, linkedFlagCoords[0], linkedFlagCoords[1], linkedFlagCoords[2]));
+			TileEntitySurveyFlag linkedFlag = ((TileEntitySurveyFlag) worldObj.getTileEntity(linkedCurve.blockEndPos));
 			if(linkedFlag != null){
 				linkedFlag.clearFlagLinking();
 			}
@@ -52,38 +50,33 @@ public class TileEntitySurveyFlag extends MTSTileEntity{
 	 * the coordinates of the location where an existing block is if not.
 	 * 
 	 */
-	public int[] spawnDummyTracks(){
+	public BlockPos spawnDummyTracks(){
 		float[] currentPoint;		
 		float currentAngle;
 		float currentSin;
 		float currentCos;
 		
-		List<int[]> blockList = new ArrayList<int[]>();
+		Map<BlockPos, Byte> blockMap = new HashMap<BlockPos, Byte>();
 		for(float f=0; f <= linkedCurve.pathLength; f = Math.min(f + 0.25F, linkedCurve.pathLength)){
 			currentPoint = linkedCurve.getCachedPointAt(f/linkedCurve.pathLength);
 			currentAngle = linkedCurve.getCachedYawAngleAt(f/linkedCurve.pathLength);
 			currentSin = (float) Math.sin(Math.toRadians(currentAngle));
 			currentCos = (float) Math.cos(Math.toRadians(currentAngle));
 
-			int[] offset = new int[3];
 			for(byte j=-1; j<=1; ++j){
-				offset[0] = (int) Math.round(currentPoint[0] - 0.5 + j*currentCos);
-				offset[1] = (int) Math.floor(currentPoint[1] + 0.01);
-				offset[2] = (int) Math.round(currentPoint[2] - 0.5 + j*currentSin);
-				if(BlockHelper.canPlaceBlockAt(worldObj, offset[0], offset[1], offset[2])){
+				BlockPos placementPos = new BlockPos(Math.round(currentPoint[0] - 0.5 + j*currentCos), Math.floor(currentPoint[1] + 0.01), Math.round(currentPoint[2] - 0.5 + j*currentSin));
+				if(worldObj.getBlockState(placementPos).getBlock().canPlaceBlockAt(worldObj, placementPos)){
 					boolean isBlockInList = false;
-					for(int[] coords : blockList){
-						if(coords[0] == offset[0] && coords[2] == offset[2]){
-							isBlockInList = true;
-							break;
-						}
+					if(blockMap.containsKey(placementPos)){
+						isBlockInList = true;
+						break;
 					}
 					if(!isBlockInList){
-						blockList.add(new int[] {offset[0], offset[1], offset[2], (int) Math.max(((currentPoint[1] + 0.01)%1)*16, 1)});
+						blockMap.put(placementPos, (byte) Math.max(((currentPoint[1] + 0.01)%1)*16, 1));
 					}
 				}else{
-					if(!(Arrays.equals(linkedCurve.blockStartPoint, offset) || Arrays.equals(linkedCurve.blockEndPoint, offset))){
-						return offset;
+					if(!(linkedCurve.blockStartPos.equals(placementPos) || linkedCurve.blockEndPos.equals(placementPos))){
+						return placementPos;
 					}
 				}
 			}
@@ -92,29 +85,29 @@ public class TileEntitySurveyFlag extends MTSTileEntity{
 			}
 		}
 		
-		int[] masterLocation = new int[]{this.xCoord, this.yCoord, this.zCoord};
 		BlockTrackFake.overrideBreakingBlocks = true;
-		for(int[] blockData : blockList){
-			worldObj.setBlock(blockData[0], blockData[1], blockData[2], MTSRegistry.blockTrackFake);
-			((MTSBlock) MTSRegistry.blockTrackFake).setBlockMetadata(worldObj, blockData[0], blockData[1], blockData[2], (byte) Math.max(blockData[3], 4));
-			worldObj.markBlockForUpdate(blockData[0], blockData[1], blockData[2]);			
+		for(BlockPos placementPos : blockMap.keySet()){
+			worldObj.setBlockState(placementPos, MTSRegistry.blockTrackFake.getDefaultState().withProperty(BlockTrackFake.height, Math.max(blockMap.get(placementPos), 4)));
+			//TODO make sure this is not needed.  I had issues with Tile Entities and blocks not spawning in 1.7.10.
+			//worldObj.markBlockForUpdate(blockData[0], blockData[1], blockData[2]);			
 		}
 		MTSCurve curve = linkedCurve;
-		MTSCurve otherFlagCurve = ((TileEntitySurveyFlag) BlockHelper.getTileEntityFromCoords(worldObj, linkedCurve.blockEndPoint[0], linkedCurve.blockEndPoint[1], linkedCurve.blockEndPoint[2])).linkedCurve;
+		MTSCurve otherFlagCurve = ((TileEntitySurveyFlag) worldObj.getTileEntity(linkedCurve.blockEndPos)).linkedCurve;
 		boolean primary = isPrimary;
 		
-		worldObj.setBlock(curve.blockStartPoint[0], curve.blockStartPoint[1], curve.blockStartPoint[2], MTSRegistry.blockTrack);
-		worldObj.setBlock(curve.blockEndPoint[0], curve.blockEndPoint[1], curve.blockEndPoint[2], MTSRegistry.blockTrack);
+		worldObj.setBlockState(curve.blockStartPos, MTSRegistry.blockTrack.getDefaultState());
+		worldObj.setBlockState(curve.blockEndPos, MTSRegistry.blockTrack.getDefaultState());
 		
-		worldObj.markBlockForUpdate(curve.blockStartPoint[0], curve.blockStartPoint[1], curve.blockStartPoint[2]);
-		worldObj.markBlockForUpdate(curve.blockEndPoint[0], curve.blockEndPoint[1], curve.blockEndPoint[2]);
+		//TODO make sure this is not needed.  I had issues with Tile Entities and blocks not spawning in 1.7.10.
+		//worldObj.markBlockForUpdate(curve.blockStartPos[0], curve.blockStartPos[1], curve.blockStartPos[2]);
+		//worldObj.markBlockForUpdate(curve.blockEndPos[0], curve.blockEndPos[1], curve.blockEndPos[2]);
 		
 		TileEntityTrack startTile = new TileEntityTrack(curve);
 		TileEntityTrack endTile = new TileEntityTrack(otherFlagCurve);
-		startTile.setFakeTracks(blockList);
-		endTile.setFakeTracks(blockList);
-		worldObj.setTileEntity(curve.blockStartPoint[0], curve.blockStartPoint[1], curve.blockStartPoint[2], startTile);
-		worldObj.setTileEntity(curve.blockEndPoint[0], curve.blockEndPoint[1], curve.blockEndPoint[2], endTile);
+		startTile.setFakeTracks(new ArrayList<BlockPos>(blockMap.keySet()));
+		endTile.setFakeTracks(new ArrayList<BlockPos>(blockMap.keySet()));
+		worldObj.setTileEntity(curve.blockStartPos, startTile);
+		worldObj.setTileEntity(curve.blockEndPos, endTile);
 		BlockTrackFake.overrideBreakingBlocks = false;
 		return null;
 	}
@@ -136,19 +129,20 @@ public class TileEntitySurveyFlag extends MTSTileEntity{
         this.isPrimary = tagCompound.getBoolean("isPrimary");
         int[] linkedFlagCoords = tagCompound.getIntArray("linkedFlagCoords");
         if(tagCompound.getIntArray("linkedFlagCoords").length != 0){
-        	linkedCurve = new MTSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, linkedFlagCoords, this.rotation*45, tagCompound.getFloat("linkedFlagAngle"));
+        	linkedCurve = new MTSCurve(this.pos, new BlockPos(linkedFlagCoords[0], linkedFlagCoords[1], linkedFlagCoords[2]), this.rotation*45, tagCompound.getFloat("linkedFlagAngle"));
         }else{
         	linkedCurve = null;
         }
     }
     
 	@Override
-    public void writeToNBT(NBTTagCompound tagCompound){
+    public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
         tagCompound.setBoolean("isPrimary", this.isPrimary);
         if(linkedCurve != null){
-        	tagCompound.setIntArray("linkedFlagCoords", linkedCurve.blockEndPoint);
+        	tagCompound.setIntArray("linkedFlagCoords", new int[]{linkedCurve.blockEndPos.getX(), linkedCurve.blockEndPos.getY(), linkedCurve.blockEndPos.getZ()});
         	tagCompound.setFloat("linkedFlagAngle", linkedCurve.endAngle);
         }
+        return tagCompound;
     }
 }

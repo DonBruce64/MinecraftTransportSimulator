@@ -16,7 +16,7 @@ public class TileEntityTrack extends MTSTileEntity{
 	public boolean hasTriedToConnectToOtherSegment;
 	public TileEntityTrack connectedTrack;
 	public MTSCurve curve;
-	private List<int[]> fakeTracks = new ArrayList<int[]>();
+	private List<BlockPos> fakeTracks = new ArrayList<BlockPos>();
 	
 	public TileEntityTrack(){
 		super();
@@ -26,18 +26,18 @@ public class TileEntityTrack extends MTSTileEntity{
 		this.curve = curve;
 	}
 	
-	public void setFakeTracks(List<int[]> fakeTracks){
+	public void setFakeTracks(List<BlockPos> fakeTracks){
 		this.fakeTracks = fakeTracks;
 	}
 	
-	public List<int[]> getFakeTracks(){
+	public List<BlockPos> getFakeTracks(){
 		return this.fakeTracks;
 	}
 	
 	public void removeFakeTracks(){
 		this.invalidate();
-		for(int[] track : fakeTracks){
-			worldObj.setBlockToAir(new BlockPos(track[0], track[1], track[2]));
+		for(BlockPos fakePos : fakeTracks){
+			worldObj.setBlockToAir(fakePos);
 		}
 		BlockTrackFake.overrideBreakingBlocks = false;
 	}
@@ -56,17 +56,18 @@ public class TileEntityTrack extends MTSTileEntity{
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
-        if(tagCompound.getIntArray("endPoint").length != 0){
-        	curve = new MTSCurve(new int[]{this.pos.getX(), this.pos.getY(), this.pos.getZ()}, tagCompound.getIntArray("endPoint"), tagCompound.getFloat("startAngle"), tagCompound.getFloat("endAngle"));
+        int[] endCoords = tagCompound.getIntArray("endPoint");
+        if(endCoords.length != 0){
+        	BlockPos endPos = new BlockPos(endCoords[0], endCoords[1], endCoords[2]);
+        	curve = new MTSCurve(this.pos, endPos, tagCompound.getFloat("startAngle"), tagCompound.getFloat("endAngle"));
         }
         
         this.fakeTracks.clear();
         int[] fakeXCoords = tagCompound.getIntArray("fakeXCoords");
         int[] fakeYCoords = tagCompound.getIntArray("fakeYCoords");
         int[] fakeZCoords = tagCompound.getIntArray("fakeZCoords");
-        int[] fakeHeights = tagCompound.getIntArray("fakeHeights");
         for(int i=0; i<fakeXCoords.length; ++i){
-        	fakeTracks.add(new int[]{fakeXCoords[i], fakeYCoords[i], fakeZCoords[i], fakeHeights[i]});
+        	fakeTracks.add(new BlockPos(fakeXCoords[i], fakeYCoords[i], fakeZCoords[i]));
         }
     }
     
@@ -76,7 +77,7 @@ public class TileEntityTrack extends MTSTileEntity{
         if(curve != null){
 	        tagCompound.setFloat("startAngle", curve.startAngle);
 	        tagCompound.setFloat("endAngle", curve.endAngle);
-	        tagCompound.setIntArray("endPoint", curve.blockEndPoint);
+	        tagCompound.setIntArray("endPoint", new int[]{curve.blockEndPos.getX(), curve.blockEndPos.getY(), curve.blockEndPos.getZ()});
         }else{
         	this.invalidate();
         }
@@ -84,17 +85,14 @@ public class TileEntityTrack extends MTSTileEntity{
         int[] fakeXCoords = new int[fakeTracks.size()];
         int[] fakeYCoords = new int[fakeTracks.size()];
         int[] fakeZCoords = new int[fakeTracks.size()];
-        int[] fakeHeights = new int[fakeTracks.size()];
         for(int i=0;i<fakeTracks.size(); ++i){
-        	fakeXCoords[i] = fakeTracks.get(i)[0];
-        	fakeYCoords[i] = fakeTracks.get(i)[1];
-        	fakeZCoords[i] = fakeTracks.get(i)[2];
-        	fakeHeights[i] = fakeTracks.get(i)[3];
+        	fakeXCoords[i] = fakeTracks.get(i).getX();
+        	fakeYCoords[i] = fakeTracks.get(i).getY();
+        	fakeZCoords[i] = fakeTracks.get(i).getZ();
         }
         tagCompound.setIntArray("fakeXCoords", fakeXCoords);
         tagCompound.setIntArray("fakeYCoords", fakeYCoords);
         tagCompound.setIntArray("fakeZCoords", fakeZCoords);
-        tagCompound.setIntArray("fakeHeights", fakeHeights);
 		return tagCompound;
     }
 }

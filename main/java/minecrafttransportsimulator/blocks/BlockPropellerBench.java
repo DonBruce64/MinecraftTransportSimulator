@@ -3,8 +3,8 @@ package minecrafttransportsimulator.blocks;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSBlockTileEntity;
 import minecrafttransportsimulator.baseclasses.MTSTileEntity;
+import minecrafttransportsimulator.baseclasses.MTSTileEntityRotateable;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -16,15 +16,17 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public class BlockPropellerBench extends MTSBlockTileEntity{
+public class BlockPropellerBench extends MTSTileEntityRotateable{
 
 	public BlockPropellerBench(){
-		super(Material.IRON, 5.0F, 10.0F);
+		super(Material.IRON);
+		this.setHardness(5.0F);
+		this.setResistance(10.0F);
 	}
 	
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ){
-		if(player.getDistance(pos.getX(), pos.getY(),  pos.getZ()) < 5){
+		if(Math.sqrt(player.getDistanceSq(pos)) < 5){
 			TileEntityPropellerBench bench = (TileEntityPropellerBench) world.getTileEntity(pos);
 			if(!world.isRemote){
 				if(bench.getPropellerOnBench() != null){
