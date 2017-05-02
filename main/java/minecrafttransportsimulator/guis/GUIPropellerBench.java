@@ -2,7 +2,6 @@ package minecrafttransportsimulator.guis;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
-import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
 import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.gui.GuiButton;
@@ -17,6 +16,7 @@ import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
+import java.io.IOException;
 
 public class GUIPropellerBench extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/long_blank.png");
@@ -165,7 +165,7 @@ public class GUIPropellerBench extends GuiScreen{
 	}
     
 	@Override
-    protected void actionPerformed(GuiButton buttonClicked){
+    protected void actionPerformed(GuiButton buttonClicked) throws IOException {
 		super.actionPerformed(buttonClicked);
 		if(buttonClicked.equals(tier0Button)){
 			bench.propellerType=0;
@@ -186,7 +186,7 @@ public class GUIPropellerBench extends GuiScreen{
 		}else if(buttonClicked.equals(diameterDownButton)){
 			bench.diameter-=5;
 		}else if(buttonClicked.equals(startButton)){
-			bench.timeOperationFinished = bench.getWorldObj().getTotalWorldTime() + 1000;
+			bench.timeOperationFinished = bench.getWorld().getTotalWorldTime() + 1000;
 			MTS.MFSNet.sendToServer(new TileEntitySyncPacket(bench));
 			mc.thePlayer.closeScreen();
 			return;
@@ -207,14 +207,14 @@ public class GUIPropellerBench extends GuiScreen{
 		}else{
 			for(ItemStack stack : player.inventory.mainInventory){
 				if(stack != null){
-					if(ItemStackHelper.getItemFromStack(stack).equals(Item.getItemFromBlock(Blocks.planks))){
-						numberPlayerPlanks+=ItemStackHelper.getStackSize(stack);
-					}else if(ItemStackHelper.getItemFromStack(stack).equals(Items.iron_ingot)){
-						numberPlayerIronIngots+=ItemStackHelper.getStackSize(stack);
-					}else if(ItemStackHelper.getItemFromStack(stack).equals(Item.getItemFromBlock(Blocks.obsidian))){
-						numberPlayerObsidian+=ItemStackHelper.getStackSize(stack);
-					}else if(ItemStackHelper.getItemFromStack(stack).equals(Items.redstone)){
-						numberPlayerRedstone+=ItemStackHelper.getStackSize(stack);
+					if(stack.getItem().equals(Item.getItemFromBlock(Blocks.PLANKS))){
+						numberPlayerPlanks+=stack.stackSize;
+					}else if(stack.getItem().equals(Items.IRON_INGOT)){
+						numberPlayerIronIngots+=stack.stackSize;
+					}else if(stack.getItem().equals(Item.getItemFromBlock(Blocks.OBSIDIAN))){
+						numberPlayerObsidian+=stack.stackSize;
+					}else if(stack.getItem().equals(Items.REDSTONE)){
+						numberPlayerRedstone+=stack.stackSize;
 					}
 				}
 			}

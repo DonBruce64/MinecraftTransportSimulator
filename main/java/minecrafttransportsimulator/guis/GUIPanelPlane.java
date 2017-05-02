@@ -17,6 +17,7 @@ import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
+import java.io.IOException;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * Used for controlling engines, lights, trim, and other things.
@@ -151,7 +152,7 @@ public class GUIPanelPlane extends GuiScreen{
 	}
 	
     @Override
-    protected void keyTyped(char key, int bytecode){
+    protected void keyTyped(char key, int bytecode) throws IOException {
     	super.keyTyped(key, bytecode);
     	if(bytecode == Minecraft.getMinecraft().gameSettings.keyBindInventory.getKeyCode() || bytecode == Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode()){
     		super.keyTyped('0', 1);

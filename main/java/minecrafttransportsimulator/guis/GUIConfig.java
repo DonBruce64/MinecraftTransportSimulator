@@ -465,7 +465,7 @@ public class GUIConfig extends GuiScreen{
 	}
 	
     @Override
-    protected void mouseClicked(int x, int y, int button){
+    protected void mouseClicked(int x, int y, int button) throws IOException {
     	super.mouseClicked(x, y, button);
     	for(GuiTextField box : planeBoxes.values()){
     		if(box.getVisible()){
@@ -480,7 +480,7 @@ public class GUIConfig extends GuiScreen{
     }
 	
     @Override
-    protected void keyTyped(char key, int bytecode){
+    protected void keyTyped(char key, int bytecode) throws IOException {
     	super.keyTyped(key, bytecode);
     	if(bytecode==1){
             return;
