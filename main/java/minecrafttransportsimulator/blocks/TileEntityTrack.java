@@ -5,9 +5,9 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.MTSCurve;
 import minecrafttransportsimulator.baseclasses.MTSTileEntity;
-import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -37,7 +37,7 @@ public class TileEntityTrack extends MTSTileEntity{
 	public void removeFakeTracks(){
 		this.invalidate();
 		for(int[] track : fakeTracks){
-			BlockHelper.setBlockToAir(worldObj, track[0], track[1], track[2]);
+			worldObj.setBlockToAir(new BlockPos(track[0], track[1], track[2]));
 		}
 		BlockTrackFake.overrideBreakingBlocks = false;
 	}
@@ -57,7 +57,7 @@ public class TileEntityTrack extends MTSTileEntity{
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
         if(tagCompound.getIntArray("endPoint").length != 0){
-        	curve = new MTSCurve(new int[]{this.xCoord, this.yCoord, this.zCoord}, tagCompound.getIntArray("endPoint"), tagCompound.getFloat("startAngle"), tagCompound.getFloat("endAngle"));
+        	curve = new MTSCurve(new int[]{this.pos.getX(), this.pos.getY(), this.pos.getZ()}, tagCompound.getIntArray("endPoint"), tagCompound.getFloat("startAngle"), tagCompound.getFloat("endAngle"));
         }
         
         this.fakeTracks.clear();
@@ -71,7 +71,7 @@ public class TileEntityTrack extends MTSTileEntity{
     }
     
 	@Override
-    public void writeToNBT(NBTTagCompound tagCompound){
+    public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
         if(curve != null){
 	        tagCompound.setFloat("startAngle", curve.startAngle);
@@ -95,5 +95,6 @@ public class TileEntityTrack extends MTSTileEntity{
         tagCompound.setIntArray("fakeYCoords", fakeYCoords);
         tagCompound.setIntArray("fakeZCoords", fakeZCoords);
         tagCompound.setIntArray("fakeHeights", fakeHeights);
+		return tagCompound;
     }
 }

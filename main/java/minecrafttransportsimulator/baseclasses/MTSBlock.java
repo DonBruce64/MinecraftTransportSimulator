@@ -44,15 +44,4 @@ public abstract class MTSBlock extends Block{
 		this.setBlockBoundsFromMetadata(world.getBlockState(pos));
 		return super.getSelectedBoundingBox(state, world, pos);
 	}
-
-	@Override
-	public EnumBlockRenderType getRenderType(IBlockState state) {
-		return isBlock3D() ? EnumBlockRenderType.INVISIBLE : super.getRenderType(state);
-	}
-
-	@Override
-	public boolean isOpaqueCube(IBlockState state) {
-		return !isBlock3D();
-	}
-
 }

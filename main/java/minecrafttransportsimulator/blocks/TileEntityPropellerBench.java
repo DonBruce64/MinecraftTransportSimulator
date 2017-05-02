@@ -3,7 +3,6 @@ package minecrafttransportsimulator.blocks;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
 import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
 import minecrafttransportsimulator.sounds.BenchSound;
 import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
@@ -11,10 +10,11 @@ import net.minecraft.client.audio.MovingSound;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ITickable;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity{
+public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity, ITickable{
 	public byte propellerType = 0;
 	public byte numberBlades = 2;
 	public byte pitch = 64;
@@ -29,7 +29,7 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
 	}
 	
 	@Override
-	public void updateEntity(){
+	public void update(){
 		if(timeOperationFinished == worldObj.getTotalWorldTime()){
 			timeOperationFinished = 0;
 			propellerOnBench = new ItemStack(MTSRegistry.propeller, 1, propellerType);
@@ -44,7 +44,7 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
 			}else{
 				stackTag.setFloat("health", 100);
 			}
-			ItemStackHelper.setStackNBT(propellerOnBench, stackTag);
+			propellerOnBench.setTagCompound(stackTag);
 		}
 		MTS.proxy.updateSFXEntity(this, worldObj);
 	}
@@ -108,7 +108,7 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
     }
     
 	@Override
-    public void writeToNBT(NBTTagCompound tagCompound){
+    public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
         tagCompound.setByte("propellerType", propellerType);
         tagCompound.setByte("numberBlades", numberBlades);
@@ -118,5 +118,6 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
         if(propellerOnBench != null){
         	tagCompound.setTag("propellerOnBench", propellerOnBench.writeToNBT(new NBTTagCompound()));
         }
+		return tagCompound;
     }
 }
