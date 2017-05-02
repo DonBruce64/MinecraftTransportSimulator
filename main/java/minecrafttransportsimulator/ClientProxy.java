@@ -26,7 +26,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * @author don_bruce
  */
 @SideOnly(Side.CLIENT)
-public class ClientProxy extends CommonProxy{	
+public class ClientProxy extends CommonProxy{
 	
 	@Override
 	public void preInit(FMLPreInitializationEvent event){
@@ -41,7 +41,6 @@ public class ClientProxy extends CommonProxy{
 		MTSRegistryClient.init();
 		ControlSystem.init();
 		MinecraftForge.EVENT_BUS.register(ClientEventSystem.instance);
-		FMLCommonHandler.instance().bus().register(ClientEventSystem.instance);
 	}
 	
 	@Override
