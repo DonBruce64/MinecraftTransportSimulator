@@ -12,7 +12,6 @@ import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
-import minecrafttransportsimulator.minecrafthelpers.EntityHelper;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
@@ -153,19 +152,19 @@ public class EntityPlane extends EntityMultipartVehicle{
 		for(EntityMultipartChild child : getChildren()){
 			if(child instanceof EntitySeat){
 				if(((EntitySeat) child).isController){
-					if(EntityHelper.getRider(child) != null){
-						pilot = EntityHelper.getRider(child);
+					if(child.getRidingEntity() != null){
+						pilot = child.getRidingEntity();
 						break;
 					}
 				}
 			}
 		}
 		for(EntityMultipartChild child : getChildren()){
-			if(EntityHelper.getRider(child) != null){
-				if(EntityHelper.getRider(child).equals(pilot)){
-					EntityHelper.getRider(child).attackEntityFrom(new DamageSourceCrash(null, "plane"), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
+			if(child.getRidingEntity() != null){
+				if(child.getRidingEntity().equals(pilot)){
+					child.getRidingEntity().attackEntityFrom(new DamageSourceCrash(null, "plane"), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
 				}else{
-					EntityHelper.getRider(child).attackEntityFrom(new DamageSourceCrash(pilot, "plane"), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
+					child.getRidingEntity().attackEntityFrom(new DamageSourceCrash(pilot, "plane"), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
 				}
 			}
 		}
@@ -223,7 +222,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 		currentMass = (float) (emptyMass + fuel/50);
 		for(EntityMultipartChild child : getChildren()){
 			addedMass = 0;
-			rider = EntityHelper.getRider(child);
+			rider = child.getRidingEntity();
 			if(rider != null){
 				if(rider instanceof EntityPlayer){
 					addedMass = 100 + calculateInventoryWeight(((EntityPlayer) rider).inventory);

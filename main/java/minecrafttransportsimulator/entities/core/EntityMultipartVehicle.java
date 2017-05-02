@@ -1,9 +1,5 @@
 package minecrafttransportsimulator.entities.core;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -11,6 +7,10 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**This class is tailored for moving vehicles such as planes, trains, and automobiles.
  * Contains numerous methods for gauges, HUDs, and fuel systems.
@@ -189,7 +189,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	}
     
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);		
 		tagCompound.setByte("throttle", this.throttle);
 		tagCompound.setInteger("lightStatus", this.lightStatus);
@@ -206,6 +206,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		}
 		tagCompound.setByteArray("instrumentSlots", instrumentSlots);
 		tagCompound.setByteArray("instrumentTypes", instrumentTypes);
+		return tagCompound;
 	}
 	
 	public static final class Instrument{

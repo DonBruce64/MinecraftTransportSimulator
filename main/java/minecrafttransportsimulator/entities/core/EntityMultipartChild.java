@@ -2,10 +2,9 @@ package minecrafttransportsimulator.entities.core;
 
 import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.baseclasses.MTSVector;
-import minecrafttransportsimulator.minecrafthelpers.AABBHelper;
-import minecrafttransportsimulator.minecrafthelpers.EntityHelper;
-import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
+import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.systems.RotationSystem;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -13,6 +12,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
+
+import javax.annotation.Nullable;
 
 /**Main child class.  This class is the base for all child entities and should be
  * extended to use the parent-child linking system.
@@ -88,7 +89,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	 */
 	protected boolean isDamageWrench(DamageSource source){
 		if(source.getEntity() instanceof EntityPlayer){
-			if(PlayerHelper.isPlayerHoldingWrench((EntityPlayer) source.getEntity())){
+			if(EntityHelper.isPlayerHoldingWrench((EntityPlayer) source.getEntity())){
 				ItemStack droppedItem = this.getItemStack();
 				worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, droppedItem));
 				parent.removeChild(UUID, false);
@@ -139,22 +140,12 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	public boolean collidesWithLiquids(){
 		return false;
 	}
-	
-	@Override
-	public AxisAlignedBB getBoundingBox(){
-		//This gets overridden to do collisions with players.
-		return this.boundingBox;
-	}
-	
+
+
 	public boolean isOnGround(){
 		return !AABBHelper.getCollidingBlockBoxes(worldObj, AABBHelper.getOffsetEntityBoundingBox(this, 0, -0.05F, 0), this.collidesWithLiquids()).isEmpty();
 	}
-	
-	@Override
-	public void updateRiderPosition(){
-		//Rider updates are handled by the parent.
-		return;
-	}
+
 	
 	public void setController(boolean isController){
 		this.isController = true;
@@ -180,7 +171,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	}
 	
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("isController", this.isController);
 		tagCompound.setBoolean("turnsWithSteer", this.turnsWithSteer);
@@ -193,5 +184,6 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 		if(!this.parentUUID.isEmpty()){
 			tagCompound.setString("parentUUID", this.parentUUID);
 		}
+		return tagCompound;
 	}
 }

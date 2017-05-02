@@ -1,18 +1,18 @@
 package minecrafttransportsimulator.entities.parts;
 
-import java.util.List;
-
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.main.EntityGroundDevice;
-import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
-import minecrafttransportsimulator.minecrafthelpers.EntityHelper;
+import minecrafttransportsimulator.helpers.EntityHelper;
+import minecrafttransportsimulator.helpers.WorldHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
+
+import java.util.List;
 
 public class EntityPontoon extends EntityGroundDevice{
 	protected String otherHalfUUID;
@@ -56,7 +56,7 @@ public class EntityPontoon extends EntityGroundDevice{
 			}
 			return;
 		}
-		if(BlockHelper.isPositionInLiquid(worldObj, posX, posY + 1, posZ)){
+		if(WorldHelper.isPositionInLiquid(worldObj, posX, posY + 1, posZ)){
 			//Plane dive-bombed into the water.
 			parent.removeChild(UUID, true);
 		}
@@ -106,9 +106,10 @@ public class EntityPontoon extends EntityGroundDevice{
 	}
 	
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setString("otherHalfUUID", this.otherHalfUUID);
+		return tagCompound;
 	}
 	
 	public static class EntityPontoonDummy extends EntityPontoon{

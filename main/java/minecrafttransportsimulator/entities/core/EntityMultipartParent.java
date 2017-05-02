@@ -1,20 +1,19 @@
 package minecrafttransportsimulator.entities.core;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.google.common.collect.ImmutableList;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
-import minecrafttransportsimulator.minecrafthelpers.AABBHelper;
-import minecrafttransportsimulator.minecrafthelpers.EntityHelper;
 import minecrafttransportsimulator.packets.general.ServerSyncPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.Loader;
+
+import java.util.HashMap;
+import java.util.Map;
+
 /**Main parent class.  All entities that have parts should extend this class.
  * It is responsible for part management, checks, rendering and other functions.
  * It is NOT responsible for custom data sets, spawnable operations, and the like.
@@ -137,7 +136,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 			}else{
 				MTSVector offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
 				child.setPosition(posX + offset.xCoord, posY + offset.yCoord, posZ + offset.zCoord);
-				Entity rider = EntityHelper.getRider(child);
+				Entity rider = child.getRidingEntity();
 				if(rider != null){
 					if(Loader.MC_VERSION.equals("1.7.10")){
 						MTSVector posVec = RotationSystem.getRotatedPoint(child.offsetX, (float) (child.offsetY + rider.getYOffset()), (float) child.offsetZ, this.rotationPitch, this.rotationYaw, this.rotationRoll);
@@ -162,9 +161,10 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 	}
     
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setByte("numberChildren", this.numberChildren);
 		tagCompound.setFloat("rotationRoll", this.rotationRoll);
+		return tagCompound;
 	}
 }

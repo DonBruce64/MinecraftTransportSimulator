@@ -1,21 +1,13 @@
 package minecrafttransportsimulator.entities.core;
 
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
-import minecrafttransportsimulator.minecrafthelpers.AABBHelper;
-import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
-import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
-import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
+import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -25,7 +17,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 /**General moving entity class.  This provides a basic set of variables and functions for moving entities.
  * Simple things like texture and display names are included, as well as standards for removal of this
  * entity based on names and damage.  This is the most basic class used for custom multipart entities.
@@ -66,11 +65,8 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		this.writeEntityToNBT(tempTag);
 		this.readFromNBT(tempTag);
 	}
-	
-	/**
-	 * Gets a list of collision boxes used for player and entity collisions.
-	 * Used once during spawning, where these boxes are turned into {@link #EntityCore}s
-	 */
+
+
 	public List<Float[]> getCollisionBoxes(){
 		List<Float[]> boxList = new ArrayList<Float[]>();
 		for(byte i=0; i<=99; ++i){
@@ -91,21 +87,21 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	@Override
 	public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
 		if(!worldObj.isRemote){
-			if(player.ridingEntity instanceof EntitySeat){
-				if(this.equals(((EntitySeat) player.ridingEntity).parent)){
+			if(player.getRidingEntity() instanceof EntitySeat){
+				if(this.equals(((EntitySeat) player.getRidingEntity()).parent)){
 					//No in-use changes for sneaky sneaks!
 					return false;
 				}
-			}else if(PlayerHelper.getHeldStack(player) != null){
-				if(ItemStackHelper.getItemFromStack(PlayerHelper.getHeldStack(player)).equals(Items.name_tag)){
-					this.displayText = PlayerHelper.getHeldStack(player).getDisplayName().length() > this.displayTextMaxLength ? PlayerHelper.getHeldStack(player).getDisplayName().substring(0, this.displayTextMaxLength - 1) : PlayerHelper.getHeldStack(player).getDisplayName();
+			}else if(player.inventory.getCurrentItem() != null){
+				if(player.inventory.getCurrentItem().getItem().equals(Items.NAME_TAG)){
+					this.displayText = player.inventory.getCurrentItem().getDisplayName().length() > this.displayTextMaxLength ? player.inventory.getCurrentItem().getDisplayName().substring(0, this.displayTextMaxLength - 1) : player.inventory.getCurrentItem().getDisplayName();
 					this.sendDataToClient();
 					return true;
-				}else if(PlayerHelper.isPlayerHoldingWrench(player)){
+				}else if(EntityHelper.isPlayerHoldingWrench(player)){
 					return false;
 				}else{
-					ItemStack heldStack = PlayerHelper.getHeldStack(player);
-					Item heldItem = ItemStackHelper.getItemFromStack(heldStack);
+					ItemStack heldStack = player.inventory.getCurrentItem();
+					Item heldItem = player.inventory.getCurrentItem().getItem();
 					EntityMultipartChild childClicked = (EntityMultipartChild) clicked;	
 					PartData dataToSpawn = null;
 					float closestPosition = 9999;
@@ -139,13 +135,13 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 						//We have a part, now time to spawn it.
 						try{
 							Constructor<? extends EntityMultipartChild> construct = MTSRegistry.partClasses.get(heldItem.getUnlocalizedName()).getConstructor(World.class, EntityMultipartParent.class, String.class, float.class, float.class, float.class, int.class);
-							EntityMultipartChild newChild = construct.newInstance(worldObj, this, this.UUID, dataToSpawn.offsetX, dataToSpawn.offsetY, dataToSpawn.offsetZ, ItemStackHelper.getItemDamage(heldStack));
+							EntityMultipartChild newChild = construct.newInstance(worldObj, this, this.UUID, dataToSpawn.offsetX, dataToSpawn.offsetY, dataToSpawn.offsetZ, heldStack.getItemDamage());
 							newChild.setNBTFromStack(heldStack);
 							newChild.setTurnsWithSteer(dataToSpawn.turnsWithSteer);
 							newChild.setController(dataToSpawn.isController);
 							this.addChild(newChild.UUID, newChild, true);
-							if(!PlayerHelper.isPlayerCreative(player)){
-								PlayerHelper.removeItemFromHand(player, 1);
+							if(!player.capabilities.isCreativeMode){
+								EntityHelper.removeItemFromHand(player, 1);
 							}
 							return true;
 						}catch(Exception e){
@@ -155,7 +151,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 					}
 				}
 			}
-		}else if(PlayerHelper.isPlayerHoldingWrench(player)){
+		}else if(EntityHelper.isPlayerHoldingWrench(player)){
 			MTS.proxy.openGUI(this, player);
 			return true;
 		}
@@ -168,7 +164,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			if(source.getEntity() instanceof EntityPlayer){
 				EntityPlayer attackingPlayer = (EntityPlayer) source.getEntity();
 				if(attackingPlayer.isSneaking()){
-					if(attackingPlayer.capabilities.isCreativeMode || attackingPlayer.getDisplayName().endsWith(this.ownerName)){
+					if(attackingPlayer.capabilities.isCreativeMode || attackingPlayer.getDisplayName().getFormattedText().endsWith(this.ownerName)){
 						this.setDead();
 						return true;
 					}
@@ -205,9 +201,10 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		boxList.clear();
 		if(!collisionMap.isEmpty()){
 			for(Entry<AxisAlignedBB, Integer[]> entry : collisionMap.entrySet()){
-				float hardness = BlockHelper.getBlockHardness(worldObj, entry.getValue()[0], entry.getValue()[1], entry.getValue()[2]);
+				BlockPos blockPos = new BlockPos(entry.getValue()[0], entry.getValue()[1], entry.getValue()[2]);
+				float hardness = worldObj.getBlockState(blockPos).getBlockHardness(worldObj, blockPos);
 				if(hardness  <= 0.2F && hardness >= 0){
-					BlockHelper.setBlockToAir(worldObj, entry.getValue()[0], entry.getValue()[1], entry.getValue()[2]);
+					worldObj.setBlockToAir(blockPos);
             		motionX *= 0.95;
             		motionY *= 0.95;
             		motionZ *= 0.95;
@@ -234,7 +231,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		for(int i=0; i<inventory.getSizeInventory(); ++i){
 			ItemStack stack = inventory.getStackInSlot(i);
 			if(stack != null){
-				weight += 1.2F*stack.stackSize/stack.getMaxStackSize()*(ConfigSystem.getStringConfig("HeavyItems").contains(ItemStackHelper.getItemFromStack(stack).getUnlocalizedName().substring(5)) ? 2 : 1);
+				weight += 1.2F*stack.stackSize/stack.getMaxStackSize()*(ConfigSystem.getStringConfig("HeavyItems").contains(stack.getItem().getUnlocalizedName().substring(5)) ? 2 : 1);
 			}
 		}
 		return weight;
@@ -278,13 +275,14 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	}
     
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("brakeOn", this.brakeOn);
 		tagCompound.setBoolean("parkingBrakeOn", this.parkingBrakeOn);
 		tagCompound.setString("name", this.name);
 		tagCompound.setString("ownerName", this.ownerName);
 		tagCompound.setString("displayText", this.displayText);
+		return tagCompound;
 	}
 	
 	/**This class contains data for parts that can be attached to or are attached to this parent.

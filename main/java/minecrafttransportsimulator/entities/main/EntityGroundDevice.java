@@ -32,9 +32,10 @@ public abstract class EntityGroundDevice extends EntityMultipartChild{
 	}
     
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setFloat("motiveFriction", this.motiveFriction);
 		tagCompound.setFloat("lateralFriction", this.lateralFriction);
+		return tagCompound;
 	}
 }

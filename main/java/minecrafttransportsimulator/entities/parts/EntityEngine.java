@@ -3,8 +3,7 @@ package minecrafttransportsimulator.entities.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.minecrafthelpers.BlockHelper;
-import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
+import minecrafttransportsimulator.helpers.WorldHelper;
 import minecrafttransportsimulator.packets.control.EnginePacket;
 import minecrafttransportsimulator.sounds.EngineSound;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -16,7 +15,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -70,7 +71,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	
 	@Override
 	public void setNBTFromStack(ItemStack stack){
-		NBTTagCompound stackNBT = ItemStackHelper.getStackNBT(stack);
+		NBTTagCompound stackNBT = stack.getTagCompound();
 		oilLeak=stackNBT.getBoolean("oilLeak");
 		fuelLeak=stackNBT.getBoolean("fuelLeak");
 		brokenStarter=stackNBT.getBoolean("brokenStarter");
@@ -91,7 +92,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		tag.setInteger("maxSafeRPM", maxSafeRPM);
 		tag.setFloat("fuelConsumption", fuelConsumption);
 		tag.setDouble("hours", hours);
-		ItemStackHelper.setStackNBT(engineStack, tag);
+		engineStack.setTagCompound(tag);
 		return engineStack;
 	}
 	
@@ -121,7 +122,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		fuelFlow = 0;
 		if(isBurning()){
 			hours += 0.1;
-			if(BlockHelper.isPositionInLiquid(worldObj, posX, posY + 0.25, posZ)){
+			if(WorldHelper.isPositionInLiquid(worldObj, posX, posY + 0.25, posZ)){
 				temp -= 0.3;
 			}else{
 				temp += 0.3;
@@ -166,7 +167,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			}
 		}
 		
-		ambientTemp = 25*worldObj.getBiomeGenForCoords((int) this.posX, (int) this.posZ).temperature - 5*(Math.pow(2, posY/400) - 1);
+		ambientTemp = 25*worldObj.getBiomeGenForCoords(new BlockPos((int) this.posX, (int) this.posY, (int) this.posZ)).getTemperature() - 5*(Math.pow(2, posY/400) - 1);
 		coolingFactor = 0.001 + vehicle.velocity/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		vehicle.electricUsage -= 0.01*RPM/maxRPM;
@@ -211,7 +212,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			}else if(RPM < engineStallRPM){
 				internalFuel = 100;
 				stallEngine();
-			}else if(BlockHelper.isPositionInLiquid(worldObj, posX, posY, posZ)){
+			}else if(WorldHelper.isPositionInLiquid(worldObj, posX, posY, posZ)){
 				MTS.proxy.playSound(this, MTS.MODID + ":engine_starting", 1, 1);
 				stallEngine();
 			}
@@ -219,7 +220,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			oilPressure = 0;
 			if(RPM > engineStartRPM){
 				if(vehicle.fuel > 0 || fuelConsumption == 0){
-					if(!BlockHelper.isPositionInLiquid(worldObj, posX, posY + 0.25, posZ)){
+					if(!WorldHelper.isPositionInLiquid(worldObj, posX, posY + 0.25, posZ)){
 						if(state.magnetoOn){
 							startEngine();
 						}
@@ -376,9 +377,10 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	public void spawnParticles(){
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			if(temp > engineOverheatTemp1){
-				Minecraft.getMinecraft().theWorld.spawnParticle("smoke", posX, posY + 0.5, posZ, 0, 0.15, 0);
+
+				Minecraft.getMinecraft().theWorld.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, posX, posY + 0.5, posZ, 0, 0.15, 0);
 				if(temp > engineOverheatTemp2){
-					Minecraft.getMinecraft().theWorld.spawnParticle("largesmoke", posX, posY + 0.5, posZ, 0, 0.15, 0);
+					Minecraft.getMinecraft().theWorld.spawnParticle(EnumParticleTypes.SMOKE_LARGE, posX, posY + 0.5, posZ, 0, 0.15, 0);
 				}
 			}
 			if(parent != null){
@@ -396,7 +398,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			if(backfired){
 				backfired = false;
 				for(byte i=0; i<5; ++i){
-					Minecraft.getMinecraft().theWorld.spawnParticle("largesmoke", posX, posY + 0.5, posZ, Math.random()*0.15, 0.15, Math.random()*0.15);
+					Minecraft.getMinecraft().theWorld.spawnParticle(EnumParticleTypes.SMOKE_LARGE, posX, posY + 0.5, posZ, Math.random()*0.15, 0.15, Math.random()*0.15);
 				}
 			}
 		}
@@ -477,7 +479,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	}
 	
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setByte("state", (byte) this.state.ordinal());
 		tagCompound.setBoolean("oilLeak", this.oilLeak);
@@ -490,5 +492,6 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		tagCompound.setDouble("RPM", this.RPM);
 		tagCompound.setDouble("temp", this.temp);
 		tagCompound.setDouble("oilPressure", this.oilPressure);
+		return tagCompound;
 	}
 }

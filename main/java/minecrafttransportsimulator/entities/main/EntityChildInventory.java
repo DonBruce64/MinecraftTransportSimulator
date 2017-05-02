@@ -1,20 +1,20 @@
 package minecrafttransportsimulator.entities.main;
 
-import java.util.Iterator;
-import java.util.List;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
+
+import java.util.Iterator;
+import java.util.List;
 
 public abstract class EntityChildInventory extends EntityMultipartChild implements IInventory{
     public float lidAngle;
@@ -60,7 +60,7 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
         float f;
         if(!this.worldObj.isRemote && this.numPlayersUsing != 0 && (this.ticksSinceSync + this.posX + this.posY + this.posZ) % 200 == 0){
             this.numPlayersUsing = 0;
-            List list = this.worldObj.getEntitiesWithinAABB(EntityPlayer.class, this.getBoundingBox().expand(5, 5, 5));
+            List list = this.worldObj.getEntitiesWithinAABB(EntityPlayer.class, this.getEntityBoundingBox().expand(5, 5, 5));
             Iterator iterator = list.iterator();
             while (iterator.hasNext()){
                 EntityPlayer entityplayer = (EntityPlayer)iterator.next();
@@ -114,7 +114,7 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
 	public int getFieldCount(){return 0;}
 	public int getSizeInventory(){return 27;}
 	public int getInventoryStackLimit(){return 64;}
-	public String getInventoryName(){return StatCollector.translateToLocal(getChildInventoryName());}
+	public String getInventoryName(){return I18n.format(getChildInventoryName());}
 	public ItemStack getStackInSlot(int slot){return this.contents[slot];}
 	public ItemStack getStackInSlotOnClosing(int slot){return null;}
 	
@@ -165,7 +165,7 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
     }
     
 	@Override
-    public void writeToNBT(NBTTagCompound tagCompound){
+    public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
         NBTTagList nbttaglist = new NBTTagList();
         for(int i = 0; i < this.contents.length; ++i){
@@ -177,5 +177,6 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
             }
         }
         tagCompound.setTag("Items", nbttaglist);
+        return tagCompound;
     }
 }

@@ -58,7 +58,7 @@ public final class SFXSystem{
 		return false;
 	}
 	
-	public static class OilDropParticleFX extends EntityDropParticleFX{
+	public static class OilDropParticleFX extends Entity{
 		public OilDropParticleFX(World world, double posX, double posY, double posZ){
 			super(world, posX, posY, posZ, Material.lava);
 		}

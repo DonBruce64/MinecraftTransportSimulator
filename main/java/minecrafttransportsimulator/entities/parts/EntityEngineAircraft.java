@@ -4,9 +4,9 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.main.EntityPlane;
-import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
-import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
+import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.general.ChatPacket;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -30,20 +30,20 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 	@Override
     public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
 		if(!worldObj.isRemote){
-			ItemStack playerStack = PlayerHelper.getHeldStack(player);
+			ItemStack playerStack = player.inventory.getItemStack();
 			if(playerStack != null){
-				if(MTSRegistry.propeller.equals(ItemStackHelper.getItemFromStack(playerStack)) && propeller == null){
+				if(MTSRegistry.propeller.equals(playerStack.getItem()) && propeller == null){
 					if(this.parent != null){
-						if(ItemStackHelper.getStackNBT(playerStack).getInteger("diameter") > 80 && this instanceof EntityEngineAircraftSmall){
-							MTS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.failure.propellertoobig")), (EntityPlayerMP) player);
+						if(playerStack.getTagCompound().getInteger("diameter") > 80 && this instanceof EntityEngineAircraftSmall){
+							MTS.MFSNet.sendTo(new ChatPacket(I18n.format("interact.failure.propellertoobig")), (EntityPlayerMP) player);
 							return false;
 						}
-						propeller = new EntityPropeller(worldObj, (EntityPlane) parent, parent.UUID, offsetX, offsetY + (this.height - 1)/2F, offsetZ + 0.9F, ItemStackHelper.getItemDamage(playerStack));
+						propeller = new EntityPropeller(worldObj, (EntityPlane) parent, parent.UUID, offsetX, offsetY + (this.height - 1)/2F, offsetZ + 0.9F, playerStack.getItemDamage());
 						propeller.setNBTFromStack(playerStack);
 						propeller.engineUUID = this.UUID;
 						parent.addChild(propeller.UUID, propeller, true);
-						if(!PlayerHelper.isPlayerCreative(player)){
-							PlayerHelper.removeItemFromHand(player, 1);
+						if(!player.capabilities.isCreativeMode){
+							EntityHelper.removeItemFromHand(player, 1);
 						}
 						return true;
 					}

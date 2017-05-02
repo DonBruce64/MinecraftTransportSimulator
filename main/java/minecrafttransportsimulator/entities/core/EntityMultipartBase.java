@@ -33,8 +33,9 @@ public abstract class EntityMultipartBase extends MTSEntity{
 	}
     
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setString("UUID", this.UUID);
+		return tagCompound;
 	}
 }
