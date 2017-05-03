@@ -3,7 +3,6 @@ package minecrafttransportsimulator.entities.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.helpers.WorldHelper;
 import minecrafttransportsimulator.packets.control.EnginePacket;
 import minecrafttransportsimulator.sounds.EngineSound;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -122,7 +121,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		fuelFlow = 0;
 		if(isBurning()){
 			hours += 0.1;
-			if(WorldHelper.isPositionInLiquid(worldObj, posX, posY + 0.25, posZ)){
+			if(worldObj.getBlockState(getPosition()).getMaterial().isLiquid()){
 				temp -= 0.3;
 			}else{
 				temp += 0.3;
@@ -212,7 +211,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			}else if(RPM < engineStallRPM){
 				internalFuel = 100;
 				stallEngine();
-			}else if(WorldHelper.isPositionInLiquid(worldObj, posX, posY, posZ)){
+			}else if(worldObj.getBlockState(getPosition()).getMaterial().isLiquid()){
 				MTS.proxy.playSound(this, MTS.MODID + ":engine_starting", 1, 1);
 				stallEngine();
 			}
@@ -220,7 +219,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			oilPressure = 0;
 			if(RPM > engineStartRPM){
 				if(vehicle.fuel > 0 || fuelConsumption == 0){
-					if(!WorldHelper.isPositionInLiquid(worldObj, posX, posY + 0.25, posZ)){
+					if(!worldObj.getBlockState(getPosition()).getMaterial().isLiquid()){
 						if(state.magnetoOn){
 							startEngine();
 						}

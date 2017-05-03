@@ -1,18 +1,17 @@
 package minecrafttransportsimulator.entities.parts;
 
+import java.util.List;
+
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import minecrafttransportsimulator.helpers.EntityHelper;
-import minecrafttransportsimulator.helpers.WorldHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
-
-import java.util.List;
 
 public class EntityPontoon extends EntityGroundDevice{
 	protected String otherHalfUUID;
@@ -56,7 +55,7 @@ public class EntityPontoon extends EntityGroundDevice{
 			}
 			return;
 		}
-		if(WorldHelper.isPositionInLiquid(worldObj, posX, posY + 1, posZ)){
+		if(worldObj.getBlockState(getPosition().up()).getMaterial().isLiquid()){
 			//Plane dive-bombed into the water.
 			parent.removeChild(UUID, true);
 		}
