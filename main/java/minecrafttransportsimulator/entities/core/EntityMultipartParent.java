@@ -1,8 +1,13 @@
 package minecrafttransportsimulator.entities.core;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.google.common.collect.ImmutableList;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
+import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.general.ServerSyncPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -10,9 +15,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Loader;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**Main parent class.  All entities that have parts should extend this class.
  * It is responsible for part management, checks, rendering and other functions.
@@ -96,7 +98,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 			children.put(childUUID, child);
 			if(newChild){
 				++numberChildren;
-				if(!AABBHelper.getCollidingBlockBoxes(worldObj, AABBHelper.getEntityBoundingBox(child), child.collidesWithLiquids()).isEmpty()){
+				if(EntityHelper.isEntityCollidingWithBlocks(child, child.getEntityBoundingBox())){
 					float boost = Math.max(0, -child.offsetY);
 					this.rotationRoll = 0;
 					this.setPositionAndRotation(posX, posY + boost, posZ, rotationYaw, 0);
@@ -104,7 +106,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 					
 					//Sometimes children can break off if the vehicle rotates and shoves something under the ground.
 					for(EntityMultipartChild testChild : this.children.values()){
-						if(!AABBHelper.getCollidingBlockBoxes(worldObj, AABBHelper.getOffsetEntityBoundingBox(testChild, 0, boost, 0), testChild.collidesWithLiquids()).isEmpty()){
+						if(EntityHelper.isEntityCollidingWithBlocks(testChild, testChild.getEntityBoundingBox().offset(0, boost, 0))){
 							this.setPositionAndRotation(posX, posY + 1, posZ, rotationYaw, 0);
 							break;
 						}

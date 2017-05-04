@@ -9,10 +9,7 @@ import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.main.EntityPlane;
-import minecrafttransportsimulator.minecrafthelpers.AABBHelper;
-import minecrafttransportsimulator.minecrafthelpers.EntityHelper;
-import minecrafttransportsimulator.minecrafthelpers.ItemStackHelper;
-import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
+import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.control.EnginePacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
@@ -45,7 +42,7 @@ public class EntityPropeller extends EntityMultipartChild{
 	
 	@Override
 	public void setNBTFromStack(ItemStack stack){
-		NBTTagCompound stackNBT = ItemStackHelper.getStackNBT(stack);
+		NBTTagCompound stackNBT = stack.getTagCompound();
 		numberBlades = stackNBT.getInteger("numberBlades");
 		pitch = stackNBT.getInteger("pitch");
 		diameter = stackNBT.getInteger("diameter");
@@ -60,7 +57,7 @@ public class EntityPropeller extends EntityMultipartChild{
 		tag.setInteger("pitch", pitch);
 		tag.setInteger("diameter", diameter);
 		tag.setFloat("health", health);
-		ItemStackHelper.setStackNBT(propellerStack, tag);
+		propellerStack.setTagCompound(tag);
 		return propellerStack;
 	}
 	
@@ -68,7 +65,7 @@ public class EntityPropeller extends EntityMultipartChild{
 	protected boolean attackChild(DamageSource source, float damage){
 		if(parent != null){
 			if(source.getEntity() instanceof EntityPlayer){					
-				if(PlayerHelper.getHeldStack((EntityPlayer) source.getEntity()) == null){
+				if(((EntityPlayer) source.getEntity()).getActiveItemStack() == null){
 					for(EntityMultipartChild child : parent.getChildren()){
 						if(child instanceof EntityEngineAircraft){
 							if(this.equals(((EntityEngineAircraft) child).propeller)){
@@ -111,7 +108,7 @@ public class EntityPropeller extends EntityMultipartChild{
 			angularPosition += angularVelocity;
 		}else{
 			if(engine.RPM >= 100){
-				List<Entity> collidedEntites = EntityHelper.getEntitiesThatCollideWithBox(worldObj, EntityLivingBase.class, AABBHelper.getOffsetEntityBoundingBox(this, 0.2F, 0.2F, 0.2F));
+				List<EntityLivingBase> collidedEntites = worldObj.getEntitiesWithinAABB(EntityLivingBase.class, this.getEntityBoundingBox().expand(0.2F, 0.2F, 0.2F));
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
 					for(EntityMultipartChild child : parent.getChildren()){
@@ -126,12 +123,12 @@ public class EntityPropeller extends EntityMultipartChild{
 						
 					}
 					for(int i=0; i < collidedEntites.size(); ++i){
-						if(!(collidedEntites.get(i).ridingEntity instanceof EntitySeat)){
-							EntityHelper.attackEntity(collidedEntites.get(i), new DamageSourcePropellor(attacker), (float) (ConfigSystem.getDoubleConfig("PropellerDamageFactor")*engine.RPM/500F));
+						if(!(collidedEntites.get(i).getRidingEntity() instanceof EntitySeat)){
+							collidedEntites.get(i).attackEntityFrom(new DamageSourcePropellor(attacker), (float) (ConfigSystem.getDoubleConfig("PropellerDamageFactor")*engine.RPM/500F));
 						}
 					}
 				}
-				if(!AABBHelper.getCollidingBlockBoxes(worldObj, AABBHelper.getOffsetEntityBoundingBox(this, 0.1F, 0.1F, 0.1F), false).isEmpty()){
+				if(EntityHelper.isEntityCollidingWithBlocks(this, this.getEntityBoundingBox().expand(0.1F, 0.1F, 0.1F))){
 					damagePropeller(1);
 					
 				}
@@ -171,12 +168,13 @@ public class EntityPropeller extends EntityMultipartChild{
 	}
     
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setInteger("numberBlades", this.numberBlades);
 		tagCompound.setInteger("pitch", this.pitch);
 		tagCompound.setInteger("diameter", this.diameter);
 		tagCompound.setFloat("health", this.health);
 		tagCompound.setString("engineUUID", this.engineUUID);
+		return tagCompound;
 	}
 }

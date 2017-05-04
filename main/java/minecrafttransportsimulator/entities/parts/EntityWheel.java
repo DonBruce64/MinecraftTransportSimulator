@@ -73,9 +73,10 @@ public abstract class EntityWheel extends EntityGroundDevice{
 	}
     
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("isFlat", this.isFlat);
+		return tagCompound;
 	}
 	
 	public static class EntityWheelSmall extends EntityWheel{

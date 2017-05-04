@@ -5,8 +5,7 @@ import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
-import minecrafttransportsimulator.minecrafthelpers.EntityHelper;
-import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
+import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -40,10 +39,10 @@ public class EntitySeat extends EntityMultipartChild{
 		if(!worldObj.isRemote){
 			Entity rider = EntityHelper.getRider(this);
 			if(rider==null){
-				EntityHelper.setRider(player, this);
+				player.startRiding(this);
 				return true;
 			}else if(!rider.equals(player)){
-				MTS.MFSNet.sendTo(new ChatPacket(PlayerHelper.getTranslatedText("interact.failure.seattaken")), (EntityPlayerMP) player);
+				MTS.MFSNet.sendTo(new ChatPacket("interact.failure.seattaken"), (EntityPlayerMP) player);
 			}
 		}
 		return false;
@@ -66,8 +65,9 @@ public class EntitySeat extends EntityMultipartChild{
 	}
     
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("isController", this.isController);
+		return tagCompound;
 	}
 }

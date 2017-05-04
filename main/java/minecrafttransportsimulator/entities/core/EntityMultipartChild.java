@@ -1,10 +1,11 @@
 package minecrafttransportsimulator.entities.core;
 
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.systems.RotationSystem;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -12,8 +13,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
 
 /**Main child class.  This class is the base for all child entities and should be
  * extended to use the parent-child linking system.
@@ -137,13 +136,20 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 		return true;
 	}
 	
+	@Override
+    @Nullable
+    public AxisAlignedBB getCollisionBoundingBox(){
+		//Need this to do collision with other Entities.
+        return this.getEntityBoundingBox();
+    }
+	
 	public boolean collidesWithLiquids(){
 		return false;
 	}
 
 
 	public boolean isOnGround(){
-		return !AABBHelper.getCollidingBlockBoxes(worldObj, AABBHelper.getOffsetEntityBoundingBox(this, 0, -0.05F, 0), this.collidesWithLiquids()).isEmpty();
+		return worldObj.getCollisionBoxes(this.getEntityBoundingBox().offset(0, -0.05F, 0)).isEmpty() ? EntityHelper.isEntityCollidingWithBlocks(this, this.getEntityBoundingBox().offset(0, -0.05F, 0)) : true;
 	}
 
 	
