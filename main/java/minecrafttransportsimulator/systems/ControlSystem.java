@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import net.minecraft.client.resources.I18n;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
@@ -13,7 +12,6 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.guis.GUIPanelPlane;
-import minecrafttransportsimulator.minecrafthelpers.PlayerHelper;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.BrakePacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
@@ -25,6 +23,7 @@ import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.config.Property;
@@ -297,7 +296,7 @@ public final class ControlSystem{
 		checkHUD();
 		checkBrakes(plane);
 		checkThrottle(plane);
-		if(plane.hasFlaps()){checkFlaps(plane);}
+		if(plane.hasFlaps){checkFlaps(plane);}
 		checkPanel(plane, controller);
 		
 		if(ConfigSystem.getBooleanConfig("MouseYoke")){
