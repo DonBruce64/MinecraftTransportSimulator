@@ -149,7 +149,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 
 
 	public boolean isOnGround(){
-		return worldObj.getCollisionBoxes(this.getEntityBoundingBox().offset(0, -0.05F, 0)).isEmpty() ? EntityHelper.isEntityCollidingWithBlocks(this, this.getEntityBoundingBox().offset(0, -0.05F, 0)) : true;
+		return worldObj.getCollisionBoxes(this.getEntityBoundingBox().offset(0, -0.05F, 0)).isEmpty() ? EntityHelper.isBoxCollidingWithBlocks(worldObj, this.getEntityBoundingBox().offset(0, -0.05F, 0), this.collidesWithLiquids()) : true;
 	}
 
 	

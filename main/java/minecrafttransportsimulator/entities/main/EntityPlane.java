@@ -603,7 +603,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 	}
     
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound){
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setShort("aileronAngle", this.aileronAngle);
 		tagCompound.setShort("elevatorAngle", this.elevatorAngle);
@@ -612,5 +612,6 @@ public class EntityPlane extends EntityMultipartVehicle{
 		tagCompound.setShort("aileronTrim", this.aileronTrim);
 		tagCompound.setShort("elevatorTrim", this.elevatorTrim);
 		tagCompound.setShort("rudderTrim", this.rudderTrim);
+		return tagCompound;
 	}
 }

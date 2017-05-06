@@ -1,5 +1,10 @@
 package minecrafttransportsimulator.entities.core;
 
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -7,7 +12,6 @@ import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -19,12 +23,6 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 /**General moving entity class.  This provides a basic set of variables and functions for moving entities.
  * Simple things like texture and display names are included, as well as standards for removal of this
  * entity based on names and damage.  This is the most basic class used for custom multipart entities.
@@ -195,24 +193,26 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		super.setDead();
 	}
 	
-	protected void getChildCollisions(EntityMultipartChild child, AxisAlignedBB box, List<AxisAlignedBB> boxList){
+	/**
+	 * Checks to see if a child can move in a specific direction.
+	 * Returns true if no blocking blocks were found.
+	 * Removes soft blocks if they are in the way. 
+	 */
+	protected boolean checkChildMovement(EntityMultipartChild child, AxisAlignedBB box){
 		//Need to contract the box because sometimes the slight error in math causes issues.
-		Map<AxisAlignedBB, Integer[]> collisionMap = AABBHelper.getCollidingBlockBoxes(worldObj, box.contract(0.01F, 0.01F,  0.01F), child.collidesWithLiquids());
-		boxList.clear();
-		if(!collisionMap.isEmpty()){
-			for(Entry<AxisAlignedBB, Integer[]> entry : collisionMap.entrySet()){
-				BlockPos blockPos = new BlockPos(entry.getValue()[0], entry.getValue()[1], entry.getValue()[2]);
-				float hardness = worldObj.getBlockState(blockPos).getBlockHardness(worldObj, blockPos);
-				if(hardness  <= 0.2F && hardness >= 0){
-					worldObj.setBlockToAir(blockPos);
-            		motionX *= 0.95;
-            		motionY *= 0.95;
-            		motionZ *= 0.95;
-				}else{
-					boxList.add(entry.getKey());
-				}
+		ListIterator<BlockPos> iterator = EntityHelper.getCollidingBlocks(worldObj, box.contract(0.01F), child.collidesWithLiquids()).listIterator();
+		while(iterator.hasNext()){
+			BlockPos pos = iterator.next();
+			float hardness = worldObj.getBlockState(pos).getBlockHardness(worldObj, pos);
+			if(hardness  <= 0.2F && hardness >= 0){
+				worldObj.setBlockToAir(pos);
+        		motionX *= 0.95;
+        		motionY *= 0.95;
+        		motionZ *= 0.95;
+        		iterator.remove();
 			}
 		}
+		return !(iterator.hasNext() || iterator.hasPrevious());
 	}
 	
 	public void explodeAtPosition(double x, double y, double z){

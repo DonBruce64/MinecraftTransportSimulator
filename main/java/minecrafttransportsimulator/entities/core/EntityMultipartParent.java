@@ -98,7 +98,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 			children.put(childUUID, child);
 			if(newChild){
 				++numberChildren;
-				if(EntityHelper.isEntityCollidingWithBlocks(child, child.getEntityBoundingBox())){
+				if(EntityHelper.isBoxCollidingWithBlocks(worldObj, child.getEntityBoundingBox(), child.collidesWithLiquids())){
 					float boost = Math.max(0, -child.offsetY);
 					this.rotationRoll = 0;
 					this.setPositionAndRotation(posX, posY + boost, posZ, rotationYaw, 0);
@@ -106,7 +106,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 					
 					//Sometimes children can break off if the vehicle rotates and shoves something under the ground.
 					for(EntityMultipartChild testChild : this.children.values()){
-						if(EntityHelper.isEntityCollidingWithBlocks(testChild, testChild.getEntityBoundingBox().offset(0, boost, 0))){
+						if(EntityHelper.isBoxCollidingWithBlocks(worldObj, testChild.getEntityBoundingBox().offset(0, boost, 0), child.collidesWithLiquids())){
 							this.setPositionAndRotation(posX, posY + 1, posZ, rotationYaw, 0);
 							break;
 						}

@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.helpers;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartBase;
-import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -48,11 +48,11 @@ public class EntityHelper {
     	return !entityRidden.getPassengers().isEmpty() ? entityRidden.getPassengers().get(0) : null;
     }
     
-    public static boolean isEntityCollidingWithBlocks(EntityMultipartChild child, AxisAlignedBB box){
-    	if(!child.worldObj.getCollisionBoxes(child, box).isEmpty()){
+    public static boolean isBoxCollidingWithBlocks(World world, AxisAlignedBB box, boolean countLiquids){
+    	if(!world.getCollisionBoxes(box).isEmpty()){
     		return true;
     	}else{
-    		if(!child.collidesWithLiquids()){
+    		if(!countLiquids){
     			return false;
     		}else{
     			int minX = (int) Math.floor(box.minX);
@@ -65,7 +65,7 @@ public class EntityHelper {
     	    	for(int i = minX; i < maxX; ++i){
     	    		for(int j = minY; j < maxY; ++j){
     	    			for(int k = minZ; k < maxZ; ++k){
-    	    				if(child.worldObj.getBlockState(new BlockPos(i, j, k)).getMaterial().isLiquid()){
+    	    				if(world.getBlockState(new BlockPos(i, j, k)).getMaterial().isLiquid()){
     	    					return true;
     	    				}
     	    			}
@@ -76,13 +76,14 @@ public class EntityHelper {
     	}
     }
     
-    public static void addCollidingBlocksToList(World world, AxisAlignedBB box, boolean countLiquids, List<BlockPos> listToAddTo){
+    public static List<BlockPos> getCollidingBlocks(World world, AxisAlignedBB box, boolean countLiquids){
     	int minX = (int) Math.floor(box.minX);
     	int maxX = (int) Math.floor(box.maxX + 1.0D);
     	int minY = (int) Math.floor(box.minY);
     	int maxY = (int) Math.floor(box.maxY + 1.0D);
     	int minZ = (int) Math.floor(box.minZ);
     	int maxZ = (int) Math.floor(box.maxZ + 1.0D);
+    	 List<BlockPos> listToAddTo = new ArrayList<BlockPos>();
     	
     	for(int i = minX; i < maxX; ++i){
     		for(int j = minY; j < maxY; ++j){
@@ -95,5 +96,6 @@ public class EntityHelper {
     			}
     		}
     	}
+    	return listToAddTo;
     }
 }
