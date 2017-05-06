@@ -1,5 +1,16 @@
 package minecrafttransportsimulator.guis;
 
+import java.awt.Color;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.lwjgl.input.Keyboard;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
@@ -11,13 +22,6 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
-import org.lwjgl.input.Keyboard;
-
-import java.awt.*;
-import java.io.IOException;
-import java.util.*;
-import java.util.List;
-import java.util.Map.Entry;
 
 public class GUIConfig extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/wide_blank.png");
@@ -184,8 +188,8 @@ public class GUIConfig extends GuiScreen{
 		createAssignmentButtonAt(guiLeft + 165, guiTop + 90,ControlSystem.controls.LOOK_D.joystickName, digitalAssignButtons);
 		createAssignmentButtonAt(guiLeft + 165, guiTop + 110,ControlSystem.controls.LOOK_ALL.joystickName, digitalAssignButtons);
 		
-		maxTextBox = new GuiTextField(fontRendererObj, guiLeft+40, guiTop+60, 160, 15);
-		minTextBox = new GuiTextField(fontRendererObj, guiLeft+40, guiTop+90, 160, 15);
+		maxTextBox = new GuiTextField(0, fontRendererObj, guiLeft+40, guiTop+60, 160, 15);
+		minTextBox = new GuiTextField(0, fontRendererObj, guiLeft+40, guiTop+90, 160, 15);
 	}
 	
 	@Override
@@ -520,7 +524,7 @@ public class GUIConfig extends GuiScreen{
     }
     
 	private GuiTextField createKeyBox1At(int posX, int posY, String keyname){
-		GuiTextField box = new GuiTextField(fontRendererObj, posX, posY, 40, 15);
+		GuiTextField box = new GuiTextField(0, fontRendererObj, posX, posY, 40, 15);
 		planeBoxes.put(keyname, box);
 		return box;
 	}
