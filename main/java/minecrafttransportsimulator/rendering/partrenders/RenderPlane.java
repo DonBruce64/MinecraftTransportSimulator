@@ -4,12 +4,12 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.main.EntityPlane;
-import minecrafttransportsimulator.systems.RenderSystem.RenderParent;
+import minecrafttransportsimulator.systems.RenderSystem.RenderMultipart;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraftforge.client.MinecraftForgeClient;
 
-public abstract class RenderPlane extends RenderParent{
+public abstract class RenderPlane{
 	private float[] renderOffset;
 	protected static final float[] noOffset = new float[]{0, 0, 0};
 	

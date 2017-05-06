@@ -36,6 +36,8 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 	private static final float upperLowerY = 3F/16F;
 	private static final float upperUpperY = 4F/16F;
 	
+	public RenderTrack(){}
+	
 	@Override
 	public void renderTileEntityAt(TileEntity tile, double x, double y, double z, float partialTicks, int destroyStage){
 		super.renderTileEntityAt(tile, x, y, z, partialTicks, destroyStage);

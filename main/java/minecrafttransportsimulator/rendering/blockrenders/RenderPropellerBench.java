@@ -28,6 +28,8 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer{
 	private TileEntityPropellerBench bench;
 	private float[] benchOffsets;
 
+	public RenderPropellerBench(){}
+	
 	@Override
 	public void renderTileEntityAt(TileEntity tile, double x, double y, double z, float partialTicks, int destroyStage){
 		super.renderTileEntityAt(tile, x, y, z, partialTicks, destroyStage);

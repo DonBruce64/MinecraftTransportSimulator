@@ -13,6 +13,8 @@ import net.minecraft.util.ResourceLocation;
 public class RenderSurveyFlag extends TileEntitySpecialRenderer{
 	private static final ModelSurveyFlag model = new ModelSurveyFlag();
 	private static final ResourceLocation texture = new ResourceLocation(MTS.MODID, "textures/blockmodels/surveyflag.png");
+	
+	public RenderSurveyFlag(){}
 
 	@Override
 	public void renderTileEntityAt(TileEntity tile, double x, double y, double z, float partialTicks, int destroyStage){
