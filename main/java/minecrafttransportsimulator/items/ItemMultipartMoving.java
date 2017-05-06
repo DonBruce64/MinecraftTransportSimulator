@@ -3,11 +3,11 @@ package minecrafttransportsimulator.items;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.main.EntityCore;
-import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.helpers.EntityHelper;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -24,7 +24,7 @@ public class ItemMultipartMoving extends Item{
 		super();
 		this.name = name;
 		this.setUnlocalizedName("item:" + name);
-		//TODO have this link to a central system for correct creative tabs.
+		this.setCreativeTab(MTSCreativeTabs.getTabByName(name));
 	}
 	
 	@Override
@@ -35,15 +35,9 @@ public class ItemMultipartMoving extends Item{
 	@Override
 	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
 		if(!world.isRemote){
-			EntityMultipartMoving newEntity;
 			String entityName = ((ItemMultipartMoving) stack.getItem()).name;
 			try{
-				//TODO Central system should be down here too.
-				if(PackParserSystem.getStringProperty(entityName, "type").equals("plane")){
-					newEntity = EntityPlane.class.getConstructor(World.class, float.class, float.class, float.class, float.class, String.class).newInstance(world, pos.getX(), pos.getY() + 1, pos.getZ(), player.rotationYaw, entityName);
-				}else{
-					throw new TypeNotPresentException("type", null);
-				}
+				EntityMultipartMoving newEntity = MTSRegistry.multipartClasses.get(entityName).getConstructor(World.class, float.class, float.class, float.class, float.class, String.class).newInstance(world, pos.getX(), pos.getY() + 1, pos.getZ(), player.rotationYaw, entityName);
 				float minHeight = 0;
 				for(Float[] coreCoords : newEntity.getCollisionBoxes()){
 					minHeight = -coreCoords[1] > minHeight ? -coreCoords[1] : minHeight;

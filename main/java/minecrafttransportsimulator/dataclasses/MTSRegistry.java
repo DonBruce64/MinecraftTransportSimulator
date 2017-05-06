@@ -12,6 +12,7 @@ import minecrafttransportsimulator.blocks.BlockSurveyFlag;
 import minecrafttransportsimulator.blocks.BlockTrack;
 import minecrafttransportsimulator.blocks.BlockTrackFake;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.main.EntityCore;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityBogie;
@@ -52,6 +53,7 @@ import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -95,6 +97,8 @@ public class MTSRegistry{
 	private static int entityNumber = 0;
 	private static int packetNumber = 0;
 	public static List<Item> itemList = new ArrayList<Item>();
+	/**Maps multipart class names to classes.*/
+	public static Map<String, Class<? extends EntityMultipartMoving>> multipartClasses = new HashMap<String, Class<? extends EntityMultipartMoving>>();
 	/**Maps child class names to classes for quicker lookup during spawn operations.*/
 	public static Map<String, Class<? extends EntityMultipartChild>> partClasses = new HashMap<String, Class<? extends EntityMultipartChild>>();
 	
@@ -463,8 +467,7 @@ public class MTSRegistry{
 	 * @param item
 	 */
 	private static void registerItem(Item item){
-		item.setTextureName(MTS.MODID + ":" + item.getUnlocalizedName().substring(5).toLowerCase());
-		GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
+		GameRegistry.register(item.setRegistryName(item.getUnlocalizedName().substring(5).toLowerCase()));
 		MTSRegistry.itemList.add(item);
 	}
 	
@@ -474,8 +477,8 @@ public class MTSRegistry{
 	 * @param block
 	 */
 	private static void registerBlock(Block block){
-		block.setBlockTextureName(MTS.MODID + ":" + block.getUnlocalizedName().substring(5).toLowerCase());
-		GameRegistry.registerBlock(block, block.getUnlocalizedName().substring(5));
+		GameRegistry.register(block.setRegistryName(block.getUnlocalizedName().substring(5).toLowerCase()));
+		GameRegistry.register(new ItemBlock(block).setRegistryName(block.getUnlocalizedName().substring(5).toLowerCase()));
 		MTSRegistry.itemList.add(Item.getItemFromBlock(block));
 		if(block instanceof ITileEntityProvider){
 			Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
@@ -485,11 +488,14 @@ public class MTSRegistry{
 
 	/**
 	 * Registers an entity.
-	 * Optionally pairs the entity with an item for GUI operations.
+	 * Adds it to the multipartClassess map if appropriate.
 	 * @param entityClass
 	 */
 	private static void registerEntity(Class entityClass){
-		EntityRegistry.registerModEntity(entityClass, entityClass.getSimpleName().substring(6), entityNumber++, MTS.MODID, 80, 5, false);
+		EntityRegistry.registerModEntity(entityClass, entityClass.getSimpleName().substring(6).toLowerCase(), entityNumber++, MTS.MODID, 80, 5, false);
+		if(EntityMultipartMoving.class.isAssignableFrom(entityClass)){
+			multipartClasses.put(entityClass.getSimpleName().substring(6).toLowerCase(), entityClass);
+		}
 	}
 	
 	/**

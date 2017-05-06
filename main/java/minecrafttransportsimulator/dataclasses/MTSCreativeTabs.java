@@ -31,6 +31,15 @@ public abstract class MTSCreativeTabs extends CreativeTabs{
     	}
     }
 	
+	public static CreativeTabs getTabByName(String name){
+		switch (name){
+			case "plane": return tabMTSPlanes;
+			case "train": return tabMTSTrains;
+			default : return null;
+		}
+			
+	}
+	
 	public static final CreativeTabs tabMTSPlanes = new MTSCreativeTabs("tabMTSPlanes"){
 	    @Override
 		@SideOnly(Side.CLIENT)
