@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.systems;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
@@ -9,12 +12,15 @@ import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.particle.ParticleDrip;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public final class SFXSystem{
 	private static SoundHandler soundHandler;
+	private static final Map<String, SoundEvent> cachedSoundEvents = new HashMap<String, SoundEvent>();
 
 	/**
 	 * Plays a single sound in the same way as World.playSound.
@@ -24,13 +30,21 @@ public final class SFXSystem{
 		if(noisyEntity.worldObj.isRemote){
 			volume = isPlayerInsideVehicle() ? volume*0.5F : volume;
 			double soundDistance = Minecraft.getMinecraft().thePlayer.getDistance(noisyEntity.posX, noisyEntity.posY, noisyEntity.posZ);
-	        PositionedSoundRecord sound = new PositionedSoundRecord(new ResourceLocation(soundName), volume, pitch, (float)noisyEntity.posX, (float)noisyEntity.posY, (float)noisyEntity.posZ);
+	        PositionedSoundRecord sound = new PositionedSoundRecord(getSoundEventFromName(soundName), SoundCategory.MASTER, volume, pitch, (float)noisyEntity.posX, (float)noisyEntity.posY, (float)noisyEntity.posZ);
 	        if(soundDistance > 10.0D){
 	        	Minecraft.getMinecraft().getSoundHandler().playDelayedSound(sound, (int)(soundDistance/2));
 	        }else{
 	        	Minecraft.getMinecraft().getSoundHandler().playSound(sound);
 	        }
 		}
+	}
+	
+	public static SoundEvent getSoundEventFromName(String name){
+		if(!cachedSoundEvents.containsKey(name)){
+			SoundEvent newEvent = new SoundEvent(new ResourceLocation(name));
+			cachedSoundEvents.put(name, newEvent);
+		}
+		return cachedSoundEvents.get(name);
 	}
 	
 	/**

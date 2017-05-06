@@ -7,8 +7,7 @@ import minecrafttransportsimulator.systems.SFXSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
+import net.minecraft.util.SoundCategory;
 
 public class EngineSound extends MovingSound{
 	private final EntityEngine engine;
@@ -19,8 +18,8 @@ public class EngineSound extends MovingSound{
 	private MTSVector enginePos = new MTSVector(0, 0, 0);
 	private double soundVelocity;
 	
-	public EngineSound(ResourceLocation location, EntityEngine engine, float pitchFactor){
-		super(location);
+	public EngineSound(String soundName, EntityEngine engine, float pitchFactor){
+		super(SFXSystem.getSoundEventFromName(soundName), SoundCategory.MASTER);
 		this.volume=1;
 		this.repeat=true;
 		this.xPosF = (float) engine.posX;
@@ -40,9 +39,9 @@ public class EngineSound extends MovingSound{
 			playerPos.set(player.posX, player.posY, player.posZ);
 			enginePos.set(engine.posX, engine.posY, engine.posZ);
 			if(engine.parent != null){
-				if(player.ridingEntity instanceof EntitySeat){
-					if(engine.parent.equals(((EntitySeat) player.ridingEntity).parent)){
-						this.field_147663_c=(float) (engine.RPM/pitchFactor);
+				if(player.getRidingEntity() instanceof EntitySeat){
+					if(engine.parent.equals(((EntitySeat) player.getRidingEntity()).parent)){
+						this.pitch=(float) (engine.RPM/pitchFactor);
 						if(SFXSystem.isPlayerInsideVehicle()){
 							this.volume = 0.5F;
 						}else{
@@ -52,7 +51,7 @@ public class EngineSound extends MovingSound{
 					}
 				}
 				soundVelocity = (playerPos.distanceTo(enginePos) - playerPos.add(player.motionX, player.motionY, player.motionZ).distanceTo(enginePos.add(engine.parent.motionX, engine.parent.motionY, engine.parent.motionZ)));
-				this.field_147663_c=(float) (engine.RPM*(1+soundVelocity/10)/pitchFactor);
+				this.pitch=(float) (engine.RPM*(1+soundVelocity/10)/pitchFactor);
 				this.volume = (float) (30*engine.RPM/pitchFactor/playerPos.distanceTo(enginePos));
 				if(SFXSystem.isPlayerInsideVehicle()){
 					this.volume *= 0.5F;
