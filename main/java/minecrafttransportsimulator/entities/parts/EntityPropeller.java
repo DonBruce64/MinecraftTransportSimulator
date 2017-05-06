@@ -128,7 +128,7 @@ public class EntityPropeller extends EntityMultipartChild{
 						}
 					}
 				}
-				if(EntityHelper.isEntityCollidingWithBlocks(this, this.getEntityBoundingBox().expand(0.1F, 0.1F, 0.1F))){
+				if(EntityHelper.isBoxCollidingWithBlocks(worldObj, this.getEntityBoundingBox().expand(0.1F, 0.1F, 0.1F), this.collidesWithLiquids())){
 					damagePropeller(1);
 					
 				}
