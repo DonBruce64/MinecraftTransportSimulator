@@ -1,21 +1,22 @@
 package minecrafttransportsimulator.rendering.blockrenders;
 
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntitySurveyFlag;
 import minecrafttransportsimulator.rendering.blockmodels.ModelSurveyFlag;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
-import minecrafttransportsimulator.systems.RenderSystem.RenderTileBase;
+import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import org.lwjgl.opengl.GL11;
 
-public class RenderSurveyFlag extends RenderTileBase{
+public class RenderSurveyFlag extends TileEntitySpecialRenderer{
 	private static final ModelSurveyFlag model = new ModelSurveyFlag();
 	private static final ResourceLocation texture = new ResourceLocation(MTS.MODID, "textures/blockmodels/surveyflag.png");
 
 	@Override
-	protected void doRender(TileEntity tile, double x, double y, double z){
+	public void renderTileEntityAt(TileEntity tile, double x, double y, double z, float partialTicks, int destroyStage){
+		super.renderTileEntityAt(tile, x, y, z, partialTicks, destroyStage);
 		TileEntitySurveyFlag flag = (TileEntitySurveyFlag) tile;
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
@@ -30,7 +31,7 @@ public class RenderSurveyFlag extends RenderTileBase{
 		if(flag.linkedCurve != null){
 			//Ensure flag hologram hasn't already been rendered.
 			if(!flag.isPrimary){			
-				TileEntitySurveyFlag otherEnd = (TileEntitySurveyFlag) flag.getWorld().getTileEntity(new BlockPos(flag.linkedCurve.blockEndPoint[0], flag.linkedCurve.blockEndPoint[1], flag.linkedCurve.blockEndPoint[2]));
+				TileEntitySurveyFlag otherEnd = (TileEntitySurveyFlag) flag.getWorld().getTileEntity(flag.linkedCurve.blockEndPos);
 				if(otherEnd != null){
 					if(otherEnd.renderedLastPass){
 						GL11.glPopMatrix();

@@ -10,10 +10,8 @@ import minecrafttransportsimulator.entities.parts.EntitySeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 
@@ -22,12 +20,16 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
  * 
  * @author don_bruce
  */
+//TODO see about elminating these classes or something.  Not a fan of classes in classes where there's ONLY classes
 public final class RenderSystem{	
 	
     /**Abstract class for parent rendering.
      * Renders the parent model, and all child models that have been registered by
      * {@link registerChildRender}.  Ensures all parts are rendered in the exact
      * location they should be in as all rendering is done in the same operation.
+     * Entities don't render above 255 well due to the new chunk visibility system.
+     * This code is present to be called manually from
+     * {@link ClientEventSystem#on(RenderWorldLastEvent)}.
      * 
      * @author don_bruce
      */
@@ -37,36 +39,24 @@ public final class RenderSystem{
     	private static EntityPlayer player;
     	
     	public RenderParent(RenderManager manager){
-            super();
+            super(manager);
             shadowSize = 0;
         }
     	
     	@Override
     	public void doRender(Entity entity, double x, double y, double z, float yaw, float partialTicks){
-    		this.render((EntityMultipartParent) entity, x, y, z, partialTicks);
-    	}
-    	
-    	/**
-    	 * Entities don't render above 255 well in later versions due to the
-    	 * new chunk visibility system.  This code is for the default system
-    	 * only, and will be called directly from Minecraft's rendering
-    	 * system or {@link ClientEventSystem#on(RenderWorldLastEvent)}.
-    	 * The latter method only calls if this method hasn't been called first
-    	 * by Minecraft's system.
-		 **/
-    	private void render(EntityMultipartParent parent, double x, double y, double z, float partialTicks){
-    		if(!parent.rendered && parent.posY >= 255){return;}
-    		parent.rendered = true;
+    		EntityMultipartParent parent = (EntityMultipartParent) entity;
     		player = Minecraft.getMinecraft().thePlayer;
     		GL11.glPushMatrix();
     		playerRiding = false;
-    		if(player.ridingEntity instanceof EntitySeat){
-    			if(parent.equals(((EntitySeat) player.ridingEntity).parent)){
+    		if(player.getRidingEntity() instanceof EntitySeat){
+    			if(parent.equals(((EntitySeat) player.getRidingEntity()).parent)){
     				playerRiding = true;
     			}
     		}
     		//x, y, and z aren't correct here due to the delayed update system.
     		//Have to do this or put up with shaking while in the plane.
+    		//TODO look into how PartialTicks affects this.  May not need an if statement.
     		if(playerRiding){
     			GL11.glTranslated(parent.posX - player.posX, parent.posY - player.posY, parent.posZ - player.posZ);
     		}else{
@@ -98,25 +88,5 @@ public final class RenderSystem{
     public static abstract class RenderChild{
     	public RenderChild(){}
     	public abstract void render(EntityMultipartChild child, double x, double y, double z, float partialTicks);
-    }
-    
-    public static abstract class RenderTileBase extends TileEntitySpecialRenderer{
-    	
-    	@Override
-    	public void renderTileEntityAt(TileEntity tile, double x, double y, double z, float scale){
-    		this.doRender(tile, x, y, z);
-    	}
-    	
-    	protected abstract void doRender(TileEntity tile, double x, double y, double z);
-    }
-    
-    public static class RenderNull extends Render{
-    	public RenderNull(RenderManager manager){
-            super();
-    	}
-    	@Override
-    	public void doRender(Entity entity, double x, double y, double z, float yaw,float pitch){}
-    	@Override
-    	protected ResourceLocation getEntityTexture(Entity entity){return null;}
     }
 }

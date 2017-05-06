@@ -1,22 +1,23 @@
 package minecrafttransportsimulator.rendering.blockrenders;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSCurve;
 import minecrafttransportsimulator.blocks.TileEntityTrack;
 import minecrafttransportsimulator.rendering.blockmodels.ModelTrackTie;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
-import minecrafttransportsimulator.systems.RenderSystem.RenderTileBase;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.lwjgl.opengl.GL11;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class RenderTrack extends RenderTileBase{
+public class RenderTrack extends TileEntitySpecialRenderer{
 	private static final ModelTrackTie modelTie = new ModelTrackTie();
 	private static final ResourceLocation tieTexture = new ResourceLocation(MTS.MODID, "textures/blockmodels/tie.png");
 	private static final ResourceLocation railTexture = new ResourceLocation(MTS.MODID, "textures/blockmodels/rail.png");
@@ -36,10 +37,11 @@ public class RenderTrack extends RenderTileBase{
 	private static final float upperUpperY = 4F/16F;
 	
 	@Override
-	protected void doRender(TileEntity tile, double x, double y, double z){
+	public void renderTileEntityAt(TileEntity tile, double x, double y, double z, float partialTicks, int destroyStage){
+		super.renderTileEntityAt(tile, x, y, z, partialTicks, destroyStage);
 		TileEntityTrack track = (TileEntityTrack) tile;
 		if(track.curve != null){
-			TileEntity trackTileEntity = track.getWorld().getTileEntity(new BlockPos(track.curve.blockEndPoint[0], track.curve.blockEndPoint[1], track.curve.blockEndPoint[2]));
+			TileEntity trackTileEntity = track.getWorld().getTileEntity(track.curve.blockEndPos);
 			if(!(trackTileEntity instanceof TileEntityTrack)){
 				//Sometimes the TE's don't break evenly.  Make sure this doesn't happen and we try to render a flag here.
 				return;
@@ -104,12 +106,12 @@ public class RenderTrack extends RenderTileBase{
 		for(byte i=-1; i<=1; ++i){
 			for(byte j=-1; j<=1; ++j){
 				if(!(i == 0 && j == 0)){
-					TileEntity testTile = track.getWorld().getTileEntity(new BlockPos(track.curve.blockStartPoint[0] + i, track.curve.blockStartPoint[1], track.curve.blockStartPoint[2] + j));
+					TileEntity testTile = track.getWorld().getTileEntity(track.curve.blockStartPos.add(i, 0, j));
 					if(testTile instanceof TileEntityTrack){
 						if(((TileEntityTrack) testTile).curve != null){
 							if(((TileEntityTrack) testTile).curve.startAngle == (180 + track.curve.startAngle)%360){
 								//Make sure we don't link to ourselves.  Because players will try this.
-								if(!(track.curve.blockStartPoint[0] + i == track.curve.blockEndPoint[0] && track.curve.blockStartPoint[1] == track.curve.blockEndPoint[1] && track.curve.blockStartPoint[2] + j == track.curve.blockEndPoint[2])){
+								if(!testTile.getPos().equals(track.curve.blockEndPos)){
 									//If the track we want to link to has already linked with us, stop the link.
 									//Double linkings cause double rendering and lots of errors.
 									if(!track.equals(((TileEntityTrack) testTile).connectedTrack)){
@@ -148,7 +150,7 @@ public class RenderTrack extends RenderTileBase{
 			if(startConnector.curve != null){	
 				if(!startConnector.renderedLastPass){
 					//Start connecter is the end of a rail.  Test for tie space.
-					startConnectorMaster = (TileEntityTrack) world.getTileEntity(new BlockPos(startConnector.curve.blockEndPoint[0], startConnector.curve.blockEndPoint[1], startConnector.curve.blockEndPoint[2]));
+					startConnectorMaster = (TileEntityTrack) world.getTileEntity(startConnector.curve.blockEndPos);
 					if(startConnectorMaster != null){
 						if(startConnectorMaster.curve != null){
 							renderStartRailExtra = true;
@@ -171,7 +173,7 @@ public class RenderTrack extends RenderTileBase{
 			if(endConnector.curve != null){
 				if(!endConnector.renderedLastPass){
 					//End connecter is the end of a rail.  Test for tie space.
-					endConnectorMaster = (TileEntityTrack) world.getTileEntity(new BlockPos(endConnector.curve.blockEndPoint[0], endConnector.curve.blockEndPoint[1], endConnector.curve.blockEndPoint[2]));
+					endConnectorMaster = (TileEntityTrack) world.getTileEntity(endConnector.curve.blockEndPos);
 					if(endConnectorMaster != null){
 						if(endConnectorMaster.curve != null){
 							renderEndRailExtra = true;
@@ -192,11 +194,11 @@ public class RenderTrack extends RenderTileBase{
 			float lastPointOnCurve = (startConnectorMaster.curve.pathLength - (startConnectorMaster.curve.pathLength%offset))/startConnectorMaster.curve.pathLength;
 			currentPoint = startConnectorMaster.curve.getCachedPointAt(lastPointOnCurve);
 			currentAngle = startConnectorMaster.curve.getCachedYawAngleAt(lastPointOnCurve);
-			textureOffset = (float) -(Math.hypot(currentPoint[0] - startConnector.curve.blockStartPoint[0], currentPoint[2] - startConnector.curve.blockStartPoint[2]) + Math.hypot(startConnector.curve.blockStartPoint[0] - curve.blockStartPoint[0], startConnector.curve.blockStartPoint[2] - curve.blockStartPoint[2]));
+			textureOffset = (float) -(Math.hypot(currentPoint[0] - startConnector.curve.blockStartPos.getX(), currentPoint[2] - startConnector.curve.blockStartPos.getZ()) + Math.hypot(startConnector.curve.blockStartPos.getX() - curve.blockStartPos.getX(), startConnector.curve.blockStartPos.getZ() - curve.blockStartPos.getZ()));
 			texPoints.add(new float[]{
-				currentPoint[0] - curve.blockStartPoint[0],
-				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
-				currentPoint[2] - curve.blockStartPoint[2],
+				currentPoint[0] - curve.blockStartPos.getX(),
+				currentPoint[1] - curve.blockStartPos.getY() + 0.1875F,
+				currentPoint[2] - curve.blockStartPos.getZ(),
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
@@ -208,11 +210,11 @@ public class RenderTrack extends RenderTileBase{
 		if(renderStartTie || (renderStartRail && !renderStartRailExtra)){
 			currentPoint = startConnector.curve.getCachedPointAt(0);
 			currentAngle = (startConnector.curve.getCachedYawAngleAt(0) +180)%360;
-			textureOffset = (float) -Math.hypot(currentPoint[0] - curve.blockStartPoint[0], currentPoint[2] - curve.blockStartPoint[2]);
+			textureOffset = (float) -Math.hypot(currentPoint[0] - curve.blockStartPos.getX(), currentPoint[2] - curve.blockStartPos.getZ());
 			texPoints.add(new float[]{
-				currentPoint[0] - curve.blockStartPoint[0],
-				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
-				currentPoint[2] - curve.blockStartPoint[2],
+				currentPoint[0] - curve.blockStartPos.getX(),
+				currentPoint[1] - curve.blockStartPos.getY() + 0.1875F,
+				currentPoint[2] - curve.blockStartPos.getZ(),
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
@@ -225,14 +227,14 @@ public class RenderTrack extends RenderTileBase{
 			currentPoint = curve.getCachedPointAt(f/curve.pathLength);
 			currentAngle = curve.getCachedYawAngleAt(f/curve.pathLength);
 			if(f != 0){
-				textureOffset += (float) Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(texPoints.size() - 1)[2]);
+				textureOffset += (float) Math.hypot(currentPoint[0] - curve.blockStartPos.getX() - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPos.getZ() - texPoints.get(texPoints.size() - 1)[2]);
 			}else{
 				textureOffset = 0;
 			}
 			texPoints.add(new float[]{
-				currentPoint[0] - curve.blockStartPoint[0],
-				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
-				currentPoint[2] - curve.blockStartPoint[2],
+				currentPoint[0] - curve.blockStartPos.getX(),
+				currentPoint[1] - curve.blockStartPos.getY() + 0.1875F,
+				currentPoint[2] - curve.blockStartPos.getZ(),
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
@@ -244,11 +246,11 @@ public class RenderTrack extends RenderTileBase{
 		if(renderEndTie || (renderEndRail && !renderEndRailExtra)){
 			currentPoint = endConnector.curve.getCachedPointAt(0);
 			currentAngle = endConnector.curve.startAngle;
-			textureOffset += (float) Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(texPoints.size() - 1)[2]);
+			textureOffset += (float) Math.hypot(currentPoint[0] - curve.blockStartPos.getX() - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPos.getZ() - texPoints.get(texPoints.size() - 1)[2]);
 			texPoints.add(new float[]{
-				currentPoint[0] - curve.blockStartPoint[0],
-				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
-				currentPoint[2] - curve.blockStartPoint[2],
+				currentPoint[0] - curve.blockStartPos.getX(),
+				currentPoint[1] - curve.blockStartPos.getY() + 0.1875F,
+				currentPoint[2] - curve.blockStartPos.getZ(),
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
@@ -262,11 +264,11 @@ public class RenderTrack extends RenderTileBase{
 			float lastPointOnCurve = (endConnectorMaster.curve.pathLength - (endConnectorMaster.curve.pathLength%offset))/endConnectorMaster.curve.pathLength;
 			currentPoint = endConnectorMaster.curve.getCachedPointAt(lastPointOnCurve);
 			currentAngle = (endConnectorMaster.curve.getCachedYawAngleAt(lastPointOnCurve) + 180)%360;
-			textureOffset += (float) Math.hypot(currentPoint[0] - curve.blockStartPoint[0] - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPoint[2] - texPoints.get(texPoints.size() - 1)[2]);
+			textureOffset += (float) Math.hypot(currentPoint[0] - curve.blockStartPos.getX() - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPos.getZ() - texPoints.get(texPoints.size() - 1)[2]);
 			texPoints.add(new float[]{
-				currentPoint[0] - curve.blockStartPoint[0],
-				currentPoint[1] - curve.blockStartPoint[1] + 0.1875F,
-				currentPoint[2] - curve.blockStartPoint[2],
+				currentPoint[0] - curve.blockStartPos.getX(),
+				currentPoint[1] - curve.blockStartPos.getY() + 0.1875F,
+				currentPoint[2] - curve.blockStartPos.getZ(),
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),

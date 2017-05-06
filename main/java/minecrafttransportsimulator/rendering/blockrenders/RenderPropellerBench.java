@@ -11,11 +11,11 @@ import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.rendering.blockmodels.ModelPropellerBench;
 import minecrafttransportsimulator.rendering.partmodels.ModelPropeller;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
-import minecrafttransportsimulator.systems.RenderSystem.RenderTileBase;
+import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 
-public class RenderPropellerBench extends RenderTileBase{
+public class RenderPropellerBench extends TileEntitySpecialRenderer{
 	private static final ModelPropellerBench benchModel = new ModelPropellerBench();
 	private static final ModelPropeller propellerModel = new ModelPropeller();
 	private static final ResourceLocation tierOneTexture = new ResourceLocation("minecraft", "textures/blocks/planks_oak.png");
@@ -29,22 +29,23 @@ public class RenderPropellerBench extends RenderTileBase{
 	private float[] benchOffsets;
 
 	@Override
-	public void doRender(TileEntity tile, double x, double y, double z){
+	public void renderTileEntityAt(TileEntity tile, double x, double y, double z, float partialTicks, int destroyStage){
+		super.renderTileEntityAt(tile, x, y, z, partialTicks, destroyStage);
 		this.bench = (TileEntityPropellerBench) tile;
 		benchOffsets = null;
 		for(Entry<int[], float[]> entry : offsetMappings.entrySet()){
-			if(entry.getKey()[0] == bench.xCoord && entry.getKey()[1] == bench.yCoord && entry.getKey()[2] == bench.zCoord){
+			if(entry.getKey()[0] == bench.getPos().getX() && entry.getKey()[1] == bench.getPos().getY() && entry.getKey()[2] == bench.getPos().getZ()){
 				benchOffsets = entry.getValue();
 				break;
 			}
 		}
 		if(benchOffsets == null){
 			benchOffsets = new float[4];
-			offsetMappings.put(new int[]{bench.xCoord, bench.yCoord, bench.zCoord}, benchOffsets);
+			offsetMappings.put(new int[]{bench.getPos().getX(), bench.getPos().getY(), bench.getPos().getZ()}, benchOffsets);
 		}
 		
 		if(bench.isRunning()){
-			short timeLeft = (short) (bench.timeOperationFinished - bench.getWorldObj().getTotalWorldTime());
+			short timeLeft = (short) (bench.timeOperationFinished - bench.getWorld().getTotalWorldTime());
 			if(bench.getWorld().getTotalWorldTime() != benchOffsets[3]){
 				//Only update table on each tick.  MUCH simpler this way.
 				benchOffsets[3] = bench.getWorld().getTotalWorldTime();
@@ -81,7 +82,7 @@ public class RenderPropellerBench extends RenderTileBase{
 			benchOffsets[2] = 0;
 		}
 		for(Entry<int[], float[]> entry : offsetMappings.entrySet()){
-			if(entry.getKey()[0] == bench.xCoord && entry.getKey()[1] == bench.yCoord && entry.getKey()[2] == bench.zCoord){
+			if(entry.getKey()[0] == bench.getPos().getX() && entry.getKey()[1] == bench.getPos().getY() && entry.getKey()[2] == bench.getPos().getZ()){
 				entry.setValue(benchOffsets);
 				break;
 			}

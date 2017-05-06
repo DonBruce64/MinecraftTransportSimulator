@@ -24,7 +24,6 @@ import net.minecraftforge.fml.common.Loader;
  * @author don_bruce
  */
 public abstract class EntityMultipartParent extends EntityMultipartBase{
-	public boolean rendered;
 	public byte numberChildren;
 	public float rotationRoll;
 	public float prevRotationRoll;
