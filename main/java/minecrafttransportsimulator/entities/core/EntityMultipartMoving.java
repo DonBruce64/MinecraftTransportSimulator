@@ -143,7 +143,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 							newChild.setController(dataToSpawn.isController);
 							this.addChild(newChild.UUID, newChild, true);
 							if(!player.capabilities.isCreativeMode){
-								EntityHelper.removeItemFromHand(player, 1);
+								EntityHelper.removeItemFromHand(player);
 							}
 							return true;
 						}catch(Exception e){

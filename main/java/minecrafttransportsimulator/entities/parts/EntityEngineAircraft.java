@@ -43,7 +43,7 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 						propeller.engineUUID = this.UUID;
 						parent.addChild(propeller.UUID, propeller, true);
 						if(!player.capabilities.isCreativeMode){
-							EntityHelper.removeItemFromHand(player, 1);
+							EntityHelper.removeItemFromHand(player);
 						}
 						return true;
 					}
