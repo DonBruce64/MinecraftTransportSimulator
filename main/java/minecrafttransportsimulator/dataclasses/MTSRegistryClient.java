@@ -79,10 +79,7 @@ public class MTSRegistryClient{
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityTrack.class, new RenderTrack());
 	}
 	
-	private static void initEntityRenders(){
-		//MinecraftForgeClient.registerItemRenderer(this.item, new ItemRender());
-		//TODO Should init a master multipart render here.
-		
+	private static void initEntityRenders(){		
 		childRenderMap.put(EntitySeat.class, RenderSeat.class);
 		childRenderMap.put(EntityChest.class, RenderPlaneChest.class);
 		childRenderMap.put(EntityWheel.EntityWheelSmall.class, RenderWheel.class);
