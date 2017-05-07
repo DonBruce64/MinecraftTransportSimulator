@@ -95,7 +95,7 @@ public class BlockTrackFake extends Block{
 		return state.getValue(height);
 	}
 	
-	//TODO docs say this is the correct way to do this.  Ask mod commuity tommorow when I have more time.
+	//Depreciate, but correct so say master modders.
     @Deprecated
     public IBlockState getStateFromMeta(int meta){
         return this.getDefaultState().withProperty(height, meta);
