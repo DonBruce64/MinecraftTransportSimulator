@@ -58,7 +58,7 @@ public final class PlaneHUD{
 	private static void drawMiddleFlyableGauges(EntityPlane plane, int width, int height){
 		for(byte i=1; i<4; ++i){
 			if(plane.instruments.get(i) != null){
-				AircraftInstruments.drawFlyableInstrument(plane, (5*i+6)*width/32, height - 32, plane.instruments.get(i), true, (byte) -1);
+				AircraftInstruments.drawFlyableInstrument(plane, (5*i+6)*width/32, height - 32, plane.instruments.get(i).currentInstrument, true, (byte) -1);
 			}
 		}
 	}
@@ -67,10 +67,10 @@ public final class PlaneHUD{
 		GL11.glPushMatrix();
     	GL11.glScalef(0.75F, 0.75F, 0.75F);
     	if(plane.instruments.get((byte) 0) != null){
-    		AircraftInstruments.drawFlyableInstrument(plane, width*17/64, (height - 24)*4/3, plane.instruments.get((byte) 0), true, (byte) -1);
+    		AircraftInstruments.drawFlyableInstrument(plane, width*17/64, (height - 24)*4/3, plane.instruments.get((byte) 0).currentInstrument, true, (byte) -1);
     	}
     	if(plane.instruments.get((byte) 4) != null){
-    		AircraftInstruments.drawFlyableInstrument(plane, width*17/16, (height - 24)*4/3, plane.instruments.get((byte) 4), true, (byte) -1);
+    		AircraftInstruments.drawFlyableInstrument(plane, width*17/16, (height - 24)*4/3, plane.instruments.get((byte) 4).currentInstrument, true, (byte) -1);
     	}
     	GL11.glPopMatrix();
 	}
@@ -78,7 +78,7 @@ public final class PlaneHUD{
 	private static void drawLowerFlyableGauges(EntityPlane plane, int width, int height){
 		for(byte i=5; i<10; ++i){
 			if(plane.instruments.get(i) != null){
-				AircraftInstruments.drawFlyableInstrument(plane, (5*(i-5)+6)*width/32, height - 32, plane.instruments.get(i), true, (byte) -1);
+				AircraftInstruments.drawFlyableInstrument(plane, (5*(i-5)+6)*width/32, height - 32, plane.instruments.get(i).currentInstrument, true, (byte) -1);
 			}
 		}
 	}

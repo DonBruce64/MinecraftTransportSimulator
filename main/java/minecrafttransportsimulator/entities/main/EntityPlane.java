@@ -13,7 +13,6 @@ import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.pack.PackObject;
 import minecrafttransportsimulator.systems.pack.PackParserSystem;
