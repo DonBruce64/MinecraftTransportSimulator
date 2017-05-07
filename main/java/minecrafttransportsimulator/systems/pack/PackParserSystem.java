@@ -16,7 +16,7 @@ import java.util.Map;
  * @author don_bruce
  */
 public final class PackParserSystem {
-    private static Map<String, PackObject> propertyMap = new HashMap<String, PackObject>();
+    private static Map<String, PackObject> packMap = new HashMap<String, PackObject>();
 
     public static void init() {
         File assetDir = new File(MTS.assetDir);
@@ -32,7 +32,7 @@ public final class PackParserSystem {
             if (file.isDirectory()) {
                 parseDirectory(file);
             } else {
-                if (file.getName().endsWith(".txt") && !file.getName().contains("SAMPLE")) {
+                if (file.getName().endsWith(".json") && !file.getName().contains("SAMPLE")) {
                     parseFile(file);
                 }
             }
@@ -43,7 +43,7 @@ public final class PackParserSystem {
         try {
             Gson gson = new Gson();
             PackObject pack = gson.fromJson(new FileReader(file), PackObject.class);
-            propertyMap.put(pack.general.name, pack);
+            packMap.put(pack.general.name, pack);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
