@@ -48,4 +48,9 @@ public final class PackParserSystem {
             e.printStackTrace();
         }
     }
+
+    public static PackObject getPack(String name){
+        return packMap.get(name);
+    }
+
 }

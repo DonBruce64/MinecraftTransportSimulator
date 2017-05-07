@@ -5,7 +5,7 @@ public class PackRenderingConfig {
 
     public boolean useCustomModelTexture;
     public String modelTexture;
-    public double[] modelOffset;
+    public float[] modelOffset;
     public boolean flipModel;
     public boolean useCustomBackplateTexture;
     public String backplateTexture;
