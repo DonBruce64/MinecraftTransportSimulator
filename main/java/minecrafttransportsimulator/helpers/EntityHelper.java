@@ -7,6 +7,8 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartBase;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -41,9 +43,43 @@ public class EntityHelper {
         }
     }
     
-    //TODO add method for "get qty of specific items in player inventory"
-    //TODO add method for "remove qty of specific items in player inventory"  Should return success/fail.
+    public static int getQtyOfItemPlayerHas(EntityPlayer player, Item item, int damage){
+    	int qty = 0;
+    	for(ItemStack stack : player.inventory.mainInventory){
+    		if(stack != null){
+    			if(stack.getItem().equals(item)){
+    				if(stack.getItemDamage() == damage){
+    					qty += stack.stackSize;
+    				}
+    			}
+    		}
+    	}
+    	return qty;
+    }
     
+    public static boolean removeQtyOfItemsFromPlayer(EntityPlayer player, Item item, int damage, int qtyToRemove){
+    	for(byte i=0; i<player.inventory.getSizeInventory(); ++i){
+    		ItemStack stack = player.inventory.getStackInSlot(i);
+			if(stack != null){
+				if(stack.getItem().equals(item)){
+					if(stack.getItemDamage() == damage){
+						if(stack.stackSize >= qtyToRemove){
+							qtyToRemove -= stack.stackSize;
+							player.inventory.removeStackFromSlot(i);
+						}else{
+							stack.stackSize -= qtyToRemove;
+							qtyToRemove = 0;
+						}
+						if(qtyToRemove == 0){
+							return true;
+						}
+					}
+				}
+			}
+		}
+    	return false;
+    }
+        
     public static Entity getRider(Entity entityRidden){
     	return !entityRidden.getPassengers().isEmpty() ? entityRidden.getPassengers().get(0) : null;
     }

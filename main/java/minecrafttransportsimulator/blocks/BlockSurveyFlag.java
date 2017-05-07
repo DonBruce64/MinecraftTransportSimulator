@@ -9,6 +9,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.baseclasses.MTSTileEntityRotateable;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -56,7 +57,7 @@ public class BlockSurveyFlag extends MTSTileEntityRotateable{
 				if(player.getHeldItemMainhand().equals(MTSRegistry.track)){
 					if(tile.linkedCurve != null){
 						if(!player.capabilities.isCreativeMode){
-							if(doesPlayerHaveEnoughTrack(player, Math.round(tile.linkedCurve.pathLength))){
+							if(EntityHelper.getQtyOfItemPlayerHas(player, MTSRegistry.track, 0) <  Math.round(tile.linkedCurve.pathLength)){
 								MTS.MFSNet.sendTo(new ChatPacket("interact.flag.failure.materials", " " + String.valueOf((int) Math.round(tile.linkedCurve.pathLength))), (EntityPlayerMP) player);
 								return;
 							}
@@ -66,7 +67,7 @@ public class BlockSurveyFlag extends MTSTileEntityRotateable{
 							MTS.MFSNet.sendTo(new ChatPacket("interact.flag.failure.blockage", " X:" + blockingPos.getX() + " Y:" + blockingPos.getY() + " Z:" + blockingPos.getZ()), (EntityPlayerMP) player);
 						}else{
 							if(!player.capabilities.isCreativeMode){
-								removeTrackFromPlayer(player, Math.round(tile.linkedCurve.pathLength));
+								EntityHelper.removeQtyOfItemsFromPlayer(player, MTSRegistry.track, 0, Math.round(tile.linkedCurve.pathLength));
 							}
 						}
 					}else{
@@ -127,36 +128,5 @@ public class BlockSurveyFlag extends MTSTileEntityRotateable{
 	@Override
 	public MTSTileEntity getTileEntity(){
 		return new TileEntitySurveyFlag();
-	}
-	
-	private static boolean doesPlayerHaveEnoughTrack(EntityPlayer player, int trackNeeded){
-		int totalTrack = 0;
-		for(byte i=0; i<player.inventory.getSizeInventory(); ++i){
-			if(player.inventory.getStackInSlot(i) != null){
-				if(MTSRegistry.track.equals(player.inventory.getStackInSlot(i).getItem())){
-					totalTrack += player.inventory.getStackInSlot(i).stackSize;
-				}
-			}
-		}
-		return totalTrack >= trackNeeded;
-	}
-	
-	private static void removeTrackFromPlayer(EntityPlayer player, int trackToRemove){
-		for(byte i=0; i<player.inventory.getSizeInventory(); ++i){
-			if(player.inventory.getStackInSlot(i) != null){
-				if(MTSRegistry.track.equals(player.inventory.getStackInSlot(i).getItem())){
-					if(player.inventory.getStackInSlot(i).stackSize <= trackToRemove){
-						trackToRemove -= player.inventory.getStackInSlot(i).stackSize;
-						player.inventory.removeStackFromSlot(i);
-					}else{
-						player.inventory.getStackInSlot(i).stackSize -= trackToRemove;
-						trackToRemove = 0;
-					}
-					if(trackToRemove == 0){
-						return;
-					}
-				}
-			}
-		}
 	}
 }
