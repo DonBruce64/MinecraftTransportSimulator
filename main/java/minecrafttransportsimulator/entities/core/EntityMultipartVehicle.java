@@ -3,6 +3,8 @@ package minecrafttransportsimulator.entities.core;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
 import minecrafttransportsimulator.systems.pack.PackInstrument;
+import minecrafttransportsimulator.systems.pack.PackObject;
+import minecrafttransportsimulator.systems.pack.PackParserSystem;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -165,6 +167,8 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
+		PackObject pack = PackParserSystem.getPack(name);
+
 		this.throttle=tagCompound.getByte("throttle");
 		this.lightStatus=tagCompound.getInteger("lightStatus");
 		this.fuel=tagCompound.getDouble("fuel");

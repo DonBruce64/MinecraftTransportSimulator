@@ -34,7 +34,6 @@ import java.util.ListIterator;
  */
 public abstract class EntityMultipartMoving extends EntityMultipartParent{
 
-	protected PackObject pack;
 
 	public boolean openTop;
 	public boolean brakeOn;
@@ -62,7 +61,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	public EntityMultipartMoving(World world, float posX, float posY, float posZ, float playerRotation, String name){
 		super(world, posX, posY, posZ, playerRotation);
 		this.name = name;
-		this.pack = PackParserSystem.getPack(name);
+		PackObject pack = PackParserSystem.getPack(name);
 		//This only gets done at the beginning when the entity is first spawned.
 		this.displayText = pack.general.defaultDisplayText;
 		//Make sure all data for the PackParser in the NBT methods is inited now that we have a name.
@@ -73,6 +72,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 
 
 	public List<Float[]> getCollisionBoxes(){
+		PackObject pack = PackParserSystem.getPack(name);
 		List<Float[]> boxList = new ArrayList<Float[]>();
 		for(PackCollisionBox box : pack.collision){
 			boxList.add(new Float[]{box.pos[0], box.pos[1], box.pos[2], box.width, box.height});
@@ -249,7 +249,8 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		this.name=tagCompound.getString("name");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
-		
+		PackObject pack = PackParserSystem.getPack(name);
+
 		this.openTop = pack.general.openTop;
 		this.displayTextMaxLength = (byte) pack.general.displayTextMaxLength;
 		
