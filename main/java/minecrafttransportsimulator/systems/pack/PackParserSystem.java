@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Class responsible for parsing content pack data.  Gets properties from the text files that other parts
@@ -52,5 +53,9 @@ public final class PackParserSystem {
     public static PackObject getPack(String name){
         return packMap.get(name);
     }
+    public static Set<String> getRegisteredNames(){
+        return packMap.keySet();
+    }
+
 
 }

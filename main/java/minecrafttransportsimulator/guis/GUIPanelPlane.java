@@ -60,7 +60,7 @@ public class GUIPanelPlane extends GuiScreen{
 		PlaneHUD.startHUDDraw(plane);
 		PlaneHUD.drawPanelPanel(width, height);
 		if(lighted){
-			Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+			Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		}
 		for(byte i=0; i<engines.length; ++i){
 			GL11DrawSystem.bindTexture(engines[i] != null ? (engines[i].state.magnetoOn ? toggleOn : toggleOff) : toggleOff);
@@ -99,10 +99,10 @@ public class GUIPanelPlane extends GuiScreen{
 			GL11.glPushMatrix();
 			GL11.glTranslatef((2+i)*width/(2 + engines.length), height - 72, 0);
 			GL11.glScalef(0.60F, 0.60F, 0.60F);
-			AircraftInstruments.drawFlyableInstrument(plane, -30, -30, plane.instruments.get((byte) (i*10 + 10)), true, i);
-			AircraftInstruments.drawFlyableInstrument(plane, 30, -30, plane.instruments.get((byte) (i*10 + 11)), true, i);
-			AircraftInstruments.drawFlyableInstrument(plane, -30, 30, plane.instruments.get((byte) (i*10 + 12)), true, i);
-			AircraftInstruments.drawFlyableInstrument(plane, 30, 30, plane.instruments.get((byte) (i*10 + 13)), true, i);
+			AircraftInstruments.drawFlyableInstrument(plane, -30, -30, plane.instruments.get((byte) (i*10 + 10)).currentInstrument, true, i);
+			AircraftInstruments.drawFlyableInstrument(plane, 30, -30, plane.instruments.get((byte) (i*10 + 11)).currentInstrument, true, i);
+			AircraftInstruments.drawFlyableInstrument(plane, -30, 30, plane.instruments.get((byte) (i*10 + 12)).currentInstrument, true, i);
+			AircraftInstruments.drawFlyableInstrument(plane, 30, 30, plane.instruments.get((byte) (i*10 + 13)).currentInstrument, true, i);
 			GL11.glPopMatrix();
 		}
 
@@ -150,6 +150,8 @@ public class GUIPanelPlane extends GuiScreen{
 	    	}
 	    }
 	}
+
+
 	
     @Override
     protected void keyTyped(char key, int bytecode) throws IOException {
