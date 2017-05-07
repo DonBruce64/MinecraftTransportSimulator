@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.dataclasses;
 
-import java.util.List;
-
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import java.util.List;
 
 public abstract class MTSCreativeTabs extends CreativeTabs{
 	
@@ -32,10 +32,12 @@ public abstract class MTSCreativeTabs extends CreativeTabs{
     }
 	
 	public static CreativeTabs getTabByName(String name){
-		switch (name){
-			case "plane": return tabMTSPlanes;
-			case "train": return tabMTSTrains;
-			default : return null;
+		if (name.equals("plane")) {
+			return tabMTSPlanes;
+		} else if (name.equals("train")) {
+			return tabMTSTrains;
+		} else {
+			return null;
 		}
 			
 	}

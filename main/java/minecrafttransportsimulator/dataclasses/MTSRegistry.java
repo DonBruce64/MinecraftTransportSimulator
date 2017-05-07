@@ -1,11 +1,5 @@
 package minecrafttransportsimulator.dataclasses;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
 import minecrafttransportsimulator.blocks.BlockSurveyFlag;
@@ -15,39 +9,14 @@ import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.main.EntityCore;
 import minecrafttransportsimulator.entities.main.EntityPlane;
-import minecrafttransportsimulator.entities.parts.EntityBogie;
-import minecrafttransportsimulator.entities.parts.EntityChest;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
-import minecrafttransportsimulator.entities.parts.EntityPontoon;
-import minecrafttransportsimulator.entities.parts.EntityPropeller;
-import minecrafttransportsimulator.entities.parts.EntitySeat;
-import minecrafttransportsimulator.entities.parts.EntitySkid;
-import minecrafttransportsimulator.entities.parts.EntityWheel;
-import minecrafttransportsimulator.items.ItemEngine;
+import minecrafttransportsimulator.entities.parts.*;
+import minecrafttransportsimulator.items.*;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftLarge;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftSmall;
-import minecrafttransportsimulator.items.ItemFlightInstrument;
-import minecrafttransportsimulator.items.ItemPropeller;
-import minecrafttransportsimulator.items.ItemSeat;
-import minecrafttransportsimulator.items.ItemWrench;
-import minecrafttransportsimulator.packets.control.AileronPacket;
-import minecrafttransportsimulator.packets.control.BrakePacket;
-import minecrafttransportsimulator.packets.control.ElevatorPacket;
-import minecrafttransportsimulator.packets.control.EnginePacket;
-import minecrafttransportsimulator.packets.control.FlapPacket;
-import minecrafttransportsimulator.packets.control.LightPacket;
-import minecrafttransportsimulator.packets.control.RudderPacket;
-import minecrafttransportsimulator.packets.control.ThrottlePacket;
-import minecrafttransportsimulator.packets.control.TrimPacket;
-import minecrafttransportsimulator.packets.general.ChatPacket;
-import minecrafttransportsimulator.packets.general.EntityClientRequestDataPacket;
-import minecrafttransportsimulator.packets.general.InstrumentPlanePacket;
-import minecrafttransportsimulator.packets.general.ServerDataPacket;
-import minecrafttransportsimulator.packets.general.ServerSyncPacket;
-import minecrafttransportsimulator.packets.general.TileEntityClientRequestDataPacket;
-import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.packets.control.*;
+import minecrafttransportsimulator.packets.general.*;
+import minecrafttransportsimulator.systems.pack.PackObject;
+import minecrafttransportsimulator.systems.pack.PackParserSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.init.Blocks;
@@ -61,6 +30,12 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**Main registry class.  This class should be referenced by any class looking for
  * MTS items or blocks.  Adding new items and blocks is a simple as adding them
@@ -107,26 +82,27 @@ public class MTSRegistry{
 		initCustomEntities();
 		initItems();
 		initBlocks();
-		initEntites();
+		initEntities();
 		initPackets();
 		initRecipies();
 	}
 	
 	private void initCustomEntities(){
-		for(String name : PackParserSystem.getAllRegisteredNames()){
-			if(PackParserSystem.getStringProperty(name, "type").equals("Plane")){
-				
+		for(String name : PackParserSystem.getRegisteredNames()){
+			PackObject pack = PackParserSystem.getPack(name);
+			if(pack.general.type.equals("plane")){
+				multipartClasses.put(pack.general.name, EntityPlane.class);
 			}
 		}
 	}
 	
 	private void initItems(){
-		for(Field feild : this.getClass().getFields()){
-			if(feild.getType().equals(Item.class)){
+		for(Field field : this.getClass().getFields()){
+			if(field.getType().equals(Item.class)){
 				try{
-					Item item = (Item) feild.get(Item.class);
+					Item item = (Item) field.get(Item.class);
 					if(item.getUnlocalizedName().equals("item.null")){
-						item.setUnlocalizedName(feild.getName().toLowerCase());
+						item.setUnlocalizedName(field.getName().toLowerCase());
 					}
 					registerItem(item);
 				}catch(Exception e){}
@@ -148,7 +124,7 @@ public class MTSRegistry{
 		}
 	}
 	
-	private void initEntites(){
+	private void initEntities(){
 		registerEntity(EntityPlane.class);
 		
 		registerChildEntity(EntityCore.class, null);
@@ -197,7 +173,7 @@ public class MTSRegistry{
 	private void initPartRecipes(){
 		//Seats
 		for(int i=0; i<96; ++i){
-			registerRecpie(new ItemStack(seat, 1, i),
+			registerRecipe(new ItemStack(seat, 1, i),
 				" BA",
 				" BA",
 				"AAA",
@@ -205,7 +181,7 @@ public class MTSRegistry{
 				'B', new ItemStack(Blocks.WOOL, 1, i/6));
 		}
 		for(int i=0; i<6; ++i){
-			registerRecpie(new ItemStack(seat, 1, 96 + i),
+			registerRecipe(new ItemStack(seat, 1, 96 + i),
 				" BA",
 				" BA",
 				"AAA",
@@ -214,14 +190,14 @@ public class MTSRegistry{
 		}
 		
 		//Wheels
-		registerRecpie(new ItemStack(wheelSmall),
+		registerRecipe(new ItemStack(wheelSmall),
 				"ABA",
 				"ACA",
 				"ABA",
 				'A', Blocks.WOOL,
 				'B', new ItemStack(Items.DYE, 1, 0),
 				'C', Items.IRON_INGOT);
-		registerRecpie(new ItemStack(wheelLarge),
+		registerRecipe(new ItemStack(wheelLarge),
 				"ABA",
 				"BCB",
 				"ABA",
@@ -229,13 +205,13 @@ public class MTSRegistry{
 				'B', new ItemStack(Items.DYE, 1, 0),
 				'C', Items.IRON_INGOT);
 		//Skid
-		registerRecpie(new ItemStack(skid),
+		registerRecipe(new ItemStack(skid),
 				"A A",
 				" A ",
 				"  A",
 				'A', Blocks.IRON_BARS);
 		//Pontoon
-		registerRecpie(new ItemStack(pontoon, 2),
+		registerRecipe(new ItemStack(pontoon, 2),
 				"AAA",
 				"BBB",
 				"AAA",
@@ -243,7 +219,7 @@ public class MTSRegistry{
 				'B', Blocks.WOOL);
 		
 		//Propeller bench
-		registerRecpie(new ItemStack(propellerBench),
+		registerRecipe(new ItemStack(propellerBench),
 				"AAA",
 				" BA",
 				"ACA",
@@ -255,28 +231,28 @@ public class MTSRegistry{
 	
 	private void initEngineRecipes(){
 		//New engines
-		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
+		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.IRON_INGOT);
-		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
+		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.DIAMOND);
-		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
+		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
 				"ACA",
 				"ACA",
 				"ACA",
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.IRON_INGOT);
-		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
+		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
 				"ACA",
 				"ACA",
 				"ACA",
@@ -285,25 +261,25 @@ public class MTSRegistry{
 				'C', Items.DIAMOND);
 		
 		//Repaired engines
-		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
+		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.OBSIDIAN,
 				'C', ((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0]);
-		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
+		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.OBSIDIAN,
 				'C', ((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1]);
-		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
+		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
 				"B B",
 				"BCB",
 				"B B",
 				'B', Blocks.OBSIDIAN,
 				'C', ((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0]);
-		registerRecpie(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
+		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
 				"B B",
 				"BCB",
 				"B B",
@@ -312,14 +288,14 @@ public class MTSRegistry{
 	}
 	
 	private void initFlightInstrumentRecipes(){		
-		registerRecpie(new ItemStack(pointerShort),
+		registerRecipe(new ItemStack(pointerShort),
 				" WW",
 				" WW",
 				"B  ",
 				'W', new ItemStack(Items.DYE, 1, 15),
 				'B', new ItemStack(Items.DYE, 1, 0));
 		
-		registerRecpie(new ItemStack(pointerLong),
+		registerRecipe(new ItemStack(pointerLong),
 				"  W",
 				" W ",
 				"B  ",
@@ -327,13 +303,13 @@ public class MTSRegistry{
 				'B', new ItemStack(Items.DYE, 1, 0));
 		
 		
-		registerRecpie(new ItemStack(flightInstrument, 16, 0),
+		registerRecipe(new ItemStack(flightInstrument, 16, 0),
 				"III",
 				"IGI",
 				"III",
 				'I', Items.IRON_INGOT,
 				'G', Blocks.GLASS_PANE);
-		registerRecpie(new ItemStack(flightInstrument, 1, 1),
+		registerRecipe(new ItemStack(flightInstrument, 1, 1),
 				"LLL",
 				"RRR",
 				" B ",
@@ -341,7 +317,7 @@ public class MTSRegistry{
 				'L', new ItemStack(Items.DYE, 1, 4),
 				'R', new ItemStack(Items.DYE, 1, 3));
 		
-		registerRecpie(new ItemStack(flightInstrument, 1, 2),
+		registerRecipe(new ItemStack(flightInstrument, 1, 2),
 				"WLW",
 				"WSW",
 				" B ",
@@ -350,7 +326,7 @@ public class MTSRegistry{
 				'S', pointerShort, 
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecpie(new ItemStack(flightInstrument, 1, 3),
+		registerRecipe(new ItemStack(flightInstrument, 1, 3),
 				" W ",
 				"WIW",
 				" B ",
@@ -358,7 +334,7 @@ public class MTSRegistry{
 				'I', Items.IRON_INGOT,
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecpie(new ItemStack(flightInstrument, 1, 4),
+		registerRecipe(new ItemStack(flightInstrument, 1, 4),
 				"R W",
 				"YLG",
 				"GBG",
@@ -369,7 +345,7 @@ public class MTSRegistry{
 				'G', new ItemStack(Items.DYE, 1, 10),
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecpie(new ItemStack(flightInstrument, 1, 5),
+		registerRecipe(new ItemStack(flightInstrument, 1, 5),
 				"   ",
 				"WIW",
 				"WBW",
@@ -377,7 +353,7 @@ public class MTSRegistry{
 				'I', Items.IRON_INGOT,
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecpie(new ItemStack(flightInstrument, 1, 6),
+		registerRecipe(new ItemStack(flightInstrument, 1, 6),
 				"WWW",
 				" I ",
 				"WBW",
@@ -385,7 +361,7 @@ public class MTSRegistry{
 				'I', Items.IRON_INGOT,
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecpie(new ItemStack(flightInstrument, 1, 7),
+		registerRecipe(new ItemStack(flightInstrument, 1, 7),
 				"W W",
 				" L ",
 				"WBW",
@@ -393,7 +369,7 @@ public class MTSRegistry{
 				'L', pointerLong, 
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecpie(new ItemStack(flightInstrument, 1, 8),
+		registerRecipe(new ItemStack(flightInstrument, 1, 8),
 				"RYG",
 				" LG",
 				" B ",
@@ -404,7 +380,7 @@ public class MTSRegistry{
 				'G', new ItemStack(Items.DYE, 1, 10),
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecpie(new ItemStack(flightInstrument, 1, 9),
+		registerRecipe(new ItemStack(flightInstrument, 1, 9),
 				"GLG",
 				"LGL",
 				" B ",
@@ -414,7 +390,7 @@ public class MTSRegistry{
 
 		//Instrument 10 does not exist
 		
-		registerRecpie(new ItemStack(flightInstrument, 1, 11),
+		registerRecipe(new ItemStack(flightInstrument, 1, 11),
 				"W W",
 				" L ",
 				"WBR",
@@ -423,7 +399,7 @@ public class MTSRegistry{
 				'R', new ItemStack(Items.DYE, 1, 1),
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecpie(new ItemStack(flightInstrument, 1, 12),
+		registerRecipe(new ItemStack(flightInstrument, 1, 12),
 				"RWW",
 				" L ",
 				" B ",
@@ -432,7 +408,7 @@ public class MTSRegistry{
 				'R', new ItemStack(Items.DYE, 1, 1),
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecpie(new ItemStack(flightInstrument, 1, 13),
+		registerRecipe(new ItemStack(flightInstrument, 1, 13),
 				" W ",
 				"WLW",
 				" B ",
@@ -440,7 +416,7 @@ public class MTSRegistry{
 				'L', pointerLong, 
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecpie(new ItemStack(flightInstrument, 1, 14),
+		registerRecipe(new ItemStack(flightInstrument, 1, 14),
 				"YGR",
 				" L ",
 				" B ",
@@ -451,7 +427,7 @@ public class MTSRegistry{
 				'R', new ItemStack(Items.DYE, 1, 1),
 				'W', new ItemStack(Items.DYE, 1, 15));
 				
-		registerRecpie(new ItemStack(flightInstrument, 1, 15),
+		registerRecipe(new ItemStack(flightInstrument, 1, 15),
 				"   ",
 				"LGL",
 				"RB ",
@@ -524,7 +500,7 @@ public class MTSRegistry{
 		if(server)MTS.MFSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.SERVER);
 	}
 	
-	private static void registerRecpie(ItemStack output, Object...params){
+	private static void registerRecipe(ItemStack output, Object...params){
 		GameRegistry.addRecipe(output, params);
 	}
 }
