@@ -1,7 +1,17 @@
 package minecrafttransportsimulator.dataclasses;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.io.FileUtils;
+
+import com.google.common.collect.Sets;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
@@ -9,7 +19,6 @@ import minecrafttransportsimulator.blocks.TileEntitySurveyFlag;
 import minecrafttransportsimulator.blocks.TileEntityTrack;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.parts.EntityChest;
-import minecrafttransportsimulator.entities.parts.EntityEngine;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
@@ -17,6 +26,7 @@ import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
+import minecrafttransportsimulator.rendering.AircraftInstruments;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPropellerBench;
 import minecrafttransportsimulator.rendering.blockrenders.RenderSurveyFlag;
 import minecrafttransportsimulator.rendering.blockrenders.RenderTrack;
@@ -33,9 +43,14 @@ import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.resources.IResourcePack;
+import net.minecraft.client.resources.data.IMetadataSection;
+import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class MTSRegistryClient{
 	private static final MTSRegistryClient instance = new MTSRegistryClient();
@@ -43,12 +58,19 @@ public class MTSRegistryClient{
 	public static final Map <Class<? extends EntityMultipartChild>, Class<? extends RenderChild>> childRenderMap = new HashMap<Class<? extends EntityMultipartChild>, Class<? extends RenderChild>>();
 
 	public static void preInit(){
+		initCustomResourceLocation();
 		initTileEntityRenderers();
 		initEntityRenders();
 	}
 	
 	public static void init(){
 		initItemRenders();
+	}
+	
+	private static void initCustomResourceLocation(){
+		String[] fieldNames = new String[]{"defaultResourcePacks", "field_110449_ao"}; 
+		List<IResourcePack> resourcePacks = ReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), fieldNames);
+		resourcePacks.add(instance.new ExteralResourcePack());
 	}
 	
 	private static void initTileEntityRenderers(){
@@ -73,63 +95,40 @@ public class MTSRegistryClient{
 		childRenderMap.put(EntityEngineAircraftLarge.class, RenderEngine.class);
 	}
 
-
 	private static void initItemRenders(){
-		//TODO no earthly idea what to put here....
-		registerItemSeries(MTSRegistry.seat, 102);
-		registerItemSeries(MTSRegistry.flightInstrument, InstrumentHelper.AircraftGauges.values().length);
-		registerItemSeries(MTSRegistry.engine, EntityEngine.EngineTypes.values().length);
-
-		ModelResourceLocation[] propellerNames = new ModelResourceLocation[Short.MAX_VALUE];
-		for(int i=0; i<propellerNames.length; ++i){
-			propellerNames[i] = registerItemRenderWithAltName(MTSRegistry.propeller, i, i%10 < 3 ? String.valueOf(i%10) : "0");
-		}
-		ModelBakery.registerItemVariants(MTSRegistry.propeller, propellerNames);
-		String[] modelNames = new String[propellerNames.length]; for(int i=0; i<modelNames.length; ++i){modelNames[i]=propellerNames[i].getResourceDomain() + ":"+propellerNames[i].getResourcePath();};ModelBakery.addVariantName(MTSRegistry.propeller, modelNames);
-
 		registerItemRender(MTSRegistry.wheelSmall);
 		registerItemRender(MTSRegistry.wheelLarge);
 		registerItemRender(MTSRegistry.skid);
 		registerItemRender(MTSRegistry.pontoon);
+		registerItemRender(MTSRegistry.engineAircraftSmall);
+		registerItemRender(MTSRegistry.engineAircraftLarge);
+		registerItemRender(MTSRegistry.propeller);
+		registerItemRenderSeries(MTSRegistry.seat, 102);
+		registerItemRenderSeries(MTSRegistry.flightInstrument, AircraftInstruments.AircraftGauges.values().length);
 		registerItemRender(MTSRegistry.pointerShort);
 		registerItemRender(MTSRegistry.pointerLong);
-		registerItemRender(MTSRegistry.flightInstrumentBase);
-		registerItemRender(Item.getItemFromBlock(MTSRegistry.blockPropellerBench));
+		registerItemRender(MTSRegistry.wrench);
+		registerItemRender(MTSRegistry.flightManual);
+		registerItemRender(Item.getItemFromBlock(MTSRegistry.propellerBench));
+		
+		registerItemRender(MTSRegistry.track);
+		registerItemRender(MTSRegistry.bogie);
+		registerItemRender(Item.getItemFromBlock(MTSRegistry.blockTrack));
+		registerItemRender(Item.getItemFromBlock(MTSRegistry.surveyFlag));
 	}
-
-	private static void registerItemSeries(Item item, int metaNumber){
-		ModelResourceLocation[] names = new ModelResourceLocation[metaNumber];
-		for(int i=0; i<metaNumber; ++i){
-			names[i] = registerItemRender(item, i);
-		}
-		ModelBakery.registerItemVariants(item, names);
-		String[] modelNames = new String[names.length]; for(int i=0; i<modelNames.length; ++i){modelNames[i]=names[i].getResourceDomain() + ":"+names[i].getResourcePath();};ModelBakery.addVariantName(item, modelNames);
-
-	}
-
-	private static void registerItemSeriesWithAltName(Item item, int metaNumber, String altName){
-		ModelResourceLocation[] names = new ModelResourceLocation[metaNumber];
-		for(int i=0; i<metaNumber; ++i){
-			names[i] = registerItemRenderWithAltName(item, i, altName);
-		}
-		ModelBakery.registerItemVariants(item, names);
-		String[] modelNames = new String[names.length]; for(int i=0; i<modelNames.length; ++i){modelNames[i]=names[i].getResourceDomain() + ":"+names[i].getResourcePath();};ModelBakery.addVariantName(item, modelNames);
-	}
-
+	
+	//START OF ITEM REGISTRY HELPER CODE
 	private static void registerItemRender(Item item){
-	    Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, 0, new ModelResourceLocation(MFS.MODID + ":" + item.getUnlocalizedName().substring(5), "inventory"));
+	    Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, 0, new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName().substring(5), "inventory"));
 	}
 
-	private static ModelResourceLocation registerItemRender(Item item, int itemMeta){
-		ModelResourceLocation location = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName().substring(5) + String.valueOf(itemMeta), "inventory");
-	    Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, itemMeta, location);
-	    return location;
-	}
-
-	private static ModelResourceLocation registerItemRenderWithAltName(Item item, int itemMeta, String altName){
-		ModelResourceLocation location = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName().substring(5) + altName, "inventory");
-	    Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, itemMeta, location);
-	    return location;
+	private static void registerItemRenderSeries(Item item, int numberMetas){
+		ModelResourceLocation[] models = new ModelResourceLocation[numberMetas];
+		for(byte i=0; i<numberMetas; ++i){
+			models[i] = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName().substring(5) + String.valueOf(i), "inventory");
+			Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, i, models[i]);
+		}
+		ModelBakery.registerItemVariants(item, models);
 	}
 
 	private class MTSRenderingFactory implements IRenderFactory {
@@ -148,4 +147,36 @@ public class MTSRegistryClient{
 			}
 		}
 	};
+	
+	private class ExteralResourcePack implements IResourcePack{
+		@Override
+		public InputStream getInputStream(ResourceLocation location) throws IOException{
+			return FileUtils.openInputStream(new File(MTS.assetDir + File.pathSeparator + location.getResourcePath()));
+		}
+
+		@Override
+		public boolean resourceExists(ResourceLocation location){
+			return new File(MTS.assetDir, location.getResourcePath()).exists();
+		}
+
+		@Override
+		public Set<String> getResourceDomains() {
+			return Sets.newHashSet(MTS.MODID);
+		}
+
+		@Override
+		public <T extends IMetadataSection> T getPackMetadata(MetadataSerializer metadataSerializer, String metadataSectionName) throws IOException{
+			return null;
+		}
+
+		@Override
+		public BufferedImage getPackImage() throws IOException{
+			return null;
+		}
+
+		@Override
+		public String getPackName(){
+			return MTS.MODID;
+		}
+	}
 }
