@@ -35,11 +35,11 @@ public class EntityHelper {
         return player.inventory.getCurrentItem() != null && player.inventory.getCurrentItem().getItem().equals(MTSRegistry.wrench);
     }
 
-    public static void removeItemFromHand(EntityPlayer player, int amountToRemove){
-        if(player.inventory.getCurrentItem().stackSize == amountToRemove){
-            player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
+    public static void removeItemFromHand(EntityPlayer player){
+        if(player.inventory.getCurrentItem().stackSize == 1){
+            player.inventory.removeStackFromSlot(player.inventory.currentItem);
         }else{
-            player.inventory.getCurrentItem().stackSize -= amountToRemove;
+            player.inventory.getCurrentItem().stackSize -= 1;
         }
     }
     
