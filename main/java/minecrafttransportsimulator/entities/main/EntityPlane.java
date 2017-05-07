@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.entities.main;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSDamageSources.DamageSourceCrash;
@@ -18,11 +15,16 @@ import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
+import minecrafttransportsimulator.systems.pack.PackObject;
+import minecrafttransportsimulator.systems.pack.PackParserSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *Main base abstract class for planes.  To use it two things need to happen.
@@ -592,14 +594,16 @@ public class EntityPlane extends EntityMultipartVehicle{
 		this.aileronTrim=tagCompound.getShort("aileronTrim");
 		this.elevatorTrim=tagCompound.getShort("elevatorTrim");
 		this.rudderTrim=tagCompound.getShort("rudderTrim");
-		
-		this.hasFlaps = PackParserSystem.getBooleanProperty(name, "hasFlaps");
-		this.wingspan = PackParserSystem.getFloatProperty(name, "wingspan");
-		this.wingArea = PackParserSystem.getFloatProperty(name, "wingspan");
-		this.tailDistance = PackParserSystem.getFloatProperty(name, "tailDistance");
-		this.rudderArea = PackParserSystem.getFloatProperty(name, "rudderArea");
-		this.elevatorArea = PackParserSystem.getFloatProperty(name, "elevatorArea");
-		this.defaultElevatorAngle = PackParserSystem.getFloatProperty(name, "defaultElevatorAngle");
+
+		PackObject pack = PackParserSystem.getPack(name);
+
+		this.hasFlaps = pack.plane.hasFlaps;
+		this.wingspan = pack.plane.wingspan;
+		this.wingArea = pack.plane.wingArea;
+		this.tailDistance = pack.plane.tailDistance;
+		this.rudderArea = pack.plane.rudderArea;
+		this.elevatorArea = pack.plane.elevatorArea;
+		this.defaultElevatorAngle = pack.plane.defaultElevatorAngle;
 	}
     
 	@Override

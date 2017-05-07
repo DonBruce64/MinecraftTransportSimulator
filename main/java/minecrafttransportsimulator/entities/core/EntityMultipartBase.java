@@ -7,7 +7,9 @@ import net.minecraft.world.World;
 public abstract class EntityMultipartBase extends MTSEntity{
 	public boolean linked;
 	public String UUID = "";
-	
+
+
+
 	public EntityMultipartBase(World world){
 		super(world);
 	}

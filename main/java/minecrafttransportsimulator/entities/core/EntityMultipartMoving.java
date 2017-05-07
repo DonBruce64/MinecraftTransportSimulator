@@ -1,17 +1,15 @@
 package minecrafttransportsimulator.entities.core;
 
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.systems.pack.PackCollisionBox;
+import minecrafttransportsimulator.systems.pack.PackObject;
+import minecrafttransportsimulator.systems.pack.PackParserSystem;
+import minecrafttransportsimulator.systems.pack.PackPart;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -23,6 +21,11 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 /**General moving entity class.  This provides a basic set of variables and functions for moving entities.
  * Simple things like texture and display names are included, as well as standards for removal of this
  * entity based on names and damage.  This is the most basic class used for custom multipart entities.
@@ -30,6 +33,8 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public abstract class EntityMultipartMoving extends EntityMultipartParent{
+
+
 	public boolean openTop;
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
@@ -56,8 +61,9 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	public EntityMultipartMoving(World world, float posX, float posY, float posZ, float playerRotation, String name){
 		super(world, posX, posY, posZ, playerRotation);
 		this.name = name;
+		PackObject pack = PackParserSystem.getPack(name);
 		//This only gets done at the beginning when the entity is first spawned.
-		this.displayText = PackParserSystem.getStringProperty(name, "defaultDisplayText");
+		this.displayText = pack.general.defaultDisplayText;
 		//Make sure all data for the PackParser in the NBT methods is inited now that we have a name.
 		NBTTagCompound tempTag = new NBTTagCompound();
 		this.writeEntityToNBT(tempTag);
@@ -66,12 +72,10 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 
 
 	public List<Float[]> getCollisionBoxes(){
+		PackObject pack = PackParserSystem.getPack(name);
 		List<Float[]> boxList = new ArrayList<Float[]>();
-		for(byte i=0; i<=99; ++i){
-			if(PackParserSystem.doesPropertyExist(this.name, "collisionBox" + i)){
-				Float[] data = PackParserSystem.getFloatArrayProperty(this.name, "collisionBox" + i);
-				boxList.add(new Float[]{data[0], data[1], data[2], data[3], data[4]});
-			}
+		for(PackCollisionBox box : pack.collision){
+			boxList.add(new Float[]{box.pos[0], box.pos[1], box.pos[2], box.width, box.height});
 		}
 		return boxList;
 	}
@@ -245,32 +249,15 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		this.name=tagCompound.getString("name");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
-		
-		this.openTop = PackParserSystem.getBooleanProperty(name, "openTop");
-		this.displayTextMaxLength = PackParserSystem.getIntegerProperty(name, "displayTextMaxLength").byteValue();
+		PackObject pack = PackParserSystem.getPack(name);
+
+		this.openTop = pack.general.openTop;
+		this.displayTextMaxLength = (byte) pack.general.displayTextMaxLength;
 		
 		partData = new ArrayList<PartData>();
-		for(byte i=0; i<=99; ++i){
-			if(PackParserSystem.doesPropertyExist(name, "part" + i)){
-				String data = PackParserSystem.getStringProperty(name, "part" + i);
-				float posX = Float.valueOf(data.substring(data.indexOf('=') + 1, data.indexOf(',') - 1));
-				data = data.substring(data.indexOf(',') + 1);
-				float posY = Float.valueOf(data.substring(0, data.indexOf(',') - 1));
-				data = data.substring(data.indexOf(',') + 1);
-				float posZ = Float.valueOf(data.substring(0, data.indexOf(',') - 1));
-				data = data.substring(data.indexOf(',') + 1);
-				boolean turnsWithSteer = Boolean.valueOf(data.substring(0, data.indexOf(',') - 1));
-				data = data.substring(data.indexOf(',') + 1);
-				boolean isController = Boolean.valueOf(data.substring(0, data.indexOf(',') - 1));
-				data = data.substring(data.indexOf(',') + 1);
-				List<String> validNames = new ArrayList<String>();
-				while(data.indexOf(',') != -1){
-					validNames.add(data.substring(0, data.indexOf(',') - 1));
-					data = data.substring(data.indexOf(',') + 1);
-				}
-				validNames.add(data.substring(0, data.indexOf(';') - 1));
-				partData.add(new PartData(posX, posY, posZ, turnsWithSteer, isController, validNames.toArray(new String[0])));
-			}
+
+		for(PackPart part : pack.parts){
+			partData.add(new PartData(part.pos[0], part.pos[1], part.pos[2], part.turnsWithSteer, part.isController, part.names));
 		}
 	}
     

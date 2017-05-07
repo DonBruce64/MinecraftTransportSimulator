@@ -3,7 +3,8 @@ package minecrafttransportsimulator.systems.pack;
 
 public class PackInstrument {
 
-    public double[] pos;
+    public float[] pos;
     public int[] rot;
+    public int defaultInstrument;
 
 }

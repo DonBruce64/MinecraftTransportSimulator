@@ -1,9 +1,9 @@
 
 package minecrafttransportsimulator.systems.pack;
 
-public class DisplayTextConfig {
+public class PackDisplayTextConfig {
 
-    public double[] pos;
+    public float[] pos;
     public int[] rot;
 
 }
