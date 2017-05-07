@@ -2,7 +2,7 @@ package minecrafttransportsimulator.entities.core;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.systems.pack.PackInstrument;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -19,6 +19,7 @@ import java.util.Map.Entry;
  * @author don_bruce
  */
 public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
+
 	public byte numberPowerfulLights;
 	public byte throttle;
 	public int lightSetup;
@@ -169,16 +170,14 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		this.fuel=tagCompound.getDouble("fuel");
 		this.electricPower=tagCompound.getDouble("electricPower");
 		
-		this.lightSetup = PackParserSystem.getIntegerProperty(name, "lightSetup");
-		this.numberPowerfulLights = PackParserSystem.getIntegerProperty(name, "numberPowerfulLights").byteValue();
-		this.fuelCapacity = PackParserSystem.getIntegerProperty(name, "fuelCapacity");
-		this.emptyMass = PackParserSystem.getIntegerProperty(name, "emptyMass");
-		
-		for(byte i=0; i<=99; ++i){
-			if(PackParserSystem.doesPropertyExist(name, "vehicleInstrument" + i)){
-				Float[] data = PackParserSystem.getFloatArrayProperty(name, "vehicleInstrument" + i);
-				instruments.put(i, new Instrument(data[0], data[1], data[2], data[3], data[4], data[5], data[6].byteValue()));
-			}
+		this.lightSetup = Integer.parseInt(pack.motorized.lightSetup);
+		this.numberPowerfulLights = (byte) pack.motorized.numberPowerfulLights;
+		this.fuelCapacity = pack.motorized.fuelCapacity;
+		this.emptyMass = pack.motorized.emptyMass;
+
+		for (byte i = 0; i < 99; i++) {
+			PackInstrument instrument = pack.motorized.instruments.get(i);
+			instruments.put(i, new Instrument(instrument.pos[0], instrument.pos[1], instrument.pos[2], instrument.rot[0], instrument.rot[1], instrument.rot[2], (byte) instrument.defaultInstrument));
 		}
 		
 		byte[] instrumentSlots = tagCompound.getByteArray("instrumentSlots");
