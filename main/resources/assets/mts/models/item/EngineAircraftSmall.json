@@ -1,6 +1,6 @@
 {
     "parent": "mts:item/Basic",
     "textures": {
-        "layer0": "mts:items/mc1721"
+        "layer0": "mts:items/engineaircraftsmall"
     }
 }

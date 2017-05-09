@@ -1,6 +1,0 @@
-{
-    "parent": "mts:item/Basic",
-    "textures": {
-        "layer0": "mts:items/vulcanair5"
-    }
-}

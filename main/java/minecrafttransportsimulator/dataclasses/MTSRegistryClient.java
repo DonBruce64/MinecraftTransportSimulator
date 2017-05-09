@@ -99,7 +99,7 @@ public class MTSRegistryClient{
 		registerItemRender(MTSRegistry.pontoon);
 		registerItemRender(MTSRegistry.engineAircraftSmall);
 		registerItemRender(MTSRegistry.engineAircraftLarge);
-		registerItemRender(MTSRegistry.propeller);
+		registerItemRenderSeries(MTSRegistry.propeller, 3);
 		registerItemRenderSeries(MTSRegistry.seat, 102);
 		registerItemRenderSeries(MTSRegistry.flightInstrument, AircraftInstruments.AircraftGauges.values().length);
 		registerItemRender(MTSRegistry.pointerShort);

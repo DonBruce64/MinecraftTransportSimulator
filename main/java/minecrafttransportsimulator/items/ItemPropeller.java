@@ -26,6 +26,11 @@ public class ItemPropeller extends Item{
 	}
 	
 	@Override
+    public int getDamage(ItemStack stack){
+        return stack.getTagCompound() != null ? stack.getTagCompound().getByte("type") : 0;
+    }
+	
+	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean p_77624_4_){
 		NBTTagCompound stackTag = stack.getTagCompound();
@@ -57,6 +62,7 @@ public class ItemPropeller extends Item{
 		for(Byte[] propellerProperties : propellerList){
 			ItemStack propellerStack = new ItemStack(MTSRegistry.propeller, 1, propellerProperties[0]);
 			NBTTagCompound stackTag = new NBTTagCompound();
+			stackTag.setByte("type", propellerProperties[0]);
 			stackTag.setInteger("numberBlades", propellerProperties[1]);
 			stackTag.setInteger("pitch", propellerProperties[2]);
 			stackTag.setInteger("diameter", propellerProperties[3]);

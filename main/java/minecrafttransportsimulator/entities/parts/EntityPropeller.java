@@ -21,6 +21,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public class EntityPropeller extends EntityMultipartChild{
+	public byte type;
 	public int numberBlades;
 	public int pitch;
 	public int diameter;
@@ -43,6 +44,7 @@ public class EntityPropeller extends EntityMultipartChild{
 	@Override
 	public void setNBTFromStack(ItemStack stack){
 		NBTTagCompound stackNBT = stack.getTagCompound();
+		type = stackNBT.getByte("type");
 		numberBlades = stackNBT.getInteger("numberBlades");
 		pitch = stackNBT.getInteger("pitch");
 		diameter = stackNBT.getInteger("diameter");
@@ -53,6 +55,7 @@ public class EntityPropeller extends EntityMultipartChild{
 	public ItemStack getItemStack(){
 		ItemStack propellerStack = new ItemStack(MTSRegistry.propeller, 1, propertyCode);
 		NBTTagCompound tag = new NBTTagCompound();
+		tag.setByte("type", type);
 		tag.setInteger("numberBlades", numberBlades);
 		tag.setInteger("pitch", pitch);
 		tag.setInteger("diameter", diameter);
@@ -160,6 +163,7 @@ public class EntityPropeller extends EntityMultipartChild{
 	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
+		this.type=tagCompound.getByte("type");
 		this.numberBlades=tagCompound.getInteger("numberBlades");
 		this.pitch=tagCompound.getInteger("pitch");
 		this.diameter=tagCompound.getInteger("diameter");
@@ -170,6 +174,7 @@ public class EntityPropeller extends EntityMultipartChild{
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
+		tagCompound.setByte("type", this.type);
 		tagCompound.setInteger("numberBlades", this.numberBlades);
 		tagCompound.setInteger("pitch", this.pitch);
 		tagCompound.setInteger("diameter", this.diameter);
