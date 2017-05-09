@@ -95,8 +95,9 @@ public class BlockTrackFake extends Block{
 		return state.getValue(height);
 	}
 	
-	//Depreciate, but correct so say master modders.
-    @Deprecated
+	//Depreciated, but correct so say master modders.
+	@Override
+    @SuppressWarnings("deprecation")
     public IBlockState getStateFromMeta(int meta){
         return this.getDefaultState().withProperty(height, meta);
     }
