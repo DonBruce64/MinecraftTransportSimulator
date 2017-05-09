@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.entities.core;
 
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.helpers.EntityHelper;
@@ -13,6 +11,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
+
+import javax.annotation.Nullable;
 
 /**Main child class.  This class is the base for all child entities and should be
  * extended to use the parent-child linking system.
@@ -80,7 +80,8 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 			return true;
 		}
     }
-	
+
+
 	/**Checks to see if damage came from a player holding a wrench.
 	 * Removes the entity if so, dropping the entity as an item.
 	 * Called each attack before deciding whether or not to forward damage to the parent

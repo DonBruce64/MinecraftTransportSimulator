@@ -47,7 +47,7 @@ public final class PlaneHUD{
 	
 	public static void endHUDDraw(){
 		GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+		Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		GL11.glPopMatrix();
 	}
 	

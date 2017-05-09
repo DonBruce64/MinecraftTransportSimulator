@@ -30,7 +30,7 @@ public final class RenderSystem{
      * Entities don't render above 255 well due to the new chunk visibility system.
      * This code is present to be called manually from
      * {@link ClientEventSystem#on(RenderWorldLastEvent)}.
-     * 
+     *
      * @author don_bruce
      */
     public static abstract class RenderParent extends Render{
@@ -65,8 +65,14 @@ public final class RenderSystem{
             for(EntityMultipartChild child : parent.getChildren()){
             	if(MTSRegistryClient.childRenderMap.get(child.getClass()) != null){
             		childOffset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
-            		MTSRegistryClient.childRenderMap.get(child.getClass()).render(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord, partialTicks);
-        		}
+					try {
+						MTSRegistryClient.childRenderMap.get(child.getClass()).newInstance().render(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord, partialTicks);
+					} catch (InstantiationException e) {
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+					}
+				}
             }
             this.renderParentModel(parent, partialTicks);
             GL11.glPopMatrix();

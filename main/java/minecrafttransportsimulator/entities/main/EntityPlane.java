@@ -9,9 +9,11 @@ import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
+import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
+import minecrafttransportsimulator.rendering.PlaneHUD;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.pack.PackObject;
@@ -20,18 +22,13 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *Main base abstract class for planes.  To use it two things need to happen.
- *First, all plane variables need to be defined in {@link entitInit}
- *Next, all protected child UUID strings must be set in the constructor, otherwise errors will occur. 
- * @author don_bruce
- *
- */
+
 public class EntityPlane extends EntityMultipartVehicle{
 	//Defined plane proprties
 	public boolean hasFlaps;
@@ -111,7 +108,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 	private double prevYawZChildOffset;
 	private double prevPitchChildOffset;
 	private double prevRollChildOffset;
-	
+
 	private Entity rider;
 	private AxisAlignedBB newChildBox;
 	private AxisAlignedBB collidingBox;
@@ -125,7 +122,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 	
 	public EntityPlane(World world, float posX, float posY, float posZ, float rotation, String name){
 		super(world, posX, posY, posZ, rotation, name);
-	}	
+	}
 	
 	@Override
 	public void onEntityUpdate(){
@@ -338,7 +335,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 		for(EntityMultipartChild child : getChildren()){
 			xCollisionDepth = 0;
 			zCollisionDepth = 0;
-			newChildBox = child.getBoundingBox().getOffsetBoundingBox(motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), 0, 0);
+			newChildBox = EntityHelper.getOffsetBoundingBox(child.getEntityBoundingBox(), motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), 0, 0);
 			this.getChildCollisions(child, newChildBox, collidingBoxes);
 			for(int i=0; i < collidingBoxes.size(); ++i){
 				collidingBox = collidingBoxes.get(i);
@@ -349,7 +346,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 				}
 			}
 			
-			newChildBox = child.getBoundingBox().getOffsetBoundingBox(0, 0, motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
+			newChildBox = EntityHelper.getOffsetBoundingBox(child.getEntityBoundingBox(), 0, 0, motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
 			this.getChildCollisions(child, newChildBox, collidingBoxes);	
 			for(int i=0; i < collidingBoxes.size(); ++i){
 				collidingBox = collidingBoxes.get(i);
@@ -397,7 +394,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 			yawChildZOffset = 0;
 			for(EntityMultipartChild child : getChildren()){				
 				offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw + motionYaw, rotationRoll);
-				newChildBox = child.getBoundingBox().getOffsetBoundingBox(posX + offset.xCoord - child.posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), 0, posZ + offset.zCoord - child.posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
+				newChildBox = EntityHelper.getOffsetBoundingBox(child.getEntityBoundingBox(), posX + offset.xCoord - child.posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), 0, posZ + offset.zCoord - child.posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
 				this.getChildCollisions(child, newChildBox, collidingBoxes);
 				child.isCollidedHorizontally = !collidingBoxes.isEmpty();
 				if(child.isCollidedHorizontally){
@@ -452,7 +449,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 			for(EntityMultipartChild child : getChildren()){
 				offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
 				offset = offset.add(posX - child.posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY - child.posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ - child.posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
-				this.getChildCollisions(child, child.getBoundingBox().getOffsetBoundingBox(offset.xCoord, offset.yCoord, offset.zCoord), collidingBoxes);
+				this.getChildCollisions(child, EntityHelper.getOffsetBoundingBox(child.getEntityBoundingBox(), offset.xCoord, offset.yCoord, offset.zCoord), collidingBoxes);
 				if(!collidingBoxes.isEmpty()){
 					if(rollChildOffset==0){
 						rollChildOffset = child.offsetX;
@@ -488,7 +485,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 			for(EntityMultipartChild child : getChildren()){
 				offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);				
 				offset = offset.add(posX - child.posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY - child.posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ - child.posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
-				this.getChildCollisions(child, child.getBoundingBox().getOffsetBoundingBox(offset.xCoord, offset.yCoord, offset.zCoord), collidingBoxes);
+				this.getChildCollisions(child, EntityHelper.getOffsetBoundingBox(child.getEntityBoundingBox(), offset.xCoord, offset.yCoord, offset.zCoord), collidingBoxes);
 				if(!collidingBoxes.isEmpty()){
 					if(child.offsetZ != 0){
 						prevPitchChildOffset = pitchChildOffset;
@@ -516,7 +513,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 		for(EntityMultipartChild child : getChildren()){
 			yCollisionDepth = 0;
 			offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-			newChildBox = child.getBoundingBox().getOffsetBoundingBox(posX + offset.xCoord - child.posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY + offset.yCoord - child.posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ + offset.zCoord - child.posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
+			newChildBox = EntityHelper.getOffsetBoundingBox(child.getEntityBoundingBox(), posX + offset.xCoord - child.posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY + offset.yCoord - child.posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ + offset.zCoord - child.posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
 			this.getChildCollisions(child, newChildBox, collidingBoxes);
 			for(int i=0; i < collidingBoxes.size(); ++i){
 				collidingBox = collidingBoxes.get(i);
@@ -582,7 +579,31 @@ public class EntityPlane extends EntityMultipartVehicle{
 	public double[] getDebugForces(){
 		return new double[]{this.thrustForce, this.dragForce, this.wingForce, this.gravitationalForce};
 	}
-	
+
+	//TODO Temporary fix to get this mod running again, fix later
+	protected void getChildCollisions(EntityMultipartChild child, AxisAlignedBB box, List<AxisAlignedBB> boxList){
+		//Need to contract the box because sometimes the slight error in math causes issues.
+		List<BlockPos> collisionMap = EntityHelper.getCollidingBlocks(worldObj, box.contract(0.01), child.collidesWithLiquids());
+		boxList.clear();
+		if(!collisionMap.isEmpty()){
+			for(BlockPos pos : collisionMap){
+				float hardness = worldObj.getBlockState(pos).getBlockHardness(worldObj, pos);
+				if(hardness  <= 0.2F && hardness >= 0){
+					worldObj.setBlockToAir(pos);
+					motionX *= 0.95;
+					motionY *= 0.95;
+					motionZ *= 0.95;
+				}else{
+					boxList.add(worldObj.getBlockState(pos).getCollisionBoundingBox(worldObj, pos));
+				}
+			}
+		}
+	}
+
+	public void drawHUD(int width, int height){
+		PlaneHUD.drawPlaneHUD(this, width, height);
+	}
+
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);

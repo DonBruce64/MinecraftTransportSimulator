@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.helpers;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartBase;
 import net.minecraft.entity.Entity;
@@ -12,6 +9,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created for hosting the few helper methods that are actually needed
@@ -134,4 +134,9 @@ public class EntityHelper {
     	}
     	return listToAddTo;
     }
+
+	public static AxisAlignedBB getOffsetBoundingBox(AxisAlignedBB box, double x, double y, double z)
+	{
+		return new AxisAlignedBB(box.minX + x, box.minY + y, box.minZ + z, box.maxX + x, box.maxY + y, box.maxZ + z);
+	}
 }

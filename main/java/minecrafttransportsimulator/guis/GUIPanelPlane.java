@@ -143,7 +143,7 @@ public class GUIPanelPlane extends GuiScreen{
 	}
 	
 	@Override
-	protected void mouseMovedOrUp(int mouseX, int mouseY, int actionType){
+	protected void mouseReleased(int mouseX, int mouseY, int actionType){
 	    if(actionType == 0){
 	    	if(lastEngineStarted != -1 && electricStartEnabled){
 	    		MTS.MFSNet.sendToServer(new EnginePacket(engines[lastEngineStarted].parent.getEntityId(), engines[lastEngineStarted].getEntityId(), (byte) 2));

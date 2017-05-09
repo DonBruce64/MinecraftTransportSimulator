@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.systems;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
@@ -9,20 +7,24 @@ import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.guis.GUIConfig;
 import minecrafttransportsimulator.guis.GUICredits;
-import minecrafttransportsimulator.minecrafthelpers.EntityHelper;
+import minecrafttransportsimulator.helpers.EntityHelper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.lwjgl.opengl.GL11;
 
 /**This class handles rendering/camera edits that need to happen when riding planes 
  * as well as some other misc things.
@@ -57,7 +59,7 @@ public final class ClientEventSystem{
 	@SubscribeEvent
 	public void on(TickEvent.ClientTickEvent event){
 		if(minecraft.theWorld != null){
-			if(event.phase.equals(Phase.END)){
+			if(event.phase.equals(TickEvent.Phase.END)){
 				/*Minecraft skips updating children who were spawned before their parents.
 				 *This forces them to update, but causes them to lag their rendering until
 				 * the next tick.  It's one of the main reasons why all the child rendering
@@ -69,28 +71,16 @@ public final class ClientEventSystem{
 					}
 				}
 				
-				if(minecraft.thePlayer.ridingEntity == null){
+				if(minecraft.thePlayer.getRidingEntity() == null){
 					if(playerLastSeat != null){
 						playerLastSeat = null;
 						CameraSystem.setCameraZoomActive(false);
-						//DEL180START
-						CameraSystem.changeCameraRoll(0);
-						//DEL180END
 					}
-				}else if(minecraft.thePlayer.ridingEntity instanceof EntitySeat){
-					if(playerLastSeat == null || !playerLastSeat.equals(minecraft.thePlayer.ridingEntity)){
+				}else if(minecraft.thePlayer.getRidingEntity() instanceof EntitySeat){
+					if(playerLastSeat == null || !playerLastSeat.equals(minecraft.thePlayer.getRidingEntity())){
 						CameraSystem.setCameraZoomActive(true);
-						playerLastSeat = (EntitySeat) minecraft.thePlayer.ridingEntity;
+						playerLastSeat = (EntitySeat) minecraft.thePlayer.getRidingEntity();
 					}
-					//DEL180START
-					if(CameraSystem.lockedView && minecraft.gameSettings.thirdPersonView == 0){
-						if(playerLastSeat != null && playerLastSeat.parent != null){
-							CameraSystem.changeCameraRoll(playerLastSeat.parent.rotationRoll);
-						}
-					}else{
-						CameraSystem.changeCameraRoll(0);
-					}
-					//DEL180END
 					if(!Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen()){
 						ControlSystem.controlCamera();
 						if(playerLastSeat.isController){
@@ -136,7 +126,7 @@ public final class ClientEventSystem{
 	 */
 	@SubscribeEvent
 	public void on(TickEvent.RenderTickEvent event){
-		if(event.phase.equals(Phase.START) && minecraft.theWorld != null){
+		if(event.phase.equals(TickEvent.Phase.START) && minecraft.theWorld != null){
 			for(Object obj : minecraft.theWorld.loadedEntityList){
 				if(obj instanceof EntityMultipartParent){
 					((EntityMultipartParent) obj).rendered = false;
@@ -155,26 +145,24 @@ public final class ClientEventSystem{
 	 */
 	@SubscribeEvent
 	public void on(RenderWorldLastEvent event){
-        RenderManager manager = RenderManager.instance;		
+        RenderManager manager = Minecraft.getMinecraft().getRenderManager();
 		for(Object obj : minecraft.theWorld.loadedEntityList){
 			if(obj instanceof EntityMultipartParent){
 				if(!((EntityMultipartParent) obj).rendered){
-					/*INS180
 					GlStateManager.depthFunc(515);
-					INS180*/
-					minecraft.entityRenderer.enableLightmap(0);
+					minecraft.entityRenderer.enableLightmap();
 					RenderHelper.enableStandardItemLighting();
 					((EntityMultipartParent) obj).rendered = true;
-	                manager.renderEntityStatic((Entity) obj, event.partialTicks, false);
+	                manager.renderEntityStatic((Entity) obj, event.getPartialTicks(), false);
 	                
 	                for(EntityMultipartChild child : ((EntityMultipartParent) obj).getChildren()){
 	                	Entity rider = EntityHelper.getRider(child);
 	                	if(rider != null && !(minecraft.thePlayer.equals(rider) && minecraft.gameSettings.thirdPersonView == 0)){
-	                		manager.renderEntityStatic(rider, event.partialTicks, false);
+	                		manager.renderEntityStatic(rider, event.getPartialTicks(), false);
 	                	}
 	                }
 	                RenderHelper.disableStandardItemLighting();
-	                minecraft.entityRenderer.disableLightmap(0);
+	                minecraft.entityRenderer.disableLightmap();
 				}
 			}
 		}
@@ -182,13 +170,13 @@ public final class ClientEventSystem{
 	
 	@SubscribeEvent
 	public void on(RenderPlayerEvent.Pre event){
-		if(event.entityPlayer.ridingEntity instanceof EntitySeat){
-			EntityMultipartParent parent = ((EntitySeat) event.entityPlayer.ridingEntity).parent;
+		if(event.getEntityPlayer().getRidingEntity() instanceof EntitySeat){
+			EntityMultipartParent parent = ((EntitySeat) event.getEntityPlayer().getRidingEntity()).parent;
 			if(parent!=null){
 				GL11.glPushMatrix();
-				if(!event.entityPlayer.equals(minecraft.thePlayer)){					
+				if(!event.getEntityPlayer().equals(minecraft.thePlayer)){
 					EntityPlayer masterPlayer = Minecraft.getMinecraft().thePlayer;
-					EntityPlayer renderedPlayer = event.entityPlayer;
+					EntityPlayer renderedPlayer = event.getEntityPlayer();
 					float playerDistanceX = (float) (renderedPlayer.posX - masterPlayer.posX);
 					float playerDistanceY = (float) (renderedPlayer.posY - masterPlayer.posY);
 					float playerDistanceZ = (float) (renderedPlayer.posZ - masterPlayer.posZ);
@@ -199,10 +187,10 @@ public final class ClientEventSystem{
 					GL11.glTranslated(0, -masterPlayer.getEyeHeight(), 0);
 					GL11.glTranslatef(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
 				}else{
-					GL11.glTranslated(0, event.entityPlayer.getEyeHeight(), 0);
+					GL11.glTranslated(0, event.getEntityPlayer().getEyeHeight(), 0);
 					GL11.glRotated(parent.rotationPitch, Math.cos(parent.rotationYaw  * 0.017453292F), 0, Math.sin(parent.rotationYaw * 0.017453292F));
 					GL11.glRotated(parent.rotationRoll, -Math.sin(parent.rotationYaw  * 0.017453292F), 0, Math.cos(parent.rotationYaw * 0.017453292F));
-					GL11.glTranslated(0, -event.entityPlayer.getEyeHeight(), 0);
+					GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
 				}
 			}
 		}
@@ -210,38 +198,36 @@ public final class ClientEventSystem{
 	
 	@SubscribeEvent
 	public void on(RenderPlayerEvent.Post event){
-		if(event.entityPlayer.ridingEntity instanceof EntitySeat){
-			if(((EntitySeat) event.entityPlayer.ridingEntity).parent!=null){
+		if(event.getEntityPlayer().getRidingEntity() instanceof EntitySeat){
+			if(((EntitySeat) event.getEntityPlayer().getRidingEntity()).parent!=null){
 				GL11.glPopMatrix();
 			}
 		}
 	}
-	
-	/*INS180
+
 	@SubscribeEvent
-	public void on(CameraSetup event){
+	public void on(EntityViewRenderEvent.CameraSetup event){
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView==0){
-			if(event.entity.ridingEntity instanceof EntitySeat){
-				if(((EntitySeat) event.entity.ridingEntity).parent!=null){
-					event.roll = ((EntitySeat) event.entity.ridingEntity).parent.rotationRoll;
+			if(event.getEntity().getRidingEntity() instanceof EntitySeat){
+				if(((EntitySeat) event.getEntity().getRidingEntity()).parent!=null){
+					event.setRoll(((EntitySeat) event.getEntity().getRidingEntity()).parent.rotationRoll);
 				}
 			}
 		}
 	}
-	INS180*/
-	
+
 	/**
 	 * Renders HUDs for Planes.
 	 */
 	@SubscribeEvent
 	public void on(RenderGameOverlayEvent.Pre event){
-		if(minecraft.thePlayer.ridingEntity instanceof EntitySeat){
-			if(event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
+		if(minecraft.thePlayer.getRidingEntity() instanceof EntitySeat){
+			if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
 				event.setCanceled(!ConfigSystem.getBooleanConfig("XaerosCompatibility"));
-			}else if(event.type.equals(RenderGameOverlayEvent.ElementType.CHAT)){
+			}else if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
 				if(playerLastSeat != null){
 					if(playerLastSeat.parent instanceof EntityPlane && playerLastSeat.isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
-						((EntityPlane) playerLastSeat.parent).drawHUD(event.resolution.getScaledWidth(), event.resolution.getScaledHeight());
+						((EntityPlane) playerLastSeat.parent).drawHUD(event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight());
 					}
 				}
 			}

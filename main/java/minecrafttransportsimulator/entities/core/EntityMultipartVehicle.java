@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.core;
 
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
 import minecrafttransportsimulator.systems.pack.PackInstrument;
@@ -8,6 +9,7 @@ import minecrafttransportsimulator.systems.pack.PackParserSystem;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 import java.util.HashMap;
@@ -34,6 +36,9 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	public double electricFlow;
 	public double airDensity;
 	public double trackAngle;
+
+	private ResourceLocation backplateTexture;
+	private ResourceLocation mouldingTexture;
 	
 	public Map<Byte, Instrument> instruments;
 	private byte numberEngineBays = 0;
@@ -45,6 +50,10 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	
 	public EntityMultipartVehicle(World world, float posX, float posY, float posZ, float playerRotation, String name){
 		super(world, posX, posY, posZ, playerRotation, name);
+
+		PackObject pack = PackParserSystem.getPack(name);
+		this.backplateTexture = pack.rendering.useCustomBackplateTexture ? new ResourceLocation(MTS.MODID, pack.rendering.backplateTexture) : null; //TODO Fix
+		this.mouldingTexture = pack.rendering.useCustomMouldingTexture ? new ResourceLocation(MTS.MODID, pack.rendering.customMouldingTexture) : null;
 	}
 	
 	@Override
@@ -189,6 +198,14 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		for(byte i = 0; i<instrumentSlots.length; ++i){
 			instruments.get(instrumentSlots[i]).currentInstrument = instrumentTypes[i];
 		}
+	}
+
+	public ResourceLocation getBackplateTexture(){
+		return backplateTexture;
+	}
+
+	public ResourceLocation getMouldingTexture(){
+		return mouldingTexture;
 	}
     
 	@Override
