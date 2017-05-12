@@ -52,8 +52,8 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		super(world, posX, posY, posZ, playerRotation, name);
 
 		PackObject pack = PackParserSystem.getPack(name);
-		this.backplateTexture = pack.rendering.useCustomBackplateTexture ? new ResourceLocation(MTS.MODID, pack.rendering.backplateTexture) : null; //TODO Fix
-		this.mouldingTexture = pack.rendering.useCustomMouldingTexture ? new ResourceLocation(MTS.MODID, pack.rendering.customMouldingTexture) : null;
+		this.backplateTexture = pack.rendering.useCustomBackplateTexture ? new ResourceLocation(MTS.MODID, pack.rendering.backplateTexture) : new ResourceLocation(pack.rendering.backplateTexture);
+		this.mouldingTexture = pack.rendering.useCustomMouldingTexture ? new ResourceLocation(MTS.MODID, pack.rendering.customMouldingTexture) : new ResourceLocation(pack.rendering.customMouldingTexture);
 	}
 	
 	@Override

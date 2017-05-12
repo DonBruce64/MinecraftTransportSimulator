@@ -5,7 +5,7 @@ public class PackGeneralConfig {
 
 
     public String type;
-    public String itemTexture;
+    public String[] itemTexture;
     public String name;
     public String itemDisplayName;
     public String defaultDisplayText;
