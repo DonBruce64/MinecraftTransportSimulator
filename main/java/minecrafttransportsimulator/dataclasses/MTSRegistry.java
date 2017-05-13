@@ -465,7 +465,7 @@ public class MTSRegistry{
 	 * @param item
 	 */
 	private static void registerItem(Item item){
-		String registryName = item.getUnlocalizedName().split(".")[1].toLowerCase();
+		String registryName = item.getUnlocalizedName().split("\\.")[1].toLowerCase();
 		GameRegistry.register(item.setRegistryName(registryName));
 		MTSRegistry.itemList.add(item);
 	}
@@ -476,7 +476,7 @@ public class MTSRegistry{
 	 * @param block
 	 */
 	private static void registerBlock(Block block){
-		GameRegistry.register(block.setRegistryName(block.getUnlocalizedName().split(".")[1].toLowerCase()));
+		GameRegistry.register(block.setRegistryName(block.getUnlocalizedName().split("\\.")[1].toLowerCase()));
 		GameRegistry.register(new ItemBlock(block).setRegistryName(block.getUnlocalizedName().substring(5).toLowerCase()));
 		MTSRegistry.itemList.add(Item.getItemFromBlock(block));
 		if(block instanceof ITileEntityProvider){
