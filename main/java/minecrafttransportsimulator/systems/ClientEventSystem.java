@@ -11,6 +11,7 @@ import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.guis.GUIConfig;
 import minecrafttransportsimulator.guis.GUICredits;
 import minecrafttransportsimulator.helpers.EntityHelper;
+import minecrafttransportsimulator.rendering.RenderMultipart;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
@@ -136,11 +137,15 @@ public final class ClientEventSystem{
     public void on(RenderWorldLastEvent event){
         RenderManager manager = Minecraft.getMinecraft().getRenderManager();
         for(Object obj : minecraft.theWorld.loadedEntityList){
+        	//TODO this is a VERY costly CPU operation.  Create a static list in EntityMultipartParent and keep that populated.
+        	//Use that list instead.
             if(obj instanceof EntityMultipartMoving){
                 GlStateManager.depthFunc(515);
                 minecraft.entityRenderer.enableLightmap();
                 RenderHelper.enableStandardItemLighting();
-                manager.renderEntityStatic((Entity) obj, event.getPartialTicks(), false);
+                RenderMultipart.render((EntityMultipartParent) obj, event.getPartialTicks());
+                //TODO ensure no setup things get called here.  Don't want to miss GL state changes.
+                //manager.renderEntityStatic((Entity) obj, event.getPartialTicks(), false);
                 for(EntityMultipartChild child : ((EntityMultipartParent) obj).getChildren()){
                     Entity rider = EntityHelper.getRider(child);
                     if(rider != null && !(minecraft.thePlayer.equals(rider) && minecraft.gameSettings.thirdPersonView == 0)){

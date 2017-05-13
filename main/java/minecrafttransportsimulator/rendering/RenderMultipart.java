@@ -1,51 +1,42 @@
-package minecrafttransportsimulator.rendering.partrenders;
+package minecrafttransportsimulator.rendering;
+
+import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.main.EntityPlane;
-import minecrafttransportsimulator.systems.RenderSystem;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraftforge.client.MinecraftForgeClient;
-import org.lwjgl.opengl.GL11;
+import minecrafttransportsimulator.systems.ClientEventSystem;
+import minecrafttransportsimulator.systems.GL11DrawSystem;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 
-public abstract class RenderPlane extends RenderSystem.RenderParent {
-	private float[] renderOffset;
-	protected static final float[] noOffset = new float[]{0, 0, 0};
-	
-    public RenderPlane(RenderManager manager){
-    	super(manager);
-    }
+/**Main render class for all multipart entities.
+ * Renders the parent model, and all child models that have been registered by
+ * {@link registerChildRender}.  Ensures all parts are rendered in the exact
+ * location they should be in as all rendering is done in the same operation.
+ * Entities don't render above 255 well due to the new chunk visibility system.
+ * This code is present to be called manually from
+ * {@link ClientEventSystem#on(RenderWorldLastEvent)}.
+ *
+ * @author don_bruce
+ */
+public final class RenderMultipart{
+	//private float[] renderOffset;
+	//protected static final float[] noOffset = new float[]{0, 0, 0};
     
-	@Override
-	public void renderParentModel(EntityMultipartParent parent, float partialTicks){
-		EntityPlane plane=(EntityPlane) parent;
+	public static void render(EntityMultipartParent parent, float partialTicks){
 		GL11.glPushMatrix();
-		GL11.glRotatef(-plane.rotationYaw, 0, 1, 0);
-		GL11.glRotatef(plane.rotationPitch, 1, 0, 0);
-		GL11.glRotatef(plane.rotationRoll, 0, 0, 1);
+		GL11.glRotatef(-parent.rotationYaw, 0, 1, 0);
+		GL11.glRotatef(parent.rotationPitch, 1, 0, 0);
+		GL11.glRotatef(parent.rotationRoll, 0, 0, 1);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        renderOffset = getRenderOffset();
-        if(MinecraftForgeClient.getRenderPass() <= 0){
-        	GL11.glTranslated(renderOffset[0], renderOffset[1], renderOffset[2]);
-	        renderPlane(plane);
-	        GL11.glColor4f(1, 1, 1, 1);
-	        renderWindows(plane);
-	        renderConsole(plane);
-	        renderMarkings(plane);
-	        renderNavigationLights(plane, plane.getLightBrightness((byte) 1));
-	        renderStrobeLights(plane, plane.getLightBrightness((byte) 2));
-	        renderTaxiLights(plane, plane.getLightBrightness((byte) 4));
-	        renderLandingLights(plane, plane.getLightBrightness((byte) 8));
-	        if(Minecraft.getMinecraft().gameSettings.showDebugInfo){
-	        	renderDebugVectors(plane);
-	        }
-        }
-        if(MinecraftForgeClient.getRenderPass() != 0){
-        	renderLightBeams(plane);
-        }
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11DrawSystem.renderSquare(-1, -1, 0, 1, -1, 1, true);
+        GL11DrawSystem.renderSquare(1, 1, 0, 1, -1, 1, true);
+        GL11DrawSystem.renderSquare(-1, 1, 0, 1, -1, -1, true);
+        GL11DrawSystem.renderSquare(-1, 1, 0, 1, 1, 1, true);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
         GL11.glPopMatrix();
 	}
-	
+	/*
 	private void renderLightBeams(EntityPlane plane){
     	GL11.glPushMatrix();
     	Minecraft.getMinecraft().entityRenderer.disableLightmap();
@@ -73,7 +64,7 @@ public abstract class RenderPlane extends RenderSystem.RenderParent {
 	protected abstract void renderLandingLights(EntityPlane plane, float brightness);
 	protected abstract void renderTaxiBeam(EntityPlane plane);
 	protected abstract void renderLandingBeam(EntityPlane plane);
-		
+		*/
 	private void renderDebugVectors(EntityPlane plane){
 		double[] debugForces = plane.getDebugForces();
     	GL11.glPushMatrix();
