@@ -84,10 +84,12 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	@Override
 	public void setDead(){
 		if(!worldObj.isRemote){
-			for(Instrument instrument : instruments.values()){
-				if(instrument.currentInstrument != 0){
-					ItemStack stack = new ItemStack(MTSRegistry.flightInstrument, 1, instrument.currentInstrument);
-					worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
+			if(instruments != null){
+				for(Instrument instrument : instruments.values()){
+					if(instrument.currentInstrument != 0){
+						ItemStack stack = new ItemStack(MTSRegistry.flightInstrument, 1, instrument.currentInstrument);
+						worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
+					}
 				}
 			}
 		}
