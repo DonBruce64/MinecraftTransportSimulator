@@ -1,5 +1,9 @@
 package minecrafttransportsimulator.entities.core;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
@@ -11,10 +15,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 
 /**This class is tailored for moving vehicles such as planes, trains, and automobiles.
  * Contains numerous methods for gauges, HUDs, and fuel systems.
@@ -40,9 +40,10 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	private ResourceLocation backplateTexture;
 	private ResourceLocation mouldingTexture;
 	
-	public Map<Byte, Instrument> instruments;
+	public final Map<Byte, Instrument> instruments = new HashMap<Byte, Instrument>();
+	
 	private byte numberEngineBays = 0;
-	private Map<Byte, EntityEngine> engineByNumber = new HashMap<Byte, EntityEngine>();
+	private final Map<Byte, EntityEngine> engineByNumber = new HashMap<Byte, EntityEngine>();
 	
 	public EntityMultipartVehicle(World world){
 		super(world);
@@ -84,12 +85,10 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	@Override
 	public void setDead(){
 		if(!worldObj.isRemote){
-			if(instruments != null){
-				for(Instrument instrument : instruments.values()){
-					if(instrument.currentInstrument != 0){
-						ItemStack stack = new ItemStack(MTSRegistry.flightInstrument, 1, instrument.currentInstrument);
-						worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
-					}
+			for(Instrument instrument : instruments.values()){
+				if(instrument.currentInstrument != 0){
+					ItemStack stack = new ItemStack(MTSRegistry.flightInstrument, 1, instrument.currentInstrument);
+					worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
 				}
 			}
 		}
