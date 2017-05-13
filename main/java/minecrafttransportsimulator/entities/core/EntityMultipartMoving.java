@@ -246,16 +246,13 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		super.readFromNBT(tagCompound);
 		this.parkingBrakeOn=tagCompound.getBoolean("parkingBrakeOn");
 		this.brakeOn=tagCompound.getBoolean("brakeOn");
-		this.name=tagCompound.getString("name");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
 		PackObject pack = PackParserSystem.getPack(name);
-
 		this.openTop = pack.general.openTop;
 		this.displayTextMaxLength = (byte) pack.general.displayTextMaxLength;
-		
-		partData = new ArrayList<PartData>();
 
+		partData = new ArrayList<PartData>();
 		for(PackPart part : pack.parts){
 			partData.add(new PartData(part.pos[0], part.pos[1], part.pos[2], part.turnsWithSteer, part.isController, part.names));
 		}

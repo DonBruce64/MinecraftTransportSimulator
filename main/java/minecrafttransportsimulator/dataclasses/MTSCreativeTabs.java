@@ -30,17 +30,7 @@ public abstract class MTSCreativeTabs extends CreativeTabs{
     		}
     	}
     }
-	
-	public static CreativeTabs getTabByName(String name){
-		if (name.equals("plane")) {
-			return tabMTSPlanes;
-		} else if (name.equals("train")) {
-			return tabMTSTrains;
-		} else {
-			return null;
-		}
-			
-	}
+
 	
 	public static final CreativeTabs tabMTSPlanes = new MTSCreativeTabs("tabMTSPlanes"){
 	    @Override

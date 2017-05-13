@@ -80,11 +80,12 @@ public class MTSRegistry{
 	/**All run-time things go here.**/
 	public void init(){
 		initCustomEntities();
+		initPlaneItems();
 		initItems();
 		initBlocks();
 		initEntities();
 		initPackets();
-		initRecipies();
+		initRecipes();
 	}
 	
 	private void initCustomEntities(){
@@ -95,7 +96,24 @@ public class MTSRegistry{
 			}
 		}
 	}
-	
+
+
+	private void initPlaneItems(){
+		for(String planeName: PackParserSystem.getRegisteredNames()){
+			PackObject plane = PackParserSystem.getPack(planeName);
+
+			String[] itemTextures = plane.general.itemTexture;
+			for (int i = 0; i < itemTextures.length; i++) {
+				String itemTexture = itemTextures[i];
+				//TODO Actually add the item textures
+				ItemMultipartMoving item = new ItemMultipartMoving(planeName, MTSCreativeTabs.tabMTSPlanes);
+				registerItem(item);
+			}
+
+
+		}
+	}
+
 	private void initItems(){
 		for(Field field : this.getClass().getFields()){
 			if(field.getType().equals(Item.class)){
@@ -105,7 +123,9 @@ public class MTSRegistry{
 						item.setUnlocalizedName(field.getName().toLowerCase());
 					}
 					registerItem(item);
-				}catch(Exception e){}
+				}catch(Exception e){
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -119,7 +139,9 @@ public class MTSRegistry{
 						block.setUnlocalizedName(field.getName().toLowerCase());
 					}
 					registerBlock(block);
-				}catch(Exception e){}
+				}catch(Exception e){
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -164,7 +186,7 @@ public class MTSRegistry{
 		registerPacket(TrimPacket.class, TrimPacket.Handler.class, true, true);
 	}
 	
-	private void initRecipies(){
+	private void initRecipes(){
 		this.initPartRecipes();
 		this.initEngineRecipes();
 		this.initFlightInstrumentRecipes();
@@ -443,17 +465,18 @@ public class MTSRegistry{
 	 * @param item
 	 */
 	private static void registerItem(Item item){
-		GameRegistry.register(item.setRegistryName(item.getUnlocalizedName().substring(5).toLowerCase()));
+		String registryName = item.getUnlocalizedName().split(".")[1].toLowerCase();
+		GameRegistry.register(item.setRegistryName(registryName));
 		MTSRegistry.itemList.add(item);
 	}
 	
-	/**
+	/**x
 	 * Registers the given block and adds it to the creative tab list.
 	 * Also adds the respective TileEntity if the block has one.
 	 * @param block
 	 */
 	private static void registerBlock(Block block){
-		GameRegistry.register(block.setRegistryName(block.getUnlocalizedName().substring(5).toLowerCase()));
+		GameRegistry.register(block.setRegistryName(block.getUnlocalizedName().split(".")[1].toLowerCase()));
 		GameRegistry.register(new ItemBlock(block).setRegistryName(block.getUnlocalizedName().substring(5).toLowerCase()));
 		MTSRegistry.itemList.add(Item.getItemFromBlock(block));
 		if(block instanceof ITileEntityProvider){

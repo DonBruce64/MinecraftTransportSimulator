@@ -616,14 +616,15 @@ public class EntityPlane extends EntityMultipartVehicle{
 		this.rudderTrim=tagCompound.getShort("rudderTrim");
 
 		PackObject pack = PackParserSystem.getPack(name);
-
-		this.hasFlaps = pack.plane.hasFlaps;
-		this.wingspan = pack.plane.wingspan;
-		this.wingArea = pack.plane.wingArea;
-		this.tailDistance = pack.plane.tailDistance;
-		this.rudderArea = pack.plane.rudderArea;
-		this.elevatorArea = pack.plane.elevatorArea;
-		this.defaultElevatorAngle = pack.plane.defaultElevatorAngle;
+		if(pack != null){
+			this.hasFlaps = pack.plane.hasFlaps;
+			this.wingspan = pack.plane.wingspan;
+			this.wingArea = pack.plane.wingArea;
+			this.tailDistance = pack.plane.tailDistance;
+			this.rudderArea = pack.plane.rudderArea;
+			this.elevatorArea = pack.plane.elevatorArea;
+			this.defaultElevatorAngle = pack.plane.defaultElevatorAngle;
+		}
 	}
     
 	@Override

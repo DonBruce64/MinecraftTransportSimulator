@@ -176,27 +176,28 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
-		PackObject pack = PackParserSystem.getPack(name);
-
 		this.throttle=tagCompound.getByte("throttle");
 		this.lightStatus=tagCompound.getInteger("lightStatus");
 		this.fuel=tagCompound.getDouble("fuel");
 		this.electricPower=tagCompound.getDouble("electricPower");
-		
-		this.lightSetup = Integer.parseInt(pack.motorized.lightSetup);
-		this.numberPowerfulLights = (byte) pack.motorized.numberPowerfulLights;
-		this.fuelCapacity = pack.motorized.fuelCapacity;
-		this.emptyMass = pack.motorized.emptyMass;
 
-		for (byte i = 0; i < 99; i++) {
-			PackInstrument instrument = pack.motorized.instruments.get(i);
-			instruments.put(i, new Instrument(instrument.pos[0], instrument.pos[1], instrument.pos[2], instrument.rot[0], instrument.rot[1], instrument.rot[2], (byte) instrument.defaultInstrument));
-		}
-		
-		byte[] instrumentSlots = tagCompound.getByteArray("instrumentSlots");
-		byte[] instrumentTypes = tagCompound.getByteArray("instrumentTypes");
-		for(byte i = 0; i<instrumentSlots.length; ++i){
-			instruments.get(instrumentSlots[i]).currentInstrument = instrumentTypes[i];
+		PackObject pack = PackParserSystem.getPack(name);
+		if(pack != null){
+			this.lightSetup = Integer.parseInt(pack.motorized.lightSetup);
+			this.numberPowerfulLights = (byte) pack.motorized.numberPowerfulLights;
+			this.fuelCapacity = pack.motorized.fuelCapacity;
+			this.emptyMass = pack.motorized.emptyMass;
+
+			for (byte i = 0; i < pack.motorized.instruments.size(); i++) {
+				PackInstrument instrument = pack.motorized.instruments.get(i);
+				instruments.put(i, new Instrument(instrument.pos[0], instrument.pos[1], instrument.pos[2], instrument.rot[0], instrument.rot[1], instrument.rot[2], (byte) instrument.defaultInstrument));
+			}
+
+			byte[] instrumentSlots = tagCompound.getByteArray("instrumentSlots");
+			byte[] instrumentTypes = tagCompound.getByteArray("instrumentTypes");
+			for(byte i = 0; i<instrumentSlots.length; ++i){
+				instruments.get(instrumentSlots[i]).currentInstrument = instrumentTypes[i];
+			}
 		}
 	}
 
