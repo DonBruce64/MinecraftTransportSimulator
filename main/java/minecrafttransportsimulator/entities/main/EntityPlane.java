@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.entities.main;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSDamageSources.DamageSourceCrash;
@@ -24,9 +27,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class EntityPlane extends EntityMultipartVehicle{
@@ -136,7 +136,8 @@ public class EntityPlane extends EntityMultipartVehicle{
 		adjustYawMovement();
 		adjustRollMovement();
 		adjustVerticalMovement();
-		movePlane();
+		//TODO this is VERY broken.  Had to disable plane movement to keep them from running away.
+		//movePlane();
 		if(!worldObj.isRemote){
 			//Movement for children on client side is done in tick handler.
 			moveChildren();

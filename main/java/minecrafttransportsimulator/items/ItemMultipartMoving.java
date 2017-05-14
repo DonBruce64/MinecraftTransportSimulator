@@ -65,7 +65,7 @@ public class ItemMultipartMoving extends Item{
 		List<Float[]> coreLocations = mover.getCollisionBoxes();
 		List<EntityCore> spawnedCores = new ArrayList<EntityCore>();
 		for(Float[] location : coreLocations){
-			EntityCore newCore = new EntityCore(world, mover, mover.UUID, pos.getX() + location[0], pos.getY() + location[1], pos.getZ() + location[2], location[3], location[4]);
+			EntityCore newCore = new EntityCore(world, mover, mover.UUID, location[0], location[1], location[2], location[3], location[4]);
 			world.spawnEntityInWorld(newCore);
 			spawnedCores.add(newCore);
 			if(EntityHelper.isBoxCollidingWithBlocks(world, newCore.getEntityBoundingBox(), newCore.collidesWithLiquids())){

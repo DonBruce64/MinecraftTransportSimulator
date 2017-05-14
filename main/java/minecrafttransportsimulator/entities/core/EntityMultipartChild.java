@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.entities.core;
 
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.helpers.EntityHelper;
@@ -11,8 +13,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
 
 /**Main child class.  This class is the base for all child entities and should be
  * extended to use the parent-child linking system.
@@ -47,7 +47,8 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 		this.offsetX=offsetX;
 		this.offsetY=offsetY;
 		this.offsetZ=offsetZ;
-		this.setSize(width, height);
+		this.width=width;
+		this.height=height;
 		this.propertyCode=propertyCode;
 		this.UUID=String.valueOf(this.getUniqueID());
 		this.parentUUID=parentUUID;
