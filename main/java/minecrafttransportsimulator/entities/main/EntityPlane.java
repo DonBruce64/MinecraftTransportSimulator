@@ -125,7 +125,8 @@ public class EntityPlane extends EntityMultipartVehicle{
 		adjustYawMovement();
 		adjustRollMovement();
 		adjustVerticalMovement();
-		movePlane();
+		//TODO get this working.
+		//movePlane();
 		if(!worldObj.isRemote){
 			//Movement for children on client side is done in tick handler.
 			moveChildren();

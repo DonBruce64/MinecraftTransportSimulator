@@ -12,7 +12,6 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 
 /**This class contains a set of classes used for the custom render system.
@@ -34,7 +33,6 @@ public final class RenderSystem{
      * @author don_bruce
      */
     public static abstract class RenderParent extends Render{
-    	private boolean playerRiding;
     	private MTSVector childOffset;
     	private static EntityPlayer player;
     	
@@ -48,7 +46,7 @@ public final class RenderSystem{
     		EntityMultipartParent parent = (EntityMultipartParent) entity;
     		player = Minecraft.getMinecraft().thePlayer;
     		GL11.glPushMatrix();
-    		playerRiding = false;
+    		boolean playerRiding = false;
     		if(player.getRidingEntity() instanceof EntitySeat){
     			if(parent.equals(((EntitySeat) player.getRidingEntity()).parent)){
     				playerRiding = true;
@@ -65,13 +63,7 @@ public final class RenderSystem{
             for(EntityMultipartChild child : parent.getChildren()){
             	if(MTSRegistryClient.childRenderMap.get(child.getClass()) != null){
             		childOffset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
-					try {
-						MTSRegistryClient.childRenderMap.get(child.getClass()).newInstance().render(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord, partialTicks);
-					} catch (InstantiationException e) {
-						e.printStackTrace();
-					} catch (IllegalAccessException e) {
-						e.printStackTrace();
-					}
+					MTSRegistryClient.childRenderMap.get(child.getClass()).render(child, childOffset.xCoord, childOffset.yCoord, childOffset.zCoord, partialTicks);
 				}
             }
             this.renderParentModel(parent, partialTicks);
@@ -79,20 +71,5 @@ public final class RenderSystem{
     	}
     	
     	protected abstract void renderParentModel(EntityMultipartParent parent, float partialTicks);
-    	
-    	@Override
-    	protected ResourceLocation getEntityTexture(Entity propellor){
-    		return null;
-    	}
-    }
-    
-    /**Abstract class for child rendering.
-     * Register with {@link registerChildRender} to activate rendering in {@link RenderParent}
-     * 
-     * @author don_bruce
-     */
-    public static abstract class RenderChild{
-    	public RenderChild(){}
-    	public abstract void render(EntityMultipartChild child, double x, double y, double z, float partialTicks);
     }
 }

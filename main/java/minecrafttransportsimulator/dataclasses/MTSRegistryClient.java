@@ -27,6 +27,7 @@ import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
 import minecrafttransportsimulator.rendering.AircraftInstruments;
+import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPropellerBench;
 import minecrafttransportsimulator.rendering.blockrenders.RenderSurveyFlag;
 import minecrafttransportsimulator.rendering.blockrenders.RenderTrack;
@@ -37,7 +38,6 @@ import minecrafttransportsimulator.rendering.partrenders.RenderPropeller;
 import minecrafttransportsimulator.rendering.partrenders.RenderSeat;
 import minecrafttransportsimulator.rendering.partrenders.RenderSkid;
 import minecrafttransportsimulator.rendering.partrenders.RenderWheel;
-import minecrafttransportsimulator.systems.RenderSystem.RenderChild;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -55,7 +55,7 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper;
 public class MTSRegistryClient{
 	private static final MTSRegistryClient instance = new MTSRegistryClient();
 	/**Maps children to render classes.*/
-	public static final Map <Class<? extends EntityMultipartChild>, Class<? extends RenderChild>> childRenderMap = new HashMap<Class<? extends EntityMultipartChild>, Class<? extends RenderChild>>();
+	public static final Map <Class<? extends EntityMultipartChild>, RenderChild> childRenderMap = new HashMap<Class<? extends EntityMultipartChild>, RenderChild>();
 
 	public static void preInit(){
 		initCustomResourceLocation();
@@ -80,16 +80,16 @@ public class MTSRegistryClient{
 	}
 	
 	private static void initEntityRenders(){		
-		childRenderMap.put(EntitySeat.class, RenderSeat.class);
-		childRenderMap.put(EntityChest.class, RenderPlaneChest.class);
-		childRenderMap.put(EntityWheel.EntityWheelSmall.class, RenderWheel.class);
-		childRenderMap.put(EntityWheel.EntityWheelLarge.class, RenderWheel.class);
-		childRenderMap.put(EntitySkid.class, RenderSkid.class);
-		childRenderMap.put(EntityPontoon.class, RenderPontoon.class);
+		childRenderMap.put(EntitySeat.class, new RenderSeat());
+		childRenderMap.put(EntityChest.class, new RenderPlaneChest());
+		childRenderMap.put(EntityWheel.EntityWheelSmall.class, new RenderWheel());
+		childRenderMap.put(EntityWheel.EntityWheelLarge.class, new RenderWheel());
+		childRenderMap.put(EntitySkid.class, new RenderSkid());
+		childRenderMap.put(EntityPontoon.class, new RenderPontoon());
 		childRenderMap.put(EntityPontoon.EntityPontoonDummy.class, null);
-		childRenderMap.put(EntityPropeller.class, RenderPropeller.class);
-		childRenderMap.put(EntityEngineAircraftSmall.class, RenderEngine.class);
-		childRenderMap.put(EntityEngineAircraftLarge.class, RenderEngine.class);
+		childRenderMap.put(EntityPropeller.class, new RenderPropeller());
+		childRenderMap.put(EntityEngineAircraftSmall.class, new RenderEngine());
+		childRenderMap.put(EntityEngineAircraftLarge.class, new RenderEngine());
 	}
 
 	private static void initItemRenders(){
@@ -127,6 +127,16 @@ public class MTSRegistryClient{
 		}
 		ModelBakery.registerItemVariants(item, models);
 	}
+	
+    /**Abstract class for child rendering.
+     * Register with {@link registerChildRender} to activate rendering in {@link RenderMultipart}
+     * 
+     * @author don_bruce
+     */
+    public static abstract class RenderChild{
+    	public RenderChild(){}
+    	public abstract void render(EntityMultipartChild child, double x, double y, double z, float partialTicks);
+    }
 
 	private class MTSRenderingFactory implements IRenderFactory {
 		private final Class<? extends Render> entityRender;

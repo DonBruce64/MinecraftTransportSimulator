@@ -37,7 +37,6 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 	 * children get linked.
 	 */
 	private Map<String, EntityMultipartChild> children = new HashMap<String, EntityMultipartChild>();
-	public boolean rendered;
 
 	public EntityMultipartParent(World world){
 		super(world);

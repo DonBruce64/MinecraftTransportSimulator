@@ -2,11 +2,11 @@ package minecrafttransportsimulator.rendering.partrenders;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.dataclasses.MTSRegistryClient.RenderChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.rendering.partmodels.ModelPropeller;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
-import minecrafttransportsimulator.systems.RenderSystem.RenderChild;
 import net.minecraft.util.ResourceLocation;
 
 public class RenderPropeller extends RenderChild{

@@ -24,7 +24,7 @@ import java.util.Map;
 public final class GL11DrawSystem{
 	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	private static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
-	private static final Map<String, ResourceLocation> mtsTextureArray = new HashMap<String, ResourceLocation>();
+	
 	
 	public static final ResourceLocation glassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	
@@ -33,26 +33,6 @@ public final class GL11DrawSystem{
 	 */
 	public static void bindTexture(ResourceLocation texture){
 		textureManager.bindTexture(texture);
-	}
-	
-	/**
-	 * Binds the specified texture.  Used for MTS textures.  Cached for efficiency.
-	 */
-	public static void bindTexture(String textureName){
-		if(!mtsTextureArray.containsKey(textureName)){
-			File imageFile = new File(MTS.assetDir + File.separator + textureName);
-			if(!imageFile.exists()){
-				System.err.println("ERROR: COULD NOT FIND IMAGE FILE: " + imageFile.getAbsolutePath());
-				mtsTextureArray.put(textureName, new ResourceLocation(MTS.MODID, "missing/texture/file/"+textureName));
-			}else{
-				try{
-					mtsTextureArray.put(textureName, textureManager.getDynamicTextureLocation(textureName, new DynamicTexture(ImageIO.read(imageFile))));
-				}catch(Exception e){
-					System.err.println("ERROR: COULD NOT READ IMAGE FILE: " + imageFile.getAbsolutePath());
-				}
-			}
-		}
-		bindTexture(mtsTextureArray.get(textureName));
 	}
 	
 	/**

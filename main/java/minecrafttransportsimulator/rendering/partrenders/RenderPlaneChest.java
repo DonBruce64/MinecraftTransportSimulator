@@ -2,11 +2,11 @@ package minecrafttransportsimulator.rendering.partrenders;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.dataclasses.MTSRegistryClient.RenderChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.parts.EntityChest;
 import minecrafttransportsimulator.rendering.partmodels.ModelPlaneChest;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
-import minecrafttransportsimulator.systems.RenderSystem.RenderChild;
 import net.minecraft.util.ResourceLocation;
 
 public class RenderPlaneChest extends RenderChild{
