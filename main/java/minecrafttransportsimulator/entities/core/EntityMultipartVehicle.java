@@ -4,16 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
 import minecrafttransportsimulator.systems.pack.PackInstrument;
-import minecrafttransportsimulator.systems.pack.PackObject;
-import minecrafttransportsimulator.systems.pack.PackParserSystem;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 /**This class is tailored for moving vehicles such as planes, trains, and automobiles.
@@ -23,22 +19,14 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
-
-	public byte numberPowerfulLights;
 	public byte throttle;
-	public int lightSetup;
 	public int lightStatus;
-	public int fuelCapacity;
-	public int emptyMass;
 	public double fuel;
 	public double electricPower = 12;
 	public double electricUsage;
 	public double electricFlow;
 	public double airDensity;
 	public double trackAngle;
-
-	private ResourceLocation backplateTexture;
-	private ResourceLocation mouldingTexture;
 	
 	public final Map<Byte, Instrument> instruments = new HashMap<Byte, Instrument>();;
 	
@@ -51,9 +39,6 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	
 	public EntityMultipartVehicle(World world, float posX, float posY, float posZ, float playerRotation, String name){
 		super(world, posX, posY, posZ, playerRotation, name);
-		PackObject pack = PackParserSystem.getPack(name);
-		this.backplateTexture = pack.rendering.useCustomBackplateTexture ? new ResourceLocation(MTS.MODID, pack.rendering.backplateTexture) : new ResourceLocation(pack.rendering.backplateTexture);
-		this.mouldingTexture = pack.rendering.useCustomMouldingTexture ? new ResourceLocation(MTS.MODID, pack.rendering.customMouldingTexture) : new ResourceLocation(pack.rendering.customMouldingTexture);
 	}
 	
 	@Override
@@ -73,7 +58,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 				electricUsage += 0.001;
 			}
 			if((lightStatus & 8) == 8){
-				electricUsage += 0.001*(1+numberPowerfulLights);
+				electricUsage += 0.001*(1+pack.motorized.numberPowerfulLights);
 			}
 		}
 		electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
@@ -180,33 +165,17 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		this.lightStatus=tagCompound.getInteger("lightStatus");
 		this.fuel=tagCompound.getDouble("fuel");
 		this.electricPower=tagCompound.getDouble("electricPower");
-
-		PackObject pack = PackParserSystem.getPack(name);
-		if(pack != null){
-			this.lightSetup = Integer.parseInt(pack.motorized.lightSetup);
-			this.numberPowerfulLights = (byte) pack.motorized.numberPowerfulLights;
-			this.fuelCapacity = pack.motorized.fuelCapacity;
-			this.emptyMass = pack.motorized.emptyMass;
-
-			for (byte i = 0; i < pack.motorized.instruments.size(); i++) {
-				PackInstrument instrument = pack.motorized.instruments.get(i);
-				instruments.put(i, new Instrument(instrument.pos[0], instrument.pos[1], instrument.pos[2], instrument.rot[0], instrument.rot[1], instrument.rot[2], (byte) instrument.defaultInstrument));
-			}
-
-			byte[] instrumentSlots = tagCompound.getByteArray("instrumentSlots");
-			byte[] instrumentTypes = tagCompound.getByteArray("instrumentTypes");
-			for(byte i = 0; i<instrumentSlots.length; ++i){
-				instruments.get(instrumentSlots[i]).currentInstrument = instrumentTypes[i];
-			}
+		
+		for (byte i = 0; i < pack.motorized.instruments.size(); i++) {
+			PackInstrument instrument = pack.motorized.instruments.get(i);
+			instruments.put(i, new Instrument(instrument.pos[0], instrument.pos[1], instrument.pos[2], instrument.rot[0], instrument.rot[1], instrument.rot[2], (byte) instrument.defaultInstrument));
 		}
-	}
+		byte[] instrumentSlots = tagCompound.getByteArray("instrumentSlots");
+		byte[] instrumentTypes = tagCompound.getByteArray("instrumentTypes");
+		for(byte i = 0; i<instrumentSlots.length; ++i){
+			instruments.get(instrumentSlots[i]).currentInstrument = instrumentTypes[i];
+		}
 
-	public ResourceLocation getBackplateTexture(){
-		return backplateTexture;
-	}
-
-	public ResourceLocation getMouldingTexture(){
-		return mouldingTexture;
 	}
     
 	@Override

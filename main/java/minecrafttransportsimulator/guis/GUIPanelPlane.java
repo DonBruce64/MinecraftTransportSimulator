@@ -1,5 +1,10 @@
 package minecrafttransportsimulator.guis;
 
+import java.awt.Color;
+import java.io.IOException;
+
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
@@ -14,10 +19,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
-import org.lwjgl.opengl.GL11;
-
-import java.awt.*;
-import java.io.IOException;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * Used for controlling engines, lights, trim, and other things.
@@ -40,8 +41,8 @@ public class GUIPanelPlane extends GuiScreen{
 	public GUIPanelPlane(EntityPlane plane){
 		super();
 		this.plane = plane;
-		this.backplateTexture = plane.getBackplateTexture();
-		this.moldingTexture = plane.getMouldingTexture();
+		backplateTexture = plane.pack.rendering.useCustomBackplateTexture ? new ResourceLocation(MTS.MODID, plane.pack.rendering.backplateTexture) : new ResourceLocation(plane.pack.rendering.backplateTexture);
+		moldingTexture = plane.pack.rendering.useCustomMouldingTexture ? new ResourceLocation(MTS.MODID, plane.pack.rendering.customMouldingTexture) : new ResourceLocation(plane.pack.rendering.customMouldingTexture);
 		engines = new EntityEngine[plane.getNumberEngineBays()];
 		for(byte i=0; i<engines.length; ++i){
 			engines[i] = plane.getEngineByNumber(i);
@@ -71,7 +72,7 @@ public class GUIPanelPlane extends GuiScreen{
 			}
 		}
 		for(byte i=1; i<=4; ++i){
-			if(((plane.lightSetup & 1<<(i-1)) == 1<<(i-1))){
+			if(((plane.pack.motorized.lightSetup & 1<<(i-1)) == 1<<(i-1))){
 				GL11DrawSystem.bindTexture(((plane.lightStatus & 1<<(i-1)) == 1<<(i-1)) ? toggleOn : toggleOff);
 				GL11DrawSystem.renderSquare(width/10-18, width/10, height-104+(i*25), height-120+i*25, 0, 0, false);
 			}
@@ -83,7 +84,7 @@ public class GUIPanelPlane extends GuiScreen{
 			}
 		}
 		for(byte i=1; i<=4; ++i){
-			if(((plane.lightSetup & 1<<(i-1)) == 1<<(i-1))){
+			if(((plane.pack.motorized.lightSetup & 1<<(i-1)) == 1<<(i-1))){
 				if(i==1){
 					GL11DrawSystem.drawScaledStringAt(I18n.format("gui.panel.navigationlights"), width/10-10, height-126+(i*25), 0, 0.6F, lighted ? Color.WHITE : Color.BLACK);
 				}else if(i==2){
@@ -116,7 +117,7 @@ public class GUIPanelPlane extends GuiScreen{
 			mc.thePlayer.closeScreen();
 		}else if(x >= width/10-18 && x <= width/10-2){
 			for(byte i=1; i<=4; ++i){
-				if(((plane.lightSetup & 1<<(i-1)) == 1<<(i-1))){
+				if(((plane.pack.motorized.lightSetup & 1<<(i-1)) == 1<<(i-1))){
 					if(y >= height-120+(i*25) && y <= height-104+i*25){
 						MTS.MFSNet.sendToServer(new LightPacket(plane.getEntityId(), (byte) (1<<(i-1))));
 					}

@@ -296,7 +296,7 @@ public final class ControlSystem{
 		checkHUD();
 		checkBrakes(plane);
 		checkThrottle(plane);
-		if(plane.hasFlaps){checkFlaps(plane);}
+		if(plane.pack.plane.hasFlaps){checkFlaps(plane);}
 		checkPanel(plane, controller);
 		
 		if(ConfigSystem.getBooleanConfig("MouseYoke")){

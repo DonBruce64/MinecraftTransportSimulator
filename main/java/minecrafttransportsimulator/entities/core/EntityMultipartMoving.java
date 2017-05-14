@@ -33,17 +33,14 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public abstract class EntityMultipartMoving extends EntityMultipartParent{
-
-
-	public boolean openTop;
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
-	public byte displayTextMaxLength;
 	public double velocity;
 	public double health;
 	public String name="";
 	public String ownerName=MTS.MODID;
 	public String displayText="";
+	public PackObject pack;
 	
 	/**
 	 * Array containing part data for spawnable parts.
@@ -61,7 +58,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	public EntityMultipartMoving(World world, float posX, float posY, float posZ, float playerRotation, String name){
 		super(world, posX, posY, posZ, playerRotation);
 		this.name = name;
-		PackObject pack = PackParserSystem.getPack(name);
+		this.pack = PackParserSystem.getPack(name);
 		//This only gets done at the beginning when the entity is first spawned.
 		this.displayText = pack.general.defaultDisplayText;
 	}
@@ -92,7 +89,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				}
 			}else if(player.inventory.getCurrentItem() != null){
 				if(player.inventory.getCurrentItem().getItem().equals(Items.NAME_TAG)){
-					this.displayText = player.inventory.getCurrentItem().getDisplayName().length() > this.displayTextMaxLength ? player.inventory.getCurrentItem().getDisplayName().substring(0, this.displayTextMaxLength - 1) : player.inventory.getCurrentItem().getDisplayName();
+					this.displayText = player.inventory.getCurrentItem().getDisplayName().length() > this.pack.general.displayTextMaxLength ? player.inventory.getCurrentItem().getDisplayName().substring(0, this.pack.general.displayTextMaxLength - 1) : player.inventory.getCurrentItem().getDisplayName();
 					this.sendDataToClient();
 					return true;
 				}else if(EntityHelper.isPlayerHoldingWrench(player)){
@@ -245,9 +242,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		this.name=tagCompound.getString("name");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
-		PackObject pack = PackParserSystem.getPack(name);
-		this.openTop = pack.general.openTop;
-		this.displayTextMaxLength = (byte) pack.general.displayTextMaxLength;
+		this.pack = PackParserSystem.getPack(name);
 
 		partData = new ArrayList<PartData>();
 		for(PackPart part : pack.parts){

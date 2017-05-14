@@ -64,7 +64,7 @@ public final class SFXSystem{
 	public static boolean isPlayerInsideVehicle(){
 		if(ClientEventSystem.playerLastSeat != null){
 			if(ClientEventSystem.playerLastSeat.parent != null){
-				if(!((EntityMultipartMoving) ClientEventSystem.playerLastSeat.parent).openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
+				if(!((EntityMultipartMoving) ClientEventSystem.playerLastSeat.parent).pack.general.openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
 					return true;
 				}
 			}

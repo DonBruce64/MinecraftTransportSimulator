@@ -2,6 +2,7 @@ package minecrafttransportsimulator.rendering;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.rendering.AircraftInstruments.AircraftControls;
 import minecrafttransportsimulator.systems.CameraSystem;
@@ -27,7 +28,7 @@ public final class PlaneHUD{
 			drawOuterFlyableGauges(plane, width, height);
 			AircraftInstruments.drawFlyableControl(plane, 7*width/8 + 10, height - 18, AircraftControls.THROTTLE, true);
 			AircraftInstruments.drawFlyableControl(plane, 15*width/16 + 14, height - 18, AircraftControls.BRAKE, true);
-			if(plane.hasFlaps){
+			if(plane.pack.plane.hasFlaps){
 				AircraftInstruments.drawFlyableControl(plane, width/8 - 15, height - 19, AircraftControls.FLAPS, true);
 			}
 		}
@@ -41,8 +42,8 @@ public final class PlaneHUD{
 		GL11.glPushMatrix();
 		GL11.glColor4f(1, 1, 1, 1);
 		Minecraft.getMinecraft().entityRenderer.enableLightmap();
-		backplateTexture = plane.getBackplateTexture();
-		moldingTexture = plane.getMouldingTexture();
+		backplateTexture = plane.pack.rendering.useCustomBackplateTexture ? new ResourceLocation(MTS.MODID, plane.pack.rendering.backplateTexture) : new ResourceLocation(plane.pack.rendering.backplateTexture);
+		moldingTexture = plane.pack.rendering.useCustomMouldingTexture ? new ResourceLocation(MTS.MODID, plane.pack.rendering.customMouldingTexture) : new ResourceLocation(plane.pack.rendering.customMouldingTexture);
 	}
 	
 	public static void endHUDDraw(){

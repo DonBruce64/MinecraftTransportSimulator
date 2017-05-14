@@ -1,14 +1,15 @@
 package minecrafttransportsimulator.rendering;
 
+import java.awt.Color;
+
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
-import org.lwjgl.opengl.GL11;
-
-import java.awt.*;
 
 public final class AircraftInstruments{
 	private static final ResourceLocation instrumentTexture = new ResourceLocation(MTS.MODID, "textures/instruments_aircraft.png");
@@ -430,12 +431,12 @@ public final class AircraftInstruments{
     	drawScaledString("BUCKETS", centerX*2-20, centerY*2+14, 0.5F);
     	drawScaledString("FUEL", centerX*2-10, centerY*2+24, 0.5F);
     	drawScaledString("0", centerX*2-40, centerY*2-10, 0.5F);
-    	drawScaledString(String.valueOf(plane.fuelCapacity/1000/2F), centerX*2-7, centerY*2-45, 0.5F);
-    	drawScaledString(String.valueOf(plane.fuelCapacity/1000), centerX*2+35, centerY*2-10, 0.5F);
+    	drawScaledString(String.valueOf(plane.pack.motorized.fuelCapacity/1000/2F), centerX*2-7, centerY*2-45, 0.5F);
+    	drawScaledString(String.valueOf(plane.pack.motorized.fuelCapacity/1000), centerX*2+35, centerY*2-10, 0.5F);
         drawDialIncrements(centerX, centerY+8, -50, 50, 25, 7, 5);
         drawDialColoring(centerX, centerY+8, -50, 50, 18, 2, new float[] {1, 1, 1});
     	drawDialColoring(centerX, centerY+8, -50, -45, 25, 9, new float[] {1, 0, 0});
-        drawLongPointer(centerX, centerY+8, (float) (-50+plane.fuel/plane.fuelCapacity*100F), 35, 3);
+        drawLongPointer(centerX, centerY+8, (float) (-50+plane.fuel/plane.pack.motorized.fuelCapacity*100F), 35, 3);
     }
 	
 	private static void drawFuelFlowGauge(EntityPlane plane, int centerX, int centerY, boolean lighted, byte engineNumber){

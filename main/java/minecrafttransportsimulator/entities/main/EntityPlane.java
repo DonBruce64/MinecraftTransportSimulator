@@ -19,8 +19,6 @@ import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.rendering.PlaneHUD;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
-import minecrafttransportsimulator.systems.pack.PackObject;
-import minecrafttransportsimulator.systems.pack.PackParserSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -29,16 +27,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 
-public class EntityPlane extends EntityMultipartVehicle{
-	//Defined plane proprties
-	public boolean hasFlaps;
-	public float wingspan;
-	public float wingArea;
-	public float tailDistance;
-	public float rudderArea;
-	public float elevatorArea;
-	public float defaultElevatorAngle;
-	
+public class EntityPlane extends EntityMultipartVehicle{	
 	//Note that angle variable should be divided by 10 to get actual angle.
 	public short aileronAngle;
 	public short elevatorAngle;
@@ -136,8 +125,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 		adjustYawMovement();
 		adjustRollMovement();
 		adjustVerticalMovement();
-		//TODO this is VERY broken.  Had to disable plane movement to keep them from running away.
-		//movePlane();
+		movePlane();
 		if(!worldObj.isRemote){
 			//Movement for children on client side is done in tick handler.
 			moveChildren();
@@ -218,7 +206,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 	
 	private void getBasicProperties(){		
 		currentCOG = 1;
-		currentMass = (float) (emptyMass + fuel/50);
+		currentMass = (float) (pack.general.emptyMass + fuel/50);
 		for(EntityMultipartChild child : getChildren()){
 			addedMass = 0;
 			rider = child.getRidingEntity();
@@ -236,11 +224,11 @@ public class EntityPlane extends EntityMultipartVehicle{
 			currentCOG = (currentCOG*currentMass + child.offsetZ*addedMass)/(currentMass+addedMass);
 			currentMass += addedMass;
 		}
-		momentRoll = (float) (emptyMass*(1.5F+(fuel/10000F)));
+		momentRoll = (float) (pack.general.emptyMass*(1.5F+(fuel/10000F)));
 		momentPitch = 2*currentMass;
 		momentYaw = 3*currentMass;
 				
-		currentWingArea = wingArea + wingArea*flapAngle/250F;
+		currentWingArea = pack.plane.wingArea + pack.plane.wingArea*flapAngle/250F;
 		updateHeadingVec();
 		verticalVec = RotationSystem.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
 		sideVec = headingVec.cross(verticalVec);
@@ -252,7 +240,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 		dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
 		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapAngle/350F);
 		aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
-		elevatorLiftCoeff = getLiftCoeff(defaultElevatorAngle - trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
+		elevatorLiftCoeff = getLiftCoeff(pack.plane.defaultElevatorAngle - trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
 		rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.atan2(velocityVec.dot(sideVec), velocityVec.dot(headingVec))), 2);
 	}
 	
@@ -270,18 +258,18 @@ public class EntityPlane extends EntityMultipartVehicle{
 			}
 		}
 		
-		dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*wingspan*wingspan/currentWingArea*0.8));		
+		dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*pack.plane.wingspan*pack.plane.wingspan/currentWingArea*0.8));		
 		brakeForce = (brakeOn || parkingBrakeOn) ? ((groundedWheels & 1) + (groundedWheels & 2)/2 + (groundedWheels & 4)/4)*4 + groundedCores*2 : groundedCores*2;
 		wingForce = 0.5F*airDensity*velocity*velocity*currentWingArea*wingLiftCoeff;
-		aileronForce = 0.5F*airDensity*velocity*velocity*wingArea/5*aileronLiftCoeff;
-		elevatorForce = 0.5F*airDensity*velocity*velocity*elevatorArea*elevatorLiftCoeff;			
-		rudderForce = 0.5F*airDensity*velocity*velocity*rudderArea*rudderLiftCoeff;
+		aileronForce = 0.5F*airDensity*velocity*velocity*pack.plane.wingArea/5*aileronLiftCoeff;
+		elevatorForce = 0.5F*airDensity*velocity*velocity*pack.plane.elevatorArea*elevatorLiftCoeff;			
+		rudderForce = 0.5F*airDensity*velocity*velocity*pack.plane.rudderArea*rudderLiftCoeff;
 		gravitationalForce = currentMass*(9.8/400);
 					
 		brakeTorque = ((groundedWheels & 2)/2 + (groundedWheels & 4)/4)*brakeForce*brakeDistance;
-		aileronTorque = 2*aileronForce*wingspan*0.3;
-		elevatorTorque = elevatorForce*tailDistance;
-		rudderTorque = rudderForce*tailDistance;
+		aileronTorque = 2*aileronForce*pack.plane.wingspan*0.3;
+		elevatorTorque = elevatorForce*pack.plane.tailDistance;
+		rudderTorque = rudderForce*pack.plane.tailDistance;
 		gravitationalTorque = gravitationalForce*currentCOG;
 		
 		if(brakeForce > 0){
@@ -302,6 +290,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 				
 		//TODO fix this to allow barrel rolls
 		motionY += (headingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + verticalVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
+		
 		motionRoll = (float) (180/Math.PI*((1-headingVec.yCoord)*aileronTorque)/momentRoll);
 		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + (1-Math.abs(headingVec.yCoord))*(gravitationalTorque + brakeTorque))/momentPitch);
 		motionYaw = (float) (180/Math.PI*(headingVec.yCoord*aileronTorque - verticalVec.yCoord*(-thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
@@ -615,17 +604,6 @@ public class EntityPlane extends EntityMultipartVehicle{
 		this.aileronTrim=tagCompound.getShort("aileronTrim");
 		this.elevatorTrim=tagCompound.getShort("elevatorTrim");
 		this.rudderTrim=tagCompound.getShort("rudderTrim");
-
-		PackObject pack = PackParserSystem.getPack(name);
-		if(pack != null){
-			this.hasFlaps = pack.plane.hasFlaps;
-			this.wingspan = pack.plane.wingspan;
-			this.wingArea = pack.plane.wingArea;
-			this.tailDistance = pack.plane.tailDistance;
-			this.rudderArea = pack.plane.rudderArea;
-			this.elevatorArea = pack.plane.elevatorArea;
-			this.defaultElevatorAngle = pack.plane.defaultElevatorAngle;
-		}
 	}
     
 	@Override
