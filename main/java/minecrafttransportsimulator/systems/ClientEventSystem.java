@@ -143,7 +143,7 @@ public final class ClientEventSystem{
                 GlStateManager.depthFunc(515);
                 minecraft.entityRenderer.enableLightmap();
                 RenderHelper.enableStandardItemLighting();
-                RenderMultipart.render((EntityMultipartParent) obj, event.getPartialTicks());
+                //RenderMultipart.render((EntityMultipartParent) obj, event.getPartialTicks());
                 //TODO ensure no setup things get called here.  Don't want to miss GL state changes.
                 //manager.renderEntityStatic((Entity) obj, event.getPartialTicks(), false);
                 for(EntityMultipartChild child : ((EntityMultipartParent) obj).getChildren()){

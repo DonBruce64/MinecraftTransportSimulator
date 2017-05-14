@@ -123,7 +123,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	}
 	
 	private void linkToParent(){
-		MTSEntity entity = EntityHelper.getEntityByUUID(worldObj, (this.parentUUID));
+		MTSEntity entity = EntityHelper.getEntityByUUID(worldObj, this.parentUUID);
 		if(entity != null){
 			EntityMultipartParent parent =  (EntityMultipartParent) entity;
 			parent.addChild(this.UUID, this, false);

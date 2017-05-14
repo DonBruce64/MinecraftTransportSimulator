@@ -40,7 +40,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	private ResourceLocation backplateTexture;
 	private ResourceLocation mouldingTexture;
 	
-	public final Map<Byte, Instrument> instruments = new HashMap<Byte, Instrument>();
+	public final Map<Byte, Instrument> instruments = new HashMap<Byte, Instrument>();;
 	
 	private byte numberEngineBays = 0;
 	private final Map<Byte, EntityEngine> engineByNumber = new HashMap<Byte, EntityEngine>();
@@ -51,7 +51,6 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	
 	public EntityMultipartVehicle(World world, float posX, float posY, float posZ, float playerRotation, String name){
 		super(world, posX, posY, posZ, playerRotation, name);
-
 		PackObject pack = PackParserSystem.getPack(name);
 		this.backplateTexture = pack.rendering.useCustomBackplateTexture ? new ResourceLocation(MTS.MODID, pack.rendering.backplateTexture) : new ResourceLocation(pack.rendering.backplateTexture);
 		this.mouldingTexture = pack.rendering.useCustomMouldingTexture ? new ResourceLocation(MTS.MODID, pack.rendering.customMouldingTexture) : new ResourceLocation(pack.rendering.customMouldingTexture);

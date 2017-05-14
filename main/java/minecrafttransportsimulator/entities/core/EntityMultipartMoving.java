@@ -1,5 +1,10 @@
 package minecrafttransportsimulator.entities.core;
 
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -21,11 +26,6 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
 /**General moving entity class.  This provides a basic set of variables and functions for moving entities.
  * Simple things like texture and display names are included, as well as standards for removal of this
  * entity based on names and damage.  This is the most basic class used for custom multipart entities.
@@ -64,10 +64,6 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		PackObject pack = PackParserSystem.getPack(name);
 		//This only gets done at the beginning when the entity is first spawned.
 		this.displayText = pack.general.defaultDisplayText;
-		//Make sure all data for the PackParser in the NBT methods is inited now that we have a name.
-		NBTTagCompound tempTag = new NBTTagCompound();
-		this.writeEntityToNBT(tempTag);
-		this.readFromNBT(tempTag);
 	}
 
 
@@ -246,6 +242,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		super.readFromNBT(tagCompound);
 		this.parkingBrakeOn=tagCompound.getBoolean("parkingBrakeOn");
 		this.brakeOn=tagCompound.getBoolean("brakeOn");
+		this.name=tagCompound.getString("name");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
 		PackObject pack = PackParserSystem.getPack(name);
