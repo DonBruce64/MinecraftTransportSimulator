@@ -21,13 +21,15 @@ import java.util.List;
 public class EntityHelper {
 
     public static EntityMultipartBase getEntityByUUID(World world, String UUID){
-        for(Object obj : world.loadedEntityList){
-            if(obj instanceof EntityMultipartBase){
-                if(UUID.equals(((EntityMultipartBase) obj).UUID)){
-                    return (EntityMultipartBase) obj;
-                }
-            }
-        }
+    	if(!UUID.equals("")){
+	        for(Object obj : world.loadedEntityList){
+	            if(obj instanceof EntityMultipartBase){
+	                if(UUID.equals(((EntityMultipartBase) obj).UUID)){
+	                    return (EntityMultipartBase) obj;
+	                }
+	            }
+	        }
+    	}
         return null;
     }
 
