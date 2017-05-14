@@ -6,25 +6,21 @@
     "itemDisplayName" : "MC172",
     "defaultDisplayText" : "MC172",
     "displayTextMaxLength" : 7,
+    "emptyMass" : 800,
     "openTop" : false
   },
 
   "motorized" : {
-    "lightSetup" : "1111",
+    "lightSetup" : 1111,
     "numberPowerfulLights" : 2,
     "fuelCapacity" : 5000,
-    "emptyMass" : 800,
     "instruments" : [
-      {
-        "pos" : [FILL IN STUFF HERE],
-        "rot" : [FILL IN STUFF HERE],
-        "defaultInstrument": 0
-      }
+      
     ]
   },
 
   "plane" : {
-    "haslaps" : true,
+    "hasFlaps" : true,
     "wingspan" : 11.0,
     "wingArea" : 16.0,
     "tailDistance" : 7.0,
@@ -141,14 +137,14 @@
   ],
 
   "rendering": {
-    "useCustomModelTexture" : false,
-    "modelTexture" : "NOT USED YET",
+    "useCustomModelTexture" : true,
+    "modelTexture" : "minecraft:textures/blocks/planks_oak.png",
     "modelOffset" : [0, 0, 0],
     "flipModel" : false,
-    "useCustomBackplateTexture" : false,
-    "backplateTexture" : "textures/blocks/planks_oak.png",
-    "useCustomMouldingTexture" : false,
-    "customMouldingTexture" : "textures/blocks/log_oak.png",
+    "useCustomBackplateTexture" : true,
+    "backplateTexture" : "minecraft:textures/blocks/planks_oak.png",
+    "useCustomMouldingTexture" : true,
+    "customMouldingTexture" : "minecraft:textures/blocks/log_oak.png",
     "isHUDImageull" : false
   },
 
