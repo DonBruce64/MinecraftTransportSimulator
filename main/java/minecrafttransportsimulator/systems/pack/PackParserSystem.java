@@ -19,33 +19,33 @@ import java.util.Set;
 public final class PackParserSystem {
     private static Map<String, PackObject> packMap = new HashMap<String, PackObject>();
 
-    public static void init() {
+    public static void init(){
         File assetDir = new File(MTS.assetDir);
-        if (!assetDir.exists()) {
+        if(!assetDir.exists()){
             assetDir.mkdirs();
-        } else {
+        }else{
             parseDirectory(assetDir);
         }
     }
 
-    private static void parseDirectory(File assetDir) {
-        for (File file : assetDir.listFiles()) {
-            if (file.isDirectory()) {
+    private static void parseDirectory(File assetDir){
+        for(File file : assetDir.listFiles()){
+            if(file.isDirectory()){
                 parseDirectory(file);
-            } else {
-                if (file.getName().endsWith(".json") && !file.getName().contains("SAMPLE")) {
+            }else{
+                if(file.getName().endsWith(".json")){
                     parseFile(file);
                 }
             }
         }
     }
 
-    private static void parseFile(File file) {
-        try {
+    private static void parseFile(File file){
+        try{
             Gson gson = new Gson();
             PackObject pack = gson.fromJson(new FileReader(file), PackObject.class);
             packMap.put(pack.general.name, pack);
-        } catch (FileNotFoundException e) {
+        }catch (FileNotFoundException e){
             e.printStackTrace();
         }
     }
