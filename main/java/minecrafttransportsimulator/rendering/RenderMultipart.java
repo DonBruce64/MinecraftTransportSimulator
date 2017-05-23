@@ -2,6 +2,7 @@ package minecrafttransportsimulator.rendering;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
@@ -12,7 +13,7 @@ import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.systems.ClientEventSystem;
-import minecrafttransportsimulator.systems.GL11DrawSystem;
+import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -37,34 +38,11 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 public final class RenderMultipart{
 	private static final Minecraft minecraft = Minecraft.getMinecraft();
 	private static final Map<String, ResourceLocation> textureArray = new HashMap<String, ResourceLocation>();
+	private static final Map<String, Map<String, Float[][]>> modelArray = new HashMap<String, Map<String, Float[][]>>();
     
 	public static void render(EntityMultipartMoving mover, EntityPlayer playerRendering, float partialTicks){
 		if(mover.pack == null){
 			return;
-		}
-		
-		GL11.glPushMatrix();
-		GlStateManager.depthFunc(515);
-        minecraft.entityRenderer.enableLightmap();
-        RenderHelper.enableStandardItemLighting();
-		
-        //TODO look into how PartialTicks affects this.
-        //Bet this is why entities jerk around.
-        Entity renderViewEntity = minecraft.getRenderViewEntity();
-        double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * (double)partialTicks;
-        double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
-        double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
-        double thisX = mover.lastTickPosX + (mover.posX - mover.lastTickPosX) * (double)partialTicks;
-        double thisY = mover.lastTickPosY + (mover.posY - mover.lastTickPosY) * (double)partialTicks;
-        double thisZ = mover.lastTickPosZ + (mover.posZ - mover.lastTickPosZ) * (double)partialTicks;
-        GL11.glTranslated(thisX - playerX, thisY - playerY, thisZ - playerZ);
-        
-        int i = mover.getBrightnessForRender(partialTicks);
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, i % 65536, i / 65536);
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        
-		if(mover.pack.rendering.flipModel){
-			GL11.glRotatef(180, 1, 0, 0);
 		}
 		
 		//Bind texture.  Adds new element to cache if needed.
@@ -77,11 +55,52 @@ public final class RenderMultipart{
 			}
 			textureArray.put(mover.pack.general.name, textureLocation);
 		}
-		GL11DrawSystem.bindTexture(textureArray.get(mover.pack.general.name));
+		minecraft.getTextureManager().bindTexture(textureArray.get(mover.pack.general.name));
 		
-		//TODO once we settle on a parser, the main model rendering goes here.
-		//RENDER ME
+		//Get model
+		if(!modelArray.containsKey(mover.pack.general.name)){
+			modelArray.put(mover.pack.general.name, OBJParserSystem.parseOBJModel(mover.pack.general.name + ".obj"));
+		}
 		
+		//Translate model
+		GL11.glPushMatrix();		
+        Entity renderViewEntity = minecraft.getRenderViewEntity();
+        double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * (double)partialTicks;
+        double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
+        double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
+        double thisX = mover.lastTickPosX + (mover.posX - mover.lastTickPosX) * (double)partialTicks;
+        double thisY = mover.lastTickPosY + (mover.posY - mover.lastTickPosY) * (double)partialTicks;
+        double thisZ = mover.lastTickPosZ + (mover.posZ - mover.lastTickPosZ) * (double)partialTicks;
+        GL11.glTranslated(thisX - playerX, thisY - playerY, thisZ - playerZ);
+        
+        //Set up lighting
+        int i = mover.getBrightnessForRender(partialTicks);
+        minecraft.entityRenderer.enableLightmap();
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, i % 65536, i / 65536);
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.depthFunc(515);
+        //TODO why does this affect lighting of the model?
+        RenderHelper.enableStandardItemLighting();
+		
+        //Render model
+		GL11.glPushMatrix();
+		if(mover.pack.rendering.flipModel){
+			//GL11.glRotatef(180, 1, 0, 0);
+			GL11.glRotatef(mover.ticksExisted%360, 1, 0, 0);
+		}
+		GL11.glTranslatef(mover.pack.rendering.modelOffset[0], mover.pack.rendering.modelOffset[1], mover.pack.rendering.modelOffset[2]);
+		GL11.glBegin(GL11.GL_TRIANGLES);
+		for(Entry<String, Float[][]> entry : modelArray.get(mover.pack.general.name).entrySet()){
+			//TODO add actuation for control surfaces.
+			for(Float[] vertex : entry.getValue()){
+				GL11.glTexCoord2f(vertex[3], vertex[4]);
+				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+			}
+		}
+		GL11.glEnd();
+		GL11.glPopMatrix();
+		
+		//Render children
 		for(EntityMultipartChild child : mover.getChildren()){
         	if(MTSRegistryClient.childRenderMap.get(child.getClass()) != null){
         		//Render child model.
@@ -181,10 +200,6 @@ public final class RenderMultipart{
 	protected abstract void renderTaxiBeam(EntityPlane plane);
 	protected abstract void renderLandingBeam(EntityPlane plane);
 		*/
-	
-	/**
-	 * Binds the specified texture.  Used for MTS textures.  Cached for efficiency.
-	 */
 	
 	private void renderDebugVectors(EntityPlane plane){
 		double[] debugForces = plane.getDebugForces();

@@ -48,6 +48,7 @@ import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.model.obj.OBJLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
@@ -71,6 +72,7 @@ public class MTSRegistryClient{
 		String[] fieldNames = new String[]{"defaultResourcePacks", "field_110449_ao"}; 
 		List<IResourcePack> resourcePacks = ReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), fieldNames);
 		resourcePacks.add(instance.new ExteralResourcePack());
+		OBJLoader.INSTANCE.addDomain(MTS.MODID);
 	}
 	
 	private static void initTileEntityRenderers(){
@@ -158,7 +160,7 @@ public class MTSRegistryClient{
 	private class ExteralResourcePack implements IResourcePack{
 		@Override
 		public InputStream getInputStream(ResourceLocation location) throws IOException{
-			return FileUtils.openInputStream(new File(MTS.assetDir + File.pathSeparator + location.getResourcePath()));
+			return FileUtils.openInputStream(new File(MTS.assetDir + File.separatorChar + location.getResourcePath()));
 		}
 
 		@Override
