@@ -24,8 +24,6 @@ import java.util.Map;
 public final class GL11DrawSystem{
 	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	private static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
-	
-	
 	public static final ResourceLocation glassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	
 	/**

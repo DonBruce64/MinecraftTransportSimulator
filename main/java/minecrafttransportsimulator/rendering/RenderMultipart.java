@@ -1,10 +1,13 @@
 package minecrafttransportsimulator.rendering;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Vector3f;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
@@ -86,14 +89,33 @@ public final class RenderMultipart{
 		GL11.glPushMatrix();
 		if(mover.pack.rendering.flipModel){
 			//GL11.glRotatef(180, 1, 0, 0);
-			GL11.glRotatef(mover.ticksExisted%360, 1, 0, 0);
+			GL11.glRotatef(45 - 180, 1, 0, 0);
+			//GL11.glRotatef(mover.ticksExisted%360, 1, 0, 0);
 		}
 		GL11.glTranslatef(mover.pack.rendering.modelOffset[0], mover.pack.rendering.modelOffset[1], mover.pack.rendering.modelOffset[2]);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(Entry<String, Float[][]> entry : modelArray.get(mover.pack.general.name).entrySet()){
 			//TODO add actuation for control surfaces.
 			for(Float[] vertex : entry.getValue()){
+				//TODO put this into OpenGLHelper.
+				/*		//Calculate normals.
+				List<Float[]> normalList = new ArrayList<Float[]>();
+				for(int i=0; i<faceValues.size() - 3; i += 3){
+					Float[] faceVertex1 = vertexList.get(faceValues.get(i)[0] - vertexOffset);
+					Float[] faceVertex2 = vertexList.get(faceValues.get(i + 1)[0] - vertexOffset);
+					Float[] faceVertex3 = vertexList.get(faceValues.get(i + 2)[0] - vertexOffset);
+					Vector3f v1 = new Vector3f(faceVertex1[0], faceVertex1[1], faceVertex1[2]);
+					Vector3f v2 = new Vector3f(faceVertex2[0], faceVertex2[1], faceVertex2[2]);
+					Vector3f v3 = new Vector3f(faceVertex3[0], faceVertex3[1], faceVertex3[2]);
+					Vector3f norm = Vector3f.cross(Vector3f.sub(v2, v1, null), Vector3f.sub(v3, v1, null), null);
+					//Add 3 times.  Once for each vertex in this shape.
+					System.out.format("x:%f, y:%f, z:%f\n", norm.x, norm.y, norm.z);
+					normalList.add(new Float[]{norm.x, norm.y, norm.z});
+					normalList.add(new Float[]{norm.x, norm.y, norm.z});
+					normalList.add(new Float[]{norm.x, norm.y, norm.z});
+				}*/
 				GL11.glTexCoord2f(vertex[3], vertex[4]);
+				///GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
 				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
 			}
 		}

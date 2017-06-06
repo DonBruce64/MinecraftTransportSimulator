@@ -79,6 +79,7 @@ public final class OBJParserSystem{
 				int textureNumber = Integer.valueOf(faceDef.substring(faceDef.indexOf('/') + 1, faceDef.length())) - 1;
 				faceValues.add(new Integer[]{vertexNumber, textureNumber});
 			}
+			
 			if(!faceString.isEmpty()){
 				//This only happens when there's quads in an obj.  Make a second face.
 				//Duplicate point 3, add point 4, and duplicate point 1.
@@ -106,7 +107,8 @@ public final class OBJParserSystem{
 				vertexList.get(face[0] - vertexOffset)[1],
 				vertexList.get(face[0] - vertexOffset)[2],
 				textureList.get(face[1] - textureOffset)[0],
-				textureList.get(face[1] - textureOffset)[1]});
+				textureList.get(face[1] - textureOffset)[1]
+				});
 		}
 		return vertexArrays.toArray(new Float[vertexArrays.size()][5]);
 	}
