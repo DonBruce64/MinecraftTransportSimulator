@@ -17,7 +17,7 @@ import java.io.File;
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="8.0.0-ALPHA-9";
+	public static final String MODVER="8.0.0-ALPHA-10";
 	public static final String assetDir = System.getProperty("user.dir") + File.separator + MTS.MODID;
 	
 	@Instance(value = MTS.MODID)
