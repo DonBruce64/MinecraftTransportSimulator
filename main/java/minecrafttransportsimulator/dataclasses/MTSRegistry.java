@@ -9,9 +9,6 @@ import java.util.Map;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
-import minecrafttransportsimulator.blocks.BlockSurveyFlag;
-import minecrafttransportsimulator.blocks.BlockTrackStructure;
-import minecrafttransportsimulator.blocks.BlockTrackStructureFake;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.main.EntityCore;
 import minecrafttransportsimulator.entities.main.EntityPlane;
@@ -91,12 +88,7 @@ public class MTSRegistry{
 	public static final Item wrench = new ItemWrench().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item flightManual = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	
-	public static final Item track = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Block trackStructure = new BlockTrackStructure();
-	public static final Block trackStructureFake = new BlockTrackStructureFake();
-	public static final Block surveyFlag = new BlockSurveyFlag().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	
+		
 	public static final Item key = new ItemKey();
 	public static final Item instrument = new ItemInstrument();
 	

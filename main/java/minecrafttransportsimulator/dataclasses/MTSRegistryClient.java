@@ -10,15 +10,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
+
+import com.google.common.collect.Sets;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
-import minecrafttransportsimulator.blocks.TileEntitySurveyFlag;
-import minecrafttransportsimulator.blocks.TileEntityTrack;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPropellerBench;
-import minecrafttransportsimulator.rendering.blockrenders.RenderSurveyFlag;
-import minecrafttransportsimulator.rendering.blockrenders.RenderTrack;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
@@ -36,10 +36,6 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
-
-import org.apache.commons.io.FileUtils;
-
-import com.google.common.collect.Sets;
 
 public class MTSRegistryClient{
 	private static final MTSRegistryClient instance = new MTSRegistryClient();
@@ -73,8 +69,6 @@ public class MTSRegistryClient{
 	
 	private static void initTileEntityRenderers(){
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPropellerBench.class, new RenderPropellerBench());
-		ClientRegistry.bindTileEntitySpecialRenderer(TileEntitySurveyFlag.class, new RenderSurveyFlag());
-		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityTrack.class, new RenderTrack());
 	}
 	
 	private static void initEntityRenders(){
@@ -97,10 +91,7 @@ public class MTSRegistryClient{
 		registerItemRender(MTSRegistry.key);
 		registerItemRender(MTSRegistry.flightManual);
 		registerItemRender(Item.getItemFromBlock(MTSRegistry.propellerBench));
-		
-		registerItemRender(MTSRegistry.track);
-		registerItemRender(Item.getItemFromBlock(MTSRegistry.surveyFlag));
-		
+				
 		//Now register items for the pack data.
 		try{
 			//We manually create the JSON files, so get rid of what's in the directory first.

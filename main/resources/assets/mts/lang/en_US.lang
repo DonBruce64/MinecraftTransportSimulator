@@ -14,15 +14,6 @@ death.attack.traincrash.null.null=%1$s died in a train crash.
 death.attack.traincrash.null.player=%1$s got distracted while fighting %2$s and died in a train crash.
 death.attack.traincrash.player.null=%2$s crashed their train and killed %1$s.
 death.attack.traincrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash the train.
-
-interact.flag.info.set=First flag set.
-interact.flag.info.link=Flags linked.
-interact.flag.info.clear=First flag un-set.
-interact.flag.failure.dimension=Flags must be in the same dimension.
-interact.flag.failure.distance=The two flags are too far away.  The max distance between flags is 128.
-interact.flag.failure.nolink=This flag is not linked to another flag.
-interact.flag.failure.materials=You lack the required number of materials to build this track.  You need:
-interact.flag.failure.blockage=There is a block in the way at:
  
 interact.key.info.lock=Vehicle locked!
 interact.key.info.unlock=Vehicle unlocked!
@@ -127,11 +118,6 @@ info.item.key.line3=Sneak-use to take ownership.
 info.item.key.line4=Sneak-use again to relinquish.
 info.item.key.line5=Owned vehicles may only be destroyed by you and OPs.
 
-item.mc172.name=MC-172
-item.pzlp11.name=PZL P.11
-item.vulcanair.name=Vulcanair
-item.otter.name=Twin Otter
-item.trimotor.name=Trimotor
 item.seat.name=Seat
 item.skid.name=Skid
 item.pontoon.name=Pontoon
@@ -185,7 +171,6 @@ item.instrument_aircraft_oilpressure.description=Indicates oil pressure.
 entity.mts.chest.name=Chest
 tile.propellerbench.name=Propeller Bench
 
-itemGroup.tabMTSPlanes=Minecraft Flight Simulator
-itemGroup.tabMTSTrains=Minecraft Train Simulator
+itemGroup.tabMTSPlanes=Minecraft Transport Simulator
 key.categories.mts=Minecraft Transport Simulator
 key.config=Open configuration screen 
