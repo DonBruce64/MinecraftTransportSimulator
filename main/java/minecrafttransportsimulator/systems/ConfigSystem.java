@@ -57,11 +57,13 @@ public final class ConfigSystem{
 		booleanConfigMap.put("ElectricStart", config.get(CLIENT_CONFIG, "ElectricStart", true, "Is the starter enabled? \nIf not, players must hit propellers to start them").getBoolean());
 		booleanConfigMap.put("XaerosCompatibility", config.get(CLIENT_CONFIG, "XaerosCompatibility", false, "Enable Xaeros Minimap compatibility? \nThis allows Xaeros Minimap to be shown, but makes the hotbar render over the HUD.").getBoolean());
 		booleanConfigMap.put("MouseYoke", config.get(CLIENT_CONFIG, "MouseYoke", false, "Enable mouse yoke for planes? \nPrevents looking around unless unlocked.  Think MCHeli controls.").getBoolean());
+		booleanConfigMap.put("InnerWindows", config.get(CLIENT_CONFIG, "InnerWindows", true, "Render the insides of windows on vehicles?").getBoolean());
+		booleanConfigMap.put("KeyboardOverride", config.get(CLIENT_CONFIG, "KeyboardOverride", true, "Should keyboard controls be overriden when a joystick control is mapped?  \nLeave true to free up the keyboard while using a joysick.").getBoolean());
 		integerConfigMap.put("JoystickForceFactor", config.get(CLIENT_CONFIG, "JoystickForceFactor", 15, "Factor by which joystick inputs are multiplied.  \nThis controls how quickly the control surfaces change.", 1, Byte.MAX_VALUE).getInt());
 		integerConfigMap.put("ControlSurfaceCooldown", config.get(CLIENT_CONFIG, "ControlSurfaceCooldown", 4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.  \nThis is not used when using a joystick.", 0, Short.MAX_VALUE).getInt());
 		integerConfigMap.put("SyncThreshold", config.get(CLIENT_CONFIG, "SyncThreshold", 5, "How many blocks or degrees out-of-sync a plane can be on a client before it will be forced to re-sync.  \nHigher values cause less jittering but increase the chance that an entity can get out of sync.  \nYou can keep this value as it is, but consider making it lower if you are on a server with fast planes.", 1, Byte.MAX_VALUE).getInt());
 		doubleConfigMap.put("IncrementalMovement", config.get(CLIENT_CONFIG, "IncrementalMovement", 0.01, "How much planes will try to correct themselves when they get a sync packet.  \nThis is intended to gradually sync airborne planes so they don't get out of the sync threshold and get force-synced.", 0, Short.MAX_VALUE).getDouble());
-		doubleConfigMap.put("JoystickDeadZone", config.get(CLIENT_CONFIG, "JoystickDeadZone", 0.03D, "Dead zone for joystick axis.  \nMFS will always use the greater of this value and the value provided by the computer.").getDouble());
+		doubleConfigMap.put("JoystickDeadZone", config.get(CLIENT_CONFIG, "JoystickDeadZone", 0.03D, "Dead zone for joystick axis.  \nMTS will always use the greater of this value and the value provided by the computer.").getDouble());
 		config.save();
 	}
 	

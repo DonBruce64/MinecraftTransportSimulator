@@ -22,13 +22,13 @@ public class ItemPropeller extends Item{
 	
 	@Override
 	public String getUnlocalizedName(ItemStack stack){
-		return "item." + this.getClass().getSimpleName().substring(4).toLowerCase() + stack.getItemDamage();
+		switch (stack.getItemDamage()){
+			case 0: return this.getUnlocalizedName() + "_wood";
+			case 1: return this.getUnlocalizedName() + "_iron";
+			case 2: return this.getUnlocalizedName() + "_obsidian";
+			default: return this.getUnlocalizedName() + "_invalid";
+		}
 	}
-	
-	@Override
-    public int getDamage(ItemStack stack){
-        return stack.getTagCompound() != null ? stack.getTagCompound().getByte("type") : 0;
-    }
 	
 	@Override
 	@SideOnly(Side.CLIENT)

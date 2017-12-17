@@ -53,7 +53,7 @@ public class EntityPropeller extends EntityMultipartChild{
 	
 	@Override
 	public ItemStack getItemStack(){
-		ItemStack propellerStack = new ItemStack(MTSRegistry.propeller, 1, propertyCode);
+		ItemStack propellerStack = new ItemStack(MTSRegistry.propeller, 1, type);
 		NBTTagCompound tag = new NBTTagCompound();
 		tag.setByte("type", type);
 		tag.setInteger("numberBlades", numberBlades);
@@ -68,12 +68,14 @@ public class EntityPropeller extends EntityMultipartChild{
 	protected boolean attackChild(DamageSource source, float damage){
 		if(parent != null){
 			if(source.getEntity() instanceof EntityPlayer){					
-				if(((EntityPlayer) source.getEntity()).getActiveItemStack() == null){
-					for(EntityMultipartChild child : parent.getChildren()){
-						if(child instanceof EntityEngineAircraft){
-							if(this.equals(((EntityEngineAircraft) child).propeller)){
-								((EntityMultipartVehicle) parent).handleEngineSignal(engine, (byte) 4);
-								MTS.MFSNet.sendToAll(new EnginePacket(parent.getEntityId(), engine.getEntityId(), (byte) 4));
+				if(((EntityPlayer) source.getEntity()).getHeldItemMainhand() == null){
+					if(!(source.getEntity().getRidingEntity() instanceof EntitySeat)){
+						for(EntityMultipartChild child : parent.getChildren()){
+							if(child instanceof EntityEngineAircraft){
+								if(this.equals(((EntityEngineAircraft) child).propeller)){
+									((EntityMultipartVehicle) parent).handleEngineSignal(engine, (byte) 4);
+									MTS.MTSNet.sendToAll(new EnginePacket(parent.getEntityId(), engine.getEntityId(), (byte) 4));
+								}
 							}
 						}
 					}
@@ -116,9 +118,10 @@ public class EntityPropeller extends EntityMultipartChild{
 					Entity attacker = null;
 					for(EntityMultipartChild child : parent.getChildren()){
 						if(child instanceof EntitySeat){
-							if(((EntitySeat) child).isController){
-								if(EntityHelper.getRider(child) != null){
-									attacker = EntityHelper.getRider(child);
+							EntitySeat seat = (EntitySeat) child;
+							if(seat.isController){
+								if(seat.getPassenger() != null){
+									attacker = seat.getPassenger();
 									break;
 								}
 							}
@@ -147,8 +150,6 @@ public class EntityPropeller extends EntityMultipartChild{
 		if(health <= 0){
 			this.parent.removeChild(UUID, true);
 			return;
-		}else{
-			this.sendDataToClient();
 		}
 	}
 	

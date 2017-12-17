@@ -165,7 +165,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			}
 		}
 		
-		ambientTemp = 25*worldObj.getBiomeGenForCoords(new BlockPos((int) this.posX, (int) this.posY, (int) this.posZ)).getTemperature() - 5*(Math.pow(2, posY/400) - 1);
+		ambientTemp = 25*worldObj.getBiome(new BlockPos((int) this.posX, (int) this.posY, (int) this.posZ)).getTemperature() - 5*(Math.pow(2, posY/400) - 1);
 		coolingFactor = 0.001 + vehicle.velocity/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		vehicle.electricUsage -= 0.01*RPM/maxRPM;
@@ -197,22 +197,23 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			}
 			
 			if(hours > 200 && !worldObj.isRemote){
-				if(Math.random() < hours/10000){
+				if(Math.random() < hours/10000*(maxSafeRPM/(RPM+maxSafeRPM/2))){
 					this.backfireEngine();
 				}
 			}
 
 			fuelFlow = Math.min(this.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor")*RPM*(fuelLeak ? 1.5F : 1.0F)/maxRPM, vehicle.fuel);
 			vehicle.fuel -= fuelFlow;
-			if(vehicle.fuel == 0 && fuelConsumption != 0){
-				internalFuel = 100;
-				stallEngine();
-			}else if(RPM < engineStallRPM){
-				internalFuel = 100;
-				stallEngine();
-			}else if(worldObj.getBlockState(getPosition()).getMaterial().isLiquid()){
-				MTS.proxy.playSound(this, MTS.MODID + ":engine_starting", 1, 1);
-				stallEngine();
+			if(!worldObj.isRemote){
+				if(vehicle.fuel == 0 && fuelConsumption != 0){
+					internalFuel = 100;
+					stallEngine();
+				}else if(RPM < engineStallRPM){
+					internalFuel = 100;
+					stallEngine();
+				}else if(worldObj.getBlockState(getPosition()).getMaterial().isLiquid()){
+					stallEngine();
+				}
 			}
 		}else{
 			oilPressure = 0;
@@ -256,7 +257,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			}else if(state.equals(EngineStates.RUNNING)){
 				state = EngineStates.ENGINE_OFF;
 				internalFuel = 100;
-				MTS.proxy.playSound(this, MTS.MODID + ":engine_starting", 1, 1);
+				MTS.proxy.playSound(this, MTS.MODID + ":" + this.getStartingSoundName(), 1, 1);
 			}
 		}
 	}
@@ -300,15 +301,14 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	public void backfireEngine(){
 		RPM -= 100;
 		if(!worldObj.isRemote){
-			MTS.MFSNet.sendToAll(new EnginePacket(this.parent.getEntityId(), this.getEntityId(), (byte) 5));
+			MTS.MTSNet.sendToAll(new EnginePacket(this.parent.getEntityId(), this.getEntityId(), (byte) 5));
 		}else{
-			MTS.proxy.playSound(this, MTS.MODID + ":engine_sputter", 1, 1);
+			MTS.proxy.playSound(this, MTS.MODID + ":engine_sputter", 0.5F, 1);
 			backfired = true;
 		}
 	}
 	
-	private void startEngine(){
-		MTS.proxy.playSound(this, MTS.MODID + ":engine_starting", 1, 1);
+	public void startEngine(){
 		if(state.equals(EngineStates.MAGNETO_ON_STARTERS_OFF)){
 			state = EngineStates.RUNNING;
 		}else if(state.equals(EngineStates.MAGNETO_ON_ES_ON)){
@@ -319,12 +319,13 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		starterLevel = 0;
 		oilPressure = 60;
 		if(!worldObj.isRemote){
-			this.sendDataToClient();
+			MTS.MTSNet.sendToAll(new EnginePacket(this.parent.getEntityId(), this.getEntityId(), (byte) 6));
+		}else{
+			MTS.proxy.playSound(this, MTS.MODID + ":" + this.getStartingSoundName(), 1, 1);
 		}
 	}
 	
-	private void stallEngine(){
-		MTS.proxy.playSound(this, MTS.MODID + ":engine_starting", 1, 1);
+	public void stallEngine(){
 		if(state.equals(EngineStates.RUNNING)){
 			state = EngineStates.MAGNETO_ON_STARTERS_OFF;
 		}else if(state.equals(EngineStates.RUNNING_ES_ON)){
@@ -333,7 +334,9 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			state = EngineStates.MAGNETO_ON_HS_ON;
 		}
 		if(!worldObj.isRemote){
-			this.sendDataToClient();
+			MTS.MTSNet.sendToAll(new EnginePacket(this.parent.getEntityId(), this.getEntityId(), (byte) 7));
+		}else{
+			MTS.proxy.playSound(this, MTS.MODID + ":" + this.getStartingSoundName(), 1, 1);
 		}
 	}
 	
@@ -401,32 +404,6 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			}
 		}
 	}
-	
-	/*
-	public enum EngineTypes{
-		HELICOPTER((byte) 100, (byte) 100, 1.2F, "helicopter_engine_running", "helicopter_engine_cranking", new EngineProperties[]{new EngineProperties(500, 0.1F), new EngineProperties(600, 0.15F)}),
-		VEHICLE((byte) 100, (byte) 100, 1.2F, "vehicle_engine_running", "vehicle_engine_cranking", new EngineProperties[]{new EngineProperties(5500, 0.2F), new EngineProperties(6500, 0.4F)}),
-		TRAIN((byte) 100, (byte) 100, 1.2F, "train_engine_running", "train_engine_cranking", new EngineProperties[]{new EngineProperties(900, 0.2F)});
-		//TODO find other sounds
-		
-		public final byte starterIncrement;
-		public final byte starterPower;
-		public final float size;
-		public final String engineRunningSoundName;
-		public final String engineCrankingSoundName;
-		public final EngineProperties[] defaultSubtypes;
-		private EngineTypes(byte starterIncrement, byte starterPower, float size, String engineRunningSoundName, String engineCrankingSoundName, EngineProperties[] defaultSubtypes){
-			this.starterIncrement = starterIncrement;
-			this.starterPower = starterPower;
-			this.size = size;
-			this.engineRunningSoundName = engineRunningSoundName;
-			this.engineCrankingSoundName = engineCrankingSoundName;
-			this.defaultSubtypes = defaultSubtypes;
-		}
-		
-
-	}*/
-	
 	
 	protected abstract float getSize();
 	protected abstract byte getStarterPower();

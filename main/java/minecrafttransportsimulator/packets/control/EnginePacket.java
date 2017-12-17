@@ -5,10 +5,10 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
 
 public class EnginePacket implements IMessage{
 	private int id;
@@ -37,23 +37,28 @@ public class EnginePacket implements IMessage{
 		buf.writeByte(this.engineCode);
 	}
 
-	public static class Handler implements IMessageHandler<EnginePacket, IMessage> {
-		public IMessage onMessage(EnginePacket message, MessageContext ctx){
-			EntityMultipartVehicle vehicle;
-			EntityEngine engine;
-			if(ctx.side==Side.SERVER){
-				vehicle = (EntityMultipartVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
-				engine = (EntityEngine) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.engineID);
-			}else{
-				vehicle = (EntityMultipartVehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
-				engine = (EntityEngine) Minecraft.getMinecraft().theWorld.getEntityByID(message.engineID);
-			}	
-			if(vehicle != null && engine != null){
-				vehicle.handleEngineSignal(engine, message.engineCode);
-				if(ctx.side==Side.SERVER){
-					MTS.MFSNet.sendToAll(message);
+	public static class Handler implements IMessageHandler<EnginePacket, IMessage>{
+		public IMessage onMessage(final EnginePacket message, final MessageContext ctx){
+			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
+				@Override
+				public void run(){
+					EntityMultipartVehicle vehicle;
+					EntityEngine engine;
+					if(ctx.side.isServer()){
+						vehicle = (EntityMultipartVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						engine = (EntityEngine) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.engineID);
+					}else{
+						vehicle = (EntityMultipartVehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						engine = (EntityEngine) Minecraft.getMinecraft().theWorld.getEntityByID(message.engineID);
+					}	
+					if(vehicle != null && engine != null){
+						vehicle.handleEngineSignal(engine, message.engineCode);
+						if(ctx.side.isServer()){
+							MTS.MTSNet.sendToAll(message);
+						}
+					}
 				}
-			}
+			});
 			return null;
 		}
 	}

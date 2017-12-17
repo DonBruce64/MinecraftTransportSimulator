@@ -37,8 +37,7 @@ public class EntityEngineAircraftLarge extends EntityEngineAircraft{
 
 	@Override
 	protected String getStartingSoundName(){
-		//TODO find another sound for large engines.
-		return "engine_starting";
+		return "large_engine_starting";
 	}
 
 	@Override

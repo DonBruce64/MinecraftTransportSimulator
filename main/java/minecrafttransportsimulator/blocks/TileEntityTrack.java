@@ -12,7 +12,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class TileEntityTrack extends MTSTileEntity{
-	public boolean renderedLastPass;
 	public boolean hasTriedToConnectToOtherSegment;
 	public TileEntityTrack connectedTrack;
 	public MTSCurve curve;
@@ -36,10 +35,11 @@ public class TileEntityTrack extends MTSTileEntity{
 	
 	public void removeFakeTracks(){
 		this.invalidate();
+		BlockTrackStructureFake.disableMainTrackBreakage();
 		for(BlockPos fakePos : fakeTracks){
 			worldObj.setBlockToAir(fakePos);
 		}
-		BlockTrackFake.overrideBreakingBlocks = false;
+		BlockTrackStructureFake.enableMainTrackBreakage();
 	}
 	
 	@Override
@@ -56,10 +56,9 @@ public class TileEntityTrack extends MTSTileEntity{
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
-        int[] endCoords = tagCompound.getIntArray("endPoint");
+        int[] endCoords = tagCompound.getIntArray("curveEndPoint");
         if(endCoords.length != 0){
-        	BlockPos endPos = new BlockPos(endCoords[0], endCoords[1], endCoords[2]);
-        	curve = new MTSCurve(this.pos, endPos, tagCompound.getFloat("startAngle"), tagCompound.getFloat("endAngle"));
+        	curve = new MTSCurve(new BlockPos(endCoords[0], endCoords[1], endCoords[2]), tagCompound.getFloat("curveStartAngle"), tagCompound.getFloat("curveEndAngle"));
         }
         
         this.fakeTracks.clear();
@@ -75,9 +74,9 @@ public class TileEntityTrack extends MTSTileEntity{
     public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
         if(curve != null){
-	        tagCompound.setFloat("startAngle", curve.startAngle);
-	        tagCompound.setFloat("endAngle", curve.endAngle);
-	        tagCompound.setIntArray("endPoint", new int[]{curve.blockEndPos.getX(), curve.blockEndPos.getY(), curve.blockEndPos.getZ()});
+	        tagCompound.setFloat("curveStartAngle", curve.startAngle);
+	        tagCompound.setFloat("curveEndAngle", curve.endAngle);
+	        tagCompound.setIntArray("curveEndPoint", new int[]{curve.endPos.getX(), curve.endPos.getY(), curve.endPos.getZ()});
         }else{
         	this.invalidate();
         }

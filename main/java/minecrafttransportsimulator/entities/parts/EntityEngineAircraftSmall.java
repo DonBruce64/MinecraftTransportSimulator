@@ -37,7 +37,7 @@ public class EntityEngineAircraftSmall extends EntityEngineAircraft{
 
 	@Override
 	protected String getStartingSoundName(){
-		return "engine_starting";
+		return "small_engine_starting";
 	}
 
 	@Override

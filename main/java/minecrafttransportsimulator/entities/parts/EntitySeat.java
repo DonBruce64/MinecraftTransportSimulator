@@ -1,18 +1,21 @@
 package minecrafttransportsimulator.entities.parts;
 
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSEntity;
+import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
-import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.general.ChatPacket;
+import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 
 public class EntitySeat extends EntityMultipartChild{
@@ -31,21 +34,39 @@ public class EntitySeat extends EntityMultipartChild{
 
 	@Override
 	public ItemStack getItemStack(){
-		return new ItemStack(MTSRegistry.seat);
+		return new ItemStack(MTSRegistry.seat, 1, propertyCode);
 	}
 	
 	@Override
-	public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
-		if(!worldObj.isRemote){
-			Entity rider = EntityHelper.getRider(this);
+	public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
+		if(!worldObj.isRemote && this.parent != null){
+			if(stack != null){
+				if(stack.getItem().equals(MTSRegistry.key)){
+					parent.processInitialInteractFromChild(player, this, stack);
+					return true;
+				}
+			}
+			Entity rider = this.getPassenger();
 			if(rider==null){
-				player.startRiding(this);
-				return true;
+				//Don't let non-seated players in this vehicle enter if locked.
+				if(((EntityMultipartMoving) parent).locked){
+					if(player.getRidingEntity() instanceof EntitySeat){
+						if(((EntitySeat) player.getRidingEntity()).parent != null){
+							if(((EntitySeat) player.getRidingEntity()).parent.equals(this.parent)){
+								player.startRiding(this);
+								return true;
+							}
+						}
+					}
+					MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
+				}else{
+					player.startRiding(this);
+				}
 			}else if(!rider.equals(player)){
-				MTS.MFSNet.sendTo(new ChatPacket("interact.failure.seattaken"), (EntityPlayerMP) player);
+				MTS.MTSNet.sendTo(new ChatPacket("interact.failure.seattaken"), (EntityPlayerMP) player);
 			}
 		}
-		return false;
+		return true;
     }
 
 	@Override
@@ -59,15 +80,15 @@ public class EntitySeat extends EntityMultipartChild{
 	}
 	
 	@Override
-	public void readFromNBT(NBTTagCompound tagCompound){
-		super.readFromNBT(tagCompound);
-		this.isController=tagCompound.getBoolean("isController");
+	 public void updatePassenger(Entity passenger){
+		super.updatePassenger(passenger);
+		if(parent != null){
+			MTSVector posVec = RotationSystem.getRotatedPoint(this.offsetX, (float) (this.offsetY + passenger.getYOffset() + passenger.height), (float) this.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
+			passenger.setPosition(parent.posX + posVec.xCoord, parent.posY + posVec.yCoord - passenger.height, parent.posZ + posVec.zCoord);
+		}
 	}
-    
-	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
-		super.writeToNBT(tagCompound);
-		tagCompound.setBoolean("isController", this.isController);
-		return tagCompound;
+	
+	public Entity getPassenger(){
+		return this.getPassengers().isEmpty() ? null : this.getPassengers().get(0);
 	}
 }

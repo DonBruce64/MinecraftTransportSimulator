@@ -5,25 +5,20 @@ import java.util.List;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
-import minecrafttransportsimulator.dataclasses.MTSDamageSources.DamageSourceCrash;
+import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.entities.parts.EntityChest;
-import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
-import minecrafttransportsimulator.entities.parts.EntitySeat;
-import minecrafttransportsimulator.helpers.EntityHelper;
+import minecrafttransportsimulator.guis.GUIPanelAircraft;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
-import minecrafttransportsimulator.rendering.PlaneHUD;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 
@@ -41,25 +36,13 @@ public class EntityPlane extends EntityMultipartVehicle{
 	public short elevatorCooldown;
 	public short rudderCooldown;
 	
-	public MTSVector velocityVec = new MTSVector(0, 0, 0);
-	public MTSVector headingVec = new MTSVector(0, 0, 0);
 	public MTSVector verticalVec = new MTSVector(0, 0, 0);
 	public MTSVector sideVec = new MTSVector(0, 0, 0);
 
 	//Internal plane variables
-	private boolean hasPontoons;
-	private byte groundedWheels;
-	private byte groundedCores;
-	private float currentMass;
-	private float addedMass;
-	private float currentCOG;
-	private float brakeDistance;
 	private float momentRoll;
 	private float momentPitch;
 	private float momentYaw;
-	private float motionRoll;
-	private float motionPitch;
-	private float motionYaw;
 	private double currentWingArea;
 	private double dragCoeff;
 	private double wingLiftCoeff;
@@ -68,7 +51,6 @@ public class EntityPlane extends EntityMultipartVehicle{
 	private double rudderLiftCoeff;
 	private double thrust;
 	
-	private double brakeForce;//kg*m/ticks^2
 	private double thrustForce;//kg*m/ticks^2
 	private double dragForce;//kg*m/ticks^2
 	private double wingForce;//kg*m/ticks^2
@@ -76,7 +58,6 @@ public class EntityPlane extends EntityMultipartVehicle{
 	private double elevatorForce;//kg*m/ticks^2
 	private double rudderForce;//kg*m/ticks^2
 	private double gravitationalForce;//kg*m/ticks^2
-	private double brakeTorque;//kg*m^2/ticks^2
 	private double thrustTorque;//kg*m^2/ticks^2
 	private double aileronTorque;//kg*m^2/ticks^2
 	private double elevatorTorque;//kg*m^2/ticks^2
@@ -116,47 +97,32 @@ public class EntityPlane extends EntityMultipartVehicle{
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		if(!linked){return;}
-		refreshGroundedStatuses();
-		getBasicProperties();
-		getForcesAndMotions();
-		performGroundOperations();
-		adjustXZMovement();
-		adjustYawMovement();
-		adjustRollMovement();
-		adjustVerticalMovement();
-		//TODO get this working.
-		//movePlane();
-		if(!worldObj.isRemote){
-			//Movement for children on client side is done in tick handler.
+		if(linked){
+			getBasicProperties();
+			getForcesAndMotions();
+			performGroundOperations();
+			checkPlannedMovement();
+			movePlane();
 			moveChildren();
-			dampenControlSurfaces();
+			if(!worldObj.isRemote){
+				dampenControlSurfaces();
+			}
 		}
+	}
+
+	@Override
+	public Instruments getBlankInstrument(){
+		return Instruments.AIRCRAFT_BLANK;
 	}
 	
 	@Override
-	public void explodeAtPosition(double x, double y, double z){
-		Entity pilot = null;
-		for(EntityMultipartChild child : getChildren()){
-			if(child instanceof EntitySeat){
-				if(((EntitySeat) child).isController){
-					if(child.getRidingEntity() != null){
-						pilot = child.getRidingEntity();
-						break;
-					}
-				}
-			}
-		}
-		for(EntityMultipartChild child : getChildren()){
-			if(child.getRidingEntity() != null){
-				if(child.getRidingEntity().equals(pilot)){
-					child.getRidingEntity().attackEntityFrom(new DamageSourceCrash(null, "plane"), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
-				}else{
-					child.getRidingEntity().attackEntityFrom(new DamageSourceCrash(pilot, "plane"), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
-				}
-			}
-		}
-		super.explodeAtPosition(x, y, z);
+	public GuiScreen getPanel(){
+		return new GUIPanelAircraft(this);
+	}
+	
+	@Override
+	public float getSteerAngle(){
+		return -rudderAngle/10F;
 	}
 	
 	private double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
@@ -173,64 +139,12 @@ public class EntityPlane extends EntityMultipartVehicle{
 		}
 	}
 	
-	private void updateHeadingVec(){
-        double f1 = Math.cos(-this.rotationYaw * 0.017453292F - (float)Math.PI);
-        double f2 = Math.sin(-this.rotationYaw * 0.017453292F - (float)Math.PI);
-        double f3 = -Math.cos(-this.rotationPitch * 0.017453292F);
-        double f4 = Math.sin(-this.rotationPitch * 0.017453292F);
-        headingVec.set((f2 * f3), f4, (f1 * f3));
-   	}
-	
-	private void refreshGroundedStatuses(){
-		//TODO set this up with physics.
-		brakeDistance = groundedWheels = groundedCores = 0;
-		for(EntityMultipartChild child : getChildren()){
-			if(child instanceof EntityGroundDevice){
-				if(!child.isDead){
-					if(child.isOnGround()){
-						if(child.offsetX != 0){
-							brakeDistance = -child.offsetY;
-							groundedWheels += child.offsetX > 0 ? 2 : 4;
-							hasPontoons = child instanceof EntityPontoon;
-						}else{
-							groundedWheels += 1;
-						}
-					}
-				}
-			}else if(child instanceof EntityCore){
-				if(child.isOnGround()){
-					++groundedCores;
-				}
-			}
-		}
-	}
-	
-	private void getBasicProperties(){		
-		currentCOG = 1;
-		currentMass = (float) (pack.general.emptyMass + fuel/50);
-		for(EntityMultipartChild child : getChildren()){
-			addedMass = 0;
-			rider = child.getRidingEntity();
-			if(rider != null){
-				if(rider instanceof EntityPlayer){
-					addedMass = 100 + calculateInventoryWeight(((EntityPlayer) rider).inventory);
-				}else{
-					addedMass = 100;
-				}
-			}else if(child instanceof EntityChest){
-				addedMass = calculateInventoryWeight((EntityChest) child);
-			}else if(child instanceof EntityPropeller){
-				addedMass = 50*(child.propertyCode%10);
-			}
-			currentCOG = (currentCOG*currentMass + child.offsetZ*addedMass)/(currentMass+addedMass);
-			currentMass += addedMass;
-		}
+	private void getBasicProperties(){
 		momentRoll = (float) (pack.general.emptyMass*(1.5F+(fuel/10000F)));
-		momentPitch = 2*currentMass;
-		momentYaw = 3*currentMass;
-				
+		momentPitch = (float) (2*currentMass);
+		momentYaw = (float) (3*currentMass);
 		currentWingArea = pack.plane.wingArea + pack.plane.wingArea*flapAngle/250F;
-		updateHeadingVec();
+		
 		verticalVec = RotationSystem.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
 		sideVec = headingVec.cross(verticalVec);
 		velocityVec.set(motionX, motionY, motionZ);
@@ -252,76 +166,33 @@ public class EntityPlane extends EntityMultipartVehicle{
 				if(child instanceof EntityPropeller){
 					thrust = ((EntityPropeller) child).getThrustForce();
 					thrustForce += thrust;
-					if(!(groundedWheels == 7 && velocity == 0)){
-						thrustTorque += thrust*child.offsetX;
-					}
+					thrustTorque += thrust*child.offsetX;
 				}
 			}
 		}
 		
-		dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*pack.plane.wingspan*pack.plane.wingspan/currentWingArea*0.8));		
-		brakeForce = (brakeOn || parkingBrakeOn) ? ((groundedWheels & 1) + (groundedWheels & 2)/2 + (groundedWheels & 4)/4)*4 + groundedCores*2 : groundedCores*2;
+		dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*pack.plane.wingSpan*pack.plane.wingSpan/currentWingArea*0.8));		
 		wingForce = 0.5F*airDensity*velocity*velocity*currentWingArea*wingLiftCoeff;
 		aileronForce = 0.5F*airDensity*velocity*velocity*pack.plane.wingArea/5*aileronLiftCoeff;
 		elevatorForce = 0.5F*airDensity*velocity*velocity*pack.plane.elevatorArea*elevatorLiftCoeff;			
 		rudderForce = 0.5F*airDensity*velocity*velocity*pack.plane.rudderArea*rudderLiftCoeff;
 		gravitationalForce = currentMass*(9.8/400);
 					
-		brakeTorque = ((groundedWheels & 2)/2 + (groundedWheels & 4)/4)*brakeForce*brakeDistance;
-		aileronTorque = 2*aileronForce*pack.plane.wingspan*0.3;
+		aileronTorque = 2*aileronForce*pack.plane.wingSpan*0.3;
 		elevatorTorque = elevatorForce*pack.plane.tailDistance;
 		rudderTorque = rudderForce*pack.plane.tailDistance;
-		gravitationalTorque = gravitationalForce*currentCOG;
-		
-		if(brakeForce > 0){
-			if(motionX > 0){
-				motionX = Math.max(motionX + (headingVec.xCoord*thrustForce - velocityVec.xCoord*(dragForce + brakeForce) + verticalVec.xCoord*(wingForce + elevatorForce))/currentMass, 0);
-			}else if(motionX < 0){
-				motionX = Math.min(motionX + (headingVec.xCoord*thrustForce - velocityVec.xCoord*(dragForce + brakeForce) + verticalVec.xCoord*(wingForce + elevatorForce))/currentMass, 0);
-			}
-			if(motionZ > 0){
-				motionZ = Math.max(motionZ + (headingVec.zCoord*thrustForce - velocityVec.zCoord*(dragForce + brakeForce) + verticalVec.zCoord*(wingForce + elevatorForce))/currentMass, 0);	
-			}else if(motionZ < 0){
-				motionZ = Math.min(motionZ + (headingVec.zCoord*thrustForce - velocityVec.zCoord*(dragForce + brakeForce) + verticalVec.zCoord*(wingForce + elevatorForce))/currentMass, 0);
-			}
-		}else{
-			motionX += (headingVec.xCoord*thrustForce - velocityVec.xCoord*dragForce + verticalVec.xCoord*(wingForce + elevatorForce))/currentMass;
-			motionZ += (headingVec.zCoord*thrustForce - velocityVec.zCoord*dragForce + verticalVec.zCoord*(wingForce + elevatorForce))/currentMass;
-		}		
+		gravitationalTorque = gravitationalForce*1;
 				
 		//TODO fix this to allow barrel rolls
+		motionX += (headingVec.xCoord*thrustForce - velocityVec.xCoord*dragForce + verticalVec.xCoord*(wingForce + elevatorForce))/currentMass;
+		motionZ += (headingVec.zCoord*thrustForce - velocityVec.zCoord*dragForce + verticalVec.zCoord*(wingForce + elevatorForce))/currentMass;
 		motionY += (headingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + verticalVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
 		
 		motionRoll = (float) (180/Math.PI*((1-headingVec.yCoord)*aileronTorque)/momentRoll);
-		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + (1-Math.abs(headingVec.yCoord))*(gravitationalTorque + brakeTorque))/momentPitch);
+		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + (1-Math.abs(headingVec.yCoord))*gravitationalTorque)/momentPitch);
 		motionYaw = (float) (180/Math.PI*(headingVec.yCoord*aileronTorque - verticalVec.yCoord*(-thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
 	}
-	
-	private void performGroundOperations(){
-		//TODO make this physics!
-		if(hasPontoons && groundedWheels >= 6){
-			if(Math.abs(rotationRoll) <  5){
-				rotationRoll = motionRoll = 0;
-			}
-			if(groundedWheels == 12){
-				groundedWheels = 7;
-			}
-		}else if(groundedWheels >= 6 && Math.abs(rotationRoll) <  1){
-			rotationRoll = motionRoll = 0;
-		}
-		if(groundedWheels == 7){
-			if(motionY<0){motionY=0;}
-			if(motionPitch*currentCOG > 0 ){motionPitch = 0;}
-			if(Math.abs(rotationPitch) < 0.25){rotationPitch = 0;}
-			motionYaw += 7*velocityVec.dot(sideVec) + rudderAngle/(350*(0.5 + velocity*velocity));
-			updateHeadingVec();
-			double groundSpeed = Math.hypot(motionX, motionZ);
-			MTSVector groundVec = headingVec.add(0, -headingVec.yCoord, 0).normalize();
-			motionX = groundVec.xCoord * groundSpeed;
-			motionZ = groundVec.zCoord * groundSpeed;
-		}
-	}
-	
+	/*
 	private void adjustXZMovement(){
 		for(EntityMultipartChild child : getChildren()){
 			xCollisionDepth = 0;
@@ -482,9 +353,9 @@ public class EntityPlane extends EntityMultipartVehicle{
 						prevPitchChildOffset = pitchChildOffset;
 						pitchChildOffset = child.offsetZ;
 						if(prevPitchChildOffset != 0 && (prevPitchChildOffset * pitchChildOffset < 0)){
-							if((motionY += 0.1) > (hasPontoons ? 0.1 : 0)){
+							if((motionY += 0.1) > 0){
 								pitchChildOffset = motionPitch = 0;
-								motionY = hasPontoons ? 0.1 : 0;
+								motionY = 0;
 								return;
 							}else{
 								break;
@@ -531,19 +402,19 @@ public class EntityPlane extends EntityMultipartVehicle{
 				motionY += yCollisionDepth/ConfigSystem.getDoubleConfig("SpeedFactor");
 			}
 		}
-	}
+	}*/
 		
 	private void movePlane(){
-		rotationRoll += motionRoll;
+		rotationRoll = (motionRoll + rotationRoll)%360;
 		rotationPitch = (motionPitch + rotationPitch)%360;
-		rotationYaw += motionYaw;
+		rotationYaw = (motionYaw + rotationYaw)%360;
 		setPosition(posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
 	}
 
 	private void dampenControlSurfaces(){
 		if(aileronCooldown==0){
 			if(aileronAngle != 0){
-				MTS.MFSNet.sendToAll(new AileronPacket(this.getEntityId(), aileronAngle < 0, (short) 0));
+				MTS.MTSNet.sendToAll(new AileronPacket(this.getEntityId(), aileronAngle < 0, (short) 0));
 				aileronAngle += aileronAngle < 0 ? 2 : -2;
 			}
 		}else{
@@ -551,7 +422,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 		}
 		if(elevatorCooldown==0){
 			if(elevatorAngle != 0){
-				MTS.MFSNet.sendToAll(new ElevatorPacket(this.getEntityId(), elevatorAngle < 0, (short) 0));
+				MTS.MTSNet.sendToAll(new ElevatorPacket(this.getEntityId(), elevatorAngle < 0, (short) 0));
 				elevatorAngle += elevatorAngle < 0 ? 6 : -6;
 			}
 		}else{
@@ -559,7 +430,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 		}
 		if(rudderCooldown==0){
 			if(rudderAngle != 0){
-				MTS.MFSNet.sendToAll(new RudderPacket(this.getEntityId(), rudderAngle < 0, (short) 0));
+				MTS.MTSNet.sendToAll(new RudderPacket(this.getEntityId(), rudderAngle < 0, (short) 0));
 				rudderAngle += rudderAngle < 0 ? 6 : -6;
 			}
 		}else{
@@ -569,30 +440,6 @@ public class EntityPlane extends EntityMultipartVehicle{
 	
 	public double[] getDebugForces(){
 		return new double[]{this.thrustForce, this.dragForce, this.wingForce, this.gravitationalForce};
-	}
-
-	//TODO Temporary fix to get this mod running again, fix later
-	protected void getChildCollisions(EntityMultipartChild child, AxisAlignedBB box, List<AxisAlignedBB> boxList){
-		//Need to contract the box because sometimes the slight error in math causes issues.
-		List<BlockPos> collisionMap = EntityHelper.getCollidingBlocks(worldObj, box.contract(0.01), child.collidesWithLiquids());
-		boxList.clear();
-		if(!collisionMap.isEmpty()){
-			for(BlockPos pos : collisionMap){
-				float hardness = worldObj.getBlockState(pos).getBlockHardness(worldObj, pos);
-				if(hardness  <= 0.2F && hardness >= 0){
-					worldObj.setBlockToAir(pos);
-					motionX *= 0.95;
-					motionY *= 0.95;
-					motionZ *= 0.95;
-				}else{
-					boxList.add(worldObj.getBlockState(pos).getCollisionBoundingBox(worldObj, pos));
-				}
-			}
-		}
-	}
-
-	public void drawHUD(int width, int height){
-		PlaneHUD.drawPlaneHUD(this, width, height);
 	}
 
     @Override

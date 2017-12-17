@@ -4,10 +4,10 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
 
 public class BrakePacket implements IMessage{
 	private int id;
@@ -32,25 +32,30 @@ public class BrakePacket implements IMessage{
 		buf.writeByte(this.brakeCode);
 	}
 
-	public static class Handler implements IMessageHandler<BrakePacket, IMessage> {
-		public IMessage onMessage(BrakePacket message, MessageContext ctx){
-			EntityMultipartMoving thisEntity;
-			if(ctx.side==Side.SERVER){
-				thisEntity = (EntityMultipartMoving) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
-			}else{
-				thisEntity = (EntityMultipartMoving) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
-			}
-			if(thisEntity!=null){
-				if((message.brakeCode & 2) == 2){
-					thisEntity.brakeOn = (message.brakeCode & 1) == 1 ? true : false;
+	public static class Handler implements IMessageHandler<BrakePacket, IMessage>{
+		public IMessage onMessage(final BrakePacket message, final MessageContext ctx){
+			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
+				@Override
+				public void run(){
+					EntityMultipartMoving thisEntity;
+					if(ctx.side.isServer()){
+						thisEntity = (EntityMultipartMoving) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+					}else{
+						thisEntity = (EntityMultipartMoving) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+					}
+					if(thisEntity!=null){
+						if((message.brakeCode & 2) == 2){
+							thisEntity.brakeOn = (message.brakeCode & 1) == 1 ? true : false;
+						}
+						if((message.brakeCode & 8) == 8){
+							thisEntity.parkingBrakeOn = (message.brakeCode & 4) == 4 ? true : false;
+						}
+						if(ctx.side.isServer()){
+							MTS.MTSNet.sendToAll(message);
+						}
+					}
 				}
-				if((message.brakeCode & 8) == 8){
-					thisEntity.parkingBrakeOn = (message.brakeCode & 4) == 4 ? true : false;
-				}
-				if(ctx.side==Side.SERVER){
-					MTS.MFSNet.sendToAll(message);
-				}
-			}
+			});
 			return null;
 		}
 	}

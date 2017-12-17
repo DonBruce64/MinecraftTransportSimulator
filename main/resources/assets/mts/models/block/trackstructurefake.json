@@ -1,0 +1,7 @@
+{
+    "textures": {
+        "texture": "mts:items/track",
+        "particle": "mts:items/track"
+    },
+    "elements": [ ]
+}

@@ -2,15 +2,19 @@ package minecrafttransportsimulator.entities.core;
 
 import javax.annotation.Nullable;
 
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.helpers.EntityHelper;
+import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 
@@ -36,7 +40,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	public float offsetY;
 	public float offsetZ;
 	public EntityMultipartParent parent;
-	protected String parentUUID;
+	protected String parentUUID = "";
 	
 	public EntityMultipartChild(World world) {
 		super(world);
@@ -63,42 +67,34 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	}
 	
 	@Override
-    public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
-		return parent != null ? parent.performRightClickAction(clicked, player) : false;
+	public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
+		return parent != null ? parent.processInitialInteractFromChild(player, this, stack) : true;
 	}
 	
 	@Override
-	public boolean performAttackAction(DamageSource source, float damage){
+	public boolean attackEntityFrom(DamageSource source, float damage){
 		if(!worldObj.isRemote){
-			if(isDamageWrench(source)){
-				return true;
-			}else if(!attackChild(source, damage)){
-				return parent != null ? parent.performAttackAction(source, damage) : false;
-			}else{
-				return true;
+			if(source.getEntity() instanceof EntityPlayer){
+				EntityPlayer attackingPlayer = (EntityPlayer) source.getEntity();
+				if(EntityHelper.isPlayerHoldingWrench(attackingPlayer)){
+					if(((EntityMultipartMoving) parent).ownerName.isEmpty() || ((EntityMultipartMoving) parent).ownerName.equals(attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString()) || EntityHelper.isPlayerOP(attackingPlayer)){
+						ItemStack droppedItem = this.getItemStack();
+						if(droppedItem != null){
+							worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, droppedItem));
+						}
+						parent.removeChild(UUID, false);
+						return false;
+					}else{
+						MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehicleowned"), (EntityPlayerMP) attackingPlayer);
+					}
+				}
 			}
-		}else{
-			return true;
-		}
-    }
-
-
-	/**Checks to see if damage came from a player holding a wrench.
-	 * Removes the entity if so, dropping the entity as an item.
-	 * Called each attack before deciding whether or not to forward damage to the parent
-	 * or inflict damage on this child.
-	 */
-	protected boolean isDamageWrench(DamageSource source){
-		if(source.getEntity() instanceof EntityPlayer){
-			if(EntityHelper.isPlayerHoldingWrench((EntityPlayer) source.getEntity())){
-				ItemStack droppedItem = this.getItemStack();
-				worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, droppedItem));
-				parent.removeChild(UUID, false);
-				return true;
+			if(!attackChild(source, damage)){
+				return parent != null ? parent.attackEntityFrom(source, damage) : false;
 			}
 		}
 		return false;
-	}
+    }
 	
 	/**Called when child is attacked.  Return true to end attack, false to forward attack to parent. 
 	 */
@@ -132,6 +128,12 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 		}
 	}
 	
+    //Child rendering is done by the parent.
+    @Override
+    public boolean shouldRenderInPass(int pass){
+    	return false;
+    }
+	
 	@Override
 	public boolean canBeCollidedWith(){
 		//This gets overridden to do collisions with players.
@@ -156,7 +158,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 
 	
 	public void setController(boolean isController){
-		this.isController = true;
+		this.isController = isController;
 	}
 	
 	public void setTurnsWithSteer(boolean turnsWithSteer){

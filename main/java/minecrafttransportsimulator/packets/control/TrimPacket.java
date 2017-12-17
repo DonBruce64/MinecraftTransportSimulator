@@ -1,12 +1,13 @@
 package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
 
 public class TrimPacket implements IMessage{	
 	private int id;
@@ -31,50 +32,55 @@ public class TrimPacket implements IMessage{
 		buf.writeByte(this.trimCode);
 	}
 
-	public static class Handler implements IMessageHandler<TrimPacket, IMessage> {
-		public IMessage onMessage(TrimPacket message, MessageContext ctx) {
-			EntityPlane thisEntity;
-			if(ctx.side==Side.SERVER){
-				thisEntity = (EntityPlane) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
-			}else{
-				thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
-			}
-			if(thisEntity!=null){
-				if((message.trimCode & 3) == 0){
-					if((message.trimCode >> 3) == 1){
-						if(thisEntity.aileronTrim < 100){
-							++thisEntity.aileronTrim;
-						}
+	public static class Handler implements IMessageHandler<TrimPacket, IMessage>{
+		public IMessage onMessage(final TrimPacket message, final MessageContext ctx){
+			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
+				@Override
+				public void run(){
+					EntityPlane thisEntity;
+					if(ctx.side.isServer()){
+						thisEntity = (EntityPlane) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 					}else{
-						if(thisEntity.aileronTrim > -100){
-							--thisEntity.aileronTrim;
-						}
+						thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
-				}else if((message.trimCode & 3) == 1){
-					if((message.trimCode >> 3) == 1){
-						if(thisEntity.elevatorTrim < 150){
-							++thisEntity.elevatorTrim;
+					if(thisEntity!=null){
+						if((message.trimCode & 3) == 0){
+							if((message.trimCode >> 3) == 1){
+								if(thisEntity.aileronTrim < 100){
+									++thisEntity.aileronTrim;
+								}
+							}else{
+								if(thisEntity.aileronTrim > -100){
+									--thisEntity.aileronTrim;
+								}
+							}
+						}else if((message.trimCode & 3) == 1){
+							if((message.trimCode >> 3) == 1){
+								if(thisEntity.elevatorTrim < 150){
+									++thisEntity.elevatorTrim;
+								}
+							}else{
+								if(thisEntity.elevatorTrim > -150){
+									--thisEntity.elevatorTrim;
+								}
+							}
+						}else if((message.trimCode & 3) == 2){
+							if((message.trimCode >> 3) == 1){
+								if(thisEntity.rudderTrim < 200){
+									++thisEntity.rudderTrim;
+								}
+							}else{
+								if(thisEntity.rudderTrim > -200){
+									--thisEntity.rudderTrim;	
+								}
+							}
 						}
-					}else{
-						if(thisEntity.elevatorTrim > -150){
-							--thisEntity.elevatorTrim;
-						}
-					}
-				}else if((message.trimCode & 3) == 2){
-					if((message.trimCode >> 3) == 1){
-						if(thisEntity.rudderTrim < 200){
-							++thisEntity.rudderTrim;
-						}
-					}else{
-						if(thisEntity.rudderTrim > -200){
-							--thisEntity.rudderTrim;	
+						if(ctx.side.isServer()){
+							MTS.MTSNet.sendToAll(message);
 						}
 					}
 				}
-				if(ctx.side==Side.SERVER){
-					return message;
-				}
-			}
+			});
 			return null;
 		}
 	}

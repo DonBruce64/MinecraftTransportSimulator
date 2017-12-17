@@ -13,9 +13,9 @@ public class GUICredits extends GuiScreen{
 		this.drawDefaultBackground();
 		
 		line = 0;
-		drawTextLine("Thank you for downloading MFS Version " + MTS.MODVER + "! Please see the minecraftforum");
+		drawTextLine("Thank you for downloading MTS Version " + MTS.MODVER + "! Please see the minecraftforum");
 		drawTextLine("page for help, flight tips, recipes, questions, and current mod news.");
-		drawTextLine("Happy flying! ~The MFS Team");
+		drawTextLine("Happy flying! ~The MTS Team");
 		drawTextLine("");
 		drawTextLine("CREDITS:");
 		drawTextLine("don_bruce 'Don':");
@@ -23,7 +23,7 @@ public class GUICredits extends GuiScreen{
 		drawTextLine("DietPepsi1997 'Limit1997':");
 		drawTextLine("     PZL P11, Engines, Propellers, Pontoons, Propeller Bench");
 		drawTextLine("Wolfiader 'Wolfvanox':");
-		drawTextLine("     Vulcanair");
+		drawTextLine("     Vulcanair, Comanche");
 		drawTextLine("");
 		drawTextLine("TRANSLATIONS:");
 		drawTextLine("     sotakan0808 -> ja_JP.lang; Minddao -> ru_RU.lang");

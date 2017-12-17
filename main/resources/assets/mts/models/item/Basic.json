@@ -1,5 +1,5 @@
 {
-    "parent": "builtin/generated",
+    "parent": "item/generated",
     "display": {
         "thirdperson": {
             "rotation": [ -90, 0, 0 ],

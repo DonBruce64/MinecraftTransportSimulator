@@ -2,6 +2,7 @@ package minecrafttransportsimulator.entities.parts;
 
 import java.util.List;
 
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
@@ -50,7 +51,7 @@ public class EntityPontoon extends EntityGroundDevice{
 			if(ticksExisted==1 || ticksExisted%10==0){
 				this.linkToOtherHalf();
 			}else if(this.ticksExisted>100){
-				System.err.println("KILLING ORPHANED PONTOON HALF!");
+				MTS.MTSLog.error("KILLING ORPHANED PONTOON HALF!");
 				this.setDead();
 			}
 			return;

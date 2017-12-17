@@ -2,6 +2,7 @@ package minecrafttransportsimulator.dataclasses;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -9,35 +10,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.io.FileUtils;
-
-import com.google.common.collect.Sets;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.blocks.TileEntitySurveyFlag;
 import minecrafttransportsimulator.blocks.TileEntityTrack;
-import minecrafttransportsimulator.entities.core.EntityMultipartChild;
-import minecrafttransportsimulator.entities.parts.EntityChest;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
-import minecrafttransportsimulator.entities.parts.EntityPontoon;
-import minecrafttransportsimulator.entities.parts.EntityPropeller;
-import minecrafttransportsimulator.entities.parts.EntitySeat;
-import minecrafttransportsimulator.entities.parts.EntitySkid;
-import minecrafttransportsimulator.entities.parts.EntityWheel;
-import minecrafttransportsimulator.rendering.AircraftInstruments;
+import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPropellerBench;
 import minecrafttransportsimulator.rendering.blockrenders.RenderSurveyFlag;
 import minecrafttransportsimulator.rendering.blockrenders.RenderTrack;
-import minecrafttransportsimulator.rendering.partrenders.RenderEngine;
-import minecrafttransportsimulator.rendering.partrenders.RenderPlaneChest;
-import minecrafttransportsimulator.rendering.partrenders.RenderPontoon;
-import minecrafttransportsimulator.rendering.partrenders.RenderPropeller;
-import minecrafttransportsimulator.rendering.partrenders.RenderSeat;
-import minecrafttransportsimulator.rendering.partrenders.RenderSkid;
-import minecrafttransportsimulator.rendering.partrenders.RenderWheel;
+import minecrafttransportsimulator.systems.OBJParserSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -47,19 +30,25 @@ import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.model.obj.OBJLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+
+import org.apache.commons.io.FileUtils;
+
+import com.google.common.collect.Sets;
 
 public class MTSRegistryClient{
 	private static final MTSRegistryClient instance = new MTSRegistryClient();
-	/**Maps children to render classes.*/
-	public static final Map <Class<? extends EntityMultipartChild>, RenderChild> childRenderMap = new HashMap<Class<? extends EntityMultipartChild>, RenderChild>();
+	/**Map of parsed models keyed by name.*/
+	public static final Map<String, Map<String, Float[][]>> modelMap = new HashMap<String, Map<String, Float[][]>>();
 
 	public static void preInit(){
 		initCustomResourceLocation();
+		loadCustomOBJModels();
 		initTileEntityRenderers();
 		initEntityRenders();
 	}
@@ -72,7 +61,14 @@ public class MTSRegistryClient{
 		String[] fieldNames = new String[]{"defaultResourcePacks", "field_110449_ao"}; 
 		List<IResourcePack> resourcePacks = ReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), fieldNames);
 		resourcePacks.add(instance.new ExteralResourcePack());
-		OBJLoader.INSTANCE.addDomain(MTS.MODID);
+	}
+	
+	public static void loadCustomOBJModels(){
+		for(String name : PackParserSystem.getRegisteredNames()){
+			if(!modelMap.containsKey(name)){
+				modelMap.put(name, OBJParserSystem.parseOBJModel(PackParserSystem.getPack(name).rendering.modelName));
+			}
+		}
 	}
 	
 	private static void initTileEntityRenderers(){
@@ -81,17 +77,8 @@ public class MTSRegistryClient{
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityTrack.class, new RenderTrack());
 	}
 	
-	private static void initEntityRenders(){		
-		childRenderMap.put(EntitySeat.class, new RenderSeat());
-		childRenderMap.put(EntityChest.class, new RenderPlaneChest());
-		childRenderMap.put(EntityWheel.EntityWheelSmall.class, new RenderWheel());
-		childRenderMap.put(EntityWheel.EntityWheelLarge.class, new RenderWheel());
-		childRenderMap.put(EntitySkid.class, new RenderSkid());
-		childRenderMap.put(EntityPontoon.class, new RenderPontoon());
-		childRenderMap.put(EntityPontoon.EntityPontoonDummy.class, null);
-		childRenderMap.put(EntityPropeller.class, new RenderPropeller());
-		childRenderMap.put(EntityEngineAircraftSmall.class, new RenderEngine());
-		childRenderMap.put(EntityEngineAircraftLarge.class, new RenderEngine());
+	private static void initEntityRenders(){
+		RenderingRegistry.registerEntityRenderingHandler(EntityMultipartMoving.class, instance.new MTSRenderingFactory(RenderMultipart.class));
 	}
 
 	private static void initItemRenders(){
@@ -103,44 +90,63 @@ public class MTSRegistryClient{
 		registerItemRender(MTSRegistry.engineAircraftLarge);
 		registerItemRenderSeries(MTSRegistry.propeller, 3);
 		registerItemRenderSeries(MTSRegistry.seat, 102);
-		registerItemRenderSeries(MTSRegistry.flightInstrument, AircraftInstruments.AircraftGauges.values().length);
+		registerItemRenderSeries(MTSRegistry.instrument, MTSInstruments.Instruments.values().length);
 		registerItemRender(MTSRegistry.pointerShort);
 		registerItemRender(MTSRegistry.pointerLong);
 		registerItemRender(MTSRegistry.wrench);
+		registerItemRender(MTSRegistry.key);
 		registerItemRender(MTSRegistry.flightManual);
 		registerItemRender(Item.getItemFromBlock(MTSRegistry.propellerBench));
 		
 		registerItemRender(MTSRegistry.track);
-		registerItemRender(MTSRegistry.bogie);
-		registerItemRender(Item.getItemFromBlock(MTSRegistry.blockTrack));
 		registerItemRender(Item.getItemFromBlock(MTSRegistry.surveyFlag));
+		
+		//Now register items for the pack data.
+		try{
+			//We manually create the JSON files, so get rid of what's in the directory first.
+			File jsonDir = new File(MTS.assetDir + File.separator + "models" + File.separator + "item");
+			for(File file : jsonDir.listFiles()){
+				if(file.getName().endsWith(".json")){
+					file.delete();
+				}
+			}
+			//Now create the files and register the item renders.
+			for(String name : MTSRegistry.multipartItemMap.keySet()){
+				String uniqueItemName = PackParserSystem.getDefinitionForPack(name).uniqueName;
+				FileWriter jsonWriter = new FileWriter(new File(jsonDir.getAbsolutePath() + File.separator + uniqueItemName + ".json"));
+				jsonWriter.write("{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + MTS.MODID + ":items/" + uniqueItemName + "\"}}");
+				registerMultipartItemRender(name);
+				jsonWriter.close();
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 	//START OF ITEM REGISTRY HELPER CODE
 	private static void registerItemRender(Item item){
-	    Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, 0, new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName().substring(5), "inventory"));
+	    Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, 0, new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName().substring(5).replace("block", ""), "inventory"));
 	}
 
 	private static void registerItemRenderSeries(Item item, int numberMetas){
 		ModelResourceLocation[] models = new ModelResourceLocation[numberMetas];
 		for(byte i=0; i<numberMetas; ++i){
-			models[i] = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName().substring(5) + String.valueOf(i), "inventory");
+			if(item.getUnlocalizedName(new ItemStack(item, 1, i)).equals(item.getUnlocalizedName())){
+				models[i] = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName(new ItemStack(item, 1, i)).substring(5) + Integer.valueOf(i), "inventory");
+			}else{
+				models[i] = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName(new ItemStack(item, 1, i)).substring(5), "inventory");
+			}
+			
 			Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, i, models[i]);
 		}
 		ModelBakery.registerItemVariants(item, models);
 	}
 	
-    /**Abstract class for child rendering.
-     * Register with {@link registerChildRender} to activate rendering in {@link RenderMultipart}
-     * 
-     * @author don_bruce
-     */
-    public static abstract class RenderChild{
-    	public RenderChild(){}
-    	public abstract void render(EntityMultipartChild child, double x, double y, double z, float partialTicks);
-    }
-
-	private class MTSRenderingFactory implements IRenderFactory {
+	private static void registerMultipartItemRender(String name){
+		Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(MTSRegistry.multipartItemMap.get(name), 0, new ModelResourceLocation(MTS.MODID + ":" + PackParserSystem.getDefinitionForPack(name).uniqueName, "inventory"));
+	}
+	
+	private class MTSRenderingFactory implements IRenderFactory{
 		private final Class<? extends Render> entityRender;
 		public MTSRenderingFactory(Class<? extends Render>  entityRender){
 			this.entityRender = entityRender;

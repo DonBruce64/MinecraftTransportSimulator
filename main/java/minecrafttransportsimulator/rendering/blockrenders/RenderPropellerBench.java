@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.rendering.blockmodels.ModelPropellerBench;
@@ -15,13 +13,15 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 
+import org.lwjgl.opengl.GL11;
+
 public class RenderPropellerBench extends TileEntitySpecialRenderer{
 	private static final ModelPropellerBench benchModel = new ModelPropellerBench();
 	private static final ModelPropeller propellerModel = new ModelPropeller();
 	private static final ResourceLocation tierOneTexture = new ResourceLocation("minecraft", "textures/blocks/planks_oak.png");
 	private static final ResourceLocation tierTwoTexture = new ResourceLocation("minecraft", "textures/blocks/iron_block.png");
 	private static final ResourceLocation tierThreeTexture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
-	private static final ResourceLocation benchTexture = new ResourceLocation(MTS.MODID, "textures/parts/propellerbench.png");
+	private static final ResourceLocation benchTexture = new ResourceLocation(MTS.MODID, "textures/blockmodels/propellerbench.png");
 	
 	private static Map<int[], float[]> offsetMappings = new HashMap<int[], float[]>();
 	
@@ -97,12 +97,12 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer{
 		GL11.glTranslatef(-0.5F, 0F, -0.5F);
 		GL11.glTranslatef(0, 0.44F, 1.25F);
 		GL11.glRotatef(180, 1, 0, 0);
-		GL11DrawSystem.bindTexture(benchTexture);
+		bindTexture(benchTexture);
 		benchModel.renderBase();
 		GL11.glTranslatef(benchOffsets[0], 0, benchOffsets[1]);
 		benchModel.renderTable();
 		renderMaterial(bench);
-		GL11DrawSystem.bindTexture(benchTexture);
+		bindTexture(benchTexture);
 		GL11.glTranslatef(-benchOffsets[0], 0, -benchOffsets[1]);
 		GL11.glTranslatef(0, 0, -0.25F);
 		benchModel.renderBody();
@@ -112,9 +112,9 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer{
 
 	private void renderMaterial(TileEntityPropellerBench bench){
 		switch(bench.propellerType){
-			case 0: GL11DrawSystem.bindTexture(tierOneTexture); break;
-			case 1: GL11DrawSystem.bindTexture(tierTwoTexture); break;
-			case 2: GL11DrawSystem.bindTexture(tierThreeTexture); break;
+			case 0: bindTexture(tierOneTexture); break;
+			case 1: bindTexture(tierTwoTexture); break;
+			case 2: bindTexture(tierThreeTexture); break;
 		}
 		
 		short timeLeft = (short) (bench.timeOperationFinished - bench.getWorld().getTotalWorldTime());
@@ -147,6 +147,7 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer{
 	}
 	
 	private void renderMaterialBlock(float x1, float x2, float z1, float z2){
+		//TODO find a way to not render using the GL11DrawSystem.
 		GL11DrawSystem.renderSquareUV(x1, x2, 0.24, 0, z1, z1, x1*4 + 2, x2*4 + 2, 0, 1, false);
 		GL11DrawSystem.renderSquareUV(x1, x2, 0.0, 0.24, z2, z2, x1*4 + 2, x2*4 + 2, 0, 1, false);
 		GL11DrawSystem.renderSquareUV(x1, x1, 0.0, 0.24, z1, z2, z1*4 + 2, z2*4 + 2, 0, 1, false);

@@ -6,8 +6,8 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.MTSBlockRotateable;
 import minecrafttransportsimulator.baseclasses.MTSTileEntity;
-import minecrafttransportsimulator.baseclasses.MTSTileEntityRotateable;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.general.ChatPacket;
@@ -24,7 +24,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BlockSurveyFlag extends MTSTileEntityRotateable{
+public class BlockSurveyFlag extends MTSBlockRotateable{
 	private static final AxisAlignedBB blockBox = new AxisAlignedBB(0.4375F, 0.0F, 0.4375F, 0.5625F, 1.0F, 0.5625F);
 	private static final Map<EntityPlayer, BlockPos> firstPosition = new HashMap<EntityPlayer, BlockPos>();
 	private static final Map<EntityPlayer, Integer> firstDimension = new HashMap<EntityPlayer, Integer>();
@@ -54,56 +54,56 @@ public class BlockSurveyFlag extends MTSTileEntityRotateable{
 		if(!world.isRemote){
 			TileEntitySurveyFlag tile = (TileEntitySurveyFlag) world.getTileEntity(pos);
 			if(!player.isSneaking() && player.getHeldItemMainhand() != null){
-				if(player.getHeldItemMainhand().equals(MTSRegistry.track)){
+				if(MTSRegistry.track.equals(player.getHeldItemMainhand().getItem())){
 					if(tile.linkedCurve != null){
 						if(!player.capabilities.isCreativeMode){
 							if(EntityHelper.getQtyOfItemPlayerHas(player, MTSRegistry.track, 0) <  Math.round(tile.linkedCurve.pathLength)){
-								MTS.MFSNet.sendTo(new ChatPacket("interact.flag.failure.materials", " " + String.valueOf((int) Math.round(tile.linkedCurve.pathLength))), (EntityPlayerMP) player);
+								MTS.MTSNet.sendTo(new ChatPacket("interact.flag.failure.materials", " " + String.valueOf((int) Math.round(tile.linkedCurve.pathLength))), (EntityPlayerMP) player);
 								return;
 							}
 						}
 						BlockPos blockingPos = tile.spawnDummyTracks();
 						if(blockingPos != null){
-							MTS.MFSNet.sendTo(new ChatPacket("interact.flag.failure.blockage", " X:" + blockingPos.getX() + " Y:" + blockingPos.getY() + " Z:" + blockingPos.getZ()), (EntityPlayerMP) player);
+							MTS.MTSNet.sendTo(new ChatPacket("interact.flag.failure.blockage", " X:" + blockingPos.getX() + " Y:" + blockingPos.getY() + " Z:" + blockingPos.getZ()), (EntityPlayerMP) player);
 						}else{
 							if(!player.capabilities.isCreativeMode){
 								EntityHelper.removeQtyOfItemsFromPlayer(player, MTSRegistry.track, 0, Math.round(tile.linkedCurve.pathLength));
 							}
 						}
 					}else{
-						MTS.MFSNet.sendTo(new ChatPacket("interact.flag.failure.nolink"), (EntityPlayerMP) player);
+						MTS.MTSNet.sendTo(new ChatPacket("interact.flag.failure.nolink"), (EntityPlayerMP) player);
 					}
 					return;
 				}
 			}
 			if(firstPosition.containsKey(player)){
 				if(firstDimension.get(player) != world.provider.getDimension()){
-					MTS.MFSNet.sendTo(new ChatPacket("interact.flag.failure.dimension"), (EntityPlayerMP) player);
+					MTS.MTSNet.sendTo(new ChatPacket("interact.flag.failure.dimension"), (EntityPlayerMP) player);
 					resetMaps(player);
 				}else if(firstPosition.get(player).equals(pos)){
-					MTS.MFSNet.sendTo(new ChatPacket("interact.flag.info.clear"), (EntityPlayerMP) player);
+					MTS.MTSNet.sendTo(new ChatPacket("interact.flag.info.clear"), (EntityPlayerMP) player);
 					resetMaps(player);
 				}else if(Math.sqrt(firstPosition.get(player).distanceSq(pos)) > 128){
-					MTS.MFSNet.sendTo(new ChatPacket("interact.flag.failure.distance"), (EntityPlayerMP) player);
+					MTS.MTSNet.sendTo(new ChatPacket("interact.flag.failure.distance"), (EntityPlayerMP) player);
 					resetMaps(player);
 				}else{
 					//Make sure flag has not been removed since linking.
 					if(world.getTileEntity(firstPosition.get(player)) instanceof TileEntitySurveyFlag){
 						TileEntitySurveyFlag firstFlag = (TileEntitySurveyFlag) world.getTileEntity(firstPosition.get(player));
 						TileEntitySurveyFlag secondFlag = (TileEntitySurveyFlag) world.getTileEntity(pos);
-						firstFlag.linkToFlag(pos, true);
-						secondFlag.linkToFlag(firstPosition.get(player), false);
-						MTS.MFSNet.sendTo(new ChatPacket("interact.flag.info.link"), (EntityPlayerMP) player);
+						firstFlag.linkToFlag(pos);
+						secondFlag.linkToFlag(firstPosition.get(player));
+						MTS.MTSNet.sendTo(new ChatPacket("interact.flag.info.link"), (EntityPlayerMP) player);
 						resetMaps(player);
 					}else{
-						MTS.MFSNet.sendTo(new ChatPacket("interact.flag.info.clear"), (EntityPlayerMP) player);
+						MTS.MTSNet.sendTo(new ChatPacket("interact.flag.info.clear"), (EntityPlayerMP) player);
 						resetMaps(player);
 					}
 				}
 			}else{
 				firstPosition.put(player, pos);
 				firstDimension.put(player, world.provider.getDimension());
-				MTS.MFSNet.sendTo(new ChatPacket("interact.flag.info.set"), (EntityPlayerMP) player);
+				MTS.MTSNet.sendTo(new ChatPacket("interact.flag.info.set"), (EntityPlayerMP) player);
 			}
 		}
 	}
@@ -121,6 +121,7 @@ public class BlockSurveyFlag extends MTSTileEntityRotateable{
 	
 	
 	@Override
+	@SuppressWarnings("deprecation")
 	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos){
 		return blockBox;
 	}

@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -42,20 +43,25 @@ public class TileEntitySyncPacket implements IMessage{
 		ByteBufUtils.writeTag(buf, tag);
 	}
 
-	public static class Handler implements IMessageHandler<TileEntitySyncPacket, IMessage> {
-		public IMessage onMessage(TileEntitySyncPacket message, MessageContext ctx){
-			TileEntity tile;
-			if(ctx.side.isServer()){
-				tile = ctx.getServerHandler().playerEntity.worldObj.getTileEntity(new BlockPos(message.x, message.y, message.z));
-			}else{
-				tile = Minecraft.getMinecraft().theWorld.getTileEntity(new BlockPos(message.x, message.y, message.z));
-			}
-			if(tile != null){
-				tile.readFromNBT(message.tag);
-			}
-			if(ctx.side.isServer()){
-				MTS.MFSNet.sendToAll(message);
-			}
+	public static class Handler implements IMessageHandler<TileEntitySyncPacket, IMessage>{
+		public IMessage onMessage(final TileEntitySyncPacket message, final MessageContext ctx){
+			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
+				@Override
+				public void run(){
+					TileEntity tile;
+					if(ctx.side.isServer()){
+						tile = ctx.getServerHandler().playerEntity.worldObj.getTileEntity(new BlockPos(message.x, message.y, message.z));
+					}else{
+						tile = Minecraft.getMinecraft().theWorld.getTileEntity(new BlockPos(message.x, message.y, message.z));
+					}
+					if(tile != null){
+						tile.readFromNBT(message.tag);
+					}
+					if(ctx.side.isServer()){
+						MTS.MTSNet.sendToAll(message);
+					}
+				}
+			});
 			return null;
 		}
 	}	

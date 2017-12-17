@@ -1,20 +1,23 @@
 package minecrafttransportsimulator.entities.main;
 
+import java.util.Iterator;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.world.World;
-
-import java.util.Iterator;
-import java.util.List;
 
 public abstract class EntityChildInventory extends EntityMultipartChild implements IInventory{
     public float lidAngle;
@@ -34,7 +37,7 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
 	protected abstract String getChildInventoryName();
 	
 	@Override
-    public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
+	public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
 		player.openGui(MTS.instance, this.getEntityId(), worldObj, (int) posX, (int) posY, (int) posZ);
 		return false;
     }
@@ -72,7 +75,7 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
         this.prevLidAngle = this.lidAngle;
         f = 0.1F;
         if(this.numPlayersUsing > 0 && this.lidAngle == 0.0F){
-        	MTS.proxy.playSound(this, "random.chestopen", 0.5F, this.worldObj.rand.nextFloat() * 0.1F + 0.9F);
+        	worldObj.playSound((EntityPlayer)null, posX, posY + 0.5D, posZ, SoundEvents.BLOCK_CHEST_OPEN, SoundCategory.BLOCKS, 0.5F, worldObj.rand.nextFloat() * 0.1F + 0.9F);
         }
 
         if(this.numPlayersUsing == 0 && this.lidAngle > 0.0F || this.numPlayersUsing > 0 && this.lidAngle < 1.0F){
@@ -90,7 +93,7 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
             float f2 = 0.5F;
 
             if(this.lidAngle < f2 && f1 >= f2){
-            	MTS.proxy.playSound(this, "random.chestclosed", 0.5F, this.worldObj.rand.nextFloat() * 0.1F + 0.9F);
+            	worldObj.playSound((EntityPlayer)null, posX, posY + 0.5D, posZ, SoundEvents.BLOCK_CHEST_CLOSE, SoundCategory.BLOCKS, 0.5F, worldObj.rand.nextFloat() * 0.1F + 0.9F);
             }
 
             if(this.lidAngle < 0.0F){
@@ -102,21 +105,16 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
 	public void markDirty(){}
 	public void clear(){}
 	public void setField(int id, int value){}
-	public void openInventory(){this.openInventory(null);}
 	public void openInventory(EntityPlayer player){this.numPlayersUsing = this.numPlayersUsing < 0 ? 0 : this.numPlayersUsing + 1;}
-	public void closeInventory(){this.closeInventory(null);}
     public void closeInventory(EntityPlayer player){--this.numPlayersUsing;}
     
-	public boolean hasCustomInventoryName(){return false;}
 	public boolean isUseableByPlayer(EntityPlayer player){return player.getDistanceToEntity(this) < 5;}
 	public boolean isItemValidForSlot(int slot, ItemStack stack){return true;}
 	public int getField(int id){return 0;}
 	public int getFieldCount(){return 0;}
 	public int getSizeInventory(){return 27;}
 	public int getInventoryStackLimit(){return 64;}
-	public String getInventoryName(){return I18n.format(getChildInventoryName());}
 	public ItemStack getStackInSlot(int slot){return this.contents[slot];}
-	public ItemStack getStackInSlotOnClosing(int slot){return null;}
 	
     public void setInventorySlotContents(int slot, ItemStack item){
         this.contents[slot] = item;

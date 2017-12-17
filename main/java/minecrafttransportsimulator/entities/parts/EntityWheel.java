@@ -1,9 +1,11 @@
 package minecrafttransportsimulator.entities.parts;
 
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.main.EntityGroundDevice;
+import minecrafttransportsimulator.packets.general.FlatWheelPacket;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -21,7 +23,7 @@ public abstract class EntityWheel extends EntityGroundDevice{
 	}
 	
 	public EntityWheel(World world, EntityMultipartMoving moving, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
-		super(world, moving, parentUUID, offsetX, offsetY, offsetZ, width, height, 0.01F, 0.5F);
+		super(world, moving, parentUUID, offsetX, offsetY, offsetZ, width, height, 0.5F, 0.5F);
 	}
 	
 	@Override
@@ -56,14 +58,16 @@ public abstract class EntityWheel extends EntityGroundDevice{
 		}
 	}
 	
-	private void setFlat(){
+	public void setFlat(){
 		isFlat = true;
 		this.offsetY+=this.height/4;
 		this.height*=0.5;
-		this.lateralFriction*=0.1;
 		this.motiveFriction*=10;
-		worldObj.newExplosion(this, posX, posY, posZ, 0.25F, false, false);
-		this.sendDataToClient();
+		this.lateralFriction*=0.1;
+		if(!worldObj.isRemote){
+			worldObj.newExplosion(this, posX, posY, posZ, 0.25F, false, false);
+			MTS.MTSNet.sendToAll(new FlatWheelPacket(this.getEntityId()));
+		}
 	}
 	
 	@Override
@@ -91,7 +95,11 @@ public abstract class EntityWheel extends EntityGroundDevice{
 
 		@Override
 		public ItemStack getItemStack(){
-			return new ItemStack(MTSRegistry.wheelSmall);
+			if(!this.isFlat){
+				return new ItemStack(MTSRegistry.wheelSmall);	
+			}else{
+				return null;
+			}
 		}
 	}
 	
@@ -107,7 +115,11 @@ public abstract class EntityWheel extends EntityGroundDevice{
 
 		@Override
 		public ItemStack getItemStack(){
-			return new ItemStack(MTSRegistry.wheelLarge);
+			if(!this.isFlat){
+				return new ItemStack(MTSRegistry.wheelLarge);	
+			}else{
+				return null;
+			}
 		}
 	}
 }

@@ -12,7 +12,7 @@ public abstract class MTSTileEntity extends TileEntity{
     public void validate(){
 		super.validate();
         if(worldObj.isRemote){
-        	MTS.MFSNet.sendToServer(new TileEntityClientRequestDataPacket(this));
+        	MTS.MTSNet.sendToServer(new TileEntityClientRequestDataPacket(this));
         }
     }
 	

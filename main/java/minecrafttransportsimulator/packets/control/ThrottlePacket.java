@@ -4,10 +4,10 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
 
 public class ThrottlePacket implements IMessage{
 	private int id;
@@ -32,30 +32,35 @@ public class ThrottlePacket implements IMessage{
 		buf.writeByte(this.throttle);
 	}
 
-	public static class Handler implements IMessageHandler<ThrottlePacket, IMessage> {
-		public IMessage onMessage(ThrottlePacket message, MessageContext ctx) {
-			EntityMultipartVehicle thisEntity;
-			if(ctx.side==Side.SERVER){
-				thisEntity = (EntityMultipartVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
-			}else{
-				thisEntity = (EntityMultipartVehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
-			}
-			if(thisEntity!=null){
-				if(message.throttle == Byte.MAX_VALUE){
-					if(thisEntity.throttle < 100){
-						++thisEntity.throttle;
+	public static class Handler implements IMessageHandler<ThrottlePacket, IMessage>{
+		public IMessage onMessage(final ThrottlePacket message, final MessageContext ctx){
+			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
+				@Override
+				public void run(){
+					EntityMultipartVehicle thisEntity;
+					if(ctx.side.isServer()){
+						thisEntity = (EntityMultipartVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+					}else{
+						thisEntity = (EntityMultipartVehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
-				}else if(message.throttle == Byte.MIN_VALUE){
-					if(thisEntity.throttle > 0){
-						--thisEntity.throttle;
+					if(thisEntity!=null){
+						if(message.throttle == Byte.MAX_VALUE){
+							if(thisEntity.throttle < 100){
+								++thisEntity.throttle;
+							}
+						}else if(message.throttle == Byte.MIN_VALUE){
+							if(thisEntity.throttle > 0){
+								--thisEntity.throttle;
+							}
+						}else{
+							thisEntity.throttle = message.throttle;
+						}
+						if(ctx.side.isServer()){
+							MTS.MTSNet.sendToAll(message);
+						}
 					}
-				}else{
-					thisEntity.throttle = message.throttle;
 				}
-				if(ctx.side==Side.SERVER){
-					MTS.MFSNet.sendToAll(message);
-				}
-			}
+			});
 			return null;
 		}
 	}

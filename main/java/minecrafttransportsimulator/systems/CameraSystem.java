@@ -1,15 +1,13 @@
 package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSVector;
-import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
-import minecrafttransportsimulator.entities.parts.EntitySeat;
+import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHandSide;
+import net.minecraft.init.SoundEvents;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 /**Contains numerous camera functions for view edits.
  * 
@@ -18,33 +16,23 @@ import net.minecraft.util.EnumHandSide;
 public final class CameraSystem{
 	public static boolean lockedView = true;
 	public static boolean disableHUD = false;
-	private static boolean active = false;
 	public static int hudMode = 2;
 	private static int zoomLevel = 4;
 	
-	private static EntityCamera camera;
-
-	public static void setCameraActive(boolean active){
-		if(active){
-			if(camera == null){
-				if(ClientEventSystem.playerLastSeat != null){
-					if(ClientEventSystem.playerLastSeat.parent != null){
-						camera = new EntityCamera(Minecraft.getMinecraft().thePlayer);
-						Minecraft.getMinecraft().thePlayer.worldObj.spawnEntityInWorld(camera);
-					}
-				}
-			}
-		}else{
-			Minecraft.getMinecraft().setRenderViewEntity(Minecraft.getMinecraft().thePlayer);
-			if(camera != null){
-				camera.setDead();
-				camera = null;
-			}
-		}
+	private static final String[] zoomNames = { "thirdPersonDistancePrev", "field_78491_C" };
+	
+	public static void runCustomCamera(float partialTicks){
+		try{
+			float rectifiedZoomLevel = (zoomLevel - 4*partialTicks)/(1 - partialTicks);
+			ObfuscationReflectionHelper.setPrivateValue(EntityRenderer.class, Minecraft.getMinecraft().entityRenderer, Float.valueOf(rectifiedZoomLevel), zoomNames);
+		}catch (Exception e){
+			MTS.MTSLog.fatal("ERROR IN AIRCRAFT ZOOM REFLECTION!");
+			throw new RuntimeException(e);
+   	    }
 	}
 	
 	public static void changeCameraZoom(boolean zoomOut){
-		if(zoomLevel < 15 && zoomOut){
+		if(zoomLevel < 20 && zoomOut){
 			++zoomLevel;
 		}else if(zoomLevel > 4 && !zoomOut){
 			--zoomLevel;
@@ -53,73 +41,28 @@ public final class CameraSystem{
 	
 	public static void changeCameraLock(){
 		lockedView = !lockedView;
-		MTS.proxy.playSound(Minecraft.getMinecraft().thePlayer, "gui.button.press", 1, 1);
+		Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
 	}
-
-	private static class EntityCamera extends EntityLivingBase{
-		private final EntityPlayer player;
-		private final EntitySeat seat;
-		private final EntityMultipartMoving moving;
-		private static MTSVector playerVector;
-		private static MTSVector cameraVector;
+	
+	public static void updatePlayerYawAndPitch(EntityPlayer player, EntityMultipartParent master){
+		boolean mouseYoke = ConfigSystem.getBooleanConfig("MouseYoke");
 		
-		public EntityCamera(EntityPlayer seatedPlayer){
-			super(seatedPlayer.getEntityWorld());
-			this.player = seatedPlayer;
-			this.seat = (EntitySeat) seatedPlayer.getRidingEntity();
-			this.moving = (EntityMultipartMoving) seat.parent;
-			this.onUpdate();
-		}
-		
-		@Override
-		public void onUpdate(){
-			super.onUpdate();
-			if(!Minecraft.getMinecraft().isGamePaused()){
-				if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
-					this.setPosition(player.posX, player.posY, player.posZ);
-				}else{
-					MTSVector playerVector = RotationSystem.getRotatedPoint((float) (player.posX - moving.posX), (float) (player.posY - moving.posY), (float) (player.posZ - moving.posZ), moving.rotationRoll, moving.rotationYaw, moving.rotationRoll);
-					//MTSVector cameraVector = RotationSystem.getRotatedPoint((float) - Math.sin(rotationYaw)
-					//TODO fix this.
-					this.setPosition(player.posX, player.posY, player.posZ);
-				}
-				boolean mouseYoke = ConfigSystem.getBooleanConfig("mouseYoke");
-				if(!mouseYoke || (mouseYoke && !CameraSystem.lockedView)){
-					rotationYaw += player.rotationYaw - player.prevRotationYaw;
-					rotationPitch += player.rotationPitch - player.prevRotationPitch;
-				}
-				
-				if(CameraSystem.lockedView){
-					rotationYaw += moving.rotationYaw - moving.prevRotationYaw;
-					if(moving.rotationPitch > 90 || moving.rotationPitch < -90){
-						rotationPitch -= moving.rotationPitch - moving.prevRotationPitch;
-					}else{
-						rotationPitch += moving.rotationPitch - moving.prevRotationPitch;
-					}
-					if((moving.rotationPitch > 90 || moving.rotationPitch < -90) ^ moving.prevRotationPitch > 90 || moving.prevRotationPitch < -90){
-						//TODO get this camera flip feature working.
-						//rider.rotationYaw+=180;
-					}
-				}
+		player.renderYawOffset += master.rotationYaw - master.prevRotationYaw;
+		if((!mouseYoke && lockedView) || (mouseYoke && !lockedView)){
+			player.rotationYaw += master.rotationYaw - master.prevRotationYaw;
+			if(master.rotationPitch > 90 || master.rotationPitch < -90){
+				player.rotationPitch -= master.rotationPitch - master.prevRotationPitch;
+			}else{
+				player.rotationPitch += master.rotationPitch - master.prevRotationPitch;
 			}
-		}
-
-		@Override
-		public Iterable<ItemStack> getArmorInventoryList(){
-			return null;
-		}
-
-		@Override
-		public ItemStack getItemStackFromSlot(EntityEquipmentSlot slotIn){
-			return null;
-		}
-
-		@Override
-		public void setItemStackToSlot(EntityEquipmentSlot slotIn, ItemStack stack){}
-
-		@Override
-		public EnumHandSide getPrimaryHand(){
-			return EnumHandSide.RIGHT;
+			if((master.rotationPitch > 90 || master.rotationPitch < -90) ^ master.prevRotationPitch > 90 || master.prevRotationPitch < -90){
+				player.rotationYaw+=180;
+			}
+		}else if(mouseYoke){
+			if(lockedView){
+				player.rotationYaw = master.rotationYaw;
+				player.rotationPitch = master.rotationPitch;
+			}
 		}
 	}
 }

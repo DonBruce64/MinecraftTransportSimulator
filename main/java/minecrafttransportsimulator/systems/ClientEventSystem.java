@@ -1,19 +1,18 @@
 package minecrafttransportsimulator.systems;
 
-import org.lwjgl.opengl.GL11;
-
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
-import minecrafttransportsimulator.entities.main.EntityPlane;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.guis.GUIConfig;
 import minecrafttransportsimulator.guis.GUICredits;
-import minecrafttransportsimulator.helpers.EntityHelper;
+import minecrafttransportsimulator.packets.general.PackPacket;
+import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -27,6 +26,8 @@ import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+
+import org.lwjgl.opengl.GL11;
 
 /**This class handles rendering/camera edits that need to happen when riding planes
  * as well as some other misc things.
@@ -54,30 +55,28 @@ public final class ClientEventSystem{
 
 
     /**
-     * Moves children on the client.
-     * Adjusts zoom, pitch, and roll for camera.
-     * Tweaks player rendering.
+     * Adjusts camera zoom if player is seated and in third-person.
+     * Also adjusts the player's rotation.
+     */
+    @SubscribeEvent
+    public void on(TickEvent.RenderTickEvent event){
+    	if(event.phase.equals(event.phase.START)){
+    		if(playerLastSeat != null){
+    			if(minecraft.gameSettings.thirdPersonView != 0){
+    				CameraSystem.runCustomCamera(event.renderTickTime);
+    			}
+    		}
+    	}
+    }
+    
+    /**
+     * Updates player seated status and rotates player in the seat.
+     * Forwards camera control options to the ControlSystem.
      */
     @SubscribeEvent
     public void on(TickEvent.ClientTickEvent event){
         if(minecraft.theWorld != null){
-            if(event.phase.equals(Phase.START)){
-                //See if we need to enable or disable the custom CameraSystem.
-                if(playerLastSeat != null){
-                    CameraSystem.setCameraActive(true);
-                }
-            }else{
-				/*Minecraft skips updating children who were spawned before their parents.
-				 *This forces them to update, but causes them to lag their rendering until
-				 * the next tick.  It's one of the main reasons why all the child rendering
-				 * is shoved into custom code.
-				 */
-                for(Object entity : minecraft.theWorld.getLoadedEntityList()){
-                    if(entity instanceof EntityMultipartParent){
-                        ((EntityMultipartParent) entity).moveChildren();
-                    }
-                }
-
+            if(event.phase.equals(Phase.END)){
                 //Update the player seated status
                 if(minecraft.thePlayer.getRidingEntity() == null){
                     if(playerLastSeat != null){
@@ -90,23 +89,20 @@ public final class ClientEventSystem{
                     if(!Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen()){
                         ControlSystem.controlCamera();
                         if(playerLastSeat.isController){
-                            if(playerLastSeat.parent instanceof EntityPlane){
-                                ControlSystem.controlPlane((EntityPlane) playerLastSeat.parent, minecraft.thePlayer);
+                            if(playerLastSeat.parent instanceof EntityMultipartVehicle){
+                                ControlSystem.controlVehicle((EntityMultipartVehicle) playerLastSeat.parent, minecraft.thePlayer);
                             }
                         }
                     }
-                }
-
-                //Update player rotation.
-                if(playerLastSeat != null && !minecraft.isGamePaused()){
-                    if(playerLastSeat.parent != null){
-                        minecraft.thePlayer.renderYawOffset += playerLastSeat.parent.rotationYaw - playerLastSeat.parent.prevRotationYaw;
-                    }
+                    if(!minecraft.isGamePaused()){
+        				if(playerLastSeat.parent != null){
+        					CameraSystem.updatePlayerYawAndPitch(minecraft.thePlayer, playerLastSeat.parent);
+        				}
+                     }
                 }
             }
         }
     }
-
 
     /**
      * Adjusts roll for camera.
@@ -116,40 +112,26 @@ public final class ClientEventSystem{
     public void on(CameraSetup event){
         if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
             if(event.getEntity().getRidingEntity() instanceof EntitySeat){
-                if(((EntitySeat) event.getEntity().getRidingEntity()).parent != null){
-                    event.setRoll(((EntitySeat) event.getEntity().getRidingEntity()).parent.rotationRoll);
+            	EntityMultipartParent parent = ((EntitySeat) event.getEntity().getRidingEntity()).parent;
+                if(parent != null){
+                    event.setRoll((float) (parent.rotationRoll  + (parent.rotationRoll - parent.prevRotationRoll)*(double)event.getRenderPartialTicks()));
                 }
             }
         }
     }
 
     /**
-     * Checks to see if any parents have not been rendered.  Used to
-     * force rendering of aircraft above the world height limit, as
+     * Used to force rendering of aircraft above the world height limit, as
      * newer versions suppress this as part of the chunk visibility
      * feature.
-     * Also renders exterior lights, as rendering them during regular calls
+     * Also causes lights to render, as rendering them during regular calls
      * results in water being invisible.
      */
     @SubscribeEvent
     public void on(RenderWorldLastEvent event){
-        RenderManager manager = Minecraft.getMinecraft().getRenderManager();
         for(Entity entity : minecraft.theWorld.loadedEntityList){
-        	//TODO this is a VERY costly CPU operation.  Create a static list in EntityMultipartParent and keep that populated.
-        	//note that issues will occur if this list is not cleared when a player loads/unloads a world.
-        	//Use that list instead when it's done.
             if(entity instanceof EntityMultipartMoving){
-                RenderMultipart.render((EntityMultipartMoving) entity, minecraft.thePlayer, event.getPartialTicks());
-                //TODO ensure no setup things get called in this method.  Don't want to miss GL state changes.
-                //We can remove this TODO when the render system is verified on MAC and PC.
-                //manager.renderEntityStatic((Entity) obj, event.getPartialTicks(), false);
-                for(EntityMultipartChild child : ((EntityMultipartMoving) entity).getChildren()){
-                    Entity rider = EntityHelper.getRider(child);
-                    if(rider != null && !(minecraft.thePlayer.equals(rider) && minecraft.gameSettings.thirdPersonView == 0)){
-                        manager.renderEntityStatic(rider, event.getPartialTicks(), false);
-                    }
-                }
-                
+            	minecraft.getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
             }
         }
     }
@@ -204,9 +186,8 @@ public final class ClientEventSystem{
                 event.setCanceled(!ConfigSystem.getBooleanConfig("XaerosCompatibility"));
             }else if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
                 if(playerLastSeat != null){
-                    if(playerLastSeat.parent instanceof EntityPlane && playerLastSeat.isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
-                        //TODO fix HUD renders.
-                        ((EntityPlane) playerLastSeat.parent).drawHUD(event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight());
+                    if(playerLastSeat.parent instanceof EntityMultipartVehicle && playerLastSeat.isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
+                        RenderHUD.drawMainHUD((EntityMultipartVehicle) playerLastSeat.parent, event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight(), false);
                     }
                 }
             }
@@ -220,7 +201,13 @@ public final class ClientEventSystem{
     public void onKeyInput(InputEvent.KeyInputEvent event){
         if(ControlSystem.configKey.isPressed()){
             if(minecraft.currentScreen == null){
-                FMLCommonHandler.instance().showGuiScreen(new GUIConfig());
+            	FMLCommonHandler.instance().showGuiScreen(new GUIConfig());
+                if(Minecraft.getMinecraft().isSingleplayer()){
+                	MTS.MTSNet.sendToServer(new PackPacket());
+                	MTSRegistryClient.modelMap.clear();
+                	MTSRegistryClient.loadCustomOBJModels();
+                	RenderMultipart.resetDisplayLists();
+                }
             }
         }
     }

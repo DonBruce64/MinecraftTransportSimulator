@@ -1,11 +1,16 @@
 package minecrafttransportsimulator.guis;
 
+import java.awt.Color;
+import java.io.IOException;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
-import minecrafttransportsimulator.systems.GL11DrawSystem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -13,22 +18,17 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import org.lwjgl.opengl.GL11;
 
-import java.awt.*;
-import java.io.IOException;
+import org.lwjgl.opengl.GL11;
 
 public class GUIPropellerBench extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/long_blank.png");
 	
-	private static final ResourceLocation woodPropellerIcon = new ResourceLocation(MTS.MODID, "textures/items/propeller0.png");
-	private static final ResourceLocation ironPropellerIcon = new ResourceLocation(MTS.MODID, "textures/items/propeller1.png");
-	private static final ResourceLocation obsidianPropellerIcon = new ResourceLocation(MTS.MODID, "textures/items/propeller2.png");
-	
-	private static final ResourceLocation planksIcon = new ResourceLocation(MTS.MODID, "textures/guis/propeller_bench_planks.png");
-	private static final ResourceLocation ironIngotIcon = new ResourceLocation("minecraft", "textures/items/iron_ingot.png");
-	private static final ResourceLocation obsidianIcon = new ResourceLocation(MTS.MODID, "textures/guis/propeller_bench_obsidian.png");
-	private static final ResourceLocation redstoneIcon = new ResourceLocation("minecraft", "textures/items/redstone_dust.png");
+	private static final ItemStack planksStack = new ItemStack(Blocks.PLANKS);
+	private static final ItemStack ingotStack = new ItemStack(Items.IRON_INGOT);
+	private static final ItemStack obsidianStack = new ItemStack(Blocks.OBSIDIAN);
+	private static final ItemStack redstoneStack = new ItemStack(Items.REDSTONE);
+	private static final ItemStack[] propellerStacks = new ItemStack[]{new ItemStack(MTSRegistry.propeller, 1, 0), new ItemStack(MTSRegistry.propeller, 1, 1), new ItemStack(MTSRegistry.propeller, 1, 2)};
 	
 	private int guiLeft;
 	private int guiTop;
@@ -87,7 +87,7 @@ public class GUIPropellerBench extends GuiScreen{
 		this.getPlayerMaterials();
 		GL11.glColor3f(1, 1, 1); //Not sure why buttons make this grey, but whatever...
 		this.drawDefaultBackground();
-		GL11DrawSystem.bindTexture(background);
+		mc.getTextureManager().bindTexture(background);
 		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 176, 222);
 		
 		tier0Button.enabled = bench.propellerType != 0;
@@ -105,63 +105,50 @@ public class GUIPropellerBench extends GuiScreen{
 			((GuiButton) obj).drawButton(mc, mouseX, mouseY);
 		}
 		
-		GL11.glColor3f(1, 1, 1);
-		GL11DrawSystem.bindTexture(woodPropellerIcon);
-		GL11DrawSystem.renderSquare(guiLeft + 10, guiLeft + 26, guiTop + 28, guiTop + 12, 0, 0, false);
-		GL11DrawSystem.bindTexture(ironPropellerIcon);
-		GL11DrawSystem.renderSquare(guiLeft + 40, guiLeft + 56, guiTop + 28, guiTop + 12, 0, 0, false);
-		GL11DrawSystem.bindTexture(obsidianPropellerIcon);
-		GL11DrawSystem.renderSquare(guiLeft + 70, guiLeft + 86, guiTop + 28, guiTop + 12, 0, 0, false);
+		ItemStack propellerMaterial;
+		switch(bench.propellerType){
+			case(0): propellerMaterial = planksStack; break;
+			case(1): propellerMaterial = ingotStack; break;
+			case(2): propellerMaterial = obsidianStack; break;
+			default: propellerMaterial = new ItemStack(Blocks.ANVIL);
+		}
+
+		RenderHelper.enableGUIStandardItemLighting();
+		mc.getRenderItem().renderItemIntoGUI(propellerStacks[0], guiLeft + 10, guiTop + 12);
+		mc.getRenderItem().renderItemIntoGUI(propellerStacks[1], guiLeft + 40, guiTop + 12);
+		mc.getRenderItem().renderItemIntoGUI(propellerStacks[2], guiLeft + 70, guiTop + 12);
+		mc.getRenderItem().renderItemIntoGUI(propellerMaterial, guiLeft + 10, guiTop + 120);
+		mc.getRenderItem().renderItemIntoGUI(ingotStack, guiLeft + 10, guiTop + 150);
+		mc.getRenderItem().renderItemIntoGUI(redstoneStack, guiLeft + 10, guiTop + 180);
+		RenderHelper.disableStandardItemLighting();
 		
-		GL11DrawSystem.drawString(I18n.format("info.item.propeller.numberBlades"), guiLeft + 20, guiTop + 40, Color.BLACK);
-		GL11DrawSystem.drawString(I18n.format("info.item.propeller.pitch"), guiLeft + 65, guiTop + 40, Color.BLACK);
-		GL11DrawSystem.drawString(I18n.format("info.item.propeller.diameter"), guiLeft + 110, guiTop + 40, Color.BLACK);
+		this.drawRect(guiLeft + 132, guiTop + 163, guiLeft + 148, guiTop + 147, doesPlayerHaveMaterials() ? Color.GREEN.getRGB() : Color.RED.getRGB());
+		
+		mc.fontRendererObj.drawString(I18n.format("info.item.propeller.numberBlades"), guiLeft + 20, guiTop + 40, Color.BLACK.getRGB());
+		mc.fontRendererObj.drawString(I18n.format("info.item.propeller.pitch"), guiLeft + 65, guiTop + 40, Color.BLACK.getRGB());
+		mc.fontRendererObj.drawString(I18n.format("info.item.propeller.diameter"), guiLeft + 110, guiTop + 40, Color.BLACK.getRGB());
 		
 		GL11.glPushMatrix();
 		GL11.glScalef(2, 2, 2);
-		GL11DrawSystem.drawString(String.valueOf(bench.numberBlades), (guiLeft + 35)/2, (guiTop + 85)/2, Color.BLACK);
-		GL11DrawSystem.drawString(String.valueOf(bench.pitch), (guiLeft + 75)/2, (guiTop + 85)/2, Color.BLACK);
-		GL11DrawSystem.drawString(String.valueOf(bench.diameter), (guiLeft + 115)/2, (guiTop + 85)/2, Color.BLACK);
+		mc.fontRendererObj.drawString(String.valueOf(bench.numberBlades), (guiLeft + 35)/2, (guiTop + 85)/2, Color.BLACK.getRGB());
+		mc.fontRendererObj.drawString(String.valueOf(bench.pitch), (guiLeft + 75)/2, (guiTop + 85)/2, Color.BLACK.getRGB());
+		mc.fontRendererObj.drawString(String.valueOf(bench.diameter), (guiLeft + 115)/2, (guiTop + 85)/2, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
-		
-		switch(bench.propellerType){
-			case(0): GL11DrawSystem.bindTexture(planksIcon); break;
-			case(1): GL11DrawSystem.bindTexture(ironIngotIcon); break;
-			case(2): GL11DrawSystem.bindTexture(obsidianIcon); break;
-			default: ;
-		}
-		GL11DrawSystem.renderSquare(guiLeft + 10, guiLeft + 26, guiTop + 136, guiTop + 120, 0, 0, false);
-		GL11DrawSystem.bindTexture(ironIngotIcon);
-		GL11DrawSystem.renderSquare(guiLeft + 10, guiLeft + 26, guiTop + 166, guiTop + 150, 0, 0, false);
-		GL11DrawSystem.bindTexture(redstoneIcon);
-		GL11DrawSystem.renderSquare(guiLeft + 10, guiLeft + 26, guiTop + 196, guiTop + 180, 0, 0, false);
 		
 		GL11.glPushMatrix();
 		GL11.glScalef(2, 2, 2);
 		switch(bench.propellerType){
-			case(0): GL11DrawSystem.drawString(String.valueOf(numberPlayerPlanks), (guiLeft + 35)/2, (guiTop + 120)/2, numberPlayerPlanks >= propellerMaterialQty ? Color.GREEN : Color.RED); break;
-			case(1): GL11DrawSystem.drawString(String.valueOf((numberPlayerIronIngots <= 1 ? 0 : numberPlayerIronIngots - 1)), (guiLeft + 35)/2, (guiTop + 120)/2, numberPlayerIronIngots >= propellerMaterialQty ? Color.GREEN : Color.RED); break;
-			case(2): GL11DrawSystem.drawString(String.valueOf(numberPlayerObsidian), (guiLeft + 35)/2, (guiTop + 120)/2, numberPlayerObsidian >= propellerMaterialQty ? Color.GREEN : Color.RED); break;
+			case(0): mc.fontRendererObj.drawString(String.valueOf(numberPlayerPlanks), (guiLeft + 35)/2, (guiTop + 120)/2, numberPlayerPlanks >= propellerMaterialQty ? Color.GREEN.getRGB() : Color.RED.getRGB()); break;
+			case(1): mc.fontRendererObj.drawString(String.valueOf((numberPlayerIronIngots <= 1 ? 0 : numberPlayerIronIngots - 1)), (guiLeft + 35)/2, (guiTop + 120)/2, numberPlayerIronIngots >= propellerMaterialQty ? Color.GREEN.getRGB() : Color.RED.getRGB()); break;
+			case(2): mc.fontRendererObj.drawString(String.valueOf(numberPlayerObsidian), (guiLeft + 35)/2, (guiTop + 120)/2, numberPlayerObsidian >= propellerMaterialQty ? Color.GREEN.getRGB() : Color.RED.getRGB()); break;
 			default: ;
 		}
-		GL11DrawSystem.drawString("/" + String.valueOf(propellerMaterialQty), (guiLeft + 70)/2, (guiTop + 120)/2, Color.BLACK);
-		GL11DrawSystem.drawString(String.valueOf(numberPlayerIronIngots), (guiLeft + 35)/2, (guiTop + 150)/2, numberPlayerIronIngots >= 1 ? Color.GREEN : Color.RED);
-		GL11DrawSystem.drawString("/1", (guiLeft + 70)/2, (guiTop + 150)/2, Color.BLACK);
-		GL11DrawSystem.drawString(String.valueOf(numberPlayerRedstone), (guiLeft + 35)/2, (guiTop + 180)/2, numberPlayerRedstone >= 5 ? Color.GREEN : Color.RED);
-		GL11DrawSystem.drawString("/5", (guiLeft + 70)/2, (guiTop + 180)/2, Color.BLACK);
+		mc.fontRendererObj.drawString("/" + String.valueOf(propellerMaterialQty), (guiLeft + 70)/2, (guiTop + 120)/2, Color.BLACK.getRGB());
+		mc.fontRendererObj.drawString(String.valueOf(numberPlayerIronIngots), (guiLeft + 35)/2, (guiTop + 150)/2, numberPlayerIronIngots >= 1 ? Color.GREEN.getRGB() : Color.RED.getRGB());
+		mc.fontRendererObj.drawString("/1", (guiLeft + 70)/2, (guiTop + 150)/2, Color.BLACK.getRGB());
+		mc.fontRendererObj.drawString(String.valueOf(numberPlayerRedstone), (guiLeft + 35)/2, (guiTop + 180)/2, numberPlayerRedstone >= 5 ? Color.GREEN.getRGB() : Color.RED.getRGB());
+		mc.fontRendererObj.drawString("/5", (guiLeft + 70)/2, (guiTop + 180)/2, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
-		
-		GL11.glPushMatrix();
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		if(doesPlayerHaveMaterials()){
-			GL11.glColor3f(0, 1, 0);
-		}else{
-			GL11.glColor3f(1, 0, 0);
-		}
-		GL11DrawSystem.renderSquare(guiLeft + 132, guiLeft + 148, guiTop + 163, guiTop + 147, 0, 0, false);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glPopMatrix();
-		
 	}
     
 	@Override
@@ -187,11 +174,11 @@ public class GUIPropellerBench extends GuiScreen{
 			bench.diameter-=5;
 		}else if(buttonClicked.equals(startButton)){
 			bench.timeOperationFinished = bench.getWorld().getTotalWorldTime() + 1000;
-			MTS.MFSNet.sendToServer(new TileEntitySyncPacket(bench));
+			MTS.MTSNet.sendToServer(new TileEntitySyncPacket(bench));
 			mc.thePlayer.closeScreen();
 			return;
 		}
-		MTS.MFSNet.sendToServer(new TileEntitySyncPacket(bench));
+		MTS.MTSNet.sendToServer(new TileEntitySyncPacket(bench));
 	}
 	
 	private void getPlayerMaterials(){

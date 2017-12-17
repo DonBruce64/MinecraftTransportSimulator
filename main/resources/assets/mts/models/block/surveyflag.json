@@ -1,0 +1,7 @@
+{
+    "textures": {
+        "texture": "mts:items/surveyflag",
+        "particle": "mts:items/surveyflag"
+    },
+    "elements": [ ]
+}

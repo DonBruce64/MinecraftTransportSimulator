@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.MTS;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -34,14 +36,17 @@ public class TileEntityClientRequestDataPacket implements IMessage{
 		buf.writeInt(this.z);
 	}
 
-	public static class Handler implements IMessageHandler<TileEntityClientRequestDataPacket, TileEntitySyncPacket> {
-		public TileEntitySyncPacket onMessage(TileEntityClientRequestDataPacket message, MessageContext ctx){
-			if(ctx.side.isServer()){
-				TileEntity tile = ctx.getServerHandler().playerEntity.worldObj.getTileEntity(new BlockPos(message.x, message.y, message.z));
-				if(tile != null){
-					return new TileEntitySyncPacket(tile);
+	public static class Handler implements IMessageHandler<TileEntityClientRequestDataPacket, IMessage> {
+		public IMessage onMessage(final TileEntityClientRequestDataPacket message, final MessageContext ctx){
+			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
+				@Override
+				public void run(){
+					TileEntity tile = ctx.getServerHandler().playerEntity.worldObj.getTileEntity(new BlockPos(message.x, message.y, message.z));
+					if(tile != null){
+						MTS.MTSNet.sendTo(new TileEntitySyncPacket(tile), ctx.getServerHandler().playerEntity);
+					}
 				}
-			}
+			});
 			return null;
 		}
 	}	

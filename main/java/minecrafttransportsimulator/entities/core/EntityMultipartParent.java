@@ -3,7 +3,7 @@ package minecrafttransportsimulator.entities.core;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.collect.ImmutableList;
+import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
@@ -11,10 +11,13 @@ import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.general.ServerSyncPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
-import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.Loader;
+
+import com.google.common.collect.ImmutableList;
 
 /**Main parent class.  All entities that have parts should extend this class.
  * It is responsible for part management, checks, rendering and other functions.
@@ -59,9 +62,9 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 			//Sometimes parts don't load right.  Need to reset the number of children then.
 			if(!linked && ticksExisted == 100){
 				if(children.size() == numberChildren - 1){
-					System.err.println("A PART HAS FAILED TO LOAD!  SKIPPNG!");
+					MTS.MTSLog.warn("A PART HAS FAILED TO LOAD!  SKIPPNG!");
 				}else if(children.size() == numberChildren + 1){
-					System.err.println("AN EXTRA PART HAS BEEN LOADED!  ADDING!");
+					MTS.MTSLog.warn("AN EXTRA PART HAS BEEN LOADED!  ADDING!");
 				}else{
 					return;
 				}
@@ -69,7 +72,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 				linked = true;
 			}	
 		}else if(!worldObj.isRemote && this.ticksExisted%ConfigSystem.getIntegerConfig("SyncDelay")==0){
-			MTS.MFSNet.sendToAll(new ServerSyncPacket(getEntityId(), posX, posY, posZ, motionX, motionY, motionZ, rotationPitch, rotationRoll, rotationYaw));
+			MTS.MTSNet.sendToAll(new ServerSyncPacket(getEntityId(), posX, posY, posZ, motionX, motionY, motionZ, rotationPitch, rotationRoll, rotationYaw));
 		}
 		prevRotationRoll = rotationRoll + rollCorrection;
 		prevRotationPitch = rotationPitch + pitchCorrection;
@@ -103,7 +106,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 					this.setPositionAndRotation(posX, posY + boost, posZ, rotationYaw, 0);
 					child.setPosition(posX + child.offsetX, posY + child.offsetY + boost, posZ + child.offsetZ);
 					
-					//Sometimes children can break off if the vehicle rotates and shoves something under the ground.
+					//Sometimes children can break off if the parent rotates and shoves something under the ground.
 					for(EntityMultipartChild testChild : this.children.values()){
 						if(EntityHelper.isBoxCollidingWithBlocks(worldObj, testChild.getEntityBoundingBox().offset(0, boost, 0), child.collidesWithLiquids())){
 							this.setPositionAndRotation(posX, posY + 1, posZ, rotationYaw, 0);
@@ -126,7 +129,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 			--numberChildren;
 		}
 		if(playBreakSound){
-			MTS.proxy.playSound(this, "random.break", 2, 1);
+			this.playSound(SoundEvents.ITEM_SHIELD_BREAK, 2.0F, 1.0F);
 		}
 	}
 
@@ -137,22 +140,13 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 			}else{
 				MTSVector offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
 				child.setPosition(posX + offset.xCoord, posY + offset.yCoord, posZ + offset.zCoord);
-				Entity rider = child.getRidingEntity();
-				if(rider != null){
-					if(Loader.MC_VERSION.equals("1.7.10")){
-						MTSVector posVec = RotationSystem.getRotatedPoint(child.offsetX, (float) (child.offsetY + rider.getYOffset()), (float) child.offsetZ, this.rotationPitch, this.rotationYaw, this.rotationRoll);
-						rider.setPosition(this.posX + posVec.xCoord, this.posY + posVec.yCoord, this.posZ + posVec.zCoord);
-					}else{
-						MTSVector posVec = RotationSystem.getRotatedPoint(child.offsetX, (float) (child.offsetY + rider.getYOffset() + rider.height), (float) child.offsetZ, this.rotationPitch, this.rotationYaw, this.rotationRoll);
-						rider.setPosition(this.posX + posVec.xCoord, this.posY + posVec.yCoord - rider.height, this.posZ + posVec.zCoord);
-					}
-					
-				}
 			}
 		}
 	}
 	
 	public EntityMultipartChild[] getChildren(){return ImmutableList.copyOf(children.values()).toArray(new EntityMultipartChild[children.size()]);}
+	
+	public abstract boolean processInitialInteractFromChild(EntityPlayer player, EntityMultipartChild childClicked, @Nullable ItemStack stack);
 		
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){

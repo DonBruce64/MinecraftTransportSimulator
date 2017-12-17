@@ -4,10 +4,10 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
 
 public class FlapPacket implements IMessage{	
 	private int id;
@@ -32,24 +32,29 @@ public class FlapPacket implements IMessage{
 		buf.writeByte(this.flapAngle);
 	}
 
-	public static class Handler implements IMessageHandler<FlapPacket, IMessage> {
-		public IMessage onMessage(FlapPacket message, MessageContext ctx) {
-			EntityPlane thisEntity;
-			if(ctx.side==Side.SERVER){
-				thisEntity = (EntityPlane) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
-			}else{
-				thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
-			}
-			if(thisEntity!=null){
-				if(ctx.side==Side.SERVER){
-					if(message.flapAngle + thisEntity.flapAngle >= 0 && message.flapAngle + thisEntity.flapAngle <= 350){
-						thisEntity.flapAngle += message.flapAngle;
-						MTS.MFSNet.sendToAll(message);
+	public static class Handler implements IMessageHandler<FlapPacket, IMessage>{
+		public IMessage onMessage(final FlapPacket message, final MessageContext ctx){
+			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
+				@Override
+				public void run(){
+					EntityPlane thisEntity;
+					if(ctx.side.isServer()){
+						thisEntity = (EntityPlane) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+					}else{
+						thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
-				}else{
-					thisEntity.flapAngle += message.flapAngle;
+					if(thisEntity!=null){
+						if(ctx.side.isServer()){
+							if(message.flapAngle + thisEntity.flapAngle >= 0 && message.flapAngle + thisEntity.flapAngle <= 350){
+								thisEntity.flapAngle += message.flapAngle;
+								MTS.MTSNet.sendToAll(message);
+							}
+						}else{
+							thisEntity.flapAngle += message.flapAngle;
+						}
+					}
 				}
-			}
+			});
 			return null;
 		}
 	}

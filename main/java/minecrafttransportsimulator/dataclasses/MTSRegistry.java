@@ -1,22 +1,58 @@
 package minecrafttransportsimulator.dataclasses;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
 import minecrafttransportsimulator.blocks.BlockSurveyFlag;
-import minecrafttransportsimulator.blocks.BlockTrack;
-import minecrafttransportsimulator.blocks.BlockTrackFake;
+import minecrafttransportsimulator.blocks.BlockTrackStructure;
+import minecrafttransportsimulator.blocks.BlockTrackStructureFake;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
-import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.main.EntityCore;
 import minecrafttransportsimulator.entities.main.EntityPlane;
-import minecrafttransportsimulator.entities.parts.*;
-import minecrafttransportsimulator.items.*;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
+import minecrafttransportsimulator.entities.parts.EntityPontoon;
+import minecrafttransportsimulator.entities.parts.EntityPropeller;
+import minecrafttransportsimulator.entities.parts.EntitySeat;
+import minecrafttransportsimulator.entities.parts.EntitySkid;
+import minecrafttransportsimulator.entities.parts.EntityVehicleChest;
+import minecrafttransportsimulator.entities.parts.EntityWheel;
+import minecrafttransportsimulator.items.ItemEngine;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftLarge;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftSmall;
-import minecrafttransportsimulator.packets.control.*;
-import minecrafttransportsimulator.packets.general.*;
-import minecrafttransportsimulator.systems.pack.PackObject;
-import minecrafttransportsimulator.systems.pack.PackParserSystem;
+import minecrafttransportsimulator.items.ItemInstrument;
+import minecrafttransportsimulator.items.ItemKey;
+import minecrafttransportsimulator.items.ItemMultipartMoving;
+import minecrafttransportsimulator.items.ItemPropeller;
+import minecrafttransportsimulator.items.ItemSeat;
+import minecrafttransportsimulator.items.ItemWrench;
+import minecrafttransportsimulator.packets.control.AileronPacket;
+import minecrafttransportsimulator.packets.control.BrakePacket;
+import minecrafttransportsimulator.packets.control.ElevatorPacket;
+import minecrafttransportsimulator.packets.control.EnginePacket;
+import minecrafttransportsimulator.packets.control.FlapPacket;
+import minecrafttransportsimulator.packets.control.LightPacket;
+import minecrafttransportsimulator.packets.control.RudderPacket;
+import minecrafttransportsimulator.packets.control.ThrottlePacket;
+import minecrafttransportsimulator.packets.control.TrimPacket;
+import minecrafttransportsimulator.packets.general.ChatPacket;
+import minecrafttransportsimulator.packets.general.DamagePacket;
+import minecrafttransportsimulator.packets.general.EntityClientRequestDataPacket;
+import minecrafttransportsimulator.packets.general.FlatWheelPacket;
+import minecrafttransportsimulator.packets.general.InstrumentPacket;
+import minecrafttransportsimulator.packets.general.PackPacket;
+import minecrafttransportsimulator.packets.general.ServerDataPacket;
+import minecrafttransportsimulator.packets.general.ServerSyncPacket;
+import minecrafttransportsimulator.packets.general.TileEntityClientRequestDataPacket;
+import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
+import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.init.Blocks;
@@ -30,12 +66,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**Main registry class.  This class should be referenced by any class looking for
  * MTS items or blocks.  Adding new items and blocks is a simple as adding them
@@ -56,31 +86,31 @@ public class MTSRegistry{
 	public static final Item engineAircraftLarge = new ItemEngineAircraftLarge().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item propeller = new ItemPropeller().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item seat = new ItemSeat().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item flightInstrument = new ItemFlightInstrument().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item pointerShort = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item pointerLong = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item wrench = new ItemWrench().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item flightManual = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	
-	public static final Item track = new Item().setCreativeTab(MTSCreativeTabs.tabMTSTrains);
-	public static final Item bogie = new Item().setCreativeTab(MTSCreativeTabs.tabMTSTrains);
-	public static final Block blockTrack = new BlockTrack();
-	public static final Block blockTrackFake = new BlockTrackFake();
-	public static final Block surveyFlag = new BlockSurveyFlag().setCreativeTab(MTSCreativeTabs.tabMTSTrains);
+	public static final Item track = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Block trackStructure = new BlockTrackStructure();
+	public static final Block trackStructureFake = new BlockTrackStructureFake();
+	public static final Block surveyFlag = new BlockSurveyFlag().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	
+	public static final Item key = new ItemKey();
+	public static final Item instrument = new ItemInstrument();
 	
 	private static int entityNumber = 0;
 	private static int packetNumber = 0;
 	public static List<Item> itemList = new ArrayList<Item>();
-	/**Maps multipart class names to classes.*/
-	public static Map<String, Class<? extends EntityMultipartMoving>> multipartClasses = new HashMap<String, Class<? extends EntityMultipartMoving>>();
+	/**Maps multipart item names to items.*/
+	public static Map<String, ItemMultipartMoving> multipartItemMap = new HashMap<String, ItemMultipartMoving>();
 	/**Maps child class names to classes for quicker lookup during spawn operations.*/
 	public static Map<String, Class<? extends EntityMultipartChild>> partClasses = new HashMap<String, Class<? extends EntityMultipartChild>>();
 	
 	/**All run-time things go here.**/
 	public void init(){
-		initCustomEntities();
-		initPlaneItems();
+		initPackData();
 		initItems();
 		initBlocks();
 		initEntities();
@@ -88,29 +118,45 @@ public class MTSRegistry{
 		initRecipes();
 	}
 	
-	private void initCustomEntities(){
-		for(String name : PackParserSystem.getRegisteredNames()){
-			PackObject pack = PackParserSystem.getPack(name);
-			if(pack.general.type.equals("plane")){
-				multipartClasses.put(pack.general.name, EntityPlane.class);
+	private void initPackData(){
+		List<String> nameList = new ArrayList<String>(PackParserSystem.getRegisteredNames());
+		Collections.sort(nameList);
+		for(String name : nameList){
+			MultipartTypes type = PackParserSystem.getMultipartType(name);
+			if(type != null){
+				ItemMultipartMoving itemMultipart = new ItemMultipartMoving(name, type.tabToDisplayOn);
+				multipartItemMap.put(name, itemMultipart);
+				registerItem(itemMultipart);
+	
+				//Init multipart recipes.
+				//Convert strings into ItemStacks
+				Character[] indexes = new Character[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'};
+				String[] craftingRows = new String[]{"", "", ""};
+				List<ItemStack> stacks = new ArrayList<ItemStack>();
+				String[] recipe = PackParserSystem.getDefinitionForPack(name).recipe;
+				for(byte i=0; i<9; ++i){
+					if(!recipe[i].isEmpty()){
+						Item item = Item.getByNameOrId(recipe[i].substring(0, recipe[i].lastIndexOf(':')));
+						int damage = Integer.valueOf(recipe[i].substring(recipe[i].lastIndexOf(':') + 1));
+						craftingRows[i/3] = craftingRows[i/3] + indexes[stacks.size()];
+						stacks.add(new ItemStack(item, 1, damage));
+					}else{
+						craftingRows[i/3] = craftingRows[i/3] + ' ';
+					}
+				}
+	
+				//Create the object array that is going to be registered.
+				Object[] registryObject = new Object[craftingRows.length + stacks.size()*2];
+				registryObject[0] = craftingRows[0];
+				registryObject[1] = craftingRows[1];
+				registryObject[2] = craftingRows[2];
+				for(byte i=0; i<stacks.size(); ++i){
+					registryObject[3 + i*2] = indexes[i];
+					registryObject[3 + i*2 + 1] = stacks.get(i);
+				}
+				//Now register the recipe
+				registerRecipe(new ItemStack(itemMultipart), registryObject);
 			}
-		}
-	}
-
-
-	private void initPlaneItems(){
-		for(String planeName: PackParserSystem.getRegisteredNames()){
-			PackObject plane = PackParserSystem.getPack(planeName);
-
-			String[] itemTextures = plane.general.itemTexture;
-			for (int i = 0; i < itemTextures.length; i++) {
-				String itemTexture = itemTextures[i];
-				//TODO Actually add the item textures
-				ItemMultipartMoving item = new ItemMultipartMoving(planeName, MTSCreativeTabs.tabMTSPlanes);
-				registerItem(item);
-			}
-
-
 		}
 	}
 
@@ -134,11 +180,7 @@ public class MTSRegistry{
 		for(Field field : this.getClass().getFields()){
 			if(field.getType().equals(Block.class)){
 				try{
-					Block block = (Block) field.get(Block.class);
-					if(block.getUnlocalizedName().equals("tile.null")){
-						block.setUnlocalizedName(field.getName().toLowerCase());
-					}
-					registerBlock(block);
+					registerBlock((Block) field.get(Block.class));
 				}catch(Exception e){
 					e.printStackTrace();
 				}
@@ -151,7 +193,7 @@ public class MTSRegistry{
 		
 		registerChildEntity(EntityCore.class, null);
 		registerChildEntity(EntitySeat.class, seat);
-		registerChildEntity(EntityChest.class, Item.getItemFromBlock(Blocks.CHEST));
+		registerChildEntity(EntityVehicleChest.class, Item.getItemFromBlock(Blocks.CHEST));
 		registerChildEntity(EntityWheel.EntityWheelSmall.class, wheelSmall);
 		registerChildEntity(EntityWheel.EntityWheelLarge.class, wheelLarge);
 		registerChildEntity(EntitySkid.class, skid);
@@ -159,21 +201,22 @@ public class MTSRegistry{
 		registerChildEntity(EntityPontoon.EntityPontoonDummy.class, pontoon);
 		registerChildEntity(EntityPropeller.class, propeller);
 		registerChildEntity(EntityEngineAircraftSmall.class, engineAircraftSmall);
-		registerChildEntity(EntityEngineAircraftLarge.class, engineAircraftLarge);
-		
-		registerChildEntity(EntityBogie.class, bogie);
+		registerChildEntity(EntityEngineAircraftLarge.class, engineAircraftLarge);		
 	}
 	
 	private void initPackets(){
 		registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
 		registerPacket(ServerDataPacket.class, ServerDataPacket.Handler.class, true, false);
 		registerPacket(ServerSyncPacket.class, ServerSyncPacket.Handler.class, true, false);
+		registerPacket(DamagePacket.class, DamagePacket.Handler.class, true, false);
+		registerPacket(FlatWheelPacket.class, FlatWheelPacket.Handler.class, true, false);
 		
 		registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
 		registerPacket(TileEntityClientRequestDataPacket.class, TileEntityClientRequestDataPacket.Handler.class, false, true);
 
-		registerPacket(InstrumentPlanePacket.class, InstrumentPlanePacket.Handler.class, true, true);
+		registerPacket(InstrumentPacket.class, InstrumentPacket.Handler.class, true, true);
 		registerPacket(TileEntitySyncPacket.class, TileEntitySyncPacket.Handler.class, true, true);
+		registerPacket(PackPacket.class, PackPacket.Handler.class, true, true);
 		
 		registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
 		registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);
@@ -189,7 +232,7 @@ public class MTSRegistry{
 	private void initRecipes(){
 		this.initPartRecipes();
 		this.initEngineRecipes();
-		this.initFlightInstrumentRecipes();
+		this.initAircraftInstrumentRecipes();
 	}
 	
 	private void initPartRecipes(){
@@ -309,7 +352,7 @@ public class MTSRegistry{
 				'C', ((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1]);
 	}
 	
-	private void initFlightInstrumentRecipes(){		
+	private void initAircraftInstrumentRecipes(){		
 		registerRecipe(new ItemStack(pointerShort),
 				" WW",
 				" WW",
@@ -325,135 +368,132 @@ public class MTSRegistry{
 				'B', new ItemStack(Items.DYE, 1, 0));
 		
 		
-		registerRecipe(new ItemStack(flightInstrument, 16, 0),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 16, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()),
 				"III",
 				"IGI",
 				"III",
 				'I', Items.IRON_INGOT,
 				'G', Blocks.GLASS_PANE);
-		registerRecipe(new ItemStack(flightInstrument, 1, 1),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_ATTITUDE.ordinal()),
 				"LLL",
 				"RRR",
 				" B ",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'L', new ItemStack(Items.DYE, 1, 4),
 				'R', new ItemStack(Items.DYE, 1, 3));
 		
-		registerRecipe(new ItemStack(flightInstrument, 1, 2),
-				"WLW",
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_ALTIMETER.ordinal()),
 				"WSW",
 				" B ",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'L', pointerLong, 
 				'S', pointerShort, 
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecipe(new ItemStack(flightInstrument, 1, 3),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_HEADING.ordinal()),
 				" W ",
 				"WIW",
 				" B ",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'I', Items.IRON_INGOT,
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecipe(new ItemStack(flightInstrument, 1, 4),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_AIRSPEED.ordinal()),
 				"R W",
 				"YLG",
 				"GBG",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'L', pointerLong, 
 				'R', new ItemStack(Items.DYE, 1, 1),
 				'Y', new ItemStack(Items.DYE, 1, 11),
 				'G', new ItemStack(Items.DYE, 1, 10),
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecipe(new ItemStack(flightInstrument, 1, 5),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_TURNCOORD.ordinal()),
 				"   ",
 				"WIW",
 				"WBW",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'I', Items.IRON_INGOT,
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecipe(new ItemStack(flightInstrument, 1, 6),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_TURNSLIP.ordinal()),
 				"WWW",
 				" I ",
 				"WBW",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'I', Items.IRON_INGOT,
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecipe(new ItemStack(flightInstrument, 1, 7),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_VERTICALSPEED.ordinal()),
 				"W W",
 				" L ",
 				"WBW",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'L', pointerLong, 
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecipe(new ItemStack(flightInstrument, 1, 8),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_LIFTRESERVE.ordinal()),
 				"RYG",
 				" LG",
 				" B ",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'L', pointerLong, 
 				'R', new ItemStack(Items.DYE, 1, 1),
 				'Y', new ItemStack(Items.DYE, 1, 11),
 				'G', new ItemStack(Items.DYE, 1, 10),
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecipe(new ItemStack(flightInstrument, 1, 9),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_TRIM.ordinal()),
 				"GLG",
 				"LGL",
 				" B ",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'L', pointerLong, 
 				'G', new ItemStack(Items.DYE, 1, 10));
-
-		//Instrument 10 does not exist
 		
-		registerRecipe(new ItemStack(flightInstrument, 1, 11),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_TACHOMETER.ordinal()),
 				"W W",
 				" L ",
 				"WBR",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'L', pointerLong, 
 				'R', new ItemStack(Items.DYE, 1, 1),
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecipe(new ItemStack(flightInstrument, 1, 12),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_FUELQTY.ordinal()),
 				"RWW",
 				" L ",
 				" B ",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'L', pointerLong, 
 				'R', new ItemStack(Items.DYE, 1, 1),
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecipe(new ItemStack(flightInstrument, 1, 13),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_FUELFLOW.ordinal()),
 				" W ",
 				"WLW",
 				" B ",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'L', pointerLong, 
 				'W', new ItemStack(Items.DYE, 1, 15));
 		
-		registerRecipe(new ItemStack(flightInstrument, 1, 14),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_ENGINETEMP.ordinal()),
 				"YGR",
 				" L ",
 				" B ",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'L', pointerLong, 
 				'Y', new ItemStack(Items.DYE, 1, 11),
 				'G', new ItemStack(Items.DYE, 1, 10),
 				'R', new ItemStack(Items.DYE, 1, 1),
 				'W', new ItemStack(Items.DYE, 1, 15));
 				
-		registerRecipe(new ItemStack(flightInstrument, 1, 15),
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_OILPRESSURE.ordinal()),
 				"   ",
 				"LGL",
 				"RB ",
-				'B', new ItemStack(flightInstrument, 1, 0), 
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
 				'L', pointerLong,  
 				'G', new ItemStack(Items.DYE, 1, 10),
 				'R', new ItemStack(Items.DYE, 1, 1));
@@ -461,7 +501,7 @@ public class MTSRegistry{
 	
 	
 	/**
-	 * Registers the given item and adds it to the creative tab list.
+	 * Registers the given item.
 	 * @param item
 	 */
 	private static void registerItem(Item item){
@@ -476,9 +516,12 @@ public class MTSRegistry{
 	 * @param block
 	 */
 	private static void registerBlock(Block block){
-		GameRegistry.register(block.setRegistryName(block.getUnlocalizedName().split("\\.")[1].toLowerCase()));
-		GameRegistry.register(new ItemBlock(block).setRegistryName(block.getUnlocalizedName().substring(5).toLowerCase()));
-		MTSRegistry.itemList.add(Item.getItemFromBlock(block));
+		String name = block.getClass().getSimpleName().toLowerCase().substring(5);
+		GameRegistry.register(block.setRegistryName(name).setUnlocalizedName(name));
+		if(block.getCreativeTabToDisplayOn() != null){
+			GameRegistry.register(new ItemBlock(block).setRegistryName(name));
+			MTSRegistry.itemList.add(Item.getItemFromBlock(block));
+		}
 		if(block instanceof ITileEntityProvider){
 			Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
 			GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
@@ -492,9 +535,6 @@ public class MTSRegistry{
 	 */
 	private static void registerEntity(Class entityClass){
 		EntityRegistry.registerModEntity(entityClass, entityClass.getSimpleName().substring(6).toLowerCase(), entityNumber++, MTS.MODID, 80, 5, false);
-		if(EntityMultipartMoving.class.isAssignableFrom(entityClass)){
-			multipartClasses.put(entityClass.getSimpleName().substring(6).toLowerCase(), entityClass);
-		}
 	}
 	
 	/**
@@ -519,8 +559,8 @@ public class MTSRegistry{
 	 * @param server
 	 */
 	private static <REQ extends IMessage, REPLY extends IMessage> void registerPacket(Class<REQ> packetClass, Class<? extends IMessageHandler<REQ, REPLY>> handlerClass, boolean client, boolean server){
-		if(client)MTS.MFSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.CLIENT);
-		if(server)MTS.MFSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.SERVER);
+		if(client)MTS.MTSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.CLIENT);
+		if(server)MTS.MTSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.SERVER);
 	}
 	
 	private static void registerRecipe(ItemStack output, Object...params){

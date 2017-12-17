@@ -32,8 +32,9 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
 	public void update(){
 		if(timeOperationFinished == worldObj.getTotalWorldTime()){
 			timeOperationFinished = 0;
-			propellerOnBench = new ItemStack(MTSRegistry.propeller, 1, propellerType);
+			propellerOnBench = new ItemStack(MTSRegistry.propeller, 1, this.propellerType);
 			NBTTagCompound stackTag = new NBTTagCompound();
+			stackTag.setByte("type", propellerType);
 			stackTag.setInteger("numberBlades", numberBlades);
 			stackTag.setInteger("pitch", pitch);
 			stackTag.setInteger("diameter", diameter);
@@ -61,7 +62,7 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
 		if(propellerOnBench != null){
 			worldObj.spawnEntityInWorld(new EntityItem(worldObj, x, y, z, propellerOnBench));
 			propellerOnBench = null;
-			MTS.MFSNet.sendToAll(new TileEntitySyncPacket(this));
+			MTS.MTSNet.sendToAll(new TileEntitySyncPacket(this));
 		}
 	}
 

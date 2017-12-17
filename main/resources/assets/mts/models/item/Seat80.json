@@ -1,5 +1,5 @@
 {
-    "parent": "mts:item/Basic",
+    "parent": "mts:item/basic",
     "textures": {
         "layer0": "mts:items/seat80"
     }

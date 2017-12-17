@@ -3,10 +3,11 @@ package minecrafttransportsimulator.items;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.main.EntityCore;
 import minecrafttransportsimulator.helpers.EntityHelper;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -29,7 +30,7 @@ public class ItemMultipartMoving extends Item{
 	
 	@Override
 	public String getItemStackDisplayName(ItemStack stack){
-		return ((ItemMultipartMoving) stack.getItem()).name;
+		return PackParserSystem.getDefinitionForPack(name).itemDisplayName;
 	}
 	
 	@Override
@@ -39,13 +40,12 @@ public class ItemMultipartMoving extends Item{
 			pos = pos.up();
 			String entityName = ((ItemMultipartMoving) stack.getItem()).name;
 			try{
-				EntityMultipartMoving newEntity = MTSRegistry.multipartClasses.get(entityName).getConstructor(World.class, float.class, float.class, float.class, float.class, String.class).newInstance(world, pos.getX(), pos.getY(), pos.getZ(), player.rotationYaw, entityName);
+				EntityMultipartMoving newEntity = PackParserSystem.getMultipartType(entityName).multipartClass.getConstructor(World.class, float.class, float.class, float.class, float.class, String.class).newInstance(world, pos.getX(), pos.getY(), pos.getZ(), player.rotationYaw, entityName);
 				float minHeight = 0;
 				for(Float[] coreCoords : newEntity.getCollisionBoxes()){
 					minHeight = -coreCoords[1] > minHeight ? -coreCoords[1] : minHeight;
 				}
 				newEntity.posY += minHeight;
-				newEntity.ownerName = player.getDisplayNameString();
 				if(canSpawn(world, newEntity, pos)){
 					newEntity.numberChildren = (byte) newEntity.getCollisionBoxes().size();
 					if(!player.capabilities.isCreativeMode){
@@ -54,14 +54,14 @@ public class ItemMultipartMoving extends Item{
 					return EnumActionResult.PASS;
 				}
 			}catch(Exception e){
-				System.err.println("ERROR SPAWING ENTITY!");
+				MTS.MTSLog.error("ERROR SPAWING MULTIPART ENTITY!");
 				e.printStackTrace();
 			}
 		}
 		return EnumActionResult.FAIL;
 	}
 
-	public static boolean canSpawn(World world, EntityMultipartMoving mover, BlockPos pos){
+	private static boolean canSpawn(World world, EntityMultipartMoving mover, BlockPos pos){
 		List<Float[]> coreLocations = mover.getCollisionBoxes();
 		List<EntityCore> spawnedCores = new ArrayList<EntityCore>();
 		for(Float[] location : coreLocations){

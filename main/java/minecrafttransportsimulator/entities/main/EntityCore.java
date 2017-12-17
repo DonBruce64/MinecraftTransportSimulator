@@ -20,10 +20,13 @@ public class EntityCore extends EntityMultipartChild{
 	public EntityCore(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
 		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, width, height, 0);
 	}
-
+	
 	@Override
-	public boolean performAttackAction(DamageSource source, float damage){
-		return parent != null ? parent.performAttackAction(source, damage) : false;
+	public boolean attackEntityFrom(DamageSource source, float damage){
+		if(!worldObj.isRemote){
+			return parent != null ? parent.attackEntityFrom(source, damage) : false;
+		}
+		return false;
     }
 	
 	@Override

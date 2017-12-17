@@ -9,7 +9,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSCurve;
 import minecrafttransportsimulator.blocks.TileEntityTrack;
 import minecrafttransportsimulator.rendering.blockmodels.ModelTrackTie;
-import minecrafttransportsimulator.systems.GL11DrawSystem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
@@ -23,6 +23,7 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 	private static final ResourceLocation railTexture = new ResourceLocation(MTS.MODID, "textures/blockmodels/rail.png");
 	private static final ResourceLocation ballastTexture = new ResourceLocation(MTS.MODID, "textures/blocks/ballast.png");
 
+	//These define what the rails look like.  Change ONLY if rail shapes need to change.
 	private static final float bottomInnerX = 11.5F/16F;
 	private static final float bottomOuterX = 16.5F/16F;
 	private static final float bottomLowerY = 0F/16F;
@@ -43,7 +44,7 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 		super.renderTileEntityAt(tile, x, y, z, partialTicks, destroyStage);
 		TileEntityTrack track = (TileEntityTrack) tile;
 		if(track.curve != null){
-			TileEntity trackTileEntity = track.getWorld().getTileEntity(track.curve.blockEndPos);
+			TileEntity trackTileEntity = track.getWorld().getTileEntity(track.getPos().add(track.curve.endPos));
 			if(!(trackTileEntity instanceof TileEntityTrack)){
 				//Sometimes the TE's don't break evenly.  Make sure this doesn't happen and we try to render a flag here.
 				return;
@@ -65,40 +66,49 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 			
 			//Make sure not to render if the other end has done so.
 			if(otherEnd != null){
-				if(otherEnd.renderedLastPass){
+				//Try to keep the same track rendering if possible.
+				//If the track isn't null, render that one instead.
+				boolean renderFromOtherEnd = otherEnd.getPos().getX() != track.getPos().getX() ? otherEnd.getPos().getX() > track.getPos().getX() : otherEnd.getPos().getZ() > track.getPos().getZ(); 
+				if(renderFromOtherEnd){
+					this.renderTileEntityAt(otherEnd, x + otherEnd.getPos().getX() - track.getPos().getX(), y + otherEnd.getPos().getY() - track.getPos().getY(), z + otherEnd.getPos().getZ() - track.getPos().getZ(), partialTicks, destroyStage);
 					return;
 				}
 			}
-			track.renderedLastPass = true;
 			
 			GL11.glPushMatrix();
 			GL11.glTranslated(x, y, z);
 			GL11.glPushMatrix();
-			renderTrackSegmentFromCurve(track.getWorld(), track.curve, false, track.connectedTrack, otherEnd != null ? otherEnd.connectedTrack : null);
+			renderTrackSegmentFromCurve(track.getWorld(), track.getPos(), track.curve, false, track.connectedTrack, otherEnd != null ? otherEnd.connectedTrack : null);
 			GL11.glPopMatrix();
 			
-			/*
+			
 			//CAUSES OVER 20FPS LOSS.  DO NOT USE EXCEPT FOR TESTING!
-			GL11DrawSystem.bindTexture(ballastTexture);
+			/*
+			Minecraft.getMinecraft().getTextureManager().bindTexture(ballastTexture);
 			//Render master tracks with ballast.
 			GL11.glPushMatrix();
-			float lightValue = BlockHelper.getRenderLight(track.getWorldObj(), (int) Math.ceil(track.curve.blockStartPoint[0]), (int) Math.ceil(track.curve.blockStartPoint[1]), (int) Math.ceil(track.curve.blockStartPoint[2]));
+			int lightValue = track.getWorld().getCombinedLight(track.curve.blockStartPos, 0);
 			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightValue%65536, lightValue/65536);
 			drawBallastBox(1F/16F);
-			GL11.glTranslatef(track.curve.blockEndPoint[0] - track.curve.blockStartPoint[0], track.curve.blockEndPoint[1] - track.curve.blockStartPoint[1], track.curve.blockEndPoint[2] - track.curve.blockStartPoint[2]);
-			lightValue = BlockHelper.getRenderLight(track.getWorldObj(), (int) Math.ceil(track.curve.blockEndPoint[0]), (int) Math.ceil(track.curve.blockEndPoint[1]), (int) Math.ceil(track.curve.blockEndPoint[2]));
+			
+			GL11.glTranslatef(track.curve.blockEndPos.getX() - track.curve.blockStartPos.getX(), track.curve.blockEndPos.getY() - track.curve.blockStartPos.getY(), track.curve.blockEndPos.getZ() - track.curve.blockStartPos.getZ());
+			lightValue = track.getWorld().getCombinedLight(track.curve.blockEndPos, 0);
 			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightValue%65536, lightValue/65536);
 			drawBallastBox(1F/16F);
 			GL11.glPopMatrix();
 			
 			//Render fake tracks with ballast.
-			for(int[] fakeData : track.getFakeTracks()){
-				GL11.glPushMatrix();
-				GL11.glTranslatef(fakeData[0] - track.curve.blockStartPoint[0], fakeData[1] - track.curve.blockStartPoint[1], fakeData[2] - track.curve.blockStartPoint[2]);
-				lightValue = BlockHelper.getRenderLight(track.getWorldObj(), (int) Math.ceil(fakeData[0]), (int) Math.ceil(fakeData[1]), (int) Math.ceil(fakeData[2]));
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightValue%65536, lightValue/65536);
-				drawBallastBox(fakeData[3]/16F);
-				GL11.glPopMatrix();
+			for(BlockPos fakePos : track.getFakeTracks()){
+				//Sometimes while breaking states don't update at the same time.
+				//Make sure we have a fake track here.
+				if(track.getWorld().getBlockState(fakePos).getBlock().equals(MTSRegistry.trackStructureFake)){
+					GL11.glPushMatrix();
+					GL11.glTranslatef(fakePos.getX() - track.curve.blockStartPos.getX(), fakePos.getY() - track.curve.blockStartPos.getY(), fakePos.getZ() - track.curve.blockStartPos.getZ());
+					lightValue = track.getWorld().getCombinedLight(fakePos, 0);
+					OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightValue%65536, lightValue/65536);
+					drawBallastBox(track.getWorld().getBlockState(fakePos).getValue(BlockTrackStructureFake.height)/16F);
+					GL11.glPopMatrix();
+				}
 			}*/
 			GL11.glPopMatrix();
 		}
@@ -108,12 +118,12 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 		for(byte i=-1; i<=1; ++i){
 			for(byte j=-1; j<=1; ++j){
 				if(!(i == 0 && j == 0)){
-					TileEntity testTile = track.getWorld().getTileEntity(track.curve.blockStartPos.add(i, 0, j));
+					TileEntity testTile = track.getWorld().getTileEntity(track.getPos().add(i, 0, j));
 					if(testTile instanceof TileEntityTrack){
 						if(((TileEntityTrack) testTile).curve != null){
 							if(((TileEntityTrack) testTile).curve.startAngle == (180 + track.curve.startAngle)%360){
-								//Make sure we don't link to ourselves.  Because players will try this.
-								if(!testTile.getPos().equals(track.curve.blockEndPos)){
+								//Make sure we don't link to ourselves.  Because players will find a way to make this happen.
+								if(!testTile.getPos().equals(track.getPos().add(track.curve.endPos))){
 									//If the track we want to link to has already linked with us, stop the link.
 									//Double linkings cause double rendering and lots of errors.
 									if(!track.equals(((TileEntityTrack) testTile).connectedTrack)){
@@ -136,7 +146,7 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 	/**
 	 * This can be called to render track anywhere in the code, not just from this class.
 	 */
-	public static void renderTrackSegmentFromCurve(World world, MTSCurve curve, boolean holographic, TileEntityTrack startConnector, TileEntityTrack endConnector){
+	public static void renderTrackSegmentFromCurve(World world, BlockPos startPos, MTSCurve curve, boolean holographic, TileEntityTrack startConnector, TileEntityTrack endConnector){
 		final float offset = 0.65F;
 		float textureOffset = 0;
 		List<float[]> texPoints = new ArrayList<float[]>();
@@ -150,10 +160,11 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 		TileEntityTrack startConnectorMaster = null;
 		if(startConnector != null){
 			if(startConnector.curve != null){	
-				if(!startConnector.renderedLastPass){
-					//Start connecter is the end of a rail.  Test for tie space.
-					startConnectorMaster = (TileEntityTrack) world.getTileEntity(startConnector.curve.blockEndPos);
-					if(startConnectorMaster != null){
+				startConnectorMaster = (TileEntityTrack) world.getTileEntity(startConnector.getPos().add(startConnector.curve.endPos));
+				if(startConnectorMaster != null){
+					boolean renderFromOtherEnd = startConnectorMaster.getPos().getX() != startConnector.getPos().getX() ? startConnectorMaster.getPos().getX() > startConnector.getPos().getX() : startConnectorMaster.getPos().getZ() > startConnector.getPos().getZ();
+					if(renderFromOtherEnd){
+						//Start connecter is the end of a rail.  Test for tie space.
 						if(startConnectorMaster.curve != null){
 							renderStartRailExtra = true;
 							if(startConnectorMaster.curve.pathLength%offset > offset/2){
@@ -173,10 +184,11 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 		TileEntityTrack endConnectorMaster = null;
 		if(endConnector != null){
 			if(endConnector.curve != null){
-				if(!endConnector.renderedLastPass){
-					//End connecter is the end of a rail.  Test for tie space.
-					endConnectorMaster = (TileEntityTrack) world.getTileEntity(endConnector.curve.blockEndPos);
-					if(endConnectorMaster != null){
+				endConnectorMaster = (TileEntityTrack) world.getTileEntity(endConnector.getPos().add(endConnector.curve.endPos));
+				if(endConnectorMaster != null){
+					boolean renderFromOtherEnd = endConnectorMaster.getPos().getX() != endConnector.getPos().getX() ? endConnectorMaster.getPos().getX() > endConnector.getPos().getX() : endConnectorMaster.getPos().getZ() > endConnector.getPos().getZ();
+					if(renderFromOtherEnd){
+						//End connecter is the end of a rail.  Test for tie space.
 						if(endConnectorMaster.curve != null){
 							renderEndRailExtra = true;
 							if(endConnectorMaster.curve.pathLength%offset + curve.pathLength%offset > offset/2){
@@ -196,15 +208,15 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 			float lastPointOnCurve = (startConnectorMaster.curve.pathLength - (startConnectorMaster.curve.pathLength%offset))/startConnectorMaster.curve.pathLength;
 			currentPoint = startConnectorMaster.curve.getCachedPointAt(lastPointOnCurve);
 			currentAngle = startConnectorMaster.curve.getCachedYawAngleAt(lastPointOnCurve);
-			textureOffset = (float) -(Math.hypot(currentPoint[0] - startConnector.curve.blockStartPos.getX(), currentPoint[2] - startConnector.curve.blockStartPos.getZ()) + Math.hypot(startConnector.curve.blockStartPos.getX() - curve.blockStartPos.getX(), startConnector.curve.blockStartPos.getZ() - curve.blockStartPos.getZ()));
+			textureOffset = (float) -(Math.hypot(currentPoint[0] - startConnector.getPos().getX(), currentPoint[2] - startConnector.getPos().getZ()) + Math.hypot(startConnector.getPos().getX(), startConnector.getPos().getZ()));
 			texPoints.add(new float[]{
-				currentPoint[0] - curve.blockStartPos.getX(),
-				currentPoint[1] - curve.blockStartPos.getY() + 0.1875F,
-				currentPoint[2] - curve.blockStartPos.getZ(),
+				currentPoint[0],
+				currentPoint[1] + 0.1875F,
+				currentPoint[2],
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
-				world.getLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])))
+				world.getCombinedLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])).add(startPos), 0)
 			});
 		}
 		
@@ -212,15 +224,15 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 		if(renderStartTie || (renderStartRail && !renderStartRailExtra)){
 			currentPoint = startConnector.curve.getCachedPointAt(0);
 			currentAngle = (startConnector.curve.getCachedYawAngleAt(0) +180)%360;
-			textureOffset = (float) -Math.hypot(currentPoint[0] - curve.blockStartPos.getX(), currentPoint[2] - curve.blockStartPos.getZ());
+			textureOffset = (float) -Math.hypot(currentPoint[0], currentPoint[2]);
 			texPoints.add(new float[]{
-				currentPoint[0] - curve.blockStartPos.getX(),
-				currentPoint[1] - curve.blockStartPos.getY() + 0.1875F,
-				currentPoint[2] - curve.blockStartPos.getZ(),
+				currentPoint[0],
+				currentPoint[1] + 0.1875F,
+				currentPoint[2],
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
-                world.getLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])))
+				world.getCombinedLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])).add(startPos), 0)
 			});
 		}
 
@@ -229,18 +241,18 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 			currentPoint = curve.getCachedPointAt(f/curve.pathLength);
 			currentAngle = curve.getCachedYawAngleAt(f/curve.pathLength);
 			if(f != 0){
-				textureOffset += (float) Math.hypot(currentPoint[0] - curve.blockStartPos.getX() - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPos.getZ() - texPoints.get(texPoints.size() - 1)[2]);
+				textureOffset += (float) Math.hypot(currentPoint[0] - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - texPoints.get(texPoints.size() - 1)[2]);
 			}else{
 				textureOffset = 0;
 			}
 			texPoints.add(new float[]{
-				currentPoint[0] - curve.blockStartPos.getX(),
-				currentPoint[1] - curve.blockStartPos.getY() + 0.1875F,
-				currentPoint[2] - curve.blockStartPos.getZ(),
+				currentPoint[0],
+				currentPoint[1] + 0.1875F,
+				currentPoint[2],
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
-                world.getLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])))
+                world.getCombinedLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])).add(startPos), 0)
 			});
 		}
 		
@@ -248,15 +260,15 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 		if(renderEndTie || (renderEndRail && !renderEndRailExtra)){
 			currentPoint = endConnector.curve.getCachedPointAt(0);
 			currentAngle = endConnector.curve.startAngle;
-			textureOffset += (float) Math.hypot(currentPoint[0] - curve.blockStartPos.getX() - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPos.getZ() - texPoints.get(texPoints.size() - 1)[2]);
+			textureOffset += (float) Math.hypot(currentPoint[0] - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - texPoints.get(texPoints.size() - 1)[2]);
 			texPoints.add(new float[]{
-				currentPoint[0] - curve.blockStartPos.getX(),
-				currentPoint[1] - curve.blockStartPos.getY() + 0.1875F,
-				currentPoint[2] - curve.blockStartPos.getZ(),
+				currentPoint[0],
+				currentPoint[1] + 0.1875F,
+				currentPoint[2],
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
-                world.getLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])))
+				world.getCombinedLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])).add(startPos), 0)
 			});			
 		}
 		
@@ -266,15 +278,15 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 			float lastPointOnCurve = (endConnectorMaster.curve.pathLength - (endConnectorMaster.curve.pathLength%offset))/endConnectorMaster.curve.pathLength;
 			currentPoint = endConnectorMaster.curve.getCachedPointAt(lastPointOnCurve);
 			currentAngle = (endConnectorMaster.curve.getCachedYawAngleAt(lastPointOnCurve) + 180)%360;
-			textureOffset += (float) Math.hypot(currentPoint[0] - curve.blockStartPos.getX() - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - curve.blockStartPos.getZ() - texPoints.get(texPoints.size() - 1)[2]);
+			textureOffset += (float) Math.hypot(currentPoint[0] - texPoints.get(texPoints.size() - 1)[0], currentPoint[2] - texPoints.get(texPoints.size() - 1)[2]);
 			texPoints.add(new float[]{
-				currentPoint[0] - curve.blockStartPos.getX(),
-				currentPoint[1] - curve.blockStartPos.getY() + 0.1875F,
-				currentPoint[2] - curve.blockStartPos.getZ(),
+				currentPoint[0],
+				currentPoint[1] + 0.1875F,
+				currentPoint[2],
 				(float) Math.sin(Math.toRadians(currentAngle)),
 				(float) Math.cos(Math.toRadians(currentAngle)),
 				(float) (textureOffset),
-                world.getLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])))
+				world.getCombinedLight(new BlockPos((int) Math.ceil(currentPoint[0]), (int) Math.ceil(currentPoint[1]), (int) Math.ceil(currentPoint[2])).add(startPos), 0)
 			});
 		}
 		
@@ -315,7 +327,7 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 		//Now to render the rails.
 		//These use all the points so no special logic is required.		
 		GL11.glPushMatrix();
-		GL11DrawSystem.bindTexture(railTexture);
+		Minecraft.getMinecraft().getTextureManager().bindTexture(railTexture);
 		drawRailSegment(texPoints, bottomInnerX, bottomOuterX, bottomLowerY, bottomLowerY, 0.0F, 3F/19F, holographic);//Bottom
 		drawRailSegment(texPoints, bottomOuterX, bottomOuterX, bottomLowerY, bottomUpperY, 3F/19F, 4F/19F, holographic);//Outer-bottom-side
 		drawRailSegment(texPoints, bottomOuterX, middleOuterX, bottomUpperY, bottomUpperY, 4F/19F, 5.5F/19F, holographic);//Outer-bottom-top
@@ -347,13 +359,17 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 			drawRailEndCaps(texPoints.get(texPoints.size() - 1), holographic);
 			GL11.glPopMatrix();
 		}
+		if(holographic){
+			GL11.glDisable(GL11.GL_BLEND);
+			GL11.glColor4f(1, 1, 1, 1);
+		}
 	}
 	
 	private static void renderTie(float brightness, boolean holographic){
 		if(!holographic){
 			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, brightness%65536, brightness/65536);
 		}
-		GL11DrawSystem.bindTexture(tieTexture);
+		Minecraft.getMinecraft().getTextureManager().bindTexture(tieTexture);
 		GL11.glRotatef(180, 1, 0, 0);
 		GL11.glTranslatef(0, 0, -0.1875F);
 		modelTie.render();
@@ -364,8 +380,10 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 		for(float[] point : texPoints){
 			if(!holographic)OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, point[6]%65536, point[6]/65536);
 			GL11.glTexCoord2d(point[5], t2);
+			GL11.glNormal3f(0, 1, 0);
 			GL11.glVertex3d(point[0] + w1*point[4], point[1] + h1, point[2] + w1*point[3]);
 			GL11.glTexCoord2d(point[5], t1);
+			GL11.glNormal3f(0, 1, 0);
 			GL11.glVertex3d(point[0] + w2*point[4], point[1] + h2, point[2] + w2*point[3]);
 		}
 		GL11.glEnd();
@@ -373,14 +391,16 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 		for(float[] point : texPoints){
 			if(!holographic)OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, point[6]%65536, point[6]/65536);
             GL11.glTexCoord2d(point[5], t1);
+            GL11.glNormal3f(0, 1, 0);
 			GL11.glVertex3d(point[0] - w2*point[4], point[1] + h2, point[2] - w2*point[3]);
 			GL11.glTexCoord2d(point[5], t2);
+			GL11.glNormal3f(0, 1, 0);
 			GL11.glVertex3d(point[0] - w1*point[4], point[1] + h1, point[2] - w1*point[3]);
 		}
 		GL11.glEnd();
 	}
 	
-	private static void drawRailEndCaps(float[] texPoint, boolean holographic){
+	private static void drawRailEndCaps(float[] texPoint, boolean holographic){		
 		GL11.glPushMatrix();
 		GL11.glBegin(GL11.GL_QUADS);
 			if(!holographic)OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, texPoint[6]%65536, texPoint[6]/65536);
@@ -442,11 +462,86 @@ public class RenderTrack extends TileEntitySpecialRenderer{
 	}
 	
 	private static void drawBallastBox(float height){
-		GL11DrawSystem.renderSquare(0, 0, -0.01, height, 0, 1, false);
-		GL11DrawSystem.renderSquare(1, 0, -0.01, height, 0, 0, false);
-		GL11DrawSystem.renderSquare(0, 1, -0.01, height, 1, 1, false);
-		GL11DrawSystem.renderSquare(1, 1, -0.01, height, 1, 0, false);
-		GL11DrawSystem.renderQuad(0, 0, 1, 1, height, height, height, height, 0, 1, 1, 0, false);
-		GL11DrawSystem.renderQuad(1, 1, 0, 0, -0.01, -0.01, -0.01, -0.01, 0, 1, 1, 0, false);
+		//TODO edit the fake tracks to make these go in to a Json def.
+		height += 1/16F;
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glTexCoord2f(1, 1 - height);
+		GL11.glNormal3f(-1, 0, 0);
+		GL11.glVertex3d(0, height, 0);
+		GL11.glTexCoord2f(1, 1);
+		GL11.glNormal3f(-1, 0, 0);
+		GL11.glVertex3d(0, -0.01, 0);
+		GL11.glTexCoord2f(0, 1);
+		GL11.glNormal3f(-1, 0, 0);
+		GL11.glVertex3d(0, -0.01, 1);
+		GL11.glTexCoord2f(0, 1 - height);
+		GL11.glNormal3f(-1, 0, 0);
+		GL11.glVertex3d(0, height, 1);
+		
+		GL11.glTexCoord2f(0, 1 - height);
+		GL11.glNormal3f(1, 0, 0);
+		GL11.glVertex3d(1, height, 1);
+		GL11.glTexCoord2f(0, 1);
+		GL11.glNormal3f(1, 0, 0);
+		GL11.glVertex3d(1, -0.01, 1);
+		GL11.glTexCoord2f(1, 1);
+		GL11.glNormal3f(1, 0, 0);
+		GL11.glVertex3d(1, -0.01, 0);
+		GL11.glTexCoord2f(1, 1 - height);
+		GL11.glNormal3f(1, 0, 0);
+		GL11.glVertex3d(1, height, 0);
+		
+		GL11.glTexCoord2f(0, 1 - height);
+		GL11.glNormal3f(0, 0, -1);
+		GL11.glVertex3d(1, height, 0);
+		GL11.glTexCoord2f(0, 1);
+		GL11.glNormal3f(0, 0, -1);
+		GL11.glVertex3d(1, -0.01, 0);
+		GL11.glTexCoord2f(1, 1);
+		GL11.glNormal3f(0, 0, -1);
+		GL11.glVertex3d(0, -0.01, 0);
+		GL11.glTexCoord2f(1, 1 - height);
+		GL11.glNormal3f(0, 0, -1);
+		GL11.glVertex3d(0, height, 0);
+		
+		GL11.glTexCoord2f(1, 1 - height);
+		GL11.glNormal3f(0, 0, 1);
+		GL11.glVertex3d(0, height, 1);
+		GL11.glTexCoord2f(1, 1);
+		GL11.glNormal3f(0, 0, 1);
+		GL11.glVertex3d(0, -0.01, 1);
+		GL11.glTexCoord2f(0, 1);
+		GL11.glNormal3f(0, 0, 1);
+		GL11.glVertex3d(1, -0.01, 1);
+		GL11.glTexCoord2f(0, 1 - height);
+		GL11.glNormal3f(0, 0, 1);
+		GL11.glVertex3d(1, height, 1);
+		
+		GL11.glTexCoord2f(1, 0);
+		GL11.glNormal3f(0, 1, 0);
+		GL11.glVertex3d(1, height, 1);
+		GL11.glTexCoord2f(1, 1);
+		GL11.glNormal3f(0, 1, 0);
+		GL11.glVertex3d(1, height, 0);
+		GL11.glTexCoord2f(0, 1);
+		GL11.glNormal3f(0, 1, 0);
+		GL11.glVertex3d(0, height, 0);
+		GL11.glTexCoord2f(0, 0);
+		GL11.glNormal3f(0, 1, 0);
+		GL11.glVertex3d(0, height, 1);
+		
+		GL11.glTexCoord2f(0, 0);
+		GL11.glNormal3f(0, -1, 0);
+		GL11.glVertex3d(0, -0.01, 1);
+		GL11.glTexCoord2f(0, 1);
+		GL11.glNormal3f(0, -1, 0);
+		GL11.glVertex3d(0, -0.01, 0);
+		GL11.glTexCoord2f(1, 1);
+		GL11.glNormal3f(0, -1, 0);
+		GL11.glVertex3d(1, -0.01, 0);
+		GL11.glTexCoord2f(1, 0);
+		GL11.glNormal3f(0, -1, 0);
+		GL11.glVertex3d(1, -0.01, 1);
+		GL11.glEnd();
 	}
 }

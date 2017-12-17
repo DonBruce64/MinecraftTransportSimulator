@@ -1,5 +1,5 @@
 {
     "variants": {
-        "normal": { "model": "mts:PropellerBench" }
+        "normal": { "model": "mts:propellerbench" }
     }
 }

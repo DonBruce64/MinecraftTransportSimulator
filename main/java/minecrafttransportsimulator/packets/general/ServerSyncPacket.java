@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -64,61 +65,68 @@ public class ServerSyncPacket implements IMessage{
 	}
 
 	public static class Handler implements IMessageHandler<ServerSyncPacket, IMessage>{
-		private static boolean forced;
 		
 		@Override
-		public IMessage onMessage(ServerSyncPacket message, MessageContext ctx) {
-			if(ctx.side.isClient()){
-				EntityMultipartParent thisEntity = (EntityMultipartParent) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
-				if(thisEntity != null){
-					byte syncThreshold = (byte) ConfigSystem.getIntegerConfig("SyncThreshold");
-					float syncIncrement = (float) ConfigSystem.getDoubleConfig("IncrementalMovement");
-					forced = false;
-
-					thisEntity.posX = rectifyValue(thisEntity.posX, message.posX, syncIncrement, syncThreshold);
-					thisEntity.posY = rectifyValue(thisEntity.posY, message.posY, syncIncrement, syncThreshold);
-					thisEntity.posZ = rectifyValue(thisEntity.posZ, message.posZ, syncIncrement, syncThreshold);
-					
-					thisEntity.motionX = rectifyValue(thisEntity.motionX, message.motionX, syncIncrement, syncThreshold/25);
-					thisEntity.motionY = rectifyValue(thisEntity.motionY, message.motionY, syncIncrement, syncThreshold/25);
-					thisEntity.motionZ = rectifyValue(thisEntity.motionZ, message.motionZ, syncIncrement, syncThreshold/25);
-					
-					thisEntity.rollCorrection = thisEntity.rotationRoll;
-					thisEntity.rotationRoll = (float) rectifyValue(thisEntity.rotationRoll, message.roll, syncIncrement, syncThreshold);
-					thisEntity.rollCorrection -= thisEntity.rotationRoll;
-					
-					thisEntity.pitchCorrection = thisEntity.rotationPitch;
-					thisEntity.rotationPitch = (float) rectifyValue(thisEntity.rotationPitch, message.pitch, syncIncrement, syncThreshold);
-					thisEntity.pitchCorrection -= thisEntity.rotationPitch; 
-					
-					thisEntity.yawCorrection = thisEntity.rotationYaw;
-					thisEntity.rotationYaw = (float) rectifyValue(thisEntity.rotationYaw, message.yaw, syncIncrement, syncThreshold);
-					thisEntity.yawCorrection -= thisEntity.rotationYaw;
-					
-					thisEntity.moveChildren();
-					
-					if(forced){
-						thisEntity.requestDataFromServer();
+		public IMessage onMessage(final ServerSyncPacket message, final MessageContext ctx){
+			
+			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new RunnableSync(){
+				@Override
+				public void run(){
+					EntityMultipartParent thisEntity = (EntityMultipartParent) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+					if(thisEntity != null){
+						forcedSync = false;
+						byte syncThreshold = (byte) ConfigSystem.getIntegerConfig("SyncThreshold");
+						float syncIncrement = (float) ConfigSystem.getDoubleConfig("IncrementalMovement");
+						thisEntity.posX = rectifyValue(thisEntity.posX, message.posX, syncIncrement, syncThreshold);
+						thisEntity.posY = rectifyValue(thisEntity.posY, message.posY, syncIncrement, syncThreshold);
+						thisEntity.posZ = rectifyValue(thisEntity.posZ, message.posZ, syncIncrement, syncThreshold);
+						
+						thisEntity.motionX = rectifyValue(thisEntity.motionX, message.motionX, syncIncrement, syncThreshold/25F);
+						thisEntity.motionY = rectifyValue(thisEntity.motionY, message.motionY, syncIncrement, syncThreshold/25F);
+						thisEntity.motionZ = rectifyValue(thisEntity.motionZ, message.motionZ, syncIncrement, syncThreshold/25F);
+						
+						thisEntity.rollCorrection = thisEntity.rotationRoll;
+						thisEntity.rotationRoll = (float) rectifyValue(thisEntity.rotationRoll, message.roll, syncIncrement, syncThreshold);
+						thisEntity.rollCorrection -= thisEntity.rotationRoll;
+						
+						thisEntity.pitchCorrection = thisEntity.rotationPitch;
+						thisEntity.rotationPitch = (float) rectifyValue(thisEntity.rotationPitch, message.pitch, syncIncrement, syncThreshold);
+						thisEntity.pitchCorrection -= thisEntity.rotationPitch; 
+						
+						thisEntity.yawCorrection = thisEntity.rotationYaw;
+						thisEntity.rotationYaw = (float) rectifyValue(thisEntity.rotationYaw, message.yaw, syncIncrement, syncThreshold);
+						thisEntity.yawCorrection -= thisEntity.rotationYaw;
+						
+						thisEntity.moveChildren();
+						if(forcedSync){
+							thisEntity.requestDataFromServer();
+						}
 					}
 				}
-			}
+			});
 			return null;
 		}
 		
-		private static double rectifyValue(double currentValue, double packetValue, double increment, double cutoff){
-			if(currentValue > packetValue){
-				if(currentValue - packetValue > cutoff){
-					forced = true;
-					return packetValue;
+		
+		
+		private abstract static class RunnableSync implements Runnable{
+			protected static boolean forcedSync;
+			
+			protected static double rectifyValue(double currentValue, double packetValue, double increment, double cutoff){
+				if(currentValue > packetValue){
+					if(currentValue - packetValue > cutoff){
+						forcedSync = true;
+						return packetValue;
+					}else{
+						return currentValue - Math.min(currentValue - packetValue, increment);
+					}
 				}else{
-					return currentValue - Math.min(currentValue - packetValue, increment);
-				}
-			}else{
-				if(packetValue - currentValue > cutoff){
-					forced = true;
-					return packetValue;
-				}else{
-					return currentValue + Math.min(packetValue - currentValue, increment);
+					if(packetValue - currentValue > cutoff){
+						forcedSync = true;
+						return packetValue;
+					}else{
+						return currentValue + Math.min(packetValue - currentValue, increment);
+					}
 				}
 			}
 		}

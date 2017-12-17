@@ -10,7 +10,7 @@ public class BenchSound extends MovingSound{
 	private final TileEntityPropellerBench bench;
 
 	public BenchSound(TileEntityPropellerBench bench){
-		super(SFXSystem.getSoundEventFromName(MTS.MODID + "bench_running"), SoundCategory.MASTER);
+		super(SFXSystem.getSoundEventFromName(MTS.MODID + ":bench_running"), SoundCategory.MASTER);
 		this.volume=0.75F;
 		this.repeat=true;
 		this.xPosF = bench.getPos().getX();

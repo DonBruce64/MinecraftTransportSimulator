@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.entities.parts;
 
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.helpers.EntityHelper;
@@ -11,6 +12,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 
 public abstract class EntityEngineAircraft extends EntityEngine{
@@ -28,14 +30,14 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 	}
 	
 	@Override
-    public boolean performRightClickAction(MTSEntity clicked, EntityPlayer player){
+	public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
 		if(!worldObj.isRemote){
-			ItemStack playerStack = player.inventory.getItemStack();
+			ItemStack playerStack = player.getHeldItemMainhand();
 			if(playerStack != null){
 				if(MTSRegistry.propeller.equals(playerStack.getItem()) && propeller == null){
 					if(this.parent != null){
 						if(playerStack.getTagCompound().getInteger("diameter") > 80 && this instanceof EntityEngineAircraftSmall){
-							MTS.MFSNet.sendTo(new ChatPacket(I18n.format("interact.failure.propellertoobig")), (EntityPlayerMP) player);
+							MTS.MTSNet.sendTo(new ChatPacket(I18n.format("interact.failure.propellertoobig")), (EntityPlayerMP) player);
 							return false;
 						}
 						propeller = new EntityPropeller(worldObj, (EntityPlane) parent, parent.UUID, offsetX, offsetY + (this.height - 1)/2F, offsetZ + 0.9F, playerStack.getItemDamage());
@@ -50,7 +52,7 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 				}
 			}
 		}
-		return parent != null ? parent.performRightClickAction(clicked, player) : false;
+		return super.processInitialInteract(player, stack, hand);
 	}
 	
 	@Override

@@ -1,5 +1,7 @@
 package minecrafttransportsimulator;
 
+import java.io.File;
+
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -11,18 +13,19 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 
-import java.io.File;
+import org.apache.logging.log4j.Logger;
 
 @Mod(modid = MTS.MODID, name = MTS.MODNAME, version = MTS.MODVER)
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="8.0.0-ALPHA-10";
+	public static final String MODVER="8.0.0-INDEV-27";
 	public static final String assetDir = System.getProperty("user.dir") + File.separator + MTS.MODID;
 	
 	@Instance(value = MTS.MODID)
 	public static MTS instance;
-	public static final SimpleNetworkWrapper MFSNet = NetworkRegistry.INSTANCE.newSimpleChannel("MTSNet");
+	public static Logger MTSLog;
+	public static final SimpleNetworkWrapper MTSNet = NetworkRegistry.INSTANCE.newSimpleChannel("MTSNet");
 	@SidedProxy(clientSide="minecrafttransportsimulator.ClientProxy", serverSide="minecrafttransportsimulator.CommonProxy")
 	public static CommonProxy proxy;
 	
@@ -32,8 +35,9 @@ public class MTS {
 
 	@EventHandler
 	public void PreInit(FMLPreInitializationEvent event){
+		MTSLog = event.getModLog();
 		proxy.preInit(event);
-		this.initModMetadata(event);
+		//this.initModMetadata(event);
 	}
 	
 	@EventHandler
@@ -53,4 +57,3 @@ public class MTS {
         meta.version = this.MODVER;
 	}
 }
-

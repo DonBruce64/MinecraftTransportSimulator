@@ -5,6 +5,7 @@ import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -33,18 +34,21 @@ public class ServerDataPacket implements IMessage{
 		ByteBufUtils.writeTag(buf, this.tagCompound);
 	}
 
-	public static class Handler implements IMessageHandler<ServerDataPacket, IMessage> {
+	public static class Handler implements IMessageHandler<ServerDataPacket, IMessage>{
 		@Override
-		public IMessage onMessage(ServerDataPacket message, MessageContext ctx) {
-			if(ctx.side.isClient()){
-				MTSEntity thisEntity = (MTSEntity) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
-				if(thisEntity != null){
-					thisEntity.readFromNBT(message.tagCompound);
-					if(thisEntity instanceof EntityMultipartParent){
-						((EntityMultipartParent) thisEntity).moveChildren();
+		public IMessage onMessage(final ServerDataPacket message, final MessageContext ctx){
+			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
+				@Override
+				public void run(){
+					MTSEntity thisEntity = (MTSEntity) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+					if(thisEntity != null){
+						thisEntity.readFromNBT(message.tagCompound);
+						if(thisEntity instanceof EntityMultipartParent){
+							((EntityMultipartParent) thisEntity).moveChildren();
+						}
 					}
 				}
-			}
+			});
 			return null;
 		}
 	}
