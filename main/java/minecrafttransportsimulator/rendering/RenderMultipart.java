@@ -607,7 +607,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		GL11.glTranslatef(0, 0, -0.001F);
 		
 		Color flareColor = Color.decode(color);
-		GL11.glColor4f(flareColor.getRed(), flareColor.getGreen(), flareColor.getBlue(), brightness);
+		GL11.glColor4f(flareColor.getRed()/255F, flareColor.getGreen()/255F, flareColor.getBlue()/255F, brightness);
 		renderQuad(size*brightness, size*brightness);
 		GL11.glPopMatrix();
 	}
