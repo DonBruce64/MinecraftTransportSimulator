@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.rendering;
 
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackControl;
@@ -7,14 +9,11 @@ import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackInstrument;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.systems.CameraSystem;
-import minecrafttransportsimulator.systems.GL11DrawSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
-
-import org.lwjgl.opengl.GL11;
 
 public final class RenderHUD{
 	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
@@ -47,8 +46,6 @@ public final class RenderHUD{
 		}
 		if(CameraSystem.hudMode == 2 || CameraSystem.hudMode == 3 || inGUI){
 			drawUpperPanel(width, height, backplateTexture, mouldingTexture);
-			drawLeftPanel(width, height, backplateTexture, mouldingTexture);
-			drawRightPanel(width, height, backplateTexture, mouldingTexture);
 		}
 		if(CameraSystem.hudMode > 0 || inGUI){
 			drawInstruments(vehicle, width, height, 
@@ -133,36 +130,94 @@ public final class RenderHUD{
 	}
 	
 	private static void drawUpperPanel(int width, int height, ResourceLocation backplateTexture, ResourceLocation mouldingTexture){
-		//TODO make these render in a standard call and not the GL11 Draw System
 		textureManager.bindTexture(backplateTexture);
-    	GL11DrawSystem.renderQuadUV(width/4, width/4, 3*width/4, 3*width/4, height/2, 3*height/4, 3*height/4, height/2, 0, 0, 0, 0, 0, 3, 0, 1, false);
-    	textureManager.bindTexture(mouldingTexture);
-    	GL11DrawSystem.renderQuadUV(width/4, 3*width/4, 3*width/4, width/4, height/2, height/2, height/2-16, height/2-16, 0, 0, 0, 0, 0, 1, 0, 8, false);
-    }
-        
-	private static void drawLeftPanel(int width, int height, ResourceLocation backplateTexture, ResourceLocation mouldingTexture){
-		textureManager.bindTexture(backplateTexture);
-    	GL11DrawSystem.renderQuadUVCustom(0, width/4, width/4, 0, 3*height/4, 3*height/4, height/2, 5*height/8, 0, 0, 0, 0, 0, 1.5, 1.5, 0, 1, 1, 0, 0.5, false);
-    	textureManager.bindTexture(mouldingTexture);
-    	GL11DrawSystem.renderQuadUV(0, width/4, width/4, 0, 5*height/8, height/2, height/2-16, 5*height/8-16, 0, 0, 0, 0, 0, 1, 0, 4, false);
-    }
-    
-	private static void drawRightPanel(int width, int height, ResourceLocation backplateTexture, ResourceLocation mouldingTexture){
-		textureManager.bindTexture(backplateTexture);
-    	GL11DrawSystem.renderQuadUVCustom(3*width/4, width, width, 3*width/4, 3*height/4, 3*height/4, 5*height/8, height/2, 0, 0, 0, 0, 0, 1.5, 1.5, 0, 1, 1, 0.5, 0, false);
-    	textureManager.bindTexture(mouldingTexture);
-    	GL11DrawSystem.renderQuadUV(3*width/4, width, width, 3*width/4, height/2, 5*height/8, 5*height/8-16, height/2-16, 0, 0, 0, 0, 0, 1, 0, 4, false);
+		GL11.glBegin(GL11.GL_QUAD_STRIP);
+		GL11.glTexCoord2f(0.0F, 0.5F);
+		GL11.glVertex2d(0, 5*height/8);
+		GL11.glTexCoord2f(0, 1.0F);
+		GL11.glVertex2d(0.0F, 3*height/4);
+		GL11.glTexCoord2f(1.5F, 0.0F);
+		GL11.glVertex2d(width/4, height/2);
+		GL11.glTexCoord2f(1.5F, 1.0F);
+		GL11.glVertex2d(width/4, 3*height/4);
+		GL11.glTexCoord2f(4.5F, 0.0F);
+		GL11.glVertex2d(3*width/4, height/2);
+		GL11.glTexCoord2f(4.5F, 1.0F);
+		GL11.glVertex2d(3*width/4, 3*height/4);
+		GL11.glTexCoord2f(6.0F, 0.5F);
+		GL11.glVertex2d(width, 5*height/8);
+		GL11.glTexCoord2f(6.0F, 1.0F);
+		GL11.glVertex2d(width, 3*height/4);		
+		GL11.glEnd();
+    	
+		textureManager.bindTexture(mouldingTexture);
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glTexCoord2f(0.0F, 0.0F);
+		GL11.glVertex2d(width/4, height/2 - 16);
+		GL11.glTexCoord2f(0.0F, 4.0F);
+		GL11.glVertex2d(0, 5*height/8 - 16);
+		GL11.glTexCoord2f(1.0F, 4.0F);
+		GL11.glVertex2d(0, 5*height/8);
+		GL11.glTexCoord2f(1.0F, 0.0F);
+		GL11.glVertex2d(width/4, height/2);
+		
+		GL11.glTexCoord2f(0.0F, 8.0F);
+		GL11.glVertex2d(3*width/4, height/2 - 16);
+		GL11.glTexCoord2f(0.0F, 0.0F);
+		GL11.glVertex2d(width/4, height/2 - 16);
+		GL11.glTexCoord2f(1.0F, 0.0F);
+		GL11.glVertex2d(width/4, height/2);
+		GL11.glTexCoord2f(1.0F, 8.0F);
+		GL11.glVertex2d(3*width/4, height/2);
+		
+		GL11.glTexCoord2f(0.0F, 0.0F);
+		GL11.glVertex2d(width, 5*height/8 - 16);
+		GL11.glTexCoord2f(0.0F, 4.0F);
+		GL11.glVertex2d(3*width/4, height/2 - 16);
+		GL11.glTexCoord2f(1.0F, 4.0F);
+		GL11.glVertex2d(3*width/4, height/2);
+		GL11.glTexCoord2f(1.0F, 0.0F);
+		GL11.glVertex2d(width, 5*height/8);
+		GL11.glEnd();
     }
     
 	private static void drawLowerPanel(int width, int height, ResourceLocation backplateTexture){
 		textureManager.bindTexture(backplateTexture);
-    	GL11DrawSystem.renderQuadUV(0, 0, width, width, 3*height/4, height, height, 3*height/4, 0, 0, 0, 0, 0, 6, 0, 1, false);
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glTexCoord2f(0.0F, 0.0F);
+		GL11.glVertex2d(0, 3*height/4);
+		GL11.glTexCoord2f(0.0F, 1.0F);
+		GL11.glVertex2d(0, height);
+		GL11.glTexCoord2f(6.0F, 1.0F);
+		GL11.glVertex2d(width, height);
+		GL11.glTexCoord2f(6.0F, 0.0F);
+		GL11.glVertex2d(width, 3*height/4);
+		GL11.glEnd();
     }
 
 	private static void drawAuxiliaryPanel(int width, int height, ResourceLocation backplateTexture, ResourceLocation mouldingTexture){
 		textureManager.bindTexture(backplateTexture);
-    	GL11DrawSystem.renderQuadUV(0, 0, width, width, height/2+16, height, height, height/2+16, 0, 0, 0, 0, 0, 6, 0, 1.75, false);
-    	textureManager.bindTexture(mouldingTexture);
-    	GL11DrawSystem.renderQuadUV(0, width, width, 0, height/2+16, height/2+16, height/2, height/2, 0, 0, 0, 0, 0, 1, 0, 16, false);
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glTexCoord2f(0.0F, 0.0F);
+		GL11.glVertex2d(0, height/2+16);
+		GL11.glTexCoord2f(0.0F, 1.75F);
+		GL11.glVertex2d(0, height);
+		GL11.glTexCoord2f(6.0F, 1.75F);
+		GL11.glVertex2d(width, height);
+		GL11.glTexCoord2f(6.0F, 0.0F);
+		GL11.glVertex2d(width, height/2+16);
+		GL11.glEnd();
+    	
+		textureManager.bindTexture(mouldingTexture);
+		GL11.glBegin(GL11.GL_QUADS);
+    	GL11.glTexCoord2f(0.0F, 16.0F);
+		GL11.glVertex2d(width, height/2);
+		GL11.glTexCoord2f(0.0F, 0.0F);
+		GL11.glVertex2d(0, height/2);
+		GL11.glTexCoord2f(1.0F, 0.0F);
+		GL11.glVertex2d(0, height/2 + 16);
+		GL11.glTexCoord2f(1.0F, 16.0F);
+		GL11.glVertex2d(width, height/2 + 16);
+		GL11.glEnd();
     }
 }
