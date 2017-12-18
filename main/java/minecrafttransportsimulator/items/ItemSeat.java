@@ -13,7 +13,6 @@ public class ItemSeat extends Item{
 	
 	public ItemSeat(){
 		this.hasSubtypes=true;
-		//TODO make this use a single JSON.
 	}
 	
 	@Override
