@@ -762,26 +762,32 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	 * Sign of returned value indicates which direction entity should yaw.
 	 * A 0 value indicates no yaw change.
 	 */
-	protected float getTurningFactor(){
-		float turningFactor = 0;
+	protected float getTurningFactor(){		
 		float turningForce = 0;
-		if(this.getSteerAngle() != 0){
+		float steeringAngle = this.getSteerAngle();
+		if(steeringAngle != 0){
+			float turningFactor = 0;
 			for(EntityGroundDevice grounder : groundedGroundDevices){
-				//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything extra should increase it.
+				//0.6 is default slipperiness for blocks.  Anything less should reduce friction, anything extra should increase it.
 				float frictionLoss = 0.6F - grounder.worldObj.getBlockState(grounder.getPosition().down()).getBlock().slipperiness;
 				//Do we have enough friction to change yaw?
 				if(grounder.turnsWithSteer && grounder.lateralFriction - frictionLoss > 0){
-					turningForce += grounder.lateralFriction - frictionLoss;
+					turningFactor += grounder.lateralFriction - frictionLoss;
 				}
 			}
-			if(turningForce - Math.abs(velocity/2F) > 0){
+			if(turningFactor > 0){
 				//Now that we know we can turn, we can attempt to change the track.
-				//Adjust turn factor to steer angle based on turning force.
-				turningForce = (float) Math.min(turningForce - Math.abs(velocity/2F), 1);
-				turningFactor = (float) (Math.min(Math.abs(this.getSteerAngle()), Math.abs(this.getSteerAngle())*turningForce)*velocity/2F);
+				if(turningFactor < 1){
+					steeringAngle = Math.abs(steeringAngle)*turningFactor;
+				}
+				//Another thing that can affect the steering angle is speed.
+				//More speed makes for less wheel turn to prevent crazy circles.
+				steeringAngle *= Math.pow(0.25F, velocity);
+				//Adjust turn force to steer angle based on turning factor.
+				turningForce = -(float) (steeringAngle*velocity/2F);
 			}
 		}
-		return turningFactor*Math.signum(-this.getSteerAngle());
+		return turningForce;
 	}
 	
 	protected float getCurrentMass(){
