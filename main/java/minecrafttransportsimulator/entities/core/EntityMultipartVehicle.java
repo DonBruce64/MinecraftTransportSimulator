@@ -99,8 +99,8 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	protected void performGroundOperations(){
 		float brakingFactor = getBrakingForceFactor();
 		if(brakingFactor > 0){
-			double groundSpeed = Math.hypot(motionX, motionZ);
-			groundSpeed = Math.max(groundSpeed - Math.max(brakingFactor - groundSpeed, 0)/(currentMass/50F), 0);
+			double groundSpeed = Math.hypot(motionX, motionZ);	
+			groundSpeed -= 20F*brakingFactor/currentMass;
 			if(groundSpeed > 0.1){
 				reAdjustGroundSpeed(groundSpeed);
 			}else{
