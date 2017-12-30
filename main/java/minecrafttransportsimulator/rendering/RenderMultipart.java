@@ -157,7 +157,6 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			}
 		}
 		minecraft.getTextureManager().bindTexture(textureMap.get(mover.name));
-		
 		//Render all the model parts except windows.
 		//Those need to be rendered after the player if the player is rendered manually.
 		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
@@ -205,18 +204,18 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		//The first renders the cases and bulbs, the second renders the beams and effects.
 		if(mover instanceof EntityMultipartVehicle){
 			EntityMultipartVehicle vehicle = (EntityMultipartVehicle) mover;
-			float sunLight = vehicle.worldObj.getSunBrightness(0);
+			float sunLight = vehicle.worldObj.getSunBrightness(0)*vehicle.worldObj.getLightBrightness(vehicle.getPosition());
 			float blockLight = vehicle.worldObj.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, vehicle.getPosition())/15F;
 			float electricFactor = (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1);
 			float lightBrightness = (float) Math.min((1 - Math.max(sunLight, blockLight))*electricFactor, 1);
-			
+
 			GL11.glPushMatrix();
 			GL11.glEnable(GL11.GL_NORMALIZE);
 			GL11.glRotated(rotateYaw, 0, 1, 0);
 	        GL11.glRotated(rotatePitch, 1, 0, 0);
 	        GL11.glRotated(rotateRoll, 0, 0, 1);
-			
-			renderLights(vehicle, sunLight, blockLight, lightBrightness, electricFactor, wasRenderedPrior);
+
+	        renderLights(vehicle, sunLight, blockLight, lightBrightness, electricFactor, wasRenderedPrior);
 			if(!wasRenderedPrior){
 				renderBeacons(vehicle, sunLight, blockLight, lightBrightness, electricFactor);
 			}
@@ -414,7 +413,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		for(PackLight light : vehicle.pack.rendering.lights){
 			boolean lightOn = (vehicle.lightStatus>>(light.switchNumber-1) & 1) == 1 && lightBrightness > 0;
 			boolean overrideCaseBrightness = lightBrightness > Math.max(sunLight, blockLight) && lightOn;
-			
+
 			if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
 				GL11.glPushMatrix();
 				if(overrideCaseBrightness){
