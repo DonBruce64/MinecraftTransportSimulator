@@ -199,11 +199,12 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 			if(engineByNumber.get(number) != null){
 				if(engineByNumber.get(number).isDead){
 					engineByNumber.put(number, null);
+				}else{
+					return engineByNumber.get(number);
 				}
-				return engineByNumber.get(number);
 			}
 		}
-		//The only way to get here is if an engine in the map is null, or the map isn't popluated.
+		//The only way to get here is if an engine in the map is null, or the map isn't populated.
 		//Re-populate it and return the engine.
 		//Because parts is a list, the #1 engine will always come before the #2 engine.
 		byte engineNumber = 1;
