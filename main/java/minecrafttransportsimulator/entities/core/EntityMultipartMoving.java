@@ -747,7 +747,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	protected float getSkiddingFactor(){
 		float skiddingFactor = 0;
 		for(EntityGroundDevice grounder : groundedGroundDevices){
-			//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything extra should increase it.
+			//0.6 is default slipperiness for blocks.  Anything less should reduce friction, anything extra should increase it.
 			float frictionLoss = 0.6F - grounder.worldObj.getBlockState(grounder.getPosition().down()).getBlock().slipperiness;
 			//Do we have enough friction to prevent skidding?
 			if(grounder.lateralFriction - frictionLoss > 0){
