@@ -405,9 +405,9 @@ public class EntityPlane extends EntityMultipartVehicle{
 	}*/
 		
 	private void movePlane(){
-		rotationRoll = (motionRoll + rotationRoll)%360;
-		rotationPitch = (motionPitch + rotationPitch)%360;
-		rotationYaw = (motionYaw + rotationYaw)%360;
+		rotationRoll = (motionRoll + rotationRoll);
+		rotationPitch = (motionPitch + rotationPitch);
+		rotationYaw = (motionYaw + rotationYaw);
 		setPosition(posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
 	}
 
