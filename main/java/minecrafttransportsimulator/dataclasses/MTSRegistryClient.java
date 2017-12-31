@@ -89,7 +89,7 @@ public class MTSRegistryClient{
 		registerItemRender(MTSRegistry.pointerLong);
 		registerItemRender(MTSRegistry.wrench);
 		registerItemRender(MTSRegistry.key);
-		registerItemRender(MTSRegistry.flightManual);
+		registerItemRender(MTSRegistry.manual);
 		registerItemRender(Item.getItemFromBlock(MTSRegistry.propellerBench));
 				
 		//Now register items for the pack data.

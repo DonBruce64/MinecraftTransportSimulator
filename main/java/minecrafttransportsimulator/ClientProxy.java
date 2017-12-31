@@ -3,8 +3,10 @@ package minecrafttransportsimulator;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.guis.GUIManual;
 import minecrafttransportsimulator.guis.GUIInstruments;
 import minecrafttransportsimulator.guis.GUIPropellerBench;
+import minecrafttransportsimulator.items.ItemManual;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
@@ -12,6 +14,7 @@ import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -49,6 +52,8 @@ public class ClientProxy extends CommonProxy{
 			FMLCommonHandler.instance().showGuiScreen(new GUIInstruments((EntityMultipartVehicle) clicked, clicker));
 		}else if(clicked instanceof TileEntityPropellerBench){
 			FMLCommonHandler.instance().showGuiScreen(new GUIPropellerBench((TileEntityPropellerBench) clicked, clicker));
+		}else if(clicked instanceof ItemStack && ((ItemStack) clicked).getItem() instanceof ItemManual){
+			FMLCommonHandler.instance().showGuiScreen(new GUIManual((ItemStack) clicked));
 		}
 	}
 	

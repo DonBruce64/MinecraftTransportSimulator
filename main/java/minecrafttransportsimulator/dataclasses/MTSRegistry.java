@@ -23,6 +23,7 @@ import minecrafttransportsimulator.entities.parts.EntityWheel;
 import minecrafttransportsimulator.items.ItemEngine;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftLarge;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftSmall;
+import minecrafttransportsimulator.items.ItemManual;
 import minecrafttransportsimulator.items.ItemInstrument;
 import minecrafttransportsimulator.items.ItemKey;
 import minecrafttransportsimulator.items.ItemMultipartMoving;
@@ -86,7 +87,7 @@ public class MTSRegistry{
 	public static final Item pointerShort = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item pointerLong = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item wrench = new ItemWrench().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
-	public static final Item flightManual = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item manual = new ItemManual().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 		
 	public static final Item key = new ItemKey();

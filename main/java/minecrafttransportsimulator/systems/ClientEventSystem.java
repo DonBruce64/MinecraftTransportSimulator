@@ -49,7 +49,7 @@ public final class ClientEventSystem{
         if(ConfigSystem.getBooleanConfig("FirstRun")){
             ConfigSystem.setClientConfig("FirstRun", false);
             FMLCommonHandler.instance().showGuiScreen(new GUICredits());
-            event.player.inventory.addItemStackToInventory(new ItemStack(MTSRegistry.flightManual));
+            event.player.inventory.addItemStackToInventory(new ItemStack(MTSRegistry.manual));
         }
     }
 

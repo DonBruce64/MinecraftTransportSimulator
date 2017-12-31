@@ -1,6 +1,6 @@
 {
     "parent": "mts:item/basic",
     "textures": {
-        "layer0": "mts:items/flightmanual"
+        "layer0": "mts:items/manual"
     }
 }
