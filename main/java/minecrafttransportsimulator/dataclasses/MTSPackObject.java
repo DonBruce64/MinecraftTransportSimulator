@@ -5,7 +5,7 @@ import java.util.List;
 
 public class MTSPackObject{
 	public List<PackFileDefinitions> definitions = new ArrayList<PackFileDefinitions>();
-    public PackGeneralConfig general;
+	public PackGeneralConfig general;
     public PackMotorizedConfig motorized;
     public PackPlane plane;
     public List<PackPart> parts = new ArrayList<PackPart>();
@@ -25,7 +25,9 @@ public class MTSPackObject{
     	public boolean openTop;
     	public int emptyMass;
     	public int displayTextMaxLength;
+        public String name;
     	public String type;
+    	public String description;
         public String defaultDisplayText;
     }
     

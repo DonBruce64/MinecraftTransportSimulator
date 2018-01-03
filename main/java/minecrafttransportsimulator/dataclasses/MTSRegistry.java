@@ -226,6 +226,7 @@ public class MTSRegistry{
 		this.initPartRecipes();
 		this.initEngineRecipes();
 		this.initAircraftInstrumentRecipes();
+		//TODO make key and flight instrument.
 	}
 	
 	private void initPartRecipes(){

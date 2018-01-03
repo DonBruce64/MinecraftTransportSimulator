@@ -2,14 +2,17 @@ package minecrafttransportsimulator.guis;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSPackObject;
+import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -23,6 +26,7 @@ public class GUIManual extends GuiScreen{
 	private static final ResourceLocation cover = new ResourceLocation(MTS.MODID, "textures/guis/manual_cover.png");
 	
 	private short pageNumber;
+	private short dataPageStart;
 	private short maxPages;
 	private int guiLeft;
 	private int guiTop;
@@ -30,12 +34,13 @@ public class GUIManual extends GuiScreen{
 	private int rightSideOffset;
 	private final ItemStack stack;
 	private final NBTTagCompound stackTag;
-	private final Map<String, List<String>> packDataMap = new HashMap<String, List<String>>();
+	private final List<MTSPackObject> packList = new ArrayList<MTSPackObject>();
 	
 	private GuiButton leftButton;
 	private GuiButton rightButton;
 	
 	public GUIManual(ItemStack stack){
+		//Get saved page data
 		this.stack = stack;
 		if(!stack.hasTagCompound()){
 			this.stackTag = stack.writeToNBT(new NBTTagCompound());
@@ -44,9 +49,25 @@ public class GUIManual extends GuiScreen{
 		}
 		this.pageNumber = stackTag.getShort("page");
 		
-		maxPages += PackParserSystem.getRegisteredNames().size()*2;
+		//Add two pages for the table of contents.
+		this.maxPages += 2;
+		
+		//Calculate the number of info pages, add those to maxPages.
 		for(InfoPages pageDef : InfoPages.values()){
-			maxPages += pageDef.pages;
+			maxPages += pageDef.pages%2 == 1 ? pageDef.pages + 1 : pageDef.pages;
+		}
+		
+		//This is where the Vehicle Data pages start, save this number.
+		dataPageStart = maxPages;
+		
+		//Now add the Vehicle Data pages.
+		List<String> nameList = new ArrayList<String>(PackParserSystem.getRegisteredNames());
+		Collections.sort(nameList);
+		for(String name : nameList){
+			if(!packList.contains(PackParserSystem.getPack(name))){
+				packList.add(PackParserSystem.getPack(name));
+				maxPages += 2;
+			}
 		}
 	}
 	
@@ -100,8 +121,10 @@ public class GUIManual extends GuiScreen{
 			 drawCover();
 		}else if(pageNumber == 1){
 			drawContentsPage();
-		}else{
+		}else if(pageNumber < dataPageStart){
 			drawInfoPage();
+		}else{
+			drawDataPage();
 		}
 	}
 
@@ -122,25 +145,21 @@ public class GUIManual extends GuiScreen{
 	}
 	
 	private void drawContentsPage(){
+		byte contentsLine = 0;
+		byte contentsCount = 0;
+		short pageCount = 3;
+		
 		fontRendererObj.drawString("CONTENTS", guiLeft + 50, guiTop + 25, Color.BLACK.getRGB());
-		fontRendererObj.drawString("06: Introduction", leftSideOffset, guiTop + 45, Color.BLACK.getRGB());
-		fontRendererObj.drawString("08: Basic Crafting", leftSideOffset, guiTop + 55, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: Vehicle Assembly", leftSideOffset, guiTop + 65, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: Fueling", leftSideOffset, guiTop + 75, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: Controls", leftSideOffset, guiTop + 85, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: Pre-Flight Prep", leftSideOffset, guiTop + 95, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: First Flight", leftSideOffset, guiTop + 105, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: In-Flight", leftSideOffset, guiTop + 115, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: Landing", leftSideOffset, guiTop + 125, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: Instruments", leftSideOffset, guiTop + 135, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: Engine Health", rightSideOffset, guiTop + 45, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: Theft Prevention", rightSideOffset, guiTop + 55, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: Propeller Specs", rightSideOffset, guiTop + 65, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: Body Damage", rightSideOffset, guiTop + 75, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: Joystick Notes", rightSideOffset, guiTop + 85, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: Vehicle Data", rightSideOffset, guiTop + 95, Color.BLACK.getRGB());
-		fontRendererObj.drawString("    & Crafting Info", rightSideOffset, guiTop + 105, Color.BLACK.getRGB());
-		fontRendererObj.drawString("00: JSON Pack System", rightSideOffset, guiTop + 125, Color.BLACK.getRGB());
+		for(InfoPages pageDef : InfoPages.values()){
+			String title = I18n.format("manual." + pageDef.name().toLowerCase() + ".title");
+			fontRendererObj.drawString(String.valueOf(pageCount) + ": " + title, contentsCount < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*contentsLine, Color.BLACK.getRGB());
+			pageCount += pageDef.pages%2 == 1 ? pageDef.pages + 1 : pageDef.pages;
+			++contentsCount;
+			++contentsLine;
+			if(contentsLine == 10){
+				contentsLine = 0;
+			}
+		}
 	}
 	
 	private void drawInfoPage(){
@@ -148,7 +167,6 @@ public class GUIManual extends GuiScreen{
 		int TopOffset = guiTop + 25;
 		
 		for(InfoPages pageDef : InfoPages.values()){
-			//System.out.println(pageIndex);
 			if(pageNumber > pageIndex + pageDef.pages - 1){
 				//If there's and odd number of pages in this section add an extra one so sections don't start on the right side.
 				pageIndex += pageDef.pages%2 == 1 ? pageDef.pages + 1 : pageDef.pages;
@@ -164,14 +182,71 @@ public class GUIManual extends GuiScreen{
 				}
 				
 				//If odd page, render on the left side of the book.  Even goes on the right.
-				fontRendererObj.drawSplitString(I18n.format("manual." + sectionName + "." + String.valueOf(pageNumber - pageIndex + 1)), leftSideOffset, TopOffset + headerOffset, 110, Color.BLACK.getRGB());	
+				GL11.glPushMatrix();
+				GL11.glTranslatef(leftSideOffset, TopOffset + headerOffset, 0);
+				GL11.glScalef(0.75F, 0.75F, 0.75F);
+				fontRendererObj.drawSplitString(I18n.format("manual." + sectionName + "." + String.valueOf(pageNumber - pageIndex + 1)), 0, 0, 150, Color.BLACK.getRGB());	
 				if(pageNumber - pageIndex + 2 <= pageDef.pages){
-					fontRendererObj.drawSplitString(I18n.format("manual." + sectionName + "." + String.valueOf(pageNumber - pageIndex + 2)), rightSideOffset, TopOffset, 110, Color.BLACK.getRGB());
+					GL11.glTranslatef((rightSideOffset - leftSideOffset)/0.75F, -headerOffset/0.75F, 0);
+					fontRendererObj.drawSplitString(I18n.format("manual." + sectionName + "." + String.valueOf(pageNumber - pageIndex + 2)), 0, 0, 150, Color.BLACK.getRGB());
 				}
+				GL11.glPopMatrix();
 				return;
 				
 			}
 		}
+	}
+	
+	private void drawDataPage(){
+		MTSPackObject packObject = packList.get((pageNumber - dataPageStart)/2); 
+		byte controllers = 0;
+		byte passengers = 0;
+		byte cargo = 0;
+		for(PackPart part : packObject.parts){
+			if(part.isController){
+				++controllers;
+			}else{
+				boolean canAcceptSeat = false;
+				boolean canAcceptChest = false;
+				for(String partName : part.names){
+					if(partName.equals("seat")){
+						canAcceptSeat = true;
+					}else if(partName.equals("chest")){
+						canAcceptChest = true;
+					}
+				}
+				if(canAcceptSeat){
+					++passengers;
+				}else if(canAcceptChest){
+					++cargo;
+				}
+			}
+		}
+		
+		
+		
+		fontRendererObj.drawString(packObject.general.name, (guiLeft + 75 - fontRendererObj.getStringWidth(packObject.general.name) / 2), guiTop + 25, Color.BLACK.getRGB());
+		GL11.glPushMatrix();
+		GL11.glTranslatef(leftSideOffset, guiTop + 35, 0);
+		GL11.glScalef(0.75F, 0.75F, 0.75F);
+		fontRendererObj.drawString(I18n.format("manual.vehicle_data.type") + ":", 0, 05, Color.BLACK.getRGB());
+		fontRendererObj.drawString(String.valueOf(packObject.general.type), 95, 05, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("manual.vehicle_data.weight") + ":", 0, 15, Color.BLACK.getRGB());
+		fontRendererObj.drawString(String.valueOf(packObject.general.emptyMass) + "kg", 95, 15, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("manual.vehicle_data.fuel") + ":", 0, 25, Color.BLACK.getRGB());
+		fontRendererObj.drawString(String.valueOf(packObject.motorized.fuelCapacity) + "mb", 95, 25, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("manual.vehicle_data.controllers") + ":", 0, 35, Color.BLACK.getRGB());
+		fontRendererObj.drawString(String.valueOf(controllers), 95, 35, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("manual.vehicle_data.passengers") + ":", 0, 45, Color.BLACK.getRGB());
+		fontRendererObj.drawString(String.valueOf(passengers), 95, 45, Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("manual.vehicle_data.cargo") + ":", 0, 55, Color.BLACK.getRGB());
+		fontRendererObj.drawString(String.valueOf(cargo), 95, 55, Color.BLACK.getRGB());
+		fontRendererObj.drawSplitString(packObject.general.description, 0, 75, 150, Color.BLACK.getRGB());
+		GL11.glPopMatrix();
+		
+		byte index = (byte) (mc.theWorld.getTotalWorldTime()/20%packObject.definitions.size());
+		mc.getRenderItem().renderItemIntoGUI(new ItemStack(MTSRegistry.multipartItemMap.get(packObject.definitions.get(index).uniqueName)), guiLeft + 200, guiTop + 25);
+		
 	}
 	
 	@Override
@@ -186,16 +261,31 @@ public class GUIManual extends GuiScreen{
 	
 	@Override
 	public void onGuiClosed(){
+		//TODO send packet here to sync.
 		stackTag.setShort("page", pageNumber);
 		stack.setTagCompound(stackTag);
 	}
 	
+	
+	@Override
+	public boolean doesGuiPauseGame(){
+		return false;
+	}
+	
 	public static enum InfoPages{
-		INTRODUCTION((byte) 5),
-		BASIC_CRAFTING((byte) 4),
-		VEHICLE_ASSEMBLY((byte) 7),
-		FUELING((byte) 6),
-		CONTROLS((byte) 10);
+		INTRODUCTION((byte) 3),
+		BASIC_CRAFTING((byte) 2),
+		VEHICLE_ASSEMBLY((byte) 3),
+		FUELING((byte) 2),
+		CONTROLS((byte) 4),
+		ENGINES((byte) 2),
+		THEFT_PREVENTION((byte) 2),
+		PRE_FLIGHT_PREP((byte) 2),
+		IN_FLIGHT((byte) 2),
+		LANDING((byte) 2),
+		INSTRUMENTS((byte) 2),
+		PROPELLER_SPECS((byte) 2),
+		VEHICLE_DATA((byte) 1);
 		
 		public final byte pages;
 		
