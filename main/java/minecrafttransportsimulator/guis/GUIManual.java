@@ -4,26 +4,35 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSPackObject;
+import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.ItemMultipartMoving;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.CraftingManager;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.ShapedRecipes;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
 public class GUIManual extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/manual.png");
 	private static final ResourceLocation cover = new ResourceLocation(MTS.MODID, "textures/guis/manual_cover.png");
+	private static final ResourceLocation crafting = new ResourceLocation("minecraft", "textures/gui/container/crafting_table.png");
 	
 	private short pageNumber;
 	private short dataPageStart;
@@ -35,6 +44,7 @@ public class GUIManual extends GuiScreen{
 	private final ItemStack stack;
 	private final NBTTagCompound stackTag;
 	private final List<MTSPackObject> packList = new ArrayList<MTSPackObject>();
+	private final Map<String, ItemStack[]> craftingItemMap = new HashMap<String, ItemStack[]>();
 	
 	private GuiButton leftButton;
 	private GuiButton rightButton;
@@ -69,6 +79,16 @@ public class GUIManual extends GuiScreen{
 				maxPages += 2;
 			}
 		}
+		
+		//Populate vehicle crafting data
+		for(IRecipe recipe : CraftingManager.getInstance().getRecipeList()){
+			if(recipe instanceof ShapedRecipes){
+				if(recipe.getRecipeOutput().getItem() instanceof ItemMultipartMoving){
+					craftingItemMap.put(((ItemMultipartMoving) recipe.getRecipeOutput().getItem()).name, ((ShapedRecipes) recipe).recipeItems);
+				}
+			}
+			
+		}
 	}
 	
 	@Override 
@@ -88,7 +108,7 @@ public class GUIManual extends GuiScreen{
 		
 		if(Mouse.isCreated() && Mouse.hasWheel()){
 			int wheelMovement = Mouse.getDWheel();
-			if(wheelMovement > 0 && pageNumber < maxPages){
+			if(wheelMovement > 0 && pageNumber < maxPages - 1){
 				pageNumber += pageNumber == 0 ? 1 : 2;
 			}else if(wheelMovement < 0 && pageNumber > 0){
 				pageNumber -= pageNumber == 1 ? 1 : 2;
@@ -106,14 +126,25 @@ public class GUIManual extends GuiScreen{
 			fontRendererObj.drawString(String.valueOf(pageNumber + 1) + "/" + String.valueOf(maxPages), guiLeft + 240, guiTop + 10, Color.BLACK.getRGB());
 			
 			leftButton.visible = true;
-			rightButton.visible = true;
+			leftButton.enabled = true;
 			leftButton.drawButton(mc, mouseX, mouseY);
-			rightButton.drawButton(mc, mouseX, mouseY);
+
+			
+			if(pageNumber < maxPages - 1){
+				rightButton.visible = true;
+				rightButton.enabled = true;
+				rightButton.drawButton(mc, mouseX, mouseY);
+			}else{
+				rightButton.visible = false;
+				rightButton.enabled = false;
+			}
 		}else{
 			this.mc.getTextureManager().bindTexture(cover);
 			this.drawModalRectWithCustomSizedTexture(guiLeft, guiTop, 0, 0, 280, 180, 512, 256);
 			leftButton.visible = false;
+			leftButton.enabled = false;
 			rightButton.visible = true;
+			rightButton.enabled = true;
 			rightButton.drawButton(mc, mouseX, mouseY);
 		}
 		
@@ -198,7 +229,12 @@ public class GUIManual extends GuiScreen{
 	}
 	
 	private void drawDataPage(){
-		MTSPackObject packObject = packList.get((pageNumber - dataPageStart)/2); 
+		MTSPackObject packObject = packList.get((pageNumber - dataPageStart)/2);
+		byte index = (byte) (mc.theWorld.getTotalWorldTime()/40%packObject.definitions.size());
+		String uniqueName = packObject.definitions.get(index).uniqueName;
+		ItemStack resultStack = new ItemStack(MTSRegistry.multipartItemMap.get(uniqueName));
+		ItemStack[] craftingStacks = craftingItemMap.get(uniqueName);
+		
 		byte controllers = 0;
 		byte passengers = 0;
 		byte cargo = 0;
@@ -244,9 +280,37 @@ public class GUIManual extends GuiScreen{
 		fontRendererObj.drawSplitString(packObject.general.description, 0, 75, 150, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
 		
-		byte index = (byte) (mc.theWorld.getTotalWorldTime()/20%packObject.definitions.size());
-		mc.getRenderItem().renderItemIntoGUI(new ItemStack(MTSRegistry.multipartItemMap.get(packObject.definitions.get(index).uniqueName)), guiLeft + 200, guiTop + 25);
+		fontRendererObj.drawString(packObject.definitions.get(index).itemDisplayName, rightSideOffset + 5, guiTop + 25, Color.BLACK.getRGB());
 		
+		mc.getTextureManager().bindTexture(crafting);
+		GL11.glPushMatrix();
+		GL11.glTranslatef(rightSideOffset + 5, guiTop + 35, 0);
+		GL11.glScalef(0.75F, 0.75F, 0.75F);
+		GL11.glColor3f(1.0F, 1.0F, 1.0F);
+		drawTexturedModalRect(0.0F, 0.0F, 22, 8, 131, 70);
+		GL11.glPopMatrix();
+		
+		GL11.glPushMatrix();
+		RenderHelper.enableGUIStandardItemLighting();
+		GL11.glTranslatef(rightSideOffset, guiTop + 10, 0);
+		GL11.glScalef(0.75F, 0.75F, 0.75F);
+		byte row = 1;
+		byte col = 1;
+		GL11.glTranslatef(-3.5F, 24F, 0F);
+		for(ItemStack stack : craftingStacks){
+			if(stack != null){
+				mc.getRenderItem().renderItemIntoGUI(stack, 18*col, 18*row);
+			}
+			++col;
+			if(col > 3){
+				++row;
+				col = 1;
+			}
+		}
+		
+		mc.getRenderItem().renderItemIntoGUI(resultStack, 112, 36);
+		RenderHelper.disableStandardItemLighting();
+		GL11.glPopMatrix();
 	}
 	
 	@Override

@@ -19,7 +19,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ItemMultipartMoving extends Item{
-	private final String name;
+	public final String name;
 	
 	public ItemMultipartMoving(String name, CreativeTabs creativeTab){
 		super();
