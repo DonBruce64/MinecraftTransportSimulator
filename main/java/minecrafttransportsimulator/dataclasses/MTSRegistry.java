@@ -23,9 +23,9 @@ import minecrafttransportsimulator.entities.parts.EntityWheel;
 import minecrafttransportsimulator.items.ItemEngine;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftLarge;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftSmall;
-import minecrafttransportsimulator.items.ItemManual;
 import minecrafttransportsimulator.items.ItemInstrument;
 import minecrafttransportsimulator.items.ItemKey;
+import minecrafttransportsimulator.items.ItemManual;
 import minecrafttransportsimulator.items.ItemMultipartMoving;
 import minecrafttransportsimulator.items.ItemPropeller;
 import minecrafttransportsimulator.items.ItemSeat;
@@ -44,6 +44,7 @@ import minecrafttransportsimulator.packets.general.DamagePacket;
 import minecrafttransportsimulator.packets.general.EntityClientRequestDataPacket;
 import minecrafttransportsimulator.packets.general.FlatWheelPacket;
 import minecrafttransportsimulator.packets.general.InstrumentPacket;
+import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
 import minecrafttransportsimulator.packets.general.PackPacket;
 import minecrafttransportsimulator.packets.general.ServerDataPacket;
 import minecrafttransportsimulator.packets.general.ServerSyncPacket;
@@ -199,17 +200,16 @@ public class MTSRegistry{
 	
 	private void initPackets(){
 		registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
+		registerPacket(DamagePacket.class, DamagePacket.Handler.class, true, false);
+		registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
+		registerPacket(FlatWheelPacket.class, FlatWheelPacket.Handler.class, true, false);
+		registerPacket(InstrumentPacket.class, InstrumentPacket.Handler.class, true, true);
+		registerPacket(ManualPageUpdatePacket.class, ManualPageUpdatePacket.Handler.class, false, true);
+		registerPacket(PackPacket.class, PackPacket.Handler.class, true, true);
 		registerPacket(ServerDataPacket.class, ServerDataPacket.Handler.class, true, false);
 		registerPacket(ServerSyncPacket.class, ServerSyncPacket.Handler.class, true, false);
-		registerPacket(DamagePacket.class, DamagePacket.Handler.class, true, false);
-		registerPacket(FlatWheelPacket.class, FlatWheelPacket.Handler.class, true, false);
-		
-		registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
 		registerPacket(TileEntityClientRequestDataPacket.class, TileEntityClientRequestDataPacket.Handler.class, false, true);
-
-		registerPacket(InstrumentPacket.class, InstrumentPacket.Handler.class, true, true);
 		registerPacket(TileEntitySyncPacket.class, TileEntitySyncPacket.Handler.class, true, true);
-		registerPacket(PackPacket.class, PackPacket.Handler.class, true, true);
 		
 		registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
 		registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);

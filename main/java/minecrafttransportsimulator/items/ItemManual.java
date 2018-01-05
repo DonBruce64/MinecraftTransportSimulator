@@ -13,6 +13,7 @@ public class ItemManual extends Item{
 	public ItemManual(){
 		super();
 		setFull3D();
+		this.setMaxStackSize(1);
 	}
 	
 	public ActionResult<ItemStack> onItemRightClick(ItemStack stack, World world, EntityPlayer player, EnumHand hand){

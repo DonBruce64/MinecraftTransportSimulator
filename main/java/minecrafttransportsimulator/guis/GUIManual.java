@@ -13,15 +13,16 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSPackObject;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.ItemMultipartMoving;
+import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
@@ -235,6 +236,7 @@ public class GUIManual extends GuiScreen{
 		ItemStack resultStack = new ItemStack(MTSRegistry.multipartItemMap.get(uniqueName));
 		ItemStack[] craftingStacks = craftingItemMap.get(uniqueName);
 		
+		//Calculate specs.
 		byte controllers = 0;
 		byte passengers = 0;
 		byte cargo = 0;
@@ -259,8 +261,7 @@ public class GUIManual extends GuiScreen{
 			}
 		}
 		
-		
-		
+		//Render specs.
 		fontRendererObj.drawString(packObject.general.name, (guiLeft + 75 - fontRendererObj.getStringWidth(packObject.general.name) / 2), guiTop + 25, Color.BLACK.getRGB());
 		GL11.glPushMatrix();
 		GL11.glTranslatef(leftSideOffset, guiTop + 35, 0);
@@ -280,8 +281,8 @@ public class GUIManual extends GuiScreen{
 		fontRendererObj.drawSplitString(packObject.general.description, 0, 75, 150, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
 		
-		fontRendererObj.drawString(packObject.definitions.get(index).itemDisplayName, rightSideOffset + 5, guiTop + 25, Color.BLACK.getRGB());
-		
+		//Render crafting grid background.
+		fontRendererObj.drawString(packObject.definitions.get(index).itemDisplayName, rightSideOffset + 5, guiTop + 25, Color.BLACK.getRGB());		
 		mc.getTextureManager().bindTexture(crafting);
 		GL11.glPushMatrix();
 		GL11.glTranslatef(rightSideOffset + 5, guiTop + 35, 0);
@@ -290,6 +291,7 @@ public class GUIManual extends GuiScreen{
 		drawTexturedModalRect(0.0F, 0.0F, 22, 8, 131, 70);
 		GL11.glPopMatrix();
 		
+		//Render items into grid.
 		GL11.glPushMatrix();
 		RenderHelper.enableGUIStandardItemLighting();
 		GL11.glTranslatef(rightSideOffset, guiTop + 10, 0);
@@ -307,8 +309,41 @@ public class GUIManual extends GuiScreen{
 				col = 1;
 			}
 		}
-		
 		mc.getRenderItem().renderItemIntoGUI(resultStack, 112, 36);
+		RenderHelper.disableStandardItemLighting();
+		GL11.glPopMatrix();
+		
+		//Calculate components.
+		List<Item> partItems = new ArrayList<Item>();
+		for(PackPart part : packObject.parts){
+			for(String partName : part.names){
+				boolean needToAdd = false;
+				for(Item item : MTSRegistry.itemList){
+					if(!partItems.contains(item)){
+						if(item.getRegistryName().getResourcePath().equals(partName)){
+							partItems.add(item);
+						}
+					}
+				}
+			}
+		}
+		
+		//Render components.
+		GL11.glPushMatrix();
+		RenderHelper.enableGUIStandardItemLighting();
+		GL11.glTranslatef(rightSideOffset, guiTop + 95, 0);
+		fontRendererObj.drawString(I18n.format("manual.vehicle_data.components") + ":", 5, 0, Color.BLACK.getRGB());
+		
+		row = 0;
+		col = 0;
+		for(Item item : partItems){
+			mc.getRenderItem().renderItemIntoGUI(new ItemStack(item), 0 + 18*col, 10 + 18*row);
+			++col;
+			if(col > 5){
+				++row;
+				col = 0;
+			}
+		}
 		RenderHelper.disableStandardItemLighting();
 		GL11.glPopMatrix();
 	}
@@ -325,7 +360,7 @@ public class GUIManual extends GuiScreen{
 	
 	@Override
 	public void onGuiClosed(){
-		//TODO send packet here to sync.
+		MTS.MTSNet.sendToServer(new ManualPageUpdatePacket(pageNumber));
 		stackTag.setShort("page", pageNumber);
 		stack.setTagCompound(stackTag);
 	}

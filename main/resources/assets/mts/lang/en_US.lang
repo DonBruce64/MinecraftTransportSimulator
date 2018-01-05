@@ -231,3 +231,4 @@ manual.vehicle_data.fuel=Fuel Capacity
 manual.vehicle_data.controllers=Drivers/Pilots
 manual.vehicle_data.passengers=Seats/Cargo
 manual.vehicle_data.cargo=Cargo Only
+manual.vehicle_data.components=Components
