@@ -62,7 +62,6 @@ public final class PackParserSystem{
     private static void parseDirectory(File jsonDir){
     	MTS.MTSLog.info("Parsing directory: " + jsonDir.getAbsolutePath());
         for(File file : jsonDir.listFiles()){
-        	MTS.MTSLog.info("Examining file: " + file.getName());
             if(file.isDirectory()){
                 parseDirectory(file);
             }else{
