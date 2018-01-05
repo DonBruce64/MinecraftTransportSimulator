@@ -20,6 +20,6 @@ public class ItemManual extends Item{
 		if(world.isRemote){
 			MTS.proxy.openGUI(stack, player);
 		}
-        return new ActionResult(EnumActionResult.SUCCESS, stack);
+        return new ActionResult(EnumActionResult.FAIL, stack);
     }
 }
