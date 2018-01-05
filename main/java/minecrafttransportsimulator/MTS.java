@@ -19,7 +19,7 @@ import org.apache.logging.log4j.Logger;
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="8.0.0-INDEV-28";
+	public static final String MODVER="8.0.0-INDEV-29";
 	public static final String assetDir = System.getProperty("user.dir") + File.separator + MTS.MODID;
 	
 	@Instance(value = MTS.MODID)
