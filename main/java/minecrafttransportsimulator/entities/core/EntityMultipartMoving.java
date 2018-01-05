@@ -120,12 +120,18 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 								this.ownerName = "";
 								MTS.MTSNet.sendTo(new ChatPacket("interact.key.info.unown"), (EntityPlayerMP) player);	
 							}else{
-								MTS.MTSNet.sendTo(new ChatPacket(worldObj.getPlayerEntityByUUID(player.getPersistentID().fromString(ownerName)).getDisplayNameString() + "interact.key.failure.notowner"), (EntityPlayerMP) player);
+								MTS.MTSNet.sendTo(new ChatPacket(worldObj.getPlayerEntityByUUID(player.getPersistentID().fromString(ownerName)).getDisplayNameString() + " " + "interact.key.failure.alreadyowned"), (EntityPlayerMP) player);
 								return true;
 							}
 						}
 					}else{
 						if(ItemKey.getVehicleUUID(stack).isEmpty()){
+							if(!this.ownerName.isEmpty()){
+								if(!player.getUUID(player.getGameProfile()).toString().equals(this.ownerName)){
+									MTS.MTSNet.sendTo(new ChatPacket("interact.key.failure.notowner"), (EntityPlayerMP) player);
+									return true;
+								}
+							}
 							ItemKey.setVehicle(stack, this);
 							this.locked = true;
 							MTS.MTSNet.sendTo(new ChatPacket("interact.key.info.lock"), (EntityPlayerMP) player);
@@ -187,7 +193,6 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 							if(!player.capabilities.isCreativeMode){
 								EntityHelper.removeItemFromHand(player);
 							}
-							//TODO make sure this syncs correctly!
 						}catch(Exception e){
 							MTS.MTSLog.error("ERROR SPAWING PART!");
 							e.printStackTrace();

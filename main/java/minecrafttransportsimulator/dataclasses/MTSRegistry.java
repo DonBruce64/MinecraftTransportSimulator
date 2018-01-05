@@ -285,7 +285,23 @@ public class MTSRegistry{
 				'A', Items.IRON_INGOT,
 				'B', Items.DIAMOND,
 				'C', Blocks.ANVIL);
-				
+		
+		//Manual
+		registerRecipe(new ItemStack(manual),
+				" A ",
+				"CBC",
+				" D ",
+				'A', Items.FEATHER,
+				'B', Items.BOOK,
+				'C', new ItemStack(Items.DYE, 1, 0),
+				'D', Items.PAPER);
+		
+		//Key
+		registerRecipe(new ItemStack(key),
+				"   ",
+				" A ",
+				" A ",
+				'A', Items.IRON_INGOT);
 	}
 	
 	private void initEngineRecipes(){

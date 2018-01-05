@@ -14,8 +14,9 @@ interact.key.info.lock=Vehicle locked!
 interact.key.info.unlock=Vehicle unlocked!
 interact.key.info.own=You are now the owner of this vehicle!
 interact.key.info.unown=This vehicle is now no longer owned!
+interact.key.failure.notowner=Only the owner of this vehicle may make new keys!
 interact.key.failure.wrongkey=This key does not go to this vehicle!
-interact.key.failure.notowner= is the owner of this vehicle, you cannot change ownership!
+interact.key.failure.alreadyowned=is the owner of this vehicle, you cannot change ownership!
  
 interact.failure.seattaken=This seat is taken!
 interact.failure.vehiclelocked=This vehicle is locked!
