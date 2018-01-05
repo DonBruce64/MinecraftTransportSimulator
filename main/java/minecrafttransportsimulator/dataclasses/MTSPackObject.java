@@ -105,7 +105,7 @@ public class MTSPackObject{
         public float[] rot;
         public float[] lightRot;
         public int width;
-        public int height;
+        public int length;
         public int brightness;
         public int switchNumber;
         public String color;
@@ -117,6 +117,7 @@ public class MTSPackObject{
         public float[] pos;
         public float[] rot;
         public int width;
+        public int length;
         public int height;
         public int brightness;
         public int switchNumber;

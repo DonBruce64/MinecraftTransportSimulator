@@ -437,7 +437,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				GL11.glPushMatrix();
 				GL11.glTranslatef(0, 0, 0.01F);
 				GL11.glRotatef(180, 0, 1, 0);
-				renderQuad(light.width, light.height);
+				renderQuad(light.width, light.length);
 				GL11.glPopMatrix();
 				
 				if(lightOn){
@@ -452,7 +452,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 					GL11.glPushMatrix();
 					GL11.glTranslatef(0, 0, 0.005F);
 					GL11.glRotatef(180, 1, 0, 0);
-					renderQuad(light.width, light.height);
+					renderQuad(light.width, light.length);
 					GL11.glPopMatrix();
 				}
 				GL11.glPopMatrix();
@@ -539,8 +539,13 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				for(byte i=0; i<=3; ++i){
 					GL11.glPushMatrix();
 					GL11.glRotatef(90*i, 0, 1, 0);
-					GL11.glTranslatef(0, beacon.height/2F, -beacon.width/2F);
-					renderQuad(beacon.width, beacon.height);
+					if(i == 0 || i == 2){
+						GL11.glTranslatef(0, beacon.height/2F, -beacon.length/2F);
+						renderQuad(beacon.width, beacon.height);
+					}else{
+						GL11.glTranslatef(0, beacon.height/2F, -beacon.width/2F);
+						renderQuad(beacon.length, beacon.height);
+					}
 					GL11.glPopMatrix();
 				}
 				
@@ -548,7 +553,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				GL11.glPushMatrix();
 				GL11.glTranslatef(0, beacon.height, 0);
 				GL11.glRotatef(90, 1, 0, 0);
-				renderQuad(beacon.width, beacon.width);
+				renderQuad(beacon.width, beacon.length);
 				GL11.glPopMatrix();
 				
 				if(beaconOn){
@@ -563,16 +568,22 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 					for(byte i=0; i<=3; ++i){
 						GL11.glPushMatrix();
 						GL11.glRotatef(90*i, 0, 1, 0);
-						GL11.glTranslatef(0, beacon.height/2F - 0.01F, -beacon.width/2F + 0.01F);
-						renderQuad(beacon.width - 0.01F, beacon.height - 0.01F);
+						if(i == 0 || i == 2){
+							GL11.glTranslatef(0, beacon.height/2F - 0.01F, -beacon.length/2F + 0.01F);
+							renderQuad(beacon.width, beacon.height);
+						}else{
+							GL11.glTranslatef(0, beacon.height/2F, -beacon.width/2F);
+							renderQuad(beacon.length, beacon.height);
+						}
 						GL11.glPopMatrix();
 					}
+					
 					
 					//Light center.
 					GL11.glPushMatrix();
 					GL11.glTranslatef(0, beacon.height - 0.005F, 0);
 					GL11.glRotatef(90, 1, 0, 0);
-					renderQuad(beacon.width - 0.01F, beacon.width - 0.01F);
+					renderQuad(beacon.width - 0.01F, beacon.length - 0.01F);
 					GL11.glPopMatrix();
 				}				
 				GL11.glPopMatrix();
