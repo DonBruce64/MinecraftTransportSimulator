@@ -324,7 +324,11 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			GL11.glPushMatrix();
     		GL11.glTranslatef(child.offsetX, child.offsetY, child.offsetZ);
     		if(child.turnsWithSteer){
-    			GL11.glRotatef(mover.getSteerAngle(), 0, 1, 0);
+    			if(child.offsetZ >= 0){
+    				GL11.glRotatef(mover.getSteerAngle(), 0, 1, 0);
+    			}else{
+    				GL11.glRotatef(-mover.getSteerAngle(), 0, 1, 0);
+    			}
     		}
     		RenderMultipartChild.renderChildEntity(child, partialTicks);
 			GL11.glPopMatrix();
