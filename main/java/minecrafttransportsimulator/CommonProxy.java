@@ -20,7 +20,6 @@ import net.minecraftforge.fml.common.network.NetworkRegistry;
 public class CommonProxy{
 	public void preInit(FMLPreInitializationEvent event){
 		ConfigSystem.initCommon(event.getSuggestedConfigurationFile());
-		PackParserSystem.init();
 	}
 	
 	public void init(FMLInitializationEvent event){

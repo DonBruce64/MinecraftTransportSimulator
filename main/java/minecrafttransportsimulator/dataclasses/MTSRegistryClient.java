@@ -42,8 +42,11 @@ public class MTSRegistryClient{
 	/**Map of parsed models keyed by name.*/
 	public static final Map<String, Map<String, Float[][]>> modelMap = new HashMap<String, Map<String, Float[][]>>();
 
-	public static void preInit(){
+	public MTSRegistryClient(){
 		initCustomResourceLocation();
+	}
+	
+	public static void preInit(){
 		loadCustomOBJModels();
 		initTileEntityRenderers();
 		initEntityRenders();
@@ -56,7 +59,7 @@ public class MTSRegistryClient{
 	private static void initCustomResourceLocation(){
 		String[] fieldNames = new String[]{"defaultResourcePacks", "field_110449_ao"}; 
 		List<IResourcePack> resourcePacks = ReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), fieldNames);
-		resourcePacks.add(instance.new ExteralResourcePack());
+		resourcePacks.add(new MTSExternalResourcePack());
 	}
 	
 	public static void loadCustomOBJModels(){

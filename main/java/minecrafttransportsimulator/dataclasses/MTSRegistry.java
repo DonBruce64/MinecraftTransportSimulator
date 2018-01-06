@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
@@ -60,6 +61,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
@@ -101,68 +105,32 @@ public class MTSRegistry{
 	public static Map<String, ItemMultipartMoving> multipartItemMap = new HashMap<String, ItemMultipartMoving>();
 	/**Maps child class names to classes for quicker lookup during spawn operations.*/
 	public static Map<String, Class<? extends EntityMultipartChild>> partClasses = new HashMap<String, Class<? extends EntityMultipartChild>>();
-	
+
 	/**All run-time things go here.**/
 	public void init(){
-		initPackData();
-		initItems();
-		initBlocks();
 		initEntities();
 		initPackets();
 		initRecipes();
+		initPackRecipes();
 	}
 	
-	private void initPackData(){
-		List<String> nameList = new ArrayList<String>(PackParserSystem.getRegisteredNames());
-		Collections.sort(nameList);
-		for(String name : nameList){
-			MultipartTypes type = PackParserSystem.getMultipartType(name);
-			if(type != null){
-				ItemMultipartMoving itemMultipart = new ItemMultipartMoving(name, type.tabToDisplayOn);
-				multipartItemMap.put(name, itemMultipart);
-				registerItem(itemMultipart);
-	
-				//Init multipart recipes.
-				//Convert strings into ItemStacks
-				Character[] indexes = new Character[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'};
-				String[] craftingRows = new String[]{"", "", ""};
-				List<ItemStack> stacks = new ArrayList<ItemStack>();
-				String[] recipe = PackParserSystem.getDefinitionForPack(name).recipe;
-				for(byte i=0; i<9; ++i){
-					if(!recipe[i].isEmpty()){
-						Item item = Item.getByNameOrId(recipe[i].substring(0, recipe[i].lastIndexOf(':')));
-						int damage = Integer.valueOf(recipe[i].substring(recipe[i].lastIndexOf(':') + 1));
-						craftingRows[i/3] = craftingRows[i/3] + indexes[stacks.size()];
-						stacks.add(new ItemStack(item, 1, damage));
-					}else{
-						craftingRows[i/3] = craftingRows[i/3] + ' ';
-					}
-				}
-	
-				//Create the object array that is going to be registered.
-				Object[] registryObject = new Object[craftingRows.length + stacks.size()*2];
-				registryObject[0] = craftingRows[0];
-				registryObject[1] = craftingRows[1];
-				registryObject[2] = craftingRows[2];
-				for(byte i=0; i<stacks.size(); ++i){
-					registryObject[3 + i*2] = indexes[i];
-					registryObject[3 + i*2 + 1] = stacks.get(i);
-				}
-				//Now register the recipe
-				registerRecipe(new ItemStack(itemMultipart), registryObject);
-			}
-		}
-	}
-
-	private void initItems(){
+	/**
+	 * Registers the given block and adds it to the creative tab list.
+	 * Also adds the respective TileEntity if the block has one.
+	 * @param block
+	 */
+	@SubscribeEvent
+	public void registerBlocks(RegistryEvent.Register<Block> event){
 		for(Field field : this.getClass().getFields()){
-			if(field.getType().equals(Item.class)){
+			if(field.getType().equals(Block.class)){
 				try{
-					Item item = (Item) field.get(Item.class);
-					if(item.getUnlocalizedName().equals("item.null")){
-						item.setUnlocalizedName(field.getName().toLowerCase());
+					Block block = (Block) field.get(Block.class);
+					String name = block.getClass().getSimpleName().toLowerCase().substring(5);
+					event.getRegistry().register(block.setRegistryName(name).setUnlocalizedName(name));
+					if(block instanceof ITileEntityProvider){
+						Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
+						GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
 					}
-					registerItem(item);
 				}catch(Exception e){
 					e.printStackTrace();
 				}
@@ -170,11 +138,49 @@ public class MTSRegistry{
 		}
 	}
 	
-	private void initBlocks(){
+	/**
+	 * Registers all items in-game.  Registers multiparts, then regular items, then itemblocks.
+	 * This order ensures correct order in creative tabs.
+	 * @param item
+	 */
+	@SubscribeEvent
+	public void registerItems(RegistryEvent.Register<Item> event){
+		List<String> nameList = new ArrayList<String>(PackParserSystem.getRegisteredNames());
+		Collections.sort(nameList);
+		for(String name : nameList){
+			MultipartTypes type = PackParserSystem.getMultipartType(name);
+			if(type != null){
+				ItemMultipartMoving itemMultipart = new ItemMultipartMoving(name, type.tabToDisplayOn);
+				multipartItemMap.put(name, itemMultipart);
+				event.getRegistry().register(itemMultipart.setRegistryName(itemMultipart.getUnlocalizedName().split("\\.")[1].toLowerCase()));
+				MTSRegistry.itemList.add(itemMultipart);
+			}
+		}
+		
+		for(Field field : this.getClass().getFields()){
+			if(field.getType().equals(Item.class)){
+				try{
+					Item item = (Item) field.get(Item.class);
+					if(item.getUnlocalizedName().equals("item.null")){
+						item.setUnlocalizedName(field.getName().toLowerCase());
+					}
+					event.getRegistry().register(item.setRegistryName(item.getUnlocalizedName().split("\\.")[1].toLowerCase()));
+					MTSRegistry.itemList.add(item);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		for(Field field : this.getClass().getFields()){
 			if(field.getType().equals(Block.class)){
 				try{
-					registerBlock((Block) field.get(Block.class));
+					Block block = (Block) field.get(Block.class);
+					String name = block.getClass().getSimpleName().toLowerCase().substring(5);
+					if(block.getCreativeTabToDisplayOn() != null){
+						event.getRegistry().register(new ItemBlock(block).setRegistryName(name));
+						MTSRegistry.itemList.add(Item.getItemFromBlock(block));
+					}
 				}catch(Exception e){
 					e.printStackTrace();
 				}
@@ -507,33 +513,39 @@ public class MTSRegistry{
 				'G', new ItemStack(Items.DYE, 1, 10),
 				'R', new ItemStack(Items.DYE, 1, 1));
 	}
-	
-	
-	/**
-	 * Registers the given item.
-	 * @param item
-	 */
-	private static void registerItem(Item item){
-		String registryName = item.getUnlocalizedName().split("\\.")[1].toLowerCase();
-		GameRegistry.register(item.setRegistryName(registryName));
-		MTSRegistry.itemList.add(item);
-	}
-	
-	/**x
-	 * Registers the given block and adds it to the creative tab list.
-	 * Also adds the respective TileEntity if the block has one.
-	 * @param block
-	 */
-	private static void registerBlock(Block block){
-		String name = block.getClass().getSimpleName().toLowerCase().substring(5);
-		GameRegistry.register(block.setRegistryName(name).setUnlocalizedName(name));
-		if(block.getCreativeTabToDisplayOn() != null){
-			GameRegistry.register(new ItemBlock(block).setRegistryName(name));
-			MTSRegistry.itemList.add(Item.getItemFromBlock(block));
-		}
-		if(block instanceof ITileEntityProvider){
-			Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
-			GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
+
+	private void initPackRecipes(){
+		for(Entry<String, ItemMultipartMoving> mapEntry : multipartItemMap.entrySet()){
+			String name = mapEntry.getKey();
+			MultipartTypes type = PackParserSystem.getMultipartType(name);
+			//Init multipart recipes.
+			//Convert strings into ItemStacks
+			Character[] indexes = new Character[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'};
+			String[] craftingRows = new String[]{"", "", ""};
+			List<ItemStack> stacks = new ArrayList<ItemStack>();
+			String[] recipe = PackParserSystem.getDefinitionForPack(name).recipe;
+			for(byte i=0; i<9; ++i){
+				if(!recipe[i].isEmpty()){
+					Item item = Item.getByNameOrId(recipe[i].substring(0, recipe[i].lastIndexOf(':')));
+					int damage = Integer.valueOf(recipe[i].substring(recipe[i].lastIndexOf(':') + 1));
+					craftingRows[i/3] = craftingRows[i/3] + indexes[stacks.size()];
+					stacks.add(new ItemStack(item, 1, damage));
+				}else{
+					craftingRows[i/3] = craftingRows[i/3] + ' ';
+				}
+			}
+
+			//Create the object array that is going to be registered.
+			Object[] registryObject = new Object[craftingRows.length + stacks.size()*2];
+			registryObject[0] = craftingRows[0];
+			registryObject[1] = craftingRows[1];
+			registryObject[2] = craftingRows[2];
+			for(byte i=0; i<stacks.size(); ++i){
+				registryObject[3 + i*2] = indexes[i];
+				registryObject[3 + i*2 + 1] = stacks.get(i);
+			}
+			//Now register the recipe
+			registerRecipe(new ItemStack(mapEntry.getValue()), registryObject);
 		}
 	}
 

@@ -4,6 +4,10 @@ import java.io.File;
 
 import org.apache.logging.log4j.Logger;
 
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.systems.ClientEventSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -30,11 +34,14 @@ public class MTS {
 	
 	public MTS(){
 		FluidRegistry.enableUniversalBucket();
+		PackParserSystem.init();
+		MinecraftForge.EVENT_BUS.register(MTSRegistry.instance);
 	}
 
 	@EventHandler
 	public void PreInit(FMLPreInitializationEvent event){
 		MTSLog = event.getModLog();
+		PackParserSystem.writeLogOutput();
 		proxy.preInit(event);
 	}
 	
