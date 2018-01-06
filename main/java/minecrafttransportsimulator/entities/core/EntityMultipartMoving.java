@@ -790,6 +790,8 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				steeringAngle *= Math.pow(0.25F, velocity);
 				//Adjust turn force to steer angle based on turning factor.
 				turningForce = -(float) (steeringAngle*velocity/2F);
+				//Now add the sign to this force.
+				turningForce *= Math.signum(this.getSteerAngle());
 			}
 		}
 		return turningForce;
