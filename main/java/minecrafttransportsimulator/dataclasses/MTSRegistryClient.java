@@ -32,11 +32,17 @@ import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.relauncher.Side;
 
+@Mod.EventBusSubscriber(Side.CLIENT)
 public class MTSRegistryClient{
 	private static final MTSRegistryClient instance = new MTSRegistryClient();
 	/**Map of parsed models keyed by name.*/
@@ -52,9 +58,7 @@ public class MTSRegistryClient{
 		initEntityRenders();
 	}
 	
-	public static void init(){
-		initItemRenders();
-	}
+	public static void init(){}
 	
 	private static void initCustomResourceLocation(){
 		String[] fieldNames = new String[]{"defaultResourcePacks", "field_110449_ao"}; 
@@ -78,7 +82,12 @@ public class MTSRegistryClient{
 		RenderingRegistry.registerEntityRenderingHandler(EntityMultipartMoving.class, instance.new MTSRenderingFactory(RenderMultipart.class));
 	}
 
-	private static void initItemRenders(){
+	/**
+	 * Registers all item renderer stuff.  Started on the appropriate Forge event.
+	 * @param item
+	 */
+	@SubscribeEvent
+	public static void registerItemModels(ModelRegistryEvent event){
 		registerItemRender(MTSRegistry.wheelSmall);
 		registerItemRender(MTSRegistry.wheelLarge);
 		registerItemRender(MTSRegistry.skid);
@@ -119,7 +128,7 @@ public class MTSRegistryClient{
 	
 	//START OF ITEM REGISTRY HELPER CODE
 	private static void registerItemRender(Item item){
-	    Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, 0, new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName().substring(5).replace("block", ""), "inventory"));
+		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName().substring(5).replace("block", ""), "inventory"));
 	}
 
 	private static void registerItemRenderSeries(Item item, int numberMetas){
@@ -131,13 +140,13 @@ public class MTSRegistryClient{
 				models[i] = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName(new ItemStack(item, 1, i)).substring(5), "inventory");
 			}
 			
-			Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, i, models[i]);
+			ModelLoader.setCustomModelResourceLocation(item, i, models[i]);
 		}
 		ModelBakery.registerItemVariants(item, models);
 	}
 	
 	private static void registerMultipartItemRender(String name){
-		Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(MTSRegistry.multipartItemMap.get(name), 0, new ModelResourceLocation(MTS.MODID + ":" + PackParserSystem.getDefinitionForPack(name).uniqueName, "inventory"));
+		ModelLoader.setCustomModelResourceLocation(MTSRegistry.multipartItemMap.get(name), 0, new ModelResourceLocation(MTS.MODID + ":" + PackParserSystem.getDefinitionForPack(name).uniqueName, "inventory"));
 	}
 	
 	private class MTSRenderingFactory implements IRenderFactory{

@@ -152,7 +152,7 @@ public class MTSRegistry{
 			if(type != null){
 				ItemMultipartMoving itemMultipart = new ItemMultipartMoving(name, type.tabToDisplayOn);
 				multipartItemMap.put(name, itemMultipart);
-				event.getRegistry().register(itemMultipart.setRegistryName(itemMultipart.getUnlocalizedName().split("\\.")[1].toLowerCase()));
+				event.getRegistry().register(itemMultipart.setRegistryName(name).setUnlocalizedName(name));
 				MTSRegistry.itemList.add(itemMultipart);
 			}
 		}
@@ -161,10 +161,8 @@ public class MTSRegistry{
 			if(field.getType().equals(Item.class)){
 				try{
 					Item item = (Item) field.get(Item.class);
-					if(item.getUnlocalizedName().equals("item.null")){
-						item.setUnlocalizedName(field.getName().toLowerCase());
-					}
-					event.getRegistry().register(item.setRegistryName(item.getUnlocalizedName().split("\\.")[1].toLowerCase()));
+					String name = field.getName().toLowerCase();
+					event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
 					MTSRegistry.itemList.add(item);
 				}catch(Exception e){
 					e.printStackTrace();

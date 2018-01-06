@@ -24,7 +24,6 @@ public class ItemMultipartMoving extends Item{
 	public ItemMultipartMoving(String name, CreativeTabs creativeTab){
 		super();
 		this.name = name;
-		this.setUnlocalizedName("mts:" + name);
 		this.setCreativeTab(creativeTab);
 	}
 	
