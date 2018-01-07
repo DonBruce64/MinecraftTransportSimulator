@@ -14,6 +14,7 @@ import com.google.gson.Gson;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
+import minecrafttransportsimulator.dataclasses.MTSExternalResourcePack;
 import minecrafttransportsimulator.dataclasses.MTSPackObject;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
@@ -34,7 +35,11 @@ public final class PackParserSystem{
      */
     private static final List<String> log = new ArrayList<String>();
 
+    /**Parses the entire pack directory and loads it into the registers.  Also creates the custom
+     * ResourceLocation for item JSON if needed.
+     */
     public static void init(){
+    	MTSExternalResourcePack.init();
         File assetDir = new File(MTS.assetDir);
         File jsonDir = new File(assetDir.getAbsolutePath() + File.separator + "jsondefs");
         log.clear();

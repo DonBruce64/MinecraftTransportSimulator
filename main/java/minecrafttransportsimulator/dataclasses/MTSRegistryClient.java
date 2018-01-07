@@ -1,18 +1,9 @@
 package minecrafttransportsimulator.dataclasses;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.io.FileUtils;
-
-import com.google.common.collect.Sets;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
@@ -21,17 +12,12 @@ import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPropellerBench;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.resources.IResourcePack;
-import net.minecraft.client.resources.data.IMetadataSection;
-import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -39,33 +25,19 @@ import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 
+/**Sub-class for client-only registration.  Used for models, item texture, entity rendering and the like.
+ * Registrations are fired on events, so should be good for the next few MC versions.
+ * 
+ * @author don_bruce
+ */
 @Mod.EventBusSubscriber(Side.CLIENT)
-public class MTSRegistryClient{
+public final class MTSRegistryClient{
 	private static final MTSRegistryClient instance = new MTSRegistryClient();
 	/**Map of parsed models keyed by name.*/
 	public static final Map<String, Map<String, Float[][]>> modelMap = new HashMap<String, Map<String, Float[][]>>();
 
-	public MTSRegistryClient(){
-		initCustomResourceLocation();
-	}
-	
-	public static void preInit(){
-		loadCustomOBJModels();
-		initTileEntityRenderers();
-		initEntityRenders();
-	}
-	
-	public static void init(){}
-	
-	private static void initCustomResourceLocation(){
-		String[] fieldNames = new String[]{"defaultResourcePacks", "field_110449_ao"}; 
-		List<IResourcePack> resourcePacks = ReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), fieldNames);
-		resourcePacks.add(new MTSExternalResourcePack());
-	}
-	
 	public static void loadCustomOBJModels(){
 		for(String name : PackParserSystem.getRegisteredNames()){
 			if(!modelMap.containsKey(name)){
@@ -74,20 +46,18 @@ public class MTSRegistryClient{
 		}
 	}
 	
-	private static void initTileEntityRenderers(){
-		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPropellerBench.class, new RenderPropellerBench());
-	}
-	
-	private static void initEntityRenders(){
-		RenderingRegistry.registerEntityRenderingHandler(EntityMultipartMoving.class, instance.new MTSRenderingFactory(RenderMultipart.class));
-	}
-
-	/**
-	 * Registers all item renderer stuff.  Started on the appropriate Forge event.
-	 * @param item
-	 */
 	@SubscribeEvent
-	public static void registerItemModels(ModelRegistryEvent event){
+	public static void registerModels(ModelRegistryEvent event){
+		//Load the OBJ models.
+		loadCustomOBJModels();
+		
+		//Register the TESRs.
+		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPropellerBench.class, new RenderPropellerBench());
+		
+		//Register the Entity rendering classes.
+		RenderingRegistry.registerEntityRenderingHandler(EntityMultipartMoving.class, instance.new MTSRenderingFactory(RenderMultipart.class));
+		
+		//Register the item models.
 		registerItemRender(MTSRegistry.wheelSmall);
 		registerItemRender(MTSRegistry.wheelLarge);
 		registerItemRender(MTSRegistry.skid);
@@ -118,7 +88,7 @@ public class MTSRegistryClient{
 				String uniqueItemName = PackParserSystem.getDefinitionForPack(name).uniqueName;
 				FileWriter jsonWriter = new FileWriter(new File(jsonDir.getAbsolutePath() + File.separator + uniqueItemName + ".json"));
 				jsonWriter.write("{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + MTS.MODID + ":items/" + uniqueItemName + "\"}}");
-				registerMultipartItemRender(name);
+				ModelLoader.setCustomModelResourceLocation(MTSRegistry.multipartItemMap.get(name), 0, new ModelResourceLocation(MTS.MODID + ":" + PackParserSystem.getDefinitionForPack(name).uniqueName, "inventory"));
 				jsonWriter.close();
 			}
 		}catch(Exception e){
@@ -126,27 +96,24 @@ public class MTSRegistryClient{
 		}
 	}
 	
-	//START OF ITEM REGISTRY HELPER CODE
 	private static void registerItemRender(Item item){
-		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName().substring(5).replace("block", ""), "inventory"));
+		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(MTS.MODID + ":" + item.getRegistryName().getResourcePath(), "inventory"));
 	}
 
 	private static void registerItemRenderSeries(Item item, int numberMetas){
-		ModelResourceLocation[] models = new ModelResourceLocation[numberMetas];
 		for(byte i=0; i<numberMetas; ++i){
+			//If items are called the same thing no matter the metadata, then they should simply gain a numerical suffix.
+			//Otherwise take their unlocalized name and use it for the JSON name.
+			//Example: Seats would fall into the first category, but flight instruments would fall into the second.
+			ModelResourceLocation model;
 			if(item.getUnlocalizedName(new ItemStack(item, 1, i)).equals(item.getUnlocalizedName())){
-				models[i] = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName(new ItemStack(item, 1, i)).substring(5) + Integer.valueOf(i), "inventory");
+				model = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName(new ItemStack(item, 1, i)).substring(5) + Integer.valueOf(i), "inventory");
 			}else{
-				models[i] = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName(new ItemStack(item, 1, i)).substring(5), "inventory");
+				model = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName(new ItemStack(item, 1, i)).substring(5), "inventory");
 			}
 			
-			ModelLoader.setCustomModelResourceLocation(item, i, models[i]);
+			ModelLoader.setCustomModelResourceLocation(item, i, model);
 		}
-		ModelBakery.registerItemVariants(item, models);
-	}
-	
-	private static void registerMultipartItemRender(String name){
-		ModelLoader.setCustomModelResourceLocation(MTSRegistry.multipartItemMap.get(name), 0, new ModelResourceLocation(MTS.MODID + ":" + PackParserSystem.getDefinitionForPack(name).uniqueName, "inventory"));
 	}
 	
 	private class MTSRenderingFactory implements IRenderFactory{
@@ -165,36 +132,4 @@ public class MTSRegistryClient{
 			}
 		}
 	};
-	
-	private class ExteralResourcePack implements IResourcePack{
-		@Override
-		public InputStream getInputStream(ResourceLocation location) throws IOException{
-			return FileUtils.openInputStream(new File(MTS.assetDir + File.separatorChar + location.getResourcePath()));
-		}
-
-		@Override
-		public boolean resourceExists(ResourceLocation location){
-			return new File(MTS.assetDir, location.getResourcePath()).exists();
-		}
-
-		@Override
-		public Set<String> getResourceDomains() {
-			return Sets.newHashSet(MTS.MODID);
-		}
-
-		@Override
-		public <T extends IMetadataSection> T getPackMetadata(MetadataSerializer metadataSerializer, String metadataSectionName) throws IOException{
-			return null;
-		}
-
-		@Override
-		public BufferedImage getPackImage() throws IOException{
-			return null;
-		}
-
-		@Override
-		public String getPackName(){
-			return MTS.MODID;
-		}
-	}
 }

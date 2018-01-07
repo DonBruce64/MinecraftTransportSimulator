@@ -61,8 +61,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -78,9 +78,8 @@ import net.minecraftforge.fml.relauncher.Side;
  * 
  * @author don_bruce
  */
-public class MTSRegistry{
-	public static final MTSRegistry instance = new MTSRegistry();
-	
+@Mod.EventBusSubscriber
+public final class MTSRegistry{	
 	public static final Item wheelSmall = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item wheelLarge = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Item skid = new Item().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
@@ -107,10 +106,12 @@ public class MTSRegistry{
 	public static Map<String, Class<? extends EntityMultipartChild>> partClasses = new HashMap<String, Class<? extends EntityMultipartChild>>();
 
 	/**All run-time things go here.**/
-	public void init(){
+	public static void init(){
 		initEntities();
 		initPackets();
-		initRecipes();
+		initPartRecipes();
+		initEngineRecipes();
+		initAircraftInstrumentRecipes();
 		initPackRecipes();
 	}
 	
@@ -120,8 +121,8 @@ public class MTSRegistry{
 	 * @param block
 	 */
 	@SubscribeEvent
-	public void registerBlocks(RegistryEvent.Register<Block> event){
-		for(Field field : this.getClass().getFields()){
+	public static void registerBlocks(RegistryEvent.Register<Block> event){
+		for(Field field : MTSRegistry.class.getFields()){
 			if(field.getType().equals(Block.class)){
 				try{
 					Block block = (Block) field.get(Block.class);
@@ -144,7 +145,7 @@ public class MTSRegistry{
 	 * @param item
 	 */
 	@SubscribeEvent
-	public void registerItems(RegistryEvent.Register<Item> event){
+	public static void registerItems(RegistryEvent.Register<Item> event){
 		List<String> nameList = new ArrayList<String>(PackParserSystem.getRegisteredNames());
 		Collections.sort(nameList);
 		for(String name : nameList){
@@ -157,7 +158,7 @@ public class MTSRegistry{
 			}
 		}
 		
-		for(Field field : this.getClass().getFields()){
+		for(Field field : MTSRegistry.class.getFields()){
 			if(field.getType().equals(Item.class)){
 				try{
 					Item item = (Item) field.get(Item.class);
@@ -170,7 +171,7 @@ public class MTSRegistry{
 			}
 		}
 		
-		for(Field field : this.getClass().getFields()){
+		for(Field field : MTSRegistry.class.getFields()){
 			if(field.getType().equals(Block.class)){
 				try{
 					Block block = (Block) field.get(Block.class);
@@ -185,8 +186,8 @@ public class MTSRegistry{
 			}
 		}
 	}
-	
-	private void initEntities(){
+
+	private static void initEntities(){
 		registerEntity(EntityPlane.class);
 		
 		registerChildEntity(EntityCore.class, null);
@@ -199,10 +200,10 @@ public class MTSRegistry{
 		registerChildEntity(EntityPontoon.EntityPontoonDummy.class, pontoon);
 		registerChildEntity(EntityPropeller.class, propeller);
 		registerChildEntity(EntityEngineAircraftSmall.class, engineAircraftSmall);
-		registerChildEntity(EntityEngineAircraftLarge.class, engineAircraftLarge);		
+		registerChildEntity(EntityEngineAircraftLarge.class, engineAircraftLarge);
 	}
 	
-	private void initPackets(){
+	private static void initPackets(){
 		registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
 		registerPacket(DamagePacket.class, DamagePacket.Handler.class, true, false);
 		registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
@@ -226,13 +227,7 @@ public class MTSRegistry{
 		registerPacket(TrimPacket.class, TrimPacket.Handler.class, true, true);
 	}
 	
-	private void initRecipes(){
-		this.initPartRecipes();
-		this.initEngineRecipes();
-		this.initAircraftInstrumentRecipes();
-	}
-	
-	private void initPartRecipes(){
+	private static void initPartRecipes(){
 		//Seats
 		for(int i=0; i<96; ++i){
 			registerRecipe(new ItemStack(seat, 1, i),
@@ -307,7 +302,7 @@ public class MTSRegistry{
 				'A', Items.IRON_INGOT);
 	}
 	
-	private void initEngineRecipes(){
+	private static void initEngineRecipes(){
 		//New engines
 		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
 				"ABA",
@@ -365,7 +360,7 @@ public class MTSRegistry{
 				'C', ((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1]);
 	}
 	
-	private void initAircraftInstrumentRecipes(){		
+	private static void initAircraftInstrumentRecipes(){		
 		registerRecipe(new ItemStack(pointerShort),
 				" WW",
 				" WW",
@@ -512,7 +507,7 @@ public class MTSRegistry{
 				'R', new ItemStack(Items.DYE, 1, 1));
 	}
 
-	private void initPackRecipes(){
+	private static void initPackRecipes(){
 		for(Entry<String, ItemMultipartMoving> mapEntry : multipartItemMap.entrySet()){
 			String name = mapEntry.getKey();
 			MultipartTypes type = PackParserSystem.getMultipartType(name);

@@ -1,13 +1,13 @@
 package minecrafttransportsimulator;
 
+import java.io.File;
+
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
-import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.guis.GUIManual;
 import minecrafttransportsimulator.guis.GUIInstruments;
+import minecrafttransportsimulator.guis.GUIManual;
 import minecrafttransportsimulator.guis.GUIPropellerBench;
 import minecrafttransportsimulator.items.ItemManual;
-import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
@@ -16,10 +16,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -32,20 +29,14 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class ClientProxy extends CommonProxy{
 	
 	@Override
-	public void preInit(FMLPreInitializationEvent event){
-		super.preInit(event);
-		MTSRegistryClient.preInit();
-		ConfigSystem.initClient();
+	public void initConfig(File configFile){
+		ConfigSystem.initClient(configFile);
 	}
-	
+
 	@Override
-	public void init(FMLInitializationEvent event){
-		super.init(event);
-		MTSRegistryClient.init();
+	public void initControls(){
 		ControlSystem.init();
-		MinecraftForge.EVENT_BUS.register(ClientEventSystem.instance);
 	}
-	
 	@Override
 	public void openGUI(Object clicked, EntityPlayer clicker){
 		if(clicked instanceof EntityMultipartVehicle){

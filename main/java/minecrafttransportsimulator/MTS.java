@@ -5,9 +5,8 @@ import java.io.File;
 import org.apache.logging.log4j.Logger;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.systems.ClientEventSystem;
+import minecrafttransportsimulator.systems.ForgeContainerGUISystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -22,7 +21,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="8.0.0-INDEV-29";
+	public static final String MODVER="8.0.0-INDEV-30";
 	public static final String assetDir = System.getProperty("user.dir") + File.separator + MTS.MODID;
 	
 	@Instance(value = MTS.MODID)
@@ -35,18 +34,19 @@ public class MTS {
 	public MTS(){
 		FluidRegistry.enableUniversalBucket();
 		PackParserSystem.init();
-		MinecraftForge.EVENT_BUS.register(MTSRegistry.instance);
 	}
 
 	@EventHandler
-	public void PreInit(FMLPreInitializationEvent event){
+	public void preInit(FMLPreInitializationEvent event){
 		MTSLog = event.getModLog();
 		PackParserSystem.writeLogOutput();
-		proxy.preInit(event);
+		proxy.initConfig(event.getSuggestedConfigurationFile());
+		proxy.initControls();
 	}
 	
 	@EventHandler
-	public void Init(FMLInitializationEvent event){
-		proxy.init(event);
+	public void init(FMLInitializationEvent event){
+		MTSRegistry.init();
+		NetworkRegistry.INSTANCE.registerGuiHandler(instance, new ForgeContainerGUISystem());
 	}
 }

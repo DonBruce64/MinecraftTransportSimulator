@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.systems;
 
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
@@ -21,21 +23,21 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-
-import org.lwjgl.opengl.GL11;
+import net.minecraftforge.fml.relauncher.Side;
 
 /**This class handles rendering/camera edits that need to happen when riding planes
  * as well as some other misc things.
  *
  * @author don_bruce
  */
+@Mod.EventBusSubscriber(Side.CLIENT)
 public final class ClientEventSystem{
-    public static ClientEventSystem instance = new ClientEventSystem();
     /**The last seat a player was in.  If null, this means the player is not in a seat.*/
     public static EntitySeat playerLastSeat = null;
     private static Minecraft minecraft = Minecraft.getMinecraft();
@@ -45,7 +47,7 @@ public final class ClientEventSystem{
      * If not, it shows the player the credits and gives the player a flight manual.
      */
     @SubscribeEvent
-    public void on(PlayerLoggedInEvent event){
+    public static void on(PlayerLoggedInEvent event){
         if(ConfigSystem.getBooleanConfig("FirstRun")){
             ConfigSystem.setClientConfig("FirstRun", false);
             FMLCommonHandler.instance().showGuiScreen(new GUICredits());
@@ -59,7 +61,7 @@ public final class ClientEventSystem{
      * Also adjusts the player's rotation.
      */
     @SubscribeEvent
-    public void on(TickEvent.RenderTickEvent event){
+    public static void on(TickEvent.RenderTickEvent event){
     	if(event.phase.equals(event.phase.START)){
     		if(playerLastSeat != null){
     			if(minecraft.gameSettings.thirdPersonView != 0){
@@ -74,7 +76,7 @@ public final class ClientEventSystem{
      * Forwards camera control options to the ControlSystem.
      */
     @SubscribeEvent
-    public void on(TickEvent.ClientTickEvent event){
+    public static void on(TickEvent.ClientTickEvent event){
         if(minecraft.theWorld != null){
             if(event.phase.equals(Phase.END)){
                 //Update the player seated status
@@ -109,7 +111,7 @@ public final class ClientEventSystem{
      * Only works when camera is inside the plane.
      */
     @SubscribeEvent
-    public void on(CameraSetup event){
+    public static void on(CameraSetup event){
         if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
             if(event.getEntity().getRidingEntity() instanceof EntitySeat){
             	EntityMultipartParent parent = ((EntitySeat) event.getEntity().getRidingEntity()).parent;
@@ -128,7 +130,7 @@ public final class ClientEventSystem{
      * results in water being invisible.
      */
     @SubscribeEvent
-    public void on(RenderWorldLastEvent event){
+    public static void on(RenderWorldLastEvent event){
         for(Entity entity : minecraft.theWorld.loadedEntityList){
             if(entity instanceof EntityMultipartMoving){
             	minecraft.getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
@@ -140,7 +142,7 @@ public final class ClientEventSystem{
      * Pre-post methods for adjusting player pitch while seated.
      */
     @SubscribeEvent
-    public void on(RenderPlayerEvent.Pre event){
+    public static void on(RenderPlayerEvent.Pre event){
         if(event.getEntityPlayer().getRidingEntity() instanceof EntitySeat){
             EntityMultipartParent parent = ((EntitySeat) event.getEntityPlayer().getRidingEntity()).parent;
             if(parent!=null){
@@ -168,7 +170,7 @@ public final class ClientEventSystem{
     }
 
     @SubscribeEvent
-    public void on(RenderPlayerEvent.Post event){
+    public static void on(RenderPlayerEvent.Post event){
         if(event.getEntityPlayer().getRidingEntity() instanceof EntitySeat){
             if(((EntitySeat) event.getEntityPlayer().getRidingEntity()).parent!=null){
                 GL11.glPopMatrix();
@@ -180,7 +182,7 @@ public final class ClientEventSystem{
      * Renders HUDs for Planes.
      */
     @SubscribeEvent
-    public void on(RenderGameOverlayEvent.Pre event){
+    public static void on(RenderGameOverlayEvent.Pre event){
         if(minecraft.thePlayer.getRidingEntity() instanceof EntitySeat){
             if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
                 event.setCanceled(!ConfigSystem.getBooleanConfig("XaerosCompatibility"));
@@ -198,7 +200,7 @@ public final class ClientEventSystem{
      * Opens the MFS config screen.
      */
     @SubscribeEvent
-    public void onKeyInput(InputEvent.KeyInputEvent event){
+    public static void onKeyInput(InputEvent.KeyInputEvent event){
         if(ControlSystem.configKey.isPressed()){
             if(minecraft.currentScreen == null){
             	FMLCommonHandler.instance().showGuiScreen(new GUIConfig());
