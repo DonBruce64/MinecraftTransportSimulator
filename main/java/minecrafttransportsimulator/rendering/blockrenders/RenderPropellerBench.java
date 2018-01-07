@@ -4,16 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.rendering.blockmodels.ModelPropellerBench;
 import minecrafttransportsimulator.rendering.partmodels.ModelPropeller;
-import minecrafttransportsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
-
-import org.lwjgl.opengl.GL11;
 
 public class RenderPropellerBench extends TileEntitySpecialRenderer{
 	private static final ModelPropellerBench benchModel = new ModelPropellerBench();
@@ -147,11 +146,63 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer{
 	}
 	
 	private void renderMaterialBlock(float x1, float x2, float z1, float z2){
-		//TODO find a way to not render using the GL11DrawSystem.
-		GL11DrawSystem.renderSquareUV(x1, x2, 0.24, 0, z1, z1, x1*4 + 2, x2*4 + 2, 0, 1, false);
-		GL11DrawSystem.renderSquareUV(x1, x2, 0.0, 0.24, z2, z2, x1*4 + 2, x2*4 + 2, 0, 1, false);
-		GL11DrawSystem.renderSquareUV(x1, x1, 0.0, 0.24, z1, z2, z1*4 + 2, z2*4 + 2, 0, 1, false);
-		GL11DrawSystem.renderSquareUV(x2, x2, 0.24, 0.0, z1, z2, z1*4 + 2, z2*4 + 2, 0, 1, false);
-		GL11DrawSystem.renderQuadUV(x2, x2, x1, x1, 0.0, 0.0, 0.0, 0.0, z1, z2, z2, z1, x2*4 + 2, x1*4 + 2, z1*4 + 2, z2*4 + 2, false);
+		//This whole system is backwards.  +Y is actually down due to Techne model flipping.
+		GL11.glPushMatrix();
+		GL11.glBegin(GL11.GL_QUADS);
+		//Not sure why I only need one of these rather than one for each vertex, but eh...
+		GL11.glNormal3f(0, -1.0F, 0);
+		
+		//Right side
+		GL11.glTexCoord2f(z1*4 + 2, 0);
+		GL11.glVertex3f(x2, 0, z1);
+		GL11.glTexCoord2f(z1*4 + 2, 1);
+		GL11.glVertex3f(x2, 0.24F, z1);
+		GL11.glTexCoord2f(z2*4 + 2, 1);
+		GL11.glVertex3f(x2, 0.24F, z2);
+		GL11.glTexCoord2f(z2*4 + 2, 0);
+		GL11.glVertex3f(x2, 0, z2);
+		
+		//Back side
+		GL11.glTexCoord2f(x1*4 + 2, 0);
+		GL11.glVertex3f(x2, 0, z2);
+		GL11.glTexCoord2f(x1*4 + 2, 1);
+		GL11.glVertex3f(x2, 0.24F, z2);
+		GL11.glTexCoord2f(x2*4 + 2, 1);
+		GL11.glVertex3f(x1, 0.24F, z2);
+		GL11.glTexCoord2f(x2*4 + 2, 0);
+		GL11.glVertex3f(x1, 0, z2);
+		
+		//Left side
+		GL11.glTexCoord2f(z2*4 + 2, 0);
+		GL11.glVertex3f(x1, 0, z2);
+		GL11.glTexCoord2f(z2*4 + 2, 1);
+		GL11.glVertex3f(x1, 0.24F, z2);
+		GL11.glTexCoord2f(z1*4 + 2, 1);
+		GL11.glVertex3f(x1, 0.24F, z1);
+		GL11.glTexCoord2f(z1*4 + 2, 0);
+		GL11.glVertex3f(x1, 0, z1);
+		
+		//Front side
+		GL11.glTexCoord2f(x1*4 + 2, 0);
+		GL11.glVertex3f(x1, 0, z1);
+		GL11.glTexCoord2f(x1*4 + 2, 1);
+		GL11.glVertex3f(x1, 0.24F, z1);
+		GL11.glTexCoord2f(x2*4 + 2, 1);
+		GL11.glVertex3f(x2, 0.24F, z1);
+		GL11.glTexCoord2f(x2*4 + 2, 0);
+		GL11.glVertex3f(x2, 0, z1);
+		
+		//Top side
+		GL11.glTexCoord2f(x1*4 + 2, z2*4 + 2);
+		GL11.glVertex3f(x1, 0, z2);
+		GL11.glTexCoord2f(x1*4 + 2, z1*4 + 2);
+		GL11.glVertex3f(x1, 0, z1);
+		GL11.glTexCoord2f(x2*4 + 2, z1*4 + 2);
+		GL11.glVertex3f(x2, 0, z1);
+		GL11.glTexCoord2f(x2*4 + 2, z2*4 + 2);
+		GL11.glVertex3f(x2, 0, z2);
+		
+		GL11.glEnd();
+		GL11.glPopMatrix();
 	}
 }
