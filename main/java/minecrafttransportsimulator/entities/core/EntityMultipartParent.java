@@ -115,6 +115,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 					}
 				}
 				worldObj.spawnEntityInWorld(child);
+				this.sendDataToClient();
 			}
 		}
 	}
