@@ -7,7 +7,6 @@ import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.sounds.StallSound;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.GL11DrawSystem;
 import net.minecraft.client.Minecraft;
 
 public final class RenderInstrumentsAircraft extends RenderInstruments{
@@ -53,7 +52,8 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
 			GL11.glEnable(GL11.GL_BLEND);
 			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
 			textureManager.bindTexture(instrumentTexture);
-			GL11DrawSystem.renderSquareUV(x-30, x+30, y+30, y-30, 0, 0, 0.5, 0.75, 0.25, 0.5, false);
+			GL11.glTranslatef(x,  y,  0);
+			renderSquareUV(60, 60, 0, 0.5F, 0.75F, 0.5F, 0.25F);
 			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		}
@@ -67,32 +67,33 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
 	private static void drawGaugeBase(boolean lightsOn){
 		if(lightsOn){
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
-	    	GL11DrawSystem.renderSquareUV(-30, +30, +30, -30, 0, 0, 0.75, 1, 0, 0.25, false);
+	    	renderSquareUV(60, 60, 0, 0.75F, 1F, 0.25F, 0F);
 	    	Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		}else{
-	    	GL11DrawSystem.renderSquareUV(-30, +30, +30, -30, 0, 0, 0.75, 1, 0, 0.25, false);
+			renderSquareUV(60, 60, 0, 0.75F, 1F, 0.25F, 0F);
 		}
     }
     
 	private static void drawAttitudeIndicator(EntityMultipartVehicle aircraft, boolean lightsOn){
-		GL11.glRotatef(-aircraft.rotationRoll, 0, 0, 1);
+		GL11.glRotatef(-aircraft.rotationRoll + 90, 0, 0, 1);
 		if(aircraft.rotationPitch >= 24){
-			GL11DrawSystem.renderQuadUV(-20, +20, +20, -20, +20, +20, -20, -20, 0, 0, 0, 0, 0.25, 0.5625, 0.53125, 0.84375, false);
+			renderSquareUV(40, 40, 0, 0.25F, 0.5625F, 0.84375F, 0.53125F);
 		}else if(aircraft.rotationPitch <= -24){
-			GL11DrawSystem.renderQuadUV(-20, +20, +20, -20, +20, +20, -20, -20, 0, 0, 0, 0, 0.4375, 0.75, 0.53125, 0.84375, false);
+			renderSquareUV(40, 40, 0, 0.4375F, 0.75F, 0.84375F, 0.53125F);
 		}else{
-			GL11DrawSystem.renderQuadUV(-20, +20, +20, -20, +20, +20, -20, -20, 0, 0, 0, 0, 0.34375 - aircraft.rotationPitch*0.00390625, 0.65625 - 0.00390625*aircraft.rotationPitch, 0.53125,  0.84375, false);
+			renderSquareUV(40, 40, 0, 0.34375F - aircraft.rotationPitch*0.00390625F, 0.65625F - 0.00390625F*aircraft.rotationPitch, 0.84375F, 0.53125F);
 		}
     	
-    	GL11DrawSystem.renderSquareUV(-30, +30, +30, -30, 0, 0, 0.25, 0.5, 0, 0.25, false);
-    	
+		GL11.glRotatef(-90, 0, 0, 1);
+    	renderSquareUV(60, 60, 0, 0.25F, 0.5F, 0.25F, 0F);
     	GL11.glRotatef(aircraft.rotationRoll, 0, 0, 1);
+    	
     	if(lightsOn){
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
-			GL11DrawSystem.renderSquareUV(-30, +30, +30, -30, 0, 0, 0.5, 0.75, 0, 0.25, false);
+			renderSquareUV(60, 60, 0, 0.5F, 0.75F, 0.25F, 0F);
 	    	Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		}else{
-			GL11DrawSystem.renderSquareUV(-30, +30, +30, -30, 0, 0, 0.5, 0.75, 0, 0.25, false);
+			renderSquareUV(60, 60, 0, 0.5F, 0.75F, 0.25F, 0F);
 		}
 	}
 	
@@ -108,7 +109,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     
 	private static void drawHeadingIndicator(EntityMultipartVehicle aircraft, boolean lightsOn){
     	drawGaugeBase(lightsOn);
-    	GL11DrawSystem.renderSquareUV(-20, +20, +20, -20, 0, 0, 0.75, 1, 0.25, 0.5, false);
+    	renderSquareUV(40, 40, 0, 0.75F, 1F, 0.5F, 0.25F);
     	
     	drawScaledString("HEADING", -18, +14, 0.5F);
     	
@@ -165,15 +166,19 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	drawDialIncrements(0, 0, -90, 90, 20, 5, 2);
     	drawDialIncrements(0, 0, -115, 115, 20, 5, 2);
     	
-    	GL11DrawSystem.renderSquareUV(-25, +25, +18.75, +6.25, 0, 0, 0.75, 1, 0.5625, 0.625, false);
+    	GL11.glTranslatef(0, 12.5F, 0);
+    	renderSquareUV(50, 13, 0, 0.75F, 1F, 0.625F, 0.5625F);
+    	GL11.glTranslatef(0, -12.5F, 0);
     	
     	float turn = Math.max(Math.min(((plane.rotationRoll - plane.prevRotationRoll)/10 + plane.rotationYaw - plane.prevRotationYaw)/0.15F*25F, 50), -50);
     	GL11.glRotatef(turn, 0, 0, 1);
-    	GL11DrawSystem.renderSquareUV(-25, +25, +6.25, -6.25, 0, 0, 0.75, 1, 0.5, 0.5625, false);
+    	renderSquareUV(50, 13, 0, 0.75F, 1F, 0.5625F, 0.5F);
     	GL11.glRotatef(-turn, 0, 0, 1);
     	
-    	double slip = plane.sideVec.dot(plane.velocityVec);
-    	GL11DrawSystem.renderSquareUV(-2.5 + 20*slip, +2.5 + 20*slip, +15 - Math.abs(slip), +10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
+    	float slip = (float) plane.sideVec.dot(plane.velocityVec);
+    	GL11.glTranslatef(20*slip, 12.5F - Math.abs(slip), 0);
+    	renderSquareUV(5, 5, 0, 0.75F, 0.875F, 1F, 0.875F);
+    	GL11.glTranslatef(-20*slip, -12.5F + Math.abs(slip), 0);
 
     	drawScaledString("L", -34, 20, 0.5F);
     	drawScaledString("R", 30, 20, 0.5F);
@@ -187,7 +192,9 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
 		drawGaugeBase(lightsOn);
 		GL11.glPushMatrix();
     	
-    	GL11DrawSystem.renderSquareUV(-25, +25, +18.75, +6.25, 0, 0, 0.75, 1, 0.5625, 0.625, false);
+		GL11.glTranslatef(0, 12.5F, 0);
+    	renderSquareUV(50, 13, 0, 0.75F, 1F, 0.625F, 0.5625F);
+    	GL11.glTranslatef(0, -12.5F, 0);
     	
     	GL11.glDisable(GL11.GL_TEXTURE_2D);
     	GL11.glColor3f(1, 1, 1);
@@ -254,8 +261,10 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	GL11.glColor3f(1, 1, 1);
     	GL11.glEnable(GL11.GL_TEXTURE_2D);
     	
-    	double slip = plane.sideVec.dot(plane.velocityVec);
-    	GL11DrawSystem.renderSquareUV(-2.5 + 20*slip, +2.5 + 20*slip, +15 - Math.abs(slip), +10 - Math.abs(slip), 0, 0, 0.75, 0.875, 0.875, 1, false);
+    	float slip = (float) plane.sideVec.dot(plane.velocityVec);
+    	GL11.glTranslatef(20*slip, 12.5F - Math.abs(slip), 0);
+    	renderSquareUV(5, 5, 0, 0.75F, 0.875F, 1F, 0.875F);
+    	GL11.glTranslatef(-20*slip, -12.5F + Math.abs(slip), 0);
 
     	drawScaledString("L", -30, -30, 0.5F);
     	drawScaledString("R", 26, -30, 0.5F);
@@ -359,8 +368,11 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	
 		drawLongPointer(0, -10, 135F/20F*plane.rudderTrim/10F, 14, 2);
 		rotationHelper(-12, 8, 75F/10F*plane.aileronTrim/10F + 90);
-		GL11DrawSystem.renderSquareUV(-13, -11, 8, -4, 0, 0, 0.09375, 0.15625, 0.5, 0.875, false);
-		GL11DrawSystem.renderSquareUV(-13, -11, 22, 8, 0, 0, 0.09375, 0.15625, 0.875, 0.5, false);
+		GL11.glTranslated(-12, 2, 0);
+		renderSquareUV(2, 12, 0, 0.09375F, 0.15625F, 0.875F, 0.5F);
+		GL11.glTranslated(0, 13, 0);
+		renderSquareUV(2, 12, 0, 0.09375F, 0.15625F, 0.5F, 0.875F);
+		GL11.glTranslated(12, -15, 0);
 		rotationHelper(-12, 8, -(75F/10F*plane.aileronTrim/10F + 90));
 		drawLongPointer(12, 8, 135F/15F*plane.elevatorTrim/10F + 90, 14, 2);
     }
@@ -522,8 +534,9 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	GL11.glColor3f(1,1,1);
     	textureManager.bindTexture(instrumentTexture);
     	rotationHelper(centerX, centerY, angle);
-    	GL11.glTranslatef(0, -length*0.25F, 0);
-    	GL11DrawSystem.renderSquareUV(centerX-width/2, centerX+width/2, centerY+length/2, centerY-length/2, 0, 0, 0.09375, 0.15625, 0.5, 1, false);
+    	//GL11.glTranslatef(centerX, -length*0.25F + centerY, 0);
+    	GL11.glTranslatef(centerX, -length*0.25F + centerY, 0);
+    	renderSquareUV(width, length, 0, 0.09375F, 0.15625F, 1F, 0.5F);
         GL11.glPopMatrix();
     }
     
@@ -535,8 +548,8 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
         GL11.glColor3f(1,1,1);
         textureManager.bindTexture(instrumentTexture);
         rotationHelper(centerX, centerY, angle);
-        GL11.glTranslatef(0, -length*0.0625F, 0);
-        GL11DrawSystem.renderSquareUV(centerX-width/2, centerX+width/2, centerY+length/2, centerY-length/2, 0, 0, 0.03125, 0.21875, 0, 0.5, true);
+        GL11.glTranslatef(centerX, -length*0.0625F + centerY, 0);
+        renderSquareUV(width, length, 0, 0.03125F, 0.21875F, 0.5F, 0F);
         GL11.glPopMatrix();
     }
 }
