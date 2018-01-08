@@ -7,13 +7,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.general.InstrumentPacket;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
@@ -21,8 +22,6 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-
-import org.lwjgl.opengl.GL11;
 
 public class GUIInstruments extends GuiScreen{
 	private final EntityMultipartVehicle vehicle;
@@ -107,7 +106,7 @@ public class GUIInstruments extends GuiScreen{
 			if(player.capabilities.isCreativeMode){
 				hasInstrument[i] = true;
 			}else{
-				hasInstrument[i] = EntityHelper.getQtyOfItemPlayerHas(player, MTSRegistry.instrument, i) > 0;
+				hasInstrument[i] = player.inventory.hasItemStack(new ItemStack(MTSRegistry.instrument, 1, i));
 			}
 		}
 

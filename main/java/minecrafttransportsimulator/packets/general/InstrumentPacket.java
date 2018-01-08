@@ -5,7 +5,6 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.helpers.EntityHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -62,7 +61,7 @@ public class InstrumentPacket implements IMessage{
 					if(vehicle != null && player != null){
 						byte blankInstrumentNumber = (byte) vehicle.getBlankInstrument().ordinal();
 						//If the instrument selected is a blank, remove the current instrument.
-						if(message.instrumentToChangeTo == blankInstrumentNumber){
+						if(message.instrumentToChangeTo != blankInstrumentNumber){
 							//If there's an instrument present, give it back.
 							if(!vehicle.getInstrumentNumber(message.instrumentToChange).equals(Instruments.values()[blankInstrumentNumber])){
 								if(!player.capabilities.isCreativeMode){
@@ -70,6 +69,7 @@ public class InstrumentPacket implements IMessage{
 									if(!player.inventory.addItemStackToInventory(new ItemStack(MTSRegistry.instrument, 1, vehicle.getInstrumentNumber(message.instrumentToChange).ordinal()))){
 										return;
 									}
+									player.inventory.clearMatchingItems(MTSRegistry.instrument, message.instrumentToChangeTo, 1, null);
 								}
 								vehicle.setInstrumentNumber(message.instrumentToChange, Instruments.values()[message.instrumentToChangeTo]);
 								if(ctx.side.isServer()){
@@ -80,8 +80,8 @@ public class InstrumentPacket implements IMessage{
 							//This time we are adding a new instrument.
 							//Check if we are in creative mode and go from there like before.
 							if(!player.capabilities.isCreativeMode){
-								if(EntityHelper.getQtyOfItemPlayerHas(player, MTSRegistry.instrument, message.instrumentToChangeTo) > 0){
-									EntityHelper.removeQtyOfItemsFromPlayer(player, MTSRegistry.instrument, message.instrumentToChangeTo, 1);
+								if(player.inventory.hasItemStack(new ItemStack(MTSRegistry.instrument, 1, message.instrumentToChangeTo))){
+									player.inventory.clearMatchingItems(MTSRegistry.instrument, message.instrumentToChangeTo, 1, null);
 									vehicle.setInstrumentNumber(message.instrumentToChange, Instruments.values()[message.instrumentToChangeTo]);
 									if(ctx.side.isServer()){
 										MTS.MTSNet.sendToAll(message);
