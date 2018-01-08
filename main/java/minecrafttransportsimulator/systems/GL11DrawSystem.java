@@ -1,10 +1,5 @@
 package minecrafttransportsimulator.systems;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.util.ResourceLocation;
-
 import org.lwjgl.opengl.GL11;
 
 /**This class is responsible for most of the legwork of the custom rendering system.
@@ -14,12 +9,11 @@ import org.lwjgl.opengl.GL11;
  */
 @Deprecated
 public final class GL11DrawSystem{
-	
-	/**
-     * Draws a quad clockwise starting from top-left point.
+    /**
+     * Draws a square with specified bounds and custom UV mapping.  Use for vertical draws only.
      */
-    public static void renderQuad(double x1, double x2, double x3, double x4, double y1, double y2, double y3, double y4, double z1, double z2, double z3, double z4, boolean mirror){
-    	renderQuadUV(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4, 0, 1, 0, 1, mirror);
+    public static void renderSquareUV(double x1, double x2, double y1, double y2, double z1, double z2, double u, double U, double v, double V, boolean mirror){
+    	renderQuadUV(x1, x1, x2, x2, y2, y1, y1, y2, z1, z1, z2, z2, u, U, v, V, mirror);
     }
     
 	/**
@@ -57,12 +51,5 @@ public final class GL11DrawSystem{
     	}
     	GL11.glEnd();
     	GL11.glPopMatrix();
-    }
-    
-    /**
-     * Draws a square with specified bounds and custom UV mapping.  Use for vertical draws only.
-     */
-    public static void renderSquareUV(double x1, double x2, double y1, double y2, double z1, double z2, double u, double U, double v, double V, boolean mirror){
-    	renderQuadUV(x1, x1, x2, x2, y2, y1, y1, y2, z1, z1, z2, z2, u, U, v, V, mirror);
     }
 }
