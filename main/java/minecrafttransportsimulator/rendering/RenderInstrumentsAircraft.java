@@ -215,7 +215,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	GL11.glVertex2d(-2, -18);
     	GL11.glVertex2d(2, -18);
     	GL11.glVertex2d(2, -20);
-    	GL11.glVertex2d(2, -20);
+    	GL11.glVertex2d(-2, -20);
     	GL11.glEnd();
     	GL11.glBegin(GL11.GL_TRIANGLES);
     	GL11.glVertex2d(0, -22);
