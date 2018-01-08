@@ -79,7 +79,8 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 			if(source.getEntity() instanceof EntityPlayer){
 				EntityPlayer attackingPlayer = (EntityPlayer) source.getEntity();
 				if(attackingPlayer.getHeldItemMainhand() != null && attackingPlayer.getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
-					if(((EntityMultipartMoving) parent).ownerName.isEmpty() || ((EntityMultipartMoving) parent).ownerName.equals(attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString()) || EntityHelper.isPlayerOP(attackingPlayer)){
+					boolean isPlayerOP = attackingPlayer.getServer().getPlayerList().getOppedPlayers().getEntry(attackingPlayer.getGameProfile()) != null || attackingPlayer.getServer().isSinglePlayer();
+					if(((EntityMultipartMoving) parent).ownerName.isEmpty() || ((EntityMultipartMoving) parent).ownerName.equals(attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString()) || isPlayerOP){
 						ItemStack droppedItem = this.getItemStack();
 						if(droppedItem != null){
 							worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, droppedItem));

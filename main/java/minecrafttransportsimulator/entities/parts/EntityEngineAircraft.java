@@ -5,7 +5,6 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.main.EntityPlane;
-import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.item.EntityItem;
@@ -45,7 +44,11 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 						propeller.engineUUID = this.UUID;
 						parent.addChild(propeller.UUID, propeller, true);
 						if(!player.capabilities.isCreativeMode){
-							EntityHelper.removeItemFromHand(player);
+							if(stack.stackSize > 1){
+								--stack.stackSize;
+							}else{
+								player.inventory.removeStackFromSlot(player.inventory.currentItem);
+							}
 						}
 						return true;
 					}

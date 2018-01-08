@@ -20,7 +20,6 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.main.EntityCore;
 import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
-import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.items.ItemKey;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.packets.general.DamagePacket;
@@ -116,7 +115,8 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 							this.ownerName = player.getUUID(player.getGameProfile()).toString();
 							MTS.MTSNet.sendTo(new ChatPacket("interact.key.info.own"), (EntityPlayerMP) player);
 						}else{
-							if(player.getUUID(player.getGameProfile()).toString().equals(this.ownerName) || EntityHelper.isPlayerOP(player)){
+							boolean isPlayerOP = player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
+							if(player.getUUID(player.getGameProfile()).toString().equals(this.ownerName) || isPlayerOP){
 								this.ownerName = "";
 								MTS.MTSNet.sendTo(new ChatPacket("interact.key.info.unown"), (EntityPlayerMP) player);	
 							}else{
@@ -191,7 +191,11 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 							newChild.setController(partToSpawn.isController);
 							this.addChild(newChild.UUID, newChild, true);
 							if(!player.capabilities.isCreativeMode){
-								EntityHelper.removeItemFromHand(player);
+								if(stack.stackSize > 0){
+									--stack.stackSize;
+								}else{
+									player.inventory.removeStackFromSlot(player.inventory.currentItem);
+								}
 							}
 						}catch(Exception e){
 							MTS.MTSLog.error("ERROR SPAWING PART!");
@@ -216,7 +220,8 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			if(source.getEntity() instanceof EntityPlayer){
 				EntityPlayer attackingPlayer = (EntityPlayer) source.getEntity();
 				if(attackingPlayer.isSneaking() && attackingPlayer.getHeldItemMainhand() != null && attackingPlayer.getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
-					if(this.ownerName.isEmpty() || attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString().equals(this.ownerName) || EntityHelper.isPlayerOP(attackingPlayer)){
+					boolean isPlayerOP = attackingPlayer.getServer().getPlayerList().getOppedPlayers().getEntry(attackingPlayer.getGameProfile()) != null || attackingPlayer.getServer().isSinglePlayer();
+					if(this.ownerName.isEmpty() || attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString().equals(this.ownerName) || isPlayerOP){
 						this.setDead();
 					}else{
 						MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehicleowned"), (EntityPlayerMP) attackingPlayer);
