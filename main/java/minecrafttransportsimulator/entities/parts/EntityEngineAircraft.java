@@ -31,7 +31,7 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 	
 	@Override
 	public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
-		if(!worldObj.isRemote){
+		if(!worldObj.isRemote && hand.equals(hand.MAIN_HAND)){
 			ItemStack playerStack = player.getHeldItemMainhand();
 			if(playerStack != null){
 				if(MTSRegistry.propeller.equals(playerStack.getItem()) && propeller == null){
