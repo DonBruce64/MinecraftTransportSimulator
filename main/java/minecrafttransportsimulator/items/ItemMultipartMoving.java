@@ -6,7 +6,6 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.main.EntityCore;
-import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -67,7 +66,7 @@ public class ItemMultipartMoving extends Item{
 			EntityCore newCore = new EntityCore(world, mover, mover.UUID, location[0], location[1], location[2], location[3], location[4]);
 			world.spawnEntityInWorld(newCore);
 			spawnedCores.add(newCore);
-			if(EntityHelper.isBoxCollidingWithBlocks(world, newCore.getEntityBoundingBox(), newCore.collidesWithLiquids())){
+			if(newCore.isChildOffsetBoxCollidingWithBlocks(newCore.getEntityBoundingBox())){
 				for(EntityCore spawnedCore : spawnedCores){
 					spawnedCore.setDead();
 				}

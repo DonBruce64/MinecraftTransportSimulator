@@ -5,9 +5,10 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.ImmutableList;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
-import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.general.ServerSyncPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -16,8 +17,6 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
-
-import com.google.common.collect.ImmutableList;
 
 /**Main parent class.  All entities that have parts should extend this class.
  * It is responsible for part management, checks, rendering and other functions.
@@ -100,7 +99,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 			children.put(childUUID, child);
 			if(newChild){
 				++numberChildren;
-				if(EntityHelper.isBoxCollidingWithBlocks(worldObj, child.getEntityBoundingBox(), child.collidesWithLiquids())){
+				if(child.isChildOffsetBoxCollidingWithBlocks(child.getEntityBoundingBox())){
 					float boost = Math.max(0, -child.offsetY);
 					this.rotationRoll = 0;
 					this.setPositionAndRotation(posX, posY + boost, posZ, rotationYaw, 0);
@@ -108,7 +107,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 					
 					//Sometimes children can break off if the parent rotates and shoves something under the ground.
 					for(EntityMultipartChild testChild : this.children.values()){
-						if(EntityHelper.isBoxCollidingWithBlocks(worldObj, testChild.getEntityBoundingBox().offset(0, boost, 0), child.collidesWithLiquids())){
+						if(child.isChildOffsetBoxCollidingWithBlocks(testChild.getEntityBoundingBox().offset(0, boost, 0))){
 							this.setPositionAndRotation(posX, posY + 1, posZ, rotationYaw, 0);
 							break;
 						}

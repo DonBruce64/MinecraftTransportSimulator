@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.baseclasses.MTSVector;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -16,6 +17,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 /**Main child class.  This class is the base for all child entities and should be
@@ -76,7 +78,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 		if(!worldObj.isRemote){
 			if(source.getEntity() instanceof EntityPlayer){
 				EntityPlayer attackingPlayer = (EntityPlayer) source.getEntity();
-				if(EntityHelper.isPlayerHoldingWrench(attackingPlayer)){
+				if(attackingPlayer.getHeldItemMainhand() != null && attackingPlayer.getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
 					if(((EntityMultipartMoving) parent).ownerName.isEmpty() || ((EntityMultipartMoving) parent).ownerName.equals(attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString()) || EntityHelper.isPlayerOP(attackingPlayer)){
 						ItemStack droppedItem = this.getItemStack();
 						if(droppedItem != null){
@@ -120,13 +122,26 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	}
 	
 	private void linkToParent(){
-		MTSEntity entity = EntityHelper.getEntityByUUID(worldObj, this.parentUUID);
+		MTSEntity entity = getEntityByUUID(worldObj, this.parentUUID);
 		if(entity != null){
 			EntityMultipartParent parent =  (EntityMultipartParent) entity;
 			parent.addChild(this.UUID, this, false);
 			this.parent=parent;
 		}
 	}
+	
+	protected static EntityMultipartBase getEntityByUUID(World world, String UUID){
+    	if(!UUID.equals("")){
+	        for(Object obj : world.loadedEntityList){
+	            if(obj instanceof EntityMultipartBase){
+	                if(UUID.equals(((EntityMultipartBase) obj).UUID)){
+	                    return (EntityMultipartBase) obj;
+	                }
+	            }
+	        }
+    	}
+        return null;
+    }
 	
     //Child rendering is done by the parent.
     @Override
@@ -147,13 +162,39 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
         return this.getEntityBoundingBox();
     }
 	
-	public boolean collidesWithLiquids(){
+	protected boolean collidesWithLiquids(){
 		return false;
 	}
 
-
+	public boolean isChildOffsetBoxCollidingWithBlocks(AxisAlignedBB box){ 
+    	if(!worldObj.getCollisionBoxes(box).isEmpty()){
+    		return true;
+    	}else{
+    		if(!collidesWithLiquids()){
+    			return false;
+    		}else{
+    			int minX = (int) Math.floor(box.minX);
+    	    	int maxX = (int) Math.floor(box.maxX + 1.0D);
+    	    	int minY = (int) Math.floor(box.minY);
+    	    	int maxY = (int) Math.floor(box.maxY + 1.0D);
+    	    	int minZ = (int) Math.floor(box.minZ);
+    	    	int maxZ = (int) Math.floor(box.maxZ + 1.0D);
+    	    	
+    	    	for(int i = minX; i < maxX; ++i){
+    	    		for(int j = minY; j < maxY; ++j){
+    	    			for(int k = minZ; k < maxZ; ++k){
+    	    				if(worldObj.getBlockState(new BlockPos(i, j, k)).getMaterial().isLiquid()){
+    	    					return true;
+    	    				}
+    	    			}
+    	    		}
+    	    	}
+    	    	return false;
+    		}
+    	}
+    }
 	public boolean isOnGround(){
-		return worldObj.getCollisionBoxes(this.getEntityBoundingBox().offset(0, -0.05F, 0)).isEmpty() ? EntityHelper.isBoxCollidingWithBlocks(worldObj, this.getEntityBoundingBox().offset(0, -0.05F, 0), this.collidesWithLiquids()) : true;
+		return worldObj.getCollisionBoxes(this.getEntityBoundingBox().offset(0, -0.05F, 0)).isEmpty() ? isChildOffsetBoxCollidingWithBlocks(this.getEntityBoundingBox().offset(0, -0.05F, 0)) : true;
 	}
 
 	

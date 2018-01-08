@@ -24,6 +24,10 @@ public abstract class EntityGroundDevice extends EntityMultipartChild{
 		this.lateralFriction = lateralFriction;
 	}
 	
+	public boolean shouldAffectSteering(){
+		return this.turnsWithSteer;
+	}
+	
 	@Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);

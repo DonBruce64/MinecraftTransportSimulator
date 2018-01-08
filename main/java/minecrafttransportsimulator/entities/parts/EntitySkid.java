@@ -17,6 +17,11 @@ public class EntitySkid extends EntityGroundDevice{
 	public EntitySkid(World world, EntityMultipartParent plane, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		super(world, (EntityPlane) plane, parentUUID, offsetX, offsetY, offsetZ, 0.3F, 0.3F, 0.0F, 0.5F);
 	}
+	
+	@Override
+	public boolean shouldAffectSteering(){
+		return true;
+	}
 
 	@Override
 	public void setNBTFromStack(ItemStack stack){}

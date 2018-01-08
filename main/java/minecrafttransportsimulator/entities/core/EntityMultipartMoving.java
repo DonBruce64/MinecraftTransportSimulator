@@ -203,7 +203,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 					}
 				}
 			}
-		}else if(EntityHelper.isPlayerHoldingWrench(player)){
+		}else if(player.getHeldItemMainhand() != null && player.getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
 			MTS.proxy.openGUI(this, player);
 			return true;
 		}
@@ -215,7 +215,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		if(!worldObj.isRemote){
 			if(source.getEntity() instanceof EntityPlayer){
 				EntityPlayer attackingPlayer = (EntityPlayer) source.getEntity();
-				if(attackingPlayer.isSneaking() && EntityHelper.isPlayerHoldingWrench(attackingPlayer)){
+				if(attackingPlayer.isSneaking() && attackingPlayer.getHeldItemMainhand() != null && attackingPlayer.getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
 					if(this.ownerName.isEmpty() || attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString().equals(this.ownerName) || EntityHelper.isPlayerOP(attackingPlayer)){
 						this.setDead();
 					}else{
@@ -640,9 +640,12 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
     			for(int k = minZ; k < maxZ; ++k){
     				BlockPos pos = new BlockPos(i, j, k);
     				AxisAlignedBB blockBox = worldObj.getBlockState(pos).getCollisionBoundingBox(worldObj, pos);
-    				if(blockBox != null){
-    					blockBox = blockBox.offset(pos);
-    					if(box.intersectsWith(blockBox) || (child.collidesWithLiquids() && worldObj.getBlockState(pos).getMaterial().isLiquid())){
+    				if(blockBox == null){
+    					if(child.collidesWithLiquids() && worldObj.getBlockState(pos).getMaterial().isLiquid()){
+    						collisionMap.add(pos);
+    					}
+    				}else{
+    					if(box.intersectsWith(blockBox.offset(pos))){
     						collisionMap.add(pos);
     					}
     				}
@@ -659,7 +662,11 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				motionY *= 0.95;
 				motionZ *= 0.95;
 			}else{
-				collidingAABBList.add(worldObj.getBlockState(pos).getCollisionBoundingBox(worldObj, pos).offset(pos));
+				if(child.collidesWithLiquids() && worldObj.getBlockState(pos).getMaterial().isLiquid()){
+					collidingAABBList.add(worldObj.getBlockState(pos).getBoundingBox(worldObj, pos).offset(pos));
+				}else{
+					collidingAABBList.add(worldObj.getBlockState(pos).getCollisionBoundingBox(worldObj, pos).offset(pos));
+				}
 			}
 		}
 		return collidingAABBList;
@@ -776,14 +783,15 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				//0.6 is default slipperiness for blocks.  Anything less should reduce friction, anything extra should increase it.
 				float frictionLoss = 0.6F - grounder.worldObj.getBlockState(grounder.getPosition().down()).getBlock().slipperiness;
 				//Do we have enough friction to change yaw?
-				if(grounder.turnsWithSteer && grounder.lateralFriction - frictionLoss > 0){
+				if(grounder.shouldAffectSteering() && grounder.lateralFriction - frictionLoss > 0){
 					turningFactor += grounder.lateralFriction - frictionLoss;
 				}
 			}
 			if(turningFactor > 0){
 				//Now that we know we can turn, we can attempt to change the track.
+				steeringAngle = Math.abs(steeringAngle);
 				if(turningFactor < 1){
-					steeringAngle = Math.abs(steeringAngle)*turningFactor;
+					steeringAngle *= turningFactor;
 				}
 				//Another thing that can affect the steering angle is speed.
 				//More speed makes for less wheel turn to prevent crazy circles.

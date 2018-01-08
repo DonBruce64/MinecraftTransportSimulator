@@ -7,7 +7,6 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.main.EntityGroundDevice;
-import minecrafttransportsimulator.helpers.EntityHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -32,7 +31,7 @@ public class EntityPontoon extends EntityGroundDevice{
 	}
 	
 	protected EntityPontoon(World world, EntityMultipartParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, (EntityMultipartVehicle) vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F, 0.1F, 2.5F);
+		super(world, (EntityMultipartVehicle) vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F, 0.1F, 0.125F);
 	}
 	
 	@Override
@@ -85,7 +84,7 @@ public class EntityPontoon extends EntityGroundDevice{
 	}
 	
 	private void linkToOtherHalf(){
-		Entity entity = EntityHelper.getEntityByUUID(worldObj, otherHalfUUID);
+		Entity entity = getEntityByUUID(worldObj, otherHalfUUID);
 		if(entity != null){
 			this.otherHalf=(EntityPontoon) entity;
 		}
@@ -127,6 +126,11 @@ public class EntityPontoon extends EntityGroundDevice{
 		
 		public EntityPontoonDummy(World world, EntityMultipartParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ){
 			super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ);
+		}
+		
+		@Override
+		public boolean shouldAffectSteering(){
+			return true;
 		}
 		
 		@Override

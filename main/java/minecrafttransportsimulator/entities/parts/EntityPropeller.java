@@ -9,7 +9,6 @@ import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.main.EntityPlane;
-import minecrafttransportsimulator.helpers.EntityHelper;
 import minecrafttransportsimulator.packets.control.EnginePacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
@@ -100,7 +99,7 @@ public class EntityPropeller extends EntityMultipartChild{
 		super.onUpdate();
 		if(!linked){return;}
 		if(engine == null){
-			engine = (EntityEngineAircraft) EntityHelper.getEntityByUUID(worldObj, engineUUID);
+			engine = (EntityEngineAircraft) getEntityByUUID(worldObj, engineUUID);
 			if(engine != null){
 				engine.propeller = this;
 			}else{
@@ -134,7 +133,7 @@ public class EntityPropeller extends EntityMultipartChild{
 						}
 					}
 				}
-				if(EntityHelper.isBoxCollidingWithBlocks(worldObj, this.getEntityBoundingBox().expand(0.1F, 0.1F, 0.1F), this.collidesWithLiquids())){
+				if(this.isChildOffsetBoxCollidingWithBlocks(this.getEntityBoundingBox().expand(0.1F, 0.1F, 0.1F))){
 					damagePropeller(1);
 					
 				}
