@@ -30,6 +30,9 @@ public final class OBJParserSystem{
 			final List<String> faceList = new ArrayList<String>();
 			while(reader.ready()){
 				String line = reader.readLine();
+				if(line.isEmpty()){
+					continue;
+				}
 				if(line.startsWith("o")){
 					//Declaration of an object.
 					//Save current part we are parsing (if any) and start new part.
@@ -44,14 +47,14 @@ public final class OBJParserSystem{
 				if(partName != null){
 					if(line.startsWith("v ")){
 						Float[] coords = new Float[3];
-						line = line.trim().substring(2, line.length());
+						line = line.trim().substring(2, line.length()).trim();
 						coords[0] = Float.valueOf(line.substring(0, line.indexOf(' ')));
 						coords[1] = Float.valueOf(line.substring(line.indexOf(' ') + 1, line.lastIndexOf(' ')));
 						coords[2] = Float.valueOf(line.substring(line.lastIndexOf(' ') + 1, line.length()));
 						vertexList.add(coords);
 					}else if(line.startsWith("vt ")){
 						Float[] coords = new Float[2];
-						line = line.trim().substring(3, line.length());
+						line = line.trim().substring(3, line.length()).trim();
 						int space = line.indexOf(' ');
 						int vertexEnd = line.lastIndexOf(' ') == space ? line.length() : line.lastIndexOf(' ');
 						coords[0] = Float.valueOf(line.substring(0, space));
@@ -66,7 +69,7 @@ public final class OBJParserSystem{
 			partMap.put(partName, compileVertexArray(vertexList, textureList, faceList));
 			reader.close();
 			return partMap;
-		}catch (IOException e){
+		}catch (Exception e){
 			e.printStackTrace();
 			return null;
 		}
