@@ -60,39 +60,25 @@ public class InstrumentPacket implements IMessage{
 					}
 					if(vehicle != null && player != null){
 						byte blankInstrumentNumber = (byte) vehicle.getBlankInstrument().ordinal();
-						//If the instrument selected is a blank, remove the current instrument.
-						if(message.instrumentToChangeTo != blankInstrumentNumber){
-							//If there's an instrument present, give it back.
-							if(!vehicle.getInstrumentNumber(message.instrumentToChange).equals(Instruments.values()[blankInstrumentNumber])){
-								if(!player.capabilities.isCreativeMode){
-									//If the player can't fit the old instrument into their inventory, don't make the change.
-									if(!player.inventory.addItemStackToInventory(new ItemStack(MTSRegistry.instrument, 1, vehicle.getInstrumentNumber(message.instrumentToChange).ordinal()))){
-										return;
-									}
-									player.inventory.clearMatchingItems(MTSRegistry.instrument, message.instrumentToChangeTo, 1, null);
-								}
-								vehicle.setInstrumentNumber(message.instrumentToChange, Instruments.values()[message.instrumentToChangeTo]);
-								if(ctx.side.isServer()){
-									MTS.MTSNet.sendToAll(message);
-								}
+						//Check to make sure the instrument can fit in survival player's inventories.
+						if(!player.capabilities.isCreativeMode && ctx.side.isServer() && !vehicle.getInstrumentNumber(message.instrumentToChange).equals(Instruments.values()[blankInstrumentNumber])){
+							if(!player.inventory.addItemStackToInventory(new ItemStack(MTSRegistry.instrument, 1, vehicle.getInstrumentNumber(message.instrumentToChange).ordinal()))){
+								return;
 							}
-						}else{
-							//This time we are adding a new instrument.
-							//Check if we are in creative mode and go from there like before.
-							if(!player.capabilities.isCreativeMode){
-								if(player.inventory.hasItemStack(new ItemStack(MTSRegistry.instrument, 1, message.instrumentToChangeTo))){
-									player.inventory.clearMatchingItems(MTSRegistry.instrument, message.instrumentToChangeTo, 1, null);
-									vehicle.setInstrumentNumber(message.instrumentToChange, Instruments.values()[message.instrumentToChangeTo]);
-									if(ctx.side.isServer()){
-										MTS.MTSNet.sendToAll(message);
-									}
-								}
+						}
+						
+						//Check to make sure player has the instrument they are trying to put in.
+						if(!player.capabilities.isCreativeMode && ctx.side.isServer() && message.instrumentToChangeTo != blankInstrumentNumber){
+							if(player.inventory.hasItemStack(new ItemStack(MTSRegistry.instrument, 1, message.instrumentToChangeTo))){
+								player.inventory.clearMatchingItems(MTSRegistry.instrument, message.instrumentToChangeTo, 1, null);
 							}else{
-								vehicle.setInstrumentNumber(message.instrumentToChange, Instruments.values()[message.instrumentToChangeTo]);
-								if(ctx.side.isServer()){
-									MTS.MTSNet.sendToAll(message);
-								}
+								return;
 							}
+						}
+						
+						vehicle.setInstrumentNumber(message.instrumentToChange, Instruments.values()[message.instrumentToChangeTo]);
+						if(ctx.side.isServer()){
+							MTS.MTSNet.sendToAll(message);
 						}
 					}
 				}
