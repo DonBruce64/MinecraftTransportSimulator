@@ -422,7 +422,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	drawScaledString("RPM", -10, 14, 0.5F);
     	if(engineNumber == 0){
     		int lowestMaxRPM = 9999;
-    		for(byte i=0; i<aircraft.getNumberEngineBays(); ++i){
+    		for(byte i=1; i<=aircraft.getNumberEngineBays(); ++i){
     			if(aircraft.getEngineByNumber(i) != null){
     				lowestMaxRPM = Math.min(lowestMaxRPM, aircraft.getEngineByNumber(i).maxRPM);
     			}
@@ -437,7 +437,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
 		drawDialIncrements(0, 0, -135, 165, 25, 9, 13);
         drawDialNumbers(0, 0, -135, 165, 13, 0, 5, 6, 0.6F);
         if(engineNumber == 0){
-    		for(byte i=0; i<aircraft.getNumberEngineBays(); ++i){
+    		for(byte i=1; i<=aircraft.getNumberEngineBays(); ++i){
     			if(aircraft.getEngineByNumber(i) != null){
 	    			drawLongPointer(0, 0, (float) (-135+aircraft.getEngineByNumber(i).RPM/10), 30, 3);
     			}
@@ -461,7 +461,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
         drawDialNumbers(0, 0, -135, 135, 16, 0, 1, 4, 0.6F);
         if(engineNumber == 0){
         	double totalFuelFlow = 0;
-    		for(byte i=0; i<aircraft.getNumberEngineBays(); ++i){
+        	for(byte i=1; i<=aircraft.getNumberEngineBays(); ++i){
     			if(aircraft.getEngineByNumber(i) != null){
     				totalFuelFlow += aircraft.getEngineByNumber(i).fuelFlow;
     			}
@@ -490,7 +490,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	drawDialNumbers(0, 0, -135, 135, 16, 50, 50, 4, 0.5F);
         
         if(engineNumber == 0){
-    		for(byte i=0; i<aircraft.getNumberEngineBays(); ++i){
+        	for(byte i=1; i<=aircraft.getNumberEngineBays(); ++i){
     			if(aircraft.getEngineByNumber(i) != null){
 	    			drawLongPointer(0, 0, (float) (-135 + ((aircraft.getEngineByNumber(i).temp*9F/5F + 32) - 50)*1.35), 30, 3);
     			}
@@ -515,7 +515,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	GL11.glColor3f(1, 1, 1);
     	drawDialNumbers(0, 0, -135, 135, 16, 0, 25, 6, 0.5F);
         if(engineNumber == 0){
-    		for(byte i=0; i<aircraft.getNumberEngineBays(); ++i){
+        	for(byte i=1; i<=aircraft.getNumberEngineBays(); ++i){
     			if(aircraft.getEngineByNumber(i) != null){
 	    			drawLongPointer(0, 0, (float) (-135 + aircraft.getEngineByNumber(i).oilPressure*1.8F), 30, 3);
     			}
