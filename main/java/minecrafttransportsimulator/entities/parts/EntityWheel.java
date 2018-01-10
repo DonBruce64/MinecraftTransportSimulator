@@ -6,16 +6,23 @@ import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import minecrafttransportsimulator.packets.general.FlatWheelPacket;
+import minecrafttransportsimulator.systems.SFXSystem;
+import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.MovingSound;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class EntityWheel extends EntityGroundDevice{
+public abstract class EntityWheel extends EntityGroundDevice implements SFXEntity{
 	public boolean isFlat;
 	public float angularPosition;
 	public float angularVelocity;
 	protected float wheelDiameter;
+	private boolean landedThisTick = false;
 	private EntityMultipartMoving moving;
 	
 	public EntityWheel(World world){
@@ -46,6 +53,11 @@ public abstract class EntityWheel extends EntityGroundDevice{
 		moving = (EntityMultipartMoving) this.parent;
 		if(worldObj.isRemote){
 			if(this.isOnGround()){
+				if(angularVelocity/(moving.velocity/wheelDiameter) < 0.25 && moving.velocity > 0.1){
+					if(worldObj.getBlockState(this.getPosition().down()).getBlockHardness(worldObj, this.getPosition().down()) >= 1.5){
+						landedThisTick = true;
+					}
+				}
 				angularVelocity = (float) (moving.velocity/wheelDiameter);
 			}else{
 				if(moving.brakeOn || moving.parkingBrakeOn){
@@ -55,6 +67,7 @@ public abstract class EntityWheel extends EntityGroundDevice{
 				}
 			}
 			angularPosition += angularVelocity;
+			MTS.proxy.updateSFXEntity(this, worldObj);
 		}
 	}
 	
@@ -67,6 +80,42 @@ public abstract class EntityWheel extends EntityGroundDevice{
 		if(!worldObj.isRemote){
 			worldObj.newExplosion(this, posX, posY, posZ, 0.25F, false, false);
 			MTS.MTSNet.sendToAll(new FlatWheelPacket(this.getEntityId()));
+		}
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public boolean hasSound(){
+		return false;
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public MovingSound getNewSound(){
+		return null;
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public MovingSound getCurrentSound(){
+		return null;
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public void setCurrentSound(MovingSound sound){
+		
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public boolean shouldSoundBePlaying(){
+		return false;
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public void spawnParticles(){
+		if(landedThisTick){
+			for(byte i=0; i<4; ++i){
+				Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.WhiteSmokeFX(worldObj, posX, posY, posZ, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05));
+			}
+			MTS.proxy.playSound(this, MTS.MODID + ":" + "wheel_striking", 1, 1);
+			landedThisTick = false;
 		}
 	}
 	

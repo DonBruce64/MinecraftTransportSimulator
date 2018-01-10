@@ -65,6 +65,12 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
 			MTS.MTSNet.sendToAll(new TileEntitySyncPacket(this));
 		}
 	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public boolean hasSound(){
+		return true;
+	}
 
 	@Override
 	@SideOnly(Side.CLIENT)

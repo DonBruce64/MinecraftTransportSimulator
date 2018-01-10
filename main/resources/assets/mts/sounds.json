@@ -1,11 +1,12 @@
 {
     "bench_running"    : {"category": "master", "sounds": [{"name": "mts:bench_running","stream": false}]},
     "small_engine_starting"    : {"category": "master", "sounds": [{"name": "mts:small_engine_starting","stream": false}]},
-		"large_engine_starting"    : {"category": "master", "sounds": [{"name": "mts:large_engine_starting","stream": false}]},
+	"large_engine_starting"    : {"category": "master", "sounds": [{"name": "mts:large_engine_starting","stream": false}]},
     "engine_sputter"    : {"category": "master", "sounds": [{"name": "mts:engine_sputter","stream": false}]},
     "small_engine_running"     : {"category": "master", "sounds": [{"name": "mts:small_engine_running","stream": false}]},
     "small_engine_cranking"    : {"category": "master", "sounds": [{"name": "mts:small_engine_cranking","stream": false}]},
     "large_engine_running"     : {"category": "master", "sounds": [{"name": "mts:large_engine_running","stream": false}]},
     "large_engine_cranking"     : {"category": "master", "sounds": [{"name": "mts:large_engine_cranking","stream": false}]},
-		"stall_buzzer"     : {"category": "master", "sounds": [{"name": "mts:stall_buzzer","stream": false}]}
+	"stall_buzzer"     : {"category": "master", "sounds": [{"name": "mts:stall_buzzer","stream": false}]},
+	"wheel_striking"     : {"category": "master", "sounds": [{"name": "mts:wheel_striking","stream": false}]}
 }

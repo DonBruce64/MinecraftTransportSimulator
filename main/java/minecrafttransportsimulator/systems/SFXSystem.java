@@ -10,6 +10,7 @@ import net.minecraft.client.audio.MovingSound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.particle.ParticleDrip;
+import net.minecraft.client.particle.ParticleSmokeNormal;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
@@ -52,10 +53,12 @@ public final class SFXSystem{
 	 */
 	public static void doSFX(SFXEntity entity, World world){
 		if(world.isRemote){
-			soundHandler = Minecraft.getMinecraft().getSoundHandler();
-			if(entity.shouldSoundBePlaying() && (entity.getCurrentSound() == null || !soundHandler.isSoundPlaying(entity.getCurrentSound()))){
-				entity.setCurrentSound(entity.getNewSound());
-				soundHandler.playSound(entity.getCurrentSound());
+			if(entity.hasSound()){
+				soundHandler = Minecraft.getMinecraft().getSoundHandler();
+				if(entity.shouldSoundBePlaying() && (entity.getCurrentSound() == null || !soundHandler.isSoundPlaying(entity.getCurrentSound()))){
+					entity.setCurrentSound(entity.getNewSound());
+					soundHandler.playSound(entity.getCurrentSound());
+				}
 			}
 			entity.spawnParticles();
 		}
@@ -90,7 +93,22 @@ public final class SFXSystem{
 		}
 	}
 	
-	public static interface SFXEntity{		
+	public static class WhiteSmokeFX extends ParticleSmokeNormal{
+		public WhiteSmokeFX(World world, double posX, double posY, double posZ, double motionX, double motionY, double motionZ){
+			super(world, posX, posY, posZ, motionX, motionY, motionZ, 1.0F);
+		}
+		
+		@Override
+		public void onUpdate(){
+			super.onUpdate();
+			this.setRBGColorF(1, 1, 1);
+		}
+	}
+	
+	public static interface SFXEntity{
+		@SideOnly(Side.CLIENT)
+		public boolean hasSound();
+		
 		@SideOnly(Side.CLIENT)
 		public MovingSound getNewSound();
 		

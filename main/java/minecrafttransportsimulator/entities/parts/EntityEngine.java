@@ -348,6 +348,12 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	public static int getMaxSafeRPM(int maxRPM){
 		return (maxRPM - (maxRPM - 2500)/2);
 	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public boolean hasSound(){
+		return true;
+	}
 
 	@Override
 	@SideOnly(Side.CLIENT)
