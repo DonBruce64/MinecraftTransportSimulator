@@ -8,6 +8,7 @@ import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.passive.EntitySquid;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -23,8 +24,8 @@ public class EntityPontoon extends EntityGroundDevice{
 	}
 	
 	public EntityPontoon(World world, EntityMultipartParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		this(world, vehicle, parentUUID, offsetX, offsetY, offsetZ);
-		this.otherHalf = new EntityPontoonDummy(world, vehicle, parentUUID, offsetX, offsetY, offsetZ - 2);
+		this(world, vehicle, parentUUID, offsetX, offsetY, offsetZ > 0 ? offsetZ : offsetZ + 2);
+		this.otherHalf = new EntityPontoonDummy(world, vehicle, parentUUID, offsetX, offsetY, offsetZ > 0 ? offsetZ - 2 : offsetZ);
 		this.setOtherHalf(otherHalf);
 		otherHalf.setOtherHalf(this);
 		vehicle.addChild(this.otherHalfUUID, otherHalf, true);
@@ -112,6 +113,8 @@ public class EntityPontoon extends EntityGroundDevice{
 	}
 	
 	public static class EntityPontoonDummy extends EntityPontoon{
+		private boolean isBeingAttacked = false;
+		
 		public EntityPontoonDummy(World world){
 			super(world);
 		}
@@ -129,13 +132,21 @@ public class EntityPontoon extends EntityGroundDevice{
 		}
 		
 		@Override
+		public boolean attackEntityFrom(DamageSource source, float damage){
+			isBeingAttacked = true;
+			boolean returnCode = super.attackEntityFrom(source, damage);
+			isBeingAttacked = false;
+			return returnCode;
+		}
+		
+		@Override
 		public boolean shouldAffectSteering(){
 			return true;
 		}
 		
 		@Override
 		public ItemStack getItemStack(){
-			return null;
+			return isBeingAttacked ? super.getItemStack() : null;
 		}
 	}
 }

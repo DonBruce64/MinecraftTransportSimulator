@@ -197,7 +197,7 @@ public final class MTSRegistry{
 		registerChildEntity(EntityWheel.EntityWheelLarge.class, wheelLarge);
 		registerChildEntity(EntitySkid.class, skid);
 		registerChildEntity(EntityPontoon.class, pontoon);
-		registerChildEntity(EntityPontoon.EntityPontoonDummy.class, pontoon);
+		registerChildEntity(EntityPontoon.EntityPontoonDummy.class, null);
 		registerChildEntity(EntityPropeller.class, propeller);
 		registerChildEntity(EntityEngineAircraftSmall.class, engineAircraftSmall);
 		registerChildEntity(EntityEngineAircraftLarge.class, engineAircraftLarge);
