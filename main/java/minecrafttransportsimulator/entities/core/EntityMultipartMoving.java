@@ -184,7 +184,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 					if(partToSpawn != null){
 						//We have a part, now time to spawn it.
 						try{
-							Constructor<? extends EntityMultipartChild> construct = MTSRegistry.partClasses.get(heldItem.getUnlocalizedName()).getConstructor(World.class, EntityMultipartParent.class, String.class, float.class, float.class, float.class, int.class);
+							Constructor<? extends EntityMultipartChild> construct = MTSRegistry.partClasses.get(heldItem.getRegistryName().getResourcePath()).getConstructor(World.class, EntityMultipartParent.class, String.class, float.class, float.class, float.class, int.class);
 							EntityMultipartChild newChild = construct.newInstance(worldObj, this, this.UUID, partToSpawn.pos[0], partToSpawn.pos[1], partToSpawn.pos[2], stack.getItemDamage());
 							newChild.setNBTFromStack(stack);
 							newChild.setTurnsWithSteer(partToSpawn.turnsWithSteer);

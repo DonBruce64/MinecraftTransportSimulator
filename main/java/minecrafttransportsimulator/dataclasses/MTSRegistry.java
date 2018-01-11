@@ -560,7 +560,7 @@ public final class MTSRegistry{
 	 */
 	private static void registerChildEntity(Class<? extends EntityMultipartChild> entityClass, Item entityItem){
 		if(entityItem != null){
-			partClasses.put(entityItem.getUnlocalizedName(), entityClass);
+			partClasses.put(entityItem.getRegistryName().getResourcePath(), entityClass);
 		}
 		registerEntity(entityClass);
 	}
