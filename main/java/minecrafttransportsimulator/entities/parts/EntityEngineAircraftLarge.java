@@ -27,7 +27,7 @@ public class EntityEngineAircraftLarge extends EntityEngineAircraft{
 
 	@Override
 	protected byte getStarterIncrement(){
-		return 22;
+		return 13;
 	}
 
 	@Override
