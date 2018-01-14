@@ -206,7 +206,6 @@ public final class ClientEventSystem{
             	FMLCommonHandler.instance().showGuiScreen(new GUIConfig());
                 if(Minecraft.getMinecraft().isSingleplayer()){
                 	MTS.MTSNet.sendToServer(new PackPacket());
-                	MTSRegistryClient.modelMap.clear();
                 	MTSRegistryClient.loadCustomOBJModels();
                 	RenderMultipart.resetDisplayLists();
                 }

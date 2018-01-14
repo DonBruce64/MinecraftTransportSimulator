@@ -1,17 +1,16 @@
 package minecrafttransportsimulator.systems;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.MTS;
-
 import org.lwjgl.util.vector.Vector3f;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.ResourceLocation;
 
 /**Class responsible for parsing OBJ models into arrays that can be fed to the GPU.
  * Much more versatile than the Forge system.
@@ -19,10 +18,10 @@ import org.lwjgl.util.vector.Vector3f;
  * @author don_bruce
  */
 public final class OBJParserSystem{
-	public static Map<String, Float[][]> parseOBJModel(String modelName){
+	public static Map<String, Float[][]> parseOBJModel(ResourceLocation location){
 		try{
 			Map<String, Float[][]> partMap = new HashMap<String, Float[][]>();
-			BufferedReader reader = new BufferedReader(new FileReader(MTS.assetDir + File.separatorChar + "objmodels" + File.separatorChar + modelName));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(location).getInputStream()));
 			
 			String partName = null;
 			final List<Float[]> vertexList = new ArrayList<Float[]>();

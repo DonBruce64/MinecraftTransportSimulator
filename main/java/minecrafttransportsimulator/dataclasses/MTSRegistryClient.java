@@ -6,18 +6,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.blocks.TileEntityFuelPump;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.rendering.RenderMultipart;
+import minecrafttransportsimulator.rendering.blockrenders.RenderFuelPump;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPropellerBench;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -39,10 +41,9 @@ public final class MTSRegistryClient{
 	public static final Map<String, Map<String, Float[][]>> modelMap = new HashMap<String, Map<String, Float[][]>>();
 
 	public static void loadCustomOBJModels(){
+		modelMap.put("fuelpump", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/fuelpump.obj")));
 		for(String name : PackParserSystem.getRegisteredNames()){
-			if(!modelMap.containsKey(name)){
-				modelMap.put(name, OBJParserSystem.parseOBJModel(PackParserSystem.getPack(name).rendering.modelName));
-			}
+			modelMap.put(name, OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/" + PackParserSystem.getPack(name).rendering.modelName)));
 		}
 	}
 	
@@ -53,6 +54,7 @@ public final class MTSRegistryClient{
 		
 		//Register the TESRs.
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPropellerBench.class, new RenderPropellerBench());
+		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityFuelPump.class, new RenderFuelPump());
 		
 		//Register the Entity rendering classes.
 		RenderingRegistry.registerEntityRenderingHandler(EntityMultipartMoving.class, instance.new MTSRenderingFactory(RenderMultipart.class));
