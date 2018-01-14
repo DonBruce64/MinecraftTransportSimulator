@@ -1,16 +1,21 @@
 package minecrafttransportsimulator.blocks;
 
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
+import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidEvent;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidTank;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
@@ -102,6 +107,16 @@ public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFl
 			return null;
 		}
 	}
+	
+    @Override
+    public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing){
+    	//Only let fluid be interacted with on the bottom face.
+    	if(facing != null && facing.equals(facing.DOWN)){
+    		return capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
+    	}else{
+    		return super.hasCapability(capability, facing);
+    	}
+    }
 	
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){
