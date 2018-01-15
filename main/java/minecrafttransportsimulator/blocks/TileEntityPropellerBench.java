@@ -3,7 +3,6 @@ package minecrafttransportsimulator.blocks;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
 import minecrafttransportsimulator.sounds.BenchSound;
 import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
 import net.minecraft.client.audio.MovingSound;
@@ -59,11 +58,11 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
 	}
 	
 	public void dropPropellerAt(double x, double y, double z){
-		if(propellerOnBench != null){
+		System.out.println("DROP");
+		if(!worldObj.isRemote){
 			worldObj.spawnEntityInWorld(new EntityItem(worldObj, x, y, z, propellerOnBench));
-			propellerOnBench = null;
-			MTS.MTSNet.sendToAll(new TileEntitySyncPacket(this));
 		}
+		propellerOnBench = null;
 	}
 	
 	@Override

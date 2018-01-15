@@ -28,15 +28,17 @@ public class BlockPropellerBench extends MTSBlockRotateable{
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ){
 		if(Math.sqrt(player.getDistanceSq(pos)) < 5){
 			TileEntityPropellerBench bench = (TileEntityPropellerBench) world.getTileEntity(pos);
-			if(!world.isRemote){
-				if(bench.getPropellerOnBench() != null){
-					bench.dropPropellerAt(player.posX, player.posY, player.posZ);
-				}else if(bench.isRunning()){
-					MTS.MTSNet.sendTo(new ChatPacket("interact.failure.propellerbenchworking"), (EntityPlayerMP) player);
-				}
+			if(bench.getPropellerOnBench() != null){
+				bench.dropPropellerAt(player.posX, player.posY, player.posZ);
 			}else{
-				if(!bench.isRunning() && bench.getPropellerOnBench() == null){
-					MTS.proxy.openGUI(bench, player);
+				if(bench.isRunning()){
+					if(!world.isRemote){
+						MTS.MTSNet.sendTo(new ChatPacket("interact.failure.propellerbenchworking"), (EntityPlayerMP) player);
+					}
+				}else{
+					if(world.isRemote){
+						MTS.proxy.openGUI(bench, player);
+					}
 				}
 			}
 		}
@@ -45,9 +47,7 @@ public class BlockPropellerBench extends MTSBlockRotateable{
 	
 	@Override
     public void breakBlock(World world, BlockPos pos, IBlockState state){
-		if(!world.isRemote){
-			((TileEntityPropellerBench) world.getTileEntity(pos)).dropPropellerAt(pos.getX(), pos.getY(), pos.getZ());
-		}
+		((TileEntityPropellerBench) world.getTileEntity(pos)).dropPropellerAt(pos.getX(), pos.getY(), pos.getZ());
 		super.breakBlock(world, pos, state);
     }
 	
