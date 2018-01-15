@@ -22,7 +22,7 @@ import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.items.ItemKey;
 import minecrafttransportsimulator.packets.general.ChatPacket;
-import minecrafttransportsimulator.packets.general.DamagePacket;
+import minecrafttransportsimulator.packets.general.MultipartParentDamagePacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -266,7 +266,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 					this.brokenWindows.add(closestWindowIndex);
 					this.playSound(SoundEvents.BLOCK_GLASS_BREAK, 2.0F, 1.0F);
 				}
-				MTS.MTSNet.sendToAll(new DamagePacket(this.getEntityId(), damage, closestWindowIndex));
+				MTS.MTSNet.sendToAll(new MultipartParentDamagePacket(this.getEntityId(), damage, closestWindowIndex));
 			}
 		}
 		return true;

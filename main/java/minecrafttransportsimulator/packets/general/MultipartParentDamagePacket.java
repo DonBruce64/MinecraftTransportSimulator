@@ -8,14 +8,14 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class DamagePacket implements IMessage{
+public class MultipartParentDamagePacket implements IMessage{
 	private int id;
 	private float damage;
 	private byte windowBroken;
 
-	public DamagePacket() {}
+	public MultipartParentDamagePacket() {}
 	
-	public DamagePacket(int id, float damage, byte windowBroken){
+	public MultipartParentDamagePacket(int id, float damage, byte windowBroken){
 		this.id = id;
 		this.damage = damage;
 		this.windowBroken = windowBroken;
@@ -35,9 +35,9 @@ public class DamagePacket implements IMessage{
 		buf.writeByte(this.windowBroken);
 	}
 
-	public static class Handler implements IMessageHandler<DamagePacket, IMessage>{
+	public static class Handler implements IMessageHandler<MultipartParentDamagePacket, IMessage>{
 		@Override
-		public IMessage onMessage(final DamagePacket message, final MessageContext ctx){
+		public IMessage onMessage(final MultipartParentDamagePacket message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){

@@ -42,7 +42,7 @@ import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.general.ChatPacket;
-import minecrafttransportsimulator.packets.general.DamagePacket;
+import minecrafttransportsimulator.packets.general.MultipartParentDamagePacket;
 import minecrafttransportsimulator.packets.general.EntityClientRequestDataPacket;
 import minecrafttransportsimulator.packets.general.FlatWheelPacket;
 import minecrafttransportsimulator.packets.general.FuelPumpFillDrainPacket;
@@ -208,7 +208,7 @@ public final class MTSRegistry{
 	
 	private static void initPackets(){
 		registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
-		registerPacket(DamagePacket.class, DamagePacket.Handler.class, true, false);
+		registerPacket(MultipartParentDamagePacket.class, MultipartParentDamagePacket.Handler.class, true, false);
 		registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
 		registerPacket(FlatWheelPacket.class, FlatWheelPacket.Handler.class, true, false);
 		registerPacket(FuelPumpFillDrainPacket.class, FuelPumpFillDrainPacket.Handler.class, true, false);
