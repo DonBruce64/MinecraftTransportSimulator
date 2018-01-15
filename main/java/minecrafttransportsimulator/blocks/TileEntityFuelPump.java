@@ -4,12 +4,13 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSTileEntity;
-import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
+import minecrafttransportsimulator.packets.general.FuelPumpFillDrainPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidEvent;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -31,7 +32,7 @@ public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFl
 	
 	@Override
 	public void update(){
-		//System.out.println(tankInfo.fluid != null ? tankInfo.fluid.amount : 0);
+		if(worldObj.getTotalWorldTime()%20 == 0)System.out.println(" " + (tankInfo.fluid != null ? tankInfo.fluid.amount : 0));
 	}
 
 	@Override
@@ -42,6 +43,10 @@ public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFl
 	@Override
 	public FluidStack getFluid(){
 		return tankInfo.fluid;
+	}
+	
+	public void setFluid(Fluid fluid){
+		tankInfo = new FluidTankInfo(new FluidStack(fluid, 0), emptyTankInfo.capacity);
 	}
 
 	@Override
@@ -67,11 +72,11 @@ public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFl
 			int amountToFill = (int) Math.min(amountAbleToFill, stack.amount*fuelFactor);
 			if(doFill){
 				if(tankInfo.fluid == null){
-					tankInfo = new FluidTankInfo(new FluidStack(stack.getFluid(), 0), emptyTankInfo.capacity);
+					this.setFluid(stack.getFluid());
 				}
 				tankInfo.fluid.amount += amountToFill;
 				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(tankInfo.fluid, worldObj, getPos(), this, amountToFill));
-				MTS.MTSNet.sendToAll(new TileEntitySyncPacket(this));
+				MTS.MTSNet.sendToAll(new FuelPumpFillDrainPacket(this, new FluidStack(tankInfo.fluid, amountToFill)));
 			}
 			return amountToFill;
 		}else{
@@ -85,14 +90,14 @@ public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFl
 			if(doDrain){
 				tankInfo.fluid.amount -= maxDrain;
 				FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(tankInfo.fluid, worldObj, getPos(), this, maxDrain));
-				MTS.MTSNet.sendToAll(new TileEntitySyncPacket(this));
+				MTS.MTSNet.sendToAll(new FuelPumpFillDrainPacket(this, new FluidStack(tankInfo.fluid, -maxDrain)));
 			}
 			return new FluidStack(tankInfo.fluid, maxDrain);
 		}else{
 			FluidStack returnedFluid = tankInfo.fluid;
 			if(doDrain){
 				FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(returnedFluid, worldObj, getPos(), this, returnedFluid.amount));
-				MTS.MTSNet.sendToAll(new TileEntitySyncPacket(this));
+				MTS.MTSNet.sendToAll(new FuelPumpFillDrainPacket(this, new FluidStack(returnedFluid, -returnedFluid.amount)));
 				this.tankInfo = emptyTankInfo;
 			}
 			return returnedFluid;
