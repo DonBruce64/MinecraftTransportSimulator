@@ -11,7 +11,7 @@ import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.guis.GUIConfig;
 import minecrafttransportsimulator.guis.GUICredits;
-import minecrafttransportsimulator.packets.general.PackPacket;
+import minecrafttransportsimulator.packets.general.PackReloadPacket;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import net.minecraft.client.Minecraft;
@@ -205,7 +205,7 @@ public final class ClientEventSystem{
             if(minecraft.currentScreen == null){
             	FMLCommonHandler.instance().showGuiScreen(new GUIConfig());
                 if(Minecraft.getMinecraft().isSingleplayer()){
-                	MTS.MTSNet.sendToServer(new PackPacket());
+                	MTS.MTSNet.sendToServer(new PackReloadPacket());
                 	MTSRegistryClient.loadCustomOBJModels();
                 	RenderMultipart.resetDisplayLists();
                 }
