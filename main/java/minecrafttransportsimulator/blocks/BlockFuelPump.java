@@ -49,11 +49,15 @@ public class BlockFuelPump extends MTSBlockRotateable{
             	if(handlerBucket != null){
             		if(amountToFill <= stackToAdd.amount){
             			pump.fill(stackToAdd, true);
-            			handlerBucket.drain(stackToAdd, true);
+            			if(!player.isCreative()){
+            				handlerBucket.drain(stackToAdd, true);
+            			}
             		}
             	}else{
             		pump.fill(stackToAdd, true);
-            		handlerStack.drain(new FluidStack(stackToAdd.getFluid(), amountToFill), true);
+            		if(!player.isCreative()){
+            			handlerStack.drain(new FluidStack(stackToAdd.getFluid(), amountToFill), true);
+        			}
             	}
     		}
 		}
