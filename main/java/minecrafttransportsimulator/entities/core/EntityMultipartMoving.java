@@ -404,7 +404,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			//Now do pitch.
 			//Make sure to take into account yaw as it's already been checked.
 			//Note that pitch is special in that it can add a slight Y to multiparts if the multipart is
-			//trying to pitch up and ground devices at Z=0 are blocking it.  This needed to allow planes to
+			//trying to pitch up and rear ground devices are blocking it.  This needed to allow planes to
 			//rotate on their landing gear.
 			for(EntityMultipartChild child : childArray){
 				while(motionPitch != 0){
