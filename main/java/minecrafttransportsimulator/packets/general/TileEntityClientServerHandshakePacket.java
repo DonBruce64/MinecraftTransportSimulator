@@ -12,19 +12,19 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class TileEntitySyncPacket implements IMessage{
+public class TileEntityClientServerHandshakePacket implements IMessage{
 	private int x;
 	private int y;
 	private int z;
 	private NBTTagCompound tag = new NBTTagCompound();
 
-	public TileEntitySyncPacket() {}
+	public TileEntityClientServerHandshakePacket() {}
 	
-	public TileEntitySyncPacket(TileEntity tile){
+	public TileEntityClientServerHandshakePacket(TileEntity tile, NBTTagCompound tag){
 		this.x = tile.getPos().getX();
 		this.y = tile.getPos().getY();
 		this.z = tile.getPos().getZ();
-		tile.writeToNBT(tag);
+		this.tag = tag;
 	}
 	
 	@Override
@@ -43,22 +43,21 @@ public class TileEntitySyncPacket implements IMessage{
 		ByteBufUtils.writeTag(buf, tag);
 	}
 
-	public static class Handler implements IMessageHandler<TileEntitySyncPacket, IMessage>{
-		public IMessage onMessage(final TileEntitySyncPacket message, final MessageContext ctx){
+	public static class Handler implements IMessageHandler<TileEntityClientServerHandshakePacket, IMessage>{
+		public IMessage onMessage(final TileEntityClientServerHandshakePacket message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					TileEntity tile;
 					if(ctx.side.isServer()){
-						tile = ctx.getServerHandler().playerEntity.worldObj.getTileEntity(new BlockPos(message.x, message.y, message.z));
+						TileEntity tile = ctx.getServerHandler().playerEntity.worldObj.getTileEntity(new BlockPos(message.x, message.y, message.z));
+						if(tile != null){
+							MTS.MTSNet.sendTo(new TileEntityClientServerHandshakePacket(tile, tile.writeToNBT(new NBTTagCompound())), ctx.getServerHandler().playerEntity);
+						}
 					}else{
-						tile = Minecraft.getMinecraft().theWorld.getTileEntity(new BlockPos(message.x, message.y, message.z));
-					}
-					if(tile != null){
-						tile.readFromNBT(message.tag);
-					}
-					if(ctx.side.isServer()){
-						MTS.MTSNet.sendToAll(message);
+						TileEntity tile = Minecraft.getMinecraft().theWorld.getTileEntity(new BlockPos(message.x, message.y, message.z));
+						if(tile != null){
+							tile.readFromNBT(message.tag);
+						}
 					}
 				}
 			});

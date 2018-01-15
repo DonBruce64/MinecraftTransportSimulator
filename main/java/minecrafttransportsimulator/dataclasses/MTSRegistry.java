@@ -49,10 +49,10 @@ import minecrafttransportsimulator.packets.general.FuelPumpFillDrainPacket;
 import minecrafttransportsimulator.packets.general.InstrumentAddRemovePacket;
 import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
 import minecrafttransportsimulator.packets.general.PackReloadPacket;
+import minecrafttransportsimulator.packets.general.PropellerBenchStartPacket;
 import minecrafttransportsimulator.packets.general.ServerDataPacket;
 import minecrafttransportsimulator.packets.general.ServerSyncPacket;
-import minecrafttransportsimulator.packets.general.TileEntityClientRequestDataPacket;
-import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
+import minecrafttransportsimulator.packets.general.TileEntityClientServerHandshakePacket;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.block.Block;
@@ -215,10 +215,10 @@ public final class MTSRegistry{
 		registerPacket(InstrumentAddRemovePacket.class, InstrumentAddRemovePacket.Handler.class, true, true);
 		registerPacket(ManualPageUpdatePacket.class, ManualPageUpdatePacket.Handler.class, false, true);
 		registerPacket(PackReloadPacket.class, PackReloadPacket.Handler.class, true, true);
+		registerPacket(PropellerBenchStartPacket.class, PropellerBenchStartPacket.Handler.class, true, true);
 		registerPacket(ServerDataPacket.class, ServerDataPacket.Handler.class, true, false);
 		registerPacket(ServerSyncPacket.class, ServerSyncPacket.Handler.class, true, false);
-		registerPacket(TileEntityClientRequestDataPacket.class, TileEntityClientRequestDataPacket.Handler.class, false, true);
-		registerPacket(TileEntitySyncPacket.class, TileEntitySyncPacket.Handler.class, true, true);
+		registerPacket(TileEntityClientServerHandshakePacket.class, TileEntityClientServerHandshakePacket.Handler.class, true, true);
 		
 		registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
 		registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);

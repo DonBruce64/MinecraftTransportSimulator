@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.baseclasses;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.packets.general.TileEntityClientRequestDataPacket;
+import minecrafttransportsimulator.packets.general.TileEntityClientServerHandshakePacket;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 
@@ -12,7 +12,7 @@ public abstract class MTSTileEntity extends TileEntity{
     public void validate(){
 		super.validate();
         if(worldObj.isRemote){
-        	MTS.MTSNet.sendToServer(new TileEntityClientRequestDataPacket(this));
+        	MTS.MTSNet.sendToServer(new TileEntityClientServerHandshakePacket(this, null));
         }
     }
 	

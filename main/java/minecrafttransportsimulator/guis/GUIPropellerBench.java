@@ -3,11 +3,12 @@ package minecrafttransportsimulator.guis;
 import java.awt.Color;
 import java.io.IOException;
 
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.packets.general.TileEntitySyncPacket;
-import net.minecraft.client.Minecraft;
+import minecrafttransportsimulator.packets.general.PropellerBenchStartPacket;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
@@ -18,8 +19,6 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-
-import org.lwjgl.opengl.GL11;
 
 public class GUIPropellerBench extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/long_blank.png");
@@ -174,11 +173,11 @@ public class GUIPropellerBench extends GuiScreen{
 			bench.diameter-=5;
 		}else if(buttonClicked.equals(startButton)){
 			bench.timeOperationFinished = bench.getWorld().getTotalWorldTime() + 1000;
-			MTS.MTSNet.sendToServer(new TileEntitySyncPacket(bench));
+			MTS.MTSNet.sendToServer(new PropellerBenchStartPacket(bench));
 			mc.thePlayer.closeScreen();
 			return;
 		}
-		MTS.MTSNet.sendToServer(new TileEntitySyncPacket(bench));
+		MTS.MTSNet.sendToServer(new PropellerBenchStartPacket(bench));
 	}
 	
 	private void getPlayerMaterials(){
