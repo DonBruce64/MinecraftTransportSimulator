@@ -64,4 +64,9 @@ public class BlockFuelPump extends MTSBlockRotateable{
 	public MTSTileEntity getTileEntity(){
 		return new TileEntityFuelPump();
 	}
+	
+	@Override
+	protected boolean canRotateDiagonal(){
+		return false;
+	}
 }

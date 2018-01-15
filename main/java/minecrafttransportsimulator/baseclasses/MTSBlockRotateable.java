@@ -23,7 +23,11 @@ public abstract class MTSBlockRotateable extends BlockContainer{
         while(yaw < 0){
             yaw += 360;
         }
-        ((MTSTileEntity) world.getTileEntity(pos)).rotation = Math.round(yaw%360/45) == 8 ? 0 : (byte) Math.round(yaw%360/45);
+        if(this.canRotateDiagonal()){
+        	((MTSTileEntity) world.getTileEntity(pos)).rotation = Math.round(yaw%360/45) == 8 ? 0 : (byte) Math.round(yaw%360/45);
+        }else{
+        	((MTSTileEntity) world.getTileEntity(pos)).rotation = (byte) (Math.round(yaw%360/90) == 8 ? 0 : Math.round(yaw%360/90)*2);
+        }
     }
 
 	@Override
@@ -32,6 +36,8 @@ public abstract class MTSBlockRotateable extends BlockContainer{
 	}
 
     public abstract MTSTileEntity getTileEntity();
+    
+    protected abstract boolean canRotateDiagonal();
     
     @Override
     @SuppressWarnings("deprecation")

@@ -3,8 +3,8 @@ package minecrafttransportsimulator.blocks;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.baseclasses.MTSBlockRotateable;
+import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -54,5 +54,10 @@ public class BlockPropellerBench extends MTSBlockRotateable{
 	@Override
 	public MTSTileEntity getTileEntity(){
 		return new TileEntityPropellerBench();
+	}
+	
+	@Override
+	protected boolean canRotateDiagonal(){
+		return false;
 	}
 }
