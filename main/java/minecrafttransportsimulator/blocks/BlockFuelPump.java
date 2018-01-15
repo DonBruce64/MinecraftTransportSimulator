@@ -43,23 +43,25 @@ public class BlockFuelPump extends MTSBlockRotateable{
     			stackToAdd = handlerStack.getFluid();
         	}
         	
-        	TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(pos); 
-        	int amountToFill = pump.fill(stackToAdd, false);
-    		if(amountToFill > 0){
-            	if(handlerBucket != null){
-            		if(amountToFill <= stackToAdd.amount){
-            			pump.fill(stackToAdd, true);
-            			if(!player.isCreative()){
-            				handlerBucket.drain(stackToAdd, true);
-            			}
-            		}
-            	}else{
-            		pump.fill(stackToAdd, true);
-            		if(!player.isCreative()){
-            			handlerStack.drain(new FluidStack(stackToAdd.getFluid(), amountToFill), true);
-        			}
-            	}
-    		}
+        	if(stackToAdd != null){
+	        	TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(pos); 
+	        	int amountToFill = pump.fill(stackToAdd, false);
+	    		if(amountToFill > 0){
+	            	if(handlerBucket != null){
+	            		if(amountToFill <= stackToAdd.amount){
+	            			pump.fill(stackToAdd, true);
+	            			if(!player.isCreative()){
+	            				handlerBucket.drain(stackToAdd, true);
+	            			}
+	            		}
+	            	}else{
+	            		pump.fill(stackToAdd, true);
+	            		if(!player.isCreative()){
+	            			handlerStack.drain(new FluidStack(stackToAdd.getFluid(), amountToFill), true);
+	        			}
+	            	}
+	    		}
+        	}
 		}
 		return true;
 	}
