@@ -58,7 +58,6 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
 	}
 	
 	public void dropPropellerAt(double x, double y, double z){
-		System.out.println("DROP");
 		if(!worldObj.isRemote){
 			worldObj.spawnEntityInWorld(new EntityItem(worldObj, x, y, z, propellerOnBench));
 		}
