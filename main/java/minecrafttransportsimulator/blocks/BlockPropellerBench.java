@@ -58,6 +58,6 @@ public class BlockPropellerBench extends MTSBlockRotateable{
 	
 	@Override
 	protected boolean canRotateDiagonal(){
-		return false;
+		return true;
 	}
 }
