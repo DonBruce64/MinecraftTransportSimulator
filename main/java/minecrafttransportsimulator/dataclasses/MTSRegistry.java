@@ -46,7 +46,7 @@ import minecrafttransportsimulator.packets.general.DamagePacket;
 import minecrafttransportsimulator.packets.general.EntityClientRequestDataPacket;
 import minecrafttransportsimulator.packets.general.FlatWheelPacket;
 import minecrafttransportsimulator.packets.general.FuelPumpFillDrainPacket;
-import minecrafttransportsimulator.packets.general.InstrumentPacket;
+import minecrafttransportsimulator.packets.general.InstrumentAddRemovePacket;
 import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
 import minecrafttransportsimulator.packets.general.PackReloadPacket;
 import minecrafttransportsimulator.packets.general.ServerDataPacket;
@@ -212,7 +212,7 @@ public final class MTSRegistry{
 		registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
 		registerPacket(FlatWheelPacket.class, FlatWheelPacket.Handler.class, true, false);
 		registerPacket(FuelPumpFillDrainPacket.class, FuelPumpFillDrainPacket.Handler.class, true, false);
-		registerPacket(InstrumentPacket.class, InstrumentPacket.Handler.class, true, true);
+		registerPacket(InstrumentAddRemovePacket.class, InstrumentAddRemovePacket.Handler.class, true, true);
 		registerPacket(ManualPageUpdatePacket.class, ManualPageUpdatePacket.Handler.class, false, true);
 		registerPacket(PackReloadPacket.class, PackReloadPacket.Handler.class, true, true);
 		registerPacket(ServerDataPacket.class, ServerDataPacket.Handler.class, true, false);

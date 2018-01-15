@@ -13,15 +13,15 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class InstrumentPacket implements IMessage{
+public class InstrumentAddRemovePacket implements IMessage{
 	private int id;
 	private int player;
 	private byte instrumentToChange;
 	private byte instrumentToChangeTo;
 
-	public InstrumentPacket() {}
+	public InstrumentAddRemovePacket() {}
 	
-	public InstrumentPacket(int id, int player, byte instrumentToChange, byte instrumentToChangeTo){
+	public InstrumentAddRemovePacket(int id, int player, byte instrumentToChange, byte instrumentToChangeTo){
 		this.id=id;
 		this.player=player;
 		this.instrumentToChange=instrumentToChange;
@@ -44,8 +44,8 @@ public class InstrumentPacket implements IMessage{
 		buf.writeByte(instrumentToChangeTo);
 	}
 
-	public static class Handler implements IMessageHandler<InstrumentPacket, IMessage> {
-		public IMessage onMessage(final InstrumentPacket message, final MessageContext ctx){
+	public static class Handler implements IMessageHandler<InstrumentAddRemovePacket, IMessage> {
+		public IMessage onMessage(final InstrumentAddRemovePacket message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
