@@ -413,7 +413,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 					if(getChildCollisions(child, offsetChildBox).isEmpty()){
 						break;
 					}else if(motionPitch < 0){
-						if(child.offsetZ == 0 && child instanceof EntityGroundDevice){
+						if(child.offsetZ <= 0 && child instanceof EntityGroundDevice){
 							float yBoost = 0;
 							for(AxisAlignedBB box : getChildCollisions(child, offsetChildBox)){
 								if(box.maxY > offsetChildBox.minY + yBoost){
