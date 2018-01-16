@@ -4,8 +4,11 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSTileEntity;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.packets.general.FuelPumpFillDrainPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
@@ -20,9 +23,14 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
+import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 
 public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFluidHandler, ITickable{
-    private FluidTankInfo tankInfo;
+    public String connectedVehicleUUID = "";
+    public EntityMultipartVehicle connectedVehicle;
+    public int totalTransfered;
+    
+	private FluidTankInfo tankInfo;
     private FluidTankInfo emptyTankInfo = new FluidTankInfo(null, 15000);
 	    
 	public TileEntityFuelPump(){
@@ -32,7 +40,46 @@ public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFl
 	
 	@Override
 	public void update(){
-		if(worldObj.getTotalWorldTime()%20 == 0)System.out.println(" " + (tankInfo.fluid != null ? tankInfo.fluid.amount : 0));
+		if(!connectedVehicleUUID.equals("")){
+			if(connectedVehicle != null){
+				if(connectedVehicle.pack.motorized.fuelCapacity - connectedVehicle.fuel >= 10){
+					if(this.tankInfo.fluid != null){
+						int fuelToFill = Math.min(this.tankInfo.fluid.amount, 10);
+						this.tankInfo.fluid.amount -= fuelToFill;
+						connectedVehicle.fuel += fuelToFill;
+						totalTransfered += fuelToFill;
+						if(this.tankInfo.fluid.amount == 0){
+							this.connectedVehicle = null;
+							this.connectedVehicleUUID = "";
+							this.tankInfo = emptyTankInfo;
+							if(!worldObj.isRemote){
+								MTS.MTSNet.sendToAllAround(new ChatPacket("interact.fuelpump.empty"), new TargetPoint(worldObj.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
+							}
+						}
+					}else{
+						this.connectedVehicle = null;
+						this.connectedVehicleUUID = "";
+						if(!worldObj.isRemote){
+							MTS.MTSNet.sendToAllAround(new ChatPacket("interact.fuelpump.empty"), new TargetPoint(worldObj.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
+						}
+					}
+				}else{
+					this.connectedVehicle = null;
+					this.connectedVehicleUUID = "";
+					if(!worldObj.isRemote){
+						MTS.MTSNet.sendToAllAround(new ChatPacket("interact.fuelpump.complete"), new TargetPoint(worldObj.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
+					}
+				}
+			}else{
+				for(Entity entity : worldObj.loadedEntityList){
+					if(entity instanceof EntityMultipartVehicle){
+						if(((EntityMultipartVehicle) entity).UUID.equals(this.connectedVehicleUUID)){
+							connectedVehicle = (EntityMultipartVehicle) entity;
+						}
+					}
+				}
+			}
+		}
 	}
 
 	@Override
@@ -126,6 +173,10 @@ public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFl
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
+        this.totalTransfered = tagCompound.getInteger("totalTransfered");
+        if(!tagCompound.getString("connectedVehicleUUID").isEmpty()){
+        	this.connectedVehicleUUID = tagCompound.getString("connectedVehicleUUID");
+        }
         if(!tagCompound.hasKey("Empty")){
         	this.tankInfo = new FluidTankInfo(FluidStack.loadFluidStackFromNBT(tagCompound), emptyTankInfo.capacity);
         }else{
@@ -136,6 +187,10 @@ public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFl
 	@Override
     public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
+        tagCompound.setInteger("totalTransfered", this.totalTransfered);
+        if(!this.connectedVehicleUUID.equals("")){
+        	tagCompound.setString("connectedVehicleUUID", this.connectedVehicleUUID);
+        }
         if(tankInfo.fluid != null){
         	tankInfo.fluid.writeToNBT(tagCompound);
         }else{
