@@ -23,8 +23,8 @@ interact.failure.vehiclelocked=This vehicle is locked!
 interact.failure.vehicleowned=This vehicle is locked!
 interact.failure.propellertoobig=This propeller is too big for this engine!
 interact.failure.propellerbenchworking=This propeller bench is currently busy.
-interact.failure.gaspumptoofar=The gas pump is too far away from the vehicle.  The pump should be no less than 16 blocks away.
-interact.failure.gaspumpwrongside=The gas pump is on the wrong side of the vehicle.  The pump should be on the right. 
+interact.failure.fuelpumptoofar=The fuel pump is too far away from the vehicle.  The pump should be no less than 16 blocks away.
+interact.failure.fuelpumpwrongside=The fuel pump is on the wrong side of the vehicle.  The pump should be on the right. 
 
 input.key.mod=Mod
 input.key.camlock=CamLock
