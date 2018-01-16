@@ -17,14 +17,18 @@ interact.key.info.unown=This vehicle is now no longer owned!
 interact.key.failure.notowner=Only the owner of this vehicle may make new keys!
 interact.key.failure.wrongkey=This key does not go to this vehicle!
 interact.key.failure.alreadyowned=is the owner of this vehicle, you cannot change ownership!
+
+interact.fuelpump.connect=Fuel pump connected and pumping.
+interact.fuelpump.complete=Vehicle is full, disconnecting.
+interact.fuelpump.empty=Fuel pump is empty, disconnecting.
+interact.fuelpump.disconnect=Disconnecting and stopping pumping.
+interact.fuelpump.toofar=The fuel pump is too far away from the vehicle.  The pump should be no less than 16 blocks away.
  
 interact.failure.seattaken=This seat is taken!
 interact.failure.vehiclelocked=This vehicle is locked!
 interact.failure.vehicleowned=This vehicle is locked!
 interact.failure.propellertoobig=This propeller is too big for this engine!
 interact.failure.propellerbenchworking=This propeller bench is currently busy.
-interact.failure.fuelpumptoofar=The fuel pump is too far away from the vehicle.  The pump should be no less than 16 blocks away.
-interact.failure.fuelpumpwrongside=The fuel pump is on the wrong side of the vehicle.  The pump should be on the right. 
 
 input.key.mod=Mod
 input.key.camlock=CamLock
@@ -188,7 +192,7 @@ manual.vehicle_assembly.2=The only exception to this rule is, once again, propel
 manual.vehicle_assembly.3=Vehicles may not be worked on from inside them for obvious reasons.  If you were expecting to repair a failing engine mid-flight you're out of luck.  It is not recommended that you work on vehicles in close quarters as they have been known to bind in their collision and possibly explode.  Please plan your garages and hangars to take this into account.
 
 manual.fueling.title=Fueling
-manual.fueling.1=Vehicles are fueled from the fuel pump block.  Just pull up to a fuel pump and click it, then the vehicle you want to fuel.  If the connection is successful a hose will appear from the fuel pump to the vehicle.  The pump will then transfer fuel at a rate of 10 mb/t.  The pump itself has a 15000mb reservoir and can be filled directly from liquid-holding containers or from pipe systems compatible with Forge liquids.
+manual.fueling.1=Vehicles are fueled from the fuel pump block.  Just pull up to a fuel pump and click it.  The block will automatically connect to the nearest vehicle.  If the connection is successful a chat message will appear.  The pump will then transfer fuel at a rate of 10 mb/t.  The pump itself has a 15000mb reservoir and can be filled directly from liquid-holding containers or from pipe systems compatible with Forge liquids.
 manual.fueling.2=Fuels are determined by the settings in the config file.  Lava is set as fuel by default, but other liquids can be added to the config by running MTS once with them installed.  Fuel is determined by a number that represents how much the fuel fills the tanks of vehicles (all new liquids are set to 0.0 by default).  Note that the value is NOT potency of the fuel; adjust fuel potencey using the FuelUsageFactor in the config file.
 
 manual.controls.title=Controls
