@@ -1,0 +1,7 @@
+{
+    "textures": {
+        "texture": "mts:items/fuelpump",
+        "particle": "mts:items/fuelpump"
+    },
+    "elements": []
+}
