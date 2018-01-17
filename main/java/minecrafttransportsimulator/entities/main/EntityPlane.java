@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.entities.main;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
@@ -16,9 +13,7 @@ import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 
 
@@ -63,29 +58,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 	private double elevatorTorque;//kg*m^2/ticks^2
 	private double rudderTorque;//kg*m^2/ticks^2
 	private double gravitationalTorque;//kg*m^2/ticks^2
-	
-	private double xCollisionDepth;
-	private double yCollisionDepth;
-	private double zCollisionDepth;
-	private double originalMotionYaw;
-	private double originalMotionPitch;
-	private double originalMotionRoll;
-	private double yawChildXOffset;
-	private double yawChildZOffset;
-	private double pitchChildOffset;
-	private double rollChildOffset;
-	private double prevYawXChildOffset;
-	private double prevYawZChildOffset;
-	private double prevPitchChildOffset;
-	private double prevRollChildOffset;
-
-	private Entity rider;
-	private AxisAlignedBB newChildBox;
-	private AxisAlignedBB collidingBox;
-	private MTSVector offset;
-	
-	private List<AxisAlignedBB> collidingBoxes = new ArrayList<AxisAlignedBB>();
-	
+			
 	public EntityPlane(World world){
 		super(world);
 	}
