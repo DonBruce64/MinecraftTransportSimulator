@@ -78,22 +78,24 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 	@Override
 	public void doRender(EntityMultipartMoving entity, double x, double y, double z, float entityYaw, float partialTicks){
 		boolean didRender = false;
-		if(lastRenderPass.containsKey(entity)){
-			//Did we render this tick?
-			if(lastRenderTick.get(entity) == entity.worldObj.getTotalWorldTime() && lastRenderPartial.get(entity) == partialTicks){
-				//If we rendered last on a pass of 0 or 1 this tick, don't re-render some things.
-				if(lastRenderPass.get(entity) != -1 && MinecraftForgeClient.getRenderPass() == -1){
-					render(entity, Minecraft.getMinecraft().thePlayer, partialTicks, true);
-					didRender = true;
+		if(entity.pack != null){ 
+			if(lastRenderPass.containsKey(entity)){
+				//Did we render this tick?
+				if(lastRenderTick.get(entity) == entity.worldObj.getTotalWorldTime() && lastRenderPartial.get(entity) == partialTicks){
+					//If we rendered last on a pass of 0 or 1 this tick, don't re-render some things.
+					if(lastRenderPass.get(entity) != -1 && MinecraftForgeClient.getRenderPass() == -1){
+						render(entity, Minecraft.getMinecraft().thePlayer, partialTicks, true);
+						didRender = true;
+					}
 				}
 			}
+			if(!didRender){
+				render(entity, Minecraft.getMinecraft().thePlayer, partialTicks, false);
+			}
+			lastRenderPass.put(entity, (byte) MinecraftForgeClient.getRenderPass());
+			lastRenderTick.put(entity, entity.worldObj.getTotalWorldTime());
+			lastRenderPartial.put(entity, partialTicks);
 		}
-		if(entity.pack != null && !didRender){
-			render(entity, Minecraft.getMinecraft().thePlayer, partialTicks, false);
-		}
-		lastRenderPass.put(entity, (byte) MinecraftForgeClient.getRenderPass());
-		lastRenderTick.put(entity, entity.worldObj.getTotalWorldTime());
-		lastRenderPartial.put(entity, partialTicks);
 	}
 	
 	public static void resetDisplayLists(){
