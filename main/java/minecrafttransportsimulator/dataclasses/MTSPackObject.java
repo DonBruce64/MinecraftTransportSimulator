@@ -8,6 +8,7 @@ public class MTSPackObject{
 	public PackGeneralConfig general;
     public PackMotorizedConfig motorized;
     public PackPlane plane;
+    public PackCar car;
     public List<PackPart> parts = new ArrayList<PackPart>();
     public List<PackCollisionBox> collision = new ArrayList<PackCollisionBox>();
     public PackRenderingConfig rendering;
@@ -46,6 +47,12 @@ public class MTSPackObject{
         public float rudderArea;
         public float elevatorArea;
         public float defaultElevatorAngle;
+    }
+    
+    public class PackCar{
+        public boolean is4WD;
+        public float dragCoefficient;
+        public String hornSound;
     }
     
     public class PackPart{
