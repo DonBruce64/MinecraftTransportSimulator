@@ -51,22 +51,23 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		super.onUpdate();
 		if(!linked){return;}
 		moving = (EntityMultipartMoving) this.parent;
-		if(worldObj.isRemote){
-			if(this.isOnGround()){
-				if(angularVelocity/(moving.velocity/wheelDiameter) < 0.25 && moving.velocity > 0.1){
-					if(worldObj.getBlockState(this.getPosition().down()).getBlockHardness(worldObj, this.getPosition().down()) >= 1.5){
-						landedThisTick = true;
-					}
-				}
-				angularVelocity = (float) (moving.velocity/wheelDiameter);
-			}else{
-				if(moving.brakeOn || moving.parkingBrakeOn){
-					angularVelocity = 0;
-				}else if(angularVelocity>0){
-					angularVelocity = (float) Math.max(angularVelocity - 0.05, 0);
+		if(this.isOnGround()){
+			if(angularVelocity/(moving.velocity/wheelDiameter) < 0.25 && moving.velocity > 0.1){
+				if(worldObj.getBlockState(this.getPosition().down()).getBlockHardness(worldObj, this.getPosition().down()) >= 1.5){
+					landedThisTick = true;
 				}
 			}
-			angularPosition += angularVelocity;
+			angularVelocity = (float) (moving.velocity/wheelDiameter);
+		}else{
+			if(moving.brakeOn || moving.parkingBrakeOn){
+				angularVelocity = 0;
+			}else if(angularVelocity>0){
+				angularVelocity = (float) Math.max(angularVelocity - 0.05, 0);
+			}
+		}
+		angularPosition += angularVelocity;
+		
+		if(worldObj.isRemote){
 			MTS.proxy.updateSFXEntity(this, worldObj);
 		}
 	}
