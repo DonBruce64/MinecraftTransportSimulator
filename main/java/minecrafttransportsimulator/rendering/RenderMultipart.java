@@ -483,7 +483,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				GL11.glRotatef(light.lightRot[2], 0, 0, 0);
 				GL11.glScalef(16F, 16F, 16F);
 				GL11.glDepthMask(false);
-				byte lightReps = (byte) (!lastRenderPass.containsKey(vehicle) || lastRenderPass.get(vehicle) != -1 ? (byte) (light.brightness/20F) : ((byte) (light.brightness/20F))*2 + 1);
+				byte lightReps = (byte) ((light.brightness/20F)*2 + 1);
 				for(byte i=0; i<=lightReps; ++i){
 		    		drawCone(light.beamDiameter, light.beamDistance, false);
 		    	}
