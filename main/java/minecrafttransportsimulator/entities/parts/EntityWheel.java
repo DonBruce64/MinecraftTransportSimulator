@@ -21,7 +21,7 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 	public boolean isFlat;
 	public float angularPosition;
 	public float angularVelocity;
-	protected float wheelDiameter;
+	public float wheelDiameter;
 	private boolean landedThisTick = false;
 	private EntityMultipartMoving moving;
 	
