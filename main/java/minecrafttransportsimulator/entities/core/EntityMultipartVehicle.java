@@ -157,7 +157,9 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	 * 4 is hand starter on.
 	 * 5 is a backfire from a high-hour engine.
 	 * 6 is start.
-	 * 7 is stall.
+	 * 7 is out of fuel.
+	 * 8 is stalled due to low RPM.
+	 * 9 is drown.
 	 */
 	public void handleEngineSignal(EntityEngine engine, byte signal){
 		switch (signal){
@@ -168,7 +170,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 			case 4: engine.handStartEngine(); break;
 			case 5: engine.backfireEngine(); break;
 			case 6: engine.startEngine(); break;
-			case 7: engine.stallEngine(); break;
+			default: engine.stallEngine((byte) (signal - 6)); break;
 		}
 	}
 	

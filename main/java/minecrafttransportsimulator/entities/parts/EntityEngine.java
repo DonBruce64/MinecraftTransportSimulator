@@ -206,13 +206,11 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			vehicle.fuel -= fuelFlow;
 			if(!worldObj.isRemote){
 				if(vehicle.fuel == 0 && fuelConsumption != 0){
-					internalFuel = 100;
-					stallEngine();
+					stallEngine((byte) 1);
 				}else if(RPM < engineStallRPM){
-					internalFuel = 100;
-					stallEngine();
+					stallEngine((byte) 2);
 				}else if(worldObj.getBlockState(getPosition()).getMaterial().isLiquid()){
-					stallEngine();
+					stallEngine((byte) 3);
 				}
 			}
 		}else{
@@ -230,7 +228,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			//Internal fuel is used for engine sound wind down.  NOT used for power.
 			if(internalFuel > 0){
 				--internalFuel;
-				if(RPM < 1000){
+				if(RPM < 500){
 					internalFuel = 0;
 				}
 			}
@@ -325,7 +323,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		}
 	}
 	
-	public void stallEngine(){
+	public void stallEngine(byte engineCodeOffset){
 		if(state.equals(EngineStates.RUNNING)){
 			state = EngineStates.MAGNETO_ON_STARTERS_OFF;
 		}else if(state.equals(EngineStates.RUNNING_ES_ON)){
@@ -334,8 +332,14 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			state = EngineStates.MAGNETO_ON_HS_ON;
 		}
 		if(!worldObj.isRemote){
-			MTS.MTSNet.sendToAll(new EnginePacket(this.parent.getEntityId(), this.getEntityId(), (byte) 7));
+			MTS.MTSNet.sendToAll(new EnginePacket(this.parent.getEntityId(), this.getEntityId(), (byte) (6 + engineCodeOffset)));
 		}else{
+			if(engineCodeOffset != 2){
+				internalFuel = 100;
+				if(engineCodeOffset == 1){
+					vehicle.fuel = 0;
+				}
+			}
 			MTS.proxy.playSound(this, MTS.MODID + ":" + this.getStartingSoundName(), 1, 1);
 		}
 	}
