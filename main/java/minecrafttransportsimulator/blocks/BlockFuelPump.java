@@ -73,9 +73,9 @@ public class BlockFuelPump extends MTSBlockRotateable{
         			float lowestDistance = 99;
         			for(Entity entity : world.loadedEntityList){
         				if(entity instanceof EntityMultipartVehicle){
-        					float distance = (float) Math.sqrt(pos.distanceSq(pump.getPos()));
-        					if(lowestDistance > distance){
-        						distance = lowestDistance;
+        					float distance = (float) Math.sqrt(entity.getPosition().distanceSq(pump.getPos()));
+        					if(distance < lowestDistance){
+        						lowestDistance = distance;
         						nearestEntity = entity;
         					}
         				}
