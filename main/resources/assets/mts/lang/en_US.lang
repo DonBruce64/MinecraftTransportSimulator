@@ -75,7 +75,7 @@ gui.instruments.fault=This instrument cannot go here!
 gui.config.title.config=CONFIG
 gui.config.title.plane=PLANE
 gui.config.title.heli=HELI
-gui.config.title.vehicle=VEHICLE
+gui.config.title.vehicle=CAR
 gui.config.title.joystick=JOYSTICK
 gui.config.joystick.confirm=Confirm
 gui.config.joystick.cancel=Cancel
@@ -169,7 +169,7 @@ item.instrument_aircraft_enginetemp.description=Indicates engine temperature.
 item.instrument_aircraft_oilpressure.name=Oil Pressure Gauge
 item.instrument_aircraft_oilpressure.description=Indicates oil pressure.
 
-entity.mts.chest.name=Chest
+entity.mts.vehiclechest.name=Chest
 tile.propellerbench.name=Propeller Bench
 tile.fuelpump.name=Fuel Pump
 
