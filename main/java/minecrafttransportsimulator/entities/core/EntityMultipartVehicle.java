@@ -32,7 +32,6 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	public double electricUsage;
 	public double electricFlow;
 	public double airDensity;
-	public double trackAngle;
 	public MTSVector velocityVec = new MTSVector(0, 0, 0);
 	public MTSVector headingVec = new MTSVector(0, 0, 0);
 	

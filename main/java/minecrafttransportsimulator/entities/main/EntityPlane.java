@@ -31,6 +31,8 @@ public class EntityPlane extends EntityMultipartVehicle{
 	public short elevatorCooldown;
 	public short rudderCooldown;
 	
+	public double trackAngle;
+	
 	public MTSVector verticalVec = new MTSVector(0, 0, 0);
 	public MTSVector sideVec = new MTSVector(0, 0, 0);
 
