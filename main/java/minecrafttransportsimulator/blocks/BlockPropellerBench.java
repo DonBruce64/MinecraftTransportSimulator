@@ -47,7 +47,9 @@ public class BlockPropellerBench extends MTSBlockRotateable{
 	
 	@Override
     public void breakBlock(World world, BlockPos pos, IBlockState state){
-		((TileEntityPropellerBench) world.getTileEntity(pos)).dropPropellerAt(pos.getX(), pos.getY(), pos.getZ());
+		if(((TileEntityPropellerBench) world.getTileEntity(pos)).getPropellerOnBench() != null){
+			((TileEntityPropellerBench) world.getTileEntity(pos)).dropPropellerAt(pos.getX(), pos.getY(), pos.getZ());
+		}
 		super.breakBlock(world, pos, state);
     }
 	
