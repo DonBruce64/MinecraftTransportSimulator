@@ -42,6 +42,7 @@ public final class MTSRegistryClient{
 
 	public static void loadCustomOBJModels(){
 		modelMap.put("fuelpump", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/fuelpump.obj")));
+		modelMap.put("enginecarsmall", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/enginecarsmall.obj")));
 		for(String name : PackParserSystem.getRegisteredNames()){
 			modelMap.put(name, OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/" + PackParserSystem.getPack(name).rendering.modelName)));
 		}
@@ -64,6 +65,7 @@ public final class MTSRegistryClient{
 		registerItemRender(MTSRegistry.wheelLarge);
 		registerItemRender(MTSRegistry.skid);
 		registerItemRender(MTSRegistry.pontoon);
+		registerItemRender(MTSRegistry.engineCarSmall);
 		registerItemRender(MTSRegistry.engineAircraftSmall);
 		registerItemRender(MTSRegistry.engineAircraftLarge);
 		registerItemRenderSeries(MTSRegistry.propeller, 3);

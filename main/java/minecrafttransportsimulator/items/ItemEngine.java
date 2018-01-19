@@ -64,6 +64,16 @@ public abstract class ItemEngine extends Item{
 	
 	public abstract ItemStack[] getAllPossibleStacks();
 	
+	public static class ItemEngineCar extends ItemEngine{
+		@Override
+		public ItemStack[] getAllPossibleStacks(){
+			ItemStack[] stacks = new ItemStack[2];
+			stacks[0] = getStackWithData(MTSRegistry.engineCarSmall, 3500, 0.5F);
+			stacks[1] = getStackWithData(MTSRegistry.engineCarSmall, 3500, 0.0F);
+			return stacks;
+		}
+	}
+	
 	public static class ItemEngineAircraftSmall extends ItemEngine{
 		@Override
 		public ItemStack[] getAllPossibleStacks(){

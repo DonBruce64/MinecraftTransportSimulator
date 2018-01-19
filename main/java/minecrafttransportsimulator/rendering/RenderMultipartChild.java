@@ -2,9 +2,14 @@ package minecrafttransportsimulator.rendering;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftCar;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
@@ -25,8 +30,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 
-import org.lwjgl.opengl.GL11;
-
 public final class RenderMultipartChild{
 	private static final Map<Class<? extends EntityMultipartChild>, RenderChild> childRenderMap = new HashMap<Class<? extends EntityMultipartChild>, RenderChild>();
 	
@@ -34,6 +37,7 @@ public final class RenderMultipartChild{
 		childRenderMap.clear();
 		childRenderMap.put(EntityEngineAircraftSmall.class, new RenderEngine());
 		childRenderMap.put(EntityEngineAircraftLarge.class, childRenderMap.get(EntityEngineAircraftSmall.class));
+		childRenderMap.put(EntityEngineAircraftCar.class, childRenderMap.get(EntityEngineAircraftSmall.class));
 		childRenderMap.put(EntityVehicleChest.class, new RenderVehicleChest());
 		childRenderMap.put(EntityPontoon.class, new RenderPontoon());
 		childRenderMap.put(EntityPropeller.class, new RenderPropeller());
@@ -58,12 +62,34 @@ public final class RenderMultipartChild{
     	private static final ModelEngineLarge modelEngineLarge = new ModelEngineLarge();
     	private static final ResourceLocation textureEngineSmall = new ResourceLocation(MTS.MODID, "textures/parts/enginesmall.png");
     	private static final ResourceLocation textureEngineLarge = new ResourceLocation(MTS.MODID, "textures/parts/enginelarge.png");
+    	private static final ResourceLocation textureEngineCarSmall = new ResourceLocation(MTS.MODID, "textures/parts/enginecarsmall.png");
+    	
+    	private static int carSmallDisplayListIndex = -1;
     	
     	@Override
-    	public void doRender(EntityMultipartChild child, TextureManager textureManger, float partialTicks){		
+    	public void doRender(EntityMultipartChild child, TextureManager textureManger, float partialTicks){
+    		if(carSmallDisplayListIndex == -1){
+    			carSmallDisplayListIndex = GL11.glGenLists(1);
+    			GL11.glNewList(carSmallDisplayListIndex, GL11.GL_COMPILE);
+    			GL11.glBegin(GL11.GL_TRIANGLES);
+    			for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get("enginecarsmall").entrySet()){
+    				for(Float[] vertex : entry.getValue()){
+    					GL11.glTexCoord2f(vertex[3], vertex[4]);
+    					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+    					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+    				}
+    			}
+    			GL11.glEnd();
+    			GL11.glEndList();
+    		}
     		GL11.glRotatef(180, 1, 0, 0);
             GL11.glTranslatef(0, -child.height/2, 0);
-    		if(child instanceof EntityEngineAircraftSmall){
+            if(child instanceof EntityEngineAircraftCar){
+            	//TODO move this below plane engines when we get this to be unique.
+            	GL11.glRotatef(-180, 1, 0, 0);
+    			textureManger.bindTexture(textureEngineCarSmall);
+    			GL11.glCallList(carSmallDisplayListIndex);
+    		}else if(child instanceof EntityEngineAircraftSmall){
     			textureManger.bindTexture(textureEngineSmall);
     			modelEngineSmall.render();
     		}else if(child instanceof EntityEngineAircraftLarge){
