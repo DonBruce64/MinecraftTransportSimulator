@@ -50,7 +50,8 @@ public class MTSPackObject{
     }
     
     public class PackCar{
-        public boolean is4WD;
+        public boolean isFrontWheelDrive;
+        public boolean isRearWheelDrive;
         public float dragCoefficient;
         public String hornSound;
     }
