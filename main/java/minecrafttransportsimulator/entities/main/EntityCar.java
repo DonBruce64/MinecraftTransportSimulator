@@ -1,10 +1,14 @@
 package minecrafttransportsimulator.entities.main;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.entities.parts.EntityEngine;
+import minecrafttransportsimulator.entities.parts.EntityEngineCar;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
 import minecrafttransportsimulator.guis.GUIPanelAircraft;
 import minecrafttransportsimulator.packets.control.AileronPacket;
@@ -17,12 +21,12 @@ import net.minecraft.world.World;
 public class EntityCar extends EntityMultipartVehicle{	
 	//Note that angle variable should be divided by 10 to get actual angle.
 	public short steeringAngle;
-	
 	public short steeringCooldown;
+	
+	public List<EntityWheel> wheels = new ArrayList<EntityWheel>();
 	
 	//Internal car variables
 	private float momentPitch;
-	private double engineRPM;
 	private double currentWheelSpeed;
 	private double desiredWheelSpeed;
 	
@@ -30,6 +34,8 @@ public class EntityCar extends EntityMultipartVehicle{
 	private double dragForce;//kg*m/ticks^2
 	private double gravitationalForce;//kg*m/ticks^2
 	private double gravitationalTorque;//kg*m^2/ticks^2
+	
+	private EntityEngineCar engine;
 	
 	public EntityCar(World world){
 		super(world);
@@ -52,6 +58,31 @@ public class EntityCar extends EntityMultipartVehicle{
 			if(!worldObj.isRemote){
 				dampenControlSurfaces();
 			}
+		}
+	}
+	
+	@Override
+	public void addChild(String childUUID, EntityMultipartChild child, boolean newChild){
+		super.addChild(childUUID, child, newChild);
+		if(child instanceof EntityWheel){
+			wheels.add((EntityWheel) child);
+		}else if(child instanceof EntityEngineCar){
+			engine = (EntityEngineCar) child;
+		}
+	}
+	
+	@Override
+	public void removeChild(String childUUID, boolean playBreakSound){
+		super.removeChild(childUUID, playBreakSound);
+		Iterator<EntityWheel> wheelIterator = wheels.iterator();
+		while(wheelIterator.hasNext()){
+			if(wheelIterator.next().UUID.equals(childUUID)){
+				wheelIterator.remove();
+				return;
+			}
+		}
+		if(engine != null && engine.UUID.equals(childUUID)){
+			engine = null;
 		}
 	}
 
@@ -78,26 +109,10 @@ public class EntityCar extends EntityMultipartVehicle{
 	}
 	
 	private void getForcesAndMotions(){
-		wheelForce = 0;
-		for(EntityMultipartChild child : getChildren()){
-			if(!child.isDead){
-				if(child instanceof EntityEngine){
-					engineRPM = ((EntityEngine) child).RPM;
-					break;
-				}
-			}
-		}
-		//TODO either this needs to be done in the engine, or here.  Decide where to do wheel rotation NOW!
-		for(EntityMultipartChild child : getChildren()){
-			if(!child.isDead){
-				if(child instanceof EntityWheel){
-					if(!child.turnsWithSteer || pack.car.is4WD){
-						EntityWheel wheel = ((EntityWheel) child);
-						currentWheelSpeed = wheel.angularVelocity*wheel.wheelDiameter/2F;
-						desiredWheelSpeed = engineRPM;
-					}
-				}
-			}
+		if(engine != null){
+			wheelForce = engine.getForceOutput();
+		}else{
+			wheelForce = 0;
 		}
 		dragForce = 0.5F*airDensity*velocity*velocity*0.75F*pack.car.dragCoefficient;		
 		gravitationalForce = currentMass*(9.8/400);
@@ -118,7 +133,7 @@ public class EntityCar extends EntityMultipartVehicle{
 	private void dampenControlSurfaces(){
 		if(steeringCooldown==0){
 			if(steeringAngle != 0){
-				//TODO make new packet.
+				//FIXME make new packet.
 				MTS.MTSNet.sendToAll(new AileronPacket(this.getEntityId(), steeringAngle < 0, (short) 0));
 				steeringAngle += steeringAngle < 0 ? 4 : -4;
 			}

@@ -59,6 +59,7 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 			}
 			angularVelocity = (float) (moving.velocity/wheelDiameter);
 		}else{
+			//TODO need to make an exception here if the wheel is attached to a car otherwise the brake will stop the rotation.
 			if(moving.brakeOn || moving.parkingBrakeOn){
 				angularVelocity = 0;
 			}else if(angularVelocity>0){
