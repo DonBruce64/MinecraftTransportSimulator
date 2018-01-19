@@ -71,7 +71,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 				linked = true;
 			}	
 		}else if(!worldObj.isRemote && this.ticksExisted%ConfigSystem.getIntegerConfig("SyncDelay")==0){
-			MTS.MTSNet.sendToAll(new ServerSyncPacket(getEntityId(), posX, posY, posZ, motionX, motionY, motionZ, rotationPitch, rotationRoll));
+			MTS.MTSNet.sendToAll(new ServerSyncPacket(getEntityId(), posX, posY, posZ, motionX, motionY, motionZ, rotationYaw, rotationPitch, rotationRoll));
 		}
 		prevRotationRoll = rotationRoll + rollCorrection;
 		prevRotationPitch = rotationPitch + pitchCorrection;

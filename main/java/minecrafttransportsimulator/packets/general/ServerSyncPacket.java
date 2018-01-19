@@ -23,7 +23,7 @@ public class ServerSyncPacket implements IMessage{
 
 	public ServerSyncPacket() { }
 	
-	public ServerSyncPacket(int id, double posX, double posY, double posZ, double motionX, double motionY, double motionZ, float pitch, float roll){
+	public ServerSyncPacket(int id, double posX, double posY, double posZ, double motionX, double motionY, double motionZ, float yaw, float pitch, float roll){
 		this.id=id;
 		this.posX=posX;
 		this.posY=posY;
@@ -31,6 +31,7 @@ public class ServerSyncPacket implements IMessage{
 		this.motionX=motionX;
 		this.motionY=motionY;
 		this.motionZ=motionZ;
+		this.yaw=yaw;
 		this.pitch=pitch;
 		this.roll=roll;
 	}
@@ -44,6 +45,7 @@ public class ServerSyncPacket implements IMessage{
 		this.motionX=buf.readDouble();
 		this.motionY=buf.readDouble();
 		this.motionZ=buf.readDouble();
+		this.yaw=buf.readFloat();
 		this.pitch=buf.readFloat();
 		this.roll=buf.readFloat();
 	}
@@ -57,6 +59,7 @@ public class ServerSyncPacket implements IMessage{
 		buf.writeDouble(this.motionX);
 		buf.writeDouble(this.motionY);
 		buf.writeDouble(this.motionZ);
+		buf.writeFloat(this.yaw);
 		buf.writeFloat(this.pitch);
 		buf.writeFloat(this.roll);
 	}
@@ -81,6 +84,10 @@ public class ServerSyncPacket implements IMessage{
 						thisEntity.motionX = rectifyValue(thisEntity.motionX, message.motionX, syncIncrement, syncThreshold/25F);
 						thisEntity.motionY = rectifyValue(thisEntity.motionY, message.motionY, syncIncrement, syncThreshold/25F);
 						thisEntity.motionZ = rectifyValue(thisEntity.motionZ, message.motionZ, syncIncrement, syncThreshold/25F);
+						
+						thisEntity.yawCorrection = thisEntity.rotationYaw;
+						thisEntity.rotationYaw = (float) rectifyValue(thisEntity.rotationYaw, message.yaw, syncIncrement, syncThreshold);
+						thisEntity.yawCorrection -= thisEntity.rotationYaw;
 						
 						thisEntity.rollCorrection = thisEntity.rotationRoll;
 						thisEntity.rotationRoll = (float) rectifyValue(thisEntity.rotationRoll, message.roll, syncIncrement, syncThreshold);
