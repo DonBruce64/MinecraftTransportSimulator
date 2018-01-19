@@ -49,9 +49,4 @@ public class EntityEngineAircraftLarge extends EntityEngineAircraft{
 	protected Item getEngineItem(){
 		return MTSRegistry.engineAircraftLarge;
 	}
-
-	@Override
-	protected boolean isSmall(){
-		return false;
-	}
 }

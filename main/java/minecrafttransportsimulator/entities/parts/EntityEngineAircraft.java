@@ -104,6 +104,4 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 	private double getPropellerForcePenalty(){
 		return Math.pow(1.25, 3 + (propeller.diameter - 70)/5)/10;
 	}
-	
-	protected abstract boolean isSmall();
 }
