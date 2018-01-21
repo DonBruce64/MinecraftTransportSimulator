@@ -172,6 +172,8 @@ item.instrument_aircraft_oilpressure.description=Indicates oil pressure.
 entity.mts.vehiclechest.name=Chest
 tile.propellerbench.name=Propeller Bench
 tile.fuelpump.name=Fuel Pump
+tile.fuelpump.level=LVL:
+tile.fuelpump.dispensed=DISP:
 
 itemGroup.tabMTSPlanes=Minecraft Transport Simulator
 key.categories.mts=Minecraft Transport Simulator

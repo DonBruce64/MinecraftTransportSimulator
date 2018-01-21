@@ -8,14 +8,15 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityFuelPump;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 
 public class RenderFuelPump extends TileEntitySpecialRenderer{
-	//private static final ResourceLocation texture = new ResourceLocation(MTS.MODID, "textures/blockmodels/fuelpump.png");
-	private static final ResourceLocation texture = new ResourceLocation("minecraft", "textures/blocks/quartz_block_top.png");
+	private static final ResourceLocation texture = new ResourceLocation(MTS.MODID, "textures/blockmodels/fuelpump.png");
 	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	private static int displayListIndex = -1;
 	
@@ -50,41 +51,51 @@ public class RenderFuelPump extends TileEntitySpecialRenderer{
 		bindTexture(texture);
 		GL11.glCallList(displayListIndex);
 		
-		bindTexture(vanillaGlassTexture);
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(1, 0);
-		GL11.glVertex3f(-0.4375F, 1.25F, 0.3125F);
-		GL11.glTexCoord2f(1, 1);
-		GL11.glVertex3f(-0.4375F, 0.6875F, 0.3125F);
-		GL11.glTexCoord2f(0, 1);
-		GL11.glVertex3f(0.4375F, 0.6875F, 0.3125F);
-		GL11.glTexCoord2f(0, 0);
-		GL11.glVertex3f(0.4375F, 1.25F, 0.3125F);
-		GL11.glEnd();
+		if(ConfigSystem.getBooleanConfig("InnerWindows")){
+			bindTexture(vanillaGlassTexture);
+			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glTexCoord2f(1, 0);
+			GL11.glVertex3f(-0.4375F, 1.25F, 0.28125F);
+			GL11.glTexCoord2f(1, 1);
+			GL11.glVertex3f(-0.4375F, 0.6875F, 0.28125F);
+			GL11.glTexCoord2f(0, 1);
+			GL11.glVertex3f(0.4375F, 0.6875F, 0.28125F);
+			GL11.glTexCoord2f(0, 0);
+			GL11.glVertex3f(0.4375F, 1.25F, 0.28125F);
+			GL11.glEnd();
+		}
 		
-		GL11.glScalef(0.015625F, 0.015625F, 0.015625F);
+		GL11.glPushMatrix();
+		GL11.glScalef(0.0625F, 0.0625F, 0.0625F);
 		GL11.glRotatef(180, 1, 0, 0);
-		GL11.glTranslatef(0, 0, -16.1F);
+		GL11.glTranslatef(0, -8, -4.001F);
+		GL11.glScalef(0.25F, 0.25F, 0.25F);
+		getFontRenderer().drawString(MTS.MODID.toUpperCase(), -this.getFontRenderer().getStringWidth(MTS.MODID.toUpperCase())/2, 0, Color.BLACK.getRGB());
+		GL11.glPopMatrix();
+		
+		GL11.glPushMatrix();
+		GL11.glScalef(0.0625F, 0.0625F, 0.0625F);
+		GL11.glRotatef(180, 1, 0, 0);
+		GL11.glTranslatef(0, -17.25F, -4.001F);
+		GL11.glScalef(0.125F, 0.125F, 0.125F);
 		GL11.glDisable(GL11.GL_LIGHTING);
 		Minecraft.getMinecraft().entityRenderer.disableLightmap();
-		getFontRenderer().drawString(MTS.MODID.toUpperCase(), -this.getFontRenderer().getStringWidth(MTS.MODID.toUpperCase())/2, -28, Color.BLACK.getRGB());
+		
+		getFontRenderer().drawString(I18n.format("tile.fuelpump.level"), -40, 10, Color.ORANGE.getRGB());
+		getFontRenderer().drawString(I18n.format("tile.fuelpump.dispensed"), -40, 20, Color.ORANGE.getRGB());
 		if(pump.getFluid() != null){
-			getFontRenderer().drawString(pump.getFluid().getLocalizedName().toUpperCase(), -this.getFontRenderer().getStringWidth(pump.getFluid().getLocalizedName().toUpperCase())/2, -73, Color.ORANGE.getRGB());
-			GL11.glScalef(0.5F, 0.5F, 0.5F);
-			if(pump.getFluid().amount < 10000){
-				getFontRenderer().drawString("0" + String.valueOf(pump.getFluid().amount) + "mb", -15, -120, Color.ORANGE.getRGB());
-			}else{
-				getFontRenderer().drawString(String.valueOf(pump.getFluid().amount) + "mb", -15, -120, Color.ORANGE.getRGB());
-			}
+			String zeros = pump.getFluid().amount < 10 ? "0000" : pump.getFluid().amount < 100 ? "000" : pump.getFluid().amount < 1000 ? "00" : pump.getFluid().amount < 1000 ? "0" : "";
+			getFontRenderer().drawString(pump.getFluid().getLocalizedName().toUpperCase(), -this.getFontRenderer().getStringWidth(pump.getFluid().getLocalizedName().toUpperCase())/2, 0, Color.ORANGE.getRGB());
+			getFontRenderer().drawString(zeros + String.valueOf(pump.getFluid().amount) + "mb", 0, 10, Color.ORANGE.getRGB());
 		}else{
-			GL11.glScalef(0.5F, 0.5F, 0.5F);
-			getFontRenderer().drawString("00000mb", -15, -120, Color.ORANGE.getRGB());
+			getFontRenderer().drawString("00000mb", 0, 10, Color.ORANGE.getRGB());
 		}
-
 		String zeros = pump.totalTransfered < 10 ? "0000" : pump.totalTransfered < 100 ? "000" : pump.totalTransfered < 1000 ? "00" : pump.totalTransfered < 1000 ? "0" : "";
-		getFontRenderer().drawString(zeros + String.valueOf(pump.totalTransfered) + "mb", -15, -110, Color.ORANGE.getRGB());
+		getFontRenderer().drawString(zeros + String.valueOf(pump.totalTransfered) + "mb", 0, 20, Color.ORANGE.getRGB());
 		Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		GL11.glEnable(GL11.GL_LIGHTING);
+		GL11.glPopMatrix();
+		
 		GL11.glPopMatrix();
 	}
 }
