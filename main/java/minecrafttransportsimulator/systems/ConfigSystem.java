@@ -37,7 +37,6 @@ public final class ConfigSystem{
 		doubleConfigMap.put("SpeedFactor", config.get(COMMON_CONFIG, "SpeedFactor", 0.35F, "Factor to apply to vehicle movement.  \n1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.").getDouble());
 		doubleConfigMap.put("FuelUsageFactor", config.get(COMMON_CONFIG, "FuelUsageFactor", 1.0F, "Factor times which engines use fuel.  \nChange this if you think engines use fuel too fast or slow.").getDouble());
 		stringConfigMap.put("HeavyItems", config.get(COMMON_CONFIG, "HeavyItems", "diamond, iron, gold, coal, ore, stone", "Any item that contains these words will be counted as heavy (double mass) when considering plane mass.  \nChange and tweak to your liking.").getString());
-		integerConfigMap.put("SyncDelay", config.get(COMMON_CONFIG, "SyncDelay", 5, "How often (in ticks) planes sync themselves.  \nThis will control how often the server sends a sync packet with plane information.  \nNote that just because the server sends a packet doesn't mean that the client will sync.  \nThat depends on the client's PositionThreshold and IncrementalMovement value.", 1, Short.MAX_VALUE).getInt());
 		
 		
 		booleanConfigMap.put("Explosions", config.get(DAMAGE_CONFIG, "Explosions", true, "Whether or not vehicles explode when crashed or shot down.  \nDoes not disable engine explosions as they're usually too small to cause much damage.").getBoolean());

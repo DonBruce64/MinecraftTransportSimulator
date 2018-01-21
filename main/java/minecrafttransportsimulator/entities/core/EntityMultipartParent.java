@@ -10,7 +10,6 @@ import com.google.common.collect.ImmutableList;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.packets.general.ServerSyncPacket;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
@@ -70,7 +69,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 				numberChildren = (byte) children.size();
 				linked = true;
 			}	
-		}else if(!worldObj.isRemote && this.ticksExisted%ConfigSystem.getIntegerConfig("SyncDelay")==0){
+		}else if(!worldObj.isRemote){
 			MTS.MTSNet.sendToAll(new ServerSyncPacket(getEntityId(), posX, posY, posZ, motionX, motionY, motionZ, rotationYaw, rotationPitch, rotationRoll));
 		}
 		prevRotationRoll = rotationRoll + rollCorrection;
