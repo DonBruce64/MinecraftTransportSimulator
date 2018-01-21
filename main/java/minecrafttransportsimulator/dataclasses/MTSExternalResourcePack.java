@@ -14,6 +14,7 @@ import com.google.common.collect.Sets;
 import minecrafttransportsimulator.MTS;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
+import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.util.ResourceLocation;
@@ -33,6 +34,7 @@ public class MTSExternalResourcePack implements IResourcePack{
 			}
 		}
 		resourcePacks.add(new MTSExternalResourcePack());
+		((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).reloadResourcePack(new MTSExternalResourcePack());
 	}
 	
 	@Override

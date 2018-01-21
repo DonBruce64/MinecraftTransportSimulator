@@ -50,6 +50,8 @@ public final class MTSRegistryClient{
 	
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
+		MTSExternalResourcePack.init();
+		
 		//Load the OBJ models.
 		loadCustomOBJModels();
 		

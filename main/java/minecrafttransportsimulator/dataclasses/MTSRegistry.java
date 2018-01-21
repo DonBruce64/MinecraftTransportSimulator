@@ -24,9 +24,9 @@ import minecrafttransportsimulator.entities.parts.EntitySkid;
 import minecrafttransportsimulator.entities.parts.EntityVehicleChest;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
 import minecrafttransportsimulator.items.ItemEngine;
-import minecrafttransportsimulator.items.ItemEngine.ItemEngineCar;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftLarge;
 import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftSmall;
+import minecrafttransportsimulator.items.ItemEngine.ItemEngineCar;
 import minecrafttransportsimulator.items.ItemInstrument;
 import minecrafttransportsimulator.items.ItemKey;
 import minecrafttransportsimulator.items.ItemManual;
@@ -183,10 +183,8 @@ public final class MTSRegistry{
 				try{
 					Block block = (Block) field.get(Block.class);
 					String name = block.getClass().getSimpleName().toLowerCase().substring(5);
-					if(block.getCreativeTabToDisplayOn() != null){
-						event.getRegistry().register(new ItemBlock(block).setRegistryName(name));
-						MTSRegistry.itemList.add(Item.getItemFromBlock(block));
-					}
+					event.getRegistry().register(new ItemBlock(block).setRegistryName(name));
+					MTSRegistry.itemList.add(Item.getItemFromBlock(block));
 				}catch(Exception e){
 					e.printStackTrace();
 				}
