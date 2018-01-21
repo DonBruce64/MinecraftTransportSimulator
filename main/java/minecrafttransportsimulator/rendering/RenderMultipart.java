@@ -419,8 +419,8 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 	
 	private static void renderLights(EntityMultipartVehicle vehicle, float sunLight, float blockLight, float lightBrightness, float electricFactor, boolean wasRenderedPrior){		
 		for(PackLight light : vehicle.pack.rendering.lights){
-			boolean lightOn = (vehicle.lightStatus>>(light.switchNumber-1) & 1) == 1 && lightBrightness > 0;
-			boolean overrideCaseBrightness = lightBrightness > Math.max(sunLight, blockLight) && lightOn;
+			boolean lightOn = (vehicle.lightStatus>>(light.switchNumber-1) & 1) == 1;
+			boolean overrideCaseBrightness = lightBrightness > Math.max(sunLight, blockLight) && lightOn && lightBrightness > 0;
 
 			if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
 				GL11.glPushMatrix();
@@ -471,7 +471,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			}
 			
 			//Light cone
-			if(lightOn && light.beamDistance != 0 && MinecraftForgeClient.getRenderPass() == -1){
+			if(lightOn && light.beamDistance != 0 && MinecraftForgeClient.getRenderPass() == -1 && lightBrightness > 0){
 				GL11.glPushMatrix();
 		    	GL11.glColor4f(1, 1, 1, Math.min(vehicle.electricPower > 4 ? 1.0F : 0, lightBrightness/2F));
 		    	GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -501,7 +501,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			
 			if(MinecraftForgeClient.getRenderPass() != 0 && !wasRenderedPrior){
 				//Render lens flare in pass 1 or -1 for transparency.
-				if(lightOn){
+				if(lightOn && lightBrightness > 0){
 					renderLensFlare(light.pos, light.rot, light.brightness, light.color, lightBrightness, true);
 				}
 			}
