@@ -631,7 +631,12 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	 * it sets the soft block to air and slows down the entity.
 	 * Used to plow though leaves and snow and the like. 
 	 */
-	private List<AxisAlignedBB> getChildCollisions(EntityMultipartChild child, AxisAlignedBB box){		
+	private List<AxisAlignedBB> getChildCollisions(EntityMultipartChild child, AxisAlignedBB box){
+		//If the child doesn't collide with blocks, return an empty list.
+		if(!child.collidesWithBlocks()){
+			return new ArrayList<AxisAlignedBB>();
+		}
+		
 		int minX = (int) Math.floor(box.minX);
     	int maxX = (int) Math.floor(box.maxX + 1.0D);
     	int minY = (int) Math.floor(box.minY);

@@ -75,6 +75,11 @@ public class EntitySeat extends EntityMultipartChild{
 	}
 	
 	@Override
+	protected boolean collidesWithBlocks(){
+		return false;
+	}
+	
+	@Override
 	public boolean canRiderInteract(){
 		return true;
 	}

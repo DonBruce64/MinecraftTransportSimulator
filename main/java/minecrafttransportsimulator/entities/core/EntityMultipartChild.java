@@ -162,6 +162,10 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
         return this.getEntityBoundingBox();
     }
 	
+	protected boolean collidesWithBlocks(){
+		return true;
+	}
+	
 	protected boolean collidesWithLiquids(){
 		return false;
 	}

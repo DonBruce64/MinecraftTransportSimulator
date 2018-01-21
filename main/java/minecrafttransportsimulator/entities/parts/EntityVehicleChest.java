@@ -37,4 +37,8 @@ public class EntityVehicleChest extends EntityChildInventory{
 	protected String getChildInventoryName(){
 		return "entity." + MTS.MODID + ".Chest.name";
 	}
+	
+	protected boolean collidesWithBlocks(){
+		return false;
+	}
 }
