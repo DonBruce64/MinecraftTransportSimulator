@@ -31,9 +31,9 @@ public class ServerSyncPacket implements IMessage{
 		this.motionX=motionX;
 		this.motionY=motionY;
 		this.motionZ=motionZ;
-		this.yaw=yaw;
-		this.pitch=pitch;
-		this.roll=roll;
+		this.yaw=yaw%360;
+		this.pitch=pitch%360;
+		this.roll=roll%360;
 	}
 	
 	@Override
