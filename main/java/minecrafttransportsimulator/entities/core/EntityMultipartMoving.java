@@ -632,8 +632,8 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	 * Used to plow though leaves and snow and the like. 
 	 */
 	private List<AxisAlignedBB> getChildCollisions(EntityMultipartChild child, AxisAlignedBB box){
-		//If the child doesn't collide with blocks, return an empty list.
-		if(!child.collidesWithBlocks()){
+		//Only check collisions on ground devices and cores.
+		if(!(child instanceof EntityGroundDevice || child instanceof EntityCore)){
 			return new ArrayList<AxisAlignedBB>();
 		}
 		
