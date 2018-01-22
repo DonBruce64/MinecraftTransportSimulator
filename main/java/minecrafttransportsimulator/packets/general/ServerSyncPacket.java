@@ -2,7 +2,6 @@ package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -75,26 +74,25 @@ public class ServerSyncPacket implements IMessage{
 					EntityMultipartParent thisEntity = (EntityMultipartParent) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					if(thisEntity != null){
 						forcedSync = false;
-						byte syncThreshold = (byte) ConfigSystem.getIntegerConfig("SyncThreshold");
-						float syncIncrement = (float) ConfigSystem.getDoubleConfig("IncrementalMovement");
-						thisEntity.posX = rectifyValue(thisEntity.posX, message.posX, syncIncrement, syncThreshold);
-						thisEntity.posY = rectifyValue(thisEntity.posY, message.posY, syncIncrement, syncThreshold);
-						thisEntity.posZ = rectifyValue(thisEntity.posZ, message.posZ, syncIncrement, syncThreshold);
+						byte syncThreshold = 2;
+						thisEntity.posX = rectifyValue(thisEntity.posX, message.posX, syncThreshold);
+						thisEntity.posY = rectifyValue(thisEntity.posY, message.posY, syncThreshold);
+						thisEntity.posZ = rectifyValue(thisEntity.posZ, message.posZ, syncThreshold);
 						
-						thisEntity.motionX = rectifyValue(thisEntity.motionX, message.motionX, syncIncrement, syncThreshold/25F);
-						thisEntity.motionY = rectifyValue(thisEntity.motionY, message.motionY, syncIncrement, syncThreshold/25F);
-						thisEntity.motionZ = rectifyValue(thisEntity.motionZ, message.motionZ, syncIncrement, syncThreshold/25F);
+						thisEntity.motionX = rectifyValue(thisEntity.motionX, message.motionX, syncThreshold/25F);
+						thisEntity.motionY = rectifyValue(thisEntity.motionY, message.motionY, syncThreshold/25F);
+						thisEntity.motionZ = rectifyValue(thisEntity.motionZ, message.motionZ, syncThreshold/25F);
 						
 						thisEntity.yawCorrection = thisEntity.rotationYaw;
-						thisEntity.rotationYaw = (float) rectifyValue(thisEntity.rotationYaw, message.yaw, syncIncrement, syncThreshold);
+						thisEntity.rotationYaw = (float) rectifyValue(thisEntity.rotationYaw, message.yaw, syncThreshold);
 						thisEntity.yawCorrection -= thisEntity.rotationYaw;
 						
 						thisEntity.rollCorrection = thisEntity.rotationRoll;
-						thisEntity.rotationRoll = (float) rectifyValue(thisEntity.rotationRoll, message.roll, syncIncrement, syncThreshold);
+						thisEntity.rotationRoll = (float) rectifyValue(thisEntity.rotationRoll, message.roll, syncThreshold);
 						thisEntity.rollCorrection -= thisEntity.rotationRoll;
 						
 						thisEntity.pitchCorrection = thisEntity.rotationPitch;
-						thisEntity.rotationPitch = (float) rectifyValue(thisEntity.rotationPitch, message.pitch, syncIncrement, syncThreshold);
+						thisEntity.rotationPitch = (float) rectifyValue(thisEntity.rotationPitch, message.pitch, syncThreshold);
 						thisEntity.pitchCorrection -= thisEntity.rotationPitch; 
 						
 						thisEntity.moveChildren();
@@ -112,20 +110,20 @@ public class ServerSyncPacket implements IMessage{
 		private abstract static class RunnableSync implements Runnable{
 			protected static boolean forcedSync;
 			
-			protected static double rectifyValue(double currentValue, double packetValue, double increment, double cutoff){
+			protected static double rectifyValue(double currentValue, double packetValue, double cutoff){
 				if(currentValue > packetValue){
 					if(currentValue - packetValue > cutoff){
 						forcedSync = true;
 						return packetValue;
 					}else{
-						return currentValue - Math.min(currentValue - packetValue, increment);
+						return currentValue - Math.min(currentValue - packetValue, 0.01);
 					}
 				}else{
 					if(packetValue - currentValue > cutoff){
 						forcedSync = true;
 						return packetValue;
 					}else{
-						return currentValue + Math.min(packetValue - currentValue, increment);
+						return currentValue + Math.min(packetValue - currentValue, 0.01);
 					}
 				}
 			}
