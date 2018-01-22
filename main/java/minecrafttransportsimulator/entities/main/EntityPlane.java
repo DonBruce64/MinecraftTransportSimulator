@@ -15,6 +15,8 @@ import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 
 public class EntityPlane extends EntityMultipartVehicle{	
@@ -91,6 +93,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 	}
 	
 	@Override
+	@SideOnly(Side.CLIENT)
 	public GuiScreen getPanel(){
 		return new GUIPanelAircraft(this);
 	}

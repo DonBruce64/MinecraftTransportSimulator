@@ -17,6 +17,8 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**This class is tailored for moving vehicles such as planes, helicopters, and automobiles.
  * Contains numerous methods for gauges, HUDs, and fuel systems.
@@ -237,6 +239,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	
 	public abstract Instruments getBlankInstrument();
 	
+	@SideOnly(Side.CLIENT)
 	public abstract GuiScreen getPanel();
 	
 	public float getLightBrightness(byte lightBank){
