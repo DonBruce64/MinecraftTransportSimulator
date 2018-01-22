@@ -79,12 +79,16 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 				EntityPlayer attackingPlayer = (EntityPlayer) source.getEntity();
 				if(attackingPlayer.getHeldItemMainhand() != null && attackingPlayer.getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
 					boolean isPlayerOP = attackingPlayer.getServer().getPlayerList().getOppedPlayers().getEntry(attackingPlayer.getGameProfile()) != null || attackingPlayer.getServer().isSinglePlayer();
-					if(((EntityMultipartMoving) parent).ownerName.isEmpty() || ((EntityMultipartMoving) parent).ownerName.equals(attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString()) || isPlayerOP){
+					if(parent == null || ((EntityMultipartMoving) parent).ownerName.isEmpty() || ((EntityMultipartMoving) parent).ownerName.equals(attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString()) || isPlayerOP){
 						ItemStack droppedItem = this.getItemStack();
 						if(droppedItem != null){
 							worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, droppedItem));
 						}
-						parent.removeChild(UUID, false);
+						if(parent != null){
+							parent.removeChild(UUID, false);
+						}else{
+							this.setDead();
+						}
 						return false;
 					}else{
 						MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehicleowned"), (EntityPlayerMP) attackingPlayer);

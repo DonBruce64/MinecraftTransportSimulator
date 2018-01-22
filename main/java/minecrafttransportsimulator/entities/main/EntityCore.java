@@ -24,7 +24,11 @@ public class EntityCore extends EntityMultipartChild{
 	@Override
 	public boolean attackEntityFrom(DamageSource source, float damage){
 		if(!worldObj.isRemote){
-			return parent != null ? parent.attackEntityFrom(source, damage) : false;
+			if(parent != null){
+				return parent.attackEntityFrom(source, damage);
+			}else{
+				return super.attackEntityFrom(source, damage);
+			}
 		}
 		return false;
     }
