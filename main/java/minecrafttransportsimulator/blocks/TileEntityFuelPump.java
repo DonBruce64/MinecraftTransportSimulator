@@ -169,6 +169,17 @@ public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFl
     		return super.hasCapability(capability, facing);
     	}
     }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T getCapability(Capability<T> capability, EnumFacing facing){
+    	if(facing != null && facing.equals(facing.DOWN)){
+    		if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY){
+    			return (T) this.tankInfo;
+    		}
+    	}
+    	return super.getCapability(capability, facing);
+    }
 	
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){
