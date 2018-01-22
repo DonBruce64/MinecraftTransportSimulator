@@ -84,13 +84,13 @@ public class RenderFuelPump extends TileEntitySpecialRenderer{
 		getFontRenderer().drawString(I18n.format("tile.fuelpump.level"), -40, 10, Color.ORANGE.getRGB());
 		getFontRenderer().drawString(I18n.format("tile.fuelpump.dispensed"), -40, 20, Color.ORANGE.getRGB());
 		if(pump.getFluid() != null){
-			String zeros = pump.getFluid().amount < 10 ? "0000" : pump.getFluid().amount < 100 ? "000" : pump.getFluid().amount < 1000 ? "00" : pump.getFluid().amount < 1000 ? "0" : "";
+			String zeros = pump.getFluid().amount < 10 ? "0000" : pump.getFluid().amount < 100 ? "000" : pump.getFluid().amount < 1000 ? "00" : pump.getFluid().amount < 10000 ? "0" : "";
 			getFontRenderer().drawString(pump.getFluid().getLocalizedName().toUpperCase(), -this.getFontRenderer().getStringWidth(pump.getFluid().getLocalizedName().toUpperCase())/2, 0, Color.ORANGE.getRGB());
 			getFontRenderer().drawString(zeros + String.valueOf(pump.getFluid().amount) + "mb", 0, 10, Color.ORANGE.getRGB());
 		}else{
 			getFontRenderer().drawString("00000mb", 0, 10, Color.ORANGE.getRGB());
 		}
-		String zeros = pump.totalTransfered < 10 ? "0000" : pump.totalTransfered < 100 ? "000" : pump.totalTransfered < 1000 ? "00" : pump.totalTransfered < 1000 ? "0" : "";
+		String zeros = pump.totalTransfered < 10 ? "0000" : pump.totalTransfered < 100 ? "000" : pump.totalTransfered < 1000 ? "00" : pump.totalTransfered < 10000 ? "0" : "";
 		getFontRenderer().drawString(zeros + String.valueOf(pump.totalTransfered) + "mb", 0, 20, Color.ORANGE.getRGB());
 		Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		GL11.glEnable(GL11.GL_LIGHTING);
