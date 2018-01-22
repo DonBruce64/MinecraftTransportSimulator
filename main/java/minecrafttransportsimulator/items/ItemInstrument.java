@@ -5,8 +5,6 @@ import java.util.List;
 import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
 import minecrafttransportsimulator.dataclasses.MTSInstruments;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
-import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -35,18 +33,9 @@ public class ItemInstrument extends Item{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List itemList){
-		//First find the multipart type that corresponds to this tab.
-		for(MultipartTypes multipartType : PackParserSystem.MultipartTypes.values()){
-			if(multipartType.tabToDisplayOn.equals(tab)){
-				//Now find all instruments that go with this type.
-				for(Instruments instrument : MTSInstruments.Instruments.values()){
-					for(MultipartTypes instrumentType : instrument.validTypes){
-						if(instrumentType.equals(multipartType)){
-							itemList.add(new ItemStack(item, 1, instrument.ordinal()));
-						}
-					}
-				}
-			}
+		//Iterate though all the instruments and put them on this tab.
+		for(Instruments instrument : MTSInstruments.Instruments.values()){
+			itemList.add(new ItemStack(item, 1, instrument.ordinal()));
 		}
     }
 	

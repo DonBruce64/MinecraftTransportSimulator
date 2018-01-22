@@ -55,9 +55,7 @@ public abstract class MTSCreativeTabs extends CreativeTabs{
 	private List<ItemMultipartMoving> getAllRegisteredItemsForType(){
 		List<ItemMultipartMoving> movingList = new ArrayList<ItemMultipartMoving>();
 		for(ItemMultipartMoving movingItem : MTSRegistry.multipartItemMap.values()){
-			if(movingItem.getCreativeTab().equals(this.getTabType().tabToDisplayOn)){
-				movingList.add(movingItem);
-			}
+			movingList.add(movingItem);
 		}
 		return movingList;
 	}

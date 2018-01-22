@@ -13,12 +13,10 @@ import java.util.Set;
 import com.google.gson.Gson;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
 import minecrafttransportsimulator.dataclasses.MTSPackObject;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.main.EntityPlane;
-import net.minecraft.creativetab.CreativeTabs;
 
 /**
  * Class responsible for parsing content pack data.  Gets properties from the text files that other parts
@@ -155,14 +153,12 @@ public final class PackParserSystem{
     }
     
     public enum MultipartTypes{
-    	PLANE(EntityPlane.class, MTSCreativeTabs.tabMTSPlanes);
+    	PLANE(EntityPlane.class);
     	
     	public final Class<? extends EntityMultipartMoving> multipartClass;
-    	public final CreativeTabs tabToDisplayOn;
     	
-    	private MultipartTypes(Class<? extends EntityMultipartMoving> multipartClass, CreativeTabs tabToDisplayOn){
+    	private MultipartTypes(Class<? extends EntityMultipartMoving> multipartClass){
     		this.multipartClass = multipartClass;
-    		this.tabToDisplayOn = tabToDisplayOn;
     	}
     }
 }

@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.main.EntityCore;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -20,10 +20,10 @@ import net.minecraft.world.World;
 public class ItemMultipartMoving extends Item{
 	public final String name;
 	
-	public ItemMultipartMoving(String name, CreativeTabs creativeTab){
+	public ItemMultipartMoving(String name){
 		super();
 		this.name = name;
-		this.setCreativeTab(creativeTab);
+		this.setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	}
 	
 	@Override

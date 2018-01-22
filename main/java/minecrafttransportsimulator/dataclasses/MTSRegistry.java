@@ -158,7 +158,7 @@ public final class MTSRegistry{
 		for(String name : nameList){
 			MultipartTypes type = PackParserSystem.getMultipartType(name);
 			if(type != null){
-				ItemMultipartMoving itemMultipart = new ItemMultipartMoving(name, type.tabToDisplayOn);
+				ItemMultipartMoving itemMultipart = new ItemMultipartMoving(name);
 				multipartItemMap.put(name, itemMultipart);
 				event.getRegistry().register(itemMultipart.setRegistryName(name).setUnlocalizedName(name));
 				MTSRegistry.itemList.add(itemMultipart);
