@@ -76,7 +76,6 @@ public class MTSPackObject{
         public float scale;
         public float hudScale;
         public byte optionalEngineNumber;
-        public String staticInstrument;
     }
     
     public class PackControl{

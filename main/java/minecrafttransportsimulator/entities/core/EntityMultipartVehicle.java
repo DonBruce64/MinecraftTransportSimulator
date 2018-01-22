@@ -254,19 +254,10 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		byte[] instrumentsInSlots = tagCompound.getByteArray("instrumentsInSlots");
 		for(byte i = 0; i<pack.motorized.instruments.size(); ++i){
 			PackInstrument packDef = pack.motorized.instruments.get(i);
-			if(!packDef.staticInstrument.isEmpty()){
-				for(Instruments instrument : Instruments.values()){
-					if(instrument.name().toLowerCase().equals(packDef.staticInstrument)){
-						instruments.put(i, instrument);
-						break;
-					}
-				}
-			}else{
-				//Check to prevent loading of faulty instruments for the wrong vehicle due to updates or stupid people.
-				for(MultipartTypes type : Instruments.values()[instrumentsInSlots[i]].validTypes){
-					if(type.name().toLowerCase().equals(pack.general.type)){
-						instruments.put(i, Instruments.values()[instrumentsInSlots[i]]);
-					}
+			//Check to prevent loading of faulty instruments for the wrong vehicle due to updates or stupid people.
+			for(MultipartTypes type : Instruments.values()[instrumentsInSlots[i]].validTypes){
+				if(type.name().toLowerCase().equals(pack.general.type)){
+					instruments.put(i, Instruments.values()[instrumentsInSlots[i]]);
 				}
 			}
 		}
