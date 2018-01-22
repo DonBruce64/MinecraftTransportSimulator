@@ -292,6 +292,17 @@ public final class MTSRegistry{
 				'B', Items.DIAMOND,
 				'C', Blocks.ANVIL);
 		
+		//Fuel pump
+		registerRecipe(new ItemStack(fuelPump),
+				"DED",
+				"CBC",
+				"AAA",
+				'A', new ItemStack(Blocks.STONE_SLAB, 1, 0),
+				'B', Items.IRON_INGOT,
+				'C', new ItemStack(Items.DYE, 1, 0),
+				'D', new ItemStack(Items.DYE, 1, 1),
+				'E', Blocks.GLASS_PANE);
+		
 		//Manual
 		registerRecipe(new ItemStack(manual),
 				" A ",
