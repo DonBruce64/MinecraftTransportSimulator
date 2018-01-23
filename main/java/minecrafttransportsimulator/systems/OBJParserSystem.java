@@ -46,14 +46,14 @@ public final class OBJParserSystem{
 				if(partName != null){
 					if(line.startsWith("v ")){
 						Float[] coords = new Float[3];
-						line = line.trim().substring(2, line.length()).trim();
+						line = line.trim().substring(2, line.trim().length()).trim();
 						coords[0] = Float.valueOf(line.substring(0, line.indexOf(' ')));
 						coords[1] = Float.valueOf(line.substring(line.indexOf(' ') + 1, line.lastIndexOf(' ')));
 						coords[2] = Float.valueOf(line.substring(line.lastIndexOf(' ') + 1, line.length()));
 						vertexList.add(coords);
 					}else if(line.startsWith("vt ")){
 						Float[] coords = new Float[2];
-						line = line.trim().substring(3, line.length()).trim();
+						line = line.trim().substring(3, line.trim().length()).trim();
 						int space = line.indexOf(' ');
 						int vertexEnd = line.lastIndexOf(' ') == space ? line.length() : line.lastIndexOf(' ');
 						coords[0] = Float.valueOf(line.substring(0, space));
