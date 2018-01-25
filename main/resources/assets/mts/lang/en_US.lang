@@ -128,8 +128,7 @@ item.propeller_iron.name=Iron Propeller
 item.propeller_obsidian.name=Obsidian Propeller
 item.engineaircraftsmall.name=Small Airplane Engine
 item.engineaircraftlarge.name=Large Airplane Engine
-item.engine2.name=Helicopter Engine
-item.engine3.name=Car Engine
+item.enginecarsmall.name=Small Automotive Engine
 
 item.wrench.name=Wrench
 item.key.name=Key
