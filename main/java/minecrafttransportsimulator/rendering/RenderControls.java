@@ -65,7 +65,7 @@ public final class RenderControls extends RenderInstruments{
 	
 	private static void drawAircraftThrottle(EntityPlane plane, boolean hud){
 		renderSquareUV(10.5F, 10.5F, 0.0F, 0.75F, 0.875F, 0.875F, 1);
-		float offset = 3-plane.throttle/10F;
+		float offset = 3-(10 - plane.throttle/10F);
 		if(!hud){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(0, 1.75F, offset);
