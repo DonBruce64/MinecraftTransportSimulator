@@ -2,10 +2,8 @@ package minecrafttransportsimulator.items;
 
 import java.util.List;
 
-import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -14,7 +12,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ItemKey extends Item{
-	private static final CreativeTabs[] tabList = new CreativeTabs[]{MTSCreativeTabs.tabMTSPlanes};
 	
 	public ItemKey(){
 		super();
@@ -40,9 +37,4 @@ public class ItemKey extends Item{
 			list.add(I18n.format("info.item.key.line" + String.valueOf(i)));
 		}
 	}
-	
-	@Override
-    public CreativeTabs[] getCreativeTabs(){
-		return tabList;
-    }
 }

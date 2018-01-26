@@ -2,7 +2,6 @@ package minecrafttransportsimulator.items;
 
 import java.util.List;
 
-import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
 import minecrafttransportsimulator.dataclasses.MTSInstruments;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import net.minecraft.client.resources.I18n;
@@ -14,7 +13,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ItemInstrument extends Item{
-	private static final CreativeTabs[] tabList = MTSCreativeTabs.getAllCreativeTabs();
 	
 	public ItemInstrument(){
 		this.hasSubtypes = true;
@@ -24,11 +22,6 @@ public class ItemInstrument extends Item{
 	public String getUnlocalizedName(ItemStack stack){
 	    return stack.getItemDamage() < MTSInstruments.Instruments.values().length ? this.getUnlocalizedName() + "_" + MTSInstruments.Instruments.values()[stack.getItemDamage()].name().toLowerCase() : "_invalid";
 	}
-	
-	@Override
-    public CreativeTabs[] getCreativeTabs(){
-		return tabList;
-    }
 	
 	@Override
     @SideOnly(Side.CLIENT)

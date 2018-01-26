@@ -55,6 +55,7 @@ import minecrafttransportsimulator.packets.general.PackReloadPacket;
 import minecrafttransportsimulator.packets.general.PropellerBenchStartPacket;
 import minecrafttransportsimulator.packets.general.ServerDataPacket;
 import minecrafttransportsimulator.packets.general.ServerSyncPacket;
+import minecrafttransportsimulator.packets.general.ServerTPSPacket;
 import minecrafttransportsimulator.packets.general.TileEntityClientServerHandshakePacket;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
@@ -101,8 +102,8 @@ public final class MTSRegistry{
 	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 		
-	public static final Item key = new ItemKey();
-	public static final Item instrument = new ItemInstrument();
+	public static final Item key = new ItemKey().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
+	public static final Item instrument = new ItemInstrument().setCreativeTab(MTSCreativeTabs.tabMTSPlanes);
 	
 	private static int entityNumber = 0;
 	private static int packetNumber = 0;
