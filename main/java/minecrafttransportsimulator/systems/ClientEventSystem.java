@@ -185,7 +185,7 @@ public final class ClientEventSystem{
     public static void on(RenderGameOverlayEvent.Pre event){
         if(minecraft.thePlayer.getRidingEntity() instanceof EntitySeat){
             if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
-                event.setCanceled(!ConfigSystem.getBooleanConfig("XaerosCompatibility"));
+                event.setCanceled(true);
             }else if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
                 if(playerLastSeat != null){
                     if(playerLastSeat.parent instanceof EntityMultipartVehicle && playerLastSeat.isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
