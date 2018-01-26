@@ -504,7 +504,6 @@ public class GUIConfig extends GuiScreen{
 	private enum ConfigButtons{
 		SEA_LEVEL_OFFSET("SeaLevelOffset", "Sea Level Offset", new String[]{"Does altimeter display 0", "at average sea level", "instead of Y=0?"}),
 		ELECTRIC_START("ElectricStart", "Electric Start", new String[]{"Enable electric starter?", "If disabled players must", "start engines by hand."}),
-		XAEROS_COMPATIBILITY("XaerosCompatibility", "Xaeros Compatibility", new String[]{"Enable Xaeros Minimap Compatibility?", "This allows Xaeros Minimap to be shown,", "but makes the hotbar render over the HUD."}),
 		MOUSE_YOKE("MouseYoke", "Mouse Yoke", new String[]{"Enable Mouse Yoke?", "Prevents looking around unless unlocked.", "Think MCHeli controls."}),
 		INNER_WINDOWS("InnerWindows", "Inner Windows", new String[]{"Render the insides of windows on vehicles?"}),
 		KEYBOARD_OVERRIDE("KeyboardOverride", "Keyboard Override", new String[]{"Should keyboard controls be overriden", "when a joystick control is mapped?", "Leave true to free up the keyboard", "while using a joysick."});
