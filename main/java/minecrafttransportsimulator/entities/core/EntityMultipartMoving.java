@@ -643,42 +643,31 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
     	int maxY = (int) Math.floor(box.maxY + 1.0D);
     	int minZ = (int) Math.floor(box.minZ);
     	int maxZ = (int) Math.floor(box.maxZ + 1.0D);
-    	List<BlockPos> collisionMap = new ArrayList<BlockPos>();
+    	List<AxisAlignedBB> collidingAABBList = new ArrayList<AxisAlignedBB>();
     	
     	for(int i = minX; i < maxX; ++i){
     		for(int j = minY; j < maxY; ++j){
     			for(int k = minZ; k < maxZ; ++k){
     				BlockPos pos = new BlockPos(i, j, k);
-    				AxisAlignedBB blockBox = worldObj.getBlockState(pos).getCollisionBoundingBox(worldObj, pos);
-    				if(blockBox == null){
-    					if(child.collidesWithLiquids() && worldObj.getBlockState(pos).getMaterial().isLiquid()){
-    						collisionMap.add(pos);
+    				byte currentBoxes = (byte) collidingAABBList.size();
+    				worldObj.getBlockState(pos).addCollisionBoxToList(worldObj, pos, box, collidingAABBList, null);
+    				if(collidingAABBList.size() != currentBoxes){
+    					float hardness = worldObj.getBlockState(pos).getBlockHardness(worldObj, pos);
+    					if(hardness  <= 0.2F && hardness >= 0){
+    						worldObj.setBlockToAir(pos);
+    						motionX *= 0.95;
+    						motionY *= 0.95;
+    						motionZ *= 0.95;
+    						collidingAABBList.remove(currentBoxes);
     					}
     				}else{
-    					if(box.intersectsWith(blockBox.offset(pos))){
-    						collisionMap.add(pos);
+    					if(child.collidesWithLiquids() && worldObj.getBlockState(pos).getMaterial().isLiquid()){
+    						collidingAABBList.add(worldObj.getBlockState(pos).getBoundingBox(worldObj, pos).offset(pos));
     					}
     				}
     			}
     		}
     	}
-		
-		List<AxisAlignedBB> collidingAABBList = new ArrayList<AxisAlignedBB>();
-		for(BlockPos pos : collisionMap){
-			float hardness = worldObj.getBlockState(pos).getBlockHardness(worldObj, pos);
-			if(hardness  <= 0.2F && hardness >= 0){
-				worldObj.setBlockToAir(pos);
-				motionX *= 0.95;
-				motionY *= 0.95;
-				motionZ *= 0.95;
-			}else{
-				if(child.collidesWithLiquids() && worldObj.getBlockState(pos).getMaterial().isLiquid()){
-					collidingAABBList.add(worldObj.getBlockState(pos).getBoundingBox(worldObj, pos).offset(pos));
-				}else{
-					collidingAABBList.add(worldObj.getBlockState(pos).getCollisionBoundingBox(worldObj, pos).offset(pos));
-				}
-			}
-		}
 		return collidingAABBList;
 	}
 	
