@@ -223,6 +223,7 @@ public final class MTSRegistry{
 		registerPacket(PropellerBenchStartPacket.class, PropellerBenchStartPacket.Handler.class, true, true);
 		registerPacket(ServerDataPacket.class, ServerDataPacket.Handler.class, true, false);
 		registerPacket(ServerSyncPacket.class, ServerSyncPacket.Handler.class, true, false);
+		registerPacket(ServerTPSPacket.class, ServerTPSPacket.Handler.class, true, false);
 		registerPacket(TileEntityClientServerHandshakePacket.class, TileEntityClientServerHandshakePacket.Handler.class, true, true);
 		
 		registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);

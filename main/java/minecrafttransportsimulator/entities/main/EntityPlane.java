@@ -75,14 +75,19 @@ public class EntityPlane extends EntityMultipartVehicle{
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
 		if(linked){
-			getBasicProperties();
-			getForcesAndMotions();
-			performGroundOperations();
-			checkPlannedMovement();
-			movePlane();
-			moveChildren();
-			if(!worldObj.isRemote){
-				dampenControlSurfaces();
+			if(worldObj.isRemote && this.clientTicksToSkip > 0){
+				--this.clientTicksToSkip;
+				return;
+			}else{
+				getBasicProperties();
+				getForcesAndMotions();
+				performGroundOperations();
+				checkPlannedMovement();
+				movePlane();
+				moveChildren();
+				if(!worldObj.isRemote){
+					dampenControlSurfaces();
+				}
 			}
 		}
 	}
@@ -172,10 +177,11 @@ public class EntityPlane extends EntityMultipartVehicle{
 	}
 		
 	private void movePlane(){
+		//TODO move this into EntityParent and make common.
 		rotationRoll = (motionRoll + rotationRoll);
 		rotationPitch = (motionPitch + rotationPitch);
 		rotationYaw = (motionYaw + rotationYaw);
-		setPosition(posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
+		setPosition(posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));	
 	}
 
 	private void dampenControlSurfaces(){
