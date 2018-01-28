@@ -699,17 +699,23 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				//Return -3 and deal with this later.
 				return -3;
 			}else if(collisionDepth > 0.3){
-				this.removeChild(child.UUID, true);
+				if(!worldObj.isRemote){
+					this.removeChild(child.UUID, true);
+				}
 				return -1;
 			}else{
 				return collisionDepth;
 			}
 		}else if(collisionDepth > 0.3){
 			if(child instanceof EntityCore){
-				this.destroyAtPosition(child.posX, child.posY, child.posZ);
+				if(!worldObj.isRemote){
+					this.destroyAtPosition(child.posX, child.posY, child.posZ);
+				}
 				return -2;
 			}else{
-				this.removeChild(child.UUID, true);
+				if(!worldObj.isRemote){
+					this.removeChild(child.UUID, true);
+				}
 				return -1;
 			}
 		}else{
