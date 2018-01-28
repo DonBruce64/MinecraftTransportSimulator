@@ -21,7 +21,7 @@ public abstract class MTSCreativeTabs extends CreativeTabs{
 
 	@Override
     @SideOnly(Side.CLIENT)
-    public void displayAllRelevantItems(List givenList){
+    public void displayAllRelevantItems(List<ItemStack> givenList){
 		givenList.clear();
 		for(Item item : MTSRegistry.itemList){
 			for(CreativeTabs tab : item.getCreativeTabs()){
