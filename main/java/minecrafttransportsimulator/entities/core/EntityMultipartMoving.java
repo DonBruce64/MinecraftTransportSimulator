@@ -64,11 +64,11 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	public String ownerName="";
 	public String displayText="";
 	
-	public boolean gotDeltaPacket;
 	public MTSPackObject pack;
 	public List<Byte> brokenWindows = new ArrayList<Byte>();
 	public List<EntityGroundDevice> groundedGroundDevices = new ArrayList<EntityGroundDevice>();
 	
+	private boolean gotDeltaPacket;
 	private double clientDeltaX;
 	private double clientDeltaY;
 	private double clientDeltaZ;
@@ -644,6 +644,9 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		this.serverDeltaYaw += dYaw;
 		this.serverDeltaPitch += dPitch;
 		this.serverDeltaRoll += dRoll;
+		if(worldObj.isRemote){
+			gotDeltaPacket = true;
+		}
 	}
 	
 	/**

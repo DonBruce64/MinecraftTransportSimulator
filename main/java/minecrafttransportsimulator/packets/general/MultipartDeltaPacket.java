@@ -61,7 +61,6 @@ public class MultipartDeltaPacket implements IMessage{
 					EntityMultipartMoving thisEntity = (EntityMultipartMoving) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					if(thisEntity != null){
 						thisEntity.addToServerDeltas(message.deltaX, message.deltaY, message.deltaZ, message.deltaYaw, message.deltaPitch, message.deltaRoll);
-						thisEntity.gotDeltaPacket = true;
 					}
 				}
 			});
