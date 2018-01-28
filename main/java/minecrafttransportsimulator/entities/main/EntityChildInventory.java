@@ -110,6 +110,7 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
     
 	public boolean isUseableByPlayer(EntityPlayer player){return player.getDistanceToEntity(this) < 5;}
 	public boolean isItemValidForSlot(int slot, ItemStack stack){return true;}
+	public boolean isEmpty(){return false;};
 	public int getField(int id){return 0;}
 	public int getFieldCount(){return 0;}
 	public int getSizeInventory(){return 27;}
