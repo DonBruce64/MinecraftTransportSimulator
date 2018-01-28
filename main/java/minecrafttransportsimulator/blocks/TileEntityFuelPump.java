@@ -42,6 +42,11 @@ public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFl
 	public void update(){
 		if(!connectedVehicleUUID.equals("")){
 			if(connectedVehicle != null){
+				if(connectedVehicle.isDead){
+					connectedVehicleUUID = "";
+					connectedVehicle = null;
+					return;
+				}
 				if(connectedVehicle.pack.motorized.fuelCapacity - connectedVehicle.fuel >= 10){
 					if(this.tankInfo.fluid != null){
 						int fuelToFill = Math.min(this.tankInfo.fluid.amount, 10);
