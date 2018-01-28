@@ -51,6 +51,9 @@ public class AileronPacket implements IMessage{
 					if(ctx.side.isServer()){
 						thisEntity = (EntityPlane) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 					}else{
+						if(Minecraft.getMinecraft().theWorld == null){
+							return;
+						}
 						thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){

@@ -41,7 +41,11 @@ public class ThrottlePacket implements IMessage{
 					if(ctx.side.isServer()){
 						thisEntity = (EntityMultipartVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 					}else{
+						if(Minecraft.getMinecraft().theWorld == null){
+							return;
+						}
 						thisEntity = (EntityMultipartVehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						
 					}
 					if(thisEntity!=null){
 						if(message.throttle == Byte.MAX_VALUE){
