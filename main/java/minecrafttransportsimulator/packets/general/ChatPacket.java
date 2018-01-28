@@ -43,7 +43,7 @@ public class ChatPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					Minecraft.getMinecraft().thePlayer.addChatMessage(new TextComponentString(I18n.format(message.translatableMessage) + message.extraMessage));
+					Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(I18n.format(message.translatableMessage) + message.extraMessage));
 				}
 			});
 			return null;
