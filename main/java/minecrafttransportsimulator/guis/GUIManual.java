@@ -278,7 +278,7 @@ public class GUIManual extends GuiScreen{
 		fontRendererObj.drawString(String.valueOf(passengers), 95, 45, Color.BLACK.getRGB());
 		fontRendererObj.drawString(I18n.format("manual.vehicle_data.cargo") + ":", 0, 55, Color.BLACK.getRGB());
 		fontRendererObj.drawString(String.valueOf(cargo), 95, 55, Color.BLACK.getRGB());
-		fontRendererObj.drawSplitString(packObject.general.description, 0, 75, 150, Color.BLACK.getRGB());
+		fontRendererObj.drawSplitString(packObject.general.description, 0, 70, 150, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
 		
 		//Render crafting grid background.
