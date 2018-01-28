@@ -22,7 +22,9 @@ import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.items.ItemKey;
 import minecrafttransportsimulator.packets.general.ChatPacket;
+import minecrafttransportsimulator.packets.general.MultipartDeltaPacket;
 import minecrafttransportsimulator.packets.general.MultipartParentDamagePacket;
+import minecrafttransportsimulator.packets.general.ServerTPSPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -40,9 +42,12 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-/**General moving entity class.  This provides a basic set of variables and functions for moving entities.
- * Simple things like texture and display names are included, as well as standards for removal of this
- * entity based on names and damage.  This is the most basic class used for custom multipart entities.
+
+/**General moving entity class.  This provides a set of variables and functions for moving entities.
+ * Simple things like texture and display names are also included, as well as standards for removal of this
+ * entity based on names and damage, and syncing methods and packet generation.
+ * This is the most basic class used for custom multipart entities and should be extended
+ * by any multipart looking to do movement.
  * 
  * @author don_bruce
  */
@@ -60,11 +65,36 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	public String ownerName="";
 	public String displayText="";
 	
+	public float prevRotationRoll;
+	public float yawCorrection;
+	public float pitchCorrection;
+	public float rollCorrection;
+	
 	public MTSPackObject pack;
 	public List<Byte> brokenWindows = new ArrayList<Byte>();
 	public List<EntityGroundDevice> groundedGroundDevices = new ArrayList<EntityGroundDevice>();
 	
 	protected final double speedFactor = ConfigSystem.getDoubleConfig("SpeedFactor");
+	
+	/**
+	 * Every 100 ticks this value is set on clients to tell them how may ticks the server skipped.
+	 * Make sure NOT to do movement on clients for this many ticks.
+	 * Clients are responsible for decrementing the value of this variable every skipped tick to bring it back to 0.
+	 */
+	public byte clientTicksToSkip = 0;
+	
+	private double clientDeltaX;
+	private double clientDeltaY;
+	private double clientDeltaZ;
+	private float clientDeltaYaw;
+	private float clientDeltaPitch;
+	private float clientDeltaRoll;
+	private double serverDeltaX;
+	private double serverDeltaY;
+	private double serverDeltaZ;
+	private float serverDeltaYaw;
+	private float serverDeltaPitch;
+	private float serverDeltaRoll;
 			
 	public EntityMultipartMoving(World world){
 		super(world);
@@ -84,6 +114,24 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		if(linked){
 			currentMass = getCurrentMass();
 			populateGroundedGroundDeviceList(groundedGroundDevices);
+			
+			if(!worldObj.isRemote){
+				//Every 100 ticks, check the TPS to see if we need to tell the client to skip a tick (or more).
+				if(worldObj.getMinecraftServer().getTickCounter()%100==99){
+					long tpsSum = 0;
+					for(byte tick=0; tick < 100; ++tick){
+						tpsSum += worldObj.getMinecraftServer().worldTickTimes.get(worldObj.provider.getDimension())[tick];
+					}
+					double tps = Math.min(1000.0/(tpsSum/100D * 1.0E-6D), 20);
+					for(byte ticksToSkip=0; ticksToSkip < 100 - tps*5D; ++ticksToSkip){
+						MTS.MTSNet.sendToAll(new ServerTPSPacket(worldObj.provider.getDimension()));
+					}
+				}
+			}
+			prevRotationYaw = rotationYaw + yawCorrection;
+			prevRotationPitch = rotationPitch + pitchCorrection;
+			prevRotationRoll = rotationRoll + rollCorrection;
+			rollCorrection = pitchCorrection = yawCorrection = 0;
 		}
 	}
 	
@@ -297,6 +345,24 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			boxList.add(new Float[]{box.pos[0], box.pos[1], box.pos[2], box.width, box.height});
 		}
 		return boxList;
+	}
+	
+	private void addToClientDeltas(double dX, double dY, double dZ, float dYaw, float dPitch, float dRoll){
+		this.clientDeltaX += dX;
+		this.clientDeltaY += dY;
+		this.clientDeltaZ += dZ;
+		this.clientDeltaYaw += dYaw;
+		this.clientDeltaPitch += dPitch;
+		this.clientDeltaRoll += dRoll;
+	}
+	
+	public void addToServerDeltas(double dX, double dY, double dZ, float dYaw, float dPitch, float dRoll){
+		this.serverDeltaX += dX;
+		this.serverDeltaY += dY;
+		this.serverDeltaZ += dZ;
+		this.serverDeltaYaw += dYaw;
+		this.serverDeltaPitch += dPitch;
+		this.serverDeltaRoll += dRoll;
 	}
 	
 	/**
@@ -554,6 +620,50 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 					}
 					++loopCount;
 				}while(continueLoop && loopCount < 20);
+			}
+		}
+	}
+	
+	/**
+	 * Call this when moving multiparts to ensure they sync correctly.
+	 * Failure to do this will result in things going badly!
+	 */
+	protected void moveMultipart(){
+		if(!worldObj.isRemote){
+			rotationYaw += motionYaw;
+			rotationPitch += motionPitch;
+			rotationRoll += motionRoll;
+			setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
+			addToServerDeltas(motionX, motionY, motionZ, motionYaw, motionPitch, motionRoll);
+			MTS.MTSNet.sendToAll(new MultipartDeltaPacket(getEntityId(), motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll));
+		}else{
+			if(!(serverDeltaX == 0 && serverDeltaY == 0 && serverDeltaZ == 0)){
+				double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/4F;
+				double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/4F;
+				double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/4F;
+				float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/4F;
+				float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/4F;
+				float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/4F;
+				
+				setPosition(posX + deltaX, posY + deltaY, posZ + deltaZ);
+				rotationYaw += deltaYaw;
+				rotationPitch += deltaPitch;
+				rotationRoll += deltaRoll;
+				addToClientDeltas(deltaX, deltaY, deltaZ, deltaYaw, deltaPitch, deltaRoll);
+			}else{
+				rotationYaw += motionYaw;
+				rotationPitch += motionPitch;
+				rotationRoll += motionRoll;
+				setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
+			}
+		}
+		
+		for(EntityMultipartChild child : getChildren()){
+			if(child.isDead){
+				removeChild(child.UUID, false);
+			}else{
+				MTSVector offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
+				child.setPosition(posX + offset.xCoord, posY + offset.yCoord, posZ + offset.zCoord);
 			}
 		}
 	}
@@ -862,6 +972,22 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			this.brokenWindows.add(brokenWindow);
 		}
 		this.pack=PackParserSystem.getPack(name);
+		
+		this.serverDeltaX=tagCompound.getDouble("serverDeltaX");
+		this.serverDeltaY=tagCompound.getDouble("serverDeltaY");
+		this.serverDeltaZ=tagCompound.getDouble("serverDeltaZ");
+		this.serverDeltaYaw=tagCompound.getFloat("serverDeltaYaw");
+		this.serverDeltaPitch=tagCompound.getFloat("serverDeltaPitch");
+		this.serverDeltaRoll=tagCompound.getFloat("serverDeltaRoll");
+		
+		if(worldObj.isRemote){
+			this.clientDeltaX = this.serverDeltaX;
+			this.clientDeltaY = this.serverDeltaY;
+			this.clientDeltaZ = this.serverDeltaZ;
+			this.clientDeltaYaw = this.serverDeltaYaw;
+			this.clientDeltaPitch = this.serverDeltaPitch;
+			this.clientDeltaRoll = this.serverDeltaRoll;
+		}
 	}
     
 	@Override
@@ -879,6 +1005,13 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			brokenWindows[i] = this.brokenWindows.get(i);
 		}
 		tagCompound.setByteArray("brokenWindows", brokenWindows);
+		
+		tagCompound.setDouble("serverDeltaX", this.serverDeltaX);
+		tagCompound.setDouble("serverDeltaY", this.serverDeltaY);
+		tagCompound.setDouble("serverDeltaZ", this.serverDeltaZ);
+		tagCompound.setFloat("serverDeltaYaw", this.serverDeltaYaw);
+		tagCompound.setFloat("serverDeltaPitch", this.serverDeltaPitch);
+		tagCompound.setFloat("serverDeltaRoll", this.serverDeltaRoll);
 		return tagCompound;
 	}
 }

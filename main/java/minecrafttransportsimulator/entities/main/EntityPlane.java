@@ -10,7 +10,6 @@ import minecrafttransportsimulator.guis.GUIPanelAircraft;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
@@ -83,8 +82,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 				getForcesAndMotions();
 				performGroundOperations();
 				checkPlannedMovement();
-				movePlane();
-				moveChildren();
+				moveMultipart();
 				if(!worldObj.isRemote){
 					dampenControlSurfaces();
 				}
@@ -174,14 +172,6 @@ public class EntityPlane extends EntityMultipartVehicle{
 		motionRoll = (float) (180/Math.PI*((1-headingVec.yCoord)*aileronTorque)/momentRoll);
 		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + (1-Math.abs(headingVec.yCoord))*gravitationalTorque)/momentPitch);
 		motionYaw = (float) (180/Math.PI*(headingVec.yCoord*aileronTorque - verticalVec.yCoord*(-thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
-	}
-		
-	private void movePlane(){
-		//TODO move this into EntityParent and make common.
-		rotationRoll = (motionRoll + rotationRoll);
-		rotationPitch = (motionPitch + rotationPitch);
-		rotationYaw = (motionYaw + rotationYaw);
-		setPosition(posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));	
 	}
 
 	private void dampenControlSurfaces(){

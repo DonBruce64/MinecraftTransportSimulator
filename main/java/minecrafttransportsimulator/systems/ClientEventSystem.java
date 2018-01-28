@@ -114,9 +114,9 @@ public final class ClientEventSystem{
     public static void on(CameraSetup event){
         if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
             if(event.getEntity().getRidingEntity() instanceof EntitySeat){
-            	EntityMultipartParent parent = ((EntitySeat) event.getEntity().getRidingEntity()).parent;
-                if(parent != null){
-                    event.setRoll((float) (parent.rotationRoll  + (parent.rotationRoll - parent.prevRotationRoll)*(double)event.getRenderPartialTicks()));
+            	EntityMultipartMoving mover = (EntityMultipartMoving) ((EntitySeat) event.getEntity().getRidingEntity()).parent;
+                if(mover != null){
+                    event.setRoll((float) (mover.rotationRoll  + (mover.rotationRoll - mover.prevRotationRoll)*(double)event.getRenderPartialTicks()));
                 }
             }
         }

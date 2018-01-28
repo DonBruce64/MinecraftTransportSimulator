@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.core.EntityMultipartParent;
+import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -36,8 +36,8 @@ public class ServerTPSPacket implements IMessage{
 				public void run(){
 					if(Minecraft.getMinecraft().theWorld.provider.getDimension() == message.dimID){
 						for(Entity entity : Minecraft.getMinecraft().theWorld.loadedEntityList){
-							if(entity instanceof EntityMultipartParent){
-								++((EntityMultipartParent) entity).clientTicksToSkip;
+							if(entity instanceof EntityMultipartMoving){
+								++((EntityMultipartMoving) entity).clientTicksToSkip;
 							}
 						}
 					}

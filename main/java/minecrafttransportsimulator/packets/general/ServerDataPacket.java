@@ -2,7 +2,6 @@ package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.MTSEntity;
-import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -43,9 +42,6 @@ public class ServerDataPacket implements IMessage{
 					MTSEntity thisEntity = (MTSEntity) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					if(thisEntity != null){
 						thisEntity.readFromNBT(message.tagCompound);
-						if(thisEntity instanceof EntityMultipartParent){
-							((EntityMultipartParent) thisEntity).moveChildren();
-						}
 					}
 				}
 			});

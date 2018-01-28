@@ -53,8 +53,7 @@ public class EntityCar extends EntityMultipartVehicle{
 			getForcesAndMotions();
 			performGroundOperations();
 			checkPlannedMovement();
-			moveCar();
-			moveChildren();
+			moveMultipart();
 			if(!worldObj.isRemote){
 				dampenControlSurfaces();
 			}
