@@ -40,9 +40,9 @@ public class EntitySeat extends EntityMultipartChild{
 	@Override
 	public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
 		if(!worldObj.isRemote && this.parent != null){
-			if(stack != null){
-				if(stack.getItem().equals(MTSRegistry.key)){
-					parent.processInitialInteractFromChild(player, this, stack);
+			if(player.getHeldItem(hand) != null){
+				if(MTSRegistry.key.equals(player.getHeldItem(hand).getItem())){
+					parent.processInitialInteractFromChild(player, this, hand);
 					return true;
 				}
 			}

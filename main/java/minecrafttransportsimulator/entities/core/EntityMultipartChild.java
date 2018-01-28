@@ -69,7 +69,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	
 	@Override
 	public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
-		return parent != null ? parent.processInitialInteractFromChild(player, this, stack) : true;
+		return parent != null ? parent.processInitialInteractFromChild(player, this, hand) : true;
 	}
 	
 	@Override

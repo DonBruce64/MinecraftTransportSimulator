@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSAchievements;
@@ -35,10 +33,10 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -106,28 +104,29 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	}
 	
 	@Override
-	public boolean processInitialInteractFromChild(EntityPlayer player, EntityMultipartChild childClicked, @Nullable ItemStack stack){
+	public boolean processInitialInteractFromChild(EntityPlayer player, EntityMultipartChild childClicked, EnumHand hand){
 		if(player.getRidingEntity() instanceof EntitySeat){
 			if(this.equals(((EntitySeat) player.getRidingEntity()).parent)){
 				//No in-use changes for sneaky sneaks!
 				//Unless we're using a key to lock ourselves in.
-				if(stack != null){
-					if(!stack.getItem().equals(MTSRegistry.key)){
+				if(player.getHeldItem(hand) != null){
+					if(!MTSRegistry.key.equals(player.getHeldItem(hand).getItem())){
 						return false;
 					}
 				}
 			}
 		}
 		if(!worldObj.isRemote){
-			if(stack != null){
-				if(stack.getItem().equals(Items.NAME_TAG)){
+			if(player.getHeldItem(hand) != null){
+				ItemStack heldStack = player.getHeldItem(hand);
+				if(Items.NAME_TAG.equals(heldStack.getItem())){
 					int maxText = pack.general.displayTextMaxLength;
-					this.displayText = stack.getDisplayName().length() > maxText ? stack.getDisplayName().substring(0, maxText - 1) : stack.getDisplayName();
+					this.displayText = heldStack.getDisplayName().length() > maxText ? heldStack.getDisplayName().substring(0, maxText - 1) : heldStack.getDisplayName();
 					this.sendDataToClient();
 					return true;
-				}else if(stack.getItem().equals(MTSRegistry.wrench)){
+				}else if(MTSRegistry.wrench.equals(heldStack.getItem())){
 					return true;
-				}else if(stack.getItem().equals(MTSRegistry.key)){
+				}else if(MTSRegistry.key.equals(heldStack.getItem())){
 					if(player.isSneaking()){
 						if(this.ownerName.isEmpty()){
 							this.ownerName = player.getUUID(player.getGameProfile()).toString();
@@ -143,14 +142,14 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 							}
 						}
 					}else{
-						if(ItemKey.getVehicleUUID(stack).isEmpty()){
+						if(ItemKey.getVehicleUUID(heldStack).isEmpty()){
 							if(!this.ownerName.isEmpty()){
 								if(!player.getUUID(player.getGameProfile()).toString().equals(this.ownerName)){
 									MTS.MTSNet.sendTo(new ChatPacket("interact.key.failure.notowner"), (EntityPlayerMP) player);
 									return true;
 								}
 							}
-							ItemKey.setVehicle(stack, this);
+							ItemKey.setVehicle(heldStack, this);
 							this.locked = true;
 							MTS.MTSNet.sendTo(new ChatPacket("interact.key.info.lock"), (EntityPlayerMP) player);
 							player.addStat(MTSAchievements.key);
@@ -169,15 +168,14 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 					}
 					this.sendDataToClient();
 					return true;
-				}else{
+				}else if(heldStack.getItem() != null){
 					boolean isItemPart = false;
-					Item heldItem = stack.getItem();
 					PackPart partToSpawn = null;
 					float closestPosition = 9999;
 					//Look though the part data to find the class that goes with the held item.
 					for(PackPart part : pack.parts){
 						for(String partName : part.names){
-							if(heldItem.getRegistryName().getResourcePath().equals(partName)){
+							if(heldStack.getItem().getRegistryName().getResourcePath().equals(partName)){
 								isItemPart = true;
 								//The held item can spawn a part.
 								//Now find the closest spot to put it.
@@ -203,15 +201,15 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 					if(partToSpawn != null){
 						//We have a part, now time to spawn it.
 						try{
-							Constructor<? extends EntityMultipartChild> construct = MTSRegistry.partClasses.get(heldItem.getRegistryName().getResourcePath()).getConstructor(World.class, EntityMultipartParent.class, String.class, float.class, float.class, float.class, int.class);
-							EntityMultipartChild newChild = construct.newInstance(worldObj, this, this.UUID, partToSpawn.pos[0], partToSpawn.pos[1], partToSpawn.pos[2], stack.getItemDamage());
-							newChild.setNBTFromStack(stack);
+							Constructor<? extends EntityMultipartChild> construct = MTSRegistry.partClasses.get(heldStack.getItem().getRegistryName().getResourcePath()).getConstructor(World.class, EntityMultipartParent.class, String.class, float.class, float.class, float.class, int.class);
+							EntityMultipartChild newChild = construct.newInstance(worldObj, this, this.UUID, partToSpawn.pos[0], partToSpawn.pos[1], partToSpawn.pos[2], heldStack.getItemDamage());
+							newChild.setNBTFromStack(heldStack);
 							newChild.setTurnsWithSteer(partToSpawn.turnsWithSteer);
 							newChild.setController(partToSpawn.isController);
 							this.addChild(newChild.UUID, newChild, true);
 							if(!player.capabilities.isCreativeMode){
-								if(stack.stackSize > 0){
-									--stack.stackSize;
+								if(heldStack.stackSize > 0){
+									--heldStack.stackSize;
 								}else{
 									player.inventory.removeStackFromSlot(player.inventory.currentItem);
 								}

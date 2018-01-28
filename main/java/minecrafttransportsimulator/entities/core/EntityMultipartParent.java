@@ -3,15 +3,13 @@ package minecrafttransportsimulator.entities.core;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import com.google.common.collect.ImmutableList;
 
 import minecrafttransportsimulator.MTS;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 
 /**Main parent class.  All entities that have parts should extend this class.
@@ -122,7 +120,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 	
 	public EntityMultipartChild[] getChildren(){return ImmutableList.copyOf(children.values()).toArray(new EntityMultipartChild[children.size()]);}
 	
-	public abstract boolean processInitialInteractFromChild(EntityPlayer player, EntityMultipartChild childClicked, @Nullable ItemStack stack);
+	public abstract boolean processInitialInteractFromChild(EntityPlayer player, EntityMultipartChild childClicked, EnumHand hand);
 		
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
