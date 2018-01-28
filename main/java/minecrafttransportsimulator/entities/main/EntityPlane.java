@@ -74,18 +74,13 @@ public class EntityPlane extends EntityMultipartVehicle{
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
 		if(linked){
-			if(worldObj.isRemote && this.clientTicksToSkip > 0){
-				--this.clientTicksToSkip;
-				return;
-			}else{
-				getBasicProperties();
-				getForcesAndMotions();
-				performGroundOperations();
-				checkPlannedMovement();
-				moveMultipart();
-				if(!worldObj.isRemote){
-					dampenControlSurfaces();
-				}
+			getBasicProperties();
+			getForcesAndMotions();
+			performGroundOperations();
+			checkPlannedMovement();
+			moveMultipart();
+			if(!worldObj.isRemote){
+				dampenControlSurfaces();
 			}
 		}
 	}

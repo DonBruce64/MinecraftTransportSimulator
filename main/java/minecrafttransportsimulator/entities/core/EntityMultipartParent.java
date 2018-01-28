@@ -24,6 +24,7 @@ import net.minecraft.world.World;
 public abstract class EntityMultipartParent extends EntityMultipartBase{
 	public byte numberChildren;
 	public float rotationRoll;
+	public float prevRotationRoll;
 	
 	/**
 	 * Map that contains child mappings.  Keyed by child's UUID.

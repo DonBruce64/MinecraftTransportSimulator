@@ -24,7 +24,6 @@ import minecrafttransportsimulator.items.ItemKey;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.packets.general.MultipartDeltaPacket;
 import minecrafttransportsimulator.packets.general.MultipartParentDamagePacket;
-import minecrafttransportsimulator.packets.general.ServerTPSPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -65,23 +64,10 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	public String ownerName="";
 	public String displayText="";
 	
-	public float prevRotationRoll;
-	public float yawCorrection;
-	public float pitchCorrection;
-	public float rollCorrection;
-	
+	public boolean gotDeltaPacket;
 	public MTSPackObject pack;
 	public List<Byte> brokenWindows = new ArrayList<Byte>();
 	public List<EntityGroundDevice> groundedGroundDevices = new ArrayList<EntityGroundDevice>();
-	
-	protected final double speedFactor = ConfigSystem.getDoubleConfig("SpeedFactor");
-	
-	/**
-	 * Every 100 ticks this value is set on clients to tell them how may ticks the server skipped.
-	 * Make sure NOT to do movement on clients for this many ticks.
-	 * Clients are responsible for decrementing the value of this variable every skipped tick to bring it back to 0.
-	 */
-	public byte clientTicksToSkip = 0;
 	
 	private double clientDeltaX;
 	private double clientDeltaY;
@@ -95,6 +81,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	private float serverDeltaYaw;
 	private float serverDeltaPitch;
 	private float serverDeltaRoll;
+	private final double speedFactor = ConfigSystem.getDoubleConfig("SpeedFactor");
 			
 	public EntityMultipartMoving(World world){
 		super(world);
@@ -114,24 +101,6 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		if(linked){
 			currentMass = getCurrentMass();
 			populateGroundedGroundDeviceList(groundedGroundDevices);
-			
-			if(!worldObj.isRemote){
-				//Every 100 ticks, check the TPS to see if we need to tell the client to skip a tick (or more).
-				if(worldObj.getMinecraftServer().getTickCounter()%100==99){
-					long tpsSum = 0;
-					for(byte tick=0; tick < 100; ++tick){
-						tpsSum += worldObj.getMinecraftServer().worldTickTimes.get(worldObj.provider.getDimension())[tick];
-					}
-					double tps = Math.min(1000.0/(tpsSum/100D * 1.0E-6D), 20);
-					for(byte ticksToSkip=0; ticksToSkip < 100 - tps*5D; ++ticksToSkip){
-						MTS.MTSNet.sendToAll(new ServerTPSPacket(worldObj.provider.getDimension()));
-					}
-				}
-			}
-			prevRotationYaw = rotationYaw + yawCorrection;
-			prevRotationPitch = rotationPitch + pitchCorrection;
-			prevRotationRoll = rotationRoll + rollCorrection;
-			rollCorrection = pitchCorrection = yawCorrection = 0;
 		}
 	}
 	
@@ -345,24 +314,6 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			boxList.add(new Float[]{box.pos[0], box.pos[1], box.pos[2], box.width, box.height});
 		}
 		return boxList;
-	}
-	
-	private void addToClientDeltas(double dX, double dY, double dZ, float dYaw, float dPitch, float dRoll){
-		this.clientDeltaX += dX;
-		this.clientDeltaY += dY;
-		this.clientDeltaZ += dZ;
-		this.clientDeltaYaw += dYaw;
-		this.clientDeltaPitch += dPitch;
-		this.clientDeltaRoll += dRoll;
-	}
-	
-	public void addToServerDeltas(double dX, double dY, double dZ, float dYaw, float dPitch, float dRoll){
-		this.serverDeltaX += dX;
-		this.serverDeltaY += dY;
-		this.serverDeltaZ += dZ;
-		this.serverDeltaYaw += dYaw;
-		this.serverDeltaPitch += dPitch;
-		this.serverDeltaRoll += dRoll;
 	}
 	
 	/**
@@ -638,18 +589,27 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			MTS.MTSNet.sendToAll(new MultipartDeltaPacket(getEntityId(), motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll));
 		}else{
 			if(!(serverDeltaX == 0 && serverDeltaY == 0 && serverDeltaZ == 0)){
-				double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/4F;
-				double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/4F;
-				double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/4F;
-				float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/4F;
-				float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/4F;
-				float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/4F;
-				
-				setPosition(posX + deltaX, posY + deltaY, posZ + deltaZ);
-				rotationYaw += deltaYaw;
-				rotationPitch += deltaPitch;
-				rotationRoll += deltaRoll;
-				addToClientDeltas(deltaX, deltaY, deltaZ, deltaYaw, deltaPitch, deltaRoll);
+				if(gotDeltaPacket){
+					double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/4F;
+					double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/4F;
+					double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/4F;
+					float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/4F;
+					float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/4F;
+					float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/4F;
+					
+					setPosition(posX + deltaX, posY + deltaY, posZ + deltaZ);
+					rotationYaw += deltaYaw;
+					rotationPitch += deltaPitch;
+					rotationRoll += deltaRoll;
+					addToClientDeltas(deltaX, deltaY, deltaZ, deltaYaw, deltaPitch, deltaRoll);
+					gotDeltaPacket = false;
+				}else{
+					setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
+					rotationYaw += motionYaw;
+					rotationPitch += motionPitch;
+					rotationRoll += motionRoll;
+					addToClientDeltas(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll);
+				}
 			}else{
 				rotationYaw += motionYaw;
 				rotationPitch += motionPitch;
@@ -666,6 +626,24 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				child.setPosition(posX + offset.xCoord, posY + offset.yCoord, posZ + offset.zCoord);
 			}
 		}
+	}
+	
+	private void addToClientDeltas(double dX, double dY, double dZ, float dYaw, float dPitch, float dRoll){
+		this.clientDeltaX += dX;
+		this.clientDeltaY += dY;
+		this.clientDeltaZ += dZ;
+		this.clientDeltaYaw += dYaw;
+		this.clientDeltaPitch += dPitch;
+		this.clientDeltaRoll += dRoll;
+	}
+	
+	public void addToServerDeltas(double dX, double dY, double dZ, float dYaw, float dPitch, float dRoll){
+		this.serverDeltaX += dX;
+		this.serverDeltaY += dY;
+		this.serverDeltaZ += dZ;
+		this.serverDeltaYaw += dYaw;
+		this.serverDeltaPitch += dPitch;
+		this.serverDeltaRoll += dRoll;
 	}
 	
 	/**
