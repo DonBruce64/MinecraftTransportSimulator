@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import minecrafttransportsimulator.MTS;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -52,12 +53,12 @@ public final class ConfigSystem{
 	
 	public static void initClient(File configFile){
 		initCommon(configFile);
-		booleanConfigMap.put("FirstRun", config.get(CLIENT_CONFIG, "FirstRun", true, "Credits screen is displayed if this is the first run.").getBoolean());
 		booleanConfigMap.put("SeaLevelOffset", config.get(CLIENT_CONFIG, "SeaLevelOffset", false, "Does altimiter read zero at average sea level instead of Y=0?").getBoolean());
 		booleanConfigMap.put("ElectricStart", config.get(CLIENT_CONFIG, "ElectricStart", true, "Is the starter enabled? \nIf not, players must hit propellers to start them").getBoolean());
 		booleanConfigMap.put("MouseYoke", config.get(CLIENT_CONFIG, "MouseYoke", false, "Enable mouse yoke for planes? \nPrevents looking around unless unlocked.  Think MCHeli controls.").getBoolean());
 		booleanConfigMap.put("InnerWindows", config.get(CLIENT_CONFIG, "InnerWindows", true, "Render the insides of windows on vehicles?").getBoolean());
 		booleanConfigMap.put("KeyboardOverride", config.get(CLIENT_CONFIG, "KeyboardOverride", true, "Should keyboard controls be overriden when a joystick control is mapped?  \nLeave true to free up the keyboard while using a joysick.").getBoolean());
+		integerConfigMap.put("MajorVersion", config.get(CLIENT_CONFIG, "MajorVersion", 0, "This is used for the info screen when a major update happens.  Don't mess with it, okay?").getInt());
 		integerConfigMap.put("JoystickForceFactor", config.get(CLIENT_CONFIG, "JoystickForceFactor", 15, "Factor by which joystick inputs are multiplied.  \nThis controls how quickly the control surfaces change.", 1, Byte.MAX_VALUE).getInt());
 		integerConfigMap.put("ControlSurfaceCooldown", config.get(CLIENT_CONFIG, "ControlSurfaceCooldown", 4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.  \nThis is not used when using a joystick.", 0, Short.MAX_VALUE).getInt());
 		doubleConfigMap.put("JoystickDeadZone", config.get(CLIENT_CONFIG, "JoystickDeadZone", 0.03D, "Dead zone for joystick axis.  \nMTS will always use the greater of this value and the value provided by the computer.").getDouble());

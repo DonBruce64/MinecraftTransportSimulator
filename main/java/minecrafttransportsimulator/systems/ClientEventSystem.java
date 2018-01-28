@@ -3,21 +3,19 @@ package minecrafttransportsimulator.systems;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.guis.GUIConfig;
-import minecrafttransportsimulator.guis.GUICredits;
+import minecrafttransportsimulator.guis.GUISplash;
 import minecrafttransportsimulator.packets.general.PackReloadPacket;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
@@ -26,7 +24,6 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
@@ -43,22 +40,8 @@ public final class ClientEventSystem{
     private static Minecraft minecraft = Minecraft.getMinecraft();
 
     /**
-     * Checks on world load to see if player has loaded the mod before.
-     * If not, it shows the player the credits and gives the player a flight manual.
-     */
-    @SubscribeEvent
-    public static void on(PlayerLoggedInEvent event){
-        if(ConfigSystem.getBooleanConfig("FirstRun")){
-            ConfigSystem.setClientConfig("FirstRun", false);
-            FMLCommonHandler.instance().showGuiScreen(new GUICredits());
-            event.player.inventory.addItemStackToInventory(new ItemStack(MTSRegistry.manual));
-        }
-    }
-
-
-    /**
      * Adjusts camera zoom if player is seated and in third-person.
-     * Also adjusts the player's rotation.
+     * Also adjusts the player's rotation,
      */
     @SubscribeEvent
     public static void on(TickEvent.RenderTickEvent event){
@@ -74,11 +57,18 @@ public final class ClientEventSystem{
     /**
      * Updates player seated status and rotates player in the seat.
      * Forwards camera control options to the ControlSystem.
+     * Checks on world load to see if player has loaded this major revision before.
+     * If not, it shows the player the info screen once to appraise them of the changes.
      */
     @SubscribeEvent
     public static void on(TickEvent.ClientTickEvent event){
         if(minecraft.theWorld != null){
             if(event.phase.equals(Phase.END)){
+            	if(ConfigSystem.getIntegerConfig("MajorVersion") != Integer.valueOf(MTS.MODVER.substring(0, 1))){
+                    ConfigSystem.setClientConfig("MajorVersion", Integer.valueOf(MTS.MODVER.substring(0, 1)));
+                    FMLCommonHandler.instance().showGuiScreen(new GUISplash());
+                }
+            	
                 //Update the player seated status
                 if(minecraft.thePlayer.getRidingEntity() == null){
                     if(playerLastSeat != null){
