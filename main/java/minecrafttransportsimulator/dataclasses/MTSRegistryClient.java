@@ -78,8 +78,8 @@ public final class MTSRegistryClient{
 		registerItemRender(MTSRegistry.wrench);
 		registerItemRender(MTSRegistry.key);
 		registerItemRender(MTSRegistry.manual);
-		registerItemRender(Item.getItemFromBlock(MTSRegistry.propellerBench));
-		registerItemRender(Item.getItemFromBlock(MTSRegistry.fuelPump));
+		registerItemRender(MTSRegistry.itemBlockPropellerBench);
+		registerItemRender(MTSRegistry.itemBlockFuelPump);
 				
 		//Now register items for the pack data.
 		try{

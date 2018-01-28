@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
+import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.dataclasses.MTSDamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSPackObject;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackCollisionBox;
@@ -152,6 +153,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 							ItemKey.setVehicle(stack, this);
 							this.locked = true;
 							MTS.MTSNet.sendTo(new ChatPacket("interact.key.info.lock"), (EntityPlayerMP) player);
+							player.addStat(MTSAchievements.key);
 						}else if(!ItemKey.getVehicleUUID(player.getHeldItemMainhand()).equals(this.UUID)){
 							MTS.MTSNet.sendTo(new ChatPacket("interact.key.failure.wrongkey"), (EntityPlayerMP) player);
 							return true;

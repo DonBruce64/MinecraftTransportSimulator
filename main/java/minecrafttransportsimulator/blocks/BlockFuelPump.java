@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSBlockRotateable;
 import minecrafttransportsimulator.baseclasses.MTSTileEntity;
+import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.packets.general.FuelPumpConnectDisconnectPacket;
@@ -90,6 +91,7 @@ public class BlockFuelPump extends MTSBlockRotateable{
 					pump.totalTransfered = 0;
 					MTS.MTSNet.sendToAll(new FuelPumpConnectDisconnectPacket(pump, pump.connectedVehicle.getEntityId()));
 					MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.connect"), (EntityPlayerMP) player);
+					player.addStat(MTSAchievements.fuel);
     			}else{
     				MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.toofar"), (EntityPlayerMP) player);
     			}

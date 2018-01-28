@@ -98,11 +98,16 @@ public final class MTSRegistry{
 	public static final Item pointerLong = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item wrench = new ItemWrench().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item manual = new ItemManual().setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(MTSCreativeTabs.tabMTS);
-		
 	public static final Item key = new ItemKey().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item instrument = new ItemInstrument().setCreativeTab(MTSCreativeTabs.tabMTS);
+	
+	
+	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item itemBlockPropellerBench = new ItemBlock(propellerBench);
+	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item itemBlockFuelPump = new ItemBlock(fuelPump);
+		
+	
 	
 	private static int entityNumber = 0;
 	private static int packetNumber = 0;
@@ -170,26 +175,20 @@ public final class MTSRegistry{
 				try{
 					Item item = (Item) field.get(Item.class);
 					String name = field.getName().toLowerCase();
-					event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
-					MTSRegistry.itemList.add(item);
+					if(!name.startsWith("itemblock")){
+						event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
+						MTSRegistry.itemList.add(item);
+					}else{
+						name = name.substring("itemblock".length());
+						event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
+						MTSRegistry.itemList.add(item);
+					}
 				}catch(Exception e){
 					e.printStackTrace();
 				}
 			}
 		}
-		
-		for(Field field : MTSRegistry.class.getFields()){
-			if(field.getType().equals(Block.class)){
-				try{
-					Block block = (Block) field.get(Block.class);
-					String name = block.getClass().getSimpleName().toLowerCase().substring(5);
-					event.getRegistry().register(new ItemBlock(block).setRegistryName(name));
-					MTSRegistry.itemList.add(Item.getItemFromBlock(block));
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-		}
+		MTSAchievements.init();
 	}
 
 	private static void initEntities(){
@@ -284,7 +283,7 @@ public final class MTSRegistry{
 				'B', Blocks.WOOL);
 		
 		//Propeller bench
-		registerRecipe(new ItemStack(propellerBench),
+		registerRecipe(new ItemStack(itemBlockPropellerBench),
 				"AAA",
 				" BA",
 				"ACA",
@@ -293,7 +292,7 @@ public final class MTSRegistry{
 				'C', Blocks.ANVIL);
 		
 		//Fuel pump
-		registerRecipe(new ItemStack(fuelPump),
+		registerRecipe(new ItemStack(itemBlockFuelPump),
 				"DED",
 				"CBC",
 				"AAA",

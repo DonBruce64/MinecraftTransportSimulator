@@ -3,6 +3,7 @@ package minecrafttransportsimulator.entities.parts;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.packets.general.ChatPacket;
@@ -37,12 +38,14 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 					if(this.parent != null){
 						if(playerStack.getTagCompound().getInteger("diameter") > 80 && this instanceof EntityEngineAircraftSmall){
 							MTS.MTSNet.sendTo(new ChatPacket(I18n.format("interact.failure.propellertoobig")), (EntityPlayerMP) player);
+							player.addStat(MTSAchievements.propellerTooBig);
 							return false;
 						}
 						propeller = new EntityPropeller(worldObj, (EntityPlane) parent, parent.UUID, offsetX, offsetY + (this.height - 1)/2F, offsetZ + 0.9F, playerStack.getItemDamage());
 						propeller.setNBTFromStack(playerStack);
 						propeller.engineUUID = this.UUID;
 						parent.addChild(propeller.UUID, propeller, true);
+						player.addStat(MTSAchievements.propellerFits);
 						if(!player.capabilities.isCreativeMode){
 							if(stack.stackSize > 1){
 								--stack.stackSize;
