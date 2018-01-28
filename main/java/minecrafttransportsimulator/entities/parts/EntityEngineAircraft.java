@@ -47,11 +47,7 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 						parent.addChild(propeller.UUID, propeller, true);
 						player.addStat(MTSAchievements.propellerFits);
 						if(!player.capabilities.isCreativeMode){
-							if(stack.stackSize > 1){
-								--stack.stackSize;
-							}else{
-								player.inventory.removeStackFromSlot(player.inventory.currentItem);
-							}
+							player.inventory.clearMatchingItems(MTSRegistry.propeller, playerStack.getItemDamage(), 1, playerStack.getTagCompound());
 						}
 						return true;
 					}
