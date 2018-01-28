@@ -107,6 +107,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 			}else{
 				motionX = 0;
 				motionZ = 0;
+				motionYaw = 0;
 			}
 		}
 		
