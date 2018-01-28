@@ -40,62 +40,65 @@ public class BlockFuelPump extends MTSBlockRotateable{
 			FluidStack stackToAdd = null;
 			
 			ItemStack stack = player.getHeldItem(hand);
-    		ICapabilityProvider capabilities = stack.getItem().initCapabilities(stack, stack.getTagCompound());
-        	if(capabilities instanceof FluidBucketWrapper){
-        		handlerBucket = ((FluidBucketWrapper) capabilities);
-        		stackToAdd = handlerBucket.getFluid();
-        	}else if(stack.getItem() instanceof ItemFluidContainer){
-        		handlerStack = (FluidHandlerItemStack) capabilities;
-    			stackToAdd = handlerStack.getFluid();
-        	}
+			TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(pos);
+			if(stack != null){
+	    		ICapabilityProvider capabilities = stack.getItem().initCapabilities(stack, stack.getTagCompound());
+	        	if(capabilities instanceof FluidBucketWrapper){
+	        		handlerBucket = ((FluidBucketWrapper) capabilities);
+	        		stackToAdd = handlerBucket.getFluid();
+	        	}else if(stack.getItem() instanceof ItemFluidContainer){
+	        		handlerStack = (FluidHandlerItemStack) capabilities;
+	    			stackToAdd = handlerStack.getFluid();
+	        	}
+	        	
+	        	if(stackToAdd != null){
+		        	int amountToFill = pump.fill(stackToAdd, false);
+		    		if(amountToFill > 0){
+		            	if(handlerBucket != null){
+		            		if(amountToFill <= stackToAdd.amount){
+		            			pump.fill(stackToAdd, true);
+		            			if(!player.isCreative()){
+		            				handlerBucket.drain(stackToAdd, true);
+		            			}
+		            		}
+		            	}else{
+		            		pump.fill(stackToAdd, true);
+		            		if(!player.isCreative()){
+		            			handlerStack.drain(new FluidStack(stackToAdd.getFluid(), amountToFill), true);
+		        			}
+		            	}
+		    		}
+		    		return true;
+	        	}
+			}
         	
-        	TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(pos);
-        	if(stackToAdd != null){
-	        	int amountToFill = pump.fill(stackToAdd, false);
-	    		if(amountToFill > 0){
-	            	if(handlerBucket != null){
-	            		if(amountToFill <= stackToAdd.amount){
-	            			pump.fill(stackToAdd, true);
-	            			if(!player.isCreative()){
-	            				handlerBucket.drain(stackToAdd, true);
-	            			}
-	            		}
-	            	}else{
-	            		pump.fill(stackToAdd, true);
-	            		if(!player.isCreative()){
-	            			handlerStack.drain(new FluidStack(stackToAdd.getFluid(), amountToFill), true);
-	        			}
-	            	}
-	    		}
-        	}else{
-        		if(pump.connectedVehicle == null){
-        			Entity nearestEntity = null;
-        			float lowestDistance = 99;
-        			for(Entity entity : world.loadedEntityList){
-        				if(entity instanceof EntityMultipartVehicle){
-        					float distance = (float) Math.sqrt(entity.getPosition().distanceSq(pump.getPos()));
-        					if(distance < lowestDistance){
-        						lowestDistance = distance;
-        						nearestEntity = entity;
-        					}
-        				}
-        			}
-        			if(nearestEntity != null){
-    					pump.connectedVehicle = (EntityMultipartVehicle) nearestEntity;
-    					pump.connectedVehicleUUID = pump.connectedVehicle.UUID;
-    					pump.totalTransfered = 0;
-    					MTS.MTSNet.sendToAll(new FuelPumpConnectDisconnectPacket(pump, pump.connectedVehicle.getEntityId()));
-    					MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.connect"), (EntityPlayerMP) player);
-        			}else{
-        				MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.toofar"), (EntityPlayerMP) player);
-        			}
-        		}else{
-        			pump.connectedVehicleUUID = "";
-        			pump.connectedVehicle = null;
-        			MTS.MTSNet.sendToAll(new FuelPumpConnectDisconnectPacket(pump, -1));
-        			MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.disconnect"), (EntityPlayerMP) player);
-        		}
-        	}
+    		if(pump.connectedVehicle == null){
+    			Entity nearestEntity = null;
+    			float lowestDistance = 99;
+    			for(Entity entity : world.loadedEntityList){
+    				if(entity instanceof EntityMultipartVehicle){
+    					float distance = (float) Math.sqrt(entity.getPosition().distanceSq(pump.getPos()));
+    					if(distance < lowestDistance){
+    						lowestDistance = distance;
+    						nearestEntity = entity;
+    					}
+    				}
+    			}
+    			if(nearestEntity != null){
+					pump.connectedVehicle = (EntityMultipartVehicle) nearestEntity;
+					pump.connectedVehicleUUID = pump.connectedVehicle.UUID;
+					pump.totalTransfered = 0;
+					MTS.MTSNet.sendToAll(new FuelPumpConnectDisconnectPacket(pump, pump.connectedVehicle.getEntityId()));
+					MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.connect"), (EntityPlayerMP) player);
+    			}else{
+    				MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.toofar"), (EntityPlayerMP) player);
+    			}
+    		}else{
+    			pump.connectedVehicleUUID = "";
+    			pump.connectedVehicle = null;
+    			MTS.MTSNet.sendToAll(new FuelPumpConnectDisconnectPacket(pump, -1));
+    			MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.disconnect"), (EntityPlayerMP) player);
+    		}
 		}
 		return true;
 	}
