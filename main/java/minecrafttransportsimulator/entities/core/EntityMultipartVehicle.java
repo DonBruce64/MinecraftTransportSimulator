@@ -127,10 +127,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 			}
 		}
 		
-		float turningFactor = getTurningFactor();
-		if(turningFactor != 0){			
-			motionYaw += turningFactor;
-		}
+		motionYaw += getTurningFactor();
 	}
 	
 	private void updateHeadingVec(){
