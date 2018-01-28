@@ -1,11 +1,9 @@
 package minecrafttransportsimulator.dataclasses;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.items.ItemMultipartMoving;
-import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -38,7 +36,10 @@ public abstract class MTSCreativeTabs extends CreativeTabs{
 	@SideOnly(Side.CLIENT)
     public ItemStack getIconItemStack(){
 		if(multipartList == null){
-			multipartList = getAllRegisteredItemsForType();
+			multipartList = new ArrayList<ItemMultipartMoving>();
+			for(ItemMultipartMoving movingItem : MTSRegistry.multipartItemMap.values()){
+				multipartList.add(movingItem);
+			}
 		}
 		if(multipartList.isEmpty()){
 			if(defaultStack == null){
@@ -49,40 +50,11 @@ public abstract class MTSCreativeTabs extends CreativeTabs{
 			return new ItemStack(multipartList.get((int) (Minecraft.getMinecraft().theWorld.getTotalWorldTime()/20%multipartList.size())));
 		}
     }
-	
-	protected abstract MultipartTypes getTabType(); 
 		
-	private List<ItemMultipartMoving> getAllRegisteredItemsForType(){
-		List<ItemMultipartMoving> movingList = new ArrayList<ItemMultipartMoving>();
-		for(ItemMultipartMoving movingItem : MTSRegistry.multipartItemMap.values()){
-			movingList.add(movingItem);
-		}
-		return movingList;
-	}
-		
-	public static final CreativeTabs tabMTSPlanes = new MTSCreativeTabs("tabMTSPlanes"){
+	public static final CreativeTabs tabMTS = new MTSCreativeTabs("tabMTS"){
 		@Override
 		public Item getTabIconItem(){
 			return MTSRegistry.engineAircraftLarge;
 		}
-		
-		@Override
-		protected MultipartTypes getTabType(){
-			return MultipartTypes.PLANE;
-		}
 	};
-	
-	public static CreativeTabs[] getAllCreativeTabs(){
-		List<CreativeTabs> tabList = new ArrayList<CreativeTabs>();
-		for(Field field : MTSCreativeTabs.class.getFields()){
-			if(field.getType().equals(CreativeTabs.class)){
-				try{
-					tabList.add((CreativeTabs) field.get(CreativeTabs.class));
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-		}
-		return tabList.toArray(new CreativeTabs[tabList.size()]);
-	}
 }
