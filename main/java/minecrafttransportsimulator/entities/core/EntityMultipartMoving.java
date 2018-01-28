@@ -208,11 +208,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 							newChild.setController(partToSpawn.isController);
 							this.addChild(newChild.UUID, newChild, true);
 							if(!player.capabilities.isCreativeMode){
-								if(heldStack.stackSize > 0){
-									--heldStack.stackSize;
-								}else{
-									player.inventory.removeStackFromSlot(player.inventory.currentItem);
-								}
+								player.inventory.clearMatchingItems(heldStack.getItem(), heldStack.getItemDamage(), 1, heldStack.getTagCompound());
 							}
 						}catch(Exception e){
 							MTS.MTSLog.error("ERROR SPAWING PART!");
