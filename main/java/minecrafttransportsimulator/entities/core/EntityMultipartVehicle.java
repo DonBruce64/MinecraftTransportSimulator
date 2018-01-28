@@ -128,10 +128,8 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		}
 		
 		float turningFactor = getTurningFactor();
-		if(turningFactor != 0){
-			rotationYaw += turningFactor;
-			updateHeadingVec();
-			reAdjustGroundSpeed(Math.hypot(motionX, motionZ));
+		if(turningFactor != 0){			
+			motionYaw += turningFactor;
 		}
 	}
 	

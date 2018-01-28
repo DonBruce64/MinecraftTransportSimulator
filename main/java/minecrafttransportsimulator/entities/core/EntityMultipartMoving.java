@@ -406,7 +406,8 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			for(EntityMultipartChild child : childArray){
 				while(motionYaw != 0){
 					MTSVector offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw + motionYaw, rotationRoll);
-					AxisAlignedBB offsetChildBox = child.getEntityBoundingBox().offset(posX + offset.xCoord - child.posX + motionX*speedFactor, posY + offset.yCoord - child.posY + motionY*speedFactor, posZ + offset.zCoord - child.posZ + motionZ*speedFactor);
+					//Raise this box ever so slightly because Floating Point errors are a PITA.
+					AxisAlignedBB offsetChildBox = child.getEntityBoundingBox().offset(posX + offset.xCoord - child.posX + motionX*speedFactor, posY + offset.yCoord - child.posY + motionY*speedFactor + 0.01, posZ + offset.zCoord - child.posZ + motionZ*speedFactor);
 					if(getChildCollisions(child, offsetChildBox).isEmpty()){
 						break;
 					}
@@ -580,6 +581,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	 * Failure to do this will result in things going badly!
 	 */
 	protected void moveMultipart(){
+		prevRotationRoll = rotationRoll;
 		if(!worldObj.isRemote){
 			rotationYaw += motionYaw;
 			rotationPitch += motionPitch;
