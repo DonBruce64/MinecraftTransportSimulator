@@ -19,8 +19,8 @@ public class ItemManual extends Item{
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(ItemStack stack, World world, EntityPlayer player, EnumHand hand){
 		if(world.isRemote){
-			MTS.proxy.openGUI(stack, player);
+			MTS.proxy.openGUI(player.getHeldItem(hand), player);
 		}
-        return new ActionResult<ItemStack>(EnumActionResult.FAIL, stack);
+        return new ActionResult<ItemStack>(EnumActionResult.FAIL, player.getHeldItem(hand));
     }
 }
