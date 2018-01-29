@@ -91,7 +91,7 @@ public class BlockFuelPump extends MTSBlockRotateable{
 					pump.totalTransfered = 0;
 					MTS.MTSNet.sendToAll(new FuelPumpConnectDisconnectPacket(pump, pump.connectedVehicle.getEntityId()));
 					MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.connect"), (EntityPlayerMP) player);
-					player.addStat(MTSAchievements.fuel);
+					MTSAchievements.triggerFuel(player);
     			}else{
     				MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.toofar"), (EntityPlayerMP) player);
     			}

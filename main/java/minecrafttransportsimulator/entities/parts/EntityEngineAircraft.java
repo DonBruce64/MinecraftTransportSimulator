@@ -38,14 +38,14 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 					if(this.parent != null){
 						if(playerStack.getTagCompound().getInteger("diameter") > 80 && this instanceof EntityEngineAircraftSmall){
 							MTS.MTSNet.sendTo(new ChatPacket(I18n.format("interact.failure.propellertoobig")), (EntityPlayerMP) player);
-							player.addStat(MTSAchievements.propellerTooBig);
+							MTSAchievements.triggerPropellerTooBig(player);
 							return false;
 						}
 						propeller = new EntityPropeller(worldObj, (EntityPlane) parent, parent.UUID, offsetX, offsetY + (this.height - 1)/2F, offsetZ + 0.9F, playerStack.getItemDamage());
 						propeller.setNBTFromStack(playerStack);
 						propeller.engineUUID = this.UUID;
 						parent.addChild(propeller.UUID, propeller, true);
-						player.addStat(MTSAchievements.propellerFits);
+						MTSAchievements.triggerPropellerFits(player);
 						if(!player.capabilities.isCreativeMode){
 							player.inventory.clearMatchingItems(MTSRegistry.propeller, playerStack.getItemDamage(), 1, playerStack.getTagCompound());
 						}

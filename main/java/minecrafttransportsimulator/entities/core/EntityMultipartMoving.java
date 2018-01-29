@@ -152,7 +152,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 							ItemKey.setVehicle(heldStack, this);
 							this.locked = true;
 							MTS.MTSNet.sendTo(new ChatPacket("interact.key.info.lock"), (EntityPlayerMP) player);
-							player.addStat(MTSAchievements.key);
+							MTSAchievements.triggerKey(player);
 						}else if(!ItemKey.getVehicleUUID(player.getHeldItemMainhand()).equals(this.UUID)){
 							MTS.MTSNet.sendTo(new ChatPacket("interact.key.failure.wrongkey"), (EntityPlayerMP) player);
 							return true;

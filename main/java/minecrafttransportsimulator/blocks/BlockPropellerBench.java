@@ -32,7 +32,7 @@ public class BlockPropellerBench extends MTSBlockRotateable{
 			if(bench.getPropellerOnBench() != null){
 				bench.dropPropellerAt(player.posX, player.posY, player.posZ);
 				if(!world.isRemote){
-					player.addStat(MTSAchievements.propeller);
+					MTSAchievements.triggerPropeller(player);
 				}
 			}else{
 				if(bench.isRunning()){

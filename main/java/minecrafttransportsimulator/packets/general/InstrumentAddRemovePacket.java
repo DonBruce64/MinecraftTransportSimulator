@@ -79,7 +79,7 @@ public class InstrumentAddRemovePacket implements IMessage{
 						
 						vehicle.setInstrumentNumber(message.instrumentToChange, Instruments.values()[message.instrumentToChangeTo]);
 						if(ctx.side.isServer()){
-							player.addStat(MTSAchievements.instrument);
+							MTSAchievements.triggerInstrument(player);
 							MTS.MTSNet.sendToAll(message);
 						}
 					}
