@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items;
 
 import java.util.List;
 
+import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -23,8 +24,10 @@ public class ItemSeat extends Item{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
-		for(int i=0; i<numberSeats; ++i){
-			subItems.add(new ItemStack(this, 1, i));
+		if(MTSCreativeTabs.tabMTS.equals(tab)){
+			for(int i=0; i<numberSeats; ++i){
+				subItems.add(new ItemStack(this, 1, i));
+			}
 		}
     }
 }

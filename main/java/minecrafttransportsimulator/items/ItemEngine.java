@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items;
 
 import java.util.List;
 
+import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
 import net.minecraft.client.resources.I18n;
@@ -46,8 +47,10 @@ public abstract class ItemEngine extends Item{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
-		for(ItemStack stack : this.getAllPossibleStacks()){
-			subItems.add(stack);
+		if(MTSCreativeTabs.tabMTS.equals(tab)){
+			for(ItemStack stack : this.getAllPossibleStacks()){
+				subItems.add(stack);
+			}
 		}
     }
 	
