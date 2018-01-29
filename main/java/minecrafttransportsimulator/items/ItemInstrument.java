@@ -25,8 +25,8 @@ public class ItemInstrument extends Item{
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack item, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
-		tooltipLines.add(I18n.format(this.getUnlocalizedName(item) + ".description"));
+	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
+		tooltipLines.add(I18n.format(this.getUnlocalizedName(stack) + ".description"));
 	}
 	
 	@Override
