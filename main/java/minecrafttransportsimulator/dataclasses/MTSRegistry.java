@@ -425,6 +425,7 @@ public final class MTSRegistry{
 				'R', new ItemStack(Items.DYE, 1, 3));
 		
 		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_ALTIMETER.ordinal()),
+				"WLW",
 				"WSW",
 				" B ",
 				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
