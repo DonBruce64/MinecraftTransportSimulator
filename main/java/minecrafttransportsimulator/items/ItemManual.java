@@ -16,6 +16,7 @@ public class ItemManual extends Item{
 		this.setMaxStackSize(1);
 	}
 	
+	@Override
 	public ActionResult<ItemStack> onItemRightClick(ItemStack stack, World world, EntityPlayer player, EnumHand hand){
 		if(world.isRemote){
 			MTS.proxy.openGUI(stack, player);
