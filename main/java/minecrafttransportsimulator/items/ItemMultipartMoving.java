@@ -33,27 +33,30 @@ public class ItemMultipartMoving extends Item{
 	
 	@Override
 	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
-		if(!world.isRemote){
-			//We want to spawn above this block.
-			pos = pos.up();
-			String entityName = ((ItemMultipartMoving) stack.getItem()).name;
-			try{
-				EntityMultipartMoving newEntity = PackParserSystem.getMultipartType(entityName).multipartClass.getConstructor(World.class, float.class, float.class, float.class, float.class, String.class).newInstance(world, pos.getX(), pos.getY(), pos.getZ(), player.rotationYaw, entityName);
-				float minHeight = 0;
-				for(Float[] coreCoords : newEntity.getCollisionBoxes()){
-					minHeight = -coreCoords[1] > minHeight ? -coreCoords[1] : minHeight;
-				}
-				newEntity.posY += minHeight;
-				if(canSpawn(world, newEntity, pos)){
-					newEntity.numberChildren = (byte) newEntity.getCollisionBoxes().size();
-					if(!player.capabilities.isCreativeMode){
-						--stack.stackSize;
+		if(!world.isRemote && player.getHeldItem(hand) != null){
+			ItemStack heldStack = player.getHeldItem(hand);
+			if(heldStack.getItem() != null){
+				//We want to spawn above this block.
+				pos = pos.up();
+				String entityName = ((ItemMultipartMoving) heldStack.getItem()).name;
+				try{
+					EntityMultipartMoving newEntity = PackParserSystem.getMultipartType(entityName).multipartClass.getConstructor(World.class, float.class, float.class, float.class, float.class, String.class).newInstance(world, pos.getX(), pos.getY(), pos.getZ(), player.rotationYaw, entityName);
+					float minHeight = 0;
+					for(Float[] coreCoords : newEntity.getCollisionBoxes()){
+						minHeight = -coreCoords[1] > minHeight ? -coreCoords[1] : minHeight;
 					}
-					return EnumActionResult.PASS;
+					newEntity.posY += minHeight;
+					if(canSpawn(world, newEntity, pos)){
+						newEntity.numberChildren = (byte) newEntity.getCollisionBoxes().size();
+						if(!player.capabilities.isCreativeMode){
+							player.inventory.clearMatchingItems(heldStack.getItem(), heldStack.getItemDamage(), 1, heldStack.getTagCompound());
+						}
+						return EnumActionResult.PASS;
+					}
+				}catch(Exception e){
+					MTS.MTSLog.error("ERROR SPAWING MULTIPART ENTITY!");
+					e.printStackTrace();
 				}
-			}catch(Exception e){
-				MTS.MTSLog.error("ERROR SPAWING MULTIPART ENTITY!");
-				e.printStackTrace();
 			}
 		}
 		return EnumActionResult.FAIL;
