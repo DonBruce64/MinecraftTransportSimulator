@@ -34,7 +34,7 @@ public class ItemInstrument extends Item{
     public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
 		//Iterate though all the instruments and put them on this tab.
 		for(Instruments instrument : MTSInstruments.Instruments.values()){
-			subItems.add(new ItemStack(item, 1, instrument.ordinal()));
+			subItems.add(new ItemStack(this, 1, instrument.ordinal()));
 		}
     }
 }
