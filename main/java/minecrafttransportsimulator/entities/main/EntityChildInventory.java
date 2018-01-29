@@ -155,10 +155,10 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
         NBTTagList nbttaglist = tagCompound.getTagList("Items", 10);
         this.contents = new ItemStack[this.getSizeInventory()];
         for (int i = 0; i < nbttaglist.tagCount(); ++i){
-            NBTTagCompound nbttagcompound1 = nbttaglist.getCompoundTagAt(i);
-            int j = nbttagcompound1.getByte("Slot") & 255;
+            NBTTagCompound itemTag = nbttaglist.getCompoundTagAt(i);
+            int j = itemTag.getByte("Slot") & 255;
             if(j >= 0 && j < this.contents.length){
-                this.contents[j] = ItemStack.loadItemStackFromNBT(nbttagcompound1);
+                this.contents[j] = ItemStack.loadItemStackFromNBT(itemTag);
             }
         }
     }
