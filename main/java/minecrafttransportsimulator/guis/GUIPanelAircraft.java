@@ -3,8 +3,9 @@ package minecrafttransportsimulator.guis;
 import java.awt.Color;
 import java.io.IOException;
 
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
 import minecrafttransportsimulator.packets.control.EnginePacket;
@@ -12,13 +13,10 @@ import minecrafttransportsimulator.packets.control.LightPacket;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
-
-import org.lwjgl.opengl.GL11;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * Used for controlling engines, lights, trim, and other things.

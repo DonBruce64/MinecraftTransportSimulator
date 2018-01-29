@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.rendering;
 
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.main.EntityPlane;
-
-import org.lwjgl.opengl.GL11;
 
 public final class RenderControls extends RenderInstruments{	
 	public static void drawControl(EntityMultipartVehicle vehicle, Controls control, boolean hud){

@@ -2,7 +2,6 @@ package minecrafttransportsimulator.guis;
 
 import java.awt.Color;
 
-import minecrafttransportsimulator.MTS;
 import net.minecraft.client.gui.GuiScreen;
 
 public class GUISplash extends GuiScreen{
