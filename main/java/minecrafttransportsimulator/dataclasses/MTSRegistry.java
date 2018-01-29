@@ -528,8 +528,7 @@ public final class MTSRegistry{
 				'L', pointerLong, 
 				'Y', new ItemStack(Items.DYE, 1, 11),
 				'G', new ItemStack(Items.DYE, 1, 10),
-				'R', new ItemStack(Items.DYE, 1, 1),
-				'W', new ItemStack(Items.DYE, 1, 15));
+				'R', new ItemStack(Items.DYE, 1, 1));
 				
 		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_OILPRESSURE.ordinal()),
 				"   ",
