@@ -117,6 +117,8 @@ public final class MTSRegistry{
 	public static Map<String, ItemMultipartMoving> multipartItemMap = new HashMap<String, ItemMultipartMoving>();
 	/**Maps child class names to classes for quicker lookup during spawn operations.*/
 	public static Map<String, Class<? extends EntityMultipartChild>> partClasses = new HashMap<String, Class<? extends EntityMultipartChild>>();
+	/**Maps item names to their recipes.*/
+	public static Map<String, ItemStack[]> craftingItemMap = new HashMap<String, ItemStack[]>();
 
 	/**All run-time things go here.**/
 	public static void init(){
@@ -548,6 +550,7 @@ public final class MTSRegistry{
 			Character[] indexes = new Character[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'};
 			String[] craftingRows = new String[]{"", "", ""};
 			List<ItemStack> stacks = new ArrayList<ItemStack>();
+			ItemStack[] craftingArray = new ItemStack[9];
 			String[] recipe = PackParserSystem.getDefinitionForPack(name).recipe;
 			for(byte i=0; i<9; ++i){
 				if(!recipe[i].isEmpty()){
@@ -555,6 +558,7 @@ public final class MTSRegistry{
 					int damage = Integer.valueOf(recipe[i].substring(recipe[i].lastIndexOf(':') + 1));
 					craftingRows[i/3] = craftingRows[i/3] + indexes[stacks.size()];
 					stacks.add(new ItemStack(item, 1, damage));
+					craftingArray[i] = stacks.get(stacks.size() - 1); 
 				}else{
 					craftingRows[i/3] = craftingRows[i/3] + ' ';
 				}
@@ -569,8 +573,9 @@ public final class MTSRegistry{
 				registryObject[3 + i*2] = indexes[i];
 				registryObject[3 + i*2 + 1] = stacks.get(i);
 			}
-			//Now register the recipe
+			//Now register the recipe and add the stacks to the crafting item map.
 			registerRecipe(new ItemStack(mapEntry.getValue()), registryObject);
+			craftingItemMap.put(name, craftingArray);
 		}
 	}
 

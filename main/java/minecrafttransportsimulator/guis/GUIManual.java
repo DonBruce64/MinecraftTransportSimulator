@@ -4,9 +4,7 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -15,7 +13,6 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSPackObject;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.ItemMultipartMoving;
 import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
@@ -24,9 +21,6 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.CraftingManager;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.ShapedRecipes;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
@@ -45,7 +39,6 @@ public class GUIManual extends GuiScreen{
 	private final ItemStack stack;
 	private final NBTTagCompound stackTag;
 	private final List<MTSPackObject> packList = new ArrayList<MTSPackObject>();
-	private final Map<String, ItemStack[]> craftingItemMap = new HashMap<String, ItemStack[]>();
 	
 	private GuiButton leftButton;
 	private GuiButton rightButton;
@@ -79,16 +72,6 @@ public class GUIManual extends GuiScreen{
 				packList.add(PackParserSystem.getPack(name));
 				maxPages += 2;
 			}
-		}
-		
-		//Populate vehicle crafting data
-		for(IRecipe recipe : CraftingManager.getInstance().getRecipeList()){
-			if(recipe instanceof ShapedRecipes){
-				if(recipe.getRecipeOutput().getItem() instanceof ItemMultipartMoving){
-					craftingItemMap.put(((ItemMultipartMoving) recipe.getRecipeOutput().getItem()).name, ((ShapedRecipes) recipe).recipeItems);
-				}
-			}
-			
 		}
 	}
 	
@@ -234,7 +217,7 @@ public class GUIManual extends GuiScreen{
 		byte index = (byte) (mc.theWorld.getTotalWorldTime()/40%packObject.definitions.size());
 		String uniqueName = packObject.definitions.get(index).uniqueName;
 		ItemStack resultStack = new ItemStack(MTSRegistry.multipartItemMap.get(uniqueName));
-		ItemStack[] craftingStacks = craftingItemMap.get(uniqueName);
+		ItemStack[] craftingStacks = MTSRegistry.craftingItemMap.get(uniqueName);
 		
 		//Calculate specs.
 		byte controllers = 0;
