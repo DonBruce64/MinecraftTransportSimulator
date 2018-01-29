@@ -484,8 +484,7 @@ public final class MTSRegistry{
 				'L', pointerLong, 
 				'R', new ItemStack(Items.DYE, 1, 1),
 				'Y', new ItemStack(Items.DYE, 1, 11),
-				'G', new ItemStack(Items.DYE, 1, 10),
-				'W', new ItemStack(Items.DYE, 1, 15));
+				'G', new ItemStack(Items.DYE, 1, 10));
 		
 		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_TRIM.ordinal()),
 				"GLG",
