@@ -119,9 +119,6 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
 	
     public void setInventorySlotContents(int slot, ItemStack stack){
         this.contents[slot] = stack;
-        if(stack != null && stack.stackSize > this.getInventoryStackLimit()){
-            stack.stackSize = this.getInventoryStackLimit();
-        }
     }
 	
     public ItemStack decrStackSize(int slot, int number){
