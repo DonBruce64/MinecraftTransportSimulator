@@ -347,16 +347,16 @@ public final class MTSRegistry{
 				'B', Blocks.OBSIDIAN,
 				'C', Items.DIAMOND);
 		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
+				"ABA",
 				"ACA",
-				"ACA",
-				"ACA",
+				"ABA",
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.IRON_INGOT);
 		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
+				"ABA",
 				"ACA",
-				"ACA",
-				"ACA",
+				"ABA",
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.DIAMOND);
