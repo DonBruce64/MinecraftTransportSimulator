@@ -106,9 +106,8 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
     	this.pitch = tagCompound.getByte("pitch");
     	this.diameter = tagCompound.getByte("diameter");
     	this.timeOperationFinished = tagCompound.getLong("timeOperationFinished");
-    	NBTTagCompound itemTag = tagCompound.getCompoundTag("propellerOnBench");
-    	if(itemTag != null){
-    		this.propellerOnBench = ItemStack.loadItemStackFromNBT(itemTag);
+    	if(tagCompound.hasKey("propellerOnBench")){
+    		this.propellerOnBench = ItemStack.loadItemStackFromNBT(tagCompound.getCompoundTag("propellerOnBench"));
     	}
     }
     
