@@ -60,7 +60,7 @@ public final class MTSRegistryClient{
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityFuelPump.class, new RenderFuelPump());
 		
 		//Register the Entity rendering classes.
-		RenderingRegistry.registerEntityRenderingHandler(EntityMultipartMoving.class, instance.new MTSRenderingFactory(RenderMultipart.class));
+		RenderingRegistry.registerEntityRenderingHandler(EntityMultipartMoving.class, MTSRenderFactory);
 		
 		//Register the item models.
 		registerItemRender(MTSRegistry.wheelSmall);
@@ -123,20 +123,10 @@ public final class MTSRegistryClient{
 		}
 	}
 	
-	private class MTSRenderingFactory implements IRenderFactory{
-		private final Class<? extends Render> entityRender;
-		public MTSRenderingFactory(Class<? extends Render>  entityRender){
-			this.entityRender = entityRender;
-		}
-
+	private static final IRenderFactory<EntityMultipartMoving> MTSRenderFactory = new IRenderFactory<EntityMultipartMoving>(){
 		@Override
-		public Render createRenderFor(RenderManager manager){
-			try{
-				return entityRender.getConstructor(RenderManager.class).newInstance(manager);
-			}catch(Exception e){
-				e.printStackTrace();
-				return null;
-			}
+		public Render<? super EntityMultipartMoving> createRenderFor(RenderManager manager){
+			return new RenderMultipart(manager);
 		}
 	};
 }

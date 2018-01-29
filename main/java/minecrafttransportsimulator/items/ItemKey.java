@@ -32,9 +32,9 @@ public class ItemKey extends Item{
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean p_77624_4_){
+	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
 		for(byte i=1; i<=5; ++i){
-			list.add(I18n.format("info.item.key.line" + String.valueOf(i)));
+			tooltipLines.add(I18n.format("info.item.key.line" + String.valueOf(i)));
 		}
 	}
 }

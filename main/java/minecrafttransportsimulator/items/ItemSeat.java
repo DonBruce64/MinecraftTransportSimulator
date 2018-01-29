@@ -22,9 +22,9 @@ public class ItemSeat extends Item{
 	
 	@Override
     @SideOnly(Side.CLIENT)
-    public void getSubItems(Item item, CreativeTabs tab, List itemList){
+    public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
 		for(int i=0; i<numberSeats; ++i){
-			itemList.add(new ItemStack(item, 1, i));
+			subItems.add(new ItemStack(item, 1, i));
 		}
     }
 }

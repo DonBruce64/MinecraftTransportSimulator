@@ -17,9 +17,9 @@ public class ItemWrench extends Item{
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean p_77624_4_){
-		list.add(I18n.format("info.item.wrench.use"));
-		list.add(I18n.format("info.item.wrench.attack"));
-		list.add(I18n.format("info.item.wrench.sneakattack"));
+	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
+		tooltipLines.add(I18n.format("info.item.wrench.use"));
+		tooltipLines.add(I18n.format("info.item.wrench.attack"));
+		tooltipLines.add(I18n.format("info.item.wrench.sneakattack"));
 	}
 }

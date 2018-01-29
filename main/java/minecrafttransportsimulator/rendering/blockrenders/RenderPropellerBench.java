@@ -11,10 +11,9 @@ import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.rendering.blockmodels.ModelPropellerBench;
 import minecrafttransportsimulator.rendering.partmodels.ModelPropeller;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 
-public class RenderPropellerBench extends TileEntitySpecialRenderer{
+public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPropellerBench>{
 	private static final ModelPropellerBench benchModel = new ModelPropellerBench();
 	private static final ModelPropeller propellerModel = new ModelPropeller();
 	private static final ResourceLocation tierOneTexture = new ResourceLocation("minecraft", "textures/blocks/planks_oak.png");
@@ -30,9 +29,8 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer{
 	public RenderPropellerBench(){}
 	
 	@Override
-	public void renderTileEntityAt(TileEntity tile, double x, double y, double z, float partialTicks, int destroyStage){
-		super.renderTileEntityAt(tile, x, y, z, partialTicks, destroyStage);
-		this.bench = (TileEntityPropellerBench) tile;
+	public void renderTileEntityAt(TileEntityPropellerBench bench, double x, double y, double z, float partialTicks, int destroyStage){
+		super.renderTileEntityAt(bench, x, y, z, partialTicks, destroyStage);
 		benchOffsets = null;
 		for(Entry<int[], float[]> entry : offsetMappings.entrySet()){
 			if(entry.getKey()[0] == bench.getPos().getX() && entry.getKey()[1] == bench.getPos().getY() && entry.getKey()[2] == bench.getPos().getZ()){

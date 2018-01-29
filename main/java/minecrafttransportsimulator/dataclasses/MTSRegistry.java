@@ -60,6 +60,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
+import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -578,7 +579,7 @@ public final class MTSRegistry{
 	 * Adds it to the multipartClassess map if appropriate.
 	 * @param entityClass
 	 */
-	private static void registerEntity(Class entityClass){
+	private static void registerEntity(Class<? extends Entity> entityClass){
 		EntityRegistry.registerModEntity(entityClass, entityClass.getSimpleName().substring(6).toLowerCase(), entityNumber++, MTS.MODID, 80, 5, false);
 	}
 	

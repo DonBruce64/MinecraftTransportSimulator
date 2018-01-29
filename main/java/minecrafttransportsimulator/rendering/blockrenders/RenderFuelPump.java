@@ -12,10 +12,9 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 
-public class RenderFuelPump extends TileEntitySpecialRenderer{
+public class RenderFuelPump extends TileEntitySpecialRenderer<TileEntityFuelPump>{
 	private static final ResourceLocation texture = new ResourceLocation(MTS.MODID, "textures/blockmodels/fuelpump.png");
 	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	private static int displayListIndex = -1;
@@ -25,9 +24,8 @@ public class RenderFuelPump extends TileEntitySpecialRenderer{
 	public RenderFuelPump(){}
 	
 	@Override
-	public void renderTileEntityAt(TileEntity tile, double x, double y, double z, float partialTicks, int destroyStage){
-		super.renderTileEntityAt(tile, x, y, z, partialTicks, destroyStage);
-		this.pump = (TileEntityFuelPump) tile;
+	public void renderTileEntityAt(TileEntityFuelPump pump, double x, double y, double z, float partialTicks, int destroyStage){
+		super.renderTileEntityAt(pump, x, y, z, partialTicks, destroyStage);
 		
 		if(displayListIndex == -1){
 			displayListIndex = GL11.glGenLists(1);

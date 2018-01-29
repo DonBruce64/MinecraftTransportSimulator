@@ -32,18 +32,18 @@ public class ItemPropeller extends Item{
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean p_77624_4_){
+	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
 		NBTTagCompound stackTag = stack.getTagCompound();
-		list.add(I18n.format("info.item.propeller.numberBlades") + stackTag.getInteger("numberBlades"));
-		list.add(I18n.format("info.item.propeller.pitch") + stackTag.getInteger("pitch"));
-		list.add(I18n.format("info.item.propeller.diameter") + stackTag.getInteger("diameter"));
-		list.add(I18n.format("info.item.propeller.maxrpm") + Math.round(60*340.29/(0.0254*Math.PI*stackTag.getInteger("diameter"))));
-		list.add(I18n.format("info.item.propeller.health") + stackTag.getFloat("health"));
+		tooltipLines.add(I18n.format("info.item.propeller.numberBlades") + stackTag.getInteger("numberBlades"));
+		tooltipLines.add(I18n.format("info.item.propeller.pitch") + stackTag.getInteger("pitch"));
+		tooltipLines.add(I18n.format("info.item.propeller.diameter") + stackTag.getInteger("diameter"));
+		tooltipLines.add(I18n.format("info.item.propeller.maxrpm") + Math.round(60*340.29/(0.0254*Math.PI*stackTag.getInteger("diameter"))));
+		tooltipLines.add(I18n.format("info.item.propeller.health") + stackTag.getFloat("health"));
 	}
 	
 	@Override
     @SideOnly(Side.CLIENT)
-    public void getSubItems(Item item, CreativeTabs tab, List itemList){
+    public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
 		List<Byte[]> propellerList = new ArrayList<Byte[]>();
 		propellerList.add(new Byte[]{0, 2, 70, 75});
 		propellerList.add(new Byte[]{0, 3, 70, 75});
@@ -74,7 +74,7 @@ public class ItemPropeller extends Item{
 				stackTag.setFloat("health", 100);
 			}
 			propellerStack.setTagCompound(stackTag);
-			itemList.add(propellerStack);
+			subItems.add(propellerStack);
 		}
     }
 }

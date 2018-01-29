@@ -23,31 +23,31 @@ public abstract class ItemEngine extends Item{
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean p_77624_4_){
+	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
 		NBTTagCompound stackTag = stack.getTagCompound();
 		if(stackTag.getFloat("fuelConsumption") == 0){
-			list.add(TextFormatting.DARK_PURPLE + I18n.format("info.item.engine.creative"));
+			tooltipLines.add(TextFormatting.DARK_PURPLE + I18n.format("info.item.engine.creative"));
 		}
-		list.add(I18n.format("info.item.engine.maxrpm") + stackTag.getInteger("maxRPM"));
-		list.add(I18n.format("info.item.engine.maxsaferpm") + stackTag.getInteger("maxSafeRPM"));
-		list.add(I18n.format("info.item.engine.fuelconsumption") + stackTag.getFloat("fuelConsumption"));
-		list.add(I18n.format("info.item.engine.hours") + Math.round(stackTag.getDouble("hours")*100D)/100D);
+		tooltipLines.add(I18n.format("info.item.engine.maxrpm") + stackTag.getInteger("maxRPM"));
+		tooltipLines.add(I18n.format("info.item.engine.maxsaferpm") + stackTag.getInteger("maxSafeRPM"));
+		tooltipLines.add(I18n.format("info.item.engine.fuelconsumption") + stackTag.getFloat("fuelConsumption"));
+		tooltipLines.add(I18n.format("info.item.engine.hours") + Math.round(stackTag.getDouble("hours")*100D)/100D);
 		if(stackTag.getBoolean("oilLeak")){
-			list.add(TextFormatting.RED + I18n.format("info.item.engine.oilleak"));
+			tooltipLines.add(TextFormatting.RED + I18n.format("info.item.engine.oilleak"));
 		}
 		if(stackTag.getBoolean("fuelLeak")){
-			list.add(TextFormatting.RED + I18n.format("info.item.engine.fuelleak"));
+			tooltipLines.add(TextFormatting.RED + I18n.format("info.item.engine.fuelleak"));
 		}
 		if(stackTag.getBoolean("brokenStarter")){
-			list.add(TextFormatting.RED + I18n.format("info.item.engine.brokenstarter"));
+			tooltipLines.add(TextFormatting.RED + I18n.format("info.item.engine.brokenstarter"));
 		}
 	}
 	
 	@Override
     @SideOnly(Side.CLIENT)
-    public void getSubItems(Item item, CreativeTabs tab, List itemList){
+    public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
 		for(ItemStack stack : this.getAllPossibleStacks()){
-			itemList.add(stack);
+			subItems.add(stack);
 		}
     }
 	
