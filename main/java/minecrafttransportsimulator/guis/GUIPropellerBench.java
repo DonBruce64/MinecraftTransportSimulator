@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.packets.general.PropellerBenchStartPacket;
+import minecrafttransportsimulator.packets.general.PropellerBenchUpdatePacket;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
@@ -173,11 +173,11 @@ public class GUIPropellerBench extends GuiScreen{
 			bench.diameter-=5;
 		}else if(buttonClicked.equals(startButton)){
 			bench.timeOperationFinished = bench.getWorld().getTotalWorldTime() + 1000;
-			MTS.MTSNet.sendToServer(new PropellerBenchStartPacket(bench));
+			MTS.MTSNet.sendToServer(new PropellerBenchUpdatePacket(bench, player));
 			mc.thePlayer.closeScreen();
 			return;
 		}
-		MTS.MTSNet.sendToServer(new PropellerBenchStartPacket(bench));
+		MTS.MTSNet.sendToServer(new PropellerBenchUpdatePacket(bench, player));
 	}
 	
 	private void getPlayerMaterials(){

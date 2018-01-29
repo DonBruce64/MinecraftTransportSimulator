@@ -53,7 +53,7 @@ import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
 import minecrafttransportsimulator.packets.general.MultipartDeltaPacket;
 import minecrafttransportsimulator.packets.general.MultipartParentDamagePacket;
 import minecrafttransportsimulator.packets.general.PackReloadPacket;
-import minecrafttransportsimulator.packets.general.PropellerBenchStartPacket;
+import minecrafttransportsimulator.packets.general.PropellerBenchUpdatePacket;
 import minecrafttransportsimulator.packets.general.ServerDataPacket;
 import minecrafttransportsimulator.packets.general.TileEntityClientServerHandshakePacket;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -222,7 +222,7 @@ public final class MTSRegistry{
 		registerPacket(ManualPageUpdatePacket.class, ManualPageUpdatePacket.Handler.class, false, true);
 		registerPacket(MultipartDeltaPacket.class, MultipartDeltaPacket.Handler.class, true, false);
 		registerPacket(PackReloadPacket.class, PackReloadPacket.Handler.class, true, true);
-		registerPacket(PropellerBenchStartPacket.class, PropellerBenchStartPacket.Handler.class, true, true);
+		registerPacket(PropellerBenchUpdatePacket.class, PropellerBenchUpdatePacket.Handler.class, true, true);
 		registerPacket(ServerDataPacket.class, ServerDataPacket.Handler.class, true, false);
 		registerPacket(TileEntityClientServerHandshakePacket.class, TileEntityClientServerHandshakePacket.Handler.class, true, true);
 		
