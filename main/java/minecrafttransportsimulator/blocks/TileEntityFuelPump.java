@@ -180,7 +180,7 @@ public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFl
     public <T> T getCapability(Capability<T> capability, EnumFacing facing){
     	if(facing != null && facing.equals(facing.DOWN)){
     		if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY){
-    			return (T) this.tankInfo;
+    			return (T) this;
     		}
     	}
     	return super.getCapability(capability, facing);
