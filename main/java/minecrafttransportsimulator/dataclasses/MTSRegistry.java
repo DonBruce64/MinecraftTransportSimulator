@@ -620,6 +620,6 @@ public final class MTSRegistry{
 	}
 	
 	private static void registerRecipe(ItemStack output, Object...params){
-		GameRegistry.addRecipe(output, params);
+		GameRegistry.addShapedRecipe(output, params);
 	}
 }
