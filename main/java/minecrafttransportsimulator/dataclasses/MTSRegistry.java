@@ -321,6 +321,12 @@ public final class MTSRegistry{
 				" A ",
 				" A ",
 				'A', Items.IRON_INGOT);
+		//Wrench
+		registerRecipe(new ItemStack(wrench),
+				"  A",
+				" A ",
+				"A  ",
+				'A', Items.IRON_INGOT);
 	}
 	
 	private static void initEngineRecipes(){
