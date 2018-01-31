@@ -169,6 +169,7 @@ item.instrument_aircraft_oilpressure.name=Oil Pressure Gauge
 item.instrument_aircraft_oilpressure.description=Indicates oil pressure.
 
 entity.mts.vehiclechest.name=Chest
+entity.vehiclechest.name=Chest
 tile.propellerbench.name=Propeller Bench
 tile.fuelpump.name=Fuel Pump
 tile.fuelpump.level=LVL:
