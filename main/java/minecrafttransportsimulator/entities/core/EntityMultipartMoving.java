@@ -67,7 +67,6 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	public List<Byte> brokenWindows = new ArrayList<Byte>();
 	public List<EntityGroundDevice> groundedGroundDevices = new ArrayList<EntityGroundDevice>();
 	
-	private boolean gotDeltaPacket;
 	private double clientDeltaX;
 	private double clientDeltaY;
 	private double clientDeltaZ;
@@ -583,31 +582,23 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			rotationPitch += motionPitch;
 			rotationRoll += motionRoll;
 			setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
-			addToServerDeltas(motionX, motionY, motionZ, motionYaw, motionPitch, motionRoll);
+			addToServerDeltas(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll);
 			MTS.MTSNet.sendToAll(new MultipartDeltaPacket(getEntityId(), motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll));
 		}else{
+			//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.
 			if(!(serverDeltaX == 0 && serverDeltaY == 0 && serverDeltaZ == 0)){
-				if(gotDeltaPacket){
-					double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/4F;
-					double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/4F;
-					double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/4F;
-					float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/4F;
-					float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/4F;
-					float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/4F;
-					
-					setPosition(posX + deltaX, posY + deltaY, posZ + deltaZ);
-					rotationYaw += deltaYaw;
-					rotationPitch += deltaPitch;
-					rotationRoll += deltaRoll;
-					addToClientDeltas(deltaX, deltaY, deltaZ, deltaYaw, deltaPitch, deltaRoll);
-					gotDeltaPacket = false;
-				}else{
-					setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
-					rotationYaw += motionYaw;
-					rotationPitch += motionPitch;
-					rotationRoll += motionRoll;
-					addToClientDeltas(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll);
-				}
+				double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/4F;
+				double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/4F;
+				double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/4F;
+				float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/4F;
+				float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/4F;
+				float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/4F;
+				
+				setPosition(posX + deltaX, posY + deltaY, posZ + deltaZ);
+				rotationYaw += deltaYaw;
+				rotationPitch += deltaPitch;
+				rotationRoll += deltaRoll;
+				addToClientDeltas(deltaX, deltaY, deltaZ, deltaYaw, deltaPitch, deltaRoll);
 			}else{
 				rotationYaw += motionYaw;
 				rotationPitch += motionPitch;
@@ -642,9 +633,6 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		this.serverDeltaYaw += dYaw;
 		this.serverDeltaPitch += dPitch;
 		this.serverDeltaRoll += dRoll;
-		if(worldObj.isRemote){
-			gotDeltaPacket = true;
-		}
 	}
 	
 	/**
