@@ -8,7 +8,6 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityFuelPump;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.resources.I18n;
@@ -16,7 +15,6 @@ import net.minecraft.util.ResourceLocation;
 
 public class RenderFuelPump extends TileEntitySpecialRenderer<TileEntityFuelPump>{
 	private static final ResourceLocation texture = new ResourceLocation(MTS.MODID, "textures/blockmodels/fuelpump.png");
-	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	private static int displayListIndex = -1;
 	
 	private TileEntityFuelPump pump;
@@ -48,20 +46,6 @@ public class RenderFuelPump extends TileEntitySpecialRenderer<TileEntityFuelPump
 		GL11.glRotatef(180 - 45*pump.rotation, 0, 1, 0);
 		bindTexture(texture);
 		GL11.glCallList(displayListIndex);
-		
-		if(ConfigSystem.getBooleanConfig("InnerWindows")){
-			bindTexture(vanillaGlassTexture);
-			GL11.glBegin(GL11.GL_QUADS);
-			GL11.glTexCoord2f(1, 0);
-			GL11.glVertex3f(-0.4375F, 1.25F, 0.28125F);
-			GL11.glTexCoord2f(1, 1);
-			GL11.glVertex3f(-0.4375F, 0.6875F, 0.28125F);
-			GL11.glTexCoord2f(0, 1);
-			GL11.glVertex3f(0.4375F, 0.6875F, 0.28125F);
-			GL11.glTexCoord2f(0, 0);
-			GL11.glVertex3f(0.4375F, 1.25F, 0.28125F);
-			GL11.glEnd();
-		}
 		
 		GL11.glPushMatrix();
 		GL11.glScalef(0.0625F, 0.0625F, 0.0625F);
