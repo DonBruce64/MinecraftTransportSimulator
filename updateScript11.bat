@@ -44,6 +44,6 @@ XCOPY "C:\Users\chris\AppData\Roaming\.minecraft\forge2\src\main\java\minecraftt
 
 "C:\Programs\Text Find&Replace\fnr.exe" --cl --dir "C:\Users\chris\AppData\Roaming\.minecraft\forgeMTS_11\src\main\java\minecrafttransportsimulator" --fileMask "*.java" --includeSubDirectories --caseSensitive --find "public ActionResult<ItemStack> onItemRightClick(ItemStack stack, World world, EntityPlayer player, EnumHand hand)" --replace "public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand)"
 
-
+"C:\Programs\Text Find&Replace\fnr.exe" --cl --dir "C:\Users\chris\AppData\Roaming\.minecraft\forgeMTS_11\src\main\java\minecrafttransportsimulator" --fileMask "*.java" --includeSubDirectories --caseSensitive --find "FLUID_HANDLER_CAPABILITY" --replace "FLUID_HANDLER_ITEM_CAPABILITY"
 
 
