@@ -118,9 +118,9 @@ public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFl
 
 	@Override
 	public int fill(FluidStack stack, boolean doFill){
-		if(stack.isFluidEqual(tankInfo.fluid) || tankInfo.fluid == null){
+		if(tankInfo.fluid == null || stack.isFluidEqual(tankInfo.fluid)){
 			double fuelFactor = ConfigSystem.getFuelValue(FluidRegistry.getFluidName(stack.getFluid()));
-			int amountAbleToFill = Math.min(tankInfo.capacity - (tankInfo.fluid != null ? tankInfo.fluid.amount : 0), 1000);
+			int amountAbleToFill = tankInfo.capacity - (tankInfo.fluid != null ? tankInfo.fluid.amount : 0);
 			int amountToFill = (int) Math.min(amountAbleToFill, stack.amount*fuelFactor);
 			if(doFill){
 				if(tankInfo.fluid == null){

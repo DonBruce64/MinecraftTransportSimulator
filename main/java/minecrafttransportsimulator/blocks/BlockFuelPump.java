@@ -19,11 +19,9 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.ItemFluidContainer;
-import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
-import net.minecraftforge.fluids.capability.wrappers.FluidBucketWrapper;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 
 public class BlockFuelPump extends MTSBlockRotateable{
 
@@ -36,41 +34,21 @@ public class BlockFuelPump extends MTSBlockRotateable{
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ){
 		if(!world.isRemote){
-			FluidBucketWrapper handlerBucket = null;
-			FluidHandlerItemStack handlerStack = null;
-			FluidStack stackToAdd = null;
-			
 			ItemStack stack = player.getHeldItem(hand);
 			TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(pos);
 			if(stack != null){
-	    		ICapabilityProvider capabilities = stack.getItem().initCapabilities(stack, stack.getTagCompound());
-	        	if(capabilities instanceof FluidBucketWrapper){
-	        		handlerBucket = ((FluidBucketWrapper) capabilities);
-	        		stackToAdd = handlerBucket.getFluid();
-	        	}else if(stack.getItem() instanceof ItemFluidContainer){
-	        		handlerStack = (FluidHandlerItemStack) capabilities;
-	    			stackToAdd = handlerStack.getFluid();
-	        	}
-	        	
-	        	if(stackToAdd != null){
-		        	int amountToFill = pump.fill(stackToAdd, false);
-		    		if(amountToFill > 0){
-		            	if(handlerBucket != null){
-		            		if(amountToFill <= stackToAdd.amount){
-		            			pump.fill(stackToAdd, true);
-		            			if(!player.isCreative()){
-		            				handlerBucket.drain(stackToAdd, true);
-		            			}
-		            		}
-		            	}else{
-		            		pump.fill(stackToAdd, true);
-		            		if(!player.isCreative()){
-		            			handlerStack.drain(new FluidStack(stackToAdd.getFluid(), amountToFill), true);
-		        			}
-		            	}
-		    		}
-		    		return true;
-	        	}
+				if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)){
+					IFluidHandler handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
+					FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, false);
+					if(drainedStack != null){
+						int amountToDrain = pump.fill(drainedStack, false);
+						drainedStack = handler.drain(amountToDrain, true);
+						if(drainedStack != null){
+							pump.fill(drainedStack, true);
+						}
+					}
+					return true;
+				}
 			}
         	
     		if(pump.connectedVehicle == null){
