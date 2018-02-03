@@ -401,19 +401,19 @@ public final class MTSRegistry{
 	}
 	
 	private static void initAircraftInstrumentRecipes(){		
-		registerRecipe(new ItemStack(pointerShort),
+		registerRecipe(new ItemStack(pointerShort, 2),
 				" WW",
 				" WW",
-				"B  ",
+				"I  ",
 				'W', new ItemStack(Items.DYE, 1, 15),
-				'B', new ItemStack(Items.DYE, 1, 0));
+				'I', Items.IRON_INGOT);
 		
-		registerRecipe(new ItemStack(pointerLong),
+		registerRecipe(new ItemStack(pointerLong, 2),
 				"  W",
 				" W ",
-				"B  ",
+				"I  ",
 				'W', new ItemStack(Items.DYE, 1, 15),
-				'B', new ItemStack(Items.DYE, 1, 0));
+				'I', Items.IRON_INGOT);
 		
 		
 		registerRecipe(new ItemStack(MTSRegistry.instrument, 16, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()),
