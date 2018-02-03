@@ -500,6 +500,16 @@ public final class MTSRegistry{
 				'L', pointerLong, 
 				'G', new ItemStack(Items.DYE, 1, 10));
 		
+		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_ELECTRIC.ordinal()),
+				"G W",
+				"LGL",
+				"RBW",
+				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
+				'L', pointerLong, 
+				'G', new ItemStack(Items.DYE, 1, 10),
+				'R', new ItemStack(Items.DYE, 1, 1),
+				'W', new ItemStack(Items.DYE, 1, 15));
+		
 		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_TACHOMETER.ordinal()),
 				"W W",
 				" L ",
