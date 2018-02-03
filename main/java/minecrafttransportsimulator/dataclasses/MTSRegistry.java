@@ -317,10 +317,11 @@ public final class MTSRegistry{
 		
 		//Key
 		registerRecipe(new ItemStack(key),
-				"   ",
 				" A ",
 				" A ",
-				'A', Items.IRON_INGOT);
+				" S ",
+				'A', Items.IRON_INGOT,
+				'S', Items.STRING);
 		//Wrench
 		registerRecipe(new ItemStack(wrench),
 				"  A",
