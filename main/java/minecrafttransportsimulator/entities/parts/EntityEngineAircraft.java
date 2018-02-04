@@ -7,7 +7,6 @@ import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.packets.general.ChatPacket;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -37,7 +36,7 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 				if(MTSRegistry.propeller.equals(playerStack.getItem()) && propeller == null){
 					if(this.parent != null){
 						if(playerStack.getTagCompound().getInteger("diameter") > 80 && this instanceof EntityEngineAircraftSmall){
-							MTS.MTSNet.sendTo(new ChatPacket(I18n.format("interact.failure.propellertoobig")), (EntityPlayerMP) player);
+							MTS.MTSNet.sendTo(new ChatPacket("interact.failure.propellertoobig"), (EntityPlayerMP) player);
 							MTSAchievements.triggerPropellerTooBig(player);
 							return false;
 						}
