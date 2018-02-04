@@ -29,7 +29,7 @@ public class EntityPropeller extends EntityMultipartChild{
 	public float angularVelocity;
 	public float health;
 	
-	public String engineUUID;
+	public String engineUUID = "";
 	public EntityEngineAircraft engine;
 	
 	public EntityPropeller(World world){
