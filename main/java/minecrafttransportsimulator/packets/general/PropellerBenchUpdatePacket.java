@@ -74,42 +74,58 @@ public class PropellerBenchUpdatePacket implements IMessage{
 					TileEntityPropellerBench bench;
 					if(ctx.side.isServer()){
 						bench = (TileEntityPropellerBench) ctx.getServerHandler().playerEntity.worldObj.getTileEntity(new BlockPos(message.x, message.y, message.z));
-						if(message.timeOperationFinished != 0){
-							EntityPlayer player = (EntityPlayer) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.playerID);
-							if(player == null){
-								return;
-							}else if(!player.capabilities.isCreativeMode){
-								byte numberBladeMaterials = (byte) (message.diameter < 90 ? message.numberBlades : message.numberBlades*2);
-								if(message.propellerType == 0){
-									if(!player.inventory.hasItemStack(new ItemStack(Blocks.PLANKS, numberBladeMaterials)) || !player.inventory.hasItemStack(new ItemStack(Items.IRON_INGOT, 1)) || !player.inventory.hasItemStack(new ItemStack(Items.REDSTONE, 5))){
-										return;
-									}else{
-										player.inventory.clearMatchingItems(Item.getItemFromBlock(Blocks.PLANKS), -1, numberBladeMaterials, null);
-										player.inventory.clearMatchingItems(Items.IRON_INGOT, -1, 1, null);
-										player.inventory.clearMatchingItems(Items.REDSTONE, -1, 5, null);
-									}
-								}else if(message.propellerType == 1){
-									if(!player.inventory.hasItemStack(new ItemStack(Items.IRON_INGOT, 1 + numberBladeMaterials)) || !player.inventory.hasItemStack(new ItemStack(Items.REDSTONE, 5))){
-										return;
-									}else{
-										player.inventory.clearMatchingItems(Items.IRON_INGOT, -1, 1 + numberBladeMaterials, null);
-										player.inventory.clearMatchingItems(Items.REDSTONE, -1, 5, null);
-									}
-								}else if(message.propellerType == 2){
-									if(!player.inventory.hasItemStack(new ItemStack(Blocks.OBSIDIAN, numberBladeMaterials)) || !player.inventory.hasItemStack(new ItemStack(Items.IRON_INGOT, 1)) || !player.inventory.hasItemStack(new ItemStack(Items.REDSTONE, 5))){
-										return;
-									}else{
-										player.inventory.clearMatchingItems(Item.getItemFromBlock(Blocks.OBSIDIAN), -1, numberBladeMaterials, null);
-										player.inventory.clearMatchingItems(Items.IRON_INGOT, -1, 1, null);
-										player.inventory.clearMatchingItems(Items.REDSTONE, -1, 5, null);
-									}
-								}
-							}
-						}
 					}else{
 						bench = (TileEntityPropellerBench) Minecraft.getMinecraft().theWorld.getTileEntity(new BlockPos(message.x, message.y, message.z));
 					}
 					if(bench != null){
+						if(ctx.side.isServer() && message.timeOperationFinished != 0){
+							EntityPlayer player = (EntityPlayer) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.playerID);
+							if(player == null){
+								return;
+							}else if(!player.capabilities.isCreativeMode){
+								int numberPlayerPlanks = 0;
+								int numberPlayerIronIngots = 0;
+								int numberPlayerObsidian = 0;
+								int numberPlayerRedstone = 0;
+								for(ItemStack stack : player.inventory.mainInventory){
+									if(stack != null){
+										if(stack.getItem().equals(Item.getItemFromBlock(Blocks.PLANKS))){
+											numberPlayerPlanks+=stack.stackSize;
+										}else if(stack.getItem().equals(Items.IRON_INGOT)){
+											numberPlayerIronIngots+=stack.stackSize;
+										}else if(stack.getItem().equals(Item.getItemFromBlock(Blocks.OBSIDIAN))){
+											numberPlayerObsidian+=stack.stackSize;
+										}else if(stack.getItem().equals(Items.REDSTONE)){
+											numberPlayerRedstone+=stack.stackSize;
+										}
+									}
+								}
+								
+								Item propellerMaterial;
+								switch(message.propellerType){
+									case(0): propellerMaterial = Item.getItemFromBlock(Blocks.PLANKS); break;
+									case(1): propellerMaterial = Items.IRON_INGOT; break;
+									case(2): propellerMaterial = Item.getItemFromBlock(Blocks.OBSIDIAN); break;
+									default: propellerMaterial = null;
+								}
+								
+								boolean hasMaterials = false;
+								byte propellerMaterialQty = (byte) (message.diameter < 90 ? message.numberBlades : message.numberBlades*2);
+								switch(message.propellerType){
+									case(0): hasMaterials = numberPlayerPlanks >= propellerMaterialQty && numberPlayerIronIngots >= 1 && numberPlayerRedstone >= 5; break;
+									case(1): hasMaterials = numberPlayerIronIngots >= propellerMaterialQty + 1 && numberPlayerRedstone >= 5; break;
+									case(2): hasMaterials = numberPlayerObsidian >= propellerMaterialQty && numberPlayerIronIngots >= 1 && numberPlayerRedstone >= 5; break;
+								}
+								
+								if(!hasMaterials){
+									return;
+								}else{
+									player.inventory.clearMatchingItems(propellerMaterial, -1, propellerMaterialQty, null);
+									player.inventory.clearMatchingItems(Items.IRON_INGOT, -1, 1, null);
+									player.inventory.clearMatchingItems(Items.REDSTONE, -1, 5, null);
+								}
+							}
+						}
 						bench.propellerType = message.propellerType;
 						bench.numberBlades = message.numberBlades;
 						bench.pitch = message.pitch;
