@@ -24,7 +24,7 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
     public float prevLidAngle;
     public int numPlayersUsing;
     private int ticksSinceSync;
-	private ItemStack[] contents = new ItemStack[36];
+	private ItemStack[] contents = new ItemStack[27];
 	
 	public EntityChildInventory(World world){
 		super(world);
@@ -150,12 +150,12 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
         NBTTagList nbttaglist = tagCompound.getTagList("Items", 10);
-        this.contents = new ItemStack[this.getSizeInventory()];
+        this.contents = new ItemStack[27];
         for (int i = 0; i < nbttaglist.tagCount(); ++i){
             NBTTagCompound itemTag = nbttaglist.getCompoundTagAt(i);
-            int j = itemTag.getByte("Slot") & 255;
-            if(j >= 0 && j < this.contents.length){
-                this.contents[j] = ItemStack.loadItemStackFromNBT(itemTag);
+            int slot = itemTag.getByte("Slot") & 255;
+            if(slot >= 0 && slot < 27){
+                this.contents[slot] = ItemStack.loadItemStackFromNBT(itemTag);
             }
         }
     }
@@ -164,11 +164,11 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
     public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
         NBTTagList nbttaglist = new NBTTagList();
-        for(int i = 0; i < this.contents.length; ++i){
-            if (this.contents[i] != null){
+        for(int slot = 0; slot < 27; ++slot){
+            if (this.contents[slot] != null){
                 NBTTagCompound nbttagcompound1 = new NBTTagCompound();
-                nbttagcompound1.setByte("Slot", (byte)i);
-                this.contents[i].writeToNBT(nbttagcompound1);
+                nbttagcompound1.setByte("Slot", (byte)slot);
+                this.contents[slot].writeToNBT(nbttagcompound1);
                 nbttaglist.appendTag(nbttagcompound1);
             }
         }
