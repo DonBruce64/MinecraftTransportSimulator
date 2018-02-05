@@ -3,6 +3,7 @@ package minecrafttransportsimulator.systems;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
@@ -37,6 +38,7 @@ import net.minecraftforge.fml.relauncher.Side;
 public final class ClientEventSystem{
     /**The last seat a player was in.  If null, this means the player is not in a seat.*/
     public static EntitySeat playerLastSeat = null;
+    private static boolean firstTickRun = false;
     private static Minecraft minecraft = Minecraft.getMinecraft();
 
     /**
@@ -64,10 +66,15 @@ public final class ClientEventSystem{
     public static void on(TickEvent.ClientTickEvent event){
         if(minecraft.theWorld != null){
             if(event.phase.equals(Phase.END)){
-            	if(ConfigSystem.getIntegerConfig("MajorVersion") != Integer.valueOf(MTS.MODVER.substring(0, 1))){
-                    ConfigSystem.setClientConfig("MajorVersion", Integer.valueOf(MTS.MODVER.substring(0, 1)));
-                    FMLCommonHandler.instance().showGuiScreen(new GUISplash());
-                }
+            	if(!firstTickRun){
+	            	if(MTSRegistry.multipartItemMap.size() == 0){
+	            		FMLCommonHandler.instance().showGuiScreen(new GUISplash(false));
+	            	}else if(ConfigSystem.getIntegerConfig("MajorVersion") != Integer.valueOf(MTS.MODVER.substring(0, 1))){
+	                    ConfigSystem.setClientConfig("MajorVersion", Integer.valueOf(MTS.MODVER.substring(0, 1)));
+	                    FMLCommonHandler.instance().showGuiScreen(new GUISplash(true));
+	                }
+            	}
+            	firstTickRun = true;
             	
                 //Update the player seated status
                 if(minecraft.thePlayer.getRidingEntity() == null){
