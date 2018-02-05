@@ -165,7 +165,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			}
 		}
 		
-		ambientTemp = 25*worldObj.getBiome(new BlockPos((int) this.posX, (int) this.posY, (int) this.posZ)).getTemperature() - 5*(Math.pow(2, posY/400) - 1);
+		ambientTemp = 25*worldObj.getBiome(new BlockPos(this.getPosition())).getTemperature() - 5*(Math.pow(2, posY/400) - 1);
 		coolingFactor = 0.001 + vehicle.velocity/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		vehicle.electricUsage -= 0.01*RPM/maxRPM;
