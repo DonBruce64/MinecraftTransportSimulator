@@ -112,6 +112,7 @@ public final class MTSRegistry{
 	
 	private static int entityNumber = 0;
 	private static int packetNumber = 0;
+	private static int craftingNumber = 0;
 	public static List<Item> itemList = new ArrayList<Item>();
 	/**Maps multipart item names to items.*/
 	public static Map<String, ItemMultipartMoving> multipartItemMap = new HashMap<String, ItemMultipartMoving>();
@@ -632,5 +633,6 @@ public final class MTSRegistry{
 	
 	private static void registerRecipe(ItemStack output, Object...params){
 		GameRegistry.addShapedRecipe(output, params);
+		++craftingNumber;
 	}
 }
