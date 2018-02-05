@@ -2,13 +2,18 @@ package minecrafttransportsimulator.systems;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import com.google.gson.Gson;
 
@@ -36,10 +41,13 @@ public final class PackParserSystem{
      * ResourceLocation for item JSON if needed.
      */
     public static void init(){
-        File assetDir = new File(MTS.assetDir);
-        File jsonDir = new File(assetDir.getAbsolutePath() + File.separator + "jsondefs");
-        log.clear();
+    	log.clear();
         log.add("Initilizing pack parsing system.");
+        
+    	File assetDir = new File(MTS.assetDir);
+        File jsonDir = new File(assetDir.getAbsolutePath() + File.separator + "jsondefs");
+        
+        //If we don't have the folders for pack info, make it now.
         if(!assetDir.exists() || !jsonDir.exists()){
         	try{
 	        	assetDir.mkdirs();
@@ -60,15 +68,71 @@ public final class PackParserSystem{
 	            
 	            new File(assetDir.getAbsolutePath() + File.separator + "jsondefs").mkdirs();
 	            new File(assetDir.getAbsolutePath() + File.separator + "jsondefs" + File.separator + "PUT_MASTER_JSON_FILES_IN_THIS_FOLDER").createNewFile();
-			}catch (IOException e){
+			}catch(IOException e){
 				e.printStackTrace();
+				return;
 			}
-        }else{
-            parseDirectory(jsonDir);
         }
+        
+        //Now that we are assured we have the directories, check the mods folder for new pack content. 
+        File modDir = new File(System.getProperty("user.dir") + File.separator + "mods");
+    	for(File modFile : modDir.listFiles()){
+    		if(modFile.getName().endsWith(".zip")){
+    			log.add("Checking the following zip file for pack data: " + modFile.getAbsolutePath());
+    			byte packDefsAdded = 0;
+    			try{
+    				ZipFile zipFile = new ZipFile(modFile);
+    				Enumeration<? extends ZipEntry> zipEnum = zipFile.entries();
+    				while(zipEnum.hasMoreElements()){
+    					ZipEntry zipEntry = zipEnum.nextElement();
+    					if(zipEntry.getName().contains("mts/")){
+    						//Check to see if this file is a directory.  If so, ignore it and go on.
+    						if(zipEntry.isDirectory()){
+    							continue;
+    						}else if(zipEntry.getName().contains("jsondefs")){
+    							++packDefsAdded;
+    						}
+    						
+    						//If the file exists, replace it to update it.
+    						File outputfile = new File(assetDir + File.separator + zipEntry.getName().substring("mts/".length()));
+    						if(outputfile.exists()){
+    							outputfile.delete();
+    						}
+    						
+    						//Now copy over the file.
+    						InputStream inputStream = zipFile.getInputStream(zipEntry);
+    						FileOutputStream outputStream = new FileOutputStream(outputfile);
+    						
+    						byte[] bytes = new byte[1024];
+    						int length = inputStream.read(bytes);
+    						while(length >= 0){
+    							outputStream.write(bytes, 0, length);
+    							length = inputStream.read(bytes);
+    						}
+    						inputStream.close();
+    						outputStream.close();
+    					}
+    				}
+    				zipFile.close();
+    			}catch(IOException e){
+    				e.printStackTrace();
+    				return;
+    			}
+    			if(packDefsAdded >= 0){
+    				log.add("Found " + packDefsAdded + " pack definitions inside: " + modFile.getAbsolutePath());
+    			}
+    		}
+    	}
+        
+    	//Finally, parse the pack info.
+    	parseDirectory(jsonDir);
         if(MTS.MTSLog != null){
         	writeLogOutput();
         }
+    }
+    
+    private static void parseZip(){
+    	
     }
 
     private static void parseDirectory(File jsonDir){
