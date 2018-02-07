@@ -154,7 +154,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		//Bind texture.  Adds new element to cache if needed.
 		PackFileDefinitions definition = PackParserSystem.getDefinitionForPack(mover.name);
 		if(!textureMap.containsKey(definition.modelTexture)){
-			if(definition.modelTexture.startsWith("minecraft:")){
+			if(definition.modelTexture.contains(":")){
 				textureMap.put(mover.name, new ResourceLocation(definition.modelTexture));
 			}else{
 				textureMap.put(mover.name, new ResourceLocation(MTS.MODID, "textures/models/" + definition.modelTexture));

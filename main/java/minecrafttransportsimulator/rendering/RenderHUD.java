@@ -22,12 +22,12 @@ public final class RenderHUD{
 		final PackFileDefinitions definition = PackParserSystem.getDefinitionForPack(vehicle.name);
 		final ResourceLocation backplateTexture;
 		final ResourceLocation mouldingTexture;
-		if(definition.backplateTexture.startsWith("minecraft:")){
+		if(definition.backplateTexture.contains(":")){
 			backplateTexture = new ResourceLocation(definition.backplateTexture);
 		}else{
 			backplateTexture = new ResourceLocation(MTS.MODID, "textures/hud/" + definition.backplateTexture);
 		}
-		if(definition.mouldingTexture.startsWith("minecraft:")){
+		if(definition.mouldingTexture.contains(":")){
 			mouldingTexture = new ResourceLocation(definition.mouldingTexture);
 		}else{
 			mouldingTexture = new ResourceLocation(MTS.MODID, "textures/hud/" + definition.mouldingTexture);
