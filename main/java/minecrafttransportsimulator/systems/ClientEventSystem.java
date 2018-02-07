@@ -86,11 +86,8 @@ public final class ClientEventSystem{
                         playerLastSeat = (EntitySeat) minecraft.thePlayer.getRidingEntity();
                     }
                     if(!Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen()){
-                        ControlSystem.controlCamera();
-                        if(playerLastSeat.isController){
-                            if(playerLastSeat.parent instanceof EntityMultipartVehicle){
-                                ControlSystem.controlVehicle((EntityMultipartVehicle) playerLastSeat.parent, minecraft.thePlayer);
-                            }
+                    	if(playerLastSeat.parent instanceof EntityMultipartVehicle){
+                    		ControlSystem.controlVehicle((EntityMultipartVehicle) playerLastSeat.parent, playerLastSeat.isController);
                         }
                     }
                     if(!minecraft.isGamePaused()){
@@ -198,7 +195,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent event){
-        if(ControlSystem.configKey.isPressed()){
+        if(ControlSystem.isControlMasterPressed()){
             if(minecraft.currentScreen == null){
             	FMLCommonHandler.instance().showGuiScreen(new GUIConfig());
                 if(Minecraft.getMinecraft().isSingleplayer()){

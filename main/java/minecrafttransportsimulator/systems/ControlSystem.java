@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.systems;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -10,6 +12,7 @@ import org.lwjgl.input.Mouse;
 import minecrafttransportsimulator.ClientProxy;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.entities.main.EntityCar;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.guis.GUIPanelAircraft;
 import minecrafttransportsimulator.packets.control.AileronPacket;
@@ -19,13 +22,12 @@ import minecrafttransportsimulator.packets.control.FlapPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
+import net.java.games.input.Component;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -35,342 +37,331 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
  * 
  * @author don_bruce
  */
-public final class ControlSystem{
-	//Internal checkers for keys.
-	private static boolean brakeKeyPressed;
-	private static boolean flapKeyPressed;
-	private static boolean panelKeyPressed;
-	private static boolean camLockKeyPressed;
-	private static boolean changeViewKeyPressed;
-	private static boolean zoomInKeyPressed;
-	private static boolean zoomOutKeyPressed;
-	
-	//Constants for actions.
+public final class ControlSystem{	
 	private static final int NULL_COMPONENT = 999;
-	private static final String KEYBOARD_CONFIG = "keyboard";
-	private static final String JOYSTICK_CONFIG = "joystick";
-
-	//Configurations and data arrays
-	public static KeyBinding configKey;
-	private static String joystickName;
-	private static Controller joystick;
+	private static final String KEYBOARD_CONFIG = "controls_keyboard";
+	private static final String JOYSTICK_CONFIG = "controls_joystick";
+	private static final Map<String, Controller> joystickMap = new HashMap<String, Controller>();
+	
+	private static KeyBinding configKey;
 	private static short mousePosX = 0;
 	private static short mousePosY = 0;
-	private static Map<String, Integer> keyboardMap = new HashMap<String, Integer>();
-	private static Map<String, Integer> joystickMap = new HashMap<String, Integer>();
+	private static final List<ControlsKeyboard> pressedKeyboardButtons = new ArrayList<ControlsKeyboard>();
+	private static final List<ControlsJoystick> pressedJoystickButtons = new ArrayList<ControlsJoystick>();
+	
 	
 	public static void init(){
 		configKey = new KeyBinding("key.config", Keyboard.KEY_P, "key.categories." + MTS.MODID);
 		ClientRegistry.registerKeyBinding(configKey);
 		
-		keyboardMap.put(Controls.MOD.keyboardName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.MOD.keyboardName, Keyboard.KEY_RSHIFT).getInt());
-		keyboardMap.put(Controls.CAM.keyboardName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.CAM.keyboardName, Keyboard.KEY_RCONTROL).getInt());
-		keyboardMap.put(Controls.PITCH.keyboardIncrementName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.PITCH.keyboardIncrementName, Keyboard.KEY_S).getInt());
-		keyboardMap.put(Controls.PITCH.keyboardDecrementName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.PITCH.keyboardDecrementName, Keyboard.KEY_W).getInt());
-		keyboardMap.put(Controls.ROLL.keyboardIncrementName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.ROLL.keyboardIncrementName, Keyboard.KEY_D).getInt());
-		keyboardMap.put(Controls.ROLL.keyboardDecrementName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.ROLL.keyboardDecrementName, Keyboard.KEY_A).getInt());
-		keyboardMap.put(Controls.YAW.keyboardIncrementName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.YAW.keyboardIncrementName, Keyboard.KEY_L).getInt());
-		keyboardMap.put(Controls.YAW.keyboardDecrementName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.YAW.keyboardDecrementName, Keyboard.KEY_J).getInt());
-		keyboardMap.put(Controls.THROTTLE.keyboardIncrementName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.THROTTLE.keyboardIncrementName, Keyboard.KEY_I).getInt());
-		keyboardMap.put(Controls.THROTTLE.keyboardDecrementName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.THROTTLE.keyboardDecrementName, Keyboard.KEY_K).getInt());
-		keyboardMap.put(Controls.FLAPS_U.keyboardName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.FLAPS_U.keyboardName, Keyboard.KEY_Y).getInt());
-		keyboardMap.put(Controls.FLAPS_D.keyboardName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.FLAPS_D.keyboardName, Keyboard.KEY_H).getInt());
-		keyboardMap.put(Controls.BRAKE.keyboardName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.BRAKE.keyboardName, Keyboard.KEY_B).getInt());
-		keyboardMap.put(Controls.PANEL.keyboardName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.PANEL.keyboardName, Keyboard.KEY_U).getInt());
-		keyboardMap.put(Controls.ZOOM_I.keyboardName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.ZOOM_I.keyboardName, Keyboard.KEY_PRIOR).getInt());
-		keyboardMap.put(Controls.ZOOM_O.keyboardName, ConfigSystem.config.get(KEYBOARD_CONFIG, Controls.ZOOM_O.keyboardName, Keyboard.KEY_NEXT).getInt());
-		
-		joystickName = ConfigSystem.config.get(JOYSTICK_CONFIG, "JoystickName", "").getString();
-		for(Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()){
-			if(controller.getName() != null){
-				if(controller.getName().equals(joystickName)){
-					joystick = controller;
-					break;
+		//Populate the joystick device map.
+		for(Controller joystick : ControllerEnvironment.getDefaultEnvironment().getControllers()){
+			if(joystick.getType() != null && joystick.getName() != null){
+				if(!joystick.getType().equals(Controller.Type.MOUSE) && !joystick.getType().equals(Controller.Type.KEYBOARD)){
+					if(joystick.getComponents().length != 0){
+						joystickMap.put(joystick.getName(), joystick);
+					}
 				}
 			}
 		}
 		
-		joystickMap.put(Controls.MOD.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.MOD.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.CAM.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.CAM.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.PITCH.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.PITCH.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.ROLL.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.ROLL.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.YAW.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.YAW.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.THROTTLE.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.THROTTLE.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.FLAPS_U.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.FLAPS_U.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.FLAPS_D.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.FLAPS_D.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.BRAKE.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.BRAKE.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.PANEL.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.PANEL.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.ZOOM_I.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.ZOOM_I.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.ZOOM_O.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.ZOOM_O.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.CHANGEVIEW.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.CHANGEVIEW.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.LOOK_L.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.LOOK_L.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.LOOK_R.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.LOOK_R.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.LOOK_U.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.LOOK_U.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.LOOK_D.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.LOOK_D.joystickName, NULL_COMPONENT).getInt());
-		joystickMap.put(Controls.LOOK_ALL.joystickName, ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.LOOK_ALL.joystickName, NULL_COMPONENT).getInt());
-		
-		Controls.PITCH.joystickMaxTravel = ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.PITCH.joystickName+"maxtravel", 1D).getDouble();
-		Controls.PITCH.joystickMinTravel = ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.PITCH.joystickName+"mintravel", -1D).getDouble();
-		Controls.PITCH.joystickInverted = ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.PITCH.joystickName+"inverted", false).getBoolean();
-		Controls.ROLL.joystickMaxTravel = ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.ROLL.joystickName+"maxtravel", 1D).getDouble();
-		Controls.ROLL.joystickMinTravel = ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.ROLL.joystickName+"mintravel", -1D).getDouble();
-		Controls.ROLL.joystickInverted = ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.ROLL.joystickName+"inverted", false).getBoolean();
-		Controls.YAW.joystickMaxTravel = ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.YAW.joystickName+"maxtravel", 1D).getDouble();
-		Controls.YAW.joystickMinTravel = ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.YAW.joystickName+"mintravel", -1D).getDouble();
-		Controls.YAW.joystickInverted = ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.YAW.joystickName+"inverted", false).getBoolean();
-		Controls.THROTTLE.joystickMaxTravel = ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.THROTTLE.joystickName+"maxtravel", 1D).getDouble();
-		Controls.THROTTLE.joystickMinTravel = ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.THROTTLE.joystickName+"mintravel", -1D).getDouble();
-		Controls.THROTTLE.joystickInverted = ConfigSystem.config.get(JOYSTICK_CONFIG, Controls.THROTTLE.joystickName+"inverted", false).getBoolean();
-	}	
-	
-	public static String getKeyboardKeyname(String keyname){
-		return Keyboard.getKeyName(keyboardMap.get(keyname));
-	}
-	
-	public static String getJoystickControlName(int componentId){
-		for(Entry<String, Integer> entry : joystickMap.entrySet()){
-			if(entry.getValue().equals(componentId)){
-				return entry.getKey();
+		//Recall keybindings from config file.
+		for(ControlsKeyboard control : ControlsKeyboard.values()){
+			control.button = ConfigSystem.config.get(KEYBOARD_CONFIG, control.buttonName, control.defaultButton).getInt();
+		}
+		for(ControlsJoystick control : ControlsJoystick.values()){
+			control.joystickAssigned = ConfigSystem.config.get(JOYSTICK_CONFIG, control.buttonName + "_joystick", "").getString();
+			control.joystickButton = ConfigSystem.config.get(JOYSTICK_CONFIG, control.buttonName + "_button", NULL_COMPONENT).getInt();
+			if(control.isAxis){
+				control.joystickMinTravel = ConfigSystem.config.get(JOYSTICK_CONFIG, control.buttonName + "_mintravel", -1D).getDouble();
+				control.joystickMaxTravel = ConfigSystem.config.get(JOYSTICK_CONFIG, control.buttonName + "_maxtravel", 1D).getDouble();
+				control.joystickInverted = ConfigSystem.config.get(JOYSTICK_CONFIG, control.buttonName + "_inverted", false).getBoolean();
 			}
 		}
-		return "";
-	}
-	
-	public static void setKeyboardKey(String keyname, int bytecode){
-		keyboardMap.put(keyname, bytecode);
-		ConfigSystem.config.getCategory(KEYBOARD_CONFIG).put(keyname, new Property(keyname, String.valueOf(bytecode), Property.Type.INTEGER));
-		ConfigSystem.config.save();
-	}
-
-	public static void setJoystickControl(String keyname, int componentId){
-		String currentMapping = "";
-		for(Entry<String, Integer> entry : joystickMap.entrySet()){
-			if(entry.getValue().equals(componentId)){
-				currentMapping = entry.getKey();
-			}
-		}
-		if(joystickMap.containsKey(currentMapping)){
-			joystickMap.put(currentMapping, NULL_COMPONENT);
-			ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put(currentMapping, new Property(currentMapping, String.valueOf(NULL_COMPONENT), Property.Type.INTEGER));
-		}			
-		joystickMap.put(keyname, componentId);
-		ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put(keyname, new Property(keyname, String.valueOf(componentId), Property.Type.INTEGER));
 		ConfigSystem.config.save();
 	}
 	
-	public static void setAxisBounds(String axisName, double minBound, double maxBound, boolean inverted){
-		for(ControlSystem.Controls control : ControlSystem.Controls.values()){
-			if(control.joystickName.equals(axisName)){
-				control.joystickMinTravel = minBound;
-				control.joystickMaxTravel = maxBound;
-				control.joystickInverted = inverted;
-				ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put(control.joystickName+"maxtravel", new Property(control.joystickName+"maxtravel", String.valueOf(control.joystickMaxTravel), Property.Type.DOUBLE));
-				ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put(control.joystickName+"mintravel", new Property(control.joystickName+"mintravel", String.valueOf(control.joystickMinTravel), Property.Type.DOUBLE));
-				ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put(control.joystickName+"inverted", new Property(control.joystickName+"inverted", String.valueOf(control.joystickInverted), Property.Type.BOOLEAN));
-			}
+	public static boolean isControlMasterPressed(){
+		return configKey.isPressed();
+	}
+	
+	public static Set<String> getJoystickNames(){
+		return joystickMap.keySet();
+	}
+	
+	public static Component[] getJoystickControls(String joystickName){
+		return joystickMap.get(joystickName).getComponents();
+	}
+	
+	
+	public static void setKeyboardKey(ControlsKeyboard control, int keyNumber){
+		control.button = keyNumber;
+		ConfigSystem.config.getCategory(KEYBOARD_CONFIG).put(control.buttonName, new Property(control.buttonName, String.valueOf(keyNumber), Property.Type.INTEGER));
+		ConfigSystem.config.save();
+	}
+	
+	public static void setControlJoystick(ControlsJoystick control, String joystickName, int componentId){
+		control.joystickAssigned = joystickName;
+		control.joystickButton = componentId;
+		ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put(control.buttonName + "_joystick", new Property(control.buttonName + "_joystick", joystickName, Property.Type.STRING));
+		ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put(control.buttonName + "_button", new Property(control.buttonName + "_button", String.valueOf(componentId), Property.Type.INTEGER));
+		ConfigSystem.config.save();
+	}
+	
+	public static void setAxisJoystick(ControlsJoystick control, double minBound, double maxBound, boolean inverted){
+		control.joystickMinTravel = minBound;
+		control.joystickMaxTravel = maxBound;
+		control.joystickInverted = inverted;
+		ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put(control.buttonName + "_mintravel", new Property(control.buttonName + "_mintravel", String.valueOf(control.joystickMinTravel), Property.Type.DOUBLE));
+		ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put(control.buttonName + "_maxtravel", new Property(control.buttonName + "_maxtravel", String.valueOf(control.joystickMaxTravel), Property.Type.DOUBLE));
+		ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put(control.buttonName + "_inverted", new Property(control.buttonName + "_inverted", String.valueOf(control.joystickInverted), Property.Type.BOOLEAN));
+		ConfigSystem.config.save();
+	}
+	
+	public static void clearControlJoystick(ControlsJoystick control){
+		setControlJoystick(control, "", NULL_COMPONENT);
+	}
+	
+	public static void controlVehicle(EntityMultipartVehicle vehicle, boolean isPlayerController){
+		if(vehicle instanceof EntityPlane){
+			controlAircraft(vehicle, isPlayerController);
+		}else if(vehicle instanceof EntityCar){
+			controlCar(vehicle, isPlayerController);
 		}
 	}
 	
-	public static void setJoystick(Controller controller){
-		if(controller.getName() != null){
-			if(!controller.getName().equals(joystickName)){
-				ConfigSystem.config.getCategory(JOYSTICK_CONFIG).put("JoystickName", new Property("JoystickName", controller.getName(), Property.Type.STRING));
-				for(String joystickControl : joystickMap.keySet()){
-					setJoystickControl(joystickControl, NULL_COMPONENT);
+	private static boolean getTrueKeyboardButtonState(ControlsKeyboard control, boolean pressed){
+		//If this control is used in a momentary fashion make sure to only fire the event once!
+		if(pressed){
+			if(control.isMomentary){
+				if(pressedKeyboardButtons.contains(control)){
+					return false;
+				}else{
+					pressedKeyboardButtons.add(control);
+					return true;
 				}
-				joystickName = controller.getName();
-			}
-		}
-		joystick = controller;
-	}
-	
-	public static Controller getJoystick(){
-		return joystick;
-	}
-	
-	public static int getNullComponent(){
-		return NULL_COMPONENT;
-	}
-	
-	private static boolean isControlPressed(ControlSystem.Controls control){
-		if(!joystickMap.get(control.joystickName).equals(NULL_COMPONENT) && joystick != null){
-			if(joystick.getComponents()[joystickMap.get(control.joystickName)].getPollData() > 0){
-				return true;
-			}else if(ConfigSystem.getBooleanConfig("KeyboardOverride")){
-				return false;
-			}
-		}
-		if(keyboardMap.containsKey(control.keyboardName)){
-			return Keyboard.isKeyDown(keyboardMap.get(control.keyboardName));
-		}else{
-			return false;			
-		}
-	}
-	
-	private static short getAxisState(ControlSystem.Controls control, boolean controlSurface){
-		float pollValue = joystick.getComponents()[joystickMap.get(control.joystickName)].getPollData();
-		if(!controlSurface || (Math.abs(pollValue) > joystick.getComponents()[joystickMap.get(control.joystickName)].getDeadZone() && Math.abs(pollValue) > ConfigSystem.getDoubleConfig("JoystickDeadZone"))){
-			//Normalize from -1 to 1 based on the min-max travel settings.
-			pollValue = (float) (((pollValue - control.joystickMinTravel)/(control.joystickMaxTravel - control.joystickMinTravel) - 0.5)*2F);
-			//If axis is inverted, invert poll.
-			if(control.joystickInverted){
-				pollValue *= -1;
-			}
-			if(controlSurface){
-				return (short) (Math.signum(pollValue)*350*Math.pow(2, ConfigSystem.getIntegerConfig("JoystickForceFactor")*Math.abs(pollValue) - ConfigSystem.getIntegerConfig("JoystickForceFactor")));
 			}else{
-				return (short) (100*(pollValue + 1F)/2F);
+				return true;
 			}
+		}else{
+			pressedKeyboardButtons.remove(control);
+			return false;
+		}
+	}
+	
+	private static boolean getTrueJoystickButtonState(ControlsJoystick control, boolean pressed){
+		if(pressed){
+			if(pressedJoystickButtons.contains(control)){
+				return false;
+			}else{
+				pressedJoystickButtons.add(control);
+				return true;
+			}
+		}else{
+			pressedJoystickButtons.remove(control);
+			return false;
+		}
+	}
+	
+	private static boolean isKeyboardButtonPressed(ControlsKeyboard control){
+		//Check to see if there is a working joystick assigned to this control.
+		if(joystickMap.containsKey(control.linkedJoystickControl.joystickAssigned)){
+			//Need to check to see if this axis is currently bound.
+			if(control.linkedJoystickControl.joystickButton != NULL_COMPONENT){
+				//Joystick control is bound and presumably functional.  If we are overriding the keyboard we must return this value.
+				//Check to make sure this isn't mapped to an axis first.  If so, return if the value is over 25.
+				if(control.linkedJoystickControl.isAxis){
+					return getJoystickAxisState(control.linkedJoystickControl, true) > 25;
+				}
+				if(isJoystickButtonPressed(control.linkedJoystickControl)){
+					return getTrueJoystickButtonState(control.linkedJoystickControl, true);
+				}else if(ConfigSystem.getBooleanConfig("KeyboardOverride")){
+					return getTrueJoystickButtonState(control.linkedJoystickControl, false);
+				}
+			}
+		}
+		return getTrueKeyboardButtonState(control, Keyboard.isKeyDown(control.button));
+	}
+	
+	private static boolean isJoystickButtonPressed(ControlsJoystick control){
+		return getJoystickMultistateValue(control) > 0;
+	}
+	
+	private static float getJoystickMultistateValue(ControlsJoystick control){
+		//Check to make sure this control is operational before testing.  It could have been removed from a prior game.
+		if(joystickMap.containsKey(control.joystickAssigned)){
+			return joystickMap.get(control.joystickAssigned).getComponents()[control.joystickButton].getPollData();
 		}else{
 			return 0;
 		}
 	}
 	
-	public static void controlCamera(){
-		if(isControlPressed(Controls.CAM)){
-			if(!camLockKeyPressed){
-				if(!isControlPressed(Controls.MOD)){
-					camLockKeyPressed=true;
-					CameraSystem.changeCameraLock();
+	//Return type is short to allow for easier packet transmission.
+	private static short getJoystickAxisState(ControlsJoystick control, boolean normalized){
+		if(joystickMap.containsKey(control.joystickAssigned)){
+			float pollValue = joystickMap.get(control.joystickAssigned).getComponents()[control.joystickButton].getPollData();
+			if(Math.abs(pollValue) > ConfigSystem.getDoubleConfig("JoystickDeadZone")){
+				//If axis is inverted, invert poll.
+				if(control.joystickInverted){
+					pollValue *= -1;
+				}
+				
+				//Clamp the poll value to the defined axis bounds set during config to prevent over and under-runs.
+				pollValue = (float) Math.max(control.joystickMinTravel, pollValue);
+				pollValue = (float) Math.min(control.joystickMaxTravel, pollValue);
+				
+				//If we don't need to normalize the axis, return it as-is.  Otherwise do a normalization from 0-1.
+				if(!normalized){
+					return (short) (Short.MAX_VALUE*pollValue);
+				}else{
+					//Divide the poll value plus the min bounds by the span to get it in the range of 0-1.
+					pollValue = (float) ((pollValue - control.joystickMinTravel)/(control.joystickMaxTravel - control.joystickMinTravel));
+					//Now return this value in a range from 0-100.
+					return (short) (pollValue*100);
 				}
 			}
-		}else{
-			camLockKeyPressed=false;
+			
+		}
+		return 0;
+	}
+	
+	private static void controlCamera(ControlsKeyboard lock, ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsKeyboard mod, ControlsJoystick changeView){
+		if(isKeyboardButtonPressed(lock)){
+			if(isKeyboardButtonPressed(mod)){
+				if(CameraSystem.hudMode == 3){
+					CameraSystem.hudMode = 0;
+				}else{
+					++CameraSystem.hudMode;
+				}
+			}else{
+				CameraSystem.changeCameraLock();
+			}
+		}
+		if(isKeyboardButtonPressed(zoomIn)){
+			CameraSystem.changeCameraZoom(false);
+		}
+		if(isKeyboardButtonPressed(zoomOut)){
+			CameraSystem.changeCameraZoom(true);
 		}
 		
-		if(isControlPressed(Controls.ZOOM_I)){
-			if(!zoomInKeyPressed){
-				zoomInKeyPressed=true;
-				CameraSystem.changeCameraZoom(false);
+		if(isJoystickButtonPressed(changeView)){
+			if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 2){
+				Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
+			}else{
+				++Minecraft.getMinecraft().gameSettings.thirdPersonView;
 			}
-		}else{
-			zoomInKeyPressed=false;
 		}
-		if(isControlPressed(Controls.ZOOM_O)){
-			if(!zoomOutKeyPressed){
-				zoomOutKeyPressed=true;
-				CameraSystem.changeCameraZoom(true);
-			}
-		}else{
-			zoomOutKeyPressed=false;
+	}
+	
+	private static void rotateCamera(ControlsJoystick lookR, ControlsJoystick lookL, ControlsJoystick lookU, ControlsJoystick lookD, ControlsJoystick lookA){
+		if(isJoystickButtonPressed(lookR)){
+			Minecraft.getMinecraft().thePlayer.rotationYaw+=3;
 		}
-		if(isControlPressed(Controls.CHANGEVIEW)){
-			if(!changeViewKeyPressed){
-				changeViewKeyPressed = true;
-				if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 2){
-					Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-				}else{
-					++Minecraft.getMinecraft().gameSettings.thirdPersonView;
-				}
-			}
-		}else{
-			changeViewKeyPressed = false;
+		if(isJoystickButtonPressed(lookL)){
+			Minecraft.getMinecraft().thePlayer.rotationYaw-=3;
 		}
-		if(isControlPressed(Controls.LOOK_R)){
-			Minecraft.getMinecraft().thePlayer.rotationYaw+=2;
+		if(isJoystickButtonPressed(lookU)){
+			Minecraft.getMinecraft().thePlayer.rotationPitch-=3;
 		}
-		if(isControlPressed(Controls.LOOK_L)){
-			Minecraft.getMinecraft().thePlayer.rotationYaw-=2;
+		if(isJoystickButtonPressed(lookD)){
+			Minecraft.getMinecraft().thePlayer.rotationPitch+=3;
 		}
-		if(isControlPressed(Controls.LOOK_D)){
-			Minecraft.getMinecraft().thePlayer.rotationPitch+=2;
-		}
-		if(isControlPressed(Controls.LOOK_U)){
-			Minecraft.getMinecraft().thePlayer.rotationPitch-=2;
-		}
-		if(isControlPressed(Controls.LOOK_ALL)){
-			float pollData = joystick.getComponents()[joystickMap.get(Controls.LOOK_ALL.joystickName)].getPollData();
+		
+		float pollData = getJoystickMultistateValue(lookA);
+		if(pollData != 0){
 			if(pollData >= 0.125F && pollData <= 0.375F){
-				Minecraft.getMinecraft().thePlayer.rotationPitch+=2;
+				Minecraft.getMinecraft().thePlayer.rotationPitch+=3;
 			}
 			if(pollData >= 0.375F && pollData <= 0.625F){
-				Minecraft.getMinecraft().thePlayer.rotationYaw+=2;
+				Minecraft.getMinecraft().thePlayer.rotationYaw+=3;
 			}
 			if(pollData >= 0.625F && pollData <= 0.875F){
-				Minecraft.getMinecraft().thePlayer.rotationPitch-=2;
+				Minecraft.getMinecraft().thePlayer.rotationPitch-=3;
 			}
 			if(pollData >= 0.875F || pollData <= 0.125F){
-				Minecraft.getMinecraft().thePlayer.rotationYaw-=2;
+				Minecraft.getMinecraft().thePlayer.rotationYaw-=3;
 			}
 		}
 	}
 	
-	public static void controlVehicle(EntityMultipartVehicle vehicle, EntityPlayer controller){
-		if(joystick!=null){
-			if(!joystick.poll()){
-				joystick = null;
-			}
-		}
+	private static void controlBrake(ControlsKeyboard brake, ControlsKeyboard mod, ControlsJoystick pBrake, int entityID){
+		if(isJoystickButtonPressed(pBrake)){
+			MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 12));
+			return;
+		}		
 		
-		checkHUD();
-		checkBrakes(vehicle);
-		checkThrottle(vehicle);
-		if(vehicle instanceof EntityPlane){
-			checkPlaneControls((EntityPlane) vehicle);
-		}
-		checkPanel(vehicle, controller);
-		
-		
-	}
-	
-	private static void checkHUD(){
-		if(isControlPressed(Controls.CAM)){
-			if(!camLockKeyPressed){
-				if(isControlPressed(Controls.MOD)){
-					camLockKeyPressed=true;
-					if(CameraSystem.hudMode == 3){
-						CameraSystem.hudMode = 0;
-					}else{
-						++CameraSystem.hudMode;
-					} 
-				}
-			}
-		}
-	}
-	
-	private static void checkThrottle(EntityMultipartVehicle vehicle){
-		if(joystickMap.get(Controls.THROTTLE.joystickName) != 999 && joystick != null){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), (byte) getAxisState(Controls.THROTTLE, false)));
-		}else if(Keyboard.isKeyDown(keyboardMap.get(Controls.THROTTLE.keyboardIncrementName))){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), Byte.MAX_VALUE));
-		}else if(Keyboard.isKeyDown(keyboardMap.get(Controls.THROTTLE.keyboardDecrementName))){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(vehicle.getEntityId(), Byte.MIN_VALUE));
-		}
-	}
-	
-	private static void checkBrakes(EntityMultipartVehicle vehicle){
-		if(isControlPressed(Controls.BRAKE)){
-			if(!brakeKeyPressed){
-				brakeKeyPressed = true;
-				if(isControlPressed(Controls.MOD)){
-					MTS.MTSNet.sendToServer(new BrakePacket(vehicle.getEntityId(), (byte) 12));
-				}else{
-					MTS.MTSNet.sendToServer(new BrakePacket(vehicle.getEntityId(), (byte) 11));
-				}
-			}
-		}else if(brakeKeyPressed){
-			brakeKeyPressed = false;
-			MTS.MTSNet.sendToServer(new BrakePacket(vehicle.getEntityId(), (byte) 2));
-		}
-	}
-	
-	private static void checkPanel(EntityMultipartVehicle vehicle, EntityPlayer controller){
-		if(isControlPressed(Controls.PANEL)){
-			if(!panelKeyPressed){
-				panelKeyPressed = true;
-				if(Minecraft.getMinecraft().currentScreen == null){
-					FMLCommonHandler.instance().showGuiScreen(vehicle.getPanel());
-				}else if(Minecraft.getMinecraft().currentScreen.getClass().equals(GUIPanelAircraft.class)){
-					Minecraft.getMinecraft().displayGuiScreen((GuiScreen)null);
-					Minecraft.getMinecraft().setIngameFocus();
-				}
+		if(isKeyboardButtonPressed(brake)){
+			if(isKeyboardButtonPressed(mod)){
+				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 12));	
+			}else{
+				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 11));
 			}
 		}else{
-			panelKeyPressed = false;
+			MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 2));
 		}
 	}
 	
-	private static void checkPlaneControls(EntityPlane plane){
+	private static void controlAircraft(EntityMultipartVehicle aircraft, boolean isPlayerController){
+		controlCamera(ControlsKeyboard.AIRCRAFT_CAMLOCK, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsKeyboard.AIRCRAFT_MOD, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
+		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
+		if(!isPlayerController){
+			return;
+		}
+		controlBrake(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD, ControlsJoystick.AIRCRAFT_PARK, aircraft.getEntityId());
+		
+		//Open or close the panel.
+		if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_PANEL)){
+			if(Minecraft.getMinecraft().currentScreen == null){
+				FMLCommonHandler.instance().showGuiScreen(aircraft.getPanel());
+			}else if(Minecraft.getMinecraft().currentScreen.getClass().equals(GUIPanelAircraft.class)){
+				Minecraft.getMinecraft().displayGuiScreen((GuiScreen)null);
+				Minecraft.getMinecraft().setIngameFocus();
+			}
+		}
+		
+		//Increment or decrement throttle.
+		if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_THROTTLE.joystickAssigned) && ControlsJoystick.AIRCRAFT_THROTTLE.joystickButton != NULL_COMPONENT){
+			MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.AIRCRAFT_THROTTLE, true)));
+		}else{
+			if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_THROTTLE_U)){
+				MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MAX_VALUE));
+			}
+			if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_THROTTLE_D)){
+				MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MIN_VALUE));
+			}
+		}
+		
+		//Check flaps.
+		if(aircraft.pack.general.type.equals("plane") && aircraft.pack.plane.hasFlaps){
+			if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_FLAPS_U)){
+				MTS.MTSNet.sendToServer(new FlapPacket(aircraft.getEntityId(), (byte) -50));
+			}
+			if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_FLAPS_D)){
+				MTS.MTSNet.sendToServer(new FlapPacket(aircraft.getEntityId(), (byte) 50));
+			}
+		}
+		
+		//Check yaw.
+		if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_YAW.joystickAssigned) && ControlsJoystick.AIRCRAFT_YAW.joystickButton != NULL_COMPONENT){
+			MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.AIRCRAFT_YAW, true)));
+		}else{
+			if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_YAW_R)){
+				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_MOD)){
+					MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 10));
+				}else{
+					MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+				}
+			}
+			if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_YAW_L)){
+				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_MOD)){
+					MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 2));
+				}else{
+					MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+				}
+			}
+		}
+		
+		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.getBooleanConfig("MouseYoke")){
 			if(CameraSystem.lockedView && Minecraft.getMinecraft().currentScreen == null){
 				int dx = Mouse.getDX();
@@ -381,113 +372,196 @@ public final class ControlSystem{
 				if(Math.abs(dy) < 100){
 					mousePosY = (short) Math.max(Math.min(mousePosY - dy, 350), -350);
 				}
-				MTS.MTSNet.sendToServer(new AileronPacket(plane.getEntityId(), mousePosX));
-				MTS.MTSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), mousePosY));
+				MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), mousePosX));
+				MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), mousePosY));
 			}
 		}else{
-			if(joystickMap.get(Controls.ROLL.joystickName) != 999 && joystick != null){
-				MTS.MTSNet.sendToServer(new AileronPacket(plane.getEntityId(), getAxisState(Controls.ROLL, true)));
-			}else if(Keyboard.isKeyDown(keyboardMap.get(Controls.ROLL.keyboardIncrementName))){
-				if(isControlPressed(Controls.MOD)){
-					MTS.MTSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 8));
-				}else{
-					MTS.MTSNet.sendToServer(new AileronPacket(plane.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+			//Check pitch.
+			if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_PITCH.joystickAssigned) && ControlsJoystick.AIRCRAFT_PITCH.joystickButton != NULL_COMPONENT){
+				MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.AIRCRAFT_PITCH, true)));
+			}else{
+				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_PITCH_U)){
+					if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_MOD)){
+						MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 9));
+					}else{
+						MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+					}
 				}
-			}else if(Keyboard.isKeyDown(keyboardMap.get(Controls.ROLL.keyboardDecrementName))){
-				if(isControlPressed(Controls.MOD)){
-					MTS.MTSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 0));
-				}else{
-					MTS.MTSNet.sendToServer(new AileronPacket(plane.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_PITCH_D)){
+					if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_MOD)){
+						MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 1));
+					}else{
+						MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+					}
 				}
 			}
 			
-			if(joystickMap.get(Controls.PITCH.joystickName) != 999 && joystick != null){
-				MTS.MTSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), getAxisState(Controls.PITCH, true)));
-			}else if(Keyboard.isKeyDown(keyboardMap.get(Controls.PITCH.keyboardIncrementName))){
-				if(isControlPressed(Controls.MOD)){
-					MTS.MTSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 9));
-				}else{
-					MTS.MTSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-				}
-			}else if(Keyboard.isKeyDown(keyboardMap.get(Controls.PITCH.keyboardDecrementName))){
-				if(isControlPressed(Controls.MOD)){
-					MTS.MTSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 1));
-				}else{
-					MTS.MTSNet.sendToServer(new ElevatorPacket(plane.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-				}
-			}
-		}
-		
-		if(joystickMap.get(Controls.YAW.joystickName) != 999 && joystick != null){
-			MTS.MTSNet.sendToServer(new RudderPacket(plane.getEntityId(), getAxisState(Controls.YAW, true)));
-		}else if(Keyboard.isKeyDown(keyboardMap.get(Controls.YAW.keyboardIncrementName))){
-			if(isControlPressed(Controls.MOD)){
-				MTS.MTSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 10));
+			//Check roll.
+			if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_ROLL.joystickAssigned) && ControlsJoystick.AIRCRAFT_ROLL.joystickButton != NULL_COMPONENT){
+				MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.AIRCRAFT_YAW, true)));
 			}else{
-				MTS.MTSNet.sendToServer(new RudderPacket(plane.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-			}
-		}else if(Keyboard.isKeyDown(keyboardMap.get(Controls.YAW.keyboardDecrementName))){
-			if(isControlPressed(Controls.MOD)){
-				MTS.MTSNet.sendToServer(new TrimPacket(plane.getEntityId(), (byte) 2));
-			}else{
-				MTS.MTSNet.sendToServer(new RudderPacket(plane.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-			}
-		}
-		
-		if(plane.pack.plane.hasFlaps){
-			if(isControlPressed(Controls.FLAPS_U)){
-				if(!flapKeyPressed){
-					MTS.MTSNet.sendToServer(new FlapPacket(plane.getEntityId(), (byte) -50));
-					flapKeyPressed = true;
+				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_ROLL_R)){
+					if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_MOD)){
+						MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 8));
+					}else{
+						MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+					}
 				}
-			}else if(isControlPressed(Controls.FLAPS_D)){
-				if(!flapKeyPressed){
-					MTS.MTSNet.sendToServer(new FlapPacket(plane.getEntityId(), (byte) 50));
-					flapKeyPressed = true;
+				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_ROLL_L)){
+					if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_MOD)){
+						MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 0));
+					}else{
+						MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+					}
 				}
-			}else{
-				flapKeyPressed = false;
 			}
 		}
 	}
 	
-	public enum Controls{
-		MOD(I18n.format("input.key.mod"), false),
-		CAM(I18n.format("input.key.camlock"), false),
-		PITCH(I18n.format("input.joystick.pitch"), I18n.format("input.key.pitchu"), I18n.format("input.key.pitchd")),
-		ROLL(I18n.format("input.joystick.roll"), I18n.format("input.key.rollr"), I18n.format("input.key.rolll")),
-		YAW(I18n.format("input.joystick.yaw"), I18n.format("input.key.yawr"), I18n.format("input.key.yawl")),
-		THROTTLE(I18n.format("input.joystick.throttle"), I18n.format("input.key.throttleu"), I18n.format("input.key.throttled")),
-		FLAPS_U(I18n.format("input.key.flapsu"), false),
-		FLAPS_D(I18n.format("input.key.flapsd"), false),
-		BRAKE(I18n.format("input.key.brake"), false),
-		PANEL(I18n.format("input.key.panel"), false),
-		ZOOM_I(I18n.format("input.key.zoomi"), false),
-		ZOOM_O(I18n.format("input.key.zoomo"), false),
-		CHANGEVIEW(I18n.format("input.joystick.changeview"), true),
-		LOOK_L(I18n.format("input.joystick.lookl"), true),
-		LOOK_R(I18n.format("input.joystick.lookr"), true),
-		LOOK_U(I18n.format("input.joystick.looku"), true),
-		LOOK_D(I18n.format("input.joystick.lookd"), true),
-		LOOK_ALL(I18n.format("input.joystick.looka"), true)
-		;
-
-		public final String keyboardName;
-		public final String keyboardIncrementName;
-		public final String keyboardDecrementName;
-		public final String joystickName;
-		public double joystickMaxTravel = 1;
-		public double joystickMinTravel = -1;
-		public boolean joystickInverted = false;
-		
-		private Controls(String name, boolean joystickOnly){
-			this(name, joystickOnly ? "" : name, joystickOnly ? "" : name);
+	private static void controlCar(EntityMultipartVehicle car, boolean isPlayerController){
+		controlCamera(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsKeyboard.CAR_MOD, ControlsJoystick.CAR_CHANGEVIEW);
+		rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
+		if(!isPlayerController){
+			return;
 		}
-		private Controls(String joystick, String keyboardIncrement, String keyboardDecrement){
-			this.joystickName = joystick;
-			this.keyboardName = keyboardIncrement;
-			this.keyboardIncrementName = keyboardIncrement;
-			this.keyboardDecrementName = keyboardDecrement;
+		controlBrake(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD, ControlsJoystick.CAR_PARK, car.getEntityId());
+		
+		//Change gas to on or off.
+		if(joystickMap.containsKey(ControlsJoystick.CAR_GAS.joystickAssigned) && ControlsJoystick.CAR_GAS.joystickButton != NULL_COMPONENT){
+			MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_GAS, true)));
+		}else{
+			if(isKeyboardButtonPressed(ControlsKeyboard.CAR_GAS)){
+				MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) 100));
+			}else{
+				MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) 0));
+			}
+		}
+		
+		//Check steering.
+		if(joystickMap.containsKey(ControlsJoystick.CAR_TURN.joystickAssigned) && ControlsJoystick.CAR_TURN.joystickButton != NULL_COMPONENT){
+			MTS.MTSNet.sendToServer(new RudderPacket(car.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_TURN, true)));
+		}else{
+			boolean turningRight = isKeyboardButtonPressed(ControlsKeyboard.CAR_TURN_R);
+			boolean turningLeft = isKeyboardButtonPressed(ControlsKeyboard.CAR_TURN_L);
+			if(turningRight && !turningLeft){
+				MTS.MTSNet.sendToServer(new RudderPacket(car.getEntityId(), (short) 350));
+			}else if(turningLeft && !turningRight){
+				MTS.MTSNet.sendToServer(new RudderPacket(car.getEntityId(), (short) -350));
+			}else if(!turningRight && !turningLeft){
+				MTS.MTSNet.sendToServer(new RudderPacket(car.getEntityId(), (short) 0));
+			}
+		}
+	}
+		
+	public enum ControlsKeyboard{
+		AIRCRAFT_MOD(Keyboard.KEY_RSHIFT, ControlsJoystick.AIRCRAFT_MOD, false),
+		AIRCRAFT_CAMLOCK(Keyboard.KEY_RCONTROL, ControlsJoystick.AIRCRAFT_CAMLOCK, true),
+		AIRCRAFT_PITCH_U(Keyboard.KEY_S, ControlsJoystick.AIRCRAFT_PITCH, false),
+		AIRCRAFT_PITCH_D(Keyboard.KEY_W, ControlsJoystick.AIRCRAFT_PITCH, false),
+		AIRCRAFT_ROLL_R(Keyboard.KEY_D, ControlsJoystick.AIRCRAFT_ROLL, false),
+		AIRCRAFT_ROLL_L(Keyboard.KEY_A, ControlsJoystick.AIRCRAFT_ROLL, false),
+		AIRCRAFT_YAW_R(Keyboard.KEY_L, ControlsJoystick.AIRCRAFT_YAW, false),
+		AIRCRAFT_YAW_L(Keyboard.KEY_J, ControlsJoystick.AIRCRAFT_YAW, false),
+		AIRCRAFT_THROTTLE_U(Keyboard.KEY_I, ControlsJoystick.AIRCRAFT_THROTTLE, false),
+		AIRCRAFT_THROTTLE_D(Keyboard.KEY_K, ControlsJoystick.AIRCRAFT_THROTTLE, false),
+		AIRCRAFT_FLAPS_U(Keyboard.KEY_Y, ControlsJoystick.AIRCRAFT_FLAPS_U, true),
+		AIRCRAFT_FLAPS_D(Keyboard.KEY_H, ControlsJoystick.AIRCRAFT_FLAPS_D, true),
+		AIRCRAFT_BRAKE(Keyboard.KEY_B, ControlsJoystick.AIRCRAFT_BRAKE, false),
+		AIRCRAFT_PANEL(Keyboard.KEY_U, ControlsJoystick.AIRCRAFT_PANEL, true),
+		AIRCRAFT_ZOOM_I(Keyboard.KEY_PRIOR, ControlsJoystick.AIRCRAFT_ZOOM_I, true),
+		AIRCRAFT_ZOOM_O(Keyboard.KEY_NEXT, ControlsJoystick.AIRCRAFT_ZOOM_O, true),
+		
+		CAR_MOD(Keyboard.KEY_RSHIFT, ControlsJoystick.CAR_MOD, true),
+		CAR_CAMLOCK(Keyboard.KEY_RCONTROL, ControlsJoystick.CAR_CAMLOCK, true),
+		CAR_TURN_R(Keyboard.KEY_D, ControlsJoystick.CAR_TURN, false),
+		CAR_TURN_L(Keyboard.KEY_A, ControlsJoystick.CAR_TURN, false),
+		CAR_GAS(Keyboard.KEY_W, ControlsJoystick.CAR_GAS, false),
+		CAR_BRAKE(Keyboard.KEY_S, ControlsJoystick.AIRCRAFT_BRAKE, false),
+		CAR_HORN(Keyboard.KEY_C, ControlsJoystick.CAR_HORN, false),
+		CAR_START(Keyboard.KEY_Z, ControlsJoystick.CAR_START, false),
+		CAR_LIGHTS(Keyboard.KEY_X, ControlsJoystick.CAR_LIGHTS, true),
+		CAR_ZOOM_I(Keyboard.KEY_PRIOR, ControlsJoystick.CAR_ZOOM_I, true),
+		CAR_ZOOM_O(Keyboard.KEY_NEXT, ControlsJoystick.CAR_ZOOM_O, true);
+		
+
+		public final String buttonName;
+		private final boolean isMomentary;
+		private final int defaultButton;
+		private final ControlsJoystick linkedJoystickControl;
+		private int button;
+		
+		private ControlsKeyboard(int defaultButton, ControlsJoystick linkedJoystickControl, boolean momentary){
+			this.buttonName="input." + this.name().toLowerCase().replace('_', '.');
+			this.defaultButton=defaultButton;
+			this.linkedJoystickControl=linkedJoystickControl;
+			this.isMomentary=momentary;
+		}
+		
+		public String getCurrentButton(){
+			return Keyboard.getKeyName(this.button);
+		}
+	}
+	
+	public enum ControlsJoystick{
+		AIRCRAFT_MOD(false),
+		AIRCRAFT_CAMLOCK(false),
+		AIRCRAFT_PITCH(true),
+		AIRCRAFT_ROLL(true),
+		AIRCRAFT_YAW(true),
+		AIRCRAFT_THROTTLE(true),
+		AIRCRAFT_FLAPS_U(false),
+		AIRCRAFT_FLAPS_D(false),
+		AIRCRAFT_BRAKE(false),
+		AIRCRAFT_PANEL(false),
+		AIRCRAFT_ZOOM_I(false),
+		AIRCRAFT_ZOOM_O(false),
+		AIRCRAFT_PARK(false),
+		AIRCRAFT_CHANGEVIEW(false),
+		AIRCRAFT_LOOK_L(false),
+		AIRCRAFT_LOOK_R(false),
+		AIRCRAFT_LOOK_U(false),
+		AIRCRAFT_LOOK_D(false),
+		AIRCRAFT_LOOK_A(false),
+		
+		CAR_MOD(false),
+		CAR_CAMLOCK(false),
+		CAR_TURN(true),
+		CAR_GAS(true),
+		CAR_BRAKE(true),
+		CAR_HORN(false),
+		CAR_START(false),
+		CAR_LIGHTS(false),
+		CAR_ZOOM_I(false),
+		CAR_ZOOM_O(false),
+		CAR_PARK(false),
+		CAR_CHANGEVIEW(false),
+		CAR_LOOK_L(false),
+		CAR_LOOK_R(false),
+		CAR_LOOK_U(false),
+		CAR_LOOK_D(false),
+		CAR_LOOK_A(false);
+		
+		
+		public final boolean isAxis;
+		public final String buttonName;
+		
+		private boolean joystickInverted = false;
+		private int joystickButton;
+		private double joystickMaxTravel;
+		private double joystickMinTravel;
+		private String joystickAssigned;
+		
+		private ControlsJoystick(boolean isAxis){
+			this.buttonName="input." + this.name().toLowerCase().replace('_', '.');
+			this.isAxis=isAxis;
+		}
+		
+		public String getCurrentButton(){
+			return this.joystickAssigned;
+		}
+		
+		public boolean isInverted(){
+			return this.joystickInverted;
 		}
 	}
 }
