@@ -25,12 +25,12 @@ public class GUISplash extends GuiScreen{
 			drawTextLine("I will say that if you're interested in making your own packs, come join the Discord.");
 			drawTextLine("The link to the Discord is on the Minecraftforums page.");
 			drawTextLine("");
-			drawTextLine("All the devs hand out on Discord regularly, so it's a great place to get help fast.");
+			drawTextLine("All the devs hang out on Discord regularly, so it's a great place to get help fast.");
 			drawTextLine("You can also get more specifics about things the manual doesn't fully cover,");
 			drawTextLine("and get sneak peeks on how the mod is progressing.");
 			drawTextLine("");
 			drawTextLine("Oh, and one final thing.  Please don't re-distribute this mod.  I still have issues with");
-			drawTextLine("people downloading old MFS versions that people re-posted an didn't update...");
+			drawTextLine("people downloading old MFS versions that people re-posted and didn't update...");
 		}else{
 			drawTextLine("Hey, you.  Yeah you.  It appears that you don't have a content pack installed.");
 			drawTextLine("Content packs are the new way MTS distributes files to users.");
