@@ -13,9 +13,8 @@ import org.lwjgl.input.Keyboard;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
+import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboard;
 import net.java.games.input.Component;
-import net.java.games.input.Controller;
-import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -25,37 +24,57 @@ import net.minecraft.util.ResourceLocation;
 public class GUIConfig extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/wide_blank.png");
 		
-	private boolean changedThisTick;
+	
 	private boolean invertButtonPressed;
 	
+	//Global variables.
+	private boolean changedThisTick;
 	private int guiLeft;
-	private int guiTop;
-	private int scrollSpot = 0;
-	private int joystickComponentId;
-	private String controlName;
-	private GUIStates guiState;
-	private Controller[] joysticks;
-	private Component[] joystickComponents;
+	private int guiTop;	
+	private GuiButton configScreenButton;
+	private GuiButton controlScreenButton;
 	
-	private GuiButton contol_list_upButton;
-	private GuiButton control_list_downButton;
+	//Config variables.
+	private boolean configuringControls = true;
+	private Map<GuiButton, ConfigButtons> configButtons = new HashMap<GuiButton, ConfigButtons>();
+	
+	//Keybind selection variables.
+	private String vehicleConfiguring = "";
+	private Map<GuiButton, String> vehicleSelectionButtons = new HashMap<GuiButton, String>();
+	private GuiButton finishKeyboardBindingsButton;
+	
+	//Keyboard assignment variables.
+	private boolean configuringKeyboard;
+	private Map<ControlsKeyboard, GuiTextField> keyboardBoxes = new HashMap<ControlsKeyboard, GuiTextField>();
+	
+	//Joystick selection variables.
+	private List<GuiButton> joystickSelectionButtons = new ArrayList<GuiButton>();
+	
+	//Joystick component selection variables.
+	private int scrollSpot = 0;
+	private Component joystick;
+	private GuiButton component_list_upButton;
+	private GuiButton component_list_downButton;
 	private GuiButton deadzone_moreButton;
 	private GuiButton deadzone_lessButton;
-	private GuiButton confirmButton;
-	private GuiButton cancelButton;
-	private GuiButton clearButton;
-	private GuiButton invertButton;
-	private GuiTextField maxTextBox;
-	private GuiTextField minTextBox;
+	private List<GuiButton> joystickComponentSelectionButtons = new ArrayList<GuiButton>();
 	
-	private List<GuiButton> joystickConfigureButtons = new ArrayList<GuiButton>();
-	private List<GuiButton> analogAssignButtons = new ArrayList<GuiButton>();
+	//Joystick assignment variables.
+	private int joystickComponentId;
+	private GuiButton cancelAssignmentButton;
+	private GuiButton clearAssignmentButton;
+	
+	//Joystick digital assignment variables.
 	private List<GuiButton> digitalAssignButtons = new ArrayList<GuiButton>();
 	
-	private Map<GuiButton, GUIStates> menuButtons = new HashMap<GuiButton, GUIStates>();
-	private Map<GuiButton, ConfigButtons> configButtons = new HashMap<GuiButton, ConfigButtons>();
-	private Map<GuiTextField, KeybindBoxes> keybindBoxes = new HashMap<GuiTextField, KeybindBoxes>();
-	private Map<GuiButton, Byte> joystickButtons = new HashMap<GuiButton, Byte>();
+	//Joystick analog assignment variables.
+	private List<GuiButton> analogAssignButtons = new ArrayList<GuiButton>();
+	
+	//Joystick analog calibration variables.
+	private GuiButton confirmBoundsButton;
+	private GuiButton invertAxisButton;
+	private GuiTextField axisMaxBoundsTextBox;
+	private GuiTextField axisMinBoundsTextBox;
 	
 	public GUIConfig(){
 		this.allowUserInput=true;
@@ -66,60 +85,219 @@ public class GUIConfig extends GuiScreen{
 		super.initGui();
 		guiLeft = (this.width - 256)/2;
 		guiTop = (this.height - 192)/2;
-		guiState = GUIStates.PLANE;
-		initMenuButtons();
-		initConfigControls();
-		initKeybindBoxes();
-		initJoysticks();
-		initJoystickButtonList();
-		initJoystickControls();
-		setInputStatesByLevel();
+		
+		//Create ALL the buttons & boxes.
+		initHeaderButtons();
+		initConfigButtons();
+		initVehicleSelectionButtons();
+		initKeyboardBoxes();
+
+		
+		//initJoysticks();
+		//initConfigControls();
+		//initJoystickSelectionButtons();
+		//initJoystickControls();
+		//setInputStatesByLevel();
 	}
 	
-	private void initMenuButtons(){
-		menuButtons.put(new GuiButton(0, guiLeft + 0, guiTop - 20, 50, 20, I18n.format("gui.config.title.config")), GUIStates.CONFIG);
-		menuButtons.put(new GuiButton(0, guiLeft + 50, guiTop - 20, 50, 20, I18n.format("gui.config.title.plane")), GUIStates.PLANE);
-		menuButtons.put(new GuiButton(0, guiLeft + 100, guiTop - 20, 50, 20, I18n.format("gui.config.title.heli")), GUIStates.HELICOPTER);
-		menuButtons.put(new GuiButton(0, guiLeft + 150, guiTop - 20, 50, 20, I18n.format("gui.config.title.vehicle")), GUIStates.VEHICLE);
-		menuButtons.put(new GuiButton(0, guiLeft + 200, guiTop - 20, 56, 20, I18n.format("gui.config.title.joystick")), GUIStates.JS_SELECT);
-		for(GuiButton button : menuButtons.keySet()){
-			buttonList.add(button);
+	@Override
+    public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
+		changedThisTick = false;
+		for(GuiTextField box : keyboardBoxes.values()){
+			box.setEnabled(false);
+		}
+		for(GuiButton button : buttonList){
+			button.enabled = false;
+		}
+		
+		this.mc.getTextureManager().bindTexture(background);
+		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 192);
+		
+		configScreenButton.enabled = configuringControls;
+		controlScreenButton.enabled = !configScreenButton.enabled;
+		configScreenButton.drawButton(mc, mouseX, mouseY);
+		controlScreenButton.drawButton(mc, mouseX, mouseY);
+		
+		if(configuringControls){
+			if(vehicleConfiguring.isEmpty()){
+				drawVehicleSelectionScreen(mouseX, mouseY, renderPartialTicks);
+			}else{
+				if(configuringKeyboard){
+					drawKeyboardScreen(mouseX, mouseY, renderPartialTicks);
+				}else{
+					
+				}
+			}
+		}else{
+			drawConfigScreen(mouseX, mouseY, renderPartialTicks);
 		}
 	}
 	
-	private void initConfigControls(){
+	@Override
+    protected void actionPerformed(GuiButton buttonClicked){
+		try{
+			super.actionPerformed(buttonClicked);
+			if(!changedThisTick){
+				changedThisTick = true;
+				if(buttonClicked.equals(configScreenButton)){
+					configuringControls = false;
+					vehicleConfiguring = "";
+				}else if(buttonClicked.equals(controlScreenButton)){
+					configuringControls = true;
+				}else if(configButtons.containsKey(buttonClicked)){
+					ConfigSystem.setClientConfig(configButtons.get(buttonClicked).configName, !Boolean.valueOf(buttonClicked.displayString));
+					buttonClicked.displayString = String.valueOf(ConfigSystem.getBooleanConfig(configButtons.get(buttonClicked).configName));
+				}else if(vehicleSelectionButtons.containsKey(buttonClicked)){
+					String lookupString = vehicleSelectionButtons.get(buttonClicked);
+					vehicleConfiguring = lookupString.substring(0, lookupString.indexOf('.'));
+					configuringKeyboard = lookupString.contains("keyboard");
+				}if(buttonClicked.equals(finishKeyboardBindingsButton)){
+					vehicleConfiguring = "";
+				}
+			}
+		}catch (IOException e){
+			e.printStackTrace();
+		}
+	}
+	
+    @Override
+    protected void mouseClicked(int x, int y, int button) throws IOException {
+    	super.mouseClicked(x, y, button);
+    	if(!changedThisTick){
+	    	for(GuiTextField box : keyboardBoxes.values()){
+	    		if(box.getVisible()){
+	    			box.mouseClicked(x, y, button);
+	    		}
+	    	}
+    	}
+    }
+	
+    @Override
+    protected void keyTyped(char key, int bytecode) throws IOException {
+    	super.keyTyped(key, bytecode);
+    	if(bytecode!=1){
+    		for(ControlsKeyboard keyboardControl : keyboardBoxes.keySet()){
+    			GuiTextField box = keyboardBoxes.get(keyboardControl);
+        		if(box.isFocused()){
+        			box.setText(Keyboard.getKeyName(bytecode));
+        			ControlSystem.setKeyboardKey(keyboardControl, bytecode);
+        			box.setFocused(false);
+        		}
+        	}
+        }
+    }
+	
+	private void drawConfigScreen(int mouseX, int mouseY, float renderPartialTicks){
+		for(GuiButton button : configButtons.keySet()){
+			button.enabled = true;
+			button.drawButton(mc, mouseX, mouseY);
+			fontRendererObj.drawStringWithShadow(configButtons.get(button).formattedName, guiLeft+10, button.yPosition + 5, Color.WHITE.getRGB());
+		}
+		//Need to do mouseover after main rendering or you get rendering issues.
+		for(GuiButton button : configButtons.keySet()){
+			if(button.isMouseOver()){
+				drawHoveringText(Arrays.asList(configButtons.get(button).mouseoverText), mouseX, mouseY, fontRendererObj);
+			}
+		}
+	}
+	
+	private void drawVehicleSelectionScreen(int mouseX, int mouseY, float renderPartialTicks){
+		fontRendererObj.drawStringWithShadow(I18n.format("gui.config.controls.title"), guiLeft+10, guiTop+10, Color.WHITE.getRGB());
+		for(GuiButton button : vehicleSelectionButtons.keySet()){
+			button.enabled = true;
+			button.drawButton(mc, mouseX, mouseY);
+		}
+	}
+	
+	private void drawKeyboardScreen(int mouseX, int mouseY, float renderPartialTicks){
+		fontRendererObj.drawStringWithShadow(I18n.format("gui.config.controls." + vehicleConfiguring + ".keyboard"), guiLeft+15, guiTop+15, Color.WHITE.getRGB());
+		for(ControlsKeyboard keyboardControl : keyboardBoxes.keySet()){
+			GuiTextField box = keyboardBoxes.get(keyboardControl);
+			if(box.isFocused()){
+				box.setText("");
+			}else{
+				if(keyboardControl.getCurrentButton().length() < 5){
+					box.setText(keyboardControl.getCurrentButton());
+				}else{
+					box.setText(keyboardControl.getCurrentButton().substring(0, 5));
+				}
+			}
+			if(keyboardControl.name().contains(vehicleConfiguring.toUpperCase())){
+				box.setEnabled(true);
+				box.drawTextBox();
+				fontRendererObj.drawStringWithShadow(I18n.format(keyboardControl.buttonName) + ":", box.xPosition - 70, box.yPosition + 2, Color.WHITE.getRGB());
+			}
+		}
+		finishKeyboardBindingsButton.enabled = true;
+		finishKeyboardBindingsButton.drawButton(mc, mouseX, mouseY);
+	}
+	
+	private void initHeaderButtons(){
+		configScreenButton = new GuiButton(0, guiLeft + 0, guiTop - 20, 128, 20, I18n.format("gui.config.header.config"));
+		controlScreenButton = new GuiButton(0, guiLeft + 128, guiTop - 20, 128, 20, I18n.format("gui.config.header.controls"));
+		configScreenButton.enabled = true;
+		controlScreenButton.enabled = false;
+		buttonList.add(configScreenButton);
+		buttonList.add(controlScreenButton);
+	}
+	
+	private void initConfigButtons(){
 		int line = 0;
 		int xOffset = 140;
 		for(ConfigButtons buttonEnum : ConfigButtons.values()){
-			GuiButton newButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig(buttonEnum.configName))); 
+			GuiButton newButton = new GuiButton(0, guiLeft+xOffset, guiTop+10+(line++)*20, 60, 20, String.valueOf(ConfigSystem.getBooleanConfig(buttonEnum.configName)));
+			newButton.enabled = false;
 			configButtons.put(newButton, buttonEnum);
 			buttonList.add(newButton);
 		}
 	}
 	
-	private void initKeybindBoxes(){
-		for(GUIStates state : GUIStates.values()){
-			List<KeybindBoxes> boxEnumList = new ArrayList<KeybindBoxes>();
-			for(KeybindBoxes boxEnum : KeybindBoxes.values()){
-				if(boxEnum.stateToDisplayOn.equals(state)){
-					boxEnumList.add(boxEnum);
-				}
-			}
-			
-			byte boxesPerColumn = (byte) (boxEnumList.size()/2);
-			for(byte i=0; i<boxEnumList.size(); ++i){
-				KeybindBoxes boxEnum = boxEnumList.get(i);
-				GuiTextField box;
-				if(i < boxesPerColumn){
-					box = new GuiTextField(0, fontRendererObj, guiLeft+80, guiTop+10+i*17, 40, 15);
-				}else{
-					box = new GuiTextField(0, fontRendererObj, guiLeft+200, guiTop+10+(i-boxesPerColumn)*17, 40, 15);
-				} 
-				keybindBoxes.put(box, boxEnum);
+	private void initVehicleSelectionButtons(){
+		byte numTypes = 0;
+		List<String> vehicleTypes = new ArrayList<String>();
+		for(ControlsKeyboard keyboardControl : ControlSystem.ControlsKeyboard.values()){
+			String vehicleType = keyboardControl.name().substring(0, keyboardControl.name().indexOf('_')).toLowerCase();
+			if(vehicleTypes.contains(vehicleType)){
+				continue;
+			}else{
+				vehicleTypes.add(vehicleType);
+				GuiButton buttonKeyboard = new GuiButton(0, guiLeft + 10, guiTop + 30 + 20*numTypes, 118, 20, I18n.format("gui.config.controls." + vehicleType + ".keyboard"));
+				GuiButton buttonJoystick = new GuiButton(0, guiLeft + 128, guiTop + 30 + 20*numTypes, 118, 20, I18n.format("gui.config.controls." + vehicleType + ".joystick"));
+				buttonKeyboard.enabled = false;
+				buttonJoystick.enabled = false;
+				vehicleSelectionButtons.put(buttonKeyboard, vehicleType + ".keyboard");
+				vehicleSelectionButtons.put(buttonJoystick,  vehicleType + ".joystick");
+				buttonList.add(buttonKeyboard);
+				buttonList.add(buttonJoystick);
+				++numTypes;
 			}
 		}
 	}
 	
+	private void initKeyboardBoxes(){
+		int verticalOffset = 40;
+		int horizontalOffset = 80;
+		String prefix = ControlSystem.ControlsKeyboard.values()[0].name().substring(0, ControlSystem.ControlsKeyboard.values()[0].name().indexOf('_'));
+		for(ControlsKeyboard keyboardControl : ControlSystem.ControlsKeyboard.values()){
+			if(!prefix.equals(keyboardControl.name().substring(0, keyboardControl.name().indexOf('_')))){
+				verticalOffset = 40;
+				horizontalOffset = 80;
+				prefix = keyboardControl.name().substring(0, keyboardControl.name().indexOf('_'));
+			}
+			GuiTextField box = new GuiTextField(0, fontRendererObj, guiLeft + horizontalOffset, guiTop + verticalOffset, 40, 15);
+			box.setText(keyboardControl.getCurrentButton());
+			keyboardBoxes.put(keyboardControl, box);
+			verticalOffset += 17;
+			if(verticalOffset > 40 + 17*7){
+				verticalOffset = 40;
+				horizontalOffset += 120;
+			}
+		}
+		finishKeyboardBindingsButton = new GuiButton(0, guiLeft + 140, guiTop + 10, 100, 20, I18n.format("gui.config.controls.confirm"));
+		buttonList.add(finishKeyboardBindingsButton);
+	}
+	
+	/*
 	private void initJoysticks(){
 		joysticks = ControllerEnvironment.getDefaultEnvironment().getControllers();
 		byte jsNumber = 0;
@@ -139,14 +317,17 @@ public class GUIConfig extends GuiScreen{
 			++jsIndex;
 		}
 	}
+
 	
-	private void initJoystickButtonList(){
+	
+	private void initJoystickSelectionButtons(){
 		for(int i=0; i<9; ++i){
 			joystickConfigureButtons.add(new GuiButton(0, guiLeft+5, guiTop+40+15*i, 215, 15, ""));
 			buttonList.add(joystickConfigureButtons.get(i));
 			joystickConfigureButtons.get(i).enabled = false;
 		}
 	}
+
 	
 	private void initJoystickControls(){
 		buttonList.add(contol_list_upButton = new GuiButton(0, guiLeft + 225, guiTop + 40, 20, 20, "/\\"));
@@ -200,11 +381,11 @@ public class GUIConfig extends GuiScreen{
 		
 		if(guiState.equals(GUIStates.CONFIG)){
 			drawConfigScreen(mouseX, mouseY);
-		}else if(guiState.equals(GUIStates.PLANE)){
+		}else if(guiState.equals(GUIStates.CONTROLS_PLANE_KEYBOARD)){
 			drawPlaneScreen(mouseX, mouseY);
-		}else if(guiState.equals(GUIStates.HELICOPTER)){
+		}else if(guiState.equals(GUIStates.CONTROLS_HELICOPTER_KEYBOARD)){
 			drawHelicopterScreen(mouseX, mouseY);
-		}else if(guiState.equals(GUIStates.VEHICLE)){
+		}else if(guiState.equals(GUIStates.CONTROLS_CAR_KEYBOARD)){
 			drawVehicleScreen(mouseX, mouseY);
 		}else if(guiState.equals(GUIStates.JS_SELECT)){
 			drawJoystickSelectionScreen(mouseX, mouseY);
@@ -478,29 +659,8 @@ public class GUIConfig extends GuiScreen{
     		}
     	}
     }
-    
-    private GuiButton createAssignmentButtonAt(int posX, int posY, String name, List<GuiButton> listToAddTo){
-    	GuiButton button = new GuiButton(0, posX, posY, 80, 20, name);
-    	buttonList.add(button);
-    	listToAddTo.add(button);
-    	button.enabled = false;
-    	return button;
-    }
-    
-    
-	
-	private enum GUIStates{
-		CONFIG,
-		PLANE,
-		VEHICLE,
-		HELICOPTER,
-		JS_SELECT,
-		JS_BUTTON,
-		JS_DIGITAL,
-		JS_ANALOG,
-		JS_CALIBRATION;
-	}
-	
+	 */
+    	
 	private enum ConfigButtons{
 		SEA_LEVEL_OFFSET("SeaLevelOffset", "Sea Level Offset", new String[]{"Does altimeter display 0", "at average sea level", "instead of Y=0?"}),
 		ELECTRIC_START("ElectricStart", "Electric Start", new String[]{"Enable electric starter?", "If disabled players must", "start engines by hand."}),
@@ -516,32 +676,6 @@ public class GUIConfig extends GuiScreen{
 			this.configName = configName;
 			this.formattedName = formattedName;
 			this.mouseoverText = mouseoverText;
-		}
-	}
-	
-	private enum KeybindBoxes{
-		AIRCRAFT_PITCH_UP(ControlSystem.Controls.PITCH.keyboardIncrementName, GUIStates.PLANE),
-		AIRCRAFT_PITCH_DOWN(ControlSystem.Controls.PITCH.keyboardDecrementName, GUIStates.PLANE),
-		AIRCRAFT_ROLL_UP(ControlSystem.Controls.ROLL.keyboardIncrementName, GUIStates.PLANE),
-		AIRCRAFT_ROLL_DOWN(ControlSystem.Controls.ROLL.keyboardDecrementName, GUIStates.PLANE),
-		AIRCRAFT_YAW_UP(ControlSystem.Controls.YAW.keyboardIncrementName, GUIStates.PLANE),
-		AIRCRAFT_YAW_DOWNP(ControlSystem.Controls.YAW.keyboardDecrementName, GUIStates.PLANE),
-		AIRCRAFT_THROTTLE_UP(ControlSystem.Controls.THROTTLE.keyboardIncrementName, GUIStates.PLANE),
-		AIRCRAFT_THROTTLE_DOWN(ControlSystem.Controls.THROTTLE.keyboardDecrementName, GUIStates.PLANE),
-		AIRCRAFT_FLAPS_UP(ControlSystem.Controls.FLAPS_U.keyboardName, GUIStates.PLANE),
-		AIRCRAFT_FLAPS_DOWN(ControlSystem.Controls.FLAPS_D.keyboardName, GUIStates.PLANE),
-		AIRCRAFT_BRAKE(ControlSystem.Controls.BRAKE.keyboardName, GUIStates.PLANE),
-		AIRCRAFT_PANEL(ControlSystem.Controls.PANEL.keyboardName, GUIStates.PLANE),
-		AIRCRAFT_ZOOM_IN(ControlSystem.Controls.ZOOM_I.keyboardName, GUIStates.PLANE),
-		AIRCRAFT_ZOOM_OUT(ControlSystem.Controls.ZOOM_O.keyboardName, GUIStates.PLANE),
-		AIRCRAFT_CAM(ControlSystem.Controls.CAM.keyboardName, GUIStates.PLANE),
-		AIRCRAFT_MOD(ControlSystem.Controls.MOD.keyboardName, GUIStates.PLANE);
-
-		private final String keybindName;
-		private final GUIStates stateToDisplayOn;
-		private KeybindBoxes(String keybindName, GUIStates stateToDisplayOn){
-			this.keybindName = keybindName;
-			this.stateToDisplayOn = stateToDisplayOn;
 		}
 	}
 }

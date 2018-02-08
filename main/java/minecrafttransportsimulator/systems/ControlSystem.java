@@ -491,7 +491,7 @@ public final class ControlSystem{
 		private int button;
 		
 		private ControlsKeyboard(int defaultButton, ControlsJoystick linkedJoystickControl, boolean momentary){
-			this.buttonName="input." + this.name().toLowerCase().replace('_', '.');
+			this.buttonName="input." + this.name().toLowerCase().substring(0, this.name().indexOf('_')) + "." + this.name().toLowerCase().substring(this.name().indexOf('_') + 1);
 			this.defaultButton=defaultButton;
 			this.linkedJoystickControl=linkedJoystickControl;
 			this.isMomentary=momentary;
@@ -552,7 +552,7 @@ public final class ControlSystem{
 		private String joystickAssigned;
 		
 		private ControlsJoystick(boolean isAxis){
-			this.buttonName="input." + this.name().toLowerCase().replace('_', '.');
+			this.buttonName="input." + this.name().toLowerCase().substring(0, this.name().indexOf('_')) + "." + this.name().toLowerCase().substring(this.name().indexOf('_') + 1);
 			this.isAxis=isAxis;
 		}
 		
