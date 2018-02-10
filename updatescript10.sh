@@ -1,6 +1,6 @@
 #!/bin/bash
 DSTPATH="../../forge2/src/main/java"
-VERPREFIX="1.10.0-"
+VERPREFIX="1.10.2-"
 
 #Now that we are done with changes, update build number in build.gradle and run buildscript.
 #First get the string of line with the mod version number.
