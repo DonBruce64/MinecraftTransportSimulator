@@ -1,7 +1,7 @@
 #!/bin/bash
 SRCPATH="main/java"
 DSTPATH="../../forgeMTS_11/src/main/java"
-VERPREFIX="1.11.0-"
+VERPREFIX="1.11.2-"
 
 rm -r $DSTPATH
 cp -rPnu $SRCPATH $DSTPATH
