@@ -444,7 +444,7 @@ public final class ControlSystem{
 		
 		//Check steering.
 		if(joystickMap.containsKey(ControlsJoystick.CAR_TURN.joystickAssigned) && ControlsJoystick.CAR_TURN.joystickButton != NULL_COMPONENT){
-			MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_TURN, true)));
+			MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), getJoystickAxisState(ControlsJoystick.CAR_TURN, false)));
 		}else{
 			boolean turningRight = isKeyboardButtonPressed(ControlsKeyboard.CAR_TURN_R);
 			boolean turningLeft = isKeyboardButtonPressed(ControlsKeyboard.CAR_TURN_L);
