@@ -6,16 +6,12 @@ import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
-import minecrafttransportsimulator.guis.GUIPanelAircraft;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.systems.RotationSystem;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 
 public class EntityPlane extends EntityMultipartVehicle{	
@@ -88,12 +84,6 @@ public class EntityPlane extends EntityMultipartVehicle{
 	@Override
 	public Instruments getBlankInstrument(){
 		return Instruments.AIRCRAFT_BLANK;
-	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public GuiScreen getPanel(){
-		return new GUIPanelAircraft(this);
 	}
 	
 	@Override

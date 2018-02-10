@@ -10,10 +10,8 @@ import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.parts.EntityEngineCar;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
-import minecrafttransportsimulator.guis.GUIPanelAircraft;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
@@ -88,11 +86,6 @@ public class EntityCar extends EntityMultipartVehicle{
 	@Override
 	public Instruments getBlankInstrument(){
 		return Instruments.AIRCRAFT_BLANK;
-	}
-	
-	@Override
-	public GuiScreen getPanel(){
-		return new GUIPanelAircraft(this);
 	}
 	
 	@Override

@@ -319,7 +319,7 @@ public final class ControlSystem{
 		//Open or close the panel.
 		if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_PANEL)){
 			if(Minecraft.getMinecraft().currentScreen == null){
-				FMLCommonHandler.instance().showGuiScreen(aircraft.getPanel());
+				FMLCommonHandler.instance().showGuiScreen(new GUIPanelAircraft(aircraft));
 			}else if(Minecraft.getMinecraft().currentScreen.getClass().equals(GUIPanelAircraft.class)){
 				Minecraft.getMinecraft().displayGuiScreen((GuiScreen)null);
 				Minecraft.getMinecraft().setIngameFocus();

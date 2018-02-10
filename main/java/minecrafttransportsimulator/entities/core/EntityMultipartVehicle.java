@@ -12,13 +12,10 @@ import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**This class is tailored for moving vehicles such as planes, helicopters, and automobiles.
  * Contains numerous methods for gauges, HUDs, and fuel systems.
@@ -234,10 +231,6 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	}
 	
 	public abstract Instruments getBlankInstrument();
-	
-	@SideOnly(Side.CLIENT)
-	@Deprecated
-	public abstract GuiScreen getPanel();
 	
 	public float getLightBrightness(byte lightBank){
 		return (lightBank & this.lightStatus) != 0 ? (electricPower > 2 ? (float) electricPower/12F : 0) : 0;
