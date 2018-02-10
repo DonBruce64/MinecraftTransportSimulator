@@ -236,6 +236,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	public abstract Instruments getBlankInstrument();
 	
 	@SideOnly(Side.CLIENT)
+	@Deprecated
 	public abstract GuiScreen getPanel();
 	
 	public float getLightBrightness(byte lightBank){
