@@ -19,6 +19,7 @@ import minecrafttransportsimulator.packets.control.BrakePacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.FlapPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
+import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import net.java.games.input.Controller;
@@ -213,7 +214,7 @@ public final class ControlSystem{
 				
 				//If we don't need to normalize the axis, return it as-is.  Otherwise do a normalization from 0-1.
 				if(!normalized){
-					return (short) (control.joystickInverted ? (-350*pollValue) : (350*pollValue));
+					return (short) (control.joystickInverted ? (-250*pollValue) : (250*pollValue));
 				}else{
 					//Divide the poll value plus the min bounds by the span to get it in the range of 0-1.
 					pollValue = (float) ((pollValue - control.joystickMinTravel)/(control.joystickMaxTravel - control.joystickMinTravel));
@@ -374,10 +375,10 @@ public final class ControlSystem{
 				int dx = Mouse.getDX();
 				int dy = Mouse.getDY();
 				if(Math.abs(dx) < 100){
-					mousePosX = (short) Math.max(Math.min(mousePosX + dx/5F, 350), -350);
+					mousePosX = (short) Math.max(Math.min(mousePosX + dx/5F, 250), -250);
 				}
 				if(Math.abs(dy) < 100){
-					mousePosY = (short) Math.max(Math.min(mousePosY - dy, 350), -350);
+					mousePosY = (short) Math.max(Math.min(mousePosY - dy, 250), -250);
 				}
 				MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), mousePosX));
 				MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), mousePosY));
@@ -446,16 +447,14 @@ public final class ControlSystem{
 		
 		//Check steering.
 		if(joystickMap.containsKey(ControlsJoystick.CAR_TURN.joystickAssigned) && ControlsJoystick.CAR_TURN.joystickButton != NULL_COMPONENT){
-			MTS.MTSNet.sendToServer(new RudderPacket(car.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_TURN, true)));
+			MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_TURN, true)));
 		}else{
 			boolean turningRight = isKeyboardButtonPressed(ControlsKeyboard.CAR_TURN_R);
 			boolean turningLeft = isKeyboardButtonPressed(ControlsKeyboard.CAR_TURN_L);
 			if(turningRight && !turningLeft){
-				MTS.MTSNet.sendToServer(new RudderPacket(car.getEntityId(), (short) 350));
+				MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
 			}else if(turningLeft && !turningRight){
-				MTS.MTSNet.sendToServer(new RudderPacket(car.getEntityId(), (short) -350));
-			}else if(!turningRight && !turningLeft){
-				MTS.MTSNet.sendToServer(new RudderPacket(car.getEntityId(), (short) 0));
+				MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
 			}
 		}
 	}
