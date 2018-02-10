@@ -13,10 +13,10 @@ import minecrafttransportsimulator.blocks.BlockFuelPump;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.main.EntityCore;
-import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftCar;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
+import minecrafttransportsimulator.entities.parts.EntityEngineCarSmall;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
@@ -197,7 +197,9 @@ public final class MTSRegistry{
 	}
 
 	private static void initEntities(){
-		registerEntity(EntityPlane.class);
+		for(MultipartTypes type : PackParserSystem.MultipartTypes.values()){
+			registerEntity(type.multipartClass);
+		}
 		
 		registerChildEntity(EntityCore.class, null);
 		registerChildEntity(EntitySeat.class, seat);
@@ -208,7 +210,7 @@ public final class MTSRegistry{
 		registerChildEntity(EntityPontoon.class, pontoon);
 		registerChildEntity(EntityPontoon.EntityPontoonDummy.class, null);
 		registerChildEntity(EntityPropeller.class, propeller);
-		registerChildEntity(EntityEngineAircraftCar.class, engineCarSmall);
+		registerChildEntity(EntityEngineCarSmall.Automatic.class, engineCarSmall);
 		registerChildEntity(EntityEngineAircraftSmall.class, engineAircraftSmall);
 		registerChildEntity(EntityEngineAircraftLarge.class, engineAircraftLarge);
 	}

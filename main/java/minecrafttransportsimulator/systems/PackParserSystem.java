@@ -21,6 +21,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSPackObject;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
+import minecrafttransportsimulator.entities.main.EntityCar;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 
 /**
@@ -218,7 +219,8 @@ public final class PackParserSystem{
     }
     
     public enum MultipartTypes{
-    	PLANE(EntityPlane.class);
+    	PLANE(EntityPlane.class),
+    	CAR(EntityCar.class);
     	
     	public final Class<? extends EntityMultipartMoving> multipartClass;
     	
