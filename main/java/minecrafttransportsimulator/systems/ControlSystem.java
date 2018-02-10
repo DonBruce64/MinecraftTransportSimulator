@@ -120,9 +120,6 @@ public final class ControlSystem{
 	}
 	
 	public static void controlVehicle(EntityMultipartVehicle vehicle, boolean isPlayerController){
-		//for(Controller joystick : joystickMap.values()){
-			//joystick.poll();
-		//}
 		if(vehicle instanceof EntityPlane){
 			controlAircraft(vehicle, isPlayerController);
 		}else if(vehicle instanceof EntityCar){
