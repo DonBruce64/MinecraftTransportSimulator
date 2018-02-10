@@ -195,7 +195,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent event){
-        if(ControlSystem.isControlMasterPressed()){
+        if(ControlSystem.isMasterControlButttonPressed()){
             if(minecraft.currentScreen == null){
             	FMLCommonHandler.instance().showGuiScreen(new GUIConfig());
                 if(Minecraft.getMinecraft().isSingleplayer()){

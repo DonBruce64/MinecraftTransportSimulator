@@ -15,6 +15,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboard;
+import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboardDynamic;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.gui.GuiButton;
@@ -277,7 +278,6 @@ public class GUIConfig extends GuiScreen{
 	}
 	
 	private void drawKeyboardScreen(int mouseX, int mouseY, float renderPartialTicks){
-		fontRendererObj.drawStringWithShadow(I18n.format("gui.config.controls." + vehicleConfiguring + ".keyboard"), guiLeft+15, guiTop+15, Color.WHITE.getRGB());
 		for(ControlsKeyboard keyboardControl : keyboardBoxes.keySet()){
 			GuiTextField box = keyboardBoxes.get(keyboardControl);
 			if(box.isFocused()){
@@ -292,7 +292,16 @@ public class GUIConfig extends GuiScreen{
 			if(keyboardControl.name().contains(vehicleConfiguring.toUpperCase())){
 				box.setEnabled(true);
 				box.drawTextBox();
-				fontRendererObj.drawStringWithShadow(I18n.format(keyboardControl.buttonName) + ":", box.xPosition - 70, box.yPosition + 2, Color.WHITE.getRGB());
+				fontRendererObj.drawString(I18n.format(keyboardControl.buttonName) + ":", box.xPosition - 70, box.yPosition + 2, Color.BLACK.getRGB());
+			}
+		}
+		
+		//Draw dynamic text boxes.
+		byte offset = 0;
+		for(ControlsKeyboardDynamic dynamicControl : ControlsKeyboardDynamic.values()){
+			if(dynamicControl.name().contains(vehicleConfiguring.toUpperCase())){
+				fontRendererObj.drawString(I18n.format(dynamicControl.buttonName) + ": " + dynamicControl.modControl.getCurrentButton() + " + " + dynamicControl.mainControl.getCurrentButton(), guiLeft + 10, guiTop + 100 + offset, Color.BLACK.getRGB());
+				offset+=11;
 			}
 		}
 		finishKeyboardBindingsButton.enabled = true;
@@ -476,24 +485,24 @@ public class GUIConfig extends GuiScreen{
 	}
 	
 	private void initKeyboardBoxes(){
-		int verticalOffset = 40;
+		int verticalOffset = 10;
 		int horizontalOffset = 80;
 		String prefix = ControlSystem.ControlsKeyboard.values()[0].name().substring(0, ControlSystem.ControlsKeyboard.values()[0].name().indexOf('_'));
 		for(ControlsKeyboard keyboardControl : ControlSystem.ControlsKeyboard.values()){
 			if(!prefix.equals(keyboardControl.name().substring(0, keyboardControl.name().indexOf('_')))){
-				verticalOffset = 40;
+				verticalOffset = 10;
 				horizontalOffset = 80;
 				prefix = keyboardControl.name().substring(0, keyboardControl.name().indexOf('_'));
 			}
-			GuiTextField box = new GuiTextField(0, fontRendererObj, guiLeft + horizontalOffset, guiTop + verticalOffset, 40, 15);
+			GuiTextField box = new GuiTextField(0, fontRendererObj, guiLeft + horizontalOffset, guiTop + verticalOffset, 40, 10);
 			keyboardBoxes.put(keyboardControl, box);
-			verticalOffset += 17;
-			if(verticalOffset > 40 + 17*7){
-				verticalOffset = 40;
+			verticalOffset += 11;
+			if(verticalOffset > 10 + 11*7){
+				verticalOffset = 10;
 				horizontalOffset += 120;
 			}
 		}
-		buttonList.add(finishKeyboardBindingsButton = new GuiButton(0, guiLeft + 140, guiTop + 10, 100, 20, I18n.format("gui.config.controls.confirm")));
+		buttonList.add(finishKeyboardBindingsButton = new GuiButton(0, guiLeft + 180, guiTop + 140, 50, 20, I18n.format("gui.config.controls.confirm")));
 	}
 	
 	private void initJoystickSelecionButtons(){
@@ -536,13 +545,13 @@ public class GUIConfig extends GuiScreen{
 		for(ControlsJoystick joystickControl : ControlsJoystick.values()){
 			if(joystickControl.name().toLowerCase().contains(vehicleConfiguring)){
 				if(!joystickControl.isAxis){
-					GuiButton button = new GuiButton(0, guiLeft + 8 + leftOffset, guiTop + 30 + topOffset, 80, 20, I18n.format(joystickControl.buttonName));
+					GuiButton button = new GuiButton(0, guiLeft + 8 + leftOffset, guiTop + 30 + topOffset, 80, 15, I18n.format(joystickControl.buttonName));
 					digitalAssignButtons.put(button, joystickControl);
 					buttonList.add(button);
-					topOffset += 20;
+					topOffset += 15;
 				}
 			}
-			if(topOffset == 100){
+			if(topOffset == 105){
 				topOffset = 0;
 				leftOffset += 80;
 			}
@@ -579,65 +588,6 @@ public class GUIConfig extends GuiScreen{
 		axisMinBoundsTextBox.setText("0.0");
 		axisMaxBoundsTextBox.setText("0.0");
 	}
-	
-	/*
-	
-	private void initJoystickControls(){
-		buttonList.add(confirmButton = new GuiButton(0, guiLeft + 25, guiTop + 160, 100, 20, I18n.format("gui.config.joystick.confirm")));
-		buttonList.add(invertButton = new GuiButton(0, guiLeft + 50, guiTop + 120, 150, 20, I18n.format("gui.config.joystick.clear")));
-		
-		maxTextBox = new GuiTextField(0, fontRendererObj, guiLeft+50, guiTop+60, 150, 15);
-		minTextBox = new GuiTextField(0, fontRendererObj, guiLeft+50, guiTop+90, 150, 15);
-	}
-
-	private void drawPlaneScreen(int mouseX, int mouseY){
-		int line = 8;
-		int xOffset = 10;
-		fontRendererObj.drawStringWithShadow("ParkBrake:", guiLeft+xOffset, guiTop+15+(line)*17, Color.WHITE.getRGB());
-		fontRendererObj.drawString(ControlSystem.getKeyboardKeyname(ControlSystem.Controls.MOD.keyboardName) + "+" +  ControlSystem.getKeyboardKeyname(ControlSystem.Controls.BRAKE.keyboardName), guiLeft+xOffset+60, guiTop+15+(line++)*17, Color.BLACK.getRGB());
-		fontRendererObj.drawStringWithShadow("HUDMode:", guiLeft+xOffset, guiTop+15+(line)*17, Color.WHITE.getRGB());
-		fontRendererObj.drawString(ControlSystem.getKeyboardKeyname(ControlSystem.Controls.MOD.keyboardName) + "+" +  ControlSystem.getKeyboardKeyname(ControlSystem.Controls.CAM.keyboardName), guiLeft+xOffset+60, guiTop+15+(line++)*17, Color.BLACK.getRGB());
-	}
-
-	
-	private void drawJoystickCalibrationScreen(int mouseX, int mouseY){
-		fontRendererObj.drawString(I18n.format("gui.config.joystick.calibrate1"), guiLeft+10, guiTop+10, Color.BLACK.getRGB());
-		fontRendererObj.drawString(I18n.format("gui.config.joystick.calibrate2"), guiLeft+10, guiTop+20, Color.BLACK.getRGB());
-		
-		ControlSystem.getJoystick().poll();
-		if(joystickComponents[joystickComponentId].getPollData() > 0){
-			maxTextBox.setText(String.valueOf(Math.max(Double.valueOf(maxTextBox.getText()), joystickComponents[joystickComponentId].getPollData())));
-		}else{
-			minTextBox.setText(String.valueOf(Math.min(Double.valueOf(minTextBox.getText()), joystickComponents[joystickComponentId].getPollData())));
-		}
-		maxTextBox.drawTextBox();
-		minTextBox.drawTextBox();
-		
-		confirmButton.drawButton(mc, mouseX, mouseY);
-		cancelButton.drawButton(mc, mouseX, mouseY);
-		invertButton.displayString = I18n.format("gui.config.joystick.axismode") + (invertButtonPressed ? I18n.format("gui.config.joystick.invert") : I18n.format("gui.config.joystick.normal"));
-		invertButton.drawButton(mc, mouseX, mouseY);
-	}
-	
-	@Override
-    protected void actionPerformed(GuiButton buttonClicked){
-		try{
-			super.actionPerformed(buttonClicked);
-			if(changedThisTick){
-				return;
-			}else if(analogAssignButtons.contains(buttonClicked)){
-				guiState = GUIStates.JS_CALIBRATION;
-				controlName = buttonClicked.displayString;
-			}else if(buttonClicked.equals(confirmButton)){
-				guiState = GUIStates.JS_BUTTON;
-				ControlSystem.setAxisBounds(controlName, Double.valueOf(minTextBox.getText()), Double.valueOf(maxTextBox.getText()), invertButtonPressed);
-				ControlSystem.setJoystickControl(controlName, joystickComponentId);
-
-		}catch (IOException e){
-			e.printStackTrace();
-		}
-	}
-	 */
     	
 	private enum ConfigButtons{
 		SEA_LEVEL_OFFSET("SeaLevelOffset", "Sea Level Offset", new String[]{"Does altimeter display 0", "at average sea level", "instead of Y=0?"}),

@@ -17,6 +17,7 @@ import minecrafttransportsimulator.guis.GUIPanelAircraft;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.BrakePacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
+import minecrafttransportsimulator.packets.control.EnginePacket;
 import minecrafttransportsimulator.packets.control.FlapPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
@@ -80,7 +81,7 @@ public final class ControlSystem{
 		ConfigSystem.config.save();
 	}
 	
-	public static boolean isControlMasterPressed(){
+	public static boolean isMasterControlButttonPressed(){
 		return configKey.isPressed();
 	}
 	
@@ -170,15 +171,13 @@ public final class ControlSystem{
 			//Need to check to see if this axis is currently bound.
 			if(control.linkedJoystickControl.joystickButton != NULL_COMPONENT){
 				//Joystick control is bound and presumably functional.  If we are overriding the keyboard we must return this value.
-				//Check to make sure this isn't mapped to an axis first.  If so, return if the value is over 25.
-				if(control.linkedJoystickControl.isAxis){
-					return getJoystickAxisState(control.linkedJoystickControl, true) > 25;
+				//Check to make sure this isn't mapped to an axis first.  If so, don't check for joystick values.
+				boolean pressed = false;
+				if(!control.linkedJoystickControl.isAxis){
+					pressed = getTrueJoystickButtonState(control.linkedJoystickControl, isJoystickButtonPressed(control.linkedJoystickControl));
 				}
-				boolean pressed = getTrueJoystickButtonState(control.linkedJoystickControl, isJoystickButtonPressed(control.linkedJoystickControl));
-				if(ConfigSystem.getBooleanConfig("KeyboardOverride") && !pressed){
-					return false;
-				}else if(pressed){
-					return true;
+				if(pressed || ConfigSystem.getBooleanConfig("KeyboardOverride")){
+					return pressed;
 				}
 			}
 		}
@@ -187,6 +186,10 @@ public final class ControlSystem{
 	
 	private static boolean isJoystickButtonPressed(ControlsJoystick control){
 		return getJoystickMultistateValue(control) > 0;
+	}
+	
+	private static boolean isDynamicButtonPessed(ControlsKeyboardDynamic control){
+		return isKeyboardButtonPressed(control.mainControl) && isKeyboardButtonPressed(control.modControl);
 	}
 	
 	private static float getJoystickMultistateValue(ControlsJoystick control){
@@ -289,18 +292,11 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlBrake(ControlsKeyboard brake, ControlsKeyboard mod, ControlsJoystick pBrake, int entityID){
-		if(isJoystickButtonPressed(pBrake)){
+	private static void controlBrake(ControlsKeyboardDynamic dynamic, ControlsJoystick pBrake, int entityID){
+		if(isDynamicButtonPessed(dynamic) || isJoystickButtonPressed(pBrake)){
 			MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 12));
-			return;
-		}		
-		
-		if(isKeyboardButtonPressed(brake)){
-			if(isKeyboardButtonPressed(mod)){
-				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 12));	
-			}else{
-				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 11));
-			}
+		}else if(isKeyboardButtonPressed(dynamic.mainControl)){
+			MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 11));
 		}else{
 			MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 2));
 		}
@@ -312,7 +308,7 @@ public final class ControlSystem{
 		if(!isPlayerController){
 			return;
 		}
-		controlBrake(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD, ControlsJoystick.AIRCRAFT_PARK, aircraft.getEntityId());
+		controlBrake(ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_PARK, aircraft.getEntityId());
 		
 		//Open or close the panel.
 		if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_PANEL)){
@@ -350,20 +346,18 @@ public final class ControlSystem{
 		if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_YAW.joystickAssigned) && ControlsJoystick.AIRCRAFT_YAW.joystickButton != NULL_COMPONENT){
 			MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), getJoystickAxisState(ControlsJoystick.AIRCRAFT_YAW, false)));
 		}else{
-			if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_YAW_R)){
-				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_MOD)){
-					MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 10));
-				}else{
-					MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-				}
+			if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_YAW_R) && !isDynamicButtonPessed(ControlsKeyboardDynamic.AIRCRAFT_TRIM_YAW_R)){
+				MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
 			}
-			if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_YAW_L)){
-				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_MOD)){
-					MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 2));
-				}else{
-					MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-				}
+			if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_YAW_L) && !isDynamicButtonPessed(ControlsKeyboardDynamic.AIRCRAFT_TRIM_YAW_L)){
+				MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
 			}
+		}
+		if(isDynamicButtonPessed(ControlsKeyboardDynamic.AIRCRAFT_TRIM_YAW_R) || isJoystickButtonPressed(ControlsJoystick.AIRCRAFT_TRIM_YAW_R)){
+			MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 10));
+		}
+		if(isDynamicButtonPessed(ControlsKeyboardDynamic.AIRCRAFT_TRIM_YAW_L) || isJoystickButtonPressed(ControlsJoystick.AIRCRAFT_TRIM_YAW_L)){
+			MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 2));
 		}
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
@@ -385,40 +379,36 @@ public final class ControlSystem{
 			if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_PITCH.joystickAssigned) && ControlsJoystick.AIRCRAFT_PITCH.joystickButton != NULL_COMPONENT){
 				MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), getJoystickAxisState(ControlsJoystick.AIRCRAFT_PITCH, false)));
 			}else{
-				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_PITCH_U)){
-					if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_MOD)){
-						MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 9));
-					}else{
-						MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-					}
+				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_PITCH_U) && !isDynamicButtonPessed(ControlsKeyboardDynamic.AIRCRAFT_TRIM_PITCH_U)){
+					MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
 				}
-				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_PITCH_D)){
-					if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_MOD)){
-						MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 1));
-					}else{
-						MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-					}
+				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_PITCH_D) && !isDynamicButtonPessed(ControlsKeyboardDynamic.AIRCRAFT_TRIM_PITCH_D)){
+					MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
 				}
+			}
+			if(isDynamicButtonPessed(ControlsKeyboardDynamic.AIRCRAFT_TRIM_PITCH_U) || isJoystickButtonPressed(ControlsJoystick.AIRCRAFT_TRIM_PITCH_U)){
+				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 9));
+			}
+			if(isDynamicButtonPessed(ControlsKeyboardDynamic.AIRCRAFT_TRIM_PITCH_D) || isJoystickButtonPressed(ControlsJoystick.AIRCRAFT_TRIM_PITCH_D)){
+				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 1));
 			}
 			
 			//Check roll.
 			if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_ROLL.joystickAssigned) && ControlsJoystick.AIRCRAFT_ROLL.joystickButton != NULL_COMPONENT){
 				MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), getJoystickAxisState(ControlsJoystick.AIRCRAFT_ROLL, false)));
 			}else{
-				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_ROLL_R)){
-					if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_MOD)){
-						MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 8));
-					}else{
-						MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-					}
+				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_ROLL_R) && !isDynamicButtonPessed(ControlsKeyboardDynamic.AIRCRAFT_TRIM_ROLL_R)){
+					MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
 				}
-				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_ROLL_L)){
-					if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_MOD)){
-						MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 0));
-					}else{
-						MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-					}
+				if(isKeyboardButtonPressed(ControlsKeyboard.AIRCRAFT_ROLL_L) && !isDynamicButtonPessed(ControlsKeyboardDynamic.AIRCRAFT_TRIM_ROLL_L)){
+					MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
 				}
+			}
+			if(isDynamicButtonPessed(ControlsKeyboardDynamic.AIRCRAFT_TRIM_ROLL_R) || isJoystickButtonPressed(ControlsJoystick.AIRCRAFT_TRIM_ROLL_R)){
+				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 8));
+			}
+			if(isDynamicButtonPessed(ControlsKeyboardDynamic.AIRCRAFT_TRIM_ROLL_L) || isJoystickButtonPressed(ControlsJoystick.AIRCRAFT_TRIM_ROLL_L)){
+				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 0));
 			}
 		}
 	}
@@ -429,10 +419,11 @@ public final class ControlSystem{
 		if(!isPlayerController){
 			return;
 		}
-		controlBrake(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD, ControlsJoystick.CAR_PARK, car.getEntityId());
+		controlBrake(ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_PARK, car.getEntityId());
 		
 		//Change gas to on or off.
 		if(joystickMap.containsKey(ControlsJoystick.CAR_GAS.joystickAssigned) && ControlsJoystick.CAR_GAS.joystickButton != NULL_COMPONENT){
+			System.out.println(getJoystickAxisState(ControlsJoystick.CAR_GAS, true));
 			MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_GAS, true)));
 		}else{
 			if(isKeyboardButtonPressed(ControlsKeyboard.CAR_GAS)){
@@ -454,17 +445,33 @@ public final class ControlSystem{
 				MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
 			}
 		}
+		
+		//Check starter.
+		if(isKeyboardButtonPressed(ControlsKeyboard.CAR_START)){
+			if(car.getEngineByNumber((byte) 1) != null){
+				if(isKeyboardButtonPressed(ControlsKeyboard.CAR_MOD)){
+					MTS.MTSNet.sendToServer(new EnginePacket(car.getEntityId(), car.getEngineByNumber((byte) 1).getEntityId(), (byte) 0));
+				}else{
+					MTS.MTSNet.sendToServer(new EnginePacket(car.getEntityId(), car.getEngineByNumber((byte) 1).getEntityId(), (byte) 1));
+					MTS.MTSNet.sendToServer(new EnginePacket(car.getEntityId(), car.getEngineByNumber((byte) 1).getEntityId(), (byte) 3));
+				}
+			}
+		}else{
+			if(car.getEngineByNumber((byte) 1) != null){
+				MTS.MTSNet.sendToServer(new EnginePacket(car.getEntityId(), car.getEngineByNumber((byte) 1).getEntityId(), (byte) 2));
+			}
+		}
 	}
 		
 	public enum ControlsKeyboard{
 		AIRCRAFT_MOD(Keyboard.KEY_RSHIFT, ControlsJoystick.AIRCRAFT_MOD, false),
 		AIRCRAFT_CAMLOCK(Keyboard.KEY_RCONTROL, ControlsJoystick.AIRCRAFT_CAMLOCK, true),
+		AIRCRAFT_YAW_R(Keyboard.KEY_L, ControlsJoystick.AIRCRAFT_YAW, false),
+		AIRCRAFT_YAW_L(Keyboard.KEY_J, ControlsJoystick.AIRCRAFT_YAW, false),
 		AIRCRAFT_PITCH_U(Keyboard.KEY_S, ControlsJoystick.AIRCRAFT_PITCH, false),
 		AIRCRAFT_PITCH_D(Keyboard.KEY_W, ControlsJoystick.AIRCRAFT_PITCH, false),
 		AIRCRAFT_ROLL_R(Keyboard.KEY_D, ControlsJoystick.AIRCRAFT_ROLL, false),
 		AIRCRAFT_ROLL_L(Keyboard.KEY_A, ControlsJoystick.AIRCRAFT_ROLL, false),
-		AIRCRAFT_YAW_R(Keyboard.KEY_L, ControlsJoystick.AIRCRAFT_YAW, false),
-		AIRCRAFT_YAW_L(Keyboard.KEY_J, ControlsJoystick.AIRCRAFT_YAW, false),
 		AIRCRAFT_THROTTLE_U(Keyboard.KEY_I, ControlsJoystick.AIRCRAFT_THROTTLE, false),
 		AIRCRAFT_THROTTLE_D(Keyboard.KEY_K, ControlsJoystick.AIRCRAFT_THROTTLE, false),
 		AIRCRAFT_FLAPS_U(Keyboard.KEY_Y, ControlsJoystick.AIRCRAFT_FLAPS_U, true),
@@ -474,7 +481,7 @@ public final class ControlSystem{
 		AIRCRAFT_ZOOM_I(Keyboard.KEY_PRIOR, ControlsJoystick.AIRCRAFT_ZOOM_I, true),
 		AIRCRAFT_ZOOM_O(Keyboard.KEY_NEXT, ControlsJoystick.AIRCRAFT_ZOOM_O, true),
 		
-		CAR_MOD(Keyboard.KEY_RSHIFT, ControlsJoystick.CAR_MOD, true),
+		CAR_MOD(Keyboard.KEY_RSHIFT, ControlsJoystick.CAR_MOD, false),
 		CAR_CAMLOCK(Keyboard.KEY_RCONTROL, ControlsJoystick.CAR_CAMLOCK, true),
 		CAR_TURN_R(Keyboard.KEY_D, ControlsJoystick.CAR_TURN, false),
 		CAR_TURN_L(Keyboard.KEY_A, ControlsJoystick.CAR_TURN, false),
@@ -506,27 +513,35 @@ public final class ControlSystem{
 	}
 	
 	public enum ControlsJoystick{
-		AIRCRAFT_MOD(false, true),
+		AIRCRAFT_MOD(false, false),
 		AIRCRAFT_CAMLOCK(false, true),
+		AIRCRAFT_YAW(true, false),
 		AIRCRAFT_PITCH(true, false),
 		AIRCRAFT_ROLL(true, false),
-		AIRCRAFT_YAW(true, false),
 		AIRCRAFT_THROTTLE(true, false),
 		AIRCRAFT_FLAPS_U(false, true),
 		AIRCRAFT_FLAPS_D(false, true),
 		AIRCRAFT_BRAKE(false, false),
 		AIRCRAFT_PANEL(false, true),
+		AIRCRAFT_PARK(false, true),
 		AIRCRAFT_ZOOM_I(false, true),
 		AIRCRAFT_ZOOM_O(false, true),
-		AIRCRAFT_PARK(false, true),
 		AIRCRAFT_CHANGEVIEW(false, true),
+		AIRCRAFT_CHANGEHUD(false, true),
 		AIRCRAFT_LOOK_L(false, false),
 		AIRCRAFT_LOOK_R(false, false),
 		AIRCRAFT_LOOK_U(false, false),
 		AIRCRAFT_LOOK_D(false, false),
 		AIRCRAFT_LOOK_A(false, false),
+		AIRCRAFT_TRIM_YAW_R(false, true),
+		AIRCRAFT_TRIM_YAW_L(false, true),
+		AIRCRAFT_TRIM_PITCH_U(false, true),
+		AIRCRAFT_TRIM_PITCH_D(false, true),
+		AIRCRAFT_TRIM_ROLL_R(false, true),
+		AIRCRAFT_TRIM_ROLL_L(false, true),
 		
-		CAR_MOD(false, true),
+		
+		CAR_MOD(false, false),
 		CAR_CAMLOCK(false, true),
 		CAR_TURN(true, false),
 		CAR_GAS(true, false),
@@ -534,10 +549,11 @@ public final class ControlSystem{
 		CAR_HORN(false, false),
 		CAR_START(false, false),
 		CAR_LIGHTS(false, true),
+		CAR_PARK(false, true),
 		CAR_ZOOM_I(false, true),
 		CAR_ZOOM_O(false, true),
-		CAR_PARK(false, true),
 		CAR_CHANGEVIEW(false, true),
+		CAR_CHANGEHUD(false, true),
 		CAR_LOOK_L(false, false),
 		CAR_LOOK_R(false, false),
 		CAR_LOOK_U(false, false),
@@ -566,6 +582,31 @@ public final class ControlSystem{
 		
 		public int getCurrentButton(){
 			return this.joystickButton;
+		}
+	}
+	
+	public enum ControlsKeyboardDynamic{
+		AIRCRAFT_CHANGEHUD(ControlsKeyboard.AIRCRAFT_CAMLOCK, ControlsKeyboard.AIRCRAFT_MOD),
+		AIRCRAFT_PARK(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD),
+		AIRCRAFT_TRIM_YAW_R(ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_MOD),
+		AIRCRAFT_TRIM_YAW_L(ControlsKeyboard.AIRCRAFT_YAW_L, ControlsKeyboard.AIRCRAFT_MOD),
+		AIRCRAFT_TRIM_PITCH_U(ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_MOD),
+		AIRCRAFT_TRIM_PITCH_D(ControlsKeyboard.AIRCRAFT_PITCH_D, ControlsKeyboard.AIRCRAFT_MOD),
+		AIRCRAFT_TRIM_ROLL_R(ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_MOD),
+		AIRCRAFT_TRIM_ROLL_L(ControlsKeyboard.AIRCRAFT_ROLL_L, ControlsKeyboard.AIRCRAFT_MOD),
+		
+		CAR_CHANGEHUD(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_MOD),
+		CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD),
+		CAR_STOP(ControlsKeyboard.CAR_START, ControlsKeyboard.CAR_MOD);
+		
+		public final String buttonName;
+		public final ControlsKeyboard mainControl;
+		public final ControlsKeyboard modControl;
+		
+		private ControlsKeyboardDynamic(ControlsKeyboard mainControl, ControlsKeyboard modControl){
+			this.buttonName="input." + this.name().toLowerCase().substring(0, this.name().indexOf('_')) + "." + this.name().toLowerCase().substring(this.name().indexOf('_') + 1);
+			this.mainControl=mainControl;
+			this.modControl=modControl;
 		}
 	}
 }
