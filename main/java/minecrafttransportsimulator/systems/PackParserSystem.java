@@ -46,9 +46,10 @@ public final class PackParserSystem{
         
     	File assetDir = new File(MTS.assetDir);
         File jsonDir = new File(assetDir.getAbsolutePath() + File.separator + "jsondefs");
+        File modelDir = new File(assetDir.getAbsolutePath() + File.separator + "models");
         
         //If we don't have the folders for pack info, make it now.
-        if(!assetDir.exists() || !jsonDir.exists()){
+        if(!assetDir.exists() || !jsonDir.exists() || !modelDir.exists()){
         	try{
 	        	assetDir.mkdirs();
 	            new File(assetDir.getAbsolutePath() + File.separator + "models").mkdirs();
