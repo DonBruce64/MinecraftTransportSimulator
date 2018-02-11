@@ -84,18 +84,17 @@ public final class RenderMultipartChild{
     		}
     		GL11.glRotatef(180, 1, 0, 0);
             GL11.glTranslatef(0, -child.height/2, 0);
-            if(child instanceof EntityEngineCar){
-            	//TODO move this below plane engines when we get this to be unique.
-            	GL11.glRotatef(-180, 1, 0, 0);
-    			textureManger.bindTexture(textureEngineCarSmall);
-    			GL11.glCallList(carSmallDisplayListIndex);
-    		}else if(child instanceof EntityEngineAircraftSmall){
+            if(child instanceof EntityEngineAircraftSmall){
     			textureManger.bindTexture(textureEngineSmall);
     			modelEngineSmall.render();
     		}else if(child instanceof EntityEngineAircraftLarge){
     			GL11.glTranslatef(0, 0, -0.2F);
     			textureManger.bindTexture(textureEngineLarge);
     			modelEngineLarge.render();
+    		}else if(child instanceof EntityEngineCar){
+            	GL11.glRotatef(-180, 1, 0, 0);
+    			textureManger.bindTexture(textureEngineCarSmall);
+    			GL11.glCallList(carSmallDisplayListIndex);
     		}
     	}
     }
