@@ -42,7 +42,7 @@ public class BlockFuelPump extends MTSBlockRotateable{
 					FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, false);
 					if(drainedStack != null){
 						int amountToDrain = pump.fill(drainedStack, false);
-						drainedStack = handler.drain(amountToDrain, true);
+						drainedStack = handler.drain(amountToDrain, !player.capabilities.isCreativeMode);
 						if(drainedStack != null){
 							pump.fill(drainedStack, true);
 						}
