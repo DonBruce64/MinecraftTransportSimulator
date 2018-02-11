@@ -21,7 +21,6 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 	public boolean isFlat;
 	public float angularPosition;
 	public float angularVelocity;
-	public float wheelDiameter;
 	private boolean landedThisTick = false;
 	private EntityMultipartMoving moving;
 	
@@ -52,14 +51,13 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		if(!linked){return;}
 		moving = (EntityMultipartMoving) this.parent;
 		if(this.isOnGround()){
-			if(angularVelocity/(moving.velocity/wheelDiameter) < 0.25 && moving.velocity > 0.1){
+			if(angularVelocity/(moving.velocity/height) < 0.25 && moving.velocity > 0.1){
 				if(worldObj.getBlockState(this.getPosition().down()).getBlockHardness(worldObj, this.getPosition().down()) >= 1.5){
 					landedThisTick = true;
 				}
 			}
-			angularVelocity = (float) (moving.velocity/wheelDiameter);
+			angularVelocity = (float) (moving.velocity/height);
 		}else{
-			//TODO need to make an exception here if the wheel is attached to a car otherwise the brake will stop the rotation.
 			if(moving.brakeOn || moving.parkingBrakeOn){
 				angularVelocity = 0;
 			}else if(angularVelocity>0){
@@ -137,7 +135,6 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 	public static class EntityWheelSmall extends EntityWheel{
 		public EntityWheelSmall(World world){
 			super(world);
-			this.wheelDiameter=0.4375F;
 		}
 		
 		public EntityWheelSmall(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
@@ -157,7 +154,6 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 	public static class EntityWheelLarge extends EntityWheel{
 		public EntityWheelLarge(World world){
 			super(world);
-			this.wheelDiameter=0.6875F;
 		}
 		
 		public EntityWheelLarge(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
