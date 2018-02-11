@@ -98,6 +98,18 @@ public class EntityCar extends EntityMultipartVehicle{
 		velocityVec.set(motionX, motionY, motionZ);
 		velocity = velocityVec.dot(headingVec);
 		velocityVec = velocityVec.normalize();
+		
+		//Turn on brake, backup, and turn signal lights if they are activated.
+		if(this.brakeOn){
+			lightStatus |= 1; 
+		}else{
+			lightStatus &= 14;
+		}
+		if(this.engine != null && this.engine.getCurrentGear() < 0){
+			lightStatus |= 2; 
+		}else{
+			lightStatus &= 13;
+		}
 	}
 	
 	private void getForcesAndMotions(){
