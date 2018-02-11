@@ -20,6 +20,7 @@ import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.EnginePacket;
 import minecrafttransportsimulator.packets.control.FlapPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
+import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
@@ -396,7 +397,6 @@ public final class ControlSystem{
 		
 		//Change gas to on or off.
 		if(joystickMap.containsKey(ControlsJoystick.CAR_GAS.joystickAssigned) && ControlsJoystick.CAR_GAS.joystickButton != NULL_COMPONENT){
-			System.out.println(getJoystickAxisState(ControlsJoystick.CAR_GAS, true));
 			MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_GAS, true)));
 		}else{
 			if(ControlsKeyboard.CAR_GAS.isPressed()){
@@ -434,6 +434,14 @@ public final class ControlSystem{
 				MTS.MTSNet.sendToServer(new EnginePacket(car.getEntityId(), car.getEngineByNumber((byte) 1).getEntityId(), (byte) 2));
 			}
 		}
+		
+		//Check if we are shifting.
+		if(ControlsKeyboard.CAR_SHIFT_U.isPressed()){
+			MTS.MTSNet.sendToServer(new ShiftPacket(car.getEntityId(), true));
+		}
+		if(ControlsKeyboard.CAR_SHIFT_D.isPressed()){
+			MTS.MTSNet.sendToServer(new ShiftPacket(car.getEntityId(), false));
+		}
 	}
 		
 	public enum ControlsKeyboard{
@@ -459,7 +467,9 @@ public final class ControlSystem{
 		CAR_TURN_R(Keyboard.KEY_D, ControlsJoystick.CAR_TURN, false),
 		CAR_TURN_L(Keyboard.KEY_A, ControlsJoystick.CAR_TURN, false),
 		CAR_GAS(Keyboard.KEY_W, ControlsJoystick.CAR_GAS, false),
-		CAR_BRAKE(Keyboard.KEY_S, ControlsJoystick.AIRCRAFT_BRAKE, false),
+		CAR_BRAKE(Keyboard.KEY_S, ControlsJoystick.CAR_BRAKE, false),
+		CAR_SHIFT_U(Keyboard.KEY_R, ControlsJoystick.CAR_SHIFT_U, true),
+		CAR_SHIFT_D(Keyboard.KEY_F, ControlsJoystick.CAR_SHIFT_D, true),
 		CAR_HORN(Keyboard.KEY_C, ControlsJoystick.CAR_HORN, false),
 		CAR_START(Keyboard.KEY_Z, ControlsJoystick.CAR_START, false),
 		CAR_LIGHTS(Keyboard.KEY_X, ControlsJoystick.CAR_LIGHTS, true),
@@ -538,6 +548,8 @@ public final class ControlSystem{
 		CAR_TURN(true, false),
 		CAR_GAS(true, false),
 		CAR_BRAKE(true, false),
+		CAR_SHIFT_U(true, true),
+		CAR_SHIFT_D(true, true),
 		CAR_HORN(false, false),
 		CAR_START(false, false),
 		CAR_LIGHTS(false, true),
