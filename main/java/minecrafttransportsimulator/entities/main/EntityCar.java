@@ -10,7 +10,7 @@ import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.parts.EntityEngineCar;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
-import minecrafttransportsimulator.packets.control.AileronPacket;
+import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -25,8 +25,6 @@ public class EntityCar extends EntityMultipartVehicle{
 	
 	//Internal car variables
 	private float momentPitch;
-	private double currentWheelSpeed;
-	private double desiredWheelSpeed;
 	
 	private double wheelForce;//kg*m/ticks^2
 	private double dragForce;//kg*m/ticks^2
@@ -62,7 +60,9 @@ public class EntityCar extends EntityMultipartVehicle{
 	public void addChild(String childUUID, EntityMultipartChild child, boolean newChild){
 		super.addChild(childUUID, child, newChild);
 		if(child instanceof EntityWheel){
-			wheels.add((EntityWheel) child);
+			if(!wheels.contains(child)){
+				wheels.add((EntityWheel) child);
+			}
 		}else if(child instanceof EntityEngineCar){
 			engine = (EntityEngineCar) child;
 		}
@@ -106,7 +106,8 @@ public class EntityCar extends EntityMultipartVehicle{
 		}else{
 			wheelForce = 0;
 		}
-		dragForce = 0.5F*airDensity*velocity*velocity*0.75F*pack.car.dragCoefficient;		
+		
+		dragForce = 0.5F*airDensity*velocity*velocity*5.0F*pack.car.dragCoefficient;
 		gravitationalForce = currentMass*(9.8/400);
 		gravitationalTorque = gravitationalForce*1;
 				
@@ -114,7 +115,9 @@ public class EntityCar extends EntityMultipartVehicle{
 		motionZ += (headingVec.zCoord*wheelForce - velocityVec.zCoord*dragForce)/currentMass;
 		motionY += (headingVec.yCoord*wheelForce - velocityVec.yCoord*dragForce - gravitationalForce)/currentMass;
 		
+		motionYaw = 0;
 		motionPitch = (float) (((1-Math.abs(headingVec.yCoord))*gravitationalTorque)/momentPitch);
+		motionRoll = 0;
 	}
 		
 	private void moveCar(){
@@ -125,9 +128,8 @@ public class EntityCar extends EntityMultipartVehicle{
 	private void dampenControlSurfaces(){
 		if(steeringCooldown==0){
 			if(steeringAngle != 0){
-				//FIXME make new packet.
-				MTS.MTSNet.sendToAll(new AileronPacket(this.getEntityId(), steeringAngle < 0, (short) 0));
-				steeringAngle += steeringAngle < 0 ? 4 : -4;
+				MTS.MTSNet.sendToAll(new SteeringPacket(this.getEntityId(), steeringAngle < 0, (short) 0));
+				steeringAngle += steeringAngle < 0 ? 20 : -20;
 			}
 		}else{
 			--steeringAngle;

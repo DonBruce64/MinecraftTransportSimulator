@@ -9,9 +9,9 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftCar;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
+import minecrafttransportsimulator.entities.parts.EntityEngineCar;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
@@ -37,7 +37,7 @@ public final class RenderMultipartChild{
 		childRenderMap.clear();
 		childRenderMap.put(EntityEngineAircraftSmall.class, new RenderEngine());
 		childRenderMap.put(EntityEngineAircraftLarge.class, childRenderMap.get(EntityEngineAircraftSmall.class));
-		childRenderMap.put(EntityEngineAircraftCar.class, childRenderMap.get(EntityEngineAircraftSmall.class));
+		childRenderMap.put(EntityEngineCar.class, childRenderMap.get(EntityEngineAircraftSmall.class));
 		childRenderMap.put(EntityVehicleChest.class, new RenderVehicleChest());
 		childRenderMap.put(EntityPontoon.class, new RenderPontoon());
 		childRenderMap.put(EntityPropeller.class, new RenderPropeller());
@@ -84,7 +84,7 @@ public final class RenderMultipartChild{
     		}
     		GL11.glRotatef(180, 1, 0, 0);
             GL11.glTranslatef(0, -child.height/2, 0);
-            if(child instanceof EntityEngineAircraftCar){
+            if(child instanceof EntityEngineCar){
             	//TODO move this below plane engines when we get this to be unique.
             	GL11.glRotatef(-180, 1, 0, 0);
     			textureManger.bindTexture(textureEngineCarSmall);

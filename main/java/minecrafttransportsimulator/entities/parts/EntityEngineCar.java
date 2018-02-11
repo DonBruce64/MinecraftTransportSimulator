@@ -5,9 +5,10 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 public abstract class EntityEngineCar extends EntityEngine{
-	private byte gearNumber = 0;
+	private byte gearNumber = 1;
 	private double engineTargetRPM;
 	private double engineTorque;
+	private double engineForce;
 	private EntityCar car;
 
 	public EntityEngineCar(World world){
@@ -23,13 +24,36 @@ public abstract class EntityEngineCar extends EntityEngine{
 		super.onUpdate();
 		if(!linked){return;}
 		car = (EntityCar) vehicle;
+
+		
+		//Set the speed of the engine to the speed of the driving wheels.
+		if(getCurrentGear() != 0){
+			float lowestSpeed = 999F;
+			byte grounders = 0;
+			for(EntityWheel wheel : car.wheels){
+				++grounders;
+				if((wheel.offsetZ > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offsetZ < 0 && car.pack.car.isRearWheelDrive)){
+					lowestSpeed = Math.min(wheel.angularVelocity, lowestSpeed);
+				}
+			}
+			if(lowestSpeed != 999){
+				//Don't let the engine stall while being stopped.
+				if(lowestSpeed*1200F*getRatioForGear(gearNumber)*2.0F > engineStallRPM || (!state.running && !state.esOn)){
+					RPM = lowestSpeed*1200F*getRatioForGear(gearNumber)*2.0F;
+				}else{
+					RPM -= (RPM - engineStallRPM)/10;
+				}
+			}
+		}else{
+			RPM = Math.max(RPM - 10, 0);
+		}
 		
 		//Do automatic transmission functions if needed.
 		if(state.running && isAutomatic()){
 			if(gearNumber > 0){
-				if(RPM > maxSafeRPM*0.5*car.throttle/50){
+				if(RPM > maxSafeRPM*0.5F*(1.0F + car.throttle/100F)){
 					shiftUp();
-				}else if(RPM < engineStartRPM && gearNumber > 1){
+				}else if(RPM < maxSafeRPM*0.25*(1.0F + car.throttle/100F) && gearNumber > 1){
 					shiftDown();
 				}
 			}
@@ -47,27 +71,37 @@ public abstract class EntityEngineCar extends EntityEngine{
 		}
 		
 		//If running, use the friction of the wheels to determine the new speed.
-		if(state.running){
-			engineTargetRPM = car.throttle/100F*(maxRPM - engineStartRPM*1.25 - hours) + engineStartRPM*1.25;
-			engineTorque = RPM/maxSafeRPM;
-			
-			
-			//Check to see if the wheels have enough friction to affect the engine.
-			if(engineTargetRPM*engineTorque/10 <= wheelFriction){
-				//TODO make engine RPM based on current wheel speed, desired RPM, and torque;
+		if(state.running || state.esOn){
+			engineTargetRPM = car.throttle/100F*(maxRPM - engineStartRPM/1.25 - hours) + engineStartRPM/1.25;
+			if(getRatioForGear(gearNumber) != 0){
+				engineTorque = RPM/maxSafeRPM*getRatioForGear(gearNumber);
+				
+				//Check to see if the wheels have enough friction to affect the engine.
+				engineForce = (engineTargetRPM - RPM)/maxRPM*engineTorque;
+				if(Math.abs(engineForce/10) > wheelFriction){
+					engineForce /= 2F;
+					for(EntityWheel wheel : car.wheels){
+						if((wheel.offsetZ > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offsetZ < 0 && car.pack.car.isRearWheelDrive)){
+							wheel.angularVelocity = (float) (engineTargetRPM/1200F/getRatioForGear(gearNumber)/2.0F);
+						}
+					}
+				}
 			}else{
-				RPM = engineTargetRPM*engineTorque/10;
-				//TODO add wheel screeching noise here.
+				RPM += (engineTargetRPM - RPM)/10;
+				engineForce = 0;
 			}
 		}else{
-			//Not running, so just let the engine be the speed of the wheels.
-			//TODO make code for non-running engine here soley based on wheel speed.
-			RPM = Math.max(RPM - 10, 0);
+			//Not running, so either inhibit motion if not in neutral or just don't do anything.
+			if(getCurrentGear() != 0){
+				engineForce = -RPM/maxRPM;
+			}else{
+				engineForce = 0;
+			}
 		}
 	}
 	
-	public float getForceOutput(){
-		return 0;
+	public double getForceOutput(){
+		return engineForce*30;
 	}
 	
 	public void shiftUp(){
@@ -77,6 +111,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 			if(vehicle != null && vehicle.velocity == 0){
 				gearNumber = 1;
 			}else{
+				hours += 100;
 				//TODO add gearbox grinding sound here.
 			}
 		}else if(gearNumber < getNumberGears()){
@@ -94,6 +129,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 				if(vehicle != null && vehicle.velocity == 0){
 					gearNumber = -1;
 				}else{
+					hours += 100;
 					//TODO add gearbox grinding sound here.
 				}
 			}
