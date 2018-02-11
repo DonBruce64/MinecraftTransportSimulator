@@ -132,7 +132,7 @@ public class EntityCar extends EntityMultipartVehicle{
 				steeringAngle += steeringAngle < 0 ? 20 : -20;
 			}
 		}else{
-			--steeringAngle;
+			--steeringCooldown;
 		}
 	}
 
