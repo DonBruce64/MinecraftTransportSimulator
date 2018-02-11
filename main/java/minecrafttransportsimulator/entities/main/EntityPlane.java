@@ -70,6 +70,11 @@ public class EntityPlane extends EntityMultipartVehicle{
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
 		if(linked){
+			if(pack.plane == null){
+				//TODO remove this in V10 after all the old scouts are gone.
+				this.setDead();
+				return;
+			}
 			getBasicProperties();
 			getForcesAndMotions();
 			performGroundOperations();
