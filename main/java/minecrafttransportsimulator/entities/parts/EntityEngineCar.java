@@ -118,7 +118,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 		if(gearNumber == -1){
 			gearNumber = 0;
 		}else if(gearNumber == 0){
-			if(vehicle != null && vehicle.velocity == 0){
+			if(vehicle != null && vehicle.velocity > -0.1){
 				gearNumber = 1;
 			}else{
 				hours += 100;
@@ -136,7 +136,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 			if(gearNumber == 1){
 				gearNumber = 0;
 			}else if(gearNumber == 0){
-				if(vehicle != null && vehicle.velocity == 0){
+				if(vehicle != null && vehicle.velocity < 0.1){
 					gearNumber = -1;
 				}else{
 					hours += 100;
