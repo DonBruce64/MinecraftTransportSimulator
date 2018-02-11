@@ -173,10 +173,10 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			//First part is temp affect on oil, second is engine oil pump.
 			oilPressure = Math.min(90 - temp/10, oilPressure + RPM/500 - 0.5*(oilLeak ? 5F : 1F)*(oilPressure/engineOilDanger));
 			if(oilPressure < engineOilDanger){
-				temp += Math.max(0, (RPM/250)/20);
+				temp += Math.max(0, (RPM/maxRPM/20)/20);
 				hours += 0.01;
 			}else{
-				temp += Math.max(0, (RPM/400 - temp/(engineColdTemp*2))/20);
+				temp += Math.max(0, (RPM/maxRPM/10 - temp/(engineColdTemp*2))/20);
 				hours += 0.001;	
 			}
 			if(RPM > engineStartRPM*1.5 && temp < engineColdTemp){//Not warmed up
