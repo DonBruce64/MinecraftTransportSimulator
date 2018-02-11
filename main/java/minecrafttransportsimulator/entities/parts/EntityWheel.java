@@ -4,6 +4,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
+import minecrafttransportsimulator.entities.main.EntityCar;
 import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import minecrafttransportsimulator.packets.general.FlatWheelPacket;
 import minecrafttransportsimulator.systems.SFXSystem;
@@ -57,7 +58,7 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 				}
 			}
 			angularVelocity = (float) (moving.velocity/height);
-		}else{
+		}else if(!(parent instanceof EntityCar)){
 			if(moving.brakeOn || moving.parkingBrakeOn){
 				angularVelocity = 0;
 			}else if(angularVelocity>0){
