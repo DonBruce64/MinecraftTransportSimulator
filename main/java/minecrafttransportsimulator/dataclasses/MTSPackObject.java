@@ -34,7 +34,6 @@ public class MTSPackObject{
     
     public class PackMotorizedConfig{
     	public int fuelCapacity;
-    	public String lightSetup;
         public List<PackInstrument> instruments = new ArrayList<PackInstrument>();
         public List<PackControl> controls = new ArrayList<PackControl>();
     }
@@ -47,6 +46,7 @@ public class MTSPackObject{
         public float rudderArea;
         public float elevatorArea;
         public float defaultElevatorAngle;
+    	public String lightSetup;
     }
     
     public class PackCar{

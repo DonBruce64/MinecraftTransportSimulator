@@ -87,7 +87,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		//The 4-bit pack value corresponds to the presence of lights.
 		//Reference the bits to check if there's a 1 in the position, and render if so.
 		for(byte i=0; i<lightButtonCoords.length; ++i){
-			if(aircraft.pack.motorized.lightSetup.substring(i, i+1).equals("1")){
+			if(aircraft.pack.plane.lightSetup.substring(i, i+1).equals("1")){
 				drawRedstoneButton(lightButtonCoords[i], (aircraft.lightStatus & 1<<i) > 0);
 			}
 		}
@@ -107,7 +107,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		//Render light button text.
 		String[] lightText = new String[]{I18n.format("gui.panel.navigationlights"), I18n.format("gui.panel.strobelights"), I18n.format("gui.panel.taxilights"), I18n.format("gui.panel.landinglights")};
 		for(byte i=0; i<lightButtonCoords.length; ++i){
-			boolean hasLight = aircraft.pack.motorized.lightSetup.substring(i, i+1).equals("1");
+			boolean hasLight = aircraft.pack.plane.lightSetup.substring(i, i+1).equals("1");
 			if(hasLight){
 				int textX = lightButtonCoords[i][0] + (lightButtonCoords[i][1] - lightButtonCoords[i][0])/2;
 				int textY = lightButtonCoords[i][2] + 2; 
@@ -161,7 +161,7 @@ public class GUIPanelAircraft extends GuiScreen{
 			//Check if a light button has been pressed.
 			for(byte i=0; i<lightButtonCoords.length; ++i){
 				if(x > lightButtonCoords[i][0] && x < lightButtonCoords[i][1] && y < lightButtonCoords[i][2] && y > lightButtonCoords[i][3]){
-					boolean hasLight = aircraft.pack.motorized.lightSetup.substring(i, i+1).equals("1");
+					boolean hasLight = aircraft.pack.plane.lightSetup.substring(i, i+1).equals("1");
 					if(hasLight){
 						MTS.MTSNet.sendToServer(new LightPacket(aircraft.getEntityId(), (byte) (1<<i)));
 					}
