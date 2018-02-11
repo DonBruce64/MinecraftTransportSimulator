@@ -85,7 +85,7 @@ public abstract class EntityEngineCarSmall extends EntityEngineCar{
 		public float getRatioForGear(byte gearNumber){
 			switch(gearNumber){
 				case(-1): return -2.0F;
-				case(1): return 3.0F;
+				case(1): return 3.5F;
 				case(2): return 2.75F;
 				case(3): return 1.5F;
 				case(4): return 0.75F;
