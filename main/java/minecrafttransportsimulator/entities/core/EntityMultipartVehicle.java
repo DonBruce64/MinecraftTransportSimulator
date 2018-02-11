@@ -109,16 +109,17 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		}
 		
 		float skiddingFactor = getSkiddingFactor();
-		if(skiddingFactor != 0 && Math.abs(velocity) > 0.1){
+		if(skiddingFactor != 0){
 			MTSVector groundVelocityVec = new MTSVector(motionX, 0, motionZ).normalize();
-			MTSVector groundHeadingVec = new MTSVector(headingVec.xCoord*Math.signum(velocity), 0, headingVec.zCoord*Math.signum(velocity)).normalize();
+			MTSVector groundHeadingVec = new MTSVector(headingVec.xCoord, 0, headingVec.zCoord).normalize();
 			float vectorDelta = (float) groundVelocityVec.distanceTo(groundHeadingVec);
+			byte velocitySign = (byte) (vectorDelta < 1 ? 1 : -1);
 			if(vectorDelta > 0.001){
 				vectorDelta = Math.min(skiddingFactor, vectorDelta);
 				float yawTemp = rotationYaw;
 				rotationYaw += vectorDelta;
 				updateHeadingVec();
-				reAdjustGroundSpeed(Math.hypot(motionX, motionZ)*Math.signum(velocity));
+				reAdjustGroundSpeed(Math.hypot(motionX, motionZ)*velocitySign);
 				rotationYaw = yawTemp;
 			}
 		}
