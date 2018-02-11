@@ -81,8 +81,8 @@ public abstract class EntityEngineCarSmall extends EntityEngineCar{
 			switch(gearNumber){
 				case(-1): return -2.0F;
 				case(1): return 3.5F;
-				case(2): return 2.75F;
-				case(3): return 1.5F;
+				case(2): return 2.5F;
+				case(3): return 1.25F;
 				case(4): return 0.75F;
 				default: return 0.0F;
 			}
