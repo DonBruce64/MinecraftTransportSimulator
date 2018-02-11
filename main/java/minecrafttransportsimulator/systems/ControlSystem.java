@@ -19,6 +19,7 @@ import minecrafttransportsimulator.packets.control.BrakePacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.EnginePacket;
 import minecrafttransportsimulator.packets.control.FlapPacket;
+import minecrafttransportsimulator.packets.control.LightPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
@@ -441,6 +442,11 @@ public final class ControlSystem{
 		}
 		if(ControlsKeyboard.CAR_SHIFT_D.isPressed()){
 			MTS.MTSNet.sendToServer(new ShiftPacket(car.getEntityId(), false));
+		}
+		
+		//Check if light button is pressed.
+		if(ControlsKeyboard.CAR_LIGHTS.isPressed()){
+			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), (byte) (1<<3)));
 		}
 	}
 		
