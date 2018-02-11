@@ -547,7 +547,7 @@ public final class ControlSystem{
 		CAR_CAMLOCK(false, true),
 		CAR_TURN(true, false),
 		CAR_GAS(true, false),
-		CAR_BRAKE(true, false),
+		CAR_BRAKE(false, false),
 		CAR_SHIFT_U(false, true),
 		CAR_SHIFT_D(false, true),
 		CAR_HORN(false, false),
