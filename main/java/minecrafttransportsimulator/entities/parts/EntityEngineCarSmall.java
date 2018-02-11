@@ -23,32 +23,27 @@ public abstract class EntityEngineCarSmall extends EntityEngineCar{
 
 	@Override
 	protected byte getStarterPower(){
-		//TODO add new sound.
 		return 50;
 	}
 
 	@Override
 	protected byte getStarterIncrement(){
-		//TODO add new sound.
-		return 4;
+		return 3;
 	}
 
 	@Override
 	protected String getCrankingSoundName(){
-		//TODO add new sound.
-		return "small_engine_cranking";
+		return "small_automotive_engine_cranking";
 	}
 
 	@Override
 	protected String getStartingSoundName(){
-		//TODO add new sound.
-		return "small_engine_starting";
+		return "small_automotive_engine_starting";
 	}
 
 	@Override
 	protected String getRunningSoundName(){
-		//TODO add new sound.
-		return "small_engine_running";
+		return "small_automotive_engine_running";
 	}
 
 	@Override
