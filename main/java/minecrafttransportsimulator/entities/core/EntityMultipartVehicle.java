@@ -97,8 +97,8 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	protected void performGroundOperations(){
 		float brakingFactor = getBrakingForceFactor();
 		if(brakingFactor > 0){
-			double groundSpeed = Math.hypot(motionX, motionZ);	
-			groundSpeed -= 20F*brakingFactor/currentMass;
+			double groundSpeed = Math.hypot(motionX, motionZ)*Math.signum(velocity);
+			groundSpeed -= 10F*brakingFactor/currentMass;
 			if(groundSpeed > 0.1){
 				reAdjustGroundSpeed(groundSpeed);
 			}else{
@@ -109,18 +109,16 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		}
 		
 		float skiddingFactor = getSkiddingFactor();
-		if(skiddingFactor != 0 && (motionX != 0 || motionZ !=0)){
+		if(skiddingFactor != 0 && Math.abs(velocity) > 0.2){
 			MTSVector groundVelocityVec = new MTSVector(motionX, 0, motionZ).normalize();
-			MTSVector groundHeadingVec = new MTSVector(headingVec.xCoord, 0, headingVec.zCoord).normalize();
-			if(groundVelocityVec.distanceTo(groundHeadingVec) > 0.001){
-				//Technically not correct, but close enough!
-				float yawDeviationAngle = (float) (Math.toDegrees(Math.acos(groundVelocityVec.dot(groundHeadingVec)))*Math.signum(groundVelocityVec.cross(groundHeadingVec).yCoord));
-				float yawCorrection = (float) Math.min(Math.abs(yawDeviationAngle), skiddingFactor)*Math.signum(yawDeviationAngle);
-				//Now that we know how much yaw to correct for, adjust the velocity accordingly.
+			MTSVector groundHeadingVec = new MTSVector(headingVec.xCoord*Math.signum(velocity), 0, headingVec.zCoord*Math.signum(velocity)).normalize();
+			float vectorDelta = (float) groundVelocityVec.distanceTo(groundHeadingVec);
+			if(vectorDelta > 0.001){
+				vectorDelta = Math.min(skiddingFactor, vectorDelta);
 				float yawTemp = rotationYaw;
-				rotationYaw = rotationYaw - yawDeviationAngle + yawCorrection;
+				rotationYaw += vectorDelta;
 				updateHeadingVec();
-				reAdjustGroundSpeed(Math.hypot(motionX, motionZ));
+				reAdjustGroundSpeed(Math.hypot(motionX, motionZ)*Math.signum(velocity));
 				rotationYaw = yawTemp;
 			}
 		}
