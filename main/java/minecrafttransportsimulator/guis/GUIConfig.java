@@ -93,7 +93,6 @@ public class GUIConfig extends GuiScreen{
 		initHeaderButtons();
 		initConfigButtons();
 		initVehicleSelectionButtons();
-		initKeyboardBoxes();
 		initJoystickSelecionButtons();
 		initJoystickComponentSelecionButtons();
 		initAssignmentButtons();
@@ -172,6 +171,7 @@ public class GUIConfig extends GuiScreen{
 					String lookupString = vehicleSelectionButtons.get(buttonClicked);
 					vehicleConfiguring = lookupString.substring(0, lookupString.indexOf('.'));
 					configuringKeyboard = lookupString.contains("keyboard");
+					initKeyboardBoxes();
 				}else if(buttonClicked.equals(finishKeyboardBindingsButton)){
 					vehicleConfiguring = "";
 				}else if(joystickSelectionButtons.containsKey(buttonClicked)){
@@ -485,21 +485,19 @@ public class GUIConfig extends GuiScreen{
 	}
 	
 	private void initKeyboardBoxes(){
+		keyboardBoxes.clear();
+		
 		int verticalOffset = 10;
 		int horizontalOffset = 80;
-		String prefix = ControlSystem.ControlsKeyboard.values()[0].name().substring(0, ControlSystem.ControlsKeyboard.values()[0].name().indexOf('_'));
 		for(ControlsKeyboard keyboardControl : ControlSystem.ControlsKeyboard.values()){
-			if(!prefix.equals(keyboardControl.name().substring(0, keyboardControl.name().indexOf('_')))){
-				verticalOffset = 10;
-				horizontalOffset = 80;
-				prefix = keyboardControl.name().substring(0, keyboardControl.name().indexOf('_'));
-			}
-			GuiTextField box = new GuiTextField(0, fontRendererObj, guiLeft + horizontalOffset, guiTop + verticalOffset, 40, 10);
-			keyboardBoxes.put(keyboardControl, box);
-			verticalOffset += 11;
-			if(verticalOffset > 10 + 11*7){
-				verticalOffset = 10;
-				horizontalOffset += 120;
+			if(keyboardControl.name().toLowerCase().contains(vehicleConfiguring)){
+				GuiTextField box = new GuiTextField(0, fontRendererObj, guiLeft + horizontalOffset, guiTop + verticalOffset, 40, 10);
+				keyboardBoxes.put(keyboardControl, box);
+				verticalOffset += 11;
+				if(verticalOffset > 10 + 11*7){
+					verticalOffset = 10;
+					horizontalOffset += 120;
+				}
 			}
 		}
 		buttonList.add(finishKeyboardBindingsButton = new GuiButton(0, guiLeft + 180, guiTop + 140, 50, 20, I18n.format("gui.config.controls.confirm")));
