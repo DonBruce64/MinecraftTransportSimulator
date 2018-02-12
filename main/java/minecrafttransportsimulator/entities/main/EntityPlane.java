@@ -154,7 +154,6 @@ public class EntityPlane extends EntityMultipartVehicle{
 		rudderTorque = rudderForce*pack.plane.tailDistance;
 		gravitationalTorque = gravitationalForce*1;
 				
-		//TODO fix this to allow barrel rolls
 		motionX += (headingVec.xCoord*thrustForce - velocityVec.xCoord*dragForce + verticalVec.xCoord*(wingForce + elevatorForce))/currentMass;
 		motionZ += (headingVec.zCoord*thrustForce - velocityVec.zCoord*dragForce + verticalVec.zCoord*(wingForce + elevatorForce))/currentMass;
 		motionY += (headingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + verticalVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
