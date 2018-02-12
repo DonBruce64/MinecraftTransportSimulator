@@ -12,13 +12,13 @@ import net.minecraft.util.SoundCategory;
 public class EngineSound extends MovingSound{
 	private final EntityEngine engine;
 	private final EntityPlayer player;
-	private final float pitchFactor;
+	private final float pitchFactor = 2000F;
 	
 	private MTSVector playerPos = new MTSVector(0, 0, 0);
 	private MTSVector enginePos = new MTSVector(0, 0, 0);
 	private double soundVelocity;
 	
-	public EngineSound(String soundName, EntityEngine engine, float pitchFactor){
+	public EngineSound(String soundName, EntityEngine engine){
 		super(SFXSystem.getSoundEventFromName(soundName), SoundCategory.MASTER);
 		this.volume=1;
 		this.repeat=true;
@@ -26,7 +26,6 @@ public class EngineSound extends MovingSound{
 		this.yPosF = (float) engine.posY;
 		this.zPosF = (float) engine.posZ;
 		this.engine = engine;
-		this.pitchFactor = pitchFactor;
 		this.player = Minecraft.getMinecraft().thePlayer;
 	}
 	

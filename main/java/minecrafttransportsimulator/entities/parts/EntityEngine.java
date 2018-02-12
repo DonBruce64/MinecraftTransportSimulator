@@ -15,7 +15,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -362,7 +361,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	@Override
 	@SideOnly(Side.CLIENT)
 	public MovingSound getNewSound(){
-		return new EngineSound(MTS.MODID + ":" + this.getRunningSoundName(), this, 2000F);
+		return new EngineSound(MTS.MODID + ":" + this.getRunningSoundName(), this);
 	}
 
 	@Override
