@@ -11,7 +11,7 @@ import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.parts.EntityEngineCar;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
-import minecrafttransportsimulator.sounds.HornSound;
+import minecrafttransportsimulator.sounds.AttenuatedSound;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
 import net.minecraft.client.audio.MovingSound;
@@ -38,7 +38,7 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 	private double gravitationalTorque;//kg*m^2/ticks^2
 	
 	private EntityEngineCar engine;
-	private HornSound hornSound;
+	private AttenuatedSound hornSound;
 	
 	public EntityCar(World world){
 		super(world);
@@ -155,17 +155,11 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 			--steeringCooldown;
 		}
 	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public boolean hasSound(){
-		return true;
-	}
 
 	@Override
 	@SideOnly(Side.CLIENT)
 	public MovingSound getNewSound(){
-		return new HornSound(MTS.MODID + ":" + pack.car.hornSound, this);
+		return new AttenuatedSound(MTS.MODID + ":" + pack.car.hornSound, this);
 	}
 
 	@Override
@@ -177,13 +171,25 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void setCurrentSound(MovingSound sound){
-		hornSound = (HornSound) sound;
+		hornSound = (AttenuatedSound) sound;
 	}
 
 	@Override
 	@SideOnly(Side.CLIENT)
 	public boolean shouldSoundBePlaying(){
 		return isHornOn && !isDead;
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public float getVolume(){
+		return 5.0F;
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public float getPitch(){
+		return 1.0F;
 	}
 
 	@Override

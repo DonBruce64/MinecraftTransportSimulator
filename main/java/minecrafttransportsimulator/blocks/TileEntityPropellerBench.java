@@ -63,12 +63,6 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
 		}
 		propellerOnBench = null;
 	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public boolean hasSound(){
-		return true;
-	}
 
 	@Override
 	@SideOnly(Side.CLIENT)
@@ -91,7 +85,19 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
 	@Override
 	@SideOnly(Side.CLIENT)
 	public boolean shouldSoundBePlaying(){
-		return this.isRunning();
+		return this.isInvalid() ? false : this.isRunning();
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public float getVolume(){
+		return 1.0F;
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public float getPitch(){
+		return 1.0F;
 	}
 
 	@Override

@@ -29,7 +29,7 @@ public final class SFXSystem{
 	 */
 	public static void playSound(Entity noisyEntity, String soundName, float volume, float pitch){
 		if(noisyEntity.worldObj.isRemote){
-			volume = isPlayerInsideVehicle() ? volume*0.5F : volume;
+			volume = isPlayerInsideEnclosedVehicle() ? volume*0.5F : volume;
 			double soundDistance = Minecraft.getMinecraft().thePlayer.getDistance(noisyEntity.posX, noisyEntity.posY, noisyEntity.posZ);
 	        PositionedSoundRecord sound = new PositionedSoundRecord(getSoundEventFromName(soundName), SoundCategory.MASTER, volume, pitch, (float)noisyEntity.posX, (float)noisyEntity.posY, (float)noisyEntity.posZ);
 	        if(soundDistance > 10.0D){
@@ -53,9 +53,9 @@ public final class SFXSystem{
 	 */
 	public static void doSFX(SFXEntity entity, World world){
 		if(world.isRemote){
-			if(entity.hasSound()){
-				soundHandler = Minecraft.getMinecraft().getSoundHandler();
-				if(entity.shouldSoundBePlaying() && (entity.getCurrentSound() == null || !soundHandler.isSoundPlaying(entity.getCurrentSound()))){
+			soundHandler = Minecraft.getMinecraft().getSoundHandler();
+			if(entity.shouldSoundBePlaying()){
+				if(entity.getCurrentSound() == null || !soundHandler.isSoundPlaying(entity.getCurrentSound())){
 					entity.setCurrentSound(entity.getNewSound());
 					soundHandler.playSound(entity.getCurrentSound());
 				}
@@ -64,7 +64,7 @@ public final class SFXSystem{
 		}
 	}
 	
-	public static boolean isPlayerInsideVehicle(){
+	public static boolean isPlayerInsideEnclosedVehicle(){
 		if(ClientEventSystem.playerLastSeat != null){
 			if(ClientEventSystem.playerLastSeat.parent != null){
 				if(!((EntityMultipartMoving) ClientEventSystem.playerLastSeat.parent).pack.general.openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
@@ -105,10 +105,7 @@ public final class SFXSystem{
 		}
 	}
 	
-	public static interface SFXEntity{
-		@SideOnly(Side.CLIENT)
-		public boolean hasSound();
-		
+	public static interface SFXEntity{		
 		@SideOnly(Side.CLIENT)
 		public MovingSound getNewSound();
 		
@@ -120,6 +117,12 @@ public final class SFXSystem{
 		
 		@SideOnly(Side.CLIENT)
 		public abstract boolean shouldSoundBePlaying();
+		
+		@SideOnly(Side.CLIENT)
+		public abstract float getVolume();
+		
+		@SideOnly(Side.CLIENT)
+		public abstract float getPitch();
 		
 		@SideOnly(Side.CLIENT)
 		public abstract void spawnParticles();

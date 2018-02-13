@@ -4,7 +4,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.packets.control.EnginePacket;
-import minecrafttransportsimulator.sounds.EngineSound;
+import minecrafttransportsimulator.sounds.AttenuatedSound;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
@@ -43,7 +43,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	private double ambientTemp;
 	private double engineHeat;
 	private double coolingFactor;
-	private EngineSound engineSound;
+	private AttenuatedSound engineSound;
 	
 	//Constants
 	public static final float engineStallRPM = 300;
@@ -351,17 +351,11 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	public static int getMaxSafeRPM(int maxRPM){
 		return (maxRPM - (maxRPM - 2500)/2);
 	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public boolean hasSound(){
-		return true;
-	}
 
 	@Override
 	@SideOnly(Side.CLIENT)
 	public MovingSound getNewSound(){
-		return new EngineSound(MTS.MODID + ":" + this.getRunningSoundName(), this);
+		return new AttenuatedSound(MTS.MODID + ":" + this.getRunningSoundName(), this);
 	}
 
 	@Override
@@ -373,13 +367,25 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void setCurrentSound(MovingSound sound){
-		engineSound = (EngineSound) sound;
+		engineSound = (AttenuatedSound) sound;
 	}
 
 	@Override
 	@SideOnly(Side.CLIENT)
 	public boolean shouldSoundBePlaying(){
 		return (state.running || internalFuel > 0) && !isDead;
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public float getVolume(){
+		return (float) (30*RPM/2000F);
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public float getPitch(){
+		return (float) (RPM/2000F);
 	}
 
 	@Override

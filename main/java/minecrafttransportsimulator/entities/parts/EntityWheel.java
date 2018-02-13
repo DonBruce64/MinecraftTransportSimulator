@@ -84,31 +84,41 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		}
 	}
 	
-	@SideOnly(Side.CLIENT)
-	public boolean hasSound(){
-		return false;
-	}
-	
+	@Override
 	@SideOnly(Side.CLIENT)
 	public MovingSound getNewSound(){
 		return null;
 	}
 	
+	@Override
 	@SideOnly(Side.CLIENT)
 	public MovingSound getCurrentSound(){
 		return null;
 	}
 	
+	@Override
 	@SideOnly(Side.CLIENT)
-	public void setCurrentSound(MovingSound sound){
-		
-	}
+	public void setCurrentSound(MovingSound sound){}
 	
+	@Override
 	@SideOnly(Side.CLIENT)
 	public boolean shouldSoundBePlaying(){
 		return false;
 	}
 	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public float getVolume(){
+		return 0.0F;
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public float getPitch(){
+		return 0.0F;
+	}
+	
+	@Override
 	@SideOnly(Side.CLIENT)
 	public void spawnParticles(){
 		if(landedThisTick){
