@@ -25,6 +25,7 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPr
 	
 	private TileEntityPropellerBench bench;
 	private float[] benchOffsets;
+	private long lastWorldTick;
 
 	public RenderPropellerBench(){}
 	
@@ -39,15 +40,15 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPr
 			}
 		}
 		if(benchOffsets == null){
-			benchOffsets = new float[4];
+			benchOffsets = new float[3];
 			offsetMappings.put(new int[]{bench.getPos().getX(), bench.getPos().getY(), bench.getPos().getZ()}, benchOffsets);
 		}
 		
 		if(bench.isRunning()){
 			short timeLeft = (short) (bench.timeOperationFinished - bench.getWorld().getTotalWorldTime());
-			if(bench.getWorld().getTotalWorldTime() != benchOffsets[3]){
+			if(bench.getWorld().getTotalWorldTime() != lastWorldTick){
 				//Only update table on each tick.  MUCH simpler this way.
-				benchOffsets[3] = bench.getWorld().getTotalWorldTime();
+				lastWorldTick = bench.getWorld().getTotalWorldTime();
 				if(timeLeft > 955){
 					benchOffsets[0] -= 0.5F/45F;
 					benchOffsets[1] += 0.2F/45F;
