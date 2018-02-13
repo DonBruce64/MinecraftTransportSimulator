@@ -109,14 +109,14 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 		
 		//Turn on brake, backup, and turn signal lights if they are activated.
 		if(this.brakeOn){
-			lightStatus |= 1; 
-		}else{
-			lightStatus &= 14;
-		}
-		if(this.engine != null && this.engine.getCurrentGear() < 0){
 			lightStatus |= 2; 
 		}else{
 			lightStatus &= 13;
+		}
+		if(this.engine != null && this.engine.getCurrentGear() < 0){
+			lightStatus |= 4; 
+		}else{
+			lightStatus &= 11;
 		}
 	}
 	

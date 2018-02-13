@@ -447,7 +447,7 @@ public final class ControlSystem{
 		
 		//Check if light button is pressed.
 		if(ControlsKeyboard.CAR_LIGHTS.isPressed()){
-			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), (byte) (1<<2)));
+			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), (byte) 1));
 		}
 		
 		//Check if horn button is pressed.
