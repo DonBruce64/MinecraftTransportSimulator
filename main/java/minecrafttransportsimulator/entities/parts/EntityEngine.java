@@ -32,7 +32,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	public double hours;
 	
 	//Runtime data
-	public EngineStates state;
+	public EngineStates state = EngineStates.ENGINE_OFF;
 	public boolean backfired;
 	public byte starterLevel;
 	public int internalFuel;
