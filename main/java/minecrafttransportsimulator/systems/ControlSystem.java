@@ -209,18 +209,17 @@ public final class ControlSystem{
 		return 0;
 	}
 	
-	private static void controlCamera(ControlsKeyboard lock, ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsKeyboard mod, ControlsJoystick changeView){
-		if(lock.isPressed()){
-			if(mod.isPressed()){
-				if(CameraSystem.hudMode == 3){
-					CameraSystem.hudMode = 0;
-				}else{
-					++CameraSystem.hudMode;
-				}
+	private static void controlCamera(ControlsKeyboardDynamic dynamic, ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsJoystick hudMode, ControlsJoystick changeView){
+		if(dynamic.isPessed() || hudMode.isPressed()){
+			if(CameraSystem.hudMode == 3){
+				CameraSystem.hudMode = 0;
 			}else{
-				CameraSystem.changeCameraLock();
+				++CameraSystem.hudMode;
 			}
+		}else if(dynamic.mainControl.isPressed()){
+			CameraSystem.changeCameraLock();
 		}
+		
 		if(zoomIn.isPressed()){
 			CameraSystem.changeCameraZoom(false);
 		}
@@ -279,7 +278,7 @@ public final class ControlSystem{
 	}
 	
 	private static void controlAircraft(EntityMultipartVehicle aircraft, boolean isPlayerController){
-		controlCamera(ControlsKeyboard.AIRCRAFT_CAMLOCK, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsKeyboard.AIRCRAFT_MOD, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
+		controlCamera(ControlsKeyboardDynamic.AIRCRAFT_CHANGEHUD, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEHUD, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
 		if(!isPlayerController){
 			return;
@@ -390,7 +389,7 @@ public final class ControlSystem{
 	}
 	
 	private static void controlCar(EntityMultipartVehicle car, boolean isPlayerController){
-		controlCamera(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsKeyboard.CAR_MOD, ControlsJoystick.CAR_CHANGEVIEW);
+		controlCamera(ControlsKeyboardDynamic.CAR_CHANGEHUD, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEHUD, ControlsJoystick.CAR_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
 		if(!isPlayerController){
 			return;
@@ -517,7 +516,7 @@ public final class ControlSystem{
 					//Check to make sure this isn't mapped to an axis first.  If so, don't check for joystick values.
 					boolean pressed = false;
 					if(!this.linkedJoystickControl.isAxis){
-						pressed = getTrueJoystickButtonState(this.linkedJoystickControl, this.linkedJoystickControl.isPressed());
+						pressed = this.linkedJoystickControl.isPressed();
 					}
 					if(pressed || ConfigSystem.getBooleanConfig("KeyboardOverride")){
 						return pressed;
@@ -603,7 +602,7 @@ public final class ControlSystem{
 		}
 		
 		public  boolean isPressed(){
-			return getJoystickMultistateValue(this) > 0;
+			return getTrueJoystickButtonState(this, getJoystickMultistateValue(this) > 0);
 		}
 	}
 	
@@ -632,7 +631,7 @@ public final class ControlSystem{
 		}
 		
 		public boolean isPessed(){
-			return this.mainControl.isPressed() && this.modControl.isPressed();
+			return this.modControl.isPressed() ? this.mainControl.isPressed() : false;
 		}
 	}
 }
