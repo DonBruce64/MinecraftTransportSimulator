@@ -9,6 +9,11 @@ death.attack.planecrash.null.null=%1$s died in a plane crash.
 death.attack.planecrash.null.player=%1$s got distracted while fighting %2$s and died in a plane crash.
 death.attack.planecrash.player.null=%2$s crashed their plane and killed %1$s.
 death.attack.planecrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash the plane.
+
+death.attack.carcrash.null.null=%1$s died in a car crash.
+death.attack.carcrash.null.player=%1$s got distracted while fighting %2$s and died in a car crash.
+death.attack.carcrash.player.null=%2$s crashed their car and killed %1$s.
+death.attack.carcrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash the car.
  
 interact.key.info.lock=Vehicle locked!
 interact.key.info.unlock=Vehicle unlocked!
