@@ -85,8 +85,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 					engineForce /= 2F;
 					for(EntityWheel wheel : car.wheels){
 						if((wheel.offsetZ > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offsetZ < 0 && car.pack.car.isRearWheelDrive)){
-							System.out.println(wheel.angularVelocity);
-							wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForGear(gearNumber)/2.0F, wheel.angularVelocity + 0.01);
+							wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForGear(gearNumber)/2.0F, wheel.angularVelocity + 0.05);
 						}
 					}
 				}else{
