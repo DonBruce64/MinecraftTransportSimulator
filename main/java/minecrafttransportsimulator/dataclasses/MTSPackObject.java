@@ -52,6 +52,7 @@ public class MTSPackObject{
     public class PackCar{
         public boolean isFrontWheelDrive;
         public boolean isRearWheelDrive;
+        public boolean hasBackupBeepers;
         public float dragCoefficient;
         public String hornSound;
     }
