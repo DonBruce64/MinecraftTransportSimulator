@@ -762,18 +762,12 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		Entity controller = null;
 		for(EntityMultipartChild child : getChildren()){
 			if(child instanceof EntitySeat){
-				if(((EntitySeat) child).isController){
-					Entity rider = child.getPassengers().get(0);
-					if(rider != null){
-						controller = rider;
-						break;
-					}
+				EntitySeat seat = (EntitySeat) child;
+				Entity rider = seat.getPassenger();
+				if(seat.isController && controller != null){
+					controller = rider;
 				}
-			}
-		}
-		for(EntityMultipartChild child : getChildren()){
-			if(!child.getPassengers().isEmpty()){
-				Entity rider = child.getPassengers().get(0);
+				
 				if(rider != null){
 					if(rider.equals(controller)){
 						rider.attackEntityFrom(new DamageSourceCrash(null, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
@@ -783,6 +777,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				}
 			}
 		}
+
 		this.setDead();
 		if(ConfigSystem.getBooleanConfig("Explosions")){
 			if(this.getExplosionStrength() > 0){
