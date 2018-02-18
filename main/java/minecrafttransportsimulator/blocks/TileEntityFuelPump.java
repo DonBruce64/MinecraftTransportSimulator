@@ -138,31 +138,12 @@ public class TileEntityFuelPump extends MTSTileEntity implements IFluidTank, IFl
 
 	@Override
 	public FluidStack drain(int maxDrain, boolean doDrain){
-		if(maxDrain < tankInfo.fluid.amount){
-			if(doDrain){
-				tankInfo.fluid.amount -= maxDrain;
-				FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(tankInfo.fluid, worldObj, getPos(), this, maxDrain));
-				MTS.MTSNet.sendToAll(new FuelPumpFillDrainPacket(this, new FluidStack(tankInfo.fluid, -maxDrain)));
-			}
-			return new FluidStack(tankInfo.fluid, maxDrain);
-		}else{
-			FluidStack returnedFluid = tankInfo.fluid;
-			if(doDrain){
-				FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(returnedFluid, worldObj, getPos(), this, returnedFluid.amount));
-				MTS.MTSNet.sendToAll(new FuelPumpFillDrainPacket(this, new FluidStack(returnedFluid, -returnedFluid.amount)));
-				this.tankInfo = emptyTankInfo;
-			}
-			return returnedFluid;
-		}
+		return null;
 	}
 	
 	@Override
 	public FluidStack drain(FluidStack stack, boolean doDrain){
-		if(stack.isFluidEqual(this.tankInfo.fluid)){
-			return this.drain(stack.amount, doDrain);
-		}else{
-			return null;
-		}
+		return null;
 	}
 	
     @Override
