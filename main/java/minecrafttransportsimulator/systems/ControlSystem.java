@@ -41,6 +41,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
  * @author don_bruce
  */
 public final class ControlSystem{	
+	private static boolean joystickEnabled = false;
 	private static final int NULL_COMPONENT = 999;
 	private static final String KEYBOARD_CONFIG = "controls_keyboard";
 	private static final String JOYSTICK_CONFIG = "controls_joystick";
@@ -58,7 +59,9 @@ public final class ControlSystem{
 		ClientRegistry.registerKeyBinding(configKey);
 		
 		//Populate the joystick device map.
+		//Joystick will be enabled if at least one controller is found.  If none are found, we likely have an error.
 		for(Controller joystick : ControllerEnvironment.getDefaultEnvironment().getControllers()){
+			joystickEnabled = true;
 			if(joystick.getType() != null && joystick.getName() != null){
 				if(!joystick.getType().equals(Controller.Type.MOUSE) && !joystick.getType().equals(Controller.Type.KEYBOARD)){
 					if(joystick.getComponents().length != 0){
@@ -86,6 +89,10 @@ public final class ControlSystem{
 	
 	public static boolean isMasterControlButttonPressed(){
 		return configKey.isPressed();
+	}
+	
+	public static boolean isJoystickSupportEnabled(){
+		return joystickEnabled;
 	}
 	
 	public static void setKeyboardKey(ControlsKeyboard control, int keyNumber){

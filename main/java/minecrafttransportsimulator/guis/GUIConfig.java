@@ -96,12 +96,6 @@ public class GUIConfig extends GuiScreen{
 		initJoystickSelecionButtons();
 		initJoystickComponentSelecionButtons();
 		initAssignmentButtons();
-		
-		//initJoysticks();
-		//initConfigControls();
-		//initJoystickSelectionButtons();
-		//initJoystickControls();
-		//setInputStatesByLevel();
 	}
 	
 	@Override
@@ -274,6 +268,9 @@ public class GUIConfig extends GuiScreen{
 		for(GuiButton button : vehicleSelectionButtons.keySet()){
 			button.enabled = true;
 			button.drawButton(mc, mouseX, mouseY);
+		}
+		if(!ControlSystem.isJoystickSupportEnabled()){
+			fontRendererObj.drawSplitString(I18n.format("gui.config.joystick.error"), guiLeft+10, guiTop+120, 240, Color.BLACK.getRGB());
 		}
 	}
 	
@@ -472,13 +469,15 @@ public class GUIConfig extends GuiScreen{
 			}else{
 				vehicleTypes.add(vehicleType);
 				GuiButton buttonKeyboard = new GuiButton(0, guiLeft + 10, guiTop + 30 + 20*numTypes, 118, 20, I18n.format("gui.config.controls." + vehicleType + ".keyboard"));
-				GuiButton buttonJoystick = new GuiButton(0, guiLeft + 128, guiTop + 30 + 20*numTypes, 118, 20, I18n.format("gui.config.controls." + vehicleType + ".joystick"));
 				buttonKeyboard.enabled = false;
-				buttonJoystick.enabled = false;
 				vehicleSelectionButtons.put(buttonKeyboard, vehicleType + ".keyboard");
-				vehicleSelectionButtons.put(buttonJoystick,  vehicleType + ".joystick");
 				buttonList.add(buttonKeyboard);
-				buttonList.add(buttonJoystick);
+				if(ControlSystem.isJoystickSupportEnabled()){
+					GuiButton buttonJoystick = new GuiButton(0, guiLeft + 128, guiTop + 30 + 20*numTypes, 118, 20, I18n.format("gui.config.controls." + vehicleType + ".joystick"));
+					buttonJoystick.enabled = false;
+					vehicleSelectionButtons.put(buttonJoystick,  vehicleType + ".joystick");
+					buttonList.add(buttonJoystick);
+				}
 				++numTypes;
 			}
 		}
