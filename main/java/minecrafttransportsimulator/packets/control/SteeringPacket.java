@@ -3,7 +3,6 @@ package minecrafttransportsimulator.packets.control;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.main.EntityCar;
-import minecrafttransportsimulator.entities.main.EntityPlane;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
