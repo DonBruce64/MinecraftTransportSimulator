@@ -676,7 +676,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			//Ground device has collided.
 			//Check to see if this collision can be avoided if the device is moved upwards.
 			//Expand this box slightly to ensure we see the collision even with floating-point errors.
-			offsetChildBox = child.getEntityBoundingBox().offset(xAxis ? this.motionX*speedFactor : 0, child.height*1.5F, zAxis ? this.motionZ*speedFactor : 0).expandXyz(0.05F);
+			offsetChildBox = child.getEntityBoundingBox().offset(xAxis ? this.motionX*speedFactor : 0, child.getHeight()*1.5F, zAxis ? this.motionZ*speedFactor : 0).expandXyz(0.05F);
 			collidingAABBList = getChildCollisions(child, offsetChildBox);
 			if(collidingAABBList.isEmpty()){
 				//Ground device can be moved upward out of the way.

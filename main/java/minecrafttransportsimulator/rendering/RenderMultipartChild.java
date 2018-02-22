@@ -230,6 +230,14 @@ public final class RenderMultipartChild{
     				textureManger.bindTexture(textureWheelOuter);
     				modelWheel.renderSmallOuterWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);
     			}
+    		
+    		}else if(wheel instanceof EntityWheel.EntityWheelMedium){
+    			textureManger.bindTexture(textureWheelInner);
+    			modelWheel.renderMediumInnerWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);
+    			if(!wheel.isFlat){
+    				textureManger.bindTexture(textureWheelOuter);
+    				modelWheel.renderMediumOuterWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);
+    			}
     		}else{
     			textureManger.bindTexture(textureWheelInner);
     			modelWheel.renderLargeInnerWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);

@@ -37,7 +37,17 @@ public class EntityPropeller extends EntityMultipartChild{
 	}
 	
 	public EntityPropeller(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, 0.8F, 1.0F, propertyCode);		
+		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, propertyCode);		
+	}
+	
+	@Override
+	protected float getWidth(){
+		return 0.8F;
+	}
+
+	@Override
+	protected float getHeight(){
+		return 1.0F;
 	}
 	
 	@Override

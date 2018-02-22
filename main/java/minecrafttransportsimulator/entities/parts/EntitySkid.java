@@ -15,7 +15,17 @@ public class EntitySkid extends EntityGroundDevice{
 	}
 	
 	public EntitySkid(World world, EntityMultipartParent plane, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, (EntityPlane) plane, parentUUID, offsetX, offsetY, offsetZ, 0.3F, 0.3F, 0.0F, 0.5F);
+		super(world, (EntityPlane) plane, parentUUID, offsetX, offsetY, offsetZ, 0.0F, 0.5F);
+	}
+	
+	@Override
+	protected float getWidth(){
+		return 0.3F;
+	}
+
+	@Override
+	protected float getHeight(){
+		return 0.3F;
 	}
 	
 	@Override

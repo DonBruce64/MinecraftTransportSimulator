@@ -18,8 +18,8 @@ public abstract class EntityGroundDevice extends EntityMultipartChild{
 		super(world);
 	}
 	
-	public EntityGroundDevice(World world, EntityMultipartMoving mover, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height, float motiveFriction, float lateralFriction){
-		super(world, mover, parentUUID, offsetX, offsetY, offsetZ, width, height, 0);
+	public EntityGroundDevice(World world, EntityMultipartMoving mover, String parentUUID, float offsetX, float offsetY, float offsetZ, float motiveFriction, float lateralFriction){
+		super(world, mover, parentUUID, offsetX, offsetY, offsetZ, 0);
 		this.motiveFriction = motiveFriction;
 		this.lateralFriction = lateralFriction;
 	}

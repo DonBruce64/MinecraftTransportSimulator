@@ -43,17 +43,15 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	public EntityMultipartParent parent;
 	protected String parentUUID = "";
 	
-	public EntityMultipartChild(World world) {
+	public EntityMultipartChild(World world){
 		super(world);
 	}
 	
-	public EntityMultipartChild(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height, int propertyCode){
+	public EntityMultipartChild(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		this(world);
 		this.offsetX=offsetX;
 		this.offsetY=offsetY;
 		this.offsetZ=offsetZ;
-		this.width=width;
-		this.height=height;
 		this.propertyCode=propertyCode;
 		this.UUID=String.valueOf(this.getUniqueID());
 		this.parentUUID=parentUUID;
@@ -64,6 +62,8 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
+		//This can be changed dynamically based on entity state.
+		this.setSize(this.getWidth(), this.getHeight());
 		linked = hasUUID() && hasParent();
 	}
 	
@@ -101,6 +101,10 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 		}
 		return false;
     }
+	
+	protected abstract float getWidth();
+	
+	protected abstract float getHeight();
 	
 	/**Called when child is attacked.  Return true to end attack, false to forward attack to parent. 
 	 */
@@ -220,9 +224,6 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 		this.offsetY=tagCompound.getFloat("offsetY");
 		this.offsetZ=tagCompound.getFloat("offsetZ");
 		this.parentUUID=tagCompound.getString("parentUUID");
-		this.width=tagCompound.getFloat("width");
-		this.height=tagCompound.getFloat("height");
-    	this.setSize(width, height);
 	}
 	
 	@Override
@@ -234,8 +235,6 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 		tagCompound.setFloat("offsetX", this.offsetX);
 		tagCompound.setFloat("offsetY", this.offsetY);
 		tagCompound.setFloat("offsetZ", this.offsetZ);
-		tagCompound.setFloat("width", this.width);
-		tagCompound.setFloat("height", this.height);
 		if(!this.parentUUID.isEmpty()){
 			tagCompound.setString("parentUUID", this.parentUUID);
 		}

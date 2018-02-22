@@ -89,6 +89,7 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod.EventBusSubscriber
 public final class MTSRegistry{	
 	public static final Item wheelSmall = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item wheelMedium = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item wheelLarge = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item skid = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item pontoon = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
@@ -206,6 +207,7 @@ public final class MTSRegistry{
 		registerChildEntity(EntitySeat.class, seat);
 		registerChildEntity(EntityVehicleChest.class, Item.getItemFromBlock(Blocks.CHEST));
 		registerChildEntity(EntityWheel.EntityWheelSmall.class, wheelSmall);
+		registerChildEntity(EntityWheel.EntityWheelMedium.class, wheelMedium);
 		registerChildEntity(EntityWheel.EntityWheelLarge.class, wheelLarge);
 		registerChildEntity(EntitySkid.class, skid);
 		registerChildEntity(EntityPontoon.class, pontoon);
@@ -265,17 +267,24 @@ public final class MTSRegistry{
 		}
 		
 		//Wheels
-		registerRecipe(new ItemStack(wheelSmall),
+		registerRecipe(new ItemStack(wheelSmall, 2),
 				"ABA",
 				"ACA",
 				"ABA",
 				'A', Blocks.WOOL,
 				'B', new ItemStack(Items.DYE, 1, 0),
 				'C', Items.IRON_INGOT);
-		registerRecipe(new ItemStack(wheelLarge),
+		registerRecipe(new ItemStack(wheelMedium, 2),
 				"ABA",
 				"BCB",
 				"ABA",
+				'A', Blocks.WOOL,
+				'B', new ItemStack(Items.DYE, 1, 0),
+				'C', Items.IRON_INGOT);
+		registerRecipe(new ItemStack(wheelLarge, 2),
+				"BBB",
+				"ACA",
+				"BBB",
 				'A', Blocks.WOOL,
 				'B', new ItemStack(Items.DYE, 1, 0),
 				'C', Items.IRON_INGOT);

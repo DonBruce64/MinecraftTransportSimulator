@@ -14,9 +14,14 @@ public class EntityEngineAircraftSmall extends EntityEngineAircraft{
 	public EntityEngineAircraftSmall(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		super(world, (EntityPlane) parent, parentUUID, offsetX, offsetY, offsetZ);
 	}
+	
+	@Override
+	protected float getWidth(){
+		return 1.0F;
+	}
 
 	@Override
-	protected float getSize(){
+	protected float getHeight(){
 		return 1.0F;
 	}
 

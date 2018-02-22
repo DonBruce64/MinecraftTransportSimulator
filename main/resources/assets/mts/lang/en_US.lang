@@ -162,6 +162,7 @@ item.seat.name=Seat
 item.skid.name=Skid
 item.pontoon.name=Pontoon
 item.wheelsmall.name=Small Wheel
+item.wheelmedium.name=Medium Wheel
 item.wheellarge.name=Large Wheel
 item.propeller_wood.name=Wooden Propeller
 item.propeller_iron.name=Iron Propeller

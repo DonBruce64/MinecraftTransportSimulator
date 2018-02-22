@@ -31,7 +31,17 @@ public class EntityPontoon extends EntityGroundDevice{
 	}
 	
 	protected EntityPontoon(World world, EntityMultipartParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, (EntityMultipartVehicle) vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F, 0.1F, 0.125F);
+		super(world, (EntityMultipartVehicle) vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.1F, 0.125F);
+	}
+	
+	@Override
+	protected float getWidth(){
+		return 0.75F;
+	}
+
+	@Override
+	protected float getHeight(){
+		return 0.75F;
 	}
 	
 	@Override

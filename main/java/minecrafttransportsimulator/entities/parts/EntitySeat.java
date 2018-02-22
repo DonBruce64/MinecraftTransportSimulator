@@ -22,11 +22,20 @@ public class EntitySeat extends EntityMultipartChild{
 	
 	public EntitySeat(World world){
 		super(world);
-		this.setSize(0.75F, 0.75F);
 	}
 	
 	public EntitySeat(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F, propertyCode);
+		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
+	}
+	
+	@Override
+	protected float getWidth(){
+		return 0.75F;
+	}
+
+	@Override
+	protected float getHeight(){
+		return 0.75F;
 	}
 
 	@Override

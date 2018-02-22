@@ -60,9 +60,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	}
 
 	public EntityEngine(World world, EntityMultipartVehicle vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, 0, 0, propertyCode);
-		//Set size here as we can't do it in the super constructor.
-		this.setSize(getSize(), getSize());
+		super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
 		this.state = EngineStates.ENGINE_OFF;
 	}
 	
@@ -420,7 +418,6 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		}
 	}
 	
-	protected abstract float getSize();
 	protected abstract byte getStarterPower();
 	protected abstract byte getStarterIncrement();
 	protected abstract String getCrankingSoundName();

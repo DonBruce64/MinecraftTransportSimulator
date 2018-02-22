@@ -17,8 +17,13 @@ public abstract class EntityEngineCarSmall extends EntityEngineCar{
 	}
 	
 	@Override
-	protected float getSize(){
-		return  0.5F;
+	protected float getWidth(){
+		return 0.5F;
+	}
+
+	@Override
+	protected float getHeight(){
+		return 0.5F;
 	}
 
 	@Override

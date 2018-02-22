@@ -29,8 +29,8 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		super(world);
 	}
 	
-	public EntityWheel(World world, EntityMultipartMoving moving, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
-		super(world, moving, parentUUID, offsetX, offsetY, offsetZ, width, height, 0.5F, 0.5F);
+	public EntityWheel(World world, EntityMultipartMoving moving, String parentUUID, float offsetX, float offsetY, float offsetZ){
+		super(world, moving, parentUUID, offsetX, offsetY, offsetZ, 0.5F, 0.5F);
 	}
 	
 	@Override
@@ -52,12 +52,12 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		if(!linked){return;}
 		moving = (EntityMultipartMoving) this.parent;
 		if(this.isOnGround()){
-			if(angularVelocity/(moving.velocity/height) < 0.25 && moving.velocity > 0.1){
+			if(angularVelocity/(moving.velocity/getHeight()) < 0.25 && moving.velocity > 0.1){
 				if(worldObj.getBlockState(this.getPosition().down()).getBlockHardness(worldObj, this.getPosition().down()) >= 1.5){
 					landedThisTick = true;
 				}
 			}
-			angularVelocity = (float) (moving.velocity/height);
+			angularVelocity = (float) (moving.velocity/getHeight());
 		}else if(!(parent instanceof EntityCar)){
 			if(moving.brakeOn || moving.parkingBrakeOn){
 				angularVelocity = 0;
@@ -74,8 +74,7 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 	
 	public void setFlat(){
 		isFlat = true;
-		this.offsetY+=this.height/4;
-		this.height*=0.5;
+		this.offsetY+=this.getHeight()/4;
 		this.motiveFriction*=10;
 		this.lateralFriction*=0.1;
 		if(!worldObj.isRemote){
@@ -149,7 +148,46 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		}
 		
 		public EntityWheelSmall(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-			super(world, (EntityMultipartMoving) parent, parentUUID, offsetX, offsetY, offsetZ, 0.5F, 0.5F);
+			super(world, (EntityMultipartMoving) parent, parentUUID, offsetX, offsetY, offsetZ);
+		}
+		
+		@Override
+		protected float getWidth(){
+			return 0.5F;
+		}
+		
+		@Override
+		protected float getHeight(){
+			return this.isFlat ? 0.25F : 0.5F;
+		}
+		
+		@Override
+		public ItemStack getItemStack(){
+			if(!this.isFlat){
+				return new ItemStack(MTSRegistry.wheelSmall);	
+			}else{
+				return null;
+			}
+		}
+	}
+	
+	public static class EntityWheelMedium extends EntityWheel{
+		public EntityWheelMedium(World world){
+			super(world);
+		}
+		
+		public EntityWheelMedium(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+			super(world, (EntityMultipartMoving) parent, parentUUID, offsetX, offsetY, offsetZ);
+		}
+		
+		@Override
+		protected float getWidth(){
+			return 0.75F;
+		}
+		
+		@Override
+		protected float getHeight(){
+			return this.isFlat ? 0.375F : 0.75F;
 		}
 
 		@Override
@@ -168,7 +206,17 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		}
 		
 		public EntityWheelLarge(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-			super(world, (EntityMultipartMoving) parent, parentUUID, offsetX, offsetY, offsetZ, 0.75F, 0.75F);
+			super(world, (EntityMultipartMoving) parent, parentUUID, offsetX, offsetY, offsetZ);
+		}
+		
+		@Override
+		protected float getWidth(){
+			return 1.0F;
+		}
+		
+		@Override
+		protected float getHeight(){
+			return this.isFlat ? 0.5F : 1.0F;
 		}
 
 		@Override

@@ -3,6 +3,7 @@ package minecrafttransportsimulator.entities.main;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
@@ -18,7 +19,19 @@ public class EntityCore extends EntityMultipartChild{
 	}
 
 	public EntityCore(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, width, height, 0);
+		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, 0);
+		this.setSize(width, height);
+	}
+	
+
+	@Override
+	protected float getWidth(){
+		return this.width;
+	}
+
+	@Override
+	protected float getHeight(){
+		return this.height;
 	}
 	
 	@Override
@@ -44,5 +57,21 @@ public class EntityCore extends EntityMultipartChild{
 	@Override
 	public ItemStack getItemStack(){
 		return null;
+	}
+	
+	@Override
+	public void readFromNBT(NBTTagCompound tagCompound){
+		super.readFromNBT(tagCompound);
+		this.width=tagCompound.getFloat("width");
+		this.height=tagCompound.getFloat("height");
+    	this.setSize(width, height);
+	}
+	
+	@Override
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
+		super.writeToNBT(tagCompound);
+		tagCompound.setFloat("width", this.width);
+		tagCompound.setFloat("height", this.height);
+		return tagCompound;
 	}
 }

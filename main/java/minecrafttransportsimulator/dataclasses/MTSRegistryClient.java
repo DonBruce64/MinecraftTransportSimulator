@@ -64,6 +64,7 @@ public final class MTSRegistryClient{
 		
 		//Register the item models.
 		registerItemRender(MTSRegistry.wheelSmall);
+		registerItemRender(MTSRegistry.wheelMedium);
 		registerItemRender(MTSRegistry.wheelLarge);
 		registerItemRender(MTSRegistry.skid);
 		registerItemRender(MTSRegistry.pontoon);

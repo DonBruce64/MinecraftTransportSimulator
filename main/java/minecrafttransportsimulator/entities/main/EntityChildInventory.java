@@ -30,8 +30,8 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
 		super(world);
 	}
 	
-	public EntityChildInventory(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, width, height, 0);
+	public EntityChildInventory(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ){
+		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, 0);
 	}
 	
 	protected abstract String getChildInventoryName();
