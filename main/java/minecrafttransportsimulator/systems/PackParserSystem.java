@@ -23,6 +23,7 @@ import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.main.EntityCar;
 import minecrafttransportsimulator.entities.main.EntityPlane;
+import net.minecraftforge.common.MinecraftForge;
 
 /**
  * Class responsible for parsing content pack data.  Gets properties from the text files that other parts
@@ -76,8 +77,32 @@ public final class PackParserSystem{
 			}
         }
         
-        //Now that we are assured we have the directories, check the mods folder for new pack content. 
+        //Now that we are assured we have the directories, check the mods folder for new pack content.
         File modDir = new File(System.getProperty("user.dir") + File.separator + "mods");
+        if(modDir.exists()){
+        	parseModDirectory(modDir, assetDir);
+        }
+    	//Also check version-specific sub-directory for content.
+        modDir = new File(System.getProperty("user.dir") + File.separator + "mods" + File.separator + MinecraftForge.MC_VERSION);
+        if(modDir.exists()){
+        	parseModDirectory(modDir, assetDir);
+        }
+        
+    	//Finally, parse the pack info.
+    	log.add("Parsing pack directory: " + jsonDir.getAbsolutePath());
+        for(File file : jsonDir.listFiles()){
+            if(file.getName().endsWith(".json")){
+            	log.add("Parsing file: " + file.getName());
+                parseJSONFile(file);
+            }
+        }
+        if(MTS.MTSLog != null){
+        	writeLogOutput();
+        }
+    }
+
+    private static boolean parseModDirectory(File modDir, File assetDir){
+    	boolean foundPack = false;
     	for(File modFile : modDir.listFiles()){
     		if(modFile.getName().endsWith(".zip")){
     			log.add("Checking the following zip file for pack data: " + modFile.getAbsolutePath());
@@ -113,45 +138,28 @@ public final class PackParserSystem{
     						}
     						inputStream.close();
     						outputStream.close();
+    						foundPack = true;
     					}
     				}
     				zipFile.close();
     			}catch(IOException e){
     				e.printStackTrace();
-    				return;
+    				return false;
     			}
     			if(packDefsAdded >= 0){
     				log.add("Found " + packDefsAdded + " pack definitions inside: " + modFile.getAbsolutePath());
     			}
     		}
     	}
-        
-    	//Finally, parse the pack info.
-    	parseDirectory(jsonDir);
-        if(MTS.MTSLog != null){
-        	writeLogOutput();
-        }
+    	return foundPack;
     }
+    
     
     private static void parseZip(){
     	
     }
 
-    private static void parseDirectory(File jsonDir){
-    	log.add("Parsing directory: " + jsonDir.getAbsolutePath());
-        for(File file : jsonDir.listFiles()){
-            if(file.isDirectory()){
-                parseDirectory(file);
-            }else{
-                if(file.getName().endsWith(".json")){
-                	log.add("Parsing file: " + file.getName());
-                    parseFile(file);
-                }
-            }
-        }
-    }
-
-    private static void parseFile(File file){
+    private static void parseJSONFile(File file){
     	MTSPackObject pack = null;
     	try{
         	//Check to make sure we are trying to parse a vaild file.
