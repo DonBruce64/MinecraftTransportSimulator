@@ -26,6 +26,7 @@ import minecrafttransportsimulator.packets.general.MultipartParentDamagePacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
+import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -99,6 +100,16 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		if(linked){
 			currentMass = getCurrentMass();
 			populateGroundedGroundDeviceList(groundedGroundDevices);
+			getBasicProperties();
+			getForcesAndMotions();
+			performGroundOperations();
+			moveMultipart();
+			if(!worldObj.isRemote){
+				dampenControlSurfaces();
+			}
+			if(this instanceof SFXEntity){
+				MTS.proxy.updateSFXEntity((SFXEntity) this, worldObj);
+			}
 		}
 	}
 	
@@ -315,7 +326,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	 * Call this when moving multiparts to ensure they move correctly.
 	 * Failure to do this will result in things going badly!
 	 */
-	protected void moveMultipart(){
+	private void moveMultipart(){
 		//First check planned movement.
 		boolean needCheck = false;
 		boolean groundDeviceNeedsLifting = false;
@@ -909,10 +920,32 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	}
 	
 	/**
+	 * Method block for basic properties like weight and vectors.
+	 */
+	protected abstract void getBasicProperties();
+	
+	/**
+	 * Method block for force and motion calculations.
+	 */
+	protected abstract void getForcesAndMotions();
+	
+	/**
+	 * Method block for ground operations.
+	 * Must come AFTER force calculations as it depends on motions.
+	 */
+	protected abstract void performGroundOperations();
+	
+	/**
+	 * Method block for dampening control surfaces.
+	 * Used to move control surfaces back to neutral position.
+	 */
+	protected abstract void dampenControlSurfaces();
+	
+	/**
 	 * Returns whatever the steering angle is.  Used for rendering and possibly other things.
 	 */
 	public abstract float getSteerAngle();
-		
+	
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);

@@ -12,7 +12,6 @@ import minecrafttransportsimulator.entities.parts.EntityEngineCar;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.sounds.AttenuatedSound;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.nbt.NBTTagCompound;
@@ -49,19 +48,58 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 	}
 	
 	@Override
-	public void onEntityUpdate(){
-		super.onEntityUpdate();
-		if(linked){
-			getBasicProperties();
-			getForcesAndMotions();
-			performGroundOperations();
-			moveMultipart();
-			if(!worldObj.isRemote){
-				dampenControlSurfaces();
-			}
-			MTS.proxy.updateSFXEntity(this, worldObj);
+	protected void getBasicProperties(){
+		momentPitch = (float) (2*currentMass);
+		velocityVec.set(motionX, motionY, motionZ);
+		velocity = velocityVec.dot(headingVec);
+		velocityVec = velocityVec.normalize();
+		
+		//Turn on brake, backup, and turn signal lights if they are activated.
+		if(this.brakeOn){
+			lightStatus |= 2; 
+		}else{
+			lightStatus &= 13;
+		}
+		if(this.engine != null && this.engine.getCurrentGear() < 0){
+			lightStatus |= 4; 
+		}else{
+			lightStatus &= 11;
 		}
 	}
+	
+	@Override
+	protected void getForcesAndMotions(){
+		if(engine != null){
+			wheelForce = engine.getForceOutput();
+		}else{
+			wheelForce = 0;
+		}
+		
+		dragForce = 0.5F*airDensity*velocity*velocity*5.0F*pack.car.dragCoefficient;
+		gravitationalForce = currentMass*(9.8/400);
+		gravitationalTorque = gravitationalForce*1;
+				
+		motionX += (headingVec.xCoord*wheelForce - velocityVec.xCoord*dragForce)/currentMass;
+		motionZ += (headingVec.zCoord*wheelForce - velocityVec.zCoord*dragForce)/currentMass;
+		motionY += (headingVec.yCoord*wheelForce - velocityVec.yCoord*dragForce - gravitationalForce)/currentMass;
+		
+		motionYaw = 0;
+		motionPitch = (float) (((1-Math.abs(headingVec.yCoord))*gravitationalTorque)/momentPitch);
+		motionRoll = 0;
+	}
+	
+	@Override
+	protected void dampenControlSurfaces(){
+		if(steeringCooldown==0){
+			if(steeringAngle != 0){
+				MTS.MTSNet.sendToAll(new SteeringPacket(this.getEntityId(), steeringAngle < 0, (short) 0));
+				steeringAngle += steeringAngle < 0 ? 20 : -20;
+			}
+		}else{
+			--steeringCooldown;
+		}
+	}
+	
 	
 	@Override
 	public void addChild(String childUUID, EntityMultipartChild child, boolean newChild){
@@ -98,61 +136,6 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 	@Override
 	public float getSteerAngle(){
 		return -steeringAngle/10F;
-	}
-	
-	private void getBasicProperties(){
-		momentPitch = (float) (2*currentMass);
-		velocityVec.set(motionX, motionY, motionZ);
-		velocity = velocityVec.dot(headingVec);
-		velocityVec = velocityVec.normalize();
-		
-		//Turn on brake, backup, and turn signal lights if they are activated.
-		if(this.brakeOn){
-			lightStatus |= 2; 
-		}else{
-			lightStatus &= 13;
-		}
-		if(this.engine != null && this.engine.getCurrentGear() < 0){
-			lightStatus |= 4; 
-		}else{
-			lightStatus &= 11;
-		}
-	}
-	
-	private void getForcesAndMotions(){
-		if(engine != null){
-			wheelForce = engine.getForceOutput();
-		}else{
-			wheelForce = 0;
-		}
-		
-		dragForce = 0.5F*airDensity*velocity*velocity*5.0F*pack.car.dragCoefficient;
-		gravitationalForce = currentMass*(9.8/400);
-		gravitationalTorque = gravitationalForce*1;
-				
-		motionX += (headingVec.xCoord*wheelForce - velocityVec.xCoord*dragForce)/currentMass;
-		motionZ += (headingVec.zCoord*wheelForce - velocityVec.zCoord*dragForce)/currentMass;
-		motionY += (headingVec.yCoord*wheelForce - velocityVec.yCoord*dragForce - gravitationalForce)/currentMass;
-		
-		motionYaw = 0;
-		motionPitch = (float) (((1-Math.abs(headingVec.yCoord))*gravitationalTorque)/momentPitch);
-		motionRoll = 0;
-	}
-		
-	private void moveCar(){
-		rotationPitch = (motionPitch + rotationPitch);
-		setPosition(posX + motionX*ConfigSystem.getDoubleConfig("SpeedFactor"), posY + motionY*ConfigSystem.getDoubleConfig("SpeedFactor"), posZ + motionZ*ConfigSystem.getDoubleConfig("SpeedFactor"));
-	}
-
-	private void dampenControlSurfaces(){
-		if(steeringCooldown==0){
-			if(steeringAngle != 0){
-				MTS.MTSNet.sendToAll(new SteeringPacket(this.getEntityId(), steeringAngle < 0, (short) 0));
-				steeringAngle += steeringAngle < 0 ? 20 : -20;
-			}
-		}else{
-			--steeringCooldown;
-		}
 	}
 
 	@Override

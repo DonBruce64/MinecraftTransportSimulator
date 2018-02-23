@@ -66,35 +66,6 @@ public class EntityPlane extends EntityMultipartVehicle{
 		super(world, posX, posY, posZ, rotation, name);
 	}
 	
-	@Override
-	public void onEntityUpdate(){
-		super.onEntityUpdate();
-		if(linked){
-			if(pack.plane == null){
-				//TODO remove this in V10 after all the old scouts are gone.
-				this.setDead();
-				return;
-			}
-			getBasicProperties();
-			getForcesAndMotions();
-			performGroundOperations();
-			moveMultipart();
-			if(!worldObj.isRemote){
-				dampenControlSurfaces();
-			}
-		}
-	}
-
-	@Override
-	public Instruments getBlankInstrument(){
-		return Instruments.AIRCRAFT_BLANK;
-	}
-	
-	@Override
-	public float getSteerAngle(){
-		return -rudderAngle/10F;
-	}
-	
 	private double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
 		if(Math.abs(angleOfAttack) <= 15*1.25){
 			return maxLiftCoeff*Math.sin(Math.PI/2*angleOfAttack/15);
@@ -109,7 +80,8 @@ public class EntityPlane extends EntityMultipartVehicle{
 		}
 	}
 	
-	private void getBasicProperties(){
+	@Override
+	protected void getBasicProperties(){
 		momentRoll = (float) (pack.general.emptyMass*(1.5F+(fuel/10000F)));
 		momentPitch = (float) (2*currentMass);
 		momentYaw = (float) (3*currentMass);
@@ -129,7 +101,8 @@ public class EntityPlane extends EntityMultipartVehicle{
 		rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.atan2(velocityVec.dot(sideVec), velocityVec.dot(headingVec))), 2);
 	}
 	
-	private void getForcesAndMotions(){
+	@Override
+	protected void getForcesAndMotions(){
 		thrustForce = thrustTorque = 0;
 		for(EntityMultipartChild child : getChildren()){
 			if(!child.isDead){
@@ -162,7 +135,8 @@ public class EntityPlane extends EntityMultipartVehicle{
 		motionYaw = (float) (180/Math.PI*(headingVec.yCoord*aileronTorque - verticalVec.yCoord*(-thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
 	}
 
-	private void dampenControlSurfaces(){
+	@Override
+	protected void dampenControlSurfaces(){
 		if(aileronCooldown==0){
 			if(aileronAngle != 0){
 				MTS.MTSNet.sendToAll(new AileronPacket(this.getEntityId(), aileronAngle < 0, (short) 0));
@@ -187,6 +161,16 @@ public class EntityPlane extends EntityMultipartVehicle{
 		}else{
 			--rudderCooldown;
 		}
+	}
+	
+	@Override
+	public Instruments getBlankInstrument(){
+		return Instruments.AIRCRAFT_BLANK;
+	}
+	
+	@Override
+	public float getSteerAngle(){
+		return -rudderAngle/10F;
 	}
 	
 	public double[] getDebugForces(){
