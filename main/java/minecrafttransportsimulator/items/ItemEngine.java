@@ -3,7 +3,6 @@ package minecrafttransportsimulator.items;
 import java.util.List;
 
 import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
@@ -48,54 +47,59 @@ public abstract class ItemEngine extends Item{
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
 		if(MTSCreativeTabs.tabMTS.equals(tab)){
-			for(ItemStack stack : this.getAllPossibleStacks()){
-				subItems.add(stack);
-			}
+			subItems.add(getStackWithData(this, false));
+			subItems.add(getStackWithData(this, true));
 		}
     }
 	
-	private static ItemStack getStackWithData(Item item, int maxRPM, float fuelConsumption){
+	public static ItemStack getStackWithData(ItemEngine item, boolean creative){
 		ItemStack stack = new ItemStack(item);
 		NBTTagCompound stackTag = new NBTTagCompound();
-		stackTag.setInteger("maxRPM", maxRPM);
-		stackTag.setInteger("maxSafeRPM", EntityEngine.getMaxSafeRPM(maxRPM));
-		stackTag.setFloat("fuelConsumption", fuelConsumption);
+		stackTag.setInteger("maxRPM", item.getMaxRPM());
+		stackTag.setInteger("maxSafeRPM", EntityEngine.getMaxSafeRPM(item.getMaxRPM()));
+		stackTag.setFloat("fuelConsumption", creative ? 0.0F : item.getFuelConsumption());
 		stackTag.setDouble("hours", 0);
 		stack.setTagCompound(stackTag);
 		return stack;
-	}
+	} 
 	
-	public abstract ItemStack[] getAllPossibleStacks();
+	public abstract int getMaxRPM();
+	
+	public abstract float getFuelConsumption();
 	
 	public static class ItemEngineCar extends ItemEngine{
 		@Override
-		public ItemStack[] getAllPossibleStacks(){
-			ItemStack[] stacks = new ItemStack[2];
-			stacks[0] = getStackWithData(MTSRegistry.engineCarSmall, 7500, 0.5F);
-			stacks[1] = getStackWithData(MTSRegistry.engineCarSmall, 7500, 0.0F);
-			return stacks;
+		public int getMaxRPM(){
+			return 7500;
+		}
+		
+		@Override
+		public float getFuelConsumption(){
+			return 0.5F;
 		}
 	}
 	
 	public static class ItemEngineAircraftSmall extends ItemEngine{
 		@Override
-		public ItemStack[] getAllPossibleStacks(){
-			ItemStack[] stacks = new ItemStack[3];
-			stacks[0] = getStackWithData(MTSRegistry.engineAircraftSmall, 2700, 0.3F);
-			stacks[1] = getStackWithData(MTSRegistry.engineAircraftSmall, 2900, 0.4F);
-			stacks[2] = getStackWithData(MTSRegistry.engineAircraftSmall, 2900, 0.0F);
-			return stacks;
+		public int getMaxRPM(){
+			return 2900;
+		}
+		
+		@Override
+		public float getFuelConsumption(){
+			return 0.4F;
 		}
 	}
 	
 	public static class ItemEngineAircraftLarge extends ItemEngine{
 		@Override
-		public ItemStack[] getAllPossibleStacks() {
-			ItemStack[] stacks = new ItemStack[3];
-			stacks[0] = getStackWithData(MTSRegistry.engineAircraftLarge, 2000, 0.5F);
-			stacks[1] = getStackWithData(MTSRegistry.engineAircraftLarge, 2400, 0.7F);
-			stacks[2] = getStackWithData(MTSRegistry.engineAircraftLarge, 2400, 0.0F);
-			return stacks;
+		public int getMaxRPM(){
+			return 2400;
+		}
+		
+		@Override
+		public float getFuelConsumption(){
+			return 0.7F;
 		}
 	}
 }

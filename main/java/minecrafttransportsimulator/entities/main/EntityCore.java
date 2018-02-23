@@ -10,8 +10,11 @@ import net.minecraft.world.World;
 /**Core entities are like children except they cannot be removed from a parent.
  * Used primarily as bounding-box extensions for collision detection and impact calculations.
  * 
+ * See about moving this bit of code to EntityMultipartMoving and have it handle collision.
+ * We can do this now that only GDs collide and cores are known and don't change.
  * @author don_bruce
  */
+@Deprecated
 public class EntityCore extends EntityMultipartChild{
 	
 	public EntityCore(World world) {

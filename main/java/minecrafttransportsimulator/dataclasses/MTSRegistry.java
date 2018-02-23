@@ -349,73 +349,47 @@ public final class MTSRegistry{
 	
 	private static void initEngineRecipes(){
 		//New engines
-		registerRecipe(((ItemEngine) MTSRegistry.engineCarSmall).getAllPossibleStacks()[0],
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineCarSmall, false),
 				"AAA",
 				"BCB",
 				"BBB",
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.IRON_INGOT);
-		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineAircraftSmall, false),
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.IRON_INGOT);
-		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
-				"ABA",
-				"BCB",
-				"ABA",
-				'A', Blocks.PISTON,
-				'B', Blocks.OBSIDIAN,
-				'C', Items.DIAMOND);
-		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineAircraftLarge, false),
 				"ABA",
 				"ACA",
 				"ABA",
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.IRON_INGOT);
-		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
-				"ABA",
-				"ACA",
-				"ABA",
-				'A', Blocks.PISTON,
-				'B', Blocks.OBSIDIAN,
-				'C', Items.DIAMOND);
 		
 		//Repaired engines
-		registerRecipe(((ItemEngine) MTSRegistry.engineCarSmall).getAllPossibleStacks()[0],
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineCarSmall, false),
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.OBSIDIAN,
-				'C', ((ItemEngine) MTSRegistry.engineCarSmall).getAllPossibleStacks()[0]);
-		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0],
+				'C', MTSRegistry.engineCarSmall);
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineAircraftSmall, false),
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.OBSIDIAN,
-				'C', ((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[0]);
-		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1],
-				"B B",
-				" C ",
-				"B B",
-				'B', Blocks.OBSIDIAN,
-				'C', ((ItemEngine) MTSRegistry.engineAircraftSmall).getAllPossibleStacks()[1]);
-		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0],
+				'C', MTSRegistry.engineAircraftSmall);
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineAircraftLarge, false),
 				"B B",
 				"BCB",
 				"B B",
 				'B', Blocks.OBSIDIAN,
-				'C', ((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[0]);
-		registerRecipe(((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1],
-				"B B",
-				"BCB",
-				"B B",
-				'B', Blocks.OBSIDIAN,
-				'C', ((ItemEngine) MTSRegistry.engineAircraftLarge).getAllPossibleStacks()[1]);
+				'C', MTSRegistry.engineAircraftLarge);
 	}
 	
 	private static void initAircraftInstrumentRecipes(){		
