@@ -11,6 +11,7 @@ import minecrafttransportsimulator.dataclasses.MTSPackObject.PackLight;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
@@ -85,8 +86,11 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	}
 	
 	@Override
-	protected float getExplosionStrength(){
-		return (float) (fuel/1000 + 1F);
+	protected void destroyAtPosition(double x, double y, double z){
+		super.destroyAtPosition(x, y, z);
+		if(ConfigSystem.getBooleanConfig("Explosions")){
+			worldObj.newExplosion(this, x, y, z, (float) (fuel/1000F + 1F), true, true);
+		}
 	}
 	
 	@Override

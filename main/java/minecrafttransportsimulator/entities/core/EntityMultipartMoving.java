@@ -611,24 +611,6 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		}
 	}
 	
-	private void addToClientDeltas(double dX, double dY, double dZ, float dYaw, float dPitch, float dRoll){
-		this.clientDeltaX += dX;
-		this.clientDeltaY += dY;
-		this.clientDeltaZ += dZ;
-		this.clientDeltaYaw += dYaw;
-		this.clientDeltaPitch += dPitch;
-		this.clientDeltaRoll += dRoll;
-	}
-	
-	public void addToServerDeltas(double dX, double dY, double dZ, float dYaw, float dPitch, float dRoll){
-		this.serverDeltaX += dX;
-		this.serverDeltaY += dY;
-		this.serverDeltaZ += dZ;
-		this.serverDeltaYaw += dYaw;
-		this.serverDeltaPitch += dPitch;
-		this.serverDeltaRoll += dRoll;
-	}
-	
 	/**
 	 * Checks collisions and returns the collision depth for an entity.
 	 * Returns -1 and breaks the child if it had a hard collision.
@@ -752,7 +734,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	 * Essentially the way to kill this multipart.  Explosions may not occur 
 	 * depending on config settings or a lack of fuel or explodable cargo.
 	 */
-	private void destroyAtPosition(double x, double y, double z){
+	protected void destroyAtPosition(double x, double y, double z){
 		Entity controller = null;
 		for(EntityMultipartChild child : getChildren()){
 			if(child instanceof EntitySeat){
@@ -771,13 +753,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				}
 			}
 		}
-
 		this.setDead();
-		if(ConfigSystem.getBooleanConfig("Explosions")){
-			if(this.getExplosionStrength() > 0){
-				worldObj.newExplosion(this, x, y, z, this.getExplosionStrength(), true, true);
-			}
-		}
 	}
 	
 	private void populateGroundedGroundDeviceList(List<EntityGroundDevice> deviceList){
@@ -914,16 +890,28 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		return weight;
 	}
 	
+	private void addToClientDeltas(double dX, double dY, double dZ, float dYaw, float dPitch, float dRoll){
+		this.clientDeltaX += dX;
+		this.clientDeltaY += dY;
+		this.clientDeltaZ += dZ;
+		this.clientDeltaYaw += dYaw;
+		this.clientDeltaPitch += dPitch;
+		this.clientDeltaRoll += dRoll;
+	}
+	
+	public void addToServerDeltas(double dX, double dY, double dZ, float dYaw, float dPitch, float dRoll){
+		this.serverDeltaX += dX;
+		this.serverDeltaY += dY;
+		this.serverDeltaZ += dZ;
+		this.serverDeltaYaw += dYaw;
+		this.serverDeltaPitch += dPitch;
+		this.serverDeltaRoll += dRoll;
+	}
+	
 	/**
 	 * Returns whatever the steering angle is.  Used for rendering and possibly other things.
 	 */
 	public abstract float getSteerAngle();
-	
-	/**
-	 * Gets the strength of an explosion when this entity is destroyed.
-	 * Is not used if explosions are disabled in the config.
-	 */
-	protected abstract float getExplosionStrength();
 		
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
