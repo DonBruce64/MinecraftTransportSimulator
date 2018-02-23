@@ -153,11 +153,6 @@ public final class PackParserSystem{
     	}
     	return foundPack;
     }
-    
-    
-    private static void parseZip(){
-    	
-    }
 
     private static void parseJSONFile(File file){
     	MTSPackObject pack = null;
