@@ -202,6 +202,7 @@ public final class ClientEventSystem{
                 	MTS.MTSNet.sendToServer(new PackReloadPacket());
                 	MTSRegistryClient.loadCustomOBJModels();
                 	RenderMultipart.resetDisplayLists();
+                	EntityMultipartMoving.resetCollisionBoxes();
                 }
             }
         }

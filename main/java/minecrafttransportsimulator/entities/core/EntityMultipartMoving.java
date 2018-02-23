@@ -80,6 +80,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	private float serverDeltaYaw;
 	private float serverDeltaPitch;
 	private float serverDeltaRoll;
+	private static final Map<String, List<Float[]>> collisionBoxMap = new HashMap<String, List<Float[]>>();
 	private final double speedFactor = ConfigSystem.getDoubleConfig("SpeedFactor");
 			
 	public EntityMultipartMoving(World world){
@@ -315,11 +316,24 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
     }
     
 	public List<Float[]> getCollisionBoxes(){
-		List<Float[]> boxList = new ArrayList<Float[]>();
-		for(PackCollisionBox box : pack.collision){
-			boxList.add(new Float[]{box.pos[0], box.pos[1], box.pos[2], box.width, box.height});
+		if(this.pack != null){
+			if(!collisionBoxMap.containsKey(this.pack.general.name) || collisionBoxMap.get(this.pack.general.name).isEmpty()){
+				List<Float[]> boxList = new ArrayList<Float[]>();
+				for(PackCollisionBox box : pack.collision){
+					boxList.add(new Float[]{box.pos[0], box.pos[1], box.pos[2], box.width, box.height});
+				}
+				collisionBoxMap.put(this.pack.general.name, boxList);
+			}
+			return collisionBoxMap.get(this.pack.general.name);
+		}else{
+			return new ArrayList<Float[]>(0);
 		}
-		return boxList;
+	}
+	
+	public static void resetCollisionBoxes(){
+		for(String nameString : collisionBoxMap.keySet()){
+			collisionBoxMap.get(nameString).clear();
+		}
 	}
 	
 	/**

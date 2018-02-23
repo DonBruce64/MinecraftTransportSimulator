@@ -26,6 +26,7 @@ public class PackReloadPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
+					EntityMultipartMoving.resetCollisionBoxes();
 					PackParserSystem.init();
 					World world;
 					if(ctx.side.isServer()){

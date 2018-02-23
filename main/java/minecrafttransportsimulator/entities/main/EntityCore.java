@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.entities.main;
 
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
@@ -21,20 +21,29 @@ public class EntityCore extends EntityMultipartChild{
 		super(world);
 	}
 
-	public EntityCore(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, float width, float height){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, 0);
+	public EntityCore(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int collisionIndex){
+		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, collisionIndex);
 		this.setSize(width, height);
 	}
-	
 
 	@Override
 	protected float getWidth(){
-		return this.width;
+		if(parent != null){
+			if(((EntityMultipartMoving) parent).getCollisionBoxes().size() > this.propertyCode){
+				return ((EntityMultipartMoving) parent).getCollisionBoxes().get(this.propertyCode)[3];
+			}
+		}
+		return 1.0F;
 	}
 
 	@Override
 	protected float getHeight(){
-		return this.height;
+		if(parent != null){
+			if(((EntityMultipartMoving) parent).getCollisionBoxes().size() > this.propertyCode){
+				return ((EntityMultipartMoving) parent).getCollisionBoxes().get(this.propertyCode)[4];
+			}
+		}
+		return 1.0F;
 	}
 	
 	@Override
@@ -60,21 +69,5 @@ public class EntityCore extends EntityMultipartChild{
 	@Override
 	public ItemStack getItemStack(){
 		return null;
-	}
-	
-	@Override
-	public void readFromNBT(NBTTagCompound tagCompound){
-		super.readFromNBT(tagCompound);
-		this.width=tagCompound.getFloat("width");
-		this.height=tagCompound.getFloat("height");
-    	this.setSize(width, height);
-	}
-	
-	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
-		super.writeToNBT(tagCompound);
-		tagCompound.setFloat("width", this.width);
-		tagCompound.setFloat("height", this.height);
-		return tagCompound;
 	}
 }
