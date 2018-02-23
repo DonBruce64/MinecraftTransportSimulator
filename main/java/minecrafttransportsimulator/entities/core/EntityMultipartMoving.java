@@ -312,12 +312,11 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	}
 	
 	/**
-	 * Checks to see if this multipart can move.  If so, nothing is changed.
-	 * If not, motions are adjusted to prevent collisions.  If velocity motions
-	 * cause a collision that's larger than 0.3 blocks the part is removed,
-	 * or if a core was collided the multipart is destroyed (by an explosion if set).
+	 * Call this when moving multiparts to ensure they move correctly.
+	 * Failure to do this will result in things going badly!
 	 */
-	protected void checkPlannedMovement(){
+	protected void moveMultipart(){
+		//First check planned movement.
 		boolean needCheck = false;
 		boolean groundDeviceNeedsLifting = false;
 		double originalMotionY = motionY;
@@ -569,13 +568,8 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				}while(continueLoop && loopCount < 20);
 			}
 		}
-	}
-	
-	/**
-	 * Call this when moving multiparts to ensure they sync correctly.
-	 * Failure to do this will result in things going badly!
-	 */
-	protected void moveMultipart(){
+		
+		//Now that that the movement has been checked, move the multipart.
 		prevRotationRoll = rotationRoll;
 		if(!worldObj.isRemote){
 			rotationYaw += motionYaw;

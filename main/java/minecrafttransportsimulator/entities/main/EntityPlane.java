@@ -78,7 +78,6 @@ public class EntityPlane extends EntityMultipartVehicle{
 			getBasicProperties();
 			getForcesAndMotions();
 			performGroundOperations();
-			checkPlannedMovement();
 			moveMultipart();
 			if(!worldObj.isRemote){
 				dampenControlSurfaces();

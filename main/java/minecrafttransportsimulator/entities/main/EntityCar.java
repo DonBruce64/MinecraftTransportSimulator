@@ -55,7 +55,6 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 			getBasicProperties();
 			getForcesAndMotions();
 			performGroundOperations();
-			checkPlannedMovement();
 			moveMultipart();
 			if(!worldObj.isRemote){
 				dampenControlSurfaces();
