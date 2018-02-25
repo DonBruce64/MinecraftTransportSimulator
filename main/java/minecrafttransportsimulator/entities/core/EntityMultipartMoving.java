@@ -111,9 +111,10 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			collisionMap.clear();
 			partMap.clear();
 			for(EntityMultipartChild child : getChildren()){
-				partMap.put(new MTSAxisAlignedBB(child.posX, child.posY, child.posZ, child.offsetX, child.offsetY, child.offsetZ, child.getWidth(), child.getHeight()), child);
+				MTSAxisAlignedBB newBox = new MTSAxisAlignedBB(child.posX, child.posY, child.posZ, child.offsetX, child.offsetY, child.offsetZ, child.getWidth(), child.getHeight()); 
+				partMap.put(newBox, child);
 				if(child instanceof EntityGroundDevice){
-					collisionMap.put(new MTSAxisAlignedBB(child.posX, child.posY, child.posZ, child.offsetX, child.offsetY, child.offsetZ, child.getWidth(), child.getHeight()), child);
+					collisionMap.put(newBox, child);
 				}
 			}
 			for(MTSAxisAlignedBB box : getUpdatedCollisionBoxes()){
