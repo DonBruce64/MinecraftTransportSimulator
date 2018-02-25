@@ -16,12 +16,12 @@ public class EntityEngineAircraftSmall extends EntityEngineAircraft{
 	}
 	
 	@Override
-	protected float getWidth(){
+	public float getWidth(){
 		return 1.0F;
 	}
 
 	@Override
-	protected float getHeight(){
+	public float getHeight(){
 		return 1.0F;
 	}
 

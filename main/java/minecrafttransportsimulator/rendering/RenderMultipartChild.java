@@ -18,6 +18,7 @@ import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
 import minecrafttransportsimulator.entities.parts.EntityVehicleChest;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
+import minecrafttransportsimulator.entities.parts.EntityWheel.EntityWheelMedium;
 import minecrafttransportsimulator.rendering.partmodels.ModelEngineLarge;
 import minecrafttransportsimulator.rendering.partmodels.ModelEngineSmall;
 import minecrafttransportsimulator.rendering.partmodels.ModelPontoon;
@@ -44,6 +45,7 @@ public final class RenderMultipartChild{
 		childRenderMap.put(EntitySeat.class, new RenderSeat());
 		childRenderMap.put(EntitySkid.class, new RenderSkid());
 		childRenderMap.put(EntityWheel.EntityWheelSmall.class, new RenderWheel());
+		childRenderMap.put(EntityWheel.EntityWheelMedium.class, childRenderMap.get(EntityWheel.EntityWheelSmall.class));
 		childRenderMap.put(EntityWheel.EntityWheelLarge.class, childRenderMap.get(EntityWheel.EntityWheelSmall.class));
 	}
 	
@@ -223,6 +225,7 @@ public final class RenderMultipartChild{
     		if(wheel.isFlat){
     			GL11.glTranslated(0, -wheel.height/2F, 0);
     		}
+    		
     		if(wheel instanceof EntityWheel.EntityWheelSmall){
     			textureManger.bindTexture(textureWheelInner);
     			modelWheel.renderSmallInnerWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);

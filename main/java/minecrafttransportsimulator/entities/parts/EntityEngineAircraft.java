@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.entities.parts;
 
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -29,7 +27,7 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 	}
 	
 	@Override
-	public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
+	protected boolean interactPart(EntityPlayer player, EnumHand hand){
 		if(!worldObj.isRemote && hand.equals(hand.MAIN_HAND)){
 			ItemStack playerStack = player.getHeldItemMainhand();
 			if(playerStack != null){
@@ -38,22 +36,21 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 						if(playerStack.getTagCompound().getInteger("diameter") > 80 && this instanceof EntityEngineAircraftSmall){
 							MTS.MTSNet.sendTo(new ChatPacket("interact.failure.propellertoobig"), (EntityPlayerMP) player);
 							MTSAchievements.triggerPropellerTooBig(player);
-							return false;
+						}else{
+							propeller = new EntityPropeller(worldObj, (EntityPlane) parent, parent.UUID, offsetX, offsetY + (this.getHeight() - 1)/2F, offsetZ + 0.9F, playerStack.getItemDamage());
+							propeller.setNBTFromStack(playerStack);
+							propeller.engineUUID = this.UUID;
+							parent.addChild(propeller.UUID, propeller, true);
+							MTSAchievements.triggerPropellerFits(player);
+							if(!player.capabilities.isCreativeMode){
+								player.inventory.clearMatchingItems(MTSRegistry.propeller, playerStack.getItemDamage(), 1, playerStack.getTagCompound());
+							}
 						}
-						propeller = new EntityPropeller(worldObj, (EntityPlane) parent, parent.UUID, offsetX, offsetY + (this.getHeight() - 1)/2F, offsetZ + 0.9F, playerStack.getItemDamage());
-						propeller.setNBTFromStack(playerStack);
-						propeller.engineUUID = this.UUID;
-						parent.addChild(propeller.UUID, propeller, true);
-						MTSAchievements.triggerPropellerFits(player);
-						if(!player.capabilities.isCreativeMode){
-							player.inventory.clearMatchingItems(MTSRegistry.propeller, playerStack.getItemDamage(), 1, playerStack.getTagCompound());
-						}
-						return true;
 					}
 				}
 			}
 		}
-		return super.processInitialInteract(player, stack, hand);
+		return true;
 	}
 	
 	@Override

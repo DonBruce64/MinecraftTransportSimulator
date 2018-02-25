@@ -37,13 +37,12 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 	public void setNBTFromStack(ItemStack stack){}
 	
 	@Override
-	protected boolean attackChild(DamageSource source, float damage){
+	protected void attackPart(DamageSource source, float damage){
 		if(!isFlat){
 			if(source.isExplosion() || Math.random() < 0.1){
 				setFlat();
 			}
 		}
-		return true;
 	}
 	
 	@Override
@@ -152,12 +151,12 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		}
 		
 		@Override
-		protected float getWidth(){
+		public float getWidth(){
 			return 0.5F;
 		}
 		
 		@Override
-		protected float getHeight(){
+		public float getHeight(){
 			return this.isFlat ? 0.25F : 0.5F;
 		}
 		
@@ -181,19 +180,19 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		}
 		
 		@Override
-		protected float getWidth(){
+		public float getWidth(){
 			return 0.75F;
 		}
 		
 		@Override
-		protected float getHeight(){
+		public float getHeight(){
 			return this.isFlat ? 0.375F : 0.75F;
 		}
 
 		@Override
 		public ItemStack getItemStack(){
 			if(!this.isFlat){
-				return new ItemStack(MTSRegistry.wheelSmall);	
+				return new ItemStack(MTSRegistry.wheelMedium);	
 			}else{
 				return null;
 			}
@@ -210,12 +209,12 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		}
 		
 		@Override
-		protected float getWidth(){
+		public float getWidth(){
 			return 1.0F;
 		}
 		
 		@Override
-		protected float getHeight(){
+		public float getHeight(){
 			return this.isFlat ? 0.5F : 1.0F;
 		}
 

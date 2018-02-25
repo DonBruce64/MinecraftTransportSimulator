@@ -92,7 +92,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	}
 	
 	@Override
-	protected boolean attackChild(DamageSource source, float damage){
+	protected void attackPart(DamageSource source, float damage){
 		if(source.isExplosion()){
 			hours += damage*10;
 			if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
@@ -106,7 +106,6 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			}
 		}
 		this.sendDataToClient();
-		return true;
 	}
 	
 	@Override

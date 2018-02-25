@@ -5,7 +5,6 @@ import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public class EntitySkid extends EntityGroundDevice{
@@ -19,12 +18,12 @@ public class EntitySkid extends EntityGroundDevice{
 	}
 	
 	@Override
-	protected float getWidth(){
+	public float getWidth(){
 		return 0.3F;
 	}
 
 	@Override
-	protected float getHeight(){
+	public float getHeight(){
 		return 0.3F;
 	}
 	
@@ -39,10 +38,5 @@ public class EntitySkid extends EntityGroundDevice{
 	@Override
 	public ItemStack getItemStack(){
 		return new ItemStack(MTSRegistry.skid);
-	}
-	
-	@Override
-	protected boolean attackChild(DamageSource source, float damage){
-		return true;
 	}
 }

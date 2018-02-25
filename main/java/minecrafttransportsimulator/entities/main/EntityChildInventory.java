@@ -3,8 +3,6 @@ package minecrafttransportsimulator.entities.main;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
@@ -37,9 +35,9 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
 	protected abstract String getChildInventoryName();
 	
 	@Override
-	public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
+	public boolean interactPart(EntityPlayer player, EnumHand hand){
 		player.openGui(MTS.instance, this.getEntityId(), worldObj, (int) posX, (int) posY, (int) posZ);
-		return false;
+		return true;
     }
     
 	@Override

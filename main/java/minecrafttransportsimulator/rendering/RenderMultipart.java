@@ -1,9 +1,7 @@
 package minecrafttransportsimulator.rendering;
 
 import java.awt.Color;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -11,7 +9,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSVector;
+import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackBeacon;
@@ -31,7 +29,6 @@ import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
@@ -40,7 +37,6 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -687,18 +683,13 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 	}
 	
 	private static void renderBoundingBoxes(EntityMultipartMoving mover){
-		List<AxisAlignedBB> boxesToRender = new ArrayList<AxisAlignedBB>();
-		for(EntityMultipartChild child : mover.getChildren()){
-			MTSVector childOffset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, mover.rotationPitch, mover.rotationYaw, mover.rotationRoll);
-			boxesToRender.add(child.getEntityBoundingBox().offset(-child.posX + childOffset.xCoord, -child.posY + childOffset.yCoord, -child.posZ + childOffset.zCoord));
-		}
-		
 		GL11.glPushMatrix();
 		GL11.glDisable(GL11.GL_LIGHTING);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glColor3f(0.0F, 0.0F, 0.0F);
 		GL11.glLineWidth(3.0F);
-		for(AxisAlignedBB box : boxesToRender){
+		for(MTSAxisAlignedBB box : mover.getCurrentCollisionBoxes()){
+			box = box.offset(-mover.posX, -mover.posY, -mover.posZ);
 			GL11.glBegin(GL11.GL_LINES);
 			GL11.glVertex3d(box.minX, box.minY, box.minZ);
 			GL11.glVertex3d(box.maxX, box.minY, box.minZ);

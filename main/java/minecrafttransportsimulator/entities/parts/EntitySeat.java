@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.entities.parts;
 
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -14,7 +12,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 
@@ -29,12 +26,12 @@ public class EntitySeat extends EntityMultipartChild{
 	}
 	
 	@Override
-	protected float getWidth(){
+	public float getWidth(){
 		return 0.75F;
 	}
 
 	@Override
-	protected float getHeight(){
+	public float getHeight(){
 		return 0.75F;
 	}
 
@@ -47,46 +44,28 @@ public class EntitySeat extends EntityMultipartChild{
 	}
 	
 	@Override
-	public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
-		if(!worldObj.isRemote && this.parent != null){
-			if(player.getHeldItem(hand) != null){
-				if(MTSRegistry.key.equals(player.getHeldItem(hand).getItem())){
-					parent.processInitialInteractFromChild(player, this, hand);
-					return true;
-				}
-			}
-			Entity rider = this.getPassenger();
-			if(rider==null){
-				//Don't let non-seated players in this vehicle enter if locked.
-				if(((EntityMultipartMoving) parent).locked){
-					if(player.getRidingEntity() instanceof EntitySeat){
-						if(((EntitySeat) player.getRidingEntity()).parent != null){
-							if(((EntitySeat) player.getRidingEntity()).parent.equals(this.parent)){
-								player.startRiding(this);
-								return true;
-							}
+	protected boolean interactPart(EntityPlayer player, EnumHand hand){
+		Entity rider = this.getPassenger();
+		if(rider==null){
+			//Don't let non-seated players in this vehicle enter if locked.
+			if(((EntityMultipartMoving) parent).locked){
+				if(player.getRidingEntity() instanceof EntitySeat){
+					if(((EntitySeat) player.getRidingEntity()).parent != null){
+						if(((EntitySeat) player.getRidingEntity()).parent.equals(this.parent)){
+							player.startRiding(this);
+							return true;
 						}
 					}
-					MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
-				}else{
-					player.startRiding(this);
 				}
-			}else if(!rider.equals(player)){
-				MTS.MTSNet.sendTo(new ChatPacket("interact.failure.seattaken"), (EntityPlayerMP) player);
+				MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
+			}else{
+				player.startRiding(this);
 			}
+		}else if(!rider.equals(player)){
+			MTS.MTSNet.sendTo(new ChatPacket("interact.failure.seattaken"), (EntityPlayerMP) player);
 		}
 		return true;
     }
-
-	@Override
-	protected boolean attackChild(DamageSource source, float damage){
-		return false;
-	}
-
-	@Override
-	public boolean canRiderInteract(){
-		return true;
-	}
 	
 	@Override
 	 public void updatePassenger(Entity passenger){

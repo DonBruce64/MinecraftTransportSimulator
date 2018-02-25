@@ -7,7 +7,6 @@ import minecrafttransportsimulator.entities.main.EntityChildInventory;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public class EntityVehicleChest extends EntityChildInventory{
@@ -21,18 +20,13 @@ public class EntityVehicleChest extends EntityChildInventory{
 	}
 	
 	@Override
-	protected float getWidth(){
+	public float getWidth(){
 		return 0.75F;
 	}
 
 	@Override
-	protected float getHeight(){
+	public float getHeight(){
 		return 0.75F;
-	}
-	
-	@Override
-	protected boolean attackChild(DamageSource source, float damage){
-		return false;
 	}
 
 	@Override
@@ -46,9 +40,5 @@ public class EntityVehicleChest extends EntityChildInventory{
 	@Override
 	protected String getChildInventoryName(){
 		return "entity." + MTS.MODID + ".Chest.name";
-	}
-	
-	protected boolean collidesWithBlocks(){
-		return false;
 	}
 }

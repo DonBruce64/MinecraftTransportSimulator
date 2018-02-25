@@ -41,12 +41,12 @@ public class EntityPropeller extends EntityMultipartChild{
 	}
 	
 	@Override
-	protected float getWidth(){
+	public float getWidth(){
 		return 0.8F;
 	}
 
 	@Override
-	protected float getHeight(){
+	public float getHeight(){
 		return 1.0F;
 	}
 	
@@ -74,26 +74,23 @@ public class EntityPropeller extends EntityMultipartChild{
 	}
 	
 	@Override
-	protected boolean attackChild(DamageSource source, float damage){
-		if(parent != null){
-			if(source.getEntity() instanceof EntityPlayer){					
-				if(((EntityPlayer) source.getEntity()).getHeldItemMainhand() == null){
-					if(!(source.getEntity().getRidingEntity() instanceof EntitySeat)){
-						for(EntityMultipartChild child : parent.getChildren()){
-							if(child instanceof EntityEngineAircraft){
-								if(this.equals(((EntityEngineAircraft) child).propeller)){
-									((EntityMultipartVehicle) parent).handleEngineSignal(engine, (byte) 4);
-									MTS.MTSNet.sendToAll(new EnginePacket(parent.getEntityId(), engine.getEntityId(), (byte) 4));
-								}
+	protected void attackPart(DamageSource source, float damage){
+		if(source.getEntity() instanceof EntityPlayer){					
+			if(((EntityPlayer) source.getEntity()).getHeldItemMainhand() == null){
+				if(!(source.getEntity().getRidingEntity() instanceof EntitySeat)){
+					for(EntityMultipartChild child : parent.getChildren()){
+						if(child instanceof EntityEngineAircraft){
+							if(this.equals(((EntityEngineAircraft) child).propeller)){
+								((EntityMultipartVehicle) parent).handleEngineSignal(engine, (byte) 4);
+								MTS.MTSNet.sendToAll(new EnginePacket(parent.getEntityId(), engine.getEntityId(), (byte) 4));
 							}
 						}
 					}
-					return true;
 				}
+				return;
 			}
 		}
 		damagePropeller(damage);
-		return true;
 	}
 	
 	@Override

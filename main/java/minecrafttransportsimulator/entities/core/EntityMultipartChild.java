@@ -2,15 +2,11 @@ package minecrafttransportsimulator.entities.core;
 
 import javax.annotation.Nullable;
 
-import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.baseclasses.MTSVector;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.systems.RotationSystem;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -40,6 +36,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	public float offsetX;
 	public float offsetY;
 	public float offsetZ;
+	public MTSAxisAlignedBB collisionBox;
 	public EntityMultipartParent parent;
 	protected String parentUUID = "";
 	
@@ -60,55 +57,30 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	}
 	
 	@Override
-	public void onEntityUpdate(){
-		super.onEntityUpdate();
+	public void onUpdate(){
+		super.onUpdate();
 		//This can be changed dynamically based on entity state.
 		this.setSize(this.getWidth(), this.getHeight());
 		linked = hasUUID() && hasParent();
 	}
-	
-	@Override
-	public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
-		return parent != null ? parent.processInitialInteractFromChild(player, this, hand) : true;
+		
+	/**Called when multipart sees this part being interacted with.
+	 * Use this information to do part interactions.
+	 * Return true if part can be interacted with as this will stop
+	 * processing in multipart interaction system.  
+	 */
+	protected boolean interactPart(EntityPlayer player, EnumHand hand){
+		return false;
 	}
 	
-	@Override
-	public boolean attackEntityFrom(DamageSource source, float damage){
-		if(!worldObj.isRemote){
-			if(source.getEntity() instanceof EntityPlayer){
-				EntityPlayer attackingPlayer = (EntityPlayer) source.getEntity();
-				if(attackingPlayer.getHeldItemMainhand() != null && attackingPlayer.getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
-					boolean isPlayerOP = attackingPlayer.getServer().getPlayerList().getOppedPlayers().getEntry(attackingPlayer.getGameProfile()) != null || attackingPlayer.getServer().isSinglePlayer();
-					if(parent == null || ((EntityMultipartMoving) parent).ownerName.isEmpty() || ((EntityMultipartMoving) parent).ownerName.equals(attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString()) || isPlayerOP){
-						ItemStack droppedItem = this.getItemStack();
-						if(droppedItem != null){
-							worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, droppedItem));
-						}
-						if(parent != null){
-							parent.removeChild(UUID, false);
-						}else{
-							this.setDead();
-						}
-						return false;
-					}else{
-						MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehicleowned"), (EntityPlayerMP) attackingPlayer);
-					}
-				}
-			}
-			if(!attackChild(source, damage)){
-				return parent != null ? parent.attackEntityFrom(source, damage) : false;
-			}
-		}
-		return false;
-    }
-	
-	protected abstract float getWidth();
-	
-	protected abstract float getHeight();
-	
-	/**Called when child is attacked.  Return true to end attack, false to forward attack to parent. 
+	/**Called when multipart sees this part being attacked.
+	 * Use this information to damage part.
 	 */
-	protected abstract boolean attackChild(DamageSource source, float damage);
+	protected void attackPart(DamageSource source, float damage){}
+	
+	public abstract float getWidth();
+	
+	public abstract float getHeight();
 	
 	/**Sets the NBT of the entity to that of the stack.
 	 */
@@ -155,19 +127,6 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
     @Override
     public boolean shouldRenderInPass(int pass){
     	return false;
-    }
-	
-	@Override
-	public boolean canBeCollidedWith(){
-		//This gets overridden to do collisions with players.
-		return true;
-	}
-	
-	@Override
-    @Nullable
-    public AxisAlignedBB getCollisionBoundingBox(){
-		//Need this to do collision with other Entities.
-        return this.getEntityBoundingBox();
     }
 	
 	protected boolean collidesWithLiquids(){

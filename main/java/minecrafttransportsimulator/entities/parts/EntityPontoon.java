@@ -10,7 +10,6 @@ import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public class EntityPontoon extends EntityGroundDevice{
@@ -35,12 +34,12 @@ public class EntityPontoon extends EntityGroundDevice{
 	}
 	
 	@Override
-	protected float getWidth(){
+	public float getWidth(){
 		return 0.75F;
 	}
 
 	@Override
-	protected float getHeight(){
+	public float getHeight(){
 		return 0.75F;
 	}
 	
@@ -69,11 +68,6 @@ public class EntityPontoon extends EntityGroundDevice{
 			//Plane dive-bombed into the water.
 			parent.removeChild(UUID, true);
 		}
-	}
-	
-	@Override
-	protected boolean attackChild(DamageSource source, float damage){
-		return true;
 	}
 	
 	@Override
@@ -122,7 +116,6 @@ public class EntityPontoon extends EntityGroundDevice{
 	}
 	
 	public static class EntityPontoonDummy extends EntityPontoon{
-		private boolean isBeingAttacked = false;
 		
 		public EntityPontoonDummy(World world){
 			super(world);
@@ -139,23 +132,11 @@ public class EntityPontoon extends EntityGroundDevice{
 		public EntityPontoonDummy(World world, EntityMultipartParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ){
 			super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ);
 		}
-		
-		@Override
-		public boolean attackEntityFrom(DamageSource source, float damage){
-			isBeingAttacked = true;
-			boolean returnCode = super.attackEntityFrom(source, damage);
-			isBeingAttacked = false;
-			return returnCode;
-		}
+
 		
 		@Override
 		public boolean shouldAffectSteering(){
 			return true;
-		}
-		
-		@Override
-		public ItemStack getItemStack(){
-			return isBeingAttacked ? super.getItemStack() : null;
 		}
 	}
 }

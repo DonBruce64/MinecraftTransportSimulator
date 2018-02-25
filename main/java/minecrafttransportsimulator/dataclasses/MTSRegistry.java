@@ -12,7 +12,6 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockFuelPump;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
-import minecrafttransportsimulator.entities.main.EntityCore;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
 import minecrafttransportsimulator.entities.parts.EntityEngineCarSmall;
@@ -203,7 +202,6 @@ public final class MTSRegistry{
 			registerEntity(type.multipartClass);
 		}
 		
-		registerChildEntity(EntityCore.class, null);
 		registerChildEntity(EntitySeat.class, seat);
 		registerChildEntity(EntityVehicleChest.class, Item.getItemFromBlock(Blocks.CHEST));
 		registerChildEntity(EntityWheel.EntityWheelSmall.class, wheelSmall);

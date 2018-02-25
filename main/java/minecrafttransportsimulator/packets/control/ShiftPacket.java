@@ -47,15 +47,17 @@ public class ShiftPacket implements IMessage{
 					if(thisEntity!=null){
 						EntityEngineCar carEngine = (EntityEngineCar) thisEntity.getEngineByNumber((byte) 1);
 						if(carEngine != null){
-							if(message.shiftUp){
-								carEngine.shiftUp();
-							}else{
-								carEngine.shiftDown();
+							if(!(carEngine.isAutomatic() && carEngine.getCurrentGear() > 0)){
+								if(message.shiftUp){
+									carEngine.shiftUp();
+								}else{
+									carEngine.shiftDown();
+								}
+								if(ctx.side.isServer()){
+									MTS.MTSNet.sendToAll(message);
+								}
 							}
-						}
-						
-						if(ctx.side.isServer()){
-							MTS.MTSNet.sendToAll(message);
+							
 						}
 					}
 				}

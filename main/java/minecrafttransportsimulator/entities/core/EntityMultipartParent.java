@@ -33,7 +33,6 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 
 	public EntityMultipartParent(World world){
 		super(world);
-		this.setSize(0.75F, 0.75F);
 		this.preventEntitySpawning = false;
 	}
 	
@@ -119,9 +118,7 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 	}
 	
 	public EntityMultipartChild[] getChildren(){return ImmutableList.copyOf(children.values()).toArray(new EntityMultipartChild[children.size()]);}
-	
-	public abstract boolean processInitialInteractFromChild(EntityPlayer player, EntityMultipartChild childClicked, EnumHand hand);
-		
+			
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
