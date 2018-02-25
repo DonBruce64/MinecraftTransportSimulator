@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSEntity;
+import minecrafttransportsimulator.entities.core.EntityMultipartBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -34,7 +34,7 @@ public class EntityClientRequestDataPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					MTSEntity thisEntity = (MTSEntity) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+					EntityMultipartBase thisEntity = (EntityMultipartBase) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 					if(thisEntity!=null){
 						NBTTagCompound tagCompound = new NBTTagCompound();
 						thisEntity.writeToNBT(tagCompound);

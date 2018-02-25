@@ -1,9 +1,6 @@
 package minecrafttransportsimulator.entities.core;
 
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
-import minecrafttransportsimulator.baseclasses.MTSEntity;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -102,7 +99,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	}
 	
 	private void linkToParent(){
-		MTSEntity entity = getEntityByUUID(worldObj, this.parentUUID);
+		EntityMultipartBase entity = getEntityByUUID(worldObj, this.parentUUID);
 		if(entity != null){
 			EntityMultipartParent parent =  (EntityMultipartParent) entity;
 			parent.addChild(this.UUID, this, false);
