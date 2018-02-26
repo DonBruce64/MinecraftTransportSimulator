@@ -315,6 +315,10 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				GL11.glRotatef(((EntityPlane) mover).rudderAngle/10F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
 			}else if(rotatable.rotationVariable.equals("flap")){
 				GL11.glRotatef(((EntityPlane) mover).flapAngle/10F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
+			}else if(rotatable.rotationVariable.equals("door")){
+				if(mover.parkingBrakeOn && mover.velocity == 0 && !mover.locked){
+					GL11.glRotatef(-60F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
+				}
 			}
 		}
 	}
