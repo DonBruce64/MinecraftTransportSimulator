@@ -68,9 +68,10 @@ public final class MTSRegistryClient{
 		registerItemRender(MTSRegistry.wheelLarge);
 		registerItemRender(MTSRegistry.skid);
 		registerItemRender(MTSRegistry.pontoon);
-		registerItemRender(MTSRegistry.engineCarSmall);
-		registerItemRender(MTSRegistry.engineAircraftSmall);
-		registerItemRender(MTSRegistry.engineAircraftLarge);
+		registerItemRender(MTSRegistry.engineAMCI4_A);
+		registerItemRender(MTSRegistry.engineAMCI4_M);
+		registerItemRender(MTSRegistry.engineLycoming0360);
+		registerItemRender(MTSRegistry.engineWaspR1340);
 		registerItemRenderSeries(MTSRegistry.propeller, 3);
 		registerItemRenderSeries(MTSRegistry.seat, 102);
 		registerItemRenderSeries(MTSRegistry.instrument, MTSInstruments.Instruments.values().length);

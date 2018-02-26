@@ -6,12 +6,12 @@ import minecrafttransportsimulator.entities.main.EntityPlane;
 import net.minecraft.item.Item;
 import net.minecraft.world.World;
 
-public class EntityEngineAircraftSmall extends EntityEngineAircraft{
-	public EntityEngineAircraftSmall(World world){
+public class EntityEngineAircraftLycoming extends EntityEngineAircraft{
+	public EntityEngineAircraftLycoming(World world){
 		super(world);
 	}
 	
-	public EntityEngineAircraftSmall(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+	public EntityEngineAircraftLycoming(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		super(world, (EntityPlane) parent, parentUUID, offsetX, offsetY, offsetZ);
 	}
 	
@@ -52,6 +52,6 @@ public class EntityEngineAircraftSmall extends EntityEngineAircraft{
 
 	@Override
 	protected Item getEngineItem(){
-		return MTSRegistry.engineAircraftSmall;
+		return MTSRegistry.engineLycoming0360;
 	}
 }

@@ -12,9 +12,9 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockFuelPump;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
-import minecrafttransportsimulator.entities.parts.EntityEngineCarSmall;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLycoming;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftWasp;
+import minecrafttransportsimulator.entities.parts.EntityEngineCarAMC;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
@@ -22,9 +22,6 @@ import minecrafttransportsimulator.entities.parts.EntitySkid;
 import minecrafttransportsimulator.entities.parts.EntityVehicleChest;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
 import minecrafttransportsimulator.items.ItemEngine;
-import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftLarge;
-import minecrafttransportsimulator.items.ItemEngine.ItemEngineAircraftSmall;
-import minecrafttransportsimulator.items.ItemEngine.ItemEngineCar;
 import minecrafttransportsimulator.items.ItemInstrument;
 import minecrafttransportsimulator.items.ItemKey;
 import minecrafttransportsimulator.items.ItemManual;
@@ -92,9 +89,10 @@ public final class MTSRegistry{
 	public static final Item wheelLarge = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item skid = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item pontoon = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item engineCarSmall = new ItemEngineCar().setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item engineAircraftSmall = new ItemEngineAircraftSmall().setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item engineAircraftLarge = new ItemEngineAircraftLarge().setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item engineLycoming0360 = new ItemEngine(ItemEngine.EngineItems.LYCOMING_O360).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item engineWaspR1340 = new ItemEngine(ItemEngine.EngineItems.WASP_R1340).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item engineAMCI4_A = new ItemEngine(ItemEngine.EngineItems.AMC_I4_A).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item engineAMCI4_M = new ItemEngine(ItemEngine.EngineItems.AMC_I4_M).setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item propeller = new ItemPropeller().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item seat = new ItemSeat().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item pointerShort = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
@@ -211,9 +209,10 @@ public final class MTSRegistry{
 		registerChildEntity(EntityPontoon.class, pontoon);
 		registerChildEntity(EntityPontoon.EntityPontoonDummy.class, null);
 		registerChildEntity(EntityPropeller.class, propeller);
-		registerChildEntity(EntityEngineCarSmall.Automatic.class, engineCarSmall);
-		registerChildEntity(EntityEngineAircraftSmall.class, engineAircraftSmall);
-		registerChildEntity(EntityEngineAircraftLarge.class, engineAircraftLarge);
+		registerChildEntity(EntityEngineCarAMC.class, engineAMCI4_A);
+		registerChildEntity(EntityEngineCarAMC.class, engineAMCI4_M);
+		registerChildEntity(EntityEngineAircraftLycoming.class, engineLycoming0360);
+		registerChildEntity(EntityEngineAircraftWasp.class, engineWaspR1340);
 	}
 	
 	private static void initPackets(){
@@ -347,21 +346,21 @@ public final class MTSRegistry{
 	
 	private static void initEngineRecipes(){
 		//New engines
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineCarSmall, false),
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineAMCI4_A, false),
 				"AAA",
 				"BCB",
 				"BBB",
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.IRON_INGOT);
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineAircraftSmall, false),
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineLycoming0360, false),
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.IRON_INGOT);
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineAircraftLarge, false),
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineWaspR1340, false),
 				"ABA",
 				"ACA",
 				"ABA",
@@ -370,24 +369,24 @@ public final class MTSRegistry{
 				'C', Items.IRON_INGOT);
 		
 		//Repaired engines
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineCarSmall, false),
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineAMCI4_A, false),
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.OBSIDIAN,
-				'C', MTSRegistry.engineCarSmall);
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineAircraftSmall, false),
+				'C', MTSRegistry.engineAMCI4_A);
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineLycoming0360, false),
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.OBSIDIAN,
-				'C', MTSRegistry.engineAircraftSmall);
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineAircraftLarge, false),
+				'C', MTSRegistry.engineLycoming0360);
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineWaspR1340, false),
 				"B B",
 				"BCB",
 				"B B",
 				'B', Blocks.OBSIDIAN,
-				'C', MTSRegistry.engineAircraftLarge);
+				'C', MTSRegistry.engineWaspR1340);
 	}
 	
 	private static void initAircraftInstrumentRecipes(){		

@@ -52,7 +52,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 		}
 		
 		//Do automatic transmission functions if needed.
-		if(state.running && isAutomatic()){
+		if(state.running && isAutomatic){
 			if(gearNumber > 0){
 				if(RPM > maxSafeRPM*0.5F*(1.0F + car.throttle/100F)){
 					shiftUp();
@@ -115,6 +115,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 	}
 	
 	public void shiftUp(){
+		System.out.println(numberGears);
 		if(gearNumber == -1){
 			gearNumber = 0;
 		}else if(gearNumber == 0){
@@ -124,7 +125,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 				hours += 100;
 				//TODO add gearbox grinding sound here.
 			}
-		}else if(gearNumber < getNumberGears()){
+		}else if(gearNumber < numberGears){
 			++gearNumber;
 		}
 	}
@@ -149,10 +150,6 @@ public abstract class EntityEngineCar extends EntityEngine{
 	public byte getCurrentGear(){
 		return gearNumber;
 	}
-	
-	public abstract boolean isAutomatic();
-	
-	public abstract byte getNumberGears();
 	
 	public abstract float getRatioForGear(byte gearNumber);
 	

@@ -9,8 +9,8 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLarge;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftSmall;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftWasp;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLycoming;
 import minecrafttransportsimulator.entities.parts.EntityEngineCar;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
@@ -36,9 +36,9 @@ public final class RenderMultipartChild{
 	
 	public static void init(){
 		childRenderMap.clear();
-		childRenderMap.put(EntityEngineAircraftSmall.class, new RenderEngine());
-		childRenderMap.put(EntityEngineAircraftLarge.class, childRenderMap.get(EntityEngineAircraftSmall.class));
-		childRenderMap.put(EntityEngineCar.class, childRenderMap.get(EntityEngineAircraftSmall.class));
+		childRenderMap.put(EntityEngineAircraftLycoming.class, new RenderEngine());
+		childRenderMap.put(EntityEngineAircraftWasp.class, childRenderMap.get(EntityEngineAircraftLycoming.class));
+		childRenderMap.put(EntityEngineCar.class, childRenderMap.get(EntityEngineAircraftLycoming.class));
 		childRenderMap.put(EntityVehicleChest.class, new RenderVehicleChest());
 		childRenderMap.put(EntityPontoon.class, new RenderPontoon());
 		childRenderMap.put(EntityPropeller.class, new RenderPropeller());
@@ -86,10 +86,10 @@ public final class RenderMultipartChild{
     		}
     		GL11.glRotatef(180, 1, 0, 0);
             GL11.glTranslatef(0, -child.height/2, 0);
-            if(child instanceof EntityEngineAircraftSmall){
+            if(child instanceof EntityEngineAircraftLycoming){
     			textureManger.bindTexture(textureEngineSmall);
     			modelEngineSmall.render();
-    		}else if(child instanceof EntityEngineAircraftLarge){
+    		}else if(child instanceof EntityEngineAircraftWasp){
     			GL11.glTranslatef(0, 0, -0.2F);
     			textureManger.bindTexture(textureEngineLarge);
     			modelEngineLarge.render();

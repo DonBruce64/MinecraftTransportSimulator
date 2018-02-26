@@ -26,6 +26,8 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	public boolean oilLeak;
 	public boolean fuelLeak;
 	public boolean brokenStarter;
+	public boolean isAutomatic;
+	public byte numberGears;
 	public int maxRPM;
 	public int maxSafeRPM;
 	public float fuelConsumption;
@@ -70,6 +72,8 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		oilLeak=stackNBT.getBoolean("oilLeak");
 		fuelLeak=stackNBT.getBoolean("fuelLeak");
 		brokenStarter=stackNBT.getBoolean("brokenStarter");
+		isAutomatic=stackNBT.getBoolean("isAutomatic");
+		numberGears=stackNBT.getByte("numberGears");
 		hours = stackNBT.getDouble("hours");
 		maxRPM = stackNBT.getInteger("maxRPM");
 		maxSafeRPM = stackNBT.getInteger("maxSafeRPM");
@@ -83,6 +87,8 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		tag.setBoolean("oilLeak", this.oilLeak);
 		tag.setBoolean("fuelLeak", this.fuelLeak);
 		tag.setBoolean("brokenStarter", this.brokenStarter);
+		tag.setBoolean("isAutomatic", this.isAutomatic);
+		tag.setByte("numberGears", numberGears);
 		tag.setInteger("maxRPM", maxRPM);
 		tag.setInteger("maxSafeRPM", maxSafeRPM);
 		tag.setFloat("fuelConsumption", fuelConsumption);
@@ -455,6 +461,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		this.oilLeak=tagCompound.getBoolean("oilLeak");
 		this.fuelLeak=tagCompound.getBoolean("fuelLeak");
 		this.brokenStarter=tagCompound.getBoolean("brokenStarter");
+		this.numberGears=tagCompound.getByte("numberGears");
 		this.maxRPM=tagCompound.getInteger("maxRPM");
 		this.maxSafeRPM=tagCompound.getInteger("maxSafeRPM");
 		this.fuelConsumption=tagCompound.getFloat("fuelConsumption");
@@ -471,6 +478,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		tagCompound.setBoolean("oilLeak", this.oilLeak);
 		tagCompound.setBoolean("fuelLeak", this.fuelLeak);
 		tagCompound.setBoolean("brokenStarter", this.brokenStarter);
+		tagCompound.setByte("numberGears", this.numberGears);
 		tagCompound.setInteger("maxRPM", this.maxRPM);
 		tagCompound.setInteger("maxSafeRPM", this.maxSafeRPM);
 		tagCompound.setFloat("fuelConsumption", this.fuelConsumption);

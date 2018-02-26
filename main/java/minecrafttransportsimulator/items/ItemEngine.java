@@ -14,11 +14,13 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class ItemEngine extends Item{
+public final class ItemEngine extends Item{
+	private final EngineItems engineItem;
 	
-	public ItemEngine(){
+	public ItemEngine(EngineItems engineItem){
 		this.hasSubtypes=true;
 		this.setMaxStackSize(1);
+		this.engineItem = engineItem;
 	}
 	
 	@Override
@@ -28,6 +30,8 @@ public abstract class ItemEngine extends Item{
 		if(stackTag.getFloat("fuelConsumption") == 0){
 			tooltipLines.add(TextFormatting.DARK_PURPLE + I18n.format("info.item.engine.creative"));
 		}
+		tooltipLines.add(stackTag.getBoolean("automatic") ? I18n.format("info.item.engine.automatic") : I18n.format("info.item.engine.manual"));
+		tooltipLines.add(I18n.format("info.item.engine.numbergears") + stackTag.getByte("numberGears"));
 		tooltipLines.add(I18n.format("info.item.engine.maxrpm") + stackTag.getInteger("maxRPM"));
 		tooltipLines.add(I18n.format("info.item.engine.maxsaferpm") + stackTag.getInteger("maxSafeRPM"));
 		tooltipLines.add(I18n.format("info.item.engine.fuelconsumption") + stackTag.getFloat("fuelConsumption"));
@@ -55,51 +59,33 @@ public abstract class ItemEngine extends Item{
 	public static ItemStack getStackWithData(ItemEngine item, boolean creative){
 		ItemStack stack = new ItemStack(item);
 		NBTTagCompound stackTag = new NBTTagCompound();
-		stackTag.setInteger("maxRPM", item.getMaxRPM());
-		stackTag.setInteger("maxSafeRPM", EntityEngine.getMaxSafeRPM(item.getMaxRPM()));
-		stackTag.setFloat("fuelConsumption", creative ? 0.0F : item.getFuelConsumption());
+		stackTag.setBoolean("automatic", item.engineItem.isAutomatic);
+		stackTag.setByte("numberGears", item.engineItem.numberGears);
+		stackTag.setInteger("maxRPM", item.engineItem.maxRPM);
+		stackTag.setInteger("maxSafeRPM", EntityEngine.getMaxSafeRPM(item.engineItem.maxRPM));
+		stackTag.setFloat("fuelConsumption", creative ? 0.0F : item.engineItem.fuelConsumption);
 		stackTag.setDouble("hours", 0);
 		stack.setTagCompound(stackTag);
 		return stack;
-	} 
-	
-	public abstract int getMaxRPM();
-	
-	public abstract float getFuelConsumption();
-	
-	public static class ItemEngineCar extends ItemEngine{
-		@Override
-		public int getMaxRPM(){
-			return 7500;
-		}
-		
-		@Override
-		public float getFuelConsumption(){
-			return 0.5F;
-		}
 	}
 	
-	public static class ItemEngineAircraftSmall extends ItemEngine{
-		@Override
-		public int getMaxRPM(){
-			return 2900;
-		}
-		
-		@Override
-		public float getFuelConsumption(){
-			return 0.4F;
-		}
-	}
 	
-	public static class ItemEngineAircraftLarge extends ItemEngine{
-		@Override
-		public int getMaxRPM(){
-			return 2400;
-		}
+	public enum EngineItems{
+		LYCOMING_O360(true, (byte) 1, 2900, 0.4F),
+		WASP_R1340(true, (byte) 1, 2900, 0.4F),
+		AMC_I4_A(true, (byte) 4, 7500, 0.5F),
+		AMC_I4_M(false, (byte) 5, 7500, 0.5F);
 		
-		@Override
-		public float getFuelConsumption(){
-			return 0.7F;
+		private final boolean isAutomatic;
+		private final byte numberGears;
+		private final int maxRPM;
+		private final float fuelConsumption;
+		
+		private EngineItems(boolean isAutomatic, byte numberGears, int maxRPM, float fuelConsumption){
+			this.isAutomatic = isAutomatic;
+			this.numberGears = numberGears;
+			this.maxRPM = maxRPM;
+			this.fuelConsumption = fuelConsumption;
 		}
 	}
 }

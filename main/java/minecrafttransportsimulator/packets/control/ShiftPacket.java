@@ -47,7 +47,7 @@ public class ShiftPacket implements IMessage{
 					if(thisEntity!=null){
 						EntityEngineCar carEngine = (EntityEngineCar) thisEntity.getEngineByNumber((byte) 1);
 						if(carEngine != null){
-							if(!(carEngine.isAutomatic() && carEngine.getCurrentGear() > 0)){
+							if(!(carEngine.isAutomatic && carEngine.getCurrentGear() > 0)){
 								if(message.shiftUp){
 									carEngine.shiftUp();
 								}else{

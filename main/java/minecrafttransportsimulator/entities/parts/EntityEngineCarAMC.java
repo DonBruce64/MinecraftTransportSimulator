@@ -6,14 +6,14 @@ import minecrafttransportsimulator.entities.main.EntityCar;
 import net.minecraft.item.Item;
 import net.minecraft.world.World;
 
-public abstract class EntityEngineCarSmall extends EntityEngineCar{
+public class EntityEngineCarAMC extends EntityEngineCar{
 
-	public EntityEngineCarSmall(World world){
+	public EntityEngineCarAMC(World world){
 		super(world);
 	}
 
-	public EntityEngineCarSmall(World world, EntityCar car, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, car, parentUUID, offsetX, offsetY, offsetZ);
+	public EntityEngineCarAMC(World world, EntityMultipartParent car, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+		super(world, (EntityCar) car, parentUUID, offsetX, offsetY, offsetZ);
 	}
 	
 	@Override
@@ -53,42 +53,28 @@ public abstract class EntityEngineCarSmall extends EntityEngineCar{
 
 	@Override
 	protected Item getEngineItem(){
-		return MTSRegistry.engineCarSmall;
+		return MTSRegistry.engineAMCI4_A;
 	}
-	
-	public abstract boolean isAutomatic();
-	
-	public abstract byte getNumberGears();
-	
-	public abstract float getRatioForGear(byte gearNumber);
-	
-	public static class Automatic extends EntityEngineCarSmall{
-		public Automatic(World world){
-			super(world);
-		}
-
-		public Automatic(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-			super(world, (EntityCar) parent, parentUUID, offsetX, offsetY, offsetZ);
-		}
-
-		@Override
-		public boolean isAutomatic(){
-			return true;
-		}
-
-		@Override
-		public byte getNumberGears(){
-			return 4;
-		}
-
-		@Override
-		public float getRatioForGear(byte gearNumber){
+		
+	@Override
+	public float getRatioForGear(byte gearNumber){
+		if(this.isAutomatic){
 			switch(gearNumber){
 				case(-1): return -2.0F;
 				case(1): return 3.5F;
 				case(2): return 2.5F;
 				case(3): return 1.25F;
 				case(4): return 0.75F;
+				default: return 0.0F;
+			}
+		}else{
+			switch(gearNumber){
+				case(-1): return -2.0F;
+				case(1): return 3.92F;
+				case(2): return 2.33F;
+				case(3): return 1.44F;
+				case(4): return 1.00F;
+				case(5): return 0.85F;
 				default: return 0.0F;
 			}
 		}

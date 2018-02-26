@@ -54,7 +54,7 @@ public abstract class MTSCreativeTabs extends CreativeTabs{
 	public static final CreativeTabs tabMTS = new MTSCreativeTabs("tabMTS"){
 		@Override
 		public Item getTabIconItem(){
-			return MTSRegistry.engineAircraftLarge;
+			return MTSRegistry.engineWaspR1340;
 		}
 	};
 }

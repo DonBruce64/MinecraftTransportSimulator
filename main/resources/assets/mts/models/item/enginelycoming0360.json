@@ -1,6 +1,6 @@
 {
     "parent": "mts:item/basic",
     "textures": {
-        "layer0": "mts:items/enginecarsmall"
+        "layer0": "mts:items/enginelycoming0360"
     }
 }
