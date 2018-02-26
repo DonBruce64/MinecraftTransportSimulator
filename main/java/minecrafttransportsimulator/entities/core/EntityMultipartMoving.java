@@ -139,6 +139,11 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	@Override
 	public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
 		if(!worldObj.isRemote){
+			ItemStack heldStack = player.getHeldItem(hand);
+			//Don't do anything if we use a wrench on the server; that opens the GUI on the client.
+			if(heldStack != null && MTSRegistry.wrench.equals(heldStack.getItem())){
+				return true;
+			}
 			//Before we check item actions, see if we clicked a part and we need to interact with it.
 			//If so, do the part's interaction rather than our own.
 			EntityMultipartChild hitChild = getHitChild(player);
@@ -157,17 +162,13 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				}
 			}
 			
-			if(player.getHeldItem(hand) != null){
+			if(heldStack != null){
 				//Check if we are holding something that can be interacted with.
-				ItemStack heldStack = player.getHeldItem(hand);
 				if(Items.NAME_TAG.equals(heldStack.getItem())){
 					//Use name tag to change name on side of vehicle.
 					int maxText = pack.general.displayTextMaxLength;
 					this.displayText = heldStack.getDisplayName().length() > maxText ? heldStack.getDisplayName().substring(0, maxText - 1) : heldStack.getDisplayName();
 					this.sendDataToClient();
-					return true;
-				}else if(MTSRegistry.wrench.equals(heldStack.getItem())){
-					//Don't do anything if we use a wrench on the server; that opens the GUI on the client.
 					return true;
 				}else if(MTSRegistry.key.equals(heldStack.getItem())){
 					ItemKey key = (ItemKey) heldStack.getItem();
