@@ -6,12 +6,12 @@ import minecrafttransportsimulator.entities.main.EntityPlane;
 import net.minecraft.item.Item;
 import net.minecraft.world.World;
 
-public class EntityEngineAircraftWasp extends EntityEngineAircraft{
-	public EntityEngineAircraftWasp(World world){
+public class EntityEngineAircraftBristol extends EntityEngineAircraft{
+	public EntityEngineAircraftBristol(World world){
 		super(world);
 	}
 	
-	public EntityEngineAircraftWasp(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+	public EntityEngineAircraftBristol(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		super(world, (EntityPlane) parent, parentUUID, offsetX, offsetY, offsetZ);
 	}
 	
@@ -37,22 +37,7 @@ public class EntityEngineAircraftWasp extends EntityEngineAircraft{
 	}
 
 	@Override
-	protected String getCrankingSoundName(){
-		return "enginewaspr1340_cranking";
-	}
-
-	@Override
-	protected String getStartingSoundName(){
-		return "enginewaspr1340_starting";
-	}
-
-	@Override
-	protected String getRunningSoundName(){
-		return "enginewaspr1340_running";
-	}
-
-	@Override
 	protected Item getEngineItem(){
-		return MTSRegistry.engineWaspR1340;
+		return MTSRegistry.engineBristolMercury;
 	}
 }

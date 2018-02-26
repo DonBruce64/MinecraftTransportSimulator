@@ -13,7 +13,7 @@ import minecrafttransportsimulator.blocks.BlockFuelPump;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLycoming;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftWasp;
+import minecrafttransportsimulator.entities.parts.EntityEngineAircraftBristol;
 import minecrafttransportsimulator.entities.parts.EntityEngineCarAMC;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
@@ -90,7 +90,7 @@ public final class MTSRegistry{
 	public static final Item skid = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item pontoon = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item engineLycoming0360 = new ItemEngine(ItemEngine.EngineItems.LYCOMING_O360).setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item engineWaspR1340 = new ItemEngine(ItemEngine.EngineItems.WASP_R1340).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item engineBristolMercury = new ItemEngine(ItemEngine.EngineItems.WASP_R1340).setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item engineAMCI4_A = new ItemEngine(ItemEngine.EngineItems.AMC_I4_A).setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item engineAMCI4_M = new ItemEngine(ItemEngine.EngineItems.AMC_I4_M).setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item propeller = new ItemPropeller().setCreativeTab(MTSCreativeTabs.tabMTS);
@@ -212,7 +212,7 @@ public final class MTSRegistry{
 		registerChildEntity(EntityEngineCarAMC.class, engineAMCI4_A);
 		registerChildEntity(EntityEngineCarAMC.class, engineAMCI4_M);
 		registerChildEntity(EntityEngineAircraftLycoming.class, engineLycoming0360);
-		registerChildEntity(EntityEngineAircraftWasp.class, engineWaspR1340);
+		registerChildEntity(EntityEngineAircraftBristol.class, engineBristolMercury);
 	}
 	
 	private static void initPackets(){
@@ -360,7 +360,7 @@ public final class MTSRegistry{
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.IRON_INGOT);
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineWaspR1340, false),
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineBristolMercury, false),
 				"ABA",
 				"ACA",
 				"ABA",
@@ -381,12 +381,12 @@ public final class MTSRegistry{
 				"B B",
 				'B', Blocks.OBSIDIAN,
 				'C', MTSRegistry.engineLycoming0360);
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineWaspR1340, false),
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineBristolMercury, false),
 				"B B",
 				"BCB",
 				"B B",
 				'B', Blocks.OBSIDIAN,
-				'C', MTSRegistry.engineWaspR1340);
+				'C', MTSRegistry.engineBristolMercury);
 	}
 	
 	private static void initAircraftInstrumentRecipes(){		

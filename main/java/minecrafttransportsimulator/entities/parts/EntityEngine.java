@@ -139,9 +139,9 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 				if(vehicle.electricPower > 2){
 					starterLevel += this.getStarterIncrement();
 					if(vehicle.electricPower > 6){
-						MTS.proxy.playSound(this, MTS.MODID + ":" + this.getCrankingSoundName(), 1, 1);
+						MTS.proxy.playSound(this, MTS.MODID + ":" + this.getEngineItem().getRegistryName().getResourcePath() + "_cranking", 1, 1);
 					}else{
-						MTS.proxy.playSound(this, MTS.MODID + ":" + this.getCrankingSoundName(), 1, (float) (vehicle.electricPower/8F));
+						MTS.proxy.playSound(this, MTS.MODID + ":" + this.getEngineItem().getRegistryName().getResourcePath() + "_cranking", 1, (float) (vehicle.electricPower/8F));
 					}
 				}
 			}
@@ -257,7 +257,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			}else if(state.equals(EngineStates.RUNNING)){
 				state = EngineStates.ENGINE_OFF;
 				internalFuel = 100;
-				MTS.proxy.playSound(this, MTS.MODID + ":" + this.getStartingSoundName(), 1, 1);
+				MTS.proxy.playSound(this, MTS.MODID + ":" + this.getEngineItem().getRegistryName().getResourcePath() + "_starting", 1, 1);
 			}
 		}
 	}
@@ -295,7 +295,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			return;
 		}
 		starterLevel += this.getStarterIncrement();
-		MTS.proxy.playSound(this, MTS.MODID + ":" + this.getCrankingSoundName(), 1, 1);
+		MTS.proxy.playSound(this, MTS.MODID + ":" + this.getEngineItem().getRegistryName().getResourcePath() + "_cranking", 1, 1);
 	}
 	
 	public void backfireEngine(){
@@ -321,7 +321,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		if(!worldObj.isRemote){
 			MTS.MTSNet.sendToAll(new EnginePacket(this.parent.getEntityId(), this.getEntityId(), (byte) 6));
 		}else{
-			MTS.proxy.playSound(this, MTS.MODID + ":" + this.getStartingSoundName(), 1, 1);
+			MTS.proxy.playSound(this, MTS.MODID + ":" + this.getEngineItem().getRegistryName().getResourcePath() + "_starting", 1, 1);
 		}
 	}
 	
@@ -342,7 +342,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 					vehicle.fuel = 0;
 				}
 			}
-			MTS.proxy.playSound(this, MTS.MODID + ":" + this.getStartingSoundName(), 1, 1);
+			MTS.proxy.playSound(this, MTS.MODID + ":" + this.getEngineItem().getRegistryName().getResourcePath() + "_starting", 1, 1);
 		}
 	}
 	
@@ -358,7 +358,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	@Override
 	@SideOnly(Side.CLIENT)
 	public MovingSound getNewSound(){
-		return new AttenuatedSound(MTS.MODID + ":" + this.getRunningSoundName(), this);
+		return new AttenuatedSound(MTS.MODID + ":" + this.getEngineItem().getRegistryName().getResourcePath() + "_running", this);
 	}
 
 	@Override
@@ -425,9 +425,6 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	
 	protected abstract byte getStarterPower();
 	protected abstract byte getStarterIncrement();
-	protected abstract String getCrankingSoundName();
-	protected abstract String getStartingSoundName();
-	protected abstract String getRunningSoundName();
 	protected abstract Item getEngineItem();
 	
 	public enum EngineStates{

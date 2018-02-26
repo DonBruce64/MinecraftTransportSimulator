@@ -20,7 +20,7 @@ public final class MTSAchievements{
 	private static final MTSAchievement rtfm = new MTSAchievement("achievement.rtfm", "rtfm", 0, 0, MTSRegistry.manual, null);
 	private static final MTSAchievement engineAircraftSmall = new MTSAchievement("achievement.engine_aircraft_small", "engine_aircraft_small", 2, 0, MTSRegistry.engineLycoming0360, rtfm);
 	private static final MTSAchievement engineAircraftOverhaul = new MTSAchievement("achievement.engine_aircraft_overhaul", "engine_aircraft_overhaul", 4, 0, new ItemStack(Blocks.OBSIDIAN), engineAircraftSmall);
-	private static final MTSAchievement engineAircraftLarge = new MTSAchievement("achievement.engine_aircraft_large", "engine_aircraft_large", 1, 2, MTSRegistry.engineWaspR1340, engineAircraftSmall);
+	private static final MTSAchievement engineAircraftLarge = new MTSAchievement("achievement.engine_aircraft_large", "engine_aircraft_large", 1, 2, MTSRegistry.engineBristolMercury, engineAircraftSmall);
 	private static final MTSAchievement propellerBench = new MTSAchievement("achievement.propeller_bench", "propeller_bench", 3, 2, MTSRegistry.itemBlockPropellerBench, engineAircraftSmall);
 	private static final MTSAchievement propeller = new MTSAchievement("achievement.propeller", "propeller", 3, 4, MTSRegistry.propeller, propellerBench);
 	private static final MTSAchievement propellerTooBig = new MTSAchievement("achievement.propeller_too_big", "propeller_too_big", 1, 4, new ItemStack(MTSRegistry.propeller, 1, 2), propeller);
@@ -86,11 +86,11 @@ public final class MTSAchievements{
 					}
 				}
 				engineAircraftSmall.trigger(event.player);
-			}else if(event.crafting.getItem().equals(MTSRegistry.engineWaspR1340)){
+			}else if(event.crafting.getItem().equals(MTSRegistry.engineBristolMercury)){
 				for(byte slot=0; slot < event.craftMatrix.getSizeInventory(); ++slot){
 					ItemStack stack = event.craftMatrix.getStackInSlot(slot);
 					if(stack != null){
-						if(MTSRegistry.engineWaspR1340.equals(stack.getItem())){
+						if(MTSRegistry.engineBristolMercury.equals(stack.getItem())){
 							engineAircraftOverhaul.trigger(event.player);
 						}
 					}

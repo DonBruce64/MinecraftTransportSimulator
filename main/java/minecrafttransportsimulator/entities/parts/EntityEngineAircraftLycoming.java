@@ -36,21 +36,6 @@ public class EntityEngineAircraftLycoming extends EntityEngineAircraft{
 	}
 
 	@Override
-	protected String getCrankingSoundName(){
-		return "enginelycoming0360_cranking";
-	}
-
-	@Override
-	protected String getStartingSoundName(){
-		return "enginelycoming0360_starting";
-	}
-
-	@Override
-	protected String getRunningSoundName(){
-		return "enginelycoming0360_running";
-	}
-
-	@Override
 	protected Item getEngineItem(){
 		return MTSRegistry.engineLycoming0360;
 	}
