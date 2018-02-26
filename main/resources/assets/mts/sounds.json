@@ -1,17 +1,18 @@
 {    
-    "small_aircraft_engine_cranking"    : {"category": "master", "sounds": [{"name": "mts:small_aircraft_engine_cranking","stream": false}]},
-    "small_aircraft_engine_starting"    : {"category": "master", "sounds": [{"name": "mts:small_aircraft_engine_starting","stream": false}]},
-    "small_aircraft_engine_running"     : {"category": "master", "sounds": [{"name": "mts:small_aircraft_engine_running","stream": false}]},
+    "enginelycoming0360_cranking"    : {"category": "master", "sounds": [{"name": "mts:enginelycoming0360_cranking","stream": false}]},
+    "enginelycoming0360_starting"    : {"category": "master", "sounds": [{"name": "mts:enginelycoming0360_starting","stream": false}]},
+    "enginelycoming0360_running"     : {"category": "master", "sounds": [{"name": "mts:enginelycoming0360_running","stream": false}]},
     
-    "large_aircraft_engine_cranking"     : {"category": "master", "sounds": [{"name": "mts:large_aircraft_engine_cranking","stream": false}]},
-	"large_aircraft_engine_starting"    : {"category": "master", "sounds": [{"name": "mts:large_aircraft_engine_starting","stream": false}]},
-    "large_aircraft_engine_running"     : {"category": "master", "sounds": [{"name": "mts:large_aircraft_engine_running","stream": false}]},
+    "enginewaspr1340_cranking"     : {"category": "master", "sounds": [{"name": "mts:enginewaspr1340_cranking","stream": false}]},
+	"enginewaspr1340_starting"    : {"category": "master", "sounds": [{"name": "mts:enginewaspr1340_starting","stream": false}]},
+    "enginewaspr1340_running"     : {"category": "master", "sounds": [{"name": "mts:enginewaspr1340_running","stream": false}]},
  
-    "small_automotive_engine_cranking"     : {"category": "master", "sounds": [{"name": "mts:small_automotive_engine_cranking","stream": false}]},
-    "small_automotive_engine_starting"     : {"category": "master", "sounds": [{"name": "mts:small_automotive_engine_starting","stream": false}]},
-    "small_automotive_engine_running"     : {"category": "master", "sounds": [{"name": "mts:small_automotive_engine_running","stream": false}]},
+    "engineamci4_cranking"     : {"category": "master", "sounds": [{"name": "mts:engineamci4_cranking","stream": false}]},
+    "engineamci4_starting"     : {"category": "master", "sounds": [{"name": "mts:engineamci4_starting","stream": false}]},
+    "engineamci4_running"     : {"category": "master", "sounds": [{"name": "mts:engineamci4_running","stream": false}]},
    
     "engine_sputter"    : {"category": "master", "sounds": [{"name": "mts:engine_sputter","stream": false}]},
+    "engine_shifting_grinding"    : {"category": "master", "sounds": [{"name": "mts:engine_shifting_grinding","stream": false}]},
     
     "horn_car"    : {"category": "master", "sounds": [{"name": "mts:horn_car","stream": false}]},
     

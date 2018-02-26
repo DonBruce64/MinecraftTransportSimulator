@@ -38,17 +38,17 @@ public class EntityEngineAircraftWasp extends EntityEngineAircraft{
 
 	@Override
 	protected String getCrankingSoundName(){
-		return "large_aircraft_engine_cranking";
+		return "enginewaspr1340_cranking";
 	}
 
 	@Override
 	protected String getStartingSoundName(){
-		return "large_aircraft_engine_starting";
+		return "enginewaspr1340_starting";
 	}
 
 	@Override
 	protected String getRunningSoundName(){
-		return "large_aircraft_engine_running";
+		return "enginewaspr1340_running";
 	}
 
 	@Override

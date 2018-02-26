@@ -38,17 +38,17 @@ public class EntityEngineCarAMC extends EntityEngineCar{
 
 	@Override
 	protected String getCrankingSoundName(){
-		return "small_automotive_engine_cranking";
+		return "engineamci4_cranking";
 	}
 
 	@Override
 	protected String getStartingSoundName(){
-		return "small_automotive_engine_starting";
+		return "engineamci4_starting";
 	}
 
 	@Override
 	protected String getRunningSoundName(){
-		return "small_automotive_engine_running";
+		return "engineamci4_running";
 	}
 
 	@Override

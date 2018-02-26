@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.parts;
 
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.main.EntityCar;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -115,7 +116,6 @@ public abstract class EntityEngineCar extends EntityEngine{
 	}
 	
 	public void shiftUp(){
-		System.out.println(numberGears);
 		if(gearNumber == -1){
 			gearNumber = 0;
 		}else if(gearNumber == 0){
@@ -123,7 +123,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 				gearNumber = 1;
 			}else{
 				hours += 100;
-				//TODO add gearbox grinding sound here.
+				MTS.proxy.playSound(this, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
 			}
 		}else if(gearNumber < numberGears){
 			++gearNumber;
@@ -141,7 +141,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 					gearNumber = -1;
 				}else{
 					hours += 100;
-					//TODO add gearbox grinding sound here.
+					MTS.proxy.playSound(this, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
 				}
 			}
 		}

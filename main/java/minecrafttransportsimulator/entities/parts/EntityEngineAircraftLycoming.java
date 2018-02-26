@@ -37,17 +37,17 @@ public class EntityEngineAircraftLycoming extends EntityEngineAircraft{
 
 	@Override
 	protected String getCrankingSoundName(){
-		return "small_aircraft_engine_cranking";
+		return "enginelycoming0360_cranking";
 	}
 
 	@Override
 	protected String getStartingSoundName(){
-		return "small_aircraft_engine_starting";
+		return "enginelycoming0360_starting";
 	}
 
 	@Override
 	protected String getRunningSoundName(){
-		return "small_aircraft_engine_running";
+		return "enginelycoming0360_running";
 	}
 
 	@Override
