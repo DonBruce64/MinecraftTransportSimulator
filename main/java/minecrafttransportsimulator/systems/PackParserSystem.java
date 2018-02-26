@@ -161,8 +161,12 @@ public final class PackParserSystem{
         	BufferedReader buffer = new BufferedReader(new FileReader(file));
         	boolean validFile = false;
         	while(buffer.ready()){
-        		if(buffer.readLine().contains("definitions")){
-        			validFile = true;
+        		String line = buffer.readLine();
+        		if(line.contains("packVersion")){
+        			byte packVersionNumber = Byte.valueOf(line.substring(line.indexOf(':') + 1, line.indexOf(',')).trim());
+        			if(packVersionNumber == MTS.packJSONVersionNumber){
+            			validFile = true;
+        			}
         			break;
         		}
         	}

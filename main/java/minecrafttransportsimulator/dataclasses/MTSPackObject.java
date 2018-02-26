@@ -24,6 +24,7 @@ public class MTSPackObject{
     
     public class PackGeneralConfig{
     	public boolean openTop;
+    	public byte packVersion;
     	public int emptyMass;
     	public int displayTextMaxLength;
         public String name;
