@@ -3,7 +3,6 @@ package minecrafttransportsimulator.systems;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
@@ -67,11 +66,9 @@ public final class ClientEventSystem{
         if(minecraft.theWorld != null){
             if(event.phase.equals(Phase.END)){
             	if(!firstTickRun){
-	            	if(MTSRegistry.multipartItemMap.size() == 0){
-	            		FMLCommonHandler.instance().showGuiScreen(new GUISplash(false));
-	            	}else if(ConfigSystem.getIntegerConfig("MajorVersion") != Integer.valueOf(MTS.MODVER.substring(0, 1))){
+	            	if(ConfigSystem.getIntegerConfig("MajorVersion") != Integer.valueOf(MTS.MODVER.substring(0, 1))){
 	                    ConfigSystem.setClientConfig("MajorVersion", Integer.valueOf(MTS.MODVER.substring(0, 1)));
-	                    FMLCommonHandler.instance().showGuiScreen(new GUISplash(true));
+	                    FMLCommonHandler.instance().showGuiScreen(new GUISplash());
 	                }
             	}
             	firstTickRun = true;
