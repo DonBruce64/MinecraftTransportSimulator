@@ -197,7 +197,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(DrawScreenEvent.Post event){
-    	if(!PackParserSystem.getRegisteredNames().isEmpty()){
+    	if(PackParserSystem.getRegisteredNames().isEmpty()){
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
 	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()] instanceof MTSCreativeTabs){
