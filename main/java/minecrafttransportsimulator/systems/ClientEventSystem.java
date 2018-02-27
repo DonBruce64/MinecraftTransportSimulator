@@ -3,20 +3,25 @@ package minecrafttransportsimulator.systems;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.guis.GUIConfig;
+import minecrafttransportsimulator.guis.GUIPackMissing;
 import minecrafttransportsimulator.guis.GUISplash;
 import minecrafttransportsimulator.packets.general.PackReloadPacket;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.inventory.GuiContainerCreative;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
+import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -170,10 +175,10 @@ public final class ClientEventSystem{
     }
 
     /**
-     * Renders HUDs for Planes.
+     * Renders HUDs for Aircraft.
      */
     @SubscribeEvent
-    public static void on(RenderGameOverlayEvent.Pre event){
+    public static void on(RenderGameOverlayEvent.Pre event){    	
         if(minecraft.thePlayer.getRidingEntity() instanceof EntitySeat){
             if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
                 event.setCanceled(true);
@@ -185,6 +190,21 @@ public final class ClientEventSystem{
                 }
             }
         }
+    }
+    
+    /**
+     * Renders a warning on the MTS creative tab if there is no pack data.
+     */
+    @SubscribeEvent
+    public static void on(DrawScreenEvent.Post event){
+    	if(!PackParserSystem.getRegisteredNames().isEmpty()){
+	    	if(event.getGui() instanceof GuiContainerCreative){
+	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
+	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()] instanceof MTSCreativeTabs){
+	    			FMLCommonHandler.instance().showGuiScreen(new GUIPackMissing());
+	    		}
+	    	}
+    	}
     }
 
     /**
