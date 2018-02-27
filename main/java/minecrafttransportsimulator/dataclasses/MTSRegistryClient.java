@@ -42,7 +42,8 @@ public final class MTSRegistryClient{
 
 	public static void loadCustomOBJModels(){
 		modelMap.put("fuelpump", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/fuelpump.obj")));
-		modelMap.put("enginecarsmall", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/enginecarsmall.obj")));
+		modelMap.put("engineamci4", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/engineamci4.obj")));
+		modelMap.put("enginedetroitdiesel", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/enginedetroitdiesel.obj")));
 		for(String name : PackParserSystem.getRegisteredNames()){
 			modelMap.put(name, OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/" + PackParserSystem.getPack(name).rendering.modelName)));
 		}
@@ -68,9 +69,9 @@ public final class MTSRegistryClient{
 		registerItemRender(MTSRegistry.wheelLarge);
 		registerItemRender(MTSRegistry.skid);
 		registerItemRender(MTSRegistry.pontoon);
-		registerItemRender(MTSRegistry.engineAMCI4_A);
-		registerItemRender(MTSRegistry.engineAMCI4_M);
-		registerItemRender(MTSRegistry.engineLycoming0360);
+		registerItemRender(MTSRegistry.engineAMCI4);
+		registerItemRender(MTSRegistry.engineDetroitDiesel);
+		registerItemRender(MTSRegistry.engineLycomingO360);
 		registerItemRender(MTSRegistry.engineBristolMercury);
 		registerItemRenderSeries(MTSRegistry.propeller, 3);
 		registerItemRenderSeries(MTSRegistry.seat, 102);

@@ -217,6 +217,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 						try{
 							Constructor<? extends EntityMultipartChild> construct = MTSRegistry.partClasses.get(heldStack.getItem().getRegistryName().getResourcePath()).getConstructor(World.class, EntityMultipartParent.class, String.class, float.class, float.class, float.class, int.class);
 							EntityMultipartChild newChild = construct.newInstance(worldObj, this, this.UUID, partToSpawn.pos[0], partToSpawn.pos[1], partToSpawn.pos[2], heldStack.getItemDamage());
+							//TODO make this use the default NBT methods rather than a custom one.
 							newChild.setNBTFromStack(heldStack);
 							newChild.setTurnsWithSteer(partToSpawn.turnsWithSteer);
 							newChild.setController(partToSpawn.isController);

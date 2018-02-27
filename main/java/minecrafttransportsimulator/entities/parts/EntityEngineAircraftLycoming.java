@@ -26,17 +26,7 @@ public class EntityEngineAircraftLycoming extends EntityEngineAircraft{
 	}
 
 	@Override
-	protected byte getStarterPower(){
-		return 50;
-	}
-
-	@Override
-	protected byte getStarterIncrement(){
-		return 4;
-	}
-
-	@Override
 	protected Item getEngineItem(){
-		return MTSRegistry.engineLycoming0360;
+		return MTSRegistry.engineLycomingO360;
 	}
 }

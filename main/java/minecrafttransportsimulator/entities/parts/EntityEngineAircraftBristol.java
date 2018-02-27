@@ -15,7 +15,6 @@ public class EntityEngineAircraftBristol extends EntityEngineAircraft{
 		super(world, (EntityPlane) parent, parentUUID, offsetX, offsetY, offsetZ);
 	}
 	
-	
 	@Override
 	public float getWidth(){
 		return 1.2F;
@@ -24,16 +23,6 @@ public class EntityEngineAircraftBristol extends EntityEngineAircraft{
 	@Override
 	public float getHeight(){
 		return 1.2F;
-	}
-
-	@Override
-	protected byte getStarterPower(){
-		return 25;
-	}
-
-	@Override
-	protected byte getStarterIncrement(){
-		return 13;
 	}
 
 	@Override

@@ -27,18 +27,8 @@ public class EntityEngineCarAMC extends EntityEngineCar{
 	}
 
 	@Override
-	protected byte getStarterPower(){
-		return 50;
-	}
-
-	@Override
-	protected byte getStarterIncrement(){
-		return 3;
-	}
-
-	@Override
 	protected Item getEngineItem(){
-		return MTSRegistry.engineAMCI4_A;
+		return MTSRegistry.engineAMCI4;
 	}
 		
 	@Override
@@ -48,8 +38,8 @@ public class EntityEngineCarAMC extends EntityEngineCar{
 				case(-1): return -2.0F;
 				case(1): return 3.5F;
 				case(2): return 2.5F;
-				case(3): return 1.25F;
-				case(4): return 0.75F;
+				case(3): return 1.5F;
+				case(4): return 0.90F;
 				default: return 0.0F;
 			}
 		}else{

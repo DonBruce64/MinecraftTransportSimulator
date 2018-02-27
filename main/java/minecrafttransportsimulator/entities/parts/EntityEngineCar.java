@@ -42,8 +42,8 @@ public abstract class EntityEngineCar extends EntityEngine{
 			}
 			if(lowestSpeed != 999){
 				//Don't let the engine stall while being stopped.
-				if(lowestSpeed*1200F*getRatioForGear(gearNumber)*2.0F > engineStallRPM || (!state.running && !state.esOn)){
-					RPM = lowestSpeed*1200F*getRatioForGear(gearNumber)*2.0F;
+				if(lowestSpeed*1200F*getRatioForGear(gearNumber)*1.0F > engineStallRPM || (!state.running && !state.esOn)){
+					RPM = lowestSpeed*1200F*getRatioForGear(gearNumber)*1.0F;
 				}else{
 					RPM -= (RPM - engineStallRPM)/10;
 				}
@@ -86,7 +86,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 					engineForce /= 2F;
 					for(EntityWheel wheel : car.wheels){
 						if((wheel.offsetZ > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offsetZ < 0 && car.pack.car.isRearWheelDrive)){
-							wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForGear(gearNumber)/2.0F, wheel.angularVelocity + 0.05);
+							wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForGear(gearNumber)/1.0F, wheel.angularVelocity + 0.05);
 						}
 					}
 				}else{

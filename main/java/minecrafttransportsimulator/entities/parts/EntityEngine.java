@@ -28,6 +28,8 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	public boolean brokenStarter;
 	public boolean isAutomatic;
 	public byte numberGears;
+	public byte starterPower;
+	public byte starterIncrement;
 	public int maxRPM;
 	public int maxSafeRPM;
 	public float fuelConsumption;
@@ -74,6 +76,8 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		brokenStarter=stackNBT.getBoolean("brokenStarter");
 		isAutomatic=stackNBT.getBoolean("isAutomatic");
 		numberGears=stackNBT.getByte("numberGears");
+		starterPower=stackNBT.getByte("starterPower");
+		starterIncrement=stackNBT.getByte("starterIncrement");
 		hours = stackNBT.getDouble("hours");
 		maxRPM = stackNBT.getInteger("maxRPM");
 		maxSafeRPM = stackNBT.getInteger("maxSafeRPM");
@@ -88,7 +92,9 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		tag.setBoolean("fuelLeak", this.fuelLeak);
 		tag.setBoolean("brokenStarter", this.brokenStarter);
 		tag.setBoolean("isAutomatic", this.isAutomatic);
-		tag.setByte("numberGears", numberGears);
+		tag.setByte("numberGears", this.numberGears);
+		tag.setByte("starterPower", this.starterPower);
+		tag.setByte("starterIncrement", this.starterIncrement);
 		tag.setInteger("maxRPM", maxRPM);
 		tag.setInteger("maxSafeRPM", maxSafeRPM);
 		tag.setFloat("fuelConsumption", fuelConsumption);
@@ -137,7 +143,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		if(state.esOn){
 			if(starterLevel == 0){
 				if(vehicle.electricPower > 2){
-					starterLevel += this.getStarterIncrement();
+					starterLevel += starterIncrement;
 					if(vehicle.electricPower > 6){
 						MTS.proxy.playSound(this, MTS.MODID + ":" + this.getEngineItem().getRegistryName().getResourcePath() + "_cranking", 1, 1);
 					}else{
@@ -161,9 +167,9 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		if(starterLevel > 0){
 			--starterLevel;
 			if(RPM < 600){
-				RPM = Math.min(RPM + this.getStarterPower(), 600);
+				RPM = Math.min(RPM + starterPower, 600);
 			}else{
-				RPM = Math.max(RPM - this.getStarterPower(), 600);
+				RPM = Math.max(RPM - starterPower, 600);
 			}
 		}
 		
@@ -294,7 +300,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		}else{
 			return;
 		}
-		starterLevel += this.getStarterIncrement();
+		starterLevel += starterIncrement;
 		MTS.proxy.playSound(this, MTS.MODID + ":" + this.getEngineItem().getRegistryName().getResourcePath() + "_cranking", 1, 1);
 	}
 	
@@ -423,8 +429,6 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		}
 	}
 	
-	protected abstract byte getStarterPower();
-	protected abstract byte getStarterIncrement();
 	protected abstract Item getEngineItem();
 	
 	public enum EngineStates{
@@ -458,7 +462,10 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		this.oilLeak=tagCompound.getBoolean("oilLeak");
 		this.fuelLeak=tagCompound.getBoolean("fuelLeak");
 		this.brokenStarter=tagCompound.getBoolean("brokenStarter");
+		this.isAutomatic=tagCompound.getBoolean("isAutomatic");
 		this.numberGears=tagCompound.getByte("numberGears");
+		this.starterPower=tagCompound.getByte("starterPower");
+		this.starterIncrement=tagCompound.getByte("starterIncrement");
 		this.maxRPM=tagCompound.getInteger("maxRPM");
 		this.maxSafeRPM=tagCompound.getInteger("maxSafeRPM");
 		this.fuelConsumption=tagCompound.getFloat("fuelConsumption");
@@ -475,7 +482,10 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		tagCompound.setBoolean("oilLeak", this.oilLeak);
 		tagCompound.setBoolean("fuelLeak", this.fuelLeak);
 		tagCompound.setBoolean("brokenStarter", this.brokenStarter);
+		tagCompound.setBoolean("isAutomatic", this.isAutomatic);
 		tagCompound.setByte("numberGears", this.numberGears);
+		tagCompound.setByte("starterPower", this.starterPower);
+		tagCompound.setByte("starterIncrement", this.starterIncrement);
 		tagCompound.setInteger("maxRPM", this.maxRPM);
 		tagCompound.setInteger("maxSafeRPM", this.maxSafeRPM);
 		tagCompound.setFloat("fuelConsumption", this.fuelConsumption);

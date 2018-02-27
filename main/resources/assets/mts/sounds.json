@@ -11,6 +11,10 @@
     "engineamci4_starting"     : {"category": "master", "sounds": [{"name": "mts:engineamci4_starting","stream": false}]},
     "engineamci4_running"     : {"category": "master", "sounds": [{"name": "mts:engineamci4_running","stream": false}]},
    
+    "enginedetroitdiesel_cranking"     : {"category": "master", "sounds": [{"name": "mts:enginedetroitdiesel_cranking","stream": false}]},
+    "enginedetroitdiesel_starting"     : {"category": "master", "sounds": [{"name": "mts:enginedetroitdiesel_starting","stream": false}]},
+    "enginedetroitdiesel_running"     : {"category": "master", "sounds": [{"name": "mts:enginedetroitdiesel_running","stream": false}]},
+   
     "engine_sputter"    : {"category": "master", "sounds": [{"name": "mts:engine_sputter","stream": false}]},
     "engine_shifting_grinding"    : {"category": "master", "sounds": [{"name": "mts:engine_shifting_grinding","stream": false}]},
     

@@ -15,9 +15,9 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public final class ItemEngine extends Item{
-	private final EngineItems engineItem;
+	private final Engines engineItem;
 	
-	public ItemEngine(EngineItems engineItem){
+	public ItemEngine(Engines engineItem){
 		this.hasSubtypes=true;
 		this.setMaxStackSize(1);
 		this.engineItem = engineItem;
@@ -30,7 +30,7 @@ public final class ItemEngine extends Item{
 		if(stackTag.getFloat("fuelConsumption") == 0){
 			tooltipLines.add(TextFormatting.DARK_PURPLE + I18n.format("info.item.engine.creative"));
 		}
-		tooltipLines.add(stackTag.getBoolean("automatic") ? I18n.format("info.item.engine.automatic") : I18n.format("info.item.engine.manual"));
+		tooltipLines.add(stackTag.getBoolean("isAutomatic") ? I18n.format("info.item.engine.automatic") : I18n.format("info.item.engine.manual"));
 		tooltipLines.add(I18n.format("info.item.engine.numbergears") + stackTag.getByte("numberGears"));
 		tooltipLines.add(I18n.format("info.item.engine.maxrpm") + stackTag.getInteger("maxRPM"));
 		tooltipLines.add(I18n.format("info.item.engine.maxsaferpm") + stackTag.getInteger("maxSafeRPM"));
@@ -59,8 +59,10 @@ public final class ItemEngine extends Item{
 	public static ItemStack getStackWithData(ItemEngine item, boolean creative){
 		ItemStack stack = new ItemStack(item);
 		NBTTagCompound stackTag = new NBTTagCompound();
-		stackTag.setBoolean("automatic", item.engineItem.isAutomatic);
+		stackTag.setBoolean("isAutomatic", item.engineItem.isAutomatic);
 		stackTag.setByte("numberGears", item.engineItem.numberGears);
+		stackTag.setByte("starterPower", item.engineItem.starterPower);
+		stackTag.setByte("starterIncrement", item.engineItem.starterIncrement);
 		stackTag.setInteger("maxRPM", item.engineItem.maxRPM);
 		stackTag.setInteger("maxSafeRPM", EntityEngine.getMaxSafeRPM(item.engineItem.maxRPM));
 		stackTag.setFloat("fuelConsumption", creative ? 0.0F : item.engineItem.fuelConsumption);
@@ -70,20 +72,24 @@ public final class ItemEngine extends Item{
 	}
 	
 	
-	public enum EngineItems{
-		LYCOMING_O360(true, (byte) 1, 2900, 0.4F),
-		WASP_R1340(true, (byte) 1, 2900, 0.4F),
-		AMC_I4_A(true, (byte) 4, 7500, 0.5F),
-		AMC_I4_M(false, (byte) 5, 7500, 0.5F);
+	public enum Engines{
+		LYCOMING_O360(true, (byte) 1, (byte) 50, (byte) 4, 2900, 0.4F),
+		BRISTOL_MERCURY(true, (byte) 1, (byte) 25, (byte) 13, 2900, 0.4F),
+		AMC_I4(true, (byte) 4, (byte) 50, (byte) 3, 7500, 0.5F),
+		DETROIT_DIESEL(false, (byte) 9, (byte) 25, (byte) 4, 3500, 0.75F);
 		
 		private final boolean isAutomatic;
 		private final byte numberGears;
+		private final byte starterPower;
+		private final byte starterIncrement;
 		private final int maxRPM;
 		private final float fuelConsumption;
 		
-		private EngineItems(boolean isAutomatic, byte numberGears, int maxRPM, float fuelConsumption){
+		private Engines(boolean isAutomatic, byte numberGears, byte starterPower, byte starterIncrement, int maxRPM, float fuelConsumption){
 			this.isAutomatic = isAutomatic;
 			this.numberGears = numberGears;
+			this.starterPower = starterPower;
+			this.starterIncrement = starterIncrement;
 			this.maxRPM = maxRPM;
 			this.fuelConsumption = fuelConsumption;
 		}

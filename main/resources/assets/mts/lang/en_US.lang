@@ -177,10 +177,10 @@ item.wheellarge.name=Large Wheel
 item.propeller_wood.name=Wooden Propeller
 item.propeller_iron.name=Iron Propeller
 item.propeller_obsidian.name=Obsidian Propeller
+item.enginelycomingo360.name=Lycoming O-360 Aircraft Engine
 item.enginebristolmercury.name=Bristol Mercury Aircraft Engine
-item.enginewaspr1340.name=Wasp R-1340 Aircraft Engine
-item.engineamci4_a.name=AMC Inline 4 Car Engine
-item.engineamci4_m.name=AMC Inline 4 Car Engine
+item.engineamci4.name=AMC Inline 4 Car Engine
+item.enginedetroitdiesel.name=Detroit Diesel Engine
 
 item.wrench.name=Wrench
 item.key.name=Key

@@ -170,12 +170,11 @@ public final class PackParserSystem{
         				log.add("ERROR!  Found JSON with version " + packVersionNumber +". We are using " + MTS.packJSONVersionNumber + ". This file will NOT be loaded!");
         			}
         			break;
-        		}else{
-        			log.add("ERROR!  Invalid JSON file detected.  This file will NOT be loaded!");
         		}
         	}
         	buffer.close();
         	if(!validFile){
+        		log.add("ERROR!  Invalid JSON file detected.  This file will NOT be loaded!");
         		return;
         	}
             pack = new Gson().fromJson(new FileReader(file), MTSPackObject.class);
