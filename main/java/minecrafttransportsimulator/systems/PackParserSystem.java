@@ -166,8 +166,12 @@ public final class PackParserSystem{
         			byte packVersionNumber = Byte.valueOf(line.substring(line.indexOf(':') + 1, line.indexOf(',')).trim());
         			if(packVersionNumber == MTS.packJSONVersionNumber){
             			validFile = true;
+        			}else{
+        				log.add("ERROR!  Found JSON with version " + packVersionNumber +". We are using " + MTS.packJSONVersionNumber + ". This file will NOT be loaded!");
         			}
         			break;
+        		}else{
+        			log.add("ERROR!  Invalid JSON file detected.  This file will NOT be loaded!");
         		}
         	}
         	buffer.close();
