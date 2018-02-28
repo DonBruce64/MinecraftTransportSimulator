@@ -26,7 +26,6 @@ public abstract class EntityEngineCar extends EntityEngine{
 		if(!linked){return;}
 		car = (EntityCar) vehicle;
 
-		
 		//Set the speed of the engine to the speed of the driving wheels.
 		float lowestSpeed = 999F;
 		if(getCurrentGear() != 0){
@@ -42,8 +41,8 @@ public abstract class EntityEngineCar extends EntityEngine{
 			}
 			if(lowestSpeed != 999){
 				//Don't let the engine stall while being stopped.
-				if(lowestSpeed*1200F*getRatioForGear(gearNumber)*1.0F > engineStallRPM || (!state.running && !state.esOn)){
-					RPM = lowestSpeed*1200F*getRatioForGear(gearNumber)*1.0F;
+				if(lowestSpeed*1200F*getRatioForGear(gearNumber) > engineStallRPM || (!state.running && !state.esOn)){
+					RPM = lowestSpeed*1200F*getRatioForGear(gearNumber);
 				}else{
 					RPM -= (RPM - engineStallRPM)/10;
 				}
@@ -74,11 +73,16 @@ public abstract class EntityEngineCar extends EntityEngine{
 			}
 		}
 		
+		//If running, in reverse, and we are a big truck, fire the backup beepers.
+		if(state.running && this.gearNumber == -1 && car.pack != null && car.electricPower > 4 && car.worldObj.getTotalWorldTime()%20==1){
+			MTS.proxy.playSound(car, MTS.MODID + ":backup_beeper", 1.0F, 1);
+		}
+		
 		//If running, use the friction of the wheels to determine the new speed.
 		if(state.running || state.esOn){
 			engineTargetRPM = car.throttle/100F*(maxRPM - engineStartRPM/1.25 - hours) + engineStartRPM/1.25;
 			if(getRatioForGear(gearNumber) != 0){
-				engineTorque = RPM/maxSafeRPM*getRatioForGear(gearNumber);
+				engineTorque = RPM/(maxSafeRPM - 3000*(1500/maxSafeRPM))*getRatioForGear(gearNumber);
 				
 				//Check to see if the wheels have enough friction to affect the engine.
 				engineForce = (engineTargetRPM - RPM)/maxRPM*engineTorque;
@@ -86,11 +90,11 @@ public abstract class EntityEngineCar extends EntityEngine{
 					engineForce /= 2F;
 					for(EntityWheel wheel : car.wheels){
 						if((wheel.offsetZ > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offsetZ < 0 && car.pack.car.isRearWheelDrive)){
-							wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForGear(gearNumber)/1.0F, wheel.angularVelocity + 0.05);
+							wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForGear(gearNumber), wheel.angularVelocity + 0.05);
 						}
 					}
 				}else{
-					//If we have wheels no on the ground and we drive them, adjust their velocity now.
+					//If we have wheels not on the ground and we drive them, adjust their velocity now.
 					for(EntityWheel wheel : car.wheels){
 						if(!wheel.isOnGround() && ((wheel.offsetZ > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offsetZ < 0 && car.pack.car.isRearWheelDrive))){
 							wheel.angularVelocity = lowestSpeed;
