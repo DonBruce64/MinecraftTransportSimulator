@@ -3,6 +3,7 @@ package minecrafttransportsimulator.packets.control;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
+import minecrafttransportsimulator.entities.main.EntityCar;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -48,7 +49,11 @@ public class BrakePacket implements IMessage{
 							thisEntity.brakeOn = (message.brakeCode & 1) == 1 ? true : false;
 						}
 						if((message.brakeCode & 8) == 8){
+							boolean wasParkingBrakeOn = thisEntity.parkingBrakeOn;
 							thisEntity.parkingBrakeOn = (message.brakeCode & 4) == 4 ? true : false;
+							if(thisEntity.parkingBrakeOn && !wasParkingBrakeOn && thisEntity instanceof EntityCar && thisEntity.pack != null && thisEntity.pack.car.isBigTruck){
+								MTS.proxy.playSound(thisEntity, MTS.MODID + ":air_brake_activating", 1.0F, 1);
+							}
 						}
 						if(ctx.side.isServer()){
 							MTS.MTSNet.sendToAll(message);
