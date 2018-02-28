@@ -104,30 +104,30 @@ public final class PackParserSystem{
     private static boolean parseModDirectory(File modDir, File assetDir){
     	boolean foundPack = false;
     	for(File modFile : modDir.listFiles()){
-    		if(modFile.getName().endsWith(".zip")){
-    			log.add("Checking the following zip file for pack data: " + modFile.getAbsolutePath());
+    		if(modFile.getName().endsWith(".jar")){
+    			log.add("Checking the following jar file for pack data: " + modFile.getAbsolutePath());
     			byte packDefsAdded = 0;
     			try{
-    				ZipFile zipFile = new ZipFile(modFile);
-    				Enumeration<? extends ZipEntry> zipEnum = zipFile.entries();
-    				while(zipEnum.hasMoreElements()){
-    					ZipEntry zipEntry = zipEnum.nextElement();
-    					if(zipEntry.getName().contains("mts/")){
+    				ZipFile jarFile = new ZipFile(modFile);
+    				Enumeration<? extends ZipEntry> jarEnum = jarFile.entries();
+    				while(jarEnum.hasMoreElements()){
+    					ZipEntry jarEntry = jarEnum.nextElement();
+    					if(jarEntry.getName().contains("mts/")){
     						//Check to see if this file is a directory.  If so, ignore it and go on.
-    						if(zipEntry.isDirectory()){
+    						if(jarEntry.isDirectory()){
     							continue;
-    						}else if(zipEntry.getName().contains("jsondefs")){
+    						}else if(jarEntry.getName().contains("jsondefs")){
     							++packDefsAdded;
     						}
     						
     						//If the file exists, replace it to update it.
-    						File outputfile = new File(assetDir + File.separator + zipEntry.getName().substring("mts/".length()));
+    						File outputfile = new File(assetDir + File.separator + jarEntry.getName().substring("mts/".length()));
     						if(outputfile.exists()){
     							outputfile.delete();
     						}
     						
     						//Now copy over the file.
-    						InputStream inputStream = zipFile.getInputStream(zipEntry);
+    						InputStream inputStream = jarFile.getInputStream(jarEntry);
     						FileOutputStream outputStream = new FileOutputStream(outputfile);
     						
     						byte[] bytes = new byte[1024];
@@ -141,7 +141,7 @@ public final class PackParserSystem{
     						foundPack = true;
     					}
     				}
-    				zipFile.close();
+    				jarFile.close();
     			}catch(IOException e){
     				e.printStackTrace();
     				return false;
