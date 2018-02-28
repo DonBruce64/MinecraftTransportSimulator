@@ -25,6 +25,7 @@ import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.main.EntityPlane;
+import minecrafttransportsimulator.entities.parts.EntityEngineCar;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -306,6 +307,28 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 	}
 	
 	private static void rotateObject(EntityMultipartMoving mover, PackRotatableModelObject rotatable){
+		if(rotatable.rotationVariable.equals("door")){
+			if(mover.parkingBrakeOn && mover.velocity == 0 && !mover.locked){
+				GL11.glRotatef(-60F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
+			}
+		}
+		if(mover instanceof EntityMultipartVehicle){
+			if(rotatable.rotationVariable.equals("throttle")){
+				GL11.glRotatef(((EntityMultipartVehicle) mover).throttle/4F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
+			}else if(rotatable.rotationVariable.equals("brake")){
+				if(((EntityMultipartVehicle) mover).brakeOn){
+					GL11.glRotatef(30, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
+				}
+			}else if(rotatable.rotationVariable.equals("p_brake")){
+				if(((EntityMultipartVehicle) mover).parkingBrakeOn){
+					GL11.glRotatef(30, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
+				}
+			}else if(rotatable.rotationVariable.equals("gearshift")){
+				if(((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1) != null){
+					GL11.glRotatef(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()*3, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
+				}
+			}
+		}
 		if(mover instanceof EntityPlane){
 			if(rotatable.rotationVariable.equals("aileron")){
 				GL11.glRotatef(((EntityPlane) mover).aileronAngle/10F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
@@ -315,11 +338,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				GL11.glRotatef(((EntityPlane) mover).rudderAngle/10F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
 			}else if(rotatable.rotationVariable.equals("flap")){
 				GL11.glRotatef(((EntityPlane) mover).flapAngle/10F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
-			}else if(rotatable.rotationVariable.equals("door")){
-				if(mover.parkingBrakeOn && mover.velocity == 0 && !mover.locked){
-					GL11.glRotatef(-60F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
-				}
-			}
+			}  
 		}
 	}
 	
