@@ -278,28 +278,31 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				//If the attacker is a player with a wrench (not sneaking), remove the part entirely.
 				
 				Entity attacker = source.getEntity();
-				EntityMultipartChild hitChild = getHitChild(attacker);
-				if(attacker instanceof EntityPlayer && ((EntityPlayer) attacker).getHeldItemMainhand() != null && ((EntityPlayer) attacker).getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
-					if(hitChild != null){
-						EntityPlayer attackingPlayer = (EntityPlayer) attacker;
-						boolean isPlayerOP = attackingPlayer.getServer().getPlayerList().getOppedPlayers().getEntry(attackingPlayer.getGameProfile()) != null || attackingPlayer.getServer().isSinglePlayer();
-						if(this.ownerName.isEmpty() || attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString().equals(this.ownerName) || isPlayerOP){
-							//Player can remove part.  Spawn item in the world and remove part.
-							ItemStack droppedItem = hitChild.getItemStack();
-							if(droppedItem != null){
-								worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, droppedItem));
+				if(attacker != null){
+					EntityMultipartChild hitChild = getHitChild(attacker);
+					if(attacker instanceof EntityPlayer && ((EntityPlayer) attacker).getHeldItemMainhand() != null && ((EntityPlayer) attacker).getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
+						if(hitChild != null){
+							EntityPlayer attackingPlayer = (EntityPlayer) attacker;
+							boolean isPlayerOP = attackingPlayer.getServer().getPlayerList().getOppedPlayers().getEntry(attackingPlayer.getGameProfile()) != null || attackingPlayer.getServer().isSinglePlayer();
+							if(this.ownerName.isEmpty() || attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString().equals(this.ownerName) || isPlayerOP){
+								//Player can remove part.  Spawn item in the world and remove part.
+								ItemStack droppedItem = hitChild.getItemStack();
+								if(droppedItem != null){
+									worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, droppedItem));
+								}
+								this.removeChild(hitChild.UUID, false);
+							}else{
+								MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehicleowned"), (EntityPlayerMP) attackingPlayer);
 							}
-							this.removeChild(hitChild.UUID, false);
-						}else{
-							MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehicleowned"), (EntityPlayerMP) attackingPlayer);
 						}
+						return true;
 					}
-					return true;
-				}
-				
-				if(hitChild != null){
-					hitChild.attackPart(source, damage);
-					return true;
+					
+					
+					if(hitChild != null){
+						hitChild.attackPart(source, damage);
+						return true;
+					}
 				}
 			}
 			
@@ -350,7 +353,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		return true;
 	}
 	
-	private EntityMultipartChild getHitChild(Entity entity){		
+	private EntityMultipartChild getHitChild(Entity entity){
 		Vec3d lookVec = entity.getLook(1.0F);
 		Vec3d hitVec = entity.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
 		for(float f=1.0F; f<4.0F; f += 0.1F){
