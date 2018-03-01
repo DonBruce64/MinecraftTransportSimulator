@@ -23,6 +23,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	protected EntityMultipartVehicle vehicle;
 	
 	//NBT data
+	public boolean isCreative;
 	public boolean oilLeak;
 	public boolean fuelLeak;
 	public boolean brokenStarter;
@@ -71,6 +72,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	@Override
 	public void setNBTFromStack(ItemStack stack){
 		NBTTagCompound stackNBT = stack.getTagCompound();
+		isCreative=stackNBT.getBoolean("isCreative");
 		oilLeak=stackNBT.getBoolean("oilLeak");
 		fuelLeak=stackNBT.getBoolean("fuelLeak");
 		brokenStarter=stackNBT.getBoolean("brokenStarter");
@@ -88,6 +90,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	public ItemStack getItemStack(){
 		ItemStack engineStack = new ItemStack(this.getEngineItem());
 		NBTTagCompound tag = new NBTTagCompound();
+		tag.setBoolean("isCreative", this.isCreative);
 		tag.setBoolean("oilLeak", this.oilLeak);
 		tag.setBoolean("fuelLeak", this.fuelLeak);
 		tag.setBoolean("brokenStarter", this.brokenStarter);
@@ -153,9 +156,9 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			}
 			if(starterLevel > 0){
 				vehicle.electricUsage += 0.01F;
-				if(vehicle.fuel > this.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor")){
-					vehicle.fuel -= this.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor");
-					fuelFlow += this.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor");
+				if(vehicle.fuel > fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor") && !isCreative){
+					vehicle.fuel -= fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor");
+					fuelFlow += fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor");
 				}
 			}
 		}else if(state.hsOn){
@@ -206,14 +209,16 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 			
 			if(hours > 200 && !worldObj.isRemote){
 				if(Math.random() < hours/10000*(maxSafeRPM/(RPM+maxSafeRPM/2))){
-					this.backfireEngine();
+					backfireEngine();
 				}
 			}
 
-			fuelFlow = Math.min(this.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor")*RPM*(fuelLeak ? 1.5F : 1.0F)/maxRPM, vehicle.fuel);
-			vehicle.fuel -= fuelFlow;
+			if(!isCreative){
+				fuelFlow = Math.min(fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor")*RPM*(fuelLeak ? 1.5F : 1.0F)/maxRPM, vehicle.fuel);
+				vehicle.fuel -= fuelFlow;
+			}
 			if(!worldObj.isRemote){
-				if(vehicle.fuel == 0 && fuelConsumption != 0){
+				if(vehicle.fuel == 0 && fuelConsumption != 0 && !isCreative){
 					stallEngine((byte) 1);
 				}else if(RPM < engineStallRPM){
 					stallEngine((byte) 2);
@@ -224,7 +229,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 		}else{
 			oilPressure = 0;
 			if(RPM > engineStartRPM){
-				if(vehicle.fuel > 0 || fuelConsumption == 0){
+				if(vehicle.fuel > 0 || isCreative){
 					if(!worldObj.getBlockState(getPosition()).getMaterial().isLiquid()){
 						if(state.magnetoOn){
 							startEngine();
@@ -459,6 +464,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
 		this.state=EngineStates.values()[tagCompound.getByte("state")];
+		this.isCreative=tagCompound.getBoolean("isCreative");
 		this.oilLeak=tagCompound.getBoolean("oilLeak");
 		this.fuelLeak=tagCompound.getBoolean("fuelLeak");
 		this.brokenStarter=tagCompound.getBoolean("brokenStarter");
@@ -479,6 +485,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setByte("state", (byte) this.state.ordinal());
+		tagCompound.setBoolean("isCreative", this.isCreative);
 		tagCompound.setBoolean("oilLeak", this.oilLeak);
 		tagCompound.setBoolean("fuelLeak", this.fuelLeak);
 		tagCompound.setBoolean("brokenStarter", this.brokenStarter);

@@ -27,7 +27,7 @@ public final class ItemEngine extends Item{
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
 		NBTTagCompound stackTag = stack.getTagCompound();
-		if(stackTag.getFloat("fuelConsumption") == 0){
+		if(stackTag.getBoolean("isCreative")){
 			tooltipLines.add(TextFormatting.DARK_PURPLE + I18n.format("info.item.engine.creative"));
 		}
 		tooltipLines.add(stackTag.getBoolean("isAutomatic") ? I18n.format("info.item.engine.automatic") : I18n.format("info.item.engine.manual"));
@@ -56,16 +56,17 @@ public final class ItemEngine extends Item{
 		}
     }
 	
-	public static ItemStack getStackWithData(ItemEngine item, boolean creative){
+	public static ItemStack getStackWithData(ItemEngine item, boolean isCreative){
 		ItemStack stack = new ItemStack(item);
 		NBTTagCompound stackTag = new NBTTagCompound();
+		stackTag.setBoolean("isCreative", isCreative);
 		stackTag.setBoolean("isAutomatic", item.engineItem.isAutomatic);
 		stackTag.setByte("numberGears", item.engineItem.numberGears);
 		stackTag.setByte("starterPower", item.engineItem.starterPower);
 		stackTag.setByte("starterIncrement", item.engineItem.starterIncrement);
 		stackTag.setInteger("maxRPM", item.engineItem.maxRPM);
 		stackTag.setInteger("maxSafeRPM", EntityEngine.getMaxSafeRPM(item.engineItem.maxRPM));
-		stackTag.setFloat("fuelConsumption", creative ? 0.0F : item.engineItem.fuelConsumption);
+		stackTag.setFloat("fuelConsumption", item.engineItem.fuelConsumption);
 		stackTag.setDouble("hours", 0);
 		stack.setTagCompound(stackTag);
 		return stack;
@@ -76,7 +77,7 @@ public final class ItemEngine extends Item{
 		LYCOMING_O360(true, (byte) 1, (byte) 50, (byte) 4, 2900, 0.4F),
 		BRISTOL_MERCURY(true, (byte) 1, (byte) 25, (byte) 13, 2900, 0.4F),
 		AMC_I4(true, (byte) 4, (byte) 50, (byte) 3, 7500, 0.5F),
-		DETROIT_DIESEL(false, (byte) 9, (byte) 25, (byte) 4, 3500, 0.75F);
+		DETROIT_DIESEL(false, (byte) 9, (byte) 25, (byte) 4, 3500, 1.5F);
 		
 		private final boolean isAutomatic;
 		private final byte numberGears;

@@ -82,7 +82,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 		if(state.running || state.esOn){
 			engineTargetRPM = car.throttle/100F*(maxRPM - engineStartRPM/1.25 - hours) + engineStartRPM/1.25;
 			if(getRatioForGear(gearNumber) != 0){
-				engineTorque = RPM/(maxSafeRPM - 3000*(1500/maxSafeRPM))*getRatioForGear(gearNumber);
+				engineTorque = RPM/(maxSafeRPM - 3000*(1500/maxSafeRPM))*getRatioForGear(gearNumber)*fuelConsumption*2.0F;
 				
 				//Check to see if the wheels have enough friction to affect the engine.
 				engineForce = (engineTargetRPM - RPM)/maxRPM*engineTorque;
