@@ -25,6 +25,7 @@ public class MTSPackObject{
     public class PackGeneralConfig{
     	public boolean openTop;
     	public byte packVersion;
+    	public byte numberWindows;
     	public int emptyMass;
     	public int displayTextMaxLength;
         public String name;
@@ -88,18 +89,10 @@ public class MTSPackObject{
     
     public class PackRenderingConfig{
         public String modelName;
-        public List<PackWindow> windows = new ArrayList<PackWindow>();
         public List<PackDisplayText> textMarkings = new ArrayList<PackDisplayText>();
         public List<PackLight> lights = new ArrayList<PackLight>();
         public List<PackBeacon> beacons = new ArrayList<PackBeacon>();
         public List<PackRotatableModelObject> rotatableModelObjects = new ArrayList<PackRotatableModelObject>();
-    }
-    
-    public class PackWindow{
-    	public float[] pos1;
-    	public float[] pos2;
-    	public float[] pos3;
-    	public float[] pos4;
     }
     
     public class PackDisplayText{

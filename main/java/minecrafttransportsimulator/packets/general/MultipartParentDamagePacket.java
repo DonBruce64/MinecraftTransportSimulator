@@ -11,11 +11,11 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 public class MultipartParentDamagePacket implements IMessage{
 	private int id;
 	private float damage;
-	private byte windowBroken;
+	private boolean windowBroken;
 
 	public MultipartParentDamagePacket() {}
 	
-	public MultipartParentDamagePacket(int id, float damage, byte windowBroken){
+	public MultipartParentDamagePacket(int id, float damage, boolean windowBroken){
 		this.id = id;
 		this.damage = damage;
 		this.windowBroken = windowBroken;
@@ -25,14 +25,14 @@ public class MultipartParentDamagePacket implements IMessage{
 	public void fromBytes(ByteBuf buf){
 		this.id=buf.readInt();
 		this.damage=buf.readFloat();
-		this.windowBroken=buf.readByte();
+		this.windowBroken=buf.readBoolean();
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		buf.writeInt(this.id);
 		buf.writeFloat(this.damage);
-		buf.writeByte(this.windowBroken);
+		buf.writeBoolean(this.windowBroken);
 	}
 
 	public static class Handler implements IMessageHandler<MultipartParentDamagePacket, IMessage>{
@@ -44,8 +44,8 @@ public class MultipartParentDamagePacket implements IMessage{
 					EntityMultipartMoving mover = (EntityMultipartMoving) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					if(mover != null){
 						mover.damage += message.damage;
-						if(message.windowBroken != -1){
-							mover.brokenWindows.add(message.windowBroken);
+						if(message.windowBroken){
+							++mover.brokenWindows;
 						}
 					}	
 				}

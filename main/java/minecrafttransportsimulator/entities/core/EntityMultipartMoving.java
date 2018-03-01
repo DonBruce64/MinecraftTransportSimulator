@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
@@ -17,7 +16,6 @@ import minecrafttransportsimulator.dataclasses.MTSDamageSources.DamageSourceCras
 import minecrafttransportsimulator.dataclasses.MTSPackObject;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackCollisionBox;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackWindow;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
@@ -57,6 +55,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
 	public boolean locked;
+	public byte brokenWindows;
 	public float motionRoll;
 	public float motionPitch;
 	public float motionYaw;
@@ -68,7 +67,6 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	public String displayText="";
 	
 	public MTSPackObject pack;
-	public List<Byte> brokenWindows = new ArrayList<Byte>();
 	public List<EntityGroundDevice> groundedGroundDevices = new ArrayList<EntityGroundDevice>();
 	
 	private double clientDeltaX;
@@ -312,42 +310,14 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			Entity damageSource = source.getEntity() != null && !source.getEntity().equals(source.getSourceOfDamage()) ? source.getSourceOfDamage() : source.getEntity();
 			if(damageSource != null){
 				this.damage += damage;
-				Map<Byte, Float> windowDistances = new HashMap<Byte, Float>();
-				MTSVector relativeAttackerPosition = new MTSVector(damageSource.posX, damageSource.posY, damageSource.posZ).add(-this.posX, -this.posY, -this.posZ);
-				
-				for(byte i=0; i<pack.rendering.windows.size(); ++i){
-					PackWindow window = pack.rendering.windows.get(i);
-					float averageX;
-					float averageY;
-					float averageZ;
-					if(window.pos4 != null){
-						averageX = (window.pos1[0] + window.pos2[0] + window.pos3[0] + window.pos4[0])/4F;
-						averageY = (window.pos1[1] + window.pos2[1] + window.pos3[1] + window.pos4[1])/4F;
-						averageZ = (window.pos1[2] + window.pos2[2] + window.pos3[2] + window.pos4[2])/4F;
-					}else{
-						averageX = (window.pos1[0] + window.pos2[0] + window.pos3[0])/3F;
-						averageY = (window.pos1[1] + window.pos2[1] + window.pos3[1])/3F;
-						averageZ = (window.pos1[2] + window.pos2[2] + window.pos3[2])/3F;
-					}
-					MTSVector windowPosition = RotationSystem.getRotatedPoint(averageX, averageY, averageZ, rotationPitch, rotationYaw, rotationRoll);
-					if(!this.brokenWindows.contains(i)){
-						windowDistances.put(i, (float) relativeAttackerPosition.distanceTo(windowPosition));
-					}
-				}
-				
-				byte closestWindowIndex = -1;
-				float shortestDistance = Float.MAX_VALUE;
-				for(Entry<Byte, Float> windowEntry : windowDistances.entrySet()){
-					if(windowEntry.getValue() < shortestDistance){
-						closestWindowIndex = windowEntry.getKey();
-						shortestDistance = windowEntry.getValue();
-					}
-				}
-				if(shortestDistance <= 3){
-					this.brokenWindows.add(closestWindowIndex);
+				if(this.brokenWindows < pack.general.numberWindows){
+					++brokenWindows;
 					this.playSound(SoundEvents.BLOCK_GLASS_BREAK, 2.0F, 1.0F);
+					MTS.MTSNet.sendToAll(new MultipartParentDamagePacket(this.getEntityId(), damage, true));
+				}else{
+					MTS.MTSNet.sendToAll(new MultipartParentDamagePacket(this.getEntityId(), damage, false));
 				}
-				MTS.MTSNet.sendToAll(new MultipartParentDamagePacket(this.getEntityId(), damage, closestWindowIndex));
+				
 			}
 		}
 		return true;
@@ -1064,12 +1034,10 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		this.parkingBrakeOn=tagCompound.getBoolean("parkingBrakeOn");
 		this.brakeOn=tagCompound.getBoolean("brakeOn");
 		this.locked=tagCompound.getBoolean("locked");
+		this.brokenWindows=tagCompound.getByte("brokenWindows");
 		this.name=tagCompound.getString("name");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
-		for(byte brokenWindow : tagCompound.getByteArray("brokenWindows")){
-			this.brokenWindows.add(brokenWindow);
-		}
 		this.pack=PackParserSystem.getPack(name);
 		
 		this.serverDeltaX=tagCompound.getDouble("serverDeltaX");
@@ -1095,15 +1063,10 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		tagCompound.setBoolean("brakeOn", this.brakeOn);
 		tagCompound.setBoolean("parkingBrakeOn", this.parkingBrakeOn);
 		tagCompound.setBoolean("locked", this.locked);
+		tagCompound.setByte("brokenWindows", this.brokenWindows);
 		tagCompound.setString("name", this.name);
 		tagCompound.setString("ownerName", this.ownerName);
 		tagCompound.setString("displayText", this.displayText);
-		
-		byte[] brokenWindows = new byte[this.brokenWindows.size()];
-		for(byte i=0; i<brokenWindows.length; ++i){
-			brokenWindows[i] = this.brokenWindows.get(i);
-		}
-		tagCompound.setByteArray("brokenWindows", brokenWindows);
 		
 		tagCompound.setDouble("serverDeltaX", this.serverDeltaX);
 		tagCompound.setDouble("serverDeltaY", this.serverDeltaY);

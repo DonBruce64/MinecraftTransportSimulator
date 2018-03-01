@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.vector.Vector3f;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
@@ -19,7 +18,6 @@ import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackLight;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackRotatableModelObject;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackWindow;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
@@ -250,9 +248,10 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			GL11.glCallList(displayLists.get(mover.pack.rendering.modelName));
 			//The display list only renders static parts.  We need to render dynamic ones manually.
 			//Do a null check here to make sure crashes don't occur with trailing commas.
+			//If the rotatable is a window, don't render here, instead render with the windows.
 			for(byte i=0; i<mover.pack.rendering.rotatableModelObjects.size(); ++i){
 				PackRotatableModelObject rotatable = mover.pack.rendering.rotatableModelObjects.get(i);
-				if(rotatable != null){
+				if(rotatable != null && !rotatable.partName.toLowerCase().contains("window")){
 					if(MTSRegistryClient.modelMap.get(mover.name).get(rotatable.partName) != null){
 						GL11.glPushMatrix();
 						//First translate to the center of the model for proper rotation.
@@ -290,8 +289,8 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 						}
 					}
 				}
-				//Don't add movable model parts to the display list.
-				if(!isRotatable){
+				//Don't add movable model parts or windows to the display list.
+				if(!isRotatable && !entry.getKey().toLowerCase().contains("window")){
 					for(Float[] vertex : entry.getValue()){
 						GL11.glTexCoord2f(vertex[3], vertex[4]);
 						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
@@ -361,59 +360,45 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 	private static void renderWindows(EntityMultipartMoving mover){
 		GL11.glPushMatrix();
 		minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
-		for(byte i=0; i<mover.pack.rendering.windows.size(); ++i){
-			PackWindow window = mover.pack.rendering.windows.get(i);			
-			if(!mover.brokenWindows.contains(i)){
-				Vector3f v1 = new Vector3f(window.pos1[0], window.pos1[1], window.pos1[2]);
-				Vector3f v2 = new Vector3f(window.pos2[0], window.pos2[1], window.pos2[2]);
-				Vector3f v3 = new Vector3f(window.pos3[0], window.pos3[1], window.pos3[2]);
-				Vector3f norm = Vector3f.cross(Vector3f.sub(v2, v1, null), Vector3f.sub(v3, v1, null), null);
-				GL11.glBegin(GL11.GL_TRIANGLES);
-				GL11.glTexCoord2f(0.0F, 0.0F);
-				GL11.glNormal3f(norm.x, norm.y, norm.z);
-				GL11.glVertex3f(window.pos1[0], window.pos1[1], window.pos1[2]);
-				GL11.glTexCoord2f(0.0F, 1.0F);
-				GL11.glNormal3f(norm.x, norm.y, norm.z);
-				GL11.glVertex3f(window.pos2[0], window.pos2[1], window.pos2[2]);
-				GL11.glTexCoord2f(1.0F, 1.0F);
-				GL11.glNormal3f(norm.x, norm.y, norm.z);
-				GL11.glVertex3f(window.pos3[0], window.pos3[1], window.pos3[2]);
-				if(window.pos4 != null){
-					GL11.glTexCoord2f(1.0F, 1.0F);
-					GL11.glNormal3f(norm.x, norm.y, norm.z);
-					GL11.glVertex3f(window.pos3[0], window.pos3[1], window.pos3[2]);
-					GL11.glTexCoord2f(1.0F, 0.0F);
-					GL11.glNormal3f(norm.x, norm.y, norm.z);
-					GL11.glVertex3f(window.pos4[0], window.pos4[1], window.pos4[2]);
-					GL11.glTexCoord2f(0.0F, 0.0F);
-					GL11.glNormal3f(norm.x, norm.y, norm.z);
-					GL11.glVertex3f(window.pos1[0], window.pos1[1], window.pos1[2]);
-				}
-				
-				if(ConfigSystem.getBooleanConfig("InnerWindows")){
-					GL11.glTexCoord2f(1.0F, 1.0F);
-					GL11.glNormal3f(norm.x, norm.y, norm.z);
-					GL11.glVertex3f(window.pos3[0], window.pos3[1], window.pos3[2]);
-					GL11.glTexCoord2f(1.0F, 0.0F);
-					GL11.glNormal3f(norm.x, norm.y, norm.z);
-					GL11.glVertex3f(window.pos2[0], window.pos2[1], window.pos2[2]);
-					GL11.glTexCoord2f(0.0F, 0.0F);
-					GL11.glNormal3f(norm.x, norm.y, norm.z);
-					GL11.glVertex3f(window.pos1[0], window.pos1[1], window.pos1[2]);
-					
-					if(window.pos4 != null){
-						GL11.glTexCoord2f(0.0F, 0.0F);
-						GL11.glNormal3f(norm.x, norm.y, norm.z);
-						GL11.glVertex3f(window.pos1[0], window.pos1[1], window.pos1[2]);
-						GL11.glTexCoord2f(0.0F, 1.0F);
-						GL11.glNormal3f(norm.x, norm.y, norm.z);
-						GL11.glVertex3f(window.pos4[0], window.pos4[1], window.pos4[2]);
-						GL11.glTexCoord2f(1.0F, 1.0F);
-						GL11.glNormal3f(norm.x, norm.y, norm.z);
-						GL11.glVertex3f(window.pos3[0], window.pos3[1], window.pos3[2]);
+		//Iterate through all objects in the OBJ registry and get any that contain "window".
+		byte windowIndex = 0;
+		for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get(mover.name).entrySet()){
+			if(entry.getKey().toLowerCase().contains("window")){
+				if(windowIndex >= mover.brokenWindows){
+					GL11.glPushMatrix();
+					//This is a window or set of windows.  Like the model, it will be triangle-based.
+					//However, windows may be rotatable.  Check this before continuing.
+					for(byte i=0; i<mover.pack.rendering.rotatableModelObjects.size(); ++i){
+						PackRotatableModelObject rotatable = mover.pack.rendering.rotatableModelObjects.get(i);
+						if(rotatable != null && rotatable.partName.equals(entry.getKey())){
+							//This part is rotatable.  Rotate now.
+							//First translate to the center of the model for proper rotation.
+							GL11.glTranslatef(rotatable.rotationPoint[0], rotatable.rotationPoint[1], rotatable.rotationPoint[2]);
+							//Next rotate the part.
+							rotateObject(mover, rotatable);
+							//Now translate the part back to it's original position.
+							GL11.glTranslatef(-rotatable.rotationPoint[0], -rotatable.rotationPoint[1], -rotatable.rotationPoint[2]);
+							//Now render the part.
+						}
 					}
+					GL11.glBegin(GL11.GL_QUADS);
+					for(Float[] vertex : entry.getValue()){
+						GL11.glTexCoord2f(vertex[3], vertex[4]);
+						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+					}
+					if(ConfigSystem.getBooleanConfig("InnerWindows")){
+						for(int i=entry.getValue().length-1; i >= 0; --i){
+							Float[] vertex = entry.getValue()[i];
+							GL11.glTexCoord2f(vertex[3], vertex[4]);
+							GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+							GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);	
+						}
+					}
+					GL11.glEnd();
+					GL11.glPopMatrix();
 				}
-				GL11.glEnd();
+				++windowIndex;
 			}
 		}
 		GL11.glPopMatrix();
