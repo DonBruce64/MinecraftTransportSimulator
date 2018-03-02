@@ -102,7 +102,7 @@ public final class OBJParserSystem{
 			
 			if(!faceString.isEmpty()){
 				//This only happens when there's quads in an obj.
-				//If we are not a window make a second face by
+				//Make a second face by
 				//duplicating point 3, adding point 4, and duplicating point 1.
 				//Otherwise put the 4th face in the list.
 				int defEnd = faceString.indexOf(' ');
@@ -110,17 +110,13 @@ public final class OBJParserSystem{
 					faceString = faceString.substring(0, defEnd);
 				}
 				
+				faceValues.add(faceValues.get(faceValues.size() - 1));
 				int slash = faceString.indexOf('/');
 				int faceEnd = faceString.lastIndexOf('/') == slash ? faceString.length() : faceString.lastIndexOf('/');
 				int vertexNumber = Integer.valueOf(faceString.substring(0, slash)) - 1;
 				int textureNumber = Integer.valueOf(faceString.substring(slash + 1, faceEnd)) - 1;
-				if(!isWindow){
-					faceValues.add(faceValues.get(faceValues.size() - 1));
-					faceValues.add(new Integer[]{vertexNumber, textureNumber});
-					faceValues.add(faceValues.get(faceValues.size() - 5));
-				}else{
-					faceValues.add(new Integer[]{vertexNumber, textureNumber});
-				}
+				faceValues.add(new Integer[]{vertexNumber, textureNumber});
+				faceValues.add(faceValues.get(faceValues.size() - 5));
 			}
 		}
 		
@@ -143,11 +139,16 @@ public final class OBJParserSystem{
 		//If we are parsing windows override the texture coords.
 		List<Float[]> textureArray = new ArrayList<Float[]>();
 		if(isWindow){
-			for(int i=0; i<=vertexArray.size() - 4; i += 4){
-				textureArray.add(new Float[]{0.0F, 1.0F});
-				textureArray.add(new Float[]{1.0F, 1.0F});
+			textureArray.add(new Float[]{0.0F, 1.0F});
+			textureArray.add(new Float[]{1.0F, 1.0F});
+			textureArray.add(new Float[]{1.0F, 0.0F});
+			//Since all windows must be a separate shape we will either have 3 or 6 texture points.
+			//3 points for triangles, 6 for squares (2 duplicates).
+			//Duplicate texture points just like vertices in this case.
+			if(vertexArray.size() > 3){
 				textureArray.add(new Float[]{1.0F, 0.0F});
 				textureArray.add(new Float[]{0.0F, 0.0F});
+				textureArray.add(new Float[]{0.0F, 1.0F});
 			}
 		}else{
 			for(Integer[] face : faceValues){
@@ -157,7 +158,7 @@ public final class OBJParserSystem{
 
 		//Finally, create a normal array from the vertex array.
 		List<Float[]> normalArray = new ArrayList<Float[]>();
-		for(int i=0; i<=faceValues.size() - (isWindow ? 4 : 3); i += (isWindow ? 4 : 3)){
+		for(int i=0; i<=vertexArray.size() - 3; i += 3){
 			Float[] faceVertex1 = vertexArray.get(i);
 			Float[] faceVertex2 = vertexArray.get(i + 1);
 			Float[] faceVertex3 = vertexArray.get(i + 2);
@@ -170,10 +171,6 @@ public final class OBJParserSystem{
 			normalArray.add(new Float[]{norm.x, norm.y, norm.z});
 			normalArray.add(new Float[]{norm.x, norm.y, norm.z});
 			normalArray.add(new Float[]{norm.x, norm.y, norm.z});
-			//Although we calculated normals with 3 vertices, the same normals apply for the 4th if this is a window.
-			if(isWindow){
-				normalArray.add(new Float[]{norm.x, norm.y, norm.z});	
-			}
 		}
 		
 		//Compile arrays and return.

@@ -381,7 +381,12 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 							//Now render the part.
 						}
 					}
-					GL11.glBegin(GL11.GL_QUADS);
+					//If this window is a quad, draw quads.  Otherwise draw tris.
+					if(entry.getValue().length == 4){
+						GL11.glBegin(GL11.GL_QUADS);
+					}else{
+						GL11.glBegin(GL11.GL_TRIANGLES);
+					}
 					for(Float[] vertex : entry.getValue()){
 						GL11.glTexCoord2f(vertex[3], vertex[4]);
 						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
