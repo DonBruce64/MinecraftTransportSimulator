@@ -74,7 +74,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 		}
 		
 		//If running, in reverse, and we are a big truck, fire the backup beepers.
-		if(state.running && this.gearNumber == -1 && car.pack != null && car.electricPower > 4 && car.worldObj.getTotalWorldTime()%20==1){
+		if(state.running && this.gearNumber == -1 && car.pack != null && car.pack.car.isBigTruck && car.electricPower > 4 && car.worldObj.getTotalWorldTime()%20==1){
 			MTS.proxy.playSound(car, MTS.MODID + ":backup_beeper", 1.0F, 1);
 		}
 		
