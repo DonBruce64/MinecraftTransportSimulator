@@ -1,7 +1,7 @@
 {    
-    "enginelycoming0360_cranking"    : {"category": "master", "sounds": [{"name": "mts:enginelycoming0360_cranking","stream": false}]},
-    "enginelycoming0360_starting"    : {"category": "master", "sounds": [{"name": "mts:enginelycoming0360_starting","stream": false}]},
-    "enginelycoming0360_running"     : {"category": "master", "sounds": [{"name": "mts:enginelycoming0360_running","stream": false}]},
+    "enginelycomingo360_cranking"    : {"category": "master", "sounds": [{"name": "mts:enginelycomingo360_cranking","stream": false}]},
+    "enginelycomingo360_starting"    : {"category": "master", "sounds": [{"name": "mts:enginelycomingo360_starting","stream": false}]},
+    "enginelycomingo360_running"     : {"category": "master", "sounds": [{"name": "mts:enginelycomingo360_running","stream": false}]},
     
     "enginebristolmercury_cranking"     : {"category": "master", "sounds": [{"name": "mts:enginebristolmercury_cranking","stream": false}]},
 	"enginebristolmercury_starting"    : {"category": "master", "sounds": [{"name": "mts:enginebristolmercury_starting","stream": false}]},
