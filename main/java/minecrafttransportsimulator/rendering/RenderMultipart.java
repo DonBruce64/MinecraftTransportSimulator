@@ -324,7 +324,11 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				}
 			}else if(rotatable.rotationVariable.equals("gearshift")){
 				if(((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1) != null){
-					GL11.glRotatef(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()*3, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
+					if(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).isAutomatic){
+						GL11.glRotatef(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()*15, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
+					}else{
+						GL11.glRotatef(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()*3, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
+					}
 				}
 			}
 		}
