@@ -1,7 +1,9 @@
 package minecrafttransportsimulator.rendering;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -19,7 +21,6 @@ import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackLight;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackRotatableModelObject;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
@@ -41,6 +42,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -58,6 +60,8 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 public final class RenderMultipart extends Render<EntityMultipartMoving>{
 	private static final Minecraft minecraft = Minecraft.getMinecraft();
 	private static final Map<String, Integer> displayLists = new HashMap<String, Integer>();
+	private static final Map<String, Map<String, Vec3d>> rotatableMaps = new HashMap<String, Map<String, Vec3d>>();
+	private static final Map<String, List<String>> windowLists = new HashMap<String, List<String>>();
 	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
 	private static final Map<EntityMultipartMoving, Byte> lastRenderPass = new HashMap<EntityMultipartMoving, Byte>();
 	private static final Map<EntityMultipartMoving, Long> lastRenderTick = new HashMap<EntityMultipartMoving, Long>();
@@ -250,64 +254,118 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		 GL11.glPopMatrix();
 	}
 	
+	private static Vec3d getRotationPointForMovable(Entry<String, Float[][]> entry){
+		double minX = 999;
+		double maxX = -999;
+		double minY = 999;
+		double maxY = -999;
+		double minZ = 999;
+		double maxZ = -999;
+		for(Float[] vertex : entry.getValue()){
+			minX = Math.min(vertex[0], minX);
+			maxX = Math.max(vertex[0], maxX);
+			minY = Math.min(vertex[1], minY);
+			maxY = Math.max(vertex[1], maxY);
+			minZ = Math.min(vertex[2], minZ);
+			maxZ = Math.max(vertex[2], maxZ);
+		}
+		
+		//If there are more than one of these parts remove everything after the second underscore.
+		String partName = entry.getKey(); 
+		while(partName.indexOf('_') != partName.lastIndexOf('_')){
+			partName = partName.substring(0, partName.lastIndexOf('_'));
+		}
+		switch(partName){
+			case("$Door_L"): return new Vec3d(maxX, minY, maxZ);
+			case("$Door_R"): return new Vec3d(minX, minY, maxZ);
+			
+			case("$Gas"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ);
+			case("$Brake"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ);
+			case("$Parking"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ);
+			case("$Gearshift"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ + (maxZ - minZ)/2D);
+			case("$SteeringWheel"): return new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, maxZ);
+			
+			case("$Aileron_L"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
+			case("$Aileron_R"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
+			case("$Elevator_L"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
+			case("$Elevator_R"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
+			case("$Rudder"): return new Vec3d(0, minY + (maxY - minY)/2D, maxZ);
+			case("$Flap_L"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
+			case("$Flap_R"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
+			case("$WheelStrut"): return new Vec3d(minX + (maxX - minX)/2D, maxY, minZ + (maxZ - minZ)/2D);
+			
+			default: return new Vec3d(0, 0, 0);
+		} 
+	}
+	
 	private static void renderMainModel(EntityMultipartMoving mover){
 		GL11.glPushMatrix();
 		//Normally we use the pack name, but since all displaylists
 		//are the same for all models, this is more appropriate.
 		if(displayLists.containsKey(mover.pack.rendering.modelName)){
 			GL11.glCallList(displayLists.get(mover.pack.rendering.modelName));
+			
 			//The display list only renders static parts.  We need to render dynamic ones manually.
-			//Do a null check here to make sure crashes don't occur with trailing commas.
-			//If the rotatable is a window, don't render here, instead render with the windows.
-			for(byte i=0; i<mover.pack.rendering.rotatableModelObjects.size(); ++i){
-				PackRotatableModelObject rotatable = mover.pack.rendering.rotatableModelObjects.get(i);
-				if(rotatable != null && !rotatable.partName.toLowerCase().contains("window")){
-					if(MTSRegistryClient.modelMap.get(mover.name).get(rotatable.partName) != null){
-						GL11.glPushMatrix();
-						//First translate to the center of the model for proper rotation.
-						GL11.glTranslatef(rotatable.rotationPoint[0], rotatable.rotationPoint[1], rotatable.rotationPoint[2]);
-						//Next rotate the part.
-						rotateObject(mover, rotatable);
-						//Now translate the part back to it's original position.
-						GL11.glTranslatef(-rotatable.rotationPoint[0], -rotatable.rotationPoint[1], -rotatable.rotationPoint[2]);
-						//Now render the part.
-						GL11.glBegin(GL11.GL_TRIANGLES);
-						for(Float[] vertex : MTSRegistryClient.modelMap.get(mover.name).get(rotatable.partName)){
-							GL11.glTexCoord2f(vertex[3], vertex[4]);
-							GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-							GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-						}
-						GL11.glEnd();
-						GL11.glPopMatrix();
-					}else{
-						MTS.MTSLog.warn("Invalid rotatable part: " + rotatable.partName + "! Check your part and model names!");
-						mover.pack.rendering.rotatableModelObjects.remove(i);
+			//If this is a window, don't render it as that gets done all at once later.
+			for(Entry<String, Vec3d> entry : rotatableMaps.get(mover.pack.rendering.modelName).entrySet()){
+				if(!windowLists.get(mover.pack.rendering.modelName).contains(entry.getKey())){
+					GL11.glPushMatrix();
+					rotateObject(mover, entry.getKey(), entry.getValue());
+					GL11.glBegin(GL11.GL_TRIANGLES);
+					for(Float[] vertex : MTSRegistryClient.modelMap.get(mover.name).get(entry.getKey())){
+						GL11.glTexCoord2f(vertex[3], vertex[4]);
+						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
 					}
+					GL11.glEnd();
+					GL11.glPopMatrix();
+				}
+			}
+			for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get(mover.name).entrySet()){
+				if(entry.getKey().contains("$")){
+
 				}
 			}
 		}else{
 			int displayListIndex = GL11.glGenLists(1);
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 			GL11.glBegin(GL11.GL_TRIANGLES);
+			Map<String, Vec3d> rotatableMap = new HashMap<String, Vec3d>();
 			for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get(mover.name).entrySet()){
-				boolean isRotatable = false;
-				for(PackRotatableModelObject rotatable : mover.pack.rendering.rotatableModelObjects){
-					if(rotatable != null){
-						if(rotatable.partName.equals(entry.getKey())){
-							isRotatable = true;
-							break;
-						}
-					}
-				}
 				//Don't add movable model parts or windows to the display list.
-				if(!isRotatable && !entry.getKey().toLowerCase().contains("window")){
-					for(Float[] vertex : entry.getValue()){
-						GL11.glTexCoord2f(vertex[3], vertex[4]);
-						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+				//Those go in separate maps, with windows getting parsed after all parts in case they're movable.
+				if(!entry.getKey().toLowerCase().contains("window")){
+					if(!entry.getKey().toLowerCase().contains("$")){
+						for(Float[] vertex : entry.getValue()){
+							GL11.glTexCoord2f(vertex[3], vertex[4]);
+							GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+							GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+						}
+					}else{
+						rotatableMap.put(entry.getKey(), getRotationPointForMovable(entry));
 					}
 				}
 			}
+			
+			//Windows need to come after movables so they can take the movable's rotation points if they're movable too.
+			List<String> windowList = new ArrayList<String>();
+			for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get(mover.name).entrySet()){
+				if(entry.getKey().toLowerCase().contains("window")){
+					if(entry.getKey().toLowerCase().contains("$")){
+						for(String rotatableName : rotatableMap.keySet()){
+							if(entry.getKey().contains(rotatableName)){
+								rotatableMap.put(entry.getKey(), rotatableMap.get(rotatableName));
+								break;
+							}
+						}
+					}
+					windowList.add(entry.getKey());
+				}
+			}
+			
+			//Now finalize the moving and window maps.
+			rotatableMaps.put(mover.pack.rendering.modelName, rotatableMap);
+			windowLists.put(mover.pack.rendering.modelName, windowList);
 			GL11.glEnd();
 			GL11.glEndList();
 			displayLists.put(mover.pack.rendering.modelName, displayListIndex);
@@ -315,44 +373,55 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		GL11.glPopMatrix();
 	}
 	
-	private static void rotateObject(EntityMultipartMoving mover, PackRotatableModelObject rotatable){
-		if(rotatable.rotationVariable.equals("door")){
+	private static void rotateObject(EntityMultipartMoving mover, String rotatableName, Vec3d rotationPoint){
+		//First translate to the center of the model for proper rotation.
+		GL11.glTranslated(rotationPoint.xCoord, rotationPoint.yCoord, rotationPoint.zCoord);
+		
+		//Next rotate the part.
+		if(rotatableName.contains("Door_L")){
 			if(mover.parkingBrakeOn && mover.velocity == 0 && !mover.locked){
-				GL11.glRotatef(-60F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
+				GL11.glRotatef(-60F, 0, 1, 0);
 			}
-		}
-		if(mover instanceof EntityMultipartVehicle){
-			if(rotatable.rotationVariable.equals("throttle")){
-				GL11.glRotatef(((EntityMultipartVehicle) mover).throttle/4F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
-			}else if(rotatable.rotationVariable.equals("brake")){
-				if(((EntityMultipartVehicle) mover).brakeOn){
-					GL11.glRotatef(30, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
-				}
-			}else if(rotatable.rotationVariable.equals("p_brake")){
-				if(((EntityMultipartVehicle) mover).parkingBrakeOn){
-					GL11.glRotatef(30, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
-				}
-			}else if(rotatable.rotationVariable.equals("gearshift")){
-				if(((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1) != null){
-					if(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).isAutomatic){
-						GL11.glRotatef(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()*15, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
-					}else{
-						GL11.glRotatef(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()*3, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
-					}
+		}else if(rotatableName.contains("Door_R")){
+			if(mover.parkingBrakeOn && mover.velocity == 0 && !mover.locked){
+				GL11.glRotatef(60F, 0, 1, 0);
+			}
+		}else if(rotatableName.contains("Gas")){
+			GL11.glRotatef(((EntityMultipartVehicle) mover).throttle/4F, 1, 0, 0);
+		}else if(rotatableName.contains("Brake")){
+			if(((EntityMultipartVehicle) mover).brakeOn){
+				GL11.glRotatef(30, 1, 0, 0);
+			}
+		}else if(rotatableName.contains("Parking")){
+			if(((EntityMultipartVehicle) mover).parkingBrakeOn){
+				GL11.glRotatef(30, -1, 0, 0);
+			}
+		}else if(rotatableName.contains("Gearshift")){
+			if(((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1) != null){
+				if(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).isAutomatic){
+					GL11.glRotatef(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()*15, -1, 0, 0);
+				}else{
+					GL11.glRotatef(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()*3, -1, 0, 0);
 				}
 			}
+		}else if(rotatableName.contains("SteeringWheel")){
+			GL11.glRotatef(mover.getSteerAngle(), 0, 0, 1);
+		}else if(rotatableName.contains("Aileron_L")){
+			GL11.glRotatef(((EntityPlane) mover).aileronAngle/10F, -1, 0, 0);
+		}else if(rotatableName.contains("Aileron_R")){
+			GL11.glRotatef(((EntityPlane) mover).aileronAngle/10F, 1, 0, 0);
+		}else if(rotatableName.contains("Elevator")){
+			GL11.glRotatef(((EntityPlane) mover).elevatorAngle/10F, 1, 0, 0);
+		}else if(rotatableName.contains("Rudder")){
+			GL11.glRotatef(((EntityPlane) mover).rudderAngle/10F, 0, 1, 0);
+		}else if(rotatableName.contains("Flap")){
+			GL11.glRotatef(((EntityPlane) mover).flapAngle/10F, -1, 0, 0);
+		}else if(rotatableName.contains("WheelStrut")){
+			GL11.glRotatef(((EntityPlane) mover).rudderAngle/10F, 0, -1, 0);
 		}
-		if(mover instanceof EntityPlane){
-			if(rotatable.rotationVariable.equals("aileron")){
-				GL11.glRotatef(((EntityPlane) mover).aileronAngle/10F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
-			}else if(rotatable.rotationVariable.equals("elevator")){
-				GL11.glRotatef(((EntityPlane) mover).elevatorAngle/10F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
-			}else if(rotatable.rotationVariable.equals("rudder")){
-				GL11.glRotatef(((EntityPlane) mover).rudderAngle/10F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
-			}else if(rotatable.rotationVariable.equals("flap")){
-				GL11.glRotatef(((EntityPlane) mover).flapAngle/10F, rotatable.rotationAxisDir[0], rotatable.rotationAxisDir[1], rotatable.rotationAxisDir[2]);
-			}  
-		}
+		
+		//Now translate the part back to it's original position.
+		GL11.glTranslated(-rotationPoint.xCoord, -rotationPoint.yCoord, -rotationPoint.zCoord);
 	}
 	
 	private static void renderChildren(EntityMultipartMoving mover, float partialTicks){
@@ -372,55 +441,41 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 	}
 	
 	private static void renderWindows(EntityMultipartMoving mover){
-		GL11.glPushMatrix();
 		minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
-		//Iterate through all objects in the OBJ registry and get any that contain "window".
-		byte windowIndex = 0;
-		for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get(mover.name).entrySet()){
-			if(entry.getKey().toLowerCase().contains("window")){
-				if(windowIndex >= mover.brokenWindows){
-					GL11.glPushMatrix();
-					//This is a window or set of windows.  Like the model, it will be triangle-based.
-					//However, windows may be rotatable.  Check this before continuing.
-					for(byte i=0; i<mover.pack.rendering.rotatableModelObjects.size(); ++i){
-						PackRotatableModelObject rotatable = mover.pack.rendering.rotatableModelObjects.get(i);
-						if(rotatable != null && rotatable.partName.equals(entry.getKey())){
-							//This part is rotatable.  Rotate now.
-							//First translate to the center of the model for proper rotation.
-							GL11.glTranslatef(rotatable.rotationPoint[0], rotatable.rotationPoint[1], rotatable.rotationPoint[2]);
-							//Next rotate the part.
-							rotateObject(mover, rotatable);
-							//Now translate the part back to it's original position.
-							GL11.glTranslatef(-rotatable.rotationPoint[0], -rotatable.rotationPoint[1], -rotatable.rotationPoint[2]);
-							//Now render the part.
-						}
-					}
-					//If this window is a quad, draw quads.  Otherwise draw tris.
-					if(entry.getValue().length == 4){
-						GL11.glBegin(GL11.GL_QUADS);
-					}else{
-						GL11.glBegin(GL11.GL_TRIANGLES);
-					}
-					for(Float[] vertex : entry.getValue()){
+		//Iterate through all windows.
+		for(byte i=0; i<windowLists.get(mover.pack.rendering.modelName).size(); ++i){
+			if(i >= mover.brokenWindows){
+				GL11.glPushMatrix();
+				//This is a window or set of windows.  Like the model, it will be triangle-based.
+				//However, windows may be rotatable.  Check this before continuing.
+				String windowName = windowLists.get(mover.pack.rendering.modelName).get(i);
+				Float[][] windowCoords =  MTSRegistryClient.modelMap.get(mover.name).get(windowName);
+				if(rotatableMaps.get(mover.pack.rendering.modelName).containsKey(windowName)){
+					rotateObject(mover, windowName, rotatableMaps.get(mover.pack.rendering.modelName).get(windowName));
+				}
+				//If this window is a quad, draw quads.  Otherwise draw tris.
+				if(windowCoords.length == 4){
+					GL11.glBegin(GL11.GL_QUADS);
+				}else{
+					GL11.glBegin(GL11.GL_TRIANGLES);
+				}
+				for(Float[] vertex : windowCoords){
+					GL11.glTexCoord2f(vertex[3], vertex[4]);
+					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+				}
+				if(ConfigSystem.getBooleanConfig("InnerWindows")){
+					for(int j=windowCoords.length-1; j >= 0; --j){
+						Float[] vertex = windowCoords[j];
 						GL11.glTexCoord2f(vertex[3], vertex[4]);
 						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);	
 					}
-					if(ConfigSystem.getBooleanConfig("InnerWindows")){
-						for(int i=entry.getValue().length-1; i >= 0; --i){
-							Float[] vertex = entry.getValue()[i];
-							GL11.glTexCoord2f(vertex[3], vertex[4]);
-							GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-							GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);	
-						}
-					}
-					GL11.glEnd();
-					GL11.glPopMatrix();
 				}
-				++windowIndex;
+				GL11.glEnd();
+				GL11.glPopMatrix();
 			}
 		}
-		GL11.glPopMatrix();
 	}
 	
 	private static void renderTextMarkings(EntityMultipartMoving mover){

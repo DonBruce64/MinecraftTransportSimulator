@@ -92,7 +92,6 @@ public class MTSPackObject{
         public List<PackDisplayText> textMarkings = new ArrayList<PackDisplayText>();
         public List<PackLight> lights = new ArrayList<PackLight>();
         public List<PackBeacon> beacons = new ArrayList<PackBeacon>();
-        public List<PackRotatableModelObject> rotatableModelObjects = new ArrayList<PackRotatableModelObject>();
     }
     
     public class PackDisplayText{
@@ -125,12 +124,5 @@ public class MTSPackObject{
         public int switchNumber;
         public String color;
         public boolean flashing;
-    }
-    
-    public class PackRotatableModelObject{
-    	public String partName;
-    	public float[] rotationPoint;
-    	public float[] rotationAxisDir;
-    	public String rotationVariable;
     }
 }
