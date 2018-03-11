@@ -96,10 +96,10 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		//TOOD remove this in V11 once all the buggy planes are gone.
+		//TOOD remove this in V11 once all the buggy vehicles are gone.
 		if(pack != null && !linked){
 			if(this.numberChildren > this.pack.parts.size()){
-				this.numberChildren -= this.pack.collision.size();
+				this.numberChildren -= this.getChildren().length;
 			}else if(this.numberChildren < 0){
 				this.setDead();
 			}
