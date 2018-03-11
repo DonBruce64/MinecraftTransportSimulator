@@ -31,6 +31,7 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
@@ -168,6 +169,7 @@ public final class ClientEventSystem{
 	    	if(event.getTarget() instanceof EntityMultipartMoving){
 	    		event.setCanceled(true);
 	    		MTS.MTSNet.sendToServer(new MultipartAttackPacket(event.getTarget().getEntityId(), event.getEntityPlayer().getEntityId()));
+	    		event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
 	    	}
     	}else{
     		event.setCanceled(true);
