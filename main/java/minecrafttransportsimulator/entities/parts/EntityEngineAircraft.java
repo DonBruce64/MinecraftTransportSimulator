@@ -9,7 +9,6 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 
 public abstract class EntityEngineAircraft extends EntityEngine{
@@ -27,8 +26,8 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 	}
 	
 	@Override
-	protected boolean interactPart(EntityPlayer player, EnumHand hand){
-		if(!worldObj.isRemote && hand.equals(hand.MAIN_HAND)){
+	public boolean interactPart(EntityPlayer player){
+		if(!worldObj.isRemote){
 			ItemStack playerStack = player.getHeldItemMainhand();
 			if(playerStack != null){
 				if(MTSRegistry.propeller.equals(playerStack.getItem()) && propeller == null){

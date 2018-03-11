@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.entities.core;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,12 +14,8 @@ import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSDamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSPackObject;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackCollisionBox;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
-import minecrafttransportsimulator.items.ItemKey;
-import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.packets.general.MultipartDeltaPacket;
 import minecrafttransportsimulator.packets.general.MultipartParentDamagePacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -30,14 +25,11 @@ import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -113,6 +105,10 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			}
 		}
 		if(linked && pack != null){
+			//Make sure the collision bounds for MC are big enough to collide with this entity.
+			if(World.MAX_ENTITY_RADIUS < 32){
+				World.MAX_ENTITY_RADIUS = 32;
+			}
 			//Populate the collision box map.
 			collisionMap.clear();
 			partMap.clear();
@@ -143,114 +139,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	}
 	
 	@Override
-	public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
-		if(!worldObj.isRemote){
-			ItemStack heldStack = player.getHeldItem(hand);
-			//Don't do anything if we use a wrench on the server; that opens the GUI on the client.
-			if(heldStack != null && MTSRegistry.wrench.equals(heldStack.getItem())){
-				return true;
-			}
-			//Before we check item actions, see if we clicked a part and we need to interact with it.
-			//If so, do the part's interaction rather than our own.
-			EntityMultipartChild hitChild = getHitChild(player);
-			if(hitChild != null){
-				if(hitChild.interactPart(player, hand)){
-					return true;
-				}
-			}
-			
-			//No in-use changes for sneaky sneaks!  Unless we're using a key to lock ourselves in.
-			if(player.getRidingEntity() instanceof EntitySeat){
-				if(player.getHeldItem(hand) != null){
-					if(!MTSRegistry.key.equals(player.getHeldItem(hand).getItem())){
-						return false;
-					}
-				}
-			}
-			
-			if(heldStack != null){
-				//Check if we are holding something that can be interacted with.
-				if(Items.NAME_TAG.equals(heldStack.getItem())){
-					//Use name tag to change name on side of vehicle.
-					int maxText = pack.general.displayTextMaxLength;
-					this.displayText = heldStack.getDisplayName().length() > maxText ? heldStack.getDisplayName().substring(0, maxText - 1) : heldStack.getDisplayName();
-					this.sendDataToClient();
-					return true;
-				}else if(MTSRegistry.key.equals(heldStack.getItem())){
-					ItemKey key = (ItemKey) heldStack.getItem();
-					if(player.isSneaking()){
-						//If we are sneaking with a key we need to change ownership.
-						key.changeOwner(heldStack, this, player);
-					}else{
-						//Not sneaking, do locking code.
-						key.changeLock(heldStack, this, player);
-					}
-					this.sendDataToClient();
-					return true;
-				}else if(heldStack.getItem() != null){
-					//If not any of the above items, check to see if our item spawns a part.
-					boolean isItemPart = false;
-					PackPart partToSpawn = null;
-					float closestPosition = 9999;
-					//Look though the part data to find the class that goes with the held item.
-					for(PackPart part : pack.parts){
-						for(String partName : part.names){
-							if(heldStack.getItem().getRegistryName().getResourcePath().equals(partName)){
-								isItemPart = true;
-								//The held item can spawn a part.
-								//Now find the closest spot to put it.
-								float distance = (float) Math.hypot(player.posX - this.posX - part.pos[0], player.posX - this.posX - part.pos[2]);
-								if(distance < closestPosition){
-									//Make sure a part doesn't exist already.
-									boolean childPresent = false;
-									for(EntityMultipartChild child : this.getChildren()){
-										if(child.offsetX == part.pos[0] && child.offsetY == part.pos[1] && child.offsetZ == part.pos[2]){
-											childPresent = true;
-											break;
-										}
-									}
-									if(!childPresent){
-										closestPosition = distance;
-										partToSpawn = part;
-									}
-								}
-							}
-						}
-					}
-					
-					if(partToSpawn != null){
-						//We have a part, now time to spawn it.
-						try{
-							Constructor<? extends EntityMultipartChild> construct = MTSRegistry.partClasses.get(heldStack.getItem().getRegistryName().getResourcePath()).getConstructor(World.class, EntityMultipartParent.class, String.class, float.class, float.class, float.class, int.class);
-							EntityMultipartChild newChild = construct.newInstance(worldObj, this, this.UUID, partToSpawn.pos[0], partToSpawn.pos[1], partToSpawn.pos[2], heldStack.getItemDamage());
-							//TODO make this use the default NBT methods rather than a custom one.
-							newChild.setNBTFromStack(heldStack);
-							newChild.setTurnsWithSteer(partToSpawn.turnsWithSteer);
-							newChild.setController(partToSpawn.isController);
-							this.addChild(newChild.UUID, newChild, true);
-							if(!player.capabilities.isCreativeMode){
-								player.inventory.clearMatchingItems(heldStack.getItem(), heldStack.getItemDamage(), 1, heldStack.getTagCompound());
-							}
-						}catch(Exception e){
-							MTS.MTSLog.error("ERROR SPAWING PART!");
-							e.printStackTrace();
-						}
-					}
-					
-					if(isItemPart){
-						return true;
-					}
-				}
-			}
-		}else if(player.getHeldItemMainhand() != null && player.getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
-			MTS.proxy.openGUI(this, player);
-			return true;
-		}
-		return false;
-	}
-	
-	@Override
-	public boolean attackEntityFrom(DamageSource source, float damage){		
+	public boolean attackEntityFrom(DamageSource source, float damage){
 		if(!worldObj.isRemote){
 			if(source.getSourceOfDamage() != null && !source.getSourceOfDamage().equals(source.getEntity())){
 				//This is a projectile of some sort.
@@ -266,45 +155,13 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 						return true;
 					}
 				}
-			}else if(source.getEntity() instanceof EntityPlayer && ((EntityPlayer) source.getEntity()).getHeldItemMainhand() != null && ((EntityPlayer) source.getEntity()).isSneaking() && ((EntityPlayer) source.getEntity()).getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
-				//Attacker is a sneaking player with a wrench.
-				//Remove this entity if possible.
-				EntityPlayer attackingPlayer = (EntityPlayer) source.getEntity();
-				boolean isPlayerOP = attackingPlayer.getServer().getPlayerList().getOppedPlayers().getEntry(attackingPlayer.getGameProfile()) != null || attackingPlayer.getServer().isSinglePlayer();
-				if(this.ownerName.isEmpty() || attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString().equals(this.ownerName) || isPlayerOP){
-					this.setDead();
-				}else{
-					MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehicleowned"), (EntityPlayerMP) attackingPlayer);
-				}
-				return true;
 			}else{
-				//This is not a projectile, and is not a sneaking player with a wrench and therefore must be some sort of entity.
+				//This is not a projectile, and therefore must be some sort of entity.
 				//Check to see where this entity is looking and find the collision box.
 				//If the box is a part, forward the attack to that part.
-				//If the attacker is a player with a wrench (not sneaking), remove the part entirely.
-				
 				Entity attacker = source.getEntity();
 				if(attacker != null){
 					EntityMultipartChild hitChild = getHitChild(attacker);
-					if(attacker instanceof EntityPlayer && ((EntityPlayer) attacker).getHeldItemMainhand() != null && ((EntityPlayer) attacker).getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
-						if(hitChild != null){
-							EntityPlayer attackingPlayer = (EntityPlayer) attacker;
-							boolean isPlayerOP = attackingPlayer.getServer().getPlayerList().getOppedPlayers().getEntry(attackingPlayer.getGameProfile()) != null || attackingPlayer.getServer().isSinglePlayer();
-							if(this.ownerName.isEmpty() || attackingPlayer.getUUID(attackingPlayer.getGameProfile()).toString().equals(this.ownerName) || isPlayerOP){
-								//Player can remove part.  Spawn item in the world and remove part.
-								ItemStack droppedItem = hitChild.getItemStack();
-								if(droppedItem != null){
-									worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, droppedItem));
-								}
-								this.removeChild(hitChild.UUID, false);
-							}else{
-								MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehicleowned"), (EntityPlayerMP) attackingPlayer);
-							}
-						}
-						return true;
-					}
-					
-					
 					if(hitChild != null){
 						hitChild.attackPart(source, damage);
 						return true;
@@ -313,8 +170,6 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			}
 			
 			//Since we didn't forward any attacks or do special events, we must have attacked this multipart directly.
-			//The only exception is if we are a player holding a wrench.  We may have missed the part we were aiming for
-			//so we don't want to break the glass on this entity.
 			Entity damageSource = source.getEntity() != null && !source.getEntity().equals(source.getSourceOfDamage()) ? source.getSourceOfDamage() : source.getEntity();
 			if(damageSource != null){
 				this.damage += damage;
@@ -331,7 +186,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		return true;
 	}
 	
-	private EntityMultipartChild getHitChild(Entity entity){
+	public EntityMultipartChild getHitChild(Entity entity){
 		Vec3d lookVec = entity.getLook(1.0F);
 		Vec3d hitVec = entity.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
 		for(float f=1.0F; f<4.0F; f += 0.1F){
@@ -343,6 +198,23 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			hitVec = hitVec.addVector(lookVec.xCoord*0.1F, lookVec.yCoord*0.1F, lookVec.zCoord*0.1F);
 		}
 		return null;
+	}
+	
+    /**
+     * Checks if the passed-in entity could have clicked this multipart given the current rotation of the entity.
+     */
+	public boolean wasMultipartClicked(Entity entity){
+		Vec3d lookVec = entity.getLook(1.0F);
+		Vec3d hitVec = entity.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
+		for(float f=1.0F; f<4.0F; f += 0.1F){
+			for(MTSAxisAlignedBB box : getCurrentCollisionBoxes()){
+				if(box.isVecInside(hitVec)){
+					return true;
+				}
+			}
+			hitVec = hitVec.addVector(lookVec.xCoord*0.1F, lookVec.yCoord*0.1F, lookVec.zCoord*0.1F);
+		}
+		return false;
 	}
 
 	@Override
@@ -383,7 +255,8 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		return this.collisionFrame != null ? this.collisionFrame : new MTSAxisAlignedBBCollective(this, 1, 1);
     }
 	
-	/**Called by systems needing information about collision with this entity.
+	/**
+	 * Called by systems needing information about collision with this entity.
 	 * Note that this is different than what this entity uses for collision
 	 * with blocks; block collision only looks at collision bits, while
 	 * attack and interaction collision looks at that and parts.
@@ -396,6 +269,11 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		return retList;
 	}
     
+	/**
+	 * Called to populate the collision lists for this entity.
+	 * Do NOT call more than once a tick as this operation is complex and
+	 * CPU and RAM intensive!
+	 */
 	private List<MTSAxisAlignedBB> getUpdatedCollisionBoxes(){
 		if(this.pack != null){
 			double furthestWidth = 0;

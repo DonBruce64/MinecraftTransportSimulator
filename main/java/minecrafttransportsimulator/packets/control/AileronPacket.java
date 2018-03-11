@@ -59,15 +59,15 @@ public class AileronPacket implements IMessage{
 					if(thisEntity!=null){
 						if(message.packetType == 1){
 							thisEntity.aileronCooldown = message.aileronData;
-							if(thisEntity.aileronAngle + 2 <= 250){
-								thisEntity.aileronAngle += 2;
+							if(thisEntity.aileronAngle + 6 <= 250){
+								thisEntity.aileronAngle += 6;
 							}else{
 								return;
 							}
 						}else if(message.packetType == -1){
 							thisEntity.aileronCooldown = message.aileronData;
-							if(thisEntity.aileronAngle - 2 >= -250){
-								thisEntity.aileronAngle -= 2;
+							if(thisEntity.aileronAngle - 6 >= -250){
+								thisEntity.aileronAngle -= 6;
 							}else{
 								return;
 							}

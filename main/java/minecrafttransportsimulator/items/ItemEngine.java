@@ -14,10 +14,11 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public final class ItemEngine extends Item{
+public final class ItemEngine extends ItemPart{
 	private final Engines engineItem;
 	
-	public ItemEngine(Engines engineItem){
+	public ItemEngine(Class<? extends EntityEngine> engineClass, Engines engineItem){
+		super(engineClass);
 		this.hasSubtypes=true;
 		this.setMaxStackSize(1);
 		this.engineItem = engineItem;
@@ -75,7 +76,7 @@ public final class ItemEngine extends Item{
 	
 	public enum Engines{
 		LYCOMING_O360(true, (byte) 1, (byte) 50, (byte) 4, 2900, 0.4F),
-		BRISTOL_MERCURY(true, (byte) 1, (byte) 25, (byte) 13, 2900, 0.4F),
+		BRISTOL_MERCURY(true, (byte) 1, (byte) 25, (byte) 13, 2400, 0.7F),
 		AMC_I4(true, (byte) 4, (byte) 50, (byte) 3, 7500, 0.5F),
 		DETROIT_DIESEL(false, (byte) 9, (byte) 25, (byte) 4, 3500, 1.5F);
 		

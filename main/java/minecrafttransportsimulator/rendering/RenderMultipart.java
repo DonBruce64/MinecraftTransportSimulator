@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
+import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackBeacon;
@@ -17,6 +18,7 @@ import minecrafttransportsimulator.dataclasses.MTSPackObject.PackDisplayText;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackLight;
+import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackRotatableModelObject;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
@@ -28,6 +30,7 @@ import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
@@ -35,7 +38,9 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -227,6 +232,11 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			GL11.glEnable(GL11.GL_TEXTURE_2D);
 			GL11.glDepthMask(true);
 			GL11.glColor4f(1, 1, 1, 1);
+		}
+		
+		//Render holograms for missing parts if applicable.
+		if(MinecraftForgeClient.getRenderPass() != 0){
+			renderPartBoxes(mover);
 		}
 		
 		//Make sure lightmaps are set correctly.
@@ -741,6 +751,81 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		GL11.glEnable(GL11.GL_LIGHTING);
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
 		GL11.glPopMatrix();
+	}
+	
+	private static void renderPartBoxes(EntityMultipartMoving mover){
+		EntityPlayer player = minecraft.thePlayer;
+		ItemStack heldStack = player.getHeldItemMainhand();
+		if(heldStack != null){
+			String partBoxToRender = heldStack.getItem().getRegistryName().getResourcePath();
+			
+			for(PackPart packPart : mover.pack.parts){
+				boolean isPresent = false;
+				boolean isHoldingPart = false;
+				for(EntityMultipartChild child : mover.getChildren()){
+					if(child.offsetX == packPart.pos[0] && child.offsetY == packPart.pos[1] && child.offsetZ == packPart.pos[2]){
+						isPresent = true;
+						break;
+					}
+				}
+	
+				for(String partName : packPart.names){
+					if(partName.equals(partBoxToRender)){
+						isHoldingPart = true;
+						break;
+					}
+				}
+						
+				if(!isPresent && isHoldingPart){
+					MTSVector offset = RotationSystem.getRotatedPoint(packPart.pos[0], packPart.pos[1], packPart.pos[2], mover.rotationPitch, mover.rotationYaw, mover.rotationRoll);
+					AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.75F, (float) (offset.yCoord) - 0.75F, (float) (offset.zCoord) - 0.75F, (float) (offset.xCoord) + 0.75F, (float) (offset.yCoord) + 0.75F, (float) (offset.zCoord) + 0.75F);
+					
+					GL11.glPushMatrix();
+					GL11.glDisable(GL11.GL_TEXTURE_2D);
+					GL11.glDisable(GL11.GL_LIGHTING);
+					GL11.glEnable(GL11.GL_BLEND);
+					GL11.glColor4f(0, 1, 0, 0.25F);
+					GL11.glBegin(GL11.GL_QUADS);
+					
+					GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+					GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+					GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+					GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+					
+					GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+					GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+					GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+					GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+					
+					GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+					GL11.glVertex3d(box.minX, box.minY, box.minZ);
+					GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+					GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+					
+					GL11.glVertex3d(box.minX, box.minY, box.minZ);
+					GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+					GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+					GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+					
+					GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+					GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+					GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+					GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+					
+					GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+					GL11.glVertex3d(box.minX, box.minY, box.minZ);
+					GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+					GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+					GL11.glEnd();
+
+					GL11.glColor4f(1, 1, 1, 1);
+					GL11.glDisable(GL11.GL_BLEND);
+					GL11.glEnable(GL11.GL_LIGHTING);
+					GL11.glEnable(GL11.GL_TEXTURE_2D);
+					GL11.glPopMatrix();
+				}
+			}
+		}
 	}
 	
 	private static void renderDebugVectors(EntityPlane plane){

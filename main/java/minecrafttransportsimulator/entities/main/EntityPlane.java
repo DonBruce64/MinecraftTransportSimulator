@@ -116,12 +116,12 @@ public class EntityPlane extends EntityMultipartVehicle{
 		
 		dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*pack.plane.wingSpan*pack.plane.wingSpan/currentWingArea*0.8));		
 		wingForce = 0.5F*airDensity*velocity*velocity*currentWingArea*wingLiftCoeff;
-		aileronForce = 0.5F*airDensity*velocity*velocity*pack.plane.wingArea/5*aileronLiftCoeff;
+		aileronForce = 0.5F*airDensity*velocity*velocity*pack.plane.wingArea/10F*aileronLiftCoeff;
 		elevatorForce = 0.5F*airDensity*velocity*velocity*pack.plane.elevatorArea*elevatorLiftCoeff;			
 		rudderForce = 0.5F*airDensity*velocity*velocity*pack.plane.rudderArea*rudderLiftCoeff;
 		gravitationalForce = currentMass*(9.8/400);
 					
-		aileronTorque = 2*aileronForce*pack.plane.wingSpan*0.3;
+		aileronTorque = aileronForce*pack.plane.wingSpan*0.5F*0.75F;
 		elevatorTorque = elevatorForce*pack.plane.tailDistance;
 		rudderTorque = rudderForce*pack.plane.tailDistance;
 		gravitationalTorque = gravitationalForce*1;
@@ -140,7 +140,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 		if(aileronCooldown==0){
 			if(aileronAngle != 0){
 				MTS.MTSNet.sendToAll(new AileronPacket(this.getEntityId(), aileronAngle < 0, (short) 0));
-				aileronAngle += aileronAngle < 0 ? 2 : -2;
+				aileronAngle += aileronAngle < 0 ? 6 : -6;
 			}
 		}else{
 			--aileronCooldown;

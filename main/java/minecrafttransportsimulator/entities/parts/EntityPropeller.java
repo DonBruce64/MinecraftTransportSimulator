@@ -74,7 +74,7 @@ public class EntityPropeller extends EntityMultipartChild{
 	}
 	
 	@Override
-	protected void attackPart(DamageSource source, float damage){
+	public void attackPart(DamageSource source, float damage){
 		if(source.getEntity() instanceof EntityPlayer){					
 			if(((EntityPlayer) source.getEntity()).getHeldItemMainhand() == null){
 				if(!(source.getEntity().getRidingEntity() instanceof EntitySeat)){

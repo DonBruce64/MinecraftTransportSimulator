@@ -3,8 +3,12 @@ package minecrafttransportsimulator.systems;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
+import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
@@ -12,6 +16,12 @@ import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.guis.GUIConfig;
 import minecrafttransportsimulator.guis.GUIPackMissing;
 import minecrafttransportsimulator.guis.GUISplash;
+import minecrafttransportsimulator.items.ItemPart;
+import minecrafttransportsimulator.packets.general.MultipartAttackPacket;
+import minecrafttransportsimulator.packets.general.MultipartKeyActionPacket;
+import minecrafttransportsimulator.packets.general.MultipartNameTagActionPacket;
+import minecrafttransportsimulator.packets.general.MultipartPartAdditionPacket;
+import minecrafttransportsimulator.packets.general.MultipartPartInteractionPacket;
 import minecrafttransportsimulator.packets.general.PackReloadPacket;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderMultipart;
@@ -20,11 +30,16 @@ import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -33,8 +48,8 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
 
-/**This class handles rendering/camera edits that need to happen when riding planes
- * as well as some other misc things.
+/**This class handles rendering/camera edits that need to happen when riding vehicles,
+ * as well as clicking of multiparts and their parts, as well as some other misc things.
  *
  * @author don_bruce
  */
@@ -44,7 +59,120 @@ public final class ClientEventSystem{
     public static EntitySeat playerLastSeat = null;
     private static boolean firstTickRun = false;
     private static Minecraft minecraft = Minecraft.getMinecraft();
+    
+    
+    /**
+     * Need this to do part interaction in cases when we aren't holding anything.
+     */
+    @SubscribeEvent
+    public static void on(PlayerInteractEvent.RightClickEmpty event){
+    	for(Entity entity : minecraft.theWorld.loadedEntityList){
+			if(entity instanceof EntityMultipartMoving){
+				EntityMultipartMoving mover = (EntityMultipartMoving) entity;
+				EntityPlayer player = event.getEntityPlayer();
+				EntityMultipartChild hitChild = mover.getHitChild(player);
+				if(hitChild != null){
+					hitChild.interactPart(player);
+				}
+			}
+    	}
+    }
+    
+    /**
+     * Checks if a player has right-clicked a multipart with a valid item.
+     * If so, does an action depending on what was clicked and what the player is holding.
+     */
+    @SubscribeEvent
+    public static void on(PlayerInteractEvent.RightClickItem event){
+    	for(Entity entity : minecraft.theWorld.loadedEntityList){
+			if(entity instanceof EntityMultipartMoving){
+				EntityMultipartMoving mover = (EntityMultipartMoving) entity;
+				EntityPlayer player = event.getEntityPlayer();
+				
+				//Before we check item actions, see if we clicked a part and we need to interact with it.
+				//If so, do the part's interaction rather than part checks or other interaction.
+				EntityMultipartChild hitChild = mover.getHitChild(player);
+				if(hitChild != null){
+					if(hitChild.interactPart(player)){
+						MTS.MTSNet.sendToServer(new MultipartPartInteractionPacket(hitChild.getEntityId(), player.getEntityId()));
+						return;
+					}
+				}
+				
+				//No in-use changes for sneaky sneaks!  Unless we're using a key to lock ourselves in.
+				if(player.getRidingEntity() instanceof EntitySeat){
+					if(player.getHeldItem(event.getHand()) != null){
+						if(!MTSRegistry.key.equals(player.getHeldItem(event.getHand()).getItem())){
+							return;
+						}
+					}
+				}
+				
+				//If this item is a part, find if we are right-clicking a valid part area.
+				//If so, send the info to the server to add a new part.
+				//Note that the server will check if we can actually add the part in question.
+		    	if(event.getItemStack().getItem() instanceof ItemPart){
+    				for(byte i=0; i<mover.pack.parts.size(); ++i){
+    					PackPart packPart = mover.pack.parts.get(i);
+    					MTSVector offset = RotationSystem.getRotatedPoint(packPart.pos[0], packPart.pos[1], packPart.pos[2], mover.rotationPitch, mover.rotationYaw, mover.rotationRoll);
+    					AxisAlignedBB partBox = new AxisAlignedBB((float) (mover.posX + offset.xCoord) - 0.75F, (float) (mover.posY + offset.yCoord) - 0.75F, (float) (mover.posZ + offset.zCoord) - 0.75F, (float) (mover.posX + offset.xCoord) + 0.75F, (float) (mover.posY + offset.yCoord) + 0.75F, (float) (mover.posZ + offset.zCoord) + 0.75F);
+    					Vec3d lookVec = player.getLook(1.0F);
+        				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
+        				for(float f=1.0F; f<4.0F; f += 0.1F){
+        					if(partBox.isVecInside(clickedVec)){
+        						boolean isPartPresent = false;
+        						for(EntityMultipartChild child : mover.getChildren()){
+									if(child.offsetX == packPart.pos[0] && child.offsetY == packPart.pos[1] && child.offsetZ == packPart.pos[2]){
+										isPartPresent = true;
+										break;
+									}
+								}
+        						if(!isPartPresent){
+	        						MTS.MTSNet.sendToServer(new MultipartPartAdditionPacket(mover.getEntityId(), player.getEntityId(), i));
+	        						return;
+        						}
+        					}
+        					clickedVec = clickedVec.addVector(lookVec.xCoord*0.1F, lookVec.yCoord*0.1F, lookVec.zCoord*0.1F);
+        				}
+    				}
+    			}else{
+    				//If we are not holding a part, see if we at least clicked the multipart.
+    				//If so, and we are holding a wrench or key or name tag, act on that.
+    				if(mover.wasMultipartClicked(player)){
+    					if(event.getItemStack().getItem().equals(MTSRegistry.wrench)){
+    						MTS.proxy.openGUI(mover, player);
+    					}else if(event.getItemStack().getItem().equals(MTSRegistry.key)){
+    						MTS.MTSNet.sendToServer(new MultipartKeyActionPacket(mover.getEntityId(), player.getEntityId()));
+    					}else if(event.getItemStack().getItem().equals(Items.NAME_TAG)){
+    						MTS.MTSNet.sendToServer(new MultipartNameTagActionPacket(mover.getEntityId(), player.getEntityId()));
+    					}
+    				}
+    			}
+    		}
+    	}
+    }
 
+    /**
+     * If a player swings and misses a multipart they may still have hit it.
+     * MC doesn't look for attacks based on AABB, rather it uses RayTracing.
+     * This works on the client where we can see the part, but on the server
+     * the internal distance check nulls this out.
+     * If we are attacking a multipart here cancel the attack and instead fire
+     * the attack manually from a packet to make dang sure we get it to the multipart!
+     */
+    @SubscribeEvent
+    public static void on(AttackEntityEvent event){
+    	//You might think this only gets called on clients, you'd be wrong.
+    	//Forge will gladly call this on the client and server threads on SP.
+    	if(event.getEntityPlayer().worldObj.isRemote){
+	    	if(event.getTarget() instanceof EntityMultipartMoving){
+	    		event.setCanceled(true);
+	    		MTS.MTSNet.sendToServer(new MultipartAttackPacket(event.getTarget().getEntityId(), event.getEntityPlayer().getEntityId()));
+	    	}
+    	}else{
+    		event.setCanceled(true);
+    	}
+    }
     /**
      * Adjusts camera zoom if player is seated and in third-person.
      * Also adjusts the player's rotation,
@@ -215,7 +343,7 @@ public final class ClientEventSystem{
         if(ControlSystem.isMasterControlButttonPressed()){
             if(minecraft.currentScreen == null){
             	FMLCommonHandler.instance().showGuiScreen(new GUIConfig());
-                if(Minecraft.getMinecraft().isSingleplayer() && minecraft.thePlayer.isSneaking()){
+                if(Minecraft.getMinecraft().isSingleplayer()){
                 	MTS.MTSNet.sendToServer(new PackReloadPacket());
                 	MTSRegistryClient.loadCustomOBJModels();
                 	RenderMultipart.resetDisplayLists();

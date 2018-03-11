@@ -12,7 +12,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 
 public class EntitySeat extends EntityMultipartChild{
@@ -44,25 +43,27 @@ public class EntitySeat extends EntityMultipartChild{
 	}
 	
 	@Override
-	protected boolean interactPart(EntityPlayer player, EnumHand hand){
-		Entity rider = this.getPassenger();
-		if(rider==null){
-			//Don't let non-seated players in this vehicle enter if locked.
-			if(((EntityMultipartMoving) parent).locked){
-				if(player.getRidingEntity() instanceof EntitySeat){
-					if(((EntitySeat) player.getRidingEntity()).parent != null){
-						if(((EntitySeat) player.getRidingEntity()).parent.equals(this.parent)){
-							player.startRiding(this);
-							return true;
+	public boolean interactPart(EntityPlayer player){
+		if(!worldObj.isRemote){
+			Entity rider = this.getPassenger();
+			if(rider==null){
+				//Don't let non-seated players in this vehicle enter if locked.
+				if(((EntityMultipartMoving) parent).locked){
+					if(player.getRidingEntity() instanceof EntitySeat){
+						if(((EntitySeat) player.getRidingEntity()).parent != null){
+							if(((EntitySeat) player.getRidingEntity()).parent.equals(this.parent)){
+								player.startRiding(this);
+								return true;
+							}
 						}
 					}
+					MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
+				}else{
+					player.startRiding(this);
 				}
-				MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
-			}else{
-				player.startRiding(this);
+			}else if(!rider.equals(player)){
+				MTS.MTSNet.sendTo(new ChatPacket("interact.failure.seattaken"), (EntityPlayerMP) player);
 			}
-		}else if(!rider.equals(player)){
-			MTS.MTSNet.sendTo(new ChatPacket("interact.failure.seattaken"), (EntityPlayerMP) player);
 		}
 		return true;
     }

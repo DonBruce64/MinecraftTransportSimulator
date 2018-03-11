@@ -5,6 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -14,9 +15,10 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class ItemPropeller extends Item{
+public class ItemPropeller extends ItemPart{
 	
 	public ItemPropeller(){
+		super(EntityPropeller.class);
 		this.hasSubtypes=true;
 		this.setMaxStackSize(1);
 	}

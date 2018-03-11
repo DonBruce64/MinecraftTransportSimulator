@@ -13,7 +13,6 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.world.World;
 
@@ -35,8 +34,10 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
 	protected abstract String getChildInventoryName();
 	
 	@Override
-	public boolean interactPart(EntityPlayer player, EnumHand hand){
-		player.openGui(MTS.instance, this.getEntityId(), worldObj, (int) posX, (int) posY, (int) posZ);
+	public boolean interactPart(EntityPlayer player){
+		if(!worldObj.isRemote){
+			player.openGui(MTS.instance, this.getEntityId(), worldObj, (int) posX, (int) posY, (int) posZ);
+		}
 		return true;
     }
     

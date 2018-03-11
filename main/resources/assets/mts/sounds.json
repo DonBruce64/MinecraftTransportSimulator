@@ -18,7 +18,7 @@
     "engine_sputter"    : {"category": "master", "sounds": [{"name": "mts:engine_sputter","stream": false}]},
     "engine_shifting_grinding"    : {"category": "master", "sounds": [{"name": "mts:engine_shifting_grinding","stream": false}]},
     
-    "horn_car"    : {"category": "master", "sounds": [{"name": "mts:horn_car","stream": false}]},
+    "horn_car1"    : {"category": "master", "sounds": [{"name": "mts:horn_car1","stream": false}]},
     "horn_truck"    : {"category": "master", "sounds": [{"name": "mts:horn_truck","stream": false}]},
     
     "bench_running"    : {"category": "master", "sounds": [{"name": "mts:bench_running","stream": false}]},

@@ -37,7 +37,7 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 	public void setNBTFromStack(ItemStack stack){}
 	
 	@Override
-	protected void attackPart(DamageSource source, float damage){
+	public void attackPart(DamageSource source, float damage){
 		if(!isFlat){
 			if(source.isExplosion() || Math.random() < 0.1){
 				setFlat();

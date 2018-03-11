@@ -12,29 +12,21 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class ChatPacket implements IMessage{
 	private String translatableMessage;
-	private String extraMessage;
 
 	public ChatPacket() { }
 	
 	public ChatPacket(String translatableMessage){
-		this(translatableMessage, "");
-	}
-	
-	public ChatPacket(String translatableMessage, String extraMessage){
 		this.translatableMessage=translatableMessage;
-		this.extraMessage=extraMessage;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		this.translatableMessage=ByteBufUtils.readUTF8String(buf);
-		this.extraMessage=ByteBufUtils.readUTF8String(buf);
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		ByteBufUtils.writeUTF8String(buf, this.translatableMessage);
-		ByteBufUtils.writeUTF8String(buf, this.extraMessage);
 	}
 
 	public static class Handler implements IMessageHandler<ChatPacket, IMessage>{
@@ -43,7 +35,7 @@ public class ChatPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(I18n.format(message.translatableMessage) + message.extraMessage));
+					Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(I18n.format(message.translatableMessage)));
 				}
 			});
 			return null;

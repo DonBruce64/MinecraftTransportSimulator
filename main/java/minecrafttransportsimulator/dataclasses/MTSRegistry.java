@@ -11,7 +11,6 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockFuelPump;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
-import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftBristol;
 import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLycoming;
 import minecrafttransportsimulator.entities.parts.EntityEngineCarAMC;
@@ -27,6 +26,7 @@ import minecrafttransportsimulator.items.ItemInstrument;
 import minecrafttransportsimulator.items.ItemKey;
 import minecrafttransportsimulator.items.ItemManual;
 import minecrafttransportsimulator.items.ItemMultipartMoving;
+import minecrafttransportsimulator.items.ItemPart;
 import minecrafttransportsimulator.items.ItemPropeller;
 import minecrafttransportsimulator.items.ItemSeat;
 import minecrafttransportsimulator.items.ItemWrench;
@@ -49,8 +49,13 @@ import minecrafttransportsimulator.packets.general.FuelPumpConnectDisconnectPack
 import minecrafttransportsimulator.packets.general.FuelPumpFillDrainPacket;
 import minecrafttransportsimulator.packets.general.InstrumentAddRemovePacket;
 import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
+import minecrafttransportsimulator.packets.general.MultipartAttackPacket;
 import minecrafttransportsimulator.packets.general.MultipartDeltaPacket;
+import minecrafttransportsimulator.packets.general.MultipartKeyActionPacket;
+import minecrafttransportsimulator.packets.general.MultipartNameTagActionPacket;
 import minecrafttransportsimulator.packets.general.MultipartParentDamagePacket;
+import minecrafttransportsimulator.packets.general.MultipartPartAdditionPacket;
+import minecrafttransportsimulator.packets.general.MultipartPartInteractionPacket;
 import minecrafttransportsimulator.packets.general.PackReloadPacket;
 import minecrafttransportsimulator.packets.general.PropellerBenchUpdatePacket;
 import minecrafttransportsimulator.packets.general.ServerDataPacket;
@@ -85,17 +90,18 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @Mod.EventBusSubscriber
 public final class MTSRegistry{	
-	public static final Item wheelSmall = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item wheelMedium = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item wheelLarge = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item skid = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item pontoon = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item engineLycomingO360 = new ItemEngine(ItemEngine.Engines.LYCOMING_O360).setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item engineBristolMercury = new ItemEngine(ItemEngine.Engines.BRISTOL_MERCURY).setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item engineAMCI4 = new ItemEngine(ItemEngine.Engines.AMC_I4).setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item engineDetroitDiesel = new ItemEngine(ItemEngine.Engines.DETROIT_DIESEL).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item wheelSmall = new ItemPart(EntityWheel.EntityWheelSmall.class).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item wheelMedium = new ItemPart(EntityWheel.EntityWheelMedium.class).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item wheelLarge = new ItemPart(EntityWheel.EntityWheelLarge.class).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item skid = new ItemPart(EntitySkid.class).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item pontoon = new ItemPart(EntityPontoon.class).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item engineLycomingO360 = new ItemEngine(EntityEngineAircraftLycoming.class, ItemEngine.Engines.LYCOMING_O360).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item engineBristolMercury = new ItemEngine(EntityEngineAircraftBristol.class, ItemEngine.Engines.BRISTOL_MERCURY).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item engineAMCI4 = new ItemEngine(EntityEngineCarAMC.class, ItemEngine.Engines.AMC_I4).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item engineDetroitDiesel = new ItemEngine(EntityEngineCarDetroit.class, ItemEngine.Engines.DETROIT_DIESEL).setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item propeller = new ItemPropeller().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item seat = new ItemSeat().setCreativeTab(MTSCreativeTabs.tabMTS);
+	
 	public static final Item pointerShort = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item pointerLong = new Item().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item wrench = new ItemWrench().setCreativeTab(MTSCreativeTabs.tabMTS);
@@ -117,8 +123,6 @@ public final class MTSRegistry{
 	public static List<Item> itemList = new ArrayList<Item>();
 	/**Maps multipart item names to items.*/
 	public static Map<String, ItemMultipartMoving> multipartItemMap = new HashMap<String, ItemMultipartMoving>();
-	/**Maps child class names to classes for quicker lookup during spawn operations.*/
-	public static Map<String, Class<? extends EntityMultipartChild>> partClasses = new HashMap<String, Class<? extends EntityMultipartChild>>();
 	/**Maps item names to their recipes.*/
 	public static Map<String, ItemStack[]> craftingItemMap = new HashMap<String, ItemStack[]>();
 
@@ -201,31 +205,38 @@ public final class MTSRegistry{
 			registerEntity(type.multipartClass);
 		}
 		
-		registerChildEntity(EntitySeat.class, seat);
-		registerChildEntity(EntityVehicleChest.class, Item.getItemFromBlock(Blocks.CHEST));
-		registerChildEntity(EntityWheel.EntityWheelSmall.class, wheelSmall);
-		registerChildEntity(EntityWheel.EntityWheelMedium.class, wheelMedium);
-		registerChildEntity(EntityWheel.EntityWheelLarge.class, wheelLarge);
-		registerChildEntity(EntitySkid.class, skid);
-		registerChildEntity(EntityPontoon.class, pontoon);
-		registerChildEntity(EntityPontoon.EntityPontoonDummy.class, null);
-		registerChildEntity(EntityPropeller.class, propeller);
-		registerChildEntity(EntityEngineCarAMC.class, engineAMCI4);
-		registerChildEntity(EntityEngineCarDetroit.class, engineDetroitDiesel);
-		registerChildEntity(EntityEngineAircraftLycoming.class, engineLycomingO360);
-		registerChildEntity(EntityEngineAircraftBristol.class, engineBristolMercury);
+		registerEntity(EntitySeat.class);
+		registerEntity(EntityVehicleChest.class);
+		registerEntity(EntityWheel.EntityWheelSmall.class);
+		registerEntity(EntityWheel.EntityWheelMedium.class);
+		registerEntity(EntityWheel.EntityWheelLarge.class);
+		registerEntity(EntitySkid.class);
+		registerEntity(EntityPontoon.class);
+		registerEntity(EntityPontoon.EntityPontoonDummy.class);
+		registerEntity(EntityPropeller.class);
+		registerEntity(EntityEngineCarAMC.class);
+		registerEntity(EntityEngineCarDetroit.class);
+		registerEntity(EntityEngineAircraftLycoming.class);
+		registerEntity(EntityEngineAircraftBristol.class);
 	}
 	
 	private static void initPackets(){
 		registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
-		registerPacket(MultipartParentDamagePacket.class, MultipartParentDamagePacket.Handler.class, true, false);
 		registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
 		registerPacket(FlatWheelPacket.class, FlatWheelPacket.Handler.class, true, false);
 		registerPacket(FuelPumpConnectDisconnectPacket.class, FuelPumpConnectDisconnectPacket.Handler.class, true, false);
 		registerPacket(FuelPumpFillDrainPacket.class, FuelPumpFillDrainPacket.Handler.class, true, false);
 		registerPacket(InstrumentAddRemovePacket.class, InstrumentAddRemovePacket.Handler.class, true, true);
 		registerPacket(ManualPageUpdatePacket.class, ManualPageUpdatePacket.Handler.class, false, true);
+		
+		registerPacket(MultipartAttackPacket.class, MultipartAttackPacket.Handler.class, false, true);
+		registerPacket(MultipartKeyActionPacket.class, MultipartKeyActionPacket.Handler.class, true, true);
+		registerPacket(MultipartNameTagActionPacket.class, MultipartNameTagActionPacket.Handler.class, true, true);
 		registerPacket(MultipartDeltaPacket.class, MultipartDeltaPacket.Handler.class, true, false);
+		registerPacket(MultipartParentDamagePacket.class, MultipartParentDamagePacket.Handler.class, true, false);
+		registerPacket(MultipartPartAdditionPacket.class, MultipartPartAdditionPacket.Handler.class, false, true);
+		registerPacket(MultipartPartInteractionPacket.class, MultipartPartInteractionPacket.Handler.class, false, true);
+		
 		registerPacket(PackReloadPacket.class, PackReloadPacket.Handler.class, true, true);
 		registerPacket(PropellerBenchUpdatePacket.class, PropellerBenchUpdatePacket.Handler.class, true, true);
 		registerPacket(ServerDataPacket.class, ServerDataPacket.Handler.class, true, false);
@@ -586,25 +597,10 @@ public final class MTSRegistry{
 
 	/**
 	 * Registers an entity.
-	 * Adds it to the multipartClassess map if appropriate.
 	 * @param entityClass
 	 */
 	private static void registerEntity(Class<? extends Entity> entityClass){
 		EntityRegistry.registerModEntity(entityClass, entityClass.getSimpleName().substring(6).toLowerCase(), entityNumber++, MTS.MODID, 80, 5, false);
-	}
-	
-	/**
-	 * Registers a child entity.
-	 * Optionally pairs the entity with an item for GUI operations.
-	 * Note that the name of the item is what name you should use in the {@link PackParserSystem}
-	 * @param entityClass
-	 * @param entityItem
-	 */
-	private static void registerChildEntity(Class<? extends EntityMultipartChild> entityClass, Item entityItem){
-		if(entityItem != null){
-			partClasses.put(entityItem.getRegistryName().getResourcePath(), entityClass);
-		}
-		registerEntity(entityClass);
 	}
 	
 	/**

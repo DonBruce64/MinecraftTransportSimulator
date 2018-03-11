@@ -7,7 +7,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -61,19 +60,18 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 		linked = hasUUID() && hasParent();
 	}
 		
-	/**Called when multipart sees this part being interacted with.
-	 * Use this information to do part interactions.
-	 * Return true if part can be interacted with as this will stop
-	 * processing in multipart interaction system.  
+	/**Called when checking if this part can be interacted with.
+	 * Return true to forward interactions to this part rather than
+	 * have the master multipart deal with them.
 	 */
-	protected boolean interactPart(EntityPlayer player, EnumHand hand){
+	public boolean interactPart(EntityPlayer player){
 		return false;
 	}
 	
-	/**Called when multipart sees this part being attacked.
+	/**Called when the master multipart sees this part being attacked.
 	 * Use this information to damage part.
 	 */
-	protected void attackPart(DamageSource source, float damage){}
+	public void attackPart(DamageSource source, float damage){}
 	
 	public abstract float getWidth();
 	
