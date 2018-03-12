@@ -73,7 +73,10 @@ public final class ClientEventSystem{
 				EntityPlayer player = event.getEntityPlayer();
 				EntityMultipartChild hitChild = mover.getHitChild(player);
 				if(hitChild != null){
-					hitChild.interactPart(player);
+					if(hitChild.interactPart(player)){
+						MTS.MTSNet.sendToServer(new MultipartPartInteractionPacket(hitChild.getEntityId(), player.getEntityId()));
+						return;
+					}
 				}
 			}
     	}

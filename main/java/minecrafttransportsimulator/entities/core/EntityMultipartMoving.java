@@ -18,6 +18,7 @@ import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.packets.general.MultipartDeltaPacket;
 import minecrafttransportsimulator.packets.general.MultipartParentDamagePacket;
+import minecrafttransportsimulator.packets.general.MultipartPartInteractionPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -30,6 +31,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -137,6 +139,22 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			}
 		}
 	}
+	
+	@Override
+    public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
+		//In all cases, interaction will be handled on the client and forwarded to the server.
+		//However, there is one case where we can't forward an event, and that is if a player
+		//right-clicks this with an empty hand.
+		if(worldObj.isRemote && player.getHeldItemMainhand() == null){
+			EntityMultipartChild hitChild = getHitChild(player);
+			if(hitChild != null){
+				if(hitChild.interactPart(player)){
+					MTS.MTSNet.sendToServer(new MultipartPartInteractionPacket(hitChild.getEntityId(), player.getEntityId()));
+				}
+			}
+		}
+        return false;
+    }
 	
 	@Override
 	public boolean attackEntityFrom(DamageSource source, float damage){
