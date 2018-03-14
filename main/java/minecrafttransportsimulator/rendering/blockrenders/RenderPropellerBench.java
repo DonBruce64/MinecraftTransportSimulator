@@ -1,9 +1,5 @@
 package minecrafttransportsimulator.rendering.blockrenders;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
@@ -20,71 +16,46 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPr
 	private static final ResourceLocation tierTwoTexture = new ResourceLocation("minecraft", "textures/blocks/iron_block.png");
 	private static final ResourceLocation tierThreeTexture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
 	private static final ResourceLocation benchTexture = new ResourceLocation(MTS.MODID, "textures/blocks/propellerbench.png");
-	
-	private static Map<int[], float[]> offsetMappings = new HashMap<int[], float[]>();
-	
-	private TileEntityPropellerBench bench;
-	private float[] benchOffsets;
-	private long lastWorldTick;
-
+		
 	public RenderPropellerBench(){}
 	
 	@Override
 	public void renderTileEntityAt(TileEntityPropellerBench bench, double x, double y, double z, float partialTicks, int destroyStage){
 		super.renderTileEntityAt(bench, x, y, z, partialTicks, destroyStage);
-		benchOffsets = null;
-		for(Entry<int[], float[]> entry : offsetMappings.entrySet()){
-			if(entry.getKey()[0] == bench.getPos().getX() && entry.getKey()[1] == bench.getPos().getY() && entry.getKey()[2] == bench.getPos().getZ()){
-				benchOffsets = entry.getValue();
-				break;
-			}
-		}
-		if(benchOffsets == null){
-			benchOffsets = new float[3];
-			offsetMappings.put(new int[]{bench.getPos().getX(), bench.getPos().getY(), bench.getPos().getZ()}, benchOffsets);
-		}
 		
+		float tableOffsetX = 0;
+		float tableOffsetZ = 0;
 		if(bench.isRunning()){
 			short timeLeft = (short) (bench.timeOperationFinished - bench.getWorld().getTotalWorldTime());
-			if(bench.getWorld().getTotalWorldTime() != lastWorldTick){
-				//Only update table on each tick.  MUCH simpler this way.
-				lastWorldTick = bench.getWorld().getTotalWorldTime();
-				if(timeLeft > 955){
-					benchOffsets[0] -= 0.5F/45F;
-					benchOffsets[1] += 0.2F/45F;
-				}else if(timeLeft <= 45){
-					benchOffsets[0] -= 0.5F/45F;
-					benchOffsets[1] += 0.3F/45F;
+			if(timeLeft > 955){
+				tableOffsetX = -0.5F*(1000 - timeLeft)/45F;
+				tableOffsetZ = 0.2625F*(1000 - timeLeft)/45F;
+			}else if(timeLeft <= 45){
+				tableOffsetX = 0.5F*timeLeft/45F;
+				tableOffsetZ = -0.3625F*timeLeft/45F;
+			}else{
+				//Move the table to cut or line up for another pass.
+				//If we're between markers of 45 and 55 we're moving in the Z direction to line up for a cut.
+				//Otherwise we're cutting in the X direction.
+				if(timeLeft%100 > 45 && timeLeft%100 <= 55){
+					//Z offset is based on how far we went in the transition.
+					//X offset is based what side of the cut we are on.
+					tableOffsetZ = (((int) timeLeft)/100 + (timeLeft%100 - 46)/9F)*0.0625F - 0.3625F;
+					if(timeLeft%200 >= 100){
+						tableOffsetX = -0.5F;
+					}else{
+						tableOffsetX = 0.5F;
+					}
 				}else{
-					//No movement happens between 945 and 955 as it's the start of the cut.
-					//Same goes for 55 and 45 as it's the end of the cut.
-					if(timeLeft <= 945 && timeLeft > 55){
-						//Move the table to cut or line up for another pass.
-						if(timeLeft%100 > 45 && timeLeft%100 <= 55){
-							benchOffsets[1] -= 0.0625F/10F;
-						}else{
-							if((timeLeft + 50)%200 >= 100){
-								benchOffsets[0] += 1F/90F;
-							}else{
-								benchOffsets[0] -= 1F/90F;
-							}
-						}
+					//Z offset is based on time left brackets.
+					//X offset is based on actual time left in the cut.
+					tableOffsetZ = ((int) (timeLeft + 54))/100*0.0625F - 0.3625F;
+					if((timeLeft + 50)%200 >= 100){
+						tableOffsetX = 0.5F - (timeLeft + 44)%100/90F;
+					}else{
+						tableOffsetX = (timeLeft + 44)%100/90F - 0.5F;
 					}
 				}
-			}else{
-				if(timeLeft <= 945 && timeLeft > 55){
-					benchOffsets[2] = (--benchOffsets[2])%360;
-				}
-			}
-		}else{
-			benchOffsets[0] = 0;
-			benchOffsets[1] = 0;
-			benchOffsets[2] = 0;
-		}
-		for(Entry<int[], float[]> entry : offsetMappings.entrySet()){
-			if(entry.getKey()[0] == bench.getPos().getX() && entry.getKey()[1] == bench.getPos().getY() && entry.getKey()[2] == bench.getPos().getZ()){
-				entry.setValue(benchOffsets);
-				break;
 			}
 		}
 		
@@ -97,14 +68,14 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPr
 		GL11.glRotatef(180, 1, 0, 0);
 		bindTexture(benchTexture);
 		benchModel.renderBase();
-		GL11.glTranslatef(benchOffsets[0], 0, benchOffsets[1]);
+		GL11.glTranslatef(tableOffsetX, 0, tableOffsetZ);
 		benchModel.renderTable();
 		renderMaterial(bench);
 		bindTexture(benchTexture);
-		GL11.glTranslatef(-benchOffsets[0], 0, -benchOffsets[1]);
+		GL11.glTranslatef(-tableOffsetX, 0, -tableOffsetZ);
 		GL11.glTranslatef(0, 0, -0.25F);
 		benchModel.renderBody();
-		benchModel.renderBit(benchOffsets[2]);
+		benchModel.renderBit(bench.isRunning() ? bench.getWorld().getTotalWorldTime()*partialTicks : 0);
 		GL11.glPopMatrix();
 	}
 
