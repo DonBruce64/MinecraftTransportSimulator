@@ -19,7 +19,6 @@ import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
 import minecrafttransportsimulator.entities.parts.EntityVehicleChest;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
-import minecrafttransportsimulator.rendering.partmodels.ModelEngineLarge;
 import minecrafttransportsimulator.rendering.partmodels.ModelEngineSmall;
 import minecrafttransportsimulator.rendering.partmodels.ModelPontoon;
 import minecrafttransportsimulator.rendering.partmodels.ModelPropeller;
@@ -62,14 +61,14 @@ public final class RenderMultipartChild{
     
     private static final class RenderEngine extends RenderChild{
     	private static final ModelEngineSmall modelEngineSmall = new ModelEngineSmall();
-    	private static final ModelEngineLarge modelEngineLarge = new ModelEngineLarge();
     	private static final ResourceLocation textureEngineSmall = new ResourceLocation(MTS.MODID, "textures/parts/enginesmall.png");
-    	private static final ResourceLocation textureEngineLarge = new ResourceLocation(MTS.MODID, "textures/parts/enginelarge.png");
+    	private static final ResourceLocation textureEngineLarge = new ResourceLocation(MTS.MODID, "textures/parts/enginebristolmercury.png");
     	private static final ResourceLocation textureEngineCarSmall = new ResourceLocation(MTS.MODID, "textures/parts/engineamci4.png");
     	private static final ResourceLocation textureEngineCarLarge = new ResourceLocation(MTS.MODID, "textures/parts/enginedetroitdiesel.png");
     	
     	private static int amci4_displaylist = -1;
     	private static int detroitdiesel_displaylist = -1;
+    	private static int bristolmercury_displaylist = -1;
     	
     	@Override
     	public void doRender(EntityMultipartChild child, TextureManager textureManger, float partialTicks){
@@ -103,21 +102,33 @@ public final class RenderMultipartChild{
     			GL11.glEndList();
     		}
     		
-    		GL11.glRotatef(180, 1, 0, 0);
-            GL11.glTranslatef(0, -child.height/2, 0);
+    		if(bristolmercury_displaylist == -1){
+    			bristolmercury_displaylist = GL11.glGenLists(1);
+    			GL11.glNewList(bristolmercury_displaylist, GL11.GL_COMPILE);
+    			GL11.glBegin(GL11.GL_TRIANGLES);
+    			for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get("enginebristolmercury").entrySet()){
+    				for(Float[] vertex : entry.getValue()){
+    					GL11.glTexCoord2f(vertex[3], vertex[4]);
+    					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+    					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+    				}
+    			}
+    			GL11.glEnd();
+    			GL11.glEndList();
+    		}
+    		
+            GL11.glTranslatef(0, child.height/2, 0);
             if(child instanceof EntityEngineAircraftLycoming){
+            	GL11.glRotatef(180, 1, 0, 0);
     			textureManger.bindTexture(textureEngineSmall);
     			modelEngineSmall.render();
     		}else if(child instanceof EntityEngineAircraftBristol){
-    			GL11.glTranslatef(0, 0, -0.2F);
     			textureManger.bindTexture(textureEngineLarge);
-    			modelEngineLarge.render();
+    			GL11.glCallList(bristolmercury_displaylist);
     		}else if(child instanceof EntityEngineCarAMC){
-            	GL11.glRotatef(-180, 1, 0, 0);
     			textureManger.bindTexture(textureEngineCarSmall);
     			GL11.glCallList(amci4_displaylist);
     		}else if(child instanceof EntityEngineCarDetroit){
-            	GL11.glRotatef(-180, 1, 0, 0);
     			textureManger.bindTexture(textureEngineCarLarge);
     			GL11.glCallList(detroitdiesel_displaylist);
     		}

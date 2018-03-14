@@ -44,6 +44,7 @@ public final class MTSRegistryClient{
 		modelMap.put("fuelpump", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/fuelpump.obj")));
 		modelMap.put("engineamci4", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/engineamci4.obj")));
 		modelMap.put("enginedetroitdiesel", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/enginedetroitdiesel.obj")));
+		modelMap.put("enginebristolmercury", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/enginebristolmercury.obj")));
 		for(String name : PackParserSystem.getRegisteredNames()){
 			modelMap.put(name, OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/" + PackParserSystem.getPack(name).rendering.modelName)));
 		}
