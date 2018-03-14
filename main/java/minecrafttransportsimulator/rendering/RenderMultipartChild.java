@@ -9,17 +9,16 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftBristol;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLycoming;
-import minecrafttransportsimulator.entities.parts.EntityEngineCarAMC;
-import minecrafttransportsimulator.entities.parts.EntityEngineCarDetroit;
+import minecrafttransportsimulator.entities.parts.EntityEngineAMCI4;
+import minecrafttransportsimulator.entities.parts.EntityEngineBristolMercury;
+import minecrafttransportsimulator.entities.parts.EntityEngineDetroitDiesel;
+import minecrafttransportsimulator.entities.parts.EntityEngineLycomingO360;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
 import minecrafttransportsimulator.entities.parts.EntityVehicleChest;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
-import minecrafttransportsimulator.rendering.partmodels.ModelEngineSmall;
 import minecrafttransportsimulator.rendering.partmodels.ModelPontoon;
 import minecrafttransportsimulator.rendering.partmodels.ModelPropeller;
 import minecrafttransportsimulator.rendering.partmodels.ModelSeat;
@@ -31,27 +30,29 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 
 public final class RenderMultipartChild{
-	private static final Map<Class<? extends EntityMultipartChild>, RenderChild> childRenderMap = new HashMap<Class<? extends EntityMultipartChild>, RenderChild>();
+	private static final Map<Class<? extends EntityMultipartChild>, RenderChild> renderClassMap = new HashMap<Class<? extends EntityMultipartChild>, RenderChild>();
+	private static final Map<Class<? extends EntityMultipartChild>, Integer> displayListMap = new HashMap<Class<? extends EntityMultipartChild>, Integer>();
+	private static final Map<Class<? extends EntityMultipartChild>, ResourceLocation> textureMap = new HashMap<Class<? extends EntityMultipartChild>, ResourceLocation>();
 	
 	public static void init(){
-		childRenderMap.clear();
-		childRenderMap.put(EntityEngineAircraftLycoming.class, new RenderEngine());
-		childRenderMap.put(EntityEngineAircraftBristol.class, childRenderMap.get(EntityEngineAircraftLycoming.class));
-		childRenderMap.put(EntityEngineCarAMC.class, childRenderMap.get(EntityEngineAircraftLycoming.class));
-		childRenderMap.put(EntityEngineCarDetroit.class, childRenderMap.get(EntityEngineAircraftLycoming.class));
-		childRenderMap.put(EntityVehicleChest.class, new RenderVehicleChest());
-		childRenderMap.put(EntityPontoon.class, new RenderPontoon());
-		childRenderMap.put(EntityPropeller.class, new RenderPropeller());
-		childRenderMap.put(EntitySeat.class, new RenderSeat());
-		childRenderMap.put(EntitySkid.class, new RenderSkid());
-		childRenderMap.put(EntityWheel.EntityWheelSmall.class, new RenderWheel());
-		childRenderMap.put(EntityWheel.EntityWheelMedium.class, childRenderMap.get(EntityWheel.EntityWheelSmall.class));
-		childRenderMap.put(EntityWheel.EntityWheelLarge.class, childRenderMap.get(EntityWheel.EntityWheelSmall.class));
+		renderClassMap.clear();
+		renderClassMap.put(EntityEngineLycomingO360.class, new RenderEngine());
+		renderClassMap.put(EntityEngineBristolMercury.class, renderClassMap.get(EntityEngineLycomingO360.class));
+		renderClassMap.put(EntityEngineAMCI4.class, renderClassMap.get(EntityEngineLycomingO360.class));
+		renderClassMap.put(EntityEngineDetroitDiesel.class, renderClassMap.get(EntityEngineLycomingO360.class));
+		renderClassMap.put(EntityVehicleChest.class, new RenderVehicleChest());
+		renderClassMap.put(EntityPontoon.class, new RenderPontoon());
+		renderClassMap.put(EntityPropeller.class, new RenderPropeller());
+		renderClassMap.put(EntitySeat.class, new RenderSeat());
+		renderClassMap.put(EntitySkid.class, new RenderSkid());
+		renderClassMap.put(EntityWheel.EntityWheelSmall.class, new RenderWheel());
+		renderClassMap.put(EntityWheel.EntityWheelMedium.class, renderClassMap.get(EntityWheel.EntityWheelSmall.class));
+		renderClassMap.put(EntityWheel.EntityWheelLarge.class, renderClassMap.get(EntityWheel.EntityWheelSmall.class));
 	}
 	
 	public static void renderChildEntity(EntityMultipartChild child, float partialTicks){
-		if(childRenderMap.containsKey(child.getClass())){
-			childRenderMap.get(child.getClass()).doRender(child, Minecraft.getMinecraft().getTextureManager(), partialTicks);
+		if(renderClassMap.containsKey(child.getClass())){
+			renderClassMap.get(child.getClass()).doRender(child, Minecraft.getMinecraft().getTextureManager(), partialTicks);
 		}
 	}
 	
@@ -60,23 +61,14 @@ public final class RenderMultipartChild{
     }
     
     private static final class RenderEngine extends RenderChild{
-    	private static final ModelEngineSmall modelEngineSmall = new ModelEngineSmall();
-    	private static final ResourceLocation textureEngineSmall = new ResourceLocation(MTS.MODID, "textures/parts/enginesmall.png");
-    	private static final ResourceLocation textureEngineLarge = new ResourceLocation(MTS.MODID, "textures/parts/enginebristolmercury.png");
-    	private static final ResourceLocation textureEngineCarSmall = new ResourceLocation(MTS.MODID, "textures/parts/engineamci4.png");
-    	private static final ResourceLocation textureEngineCarLarge = new ResourceLocation(MTS.MODID, "textures/parts/enginedetroitdiesel.png");
-    	
-    	private static int amci4_displaylist = -1;
-    	private static int detroitdiesel_displaylist = -1;
-    	private static int bristolmercury_displaylist = -1;
-    	
     	@Override
     	public void doRender(EntityMultipartChild child, TextureManager textureManger, float partialTicks){
-    		if(amci4_displaylist == -1){
-    			amci4_displaylist = GL11.glGenLists(1);
-    			GL11.glNewList(amci4_displaylist, GL11.GL_COMPILE);
+    		if(!displayListMap.containsKey(child.getClass())){
+    			int displayListIndex = GL11.glGenLists(1);
+    			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
     			GL11.glBegin(GL11.GL_TRIANGLES);
-    			for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get("engineamci4").entrySet()){
+    			System.out.println(child.getClass().getSimpleName().substring("Entity".length()).toLowerCase());
+    			for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get(child.getClass().getSimpleName().substring("Entity".length()).toLowerCase()).entrySet()){
     				for(Float[] vertex : entry.getValue()){
     					GL11.glTexCoord2f(vertex[3], vertex[4]);
     					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
@@ -85,53 +77,15 @@ public final class RenderMultipartChild{
     			}
     			GL11.glEnd();
     			GL11.glEndList();
+    			displayListMap.put(child.getClass(), displayListIndex);
+    			textureMap.put(child.getClass(), new ResourceLocation(MTS.MODID, "textures/parts/" + child.getClass().getSimpleName().substring("Entity".length()).toLowerCase() + ".png"));
     		}
     		
-    		if(detroitdiesel_displaylist == -1){
-    			detroitdiesel_displaylist = GL11.glGenLists(1);
-    			GL11.glNewList(detroitdiesel_displaylist, GL11.GL_COMPILE);
-    			GL11.glBegin(GL11.GL_TRIANGLES);
-    			for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get("enginedetroitdiesel").entrySet()){
-    				for(Float[] vertex : entry.getValue()){
-    					GL11.glTexCoord2f(vertex[3], vertex[4]);
-    					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-    					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-    				}
-    			}
-    			GL11.glEnd();
-    			GL11.glEndList();
-    		}
-    		
-    		if(bristolmercury_displaylist == -1){
-    			bristolmercury_displaylist = GL11.glGenLists(1);
-    			GL11.glNewList(bristolmercury_displaylist, GL11.GL_COMPILE);
-    			GL11.glBegin(GL11.GL_TRIANGLES);
-    			for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get("enginebristolmercury").entrySet()){
-    				for(Float[] vertex : entry.getValue()){
-    					GL11.glTexCoord2f(vertex[3], vertex[4]);
-    					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-    					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-    				}
-    			}
-    			GL11.glEnd();
-    			GL11.glEndList();
-    		}
-    		
+    		GL11.glPushMatrix();
             GL11.glTranslatef(0, child.height/2, 0);
-            if(child instanceof EntityEngineAircraftLycoming){
-            	GL11.glRotatef(180, 1, 0, 0);
-    			textureManger.bindTexture(textureEngineSmall);
-    			modelEngineSmall.render();
-    		}else if(child instanceof EntityEngineAircraftBristol){
-    			textureManger.bindTexture(textureEngineLarge);
-    			GL11.glCallList(bristolmercury_displaylist);
-    		}else if(child instanceof EntityEngineCarAMC){
-    			textureManger.bindTexture(textureEngineCarSmall);
-    			GL11.glCallList(amci4_displaylist);
-    		}else if(child instanceof EntityEngineCarDetroit){
-    			textureManger.bindTexture(textureEngineCarLarge);
-    			GL11.glCallList(detroitdiesel_displaylist);
-    		}
+            textureManger.bindTexture(textureMap.get(child.getClass()));
+			GL11.glCallList(displayListMap.get(child.getClass()));
+			GL11.glPopMatrix();
     	}
     }
     

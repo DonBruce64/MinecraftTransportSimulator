@@ -6,12 +6,12 @@ import minecrafttransportsimulator.entities.main.EntityPlane;
 import net.minecraft.item.Item;
 import net.minecraft.world.World;
 
-public class EntityEngineAircraftLycoming extends EntityEngineAircraft{
-	public EntityEngineAircraftLycoming(World world){
+public class EntityEngineLycomingO360 extends EntityEngineAircraft{
+	public EntityEngineLycomingO360(World world){
 		super(world);
 	}
 	
-	public EntityEngineAircraftLycoming(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+	public EntityEngineLycomingO360(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		super(world, (EntityPlane) parent, parentUUID, offsetX, offsetY, offsetZ);
 	}
 	

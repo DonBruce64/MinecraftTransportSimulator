@@ -6,12 +6,12 @@ import minecrafttransportsimulator.entities.main.EntityPlane;
 import net.minecraft.item.Item;
 import net.minecraft.world.World;
 
-public class EntityEngineAircraftBristol extends EntityEngineAircraft{
-	public EntityEngineAircraftBristol(World world){
+public class EntityEngineBristolMercury extends EntityEngineAircraft{
+	public EntityEngineBristolMercury(World world){
 		super(world);
 	}
 	
-	public EntityEngineAircraftBristol(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+	public EntityEngineBristolMercury(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		super(world, (EntityPlane) parent, parentUUID, offsetX, offsetY, offsetZ);
 	}
 	

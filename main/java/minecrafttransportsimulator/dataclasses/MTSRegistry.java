@@ -11,10 +11,10 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockFuelPump;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftBristol;
-import minecrafttransportsimulator.entities.parts.EntityEngineAircraftLycoming;
-import minecrafttransportsimulator.entities.parts.EntityEngineCarAMC;
-import minecrafttransportsimulator.entities.parts.EntityEngineCarDetroit;
+import minecrafttransportsimulator.entities.parts.EntityEngineBristolMercury;
+import minecrafttransportsimulator.entities.parts.EntityEngineLycomingO360;
+import minecrafttransportsimulator.entities.parts.EntityEngineAMCI4;
+import minecrafttransportsimulator.entities.parts.EntityEngineDetroitDiesel;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
@@ -95,10 +95,10 @@ public final class MTSRegistry{
 	public static final Item wheelLarge = new ItemPart(EntityWheel.EntityWheelLarge.class).setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item skid = new ItemPart(EntitySkid.class).setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item pontoon = new ItemPart(EntityPontoon.class).setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item engineLycomingO360 = new ItemEngine(EntityEngineAircraftLycoming.class, ItemEngine.Engines.LYCOMING_O360).setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item engineBristolMercury = new ItemEngine(EntityEngineAircraftBristol.class, ItemEngine.Engines.BRISTOL_MERCURY).setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item engineAMCI4 = new ItemEngine(EntityEngineCarAMC.class, ItemEngine.Engines.AMC_I4).setCreativeTab(MTSCreativeTabs.tabMTS);
-	public static final Item engineDetroitDiesel = new ItemEngine(EntityEngineCarDetroit.class, ItemEngine.Engines.DETROIT_DIESEL).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item engineLycomingO360 = new ItemEngine(EntityEngineLycomingO360.class, ItemEngine.Engines.LYCOMING_O360).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item engineBristolMercury = new ItemEngine(EntityEngineBristolMercury.class, ItemEngine.Engines.BRISTOL_MERCURY).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item engineAMCI4 = new ItemEngine(EntityEngineAMCI4.class, ItemEngine.Engines.AMC_I4).setCreativeTab(MTSCreativeTabs.tabMTS);
+	public static final Item engineDetroitDiesel = new ItemEngine(EntityEngineDetroitDiesel.class, ItemEngine.Engines.DETROIT_DIESEL).setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item propeller = new ItemPropeller().setCreativeTab(MTSCreativeTabs.tabMTS);
 	public static final Item seat = new ItemSeat().setCreativeTab(MTSCreativeTabs.tabMTS);
 	
@@ -214,10 +214,10 @@ public final class MTSRegistry{
 		registerEntity(EntityPontoon.class);
 		registerEntity(EntityPontoon.EntityPontoonDummy.class);
 		registerEntity(EntityPropeller.class);
-		registerEntity(EntityEngineCarAMC.class);
-		registerEntity(EntityEngineCarDetroit.class);
-		registerEntity(EntityEngineAircraftLycoming.class);
-		registerEntity(EntityEngineAircraftBristol.class);
+		registerEntity(EntityEngineAMCI4.class);
+		registerEntity(EntityEngineDetroitDiesel.class);
+		registerEntity(EntityEngineLycomingO360.class);
+		registerEntity(EntityEngineBristolMercury.class);
 	}
 	
 	private static void initPackets(){

@@ -6,13 +6,13 @@ import minecrafttransportsimulator.entities.main.EntityCar;
 import net.minecraft.item.Item;
 import net.minecraft.world.World;
 
-public class EntityEngineCarAMC extends EntityEngineCar{
+public class EntityEngineAMCI4 extends EntityEngineCar{
 
-	public EntityEngineCarAMC(World world){
+	public EntityEngineAMCI4(World world){
 		super(world);
 	}
 
-	public EntityEngineCarAMC(World world, EntityMultipartParent car, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+	public EntityEngineAMCI4(World world, EntityMultipartParent car, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		super(world, (EntityCar) car, parentUUID, offsetX, offsetY, offsetZ);
 	}
 	

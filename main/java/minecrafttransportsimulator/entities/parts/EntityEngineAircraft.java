@@ -32,7 +32,7 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 			if(playerStack != null){
 				if(MTSRegistry.propeller.equals(playerStack.getItem()) && propeller == null){
 					if(this.parent != null){
-						if(playerStack.getTagCompound().getInteger("diameter") > 80 && this instanceof EntityEngineAircraftLycoming){
+						if(playerStack.getTagCompound().getInteger("diameter") > 80 && this instanceof EntityEngineLycomingO360){
 							MTS.MTSNet.sendTo(new ChatPacket("interact.failure.propellertoobig"), (EntityPlayerMP) player);
 							MTSAchievements.triggerPropellerTooBig(player);
 						}else{
