@@ -57,7 +57,7 @@ public final class OBJParserSystem{
 						int space = line.indexOf(' ');
 						int vertexEnd = line.lastIndexOf(' ') == space ? line.length() : line.lastIndexOf(' ');
 						coords[0] = Float.valueOf(line.substring(0, space));
-						coords[1] = Float.valueOf(line.substring(space + 1, vertexEnd));
+						coords[1] = 1 - Float.valueOf(line.substring(space + 1, vertexEnd));
 						textureList.add(coords);
 					}else if(line.startsWith("f ")){
 						faceList.add(line.trim().substring(2, line.trim().length()));
