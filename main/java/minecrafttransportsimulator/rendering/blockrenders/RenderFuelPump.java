@@ -14,7 +14,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
 
 public class RenderFuelPump extends TileEntitySpecialRenderer<TileEntityFuelPump>{
-	private static final ResourceLocation texture = new ResourceLocation(MTS.MODID, "textures/blockmodels/fuelpump.png");
+	private static final ResourceLocation texture = new ResourceLocation(MTS.MODID, "textures/blocks/fuelpump.png");
 	private static int displayListIndex = -1;
 	
 	private TileEntityFuelPump pump;

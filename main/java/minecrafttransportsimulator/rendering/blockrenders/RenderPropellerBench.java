@@ -19,7 +19,7 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPr
 	private static final ResourceLocation tierOneTexture = new ResourceLocation("minecraft", "textures/blocks/planks_oak.png");
 	private static final ResourceLocation tierTwoTexture = new ResourceLocation("minecraft", "textures/blocks/iron_block.png");
 	private static final ResourceLocation tierThreeTexture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
-	private static final ResourceLocation benchTexture = new ResourceLocation(MTS.MODID, "textures/blockmodels/propellerbench.png");
+	private static final ResourceLocation benchTexture = new ResourceLocation(MTS.MODID, "textures/blocks/propellerbench.png");
 	
 	private static Map<int[], float[]> offsetMappings = new HashMap<int[], float[]>();
 	
