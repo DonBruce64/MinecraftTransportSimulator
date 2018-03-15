@@ -57,6 +57,16 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 		this.setSize(this.getWidth(), this.getHeight());
 		linked = hasUUID() && hasParent();
 	}
+	
+	@Override
+	public void setPosition(double x, double y, double z){
+        this.posX = x;
+        this.posY = y;
+        this.posZ = z;
+        float f = this.getWidth()/2.0F;
+        float f1 = this.getHeight()/2.0F;
+        this.setEntityBoundingBox(new AxisAlignedBB(x - (double)f, y - (double)f1, z - (double)f, x + (double)f, y + (double)f1, z + (double)f));
+    }
 		
 	/**Called when checking if this part can be interacted with.
 	 * Return true to forward interactions to this part rather than
@@ -71,6 +81,8 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	 */
 	public void attackPart(DamageSource source, float damage){}
 	
+	//These need to be here as clients don't have width and height data unless we make it inside the class constructors.
+	//When we are able to do this in a cleaner way, THEN we can delete this!
 	public abstract float getWidth();
 	
 	public abstract float getHeight();
@@ -153,8 +165,9 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
     		}
     	}
     }
+	
 	public boolean isOnGround(){
-		return worldObj.getCollisionBoxes(this.getEntityBoundingBox().offset(0, -0.05F, 0)).isEmpty() ? isChildOffsetBoxCollidingWithBlocks(this.getEntityBoundingBox().offset(0, -0.05F, 0)) : true;
+		return isChildOffsetBoxCollidingWithBlocks(this.getEntityBoundingBox().offset(0, -0.05F, 0));
 	}
 
 	

@@ -70,6 +70,16 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	}
 	
 	@Override
+	public float getWidth(){
+		return 1.0F;
+	}
+
+	@Override
+	public float getHeight(){
+		return 1.0F;
+	}
+
+	@Override
 	public void setNBTFromStack(ItemStack stack){
 		NBTTagCompound stackNBT = stack.getTagCompound();
 		isCreative=stackNBT.getBoolean("isCreative");

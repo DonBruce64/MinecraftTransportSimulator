@@ -119,7 +119,7 @@ public final class ClientEventSystem{
     				for(byte i=0; i<mover.pack.parts.size(); ++i){
     					PackPart packPart = mover.pack.parts.get(i);
     					MTSVector offset = RotationSystem.getRotatedPoint(packPart.pos[0], packPart.pos[1], packPart.pos[2], mover.rotationPitch, mover.rotationYaw, mover.rotationRoll);
-    					AxisAlignedBB partBox = new AxisAlignedBB((float) (mover.posX + offset.xCoord) - 0.75F, (float) (mover.posY + offset.yCoord) - 0.75F, (float) (mover.posZ + offset.zCoord) - 0.75F, (float) (mover.posX + offset.xCoord) + 0.75F, (float) (mover.posY + offset.yCoord) + 0.75F, (float) (mover.posZ + offset.zCoord) + 0.75F);
+    					AxisAlignedBB partBox = new AxisAlignedBB((float) (mover.posX + offset.xCoord) - 0.75F, (float) (mover.posY + offset.yCoord) - 0.75F, (float) (mover.posZ + offset.zCoord) - 0.75F, (float) (mover.posX + offset.xCoord) + 0.75F, (float) (mover.posY + offset.yCoord) + 1.25F, (float) (mover.posZ + offset.zCoord) + 0.75F);
     					Vec3d lookVec = player.getLook(1.0F);
         				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
         				for(float f=1.0F; f<4.0F; f += 0.1F){

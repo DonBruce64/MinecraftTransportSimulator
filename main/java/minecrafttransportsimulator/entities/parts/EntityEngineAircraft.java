@@ -36,7 +36,7 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 							MTS.MTSNet.sendTo(new ChatPacket("interact.failure.propellertoobig"), (EntityPlayerMP) player);
 							MTSAchievements.triggerPropellerTooBig(player);
 						}else{
-							propeller = new EntityPropeller(worldObj, (EntityPlane) parent, parent.UUID, offsetX, offsetY + (this.getHeight() - 1)/2F, offsetZ + 0.9F, playerStack.getItemDamage());
+							propeller = new EntityPropeller(worldObj, (EntityPlane) parent, parent.UUID, offsetX, offsetY, offsetZ + 0.9F, playerStack.getItemDamage());
 							propeller.setNBTFromStack(playerStack);
 							propeller.engineUUID = this.UUID;
 							parent.addChild(propeller.UUID, propeller, true);

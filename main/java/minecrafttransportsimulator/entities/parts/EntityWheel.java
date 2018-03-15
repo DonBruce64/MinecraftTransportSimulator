@@ -73,7 +73,6 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 	
 	public void setFlat(){
 		isFlat = true;
-		this.offsetY+=this.getHeight()/4;
 		this.motiveFriction*=10;
 		this.lateralFriction*=0.1;
 		if(!worldObj.isRemote){

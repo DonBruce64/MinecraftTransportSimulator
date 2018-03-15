@@ -17,24 +17,20 @@ public class ModelWheel extends ModelBase{
     	this.textureHeight = 16;
     	smallInnerWheel = new ModelRenderer(this, 0, 0);
     	smallInnerWheel.setTextureSize(textureWidth, textureHeight);
-    	smallInnerWheel.setRotationPoint(0F, 3F, 0F);
     	smallInnerWheel.addBox(-2F, -1.5F, -1.5F, 4, 3, 3);
     	
     	smallOuterWheel = new ModelRenderer(this, 0, 0);
     	smallOuterWheel.setTextureSize(textureWidth, textureHeight);
-    	smallOuterWheel.setRotationPoint(0F, 3F, 0F);
     	smallOuterWheel.addBox(-1.5F, -2.5F, -3.5F, 3, 5, 1);
     	smallOuterWheel.addBox(-1.5F, -2.5F, 2.5F, 3, 5, 1);
     	smallOuterWheel.addBox(-1.5F, -3.5F, -2.5F, 3, 7, 5);
     	
     	mediumInnerWheel = new ModelRenderer(this, 0, 0);
     	mediumInnerWheel.setTextureSize(textureWidth, textureHeight);
-    	mediumInnerWheel.setRotationPoint(0F, 5F, 0F);
     	mediumInnerWheel.addBox(-2.5F, -2.5F, -2.5F, 5, 5, 5);
     	
     	mediumOuterWheel = new ModelRenderer(this, 0, 0);
     	mediumOuterWheel.setTextureSize(textureWidth, textureHeight);
-    	mediumOuterWheel.setRotationPoint(0F, 5F, 0F);
     	mediumOuterWheel.addBox(-2F, -2.5F, -5.5F, 4, 5, 1);
     	mediumOuterWheel.addBox(-2F, -4.5F, -4.5F, 4, 9, 2);
     	mediumOuterWheel.addBox(-2F, -5.5F, -2.5F, 4, 11, 5);
@@ -43,14 +39,12 @@ public class ModelWheel extends ModelBase{
     	
     	largeInnerWheel = new ModelRenderer(this, 0, 0);
     	largeInnerWheel.setTextureSize(textureWidth, textureHeight);
-    	largeInnerWheel.setRotationPoint(0F, 7F, 0F);
     	largeInnerWheel.addBox(-3F, -2.5F, -3.5F, 6, 5, 1);
     	largeInnerWheel.addBox(-3F, -3.5F, -2.5F, 6, 7, 5);
     	largeInnerWheel.addBox(-3F, -2.5F, 2.5F, 6, 5, 1);
     	
     	largeOuterWheel = new ModelRenderer(this, 0, 0);
     	largeOuterWheel.setTextureSize(textureWidth, textureHeight);
-    	largeOuterWheel.setRotationPoint(0F, 7F, 0F);
     	largeOuterWheel.addBox(-2.5F, -2.5F, -7.5F, 5, 5, 1);
     	largeOuterWheel.addBox(-2.5F, -4.5F, -6.5F, 5, 9, 2);
     	largeOuterWheel.addBox(-2.5F, -6.5F, -4.5F, 5, 13, 2);

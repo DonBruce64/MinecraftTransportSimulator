@@ -67,7 +67,6 @@ public final class RenderMultipartChild{
     			int displayListIndex = GL11.glGenLists(1);
     			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
     			GL11.glBegin(GL11.GL_TRIANGLES);
-    			System.out.println(child.getClass().getSimpleName().substring("Entity".length()).toLowerCase());
     			for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get(child.getClass().getSimpleName().substring("Entity".length()).toLowerCase()).entrySet()){
     				for(Float[] vertex : entry.getValue()){
     					GL11.glTexCoord2f(vertex[3], vertex[4]);
@@ -82,7 +81,6 @@ public final class RenderMultipartChild{
     		}
     		
     		GL11.glPushMatrix();
-            GL11.glTranslatef(0, child.height/2, 0);
             textureManger.bindTexture(textureMap.get(child.getClass()));
 			GL11.glCallList(displayListMap.get(child.getClass()));
 			GL11.glPopMatrix();
@@ -210,10 +208,6 @@ public final class RenderMultipartChild{
     	@Override
     	public void doRender(EntityMultipartChild child, TextureManager textureManger, float partialTicks){
     		EntityWheel wheel = (EntityWheel) child;
-    		if(wheel.isFlat){
-    			GL11.glTranslated(0, -wheel.height/2F, 0);
-    		}
-    		
     		if(wheel instanceof EntityWheel.EntityWheelSmall){
     			textureManger.bindTexture(textureWheelInner);
     			modelWheel.renderSmallInnerWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);

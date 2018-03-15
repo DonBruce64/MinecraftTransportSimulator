@@ -18,7 +18,7 @@ public class MTSAxisAlignedBB extends AxisAlignedBB{
 	public final float height;
 	
 	public MTSAxisAlignedBB(double posX, double posY, double posZ, double relX, double relY, double relZ, float width, float height){
-		super(posX - width/2F, posY, posZ - width/2F, posX + width/2F, posY + height, posZ + width/2F);
+		super(posX - width/2F, posY - height/2F, posZ - width/2F, posX + width/2F, posY + height/2F, posZ + width/2F);
 		this.posX = (float) posX;
 		this.posY = (float) posY;
 		this.posZ = (float) posZ;

@@ -15,16 +15,6 @@ public class EntityEngineDetroitDiesel extends EntityEngineCar{
 	public EntityEngineDetroitDiesel(World world, EntityMultipartParent car, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		super(world, (EntityCar) car, parentUUID, offsetX, offsetY, offsetZ);
 	}
-	
-	@Override
-	public float getWidth(){
-		return 1.0F;
-	}
-
-	@Override
-	public float getHeight(){
-		return 1.0F;
-	}
 
 	@Override
 	protected Item getEngineItem(){

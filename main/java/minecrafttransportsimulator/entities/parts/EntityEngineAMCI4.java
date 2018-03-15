@@ -15,16 +15,6 @@ public class EntityEngineAMCI4 extends EntityEngineCar{
 	public EntityEngineAMCI4(World world, EntityMultipartParent car, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
 		super(world, (EntityCar) car, parentUUID, offsetX, offsetY, offsetZ);
 	}
-	
-	@Override
-	public float getWidth(){
-		return 0.5F;
-	}
-
-	@Override
-	public float getHeight(){
-		return 0.5F;
-	}
 
 	@Override
 	protected Item getEngineItem(){
