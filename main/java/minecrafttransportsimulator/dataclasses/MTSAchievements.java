@@ -23,8 +23,6 @@ public final class MTSAchievements{
 	private static final MTSAchievement engineAircraftLarge = new MTSAchievement("achievement.engine_aircraft_large", "engine_aircraft_large", 1, 2, MTSRegistry.engineBristolMercury, engineAircraftSmall);
 	private static final MTSAchievement propellerBench = new MTSAchievement("achievement.propeller_bench", "propeller_bench", 3, 2, MTSRegistry.itemBlockPropellerBench, engineAircraftSmall);
 	private static final MTSAchievement propeller = new MTSAchievement("achievement.propeller", "propeller", 3, 4, MTSRegistry.propeller, propellerBench);
-	private static final MTSAchievement propellerTooBig = new MTSAchievement("achievement.propeller_too_big", "propeller_too_big", 1, 4, new ItemStack(MTSRegistry.propeller, 1, 2), propeller);
-	private static final MTSAchievement propellerFits = new MTSAchievement("achievement.propeller_fits", "propeller_fits", 5, 4, new ItemStack(MTSRegistry.propeller, 1, 1), propeller);
 	private static final MTSAchievement wheel = new MTSAchievement("achievement.wheel", "wheel", 6, -1, MTSRegistry.wheelLarge, rtfm);
 	private static final MTSAchievement pontoon = new MTSAchievement("achievement.pontoon", "pontoon", 8, -1, MTSRegistry.pontoon, wheel);
 	private static final MTSAchievement wheelPop = new MTSAchievement("achievement.wheel_pop", "wheel_pop", 6, 1, Items.ARROW, wheel);
@@ -65,8 +63,6 @@ public final class MTSAchievements{
 	}
 		
 	public static void triggerPropeller(EntityPlayer player){propeller.trigger(player);}
-	public static void triggerPropellerTooBig(EntityPlayer player){propellerTooBig.trigger(player);}
-	public static void triggerPropellerFits(EntityPlayer player){propellerFits.trigger(player);}
 	public static void triggerWheelPop(EntityPlayer player){wheelPop.trigger(player);}
 	public static void triggerInstrument(EntityPlayer player){instrument.trigger(player);}
 	public static void triggerKey(EntityPlayer player){key.trigger(player);}

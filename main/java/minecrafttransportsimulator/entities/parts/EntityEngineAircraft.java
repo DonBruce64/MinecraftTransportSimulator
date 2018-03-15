@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.entities.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.packets.general.ChatPacket;
@@ -32,18 +31,15 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 			if(playerStack != null){
 				if(MTSRegistry.propeller.equals(playerStack.getItem()) && propeller == null){
 					if(this.parent != null){
-						if(playerStack.getTagCompound().getInteger("diameter") > 80 && this instanceof EntityEngineLycomingO360){
+						propeller = new EntityPropeller(worldObj, (EntityPlane) parent, parent.UUID, offsetX, offsetY, offsetZ + 0.9F, playerStack.getItemDamage());
+						propeller.setNBTFromStack(playerStack);
+						propeller.engineUUID = this.UUID;
+						parent.addChild(propeller.UUID, propeller, true);
+						if(!player.capabilities.isCreativeMode){
+							player.inventory.clearMatchingItems(MTSRegistry.propeller, playerStack.getItemDamage(), 1, playerStack.getTagCompound());
+						}
+						if(getPropellerForcePenalty() >= 5){
 							MTS.MTSNet.sendTo(new ChatPacket("interact.failure.propellertoobig"), (EntityPlayerMP) player);
-							MTSAchievements.triggerPropellerTooBig(player);
-						}else{
-							propeller = new EntityPropeller(worldObj, (EntityPlane) parent, parent.UUID, offsetX, offsetY, offsetZ + 0.9F, playerStack.getItemDamage());
-							propeller.setNBTFromStack(playerStack);
-							propeller.engineUUID = this.UUID;
-							parent.addChild(propeller.UUID, propeller, true);
-							MTSAchievements.triggerPropellerFits(player);
-							if(!player.capabilities.isCreativeMode){
-								player.inventory.clearMatchingItems(MTSRegistry.propeller, playerStack.getItemDamage(), 1, playerStack.getTagCompound());
-							}
 						}
 					}
 				}
@@ -96,6 +92,6 @@ public abstract class EntityEngineAircraft extends EntityEngine{
 	}
 	
 	private double getPropellerForcePenalty(){
-		return Math.pow(1.25, 3 + (propeller.diameter - 70)/5)/10;
+		return (propeller.diameter - 70)/(50*this.fuelConsumption - 15);
 	}
 }
