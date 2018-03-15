@@ -48,6 +48,7 @@ import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**This class handles rendering/camera edits that need to happen when riding vehicles,
  * as well as clicking of multiparts and their parts, as well as some other misc things.
@@ -55,6 +56,7 @@ import net.minecraftforge.fml.relauncher.Side;
  * @author don_bruce
  */
 @Mod.EventBusSubscriber(Side.CLIENT)
+@SideOnly(Side.CLIENT)
 public final class ClientEventSystem{
     /**The last seat a player was in.  If null, this means the player is not in a seat.*/
     public static EntitySeat playerLastSeat = null;
@@ -67,18 +69,20 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(PlayerInteractEvent.RightClickEmpty event){
-    	for(Entity entity : minecraft.theWorld.loadedEntityList){
-			if(entity instanceof EntityMultipartMoving){
-				EntityMultipartMoving mover = (EntityMultipartMoving) entity;
-				EntityPlayer player = event.getEntityPlayer();
-				EntityMultipartChild hitChild = mover.getHitChild(player);
-				if(hitChild != null){
-					if(hitChild.interactPart(player)){
-						MTS.MTSNet.sendToServer(new MultipartPartInteractionPacket(hitChild.getEntityId(), player.getEntityId()));
-						return;
+    	if(event.getWorld().isRemote){
+	    	for(Entity entity : minecraft.theWorld.loadedEntityList){
+				if(entity instanceof EntityMultipartMoving){
+					EntityMultipartMoving mover = (EntityMultipartMoving) entity;
+					EntityPlayer player = event.getEntityPlayer();
+					EntityMultipartChild hitChild = mover.getHitChild(player);
+					if(hitChild != null){
+						if(hitChild.interactPart(player)){
+							MTS.MTSNet.sendToServer(new MultipartPartInteractionPacket(hitChild.getEntityId(), player.getEntityId()));
+							return;
+						}
 					}
 				}
-			}
+	    	}
     	}
     }
     
@@ -88,71 +92,73 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(PlayerInteractEvent.RightClickItem event){
-    	for(Entity entity : minecraft.theWorld.loadedEntityList){
-			if(entity instanceof EntityMultipartMoving){
-				EntityMultipartMoving mover = (EntityMultipartMoving) entity;
-				EntityPlayer player = event.getEntityPlayer();
-				
-				//Before we check item actions, see if we clicked a part and we need to interact with it.
-				//If so, do the part's interaction rather than part checks or other interaction.
-				EntityMultipartChild hitChild = mover.getHitChild(player);
-				if(hitChild != null){
-					if(hitChild.interactPart(player)){
-						MTS.MTSNet.sendToServer(new MultipartPartInteractionPacket(hitChild.getEntityId(), player.getEntityId()));
-						return;
-					}
-				}
-				
-				//No in-use changes for sneaky sneaks!  Unless we're using a key to lock ourselves in.
-				if(player.getRidingEntity() instanceof EntitySeat){
-					if(player.getHeldItem(event.getHand()) != null){
-						if(!MTSRegistry.key.equals(player.getHeldItem(event.getHand()).getItem())){
+    	if(event.getWorld().isRemote){
+	    	for(Entity entity : minecraft.theWorld.loadedEntityList){
+				if(entity instanceof EntityMultipartMoving){
+					EntityMultipartMoving mover = (EntityMultipartMoving) entity;
+					EntityPlayer player = event.getEntityPlayer();
+					
+					//Before we check item actions, see if we clicked a part and we need to interact with it.
+					//If so, do the part's interaction rather than part checks or other interaction.
+					EntityMultipartChild hitChild = mover.getHitChild(player);
+					if(hitChild != null){
+						if(hitChild.interactPart(player)){
+							MTS.MTSNet.sendToServer(new MultipartPartInteractionPacket(hitChild.getEntityId(), player.getEntityId()));
 							return;
 						}
 					}
-				}
-				
-				//If this item is a part, find if we are right-clicking a valid part area.
-				//If so, send the info to the server to add a new part.
-				//Note that the server will check if we can actually add the part in question.
-		    	if(event.getItemStack().getItem() instanceof ItemPart){
-    				for(byte i=0; i<mover.pack.parts.size(); ++i){
-    					PackPart packPart = mover.pack.parts.get(i);
-    					MTSVector offset = RotationSystem.getRotatedPoint(packPart.pos[0], packPart.pos[1], packPart.pos[2], mover.rotationPitch, mover.rotationYaw, mover.rotationRoll);
-    					AxisAlignedBB partBox = new AxisAlignedBB((float) (mover.posX + offset.xCoord) - 0.75F, (float) (mover.posY + offset.yCoord) - 0.75F, (float) (mover.posZ + offset.zCoord) - 0.75F, (float) (mover.posX + offset.xCoord) + 0.75F, (float) (mover.posY + offset.yCoord) + 1.25F, (float) (mover.posZ + offset.zCoord) + 0.75F);
-    					Vec3d lookVec = player.getLook(1.0F);
-        				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
-        				for(float f=1.0F; f<4.0F; f += 0.1F){
-        					if(partBox.isVecInside(clickedVec)){
-        						boolean isPartPresent = false;
-        						for(EntityMultipartChild child : mover.getChildren()){
-									if(child.offsetX == packPart.pos[0] && child.offsetY == packPart.pos[1] && child.offsetZ == packPart.pos[2]){
-										isPartPresent = true;
-										break;
+					
+					//No in-use changes for sneaky sneaks!  Unless we're using a key to lock ourselves in.
+					if(player.getRidingEntity() instanceof EntitySeat){
+						if(player.getHeldItem(event.getHand()) != null){
+							if(!MTSRegistry.key.equals(player.getHeldItem(event.getHand()).getItem())){
+								return;
+							}
+						}
+					}
+					
+					//If this item is a part, find if we are right-clicking a valid part area.
+					//If so, send the info to the server to add a new part.
+					//Note that the server will check if we can actually add the part in question.
+			    	if(event.getItemStack().getItem() instanceof ItemPart){
+	    				for(byte i=0; i<mover.pack.parts.size(); ++i){
+	    					PackPart packPart = mover.pack.parts.get(i);
+	    					MTSVector offset = RotationSystem.getRotatedPoint(packPart.pos[0], packPart.pos[1], packPart.pos[2], mover.rotationPitch, mover.rotationYaw, mover.rotationRoll);
+	    					AxisAlignedBB partBox = new AxisAlignedBB((float) (mover.posX + offset.xCoord) - 0.75F, (float) (mover.posY + offset.yCoord) - 0.75F, (float) (mover.posZ + offset.zCoord) - 0.75F, (float) (mover.posX + offset.xCoord) + 0.75F, (float) (mover.posY + offset.yCoord) + 1.25F, (float) (mover.posZ + offset.zCoord) + 0.75F);
+	    					Vec3d lookVec = player.getLook(1.0F);
+	        				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
+	        				for(float f=1.0F; f<4.0F; f += 0.1F){
+	        					if(partBox.isVecInside(clickedVec)){
+	        						boolean isPartPresent = false;
+	        						for(EntityMultipartChild child : mover.getChildren()){
+										if(child.offsetX == packPart.pos[0] && child.offsetY == packPart.pos[1] && child.offsetZ == packPart.pos[2]){
+											isPartPresent = true;
+											break;
+										}
 									}
-								}
-        						if(!isPartPresent){
-	        						MTS.MTSNet.sendToServer(new MultipartPartAdditionPacket(mover.getEntityId(), player.getEntityId(), i));
-	        						return;
-        						}
-        					}
-        					clickedVec = clickedVec.addVector(lookVec.xCoord*0.1F, lookVec.yCoord*0.1F, lookVec.zCoord*0.1F);
-        				}
-    				}
-    			}else{
-    				//If we are not holding a part, see if we at least clicked the multipart.
-    				//If so, and we are holding a wrench or key or name tag, act on that.
-    				if(mover.wasMultipartClicked(player)){
-    					if(event.getItemStack().getItem().equals(MTSRegistry.wrench)){
-    						MTS.proxy.openGUI(mover, player);
-    					}else if(event.getItemStack().getItem().equals(MTSRegistry.key)){
-    						MTS.MTSNet.sendToServer(new MultipartKeyActionPacket(mover.getEntityId(), player.getEntityId()));
-    					}else if(event.getItemStack().getItem().equals(Items.NAME_TAG)){
-    						MTS.MTSNet.sendToServer(new MultipartNameTagActionPacket(mover.getEntityId(), player.getEntityId()));
-    					}
-    				}
-    			}
-    		}
+	        						if(!isPartPresent){
+		        						MTS.MTSNet.sendToServer(new MultipartPartAdditionPacket(mover.getEntityId(), player.getEntityId(), i));
+		        						return;
+	        						}
+	        					}
+	        					clickedVec = clickedVec.addVector(lookVec.xCoord*0.1F, lookVec.yCoord*0.1F, lookVec.zCoord*0.1F);
+	        				}
+	    				}
+	    			}else{
+	    				//If we are not holding a part, see if we at least clicked the multipart.
+	    				//If so, and we are holding a wrench or key or name tag, act on that.
+	    				if(mover.wasMultipartClicked(player)){
+	    					if(event.getItemStack().getItem().equals(MTSRegistry.wrench)){
+	    						MTS.proxy.openGUI(mover, player);
+	    					}else if(event.getItemStack().getItem().equals(MTSRegistry.key)){
+	    						MTS.MTSNet.sendToServer(new MultipartKeyActionPacket(mover.getEntityId(), player.getEntityId()));
+	    					}else if(event.getItemStack().getItem().equals(Items.NAME_TAG)){
+	    						MTS.MTSNet.sendToServer(new MultipartNameTagActionPacket(mover.getEntityId(), player.getEntityId()));
+	    					}
+	    				}
+	    			}
+	    		}
+	    	}
     	}
     }
 
