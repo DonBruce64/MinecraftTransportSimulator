@@ -137,6 +137,12 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			if(this instanceof SFXEntity){
 				MTS.proxy.updateSFXEntity((SFXEntity) this, worldObj);
 			}
+		}else if(!linked && pack != null && this.ticksExisted > 500){
+			//If we don't link for over 500 ticks, assume we're bugged and just run collision boxes to let player destroy us.
+			collisionMap.clear();
+			for(MTSAxisAlignedBB box : getUpdatedCollisionBoxes()){
+				collisionMap.put(box, null);
+			}
 		}
 	}
 	

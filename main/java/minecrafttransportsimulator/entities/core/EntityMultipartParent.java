@@ -6,10 +6,8 @@ import java.util.Map;
 import com.google.common.collect.ImmutableList;
 
 import minecrafttransportsimulator.MTS;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 
 /**Main parent class.  All entities that have parts should extend this class.
@@ -47,13 +45,11 @@ public abstract class EntityMultipartParent extends EntityMultipartBase{
 		super.onEntityUpdate();
 		if(!this.hasUUID()){return;}
 		if(!linked){
-			linked = children.size() == numberChildren;
+			linked = children.size() >= numberChildren;
 			//Sometimes parts don't load right.  Need to reset the number of children then.
 			if(!linked && ticksExisted == 100){
 				if(children.size() == numberChildren - 1){
 					MTS.MTSLog.warn("A PART HAS FAILED TO LOAD!  SKIPPNG!");
-				}else if(children.size() == numberChildren + 1){
-					MTS.MTSLog.warn("AN EXTRA PART HAS BEEN LOADED!  ADDING!");
 				}else{
 					return;
 				}
