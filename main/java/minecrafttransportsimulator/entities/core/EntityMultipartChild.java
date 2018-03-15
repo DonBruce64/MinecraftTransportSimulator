@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.entities.core;
 
-import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -32,7 +31,6 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	public float offsetX;
 	public float offsetY;
 	public float offsetZ;
-	public MTSAxisAlignedBB collisionBox;
 	public EntityMultipartParent parent;
 	protected String parentUUID = "";
 	
