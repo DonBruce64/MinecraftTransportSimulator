@@ -172,10 +172,6 @@ public class EntityPlane extends EntityMultipartVehicle{
 	public float getSteerAngle(){
 		return -rudderAngle/10F;
 	}
-	
-	public double[] getDebugForces(){
-		return new double[]{this.thrustForce, this.dragForce, this.wingForce, this.gravitationalForce};
-	}
 
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){

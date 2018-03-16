@@ -59,9 +59,13 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
  */
 public final class RenderMultipart extends Render<EntityMultipartMoving>{
 	private static final Minecraft minecraft = Minecraft.getMinecraft();
+	/**Display list GL integers.  Keyed by model name.*/
 	private static final Map<String, Integer> displayLists = new HashMap<String, Integer>();
+	/**Rotatable maps.  Key of main map is model name, key of value is part name.  Value of part name key is rotation point.*/
 	private static final Map<String, Map<String, Vec3d>> rotatableMaps = new HashMap<String, Map<String, Vec3d>>();
+	/**Names of windows in a model.  Keyed by model name.*/
 	private static final Map<String, List<String>> windowLists = new HashMap<String, List<String>>();
+	/**Model texture name.  Keyed by model name.*/
 	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
 	private static final Map<EntityMultipartMoving, Byte> lastRenderPass = new HashMap<EntityMultipartMoving, Byte>();
 	private static final Map<EntityMultipartMoving, Long> lastRenderTick = new HashMap<EntityMultipartMoving, Long>();
@@ -181,13 +185,10 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				renderInstrumentsAndControls((EntityMultipartVehicle) mover);
 			}
 			GL11.glDisable(GL11.GL_NORMALIZE);
-			GL11.glPopMatrix();
 			if(Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()){
 				renderBoundingBoxes(mover);
-				if(mover instanceof EntityPlane){
-					renderDebugVectors((EntityPlane) mover);
-				}
 			}
+			GL11.glPopMatrix();
 		}
 		
 		//Check to see if we need to manually render riders.
@@ -319,11 +320,6 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 					}
 					GL11.glEnd();
 					GL11.glPopMatrix();
-				}
-			}
-			for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get(mover.name).entrySet()){
-				if(entry.getKey().contains("$")){
-
 				}
 			}
 		}else{
@@ -771,34 +767,34 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		GL11.glColor3f(0.0F, 0.0F, 0.0F);
 		GL11.glLineWidth(3.0F);
 		for(MTSAxisAlignedBB box : mover.getCurrentCollisionBoxes()){
-			box = box.offset(-mover.posX, -mover.posY, -mover.posZ);
+			//box = box.offset(-mover.posX, -mover.posY, -mover.posZ);
 			GL11.glBegin(GL11.GL_LINES);
-			GL11.glVertex3d(box.minX, box.minY, box.minZ);
-			GL11.glVertex3d(box.maxX, box.minY, box.minZ);
-			GL11.glVertex3d(box.minX, box.minY, box.maxZ);
-			GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
-			GL11.glVertex3d(box.minX, box.maxY, box.minZ);
-			GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
-			GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
-			GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+			GL11.glVertex3d(box.relX - box.width/2F, box.relY - box.height/2F, box.relZ - box.width/2F);
+			GL11.glVertex3d(box.relX + box.width/2F, box.relY - box.height/2F, box.relZ - box.width/2F);
+			GL11.glVertex3d(box.relX - box.width/2F, box.relY - box.height/2F, box.relZ + box.width/2F);
+			GL11.glVertex3d(box.relX + box.width/2F, box.relY - box.height/2F, box.relZ + box.width/2F);
+			GL11.glVertex3d(box.relX - box.width/2F, box.relY + box.height/2F, box.relZ - box.width/2F);
+			GL11.glVertex3d(box.relX + box.width/2F, box.relY + box.height/2F, box.relZ - box.width/2F);
+			GL11.glVertex3d(box.relX - box.width/2F, box.relY + box.height/2F, box.relZ + box.width/2F);
+			GL11.glVertex3d(box.relX + box.width/2F, box.relY + box.height/2F, box.relZ + box.width/2F);
 			
-			GL11.glVertex3d(box.minX, box.minY, box.minZ);
-			GL11.glVertex3d(box.minX, box.minY, box.maxZ);
-			GL11.glVertex3d(box.maxX, box.minY, box.minZ);
-			GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
-			GL11.glVertex3d(box.minX, box.maxY, box.minZ);
-			GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
-			GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
-			GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+			GL11.glVertex3d(box.relX - box.width/2F, box.relY - box.height/2F, box.relZ - box.width/2F);
+			GL11.glVertex3d(box.relX - box.width/2F, box.relY - box.height/2F, box.relZ + box.width/2F);
+			GL11.glVertex3d(box.relX + box.width/2F, box.relY - box.height/2F, box.relZ - box.width/2F);
+			GL11.glVertex3d(box.relX + box.width/2F, box.relY - box.height/2F, box.relZ + box.width/2F);
+			GL11.glVertex3d(box.relX - box.width/2F, box.relY + box.height/2F, box.relZ - box.width/2F);
+			GL11.glVertex3d(box.relX - box.width/2F, box.relY + box.height/2F, box.relZ + box.width/2F);
+			GL11.glVertex3d(box.relX + box.width/2F, box.relY + box.height/2F, box.relZ - box.width/2F);
+			GL11.glVertex3d(box.relX + box.width/2F, box.relY + box.height/2F, box.relZ + box.width/2F);
 			
-			GL11.glVertex3d(box.minX, box.minY, box.minZ);
-			GL11.glVertex3d(box.minX, box.maxY, box.minZ);
-			GL11.glVertex3d(box.maxX, box.minY, box.minZ);
-			GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
-			GL11.glVertex3d(box.minX, box.minY, box.maxZ);
-			GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
-			GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
-			GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+			GL11.glVertex3d(box.relX - box.width/2F, box.relY - box.height/2F, box.relZ - box.width/2F);
+			GL11.glVertex3d(box.relX - box.width/2F, box.relY + box.height/2F, box.relZ - box.width/2F);
+			GL11.glVertex3d(box.relX + box.width/2F, box.relY - box.height/2F, box.relZ - box.width/2F);
+			GL11.glVertex3d(box.relX + box.width/2F, box.relY + box.height/2F, box.relZ - box.width/2F);
+			GL11.glVertex3d(box.relX - box.width/2F, box.relY - box.height/2F, box.relZ + box.width/2F);
+			GL11.glVertex3d(box.relX - box.width/2F, box.relY + box.height/2F, box.relZ + box.width/2F);
+			GL11.glVertex3d(box.relX + box.width/2F, box.relY - box.height/2F, box.relZ + box.width/2F);
+			GL11.glVertex3d(box.relX + box.width/2F, box.relY + box.height/2F, box.relZ + box.width/2F);
 			GL11.glEnd();
 		}
 		GL11.glLineWidth(1.0F);
@@ -833,7 +829,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 						
 				if(!isPresent && isHoldingPart){
 					MTSVector offset = RotationSystem.getRotatedPoint(packPart.pos[0], packPart.pos[1], packPart.pos[2], mover.rotationPitch, mover.rotationYaw, mover.rotationRoll);
-					AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.75F, (float) (offset.yCoord) - 0.75F, (float) (offset.zCoord) - 0.75F, (float) (offset.xCoord) + 0.75F, (float) (offset.yCoord) + 0.75F, (float) (offset.zCoord) + 0.75F);
+					AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.75F, (float) (offset.yCoord) - 0.75F, (float) (offset.zCoord) - 0.75F, (float) (offset.xCoord) + 0.75F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.75F);
 					
 					GL11.glPushMatrix();
 					GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -881,55 +877,5 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				}
 			}
 		}
-	}
-	
-	private static void renderDebugVectors(EntityPlane plane){
-		double[] debugForces = plane.getDebugForces();
-    	GL11.glPushMatrix();
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glDisable(GL11.GL_LIGHTING);
-		
-		GL11.glLineWidth(1);
-		GL11.glColor4f(1, 1, 1, 1);
-		GL11.glBegin(GL11.GL_LINES);
-		GL11.glVertex3d(0, 2, 0);
-		GL11.glVertex3d(plane.headingVec.xCoord*debugForces[0], 2 + plane.headingVec.yCoord*debugForces[0],  plane.headingVec.zCoord*debugForces[0]);
-		
-		GL11.glVertex3d(Math.cos(Math.toRadians(plane.rotationYaw)), 2, Math.sin(Math.toRadians(plane.rotationYaw)));
-		GL11.glVertex3d(Math.cos(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.xCoord*debugForces[2]/10, 2 + plane.verticalVec.yCoord*debugForces[2]/10,  Math.sin(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.zCoord*debugForces[2]/10);
-
-		GL11.glVertex3d(-Math.cos(Math.toRadians(plane.rotationYaw)), 2, -Math.sin(Math.toRadians(plane.rotationYaw)));
-		GL11.glVertex3d(-Math.cos(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.xCoord*debugForces[2]/10, 2 + plane.verticalVec.yCoord*debugForces[2]/10,  -Math.sin(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.zCoord*debugForces[2]/10);
-		GL11.glEnd();
-		
-		GL11.glLineWidth(5);
-		GL11.glColor4f(1, 0, 0, 1);
-		GL11.glBegin(GL11.GL_LINES);
-		GL11.glVertex3d(plane.headingVec.xCoord*debugForces[0], 2 + plane.headingVec.yCoord*debugForces[0],  plane.headingVec.zCoord*debugForces[0]);
-		GL11.glVertex3d(plane.headingVec.xCoord*(debugForces[0] - debugForces[1]), 2 + plane.headingVec.yCoord*(debugForces[0] - debugForces[1]),  plane.headingVec.zCoord*(debugForces[0] - debugForces[1]));
-		
-		GL11.glVertex3d(Math.cos(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.xCoord*debugForces[2]/10, 2 + plane.verticalVec.yCoord*debugForces[2]/10,  Math.sin(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.zCoord*debugForces[2]/10);
-		GL11.glVertex3d(Math.cos(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.xCoord*(debugForces[2] - debugForces[3])/10, 2 + plane.verticalVec.yCoord*(debugForces[2] - debugForces[3])/10,  Math.sin(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.zCoord*(debugForces[2] - debugForces[3])/10);
-		
-		GL11.glVertex3d(-Math.cos(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.xCoord*debugForces[2]/10, 2 + plane.verticalVec.yCoord*debugForces[2]/10,  -Math.sin(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.zCoord*debugForces[2]/10);
-		GL11.glVertex3d(-Math.cos(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.xCoord*(debugForces[2] - debugForces[3])/10, 2 + plane.verticalVec.yCoord*(debugForces[2] - debugForces[3])/10,  -Math.sin(Math.toRadians(plane.rotationYaw)) + plane.verticalVec.zCoord*(debugForces[2] - debugForces[3])/10);
-		GL11.glEnd();
-		
-		GL11.glColor4f(0, 0, 1, 1);
-		GL11.glBegin(GL11.GL_LINES);
-		GL11.glVertex3d(0, 2, 0);
-		GL11.glVertex3d(plane.velocityVec.xCoord*plane.velocity, 2 + plane.velocityVec.yCoord*plane.velocity,  plane.velocityVec.zCoord*plane.velocity);
-		GL11.glEnd();
-		
-		GL11.glColor4f(0, 1, 0, 1);
-		GL11.glBegin(GL11.GL_LINES);
-		GL11.glVertex3d(0, 2, 0);
-		GL11.glVertex3d(plane.headingVec.xCoord, 2 + plane.headingVec.yCoord,  plane.headingVec.zCoord);
-		GL11.glEnd();
-				
-		GL11.glLineWidth(1);
-		GL11.glEnable(GL11.GL_LIGHTING);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glPopMatrix();
 	}
 }
