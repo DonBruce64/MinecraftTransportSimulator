@@ -3,6 +3,7 @@ package minecrafttransportsimulator.items;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
+import minecrafttransportsimulator.dataclasses.MTSPackObject.PackCollisionBox;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -39,10 +40,10 @@ public class ItemMultipartMoving extends Item{
 				try{
 					EntityMultipartMoving newEntity = PackParserSystem.getMultipartType(entityName).multipartClass.getConstructor(World.class, float.class, float.class, float.class, float.class, String.class).newInstance(world, pos.getX(), pos.getY(), pos.getZ(), player.rotationYaw, entityName);
 					float minHeight = 0;
-					for(MTSAxisAlignedBB box : newEntity.getCurrentCollisionBoxes()){
-						minHeight = (float) (-box.minY > minHeight ? -box.minY : minHeight);
+					for(PackCollisionBox collisionBox : newEntity.pack.collision){
+						minHeight = Math.min(collisionBox.pos[1] - collisionBox.height/2F, minHeight);
 					}
-					newEntity.posY += minHeight;
+					newEntity.posY += -minHeight;
 					
 					for(MTSAxisAlignedBB coreBox : newEntity.getCurrentCollisionBoxes()){
 						if(world.collidesWithAnyBlock(coreBox)){
