@@ -432,11 +432,11 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 					if(getAABBCollisions(offsetBox, collisionMap.get(box)).isEmpty()){
 						break;
 					}else if(motionPitch < 0){
-						if(box.posZ <= 0 && collisionMap.get(box) instanceof EntityGroundDevice){
+						if(box.relZ <= 0 && collisionMap.get(box) instanceof EntityGroundDevice){
 							float yBoost = 0;
 							for(AxisAlignedBB box2 : getAABBCollisions(offsetBox, collisionMap.get(box))){
-								if(box.maxY > offsetBox.minY + yBoost){
-									yBoost += (box.maxY - offsetBox.minY);
+								if(box2.maxY > offsetBox.minY + yBoost){
+									yBoost += (box2.maxY - offsetBox.minY);
 								}
 							}
 							//Clamp the boost relative to the speed of the vehicle.
