@@ -151,7 +151,7 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		
 		@Override
 		public float getWidth(){
-			return 0.5F;
+			return 0.25F;
 		}
 		
 		@Override
@@ -180,7 +180,7 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		
 		@Override
 		public float getWidth(){
-			return 0.75F;
+			return 0.5F;
 		}
 		
 		@Override
@@ -209,7 +209,7 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		
 		@Override
 		public float getWidth(){
-			return 1.0F;
+			return 0.5F;
 		}
 		
 		@Override
