@@ -1,16 +1,23 @@
 package minecrafttransportsimulator.entities.parts;
 
+import java.util.List;
+
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSDamageSources.DamageSourceWheel;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.main.EntityCar;
 import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import minecrafttransportsimulator.packets.general.FlatWheelPacket;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSound;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -23,7 +30,7 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 	public float angularPosition;
 	public float angularVelocity;
 	private boolean landedThisTick = false;
-	private EntityMultipartMoving moving;
+	private EntityMultipartMoving mover;
 	
 	public EntityWheel(World world){
 		super(world);
@@ -49,16 +56,40 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 	public void onUpdate(){
 		super.onUpdate();
 		if(!linked){return;}
-		moving = (EntityMultipartMoving) this.parent;
+		mover = (EntityMultipartMoving) this.parent;
 		if(this.isOnGround()){
-			if(angularVelocity/(moving.velocity/getHeight()) < 0.25 && moving.velocity > 0.1){
+			if(angularVelocity/(mover.velocity/getHeight()) < 0.25 && mover.velocity > 0.3){
 				if(worldObj.getBlockState(this.getPosition().down()).getBlockHardness(worldObj, this.getPosition().down()) >= 1.5){
 					landedThisTick = true;
 				}
 			}
-			angularVelocity = (float) (moving.velocity/getHeight());
+			angularVelocity = (float) (mover.velocity/getHeight());
+			
+			if(!worldObj.isRemote && mover.velocity > 0.2F){
+				List<EntityLivingBase> collidedEntites = worldObj.getEntitiesWithinAABB(EntityLivingBase.class, this.getEntityBoundingBox().expand(0.25F, 0, 0.25F));
+				if(!collidedEntites.isEmpty()){
+					Entity attacker = null;
+					for(EntityMultipartChild child : parent.getChildren()){
+						if(child instanceof EntitySeat){
+							EntitySeat seat = (EntitySeat) child;
+							if(seat.isController){
+								if(seat.getPassenger() != null){
+									attacker = seat.getPassenger();
+									break;
+								}
+							}
+						}
+						
+					}
+					for(int i=0; i < collidedEntites.size(); ++i){
+						if(!(collidedEntites.get(i).getRidingEntity() instanceof EntitySeat)){
+							collidedEntites.get(i).attackEntityFrom(new DamageSourceWheel(attacker), (float) (ConfigSystem.getDoubleConfig("WheelDamageFactor")*mover.velocity*mover.currentMass/1000F));
+						}
+					}
+				}
+			}
 		}else if(!(parent instanceof EntityCar)){
-			if(moving.brakeOn || moving.parkingBrakeOn){
+			if(mover.brakeOn || mover.parkingBrakeOn){
 				angularVelocity = 0;
 			}else if(angularVelocity>0){
 				angularVelocity = (float) Math.max(angularVelocity - 0.05, 0);

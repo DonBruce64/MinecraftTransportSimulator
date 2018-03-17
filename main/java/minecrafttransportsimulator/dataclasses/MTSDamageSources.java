@@ -43,6 +43,12 @@ public abstract class MTSDamageSources extends DamageSource{
 			super("propellor", playerResponsible);
 		}
 	};
+	
+	public static class DamageSourceWheel extends MTSDamageSources{
+		public DamageSourceWheel(Entity playerResponsible){
+			super("wheel", playerResponsible);
+		}
+	};
 
 	public static class DamageSourceCrash extends MTSDamageSources{
 		public DamageSourceCrash(Entity playerResponsible, String entityCrashed){
