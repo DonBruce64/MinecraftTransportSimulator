@@ -116,7 +116,7 @@ public class EntityPlane extends EntityMultipartVehicle{
 		
 		dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*pack.plane.wingSpan*pack.plane.wingSpan/currentWingArea*0.8));		
 		wingForce = 0.5F*airDensity*velocity*velocity*currentWingArea*wingLiftCoeff;
-		aileronForce = 0.5F*airDensity*velocity*velocity*pack.plane.wingArea/10F*aileronLiftCoeff;
+		aileronForce = 0.5F*airDensity*velocity*velocity*pack.plane.wingArea/5F*aileronLiftCoeff;
 		elevatorForce = 0.5F*airDensity*velocity*velocity*pack.plane.elevatorArea*elevatorLiftCoeff;			
 		rudderForce = 0.5F*airDensity*velocity*velocity*pack.plane.rudderArea*rudderLiftCoeff;
 		gravitationalForce = currentMass*(9.8/400);
