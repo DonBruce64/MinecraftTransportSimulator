@@ -147,9 +147,9 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
         double thisX = mover.lastTickPosX + (mover.posX - mover.lastTickPosX) * (double)partialTicks;
         double thisY = mover.lastTickPosY + (mover.posY - mover.lastTickPosY) * (double)partialTicks;
         double thisZ = mover.lastTickPosZ + (mover.posZ - mover.lastTickPosZ) * (double)partialTicks;
-        double rotateYaw = -mover.rotationYaw - (mover.rotationYaw - mover.prevRotationYaw)*(double)partialTicks;
-        double rotatePitch = mover.rotationPitch + (mover.rotationPitch - mover.prevRotationPitch)*(double)partialTicks;
-        double rotateRoll = mover.rotationRoll + (mover.rotationRoll - mover.prevRotationRoll)*(double)partialTicks;
+        double rotateYaw = -mover.rotationYaw + (mover.rotationYaw - mover.prevRotationYaw)*(double)(1 - partialTicks);
+        double rotatePitch = mover.rotationPitch - (mover.rotationPitch - mover.prevRotationPitch)*(double)(1 - partialTicks);
+        double rotateRoll = mover.rotationRoll - (mover.rotationRoll - mover.prevRotationRoll)*(double)(1 - partialTicks);
 
         //Set up position and lighting.
         GL11.glPushMatrix();
