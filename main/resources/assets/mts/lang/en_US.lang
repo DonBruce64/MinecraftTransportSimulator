@@ -2,23 +2,23 @@
 
 death.attack.propellor.null.null=%1$s was shredded by a propeller
 death.attack.propellor.null.player=%1$s was was shredded by a propeller while fighting %2$s
-death.attack.propellor.player.null=%1$s was killed by %2$s using a propeller
-death.attack.propellor.player.player=%1$s was was killed by %2$s using propeller while fighting %3$s
+death.attack.propellor.player.null=%1$s was shredded by %2$s using a propeller
+death.attack.propellor.player.player=%1$s was was shredded by %2$s using propeller while fighting %3$s
 
 death.attack.wheel.null.null=%1$s was run over
 death.attack.wheel.null.player=%1$s was was run over while fighting %2$s
-death.attack.wheel.player.null=%2$s was run over by %1$s
+death.attack.wheel.player.null=%1$s was run over by %2$s 
 death.attack.wheel.player.player=%1$s was run over by %2$s while fighting %3$s
 
 death.attack.planecrash.null.null=%1$s died in a plane crash
 death.attack.planecrash.null.player=%1$s got distracted while fighting %2$s and died in a plane crash
 death.attack.planecrash.player.null=%2$s crashed their plane and killed %1$s
-death.attack.planecrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash the plane
+death.attack.planecrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash a plane into them
 
 death.attack.carcrash.null.null=%1$s died in a car crash
 death.attack.carcrash.null.player=%1$s got distracted while fighting %2$s and died in a car crash
 death.attack.carcrash.player.null=%2$s crashed their car and killed %1$s
-death.attack.carcrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash the car
+death.attack.carcrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash a car into them
  
 interact.key.info.lock=Vehicle locked!
 interact.key.info.unlock=Vehicle unlocked!
