@@ -12,6 +12,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 public class EntitySeat extends EntityMultipartChild{
@@ -77,6 +78,16 @@ public class EntitySeat extends EntityMultipartChild{
 			passenger.motionX = parent.motionX;
 			passenger.motionY = parent.motionY;
 			passenger.motionZ = parent.motionZ;
+			
+			if(parent.getEntityId() > this.getEntityId() && !worldObj.isRemote){
+				//This is VERY BAD as parts that are spawned before parents will not rotate correctly.
+				//Re-spawn to fix.
+				EntitySeat newSeat = new EntitySeat(this.worldObj, this.parent, this.parentUUID, this.offsetX, this.offsetY, this.offsetZ, this.propertyCode);
+				newSeat.readFromNBT(this.writeToNBT(new NBTTagCompound()));
+				parent.removeChild(this.UUID, false);
+				parent.addChild(newSeat.UUID, newSeat, false);
+				worldObj.spawnEntityInWorld(newSeat);
+			}
 		}
 	}
 	

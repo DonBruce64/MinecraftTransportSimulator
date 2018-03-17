@@ -115,33 +115,10 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		
 	private static void render(EntityMultipartMoving mover, EntityPlayer playerRendering, float partialTicks, boolean wasRenderedPrior){
 		//Calculate various things.
-		double playerX;
-        double playerY;
-        double playerZ;
 		Entity renderViewEntity = minecraft.getRenderViewEntity();
-		
-		boolean wasParentSpawnedAfterSeat = false;
-		boolean wasParentSpawnedAfterPlayer = false;
-		if(ClientEventSystem.playerLastSeat != null){
-			wasParentSpawnedAfterPlayer = mover.getEntityId() > playerRendering.getEntityId();
-			if(mover.equals(ClientEventSystem.playerLastSeat.parent)){
-				wasParentSpawnedAfterSeat = mover.getEntityId() > ClientEventSystem.playerLastSeat.getEntityId();
-				//System.out.format("%d %d %d\n", mover.getEntityId(), ClientEventSystem.playerLastSeat.getEntityId(), playerRendering.getEntityId());
-			}
-		}
-
-		//FIXME figure out just what boolean goes here.
-		//Last issue was with IDs 11336407 11336416 11336394 for parent, seat, and player.
-		//Gotta be related to how the parent and seat link.  Rendered fine outside the plane, screwy inside.
-		if(wasParentSpawnedAfterSeat){
-			playerX = renderViewEntity.posX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * (double)partialTicks;
-	        playerY = renderViewEntity.posY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
-	        playerZ = renderViewEntity.posZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
-		}else{
-			playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * (double)partialTicks;
-	        playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
-	        playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
-		}
+		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * (double)partialTicks;
+		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
+		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
         
         
         double thisX = mover.lastTickPosX + (mover.posX - mover.lastTickPosX) * (double)partialTicks;
