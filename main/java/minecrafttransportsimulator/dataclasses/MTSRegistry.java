@@ -11,10 +11,10 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockFuelPump;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
-import minecrafttransportsimulator.entities.parts.EntityEngineBristolMercury;
-import minecrafttransportsimulator.entities.parts.EntityEngineLycomingO360;
 import minecrafttransportsimulator.entities.parts.EntityEngineAMCI4;
+import minecrafttransportsimulator.entities.parts.EntityEngineBristolMercury;
 import minecrafttransportsimulator.entities.parts.EntityEngineDetroitDiesel;
+import minecrafttransportsimulator.entities.parts.EntityEngineLycomingO360;
 import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
@@ -51,6 +51,7 @@ import minecrafttransportsimulator.packets.general.InstrumentAddRemovePacket;
 import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
 import minecrafttransportsimulator.packets.general.MultipartAttackPacket;
 import minecrafttransportsimulator.packets.general.MultipartDeltaPacket;
+import minecrafttransportsimulator.packets.general.MultipartGlassActionPacket;
 import minecrafttransportsimulator.packets.general.MultipartKeyActionPacket;
 import minecrafttransportsimulator.packets.general.MultipartNameTagActionPacket;
 import minecrafttransportsimulator.packets.general.MultipartParentDamagePacket;
@@ -230,6 +231,7 @@ public final class MTSRegistry{
 		registerPacket(ManualPageUpdatePacket.class, ManualPageUpdatePacket.Handler.class, false, true);
 		
 		registerPacket(MultipartAttackPacket.class, MultipartAttackPacket.Handler.class, false, true);
+		registerPacket(MultipartGlassActionPacket.class, MultipartGlassActionPacket.Handler.class, true, true);
 		registerPacket(MultipartKeyActionPacket.class, MultipartKeyActionPacket.Handler.class, true, true);
 		registerPacket(MultipartNameTagActionPacket.class, MultipartNameTagActionPacket.Handler.class, true, true);
 		registerPacket(MultipartDeltaPacket.class, MultipartDeltaPacket.Handler.class, true, false);

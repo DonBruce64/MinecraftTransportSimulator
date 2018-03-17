@@ -18,6 +18,7 @@ import minecrafttransportsimulator.guis.GUIPackMissing;
 import minecrafttransportsimulator.guis.GUISplash;
 import minecrafttransportsimulator.items.ItemPart;
 import minecrafttransportsimulator.packets.general.MultipartAttackPacket;
+import minecrafttransportsimulator.packets.general.MultipartGlassActionPacket;
 import minecrafttransportsimulator.packets.general.MultipartKeyActionPacket;
 import minecrafttransportsimulator.packets.general.MultipartNameTagActionPacket;
 import minecrafttransportsimulator.packets.general.MultipartPartAdditionPacket;
@@ -30,8 +31,10 @@ import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.item.Item;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
@@ -146,7 +149,7 @@ public final class ClientEventSystem{
 	    				}
 	    			}else{
 	    				//If we are not holding a part, see if we at least clicked the multipart.
-	    				//If so, and we are holding a wrench or key or name tag, act on that.
+	    				//If so, and we are holding a wrench or key or name tag or glass pane, act on that.
 	    				if(mover.wasMultipartClicked(player)){
 	    					if(event.getItemStack().getItem().equals(MTSRegistry.wrench)){
 	    						MTS.proxy.openGUI(mover, player);
@@ -154,6 +157,8 @@ public final class ClientEventSystem{
 	    						MTS.MTSNet.sendToServer(new MultipartKeyActionPacket(mover.getEntityId(), player.getEntityId()));
 	    					}else if(event.getItemStack().getItem().equals(Items.NAME_TAG)){
 	    						MTS.MTSNet.sendToServer(new MultipartNameTagActionPacket(mover.getEntityId(), player.getEntityId()));
+	    					}else if(event.getItemStack().getItem().equals(Item.getItemFromBlock(Blocks.GLASS_PANE))){
+	    						MTS.MTSNet.sendToServer(new MultipartGlassActionPacket(mover.getEntityId(), player.getEntityId()));
 	    					}
 	    				}
 	    			}

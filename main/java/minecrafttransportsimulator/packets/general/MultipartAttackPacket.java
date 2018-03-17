@@ -78,10 +78,7 @@ public class MultipartAttackPacket implements IMessage{
 								}
 							}
 						}else{
-							EntityMultipartChild hitChild = mover.getHitChild(player);
-							if(hitChild != null){
-								hitChild.attackPart(DamageSource.causePlayerDamage(player), 1.0F);
-							}
+							mover.attackEntityFrom(DamageSource.causePlayerDamage(player), 1.0F);
 						}
 					}
 				}
