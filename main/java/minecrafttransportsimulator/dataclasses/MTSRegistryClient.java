@@ -2,8 +2,6 @@ package minecrafttransportsimulator.dataclasses;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.util.HashMap;
-import java.util.Map;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityFuelPump;
@@ -12,14 +10,12 @@ import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.rendering.blockrenders.RenderFuelPump;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPropellerBench;
-import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -36,28 +32,11 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @Mod.EventBusSubscriber(Side.CLIENT)
 public final class MTSRegistryClient{
-	private static final MTSRegistryClient instance = new MTSRegistryClient();
-	/**Map of parsed models keyed by name.*/
-	public static final Map<String, Map<String, Float[][]>> modelMap = new HashMap<String, Map<String, Float[][]>>();
-
-	public static void loadCustomOBJModels(){
-		modelMap.put("fuelpump", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/fuelpump.obj")));
-		modelMap.put("engineamci4", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/engineamci4.obj")));
-		modelMap.put("enginedetroitdiesel", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/enginedetroitdiesel.obj")));
-		modelMap.put("enginebristolmercury", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/enginebristolmercury.obj")));
-		modelMap.put("enginelycomingo360", OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/enginelycomingo360.obj")));
-		for(String name : PackParserSystem.getRegisteredNames()){
-			modelMap.put(name, OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/" + PackParserSystem.getPack(name).rendering.modelName)));
-		}
-	}
 	
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
 		MTSExternalResourcePack.init();
-		
-		//Load the OBJ models.
-		loadCustomOBJModels();
-		
+
 		//Register the TESRs.
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPropellerBench.class, new RenderPropellerBench());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityFuelPump.class, new RenderFuelPump());

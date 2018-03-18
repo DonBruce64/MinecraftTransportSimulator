@@ -7,7 +7,6 @@ import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
@@ -361,8 +360,7 @@ public final class ClientEventSystem{
             	FMLCommonHandler.instance().showGuiScreen(new GUIConfig());
                 if(Minecraft.getMinecraft().isSingleplayer()){
                 	MTS.MTSNet.sendToServer(new PackReloadPacket());
-                	MTSRegistryClient.loadCustomOBJModels();
-                	RenderMultipart.resetDisplayLists();
+                	RenderMultipart.resetRenders();
                 }
             }
         }

@@ -7,7 +7,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityFuelPump;
-import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
+import minecrafttransportsimulator.systems.OBJParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.resources.I18n;
@@ -17,8 +17,6 @@ public class RenderFuelPump extends TileEntitySpecialRenderer<TileEntityFuelPump
 	private static final ResourceLocation texture = new ResourceLocation(MTS.MODID, "textures/blocks/fuelpump.png");
 	private static int displayListIndex = -1;
 	
-	private TileEntityFuelPump pump;
-
 	public RenderFuelPump(){}
 	
 	@Override
@@ -29,7 +27,7 @@ public class RenderFuelPump extends TileEntitySpecialRenderer<TileEntityFuelPump
 			displayListIndex = GL11.glGenLists(1);
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 			GL11.glBegin(GL11.GL_TRIANGLES);
-			for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get("fuelpump").entrySet()){
+			for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/fuelpump.obj")).entrySet()){
 				for(Float[] vertex : entry.getValue()){
 					GL11.glTexCoord2f(vertex[3], vertex[4]);
 					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);

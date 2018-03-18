@@ -1,27 +1,53 @@
 package minecrafttransportsimulator.rendering.blockrenders;
 
+import java.util.Map.Entry;
+
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
-import minecrafttransportsimulator.rendering.blockmodels.ModelPropellerBench;
 import minecrafttransportsimulator.rendering.partmodels.ModelPropeller;
+import minecrafttransportsimulator.systems.OBJParserSystem;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.ResourceLocation;
 
 public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPropellerBench>{
-	private static final ModelPropellerBench benchModel = new ModelPropellerBench();
 	private static final ModelPropeller propellerModel = new ModelPropeller();
 	private static final ResourceLocation tierOneTexture = new ResourceLocation("minecraft", "textures/blocks/planks_oak.png");
 	private static final ResourceLocation tierTwoTexture = new ResourceLocation("minecraft", "textures/blocks/iron_block.png");
 	private static final ResourceLocation tierThreeTexture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
 	private static final ResourceLocation benchTexture = new ResourceLocation(MTS.MODID, "textures/blocks/propellerbench.png");
-		
+	
+	private static int baseDisplayListIndex = -1;
+	private static Float[][] tableCoords;
+	private static Float[][] bitCoords;
+	
 	public RenderPropellerBench(){}
 	
 	@Override
 	public void renderTileEntityAt(TileEntityPropellerBench bench, double x, double y, double z, float partialTicks, int destroyStage){
 		super.renderTileEntityAt(bench, x, y, z, partialTicks, destroyStage);
+		
+		if(baseDisplayListIndex == -1){
+			baseDisplayListIndex = GL11.glGenLists(1);
+			GL11.glNewList(baseDisplayListIndex, GL11.GL_COMPILE);
+			GL11.glBegin(GL11.GL_TRIANGLES);
+			for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/propellerbench.obj")).entrySet()){
+				if(entry.getKey().equals("Table")){
+					tableCoords = entry.getValue();
+				}else if(entry.getKey().equals("Bit")){
+					bitCoords = entry.getValue();
+				}else{
+					for(Float[] vertex : entry.getValue()){
+						GL11.glTexCoord2f(vertex[3], vertex[4]);
+						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+					}	
+				}
+			}
+			GL11.glEnd();
+			GL11.glEndList();
+		}
 		
 		float tableOffsetX = 0;
 		float tableOffsetZ = 0;
@@ -63,19 +89,35 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPr
 		GL11.glTranslated(x, y, z);
 		GL11.glTranslatef(0.5F, 0F, 0.5F);
 		GL11.glRotatef(180 - 45*bench.rotation, 0, 1, 0);
-		GL11.glTranslatef(-0.5F, 0F, -0.5F);
-		GL11.glTranslatef(0, 0.44F, 1.25F);
-		GL11.glRotatef(180, 1, 0, 0);
 		bindTexture(benchTexture);
-		benchModel.renderBase();
+		GL11.glCallList(baseDisplayListIndex);
+		
+		
+		GL11.glPushMatrix();
+		GL11.glTranslatef(0, 0, -0.125F);
+		GL11.glRotatef(bench.isRunning() ? bench.getWorld().getTotalWorldTime()%360*35 : 0, 0, 1, 0);
+		GL11.glTranslatef(0, 0, 0.125F);
+		GL11.glBegin(GL11.GL_TRIANGLES);
+		for(Float[] vertex : bitCoords){
+			GL11.glTexCoord2f(vertex[3], vertex[4]);
+			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+		}
+		GL11.glEnd();
+		GL11.glPopMatrix();
+		
+		GL11.glPushMatrix();
 		GL11.glTranslatef(tableOffsetX, 0, tableOffsetZ);
-		benchModel.renderTable();
+		GL11.glBegin(GL11.GL_TRIANGLES);
+		for(Float[] vertex : tableCoords){
+			GL11.glTexCoord2f(vertex[3], vertex[4]);
+			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+		}
+		GL11.glEnd();
+		GL11.glTranslatef(0, 1.0F, -0.125F);
 		renderMaterial(bench);
-		bindTexture(benchTexture);
-		GL11.glTranslatef(-tableOffsetX, 0, -tableOffsetZ);
-		GL11.glTranslatef(0, 0, -0.25F);
-		benchModel.renderBody();
-		benchModel.renderBit(bench.isRunning() ? bench.getWorld().getTotalWorldTime()*partialTicks : 0);
+		GL11.glPopMatrix();
 		GL11.glPopMatrix();
 	}
 
@@ -89,25 +131,24 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPr
 		short timeLeft = (short) (bench.timeOperationFinished - bench.getWorld().getTotalWorldTime());
 		if(bench.isRunning()){
 			GL11.glPushMatrix();
-			GL11.glTranslatef(0.5F, -0.8F, -0.03125F);
 			if(timeLeft > 945){
-				renderMaterialBlock(-0.5F, 0.5F, 0.4375F, 1F);
-			}else if(timeLeft > 55){
+				renderMaterialBlock(-0.5F, 0.5F, -0.25F, 0.3125F);
+			}else if(timeLeft > 55 && timeLeft <= 945){
 				if(timeLeft > 145){
-					renderMaterialBlock(-0.5F, 0.5F, 0.4375F + 0.0625F*(9 - (timeLeft-50)/100), 1F);
+					renderMaterialBlock(-0.5F, 0.5F, -0.25F + 0.0625F*(9 - (timeLeft-50)/100), 0.3125F);
 				}
 				if((timeLeft + 50)%200 >= 100){
-					renderMaterialBlock(-0.5F, ((timeLeft + 50)%200 - 100)/100F - 0.5F, 0.4375F + 0.0625F*(8 - (timeLeft-50)/100), 0.4375F + 0.0625F*(9 - (timeLeft-50)/100));
+					renderMaterialBlock(-0.5F, ((timeLeft + 50)%200 - 100)/100F - 0.5F, -0.25F + 0.0625F*(8 - (timeLeft-50)/100), -0.25F + 0.0625F*(9 - (timeLeft-50)/100));
 				}else{
-					renderMaterialBlock(0.5F - ((timeLeft + 50)%200)/100F, 0.5F, 0.4375F + 0.0625F*(8 - (timeLeft-50)/100), 0.4375F + 0.0625F*(9 - (timeLeft-50)/100));
+					renderMaterialBlock(0.5F - ((timeLeft + 50)%200)/100F, 0.5F, -0.25F + 0.0625F*(8 - (timeLeft-50)/100), -0.25F + 0.0625F*(9 - (timeLeft-50)/100));
 				}
 			}
 			GL11.glPopMatrix();
 		}
-		if((timeLeft >= 0 && bench.isRunning()) || bench.getPropellerOnBench() != null){
+		if((timeLeft >= 0 && timeLeft <= 945 && bench.isRunning()) || bench.getPropellerOnBench() != null){
 			GL11.glPushMatrix();
-			GL11.glTranslatef(0.5F, -0.7F, 0.78125F);
-			GL11.glRotatef(270, 1, 0, 0);
+			GL11.glTranslatef(0, 0.125F, 0);
+			GL11.glRotatef(90, 1, 0, 0);
 			GL11.glScalef(0.25F, 0.25F, 0.25F);
 			propellerModel.renderPropeller(bench.numberBlades, bench.diameter, 0);
 			GL11.glPopMatrix();
@@ -120,7 +161,7 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPr
 		GL11.glPushMatrix();
 		GL11.glBegin(GL11.GL_QUADS);
 		//Not sure why I only need one of these rather than one for each vertex, but eh...
-		GL11.glNormal3f(0, -1.0F, 0);
+		GL11.glNormal3f(0, 1.0F, 0);
 		
 		//Right side
 		GL11.glTexCoord2f(z1*4 + 2, 0);
@@ -163,14 +204,14 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPr
 		GL11.glVertex3f(x2, 0, z1);
 		
 		//Top side
-		GL11.glTexCoord2f(x1*4 + 2, z2*4 + 2);
-		GL11.glVertex3f(x1, 0, z2);
-		GL11.glTexCoord2f(x1*4 + 2, z1*4 + 2);
-		GL11.glVertex3f(x1, 0, z1);
-		GL11.glTexCoord2f(x2*4 + 2, z1*4 + 2);
-		GL11.glVertex3f(x2, 0, z1);
 		GL11.glTexCoord2f(x2*4 + 2, z2*4 + 2);
-		GL11.glVertex3f(x2, 0, z2);
+		GL11.glVertex3f(x2, 0.24F, z2);
+		GL11.glTexCoord2f(x2*4 + 2, z1*4 + 2);
+		GL11.glVertex3f(x2, 0.24F, z1);
+		GL11.glTexCoord2f(x1*4 + 2, z1*4 + 2);
+		GL11.glVertex3f(x1, 0.24F, z1);
+		GL11.glTexCoord2f(x1*4 + 2, z2*4 + 2);
+		GL11.glVertex3f(x1, 0.24F, z2);
 		
 		GL11.glEnd();
 		GL11.glPopMatrix();

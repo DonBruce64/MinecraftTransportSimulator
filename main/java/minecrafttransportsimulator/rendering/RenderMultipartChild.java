@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSRegistryClient;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.parts.EntityEngineAMCI4;
 import minecrafttransportsimulator.entities.parts.EntityEngineBristolMercury;
@@ -25,6 +24,7 @@ import minecrafttransportsimulator.rendering.partmodels.ModelSeat;
 import minecrafttransportsimulator.rendering.partmodels.ModelSkid;
 import minecrafttransportsimulator.rendering.partmodels.ModelVehicleChest;
 import minecrafttransportsimulator.rendering.partmodels.ModelWheel;
+import minecrafttransportsimulator.systems.OBJParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
@@ -67,7 +67,8 @@ public final class RenderMultipartChild{
     			int displayListIndex = GL11.glGenLists(1);
     			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
     			GL11.glBegin(GL11.GL_TRIANGLES);
-    			for(Entry<String, Float[][]> entry : MTSRegistryClient.modelMap.get(child.getClass().getSimpleName().substring("Entity".length()).toLowerCase()).entrySet()){
+    			String fileName = child.getClass().getSimpleName().substring("Entity".length()).toLowerCase();
+    			for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/" + fileName + ".obj")).entrySet()){
     				for(Float[] vertex : entry.getValue()){
     					GL11.glTexCoord2f(vertex[3], vertex[4]);
     					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
