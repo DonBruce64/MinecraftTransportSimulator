@@ -21,7 +21,6 @@ import minecrafttransportsimulator.entities.parts.EntityWheel;
 import minecrafttransportsimulator.rendering.partmodels.ModelPontoon;
 import minecrafttransportsimulator.rendering.partmodels.ModelPropeller;
 import minecrafttransportsimulator.rendering.partmodels.ModelSeat;
-import minecrafttransportsimulator.rendering.partmodels.ModelSkid;
 import minecrafttransportsimulator.rendering.partmodels.ModelVehicleChest;
 import minecrafttransportsimulator.rendering.partmodels.ModelWheel;
 import minecrafttransportsimulator.systems.OBJParserSystem;
@@ -187,17 +186,31 @@ public final class RenderMultipartChild{
     	}
     }
     
-    private static final class RenderSkid extends RenderChild{
-    	private static final ModelSkid modelSkid = new ModelSkid();
-    	private static final ResourceLocation textureSkid = new ResourceLocation(MTS.MODID, "textures/parts/skid.png");
-    	
+    private static final class RenderSkid extends RenderChild{    	
     	@Override
     	public void doRender(EntityMultipartChild child, TextureManager textureManger, float partialTicks){
-    		GL11.glRotatef(180, 1, 0, 0);
-    		GL11.glTranslatef(0, -0.25F, 0);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-            textureManger.bindTexture(textureSkid);
-            modelSkid.render();
+    		if(!displayListMap.containsKey(child.getClass())){
+    			int displayListIndex = GL11.glGenLists(1);
+    			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
+    			GL11.glBegin(GL11.GL_TRIANGLES);
+    			String fileName = child.getClass().getSimpleName().substring("Entity".length()).toLowerCase();
+    			for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/" + fileName + ".obj")).entrySet()){
+    				for(Float[] vertex : entry.getValue()){
+    					GL11.glTexCoord2f(vertex[3], vertex[4]);
+    					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+    					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+    				}
+    			}
+    			GL11.glEnd();
+    			GL11.glEndList();
+    			displayListMap.put(child.getClass(), displayListIndex);
+    			textureMap.put(child.getClass(), new ResourceLocation(MTS.MODID, "textures/parts/" + child.getClass().getSimpleName().substring("Entity".length()).toLowerCase() + ".png"));
+    		}
+    		
+    		GL11.glPushMatrix();
+            textureManger.bindTexture(textureMap.get(child.getClass()));
+			GL11.glCallList(displayListMap.get(child.getClass()));
+			GL11.glPopMatrix();
     	}
     }
     
