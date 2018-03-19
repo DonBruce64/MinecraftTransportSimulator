@@ -234,7 +234,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		 GL11.glPopMatrix();
 	}
 	
-	private static Vec3d getRotationPointForMovable(Entry<String, Float[][]> entry){
+	private static Vec3d getRotationPointForRotatable(Entry<String, Float[][]> entry){
 		double minX = 999;
 		double maxX = -999;
 		double minY = 999;
@@ -331,7 +331,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 							GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
 						}
 					}else{
-						rotatableParts.add(new RotatablePart(entry.getKey(), getRotationPointForMovable(entry), entry.getValue()));
+						rotatableParts.add(new RotatablePart(entry.getKey(), getRotationPointForRotatable(entry), entry.getValue()));
 					}
 				}
 			}
