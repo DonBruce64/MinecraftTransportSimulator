@@ -286,7 +286,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	 * attack and interaction collision looks at that and parts.
 	 */
 	public List<MTSAxisAlignedBB> getCurrentCollisionBoxes(){
-		List<MTSAxisAlignedBB> retList = new ArrayList(collisionMap.keySet());
+		List<MTSAxisAlignedBB> retList = new ArrayList<MTSAxisAlignedBB>(collisionMap.keySet());
 		//Remove duplicates before adding parts.
 		retList.removeAll(partMap.keySet());
 		retList.addAll(partMap.keySet());

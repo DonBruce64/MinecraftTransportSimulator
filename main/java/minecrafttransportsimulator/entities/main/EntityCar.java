@@ -141,7 +141,7 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public MovingSound getNewSound(){
-		return new AttenuatedSound(MTS.MODID + ":" + pack.car.hornSound, this);
+		return new AttenuatedSound<EntityCar>(MTS.MODID + ":" + pack.car.hornSound, this);
 	}
 
 	@Override

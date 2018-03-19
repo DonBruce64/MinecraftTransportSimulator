@@ -379,7 +379,7 @@ public abstract class EntityEngine extends EntityMultipartChild implements SFXEn
 	@Override
 	@SideOnly(Side.CLIENT)
 	public MovingSound getNewSound(){
-		return new AttenuatedSound(MTS.MODID + ":" + this.getEngineItem().getRegistryName().getResourcePath() + "_running", this);
+		return new AttenuatedSound<EntityEngine>(MTS.MODID + ":" + this.getEngineItem().getRegistryName().getResourcePath() + "_running", this);
 	}
 
 	@Override
