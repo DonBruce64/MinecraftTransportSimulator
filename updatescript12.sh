@@ -10,11 +10,8 @@ FILES=$(find $DSTPATH -not -type l -not -type d)
 
 for FILE in ${FILES[*]}; do
 
-#Don't check partmodels or blockmodels.  Those don't change.
+#Don't check partmodels.  Those don't change.
 if echo $FILE | grep -q "partmodels"; then
-	continue
-fi
-if echo $FILE | grep -q "blockmodels"; then
 	continue
 fi
 
@@ -29,10 +26,15 @@ echo "Checking file " $FILE
 #Global variable and method name changes
 sed -i 's/fontRendererObj/fontRenderer/g' $FILE
 sed -i 's/playerEntity/player/g' $FILE
-sed -i 's/expandXyz/grow/g' $FILE
 sed -i 's/source.getEntity()/source.getTrueSource()/g' $FILE
+sed -i 's/source.getSourceOfDamage()/source.getImmediateSource()/g' $FILE
 sed -i 's/player.getLastAttacker()/player.getAttackingEntity()/g' $FILE
 sed -i 's/player.getDistanceToEntity(/player.getDistance(/g' $FILE
+sed -i 's/isVecInside(/contains(/g' $FILE
+sed -i 's/expandXyz(/grow(/g' $FILE
+sed -i 's/lookVec.xCoord/lookVec.x/g' $FILE
+sed -i 's/lookVec.yCoord/lookVec.y/g' $FILE
+sed -i 's/lookVec.zCoord/lookVec.z/g' $FILE
 
 #GUIs changed their names for x and y positions.  Don't change globally cause it might mess up other x-y systems.
 #GUIs also added some odd parameter for partialTicks on buttons.  No earthly idea why you'd need that, so it gets a 0.
@@ -43,8 +45,12 @@ if echo $FILE | grep -q "GUI"; then
 fi
 
 #Rendering brightness was changed to remove partialTicks parameter.  About time seeing as it hasn't been used since 1.7.10.
+#Vector coord names were also changed.
 if echo $FILE | grep -q "RenderMultipart"; then
 	sed -i 's/getBrightnessForRender(partialTicks)/getBrightnessForRender()/' $FILE
+	sed -i 's/rotationPoint.xCoord/rotationPoint.x/g' $FILE
+	sed -i 's/rotationPoint.yCoord/rotationPoint.y/g' $FILE
+	sed -i 's/rotationPoint.zCoord/rotationPoint.z/g' $FILE
 fi
 
 #TESR systems now have an extra parameter.
@@ -58,7 +64,7 @@ if echo $FILE | grep -q "RenderPropellerBench"; then
 	sed -i 's/super.renderTileEntityAt(bench, x, y, z, partialTicks, destroyStage)/super.render(bench, x, y, z, partialTicks, destroyStage, alpha)/' $FILE
 fi
 
-#Items had a few changes on their methods WRT parameters.
+#Items had a few changes on their methods with respect to parameters.
 if echo $FILE | grep -q "Item"; then
 	sed -i 's/getSubItems(Item item, CreativeTabs tab, NonNullList<ItemStack> subItems)/getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems)/' $FILE
 	sed -i 's/addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_)/addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn)/' $FILE
@@ -80,10 +86,10 @@ if echo $FILE | grep -q "MTSRegistry"; then
 	sed -i 's/GameRegistry.addShapedRecipe(output, params)/GameRegistry.addShapedRecipe(new ResourceLocation(MTS.MODID, output.getItem().getUnlocalizedName() + craftingNumber), null, output, params)/' $FILE
 fi
 
-#Block slipperiness was changed to be state-dependent.
+#Block slipperiness was changed to be state-dependent, and vector coord names were shortened.
 if echo $FILE | grep -q "EntityMultipartMoving"; then
-	sed -i 's/world.getBlockState(grounder.getPosition().down()).getBlock().slipperiness/world.getBlockState(grounder.getPosition().down()).getBlock().getSlipperiness(world.getBlockState(grounder.getPosition().down()), world, grounder.getPosition().down(), null)/' $FILE
-	sed -i 's/world.getBlockState(child.getPosition().down()).getBlock().slipperiness/world.getBlockState(child.getPosition().down()).getBlock().getSlipperiness(world.getBlockState(child.getPosition().down()), world, child.getPosition().down(), null)/' $FILE
+	sed -i 's/world.getBlockState(pos).getBlock().slipperiness/world.getBlockState(pos).getBlock().getSlipperiness(world.getBlockState(pos), world, pos, null)/' $FILE
+	sed -i 's/world.getBlockState(pos).getBlock().slipperiness/world.getBlockState(pos).getBlock().getSlipperiness(world.getBlockState(pos), world, pos, null)/' $FILE
 fi
 
 if echo $FILE | grep -q "EntityEngineCar"; then

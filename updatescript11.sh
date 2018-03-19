@@ -10,13 +10,11 @@ FILES=$(find $DSTPATH -not -type l -not -type d)
 
 for FILE in ${FILES[*]}; do
 
-#Don't check partmodels or blockmodels.  Those don't change.
+#Don't check partmodels.  Those don't change.
 if echo $FILE | grep -q "partmodels"; then
 	continue
 fi
-if echo $FILE | grep -q "blockmodels"; then
-	continue
-fi
+
 echo "Checking file " $FILE
 
 #Global variable and method name changes
@@ -41,7 +39,7 @@ if echo $FILE | grep -q "MTSCreativeTabs"; then
 	sed -i 's/displayAllRelevantItems(List<ItemStack> givenList)/displayAllRelevantItems(NonNullList<ItemStack> givenList)/' $FILE
 	sed -i 's/public Item getTabIconItem()/public ItemStack getTabIconItem()/' $FILE
 	sed -i 's/defaultStack = new ItemStack(this.getTabIconItem())/defaultStack = this.getTabIconItem()/' $FILE
-	sed -i 's/return MTSRegistry.engineAircraftLarge/return new ItemStack(MTSRegistry.engineAircraftLarge)/' $FILE
+	sed -i 's/return MTSRegistry.engineBristolMercury/return new ItemStack(MTSRegistry.engineBristolMercury)/' $FILE
 fi
 
 #Collision methods got a few extra parameters.
