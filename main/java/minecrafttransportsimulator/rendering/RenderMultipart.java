@@ -250,7 +250,8 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			maxZ = Math.max(vertex[2], maxZ);
 		}
 		
-		//If there are more than one of these parts remove everything after the second underscore.
+		//First check parts that have a Left-Right specific rotation.
+		//These have suffixes of _L and _R, so only take away stuff after the second underscore.
 		String partName = entry.getKey(); 
 		while(partName.indexOf('_') != partName.lastIndexOf('_')){
 			partName = partName.substring(0, partName.lastIndexOf('_'));
@@ -259,23 +260,35 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			case("$Door_L"): return new Vec3d(maxX, minY, maxZ);
 			case("$Door_R"): return new Vec3d(minX, minY, maxZ);
 			
+			case("$Aileron_L"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
+			case("$Aileron_R"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
+			case("$Elevator_L"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
+			case("$Elevator_R"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
+			case("$Flap_L"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
+			case("$Flap_R"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
+		}
+		
+		//If we didn't find the part, it must be a singular type.
+		//Remove the underscore and anything after it.
+		if(partName.indexOf('_') != -1){
+			partName = partName.substring(0, partName.indexOf('_'));
+		}
+		switch(partName){
 			case("$Gas"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ);
 			case("$Brake"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ);
 			case("$Parking"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ);
 			case("$Gearshift"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ + (maxZ - minZ)/2D);
 			case("$SteeringWheel"): return new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, maxZ);
 			
-			case("$Aileron_L"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
-			case("$Aileron_R"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
-			case("$Elevator_L"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
-			case("$Elevator_R"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
 			case("$Rudder"): return new Vec3d(0, minY + (maxY - minY)/2D, maxZ);
-			case("$Flap_L"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
-			case("$Flap_R"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
 			case("$WheelStrut"): return new Vec3d(minX + (maxX - minX)/2D, maxY, minZ + (maxZ - minZ)/2D);
-			
-			default: return new Vec3d(0, 0, 0);
+			case("$Throttle"): return new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, maxZ);
+			case("$Yoke"): return new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, maxZ);
+			case("$Stick"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ + (maxZ - minZ)/2D);
 		} 
+		
+		//Default to this if we don't find the rotation.
+		return new Vec3d(0, 0, 0);
 	}
 	
 	private static void renderMainModel(EntityMultipartMoving mover){
@@ -362,7 +375,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			if(mover.parkingBrakeOn && mover.velocity == 0 && !mover.locked){
 				GL11.glRotatef(60F, 0, 1, 0);
 			}
-		}else if(rotatable.name.contains("Gas")){
+		}else if(rotatable.name.contains("Gas") || rotatable.name.contains("Throttle")){
 			GL11.glRotatef(((EntityMultipartVehicle) mover).throttle/4F, 1, 0, 0);
 		}else if(rotatable.name.contains("Brake")){
 			if(((EntityMultipartVehicle) mover).brakeOn){
@@ -394,6 +407,12 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			GL11.glRotatef(((EntityPlane) mover).flapAngle/10F, -1, 0, 0);
 		}else if(rotatable.name.contains("WheelStrut")){
 			GL11.glRotatef(((EntityPlane) mover).rudderAngle/10F, 0, -1, 0);
+		}else if(rotatable.name.contains("Stick")){
+			GL11.glRotatef(((EntityPlane) mover).aileronAngle/10F, 0, 0, 1);
+			GL11.glRotatef(((EntityPlane) mover).elevatorAngle/10F, 1, 0, 0);
+		}else if(rotatable.name.contains("Yoke")){
+			GL11.glRotatef(((EntityPlane) mover).aileronAngle/10F, 0, 0, 1);
+			GL11.glTranslatef(0, 0, -((EntityPlane) mover).elevatorAngle/10F/100F);
 		}
 		
 		//Now translate the part back to it's original position.
