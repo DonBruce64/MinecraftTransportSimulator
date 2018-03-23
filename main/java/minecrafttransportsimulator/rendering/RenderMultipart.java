@@ -120,7 +120,12 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 	}
 	
 	public static boolean doesMultipartHaveLight(EntityMultipartMoving mover, LightTypes light){
-		return lightLists.get(mover.pack.rendering.modelName).contains(light.name().toLowerCase());
+		for(LightPart lightPart : lightLists.get(mover.pack.rendering.modelName)){
+			if(lightPart.type.equals(light)){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private static void render(EntityMultipartMoving mover, EntityPlayer playerRendering, float partialTicks, boolean wasRenderedPrior){
