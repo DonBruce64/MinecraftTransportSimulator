@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.entities.core;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackBeacon;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackInstrument;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackLight;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
@@ -26,7 +26,6 @@ import net.minecraft.world.World;
  */
 public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	public byte throttle;
-	public int lightStatus;
 	public double fuel;
 	public double electricPower = 12;
 	public double electricUsage;
@@ -38,6 +37,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	private byte numberEngineBays = 0;
 	private final Map<Byte, EntityEngine> engineByNumber = new HashMap<Byte, EntityEngine>();
 	private final Map<Byte, Instruments> instruments = new HashMap<Byte, Instruments>();
+	private final List<LightTypes> lightsOn = new ArrayList<LightTypes>();
 	
 	public EntityMultipartVehicle(World world){
 		super(world);
@@ -55,13 +55,10 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 			airDensity = 1.225*Math.pow(2, -posY/500);
 			if(fuel < 0){fuel = 0;}
 			if(electricPower > 2){
-				for(PackLight light : pack.rendering.lights){
-					if((lightStatus>>(light.switchNumber-1) & 1) == 1){
-						electricUsage += light.beamDiameter/5F*light.beamDistance/15F*0.002F;
-					}
-				}
-				for(PackBeacon beacon : pack.rendering.beacons){
-					if((lightStatus>>(beacon.switchNumber-1) & 1) == 1){
+				for(LightTypes light : lightsOn){
+					if(light.hasBeam){
+						electricUsage += 0.004F;
+					}else{
 						electricUsage += 0.00001F;
 					}
 				}
@@ -225,6 +222,22 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		return engineByNumber.get(number);
 	}
 	
+	public void changeLightStatus(LightTypes light, boolean isOn){
+		if(isOn){
+			if(!lightsOn.contains(light)){
+				lightsOn.add(light);
+			}
+		}else{
+			if(lightsOn.contains(light)){
+				lightsOn.remove(light);
+			}
+		}
+	}
+	
+	public boolean isLightOn(LightTypes light){
+		return lightsOn.contains(light);
+	}
+	
 	public Instruments getInstrumentNumber(byte number){
 		return instruments.containsKey(number) ? instruments.get(number) : getBlankInstrument();
 	}
@@ -235,17 +248,25 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	
 	public abstract Instruments getBlankInstrument();
 	
-	public float getLightBrightness(byte lightBank){
-		return (lightBank & this.lightStatus) != 0 ? (electricPower > 2 ? (float) electricPower/12F : 0) : 0;
-	}
-	
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
 		this.throttle=tagCompound.getByte("throttle");
-		this.lightStatus=tagCompound.getInteger("lightStatus");
 		this.fuel=tagCompound.getDouble("fuel");
 		this.electricPower=tagCompound.getDouble("electricPower");
+		
+		lightsOn.clear();
+		String lightsOnString = tagCompound.getString("lightsOn");
+		while(!lightsOnString.isEmpty()){
+			String lightName = lightsOnString.substring(0, lightsOnString.indexOf(','));
+			for(LightTypes light : LightTypes.values()){
+				if(light.name().equals(lightName)){
+					lightsOn.add(light);
+					break;
+				}
+			}
+			lightsOnString = lightsOnString.substring(lightsOnString.indexOf(',') + 1);
+		}
 		
 		byte[] instrumentsInSlots = tagCompound.getByteArray("instrumentsInSlots");
 		for(byte i = 0; i<pack.motorized.instruments.size(); ++i){
@@ -263,9 +284,14 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);		
 		tagCompound.setByte("throttle", this.throttle);
-		tagCompound.setInteger("lightStatus", this.lightStatus);
 		tagCompound.setDouble("fuel", this.fuel);
 		tagCompound.setDouble("electricPower", this.electricPower);
+		
+		String lightsOnString = "";
+		for(LightTypes light : this.lightsOn){
+			lightsOnString += light.name() + ",";
+		}
+		tagCompound.setString("lightsOn", lightsOnString);
 		
 		byte[] instrumentsInSlots = new byte[pack.motorized.instruments.size()];
 		for(byte i=0; i<instrumentsInSlots.length; ++i){
@@ -277,5 +303,25 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		}
 		tagCompound.setByteArray("instrumentsInSlots", instrumentsInSlots);
 		return tagCompound;
+	}
+	
+	public enum LightTypes{
+		NAVIGATION(false),
+		STROBE(false),
+		TAXI(true),
+		LANDING(true),
+		BRAKE(false),
+		BACKUP(false),
+		LEFTTURN(false),
+		RIGHTTURN(false),
+		RUNNINGLIGHT(false),
+		HEADLIGHT(true),
+		SEARCHLIGHT(true);
+		
+		public final boolean hasBeam;
+		
+		private LightTypes(boolean hasBeam){
+			this.hasBeam = hasBeam;
+		}
 	}
 }

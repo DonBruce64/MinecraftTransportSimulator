@@ -14,16 +14,15 @@ import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackBeacon;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackControl;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackDisplayText;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackInstrument;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackLight;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle.LightTypes;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityEngineCar;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
@@ -65,13 +64,16 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 	private static final Map<String, List<RotatablePart>> rotatableLists = new HashMap<String, List<RotatablePart>>();
 	/**Window parts for models.  Keyed by model name.*/
 	private static final Map<String, List<WindowPart>> windowLists = new HashMap<String, List<WindowPart>>();
+	/**Lights for models.  Keyed by model name.*/
+	private static final Map<String, List<LightPart>> lightLists = new HashMap<String, List<LightPart>>();
 	/**Model texture name.  Keyed by model name.*/
 	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
 	private static final Map<EntityMultipartMoving, Byte> lastRenderPass = new HashMap<EntityMultipartMoving, Byte>();
 	private static final Map<EntityMultipartMoving, Long> lastRenderTick = new HashMap<EntityMultipartMoving, Long>();
 	private static final Map<EntityMultipartMoving, Float> lastRenderPartial = new HashMap<EntityMultipartMoving, Float>();
 	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
-	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/parts/lensflare.png");
+	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lensflare.png");
+	private static final ResourceLocation lightTexture = new ResourceLocation(MTS.MODID, "textures/rendering/light.png");
 	
 	public RenderMultipart(RenderManager renderManager){
 		super(renderManager);
@@ -113,8 +115,13 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		displayLists.clear();
 		rotatableLists.clear();
 		windowLists.clear();
+		lightLists.clear();
 	}
-		
+	
+	public static boolean doesMultipartHaveLight(EntityMultipartMoving mover, LightTypes light){
+		return lightLists.get(mover.pack.rendering.modelName).contains(light.name().toLowerCase());
+	}
+	
 	private static void render(EntityMultipartMoving mover, EntityPlayer playerRendering, float partialTicks, boolean wasRenderedPrior){
 		//Calculate various things.
 		Entity renderViewEntity = minecraft.getRenderViewEntity();
@@ -204,9 +211,9 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 	        GL11.glRotated(rotateRoll, 0, 0, 1);
 
 	        renderLights(vehicle, sunLight, blockLight, lightBrightness, electricFactor, wasRenderedPrior);
-			if(!wasRenderedPrior){
+			/*if(!wasRenderedPrior){
 				renderBeacons(vehicle, sunLight, blockLight, lightBrightness, electricFactor);
-			}
+			}*/
 			GL11.glDisable(GL11.GL_NORMALIZE);
 			GL11.glPopMatrix();
 			
@@ -285,7 +292,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			case("$Throttle"): return new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, maxZ);
 			case("$Yoke"): return new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, maxZ);
 			case("$Stick"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ + (maxZ - minZ)/2D);
-		} 
+		}
 		
 		//Default to this if we don't find the rotation.
 		return new Vec3d(0, 0, 0);
@@ -320,18 +327,23 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 			GL11.glBegin(GL11.GL_TRIANGLES);
 			List<RotatablePart> rotatableParts = new ArrayList<RotatablePart>();
+			List<LightPart> lightParts = new ArrayList<LightPart>();
 			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
 				//Don't add movable model parts or windows to the display list.
 				//Those go in separate maps, with windows getting parsed after all parts in case they're movable.
+				//Do add lights, as they will be rendered both as part of the model and with special things.
 				if(!entry.getKey().toLowerCase().contains("window")){
-					if(!entry.getKey().toLowerCase().contains("$")){
+					if(entry.getKey().contains("$")){
+						rotatableParts.add(new RotatablePart(entry.getKey(), getRotationPointForRotatable(entry), entry.getValue()));
+					}else{
 						for(Float[] vertex : entry.getValue()){
 							GL11.glTexCoord2f(vertex[3], vertex[4]);
 							GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
 							GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
 						}
-					}else{
-						rotatableParts.add(new RotatablePart(entry.getKey(), getRotationPointForRotatable(entry), entry.getValue()));
+						if(entry.getKey().contains("&")){
+							lightParts.add(new LightPart(entry.getKey(), entry.getValue()));
+						}
 					}
 				}
 			}
@@ -352,9 +364,10 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				}
 			}
 			
-			//Now finalize the moving and window maps.
+			//Now finalize the maps.
 			rotatableLists.put(mover.pack.rendering.modelName, rotatableParts);
 			windowLists.put(mover.pack.rendering.modelName, windows);
+			lightLists.put(mover.pack.rendering.modelName, lightParts);
 			GL11.glEnd();
 			GL11.glEndList();
 			displayLists.put(mover.pack.rendering.modelName, displayListIndex);
@@ -491,10 +504,13 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		RenderHelper.enableStandardItemLighting();
 	}
 	
-	private static void renderLights(EntityMultipartVehicle vehicle, float sunLight, float blockLight, float lightBrightness, float electricFactor, boolean wasRenderedPrior){		
-		for(PackLight light : vehicle.pack.rendering.lights){
-			boolean lightOn = (vehicle.lightStatus>>(light.switchNumber-1) & 1) == 1;
-			boolean overrideCaseBrightness = lightBrightness > Math.max(sunLight, blockLight) && lightOn && lightBrightness > 0;
+	private static void renderLights(EntityMultipartVehicle vehicle, float sunLight, float blockLight, float lightBrightness, float electricFactor, boolean wasRenderedPrior){
+		for(LightPart light : lightLists.get(vehicle.pack.rendering.modelName)){
+			boolean lightSwitchOn = vehicle.isLightOn(light.type);
+			//Fun with bit shifting!  20 bits make up the light on index here, so align to a 20 tick cycle.
+			boolean lightActuallyOn = lightSwitchOn && ((light.flashBits >> vehicle.ticksExisted%20) & 1) > 0;
+			//Used to make the cases of the lights full brightness.  Used when lights are brighter than the surroundings.
+			boolean overrideCaseBrightness = lightBrightness > Math.max(sunLight, blockLight) && lightActuallyOn;
 
 			if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
 				GL11.glPushMatrix();
@@ -507,211 +523,119 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				}
 				GL11.glEnable(GL11.GL_TEXTURE_2D);
 				GL11.glDisable(GL11.GL_BLEND);
+				
+				//Cover rendering.
 				minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
-				GL11.glTranslatef(light.pos[0], light.pos[1], light.pos[2]);
-				GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
-				GL11.glRotatef(light.rot[0], 1, 0, 0);
-				GL11.glRotatef(light.rot[1], 0, 1, 0);
-				GL11.glRotatef(light.rot[2], 0, 0, 1);
-				GL11.glColor3f(1.0F, 1.0F, 1.0F);
+				GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+				GL11.glBegin(GL11.GL_TRIANGLES);
+				for(Float[] vertex : light.vertices){
+					//Add a slight translation and scaling to the light coords based on the normals to make the lens cover.
+					//Also modify the cover size to ensure the whole cover is a single glass square.
+					GL11.glTexCoord2f(vertex[3], vertex[4]);
+					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+					GL11.glVertex3f(vertex[0]+vertex[5]*0.0002F, vertex[1]+vertex[6]*0.0002F, vertex[2]+vertex[7]*0.0002F);	
+				}
+				GL11.glEnd();
 				
-				//Light case cover.
-				GL11.glPushMatrix();
-				GL11.glTranslatef(0, 0, 0.01F);
-				GL11.glRotatef(180, 0, 1, 0);
-				renderQuad(light.width, light.length);
-				GL11.glPopMatrix();
-				
-				if(lightOn){
-					//Light pre-render operations
-					GL11.glDisable(GL11.GL_TEXTURE_2D);
+				//Light rendering.
+				if(lightActuallyOn){
 					GL11.glDisable(GL11.GL_LIGHTING);
 					GL11.glEnable(GL11.GL_BLEND);
-					Color lightColor = Color.decode(light.color);
-					GL11.glColor4f(lightColor.getRed(), lightColor.getGreen(), lightColor.getBlue(), electricFactor);
-					
-					//Light center.
-					GL11.glPushMatrix();
-					GL11.glTranslatef(0, 0, 0.005F);
-					GL11.glRotatef(180, 1, 0, 0);
-					renderQuad(light.width, light.length);
-					GL11.glPopMatrix();
-					
+					minecraft.getTextureManager().bindTexture(lightTexture);
+					GL11.glColor4f(light.color.getRed(), light.color.getGreen(), light.color.getBlue(), electricFactor);
+					GL11.glBegin(GL11.GL_TRIANGLES);
+					for(Float[] vertex : light.vertices){
+						//Add a slight translation and scaling to the light coords based on the normals to make the light.
+						GL11.glTexCoord2f(vertex[3], vertex[4]);
+						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+						GL11.glVertex3f(vertex[0]+vertex[5]*0.0001F, vertex[1]+vertex[6]*0.0001F, vertex[2]+vertex[7]*0.0001F);	
+					}
+					GL11.glEnd();
 					GL11.glDisable(GL11.GL_BLEND);
 					GL11.glEnable(GL11.GL_LIGHTING);
-					GL11.glEnable(GL11.GL_TEXTURE_2D);
 				}
 				GL11.glPopMatrix();
 			}
 			
-			//Light cone
-			if(lightOn && light.beamDistance != 0 && MinecraftForgeClient.getRenderPass() == -1 && lightBrightness > 0){
+			//Lens flare.
+			if(lightActuallyOn && lightBrightness > 0 && MinecraftForgeClient.getRenderPass() != 0 && !wasRenderedPrior){
+				for(byte i=0; i<light.centerPoints.length; ++i){
+					GL11.glPushMatrix();
+					GL11.glEnable(GL11.GL_TEXTURE_2D);
+					GL11.glEnable(GL11.GL_BLEND);
+					GL11.glDisable(GL11.GL_LIGHTING);
+					minecraft.entityRenderer.disableLightmap();
+					//TODO have Limit make a new flare texture here.
+					minecraft.getTextureManager().bindTexture(lensFlareTexture);
+					
+					GL11.glBegin(GL11.GL_TRIANGLES);
+					for(byte j=0; j<6; ++j){
+						Float[] vertex = light.vertices[((short) i)*6+j];
+						//Add a slight translation to the light size to make the flare move off it.
+						//Then apply scaling factor to make the flare larger than the light.
+						GL11.glTexCoord2f(vertex[3], vertex[4]);
+						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+						GL11.glVertex3d(vertex[0]+vertex[5]*0.0001F + (vertex[0] - light.centerPoints[i].xCoord)*light.size[i], 
+								vertex[1]+vertex[6]*0.0001F + (vertex[1] - light.centerPoints[i].yCoord)*light.size[i], 
+								vertex[2]+vertex[7]*0.0001F + (vertex[2] - light.centerPoints[i].zCoord)*light.size[i]);	
+					}
+					GL11.glEnd();
+					GL11.glPopMatrix();
+				}
+			}
+			
+			//Render beam if light has one.
+			if(lightActuallyOn && lightBrightness > 0 && light.type.hasBeam && MinecraftForgeClient.getRenderPass() == -1){
 				GL11.glPushMatrix();
 		    	GL11.glColor4f(1, 1, 1, Math.min(vehicle.electricPower > 4 ? 1.0F : 0, lightBrightness/2F));
+		    	//TODO have Limit make a beam texture here.
 		    	GL11.glDisable(GL11.GL_TEXTURE_2D);
 		    	GL11.glDisable(GL11.GL_LIGHTING);
 		    	GL11.glEnable(GL11.GL_BLEND);
 		    	//Allows changing by changing alpha value.
 		    	GL11.glDepthMask(false);
 		    	GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
-		    	
 				minecraft.entityRenderer.disableLightmap();
-				GL11.glTranslatef(light.pos[0], light.pos[1], light.pos[2]);
-				GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
-				GL11.glRotatef(light.lightRot[0], 0, 1, 0);
-				GL11.glRotatef(light.lightRot[1], 1, 0, 0);
-				GL11.glRotatef(light.lightRot[2], 0, 0, 0);
-				GL11.glScalef(16F, 16F, 16F);
-				GL11.glDepthMask(false);
-				byte lightReps = (byte) ((light.brightness/20F) + 1);
-				for(byte i=0; i<=lightReps; ++i){
-		    		drawCone(light.beamDiameter, light.beamDistance, false);
-		    	}
-		    	drawCone(light.beamDiameter, light.beamDistance, true);
+				
+				//As we can have more than one light per definition, we will only render 6 vertices at a time.
+				//Use the center point arrays for this; normals are the same for all 6 vertex sets so use whichever.
+				for(byte i=0; i<light.centerPoints.length; ++i){
+					GL11.glPushMatrix();
+					GL11.glTranslated(light.centerPoints[i].xCoord - light.vertices[i*6][5]*0.15F, light.centerPoints[i].yCoord - light.vertices[i*6][6]*0.15F, light.centerPoints[i].zCoord - light.vertices[i*6][7]*0.15F);
+					Vec3d endpointVec = new Vec3d(light.vertices[i*6][5]*light.size[i]*2F, light.vertices[i*6][6]*light.size[i]*2F, light.vertices[i*6][7]*light.size[i]*2F);
+					//Now that we are at the starting location for the beam, rotate the matrix to get the correct direction.
+					GL11.glDepthMask(false);
+					for(byte j=0; j<=2; ++j){
+			    		drawCone(endpointVec, light.size[i]*0.75F, false);
+			    	}
+					drawCone(endpointVec, light.size[i]*0.75F, true);
+					GL11.glPopMatrix();
+				}
 		    	GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		    	GL11.glDepthMask(true);
+				GL11.glDisable(GL11.GL_BLEND);
+				GL11.glEnable(GL11.GL_LIGHTING);
+				GL11.glEnable(GL11.GL_TEXTURE_2D);
 				GL11.glPopMatrix();
-			}
-			
-			if(MinecraftForgeClient.getRenderPass() != 0 && !wasRenderedPrior){
-				//Render lens flare in pass 1 or -1 for transparency.
-				if(lightOn && lightBrightness > 0){
-					renderLensFlare(light.pos, light.rot, light.brightness, light.color, lightBrightness, true);
-				}
 			}
 		}
 	}
 	
-    private static void drawCone(double r, double l, boolean reverse){
+    private static void drawCone(Vec3d endPoint, double radius, boolean reverse){
 		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
 		GL11.glVertex3d(0, 0, 0);
     	if(reverse){
     		for(float theta=0; theta < 2*Math.PI + 0.1; theta += 2F*Math.PI/40F){
-    			GL11.glVertex3d(r*Math.cos(theta), r*Math.sin(theta), l);
+    			GL11.glVertex3d(endPoint.xCoord + radius*Math.cos(theta), endPoint.yCoord + radius*Math.sin(theta), endPoint.zCoord);
     		}
     	}else{
     		for(float theta=(float) (2*Math.PI); theta>=0 - 0.1; theta -= 2F*Math.PI/40F){
-    			GL11.glVertex3d(r*Math.cos(theta), r*Math.sin(theta), l);
+    			GL11.glVertex3d(endPoint.xCoord + radius*Math.cos(theta), endPoint.yCoord + radius*Math.sin(theta), endPoint.zCoord);
     		}
     	}
     	GL11.glEnd();
     }
-	
-	private static void renderBeacons(EntityMultipartVehicle vehicle, float sunLight, float blockLight, float lightBrightness, float electricFactor){		
-		for(PackBeacon beacon : vehicle.pack.rendering.beacons){
-			boolean beaconOn = (vehicle.lightStatus>>(beacon.switchNumber-1) & 1) == 1 && (!beacon.flashing || vehicle.ticksExisted%20 <= 2);
-			boolean overrideCaseBrightness = lightBrightness > Math.max(sunLight, blockLight) && beaconOn;
-
-			if(MinecraftForgeClient.getRenderPass() != 1){
-				GL11.glPushMatrix();
-				if(overrideCaseBrightness){
-					GL11.glDisable(GL11.GL_LIGHTING);
-					minecraft.entityRenderer.disableLightmap();
-				}else{
-					GL11.glEnable(GL11.GL_LIGHTING);
-					minecraft.entityRenderer.enableLightmap();
-				}
-				GL11.glEnable(GL11.GL_TEXTURE_2D);
-				GL11.glDisable(GL11.GL_BLEND);
-				minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
-				GL11.glTranslatef(beacon.pos[0], beacon.pos[1], beacon.pos[2]);
-				GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
-				GL11.glRotatef(beacon.rot[0], 1, 0, 0);
-				GL11.glRotatef(beacon.rot[1], 0, 1, 0);
-				GL11.glRotatef(beacon.rot[2], 0, 0, 1);
-				GL11.glColor3f(1.0F, 1.0F, 1.0F);
-			
-				//Light case edges.
-				for(byte i=0; i<=3; ++i){
-					GL11.glPushMatrix();
-					GL11.glRotatef(90*i, 0, 1, 0);
-					if(i == 0 || i == 2){
-						GL11.glTranslatef(0, beacon.height/2F, -beacon.length/2F);
-						renderQuad(beacon.width, beacon.height);
-					}else{
-						GL11.glTranslatef(0, beacon.height/2F, -beacon.width/2F);
-						renderQuad(beacon.length, beacon.height);
-					}
-					GL11.glPopMatrix();
-				}
-				
-				//Light case cover.
-				GL11.glPushMatrix();
-				GL11.glTranslatef(0, beacon.height, 0);
-				GL11.glRotatef(90, 1, 0, 0);
-				renderQuad(beacon.width, beacon.length);
-				GL11.glPopMatrix();
-				
-				if(beaconOn){
-					//Light pre-render operations
-					GL11.glDisable(GL11.GL_TEXTURE_2D);
-					GL11.glDisable(GL11.GL_LIGHTING);
-					GL11.glEnable(GL11.GL_BLEND);
-					Color beaconColor = Color.decode(beacon.color);
-					GL11.glColor4f(beaconColor.getRed(), beaconColor.getGreen(), beaconColor.getBlue(), electricFactor);
-					
-					//Light edges.
-					for(byte i=0; i<=3; ++i){
-						GL11.glPushMatrix();
-						GL11.glRotatef(90*i, 0, 1, 0);
-						if(i == 0 || i == 2){
-							GL11.glTranslatef(0, beacon.height/2F - 0.01F, -beacon.length/2F + 0.01F);
-							renderQuad(beacon.width, beacon.height);
-						}else{
-							GL11.glTranslatef(0, beacon.height/2F, -beacon.width/2F);
-							renderQuad(beacon.length, beacon.height);
-						}
-						GL11.glPopMatrix();
-					}
-					
-					
-					//Light center.
-					GL11.glPushMatrix();
-					GL11.glTranslatef(0, beacon.height - 0.005F, 0);
-					GL11.glRotatef(90, 1, 0, 0);
-					renderQuad(beacon.width - 0.01F, beacon.length - 0.01F);
-					GL11.glPopMatrix();
-					
-					GL11.glDisable(GL11.GL_BLEND);
-					GL11.glEnable(GL11.GL_LIGHTING);
-					GL11.glEnable(GL11.GL_TEXTURE_2D);
-				}				
-				GL11.glPopMatrix();
-			}
-			if(MinecraftForgeClient.getRenderPass() != 0){
-				//Render lens flare in pass 1 or -1 for transparency.
-				if(beaconOn && lightBrightness > 0){
-					renderLensFlare(beacon.pos, beacon.rot, beacon.brightness, beacon.color, lightBrightness, false);
-				}
-			}
-		}
-	}
-	
-	private static void renderLensFlare(float[] pos, float[] rot, float size, String color, float brightness, boolean isLight){
-		GL11.glPushMatrix();
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glDisable(GL11.GL_LIGHTING);
-		minecraft.entityRenderer.disableLightmap();
-		minecraft.getTextureManager().bindTexture(lensFlareTexture);
-		GL11.glTranslatef(pos[0], pos[1], pos[2]);
-		GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
-		GL11.glRotatef(rot[0], 1, 0, 0);
-		GL11.glRotatef(rot[1], 0, 1, 0);
-		GL11.glRotatef(rot[2], 0, 0, 1);
-		if(isLight){
-			GL11.glRotatef(180, 0, 1, 0);
-		}else{
-			GL11.glRotatef(90, 1, 0, 0);
-		}
-		GL11.glTranslatef(0, 0, -0.001F);
-		
-		Color flareColor = Color.decode(color);
-		GL11.glColor4f(flareColor.getRed()/255F, flareColor.getGreen()/255F, flareColor.getBlue()/255F, brightness);
-		renderQuad(size*brightness, size*brightness);
-		GL11.glPopMatrix();
-	}
-	
+    
 	private static void renderQuad(float width, float height){
 		GL11.glBegin(GL11.GL_QUADS);
 		GL11.glTexCoord2f(0, 0);
@@ -898,6 +822,65 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		private WindowPart(String name, Float[][] vertices){
 			this.name = name;
 			this.vertices = vertices;
+		}
+	}
+	
+	private static final class LightPart{
+		private final LightTypes type;
+		private final Float[][] vertices;
+		private final Vec3d[] centerPoints;
+		private final Float[] size;
+		private final Color color;
+		private final int flashBits;
+		
+		private LightPart(String name, Float[][] vertices){
+			this.type = getTypeFromName(name.substring(1, name.indexOf('_')).toLowerCase());
+			this.vertices = vertices;
+			this.centerPoints = new Vec3d[vertices.length/6];
+			this.size = new Float[vertices.length/6];
+			
+			for(byte i=0; i<centerPoints.length; ++i){
+				double minX = 999;
+				double maxX = -999;
+				double minY = 999;
+				double maxY = -999;
+				double minZ = 999;
+				double maxZ = -999;
+				for(byte j=0; j<6; ++j){
+					Float[] vertex = this.vertices[((short) i)*6 + j];
+					minX = Math.min(vertex[0], minX);
+					maxX = Math.max(vertex[0], maxX);
+					minY = Math.min(vertex[1], minY);
+					maxY = Math.max(vertex[1], maxY);
+					minZ = Math.min(vertex[2], minZ);
+					maxZ = Math.max(vertex[2], maxZ);
+					
+					//Adjust UV point here to change this to glass coords.
+					switch(j){
+						case(0): vertex[3] = 0.0F; vertex[4] = 0.0F; break;
+						case(1): vertex[3] = 0.0F; vertex[4] = 1.0F; break;
+						case(2): vertex[3] = 1.0F; vertex[4] = 1.0F; break;
+						case(3): vertex[3] = 1.0F; vertex[4] = 1.0F; break;
+						case(4): vertex[3] = 1.0F; vertex[4] = 0.0F; break;
+						case(5): vertex[3] = 0.0F; vertex[4] = 0.0F; break;
+					}
+				}
+				centerPoints[i] = new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
+				size[i] = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*16F;
+			}
+			//Lights are in the format of "&NAME_FFFFFF_FFFFF_EXTRASTUFF"
+			//Where NAME is what switch it goes to, FFFFFF is the color, and FFFFF is the blink rate. 
+			this.color = Color.decode("0x" + name.substring(name.indexOf('_') + 1, name.indexOf('_') + 7));
+			this.flashBits = Integer.decode("0x" + name.substring(name.lastIndexOf('_') + 1, name.lastIndexOf('_') + 6));
+		}
+		
+		private LightTypes getTypeFromName(String lightName){
+			for(LightTypes light : LightTypes.values()){
+				if(light.name().toLowerCase().equals(lightName)){
+					return light;
+				}
+			}
+			return null;
 		}
 	}
 }

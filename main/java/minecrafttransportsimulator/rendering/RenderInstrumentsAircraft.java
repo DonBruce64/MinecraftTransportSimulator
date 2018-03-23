@@ -4,6 +4,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle.LightTypes;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.sounds.StallSound;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -16,7 +17,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
 	 * EngineNumber can be 0 to draw a uni-gauge.
 	 */
 	protected static void drawAircraftInstrument(EntityMultipartVehicle vehicle, int x, int y, Instruments instrument, boolean hud, byte engineNumber){
-		boolean lightsOn = (vehicle.lightStatus & 1) == 1 && vehicle.electricPower > 3;
+		boolean lightsOn = vehicle.isLightOn(LightTypes.NAVIGATION) && vehicle.electricPower > 3;
 		
 		GL11.glPushMatrix();
 		if(!hud){

@@ -7,10 +7,12 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle.LightTypes;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
 import minecrafttransportsimulator.packets.control.EnginePacket;
 import minecrafttransportsimulator.packets.control.LightPacket;
 import minecrafttransportsimulator.rendering.RenderHUD;
+import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
@@ -29,6 +31,9 @@ public class GUIPanelAircraft extends GuiScreen{
 	
 	private final EntityMultipartVehicle aircraft;
 	private final EntityEngine[] engines;
+	private final boolean[] hasLight;
+	private final LightTypes[] lights = new LightTypes[]{LightTypes.NAVIGATION, LightTypes.STROBE, LightTypes.TAXI, LightTypes.LANDING};
+	String[] lightText = new String[]{I18n.format("gui.panel.navigationlights"), I18n.format("gui.panel.strobelights"), I18n.format("gui.panel.taxilights"), I18n.format("gui.panel.landinglights")};
 	private final int[][] lightButtonCoords;
 	private final int[][] magnetoButtonCoords;
 	private final int[][] starterButtonCoords;
@@ -42,6 +47,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		for(byte i=1; i<=engines.length; ++i){
 			engines[i-1] = aircraft.getEngineByNumber(i);
 		}
+		hasLight = new boolean[4];
 		lightButtonCoords = new int[4][4];
 		magnetoButtonCoords = new int[engines.length][4];
 		if(ConfigSystem.getBooleanConfig("ElectricStart")){
@@ -54,6 +60,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	@Override
 	public void initGui(){
 		for(byte i=0; i<lightButtonCoords.length; ++i){
+			hasLight[i] = RenderMultipart.doesMultipartHaveLight(aircraft, lights[i]);
 			lightButtonCoords[i] = new int[]{this.width/20-8, this.width/20+8, (i+6)*this.height/10+16, (i+6)*this.height/10-0};
 		}
 		for(byte i=0; i<magnetoButtonCoords.length; ++i){
@@ -73,9 +80,9 @@ public class GUIPanelAircraft extends GuiScreen{
 			return;
 		}
 		
-		//If the lights are on, we want to light up the switches in the panel.
+		//If the navigation lights are on, we want to light up the switches in the panel.
 		//This is done in numerous places.
-		final boolean lightsOn = (aircraft.lightStatus & 1) == 1 && aircraft.electricPower > 3;
+		final boolean lightsOn = aircraft.isLightOn(LightTypes.NAVIGATION) && aircraft.electricPower > 3;
 		
 		//Disable the main HUD overlay if it's active.
 		CameraSystem.disableHUD = true;
@@ -83,12 +90,10 @@ public class GUIPanelAircraft extends GuiScreen{
 		//Note that while this is technically a GUI, the GUI parameter is for the instrument GUI.
 		RenderHUD.drawAuxiliaryHUD(aircraft, width, height, false);
 
-		//Render the 4 light buttons.
-		//The 4-bit pack value corresponds to the presence of lights.
-		//Reference the bits to check if there's a 1 in the position, and render if so.
-		for(byte i=0; i<lightButtonCoords.length; ++i){
-			if(aircraft.pack.plane.lightSetup.substring(i, i+1).equals("1")){
-				drawRedstoneButton(lightButtonCoords[i], (aircraft.lightStatus & 1<<i) > 0);
+		//Render the 4 light buttons if we have lights for them.
+		for(byte i=0; i<hasLight.length; ++i){
+			if(hasLight[i]){
+				drawRedstoneButton(lightButtonCoords[i], aircraft.isLightOn(lights[i]));
 			}
 		}
 		
@@ -105,10 +110,8 @@ public class GUIPanelAircraft extends GuiScreen{
 		}
 
 		//Render light button text.
-		String[] lightText = new String[]{I18n.format("gui.panel.navigationlights"), I18n.format("gui.panel.strobelights"), I18n.format("gui.panel.taxilights"), I18n.format("gui.panel.landinglights")};
 		for(byte i=0; i<lightButtonCoords.length; ++i){
-			boolean hasLight = aircraft.pack.plane.lightSetup.substring(i, i+1).equals("1");
-			if(hasLight){
+			if(hasLight[i]){
 				int textX = lightButtonCoords[i][0] + (lightButtonCoords[i][1] - lightButtonCoords[i][0])/2;
 				int textY = lightButtonCoords[i][2] + 2; 
 				GL11.glPushMatrix();
@@ -161,9 +164,8 @@ public class GUIPanelAircraft extends GuiScreen{
 			//Check if a light button has been pressed.
 			for(byte i=0; i<lightButtonCoords.length; ++i){
 				if(x > lightButtonCoords[i][0] && x < lightButtonCoords[i][1] && y < lightButtonCoords[i][2] && y > lightButtonCoords[i][3]){
-					boolean hasLight = aircraft.pack.plane.lightSetup.substring(i, i+1).equals("1");
-					if(hasLight){
-						MTS.MTSNet.sendToServer(new LightPacket(aircraft.getEntityId(), (byte) (1<<i)));
+					if(hasLight[i]){
+						MTS.MTSNet.sendToServer(new LightPacket(aircraft.getEntityId(), lights[i]));
 					}
 				}
 			}

@@ -21,8 +21,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 
 public class EntityCar extends EntityMultipartVehicle implements SFXEntity{	
+	public boolean hornOn;
 	//Note that angle variable should be divided by 10 to get actual angle.
-	public boolean isHornOn;
 	public short steeringAngle;
 	public short steeringCooldown;
 	
@@ -54,17 +54,9 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 		velocity = velocityVec.dot(headingVec);
 		velocityVec = velocityVec.normalize();
 		
-		//Turn on brake, backup, and turn signal lights if they are activated.
-		if(this.brakeOn){
-			lightStatus |= 2; 
-		}else{
-			lightStatus &= 13;
-		}
-		if(this.engine != null && this.engine.getCurrentGear() < 0){
-			lightStatus |= 4; 
-		}else{
-			lightStatus &= 11;
-		}
+		//Turn on brake and backup lights if they are activated.
+		changeLightStatus(LightTypes.BRAKE, brakeOn);
+		changeLightStatus(LightTypes.BACKUP, this.engine != null && this.engine.getCurrentGear() < 0);
 	}
 	
 	@Override
@@ -159,7 +151,7 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public boolean shouldSoundBePlaying(){
-		return isHornOn && !isDead;
+		return hornOn && !isDead;
 	}
 	
 	@Override

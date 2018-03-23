@@ -48,7 +48,6 @@ public class MTSPackObject{
         public float rudderArea;
         public float elevatorArea;
         public float defaultElevatorAngle;
-    	public String lightSetup;
     }
     
     public class PackCar{
@@ -90,8 +89,6 @@ public class MTSPackObject{
     public class PackRenderingConfig{
         public String modelName;
         public List<PackDisplayText> textMarkings = new ArrayList<PackDisplayText>();
-        public List<PackLight> lights = new ArrayList<PackLight>();
-        public List<PackBeacon> beacons = new ArrayList<PackBeacon>();
     }
     
     public class PackDisplayText{
@@ -99,30 +96,5 @@ public class MTSPackObject{
         public float[] rot;
         public float scale;
         public String color;
-    }
-    
-    public class PackLight{
-        public float[] pos;
-        public float[] rot;
-        public float[] lightRot;
-        public int width;
-        public int length;
-        public int brightness;
-        public int switchNumber;
-        public String color;
-        public int beamDistance;
-        public int beamDiameter;
-    }
-    
-    public class PackBeacon{
-        public float[] pos;
-        public float[] rot;
-        public int width;
-        public int length;
-        public int height;
-        public int brightness;
-        public int switchNumber;
-        public String color;
-        public boolean flashing;
     }
 }

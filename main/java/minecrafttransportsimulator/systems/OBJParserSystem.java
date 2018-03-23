@@ -104,7 +104,6 @@ public final class OBJParserSystem{
 				//This only happens when there's quads in an obj.
 				//Make a second face by
 				//duplicating point 3, adding point 4, and duplicating point 1.
-				//Otherwise put the 4th face in the list.
 				int defEnd = faceString.indexOf(' ');
 				if(defEnd != -1){
 					faceString = faceString.substring(0, defEnd);

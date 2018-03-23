@@ -44,7 +44,7 @@ public class HornPacket implements IMessage{
 						thisEntity = (EntityCar) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
-						thisEntity.isHornOn = message.hornOn;
+						thisEntity.hornOn = message.hornOn;
 						
 						if(ctx.side.isServer()){
 							MTS.MTSNet.sendToAll(message);
