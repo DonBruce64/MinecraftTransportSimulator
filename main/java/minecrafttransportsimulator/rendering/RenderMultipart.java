@@ -533,7 +533,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 					//Also modify the cover size to ensure the whole cover is a single glass square.
 					GL11.glTexCoord2f(vertex[3], vertex[4]);
 					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-					GL11.glVertex3f(vertex[0]+vertex[5]*0.0002F, vertex[1]+vertex[6]*0.0002F, vertex[2]+vertex[7]*0.0002F);	
+					GL11.glVertex3f(vertex[0]+vertex[5]*0.0003F, vertex[1]+vertex[6]*0.0003F, vertex[2]+vertex[7]*0.0003F);	
 				}
 				GL11.glEnd();
 				
@@ -565,9 +565,8 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 					GL11.glEnable(GL11.GL_BLEND);
 					GL11.glDisable(GL11.GL_LIGHTING);
 					minecraft.entityRenderer.disableLightmap();
-					//TODO have Limit make a new flare texture here.
 					minecraft.getTextureManager().bindTexture(lensFlareTexture);
-					
+					GL11.glColor4f(light.color.getRed(), light.color.getGreen(), light.color.getBlue(), lightBrightness);
 					GL11.glBegin(GL11.GL_TRIANGLES);
 					for(byte j=0; j<6; ++j){
 						Float[] vertex = light.vertices[((short) i)*6+j];
@@ -575,9 +574,9 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 						//Then apply scaling factor to make the flare larger than the light.
 						GL11.glTexCoord2f(vertex[3], vertex[4]);
 						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-						GL11.glVertex3d(vertex[0]+vertex[5]*0.0001F + (vertex[0] - light.centerPoints[i].xCoord)*light.size[i], 
-								vertex[1]+vertex[6]*0.0001F + (vertex[1] - light.centerPoints[i].yCoord)*light.size[i], 
-								vertex[2]+vertex[7]*0.0001F + (vertex[2] - light.centerPoints[i].zCoord)*light.size[i]);	
+						GL11.glVertex3d(vertex[0]+vertex[5]*0.0002F + (vertex[0] - light.centerPoints[i].xCoord)*light.size[i], 
+								vertex[1]+vertex[6]*0.0002F + (vertex[1] - light.centerPoints[i].yCoord)*light.size[i], 
+								vertex[2]+vertex[7]*0.0002F + (vertex[2] - light.centerPoints[i].zCoord)*light.size[i]);	
 					}
 					GL11.glEnd();
 					GL11.glPopMatrix();
