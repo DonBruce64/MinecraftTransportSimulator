@@ -74,6 +74,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lensflare.png");
 	private static final ResourceLocation lightTexture = new ResourceLocation(MTS.MODID, "textures/rendering/light.png");
+	private static final ResourceLocation lightBeamTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lightbeam.png");
 	
 	public RenderMultipart(RenderManager renderManager){
 		super(renderManager);
@@ -521,7 +522,6 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 					GL11.glEnable(GL11.GL_LIGHTING);
 					minecraft.entityRenderer.enableLightmap();
 				}
-				GL11.glEnable(GL11.GL_TEXTURE_2D);
 				GL11.glDisable(GL11.GL_BLEND);
 				
 				//Cover rendering.
@@ -561,7 +561,6 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			if(lightActuallyOn && lightBrightness > 0 && MinecraftForgeClient.getRenderPass() != 0 && !wasRenderedPrior){
 				for(byte i=0; i<light.centerPoints.length; ++i){
 					GL11.glPushMatrix();
-					GL11.glEnable(GL11.GL_TEXTURE_2D);
 					GL11.glEnable(GL11.GL_BLEND);
 					GL11.glDisable(GL11.GL_LIGHTING);
 					minecraft.entityRenderer.disableLightmap();
@@ -586,15 +585,14 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			//Render beam if light has one.
 			if(lightActuallyOn && lightBrightness > 0 && light.type.hasBeam && MinecraftForgeClient.getRenderPass() == -1){
 				GL11.glPushMatrix();
-		    	GL11.glColor4f(1, 1, 1, Math.min(vehicle.electricPower > 4 ? 1.0F : 0, lightBrightness/2F));
-		    	//TODO have Limit make a beam texture here.
-		    	GL11.glDisable(GL11.GL_TEXTURE_2D);
 		    	GL11.glDisable(GL11.GL_LIGHTING);
 		    	GL11.glEnable(GL11.GL_BLEND);
-		    	//Allows changing by changing alpha value.
+		    	minecraft.entityRenderer.disableLightmap();
+				minecraft.getTextureManager().bindTexture(lightBeamTexture);
+		    	GL11.glColor4f(1, 1, 1, Math.min(vehicle.electricPower > 4 ? 1.0F : 0, lightBrightness/2F));
+		    	//Allows making things brighter by using alpha blending.
 		    	GL11.glDepthMask(false);
 		    	GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
-				minecraft.entityRenderer.disableLightmap();
 				
 				//As we can have more than one light per definition, we will only render 6 vertices at a time.
 				//Use the center point arrays for this; normals are the same for all 6 vertex sets so use whichever.
@@ -614,7 +612,6 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		    	GL11.glDepthMask(true);
 				GL11.glDisable(GL11.GL_BLEND);
 				GL11.glEnable(GL11.GL_LIGHTING);
-				GL11.glEnable(GL11.GL_TEXTURE_2D);
 				GL11.glPopMatrix();
 			}
 		}
@@ -622,35 +619,21 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 	
     private static void drawCone(Vec3d endPoint, double radius, boolean reverse){
 		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+		GL11.glTexCoord2f(0, 0);
 		GL11.glVertex3d(0, 0, 0);
     	if(reverse){
     		for(float theta=0; theta < 2*Math.PI + 0.1; theta += 2F*Math.PI/40F){
+    			GL11.glTexCoord2f(theta, 1);
     			GL11.glVertex3d(endPoint.xCoord + radius*Math.cos(theta), endPoint.yCoord + radius*Math.sin(theta), endPoint.zCoord);
     		}
     	}else{
     		for(float theta=(float) (2*Math.PI); theta>=0 - 0.1; theta -= 2F*Math.PI/40F){
+    			GL11.glTexCoord2f(theta, 1);
     			GL11.glVertex3d(endPoint.xCoord + radius*Math.cos(theta), endPoint.yCoord + radius*Math.sin(theta), endPoint.zCoord);
     		}
     	}
     	GL11.glEnd();
     }
-    
-	private static void renderQuad(float width, float height){
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(0, 0);
-		GL11.glNormal3f(0, 0, -1);
-		GL11.glVertex3f(width/2, height/2, 0);
-		GL11.glTexCoord2f(0, 1);
-		GL11.glNormal3f(0, 0, -1);
-		GL11.glVertex3f(width/2, -height/2, 0);
-		GL11.glTexCoord2f(1, 1);
-		GL11.glNormal3f(0, 0, -1);
-		GL11.glVertex3f(-width/2, -height/2, 0);
-		GL11.glTexCoord2f(1, 0);
-		GL11.glNormal3f(0, 0, -1);
-		GL11.glVertex3f(-width/2, height/2, 0);
-		GL11.glEnd();
-	}
 	
 	private static void renderInstrumentsAndControls(EntityMultipartVehicle vehicle){
 		GL11.glPushMatrix();
