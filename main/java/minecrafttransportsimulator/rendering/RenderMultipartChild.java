@@ -18,7 +18,6 @@ import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
 import minecrafttransportsimulator.entities.parts.EntityVehicleChest;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
-import minecrafttransportsimulator.rendering.partmodels.ModelPontoon;
 import minecrafttransportsimulator.rendering.partmodels.ModelPropeller;
 import minecrafttransportsimulator.rendering.partmodels.ModelSeat;
 import minecrafttransportsimulator.rendering.partmodels.ModelVehicleChest;
@@ -34,16 +33,17 @@ public final class RenderMultipartChild{
 	private static final Map<Class<? extends EntityMultipartChild>, ResourceLocation> textureMap = new HashMap<Class<? extends EntityMultipartChild>, ResourceLocation>();
 	
 	public static void init(){
+		RenderOBJGeneric objRender = new RenderOBJGeneric();
 		renderClassMap.clear();
-		renderClassMap.put(EntityEngineLycomingO360.class, new RenderEngine());
-		renderClassMap.put(EntityEngineBristolMercury.class, renderClassMap.get(EntityEngineLycomingO360.class));
-		renderClassMap.put(EntityEngineAMCI4.class, renderClassMap.get(EntityEngineLycomingO360.class));
-		renderClassMap.put(EntityEngineDetroitDiesel.class, renderClassMap.get(EntityEngineLycomingO360.class));
+		renderClassMap.put(EntityEngineLycomingO360.class, objRender);
+		renderClassMap.put(EntityEngineBristolMercury.class, objRender);
+		renderClassMap.put(EntityEngineAMCI4.class, objRender);
+		renderClassMap.put(EntityEngineDetroitDiesel.class, objRender);
 		renderClassMap.put(EntityVehicleChest.class, new RenderVehicleChest());
-		renderClassMap.put(EntityPontoon.class, new RenderPontoon());
+		renderClassMap.put(EntityPontoon.class, objRender);
 		renderClassMap.put(EntityPropeller.class, new RenderPropeller());
 		renderClassMap.put(EntitySeat.class, new RenderSeat());
-		renderClassMap.put(EntitySkid.class, new RenderSkid());
+		renderClassMap.put(EntitySkid.class, objRender);
 		renderClassMap.put(EntityWheel.EntityWheelSmall.class, new RenderWheel());
 		renderClassMap.put(EntityWheel.EntityWheelMedium.class, renderClassMap.get(EntityWheel.EntityWheelSmall.class));
 		renderClassMap.put(EntityWheel.EntityWheelLarge.class, renderClassMap.get(EntityWheel.EntityWheelSmall.class));
@@ -59,7 +59,7 @@ public final class RenderMultipartChild{
     	public abstract void doRender(EntityMultipartChild child, TextureManager textureManger, float partialTicks);
     }
     
-    private static final class RenderEngine extends RenderChild{
+    private static final class RenderOBJGeneric extends RenderChild{
     	@Override
     	public void doRender(EntityMultipartChild child, TextureManager textureManger, float partialTicks){
     		if(!displayListMap.containsKey(child.getClass())){
@@ -84,20 +84,6 @@ public final class RenderMultipartChild{
             textureManger.bindTexture(textureMap.get(child.getClass()));
 			GL11.glCallList(displayListMap.get(child.getClass()));
 			GL11.glPopMatrix();
-    	}
-    }
-    
-    private static final class RenderPontoon extends RenderChild{
-    	private static final ModelPontoon modelPontoon = new ModelPontoon();
-    	private static final ResourceLocation texturePontoon = new ResourceLocation("minecraft", "textures/blocks/iron_block.png");
-    	
-    	@Override
-    	public void doRender(EntityMultipartChild child, TextureManager textureManger, float partialTicks){		
-    		GL11.glRotatef(180, 1, 0, 0);
-    		GL11.glTranslatef(0, -0.4F, -0.2F);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-            textureManger.bindTexture(texturePontoon);
-            modelPontoon.render();
     	}
     }
     
@@ -183,34 +169,6 @@ public final class RenderMultipartChild{
     		texArray[texIndex++] = new ResourceLocation("textures/blocks/wool_colored_red.png");
     		texArray[texIndex++] = new ResourceLocation("textures/blocks/wool_colored_black.png");
     		return texArray;
-    	}
-    }
-    
-    private static final class RenderSkid extends RenderChild{    	
-    	@Override
-    	public void doRender(EntityMultipartChild child, TextureManager textureManger, float partialTicks){
-    		if(!displayListMap.containsKey(child.getClass())){
-    			int displayListIndex = GL11.glGenLists(1);
-    			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-    			GL11.glBegin(GL11.GL_TRIANGLES);
-    			String fileName = child.getClass().getSimpleName().substring("Entity".length()).toLowerCase();
-    			for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/" + fileName + ".obj")).entrySet()){
-    				for(Float[] vertex : entry.getValue()){
-    					GL11.glTexCoord2f(vertex[3], vertex[4]);
-    					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-    					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-    				}
-    			}
-    			GL11.glEnd();
-    			GL11.glEndList();
-    			displayListMap.put(child.getClass(), displayListIndex);
-    			textureMap.put(child.getClass(), new ResourceLocation(MTS.MODID, "textures/parts/" + child.getClass().getSimpleName().substring("Entity".length()).toLowerCase() + ".png"));
-    		}
-    		
-    		GL11.glPushMatrix();
-            textureManger.bindTexture(textureMap.get(child.getClass()));
-			GL11.glCallList(displayListMap.get(child.getClass()));
-			GL11.glPopMatrix();
     	}
     }
     
