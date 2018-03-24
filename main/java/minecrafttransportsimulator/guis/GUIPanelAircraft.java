@@ -32,7 +32,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	private final EntityMultipartVehicle aircraft;
 	private final EntityEngine[] engines;
 	private final boolean[] hasLight;
-	private final LightTypes[] lights = new LightTypes[]{LightTypes.NAVIGATION, LightTypes.STROBE, LightTypes.TAXI, LightTypes.LANDING};
+	private final LightTypes[] lights = new LightTypes[]{LightTypes.NAVIGATIONLIGHT, LightTypes.STROBELIGHT, LightTypes.TAXILIGHT, LightTypes.LANDINGLIGHT};
 	String[] lightText = new String[]{I18n.format("gui.panel.navigationlights"), I18n.format("gui.panel.strobelights"), I18n.format("gui.panel.taxilights"), I18n.format("gui.panel.landinglights")};
 	private final int[][] lightButtonCoords;
 	private final int[][] magnetoButtonCoords;
@@ -82,7 +82,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		
 		//If the navigation lights are on, we want to light up the switches in the panel.
 		//This is done in numerous places.
-		final boolean lightsOn = aircraft.isLightOn(LightTypes.NAVIGATION) && aircraft.electricPower > 3;
+		final boolean lightsOn = aircraft.isLightOn(LightTypes.NAVIGATIONLIGHT) && aircraft.electricPower > 3;
 		
 		//Disable the main HUD overlay if it's active.
 		CameraSystem.disableHUD = true;

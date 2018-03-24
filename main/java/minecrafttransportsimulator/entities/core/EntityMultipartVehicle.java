@@ -306,14 +306,14 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	}
 	
 	public enum LightTypes{
-		NAVIGATION(false),
-		STROBE(false),
-		TAXI(true),
-		LANDING(true),
-		BRAKE(false),
-		BACKUP(false),
-		LEFTTURN(false),
-		RIGHTTURN(false),
+		NAVIGATIONLIGHT(false),
+		STROBELIGHT(false),
+		TAXILIGHT(true),
+		LANDINGLIGHT(true),
+		BRAKELIGHT(false),
+		BACKUPLIGHT(false),
+		LEFTTURNLIGHT(false),
+		RIGHTTURNLIGHT(false),
 		RUNNINGLIGHT(false),
 		HEADLIGHT(true),
 		SEARCHLIGHT(true);

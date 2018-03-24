@@ -55,8 +55,8 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 		velocityVec = velocityVec.normalize();
 		
 		//Turn on brake and backup lights if they are activated.
-		changeLightStatus(LightTypes.BRAKE, brakeOn);
-		changeLightStatus(LightTypes.BACKUP, this.engine != null && this.engine.getCurrentGear() < 0);
+		changeLightStatus(LightTypes.BRAKELIGHT, brakeOn);
+		changeLightStatus(LightTypes.BACKUPLIGHT, this.engine != null && this.engine.getCurrentGear() < 0);
 	}
 	
 	@Override

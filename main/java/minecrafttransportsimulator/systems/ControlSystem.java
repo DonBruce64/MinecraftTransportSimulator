@@ -418,9 +418,9 @@ public final class ControlSystem{
 		//Check steering, turn signals, and regular lights.
 		boolean lightButtonPressed = ControlsKeyboard.CAR_LIGHTS.isPressed();
 		if(lightButtonPressed && ControlsKeyboard.CAR_TURN_L.isPressed()){
-			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.LEFTTURN));
+			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.LEFTTURNLIGHT));
 		}else if(lightButtonPressed && ControlsKeyboard.CAR_TURN_R.isPressed()){
-			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.RIGHTTURN));
+			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.RIGHTTURNLIGHT));
 		}else{
 			if(lightButtonPressed){
 				MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.HEADLIGHT));
