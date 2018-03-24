@@ -314,7 +314,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			//The display list only renders static parts.  We need to render dynamic ones manually.
 			//If this is a window, don't render it as that gets done all at once later.
 			for(RotatablePart rotatable : rotatableLists.get(mover.pack.rendering.modelName)){
-				if(!windowLists.get(mover.pack.rendering.modelName).contains(rotatable.name)){
+				if(!rotatable.name.toLowerCase().contains("window")){
 					GL11.glPushMatrix();
 					rotateObject(mover, rotatable);
 					GL11.glBegin(GL11.GL_TRIANGLES);
