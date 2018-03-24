@@ -855,10 +855,10 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				centerPoints[i] = new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
 				size[i] = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*16F;
 			}
-			//Lights are in the format of "&NAME_FFFFFF_FFFFF_EXTRASTUFF"
-			//Where NAME is what switch it goes to, FFFFFF is the color, and FFFFF is the blink rate. 
+			//Lights are in the format of "&NAME_XXXXXX_YYYYY"
+			//Where NAME is what switch it goes to, XXXXXX is the color, and YYYYY is the blink rate. 
 			this.color = Color.decode("0x" + name.substring(name.indexOf('_') + 1, name.indexOf('_') + 7));
-			this.flashBits = Integer.decode("0x" + name.substring(name.lastIndexOf('_') + 1, name.lastIndexOf('_') + 6));
+			this.flashBits = Integer.decode("0x" + name.substring(name.lastIndexOf('_') + 1));
 		}
 		
 		private LightTypes getTypeFromName(String lightName){
