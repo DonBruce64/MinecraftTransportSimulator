@@ -578,9 +578,9 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 						//Then apply scaling factor to make the flare larger than the light.
 						GL11.glTexCoord2f(vertex[3], vertex[4]);
 						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-						GL11.glVertex3d(vertex[0]+vertex[5]*0.0002F + (vertex[0] - light.centerPoints[i].xCoord)*light.size[i], 
-								vertex[1]+vertex[6]*0.0002F + (vertex[1] - light.centerPoints[i].yCoord)*light.size[i], 
-								vertex[2]+vertex[7]*0.0002F + (vertex[2] - light.centerPoints[i].zCoord)*light.size[i]);	
+						GL11.glVertex3d(vertex[0]+vertex[5]*0.0002F + (vertex[0] - light.centerPoints[i].xCoord)*(2 + light.size[i]*0.25F), 
+								vertex[1]+vertex[6]*0.0002F + (vertex[1] - light.centerPoints[i].yCoord)*(2 + light.size[i]*0.25F), 
+								vertex[2]+vertex[7]*0.0002F + (vertex[2] - light.centerPoints[i].zCoord)*(2 + light.size[i]*0.25F));	
 					}
 					GL11.glEnd();
 					GL11.glPopMatrix();
@@ -608,9 +608,9 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 					//Now that we are at the starting location for the beam, rotate the matrix to get the correct direction.
 					GL11.glDepthMask(false);
 					for(byte j=0; j<=2; ++j){
-			    		drawCone(endpointVec, light.size[i]*0.75F, false);
+			    		drawCone(endpointVec, light.size[i]*0.5F, false);
 			    	}
-					drawCone(endpointVec, light.size[i]*0.75F, true);
+					drawCone(endpointVec, light.size[i]*0.5F, true);
 					GL11.glPopMatrix();
 				}
 		    	GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
