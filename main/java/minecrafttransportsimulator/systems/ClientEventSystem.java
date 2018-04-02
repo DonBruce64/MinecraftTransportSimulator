@@ -343,7 +343,7 @@ public final class ClientEventSystem{
     	if(PackParserSystem.getRegisteredNames().isEmpty()){
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
-	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()] instanceof MTSCreativeTabs){
+	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()].equals(MTSCreativeTabs.tabMTSVehicles)){
 	    			FMLCommonHandler.instance().showGuiScreen(new GUIPackMissing());
 	    		}
 	    	}

@@ -35,7 +35,7 @@ public abstract class MTSCreativeTabs extends CreativeTabs{
 		
 		@Override
 		public Item getTabIconItem(){
-			return MTSRegistry.engineBristolMercury;
+			return MTSRegistry.wrench;
 		}
 		
 		@Override
