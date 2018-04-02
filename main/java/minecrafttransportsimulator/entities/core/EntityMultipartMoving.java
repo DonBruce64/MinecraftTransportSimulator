@@ -175,8 +175,10 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 					if(box.expand(Math.abs(projectile.motionX), Math.abs(projectile.motionY), Math.abs(projectile.motionZ)).isVecInside(projectile.getPositionVector())){
 						//This is a box that the projectile could attack.
 						//If it is a part, let the part handle the attack.
-						collisionMap.get(box).attackPart(source, damage);
-						return true;
+						if(collisionMap.containsKey(box)){
+							collisionMap.get(box).attackPart(source, damage);
+							return true;
+						}
 					}
 				}
 			}else{
