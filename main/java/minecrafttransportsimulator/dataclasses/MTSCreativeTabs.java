@@ -12,8 +12,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public abstract class MTSCreativeTabs extends CreativeTabs{
-	private List<ItemMultipartMoving> multipartList;
-	private ItemStack defaultStack;
 	
 	public MTSCreativeTabs(String tabName){
 		super(tabName);
@@ -31,30 +29,35 @@ public abstract class MTSCreativeTabs extends CreativeTabs{
 			}
 		}
     }
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-    public ItemStack getIconItemStack(){
-		if(multipartList == null){
-			multipartList = new ArrayList<ItemMultipartMoving>();
-			for(ItemMultipartMoving movingItem : MTSRegistry.multipartItemMap.values()){
-				multipartList.add(movingItem);
-			}
-		}
-		if(multipartList.isEmpty()){
-			if(defaultStack == null){
-				defaultStack = new ItemStack(this.getTabIconItem());
-			}
-			return this.defaultStack;
-		}else{
-			return new ItemStack(multipartList.get((int) (Minecraft.getMinecraft().theWorld.getTotalWorldTime()/20%multipartList.size())));
-		}
-    }
 		
-	public static final CreativeTabs tabMTS = new MTSCreativeTabs("tabMTS"){
+	public static final CreativeTabs tabMTSVehicles = new MTSCreativeTabs("tabMTSVehicles"){
+		private final List<ItemMultipartMoving> multipartList = new ArrayList<ItemMultipartMoving>();
+		
 		@Override
 		public Item getTabIconItem(){
 			return MTSRegistry.engineBristolMercury;
+		}
+		
+		@Override
+		@SideOnly(Side.CLIENT)
+	    public ItemStack getIconItemStack(){
+			if(multipartList.isEmpty()){
+				if(!MTSRegistry.multipartItemMap.isEmpty()){
+					for(ItemMultipartMoving movingItem : MTSRegistry.multipartItemMap.values()){
+						multipartList.add(movingItem);
+					}
+				}else{
+					return super.getIconItemStack();
+				}
+			}
+			return new ItemStack(multipartList.get((int) (Minecraft.getMinecraft().theWorld.getTotalWorldTime()/20%multipartList.size())));
+	    }
+	};
+	
+	public static final CreativeTabs tabMTSParts = new MTSCreativeTabs("tabMTSParts"){
+		@Override
+		public Item getTabIconItem(){
+			return MTSRegistry.wrench;
 		}
 	};
 }

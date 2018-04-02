@@ -51,7 +51,7 @@ public final class ItemEngine extends ItemPart{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
-		if(MTSCreativeTabs.tabMTS.equals(tab)){
+		if(MTSCreativeTabs.tabMTSParts.equals(tab)){
 			subItems.add(getStackWithData(this, false));
 			subItems.add(getStackWithData(this, true));
 		}

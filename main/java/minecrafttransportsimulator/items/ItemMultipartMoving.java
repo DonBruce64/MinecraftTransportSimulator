@@ -21,7 +21,7 @@ public class ItemMultipartMoving extends Item{
 	public ItemMultipartMoving(String name){
 		super();
 		this.name = name;
-		this.setCreativeTab(MTSCreativeTabs.tabMTS);
+		this.setCreativeTab(MTSCreativeTabs.tabMTSVehicles);
 	}
 	
 	@Override

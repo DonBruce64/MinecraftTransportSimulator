@@ -47,7 +47,7 @@ public class ItemPropeller extends ItemPart{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
-		if(MTSCreativeTabs.tabMTS.equals(tab)){
+		if(MTSCreativeTabs.tabMTSParts.equals(tab)){
 			List<Byte[]> propellerList = new ArrayList<Byte[]>();
 			propellerList.add(new Byte[]{0, 2, 70, 75});
 			propellerList.add(new Byte[]{0, 3, 70, 75});

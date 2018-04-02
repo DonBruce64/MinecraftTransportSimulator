@@ -26,7 +26,7 @@ public class ItemSeat extends ItemPart{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
-		if(MTSCreativeTabs.tabMTS.equals(tab)){
+		if(MTSCreativeTabs.tabMTSParts.equals(tab)){
 			for(int i=0; i<numberSeats; ++i){
 				subItems.add(new ItemStack(this, 1, i));
 			}
