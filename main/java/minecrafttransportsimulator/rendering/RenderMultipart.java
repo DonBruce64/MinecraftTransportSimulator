@@ -295,7 +295,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			
 			case("$Rudder"): return new Vec3d(0, minY + (maxY - minY)/2D, maxZ);
 			case("$WheelStrut"): return new Vec3d(minX + (maxX - minX)/2D, maxY, minZ + (maxZ - minZ)/2D);
-			case("$Throttle"): return new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, maxZ);
+			case("$Throttle"): return new Vec3d(minX + (maxX - minX)/2D, minY, maxZ);
 			case("$Yoke"): return new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, maxZ);
 			case("$Stick"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ + (maxZ - minZ)/2D);
 		}
