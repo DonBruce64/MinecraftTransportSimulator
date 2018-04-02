@@ -185,6 +185,17 @@ public class GUIInstruments extends GuiScreen{
 		GL11.glTranslatef(width/4, 11*height/16, 0);
 		fontRendererObj.drawString(I18n.format("gui.instruments.clear"), (int) (-fontRendererObj.getStringWidth(I18n.format("gui.instruments.clear"))/2), 0, Color.WHITE.getRGB());
 		GL11.glPopMatrix();
+		
+		//Need to do mouseover after main rendering or you get rendering issues.
+		for(byte i=0; i<renderedInstruments.size(); ++i){
+			float xStart = (i%4-2)*width/20 + width/4;
+			float xEnd = (i%4-1)*width/20 + width/4;
+			float yStart = i/4*(height/10) + height/4;
+			float yEnd = (i/4+1)*(height/10) + height/4;
+			if(mouseX > xStart && mouseX < xEnd && mouseY > yStart && mouseY < yEnd){
+				renderToolTip(new ItemStack(MTSRegistry.instrument, 1, renderedInstruments.get(i)), mouseX,  mouseY);
+			}
+		}
 	}
 	
 	@Override
