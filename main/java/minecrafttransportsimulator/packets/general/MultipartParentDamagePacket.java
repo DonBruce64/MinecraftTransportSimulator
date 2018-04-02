@@ -43,7 +43,6 @@ public class MultipartParentDamagePacket implements IMessage{
 				public void run(){
 					EntityMultipartMoving mover = (EntityMultipartMoving) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					if(mover != null){
-						mover.damage += message.damage;
 						if(message.windowBroken){
 							++mover.brokenWindows;
 						}

@@ -9,6 +9,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -54,6 +55,11 @@ public class MultipartAttackPacket implements IMessage{
 								//Remove this entity if possible.
 								boolean isPlayerOP = player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
 								if(mover.ownerName.isEmpty() || player.getUUID(player.getGameProfile()).toString().equals(mover.ownerName) || isPlayerOP){
+									ItemStack stack = new ItemStack(MTSRegistry.multipartItemMap.get(mover.name));
+									NBTTagCompound stackTag = new NBTTagCompound();
+									stackTag.setByte("brokenWindows", mover.brokenWindows);
+									stack.setTagCompound(stackTag);
+									mover.worldObj.spawnEntityInWorld(new EntityItem(mover.worldObj, mover.posX, mover.posY, mover.posZ, stack));
 									mover.setDead();
 								}else{
 									MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehicleowned"), (EntityPlayerMP) player);

@@ -52,6 +52,10 @@ public class ItemMultipartMoving extends Item{
 						}
 					}
 					
+					//If we are using a picked-up vehicle, make sure to get no free windows!
+					if(heldStack.hasTagCompound()){
+						newEntity.brokenWindows = heldStack.getTagCompound().getByte("brokenWindows");
+					}
 					world.spawnEntityInWorld(newEntity);
 					if(!player.capabilities.isCreativeMode){
 						player.inventory.clearMatchingItems(heldStack.getItem(), heldStack.getItemDamage(), 1, heldStack.getTagCompound());

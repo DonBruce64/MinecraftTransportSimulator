@@ -55,7 +55,6 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	public float motionYaw;
 	public double velocity;
 	public double currentMass;
-	public double damage;
 	public String name="";
 	public String ownerName="";
 	public String displayText="";
@@ -98,7 +97,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		//TOOD remove this in V11 once all the buggy vehicles are gone.
+		//TODO remove this in V11 once all the buggy vehicles are gone.
 		if(pack != null && !linked){
 			if(this.numberChildren > this.pack.parts.size()){
 				this.numberChildren -= this.getChildren().length;
@@ -198,7 +197,6 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			//Since we didn't forward any attacks or do special events, we must have attacked this multipart directly.
 			Entity damageSource = source.getEntity() != null && !source.getEntity().equals(source.getSourceOfDamage()) ? source.getSourceOfDamage() : source.getEntity();
 			if(damageSource != null){
-				this.damage += damage;
 				if(this.brokenWindows < pack.general.numberWindows){
 					++brokenWindows;
 					this.playSound(SoundEvents.BLOCK_GLASS_BREAK, 2.0F, 1.0F);
@@ -735,7 +733,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	}
 	
 	/**
-	 * Essentially the way to kill this multipart.  Explosions may not occur 
+	 * Called when this multipart crashes.  Explosions may not occur 
 	 * depending on config settings or a lack of fuel or explodable cargo.
 	 */
 	protected void destroyAtPosition(double x, double y, double z){
