@@ -161,6 +161,9 @@ public class EntityPropeller extends EntityMultipartChild{
 	
 	public double getThrustForce(){
 		if(parent != null && engine != null){
+			//Need to align this to radius at 75% blade with pitch to get new
+			//force equation that uses pitch to take into account flow of air.
+			//Current model only works for small-diameter propellers.
 			return ((EntityPlane) parent).airDensity*Math.PI*Math.pow(0.0254*diameter/2D, 2)*(Math.pow(engine.RPM*0.0254*pitch/60D, 2)-(engine.RPM*0.0254*pitch/60D)*((EntityPlane) parent).velocity*20)*Math.pow(diameter/2D/pitch + numberBlades/1000D, 1.5)/400D;
 		}else{
 			return 0;
