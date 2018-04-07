@@ -265,20 +265,16 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		
 		//First check parts that have a Left-Right specific rotation.
 		//These have suffixes of _L and _R, so only take away stuff after the second underscore.
-		String partName = entry.getKey(); 
+		String partName = entry.getKey().toLowerCase(); 
 		while(partName.indexOf('_') != partName.lastIndexOf('_')){
 			partName = partName.substring(0, partName.lastIndexOf('_'));
 		}
 		switch(partName){
-			case("$Door_L"): return new Vec3d(maxX, minY, maxZ);
-			case("$Door_R"): return new Vec3d(minX, minY, maxZ);
+			case("$door_l"): return new Vec3d(maxX, minY, maxZ);
+			case("$door_r"): return new Vec3d(minX, minY, maxZ);
 			
-			case("$Aileron_L"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
-			case("$Aileron_R"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
-			case("$Elevator_L"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
-			case("$Elevator_R"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
-			case("$Flap_L"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
-			case("$Flap_R"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
+			case("$aileron_l"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
+			case("$aileron_r"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
 		}
 		
 		//If we didn't find the part, it must be a singular type.
@@ -287,17 +283,19 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			partName = partName.substring(0, partName.indexOf('_'));
 		}
 		switch(partName){
-			case("$Gas"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ);
-			case("$Brake"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ);
-			case("$Parking"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ);
-			case("$Gearshift"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ + (maxZ - minZ)/2D);
-			case("$SteeringWheel"): return new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, maxZ);
+			case("$gas"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ);
+			case("$brake"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ);
+			case("$parking"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ);
+			case("$gearshift"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ + (maxZ - minZ)/2D);
+			case("$steeringwheel"): return new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, maxZ);
 			
-			case("$Rudder"): return new Vec3d(0, minY + (maxY - minY)/2D, maxZ);
-			case("$WheelStrut"): return new Vec3d(minX + (maxX - minX)/2D, maxY, minZ + (maxZ - minZ)/2D);
-			case("$Throttle"): return new Vec3d(minX + (maxX - minX)/2D, minY, maxZ);
-			case("$Yoke"): return new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, maxZ);
-			case("$Stick"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ + (maxZ - minZ)/2D);
+			case("$elevator"): return new Vec3d(minX, minY + (maxY - minY)/2D, maxZ);
+			case("$rudder"): return new Vec3d(0, minY + (maxY - minY)/2D, maxZ);
+			case("$flap"): return new Vec3d(maxX, minY + (maxY - minY)/2D, maxZ);
+			case("$wheelstrut"): return new Vec3d(minX + (maxX - minX)/2D, maxY, minZ + (maxZ - minZ)/2D);
+			case("$throttle"): return new Vec3d(minX + (maxX - minX)/2D, minY, maxZ);
+			case("$yoke"): return new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, maxZ);
+			case("$stick"): return new Vec3d(minX + (maxX - minX)/2D, minY, minZ + (maxZ - minZ)/2D);
 		}
 		
 		//Default to this if we don't find the rotation.
@@ -358,9 +356,9 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			List<WindowPart> windows = new ArrayList<WindowPart>();
 			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
 				if(entry.getKey().toLowerCase().contains("window")){
-					if(entry.getKey().toLowerCase().contains("$")){
+					if(entry.getKey().contains("$")){
 						for(RotatablePart rotatable : rotatableParts){
-							if(entry.getKey().contains(rotatable.name)){
+							if(entry.getKey().toLowerCase().contains(rotatable.name)){
 								rotatableParts.add(new RotatablePart(entry.getKey(), rotatable.rotationPoint, entry.getValue()));
 								break;
 							}
@@ -386,25 +384,25 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		GL11.glTranslated(rotatable.rotationPoint.xCoord, rotatable.rotationPoint.yCoord, rotatable.rotationPoint.zCoord);
 		
 		//Next rotate the part.
-		if(rotatable.name.contains("Door_L")){
+		if(rotatable.name.contains("door_l")){
 			if(mover.parkingBrakeOn && mover.velocity == 0 && !mover.locked){
 				GL11.glRotatef(-60F, 0, 1, 0);
 			}
-		}else if(rotatable.name.contains("Door_R")){
+		}else if(rotatable.name.contains("door_r")){
 			if(mover.parkingBrakeOn && mover.velocity == 0 && !mover.locked){
 				GL11.glRotatef(60F, 0, 1, 0);
 			}
-		}else if(rotatable.name.contains("Gas") || rotatable.name.contains("Throttle")){
+		}else if(rotatable.name.contains("gas") || rotatable.name.contains("throttle")){
 			GL11.glRotatef(((EntityMultipartVehicle) mover).throttle/4F, 1, 0, 0);
-		}else if(rotatable.name.contains("Brake")){
+		}else if(rotatable.name.contains("brake")){
 			if(((EntityMultipartVehicle) mover).brakeOn){
 				GL11.glRotatef(30, 1, 0, 0);
 			}
-		}else if(rotatable.name.contains("Parking")){
+		}else if(rotatable.name.contains("parking")){
 			if(((EntityMultipartVehicle) mover).parkingBrakeOn){
 				GL11.glRotatef(30, -1, 0, 0);
 			}
-		}else if(rotatable.name.contains("Gearshift")){
+		}else if(rotatable.name.contains("gearshift")){
 			if(((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1) != null){
 				if(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).isAutomatic){
 					GL11.glRotatef(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()*15, -1, 0, 0);
@@ -412,24 +410,24 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 					GL11.glRotatef(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()*3, -1, 0, 0);
 				}
 			}
-		}else if(rotatable.name.contains("SteeringWheel")){
+		}else if(rotatable.name.contains("steeringwheel")){
 			GL11.glRotatef(mover.getSteerAngle(), 0, 0, 1);
-		}else if(rotatable.name.contains("Aileron_L")){
+		}else if(rotatable.name.contains("aileron_l")){
 			GL11.glRotatef(((EntityPlane) mover).aileronAngle/10F, -1, 0, 0);
-		}else if(rotatable.name.contains("Aileron_R")){
+		}else if(rotatable.name.contains("aileron_r")){
 			GL11.glRotatef(((EntityPlane) mover).aileronAngle/10F, 1, 0, 0);
-		}else if(rotatable.name.contains("Elevator")){
+		}else if(rotatable.name.contains("elevator")){
 			GL11.glRotatef(((EntityPlane) mover).elevatorAngle/10F, 1, 0, 0);
-		}else if(rotatable.name.contains("Rudder")){
+		}else if(rotatable.name.contains("rudder")){
 			GL11.glRotatef(((EntityPlane) mover).rudderAngle/10F, 0, 1, 0);
-		}else if(rotatable.name.contains("Flap")){
+		}else if(rotatable.name.contains("flap")){
 			GL11.glRotatef(((EntityPlane) mover).flapAngle/10F, -1, 0, 0);
-		}else if(rotatable.name.contains("WheelStrut")){
+		}else if(rotatable.name.contains("wheelstrut")){
 			GL11.glRotatef(((EntityPlane) mover).rudderAngle/10F, 0, -1, 0);
-		}else if(rotatable.name.contains("Stick")){
+		}else if(rotatable.name.contains("stick")){
 			GL11.glRotatef(((EntityPlane) mover).aileronAngle/10F, 0, 0, 1);
 			GL11.glRotatef(((EntityPlane) mover).elevatorAngle/10F, 1, 0, 0);
-		}else if(rotatable.name.contains("Yoke")){
+		}else if(rotatable.name.contains("yoke")){
 			GL11.glRotatef(((EntityPlane) mover).aileronAngle/10F, 0, 0, 1);
 			GL11.glTranslatef(0, 0, -((EntityPlane) mover).elevatorAngle/10F/100F);
 		}
@@ -796,7 +794,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		private final Float[][] vertices;
 		
 		private RotatablePart(String name, Vec3d rotationPoint, Float[][] vertices){
-			this.name = name;
+			this.name = name.toLowerCase();
 			this.rotationPoint = rotationPoint;
 			this.vertices = vertices;
 		}
@@ -807,7 +805,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		private final Float[][] vertices;
 		
 		private WindowPart(String name, Float[][] vertices){
-			this.name = name;
+			this.name = name.toLowerCase();
 			this.vertices = vertices;
 		}
 	}
