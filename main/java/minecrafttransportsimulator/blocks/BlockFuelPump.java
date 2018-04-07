@@ -64,7 +64,6 @@ public class BlockFuelPump extends MTSBlockRotateable{
     			}
     			if(nearestEntity != null){
     				pump.setConnectedVehicle((EntityMultipartVehicle) nearestEntity);
-					pump.totalTransfered = 0;
 					MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.connect"), (EntityPlayerMP) player);
 					MTSAchievements.triggerFuel(player);
     			}else{
