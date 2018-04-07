@@ -12,6 +12,7 @@ import minecrafttransportsimulator.entities.parts.EntityEngine;
 import minecrafttransportsimulator.packets.control.EnginePacket;
 import minecrafttransportsimulator.packets.control.LightPacket;
 import minecrafttransportsimulator.rendering.RenderHUD;
+import minecrafttransportsimulator.rendering.RenderInstruments;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -82,7 +83,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		
 		//If the navigation lights are on, we want to light up the switches in the panel.
 		//This is done in numerous places.
-		final boolean lightsOn = aircraft.isLightOn(LightTypes.NAVIGATIONLIGHT) && aircraft.electricPower > 3;
+		final boolean lightsOn = RenderInstruments.lightsOn(aircraft);
 		
 		//Disable the main HUD overlay if it's active.
 		CameraSystem.disableHUD = true;

@@ -17,7 +17,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
 	 * EngineNumber can be 0 to draw a uni-gauge.
 	 */
 	protected static void drawAircraftInstrument(EntityMultipartVehicle vehicle, int x, int y, Instruments instrument, boolean hud, byte engineNumber){
-		boolean lightsOn = vehicle.isLightOn(LightTypes.NAVIGATIONLIGHT) && vehicle.electricPower > 3;
+		boolean lightsOn = lightsOn(vehicle);
 		
 		GL11.glPushMatrix();
 		if(!hud){

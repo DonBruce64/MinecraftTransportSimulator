@@ -7,6 +7,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.entities.core.EntityMultipartVehicle.LightTypes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
@@ -19,6 +20,13 @@ public abstract class RenderInstruments{
 		if(instrument.name().startsWith("AIRCRAFT_")){
 			RenderInstrumentsAircraft.drawAircraftInstrument(vehicle, x, y, instrument, hud, engineNumber);
 		}
+	}
+	
+    /**
+     * Checks if lights are on for this vehicle and instruments need to be lit up.
+     */
+	public static boolean lightsOn(EntityMultipartVehicle vehicle){
+		return (vehicle.isLightOn(LightTypes.NAVIGATIONLIGHT) || vehicle.isLightOn(LightTypes.HEADLIGHT)) && vehicle.electricPower > 3;
 	}
 	
     /**
