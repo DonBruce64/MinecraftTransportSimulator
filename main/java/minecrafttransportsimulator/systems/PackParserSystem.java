@@ -16,6 +16,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.MalformedJsonException;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSPackObject;
@@ -178,9 +181,10 @@ public final class PackParserSystem{
         		return;
         	}
             pack = new Gson().fromJson(new FileReader(file), MTSPackObject.class);
-        }catch(Exception e){
+    	}catch(Exception e){
         	log.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + file.getName());
-            e.printStackTrace();
+        	log.add(e.getMessage());
+        	return;
         }
     	
     	//Create pack data

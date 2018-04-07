@@ -562,38 +562,42 @@ public final class MTSRegistry{
 	private static void initPackRecipes(){
 		for(Entry<String, ItemMultipartMoving> mapEntry : multipartItemMap.entrySet()){
 			String name = mapEntry.getKey();
-			MultipartTypes type = PackParserSystem.getMultipartType(name);
-			//Init multipart recipes.
-			//Convert strings into ItemStacks
-			Character[] indexes = new Character[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'};
-			String[] craftingRows = new String[]{"", "", ""};
-			List<ItemStack> stacks = new ArrayList<ItemStack>();
-			ItemStack[] craftingArray = new ItemStack[9];
-			String[] recipe = PackParserSystem.getDefinitionForPack(name).recipe;
-			for(byte i=0; i<9; ++i){
-				if(!recipe[i].isEmpty()){
-					Item item = Item.getByNameOrId(recipe[i].substring(0, recipe[i].lastIndexOf(':')));
-					int damage = Integer.valueOf(recipe[i].substring(recipe[i].lastIndexOf(':') + 1));
-					craftingRows[i/3] = craftingRows[i/3] + indexes[stacks.size()];
-					stacks.add(new ItemStack(item, 1, damage));
-					craftingArray[i] = stacks.get(stacks.size() - 1); 
-				}else{
-					craftingRows[i/3] = craftingRows[i/3] + ' ';
+			try{
+				MultipartTypes type = PackParserSystem.getMultipartType(name);
+				//Init multipart recipes.
+				//Convert strings into ItemStacks
+				Character[] indexes = new Character[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'};
+				String[] craftingRows = new String[]{"", "", ""};
+				List<ItemStack> stacks = new ArrayList<ItemStack>();
+				ItemStack[] craftingArray = new ItemStack[9];
+				String[] recipe = PackParserSystem.getDefinitionForPack(name).recipe;
+				for(byte i=0; i<9; ++i){
+					if(!recipe[i].isEmpty()){
+						Item item = Item.getByNameOrId(recipe[i].substring(0, recipe[i].lastIndexOf(':')));
+						int damage = Integer.valueOf(recipe[i].substring(recipe[i].lastIndexOf(':') + 1));
+						craftingRows[i/3] = craftingRows[i/3] + indexes[stacks.size()];
+						stacks.add(new ItemStack(item, 1, damage));
+						craftingArray[i] = stacks.get(stacks.size() - 1); 
+					}else{
+						craftingRows[i/3] = craftingRows[i/3] + ' ';
+					}
 				}
+	
+				//Create the object array that is going to be registered.
+				Object[] registryObject = new Object[craftingRows.length + stacks.size()*2];
+				registryObject[0] = craftingRows[0];
+				registryObject[1] = craftingRows[1];
+				registryObject[2] = craftingRows[2];
+				for(byte i=0; i<stacks.size(); ++i){
+					registryObject[3 + i*2] = indexes[i];
+					registryObject[3 + i*2 + 1] = stacks.get(i);
+				}
+				//Now register the recipe and add the stacks to the crafting item map.
+				registerRecipe(new ItemStack(mapEntry.getValue()), registryObject);
+				craftingItemMap.put(name, craftingArray);
+			}catch(Exception e){
+				MTS.MTSLog.error("ERROR ADDING CRAFTING RECIPE FOR: " + name);
 			}
-
-			//Create the object array that is going to be registered.
-			Object[] registryObject = new Object[craftingRows.length + stacks.size()*2];
-			registryObject[0] = craftingRows[0];
-			registryObject[1] = craftingRows[1];
-			registryObject[2] = craftingRows[2];
-			for(byte i=0; i<stacks.size(); ++i){
-				registryObject[3 + i*2] = indexes[i];
-				registryObject[3 + i*2 + 1] = stacks.get(i);
-			}
-			//Now register the recipe and add the stacks to the crafting item map.
-			registerRecipe(new ItemStack(mapEntry.getValue()), registryObject);
-			craftingItemMap.put(name, craftingArray);
 		}
 	}
 
