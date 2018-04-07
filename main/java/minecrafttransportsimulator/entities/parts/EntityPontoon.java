@@ -40,7 +40,7 @@ public class EntityPontoon extends EntityGroundDevice{
 
 	@Override
 	public float getHeight(){
-		return 0.75F;
+		return 0.25F;
 	}
 	
 	@Override
