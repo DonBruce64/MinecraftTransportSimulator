@@ -13,7 +13,6 @@ public class ModelSeat extends ModelBase{
     	this.textureHeight = 16;
     	frame = new ModelRenderer(this, 0, 0);
     	frame.setTextureSize(textureWidth, textureHeight);
-    	frame.setRotationPoint(0F, 8F, 0F);
     	frame.addBox(-4, -10, -6, 8, 3, 12);
     	frame.addBox(-6, -10, -6, 1, 6, 12);
     	frame.addBox(5, -10, -6, 1, 6, 12);
@@ -23,7 +22,6 @@ public class ModelSeat extends ModelBase{
     	
     	cushion = new ModelRenderer(this, 0, 0);
     	cushion.setTextureSize(textureWidth, textureHeight);
-    	cushion.setRotationPoint(0F, 8F, 0F);
     	cushion.addBox(-5, -7, -6, 10, 2, 12);
     	cushion.addBox(-5, -5, -6, 10, 13, 2);  
     }    

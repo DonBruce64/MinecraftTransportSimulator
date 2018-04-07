@@ -73,7 +73,7 @@ public class EntitySeat extends EntityMultipartChild{
 	 public void updatePassenger(Entity passenger){
 		super.updatePassenger(passenger);
 		if(parent != null){
-			MTSVector posVec = RotationSystem.getRotatedPoint(this.offsetX, (float) (this.offsetY + passenger.getYOffset() + passenger.height), (float) this.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
+			MTSVector posVec = RotationSystem.getRotatedPoint(this.offsetX, (float) (this.offsetY - this.getHeight()/2F + passenger.getYOffset() + passenger.height), (float) this.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
 			passenger.setPosition(parent.posX + posVec.xCoord, parent.posY + posVec.yCoord - passenger.height, parent.posZ + posVec.zCoord);
 			passenger.motionX = parent.motionX;
 			passenger.motionY = parent.motionY;
