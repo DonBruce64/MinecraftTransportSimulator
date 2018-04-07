@@ -8,7 +8,6 @@ import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.packets.general.ChatPacket;
-import minecrafttransportsimulator.packets.general.FuelPumpConnectDisconnectPacket;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -51,7 +50,7 @@ public class BlockFuelPump extends MTSBlockRotateable{
 				}
 			}
         	
-    		if(pump.connectedVehicle == null){
+    		if(pump.getConnectedVehicle() == null){
     			Entity nearestEntity = null;
     			float lowestDistance = 99;
     			for(Entity entity : world.loadedEntityList){
@@ -64,19 +63,15 @@ public class BlockFuelPump extends MTSBlockRotateable{
     				}
     			}
     			if(nearestEntity != null){
-					pump.connectedVehicle = (EntityMultipartVehicle) nearestEntity;
-					pump.connectedVehicleUUID = pump.connectedVehicle.UUID;
+    				pump.setConnectedVehicle((EntityMultipartVehicle) nearestEntity);
 					pump.totalTransfered = 0;
-					MTS.MTSNet.sendToAll(new FuelPumpConnectDisconnectPacket(pump, pump.connectedVehicle.getEntityId()));
 					MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.connect"), (EntityPlayerMP) player);
 					MTSAchievements.triggerFuel(player);
     			}else{
     				MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.toofar"), (EntityPlayerMP) player);
     			}
     		}else{
-    			pump.connectedVehicleUUID = "";
-    			pump.connectedVehicle = null;
-    			MTS.MTSNet.sendToAll(new FuelPumpConnectDisconnectPacket(pump, -1));
+    			pump.setConnectedVehicle(null);
     			MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.disconnect"), (EntityPlayerMP) player);
     		}
 		}
