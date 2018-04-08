@@ -17,7 +17,6 @@ import net.minecraftforge.fluids.FluidRegistry;
 public final class ConfigSystem{
 	public static Configuration config;	
 	 
-	protected static ConfigSystem instance;
 	protected static Map<String, Boolean> booleanConfigMap = new HashMap<String, Boolean>();
 	protected static Map<String, Integer> integerConfigMap = new HashMap<String, Integer>();
 	protected static Map<String, Double> doubleConfigMap = new HashMap<String, Double>();
@@ -30,7 +29,6 @@ public final class ConfigSystem{
 	private static final String FUEL_CONFIG = "fuels";
 	
 	public static void initCommon(File configFile){
-		instance = new ConfigSystem();
 		config = new Configuration(configFile);
 		config.load();
 		
@@ -44,7 +42,10 @@ public final class ConfigSystem{
 		doubleConfigMap.put("WheelDamageFactor", config.get(DAMAGE_CONFIG, "WheelDamageFactor", 1.0F, "Factor for damage caused by wheels on vehicles.").getDouble());
 		doubleConfigMap.put("CrashDamageFactor", config.get(DAMAGE_CONFIG, "CrashDamageFactor", 1.0F, "Factor for damage caused by crashes.").getDouble());
 		doubleConfigMap.put("EngineLeakProbability", config.get(DAMAGE_CONFIG, "EngineLeakProbability", 0.01F, "Chance an engine will spring a leak if hit.  \nExplosions cause 10x this chance.").getDouble());
-
+		config.save();
+	}
+	
+	public static void initFuels(){
 		for(String fluidName : FluidRegistry.getRegisteredFluids().keySet()){
 			fluidValues.put(fluidName, config.get(FUEL_CONFIG, fluidName, fluidName.equals(FluidRegistry.LAVA.getName()) ? 1.0F : 0.0F).getDouble());
 		}

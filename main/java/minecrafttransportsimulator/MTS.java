@@ -5,6 +5,7 @@ import java.io.File;
 import org.apache.logging.log4j.Logger;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ForgeContainerGUISystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -21,7 +22,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="10.0.0-SF4";
+	public static final String MODVER="10.0.0-SF5";
 	public static final String assetDir = System.getProperty("user.dir") + File.separator + MTS.MODID;
 	public static final byte packJSONVersionNumber = 4;
 	
@@ -48,6 +49,7 @@ public class MTS {
 	@EventHandler
 	public void init(FMLInitializationEvent event){
 		MTSRegistry.init();
+		ConfigSystem.initFuels();
 		NetworkRegistry.INSTANCE.registerGuiHandler(instance, new ForgeContainerGUISystem());
 	}
 }
