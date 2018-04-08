@@ -16,9 +16,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.MalformedJsonException;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSPackObject;
@@ -83,11 +80,13 @@ public final class PackParserSystem{
         //Now that we are assured we have the directories, check the mods folder for new pack content.
         File modDir = new File(System.getProperty("user.dir") + File.separator + "mods");
         if(modDir.exists()){
+        	log.add("Checking base mod dir for new content located at: " + modDir.getAbsolutePath());
         	parseModDirectory(modDir, assetDir);
         }
     	//Also check version-specific sub-directory for content.
         modDir = new File(System.getProperty("user.dir") + File.separator + "mods" + File.separator + MinecraftForge.MC_VERSION);
         if(modDir.exists()){
+        	log.add("Checking version-specific mod dir for new content located at: " + modDir.getAbsolutePath());
         	parseModDirectory(modDir, assetDir);
         }
         
@@ -112,40 +111,53 @@ public final class PackParserSystem{
     			byte packDefsAdded = 0;
     			try{
     				ZipFile jarFile = new ZipFile(modFile);
+    				
+    				//Check to make sure this isn't the main MTS mod jar before parsing.
+    				boolean isValidFile = true;
     				Enumeration<? extends ZipEntry> jarEnum = jarFile.entries();
     				while(jarEnum.hasMoreElements()){
-    					ZipEntry jarEntry = jarEnum.nextElement();
-    					if(jarEntry.getName().contains("mts/")){
-    						//Check to see if this file is a directory.  If so, ignore it and go on.
-    						if(jarEntry.isDirectory()){
-    							continue;
-    						}else if(jarEntry.getName().contains("jsondefs")){
-    							++packDefsAdded;
-    						}
-    						
-    						//If the file exists, replace it to update it.
-    						File outputfile = new File(assetDir + File.separator + jarEntry.getName().substring("mts/".length()));
-    						if(outputfile.exists()){
-    							outputfile.delete();
-    						}
-    						
-    						//Now copy over the file.
-    						InputStream inputStream = jarFile.getInputStream(jarEntry);
-    						FileOutputStream outputStream = new FileOutputStream(outputfile);
-    						
-    						byte[] bytes = new byte[1024];
-    						int length = inputStream.read(bytes);
-    						while(length >= 0){
-    							outputStream.write(bytes, 0, length);
-    							length = inputStream.read(bytes);
-    						}
-    						inputStream.close();
-    						outputStream.close();
-    						foundPack = true;
+    					if(jarEnum.nextElement().getName().contains(".class")){
+    						isValidFile = false;
+    						break;
     					}
     				}
-    				jarFile.close();
-    			}catch(IOException e){
+    				
+    				if(isValidFile){
+    					jarEnum = jarFile.entries();
+	    				while(jarEnum.hasMoreElements()){
+	    					ZipEntry jarEntry = jarEnum.nextElement();
+	    					if(jarEntry.getName().contains("mts/")){
+	    						//Check to see if this file is a directory.  If so, ignore it and go on.
+	    						if(jarEntry.isDirectory()){
+	    							continue;
+	    						}else if(jarEntry.getName().contains("jsondefs")){
+	    							++packDefsAdded;
+	    						}
+	    						
+	    						//If the file exists, replace it to update it.
+	    						File outputfile = new File(assetDir + File.separator + jarEntry.getName().substring("mts/".length()));
+	    						if(outputfile.exists()){
+	    							outputfile.delete();
+	    						}
+	    						
+	    						//Now copy over the file.
+	    						InputStream inputStream = jarFile.getInputStream(jarEntry);
+	    						FileOutputStream outputStream = new FileOutputStream(outputfile);
+	    						
+	    						byte[] bytes = new byte[1024];
+	    						int length = inputStream.read(bytes);
+	    						while(length >= 0){
+	    							outputStream.write(bytes, 0, length);
+	    							length = inputStream.read(bytes);
+	    						}
+	    						inputStream.close();
+	    						outputStream.close();
+	    						foundPack = true;
+	    					}
+	    				}
+	    				jarFile.close();
+	    			}
+    			}catch(Exception e){
     				e.printStackTrace();
     				return false;
     			}
