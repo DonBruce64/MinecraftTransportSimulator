@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockFuelPump;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
+import minecrafttransportsimulator.entities.parts.EntityCrate;
 import minecrafttransportsimulator.entities.parts.EntityEngineAMCI4;
 import minecrafttransportsimulator.entities.parts.EntityEngineBristolMercury;
 import minecrafttransportsimulator.entities.parts.EntityEngineDetroitDiesel;
@@ -19,8 +20,8 @@ import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
-import minecrafttransportsimulator.entities.parts.EntityVehicleChest;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
+import minecrafttransportsimulator.items.ItemCrate;
 import minecrafttransportsimulator.items.ItemEngine;
 import minecrafttransportsimulator.items.ItemInstrument;
 import minecrafttransportsimulator.items.ItemKey;
@@ -102,6 +103,7 @@ public final class MTSRegistry{
 	public static final Item engineDetroitDiesel = new ItemEngine(EntityEngineDetroitDiesel.class, ItemEngine.Engines.DETROIT_DIESEL).setCreativeTab(MTSCreativeTabs.tabMTSParts);
 	public static final Item propeller = new ItemPropeller().setCreativeTab(MTSCreativeTabs.tabMTSParts);
 	public static final Item seat = new ItemSeat().setCreativeTab(MTSCreativeTabs.tabMTSParts);
+	public static final Item crate = new ItemCrate().setCreativeTab(MTSCreativeTabs.tabMTSParts);
 	
 	public static final Item pointerShort = new Item().setCreativeTab(MTSCreativeTabs.tabMTSParts);
 	public static final Item pointerLong = new Item().setCreativeTab(MTSCreativeTabs.tabMTSParts);
@@ -115,6 +117,7 @@ public final class MTSRegistry{
 	public static final Item itemBlockPropellerBench = new ItemBlock(propellerBench);
 	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(MTSCreativeTabs.tabMTSParts);
 	public static final Item itemBlockFuelPump = new ItemBlock(fuelPump);
+	
 		
 	
 	
@@ -207,7 +210,7 @@ public final class MTSRegistry{
 		}
 		
 		registerEntity(EntitySeat.class);
-		registerEntity(EntityVehicleChest.class);
+		registerEntity(EntityCrate.class);
 		registerEntity(EntityWheel.EntityWheelSmall.class);
 		registerEntity(EntityWheel.EntityWheelMedium.class);
 		registerEntity(EntityWheel.EntityWheelLarge.class);

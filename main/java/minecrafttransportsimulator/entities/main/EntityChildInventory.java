@@ -1,26 +1,17 @@
 package minecrafttransportsimulator.entities.main;
 
-import java.util.Iterator;
-import java.util.List;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.world.World;
 
 public abstract class EntityChildInventory extends EntityMultipartChild implements IInventory{
-    public float lidAngle;
-    public float prevLidAngle;
-    public int numPlayersUsing;
-    private int ticksSinceSync;
 	private ItemStack[] contents = new ItemStack[27];
 	
 	public EntityChildInventory(World world){
@@ -54,58 +45,11 @@ public abstract class EntityChildInventory extends EntityMultipartChild implemen
 		}
 	}
 	
-	//Copied from chest code
-	@Override
-	public void onEntityUpdate(){
-        super.onEntityUpdate();
-        ++this.ticksSinceSync;
-        float f;
-        if(!this.worldObj.isRemote && this.numPlayersUsing != 0 && (this.ticksSinceSync + this.posX + this.posY + this.posZ) % 200 == 0){
-            this.numPlayersUsing = 0;
-            List list = this.worldObj.getEntitiesWithinAABB(EntityPlayer.class, this.getEntityBoundingBox().expand(5, 5, 5));
-            Iterator iterator = list.iterator();
-            while (iterator.hasNext()){
-                EntityPlayer entityplayer = (EntityPlayer)iterator.next();
-                if(this.equals(entityplayer.openContainer)){
-                	++this.numPlayersUsing;
-                }
-            }
-        }
-        this.prevLidAngle = this.lidAngle;
-        f = 0.1F;
-        if(this.numPlayersUsing > 0 && this.lidAngle == 0.0F){
-        	worldObj.playSound((EntityPlayer)null, posX, posY + 0.5D, posZ, SoundEvents.BLOCK_CHEST_OPEN, SoundCategory.BLOCKS, 0.5F, worldObj.rand.nextFloat() * 0.1F + 0.9F);
-        }
-
-        if(this.numPlayersUsing == 0 && this.lidAngle > 0.0F || this.numPlayersUsing > 0 && this.lidAngle < 1.0F){
-            float f1 = this.lidAngle;
-            if(this.numPlayersUsing > 0){
-                this.lidAngle += f;
-            }else{
-                this.lidAngle -= f;
-            }
-
-            if(this.lidAngle > 1.0F){
-                this.lidAngle = 1.0F;
-            }
-
-            float f2 = 0.5F;
-
-            if(this.lidAngle < f2 && f1 >= f2){
-            	worldObj.playSound((EntityPlayer)null, posX, posY + 0.5D, posZ, SoundEvents.BLOCK_CHEST_CLOSE, SoundCategory.BLOCKS, 0.5F, worldObj.rand.nextFloat() * 0.1F + 0.9F);
-            }
-
-            if(this.lidAngle < 0.0F){
-                this.lidAngle = 0.0F;
-            }
-        }
-    }
-	
 	public void markDirty(){}
 	public void clear(){}
 	public void setField(int id, int value){}
-	public void openInventory(EntityPlayer player){this.numPlayersUsing = this.numPlayersUsing < 0 ? 0 : this.numPlayersUsing + 1;}
-    public void closeInventory(EntityPlayer player){--this.numPlayersUsing;}
+	public void openInventory(EntityPlayer player){}
+    public void closeInventory(EntityPlayer player){}
     
 	public boolean isUseableByPlayer(EntityPlayer player){return player.getDistanceToEntity(this) < 5;}
 	public boolean isItemValidForSlot(int slot, ItemStack stack){return true;}

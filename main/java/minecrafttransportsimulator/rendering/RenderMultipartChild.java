@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.entities.parts.EntityCrate;
 import minecrafttransportsimulator.entities.parts.EntityEngineAMCI4;
 import minecrafttransportsimulator.entities.parts.EntityEngineBristolMercury;
 import minecrafttransportsimulator.entities.parts.EntityEngineDetroitDiesel;
@@ -16,11 +17,9 @@ import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
-import minecrafttransportsimulator.entities.parts.EntityVehicleChest;
 import minecrafttransportsimulator.entities.parts.EntityWheel;
 import minecrafttransportsimulator.rendering.partmodels.ModelPropeller;
 import minecrafttransportsimulator.rendering.partmodels.ModelSeat;
-import minecrafttransportsimulator.rendering.partmodels.ModelVehicleChest;
 import minecrafttransportsimulator.rendering.partmodels.ModelWheel;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import net.minecraft.client.Minecraft;
@@ -39,7 +38,7 @@ public final class RenderMultipartChild{
 		renderClassMap.put(EntityEngineBristolMercury.class, objRender);
 		renderClassMap.put(EntityEngineAMCI4.class, objRender);
 		renderClassMap.put(EntityEngineDetroitDiesel.class, objRender);
-		renderClassMap.put(EntityVehicleChest.class, new RenderVehicleChest());
+		renderClassMap.put(EntityCrate.class, objRender);
 		renderClassMap.put(EntityPontoon.class, objRender);
 		renderClassMap.put(EntityPropeller.class, new RenderPropeller());
 		renderClassMap.put(EntitySeat.class, new RenderSeat());
@@ -104,18 +103,6 @@ public final class RenderMultipartChild{
     			textureManger.bindTexture(texturePropellerOne);
     		}
     		modelPropeller.renderPropeller(((EntityPropeller) child).numberBlades, ((EntityPropeller) child).diameter, -((EntityPropeller) child).angularPosition - ((EntityPropeller) child).angularVelocity*partialTicks);
-    	}
-    }
-    
-    private static final class RenderVehicleChest extends RenderChild{
-    	private static final ModelVehicleChest modelChest = new ModelVehicleChest();
-    	private static final ResourceLocation textureChest = new ResourceLocation("minecraft", "textures/entity/chest/normal.png");
-    	
-    	@Override
-    	public void doRender(EntityMultipartChild child, TextureManager textureManger, float partialTicks){
-    		GL11.glRotatef(180, 1, 0, 0);
-    		textureManger.bindTexture(textureChest);
-    		modelChest.renderAll(-((EntityVehicleChest) child).lidAngle);
     	}
     }
     

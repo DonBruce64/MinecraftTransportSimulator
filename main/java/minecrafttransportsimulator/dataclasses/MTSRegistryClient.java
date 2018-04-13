@@ -56,6 +56,8 @@ public final class MTSRegistryClient{
 		registerItemRender(MTSRegistry.engineBristolMercury);
 		registerItemRenderSeries(MTSRegistry.propeller, 3);
 		registerItemRenderSeries(MTSRegistry.seat, 102);
+		registerItemRender(MTSRegistry.crate);
+		
 		registerItemRenderSeries(MTSRegistry.instrument, MTSInstruments.Instruments.values().length);
 		registerItemRender(MTSRegistry.pointerShort);
 		registerItemRender(MTSRegistry.pointerLong);
