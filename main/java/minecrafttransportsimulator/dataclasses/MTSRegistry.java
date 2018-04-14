@@ -315,6 +315,13 @@ public final class MTSRegistry{
 				"AAA",
 				'A', Items.IRON_INGOT,
 				'B', Blocks.WOOL);
+		//Crate
+		registerRecipe(new ItemStack(crate),
+				"AAA",
+				"ABA",
+				"AAA",
+				'A', Blocks.PLANKS,
+				'B', Blocks.WOODEN_SLAB);
 		
 		//Propeller bench
 		registerRecipe(new ItemStack(itemBlockPropellerBench),
