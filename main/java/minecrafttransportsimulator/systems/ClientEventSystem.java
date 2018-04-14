@@ -3,7 +3,6 @@ package minecrafttransportsimulator.systems;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -125,7 +124,7 @@ public final class ClientEventSystem{
 			    	if(event.getItemStack().getItem() instanceof ItemPart){
 	    				for(byte i=0; i<mover.pack.parts.size(); ++i){
 	    					PackPart packPart = mover.pack.parts.get(i);
-	    					MTSVector offset = RotationSystem.getRotatedPoint(packPart.pos[0], packPart.pos[1], packPart.pos[2], mover.rotationPitch, mover.rotationYaw, mover.rotationRoll);
+	    					Vec3d offset = RotationSystem.getRotatedPoint(packPart.pos[0], packPart.pos[1], packPart.pos[2], mover.rotationPitch, mover.rotationYaw, mover.rotationRoll);
 	    					AxisAlignedBB partBox = new AxisAlignedBB((float) (mover.posX + offset.xCoord) - 0.75F, (float) (mover.posY + offset.yCoord) - 0.75F, (float) (mover.posZ + offset.zCoord) - 0.75F, (float) (mover.posX + offset.xCoord) + 0.75F, (float) (mover.posY + offset.yCoord) + 1.25F, (float) (mover.posZ + offset.zCoord) + 0.75F);
 	    					Vec3d lookVec = player.getLook(1.0F);
 	        				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);

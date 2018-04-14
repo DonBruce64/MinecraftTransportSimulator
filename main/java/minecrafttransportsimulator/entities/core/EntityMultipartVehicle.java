@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
@@ -16,6 +15,7 @@ import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**This class is tailored for moving vehicles such as planes, helicopters, and automobiles.
@@ -31,8 +31,8 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	public double electricUsage;
 	public double electricFlow;
 	public double airDensity;
-	public MTSVector velocityVec = new MTSVector(0, 0, 0);
-	public MTSVector headingVec = new MTSVector(0, 0, 0);
+	public Vec3d velocityVec = Vec3d.ZERO;
+	public Vec3d headingVec = Vec3d.ZERO;
 	
 	private byte numberEngineBays = 0;
 	private final Map<Byte, EntityEngine> engineByNumber = new HashMap<Byte, EntityEngine>();
@@ -111,8 +111,8 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		
 		float skiddingFactor = getSkiddingFactor();
 		if(skiddingFactor != 0){
-			MTSVector groundVelocityVec = new MTSVector(motionX, 0, motionZ).normalize();
-			MTSVector groundHeadingVec = new MTSVector(headingVec.xCoord, 0, headingVec.zCoord).normalize();
+			Vec3d groundVelocityVec = new Vec3d(motionX, 0, motionZ).normalize();
+			Vec3d groundHeadingVec = new Vec3d(headingVec.xCoord, 0, headingVec.zCoord).normalize();
 			float vectorDelta = (float) groundVelocityVec.distanceTo(groundHeadingVec);
 			byte velocitySign = (byte) (vectorDelta < 1 ? 1 : -1);
 			if(vectorDelta > 0.001){
@@ -133,11 +133,11 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
         double f2 = Math.sin(-this.rotationYaw * 0.017453292F - (float)Math.PI);
         double f3 = -Math.cos(-this.rotationPitch * 0.017453292F);
         double f4 = Math.sin(-this.rotationPitch * 0.017453292F);
-        headingVec.set((f2 * f3), f4, (f1 * f3));
+        headingVec = new Vec3d((f2 * f3), f4, (f1 * f3));
    	}
 	
 	private void reAdjustGroundSpeed(double groundSpeed){
-		MTSVector groundVec = new MTSVector(headingVec.xCoord, 0, headingVec.zCoord).normalize();
+		Vec3d groundVec = new Vec3d(headingVec.xCoord, 0, headingVec.zCoord).normalize();
 		motionX = groundVec.xCoord * groundSpeed;
 		motionZ = groundVec.zCoord * groundSpeed;
 	}

@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.entities.core;
 
-import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -8,6 +7,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**Main child class.  This class is the base for all child entities and should be
@@ -46,7 +46,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 		this.propertyCode=propertyCode;
 		this.UUID=String.valueOf(this.getUniqueID());
 		this.parentUUID=parentUUID;
-		MTSVector offset = RotationSystem.getRotatedPoint(offsetX, offsetY, offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
+		Vec3d offset = RotationSystem.getRotatedPoint(offsetX, offsetY, offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
 		this.setPositionAndRotation(parent.posX+offset.xCoord, parent.posY+offset.yCoord, parent.posZ+offset.zCoord, parent.rotationYaw, parent.rotationPitch);
 	}
 	

@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.sounds;
 
-import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
@@ -11,15 +10,12 @@ import net.minecraft.client.audio.MovingSound;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.Vec3d;
 
 public final class AttenuatedSound<SoundEntity extends Entity & SFXEntity> extends MovingSound{
 	private final SoundEntity soundSource;
 	private final EntityPlayer player;
-	
-	private MTSVector playerPos = new MTSVector(0, 0, 0);
-	private MTSVector sourcePos = new MTSVector(0, 0, 0);
-	private double soundVelocity;
-	
+		
 	public AttenuatedSound(String soundName, SoundEntity soundSource){
 		super(SFXSystem.getSoundEventFromName(soundName), SoundCategory.MASTER);
 		this.volume=1;
@@ -37,8 +33,8 @@ public final class AttenuatedSound<SoundEntity extends Entity & SFXEntity> exten
 			this.xPosF = (float) player.posX;
 			this.yPosF = (float) player.posY;
 			this.zPosF = (float) player.posZ;
-			playerPos.set(player.posX, player.posY, player.posZ);
-			sourcePos.set(soundSource.posX, soundSource.posY, soundSource.posZ);
+			Vec3d playerPos = new Vec3d(player.posX, player.posY, player.posZ);
+			Vec3d sourcePos = new Vec3d(soundSource.posX, soundSource.posY, soundSource.posZ);
 			
 			if(soundSource != null && !soundSource.isDead){
 				if(player.getRidingEntity() instanceof EntitySeat){
@@ -59,7 +55,7 @@ public final class AttenuatedSound<SoundEntity extends Entity & SFXEntity> exten
 						return;
 					}
 				}
-				soundVelocity = playerPos.distanceTo(sourcePos) - playerPos.add(player.motionX, player.motionY, player.motionZ).distanceTo(sourcePos.add(soundSource.motionX, soundSource.motionY, soundSource.motionZ));
+				double soundVelocity = playerPos.distanceTo(sourcePos) - playerPos.addVector(player.motionX, player.motionY, player.motionZ).distanceTo(sourcePos.addVector(soundSource.motionX, soundSource.motionY, soundSource.motionZ));
 				this.pitch = (float) (soundSource.getPitch()*(1+soundVelocity/10F));
 				this.volume = (float) (soundSource.getVolume()/playerPos.distanceTo(sourcePos));
 				if(SFXSystem.isPlayerInsideEnclosedVehicle()){

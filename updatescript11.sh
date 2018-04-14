@@ -39,7 +39,7 @@ if echo $FILE | grep -q "MTSCreativeTabs"; then
 	sed -i 's/displayAllRelevantItems(List<ItemStack> givenList)/displayAllRelevantItems(NonNullList<ItemStack> givenList)/' $FILE
 	sed -i 's/public Item getTabIconItem()/public ItemStack getTabIconItem()/' $FILE
 	sed -i 's/defaultStack = new ItemStack(this.getTabIconItem())/defaultStack = this.getTabIconItem()/' $FILE
-	sed -i 's/return MTSRegistry.engineBristolMercury/return new ItemStack(MTSRegistry.engineBristolMercury)/' $FILE
+	sed -i 's/return MTSRegistry.wrench/return new ItemStack(MTSRegistry.wrench)/' $FILE
 fi
 
 #Collision methods got a few extra parameters.

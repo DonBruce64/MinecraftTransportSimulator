@@ -4,7 +4,6 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle.LightTypes;
 import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.sounds.StallSound;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -176,7 +175,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	renderSquareUV(50, 13, 0, 0.75F, 1F, 0.5625F, 0.5F);
     	GL11.glRotatef(-turn, 0, 0, 1);
     	
-    	float slip = (float) plane.sideVec.dot(plane.velocityVec);
+    	float slip = (float) plane.sideVec.dotProduct(plane.velocityVec);
     	GL11.glTranslatef(20*slip, 12.5F - Math.abs(slip), 0);
     	renderSquareUV(5, 5, 0, 0.75F, 0.875F, 1F, 0.875F);
     	GL11.glTranslatef(-20*slip, -12.5F + Math.abs(slip), 0);
@@ -262,7 +261,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	GL11.glColor3f(1, 1, 1);
     	GL11.glEnable(GL11.GL_TEXTURE_2D);
     	
-    	float slip = (float) plane.sideVec.dot(plane.velocityVec);
+    	float slip = (float) plane.sideVec.dotProduct(plane.velocityVec);
     	GL11.glTranslatef(20*slip, 12.5F - Math.abs(slip), 0);
     	renderSquareUV(5, 5, 0, 0.75F, 0.875F, 1F, 0.875F);
     	GL11.glTranslatef(-20*slip, -12.5F + Math.abs(slip), 0);

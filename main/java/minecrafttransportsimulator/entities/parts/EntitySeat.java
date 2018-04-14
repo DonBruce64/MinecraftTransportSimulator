@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.entities.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
@@ -13,6 +12,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class EntitySeat extends EntityMultipartChild{
@@ -73,7 +74,7 @@ public class EntitySeat extends EntityMultipartChild{
 	 public void updatePassenger(Entity passenger){
 		super.updatePassenger(passenger);
 		if(parent != null){
-			MTSVector posVec = RotationSystem.getRotatedPoint(this.offsetX, (float) (this.offsetY - this.getHeight()/2F + passenger.getYOffset() + passenger.height), (float) this.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
+			Vec3d posVec = RotationSystem.getRotatedPoint(this.offsetX, (float) (this.offsetY - this.getHeight()/2F + passenger.getYOffset() + passenger.height), (float) this.offsetZ, parent.rotationPitch, parent.rotationYaw, parent.rotationRoll);
 			passenger.setPosition(parent.posX + posVec.xCoord, parent.posY + posVec.yCoord - passenger.height, parent.posZ + posVec.zCoord);
 			passenger.motionX = parent.motionX;
 			passenger.motionY = parent.motionY;
@@ -84,6 +85,8 @@ public class EntitySeat extends EntityMultipartChild{
 				//Re-spawn to fix.
 				EntitySeat newSeat = new EntitySeat(this.worldObj, this.parent, this.parentUUID, this.offsetX, this.offsetY, this.offsetZ, this.propertyCode);
 				newSeat.readFromNBT(this.writeToNBT(new NBTTagCompound()));
+				//Need to change the UUID MC gives this seat to make it think a new seat is present.
+				newSeat.setUniqueId(MathHelper.getRandomUUID());
 				parent.removeChild(this.UUID, false);
 				parent.addChild(newSeat.UUID, newSeat, false);
 				worldObj.spawnEntityInWorld(newSeat);

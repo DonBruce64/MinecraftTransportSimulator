@@ -15,6 +15,7 @@ import minecrafttransportsimulator.sounds.AttenuatedSound;
 import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -50,8 +51,8 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 	@Override
 	protected void getBasicProperties(){
 		momentPitch = (float) (2*currentMass);
-		velocityVec.set(motionX, motionY, motionZ);
-		velocity = velocityVec.dot(headingVec);
+		velocityVec = new Vec3d(motionX, motionY, motionZ);
+		velocity = velocityVec.dotProduct(headingVec);
 		velocityVec = velocityVec.normalize();
 		
 		//Turn on brake and backup lights if they are activated.

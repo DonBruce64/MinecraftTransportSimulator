@@ -11,7 +11,6 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
-import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackControl;
@@ -737,7 +736,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				}
 						
 				if(!isPresent && isHoldingPart){
-					MTSVector offset = RotationSystem.getRotatedPoint(packPart.pos[0], packPart.pos[1], packPart.pos[2], mover.rotationPitch, mover.rotationYaw, mover.rotationRoll);
+					Vec3d offset = RotationSystem.getRotatedPoint(packPart.pos[0], packPart.pos[1], packPart.pos[2], mover.rotationPitch, mover.rotationYaw, mover.rotationRoll);
 					AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.75F, (float) (offset.yCoord) - 0.75F, (float) (offset.zCoord) - 0.75F, (float) (offset.xCoord) + 0.75F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.75F);
 					
 					GL11.glPushMatrix();

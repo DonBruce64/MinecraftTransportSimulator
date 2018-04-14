@@ -32,9 +32,9 @@ sed -i 's/player.getLastAttacker()/player.getAttackingEntity()/g' $FILE
 sed -i 's/player.getDistanceToEntity(/player.getDistance(/g' $FILE
 sed -i 's/isVecInside(/contains(/g' $FILE
 sed -i 's/expandXyz(/grow(/g' $FILE
-sed -i 's/lookVec.xCoord/lookVec.x/g' $FILE
-sed -i 's/lookVec.yCoord/lookVec.y/g' $FILE
-sed -i 's/lookVec.zCoord/lookVec.z/g' $FILE
+sed -i 's/\.xCoord/\.x/g' $FILE
+sed -i 's/\.yCoord/\.y/g' $FILE
+sed -i 's/\.zCoord/\.z/g' $FILE
 
 #GUIs changed their names for x and y positions.  Don't change globally cause it might mess up other x-y systems.
 #GUIs also added some odd parameter for partialTicks on buttons.  No earthly idea why you'd need that, so it gets a 0.
@@ -48,9 +48,6 @@ fi
 #Vector coord names were also changed.
 if echo $FILE | grep -q "RenderMultipart"; then
 	sed -i 's/getBrightnessForRender(partialTicks)/getBrightnessForRender()/' $FILE
-	sed -i 's/rotationPoint.xCoord/rotationPoint.x/g' $FILE
-	sed -i 's/rotationPoint.yCoord/rotationPoint.y/g' $FILE
-	sed -i 's/rotationPoint.zCoord/rotationPoint.z/g' $FILE
 fi
 
 #TESR systems now have an extra parameter.

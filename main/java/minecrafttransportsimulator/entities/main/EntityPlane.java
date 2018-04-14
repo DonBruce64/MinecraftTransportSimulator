@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.entities.main;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
@@ -11,6 +10,7 @@ import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 
@@ -29,9 +29,8 @@ public class EntityPlane extends EntityMultipartVehicle{
 	public short rudderCooldown;
 	
 	public double trackAngle;
-	
-	public MTSVector verticalVec = new MTSVector(0, 0, 0);
-	public MTSVector sideVec = new MTSVector(0, 0, 0);
+	public Vec3d verticalVec = Vec3d.ZERO;
+	public Vec3d sideVec = Vec3d.ZERO;
 
 	//Internal plane variables
 	private float momentRoll;
@@ -88,17 +87,17 @@ public class EntityPlane extends EntityMultipartVehicle{
 		currentWingArea = pack.plane.wingArea + pack.plane.wingArea*flapAngle/250F;
 		
 		verticalVec = RotationSystem.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
-		sideVec = headingVec.cross(verticalVec);
-		velocityVec.set(motionX, motionY, motionZ);
-		velocity = velocityVec.dot(headingVec);
+		sideVec = headingVec.crossProduct(verticalVec);
+		velocityVec = new Vec3d(motionX, motionY, motionZ);
+		velocity = velocityVec.dotProduct(headingVec);
 		velocityVec = velocityVec.normalize();
 		
-		trackAngle = Math.toDegrees(Math.atan2(velocityVec.dot(verticalVec), velocityVec.dot(headingVec)));
+		trackAngle = Math.toDegrees(Math.atan2(velocityVec.dotProduct(verticalVec), velocityVec.dotProduct(headingVec)));
 		dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
 		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapAngle/350F);
 		aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
 		elevatorLiftCoeff = getLiftCoeff(pack.plane.defaultElevatorAngle - trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
-		rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.atan2(velocityVec.dot(sideVec), velocityVec.dot(headingVec))), 2);
+		rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.atan2(velocityVec.dotProduct(sideVec), velocityVec.dotProduct(headingVec))), 2);
 	}
 	
 	@Override

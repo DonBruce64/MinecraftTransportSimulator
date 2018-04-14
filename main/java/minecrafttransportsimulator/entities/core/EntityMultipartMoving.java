@@ -10,7 +10,6 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB.MTSAxisAlignedBBCollective;
-import minecrafttransportsimulator.baseclasses.MTSVector;
 import minecrafttransportsimulator.dataclasses.MTSDamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSPackObject;
 import minecrafttransportsimulator.dataclasses.MTSPackObject.PackCollisionBox;
@@ -304,7 +303,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			double furthestHeight = 0;
 			List<MTSAxisAlignedBB> boxList = new ArrayList<MTSAxisAlignedBB>();
 			for(PackCollisionBox box : pack.collision){
-				MTSVector offset = RotationSystem.getRotatedPoint(box.pos[0], box.pos[1], box.pos[2], rotationPitch, rotationYaw, rotationRoll);
+				Vec3d offset = RotationSystem.getRotatedPoint(box.pos[0], box.pos[1], box.pos[2], rotationPitch, rotationYaw, rotationRoll);
 				MTSAxisAlignedBB newBox = new MTSAxisAlignedBB((float) (this.posX + offset.xCoord), (float) (this.posY + offset.yCoord), (float) (this.posZ + offset.zCoord), box.pos[0], box.pos[1], box.pos[2], box.width, box.height);
 				boxList.add(newBox);
 				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.relX) + box.width/2F);
@@ -330,7 +329,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		
 		//First try to add the current motion and see if we need to check anything.
 		for(MTSAxisAlignedBB box : collisionMap.keySet()){
-			MTSVector offset = RotationSystem.getRotatedPoint(box.relX, box.relY, box.relZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
+			Vec3d offset = RotationSystem.getRotatedPoint(box.relX, box.relY, box.relZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
 			MTSAxisAlignedBB offsetBox = box.getBoxWithOrigin(posX + offset.xCoord + motionX*speedFactor, posY + offset.yCoord + motionY*speedFactor, posZ + offset.zCoord + motionZ*speedFactor);
 			if(!getAABBCollisions(offsetBox, collisionMap.get(box)).isEmpty()){
 				needCheck = true;
@@ -406,7 +405,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			//Check the yaw.
 			for(MTSAxisAlignedBB box : collisionMap.keySet()){
 				while(motionYaw != 0){
-					MTSVector offset = RotationSystem.getRotatedPoint(box.relX, box.relY, box.relZ, rotationPitch, rotationYaw + motionYaw, rotationRoll);
+					Vec3d offset = RotationSystem.getRotatedPoint(box.relX, box.relY, box.relZ, rotationPitch, rotationYaw + motionYaw, rotationRoll);
 					//Raise this box ever so slightly because Floating Point errors are a PITA.
 					MTSAxisAlignedBB offsetBox = box.getBoxWithOrigin(posX + offset.xCoord + motionX*speedFactor, posY + offset.yCoord + motionY*speedFactor + 0.1, posZ + offset.zCoord + motionZ*speedFactor);
 					if(getAABBCollisions(offsetBox, collisionMap.get(box)).isEmpty()){
@@ -427,7 +426,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			//rotate on their ground devices.
 			for(MTSAxisAlignedBB box : collisionMap.keySet()){
 				while(motionPitch != 0){
-					MTSVector offset = RotationSystem.getRotatedPoint(box.relX, box.relY, box.relZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll);
+					Vec3d offset = RotationSystem.getRotatedPoint(box.relX, box.relY, box.relZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll);
 					MTSAxisAlignedBB offsetBox = box.getBoxWithOrigin(posX + offset.xCoord + motionX*speedFactor, posY + offset.yCoord + motionY*speedFactor, posZ + offset.zCoord + motionZ*speedFactor);
 					if(getAABBCollisions(offsetBox, collisionMap.get(box)).isEmpty()){
 						break;
@@ -458,7 +457,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			//And lastly the roll.
 			for(MTSAxisAlignedBB box : collisionMap.keySet()){
 				while(motionRoll != 0){
-					MTSVector offset = RotationSystem.getRotatedPoint(box.relX, box.relY, box.relZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
+					Vec3d offset = RotationSystem.getRotatedPoint(box.relX, box.relY, box.relZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
 					MTSAxisAlignedBB offsetBox = box.getBoxWithOrigin(posX + offset.xCoord + motionX*speedFactor, posY + offset.yCoord + motionY*speedFactor, posZ + offset.zCoord + motionZ*speedFactor);
 					if(getAABBCollisions(offsetBox, collisionMap.get(box)).isEmpty()){
 						break;
@@ -506,7 +505,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 					needRollRight = false;
 					needRollLeft = false;
 					for(MTSAxisAlignedBB box : collisionMap.keySet()){
-						MTSVector offset = RotationSystem.getRotatedPoint(box.relX, box.relY, box.relZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
+						Vec3d offset = RotationSystem.getRotatedPoint(box.relX, box.relY, box.relZ, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
 						MTSAxisAlignedBB offsetBox = box.getBoxWithOrigin(posX + offset.xCoord + motionX*speedFactor, posY + offset.yCoord + motionY*speedFactor, posZ + offset.zCoord + motionZ*speedFactor);
 						if(!getAABBCollisions(offsetBox, collisionMap.get(box)).isEmpty()){
 							if(box.relZ > 0){
@@ -612,7 +611,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			if(child.isDead){
 				removeChild(child.UUID, false);
 			}else{
-				MTSVector offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
+				Vec3d offset = RotationSystem.getRotatedPoint(child.offsetX, child.offsetY, child.offsetZ, rotationPitch, rotationYaw, rotationRoll);
 				child.setPosition(posX + offset.xCoord, posY + offset.yCoord, posZ + offset.zCoord);
 			}
 		}
