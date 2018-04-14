@@ -602,13 +602,13 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				for(byte i=0; i<light.centerPoints.length; ++i){
 					GL11.glPushMatrix();
 					GL11.glTranslated(light.centerPoints[i].xCoord - light.vertices[i*6][5]*0.15F, light.centerPoints[i].yCoord - light.vertices[i*6][6]*0.15F, light.centerPoints[i].zCoord - light.vertices[i*6][7]*0.15F);
-					Vec3d endpointVec = new Vec3d(light.vertices[i*6][5]*light.size[i]*2F, light.vertices[i*6][6]*light.size[i]*2F, light.vertices[i*6][7]*light.size[i]*2F);
+					Vec3d endpointVec = new Vec3d(light.vertices[i*6][5]*light.size[i]*3F, light.vertices[i*6][6]*light.size[i]*3F, light.vertices[i*6][7]*light.size[i]*3F);
 					//Now that we are at the starting location for the beam, rotate the matrix to get the correct direction.
 					GL11.glDepthMask(false);
 					for(byte j=0; j<=2; ++j){
-			    		drawCone(endpointVec, light.size[i]*0.5F, false);
+			    		drawCone(endpointVec, light.size[i], false);
 			    	}
-					drawCone(endpointVec, light.size[i]*0.5F, true);
+					drawCone(endpointVec, light.size[i], true);
 					GL11.glPopMatrix();
 				}
 		    	GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
