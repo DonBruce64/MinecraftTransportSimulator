@@ -107,7 +107,6 @@ public final class PackParserSystem{
     	boolean foundPack = false;
     	for(File modFile : modDir.listFiles()){
     		if(modFile.getName().endsWith(".jar")){
-    			log.add("Checking the following jar file for pack data: " + modFile.getAbsolutePath());
     			byte packDefsAdded = 0;
     			try{
     				ZipFile jarFile = new ZipFile(modFile);
@@ -116,13 +115,18 @@ public final class PackParserSystem{
     				boolean isValidFile = true;
     				Enumeration<? extends ZipEntry> jarEnum = jarFile.entries();
     				while(jarEnum.hasMoreElements()){
-    					if(jarEnum.nextElement().getName().contains(".class")){
-    						isValidFile = false;
-    						break;
+    					String jarEnumName = jarEnum.nextElement().getName();
+    					if(jarEnumName.contains(".class")){
+    						//This has class files.  Unless the only class file is MTSPackLoader, we don't want it!
+    						if(!jarEnumName.contains("MTSPackLoader")){
+        						isValidFile = false;
+        						break;
+    						}
     					}
     				}
     				
     				if(isValidFile){
+    	    			log.add("Checking the following jar file for pack data: " + modFile.getAbsolutePath());
     					jarEnum = jarFile.entries();
 	    				while(jarEnum.hasMoreElements()){
 	    					ZipEntry jarEntry = jarEnum.nextElement();
@@ -135,7 +139,7 @@ public final class PackParserSystem{
 	    						}
 	    						
 	    						//If the file exists, replace it to update it.
-	    						File outputfile = new File(assetDir + File.separator + jarEntry.getName().substring("mts/".length()));
+	    						File outputfile = new File(assetDir + File.separator + jarEntry.getName().substring("assets/mts/".length()));
 	    						if(outputfile.exists()){
 	    							outputfile.delete();
 	    						}
@@ -161,7 +165,7 @@ public final class PackParserSystem{
     				e.printStackTrace();
     				return false;
     			}
-    			if(packDefsAdded >= 0){
+    			if(packDefsAdded > 0){
     				log.add("Found " + packDefsAdded + " pack definitions inside: " + modFile.getAbsolutePath());
     			}
     		}
