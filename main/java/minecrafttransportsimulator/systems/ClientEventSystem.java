@@ -179,11 +179,11 @@ public final class ClientEventSystem{
     	//Forge will gladly call this on the client and server threads on SP.
     	if(event.getEntityPlayer().worldObj.isRemote){
 	    	if(event.getTarget() instanceof EntityMultipartMoving){
-	    		event.setCanceled(true);
 	    		MTS.MTSNet.sendToServer(new MultipartAttackPacket(event.getTarget().getEntityId(), event.getEntityPlayer().getEntityId()));
 	    		event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
 	    	}
-    	}else{
+    	}
+    	if(event.getTarget() instanceof EntityMultipartMoving){
     		event.setCanceled(true);
     	}
     }
