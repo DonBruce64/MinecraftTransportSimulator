@@ -60,6 +60,7 @@ public class ItemMultipartMoving extends Item{
 					if(!player.capabilities.isCreativeMode){
 						player.inventory.clearMatchingItems(heldStack.getItem(), heldStack.getItemDamage(), 1, heldStack.getTagCompound());
 					}
+					return EnumActionResult.SUCCESS;
 				}catch(Exception e){
 					MTS.MTSLog.error("ERROR SPAWING MULTIPART ENTITY!");
 					e.printStackTrace();
