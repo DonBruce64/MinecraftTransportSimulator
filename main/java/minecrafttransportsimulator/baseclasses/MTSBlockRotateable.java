@@ -5,7 +5,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 	
@@ -31,11 +30,7 @@ public abstract class MTSBlockRotateable extends BlockContainer{
     }
 
 	@Override
-	public TileEntity createNewTileEntity(World worldIn, int meta){
-		return getTileEntity();
-	}
-
-    public abstract MTSTileEntity getTileEntity();
+	public abstract MTSTileEntity createNewTileEntity(World worldIn, int meta);
     
     protected abstract boolean canRotateDiagonal();
     

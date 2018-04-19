@@ -58,7 +58,7 @@ public class BlockPropellerBench extends MTSBlockRotateable{
     }
 	
 	@Override
-	public MTSTileEntity getTileEntity(){
+	public MTSTileEntity createNewTileEntity(World worldIn, int meta){
 		return new TileEntityPropellerBench();
 	}
 	

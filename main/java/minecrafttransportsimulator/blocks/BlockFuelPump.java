@@ -78,7 +78,7 @@ public class BlockFuelPump extends MTSBlockRotateable{
 	}
 	
 	@Override
-	public MTSTileEntity getTileEntity(){
+	public MTSTileEntity createNewTileEntity(World worldIn, int meta){
 		return new TileEntityFuelPump();
 	}
 	
