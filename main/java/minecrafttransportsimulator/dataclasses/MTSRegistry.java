@@ -399,6 +399,13 @@ public final class MTSRegistry{
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.IRON_INGOT);
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineDetroitDiesel, false),
+				"AAA",
+				"ACA",
+				"BBB",
+				'A', Blocks.PISTON,
+				'B', Blocks.OBSIDIAN,
+				'C', Items.IRON_INGOT);
 		
 		//Repaired engines
 		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineAMCI4, false),
@@ -419,6 +426,12 @@ public final class MTSRegistry{
 				"B B",
 				'B', Blocks.OBSIDIAN,
 				'C', MTSRegistry.engineBristolMercury);
+		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineDetroitDiesel, false),
+				"B B",
+				"BCB",
+				"B B",
+				'B', Blocks.OBSIDIAN,
+				'C', MTSRegistry.engineDetroitDiesel);
 	}
 	
 	private static void initAircraftInstrumentRecipes(){		
