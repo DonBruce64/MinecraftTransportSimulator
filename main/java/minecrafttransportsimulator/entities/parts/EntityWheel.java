@@ -4,7 +4,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSDamageSources.DamageSourceWheel;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
@@ -19,14 +18,12 @@ import net.minecraft.client.audio.MovingSound;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public abstract class EntityWheel extends EntityGroundDevice implements SFXEntity{
-	public boolean isFlat;
 	public float angularPosition;
 	public float angularVelocity;
 	private boolean landedThisTick = false;
@@ -36,18 +33,45 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 		super(world);
 	}
 	
-	public EntityWheel(World world, EntityMultipartMoving moving, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, moving, parentUUID, offsetX, offsetY, offsetZ, 0.5F, 0.5F);
+	public EntityWheel(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ){
+		super(world, parent, parentUUID, offsetX, offsetY, offsetZ);
 	}
 	
 	@Override
 	public void setNBTFromStack(ItemStack stack){}
 	
 	@Override
+	public String getTextureName(){
+		return "wheel";
+	}
+	
+	@Override
+	public float getXRotation(float partialTicks){
+		return angularPosition + angularVelocity*partialTicks;
+	}
+	
+	@Override
+	public float getMotiveFriction(){
+		return !this.isFlat() ? 0.5F : 0.05F;
+	}
+	
+	@Override
+	public float getLateralFriction(){
+		return !this.isFlat() ? 0.5F : 0.05F;
+	}
+	
+	@Override
 	public void attackPart(DamageSource source, float damage){
-		if(!isFlat){
+		if(!this.isFlat()){
 			if(source.isExplosion() || Math.random() < 0.1){
-				setFlat();
+				if(!worldObj.isRemote){
+					worldObj.newExplosion(this, posX, posY, posZ, 0.25F, false, false);
+					//Replace regular wheel with flat wheel.
+					EntityWheel flatWheel = this.getFlatVersion();
+					parent.removeChild(this.UUID, false);
+					parent.addChild(flatWheel.UUID, flatWheel, true);
+					MTS.MTSNet.sendToAll(new FlatWheelPacket(this.getEntityId()));
+				}
 			}
 		}
 	}
@@ -95,21 +119,18 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 				angularVelocity = (float) Math.max(angularVelocity - 0.05, 0);
 			}
 		}
-		angularPosition += angularVelocity;
-		
+		angularPosition += Math.toDegrees(angularVelocity);
 		if(worldObj.isRemote){
 			MTS.proxy.updateSFXEntity(this, worldObj);
 		}
 	}
 	
-	public void setFlat(){
-		isFlat = true;
-		this.motiveFriction*=10;
-		this.lateralFriction*=0.1;
-		if(!worldObj.isRemote){
-			worldObj.newExplosion(this, posX, posY, posZ, 0.25F, false, false);
-			MTS.MTSNet.sendToAll(new FlatWheelPacket(this.getEntityId()));
-		}
+	public boolean isFlat(){
+		return false;
+	}
+	
+	public EntityWheel getFlatVersion(){
+		return null;
 	}
 	
 	@Override
@@ -155,106 +176,6 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 			}
 			MTS.proxy.playSound(this, MTS.MODID + ":" + "wheel_striking", 1, 1);
 			landedThisTick = false;
-		}
-	}
-	
-	@Override
-	public void readFromNBT(NBTTagCompound tagCompound){
-		super.readFromNBT(tagCompound);
-		this.isFlat=tagCompound.getBoolean("isFlat");
-	}
-    
-	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
-		super.writeToNBT(tagCompound);
-		tagCompound.setBoolean("isFlat", this.isFlat);
-		return tagCompound;
-	}
-	
-	public static class EntityWheelSmall extends EntityWheel{
-		public EntityWheelSmall(World world){
-			super(world);
-		}
-		
-		public EntityWheelSmall(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-			super(world, (EntityMultipartMoving) parent, parentUUID, offsetX, offsetY, offsetZ);
-		}
-		
-		@Override
-		public float getWidth(){
-			return 0.25F;
-		}
-		
-		@Override
-		public float getHeight(){
-			return this.isFlat ? 0.25F : 0.5F;
-		}
-		
-		@Override
-		public ItemStack getItemStack(){
-			if(!this.isFlat){
-				return new ItemStack(MTSRegistry.wheelSmall);	
-			}else{
-				return null;
-			}
-		}
-	}
-	
-	public static class EntityWheelMedium extends EntityWheel{
-		public EntityWheelMedium(World world){
-			super(world);
-		}
-		
-		public EntityWheelMedium(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-			super(world, (EntityMultipartMoving) parent, parentUUID, offsetX, offsetY, offsetZ);
-		}
-		
-		@Override
-		public float getWidth(){
-			return 0.5F;
-		}
-		
-		@Override
-		public float getHeight(){
-			return this.isFlat ? 0.375F : 0.75F;
-		}
-
-		@Override
-		public ItemStack getItemStack(){
-			if(!this.isFlat){
-				return new ItemStack(MTSRegistry.wheelMedium);	
-			}else{
-				return null;
-			}
-		}
-	}
-	
-	public static class EntityWheelLarge extends EntityWheel{
-		public EntityWheelLarge(World world){
-			super(world);
-		}
-		
-		public EntityWheelLarge(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-			super(world, (EntityMultipartMoving) parent, parentUUID, offsetX, offsetY, offsetZ);
-		}
-		
-		@Override
-		public float getWidth(){
-			return 0.5F;
-		}
-		
-		@Override
-		public float getHeight(){
-			return this.isFlat ? 0.5F : 1.0F;
-		}
-
-		@Override
-		public ItemStack getItemStack(){
-			if(!this.isFlat){
-				return new ItemStack(MTSRegistry.wheelLarge);	
-			}else{
-				return null;
-			}
 		}
 	}
 }

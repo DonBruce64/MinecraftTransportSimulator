@@ -17,10 +17,14 @@ import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
-import minecrafttransportsimulator.entities.parts.EntityWheel;
+import minecrafttransportsimulator.entities.parts.EntityWheelLarge;
+import minecrafttransportsimulator.entities.parts.EntityWheelLarge.EntityWheelLargeFlat;
+import minecrafttransportsimulator.entities.parts.EntityWheelMedium;
+import minecrafttransportsimulator.entities.parts.EntityWheelMedium.EntityWheelMediumFlat;
+import minecrafttransportsimulator.entities.parts.EntityWheelSmall;
+import minecrafttransportsimulator.entities.parts.EntityWheelSmall.EntityWheelSmallFlat;
 import minecrafttransportsimulator.rendering.partmodels.ModelPropeller;
 import minecrafttransportsimulator.rendering.partmodels.ModelSeat;
-import minecrafttransportsimulator.rendering.partmodels.ModelWheel;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -43,9 +47,12 @@ public final class RenderMultipartChild{
 		renderClassMap.put(EntityPropeller.class, new RenderPropeller());
 		renderClassMap.put(EntitySeat.class, new RenderSeat());
 		renderClassMap.put(EntitySkid.class, objRender);
-		renderClassMap.put(EntityWheel.EntityWheelSmall.class, new RenderWheel());
-		renderClassMap.put(EntityWheel.EntityWheelMedium.class, renderClassMap.get(EntityWheel.EntityWheelSmall.class));
-		renderClassMap.put(EntityWheel.EntityWheelLarge.class, renderClassMap.get(EntityWheel.EntityWheelSmall.class));
+		renderClassMap.put(EntityWheelSmall.class, objRender);
+		renderClassMap.put(EntityWheelSmallFlat.class, objRender);
+		renderClassMap.put(EntityWheelMedium.class, objRender);
+		renderClassMap.put(EntityWheelMediumFlat.class, objRender);
+		renderClassMap.put(EntityWheelLarge.class, objRender);
+		renderClassMap.put(EntityWheelLargeFlat.class, objRender);
 	}
 	
 	public static void renderChildEntity(EntityMultipartChild child, float partialTicks){
@@ -76,10 +83,13 @@ public final class RenderMultipartChild{
     			GL11.glEnd();
     			GL11.glEndList();
     			displayListMap.put(child.getClass(), displayListIndex);
-    			textureMap.put(child.getClass(), new ResourceLocation(MTS.MODID, "textures/parts/" + child.getClass().getSimpleName().substring("Entity".length()).toLowerCase() + ".png"));
+    			textureMap.put(child.getClass(), new ResourceLocation(MTS.MODID, "textures/parts/" + child.getTextureName() + ".png"));
     		}
     		
     		GL11.glPushMatrix();
+    		GL11.glRotatef(child.getXRotation(partialTicks), 1, 0, 0);
+    		GL11.glRotatef(child.getYRotation(partialTicks), 0, 1, 0);
+    		GL11.glRotatef(child.getZRotation(partialTicks), 0, 0, 1);
             textureManger.bindTexture(textureMap.get(child.getClass()));
 			GL11.glCallList(displayListMap.get(child.getClass()));
 			GL11.glPopMatrix();
@@ -156,40 +166,6 @@ public final class RenderMultipartChild{
     		texArray[texIndex++] = new ResourceLocation("textures/blocks/wool_colored_red.png");
     		texArray[texIndex++] = new ResourceLocation("textures/blocks/wool_colored_black.png");
     		return texArray;
-    	}
-    }
-    
-    private static final class RenderWheel extends RenderChild{
-    	private static final ModelWheel modelWheel = new ModelWheel();
-    	private static final ResourceLocation textureWheelInner = new ResourceLocation("minecraft", "textures/blocks/wool_colored_white.png");
-    	private static final ResourceLocation textureWheelOuter = new ResourceLocation("minecraft", "textures/blocks/wool_colored_black.png");
-    	
-    	@Override
-    	public void doRender(EntityMultipartChild child, TextureManager textureManger, float partialTicks){
-    		EntityWheel wheel = (EntityWheel) child;
-    		if(wheel instanceof EntityWheel.EntityWheelSmall){
-    			textureManger.bindTexture(textureWheelInner);
-    			modelWheel.renderSmallInnerWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);
-    			if(!wheel.isFlat){
-    				textureManger.bindTexture(textureWheelOuter);
-    				modelWheel.renderSmallOuterWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);
-    			}
-    		
-    		}else if(wheel instanceof EntityWheel.EntityWheelMedium){
-    			textureManger.bindTexture(textureWheelInner);
-    			modelWheel.renderMediumInnerWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);
-    			if(!wheel.isFlat){
-    				textureManger.bindTexture(textureWheelOuter);
-    				modelWheel.renderMediumOuterWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);
-    			}
-    		}else{
-    			textureManger.bindTexture(textureWheelInner);
-    			modelWheel.renderLargeInnerWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);
-    			if(!wheel.isFlat){
-    				textureManger.bindTexture(textureWheelOuter);
-    				modelWheel.renderLargeOuterWheel(wheel.angularPosition + wheel.angularVelocity*partialTicks);
-    			}
-    		}
     	}
     }
 }

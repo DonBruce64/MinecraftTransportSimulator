@@ -35,7 +35,12 @@ public class FlatWheelPacket implements IMessage{
 				public void run(){
 					EntityWheel wheel = (EntityWheel) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					if(wheel != null){
-						wheel.setFlat();
+						if(!wheel.isFlat()){
+							//Replace regular wheel with flat wheel.
+							EntityWheel flatWheel = wheel.getFlatVersion();
+							wheel.parent.removeChild(wheel.UUID, false);
+							wheel.parent.addChild(flatWheel.UUID, flatWheel, true);
+						}
 					}
 				}
 			});

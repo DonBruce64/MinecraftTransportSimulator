@@ -20,7 +20,12 @@ import minecrafttransportsimulator.entities.parts.EntityPontoon;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.entities.parts.EntitySkid;
-import minecrafttransportsimulator.entities.parts.EntityWheel;
+import minecrafttransportsimulator.entities.parts.EntityWheelLarge;
+import minecrafttransportsimulator.entities.parts.EntityWheelLarge.EntityWheelLargeFlat;
+import minecrafttransportsimulator.entities.parts.EntityWheelMedium;
+import minecrafttransportsimulator.entities.parts.EntityWheelMedium.EntityWheelMediumFlat;
+import minecrafttransportsimulator.entities.parts.EntityWheelSmall;
+import minecrafttransportsimulator.entities.parts.EntityWheelSmall.EntityWheelSmallFlat;
 import minecrafttransportsimulator.items.ItemCrate;
 import minecrafttransportsimulator.items.ItemEngine;
 import minecrafttransportsimulator.items.ItemInstrument;
@@ -92,9 +97,9 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @Mod.EventBusSubscriber
 public final class MTSRegistry{	
-	public static final Item wheelSmall = new ItemPart(EntityWheel.EntityWheelSmall.class).setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item wheelMedium = new ItemPart(EntityWheel.EntityWheelMedium.class).setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item wheelLarge = new ItemPart(EntityWheel.EntityWheelLarge.class).setCreativeTab(MTSCreativeTabs.tabMTSParts);
+	public static final Item wheelSmall = new ItemPart(EntityWheelSmall.class).setCreativeTab(MTSCreativeTabs.tabMTSParts);
+	public static final Item wheelMedium = new ItemPart(EntityWheelMedium.class).setCreativeTab(MTSCreativeTabs.tabMTSParts);
+	public static final Item wheelLarge = new ItemPart(EntityWheelLarge.class).setCreativeTab(MTSCreativeTabs.tabMTSParts);
 	public static final Item skid = new ItemPart(EntitySkid.class).setCreativeTab(MTSCreativeTabs.tabMTSParts);
 	public static final Item pontoon = new ItemPart(EntityPontoon.class).setCreativeTab(MTSCreativeTabs.tabMTSParts);
 	public static final Item engineLycomingO360 = new ItemEngine(EntityEngineLycomingO360.class, ItemEngine.Engines.LYCOMING_O360).setCreativeTab(MTSCreativeTabs.tabMTSParts);
@@ -211,9 +216,12 @@ public final class MTSRegistry{
 		
 		registerEntity(EntitySeat.class);
 		registerEntity(EntityCrate.class);
-		registerEntity(EntityWheel.EntityWheelSmall.class);
-		registerEntity(EntityWheel.EntityWheelMedium.class);
-		registerEntity(EntityWheel.EntityWheelLarge.class);
+		registerEntity(EntityWheelSmall.class);
+		registerEntity(EntityWheelSmallFlat.class);
+		registerEntity(EntityWheelMedium.class);
+		registerEntity(EntityWheelMediumFlat.class);
+		registerEntity(EntityWheelLarge.class);
+		registerEntity(EntityWheelLargeFlat.class);
 		registerEntity(EntitySkid.class);
 		registerEntity(EntityPontoon.class);
 		registerEntity(EntityPontoon.EntityPontoonDummy.class);

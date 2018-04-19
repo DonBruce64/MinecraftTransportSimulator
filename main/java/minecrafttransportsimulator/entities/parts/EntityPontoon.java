@@ -5,7 +5,6 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.main.EntityGroundDevice;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
@@ -21,16 +20,16 @@ public class EntityPontoon extends EntityGroundDevice{
 		super(world);
 	}
 	
-	public EntityPontoon(World world, EntityMultipartParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		this(world, vehicle, parentUUID, offsetX, offsetY, offsetZ > 0 ? offsetZ : offsetZ + 2);
-		this.otherHalf = new EntityPontoonDummy(world, vehicle, parentUUID, offsetX, offsetY, offsetZ > 0 ? offsetZ - 2 : offsetZ);
+	public EntityPontoon(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+		this(world, parent, parentUUID, offsetX, offsetY, offsetZ > 0 ? offsetZ : offsetZ + 2);
+		this.otherHalf = new EntityPontoonDummy(world, parent, parentUUID, offsetX, offsetY, offsetZ > 0 ? offsetZ - 2 : offsetZ);
 		this.setOtherHalf(otherHalf);
 		otherHalf.setOtherHalf(this);
-		vehicle.addChild(this.otherHalfUUID, otherHalf, true);
+		parent.addChild(this.otherHalfUUID, otherHalf, true);
 	}
 	
-	protected EntityPontoon(World world, EntityMultipartParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ){
-		super(world, (EntityMultipartVehicle) vehicle, parentUUID, offsetX, offsetY, offsetZ, 0.1F, 0.125F);
+	protected EntityPontoon(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ){
+		super(world, parent, parentUUID, offsetX, offsetY, offsetZ);
 	}
 	
 	@Override
@@ -49,6 +48,16 @@ public class EntityPontoon extends EntityGroundDevice{
 	@Override
 	public ItemStack getItemStack(){
 		return new ItemStack(MTSRegistry.pontoon);
+	}
+	
+	@Override
+	public float getMotiveFriction(){
+		return 0.1F;
+	}
+	
+	@Override
+	public float getLateralFriction(){
+		return 0.125F;
 	}
 	
 	@Override
@@ -121,16 +130,16 @@ public class EntityPontoon extends EntityGroundDevice{
 			super(world);
 		}
 		
-		public EntityPontoonDummy(World world, EntityMultipartParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-			this(world, vehicle, parentUUID, offsetX, offsetY, offsetZ);
-			this.otherHalf = new EntityPontoon(world, vehicle, parentUUID, offsetX, offsetY, offsetZ + 2);
+		public EntityPontoonDummy(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
+			this(world, parent, parentUUID, offsetX, offsetY, offsetZ);
+			this.otherHalf = new EntityPontoon(world, parent, parentUUID, offsetX, offsetY, offsetZ + 2);
 			this.setOtherHalf(otherHalf);
 			otherHalf.setOtherHalf(this);
-			vehicle.addChild(this.otherHalfUUID, otherHalf, true);
+			parent.addChild(this.otherHalfUUID, otherHalf, true);
 		}
 		
-		public EntityPontoonDummy(World world, EntityMultipartParent vehicle, String parentUUID, float offsetX, float offsetY, float offsetZ){
-			super(world, vehicle, parentUUID, offsetX, offsetY, offsetZ);
+		public EntityPontoonDummy(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ){
+			super(world, parent, parentUUID, offsetX, offsetY, offsetZ);
 		}
 
 		

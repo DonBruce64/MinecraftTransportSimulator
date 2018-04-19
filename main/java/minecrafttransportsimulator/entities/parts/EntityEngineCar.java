@@ -68,7 +68,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 			if(wheel.isOnGround()){
 				if((wheel.offsetZ > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offsetZ <= 0 && car.pack.car.isRearWheelDrive)){
 					float frictionLoss = 0.6F - wheel.worldObj.getBlockState(wheel.getPosition().down()).getBlock().slipperiness;
-					wheelFriction = wheel.motiveFriction - frictionLoss;
+					wheelFriction = wheel.getMotiveFriction() - frictionLoss;
 				}
 			}
 		}

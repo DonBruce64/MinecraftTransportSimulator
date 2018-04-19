@@ -67,7 +67,7 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
         float f1 = this.getHeight()/2.0F;
         this.setEntityBoundingBox(new AxisAlignedBB(x - (double)f, y - (double)f1, z - (double)f, x + (double)f, y + (double)f1, z + (double)f));
     }
-		
+
 	/**Called when checking if this part can be interacted with.
 	 * Return true to forward interactions to this part rather than
 	 * have the master multipart deal with them.
@@ -95,6 +95,25 @@ public abstract class EntityMultipartChild extends EntityMultipartBase{
 	 * This is called when removing the entity from the world to return an item.
 	 */
 	public abstract ItemStack getItemStack();
+	
+	/**Gets the name of the texture.
+	 * By default this is the short class name, however special parts may override this.
+	 */
+	public String getTextureName(){
+		return this.getClass().getSimpleName().substring("Entity".length()).toLowerCase();
+	}
+	
+	public float getXRotation(float partialTicks){
+		return 0;
+	}
+	
+	public float getYRotation(float partialTicks){
+		return 0;
+	}
+	
+	public float getZRotation(float partialTicks){
+		return 0;
+	}
 	
 	public boolean hasParent(){
 		if(this.parent==null){

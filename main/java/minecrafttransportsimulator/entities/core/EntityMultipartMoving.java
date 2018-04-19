@@ -781,7 +781,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			if(collisionMap.get(box) instanceof EntityGroundDevice){
 				if(brakeOn || parkingBrakeOn){
 					if(collisionMap.get(box).isOnGround()){
-						addedFactor = ((EntityGroundDevice) collisionMap.get(box)).motiveFriction;
+						addedFactor = ((EntityGroundDevice) collisionMap.get(box)).getMotiveFriction();
 					}
 				}
 			}else{
@@ -814,8 +814,8 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			BlockPos pos = grounder.getPosition().down();
 			float frictionLoss = 0.6F - grounder.worldObj.getBlockState(pos).getBlock().slipperiness;
 			//Do we have enough friction to prevent skidding?
-			if(grounder.lateralFriction - frictionLoss > 0){
-				skiddingFactor += grounder.lateralFriction - frictionLoss;
+			if(grounder.getLateralFriction() - frictionLoss > 0){
+				skiddingFactor += grounder.getLateralFriction() - frictionLoss;
 			}
 		}
 		return skiddingFactor;
@@ -836,8 +836,8 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				BlockPos pos = grounder.getPosition().down();
 				float frictionLoss = 0.6F - grounder.worldObj.getBlockState(pos).getBlock().slipperiness;
 				//Do we have enough friction to change yaw?
-				if(grounder.shouldAffectSteering() && grounder.lateralFriction - frictionLoss > 0){
-					turningFactor += grounder.lateralFriction - frictionLoss;
+				if(grounder.shouldAffectSteering() && grounder.getLateralFriction() - frictionLoss > 0){
+					turningFactor += grounder.getLateralFriction() - frictionLoss;
 				}
 			}
 			if(turningFactor > 0){
