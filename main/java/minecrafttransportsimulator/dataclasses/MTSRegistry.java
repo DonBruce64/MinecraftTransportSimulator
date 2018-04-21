@@ -26,7 +26,6 @@ import minecrafttransportsimulator.entities.parts.EntityWheelMedium;
 import minecrafttransportsimulator.entities.parts.EntityWheelMedium.EntityWheelMediumFlat;
 import minecrafttransportsimulator.entities.parts.EntityWheelSmall;
 import minecrafttransportsimulator.entities.parts.EntityWheelSmall.EntityWheelSmallFlat;
-import minecrafttransportsimulator.items.ItemCrate;
 import minecrafttransportsimulator.items.ItemEngine;
 import minecrafttransportsimulator.items.ItemInstrument;
 import minecrafttransportsimulator.items.ItemKey;
@@ -97,18 +96,18 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @Mod.EventBusSubscriber
 public final class MTSRegistry{	
-	public static final Item wheelSmall = new ItemPart(EntityWheelSmall.class).setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item wheelMedium = new ItemPart(EntityWheelMedium.class).setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item wheelLarge = new ItemPart(EntityWheelLarge.class).setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item skid = new ItemPart(EntitySkid.class).setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item pontoon = new ItemPart(EntityPontoon.class).setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item engineLycomingO360 = new ItemEngine(EntityEngineLycomingO360.class, ItemEngine.Engines.LYCOMING_O360).setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item engineBristolMercury = new ItemEngine(EntityEngineBristolMercury.class, ItemEngine.Engines.BRISTOL_MERCURY).setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item engineAMCI4 = new ItemEngine(EntityEngineAMCI4.class, ItemEngine.Engines.AMC_I4).setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item engineDetroitDiesel = new ItemEngine(EntityEngineDetroitDiesel.class, ItemEngine.Engines.DETROIT_DIESEL).setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item propeller = new ItemPropeller().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item seat = new ItemSeat().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item crate = new ItemCrate().setCreativeTab(MTSCreativeTabs.tabMTSParts);
+	public static final Item wheelSmall = new ItemPart(EntityWheelSmall.class);
+	public static final Item wheelMedium = new ItemPart(EntityWheelMedium.class);
+	public static final Item wheelLarge = new ItemPart(EntityWheelLarge.class);
+	public static final Item skid = new ItemPart(EntitySkid.class);
+	public static final Item pontoon = new ItemPart(EntityPontoon.class);
+	public static final Item engineLycomingO360 = new ItemEngine(EntityEngineLycomingO360.class, ItemEngine.Engines.LYCOMING_O360);
+	public static final Item engineBristolMercury = new ItemEngine(EntityEngineBristolMercury.class, ItemEngine.Engines.BRISTOL_MERCURY);
+	public static final Item engineAMCI4 = new ItemEngine(EntityEngineAMCI4.class, ItemEngine.Engines.AMC_I4);
+	public static final Item engineDetroitDiesel = new ItemEngine(EntityEngineDetroitDiesel.class, ItemEngine.Engines.DETROIT_DIESEL);
+	public static final Item propeller = new ItemPropeller();
+	public static final Item seat = new ItemSeat();
+	public static final Item crate = new ItemPart(EntityCrate.class);
 	
 	public static final Item pointerShort = new Item().setCreativeTab(MTSCreativeTabs.tabMTSParts);
 	public static final Item pointerLong = new Item().setCreativeTab(MTSCreativeTabs.tabMTSParts);
