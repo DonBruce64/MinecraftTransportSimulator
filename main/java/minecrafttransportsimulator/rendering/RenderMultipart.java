@@ -202,7 +202,8 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		
 		//Lights and beacons get rendered in two passes.
 		//The first renders the cases and bulbs, the second renders the beams and effects.
-		if(mover instanceof EntityMultipartVehicle){
+		//Make sure the light list is populated here before we try to render this, as loading de-syncs can leave it null.
+		if(mover instanceof EntityMultipartVehicle && lightLists.get(mover.pack.rendering.modelName) != null){
 			EntityMultipartVehicle vehicle = (EntityMultipartVehicle) mover;
 			float sunLight = vehicle.worldObj.getSunBrightness(0)*vehicle.worldObj.getLightBrightness(vehicle.getPosition());
 			float blockLight = vehicle.worldObj.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, vehicle.getPosition())/15F;
@@ -214,11 +215,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			GL11.glRotated(rotateYaw, 0, 1, 0);
 	        GL11.glRotated(rotatePitch, 1, 0, 0);
 	        GL11.glRotated(rotateRoll, 0, 0, 1);
-
 	        renderLights(vehicle, sunLight, blockLight, lightBrightness, electricFactor, wasRenderedPrior);
-			/*if(!wasRenderedPrior){
-				renderBeacons(vehicle, sunLight, blockLight, lightBrightness, electricFactor);
-			}*/
 			GL11.glDisable(GL11.GL_NORMALIZE);
 			GL11.glPopMatrix();
 			
