@@ -95,34 +95,33 @@ import net.minecraftforge.fml.relauncher.Side;
  * @author don_bruce
  */
 @Mod.EventBusSubscriber
-public final class MTSRegistry{	
+public final class MTSRegistry{
+	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(MTSCreativeTabs.tabMTSParts);
+	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(MTSCreativeTabs.tabMTSParts);	
+	
+	public static final Item wrench = new ItemWrench().setCreativeTab(MTSCreativeTabs.tabMTSParts);
+	public static final Item manual = new ItemManual().setCreativeTab(MTSCreativeTabs.tabMTSParts);
+	public static final Item key = new ItemKey().setCreativeTab(MTSCreativeTabs.tabMTSParts);
+	
+	public static final Item itemBlockPropellerBench = new ItemBlock(propellerBench);
+	public static final Item itemBlockFuelPump = new ItemBlock(fuelPump);
+	
+	public static final Item engineLycomingO360 = new ItemEngine(EntityEngineLycomingO360.class, ItemEngine.Engines.LYCOMING_O360);
+	public static final Item engineBristolMercury = new ItemEngine(EntityEngineBristolMercury.class, ItemEngine.Engines.BRISTOL_MERCURY);
+	public static final Item engineAMCI4 = new ItemEngine(EntityEngineAMCI4.class, ItemEngine.Engines.AMC_I4);
+	public static final Item engineDetroitDiesel = new ItemEngine(EntityEngineDetroitDiesel.class, ItemEngine.Engines.DETROIT_DIESEL);
 	public static final Item wheelSmall = new ItemPart(EntityWheelSmall.class);
 	public static final Item wheelMedium = new ItemPart(EntityWheelMedium.class);
 	public static final Item wheelLarge = new ItemPart(EntityWheelLarge.class);
 	public static final Item skid = new ItemPart(EntitySkid.class);
 	public static final Item pontoon = new ItemPart(EntityPontoon.class);
-	public static final Item engineLycomingO360 = new ItemEngine(EntityEngineLycomingO360.class, ItemEngine.Engines.LYCOMING_O360);
-	public static final Item engineBristolMercury = new ItemEngine(EntityEngineBristolMercury.class, ItemEngine.Engines.BRISTOL_MERCURY);
-	public static final Item engineAMCI4 = new ItemEngine(EntityEngineAMCI4.class, ItemEngine.Engines.AMC_I4);
-	public static final Item engineDetroitDiesel = new ItemEngine(EntityEngineDetroitDiesel.class, ItemEngine.Engines.DETROIT_DIESEL);
 	public static final Item propeller = new ItemPropeller();
-	public static final Item seat = new ItemSeat();
 	public static final Item crate = new ItemPart(EntityCrate.class);
+	public static final Item seat = new ItemSeat();
 	
 	public static final Item pointerShort = new Item().setCreativeTab(MTSCreativeTabs.tabMTSParts);
 	public static final Item pointerLong = new Item().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item wrench = new ItemWrench().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item manual = new ItemManual().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item key = new ItemKey().setCreativeTab(MTSCreativeTabs.tabMTSParts);
 	public static final Item instrument = new ItemInstrument().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	
-	
-	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item itemBlockPropellerBench = new ItemBlock(propellerBench);
-	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item itemBlockFuelPump = new ItemBlock(fuelPump);
-	
-		
 	
 	
 	private static int entityNumber = 0;
