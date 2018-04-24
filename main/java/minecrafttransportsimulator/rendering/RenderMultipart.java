@@ -326,7 +326,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			case("throttle"): return ((EntityMultipartVehicle) mover).throttle/4F;
 			case("brake"): return mover.brakeOn ? 30 : 0;
 			case("p_brake"): return mover.parkingBrakeOn ? 30 : 0;
-			case("gearshift"): return ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1) != null ? ((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()*15 : 0;
+			case("gearshift"): return ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1) != null ? ((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()*5 : 0;
 			case("driveshaft"): return (float) (((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1) != null ? ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1).RPM/((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getRatioForGear(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()) : 0);
 			case("steeringwheel"): return mover.getSteerAngle();
 			
