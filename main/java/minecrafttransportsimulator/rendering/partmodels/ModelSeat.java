@@ -13,7 +13,7 @@ public class ModelSeat extends ModelBase{
     	this.textureHeight = 16;
     	frame = new ModelRenderer(this, 0, 0);
     	frame.setTextureSize(textureWidth, textureHeight);
-    	frame.addBox(-4, -10, -6, 8, 3, 12);
+    	frame.addBox(-5, -10, -6, 10, 3, 12);
     	frame.addBox(-6, -10, -6, 1, 6, 12);
     	frame.addBox(5, -10, -6, 1, 6, 12);
     	frame.addBox(-6, -10, -8, 12, 18, 2);
