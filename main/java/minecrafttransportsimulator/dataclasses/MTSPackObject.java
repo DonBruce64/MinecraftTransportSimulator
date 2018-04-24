@@ -89,6 +89,7 @@ public class MTSPackObject{
     public class PackRenderingConfig{
         public String modelName;
         public List<PackDisplayText> textMarkings = new ArrayList<PackDisplayText>();
+        public List<PackRotatableModelObject> rotatableModelObjects = new ArrayList<PackRotatableModelObject>();
     }
     
     public class PackDisplayText{
@@ -96,5 +97,12 @@ public class MTSPackObject{
         public float[] rot;
         public float scale;
         public String color;
+    }
+    
+    public class PackRotatableModelObject{
+    	public String partName;
+    	public float[] rotationPoint;
+    	public float[] rotationAxis;
+    	public String rotationVariable;
     }
 }

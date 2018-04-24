@@ -24,7 +24,7 @@ public class MTS {
 	public static final String MODNAME="Minecraft Transport Simulator";
 	public static final String MODVER="10.1.1";
 	public static final String assetDir = System.getProperty("user.dir") + File.separator + MTS.MODID;
-	public static final byte packJSONVersionNumber = 4;
+	public static final byte packJSONVersionNumber = 5;
 	
 	@Instance(value = MTS.MODID)
 	public static MTS instance;
