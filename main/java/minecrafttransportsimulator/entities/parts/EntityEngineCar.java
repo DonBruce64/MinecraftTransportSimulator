@@ -103,6 +103,9 @@ public abstract class EntityEngineCar extends EntityEngine{
 				}
 			}else{
 				RPM += (engineTargetRPM - RPM)/10;
+				if(RPM > maxSafeRPM){
+					RPM -= (engineTargetRPM - RPM)/5;
+				}
 				engineForce = 0;
 			}
 		}else{
