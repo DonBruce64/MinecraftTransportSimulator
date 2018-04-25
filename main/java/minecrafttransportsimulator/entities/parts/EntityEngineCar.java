@@ -32,7 +32,7 @@ public abstract class EntityEngineCar extends EntityEngine{
 			byte grounders = 0;
 			for(EntityWheel wheel : car.wheels){
 				++grounders;
-				if((wheel.offsetZ > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offsetZ < 0 && car.pack.car.isRearWheelDrive)){
+				if((wheel.offsetZ > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offsetZ <= 0 && car.pack.car.isRearWheelDrive)){
 					//If we have grounded ground devices, and this wheel is not on the ground, don't take it into account.
 					if(wheel.isOnGround() || (car.groundedGroundDevices.size() == 0)){
 						lowestSpeed = Math.min(wheel.angularVelocity, lowestSpeed);
@@ -89,14 +89,14 @@ public abstract class EntityEngineCar extends EntityEngine{
 				if(Math.abs(engineForce/10) > wheelFriction){
 					engineForce /= 2F;
 					for(EntityWheel wheel : car.wheels){
-						if((wheel.offsetZ > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offsetZ < 0 && car.pack.car.isRearWheelDrive)){
+						if((wheel.offsetZ > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offsetZ <= 0 && car.pack.car.isRearWheelDrive)){
 							wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForGear(gearNumber), wheel.angularVelocity + 0.05);
 						}
 					}
 				}else{
 					//If we have wheels not on the ground and we drive them, adjust their velocity now.
 					for(EntityWheel wheel : car.wheels){
-						if(!wheel.isOnGround() && ((wheel.offsetZ > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offsetZ < 0 && car.pack.car.isRearWheelDrive))){
+						if(!wheel.isOnGround() && ((wheel.offsetZ > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offsetZ <= 0 && car.pack.car.isRearWheelDrive))){
 							wheel.angularVelocity = lowestSpeed;
 						}
 					}
