@@ -187,7 +187,7 @@ public final class ControlSystem{
 	}
 	
 	//Return type is short to allow for easier packet transmission.
-	private static short getJoystickAxisState(ControlsJoystick control, boolean normalized){
+	private static short getJoystickAxisState(ControlsJoystick control, short pollBounds){
 		if(joystickMap.containsKey(control.joystickAssigned)){
 			joystickMap.get(control.joystickAssigned).poll();
 			float pollValue = joystickMap.get(control.joystickAssigned).getComponents()[control.joystickButton].getPollData();
@@ -197,8 +197,8 @@ public final class ControlSystem{
 				pollValue = (float) Math.min(control.joystickMaxTravel, pollValue);				
 				
 				//If we don't need to normalize the axis, return it as-is.  Otherwise do a normalization from 0-1.
-				if(!normalized){
-					return (short) (control.joystickInverted ? (-250*pollValue) : (250*pollValue));
+				if(pollBounds != 0){
+					return (short) (control.joystickInverted ? (-pollBounds*pollValue) : (pollBounds*pollValue));
 				}else{
 					//Divide the poll value plus the min bounds by the span to get it in the range of 0-1.
 					pollValue = (float) ((pollValue - control.joystickMinTravel)/(control.joystickMaxTravel - control.joystickMinTravel));
@@ -305,7 +305,7 @@ public final class ControlSystem{
 		
 		//Increment or decrement throttle.
 		if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_THROTTLE.joystickAssigned) && ControlsJoystick.AIRCRAFT_THROTTLE.joystickButton != NULL_COMPONENT){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.AIRCRAFT_THROTTLE, true)));
+			MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.AIRCRAFT_THROTTLE, (short) 0)));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()){
 				MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MAX_VALUE));
@@ -327,7 +327,7 @@ public final class ControlSystem{
 		
 		//Check yaw.
 		if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_YAW.joystickAssigned) && ControlsJoystick.AIRCRAFT_YAW.joystickButton != NULL_COMPONENT){
-			MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), getJoystickAxisState(ControlsJoystick.AIRCRAFT_YAW, false)));
+			MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), getJoystickAxisState(ControlsJoystick.AIRCRAFT_YAW, (short) 250)));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_YAW_R.isPressed() && !ControlsKeyboardDynamic.AIRCRAFT_TRIM_YAW_R.isPressed()){
 				MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
@@ -360,7 +360,7 @@ public final class ControlSystem{
 		}else{
 			//Check pitch.
 			if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_PITCH.joystickAssigned) && ControlsJoystick.AIRCRAFT_PITCH.joystickButton != NULL_COMPONENT){
-				MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), getJoystickAxisState(ControlsJoystick.AIRCRAFT_PITCH, false)));
+				MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), getJoystickAxisState(ControlsJoystick.AIRCRAFT_PITCH, (short) 250)));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_PITCH_U.isPressed() && !ControlsKeyboardDynamic.AIRCRAFT_TRIM_PITCH_U.isPressed()){
 					MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
@@ -378,7 +378,7 @@ public final class ControlSystem{
 			
 			//Check roll.
 			if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_ROLL.joystickAssigned) && ControlsJoystick.AIRCRAFT_ROLL.joystickButton != NULL_COMPONENT){
-				MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), getJoystickAxisState(ControlsJoystick.AIRCRAFT_ROLL, false)));
+				MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), getJoystickAxisState(ControlsJoystick.AIRCRAFT_ROLL, (short) 250)));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_ROLL_R.isPressed() && !ControlsKeyboardDynamic.AIRCRAFT_TRIM_ROLL_R.isPressed()){
 					MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
@@ -406,7 +406,7 @@ public final class ControlSystem{
 		
 		//Change gas to on or off.
 		if(joystickMap.containsKey(ControlsJoystick.CAR_GAS.joystickAssigned) && ControlsJoystick.CAR_GAS.joystickButton != NULL_COMPONENT){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_GAS, true)));
+			MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_GAS, (short) 0)));
 		}else{
 			if(ControlsKeyboard.CAR_GAS.isPressed()){
 				MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) 100));
@@ -427,7 +427,7 @@ public final class ControlSystem{
 				MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.RUNNINGLIGHT));
 			}
 			if(joystickMap.containsKey(ControlsJoystick.CAR_TURN.joystickAssigned) && ControlsJoystick.CAR_TURN.joystickButton != NULL_COMPONENT){
-				MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), getJoystickAxisState(ControlsJoystick.CAR_TURN, false)));
+				MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), getJoystickAxisState(ControlsJoystick.CAR_TURN, (short) 350)));
 			}else{
 				boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
 				boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();

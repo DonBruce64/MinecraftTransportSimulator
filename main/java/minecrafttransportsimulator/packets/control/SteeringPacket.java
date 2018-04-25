@@ -59,14 +59,14 @@ public class SteeringPacket implements IMessage{
 					if(thisEntity!=null){
 						if(message.packetType == 1){
 							thisEntity.steeringCooldown = message.steeringData;
-							if(thisEntity.steeringAngle + 20 <= 250){
+							if(thisEntity.steeringAngle + 20 <= 350){
 								thisEntity.steeringAngle += 20;
 							}else{
 								return;
 							}
 						}else if(message.packetType == -1){
 							thisEntity.steeringCooldown = message.steeringData;
-							if(thisEntity.steeringAngle - 20 >= -250){
+							if(thisEntity.steeringAngle - 20 >= -350){
 								thisEntity.steeringAngle -= 20;
 							}else{
 								return;
