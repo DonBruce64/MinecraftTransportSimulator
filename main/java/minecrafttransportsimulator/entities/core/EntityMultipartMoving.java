@@ -822,15 +822,16 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	}
 	
 	/**
-	 * Returns factor for turning based on lateral friction and velocity.
+	 * Returns factor for turning based on lateral friction, velocity, and wheel distance.
 	 * Sign of returned value indicates which direction entity should yaw.
 	 * A 0 value indicates no yaw change.
 	 */
-	protected float getTurningFactor(){		
+	protected float getTurningFactor(){
 		float turningForce = 0;
 		float steeringAngle = this.getSteerAngle();
 		if(steeringAngle != 0){
 			float turningFactor = 0;
+			float turningDistance = 0;
 			for(EntityGroundDevice grounder : groundedGroundDevices){
 				//0.6 is default slipperiness for blocks.  Anything less should reduce friction, anything extra should increase it.
 				BlockPos pos = grounder.getPosition().down();
@@ -838,6 +839,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				//Do we have enough friction to change yaw?
 				if(grounder.shouldAffectSteering() && grounder.getLateralFriction() - frictionLoss > 0){
 					turningFactor += grounder.getLateralFriction() - frictionLoss;
+					turningDistance = Math.max(turningDistance, Math.abs(grounder.offsetZ));
 				}
 			}
 			if(turningFactor > 0){
@@ -846,9 +848,11 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				if(turningFactor < 1){
 					steeringAngle *= turningFactor;
 				}
+				//Adjust steering angle to be aligned with distance of the turning part from the center of the vehicle.
+				steeringAngle /= turningDistance;
 				//Another thing that can affect the steering angle is speed.
 				//More speed makes for less wheel turn to prevent crazy circles.
-				steeringAngle *= Math.pow(0.25F, velocity);
+				steeringAngle *= Math.pow(0.25F, Math.abs(velocity));
 				//Adjust turn force to steer angle based on turning factor.
 				turningForce = -(float) (steeringAngle*velocity/2F);
 				//Now add the sign to this force.
