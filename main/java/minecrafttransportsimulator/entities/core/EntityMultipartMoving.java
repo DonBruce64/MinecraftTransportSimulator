@@ -473,8 +473,8 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			//Now everything has been checked and clamped.  If we had a colliding ground device
 			//during the XZ movement that could move up to get out of the way increase the Y
 			//of this multipart to do so.
-			if(groundDeviceNeedsLifting && motionY <= 0.25F){
-				motionY = 0.25F;
+			if(groundDeviceNeedsLifting && motionY <= 0.15F){
+				motionY = 0.15F;
 			}
 			
 			if(originalMotionY != motionY && originalMotionY < 0){
