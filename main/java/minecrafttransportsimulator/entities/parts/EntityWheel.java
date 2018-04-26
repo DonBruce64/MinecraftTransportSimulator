@@ -52,12 +52,12 @@ public abstract class EntityWheel extends EntityGroundDevice implements SFXEntit
 	
 	@Override
 	public float getMotiveFriction(){
-		return !this.isFlat() ? 0.5F : 0.05F;
+		return !this.isFlat() ? this.getWidth() : this.getWidth()/10F;
 	}
 	
 	@Override
 	public float getLateralFriction(){
-		return !this.isFlat() ? 0.5F : 0.05F;
+		return !this.isFlat() ? this.getWidth() : this.getWidth()/10F;
 	}
 	
 	@Override
