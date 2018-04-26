@@ -16,7 +16,7 @@ public class EntityWheelMedium extends EntityWheel{
 
 	@Override
 	public float getWidth(){
-		return 0.5F;
+		return 0.375F;
 	}
 	
 	@Override
