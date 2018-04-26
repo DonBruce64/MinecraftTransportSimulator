@@ -146,8 +146,8 @@ gui.config.joystick.confirm=Confirm
 gui.packmissing.title=!WARNING!
 gui.packmissing.reason=MTS has detected that it has been started without a content pack.  This will result in NO vehicles being present!  If you are having trouble installing the pack please try the following:
 gui.packmissing.nomod=If you do NOT have a content pack yet installed, please see the Curse page for this mod for a link to one.
-gui.packmissing.misplaced=If you DID download a pack ensure that it is in your ./minecraft/mods folder (it can be in a sub-folder for version-specific mods).
-gui.packmissing.versionerror=If the pack is in that location, and you are still seeing this message, ensure you are running the correct pack version.  The pack version can be found in the JSON files located in the jsondefs folder of the pack.
+gui.packmissing.misplaced=If you DID download a pack ensure that it is the same place as all your other mods.  It should NOT be in the mts folder as that's for internal use only!
+gui.packmissing.versionerror=If the pack is in that location, and you are still seeing this message, ensure you are running the correct pack version.  Older packs don't have a version-checker built in and will just fail to load with current versions of MTS.
 gui.packmissing.checklogs=If all those fail, please check you log files.  MTS outputs what it is doing to those files and will provide helpful data for issues like this.
 
 info.item.propeller.numberBlades=Blades: 
