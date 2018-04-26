@@ -408,7 +408,6 @@ public final class ControlSystem{
 					if(Math.abs(dx) < 100){
 						mousePosX = (short) Math.max(Math.min(mousePosX + dx*10, 350), -350);
 					}
-					System.out.println(mousePosX);
 					MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), mousePosX));
 				}
 			}else{
