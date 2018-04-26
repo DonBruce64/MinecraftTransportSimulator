@@ -15,7 +15,6 @@ import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderInstruments;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.systems.CameraSystem;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
@@ -51,11 +50,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		hasLight = new boolean[4];
 		lightButtonCoords = new int[4][4];
 		magnetoButtonCoords = new int[engines.length][4];
-		if(ConfigSystem.getBooleanConfig("ElectricStart")){
-			starterButtonCoords = new int[engines.length][4];
-		}else{
-			starterButtonCoords = new int[0][0];
-		}
+		starterButtonCoords = new int[engines.length][4];
 	}
 	
 	@Override
