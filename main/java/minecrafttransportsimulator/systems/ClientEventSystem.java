@@ -13,7 +13,6 @@ import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.guis.GUIConfig;
 import minecrafttransportsimulator.guis.GUIPackMissing;
-import minecrafttransportsimulator.guis.GUISplash;
 import minecrafttransportsimulator.items.ItemPart;
 import minecrafttransportsimulator.packets.general.MultipartAttackPacket;
 import minecrafttransportsimulator.packets.general.MultipartGlassActionPacket;
@@ -61,7 +60,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public final class ClientEventSystem{
     /**The last seat a player was in.  If null, this means the player is not in a seat.*/
     public static EntitySeat playerLastSeat = null;
-    private static boolean firstTickRun = false;
     private static Minecraft minecraft = Minecraft.getMinecraft();
     
     
@@ -211,15 +209,7 @@ public final class ClientEventSystem{
     @SubscribeEvent
     public static void on(TickEvent.ClientTickEvent event){
         if(minecraft.theWorld != null){
-            if(event.phase.equals(Phase.END)){
-            	if(!firstTickRun){
-	            	if(ConfigSystem.getIntegerConfig("MajorVersion") != Integer.valueOf(MTS.MODVER.substring(0, 1))){
-	                    ConfigSystem.setClientConfig("MajorVersion", Integer.valueOf(MTS.MODVER.substring(0, 1)));
-	                    FMLCommonHandler.instance().showGuiScreen(new GUISplash());
-	                }
-            	}
-            	firstTickRun = true;
-            	
+            if(event.phase.equals(Phase.END)){            	
                 //Update the player seated status
                 if(minecraft.thePlayer.getRidingEntity() == null){
                     if(playerLastSeat != null){
