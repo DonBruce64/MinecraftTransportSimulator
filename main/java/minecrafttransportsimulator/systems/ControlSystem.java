@@ -392,25 +392,36 @@ public final class ControlSystem{
 		}
 		
 		//Check steering, turn signals, and regular lights.
-		boolean lightButtonPressed = ControlsKeyboard.CAR_LIGHTS.isPressed();
 		if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_R.isPressed()){
 			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.RIGHTTURNLIGHT));
 		}else if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_L.isPressed()){
 			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.LEFTTURNLIGHT));
 		}else{
-			if(lightButtonPressed){
+			if(ControlsKeyboard.CAR_LIGHTS.isPressed()){
 				MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.HEADLIGHT));
 				MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.RUNNINGLIGHT));
 			}
-			if(joystickMap.containsKey(ControlsJoystick.CAR_TURN.joystickAssigned) && ControlsJoystick.CAR_TURN.joystickButton != NULL_COMPONENT){
-				MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), getJoystickAxisState(ControlsJoystick.CAR_TURN, (short) 350)));
+			//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
+			if(ConfigSystem.getBooleanConfig("MouseYoke")){
+				if(CameraSystem.lockedView && Minecraft.getMinecraft().currentScreen == null){
+					int dx = Mouse.getDX();
+					if(Math.abs(dx) < 100){
+						mousePosX = (short) Math.max(Math.min(mousePosX + dx*10, 350), -350);
+					}
+					System.out.println(mousePosX);
+					MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), mousePosX));
+				}
 			}else{
-				boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
-				boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();
-				if(turningRight && !turningLeft){
-					MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-				}else if(turningLeft && !turningRight){
-					MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+				if(joystickMap.containsKey(ControlsJoystick.CAR_TURN.joystickAssigned) && ControlsJoystick.CAR_TURN.joystickButton != NULL_COMPONENT){
+					MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), getJoystickAxisState(ControlsJoystick.CAR_TURN, (short) 350)));
+				}else{
+					boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
+					boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();
+					if(turningRight && !turningLeft){
+						MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+					}else if(turningLeft && !turningRight){
+						MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+					}
 				}
 			}
 		}

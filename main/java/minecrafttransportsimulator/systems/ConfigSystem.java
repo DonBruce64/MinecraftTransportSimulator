@@ -55,7 +55,7 @@ public final class ConfigSystem{
 	public static void initClient(File configFile){
 		initCommon(configFile);
 		booleanConfigMap.put("SeaLevelOffset", config.get(CLIENT_CONFIG, "SeaLevelOffset", false, "Does altimiter read zero at average sea level instead of Y=0?").getBoolean());
-		booleanConfigMap.put("MouseYoke", config.get(CLIENT_CONFIG, "MouseYoke", false, "Enable mouse yoke for planes? \nPrevents looking around unless unlocked.  Think MCHeli controls.").getBoolean());
+		booleanConfigMap.put("MouseYoke", config.get(CLIENT_CONFIG, "MouseYoke", false, "Enable mouse yoke for vehicles? \nPrevents looking around unless unlocked.  Think MCHeli controls.").getBoolean());
 		booleanConfigMap.put("InnerWindows", config.get(CLIENT_CONFIG, "InnerWindows", true, "Render the insides of windows on vehicles?").getBoolean());
 		booleanConfigMap.put("KeyboardOverride", config.get(CLIENT_CONFIG, "KeyboardOverride", true, "Should keyboard controls be overriden when a joystick control is mapped?  \nLeave true to free up the keyboard while using a joysick.").getBoolean());
 		integerConfigMap.put("MajorVersion", config.get(CLIENT_CONFIG, "MajorVersion", 0, "This is used for the info screen when a major update happens.  Don't mess with it, okay?").getInt());
