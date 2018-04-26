@@ -98,6 +98,8 @@ input.car.look_d=LookDown
 input.car.look_a=LookDirectional
 input.car.changehud=HUDMode
 input.car.stop=StopEngine
+input.car.turnsignal_r=RightTurnSignal
+input.car.turnsignal_l=LeftTurnSignal
 
 gui.panel.navigationlights=NAV
 gui.panel.strobelights=STROBE

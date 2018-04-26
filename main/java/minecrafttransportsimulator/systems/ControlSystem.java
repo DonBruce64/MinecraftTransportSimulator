@@ -1,8 +1,6 @@
 package minecrafttransportsimulator.systems;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.input.Keyboard;
@@ -51,8 +49,8 @@ public final class ControlSystem{
 	private static KeyBinding configKey;
 	private static short mousePosX = 0;
 	private static short mousePosY = 0;
-	private static final List<ControlsKeyboard> pressedKeyboardButtons = new ArrayList<ControlsKeyboard>();
-	private static final List<ControlsJoystick> pressedJoystickButtons = new ArrayList<ControlsJoystick>();
+	private static final Map<ControlsKeyboard, Long> pressedKeyboardButtons = new HashMap<ControlsKeyboard, Long>();
+	private static final Map<ControlsJoystick, Long> pressedJoystickButtons = new HashMap<ControlsJoystick, Long>();
 	
 	
 	public static void init(){
@@ -139,39 +137,17 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static boolean getTrueKeyboardButtonState(ControlsKeyboard control, boolean pressed){
-		//If this control is used in a momentary fashion make sure to only fire the event once!
+	private static <ControlEnum> boolean getTrueButtonState(Map<ControlEnum, Long> buttonMap, ControlEnum button, boolean pressed){
+		//If this control is used in a momentary fashion make sure to only
+		//fire the event on the tick that the button was last pressed on!
 		if(pressed){
-			if(control.isMomentary){
-				if(pressedKeyboardButtons.contains(control)){
-					return false;
-				}else{
-					pressedKeyboardButtons.add(control);
-					return true;
-				}
-			}else{
-				return true;
+			Long time = Minecraft.getMinecraft().theWorld.getTotalWorldTime();
+			if(!buttonMap.containsKey(button)){
+				buttonMap.put(button, time);
 			}
+			return buttonMap.get(button).longValue() == time;
 		}else{
-			pressedKeyboardButtons.remove(control);
-			return false;
-		}
-	}
-	
-	private static boolean getTrueJoystickButtonState(ControlsJoystick control, boolean pressed){
-		if(pressed){
-			if(control.isMomentary){
-				if(pressedJoystickButtons.contains(control)){
-					return false;
-				}else{
-					pressedJoystickButtons.add(control);
-					return true;
-				}
-			}else{
-				return true;
-			}
-		}else{
-			pressedJoystickButtons.remove(control);
+			buttonMap.remove(button);
 			return false;
 		}
 	}
@@ -417,10 +393,10 @@ public final class ControlSystem{
 		
 		//Check steering, turn signals, and regular lights.
 		boolean lightButtonPressed = ControlsKeyboard.CAR_LIGHTS.isPressed();
-		if(lightButtonPressed && ControlsKeyboard.CAR_TURN_L.isPressed()){
-			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.LEFTTURNLIGHT));
-		}else if(lightButtonPressed && ControlsKeyboard.CAR_TURN_R.isPressed()){
+		if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_R.isPressed()){
 			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.RIGHTTURNLIGHT));
+		}else if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_L.isPressed()){
+			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.LEFTTURNLIGHT));
 		}else{
 			if(lightButtonPressed){
 				MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.HEADLIGHT));
@@ -537,7 +513,7 @@ public final class ControlSystem{
 					}
 				}
 			}
-			return getTrueKeyboardButtonState(this, Keyboard.isKeyDown(this.button));
+			return this.isMomentary ? getTrueButtonState(pressedKeyboardButtons, this, Keyboard.isKeyDown(this.button)) : Keyboard.isKeyDown(this.button);
 		}
 	}
 	
@@ -616,7 +592,7 @@ public final class ControlSystem{
 		}
 		
 		public  boolean isPressed(){
-			return getTrueJoystickButtonState(this, getJoystickMultistateValue(this) > 0);
+			return this.isMomentary ? getTrueButtonState(pressedJoystickButtons, this, getJoystickMultistateValue(this) > 0) : getJoystickMultistateValue(this) > 0;
 		}
 	}
 	
@@ -632,7 +608,9 @@ public final class ControlSystem{
 		
 		CAR_CHANGEHUD(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_MOD),
 		CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD),
-		CAR_STOP(ControlsKeyboard.CAR_START, ControlsKeyboard.CAR_MOD);		
+		CAR_STOP(ControlsKeyboard.CAR_START, ControlsKeyboard.CAR_MOD),
+		CAR_TURNSIGNAL_R(ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_LIGHTS),
+		CAR_TURNSIGNAL_L(ControlsKeyboard.CAR_TURN_L, ControlsKeyboard.CAR_LIGHTS);
 		
 		
 		public final String buttonName;
