@@ -12,11 +12,18 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.event.entity.EntityMountEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+@Mod.EventBusSubscriber
 public class EntitySeat extends EntityMultipartChild{
+	private static int seatLastDismounted = 0;
 	
 	public EntitySeat(World world){
 		super(world);
@@ -97,4 +104,30 @@ public class EntitySeat extends EntityMultipartChild{
 	public Entity getPassenger(){
 		return this.getPassengers().isEmpty() ? null : this.getPassengers().get(0);
 	}
+	
+	//Prevent dismounting from this seat naturally as MC sucks at finding good spots to dismount.
+	//Instead, chose a better spot manually to prevent the player from getting stuck in vehicles.
+	@SubscribeEvent
+	public static void on(EntityMountEvent event){
+		if(event.isDismounting()){
+			if(event.getEntityBeingMounted() instanceof EntitySeat){
+				EntitySeat seat = (EntitySeat) event.getEntityBeingMounted();
+				if(seat.parent != null){
+					if(seat.getEntityId() == seatLastDismounted){
+						seatLastDismounted = 0;
+						return;
+					}
+					Vec3d placePosition = RotationSystem.getRotatedPoint(seat.offsetX + (seat.offsetX > 0 ? 1 : -1), seat.offsetY + 2, seat.offsetZ, seat.parent.rotationPitch, seat.parent.rotationYaw, seat.parent.rotationRoll).addVector(seat.parent.posX, seat.parent.posY, seat.parent.posZ);
+					AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(placePosition)).expand(2, 2, 2);
+					if(!seat.worldObj.collidesWithAnyBlock(collisionDetectionBox)){
+						event.setCanceled(true);
+						seatLastDismounted = seat.getEntityId();
+						event.getEntityMounting().dismountRidingEntity();
+			            seat.removePassenger(event.getEntityMounting());
+						event.getEntityMounting().setPosition(placePosition.xCoord, collisionDetectionBox.minY, placePosition.zCoord);
+					}
+				}
+			}
+		}
+	 }
 }
