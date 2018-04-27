@@ -455,7 +455,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 					GL11.glDisable(GL11.GL_LIGHTING);
 					GL11.glEnable(GL11.GL_BLEND);
 					minecraft.getTextureManager().bindTexture(lightTexture);
-					GL11.glColor4f(light.color.getRed(), light.color.getGreen(), light.color.getBlue(), electricFactor);
+					GL11.glColor4f(light.color.getRed()/255F, light.color.getGreen()/255F, light.color.getBlue()/255F, electricFactor);
 					GL11.glBegin(GL11.GL_TRIANGLES);
 					for(Float[] vertex : light.vertices){
 						//Add a slight translation and scaling to the light coords based on the normals to make the light.
@@ -478,7 +478,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 					GL11.glDisable(GL11.GL_LIGHTING);
 					minecraft.entityRenderer.disableLightmap();
 					minecraft.getTextureManager().bindTexture(lensFlareTexture);
-					GL11.glColor4f(light.color.getRed(), light.color.getGreen(), light.color.getBlue(), lightBrightness);
+					GL11.glColor4f(light.color.getRed()/255F, light.color.getGreen()/255F, light.color.getBlue()/255F, lightBrightness);
 					GL11.glBegin(GL11.GL_TRIANGLES);
 					for(byte j=0; j<6; ++j){
 						Float[] vertex = light.vertices[((short) i)*6+j];
