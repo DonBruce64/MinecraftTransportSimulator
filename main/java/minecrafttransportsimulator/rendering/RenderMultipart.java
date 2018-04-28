@@ -438,20 +438,22 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 				GL11.glDisable(GL11.GL_BLEND);
 				
 				//Cover rendering.
-				minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
-				GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-				GL11.glBegin(GL11.GL_TRIANGLES);
-				for(Float[] vertex : light.vertices){
-					//Add a slight translation and scaling to the light coords based on the normals to make the lens cover.
-					//Also modify the cover size to ensure the whole cover is a single glass square.
-					GL11.glTexCoord2f(vertex[3], vertex[4]);
-					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-					GL11.glVertex3f(vertex[0]+vertex[5]*0.0003F, vertex[1]+vertex[6]*0.0003F, vertex[2]+vertex[7]*0.0003F);	
+				if(light.renderCover){
+					minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
+					GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+					GL11.glBegin(GL11.GL_TRIANGLES);
+					for(Float[] vertex : light.vertices){
+						//Add a slight translation and scaling to the light coords based on the normals to make the lens cover.
+						//Also modify the cover size to ensure the whole cover is a single glass square.
+						GL11.glTexCoord2f(vertex[3], vertex[4]);
+						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+						GL11.glVertex3f(vertex[0]+vertex[5]*0.0003F, vertex[1]+vertex[6]*0.0003F, vertex[2]+vertex[7]*0.0003F);	
+					}
+					GL11.glEnd();
 				}
-				GL11.glEnd();
 				
 				//Light rendering.
-				if(lightActuallyOn){
+				if(lightActuallyOn && light.renderColor){
 					GL11.glDisable(GL11.GL_LIGHTING);
 					GL11.glEnable(GL11.GL_BLEND);
 					minecraft.getTextureManager().bindTexture(lightTexture);
@@ -471,7 +473,7 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			}
 			
 			//Lens flare.
-			if(lightActuallyOn && lightBrightness > 0 && MinecraftForgeClient.getRenderPass() != 0 && !wasRenderedPrior){
+			if(lightActuallyOn && lightBrightness > 0 && MinecraftForgeClient.getRenderPass() != 0 && !wasRenderedPrior && light.renderFlare){
 				for(byte i=0; i<light.centerPoints.length; ++i){
 					GL11.glPushMatrix();
 					GL11.glEnable(GL11.GL_BLEND);
@@ -771,6 +773,9 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		private final Float[] size;
 		private final Color color;
 		private final int flashBits;
+		private final boolean renderFlare;
+		private final boolean renderColor;
+		private final boolean renderCover;
 		
 		private LightPart(String name, Float[][] masterVertices){
 			this.name = name.toLowerCase();
@@ -814,13 +819,19 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 					
 					this.vertices[((short) i)*6 + j] = newVertex;
 				}
-				centerPoints[i] = new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
-				size[i] = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*16F;
+				this.centerPoints[i] = new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
+				this.size[i] = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*16F;
 			}
-			//Lights are in the format of "&NAME_XXXXXX_YYYYY"
-			//Where NAME is what switch it goes to, XXXXXX is the color, and YYYYY is the blink rate. 
+			//Lights are in the format of "&NAME_XXXXXX_YYYYY_Z"
+			//Where NAME is what switch it goes to.
+			//XXXXXX is the color.
+			//YYYYY is the blink rate.
+			//ZZZ is the light type.  The first bit renders the flare, the second the color, and the third the cover.
 			this.color = Color.decode("0x" + name.substring(name.indexOf('_') + 1, name.indexOf('_') + 7));
-			this.flashBits = Integer.decode("0x" + name.substring(name.lastIndexOf('_') + 1));
+			this.flashBits = Integer.decode("0x" + name.substring(name.indexOf('_', name.indexOf('_') + 7) + 1, name.lastIndexOf('_')));
+			this.renderFlare = Integer.valueOf(name.substring(name.length() - 3, name.length() - 2)) > 0;
+			this.renderColor = Integer.valueOf(name.substring(name.length() - 2, name.length() - 1)) > 0;
+			this.renderCover = Integer.valueOf(name.substring(name.length() - 1)) > 0;
 		}
 		
 		private LightTypes getTypeFromName(String lightName){

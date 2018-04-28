@@ -314,6 +314,8 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		BACKUPLIGHT(false),
 		LEFTTURNLIGHT(false),
 		RIGHTTURNLIGHT(false),
+		LEFTINDICATORLIGHT(false),
+		RIGHTINDICATORLIGHT(false),
 		RUNNINGLIGHT(false),
 		HEADLIGHT(true),
 		SEARCHLIGHT(true);
