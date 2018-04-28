@@ -57,7 +57,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 			if(electricPower > 2){
 				for(LightTypes light : lightsOn){
 					if(light.hasBeam){
-						electricUsage += 0.004F;
+						electricUsage += 0.00005F;
 					}else{
 						electricUsage += 0.00001F;
 					}
