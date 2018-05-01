@@ -8,7 +8,7 @@ import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.main.EntityCar;
-import minecrafttransportsimulator.entities.main.EntityGroundDevice;
+import minecrafttransportsimulator.multipart.parts.AMultipartGroundDevice;
 import minecrafttransportsimulator.packets.general.FlatWheelPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
@@ -23,7 +23,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class EntityWheel extends EntityGroundDevice implements SFXEntity{
+public abstract class EntityWheel extends AMultipartGroundDevice implements SFXEntity{
 	public float angularPosition;
 	public float angularVelocity;
 	private boolean landedThisTick = false;

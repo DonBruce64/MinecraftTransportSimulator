@@ -4,7 +4,7 @@ import java.lang.reflect.Constructor;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;

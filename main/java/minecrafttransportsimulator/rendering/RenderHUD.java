@@ -4,9 +4,9 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackControl;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackInstrument;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackControl;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackFileDefinitions;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;

@@ -3,7 +3,7 @@ package minecrafttransportsimulator.items;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackCollisionBox;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackCollisionBox;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.player.EntityPlayer;

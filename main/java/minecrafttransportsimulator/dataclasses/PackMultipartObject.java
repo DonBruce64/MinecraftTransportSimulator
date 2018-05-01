@@ -3,7 +3,7 @@ package minecrafttransportsimulator.dataclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MTSPackObject{
+public class PackMultipartObject{
 	public List<PackFileDefinitions> definitions = new ArrayList<PackFileDefinitions>();
 	public PackGeneralConfig general;
     public PackMotorizedConfig motorized;

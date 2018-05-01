@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackInstrument;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;

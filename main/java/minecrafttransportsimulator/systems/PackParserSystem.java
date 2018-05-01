@@ -18,8 +18,8 @@ import java.util.zip.ZipFile;
 import com.google.gson.Gson;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSPackObject;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackFileDefinitions;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackFileDefinitions;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.main.EntityCar;
 import minecrafttransportsimulator.entities.main.EntityPlane;
@@ -33,7 +33,7 @@ import net.minecraftforge.common.MinecraftForge;
  */
 
 public final class PackParserSystem{
-    private static Map<String, MTSPackObject> packMap = new HashMap<String, MTSPackObject>();
+    private static Map<String, PackMultipartObject> packMap = new HashMap<String, PackMultipartObject>();
     /**List of log file generated during parsing.
      * Stored here as we can't output these during boot on 1.10-1.11 due to registerItems running before the log is set up.
      */
@@ -174,7 +174,7 @@ public final class PackParserSystem{
     }
 
     private static void parseJSONFile(File file){
-    	MTSPackObject pack = null;
+    	PackMultipartObject pack = null;
     	try{
         	//Check to make sure we are trying to parse a vaild file.
         	BufferedReader buffer = new BufferedReader(new FileReader(file));
@@ -196,7 +196,7 @@ public final class PackParserSystem{
         		log.add("ERROR!  Invalid JSON file detected.  This file will NOT be loaded!");
         		return;
         	}
-            pack = new Gson().fromJson(new FileReader(file), MTSPackObject.class);
+            pack = new Gson().fromJson(new FileReader(file), PackMultipartObject.class);
     	}catch(Exception e){
         	log.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + file.getName());
         	log.add(e.getMessage());
@@ -214,7 +214,7 @@ public final class PackParserSystem{
         }  
     }
 
-    public static MTSPackObject getPack(String name){
+    public static PackMultipartObject getPack(String name){
         return packMap.get(name);
     }
     
@@ -233,7 +233,7 @@ public final class PackParserSystem{
     }
     
     public static MultipartTypes getMultipartType(String packName){
-    	MTSPackObject pack = getPack(packName);
+    	PackMultipartObject pack = getPack(packName);
     	for(MultipartTypes type : MultipartTypes.values()){
     		if(pack.general.type.equals(type.name().toLowerCase())){
     			return type;

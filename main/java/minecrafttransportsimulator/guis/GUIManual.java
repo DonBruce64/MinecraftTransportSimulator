@@ -10,8 +10,8 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSPackObject;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -38,7 +38,7 @@ public class GUIManual extends GuiScreen{
 	private int rightSideOffset;
 	private final ItemStack stack;
 	private final NBTTagCompound stackTag;
-	private final List<MTSPackObject> packList = new ArrayList<MTSPackObject>();
+	private final List<PackMultipartObject> packList = new ArrayList<PackMultipartObject>();
 	
 	private GuiButton leftButton;
 	private GuiButton rightButton;
@@ -213,7 +213,7 @@ public class GUIManual extends GuiScreen{
 	}
 	
 	private void drawDataPage(){
-		MTSPackObject packObject = packList.get((pageNumber - dataPageStart)/2);
+		PackMultipartObject packObject = packList.get((pageNumber - dataPageStart)/2);
 		byte index = (byte) (mc.theWorld.getTotalWorldTime()/40%packObject.definitions.size());
 		String uniqueName = packObject.definitions.get(index).uniqueName;
 		ItemStack resultStack = new ItemStack(MTSRegistry.multipartItemMap.get(uniqueName));

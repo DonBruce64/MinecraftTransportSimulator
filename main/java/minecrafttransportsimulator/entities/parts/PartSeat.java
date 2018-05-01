@@ -1,58 +1,48 @@
 package minecrafttransportsimulator.entities.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.core.EntityMultipartChild;
+import minecrafttransportsimulator.dataclasses.PackPartObject;
+import minecrafttransportsimulator.entities.core.EntityMultipart;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
-import minecrafttransportsimulator.entities.core.EntityMultipartParent;
+import minecrafttransportsimulator.multipart.parts.AMultipartPart;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityMountEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 @Mod.EventBusSubscriber
-public class EntitySeat extends EntityMultipartChild{
-	private static int seatLastDismounted = 0;
+public final class PartSeat extends AMultipartPart{
+	public final byte rotation;
 	
-	public EntitySeat(World world){
-		super(world);
+	private static final Vec3d[] seatRotations = new Vec3d[]{new Vec3d(0, 0, 0), new Vec3d(0, 90, 0), new Vec3d(0, 180, 0), new Vec3d(0, 270, 0)}; 
+	
+	public PartSeat(EntityMultipart multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, NBTTagCompound dataTag, PackPartObject packInfo){
+		super(multipart, offset, isController, turnsWithSteer, dataTag, packInfo);
+		this.rotation = dataTag.getByte("rotation");
 	}
 	
-	public EntitySeat(World world, EntityMultipartParent parent, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, parent, parentUUID, offsetX, offsetY, offsetZ, propertyCode);
+	@Override
+	public void setPartNBTToTag(NBTTagCompound tagCompound){
+		dataTag.setByte("rotation", this.rotation);
 	}
 	
 	@Override
-	public float getWidth(){
-		return 0.75F;
-	}
-
-	@Override
-	public float getHeight(){
-		return 0.75F;
-	}
-
-	@Override
-	public void setNBTFromStack(ItemStack stack){}
-
-	@Override
-	public ItemStack getItemStack(){
-		return new ItemStack(MTSRegistry.seat, 1, propertyCode);
+	public Vec3d getRotation(float partialTicks){
+		return seatRotations[this.rotation/90];
 	}
 	
 	@Override
 	public boolean interactPart(EntityPlayer player){
+		//TOOD get this working so fake seats spawn for riders.
 		if(!worldObj.isRemote){
 			Entity rider = this.getPassenger();
 			if(rider==null){

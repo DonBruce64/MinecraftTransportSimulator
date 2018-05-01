@@ -5,13 +5,13 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
-import minecrafttransportsimulator.entities.main.EntityGroundDevice;
+import minecrafttransportsimulator.multipart.parts.AMultipartGroundDevice;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-public class EntityPontoon extends EntityGroundDevice{
+public class EntityPontoon extends AMultipartGroundDevice{
 	protected String otherHalfUUID;
 	protected EntityPontoon otherHalf;
 	private List boxList;

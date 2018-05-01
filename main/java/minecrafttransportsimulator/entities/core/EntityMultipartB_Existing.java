@@ -36,23 +36,21 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
-/**General moving entity class.  This provides a set of variables and functions for moving entities.
- * Simple things like texture and display names are also included, as well as standards for removal of this
- * entity based on names and damage, and syncing methods and packet generation.
- * This is the most basic class used for custom multipart entities and should be extended
- * by any multipart looking to do movement.
+/**This is the next class level above the base multipart.
+ * At this level we add methods for the multipart's existence in the world.
+ * Variables for position are defined here, but no methods for MOVING
+ * this multipart are present until later sub-classes.  Also not present
+ * are variables that define how this multipart COULD move (motions, states
+ * of brakes/throttles, etc.)  This is where the pack information comes in
+ * as this is where we start needing it.
  * 
  * @author don_bruce
  */
-public abstract class EntityMultipartMoving extends EntityMultipartParent{
-	public boolean brakeOn;
-	public boolean parkingBrakeOn;
+public abstract class EntityMultipartB_Existing extends EntityMultipartParent{
 	public boolean locked;
 	public byte brokenWindows;
-	public float motionRoll;
-	public float motionPitch;
-	public float motionYaw;
-	public double velocity;
+	public float rotationRoll;
+	public float prevRotationRoll;
 	public double currentMass;
 	public String name="";
 	public String ownerName="";
@@ -74,18 +72,15 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	private float serverDeltaPitch;
 	private float serverDeltaRoll;
 	
-	private float width;
-	private float height;
 	private MTSAxisAlignedBBCollective collisionFrame;
 	private final Map<MTSAxisAlignedBB, EntityMultipartChild> collisionMap = new HashMap<MTSAxisAlignedBB, EntityMultipartChild>();
 	private final Map<MTSAxisAlignedBB, EntityMultipartChild> partMap = new HashMap<MTSAxisAlignedBB, EntityMultipartChild>();
-	private final double speedFactor = ConfigSystem.getDoubleConfig("SpeedFactor");
 			
-	public EntityMultipartMoving(World world){
+	public EntityMultipartB_Existing(World world){
 		super(world);
 	}
 	
-	public EntityMultipartMoving(World world, float posX, float posY, float posZ, float playerRotation, String name){
+	public EntityMultipartB_Existing(World world, float posX, float posY, float posZ, float playerRotation, String name){
 		super(world, posX, posY, posZ, playerRotation);
 		this.name = name;
 		this.pack = PackParserSystem.getPack(name); 
@@ -935,6 +930,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		this.brakeOn=tagCompound.getBoolean("brakeOn");
 		this.locked=tagCompound.getBoolean("locked");
 		this.brokenWindows=tagCompound.getByte("brokenWindows");
+		this.rotationRoll=tagCompound.getFloat("rotationRoll");
 		this.name=tagCompound.getString("name");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
@@ -964,6 +960,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		tagCompound.setBoolean("parkingBrakeOn", this.parkingBrakeOn);
 		tagCompound.setBoolean("locked", this.locked);
 		tagCompound.setByte("brokenWindows", this.brokenWindows);
+		tagCompound.setFloat("rotationRoll", this.rotationRoll);
 		tagCompound.setString("name", this.name);
 		tagCompound.setString("ownerName", this.ownerName);
 		tagCompound.setString("displayText", this.displayText);

@@ -4,7 +4,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackPart;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;

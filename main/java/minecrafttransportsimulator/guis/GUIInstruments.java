@@ -12,7 +12,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
-import minecrafttransportsimulator.dataclasses.MTSPackObject.PackInstrument;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.packets.general.InstrumentAddRemovePacket;
