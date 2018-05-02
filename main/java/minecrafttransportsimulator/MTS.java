@@ -22,7 +22,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="11.0.0-BETA-03";
+	public static final String MODVER="11.0.0-BETA-04";
 	public static final String assetDir = System.getProperty("user.dir") + File.separator + MTS.MODID;
 	public static final byte packJSONVersionNumber = 5;
 	

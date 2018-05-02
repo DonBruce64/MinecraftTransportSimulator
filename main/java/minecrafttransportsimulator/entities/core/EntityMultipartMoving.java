@@ -14,9 +14,9 @@ import minecrafttransportsimulator.dataclasses.MTSDamageSources.DamageSourceCras
 import minecrafttransportsimulator.dataclasses.PackMultipartObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackCollisionBox;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
-import minecrafttransportsimulator.multipart.parts.AMultipartGroundDevice;
+import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
 import minecrafttransportsimulator.packets.general.MultipartDeltaPacket;
-import minecrafttransportsimulator.packets.general.MultipartParentDamagePacket;
+import minecrafttransportsimulator.packets.general.MultipartWindowBreakPacket;
 import minecrafttransportsimulator.packets.general.MultipartPartInteractionPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -59,7 +59,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	public String displayText="";
 	
 	public PackMultipartObject pack;
-	public List<AMultipartGroundDevice> groundedGroundDevices = new ArrayList<AMultipartGroundDevice>();
+	public List<PartGroundDevice> groundedGroundDevices = new ArrayList<PartGroundDevice>();
 	
 	private double clientDeltaX;
 	private double clientDeltaY;
@@ -115,7 +115,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 			for(EntityMultipartChild child : getChildren()){
 				MTSAxisAlignedBB newBox = new MTSAxisAlignedBB(child.posX, child.posY, child.posZ, child.offsetX, child.offsetY, child.offsetZ, child.getWidth(), child.getHeight()); 
 				partMap.put(newBox, child);
-				if(child instanceof AMultipartGroundDevice){
+				if(child instanceof PartGroundDevice){
 					collisionMap.put(newBox, child);
 				}
 			}
@@ -199,9 +199,9 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				if(this.brokenWindows < pack.general.numberWindows){
 					++brokenWindows;
 					this.playSound(SoundEvents.BLOCK_GLASS_BREAK, 2.0F, 1.0F);
-					MTS.MTSNet.sendToAll(new MultipartParentDamagePacket(this.getEntityId(), damage, true));
+					MTS.MTSNet.sendToAll(new MultipartWindowBreakPacket(this.getEntityId(), damage, true));
 				}else{
-					MTS.MTSNet.sendToAll(new MultipartParentDamagePacket(this.getEntityId(), damage, false));
+					MTS.MTSNet.sendToAll(new MultipartWindowBreakPacket(this.getEntityId(), damage, false));
 				}
 				
 			}
@@ -418,7 +418,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 					if(getAABBCollisions(offsetBox, collisionMap.get(box)).isEmpty()){
 						break;
 					}else if(motionPitch < 0){
-						if(box.relZ <= 0 && collisionMap.get(box) instanceof AMultipartGroundDevice){
+						if(box.relZ <= 0 && collisionMap.get(box) instanceof PartGroundDevice){
 							float yBoost = 0;
 							for(AxisAlignedBB box2 : getAABBCollisions(offsetBox, collisionMap.get(box))){
 								if(box2.maxY > offsetBox.minY + yBoost){
@@ -641,7 +641,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 				}
 			}
 		}
-		if(optionalChild instanceof AMultipartGroundDevice && !yAxis && collisionDepth > 0){
+		if(optionalChild instanceof PartGroundDevice && !yAxis && collisionDepth > 0){
 			//Ground device has collided.
 			//Check to see if this collision can be avoided if the device is moved upwards.
 			//Expand this box slightly to ensure we see the collision even with floating-point errors.
@@ -744,13 +744,13 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		this.setDead();
 	}
 	
-	private void populateGroundedGroundDeviceList(List<AMultipartGroundDevice> deviceList){
+	private void populateGroundedGroundDeviceList(List<PartGroundDevice> deviceList){
 		deviceList.clear();
 		for(EntityMultipartChild child : getChildren()){
-			if(child instanceof AMultipartGroundDevice){
+			if(child instanceof PartGroundDevice){
 				if(!child.isDead){
 					if(child.isOnGround()){
-						deviceList.add((AMultipartGroundDevice) child);
+						deviceList.add((PartGroundDevice) child);
 					}
 				}
 			}
@@ -765,10 +765,10 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		float brakingFactor = 0;
 		for(MTSAxisAlignedBB box : collisionMap.keySet()){
 			float addedFactor = 0;
-			if(collisionMap.get(box) instanceof AMultipartGroundDevice){
+			if(collisionMap.get(box) instanceof PartGroundDevice){
 				if(brakeOn || parkingBrakeOn){
 					if(collisionMap.get(box).isOnGround()){
-						addedFactor = ((AMultipartGroundDevice) collisionMap.get(box)).getMotiveFriction();
+						addedFactor = ((PartGroundDevice) collisionMap.get(box)).getMotiveFriction();
 					}
 				}
 			}else{
@@ -796,7 +796,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 	 */
 	protected float getSkiddingFactor(){
 		float skiddingFactor = 0;
-		for(AMultipartGroundDevice grounder : groundedGroundDevices){
+		for(PartGroundDevice grounder : groundedGroundDevices){
 			//0.6 is default slipperiness for blocks.  Anything less should reduce friction, anything extra should increase it.
 			BlockPos pos = grounder.getPosition().down();
 			float frictionLoss = 0.6F - grounder.worldObj.getBlockState(pos).getBlock().slipperiness;
@@ -819,7 +819,7 @@ public abstract class EntityMultipartMoving extends EntityMultipartParent{
 		if(steeringAngle != 0){
 			float turningFactor = 0;
 			float turningDistance = 0;
-			for(AMultipartGroundDevice grounder : groundedGroundDevices){
+			for(PartGroundDevice grounder : groundedGroundDevices){
 				//0.6 is default slipperiness for blocks.  Anything less should reduce friction, anything extra should increase it.
 				BlockPos pos = grounder.getPosition().down();
 				float frictionLoss = 0.6F - grounder.worldObj.getBlockState(pos).getBlock().slipperiness;

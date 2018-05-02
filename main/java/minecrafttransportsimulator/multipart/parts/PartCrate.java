@@ -1,8 +1,7 @@
 package minecrafttransportsimulator.multipart.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.PackPartObject;
-import minecrafttransportsimulator.entities.core.EntityMultipart;
+import minecrafttransportsimulator.entities.core.EntityMultipartA_Base;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
@@ -11,10 +10,10 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.Vec3d;
 
 public final class PartCrate extends AMultipartPart{
-	private final InventoryBasic crateInventory;
+	public final InventoryBasic crateInventory;
 	
-	public PartCrate(EntityMultipart multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, PackPartObject packInfo, NBTTagCompound dataTag){
-		super(multipart, offset, isController, turnsWithSteer, packInfo, dataTag);
+	public PartCrate(EntityMultipartA_Base multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
+		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
 		this.crateInventory = new InventoryBasic("entity." + MTS.MODID + ".crate.name", false, 27);
 		NBTTagList stackTagList = dataTag.getTagList("Items", 10);
         for (byte i = 0; i < stackTagList.tagCount(); ++i){

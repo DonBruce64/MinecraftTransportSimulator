@@ -1,19 +1,19 @@
 package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.parts.EntityWheel;
+import minecrafttransportsimulator.entities.core.EntityMultipartB_Existing;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class FlatWheelPacket implements IMessage{
+public class MultipartWindowBreakPacket implements IMessage{
 	private int id;
 
-	public FlatWheelPacket() {}
+	public MultipartWindowBreakPacket() {}
 	
-	public FlatWheelPacket(int id){
+	public MultipartWindowBreakPacket(int id){
 		this.id = id;
 	}
 	
@@ -27,21 +27,16 @@ public class FlatWheelPacket implements IMessage{
 		buf.writeInt(this.id);
 	}
 
-	public static class Handler implements IMessageHandler<FlatWheelPacket, IMessage>{
+	public static class Handler implements IMessageHandler<MultipartWindowBreakPacket, IMessage>{
 		@Override
-		public IMessage onMessage(final FlatWheelPacket message, final MessageContext ctx){
+		public IMessage onMessage(final MultipartWindowBreakPacket message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityWheel wheel = (EntityWheel) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
-					if(wheel != null){
-						if(!wheel.isFlat()){
-							//Replace regular wheel with flat wheel.
-							EntityWheel flatWheel = wheel.getFlatVersion();
-							wheel.parent.removeChild(wheel.UUID, false);
-							wheel.parent.addChild(flatWheel.UUID, flatWheel, true);
-						}
-					}
+					EntityMultipartB_Existing multipart = (EntityMultipartB_Existing) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+					if(multipart != null){
+						++multipart.brokenWindows;
+					}	
 				}
 			});
 			return null;

@@ -1,15 +1,14 @@
 package minecrafttransportsimulator.multipart.parts;
 
 import minecrafttransportsimulator.dataclasses.PackPartObject;
-import minecrafttransportsimulator.entities.core.EntityMultipart;
 import minecrafttransportsimulator.entities.core.EntityMultipartA_Base;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
 /**This class is the base for all parts and should be
@@ -30,13 +29,15 @@ public abstract class AMultipartPart{
 	public final Vec3d offset;
 	public final EntityMultipartA_Base multipart;
 	public final PackPartObject packInfo;
+	public final String partName;
 		
-	public AMultipartPart(EntityMultipartA_Base multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, PackPartObject packInfo, NBTTagCompound dataTag){
+	public AMultipartPart(EntityMultipartA_Base multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		this.isController = isController;
 		this.turnsWithSteer = turnsWithSteer;
 		this.offset = offset;
 		this.multipart = multipart;
-		this.packInfo = packInfo;
+		this.packInfo = PackParserSystem.getPartData(partName);
+		this.partName = partName;
 	}
 
 	/**Called when checking if this part can be interacted with.
@@ -49,6 +50,11 @@ public abstract class AMultipartPart{
 	/**Called when the master multipart sees this part being attacked.
 	 */
 	public void attackPart(DamageSource source, float damage){}
+	
+	/**This gets called every tick by the multipart after it finishes its update loop.
+	 * Use this for reactions that this part can take based on its surroundings if need be.
+	 */
+	public void updatePart(){}
 	
 	/**Return the part data in NBT form.
 	 * This is called when removing the part from a multipart to return an item.
@@ -63,12 +69,12 @@ public abstract class AMultipartPart{
 	
 	public abstract float getHeight();
 	
-	/**Gets the item for this part.
-	 * If the part should not return an item (either due to damage or other reasons)
-	 * make this method return null.
+	/**Gets the item for this part.  If the part should not return an item 
+	 * (either due to damage or other reasons) make this method return null.
 	 */
 	public Item getItemForPart(){
 		//TODO add method to return registered part items.
+		return null;
 	}
 	
 	/**Gets the location of the model for this part. 
@@ -82,6 +88,11 @@ public abstract class AMultipartPart{
 	 */
 	public final ResourceLocation getTextureLocation(){
 		return new ResourceLocation(this.packInfo.general.packID, "textures/parts/" + this.packInfo.general.partUniqueName + ".png");
+	}
+	
+	public final AxisAlignedBB getAABBWithOffset(Vec3d boxOffset){
+		Vec3d totalOffset = this.multipart.getPositionVector().add(this.offset.add(boxOffset));
+		return new AxisAlignedBB(totalOffset.xCoord - this.getWidth()/2F, totalOffset.yCoord - this.getHeight()/2F, totalOffset.zCoord - this.getWidth()/2F, totalOffset.xCoord + this.getWidth()/2F, totalOffset.yCoord + this.getHeight()/2F, totalOffset.zCoord + this.getWidth()/2F);
 	}
 	
 	/**Gets the current rotation for rendering.
@@ -99,19 +110,11 @@ public abstract class AMultipartPart{
 	 * Can be given an offset vector to check for potential collisions. 
 	 */
 	public boolean isPartCollidingWithBlocks(Vec3d collisionOffset){
-		Vec3d partPosition = this.multipart.getPositionVector().add(this.offset).add(collisionOffset);
-		AxisAlignedBB collisionBox = new AxisAlignedBB(
-				partPosition.xCoord - this.getWidth()/2F, 
-				partPosition.yCoord - this.getHeight()/2F,
-				partPosition.zCoord - this.getWidth()/2F,
-				partPosition.xCoord + this.getWidth()/2F,
-				partPosition.yCoord + this.getHeight()/2F,
-				partPosition.zCoord + this.getWidth()/2F);
-		
-    	if(!multipart.worldObj.getCollisionBoxes(collisionBox).isEmpty()){
-    		return true;
+		return !multipart.worldObj.getCollisionBoxes(this.getAABBWithOffset(collisionOffset)).isEmpty();
+    	//TODO move this to ground devices.
+		/*
     	}else{
-    		if(!collidesWithLiquids()){
+    		if(!this.packInfo.collidesWithLiquids()){
     			return false;
     		}else{
     			int minX = (int) Math.floor(collisionBox.minX);
@@ -132,6 +135,6 @@ public abstract class AMultipartPart{
     	    	}
     	    	return false;
     		}
-    	}
+    	}*/
     }
 }

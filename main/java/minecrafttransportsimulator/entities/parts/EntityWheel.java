@@ -8,8 +8,8 @@ import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.main.EntityCar;
-import minecrafttransportsimulator.multipart.parts.AMultipartGroundDevice;
-import minecrafttransportsimulator.packets.general.FlatWheelPacket;
+import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
+import minecrafttransportsimulator.packets.parts.PacketFlatGroundDevice;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
@@ -23,7 +23,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class EntityWheel extends AMultipartGroundDevice implements SFXEntity{
+public abstract class EntityWheel extends PartGroundDevice implements SFXEntity{
 	public float angularPosition;
 	public float angularVelocity;
 	private boolean landedThisTick = false;
@@ -70,7 +70,7 @@ public abstract class EntityWheel extends AMultipartGroundDevice implements SFXE
 					EntityWheel flatWheel = this.getFlatVersion();
 					parent.removeChild(this.UUID, false);
 					parent.addChild(flatWheel.UUID, flatWheel, true);
-					MTS.MTSNet.sendToAll(new FlatWheelPacket(this.getEntityId()));
+					MTS.MTSNet.sendToAll(new PacketFlatGroundDevice(this.getEntityId()));
 				}
 			}
 		}

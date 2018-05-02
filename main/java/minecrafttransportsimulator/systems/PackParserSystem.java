@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackFileDefinitions;
+import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.main.EntityCar;
 import minecrafttransportsimulator.entities.main.EntityPlane;
@@ -216,6 +217,11 @@ public final class PackParserSystem{
 
     public static PackMultipartObject getPack(String name){
         return packMap.get(name);
+    }
+    
+    public static PackPartObject getPartData(String name){
+    	//TODO add return here.
+        return ;
     }
     
     public static Set<String> getRegisteredNames(){

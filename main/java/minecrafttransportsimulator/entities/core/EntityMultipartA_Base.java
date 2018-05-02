@@ -7,10 +7,10 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.PackPartObject;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject;
 import minecrafttransportsimulator.multipart.parts.AMultipartPart;
 import minecrafttransportsimulator.packets.general.EntityClientRequestDataPacket;
-import minecrafttransportsimulator.packets.general.EntityMultipartChild;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.SoundEvents;
@@ -31,6 +31,11 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * @author don_bruce
  */
 public abstract class EntityMultipartA_Base extends Entity{
+	public String multipartName="";
+	public PackMultipartObject pack;
+	
+	/**This list contains all parts this multipart has.  Do NOT use it in loops or you will get CMEs all over!
+	 * Use the getMultipartsParts() method instead to return a loop-safe array.*/
 	private final List<AMultipartPart> parts = new ArrayList<AMultipartPart>();
 
 	public EntityMultipartA_Base(World world){
@@ -42,12 +47,10 @@ public abstract class EntityMultipartA_Base extends Entity{
 		}
 	}
 	
-	public EntityMultipartA_Base(World world, float posX, float posY, float posZ, float playerRotation){
+	public EntityMultipartA_Base(World world, String multipartName){
 		this(world);
-		//Set position to the spot that was clicked by the player.
-		//Add a -90 rotation offset so the multipart is facing perpendicular.
-		//Makes placement easier and is less likely for players to get stuck.
-		this.setPositionAndRotation(posX, posY, posZ, playerRotation-90, 0);
+		this.multipartName = multipartName;
+		this.pack = PackParserSystem.getPack(multipartName); 
 	}
 	
 	@Override
@@ -79,7 +82,6 @@ public abstract class EntityMultipartA_Base extends Entity{
 	public void addPart(AMultipartPart part){
 		if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
 			Vec3d boost = new Vec3d(0, Math.max(0, -part.offset.yCoord), 0);
-			this.rotationRoll = 0;
 			this.setPositionAndRotation(posX, posY + boost.yCoord, posZ, rotationYaw, 0);
 			
 			//Sometimes parts can break off if the multipart rotates and shoves something under the ground.
@@ -92,12 +94,9 @@ public abstract class EntityMultipartA_Base extends Entity{
 			}
 		}
 		//TODO add a new packet for add/remove part events.
-		this.sendDataToClient();
+		//this.sendDataToClient();
 	}
 	
-	/**
-	 * Removes a part from this multipart. Optionally plays a breaking sound.
-	 */
 	public void removePart(AMultipartPart part, boolean playBreakSound){
 		parts.remove(part);
 		if(playBreakSound){
@@ -105,22 +104,46 @@ public abstract class EntityMultipartA_Base extends Entity{
 		}
 	}
 	
+	/**
+	 * Returns a loop-safe array for iterating over parts.
+	 * Use this for everything that needs to look at parts.
+	 */
 	public AMultipartPart[] getMultipartParts(){
 		return ImmutableList.copyOf(parts).toArray(new AMultipartPart[parts.size()]);
+	}
+	
+	/**
+	 * Returns the part index for a part.  Useful for packets and 
+	 * other data transmission where you need to specify a specific part
+	 * without sending the whole offset data. 
+	 */
+	public byte getMultipartPartIndex(AMultipartPart part){
+		return (byte) parts.indexOf(part);
+	}
+	
+	/**
+	 * Returns a part given an index.  Note that this can change if parts are added or removed,
+	 * so only count on indexes being valid for a short time!
+	 */
+	public AMultipartPart getMultipartPartByIndex(byte index){
+		return parts.get(index);
 	}
 			
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
+		this.multipartName=tagCompound.getString("multipartName");
+		this.pack=PackParserSystem.getPack(multipartName);
+		
 		if(this.parts.size() == 0){
 			NBTTagList partTagList = tagCompound.getTagList("Parts", 10);
 			for(byte i=0; i<partTagList.tagCount(); ++i){
 				try{
 					NBTTagCompound partTag = partTagList.getCompoundTagAt(i);
-					Class partClass = Class.forName(partTag.getString("ClassName"));
-					partTag.removeTag("className");
-					Constructor<? extends AMultipartPart> construct = partClass.getConstructor(EntityMultipartA_Base.class, Vec3d.class, boolean.class, boolean.class, PackPartObject.class, NBTTagCompound.class);
-					AMultipartPart part = construct.newInstance(this, , mover, mover.UUID, packPart.pos[0], packPart.pos[1], packPart.pos[2], heldStack.getItemDamage());
+					Class partClass = Class.forName(partTag.getString("className"));
+					Constructor<? extends AMultipartPart> construct = partClass.getConstructor(EntityMultipartA_Base.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
+					AMultipartPart savedPart = construct.newInstance(this, new Vec3d(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ")), partTag.getBoolean("isController"), partTag.getBoolean("turnsWithSteer"), partTag.getString("partName"), partTag);
+					this.addPart(savedPart);
 				}catch(Exception e){
 					MTS.MTSLog.error("ERROR IN LOADING PART FROM NBT!");
 					e.printStackTrace();
@@ -132,12 +155,20 @@ public abstract class EntityMultipartA_Base extends Entity{
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
+		tagCompound.setString("multipartName", this.multipartName);
+		
 		NBTTagList partTagList = new NBTTagList();
 		for(AMultipartPart part : this.getMultipartParts()){
 			NBTTagCompound partTag = part.getPartNBTTag();
 			//We need to set some extra data here for the part to allow this multipart to know where it went.
 			//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
 			partTag.setString("className", part.getClass().getName());
+			partTag.setString("partName", part.partName);
+			partTag.setDouble("offsetX", part.offset.xCoord);
+			partTag.setDouble("offsetY", part.offset.yCoord);
+			partTag.setDouble("offsetZ", part.offset.zCoord);
+			partTag.setBoolean("isController", part.isController);
+			partTag.setBoolean("turnsWithSteer", part.turnsWithSteer);
 			partTagList.appendTag(part.getPartNBTTag());
 		}
 		tagCompound.setTag("Parts", partTagList);

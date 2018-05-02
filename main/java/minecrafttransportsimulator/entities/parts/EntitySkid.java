@@ -2,11 +2,11 @@ package minecrafttransportsimulator.entities.parts;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
-import minecrafttransportsimulator.multipart.parts.AMultipartGroundDevice;
+import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-public class EntitySkid extends AMultipartGroundDevice{
+public class EntitySkid extends PartGroundDevice{
 	public EntitySkid(World world){
 		super(world);
 	}

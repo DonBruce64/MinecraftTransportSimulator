@@ -49,7 +49,6 @@ import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.packets.general.EntityClientRequestDataPacket;
-import minecrafttransportsimulator.packets.general.FlatWheelPacket;
 import minecrafttransportsimulator.packets.general.FuelPumpConnectDisconnectPacket;
 import minecrafttransportsimulator.packets.general.FuelPumpFillDrainPacket;
 import minecrafttransportsimulator.packets.general.InstrumentAddRemovePacket;
@@ -59,13 +58,14 @@ import minecrafttransportsimulator.packets.general.MultipartDeltaPacket;
 import minecrafttransportsimulator.packets.general.MultipartGlassActionPacket;
 import minecrafttransportsimulator.packets.general.MultipartKeyActionPacket;
 import minecrafttransportsimulator.packets.general.MultipartNameTagActionPacket;
-import minecrafttransportsimulator.packets.general.MultipartParentDamagePacket;
+import minecrafttransportsimulator.packets.general.MultipartWindowBreakPacket;
 import minecrafttransportsimulator.packets.general.MultipartPartAdditionPacket;
 import minecrafttransportsimulator.packets.general.MultipartPartInteractionPacket;
 import minecrafttransportsimulator.packets.general.PackReloadPacket;
 import minecrafttransportsimulator.packets.general.PropellerBenchUpdatePacket;
 import minecrafttransportsimulator.packets.general.ServerDataPacket;
 import minecrafttransportsimulator.packets.general.TileEntityClientServerHandshakePacket;
+import minecrafttransportsimulator.packets.parts.PacketFlatGroundDevice;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.block.Block;
@@ -233,7 +233,7 @@ public final class MTSRegistry{
 	private static void initPackets(){
 		registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
 		registerPacket(EntityClientRequestDataPacket.class, EntityClientRequestDataPacket.Handler.class, false, true);
-		registerPacket(FlatWheelPacket.class, FlatWheelPacket.Handler.class, true, false);
+		registerPacket(PacketFlatGroundDevice.class, PacketFlatGroundDevice.Handler.class, true, false);
 		registerPacket(FuelPumpConnectDisconnectPacket.class, FuelPumpConnectDisconnectPacket.Handler.class, true, false);
 		registerPacket(FuelPumpFillDrainPacket.class, FuelPumpFillDrainPacket.Handler.class, true, false);
 		registerPacket(InstrumentAddRemovePacket.class, InstrumentAddRemovePacket.Handler.class, true, true);
@@ -244,7 +244,7 @@ public final class MTSRegistry{
 		registerPacket(MultipartKeyActionPacket.class, MultipartKeyActionPacket.Handler.class, true, true);
 		registerPacket(MultipartNameTagActionPacket.class, MultipartNameTagActionPacket.Handler.class, true, true);
 		registerPacket(MultipartDeltaPacket.class, MultipartDeltaPacket.Handler.class, true, false);
-		registerPacket(MultipartParentDamagePacket.class, MultipartParentDamagePacket.Handler.class, true, false);
+		registerPacket(MultipartWindowBreakPacket.class, MultipartWindowBreakPacket.Handler.class, true, false);
 		registerPacket(MultipartPartAdditionPacket.class, MultipartPartAdditionPacket.Handler.class, false, true);
 		registerPacket(MultipartPartInteractionPacket.class, MultipartPartInteractionPacket.Handler.class, false, true);
 		
