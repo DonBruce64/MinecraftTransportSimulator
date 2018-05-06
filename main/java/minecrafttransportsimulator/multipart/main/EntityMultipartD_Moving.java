@@ -5,9 +5,9 @@ import java.util.List;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
-import minecrafttransportsimulator.multipart.parts.AMultipartPart;
+import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
-import minecrafttransportsimulator.packets.general.MultipartDeltaPacket;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartDeltas;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.SFXSystem.FXPart;
 import minecrafttransportsimulator.systems.SFXSystem.SoundPart;
@@ -70,7 +70,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 			
 			//Populate the ground device list for use in the methods here.
 			groundedGroundDevices.clear();
-			for(AMultipartPart part : this.getMultipartParts()){
+			for(APart part : this.getMultipartParts()){
 				if(part instanceof PartGroundDevice){
 					if(((PartGroundDevice) part).isOnGround()){
 						groundedGroundDevices.add((PartGroundDevice) part);
@@ -79,7 +79,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 			}
 			
 			//Finally, update parts and sounds.
-			for(AMultipartPart part : this.getMultipartParts()){
+			for(APart part : this.getMultipartParts()){
 				part.updatePart();
 				if(part instanceof SoundPart){
 					MTS.proxy.updateSoundPart((SoundPart) part, worldObj);
@@ -363,7 +363,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 			rotationRoll += motionRoll;
 			setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
 			addToServerDeltas(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll);
-			MTS.MTSNet.sendToAll(new MultipartDeltaPacket(getEntityId(), motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll));
+			MTS.MTSNet.sendToAll(new PacketMultipartDeltas(this, motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll));
 		}else{
 			//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.
 			if(!(serverDeltaX == 0 && serverDeltaY == 0 && serverDeltaZ == 0)){

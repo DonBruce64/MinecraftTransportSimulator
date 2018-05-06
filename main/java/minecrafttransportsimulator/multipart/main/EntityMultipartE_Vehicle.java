@@ -10,7 +10,7 @@ import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
-import minecrafttransportsimulator.multipart.parts.AMultipartPart;
+import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
@@ -116,7 +116,7 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 	}
 	
 	@Override
-	public void addPart(AMultipartPart part){
+	public void addPart(APart part){
 		super.addPart(part);
 		if(part instanceof APartEngine){
 			//Because parts is a list, the #1 engine will always come before the #2 engine.
@@ -136,7 +136,7 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 	}
 	
 	@Override
-	public void removePart(AMultipartPart part, boolean playBreakSound){
+	public void removePart(APart part, boolean playBreakSound){
 		super.removePart(part, playBreakSound);
 		byte engineNumber = 1;
 		for(PackPart packPart : pack.parts){

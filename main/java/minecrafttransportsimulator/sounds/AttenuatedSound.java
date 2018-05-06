@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.sounds;
 
-import minecrafttransportsimulator.multipart.parts.AMultipartPart;
+import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.systems.SFXSystem.SoundPart;
 import net.minecraft.client.Minecraft;
@@ -35,7 +35,7 @@ public final class AttenuatedSound extends MovingSound{
 			Vec3d sourcePos = soundSource.getSoundPosition();
 			
 			if(soundSource != null){
-				if(soundSource.equals(player.getRidingEntity()) || (soundSource instanceof AMultipartPart && ((AMultipartPart) soundSource).multipart.equals(player.getRidingEntity()))){
+				if(soundSource.equals(player.getRidingEntity()) || (soundSource instanceof APart && ((APart) soundSource).multipart.equals(player.getRidingEntity()))){
 					this.pitch = soundSource.getSoundPitch();
 					if(SFXSystem.isPlayerInsideEnclosedVehicle()){
 						this.volume = 0.5F;

@@ -15,7 +15,7 @@ import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
-import minecrafttransportsimulator.packets.general.InstrumentAddRemovePacket;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartInstruments;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.client.gui.GuiScreen;
@@ -225,7 +225,7 @@ public class GUIInstruments extends GuiScreen{
 					}else{
 						fault = false;
 					}
-					MTS.MTSNet.sendToServer(new InstrumentAddRemovePacket(vehicle.getEntityId(), player.getEntityId(), lastInstrumentClicked, renderedInstruments.get(i)));
+					MTS.MTSNet.sendToServer(new PacketMultipartInstruments(vehicle, player, lastInstrumentClicked, renderedInstruments.get(i)));
 					lastInstrumentClicked = -1;
 					return;
 				}
@@ -234,7 +234,7 @@ public class GUIInstruments extends GuiScreen{
 			//Either the player didn't click an instrument, or they clicked the blank.
 			if(x > width/4 - 15 && x < width/4 + 15 && y > 11*height/16 + 15 && y < 11*height/16 + 45){
 				if(!vehicle.getInstrumentNumber(lastInstrumentClicked).equals(vehicle.getBlankInstrument())){
-					MTS.MTSNet.sendToServer(new InstrumentAddRemovePacket(vehicle.getEntityId(), player.getEntityId(), lastInstrumentClicked, (byte) vehicle.getBlankInstrument().ordinal()));
+					MTS.MTSNet.sendToServer(new PacketMultipartInstruments(vehicle, player, lastInstrumentClicked, (byte) vehicle.getBlankInstrument().ordinal()));
 					lastInstrumentClicked = -1;
 					return;
 				}

@@ -9,7 +9,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 
-public final class PartSeat extends AMultipartPart{
+public final class PartSeat extends APart{
 	public final byte rotation;
 	private static final Vec3d[] seatRotations = new Vec3d[]{new Vec3d(0, 0, 0), new Vec3d(0, 90, 0), new Vec3d(0, 180, 0), new Vec3d(0, 270, 0)}; 
 	

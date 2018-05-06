@@ -1,8 +1,7 @@
-package minecrafttransportsimulator.packets.general;
+package minecrafttransportsimulator.packets.multipart;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.core.EntityMultipartBase;
-import net.minecraft.client.Minecraft;
+import minecrafttransportsimulator.multipart.main.EntityMultipartA_Base;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -10,38 +9,37 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class ServerDataPacket implements IMessage{
-	private int id;
+public class PacketMultipartClientInitResponse extends APacketMultipart{
 	private NBTTagCompound tagCompound;
 
-	public ServerDataPacket() { }
+	public PacketMultipartClientInitResponse(){}
 	
-	public ServerDataPacket(int id, NBTTagCompound tagCompound){
-		this.id=id;
+	public PacketMultipartClientInitResponse(EntityMultipartA_Base multipart, NBTTagCompound tagCompound){
+		super(multipart);
 		this.tagCompound=tagCompound;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
-		this.id=buf.readInt();
+		super.fromBytes(buf);
 		this.tagCompound=ByteBufUtils.readTag(buf);
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
-		buf.writeInt(this.id);
+		super.toBytes(buf);
 		ByteBufUtils.writeTag(buf, this.tagCompound);
 	}
 
-	public static class Handler implements IMessageHandler<ServerDataPacket, IMessage>{
+	public static class Handler implements IMessageHandler<PacketMultipartClientInitResponse, IMessage>{
 		@Override
-		public IMessage onMessage(final ServerDataPacket message, final MessageContext ctx){
+		public IMessage onMessage(final PacketMultipartClientInitResponse message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartBase thisEntity = (EntityMultipartBase) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
-					if(thisEntity != null){
-						thisEntity.readFromNBT(message.tagCompound);
+					EntityMultipartA_Base multipart = getMultipartFromMessage(message, ctx);
+					if(multipart != null){
+						multipart.readFromNBT(message.tagCompound);
 					}
 				}
 			});

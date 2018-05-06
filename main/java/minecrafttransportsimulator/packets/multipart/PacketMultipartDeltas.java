@@ -1,15 +1,13 @@
-package minecrafttransportsimulator.packets.general;
+package minecrafttransportsimulator.packets.multipart;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
-import net.minecraft.client.Minecraft;
+import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class MultipartDeltaPacket implements IMessage{
-	private int id;
+public class PacketMultipartDeltas extends APacketMultipart{
 	private double deltaX;
 	private double deltaY;
 	private double deltaZ;
@@ -17,10 +15,10 @@ public class MultipartDeltaPacket implements IMessage{
 	private float deltaPitch;
 	private float deltaRoll;
 
-	public MultipartDeltaPacket() { }
+	public PacketMultipartDeltas(){}
 	
-	public MultipartDeltaPacket(int id, double deltaX, double deltaY, double deltaZ, float deltaYaw, float deltaPitch, float deltaRoll){
-		this.id=id;
+	public PacketMultipartDeltas(EntityMultipartD_Moving multipart, double deltaX, double deltaY, double deltaZ, float deltaYaw, float deltaPitch, float deltaRoll){
+		super(multipart);
 		this.deltaX=deltaX;
 		this.deltaY=deltaY;
 		this.deltaZ=deltaZ;
@@ -31,7 +29,7 @@ public class MultipartDeltaPacket implements IMessage{
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
-		this.id=buf.readInt();
+		super.fromBytes(buf);;
 		this.deltaX=buf.readDouble();
 		this.deltaY=buf.readDouble();
 		this.deltaZ=buf.readDouble();
@@ -42,7 +40,7 @@ public class MultipartDeltaPacket implements IMessage{
 
 	@Override
 	public void toBytes(ByteBuf buf){
-		buf.writeInt(this.id);
+		super.toBytes(buf);
 		buf.writeDouble(this.deltaX);
 		buf.writeDouble(this.deltaY);
 		buf.writeDouble(this.deltaZ);
@@ -51,16 +49,15 @@ public class MultipartDeltaPacket implements IMessage{
 		buf.writeFloat(this.deltaRoll);
 	}
 
-	public static class Handler implements IMessageHandler<MultipartDeltaPacket, IMessage>{
+	public static class Handler implements IMessageHandler<PacketMultipartDeltas, IMessage>{
 		@Override
-		public IMessage onMessage(final MultipartDeltaPacket message, final MessageContext ctx){
-			
+		public IMessage onMessage(final PacketMultipartDeltas message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartMoving thisEntity = (EntityMultipartMoving) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
-					if(thisEntity != null){
-						thisEntity.addToServerDeltas(message.deltaX, message.deltaY, message.deltaZ, message.deltaYaw, message.deltaPitch, message.deltaRoll);
+					EntityMultipartD_Moving multipart = (EntityMultipartD_Moving) getMultipartFromMessage(message, ctx);
+					if(multipart != null){
+						multipart.addToServerDeltas(message.deltaX, message.deltaY, message.deltaZ, message.deltaYaw, message.deltaPitch, message.deltaRoll);
 					}
 				}
 			});

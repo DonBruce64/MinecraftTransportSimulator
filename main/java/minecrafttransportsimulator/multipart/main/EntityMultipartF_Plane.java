@@ -3,7 +3,7 @@ package minecrafttransportsimulator.multipart.main;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.entities.parts.PartPropeller;
-import minecrafttransportsimulator.multipart.parts.AMultipartPart;
+import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartEngineAircraft;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
@@ -65,7 +65,7 @@ public final class EntityMultipartF_Plane extends EntityMultipartE_Vehicle{
 	}
 		
 	@Override
-	public void removePart(AMultipartPart part, boolean playBreakSound){
+	public void removePart(APart part, boolean playBreakSound){
 		super.removePart(part, playBreakSound);
 		if(part instanceof PartEngineAircraft){
 			if(((PartEngineAircraft) part).propeller != null){
@@ -98,7 +98,7 @@ public final class EntityMultipartF_Plane extends EntityMultipartE_Vehicle{
 	@Override
 	protected void getForcesAndMotions(){
 		thrustForce = thrustTorque = 0;
-		for(AMultipartPart part : this.getMultipartParts()){
+		for(APart part : this.getMultipartParts()){
 			if(part instanceof PartPropeller){
 				thrust = ((PartPropeller) part).getThrustForce();
 				thrustForce += thrust;

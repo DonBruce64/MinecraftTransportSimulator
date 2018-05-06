@@ -1,12 +1,11 @@
-package minecrafttransportsimulator.packets.general;
+package minecrafttransportsimulator.packets.multipart;
 
-import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.items.ItemKey;
-import net.minecraft.client.Minecraft;
+import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
+import minecrafttransportsimulator.packets.general.ChatPacket;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -16,44 +15,22 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class MultipartKeyActionPacket implements IMessage{
-	private int id;
-	private int player;
-
-	public MultipartKeyActionPacket() {}
+public class PacketMultipartKey extends APacketMultipartPlayer{
 	
-	public MultipartKeyActionPacket(int id, int player){
-		this.id = id;
-		this.player = player;
+	public PacketMultipartKey(){}
+	
+	public PacketMultipartKey(EntityMultipartB_Existing multipart, EntityPlayer player){
+		super(multipart, player);
 	}
 	
-	@Override
-	public void fromBytes(ByteBuf buf){
-		this.id=buf.readInt();
-		this.player=buf.readInt();
-	}
-
-	@Override
-	public void toBytes(ByteBuf buf){
-		buf.writeInt(this.id);
-		buf.writeInt(this.player);
-	}
-
-	public static class Handler implements IMessageHandler<MultipartKeyActionPacket, IMessage>{
+	public static class Handler implements IMessageHandler<PacketMultipartKey, IMessage>{
 		@Override
-		public IMessage onMessage(final MultipartKeyActionPacket message, final MessageContext ctx){
+		public IMessage onMessage(final PacketMultipartKey message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartMoving mover;
-					EntityPlayer player;
-					if(ctx.side.isServer()){
-						mover = (EntityMultipartMoving) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
-						player = (EntityPlayer) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.player);
-					}else{
-						mover = (EntityMultipartMoving) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
-						player = (EntityPlayer) Minecraft.getMinecraft().theWorld.getEntityByID(message.player);
-					}
+					EntityMultipartB_Existing multipart = (EntityMultipartB_Existing) getMultipartFromMessage(message, ctx);
+					EntityPlayer player = getPlayerFromMessage(message, ctx);
 					
 					String messageString = "";
 					ItemStack heldStack = player.getHeldItemMainhand();
@@ -62,10 +39,10 @@ public class MultipartKeyActionPacket implements IMessage{
 							ItemKey key = (ItemKey) heldStack.getItem();
 							if(player.isSneaking()){
 								//If player is sneaking with a key we need to change ownership.
-								messageString = changeOwner(heldStack, mover, player);
+								messageString = changeOwner(heldStack, multipart, player);
 							}else{
 								//Not sneaking, do locking code.
-								messageString = changeLock(heldStack, mover, player);
+								messageString = changeLock(heldStack, multipart, player);
 							}
 							if(ctx.side.isServer()){
 								MTS.MTSNet.sendToAll(message);
@@ -80,16 +57,16 @@ public class MultipartKeyActionPacket implements IMessage{
 			return null;
 		}
 		
-		private static String changeOwner(ItemStack stack, EntityMultipartMoving mover, EntityPlayer player){
-			if(mover.ownerName.isEmpty()){
+		private static String changeOwner(ItemStack stack, EntityMultipartB_Existing multipart, EntityPlayer player){
+			if(multipart.ownerName.isEmpty()){
 				//No owner, take ownership.
-				mover.ownerName = player.getUUID(player.getGameProfile()).toString();
+				multipart.ownerName = player.getUUID(player.getGameProfile()).toString();
 				return "interact.key.info.own";
 			}else{
 				//Already owned, check to see if we can disown.
 				boolean isPlayerOP = player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
-				if(player.getUUID(player.getGameProfile()).toString().equals(mover.ownerName) || isPlayerOP){
-					mover.ownerName = "";
+				if(player.getUUID(player.getGameProfile()).toString().equals(multipart.ownerName) || isPlayerOP){
+					multipart.ownerName = "";
 					return "interact.key.info.unown";	
 				}else{
 					return "interact.key.failure.alreadyowned";
@@ -97,29 +74,29 @@ public class MultipartKeyActionPacket implements IMessage{
 			}
 		}
 		
-		private static String changeLock(ItemStack stack, EntityMultipartMoving mover, EntityPlayer player){
+		private static String changeLock(ItemStack stack, EntityMultipartB_Existing multipart, EntityPlayer player){
 			String vehicleUUID = stack.hasTagCompound() ? stack.getTagCompound().getString("vehicle") : "";
 			if(vehicleUUID.isEmpty()){
-				if(!mover.ownerName.isEmpty()){
-					if(!player.getUUID(player.getGameProfile()).toString().equals(mover.ownerName)){
+				if(!multipart.ownerName.isEmpty()){
+					if(!player.getUUID(player.getGameProfile()).toString().equals(multipart.ownerName)){
 						return "interact.key.failure.notowner";
 					}
 				}
 				NBTTagCompound tag = new NBTTagCompound();
-				tag.setString("vehicle", mover.UUID);
+				tag.setString("vehicle", multipart.getUniqueID().toString());
 				stack.setTagCompound(tag);
 				
-				mover.locked = true;
+				multipart.locked = true;
 				MTSAchievements.triggerKey(player);
 				return "interact.key.info.lock";
-			}else if(!vehicleUUID.equals(mover.UUID)){
+			}else if(!vehicleUUID.equals(multipart.getUniqueID().toString())){
 				return "interact.key.failure.wrongkey";
 			}else{
-				if(mover.locked){
-					mover.locked = false;
+				if(multipart.locked){
+					multipart.locked = false;
 					return "interact.key.info.unlock";
 				}else{
-					mover.locked = true;
+					multipart.locked = true;
 					return "interact.key.info.lock";
 				}
 			}

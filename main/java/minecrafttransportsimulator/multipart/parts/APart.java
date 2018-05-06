@@ -21,7 +21,7 @@ import net.minecraft.util.math.Vec3d;
  * 
  * @author don_bruce
  */
-public abstract class AMultipartPart{	
+public abstract class APart{	
 	/** Can a rider of this part send inputs to the multipart this is a part of.*/
 	public final boolean isController;
 	/** Does this part rotate in-sync with the yaw changes of the multipart.*/
@@ -33,7 +33,7 @@ public abstract class AMultipartPart{
 	
 	public Vec3d partPos;
 		
-	public AMultipartPart(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
+	public APart(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		this.isController = isController;
 		this.turnsWithSteer = turnsWithSteer;
 		this.offset = offset;

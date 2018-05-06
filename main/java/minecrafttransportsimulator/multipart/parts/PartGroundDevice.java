@@ -7,7 +7,7 @@ import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceWheel;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
-import minecrafttransportsimulator.packets.parts.PacketFlatGroundDevice;
+import minecrafttransportsimulator.packets.parts.PacketPartFlat;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.systems.SFXSystem.FXPart;
@@ -27,7 +27,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * 
  * @author don_bruce
  */
-public final class PartGroundDevice extends AMultipartPart implements FXPart{
+public final class PartGroundDevice extends APart implements FXPart{
 	private static final Vec3d groundDetectionOffset = new Vec3d(0, -0.05F, 0);
 	
 	private boolean isFlat;
@@ -48,7 +48,7 @@ public final class PartGroundDevice extends AMultipartPart implements FXPart{
 					this.setFlat();
 					Vec3d explosionPosition = partPos;
 					multipart.worldObj.newExplosion(multipart, explosionPosition.xCoord, explosionPosition.yCoord, explosionPosition.zCoord, 0.25F, false, false);
-					MTS.MTSNet.sendToAll(new PacketFlatGroundDevice(this));
+					MTS.MTSNet.sendToAll(new PacketPartFlat(this));
 				}
 			}
 		}

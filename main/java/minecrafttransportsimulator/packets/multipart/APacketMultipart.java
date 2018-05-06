@@ -7,7 +7,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public abstract class APacketMultipart implements IMessage{
-	protected int id;
+	private int id;
 
 	public APacketMultipart(){}
 	

@@ -3,24 +3,24 @@ package minecrafttransportsimulator.systems;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.core.EntityMultipartChild;
-import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
-import minecrafttransportsimulator.entities.core.EntityMultipartParent;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.entities.parts.EntitySeat;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.guis.GUIConfig;
 import minecrafttransportsimulator.guis.GUIPackMissing;
 import minecrafttransportsimulator.items.ItemPart;
-import minecrafttransportsimulator.packets.general.MultipartAttackPacket;
-import minecrafttransportsimulator.packets.general.MultipartGlassActionPacket;
-import minecrafttransportsimulator.packets.general.MultipartKeyActionPacket;
-import minecrafttransportsimulator.packets.general.MultipartNameTagActionPacket;
+import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
+import minecrafttransportsimulator.multipart.main.EntityMultipartC_Colliding;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
+import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.packets.general.MultipartPartAdditionPacket;
-import minecrafttransportsimulator.packets.general.MultipartPartInteractionPacket;
 import minecrafttransportsimulator.packets.general.PackReloadPacket;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartAttacked;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartKey;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartNameTag;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartWindowFix;
+import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import net.minecraft.client.Minecraft;
@@ -32,7 +32,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
@@ -58,10 +57,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @Mod.EventBusSubscriber(Side.CLIENT)
 @SideOnly(Side.CLIENT)
 public final class ClientEventSystem{
-    /**The last seat a player was in.  If null, this means the player is not in a seat.*/
-    public static EntitySeat playerLastSeat = null;
-    private static Minecraft minecraft = Minecraft.getMinecraft();
-    
+    private static final Minecraft minecraft = Minecraft.getMinecraft();
     
     /**
      * Need this to do part interaction in cases when we aren't holding anything.
@@ -70,13 +66,13 @@ public final class ClientEventSystem{
     public static void on(PlayerInteractEvent.RightClickEmpty event){
     	if(event.getWorld().isRemote){
 	    	for(Entity entity : minecraft.theWorld.loadedEntityList){
-				if(entity instanceof EntityMultipartMoving){
-					EntityMultipartMoving mover = (EntityMultipartMoving) entity;
+				if(entity instanceof EntityMultipartC_Colliding){
+					EntityMultipartC_Colliding multipart = (EntityMultipartC_Colliding) entity;
 					EntityPlayer player = event.getEntityPlayer();
-					EntityMultipartChild hitChild = mover.getHitChild(player);
-					if(hitChild != null){
-						if(hitChild.interactPart(player)){
-							MTS.MTSNet.sendToServer(new MultipartPartInteractionPacket(hitChild.getEntityId(), player.getEntityId()));
+					APart hitPart = multipart.getHitPart(player);
+					if(hitPart != null){
+						if(hitPart.interactPart(player)){
+							MTS.MTSNet.sendToServer(new PacketPartInteraction(hitPart, player.getEntityId()));
 							return;
 						}
 					}
@@ -93,22 +89,22 @@ public final class ClientEventSystem{
     public static void on(PlayerInteractEvent.RightClickItem event){
     	if(event.getWorld().isRemote){
 	    	for(Entity entity : minecraft.theWorld.loadedEntityList){
-				if(entity instanceof EntityMultipartMoving){
-					EntityMultipartMoving mover = (EntityMultipartMoving) entity;
+				if(entity instanceof EntityMultipartC_Colliding){
+					EntityMultipartC_Colliding multipart = (EntityMultipartC_Colliding) entity;
 					EntityPlayer player = event.getEntityPlayer();
 					
 					//Before we check item actions, see if we clicked a part and we need to interact with it.
 					//If so, do the part's interaction rather than part checks or other interaction.
-					EntityMultipartChild hitChild = mover.getHitChild(player);
-					if(hitChild != null){
-						if(hitChild.interactPart(player)){
-							MTS.MTSNet.sendToServer(new MultipartPartInteractionPacket(hitChild.getEntityId(), player.getEntityId()));
+					APart hitPart = multipart.getHitPart(player);
+					if(hitPart != null){
+						if(hitPart.interactPart(player)){
+							MTS.MTSNet.sendToServer(new PacketPartInteraction(hitPart, player.getEntityId()));
 							return;
 						}
 					}
 					
 					//No in-use changes for sneaky sneaks!  Unless we're using a key to lock ourselves in.
-					if(player.getRidingEntity() instanceof EntitySeat){
+					if(multipart.equals(player.getRidingEntity())){
 						if(player.getHeldItem(event.getHand()) != null){
 							if(!MTSRegistry.key.equals(player.getHeldItem(event.getHand()).getItem())){
 								return;
@@ -120,23 +116,24 @@ public final class ClientEventSystem{
 					//If so, send the info to the server to add a new part.
 					//Note that the server will check if we can actually add the part in question.
 			    	if(event.getItemStack().getItem() instanceof ItemPart){
-	    				for(byte i=0; i<mover.pack.parts.size(); ++i){
-	    					PackPart packPart = mover.pack.parts.get(i);
-	    					Vec3d offset = RotationSystem.getRotatedPoint(packPart.pos[0], packPart.pos[1], packPart.pos[2], mover.rotationPitch, mover.rotationYaw, mover.rotationRoll);
-	    					AxisAlignedBB partBox = new AxisAlignedBB((float) (mover.posX + offset.xCoord) - 0.75F, (float) (mover.posY + offset.yCoord) - 0.75F, (float) (mover.posZ + offset.zCoord) - 0.75F, (float) (mover.posX + offset.xCoord) + 0.75F, (float) (mover.posY + offset.yCoord) + 1.25F, (float) (mover.posZ + offset.zCoord) + 0.75F);
+	    				for(byte i=0; i<multipart.pack.parts.size(); ++i){
+	    					PackPart packPart = multipart.pack.parts.get(i);
+	    					Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
+	    					Vec3d offset = RotationSystem.getRotatedPoint(partOffset.addVector(0, 0.25F, 0), multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
+	    					MultipartAxisAlignedBB partBox = new MultipartAxisAlignedBB(multipart.getPositionVector().add(offset), partOffset.addVector(0, 0.25F, 0), 1.5F, 2.0F);	    					
 	    					Vec3d lookVec = player.getLook(1.0F);
 	        				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
 	        				for(float f=1.0F; f<4.0F; f += 0.1F){
 	        					if(partBox.isVecInside(clickedVec)){
 	        						boolean isPartPresent = false;
-	        						for(EntityMultipartChild child : mover.getChildren()){
-										if(child.offsetX == packPart.pos[0] && child.offsetY == packPart.pos[1] && child.offsetZ == packPart.pos[2]){
+	        						for(APart part : multipart.getMultipartParts()){
+										if(part.offset.equals(partOffset)){
 											isPartPresent = true;
 											break;
 										}
 									}
 	        						if(!isPartPresent){
-		        						MTS.MTSNet.sendToServer(new MultipartPartAdditionPacket(mover.getEntityId(), player.getEntityId(), i));
+		        						MTS.MTSNet.sendToServer(new MultipartPartAdditionPacket(multipart.getEntityId(), player.getEntityId(), i));
 		        						return;
 	        						}
 	        					}
@@ -146,15 +143,15 @@ public final class ClientEventSystem{
 	    			}else{
 	    				//If we are not holding a part, see if we at least clicked the multipart.
 	    				//If so, and we are holding a wrench or key or name tag or glass pane, act on that.
-	    				if(mover.wasMultipartClicked(player)){
+	    				if(multipart.wasMultipartClicked(player)){
 	    					if(event.getItemStack().getItem().equals(MTSRegistry.wrench)){
-	    						MTS.proxy.openGUI(mover, player);
+	    						MTS.proxy.openGUI(multipart, player);
 	    					}else if(event.getItemStack().getItem().equals(MTSRegistry.key)){
-	    						MTS.MTSNet.sendToServer(new MultipartKeyActionPacket(mover.getEntityId(), player.getEntityId()));
+	    						MTS.MTSNet.sendToServer(new PacketMultipartKey(multipart, player));
 	    					}else if(event.getItemStack().getItem().equals(Items.NAME_TAG)){
-	    						MTS.MTSNet.sendToServer(new MultipartNameTagActionPacket(mover.getEntityId(), player.getEntityId()));
+	    						MTS.MTSNet.sendToServer(new PacketMultipartNameTag(multipart, player));
 	    					}else if(event.getItemStack().getItem().equals(Item.getItemFromBlock(Blocks.GLASS_PANE))){
-	    						MTS.MTSNet.sendToServer(new MultipartGlassActionPacket(mover.getEntityId(), player.getEntityId()));
+	    						MTS.MTSNet.sendToServer(new PacketMultipartWindowFix(multipart, player));
 	    					}
 	    				}
 	    			}
@@ -176,12 +173,12 @@ public final class ClientEventSystem{
     	//You might think this only gets called on clients, you'd be wrong.
     	//Forge will gladly call this on the client and server threads on SP.
     	if(event.getEntityPlayer().worldObj.isRemote){
-	    	if(event.getTarget() instanceof EntityMultipartMoving){
-	    		MTS.MTSNet.sendToServer(new MultipartAttackPacket(event.getTarget().getEntityId(), event.getEntityPlayer().getEntityId()));
+	    	if(event.getTarget() instanceof EntityMultipartC_Colliding){
+	    		MTS.MTSNet.sendToServer(new PacketMultipartAttacked((EntityMultipartB_Existing) event.getTarget(), event.getEntityPlayer()));
 	    		event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
 	    	}
     	}
-    	if(event.getTarget() instanceof EntityMultipartMoving){
+    	if(event.getTarget() instanceof EntityMultipartC_Colliding){
     		event.setCanceled(true);
     	}
     }
@@ -192,7 +189,7 @@ public final class ClientEventSystem{
     @SubscribeEvent
     public static void on(TickEvent.RenderTickEvent event){
     	if(event.phase.equals(event.phase.START)){
-    		if(playerLastSeat != null){
+    		if(minecraft.thePlayer.getRidingEntity() instanceof EntityMultipartC_Colliding){
     			if(minecraft.gameSettings.thirdPersonView != 0){
     				CameraSystem.runCustomCamera(event.renderTickTime);
     			}
@@ -201,33 +198,21 @@ public final class ClientEventSystem{
     }
     
     /**
-     * Updates player seated status and rotates player in the seat.
-     * Forwards camera control options to the ControlSystem.
-     * Checks on world load to see if player has loaded this major revision before.
-     * If not, it shows the player the info screen once to appraise them of the changes.
+     * Rotates player in the seat for proper rendering and forwards camera control options to the ControlSystem.
      */
     @SubscribeEvent
     public static void on(TickEvent.ClientTickEvent event){
         if(minecraft.theWorld != null){
             if(event.phase.equals(Phase.END)){            	
-                //Update the player seated status
-                if(minecraft.thePlayer.getRidingEntity() == null){
-                    if(playerLastSeat != null){
-                        playerLastSeat = null;
-                    }
-                }else if(minecraft.thePlayer.getRidingEntity() instanceof EntitySeat){
-                    if(playerLastSeat == null || !playerLastSeat.equals(minecraft.thePlayer.getRidingEntity())){
-                        playerLastSeat = (EntitySeat) minecraft.thePlayer.getRidingEntity();
-                    }
+                if(minecraft.thePlayer.getRidingEntity() instanceof EntityMultipartC_Colliding){
                     if(!Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen()){
-                    	if(playerLastSeat.parent instanceof EntityMultipartVehicle){
-                    		ControlSystem.controlVehicle((EntityMultipartVehicle) playerLastSeat.parent, playerLastSeat.isController);
+                    	if(minecraft.thePlayer.getRidingEntity() instanceof EntityMultipartE_Vehicle){
+                    		EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) minecraft.thePlayer.getRidingEntity();
+                    		ControlSystem.controlVehicle(vehicle, vehicle.getSeatForRider(minecraft.thePlayer).isController);
                         }
                     }
                     if(!minecraft.isGamePaused()){
-        				if(playerLastSeat.parent != null){
-        					CameraSystem.updatePlayerYawAndPitch(minecraft.thePlayer, playerLastSeat.parent);
-        				}
+        				CameraSystem.updatePlayerYawAndPitch(minecraft.thePlayer, (EntityMultipartC_Colliding) minecraft.thePlayer.getRidingEntity());
                      }
                 }
             }
@@ -236,16 +221,14 @@ public final class ClientEventSystem{
 
     /**
      * Adjusts roll for camera.
-     * Only works when camera is inside the plane.
+     * Only works when camera is inside vehicles.
      */
     @SubscribeEvent
     public static void on(CameraSetup event){
         if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
-            if(event.getEntity().getRidingEntity() instanceof EntitySeat){
-            	EntityMultipartMoving mover = (EntityMultipartMoving) ((EntitySeat) event.getEntity().getRidingEntity()).parent;
-                if(mover != null){
-                    event.setRoll((float) (mover.rotationRoll  + (mover.rotationRoll - mover.prevRotationRoll)*(double)event.getRenderPartialTicks()));
-                }
+            if(event.getEntity().getRidingEntity() instanceof EntityMultipartC_Colliding){
+            	EntityMultipartC_Colliding multipart = (EntityMultipartC_Colliding) event.getEntity().getRidingEntity();
+                event.setRoll((float) (multipart.rotationRoll  + (multipart.rotationRoll - multipart.prevRotationRoll)*(double)event.getRenderPartialTicks()));
             }
         }
     }
@@ -253,14 +236,13 @@ public final class ClientEventSystem{
     /**
      * Used to force rendering of aircraft above the world height limit, as
      * newer versions suppress this as part of the chunk visibility
-     * feature.
-     * Also causes lights to render, as rendering them during regular calls
+     * feature.  Also causes lights to render, as rendering them during regular calls
      * results in water being invisible.
      */
     @SubscribeEvent
     public static void on(RenderWorldLastEvent event){
         for(Entity entity : minecraft.theWorld.loadedEntityList){
-            if(entity instanceof EntityMultipartMoving){
+            if(entity instanceof EntityMultipartE_Vehicle){
             	minecraft.getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
             }
         }
@@ -271,38 +253,34 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Pre event){
-        if(event.getEntityPlayer().getRidingEntity() instanceof EntitySeat){
-            EntityMultipartParent parent = ((EntitySeat) event.getEntityPlayer().getRidingEntity()).parent;
-            if(parent!=null){
-                GL11.glPushMatrix();
-                if(!event.getEntityPlayer().equals(minecraft.thePlayer)){
-                    EntityPlayer masterPlayer = Minecraft.getMinecraft().thePlayer;
-                    EntityPlayer renderedPlayer = event.getEntityPlayer();
-                    float playerDistanceX = (float) (renderedPlayer.posX - masterPlayer.posX);
-                    float playerDistanceY = (float) (renderedPlayer.posY - masterPlayer.posY);
-                    float playerDistanceZ = (float) (renderedPlayer.posZ - masterPlayer.posZ);
-                    GL11.glTranslatef(playerDistanceX, playerDistanceY, playerDistanceZ);
-                    GL11.glTranslated(0, masterPlayer.getEyeHeight(), 0);
-                    GL11.glRotated(parent.rotationPitch, Math.cos(parent.rotationYaw  * 0.017453292F), 0, Math.sin(parent.rotationYaw * 0.017453292F));
-                    GL11.glRotated(parent.rotationRoll, -Math.sin(parent.rotationYaw  * 0.017453292F), 0, Math.cos(parent.rotationYaw * 0.017453292F));
-                    GL11.glTranslated(0, -masterPlayer.getEyeHeight(), 0);
-                    GL11.glTranslatef(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
-                }else{
-                    GL11.glTranslated(0, event.getEntityPlayer().getEyeHeight(), 0);
-                    GL11.glRotated(parent.rotationPitch, Math.cos(parent.rotationYaw  * 0.017453292F), 0, Math.sin(parent.rotationYaw * 0.017453292F));
-                    GL11.glRotated(parent.rotationRoll, -Math.sin(parent.rotationYaw  * 0.017453292F), 0, Math.cos(parent.rotationYaw * 0.017453292F));
-                    GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
-                }
+        if(event.getEntityPlayer().getRidingEntity() instanceof EntityMultipartC_Colliding){
+        	EntityMultipartC_Colliding multipart = (EntityMultipartC_Colliding) event.getEntityPlayer().getRidingEntity();
+            GL11.glPushMatrix();
+            if(!event.getEntityPlayer().equals(minecraft.thePlayer)){
+                EntityPlayer masterPlayer = Minecraft.getMinecraft().thePlayer;
+                EntityPlayer renderedPlayer = event.getEntityPlayer();
+                float playerDistanceX = (float) (renderedPlayer.posX - masterPlayer.posX);
+                float playerDistanceY = (float) (renderedPlayer.posY - masterPlayer.posY);
+                float playerDistanceZ = (float) (renderedPlayer.posZ - masterPlayer.posZ);
+                GL11.glTranslatef(playerDistanceX, playerDistanceY, playerDistanceZ);
+                GL11.glTranslated(0, masterPlayer.getEyeHeight(), 0);
+                GL11.glRotated(multipart.rotationPitch, Math.cos(multipart.rotationYaw  * 0.017453292F), 0, Math.sin(multipart.rotationYaw * 0.017453292F));
+                GL11.glRotated(multipart.rotationRoll, -Math.sin(multipart.rotationYaw  * 0.017453292F), 0, Math.cos(multipart.rotationYaw * 0.017453292F));
+                GL11.glTranslated(0, -masterPlayer.getEyeHeight(), 0);
+                GL11.glTranslatef(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
+            }else{
+                GL11.glTranslated(0, event.getEntityPlayer().getEyeHeight(), 0);
+                GL11.glRotated(multipart.rotationPitch, Math.cos(multipart.rotationYaw  * 0.017453292F), 0, Math.sin(multipart.rotationYaw * 0.017453292F));
+                GL11.glRotated(multipart.rotationRoll, -Math.sin(multipart.rotationYaw  * 0.017453292F), 0, Math.cos(multipart.rotationYaw * 0.017453292F));
+                GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
             }
         }
     }
 
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Post event){
-        if(event.getEntityPlayer().getRidingEntity() instanceof EntitySeat){
-            if(((EntitySeat) event.getEntityPlayer().getRidingEntity()).parent!=null){
-                GL11.glPopMatrix();
-            }
+    	if(event.getEntityPlayer().getRidingEntity() instanceof EntityMultipartC_Colliding){
+    		GL11.glPopMatrix();
         }
     }
 
@@ -311,14 +289,15 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(RenderGameOverlayEvent.Pre event){    	
-        if(minecraft.thePlayer.getRidingEntity() instanceof EntitySeat){
+        if(minecraft.thePlayer.getRidingEntity() instanceof EntityMultipartC_Colliding){
             if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
                 event.setCanceled(true);
             }else if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
-                if(playerLastSeat != null){
-                    if(playerLastSeat.parent instanceof EntityMultipartVehicle && playerLastSeat.isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
-                        RenderHUD.drawMainHUD((EntityMultipartVehicle) playerLastSeat.parent, event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight(), false);
-                    }
+                if(minecraft.thePlayer.getRidingEntity() instanceof EntityMultipartE_Vehicle){
+                	EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) minecraft.thePlayer.getRidingEntity(); 
+                	if(vehicle.getSeatForRider(minecraft.thePlayer).isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
+                		RenderHUD.drawMainHUD(vehicle, event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight(), false);
+                	}
                 }
             }
         }

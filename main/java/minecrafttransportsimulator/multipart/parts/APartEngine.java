@@ -3,8 +3,8 @@ package minecrafttransportsimulator.multipart.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
-import minecrafttransportsimulator.packets.parts.PacketEngine;
-import minecrafttransportsimulator.packets.parts.PacketEngine.PacketEngineTypes;
+import minecrafttransportsimulator.packets.parts.PacketPartEngine;
+import minecrafttransportsimulator.packets.parts.PacketPartEngine.PacketEngineTypes;
 import minecrafttransportsimulator.sounds.AttenuatedSound;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
@@ -20,7 +20,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class APartEngine extends AMultipartPart implements SoundPart, FXPart{
+public abstract class APartEngine extends APart implements SoundPart, FXPart{
 	
 	//NBT data
 	public boolean isCreative;
@@ -275,7 +275,7 @@ public abstract class APartEngine extends AMultipartPart implements SoundPart, F
 	public void backfireEngine(){
 		RPM -= 100;
 		if(!multipart.worldObj.isRemote){
-			MTS.MTSNet.sendToAll(new PacketEngine(this, PacketEngineTypes.BACKFIRE));
+			MTS.MTSNet.sendToAll(new PacketPartEngine(this, PacketEngineTypes.BACKFIRE));
 		}else{
 			MTS.proxy.playSound(partPos, this.pack.general.packID + ":" + this.pack.general.partUniqueName + "_sputter", 0.5F, 1);
 			backfired = true;
@@ -293,7 +293,7 @@ public abstract class APartEngine extends AMultipartPart implements SoundPart, F
 		starterLevel = 0;
 		oilPressure = 60;
 		if(!multipart.worldObj.isRemote){
-			MTS.MTSNet.sendToAll(new PacketEngine(this, PacketEngineTypes.START));
+			MTS.MTSNet.sendToAll(new PacketPartEngine(this, PacketEngineTypes.START));
 		}else{
 			MTS.proxy.playSound(partPos, this.pack.general.packID + ":" + this.pack.general.partUniqueName + "_starting", 1, 1);
 		}
@@ -308,7 +308,7 @@ public abstract class APartEngine extends AMultipartPart implements SoundPart, F
 			state = EngineStates.MAGNETO_ON_HS_ON;
 		}
 		if(!multipart.worldObj.isRemote){
-			MTS.MTSNet.sendToAll(new PacketEngine(this, packetType));
+			MTS.MTSNet.sendToAll(new PacketPartEngine(this, packetType));
 		}else{
 			if(!packetType.equals(PacketEngineTypes.DROWN)){
 				internalFuel = 100;

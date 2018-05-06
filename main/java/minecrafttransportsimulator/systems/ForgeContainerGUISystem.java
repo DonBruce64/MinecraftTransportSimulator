@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.entities.parts.EntityCrate;
+import minecrafttransportsimulator.multipart.parts.PartCrate;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,7 +16,7 @@ public class ForgeContainerGUISystem implements IGuiHandler{
 		if(ID != -1){
 			Entity entity = world.getEntityByID(ID);
 			if(entity instanceof EntityCrate){
-				return new ContainerChest(player.inventory, (EntityCrate) entity, player);
+				return new ContainerChest(player.inventory, ((PartCrate) entity).crateInventory, player);
 			}
 		}
 		return null;

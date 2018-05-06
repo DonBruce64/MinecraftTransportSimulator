@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.multipart.main.EntityMultipartA_Base;
-import minecrafttransportsimulator.multipart.parts.AMultipartPart;
+import minecrafttransportsimulator.multipart.parts.APart;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -13,7 +13,7 @@ public abstract class APacketPart implements IMessage{
 
 	public APacketPart(){}
 	
-	public APacketPart(AMultipartPart part){
+	public APacketPart(APart part){
 		this.id = part.multipart.getEntityId();
 		this.subId = part.multipart.getMultipartPartIndex(part);
 	}
@@ -30,7 +30,7 @@ public abstract class APacketPart implements IMessage{
 		buf.writeByte(this.subId);
 	}
 	
-	protected static AMultipartPart getMultipartPartFromMessage(APacketPart message, MessageContext ctx){
+	protected static APart getMultipartPartFromMessage(APacketPart message, MessageContext ctx){
 		EntityMultipartA_Base multipart;
 		if(ctx.side.isServer()){
 			multipart = (EntityMultipartA_Base) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
@@ -38,7 +38,7 @@ public abstract class APacketPart implements IMessage{
 			multipart = (EntityMultipartA_Base) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 		}
 		if(multipart != null){
-			AMultipartPart part = multipart.getMultipartPartByIndex(message.subId);
+			APart part = multipart.getMultipartPartByIndex(message.subId);
 			if(part != null){
 				return part;
 			}

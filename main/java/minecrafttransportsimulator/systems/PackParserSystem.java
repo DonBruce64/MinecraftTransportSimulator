@@ -21,7 +21,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackFileDefinitions;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
-import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import net.minecraftforge.common.MinecraftForge;
@@ -258,9 +258,9 @@ public final class PackParserSystem{
     	PLANE(EntityMultipartF_Plane.class),
     	CAR(EntityMultipartF_Car.class);
     	
-    	public final Class<? extends EntityMultipartMoving> multipartClass;
+    	public final Class<? extends EntityMultipartE_Vehicle> multipartClass;
     	
-    	private MultipartTypes(Class<? extends EntityMultipartMoving> multipartClass){
+    	private MultipartTypes(Class<? extends EntityMultipartE_Vehicle> multipartClass){
     		this.multipartClass = multipartClass;
     	}
     }

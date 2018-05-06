@@ -7,10 +7,10 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
-import minecrafttransportsimulator.multipart.parts.AMultipartPart;
+import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartCrate;
 import minecrafttransportsimulator.multipart.parts.PartSeat;
-import minecrafttransportsimulator.packets.general.MultipartWindowBreakPacket;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartWindowBreak;
 import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -90,7 +90,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		//However, there is one case where we can't forward an event, and that is if a player
 		//right-clicks this with an empty hand.
 		if(worldObj.isRemote && player.getHeldItemMainhand() == null){
-			AMultipartPart hitPart = getHitPart(player);
+			APart hitPart = getHitPart(player);
 			if(hitPart != null){
 				if(hitPart.interactPart(player)){
 					MTS.MTSNet.sendToServer(new PacketPartInteraction(hitPart, player.getEntityId()));
@@ -107,7 +107,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 				//This is a projectile of some sort.  If this projectile is inside a part
 				//make it hit the part rather than hit the multipart.
 				Entity projectile = source.getSourceOfDamage();
-				for(AMultipartPart part : this.getMultipartParts()){
+				for(APart part : this.getMultipartParts()){
 					//Expand this box by the speed of the projectile just in case the projectile is custom and
 					//calls its attack code before it actually gets inside the collision box.
 					if(part.getAABBWithOffset(Vec3d.ZERO).expand(Math.abs(projectile.motionX), Math.abs(projectile.motionY), Math.abs(projectile.motionZ)).isVecInside(projectile.getPositionVector())){
@@ -121,7 +121,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 				//part attack that part.
 				Entity attacker = source.getEntity();
 				if(attacker != null){
-					AMultipartPart hitPart = this.getHitPart(attacker);
+					APart hitPart = this.getHitPart(attacker);
 					if(hitPart != null){
 						hitPart.attackPart(source, damage);
 						return true;
@@ -135,7 +135,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 			if(damageSource != null && this.brokenWindows < pack.general.numberWindows){
 				++brokenWindows;
 				this.playSound(SoundEvents.BLOCK_GLASS_BREAK, 2.0F, 1.0F);
-				MTS.MTSNet.sendToAll(new MultipartWindowBreakPacket(this.getEntityId()));
+				MTS.MTSNet.sendToAll(new PacketMultipartWindowBreak(this));
 			}
 		}
 		return true;
@@ -178,7 +178,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	}
 	
 	@Override
-	public void addPart(AMultipartPart part){
+	public void addPart(APart part){
 		//Check if we are colliding and adjust roll before letting part addition continue.
 		//This is needed as the master multipart system doesn't know about roll.
 		if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
@@ -204,11 +204,11 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
      * Is determined by the rotation of the entity and distance from parts.
      * If a part is found to be hit-able, it is returned.  Else null is returned.
      */
-	public AMultipartPart getHitPart(Entity entity){
+	public APart getHitPart(Entity entity){
 		Vec3d lookVec = entity.getLook(1.0F);
 		Vec3d hitVec = entity.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
 		for(float f=1.0F; f<4.0F; f += 0.1F){
-			for(AMultipartPart part : this.getMultipartParts()){
+			for(APart part : this.getMultipartParts()){
 				if(part.getAABBWithOffset(Vec3d.ZERO).isVecInside(hitVec)){
 					return part;
 				}
@@ -242,7 +242,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 				for(String partName : packPart.names){
 					if(partName.contains("seat")){
 						if(seatNumber == 0){
-							for(AMultipartPart part : this.getMultipartParts()){
+							for(APart part : this.getMultipartParts()){
 								if(part instanceof PartSeat){
 									if(packPart.pos[0] == part.offset.xCoord && packPart.pos[1] == part.offset.yCoord && packPart.pos[2] == part.offset.zCoord){
 										riderSeats.put(rider, (PartSeat) part);
@@ -270,7 +270,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	
 	protected float getCurrentMass(){
 		int currentMass = pack.general.emptyMass;
-		for(AMultipartPart part : this.getMultipartParts()){
+		for(APart part : this.getMultipartParts()){
 			if(part instanceof PartCrate){
 				currentMass += calculateInventoryWeight(((PartCrate) part).crateInventory);
 			}else{

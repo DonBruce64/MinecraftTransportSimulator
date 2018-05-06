@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBBCollective;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackCollisionBox;
-import minecrafttransportsimulator.multipart.parts.AMultipartPart;
+import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -66,7 +66,7 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 			currentInteractionBoxes.clear();
 			groundDeviceCollisionBoxMap.clear();
 			currentCollisionBoxes.addAll(this.getUpdatedCollisionBoxes());
-			for(AMultipartPart part : this.getMultipartParts()){
+			for(APart part : this.getMultipartParts()){
 				if(part instanceof PartGroundDevice){
 					currentCollisionBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));
 					groundDeviceCollisionBoxMap.put(currentCollisionBoxes.get(currentCollisionBoxes.size() -1 ), (PartGroundDevice) part);

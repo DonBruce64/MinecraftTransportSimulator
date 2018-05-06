@@ -9,7 +9,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.Vec3d;
 
-public final class PartCrate extends AMultipartPart{
+public final class PartCrate extends APart{
 	public final InventoryBasic crateInventory;
 	
 	public PartCrate(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){

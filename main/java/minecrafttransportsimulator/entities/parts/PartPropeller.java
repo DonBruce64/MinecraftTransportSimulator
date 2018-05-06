@@ -5,11 +5,11 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourcePropellor;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
-import minecrafttransportsimulator.multipart.parts.AMultipartPart;
+import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartEngineAircraft;
 import minecrafttransportsimulator.packets.general.ChatPacket;
-import minecrafttransportsimulator.packets.parts.PacketEngine;
-import minecrafttransportsimulator.packets.parts.PacketEngine.PacketEngineTypes;
+import minecrafttransportsimulator.packets.parts.PacketPartEngine;
+import minecrafttransportsimulator.packets.parts.PacketPartEngine.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -21,7 +21,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.Vec3d;
 
-public class PartPropeller extends AMultipartPart{	
+public class PartPropeller extends APart{	
 	public float angularPosition;
 	public float angularVelocity;
 	public float health;
@@ -39,7 +39,7 @@ public class PartPropeller extends AMultipartPart{
 		//Due to linking timings, it will be impossible for players to add propellers without engines and
 		//have them be saved to multiparts.  Because of this, we can check for engines here as they MUST
 		//be present or this propeller is invalid and should be dropped as an item.
-		for(AMultipartPart part : multipart.getMultipartParts()){
+		for(APart part : multipart.getMultipartParts()){
 			if(part instanceof PartEngineAircraft){
 				if(part.offset.xCoord == this.offset.xCoord || part.offset.yCoord == this.offset.yCoord || part.offset.zCoord == this.offset.zCoord){
 					//If we align with any axis for any engine we must be linked to that engine.
@@ -67,7 +67,7 @@ public class PartPropeller extends AMultipartPart{
 			if(player.getHeldItemMainhand() == null){
 				if(!multipart.equals(player.getRidingEntity())){
 					connectedEngine.handStartEngine();
-					MTS.MTSNet.sendToAll(new PacketEngine(connectedEngine, PacketEngineTypes.HS_ON));
+					MTS.MTSNet.sendToAll(new PacketPartEngine(connectedEngine, PacketEngineTypes.HS_ON));
 				}
 				return;
 			}

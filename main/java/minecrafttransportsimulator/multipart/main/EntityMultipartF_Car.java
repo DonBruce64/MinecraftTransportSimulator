@@ -5,7 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
-import minecrafttransportsimulator.multipart.parts.AMultipartPart;
+import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartEngineCar;
 import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
@@ -92,7 +92,7 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle impleme
 	
 	
 	@Override
-	public void addPart(AMultipartPart part){
+	public void addPart(APart part){
 		super.addPart(part);
 		if(part instanceof PartGroundDevice){
 			if(((PartGroundDevice) part).pack.groundDevice.rotatesOnShaft){
@@ -104,7 +104,7 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle impleme
 	}
 	
 	@Override
-	public void removePart(AMultipartPart part, boolean playBreakSound){
+	public void removePart(APart part, boolean playBreakSound){
 		super.removePart(part, playBreakSound);
 		if(wheels.contains(part)){
 			wheels.remove(part);

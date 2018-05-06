@@ -6,11 +6,12 @@ import java.io.IOException;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.parts.EntityEngine;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
-import minecrafttransportsimulator.packets.control.EnginePacket;
+import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.packets.control.LightPacket;
+import minecrafttransportsimulator.packets.parts.PacketPartEngine;
+import minecrafttransportsimulator.packets.parts.PacketPartEngine.PacketEngineTypes;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderInstruments;
 import minecrafttransportsimulator.rendering.RenderMultipart;
@@ -30,7 +31,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	private static final ResourceLocation toggleOff = new ResourceLocation("textures/blocks/redstone_lamp_off.png");
 	
 	private final EntityMultipartE_Vehicle aircraft;
-	private final EntityEngine[] engines;
+	private final APartEngine[] engines;
 	private final boolean[] hasLight;
 	private final LightTypes[] lights = new LightTypes[]{LightTypes.NAVIGATIONLIGHT, LightTypes.STROBELIGHT, LightTypes.TAXILIGHT, LightTypes.LANDINGLIGHT};
 	String[] lightText = new String[]{I18n.format("gui.panel.navigationlights"), I18n.format("gui.panel.strobelights"), I18n.format("gui.panel.taxilights"), I18n.format("gui.panel.landinglights")};
@@ -43,7 +44,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	public GUIPanelAircraft(EntityMultipartE_Vehicle aircraft){
 		super();
 		this.aircraft = aircraft;
-		engines = new EntityEngine[aircraft.getNumberEngineBays()];
+		engines = new APartEngine[aircraft.getNumberEngineBays()];
 		for(byte i=1; i<=engines.length; ++i){
 			engines[i-1] = aircraft.getEngineByNumber(i);
 		}
@@ -169,10 +170,8 @@ public class GUIPanelAircraft extends GuiScreen{
 			//Check if a magneto button has been pressed.
 			for(byte i=0; i<magnetoButtonCoords.length; ++i){
 				if(engines[i] != null){
-					if(engines[i].parent != null){
-						if(x > magnetoButtonCoords[i][0] && x < magnetoButtonCoords[i][1] && y < magnetoButtonCoords[i][2] && y > magnetoButtonCoords[i][3]){
-							MTS.MTSNet.sendToServer(new EnginePacket(engines[i].parent.getEntityId(), engines[i].getEntityId(), engines[i].state.magnetoOn ? (byte) 0 : (byte) 1));
-						}
+					if(x > magnetoButtonCoords[i][0] && x < magnetoButtonCoords[i][1] && y < magnetoButtonCoords[i][2] && y > magnetoButtonCoords[i][3]){
+						MTS.MTSNet.sendToServer(new PacketPartEngine(engines[i], engines[i].state.magnetoOn ? PacketEngineTypes.MAGNETO_OFF : PacketEngineTypes.MAGNETO_ON));
 					}
 				}
 			}
@@ -180,13 +179,11 @@ public class GUIPanelAircraft extends GuiScreen{
 			//Check if a starter button has been pressed.
 			for(byte i=0; i<starterButtonCoords.length; ++i){
 				if(engines[i] != null){
-					if(engines[i].parent != null){
-						if(x > starterButtonCoords[i][0] && x < starterButtonCoords[i][1] && y < starterButtonCoords[i][2] && y > starterButtonCoords[i][3]){
-							if(!engines[i].state.esOn){
-								MTS.MTSNet.sendToServer(new EnginePacket(engines[i].parent.getEntityId(), engines[i].getEntityId(), (byte) 3));
-							}
-							lastEngineStarted = i;
+					if(x > starterButtonCoords[i][0] && x < starterButtonCoords[i][1] && y < starterButtonCoords[i][2] && y > starterButtonCoords[i][3]){
+						if(!engines[i].state.esOn){
+							MTS.MTSNet.sendToServer(new PacketPartEngine(engines[i], PacketEngineTypes.ES_ON));
 						}
+						lastEngineStarted = i;
 					}
 				}
 			}
@@ -197,7 +194,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	protected void mouseReleased(int mouseX, int mouseY, int actionType){
 	    if(actionType == 0){
 	    	if(lastEngineStarted != -1 && starterButtonCoords.length > 0){
-	    		MTS.MTSNet.sendToServer(new EnginePacket(engines[lastEngineStarted].parent.getEntityId(), engines[lastEngineStarted].getEntityId(), (byte) 2));
+	    		MTS.MTSNet.sendToServer(new PacketPartEngine(engines[lastEngineStarted], PacketEngineTypes.ES_OFF));
 	    	}
 	    }
 	}

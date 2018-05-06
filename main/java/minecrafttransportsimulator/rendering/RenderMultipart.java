@@ -22,9 +22,10 @@ import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackRotatable
 import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle.LightTypes;
 import minecrafttransportsimulator.entities.parts.EntityEngineCar;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -119,8 +120,8 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 		lightLists.clear();
 	}
 	
-	public static boolean doesMultipartHaveLight(EntityMultipartMoving mover, LightTypes light){
-		for(LightPart lightPart : lightLists.get(mover.pack.rendering.modelName)){
+	public static boolean doesMultipartHaveLight(EntityMultipartE_Vehicle vehicle, LightTypes light){
+		for(LightPart lightPart : lightLists.get(vehicle.pack.rendering.modelName)){
 			if(lightPart.type.equals(light)){
 				return true;
 			}

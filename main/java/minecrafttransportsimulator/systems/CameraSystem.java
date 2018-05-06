@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityMultipartParent;
+import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.renderer.EntityRenderer;
@@ -33,9 +33,9 @@ public final class CameraSystem{
 	
 	public static void changeCameraZoom(boolean zoomOut){
 		if(zoomLevel < 40 && zoomOut){
-			zoomLevel +=4;
+			zoomLevel +=2;
 		}else if(zoomLevel > 4 && !zoomOut){
-			zoomLevel -=4;
+			zoomLevel -=2;
 		}
 	}
 	
@@ -44,24 +44,24 @@ public final class CameraSystem{
 		Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
 	}
 	
-	public static void updatePlayerYawAndPitch(EntityPlayer player, EntityMultipartParent master){
+	public static void updatePlayerYawAndPitch(EntityPlayer player, EntityMultipartB_Existing multipart){
 		boolean mouseYoke = ConfigSystem.getBooleanConfig("MouseYoke");
 		
-		player.renderYawOffset += master.rotationYaw - master.prevRotationYaw;
+		player.renderYawOffset += multipart.rotationYaw - multipart.prevRotationYaw;
 		if((!mouseYoke && lockedView) || (mouseYoke && !lockedView)){
-			player.rotationYaw += master.rotationYaw - master.prevRotationYaw;
-			if(master.rotationPitch > 90 || master.rotationPitch < -90){
-				player.rotationPitch -= master.rotationPitch - master.prevRotationPitch;
+			player.rotationYaw += multipart.rotationYaw - multipart.prevRotationYaw;
+			if(multipart.rotationPitch > 90 || multipart.rotationPitch < -90){
+				player.rotationPitch -= multipart.rotationPitch - multipart.prevRotationPitch;
 			}else{
-				player.rotationPitch += master.rotationPitch - master.prevRotationPitch;
+				player.rotationPitch += multipart.rotationPitch - multipart.prevRotationPitch;
 			}
-			if((master.rotationPitch > 90 || master.rotationPitch < -90) ^ master.prevRotationPitch > 90 || master.prevRotationPitch < -90){
+			if((multipart.rotationPitch > 90 || multipart.rotationPitch < -90) ^ multipart.prevRotationPitch > 90 || multipart.prevRotationPitch < -90){
 				player.rotationYaw+=180;
 			}
 		}else if(mouseYoke){
 			if(lockedView){
-				player.rotationYaw = master.rotationYaw;
-				player.rotationPitch = master.rotationPitch;
+				player.rotationYaw = multipart.rotationYaw;
+				player.rotationPitch = multipart.rotationPitch;
 			}
 		}
 	}
