@@ -22,8 +22,8 @@ import minecrafttransportsimulator.dataclasses.PackMultipartObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackFileDefinitions;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
-import minecrafttransportsimulator.entities.main.EntityCar;
-import minecrafttransportsimulator.entities.main.EntityPlane;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import net.minecraftforge.common.MinecraftForge;
 
 /**
@@ -255,8 +255,8 @@ public final class PackParserSystem{
     }
     
     public enum MultipartTypes{
-    	PLANE(EntityPlane.class),
-    	CAR(EntityCar.class);
+    	PLANE(EntityMultipartF_Plane.class),
+    	CAR(EntityMultipartF_Car.class);
     	
     	public final Class<? extends EntityMultipartMoving> multipartClass;
     	

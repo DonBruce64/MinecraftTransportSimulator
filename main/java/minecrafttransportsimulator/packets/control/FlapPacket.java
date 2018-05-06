@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.main.EntityPlane;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -37,11 +37,11 @@ public class FlapPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityPlane thisEntity;
+					EntityMultipartF_Plane thisEntity;
 					if(ctx.side.isServer()){
-						thisEntity = (EntityPlane) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						thisEntity = (EntityMultipartF_Plane) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 					}else{
-						thisEntity = (EntityPlane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						thisEntity = (EntityMultipartF_Plane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
 						if(ctx.side.isServer()){

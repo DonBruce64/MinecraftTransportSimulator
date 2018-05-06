@@ -4,6 +4,7 @@ public class PackPartObject{
 	public PartGeneralConfig general;
     public PartEngineConfig engine;
     public PartGroundDeviceConfig groundDevice;
+    public PartPropellerConfig propeller;
 
     public class PartGeneralConfig{
     	public String packID;
@@ -36,5 +37,12 @@ public class PackPartObject{
         //These parameters are extra and depend on what is chosen in the booleans above.
         public float extraCollisionBoxOffset;
         public float flatDiameter;
+    }
+    
+    public class PartPropellerConfig{
+    	public byte numberBlades;
+    	public byte pitch;
+    	public int diameter;
+    	public int startingHealth;
     }
 }

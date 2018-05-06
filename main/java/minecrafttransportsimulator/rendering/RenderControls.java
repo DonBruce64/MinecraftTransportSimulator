@@ -3,20 +3,20 @@ package minecrafttransportsimulator.rendering;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.entities.main.EntityPlane;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 
 public final class RenderControls extends RenderInstruments{	
-	public static void drawControl(EntityMultipartVehicle vehicle, Controls control, boolean hud){
+	public static void drawControl(EntityMultipartE_Vehicle vehicle, Controls control, boolean hud){
 		textureManager.bindTexture(instrumentTexture);
 		switch(control){
-			case PARKING_BRAKE: drawParkingBrake((EntityPlane) vehicle, hud); break;	
-			case AIRCRAFT_THROTTLE: drawAircraftThrottle((EntityPlane) vehicle, hud); break;
-			case AIRCRAFT_FLAPS: drawFlapIndicator((EntityPlane) vehicle, hud); break;
+			case PARKING_BRAKE: drawParkingBrake((EntityMultipartF_Plane) vehicle, hud); break;	
+			case AIRCRAFT_THROTTLE: drawAircraftThrottle((EntityMultipartF_Plane) vehicle, hud); break;
+			case AIRCRAFT_FLAPS: drawFlapIndicator((EntityMultipartF_Plane) vehicle, hud); break;
 		}
 	}
 	
-	private static void drawParkingBrake(EntityPlane plane, boolean hud){
+	private static void drawParkingBrake(EntityMultipartF_Plane plane, boolean hud){
     	byte offset = (byte) (plane.parkingBrakeOn || plane.brakeOn ? -10 : 6);
 		byte rotation = (byte) (plane.parkingBrakeOn || plane.brakeOn ? -90 : 0);
     	if(!hud){
@@ -63,7 +63,7 @@ public final class RenderControls extends RenderInstruments{
     	}
     }
 	
-	private static void drawAircraftThrottle(EntityPlane plane, boolean hud){
+	private static void drawAircraftThrottle(EntityMultipartF_Plane plane, boolean hud){
 		renderSquareUV(10.5F, 10.5F, 0.0F, 0.75F, 0.875F, 0.875F, 1);
 		float offset = 3-(10 - plane.throttle/10F);
 		if(!hud){
@@ -93,7 +93,7 @@ public final class RenderControls extends RenderInstruments{
     	}
     }
     
-	private static void drawFlapIndicator(EntityPlane plane, boolean hud){
+	private static void drawFlapIndicator(EntityMultipartF_Plane plane, boolean hud){
 		if(!hud){
 			renderSquareUV(23F, 30F, 0, 0.515625F, 0.609375F, 0.875F, 1);
 			GL11.glTranslatef(0, 0, -0.01F);

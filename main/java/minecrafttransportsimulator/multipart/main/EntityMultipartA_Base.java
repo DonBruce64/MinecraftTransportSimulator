@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.entities.core;
+package minecrafttransportsimulator.multipart.main;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -64,8 +64,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 				if(stackTag != null){
 					partStack.setTagCompound(stackTag);
 				}
-				Vec3d partPosition = this.getPositionVector().add(part.offset);
-				worldObj.spawnEntityInWorld(new EntityItem(worldObj, partPosition.xCoord, partPosition.yCoord, partPosition.zCoord, partStack));
+				worldObj.spawnEntityInWorld(new EntityItem(worldObj, part.partPos.xCoord, part.partPos.yCoord, part.partPos.zCoord, partStack));
 			}
 		}
 	}

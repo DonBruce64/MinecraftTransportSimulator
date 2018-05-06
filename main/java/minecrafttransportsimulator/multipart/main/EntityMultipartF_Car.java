@@ -1,18 +1,16 @@
-package minecrafttransportsimulator.entities.main;
+package minecrafttransportsimulator.multipart.main;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
-import minecrafttransportsimulator.entities.core.EntityMultipartChild;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.entities.parts.EntityEngineCar;
-import minecrafttransportsimulator.entities.parts.EntityWheel;
+import minecrafttransportsimulator.multipart.parts.AMultipartPart;
+import minecrafttransportsimulator.multipart.parts.PartEngineCar;
+import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.sounds.AttenuatedSound;
-import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
+import minecrafttransportsimulator.systems.SFXSystem.SoundPart;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
@@ -21,30 +19,27 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 
-public class EntityCar extends EntityMultipartVehicle implements SFXEntity{	
+public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle implements SoundPart{	
 	public boolean hornOn;
 	//Note that angle variable should be divided by 10 to get actual angle.
 	public short steeringAngle;
 	public short steeringCooldown;
-	
-	public List<EntityWheel> wheels = new ArrayList<EntityWheel>();
+	public List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
 	
 	//Internal car variables
 	private float momentPitch;
-	
 	private double wheelForce;//kg*m/ticks^2
 	private double dragForce;//kg*m/ticks^2
 	private double gravitationalForce;//kg*m/ticks^2
 	private double gravitationalTorque;//kg*m^2/ticks^2
-	
-	private EntityEngineCar engine;
+	private PartEngineCar engine;
 	private AttenuatedSound hornSound;
 	
-	public EntityCar(World world){
+	public EntityMultipartF_Car(World world){
 		super(world);
 	}
 	
-	public EntityCar(World world, float posX, float posY, float posZ, float rotation, String name){
+	public EntityMultipartF_Car(World world, float posX, float posY, float posZ, float rotation, String name){
 		super(world, posX, posY, posZ, rotation, name);
 	}
 	
@@ -59,7 +54,7 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 		changeLightStatus(LightTypes.BRAKELIGHT, brakeOn);
 		changeLightStatus(LightTypes.LEFTINDICATORLIGHT, brakeOn && !this.isLightOn(LightTypes.LEFTTURNLIGHT));
 		changeLightStatus(LightTypes.RIGHTINDICATORLIGHT, brakeOn && !this.isLightOn(LightTypes.RIGHTTURNLIGHT));
-		changeLightStatus(LightTypes.BACKUPLIGHT, this.engine != null && this.engine.getCurrentGear() < 0);
+		changeLightStatus(LightTypes.BACKUPLIGHT, this.engine != null && this.engine.currentGear < 0);
 	}
 	
 	@Override
@@ -97,28 +92,24 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 	
 	
 	@Override
-	public void addChild(String childUUID, EntityMultipartChild child, boolean newChild){
-		super.addChild(childUUID, child, newChild);
-		if(child instanceof EntityWheel){
-			if(!wheels.contains(child)){
-				wheels.add((EntityWheel) child);
+	public void addPart(AMultipartPart part){
+		super.addPart(part);
+		if(part instanceof PartGroundDevice){
+			if(((PartGroundDevice) part).pack.groundDevice.rotatesOnShaft){
+				wheels.add((PartGroundDevice) part);
 			}
-		}else if(child instanceof EntityEngineCar){
-			engine = (EntityEngineCar) child;
+		}else if(part instanceof PartEngineCar){
+			engine = (PartEngineCar) part;
 		}
 	}
 	
 	@Override
-	public void removeChild(String childUUID, boolean playBreakSound){
-		super.removeChild(childUUID, playBreakSound);
-		Iterator<EntityWheel> wheelIterator = wheels.iterator();
-		while(wheelIterator.hasNext()){
-			if(wheelIterator.next().UUID.equals(childUUID)){
-				wheelIterator.remove();
-				return;
-			}
+	public void removePart(AMultipartPart part, boolean playBreakSound){
+		super.removePart(part, playBreakSound);
+		if(wheels.contains(part)){
+			wheels.remove(part);
 		}
-		if(engine != null && engine.UUID.equals(childUUID)){
+		if(part.equals(engine)){
 			engine = null;
 		}
 	}
@@ -136,19 +127,7 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public MovingSound getNewSound(){
-		return new AttenuatedSound<EntityCar>(MTS.MODID + ":" + pack.car.hornSound, this);
-	}
-
-	@Override
-	@SideOnly(Side.CLIENT)
-	public MovingSound getCurrentSound(){
-		return hornSound;
-	}
-
-	@Override
-	@SideOnly(Side.CLIENT)
-	public void setCurrentSound(MovingSound sound){
-		hornSound = (AttenuatedSound) sound;
+		return new AttenuatedSound(pack.car.hornSound, this);
 	}
 
 	@Override
@@ -159,19 +138,27 @@ public class EntityCar extends EntityMultipartVehicle implements SFXEntity{
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public float getVolume(){
+	public Vec3d getSoundPosition(){
+		return this.getPositionVector();
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public Vec3d getSoundMotion(){
+		return new Vec3d(this.motionX, this.motionY, this.motionZ);
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public float getSoundVolume(){
 		return 5.0F;
 	}
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public float getPitch(){
+	public float getSoundPitch(){
 		return 1.0F;
 	}
-
-	@Override
-	@SideOnly(Side.CLIENT)
-	public void spawnParticles(){}
 
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){

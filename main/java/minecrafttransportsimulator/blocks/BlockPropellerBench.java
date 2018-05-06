@@ -3,8 +3,6 @@ package minecrafttransportsimulator.blocks;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSBlockRotateable;
-import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import net.minecraft.block.material.Material;
@@ -17,7 +15,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public class BlockPropellerBench extends MTSBlockRotateable{
+public class BlockPropellerBench extends ABlockRotateable{
 
 	public BlockPropellerBench(){
 		super(Material.IRON);
@@ -58,7 +56,7 @@ public class BlockPropellerBench extends MTSBlockRotateable{
     }
 	
 	@Override
-	public MTSTileEntity createNewTileEntity(World worldIn, int meta){
+	public ATileEntityRotatable createNewTileEntity(World worldIn, int meta){
 		return new TileEntityPropellerBench();
 	}
 	

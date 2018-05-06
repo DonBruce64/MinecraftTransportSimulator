@@ -6,8 +6,8 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle.LightTypes;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
@@ -16,7 +16,7 @@ public abstract class RenderInstruments{
 	protected static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	protected static final ResourceLocation instrumentTexture = new ResourceLocation(MTS.MODID, "textures/instruments_aircraft.png");
 	
-	public static void drawInstrument(EntityMultipartVehicle vehicle, int x, int y, Instruments instrument, boolean hud, byte engineNumber){
+	public static void drawInstrument(EntityMultipartE_Vehicle vehicle, int x, int y, Instruments instrument, boolean hud, byte engineNumber){
 		if(instrument.name().startsWith("AIRCRAFT_")){
 			RenderInstrumentsAircraft.drawAircraftInstrument(vehicle, x, y, instrument, hud, engineNumber);
 		}
@@ -25,7 +25,7 @@ public abstract class RenderInstruments{
     /**
      * Checks if lights are on for this vehicle and instruments need to be lit up.
      */
-	public static boolean lightsOn(EntityMultipartVehicle vehicle){
+	public static boolean lightsOn(EntityMultipartE_Vehicle vehicle){
 		return (vehicle.isLightOn(LightTypes.NAVIGATIONLIGHT) || vehicle.isLightOn(LightTypes.HEADLIGHT)) && vehicle.electricPower > 3;
 	}
 	

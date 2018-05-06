@@ -2,7 +2,7 @@ package minecrafttransportsimulator.entities.parts;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
-import minecrafttransportsimulator.entities.main.EntityCar;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
 import net.minecraft.item.Item;
 import net.minecraft.world.World;
 
@@ -13,7 +13,7 @@ public class EntityEngineDetroitDiesel extends EntityEngineCar{
 	}
 
 	public EntityEngineDetroitDiesel(World world, EntityMultipartParent car, String parentUUID, float offsetX, float offsetY, float offsetZ, int propertyCode){
-		super(world, (EntityCar) car, parentUUID, offsetX, offsetY, offsetZ);
+		super(world, (EntityMultipartF_Car) car, parentUUID, offsetX, offsetY, offsetZ);
 	}
 
 	@Override

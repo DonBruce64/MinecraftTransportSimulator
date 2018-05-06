@@ -4,9 +4,10 @@ import java.io.File;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
-import net.minecraft.entity.Entity;
+import minecrafttransportsimulator.systems.SFXSystem.FXPart;
+import minecrafttransportsimulator.systems.SFXSystem.SoundPart;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**Contains registration methods used by {@link MTSRegistry} and methods overridden by ClientProxy. 
@@ -21,6 +22,7 @@ public class CommonProxy{
 	
 	public void initControls(){}
 	public void openGUI(Object clicked, EntityPlayer clicker){}
-	public void playSound(Entity noisyEntity, String soundName, float volume, float pitch){}
-	public void updateSFXEntity(SFXEntity entity, World world){}
+	public void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){}
+	public void updateSoundPart(SoundPart part, World world){}
+	public void updateFXPart(FXPart part, World world){}
 }

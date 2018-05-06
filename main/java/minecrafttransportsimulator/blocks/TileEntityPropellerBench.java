@@ -1,19 +1,19 @@
 package minecrafttransportsimulator.blocks;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.sounds.BenchSound;
-import minecrafttransportsimulator.systems.SFXSystem.SFXEntity;
+import minecrafttransportsimulator.systems.SFXSystem.SoundPart;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity, ITickable{
+public class TileEntityPropellerBench extends ATileEntityRotatable implements SoundPart, ITickable{
 	public byte propellerType = 0;
 	public byte numberBlades = 2;
 	public byte pitch = 64;
@@ -46,7 +46,7 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
 			}
 			propellerOnBench.setTagCompound(stackTag);
 		}
-		MTS.proxy.updateSFXEntity(this, worldObj);
+		MTS.proxy.updateSoundPart(this, worldObj);
 	}
 	
 	public boolean isRunning(){
@@ -72,37 +72,33 @@ public class TileEntityPropellerBench extends MTSTileEntity implements SFXEntity
 
 	@Override
 	@SideOnly(Side.CLIENT)
-	public MovingSound getCurrentSound(){
-		return benchSound;
-	}
-
-	@Override
-	@SideOnly(Side.CLIENT)
-	public void setCurrentSound(MovingSound sound){
-		benchSound = (BenchSound) sound;
-	}
-
-	@Override
-	@SideOnly(Side.CLIENT)
 	public boolean shouldSoundBePlaying(){
 		return this.isInvalid() ? false : this.isRunning();
 	}
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public float getVolume(){
+	public Vec3d getSoundPosition(){
+		return new Vec3d(this.pos.getX(), this.pos.getY(), this.pos.getZ());
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public Vec3d getSoundMotion(){
+		return Vec3d.ZERO;
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public float getSoundVolume(){
 		return 1.0F;
 	}
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public float getPitch(){
+	public float getSoundPitch(){
 		return 1.0F;
 	}
-
-	@Override
-	@SideOnly(Side.CLIENT)
-	public void spawnParticles(){}
 	
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){

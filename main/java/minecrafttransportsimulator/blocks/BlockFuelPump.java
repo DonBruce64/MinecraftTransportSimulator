@@ -3,10 +3,8 @@ package minecrafttransportsimulator.blocks;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSBlockRotateable;
-import minecrafttransportsimulator.baseclasses.MTSTileEntity;
 import minecrafttransportsimulator.dataclasses.MTSAchievements;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -22,7 +20,7 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
-public class BlockFuelPump extends MTSBlockRotateable{
+public class BlockFuelPump extends ABlockRotateable{
 
 	public BlockFuelPump(){
 		super(Material.IRON);
@@ -54,7 +52,7 @@ public class BlockFuelPump extends MTSBlockRotateable{
     			Entity nearestEntity = null;
     			float lowestDistance = 99;
     			for(Entity entity : world.loadedEntityList){
-    				if(entity instanceof EntityMultipartVehicle){
+    				if(entity instanceof EntityMultipartE_Vehicle){
     					float distance = (float) Math.sqrt(entity.getPosition().distanceSq(pump.getPos()));
     					if(distance < lowestDistance){
     						lowestDistance = distance;
@@ -63,7 +61,7 @@ public class BlockFuelPump extends MTSBlockRotateable{
     				}
     			}
     			if(nearestEntity != null){
-    				pump.setConnectedVehicle((EntityMultipartVehicle) nearestEntity);
+    				pump.setConnectedVehicle((EntityMultipartE_Vehicle) nearestEntity);
 					MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.connect"), (EntityPlayerMP) player);
 					MTSAchievements.triggerFuel(player);
     			}else{
@@ -78,7 +76,7 @@ public class BlockFuelPump extends MTSBlockRotateable{
 	}
 	
 	@Override
-	public MTSTileEntity createNewTileEntity(World worldIn, int meta){
+	public ATileEntityRotatable createNewTileEntity(World worldIn, int meta){
 		return new TileEntityFuelPump();
 	}
 	

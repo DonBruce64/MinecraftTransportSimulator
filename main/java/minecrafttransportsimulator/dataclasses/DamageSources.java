@@ -6,11 +6,11 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 
-public abstract class MTSDamageSources extends DamageSource{
+public abstract class DamageSources extends DamageSource{
 	//Source of the damage.  This will be the vehicle controller or the player who shot the gun.
 	private final Entity playerResponsible;
 	
-	public MTSDamageSources(String name, Entity playerResponsible){
+	public DamageSources(String name, Entity playerResponsible){
 		super(name);
 		this.playerResponsible = playerResponsible;
 	}
@@ -38,19 +38,19 @@ public abstract class MTSDamageSources extends DamageSource{
 	                
 	}
 	
-	public static class DamageSourcePropellor extends MTSDamageSources{
+	public static class DamageSourcePropellor extends DamageSources{
 		public DamageSourcePropellor(Entity playerResponsible){
 			super("propellor", playerResponsible);
 		}
 	};
 	
-	public static class DamageSourceWheel extends MTSDamageSources{
+	public static class DamageSourceWheel extends DamageSources{
 		public DamageSourceWheel(Entity playerResponsible){
 			super("wheel", playerResponsible);
 		}
 	};
 
-	public static class DamageSourceCrash extends MTSDamageSources{
+	public static class DamageSourceCrash extends DamageSources{
 		public DamageSourceCrash(Entity playerResponsible, String entityCrashed){
 			super(entityCrashed + "crash", playerResponsible);
 		}

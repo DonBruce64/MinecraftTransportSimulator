@@ -12,9 +12,9 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.packets.general.InstrumentAddRemovePacket;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
@@ -24,7 +24,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 public class GUIInstruments extends GuiScreen{
-	private final EntityMultipartVehicle vehicle;
+	private final EntityMultipartE_Vehicle vehicle;
 	private final EntityPlayer player;
 	private final byte numberEngineBays;
 	private final Map<Float[], Byte> instrumentCoords;
@@ -33,7 +33,7 @@ public class GUIInstruments extends GuiScreen{
 	private byte lastInstrumentClicked = -1;
 	private List<Byte> renderedInstruments = new ArrayList<Byte>();
 	
-	public GUIInstruments(EntityMultipartVehicle vehicle, EntityPlayer player){
+	public GUIInstruments(EntityMultipartE_Vehicle vehicle, EntityPlayer player){
 		this.vehicle = vehicle;
 		this.player = player;
 		numberEngineBays = vehicle.getNumberEngineBays();

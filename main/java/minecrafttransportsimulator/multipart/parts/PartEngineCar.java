@@ -1,0 +1,156 @@
+package minecrafttransportsimulator.multipart.parts;
+
+import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.Vec3d;
+
+public class PartEngineCar extends APartEngine{
+	public byte currentGear = 1;
+	private double engineForce;
+	private final EntityMultipartF_Car car;
+
+	public PartEngineCar(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
+		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
+		this.car = (EntityMultipartF_Car) multipart;
+		this.currentGear = dataTag.getByte("gearNumber");
+	}
+	
+	@Override
+	public void updatePart(){
+		super.updatePart();
+		//Set the speed of the engine to the speed of the driving wheels.
+		float lowestSpeed = 999F;
+		if(currentGear != 0){
+			for(PartGroundDevice wheel : car.wheels){
+				if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
+					//If we have grounded ground devices, and this wheel is not on the ground, don't take it into account.
+					if(wheel.isOnGround() || (car.groundedGroundDevices.size() == 0)){
+						lowestSpeed = Math.min(wheel.angularVelocity, lowestSpeed);
+					}
+				}
+			}
+			if(lowestSpeed != 999){
+				//Don't let the engine stall while being stopped.
+				if(lowestSpeed*1200F*getRatioForCurrentGear() > engineStallRPM || (!state.running && !state.esOn)){
+					RPM = lowestSpeed*1200F*getRatioForCurrentGear();
+				}else{
+					RPM -= (RPM - engineStallRPM)/10;
+				}
+			}
+		}else{
+			RPM = Math.max(RPM - 10, 0);
+		}
+		
+		//Do automatic transmission functions if needed.
+		if(state.running && pack.engine.isAutomatic){
+			if(currentGear > 0){
+				if(RPM > getMaxSafeRPM()*0.5F*(1.0F + car.throttle/100F)){
+					shiftUp();
+				}else if(RPM < getMaxSafeRPM()*0.25*(1.0F + car.throttle/100F) && currentGear > 1){
+					shiftDown();
+				}
+			}
+		}
+		
+		//Get friction of wheels.
+		float wheelFriction = 0;
+		for(PartGroundDevice wheel : car.groundedGroundDevices){
+			if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
+				wheelFriction = wheel.getMotiveFriction() - wheel.getFrictionLoss();
+			}
+		}
+		
+		//If running, in reverse, and we are a big truck, fire the backup beepers.
+		if(state.running && this.currentGear == -1 && car.pack != null && car.pack.car.isBigTruck && car.electricPower > 4 && car.worldObj.getTotalWorldTime()%20==1){
+			MTS.proxy.playSound(multipart.getPositionVector(), MTS.MODID + ":backup_beeper", 1.0F, 1);
+		}
+		
+		//If running, use the friction of the wheels to determine the new speed.
+		if(state.running || state.esOn){
+			double engineTargetRPM = car.throttle/100F*(pack.engine.maxRPM - engineStartRPM/1.25 - hours) + engineStartRPM/1.25;
+			if(getRatioForCurrentGear() != 0){
+				double engineTorque = RPM/(getMaxSafeRPM() - 3000*(1500/getMaxSafeRPM()))*getRatioForCurrentGear()*pack.engine.fuelConsumption*2.0F;
+				
+				//Check to see if the wheels have enough friction to affect the engine.
+				engineForce = (engineTargetRPM - RPM)/pack.engine.maxRPM*engineTorque;
+				if(Math.abs(engineForce/10) > wheelFriction){
+					engineForce /= 2F;
+					for(PartGroundDevice wheel : car.wheels){
+						if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
+							wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity + 0.05);
+						}
+					}
+				}else{
+					//If we have wheels not on the ground and we drive them, adjust their velocity now.
+					for(PartGroundDevice wheel : car.wheels){
+						if(!wheel.isOnGround() && ((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive))){
+							wheel.angularVelocity = lowestSpeed;
+						}
+					}
+				}
+			}else{
+				RPM += (engineTargetRPM - RPM)/10;
+				if(RPM > getMaxSafeRPM()){
+					RPM -= (engineTargetRPM - RPM)/5;
+				}
+				engineForce = 0;
+			}
+		}else{
+			//Not running, so either inhibit motion if not in neutral or just don't do anything.
+			if(currentGear != 0){
+				engineForce = -RPM/pack.engine.maxRPM;
+			}else{
+				engineForce = 0;
+			}
+		}
+	}
+	
+	@Override
+	public NBTTagCompound getPartNBTTag(){
+		NBTTagCompound dataTag = super.getPartNBTTag();
+		dataTag.setByte("gearNumber", this.currentGear);
+		return dataTag;
+	}
+	
+	private float getRatioForCurrentGear(){
+		return currentGear == -1 ? pack.engine.gearRatios[0] : currentGear > 0 ? pack.engine.gearRatios[currentGear] : 0;
+	}
+	
+	public double getForceOutput(){
+		return engineForce*30;
+	}
+	
+	public void shiftUp(){
+		if(currentGear == -1){
+			currentGear = 0;
+		}else if(currentGear == 0){
+			if(car.velocity > -0.1){
+				currentGear = 1;
+			}else{
+				hours += 100;
+				MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
+			}
+		}else if(currentGear < pack.engine.gearRatios.length - 1){
+			++currentGear;
+		}
+	}
+	
+	public void shiftDown(){
+		if(currentGear > 0){
+			--currentGear;
+		}else{
+			if(currentGear == 1){
+				currentGear = 0;
+			}else if(currentGear == 0){
+				if(car.velocity < 0.1){
+					currentGear = -1;
+				}else{
+					hours += 100;
+					MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
+				}
+			}
+		}
+	}
+}

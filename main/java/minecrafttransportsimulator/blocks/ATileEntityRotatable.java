@@ -1,11 +1,11 @@
-package minecrafttransportsimulator.baseclasses;
+package minecrafttransportsimulator.blocks;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.packets.general.TileEntityClientServerHandshakePacket;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 
-public abstract class MTSTileEntity extends TileEntity{
+public abstract class ATileEntityRotatable extends TileEntity{
 	public byte rotation;
 
 	@Override

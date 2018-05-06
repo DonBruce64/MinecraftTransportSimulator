@@ -1,58 +1,59 @@
-package minecrafttransportsimulator.entities.core;
+package minecrafttransportsimulator.multipart.main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.entities.parts.EntityEngine;
+import minecrafttransportsimulator.multipart.parts.AMultipartPart;
+import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
-/**This class is tailored for moving vehicles such as planes, helicopters, and automobiles.
+/**This class is built on the base multipart D level and is is tailored for moving vehicles 
+ * such as planes, helicopters, and automobiles.
  * Contains numerous methods for gauges, HUDs, and fuel systems.
  * Essentially, if it has parts and an engine, use this.
  * 
  * @author don_bruce
  */
-public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
+public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 	public byte throttle;
 	public double fuel;
 	public double electricPower = 12;
 	public double electricUsage;
 	public double electricFlow;
-	public double airDensity;
 	public Vec3d velocityVec = Vec3d.ZERO;
-	public Vec3d headingVec = Vec3d.ZERO;
 	
 	private byte numberEngineBays = 0;
-	private final Map<Byte, EntityEngine> engineByNumber = new HashMap<Byte, EntityEngine>();
+	private final Map<Byte, APartEngine> engineByNumber = new HashMap<Byte, APartEngine>();
 	private final Map<Byte, Instruments> instruments = new HashMap<Byte, Instruments>();
 	private final List<LightTypes> lightsOn = new ArrayList<LightTypes>();
 	
-	public EntityMultipartVehicle(World world){
+	public EntityMultipartE_Vehicle(World world){
 		super(world);
 	}
 	
-	public EntityMultipartVehicle(World world, float posX, float posY, float posZ, float playerRotation, String name){
+	public EntityMultipartE_Vehicle(World world, float posX, float posY, float posZ, float playerRotation, String name){
 		super(world, posX, posY, posZ, playerRotation, name);
 	}
 	
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		if(linked){
+		if(pack != null){
 			updateHeadingVec();
-			airDensity = 1.225*Math.pow(2, -posY/500);
 			if(fuel < 0){fuel = 0;}
 			if(electricPower > 2){
 				for(LightTypes light : lightsOn){
@@ -85,6 +86,25 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	@Override
 	protected void destroyAtPosition(double x, double y, double z){
 		super.destroyAtPosition(x, y, z);
+		//First find the controller to see who to display as the killer in the death message.
+		Entity controller = null;
+		for(Entity passenger : this.getPassengers()){
+			if(this.getSeatForRider(passenger).isController && controller != null){
+				controller = passenger;
+				break;
+			}
+		}
+		
+		//Now damage all passengers, including the controller.
+		for(Entity passenger : this.getPassengers()){
+			if(passenger.equals(controller)){
+				passenger.attackEntityFrom(new DamageSourceCrash(null, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
+			}else{
+				passenger.attackEntityFrom(new DamageSourceCrash(controller, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
+			}
+		}
+		
+		//Oh, and add explosions.  Because those are always fun.
 		if(ConfigSystem.getBooleanConfig("Explosions")){
 			worldObj.newExplosion(this, x, y, z, (float) (fuel/1000F + 1F), true, true);
 		}
@@ -93,6 +113,43 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	@Override
 	protected float getCurrentMass(){
 		return (float) (super.getCurrentMass() + this.fuel/50);
+	}
+	
+	@Override
+	public void addPart(AMultipartPart part){
+		super.addPart(part);
+		if(part instanceof APartEngine){
+			//Because parts is a list, the #1 engine will always come before the #2 engine.
+			//We can use this to determine where in the list this engine needs to go.
+			byte engineNumber = 1;
+			for(PackPart packPart : pack.parts){
+				for(String name : packPart.names){
+					if(name.contains("engine")){
+						if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
+							engineByNumber.put(engineNumber, (APartEngine) part);
+						}
+						++engineNumber;
+					}
+				}
+			}
+		}
+	}
+	
+	@Override
+	public void removePart(AMultipartPart part, boolean playBreakSound){
+		super.removePart(part, playBreakSound);
+		byte engineNumber = 1;
+		for(PackPart packPart : pack.parts){
+			for(String name : packPart.names){
+				if(name.contains("engine")){
+					if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
+						engineByNumber.remove(engineNumber);
+						return;
+					}
+					++engineNumber;
+				}
+			}
+		}
 	}
 	
 	protected void performGroundOperations(){
@@ -128,46 +185,6 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 		motionYaw += getTurningFactor();
 	}
 	
-	private void updateHeadingVec(){
-        double f1 = Math.cos(-this.rotationYaw * 0.017453292F - (float)Math.PI);
-        double f2 = Math.sin(-this.rotationYaw * 0.017453292F - (float)Math.PI);
-        double f3 = -Math.cos(-this.rotationPitch * 0.017453292F);
-        double f4 = Math.sin(-this.rotationPitch * 0.017453292F);
-        headingVec = new Vec3d((f2 * f3), f4, (f1 * f3));
-   	}
-	
-	private void reAdjustGroundSpeed(double groundSpeed){
-		Vec3d groundVec = new Vec3d(headingVec.xCoord, 0, headingVec.zCoord).normalize();
-		motionX = groundVec.xCoord * groundSpeed;
-		motionZ = groundVec.zCoord * groundSpeed;
-	}
-	
-	/**
-	 * Handles engine packets.
-	 * 0 is magneto off.
-	 * 1 is magneto on.
-	 * 2 is electric starter off.
-	 * 3 is electric starter on.
-	 * 4 is hand starter on.
-	 * 5 is a backfire from a high-hour engine.
-	 * 6 is start.
-	 * 7 is out of fuel.
-	 * 8 is stalled due to low RPM.
-	 * 9 is drown.
-	 */
-	public void handleEngineSignal(EntityEngine engine, byte signal){
-		switch (signal){
-			case 0: engine.setMagnetoStatus(false); break;
-			case 1: engine.setMagnetoStatus(true); break;
-			case 2: engine.setElectricStarterStatus(false); break;
-			case 3: engine.setElectricStarterStatus(true); break;
-			case 4: engine.handStartEngine(); break;
-			case 5: engine.backfireEngine(); break;
-			case 6: engine.startEngine(); break;
-			default: engine.stallEngine((byte) (signal - 6)); break;
-		}
-	}
-	
 	/**
 	 * Gets the number of bays available for engines.
 	 * Cached for efficiency.
@@ -189,36 +206,7 @@ public abstract class EntityMultipartVehicle extends EntityMultipartMoving{
 	 * Gets the 'numbered' engine.
 	 * Cached for efficiency.
 	 */
-	public EntityEngine getEngineByNumber(byte number){
-		if(engineByNumber.containsKey(number)){
-			//If the engine isn't null, it must either be present or just been killed.
-			if(engineByNumber.get(number) != null){
-				if(engineByNumber.get(number).isDead){
-					engineByNumber.put(number, null);
-				}else{
-					return engineByNumber.get(number);
-				}
-			}
-		}
-		//The only way to get here is if an engine in the map is null, or the map isn't populated.
-		//Re-populate it and return the engine.
-		//Because parts is a list, the #1 engine will always come before the #2 engine.
-		byte engineNumber = 1;
-		for(PackPart part : pack.parts){
-			for(String name : part.names){
-				if(name.contains("engine")){
-					engineByNumber.put(engineNumber, null);
-					for(EntityMultipartChild child : this.getChildren()){
-						if(child instanceof EntityEngine){
-							if(child.offsetX == part.pos[0] && child.offsetY == part.pos[1] && child.offsetZ == part.pos[2]){
-								engineByNumber.put(engineNumber, (EntityEngine) child);
-							}
-						}
-					}
-					++engineNumber;
-				}
-			}
-		}
+	public APartEngine getEngineByNumber(byte number){
 		return engineByNumber.get(number);
 	}
 	

@@ -1,10 +1,10 @@
-package minecrafttransportsimulator.entities.main;
+package minecrafttransportsimulator.multipart.main;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
-import minecrafttransportsimulator.entities.core.EntityMultipartChild;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.entities.parts.EntityPropeller;
+import minecrafttransportsimulator.entities.parts.PartPropeller;
+import minecrafttransportsimulator.multipart.parts.AMultipartPart;
+import minecrafttransportsimulator.multipart.parts.PartEngineAircraft;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
@@ -13,8 +13,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
-
-public class EntityPlane extends EntityMultipartVehicle{	
+public final class EntityMultipartF_Plane extends EntityMultipartE_Vehicle{	
 	//Note that angle variable should be divided by 10 to get actual angle.
 	public short aileronAngle;
 	public short elevatorAngle;
@@ -57,25 +56,21 @@ public class EntityPlane extends EntityMultipartVehicle{
 	private double rudderTorque;//kg*m^2/ticks^2
 	private double gravitationalTorque;//kg*m^2/ticks^2
 			
-	public EntityPlane(World world){
+	public EntityMultipartF_Plane(World world){
 		super(world);
 	}
 	
-	public EntityPlane(World world, float posX, float posY, float posZ, float rotation, String name){
+	public EntityMultipartF_Plane(World world, float posX, float posY, float posZ, float rotation, String name){
 		super(world, posX, posY, posZ, rotation, name);
 	}
-	
-	private double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
-		if(Math.abs(angleOfAttack) <= 15*1.25){
-			return maxLiftCoeff*Math.sin(Math.PI/2*angleOfAttack/15);
-		}else if(Math.abs(angleOfAttack) <= 15*1.5){
-			if(angleOfAttack > 0){
-				return maxLiftCoeff*(0.4 + 1/(angleOfAttack - 15));
-			}else{
-				return maxLiftCoeff*(-0.4 + 1/(angleOfAttack + 15));
+		
+	@Override
+	public void removePart(AMultipartPart part, boolean playBreakSound){
+		super.removePart(part, playBreakSound);
+		if(part instanceof PartEngineAircraft){
+			if(((PartEngineAircraft) part).propeller != null){
+				((PartEngineAircraft) part).propeller.dropAsItem();
 			}
-		}else{
-			return maxLiftCoeff*Math.sin(Math.PI/6*angleOfAttack/15);
 		}
 	}
 	
@@ -103,13 +98,11 @@ public class EntityPlane extends EntityMultipartVehicle{
 	@Override
 	protected void getForcesAndMotions(){
 		thrustForce = thrustTorque = 0;
-		for(EntityMultipartChild child : getChildren()){
-			if(!child.isDead){
-				if(child instanceof EntityPropeller){
-					thrust = ((EntityPropeller) child).getThrustForce();
-					thrustForce += thrust;
-					thrustTorque += thrust*child.offsetX;
-				}
+		for(AMultipartPart part : this.getMultipartParts()){
+			if(part instanceof PartPropeller){
+				thrust = ((PartPropeller) part).getThrustForce();
+				thrustForce += thrust;
+				thrustTorque += thrust*part.offset.xCoord;
 			}
 		}
 		
@@ -170,6 +163,20 @@ public class EntityPlane extends EntityMultipartVehicle{
 	@Override
 	public float getSteerAngle(){
 		return -rudderAngle/10F;
+	}
+	
+	private double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
+		if(Math.abs(angleOfAttack) <= 15*1.25){
+			return maxLiftCoeff*Math.sin(Math.PI/2*angleOfAttack/15);
+		}else if(Math.abs(angleOfAttack) <= 15*1.5){
+			if(angleOfAttack > 0){
+				return maxLiftCoeff*(0.4 + 1/(angleOfAttack - 15));
+			}else{
+				return maxLiftCoeff*(-0.4 + 1/(angleOfAttack + 15));
+			}
+		}else{
+			return maxLiftCoeff*Math.sin(Math.PI/6*angleOfAttack/15);
+		}
 	}
 
     @Override

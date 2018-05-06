@@ -3,8 +3,8 @@ package minecrafttransportsimulator.rendering;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.entities.main.EntityPlane;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.sounds.StallSound;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
@@ -15,7 +15,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
 	 * Call this to draw aircraft gauges.
 	 * EngineNumber can be 0 to draw a uni-gauge.
 	 */
-	protected static void drawAircraftInstrument(EntityMultipartVehicle vehicle, int x, int y, Instruments instrument, boolean hud, byte engineNumber){
+	protected static void drawAircraftInstrument(EntityMultipartE_Vehicle vehicle, int x, int y, Instruments instrument, boolean hud, byte engineNumber){
 		boolean lightsOn = lightsOn(vehicle);
 		
 		GL11.glPushMatrix();
@@ -35,11 +35,11 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
 			case AIRCRAFT_ALTIMETER: drawAltimeter(vehicle, lightsOn); break;
 			case AIRCRAFT_HEADING: drawHeadingIndicator(vehicle, lightsOn); break;
 			case AIRCRAFT_AIRSPEED: drawAirspeedIndicator(vehicle, lightsOn); break;
-			case AIRCRAFT_TURNCOORD: drawTurnCoordinator((EntityPlane) vehicle, lightsOn); break;
-			case AIRCRAFT_TURNSLIP: drawTurnAndSlipIndicator((EntityPlane) vehicle, lightsOn); break;
+			case AIRCRAFT_TURNCOORD: drawTurnCoordinator((EntityMultipartF_Plane) vehicle, lightsOn); break;
+			case AIRCRAFT_TURNSLIP: drawTurnAndSlipIndicator((EntityMultipartF_Plane) vehicle, lightsOn); break;
 			case AIRCRAFT_VERTICALSPEED: drawVerticalSpeedIndicator(vehicle, lightsOn); break;
-			case AIRCRAFT_LIFTRESERVE: drawLiftReserveIndicator((EntityPlane) vehicle, lightsOn); break;
-			case AIRCRAFT_TRIM: drawTrimIndicator((EntityPlane) vehicle, lightsOn); break;
+			case AIRCRAFT_LIFTRESERVE: drawLiftReserveIndicator((EntityMultipartF_Plane) vehicle, lightsOn); break;
+			case AIRCRAFT_TRIM: drawTrimIndicator((EntityMultipartF_Plane) vehicle, lightsOn); break;
 			case AIRCRAFT_TACHOMETER: drawTachometer(vehicle, lightsOn, engineNumber); break;
 			case AIRCRAFT_FUELQTY: drawFuelGauge(vehicle, lightsOn); break;
 			case AIRCRAFT_FUELFLOW: drawFuelFlowGauge(vehicle, lightsOn, engineNumber); break;
@@ -74,7 +74,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
 		}
     }
     
-	private static void drawAttitudeIndicator(EntityMultipartVehicle aircraft, boolean lightsOn){
+	private static void drawAttitudeIndicator(EntityMultipartE_Vehicle aircraft, boolean lightsOn){
 		GL11.glRotatef(-aircraft.rotationRoll + 90, 0, 0, 1);
 		if(aircraft.rotationPitch >= 24){
 			renderSquareUV(40, 40, 0, 0.25F, 0.5625F, 0.84375F, 0.53125F);
@@ -97,7 +97,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
 		}
 	}
 	
-	private static void drawAltimeter(EntityMultipartVehicle aircraft, boolean lightsOn){
+	private static void drawAltimeter(EntityMultipartE_Vehicle aircraft, boolean lightsOn){
     	drawGaugeBase(lightsOn);
     	drawScaledString("ALTITUDE", -20, +14, 0.5F);
         drawDialIncrements(0, 0, -180, 180, 25, 2, 51);
@@ -107,7 +107,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
         drawLongPointer(0, 0, (float) (3.6*(aircraft.posY - (ConfigSystem.getBooleanConfig("SeaLevelOffset") ? aircraft.worldObj.provider.getAverageGroundLevel() : 0))), 35, 3);
     }
     
-	private static void drawHeadingIndicator(EntityMultipartVehicle aircraft, boolean lightsOn){
+	private static void drawHeadingIndicator(EntityMultipartE_Vehicle aircraft, boolean lightsOn){
     	drawGaugeBase(lightsOn);
     	renderSquareUV(40, 40, 0, 0.75F, 1F, 0.5F, 0.25F);
     	
@@ -145,7 +145,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
         GL11.glPopMatrix();
     }
     
-	private static void drawAirspeedIndicator(EntityMultipartVehicle aircraft, boolean lightsOn){
+	private static void drawAirspeedIndicator(EntityMultipartE_Vehicle aircraft, boolean lightsOn){
     	drawGaugeBase(lightsOn);
 
     	drawScaledString("BLK/S", -15, +14, 0.5F);
@@ -159,7 +159,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	drawLongPointer(0, 0, (float) (30+7.5*aircraft.velocity*ConfigSystem.getDoubleConfig("SpeedFactor")*20), 35, 2);
     }
     
-	private static void drawTurnCoordinator(EntityPlane plane, boolean lightsOn){
+	private static void drawTurnCoordinator(EntityMultipartF_Plane plane, boolean lightsOn){
 		drawGaugeBase(lightsOn);
 		GL11.glPushMatrix();
     	
@@ -188,7 +188,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	GL11.glPopMatrix();
 	}
 	
-	private static void drawTurnAndSlipIndicator(EntityPlane plane, boolean lightsOn){
+	private static void drawTurnAndSlipIndicator(EntityMultipartF_Plane plane, boolean lightsOn){
 		drawGaugeBase(lightsOn);
 		GL11.glPushMatrix();
     	
@@ -272,7 +272,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	GL11.glPopMatrix();
 	}
 	
-	private static void drawVerticalSpeedIndicator(EntityMultipartVehicle aircraft, boolean lightsOn){
+	private static void drawVerticalSpeedIndicator(EntityMultipartE_Vehicle aircraft, boolean lightsOn){
 		drawGaugeBase(lightsOn);
 
     	drawScaledString("CLIMB", -14, -14, 0.5F);
@@ -286,7 +286,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	drawLongPointer(0, 0, (float) (-90+10.625*aircraft.motionY*20), 35, 2);
 	}
 	
-	private static void drawLiftReserveIndicator(EntityPlane plane, boolean lightsOn){
+	private static void drawLiftReserveIndicator(EntityMultipartF_Plane plane, boolean lightsOn){
 		drawGaugeBase(lightsOn);
     	GL11.glPushMatrix();
     	
@@ -348,7 +348,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
         }
 	}
 	
-	private static void drawTrimIndicator(EntityPlane plane, boolean lightsOn){
+	private static void drawTrimIndicator(EntityMultipartF_Plane plane, boolean lightsOn){
     	drawGaugeBase(lightsOn);
     	
     	drawScaledString("TRIM", -10, 40, 0.5F);
@@ -377,7 +377,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
 		drawLongPointer(12, 8, 135F/15F*plane.elevatorTrim/10F + 90, 14, 2);
     }
 	
-	private static void drawElectricalGauge(EntityMultipartVehicle aircraft, boolean lightsOn){
+	private static void drawElectricalGauge(EntityMultipartE_Vehicle aircraft, boolean lightsOn){
 		drawGaugeBase(lightsOn);
     	
 		drawDialColoring(-17, 0, 48.75F, 76.25F, 16, 3, new float[] {0, 1, 0});
@@ -403,7 +403,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	drawScaledString("P", 38, 10, 0.5F);
 	}
 	
-	private static void drawFuelGauge(EntityMultipartVehicle aircraft, boolean lightsOn){
+	private static void drawFuelGauge(EntityMultipartE_Vehicle aircraft, boolean lightsOn){
     	drawGaugeBase(lightsOn);
     	
     	drawScaledString("BUCKETS", -20, 14, 0.5F);
@@ -417,20 +417,20 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
         drawLongPointer(0, 8, (float) (-50+aircraft.fuel/aircraft.pack.motorized.fuelCapacity*100F), 35, 3);
     }
 	
-	private static void drawTachometer(EntityMultipartVehicle aircraft, boolean lightsOn, byte engineNumber){
+	private static void drawTachometer(EntityMultipartE_Vehicle aircraft, boolean lightsOn, byte engineNumber){
     	drawGaugeBase(lightsOn);
     	drawScaledString("RPM", -10, 14, 0.5F);
     	if(engineNumber == 0){
     		int lowestMaxRPM = 9999;
     		for(byte i=1; i<=aircraft.getNumberEngineBays(); ++i){
     			if(aircraft.getEngineByNumber(i) != null){
-    				lowestMaxRPM = Math.min(lowestMaxRPM, aircraft.getEngineByNumber(i).maxRPM);
+    				lowestMaxRPM = Math.min(lowestMaxRPM, aircraft.getEngineByNumber(i).pack.engine.maxRPM);
     			}
     		}
     		drawDialColoring(0, 0, -135+lowestMaxRPM/10, 165, 25, 4, new float[] {1, 0, 0});
 		}else{
 			if(aircraft.getEngineByNumber(engineNumber ) != null){
-				drawDialColoring(0, 0, -135+aircraft.getEngineByNumber(engineNumber).maxRPM/10, 165, 25, 4, new float[] {1, 0, 0});
+				drawDialColoring(0, 0, -135+aircraft.getEngineByNumber(engineNumber).pack.engine.maxRPM/10, 165, 25, 4, new float[] {1, 0, 0});
 			}
 		}
 		drawDialIncrements(0, 0, -135, 165, 25, 5, 61);
@@ -449,7 +449,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	}
     }
 	
-	private static void drawFuelFlowGauge(EntityMultipartVehicle aircraft, boolean lightsOn, byte engineNumber){
+	private static void drawFuelFlowGauge(EntityMultipartE_Vehicle aircraft, boolean lightsOn, byte engineNumber){
     	drawGaugeBase(lightsOn);
     	
     	drawScaledString("FUEL", -10, 14, 0.5F);
@@ -475,7 +475,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	
     }
 	
-	private static void drawEngineTempGauge(EntityMultipartVehicle aircraft, boolean lightsOn, byte engineNumber){
+	private static void drawEngineTempGauge(EntityMultipartE_Vehicle aircraft, boolean lightsOn, byte engineNumber){
 		drawGaugeBase(lightsOn);
     	
     	drawScaledString("TEMP", -12, 14, 0.5F);
@@ -502,7 +502,7 @@ public final class RenderInstrumentsAircraft extends RenderInstruments{
     	}
 	}
 	
-	private static void drawOilPressureGauge(EntityMultipartVehicle aircraft, boolean lightsOn, byte engineNumber){
+	private static void drawOilPressureGauge(EntityMultipartE_Vehicle aircraft, boolean lightsOn, byte engineNumber){
 		drawGaugeBase(lightsOn);
 		
     	drawScaledString("PSI", -10, 14, 0.5F);

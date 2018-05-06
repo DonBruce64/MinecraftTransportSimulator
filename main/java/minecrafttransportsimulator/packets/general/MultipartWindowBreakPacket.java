@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.core.EntityMultipartB_Existing;
+import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;

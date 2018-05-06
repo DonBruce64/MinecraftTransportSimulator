@@ -1,12 +1,19 @@
-package minecrafttransportsimulator.entities.core;
+package minecrafttransportsimulator.multipart.main;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.parts.AMultipartPart;
 import minecrafttransportsimulator.multipart.parts.PartCrate;
+import minecrafttransportsimulator.multipart.parts.PartSeat;
 import minecrafttransportsimulator.packets.general.MultipartWindowBreakPacket;
+import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
@@ -15,8 +22,13 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.event.entity.EntityMountEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /**This is the next class level above the base multipart.
  * At this level we add methods for the multipart's existence in the world.
@@ -29,14 +41,23 @@ import net.minecraft.world.World;
  * 
  * @author don_bruce
  */
+@Mod.EventBusSubscriber
 public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	public boolean locked;
 	public byte brokenWindows;
 	public float rotationRoll;
 	public float prevRotationRoll;
+	public double airDensity;
 	public double currentMass;
 	public String ownerName="";
 	public String displayText="";
+	public Vec3d headingVec = Vec3d.ZERO;
+	
+	/**Cached map that links entities to the seats riding them.  Used for mounting/dismounting functions.*/
+	private final Map<Entity, PartSeat> riderSeats = new HashMap<Entity, PartSeat>();
+	
+	/**Temp bit to pause dismounting code to avoid getting stuck in a loop with the events.*/
+	private static boolean pauseDismountingLogic = false;
 			
 	public EntityMultipartB_Existing(World world){
 		super(world);
@@ -58,6 +79,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		super.onEntityUpdate();
 		if(pack != null){
 			currentMass = getCurrentMass();
+			airDensity = 1.225*Math.pow(2, -posY/500);
 			getBasicProperties();
 		}
 	}
@@ -71,8 +93,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 			AMultipartPart hitPart = getHitPart(player);
 			if(hitPart != null){
 				if(hitPart.interactPart(player)){
-					//TODO update interaction packet to somehow be smart enough to interact with specific parts.
-					//MTS.MTSNet.sendToServer(new MultipartPartInteractionPacket(hitPart.getEntityId(), player.getEntityId()));
+					MTS.MTSNet.sendToServer(new PacketPartInteraction(hitPart, player.getEntityId()));
 				}
 			}
 		}
@@ -120,6 +141,42 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		return true;
 	}
 	
+	//Prevent dismounting from this multipart naturally as MC sucks at finding good spots to dismount.
+	//Instead, chose a better spot manually to prevent the player from getting stuck inside things.
+	@SubscribeEvent
+	public static void on(EntityMountEvent event){
+		if(event.getEntityBeingMounted() instanceof EntityMultipartB_Existing){
+			EntityMultipartB_Existing multipart = (EntityMultipartB_Existing) event.getEntityBeingMounted();
+			if(event.isDismounting()){
+				PartSeat seat = multipart.getSeatForRider(event.getEntityMounting());
+				if(seat != null){
+					Vec3d placePosition = RotationSystem.getRotatedPoint(seat.offset.addVector(seat.offset.xCoord > 0 ? 1 : -1, 2, 0), multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll).add(multipart.getPositionVector());
+					AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(placePosition)).expand(2, 2, 2);
+					if(!multipart.worldObj.collidesWithAnyBlock(collisionDetectionBox)){
+						event.setCanceled(true);
+						pauseDismountingLogic = true;
+						event.getEntityMounting().dismountRidingEntity();
+			            multipart.removePassenger(event.getEntityMounting());
+						event.getEntityMounting().setPosition(placePosition.xCoord, collisionDetectionBox.minY, placePosition.zCoord);
+						
+					}
+					multipart.riderSeats.remove(event.getEntityMounting());
+				}
+				pauseDismountingLogic = false;
+			}
+		}
+	 }
+	
+	@Override
+	public void updatePassenger(Entity passenger){
+		PartSeat seat = this.getSeatForRider(passenger);
+		Vec3d posVec = RotationSystem.getRotatedPoint(seat.offset.addVector(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll);
+		passenger.setPosition(this.posX + posVec.xCoord, this.posY + posVec.yCoord - passenger.height, this.posZ + posVec.zCoord);
+		passenger.motionX = this.motionX;
+		passenger.motionY = this.motionY;
+		passenger.motionZ = this.motionZ;
+	}
+	
 	@Override
 	public void addPart(AMultipartPart part){
 		//Check if we are colliding and adjust roll before letting part addition continue.
@@ -128,6 +185,18 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 			this.rotationRoll = 0;
 		}
 		super.addPart(part);
+	}
+	
+    @Override
+    public boolean shouldRenderInPass(int pass){
+        //Need to render in pass 1 to render transparent things in the world like light beams.
+    	return true;
+    }
+    
+	@Override
+	public boolean canBeCollidedWith(){
+		//This gets overridden to allow players to interact with this multipart.
+		return true;
 	}
 	
     /**
@@ -149,16 +218,46 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		return null;
 	}
 	
-    @Override
-    public boolean shouldRenderInPass(int pass){
-        //Need to render in pass 1 to render transparent things in the world like light beams.
-    	return true;
-    }
-    
-	@Override
-	public boolean canBeCollidedWith(){
-		//This gets overridden to allow players to interact with this multipart.
-		return true;
+	public Entity getRiderForSeat(PartSeat seat){
+		byte seatNumber = 0;
+		for(PackPart packPart : this.pack.parts){
+			for(String partName : packPart.names){
+				if(partName.contains("seat")){
+					if(packPart.pos[0] == seat.offset.xCoord && packPart.pos[1] == seat.offset.yCoord && packPart.pos[2] == seat.offset.zCoord){
+						return this.getPassengers().get(seatNumber);
+					}
+					++seatNumber;
+				}
+			}
+		}
+		return null;
+	}
+	
+	public PartSeat getSeatForRider(Entity rider){
+		if(riderSeats.containsKey(rider)){
+			return riderSeats.get(rider);
+		}else{
+			byte seatNumber = (byte) this.getPassengers().indexOf(rider);
+			for(PackPart packPart : this.pack.parts){
+				for(String partName : packPart.names){
+					if(partName.contains("seat")){
+						if(seatNumber == 0){
+							for(AMultipartPart part : this.getMultipartParts()){
+								if(part instanceof PartSeat){
+									if(packPart.pos[0] == part.offset.xCoord && packPart.pos[1] == part.offset.yCoord && packPart.pos[2] == part.offset.zCoord){
+										riderSeats.put(rider, (PartSeat) part);
+										return (PartSeat) part;
+									}
+								}
+							}
+						}else{
+							--seatNumber;
+						}
+					}
+				}
+			}	
+		}
+		return null;
 	}
 	
 	/**
@@ -166,26 +265,6 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	 * depending on config settings or a lack of fuel or explodable cargo.
 	 */
 	protected void destroyAtPosition(double x, double y, double z){
-		Entity controller = null;
-		//TODO set death messages here based on riders once we get them inpmlemented.
-		/*
-		for(AMultipartPart part : getMultipartParts()){
-			if(child instanceof EntitySeat){
-				EntitySeat seat = (EntitySeat) child;
-				Entity rider = seat.getPassenger();
-				if(seat.isController && controller != null){
-					controller = rider;
-				}
-				
-				if(rider != null){
-					if(rider.equals(controller)){
-						rider.attackEntityFrom(new DamageSourceCrash(null, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
-					}else{
-						rider.attackEntityFrom(new DamageSourceCrash(controller, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
-					}
-				}
-			}
-		}*/
 		this.setDead();
 	}
 	
@@ -198,15 +277,15 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 				currentMass += 50;
 			}
 		}
-		//TODO add rider mass and calculations here once we get that set up.
-		/*Entity rider = child.getRidingEntity();
-		if(rider != null){
-			if(rider instanceof EntityPlayer){
-				currentMass += 100 + calculateInventoryWeight(((EntityPlayer) rider).inventory);
+		
+		//Add passenger inventory mass as well.
+		for(Entity passenger : this.getPassengers()){
+			if(passenger instanceof EntityPlayer){
+				currentMass += 100 + calculateInventoryWeight(((EntityPlayer) passenger).inventory);
 			}else{
 				currentMass += 100;
 			}
-		}*/
+		}
 		return currentMass;
 	}
 	
@@ -222,6 +301,14 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		}
 		return weight;
 	}
+	
+	protected void updateHeadingVec(){
+        double f1 = Math.cos(-this.rotationYaw * 0.017453292F - (float)Math.PI);
+        double f2 = Math.sin(-this.rotationYaw * 0.017453292F - (float)Math.PI);
+        double f3 = -Math.cos(-this.rotationPitch * 0.017453292F);
+        double f4 = Math.sin(-this.rotationPitch * 0.017453292F);
+        headingVec = new Vec3d((f2 * f3), f4, (f1 * f3));
+   	}
 	
 	/**
 	 * Method block for basic properties like weight and vectors.

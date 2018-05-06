@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.multipart.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityMultipartA_Base;
+import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
@@ -12,7 +12,7 @@ import net.minecraft.util.math.Vec3d;
 public final class PartCrate extends AMultipartPart{
 	public final InventoryBasic crateInventory;
 	
-	public PartCrate(EntityMultipartA_Base multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
+	public PartCrate(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
 		this.crateInventory = new InventoryBasic("entity." + MTS.MODID + ".crate.name", false, 27);
 		NBTTagList stackTagList = dataTag.getTagList("Items", 10);
@@ -32,16 +32,6 @@ public final class PartCrate extends AMultipartPart{
 		}
 		return true;
     }
-
-	@Override
-	public float getWidth(){
-		return 0.75F;
-	}
-
-	@Override
-	public float getHeight(){
-		return 0.75F;
-	}
 	
 	@Override
 	public NBTTagCompound getPartNBTTag(){
@@ -58,5 +48,15 @@ public final class PartCrate extends AMultipartPart{
 		}
 		dataTag.setTag("Items", stackTagList);
 		return dataTag;
+	}
+	
+	@Override
+	public float getWidth(){
+		return 0.75F;
+	}
+
+	@Override
+	public float getHeight(){
+		return 0.75F;
 	}
 }

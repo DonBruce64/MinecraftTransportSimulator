@@ -1,14 +1,14 @@
 package minecrafttransportsimulator.multipart.parts;
 
+import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
-import minecrafttransportsimulator.entities.core.EntityMultipartA_Base;
+import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
 
 /**This class is the base for all parts and should be
@@ -27,17 +27,20 @@ public abstract class AMultipartPart{
 	/** Does this part rotate in-sync with the yaw changes of the multipart.*/
 	public final boolean turnsWithSteer;
 	public final Vec3d offset;
-	public final EntityMultipartA_Base multipart;
-	public final PackPartObject packInfo;
+	public final EntityMultipartD_Moving multipart;
+	public final PackPartObject pack;
 	public final String partName;
+	
+	public Vec3d partPos;
 		
-	public AMultipartPart(EntityMultipartA_Base multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
+	public AMultipartPart(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		this.isController = isController;
 		this.turnsWithSteer = turnsWithSteer;
 		this.offset = offset;
 		this.multipart = multipart;
-		this.packInfo = PackParserSystem.getPartData(partName);
+		this.pack = PackParserSystem.getPartData(partName);
 		this.partName = partName;
+		this.partPos = multipart.getPositionVector().add(offset);
 	}
 
 	/**Called when checking if this part can be interacted with.
@@ -54,7 +57,9 @@ public abstract class AMultipartPart{
 	/**This gets called every tick by the multipart after it finishes its update loop.
 	 * Use this for reactions that this part can take based on its surroundings if need be.
 	 */
-	public void updatePart(){}
+	public void updatePart(){
+		this.partPos = this.multipart.getPositionVector().add(this.offset);
+	}
 	
 	/**Return the part data in NBT form.
 	 * This is called when removing the part from a multipart to return an item.
@@ -80,19 +85,19 @@ public abstract class AMultipartPart{
 	/**Gets the location of the model for this part. 
 	 */
 	public final ResourceLocation getModelLocation(){
-		return new ResourceLocation(this.packInfo.general.packID, "objmodels/parts/" + this.packInfo.general.partUniqueName + ".obj");
+		return new ResourceLocation(this.pack.general.packID, "objmodels/parts/" + this.pack.general.partUniqueName + ".obj");
 	}
 	
 	/**Gets the location of the texture for this part.
 	 * This can be changed for data-dependent part texture. 
 	 */
 	public final ResourceLocation getTextureLocation(){
-		return new ResourceLocation(this.packInfo.general.packID, "textures/parts/" + this.packInfo.general.partUniqueName + ".png");
+		return new ResourceLocation(this.pack.general.packID, "textures/parts/" + this.pack.general.partUniqueName + ".png");
 	}
 	
-	public final AxisAlignedBB getAABBWithOffset(Vec3d boxOffset){
-		Vec3d totalOffset = this.multipart.getPositionVector().add(this.offset.add(boxOffset));
-		return new AxisAlignedBB(totalOffset.xCoord - this.getWidth()/2F, totalOffset.yCoord - this.getHeight()/2F, totalOffset.zCoord - this.getWidth()/2F, totalOffset.xCoord + this.getWidth()/2F, totalOffset.yCoord + this.getHeight()/2F, totalOffset.zCoord + this.getWidth()/2F);
+	public final MultipartAxisAlignedBB getAABBWithOffset(Vec3d boxOffset){
+		Vec3d totalOffset = partPos.add(boxOffset);
+		return new MultipartAxisAlignedBB(totalOffset, this.offset, this.getWidth(), this.getHeight());
 	}
 	
 	/**Gets the current rotation for rendering.
@@ -111,30 +116,5 @@ public abstract class AMultipartPart{
 	 */
 	public boolean isPartCollidingWithBlocks(Vec3d collisionOffset){
 		return !multipart.worldObj.getCollisionBoxes(this.getAABBWithOffset(collisionOffset)).isEmpty();
-    	//TODO move this to ground devices.
-		/*
-    	}else{
-    		if(!this.packInfo.collidesWithLiquids()){
-    			return false;
-    		}else{
-    			int minX = (int) Math.floor(collisionBox.minX);
-    	    	int maxX = (int) Math.floor(collisionBox.maxX + 1.0D);
-    	    	int minY = (int) Math.floor(collisionBox.minY);
-    	    	int maxY = (int) Math.floor(collisionBox.maxY + 1.0D);
-    	    	int minZ = (int) Math.floor(collisionBox.minZ);
-    	    	int maxZ = (int) Math.floor(collisionBox.maxZ + 1.0D);
-    	    	
-    	    	for(int i = minX; i < maxX; ++i){
-    	    		for(int j = minY; j < maxY; ++j){
-    	    			for(int k = minZ; k < maxZ; ++k){
-    	    				if(multipart.worldObj.getBlockState(new BlockPos(i, j, k)).getMaterial().isLiquid()){
-    	    					return true;
-    	    				}
-    	    			}
-    	    		}
-    	    	}
-    	    	return false;
-    		}
-    	}*/
     }
 }

@@ -6,9 +6,9 @@ import java.io.IOException;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle.LightTypes;
 import minecrafttransportsimulator.entities.parts.EntityEngine;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
 import minecrafttransportsimulator.packets.control.EnginePacket;
 import minecrafttransportsimulator.packets.control.LightPacket;
 import minecrafttransportsimulator.rendering.RenderHUD;
@@ -29,7 +29,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	private static final ResourceLocation toggleOn = new ResourceLocation("textures/blocks/redstone_lamp_on.png");
 	private static final ResourceLocation toggleOff = new ResourceLocation("textures/blocks/redstone_lamp_off.png");
 	
-	private final EntityMultipartVehicle aircraft;
+	private final EntityMultipartE_Vehicle aircraft;
 	private final EntityEngine[] engines;
 	private final boolean[] hasLight;
 	private final LightTypes[] lights = new LightTypes[]{LightTypes.NAVIGATIONLIGHT, LightTypes.STROBELIGHT, LightTypes.TAXILIGHT, LightTypes.LANDINGLIGHT};
@@ -40,7 +40,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	
 	private byte lastEngineStarted;
 	
-	public GUIPanelAircraft(EntityMultipartVehicle aircraft){
+	public GUIPanelAircraft(EntityMultipartE_Vehicle aircraft){
 		super();
 		this.aircraft = aircraft;
 		engines = new EntityEngine[aircraft.getNumberEngineBays()];

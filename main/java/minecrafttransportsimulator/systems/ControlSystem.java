@@ -8,15 +8,14 @@ import org.lwjgl.input.Mouse;
 
 import minecrafttransportsimulator.ClientProxy;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle.LightTypes;
-import minecrafttransportsimulator.entities.main.EntityCar;
-import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.guis.GUIPanelAircraft;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.BrakePacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
-import minecrafttransportsimulator.packets.control.EnginePacket;
 import minecrafttransportsimulator.packets.control.FlapPacket;
 import minecrafttransportsimulator.packets.control.HornPacket;
 import minecrafttransportsimulator.packets.control.LightPacket;
@@ -25,6 +24,8 @@ import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
+import minecrafttransportsimulator.packets.parts.PacketEngine;
+import minecrafttransportsimulator.packets.parts.PacketEngine.PacketEngineTypes;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
@@ -129,11 +130,11 @@ public final class ControlSystem{
 		setControlJoystick(control, "", NULL_COMPONENT);
 	}
 	
-	public static void controlVehicle(EntityMultipartVehicle vehicle, boolean isPlayerController){
-		if(vehicle instanceof EntityPlane){
-			controlAircraft(vehicle, isPlayerController);
-		}else if(vehicle instanceof EntityCar){
-			controlCar(vehicle, isPlayerController);
+	public static void controlVehicle(EntityMultipartE_Vehicle vehicle, boolean isPlayerController){
+		if(vehicle instanceof EntityMultipartF_Plane){
+			controlAircraft((EntityMultipartF_Plane) vehicle, isPlayerController);
+		}else if(vehicle instanceof EntityMultipartF_Car){
+			controlCar((EntityMultipartF_Car) vehicle, isPlayerController);
 		}
 	}
 	
@@ -261,7 +262,7 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlAircraft(EntityMultipartVehicle aircraft, boolean isPlayerController){
+	private static void controlAircraft(EntityMultipartF_Plane aircraft, boolean isPlayerController){
 		controlCamera(ControlsKeyboardDynamic.AIRCRAFT_CHANGEHUD, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEHUD, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
 		if(!isPlayerController){
@@ -372,7 +373,7 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlCar(EntityMultipartVehicle car, boolean isPlayerController){
+	private static void controlCar(EntityMultipartF_Car car, boolean isPlayerController){
 		controlCamera(ControlsKeyboardDynamic.CAR_CHANGEHUD, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEHUD, ControlsJoystick.CAR_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
 		if(!isPlayerController){
@@ -429,15 +430,15 @@ public final class ControlSystem{
 		if(ControlsKeyboard.CAR_START.isPressed()){
 			if(car.getEngineByNumber((byte) 1) != null){
 				if(ControlsKeyboard.CAR_MOD.isPressed()){
-					MTS.MTSNet.sendToServer(new EnginePacket(car.getEntityId(), car.getEngineByNumber((byte) 1).getEntityId(), (byte) 0));
+					MTS.MTSNet.sendToServer(new PacketEngine(car.getEngineByNumber((byte) 1), PacketEngineTypes.MAGNETO_OFF));
 				}else{
-					MTS.MTSNet.sendToServer(new EnginePacket(car.getEntityId(), car.getEngineByNumber((byte) 1).getEntityId(), (byte) 1));
-					MTS.MTSNet.sendToServer(new EnginePacket(car.getEntityId(), car.getEngineByNumber((byte) 1).getEntityId(), (byte) 3));
+					MTS.MTSNet.sendToServer(new PacketEngine(car.getEngineByNumber((byte) 1), PacketEngineTypes.MAGNETO_ON));
+					MTS.MTSNet.sendToServer(new PacketEngine(car.getEngineByNumber((byte) 1), PacketEngineTypes.ES_ON));
 				}
 			}
 		}else{
 			if(car.getEngineByNumber((byte) 1) != null){
-				MTS.MTSNet.sendToServer(new EnginePacket(car.getEntityId(), car.getEngineByNumber((byte) 1).getEntityId(), (byte) 2));
+				MTS.MTSNet.sendToServer(new PacketEngine(car.getEngineByNumber((byte) 1), PacketEngineTypes.ES_OFF));
 			}
 		}
 		

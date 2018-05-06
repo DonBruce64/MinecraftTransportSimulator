@@ -18,26 +18,24 @@ public final class RotationSystem{
 	private static double d9;
 	
 	/**
-	 * Takes a set of points and rotates it about a specified pitch, roll, and yaw.
+	 * Takes a point and rotates it about a specified pitch, roll, and yaw.
 	 * Used for the complex positioning of child entities and force calculations.
-	 * @param x X-coordinate
-	 * @param y Y-coordinate
-	 * @param z Z-coordinate
-	 * @param pitch The pitch of the aircraft (in degrees).
-	 * @param yaw The yaw of the aircraft (in degrees).
-	 * @param roll The roll of the aircraft (in degrees).
-	 * @return A Vec3 with the rotated points.
+	 * @param pos the point to rotate
+	 * @param pitch The pitch of the vehicle (in degrees).
+	 * @param yaw The yaw of the vehicle (in degrees).
+	 * @param roll The roll of the vehicle (in degrees).
+	 * @return A Vec3d with the rotated points.
 	 */
-	public static Vec3d getRotatedPoint(float x, float y, float z, float pitch, float yaw, float roll){
+	public static Vec3d getRotatedPoint(Vec3d pos, float pitch, float yaw, float roll){
 		d1 = Math.cos(pitch * 0.017453292F);//A
 		d2 = Math.sin(pitch * 0.017453292F);//B
 		d3 = Math.cos(yaw * 0.017453292F);//C
 		d4 = Math.sin(yaw * 0.017453292F);//D
 		d5 = Math.cos(roll * 0.017453292F);//E
 		d6 = Math.sin(roll * 0.017453292F);//F
-		d7 = x*(d3*d5-d2*d4*d6) + y*(-d2*d4*d5-d3*d6) + z*(-d1*d4);
-		d8 = x*(d1*d6)          + y*(d1*d5)           + z*(-d2);
-		d9 = x*(d4*d5+d2*d3*d6) + y*(d2*d3*d5-d4*d6)  + z*(d1*d3);
+		d7 = pos.xCoord*(d3*d5-d2*d4*d6) + pos.yCoord*(-d2*d4*d5-d3*d6) + pos.zCoord*(-d1*d4);
+		d8 = pos.xCoord*(d1*d6)          + pos.yCoord*(d1*d5)           + pos.zCoord*(-d2);
+		d9 = pos.xCoord*(d4*d5+d2*d3*d6) + pos.yCoord*(d2*d3*d5-d4*d6)  + pos.zCoord*(d1*d3);
 		return new Vec3d(d7, d8, d9);
 	}
 	
@@ -47,7 +45,7 @@ public final class RotationSystem{
 	 * @param pitch The pitch of the aircraft (in degrees).
 	 * @param yaw The yaw of the aircraft (in degrees).
 	 * @param roll The roll of the aircraft (in degrees).
-	 * @return A Vec3 with the rotated unit vector.
+	 * @return A Vec3d with the rotated unit vector.
 	 */
 	public static Vec3d getRotatedY(float pitch, float yaw, float roll){
 		d1 = Math.cos(pitch * 0.017453292F);

@@ -7,7 +7,7 @@ import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackControl;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackFileDefinitions;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
@@ -18,8 +18,8 @@ import net.minecraft.util.ResourceLocation;
 public final class RenderHUD{
 	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	
-	public static void drawMainHUD(EntityMultipartVehicle vehicle, int width, int height, boolean inGUI){
-		final PackFileDefinitions definition = PackParserSystem.getDefinitionForPack(vehicle.name);
+	public static void drawMainHUD(EntityMultipartE_Vehicle vehicle, int width, int height, boolean inGUI){
+		final PackFileDefinitions definition = PackParserSystem.getDefinitionForPack(vehicle.multipartName);
 		final ResourceLocation backplateTexture;
 		final ResourceLocation mouldingTexture;
 		if(definition.backplateTexture.contains(":")){
@@ -64,8 +64,8 @@ public final class RenderHUD{
 		GL11.glPopMatrix();
 	}
 	
-	public static void drawAuxiliaryHUD(EntityMultipartVehicle vehicle, int width, int height, boolean inGUI){
-		final PackFileDefinitions definition = PackParserSystem.getDefinitionForPack(vehicle.name);
+	public static void drawAuxiliaryHUD(EntityMultipartE_Vehicle vehicle, int width, int height, boolean inGUI){
+		final PackFileDefinitions definition = PackParserSystem.getDefinitionForPack(vehicle.multipartName);
 		final ResourceLocation backplateTexture;
 		final ResourceLocation mouldingTexture;
 		if(definition.backplateTexture.startsWith("minecraft:")){
@@ -92,8 +92,8 @@ public final class RenderHUD{
 		GL11.glPopMatrix();
 	}
 	
-	private static void drawInstruments(EntityMultipartVehicle vehicle, int width, int height, int minX, int maxX, int maxY, boolean inGUI, boolean main){
-		MultipartTypes vehicleType = PackParserSystem.getMultipartType(vehicle.name);
+	private static void drawInstruments(EntityMultipartE_Vehicle vehicle, int width, int height, int minX, int maxX, int maxY, boolean inGUI, boolean main){
+		MultipartTypes vehicleType = PackParserSystem.getMultipartType(vehicle.multipartName);
 		for(byte i=0; i<vehicle.pack.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.pack.motorized.instruments.get(i);
 			//Only render instruments not in the panel
@@ -114,8 +114,8 @@ public final class RenderHUD{
 		}
 	}
 	
-	private static void drawControls(EntityMultipartVehicle vehicle, int width, int height, boolean inGUI){
-		MultipartTypes vehicleType = PackParserSystem.getMultipartType(vehicle.name);
+	private static void drawControls(EntityMultipartE_Vehicle vehicle, int width, int height, boolean inGUI){
+		MultipartTypes vehicleType = PackParserSystem.getMultipartType(vehicle.multipartName);
 		for(byte i=0; i<vehicle.pack.motorized.controls.size(); ++i){
 			PackControl packControl = vehicle.pack.motorized.controls.get(i);
 			for(Controls control : Controls.values()){

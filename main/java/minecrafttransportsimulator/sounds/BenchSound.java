@@ -11,7 +11,7 @@ public class BenchSound extends MovingSound{
 
 	public BenchSound(TileEntityPropellerBench bench){
 		super(SFXSystem.getSoundEventFromName(MTS.MODID + ":bench_running"), SoundCategory.MASTER);
-		this.volume=bench.getVolume();
+		this.volume=bench.getSoundVolume();
 		this.repeat=true;
 		this.xPosF = bench.getPos().getX();
 		this.yPosF = bench.getPos().getY();
@@ -21,13 +21,10 @@ public class BenchSound extends MovingSound{
 	
 	@Override
 	public void update(){
-		this.volume = bench.getVolume();
+		this.volume = bench.getSoundVolume();
 		if(SFXSystem.isPlayerInsideEnclosedVehicle()){
 			this.volume /= 2;
 		}
 		this.donePlaying = !bench.shouldSoundBePlaying();
-		if(donePlaying){
-			bench.setCurrentSound(null);
-		}
 	}
 }

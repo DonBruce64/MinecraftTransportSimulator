@@ -23,9 +23,9 @@ import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle.LightTypes;
-import minecrafttransportsimulator.entities.main.EntityPlane;
 import minecrafttransportsimulator.entities.parts.EntityEngineCar;
 import minecrafttransportsimulator.entities.parts.EntitySeat;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
@@ -330,10 +330,10 @@ public final class RenderMultipart extends Render<EntityMultipartMoving>{
 			case("driveshaft"): return (float) (((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1) != null ? ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1).RPM/((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getRatioForGear(((EntityEngineCar) ((EntityMultipartVehicle) mover).getEngineByNumber((byte) 1)).getCurrentGear()) : 0);
 			case("steeringwheel"): return mover.getSteerAngle();
 			
-			case("aileron"): return ((EntityPlane) mover).aileronAngle/10F;
-			case("elevator"): return ((EntityPlane) mover).elevatorAngle/10F;
-			case("rudder"): return ((EntityPlane) mover).rudderAngle/10F;
-			case("flap"): return ((EntityPlane) mover).flapAngle/10F;
+			case("aileron"): return ((EntityMultipartF_Plane) mover).aileronAngle/10F;
+			case("elevator"): return ((EntityMultipartF_Plane) mover).elevatorAngle/10F;
+			case("rudder"): return ((EntityMultipartF_Plane) mover).rudderAngle/10F;
+			case("flap"): return ((EntityMultipartF_Plane) mover).flapAngle/10F;
 			default: return 0;
 		}
 	}

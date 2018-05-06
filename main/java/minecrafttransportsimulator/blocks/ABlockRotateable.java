@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.baseclasses;
+package minecrafttransportsimulator.blocks;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
@@ -8,9 +8,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 	
-public abstract class MTSBlockRotateable extends BlockContainer{
+public abstract class ABlockRotateable extends BlockContainer{
 	
-    public MTSBlockRotateable(Material material){
+    public ABlockRotateable(Material material){
 		super(material);
 		this.fullBlock = false;
 	}
@@ -23,14 +23,14 @@ public abstract class MTSBlockRotateable extends BlockContainer{
             yaw += 360;
         }
         if(this.canRotateDiagonal()){
-        	((MTSTileEntity) world.getTileEntity(pos)).rotation = Math.round(yaw%360/45) == 8 ? 0 : (byte) Math.round(yaw%360/45);
+        	((ATileEntityRotatable) world.getTileEntity(pos)).rotation = Math.round(yaw%360/45) == 8 ? 0 : (byte) Math.round(yaw%360/45);
         }else{
-        	((MTSTileEntity) world.getTileEntity(pos)).rotation = (byte) (Math.round(yaw%360/90) == 8 ? 0 : Math.round(yaw%360/90)*2);
+        	((ATileEntityRotatable) world.getTileEntity(pos)).rotation = (byte) (Math.round(yaw%360/90) == 8 ? 0 : Math.round(yaw%360/90)*2);
         }
     }
 
 	@Override
-	public abstract MTSTileEntity createNewTileEntity(World worldIn, int meta);
+	public abstract ATileEntityRotatable createNewTileEntity(World worldIn, int meta);
     
     protected abstract boolean canRotateDiagonal();
     
