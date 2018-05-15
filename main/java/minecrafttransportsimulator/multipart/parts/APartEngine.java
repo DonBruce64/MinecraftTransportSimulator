@@ -321,7 +321,11 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 	}
 	
 	protected void explodeEngine(){
-		multipart.worldObj.newExplosion(multipart, partPos.xCoord, partPos.yCoord, partPos.zCoord, 1F, true, true);
+		if(ConfigSystem.getBooleanConfig("Explosions")){
+			multipart.worldObj.newExplosion(multipart, partPos.xCoord, partPos.yCoord, partPos.zCoord, 1F, true, true);
+		}else{
+			multipart.worldObj.newExplosion(multipart, partPos.xCoord, partPos.yCoord, partPos.zCoord, 0F, true, true);
+		}
 		multipart.removePart(this, true);
 	}
 	
