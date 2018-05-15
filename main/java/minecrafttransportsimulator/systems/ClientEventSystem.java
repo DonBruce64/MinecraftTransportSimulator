@@ -326,9 +326,10 @@ public final class ClientEventSystem{
         if(ControlSystem.isMasterControlButttonPressed()){
             if(minecraft.currentScreen == null){
             	FMLCommonHandler.instance().showGuiScreen(new GUIConfig());
-                if(Minecraft.getMinecraft().isSingleplayer()){
-                	MTS.MTSNet.sendToServer(new PackReloadPacket());
-                	RenderMultipart.resetRenders();
+                if(Minecraft.getMinecraft().isSingleplayer() && ConfigSystem.getBooleanConfig("DevMode")){
+                	//TODO this won't work now.  Make a new system.
+                	//MTS.MTSNet.sendToServer(new PackReloadPacket());
+                	//RenderMultipart.resetRenders();
                 }
             }
         }

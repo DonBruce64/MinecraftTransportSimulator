@@ -28,8 +28,9 @@ public abstract class APart{
 	public final boolean turnsWithSteer;
 	public final Vec3d offset;
 	public final EntityMultipartD_Moving multipart;
-	public final PackPartObject pack;
 	public final String partName;
+	//This can't be final as it doesn't allow us to change this in dev mode on a reload.
+	public PackPartObject pack;
 	
 	public Vec3d partPos;
 		
@@ -38,8 +39,8 @@ public abstract class APart{
 		this.turnsWithSteer = turnsWithSteer;
 		this.offset = offset;
 		this.multipart = multipart;
-		this.pack = PackParserSystem.getPartData(partName);
 		this.partName = partName;
+		this.pack = PackParserSystem.getPartPack(partName);
 		this.partPos = multipart.getPositionVector().add(offset);
 	}
 

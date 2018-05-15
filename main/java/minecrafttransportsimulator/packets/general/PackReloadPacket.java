@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
+import minecrafttransportsimulator.multipart.main.EntityMultipartA_Base;
+import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -26,7 +27,6 @@ public class PackReloadPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					PackParserSystem.init();
 					World world;
 					if(ctx.side.isServer()){
 						world = ctx.getServerHandler().playerEntity.worldObj;
@@ -34,10 +34,13 @@ public class PackReloadPacket implements IMessage{
 						world = Minecraft.getMinecraft().theWorld;
 					}
 					for(Entity entity : world.loadedEntityList){
-						if(entity instanceof EntityMultipartMoving){
-							EntityMultipartMoving mover = (EntityMultipartMoving) entity;
-							if(!mover.name.isEmpty()){
-								mover.pack = PackParserSystem.getPack(mover.name);
+						if(entity instanceof EntityMultipartA_Base){
+							EntityMultipartA_Base multipart = (EntityMultipartA_Base) entity;
+							if(multipart.pack != null){
+								multipart.pack = PackParserSystem.getMultipartPack(multipart.multipartName);
+							}
+							for(APart part : multipart.getMultipartParts()){
+								part.pack = PackParserSystem.getPartPack(part.partName);
 							}
 						}
 					}

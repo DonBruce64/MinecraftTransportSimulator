@@ -31,7 +31,15 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * @author don_bruce
  */
 public abstract class EntityMultipartA_Base extends Entity{
+	/**This name is identical to the unique name found in the {@link PackMultipartObject}
+	 * It is present here to allow the pack system to properly identify this multipart
+	 * during save/load operations, as well as determine some properties dynamically.
+	 */
 	public String multipartName="";
+	/**The pack for this multipart.  This is set upon NBT load on the server, but needs a packet
+	 * to be present on the client.  Do NOT assume this will be valid simply because
+	 * the multipart has been loaded!
+	 */
 	public PackMultipartObject pack;
 	
 	/**This list contains all parts this multipart has.  Do NOT use it in loops or you will get CMEs all over!
@@ -50,7 +58,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 	public EntityMultipartA_Base(World world, String multipartName){
 		this(world);
 		this.multipartName = multipartName;
-		this.pack = PackParserSystem.getPack(multipartName); 
+		this.pack = PackParserSystem.getMultipartPack(multipartName); 
 	}
 	
 	@Override
@@ -132,7 +140,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
 		this.multipartName=tagCompound.getString("multipartName");
-		this.pack=PackParserSystem.getPack(multipartName);
+		this.pack=PackParserSystem.getMultipartPack(multipartName);
 		
 		if(this.parts.size() == 0){
 			NBTTagList partTagList = tagCompound.getTagList("Parts", 10);

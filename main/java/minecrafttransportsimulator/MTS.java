@@ -1,13 +1,10 @@
 package minecrafttransportsimulator;
 
-import java.io.File;
-
 import org.apache.logging.log4j.Logger;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ForgeContainerGUISystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -23,7 +20,7 @@ public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
 	public static final String MODVER="11.0.0-BETA-05";
-	public static final String assetDir = System.getProperty("user.dir") + File.separator + MTS.MODID;
+	/**Used by packs to detect if they should load or not.**/
 	public static final byte packJSONVersionNumber = 5;
 	
 	@Instance(value = MTS.MODID)
@@ -35,13 +32,11 @@ public class MTS {
 	
 	public MTS(){
 		FluidRegistry.enableUniversalBucket();
-		PackParserSystem.init();
 	}
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event){
 		MTSLog = event.getModLog();
-		PackParserSystem.writeLogOutput();
 		proxy.initConfig(event.getSuggestedConfigurationFile());
 		proxy.initControls();
 	}

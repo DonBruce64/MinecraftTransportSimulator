@@ -3,38 +3,51 @@ package minecrafttransportsimulator.dataclasses;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.systems.PackParserSystem;
+
 public class PackMultipartObject{
-	public List<PackFileDefinitions> definitions = new ArrayList<PackFileDefinitions>();
 	public PackGeneralConfig general;
+	public List<PackFileDefinitions> definitions = new ArrayList<PackFileDefinitions>();
     public PackMotorizedConfig motorized;
     public PackPlane plane;
     public PackCar car;
     public List<PackPart> parts = new ArrayList<PackPart>();
     public List<PackCollisionBox> collision = new ArrayList<PackCollisionBox>();
     public PackRenderingConfig rendering;
-
-    public class PackFileDefinitions{
-    	public String uniqueName;
-    	public String itemDisplayName;
-    	public String modelTexture;
-        public String backplateTexture;
-        public String mouldingTexture;
-    	public String[] recipe;
-    }
     
     public class PackGeneralConfig{
+    	/**Set this to true to disable the quieter sounds while riding this vehicle.**/
     	public boolean openTop;
-    	public byte packVersion;
-    	public byte numberWindows;
+    	/**Vehicle mass while empty (kg).**/
     	public int emptyMass;
-    	public int displayTextMaxLength;
-        public String name;
+    	/**The human-readable name for this vehicle.  Will have the sub-name appended in appropriate places.**/
+        public String generalName;
+        /**Vehicle type.  See {@link PackParserSystem} for a complete list.**/
     	public String type;
+    	/**Description for this vehicle.  Will be present in the manual and in the drafting table.**/
     	public String description;
-        public String defaultDisplayText;
+        /**Ingredients that need to be present to craft this vehicle.
+         * Should be a list of items in the format of [itemname]:[qty]:[metadata].
+         * Note that the itemname MUST contain the modId if modded materials are used.
+         * This is the same format as the /give command, so use that for reference.
+         */
+        public String[] materials;
+    }
+    
+    public class PackFileDefinitions{
+    	/**This value is the unique name for this vehicle and MUST be different than any other vehicle in a pack.
+    	 * Same-named vehicles in different packs are allowed, however, so don't worry about pack conflicts.**/
+    	public String uniqueName;
+    	/**A bit of text to be appended to the main vehicle name to allow for sub-types (different colors, configurations, etc.).
+    	 * Completely optional and may be left blank for single-vehicle JSONs.**/
+    	public String subName;
+    	/**Additional materials, if any, that need to be present to create this specific model of vehicle.
+    	 * Formatting is the same as the general config.**/
+    	public String[] extraMaterials;
     }
     
     public class PackMotorizedConfig{
+    	/**Capacity of the vehicle's fuel tank (in mB).**/
     	public int fuelCapacity;
         public List<PackInstrument> instruments = new ArrayList<PackInstrument>();
         public List<PackControl> controls = new ArrayList<PackControl>();
@@ -87,8 +100,16 @@ public class PackMultipartObject{
     }
     
     public class PackRenderingConfig{
-        public String modelName;
+    	/**The max number of characters that can be used with the text markings.  Prevents players from using overly-long names.**/
+    	public int displayTextMaxLength;
+    	/**Number of windows for this vehicle.  MUST match the number of windows in the model.**/
+    	public byte numberWindows;
+    	/**Default text for the display text.  This is the text the vehicle will spawn with.**/
+        public String defaultDisplayText;
+    	/**A list of text marking objects that will be rendered after the model.  May be empty, but MUST be present to avoid errors.**/
         public List<PackDisplayText> textMarkings = new ArrayList<PackDisplayText>();
+        /**A list of rotatable model definitions.  Like the text markings this can be omitted and empty,
+         * but would you really want to make a model that has not a single animated part?**/
         public List<PackRotatableModelObject> rotatableModelObjects = new ArrayList<PackRotatableModelObject>();
     }
     
