@@ -7,9 +7,7 @@ public class PackPartObject{
     public PartPropellerConfig propeller;
 
     public class PartGeneralConfig{
-    	public String packID;
     	public String type;
-    	public String partUniqueName;
     	public String partDisplayName;
     	public String[] craftingIngredients;
     }

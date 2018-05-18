@@ -2,7 +2,6 @@ package minecrafttransportsimulator.dataclasses;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,25 +10,13 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockFuelPump;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
-import minecrafttransportsimulator.entities.parts.EntityCrate;
-import minecrafttransportsimulator.entities.parts.EntityEngineAMCI4;
-import minecrafttransportsimulator.entities.parts.EntityEngineBristolMercury;
-import minecrafttransportsimulator.entities.parts.EntityEngineDetroitDiesel;
-import minecrafttransportsimulator.entities.parts.EntityEngineLycomingO360;
-import minecrafttransportsimulator.entities.parts.EntityPontoon;
-import minecrafttransportsimulator.entities.parts.EntitySkid;
-import minecrafttransportsimulator.entities.parts.EntityWheelLarge;
-import minecrafttransportsimulator.entities.parts.EntityWheelMedium;
-import minecrafttransportsimulator.entities.parts.EntityWheelSmall;
-import minecrafttransportsimulator.items.ItemEngine;
-import minecrafttransportsimulator.items.ItemInstrument;
-import minecrafttransportsimulator.items.ItemKey;
-import minecrafttransportsimulator.items.ItemManual;
-import minecrafttransportsimulator.items.ItemMultipartMoving;
-import minecrafttransportsimulator.items.ItemPart;
-import minecrafttransportsimulator.items.ItemPropeller;
-import minecrafttransportsimulator.items.ItemSeat;
-import minecrafttransportsimulator.items.ItemWrench;
+import minecrafttransportsimulator.items.core.ItemInstrument;
+import minecrafttransportsimulator.items.core.ItemKey;
+import minecrafttransportsimulator.items.core.ItemManual;
+import minecrafttransportsimulator.items.core.ItemMultipart;
+import minecrafttransportsimulator.items.core.ItemWrench;
+import minecrafttransportsimulator.items.parts.AItemPart;
+import minecrafttransportsimulator.items.parts.ItemPartEngine;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.BrakePacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
@@ -65,7 +52,6 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
-import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -85,52 +71,54 @@ import net.minecraftforge.fml.relauncher.Side;
  * MTS items or blocks.  Adding new items and blocks is a simple as adding them
  * as a field; the init method automatically registers all items and blocks in the class
  * and orders them according to the order in which they were declared.
- * This calls the {@link PackParserSystem} to get the custom vehicles from there.
+ * This calls the {@link PackParserSystem} to register any custom vehicles and parts
+ * that were loaded by packs.
  * 
  * @author don_bruce
  */
 @Mod.EventBusSubscriber
 public final class MTSRegistry{
-	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(MTSCreativeTabs.tabMTSParts);	
+	/**All registered items are stored in this list as they are added.  Used to sort items in creative tabs.**/
+	public static List<Item> itemList = new ArrayList<Item>();
 	
-	public static final Item wrench = new ItemWrench().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item manual = new ItemManual().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item key = new ItemKey().setCreativeTab(MTSCreativeTabs.tabMTSParts);
+	/**Maps multipart item names to items.  All multipart items for all packs will be populated here.*/
+	public static Map<String, ItemMultipart> multipartItemMap = new HashMap<String, ItemMultipart>();
 	
+	/**Maps part item names to items.  All part items for all packs will be populated here.*/
+	public static Map<String, AItemPart> partItemMap = new HashMap<String, AItemPart>();
+	
+	/**Maps item names to their recipes.*/
+	public static Map<String, ItemStack[]> craftingItemMap = new HashMap<String, ItemStack[]>();
+	
+	/**Core creative tab for base MTS items**/
+	public static final CreativeTabCore coreTab = new CreativeTabCore();
+	
+	/**Map of creative tabs for packs.  Keyed by pack IDs.  Populated by the {@link PackParserSystem}**/
+	public static final Map<String, CreativeTabPack> packTabs = new HashMap<String, CreativeTabPack>();
+
+	
+	public static final Item manual = new ItemManual().setCreativeTab(coreTab);
+	public static final Item wrench = new ItemWrench().setCreativeTab(coreTab);
+	public static final Item key = new ItemKey().setCreativeTab(coreTab);
+	
+	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(coreTab);
+	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(coreTab);	
 	public static final Item itemBlockPropellerBench = new ItemBlock(propellerBench);
 	public static final Item itemBlockFuelPump = new ItemBlock(fuelPump);
 	
-	public static final Item engineLycomingO360 = new ItemEngine(EntityEngineLycomingO360.class, ItemEngine.Engines.LYCOMING_O360);
-	public static final Item engineBristolMercury = new ItemEngine(EntityEngineBristolMercury.class, ItemEngine.Engines.BRISTOL_MERCURY);
-	public static final Item engineAMCI4 = new ItemEngine(EntityEngineAMCI4.class, ItemEngine.Engines.AMC_I4);
-	public static final Item engineDetroitDiesel = new ItemEngine(EntityEngineDetroitDiesel.class, ItemEngine.Engines.DETROIT_DIESEL);
-	public static final Item wheelSmall = new ItemPart(EntityWheelSmall.class);
-	public static final Item wheelMedium = new ItemPart(EntityWheelMedium.class);
-	public static final Item wheelLarge = new ItemPart(EntityWheelLarge.class);
-	public static final Item skid = new ItemPart(EntitySkid.class);
-	public static final Item pontoon = new ItemPart(EntityPontoon.class);
-	public static final Item propeller = new ItemPropeller();
-	public static final Item crate = new ItemPart(EntityCrate.class);
-	public static final Item seat = new ItemSeat();
+	public static final Item pointerShort = new Item().setCreativeTab(coreTab);
+	public static final Item pointerLong = new Item().setCreativeTab(coreTab);
+	public static final Item instrument = new ItemInstrument().setCreativeTab(coreTab);
 	
-	public static final Item pointerShort = new Item().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item pointerLong = new Item().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	public static final Item instrument = new ItemInstrument().setCreativeTab(MTSCreativeTabs.tabMTSParts);
-	
-	
+	//Counters for registry systems.
 	private static int entityNumber = 0;
 	private static int packetNumber = 0;
 	private static int craftingNumber = 0;
-	public static List<Item> itemList = new ArrayList<Item>();
-	/**Maps multipart item names to items.*/
-	public static Map<String, ItemMultipartMoving> multipartItemMap = new HashMap<String, ItemMultipartMoving>();
-	/**Maps item names to their recipes.*/
-	public static Map<String, ItemStack[]> craftingItemMap = new HashMap<String, ItemStack[]>();
-
+	
+	
 	/**All run-time things go here.**/
 	public static void init(){
-		initEntities();
+		initMultipartEntities();
 		initPackets();
 		initPartRecipes();
 		initEngineRecipes();
@@ -139,9 +127,8 @@ public final class MTSRegistry{
 	}
 	
 	/**
-	 * Registers the given block and adds it to the creative tab list.
+	 * Registers all blocks present in this class.
 	 * Also adds the respective TileEntity if the block has one.
-	 * @param block
 	 */
 	@SubscribeEvent
 	public static void registerBlocks(RegistryEvent.Register<Block> event){
@@ -163,24 +150,15 @@ public final class MTSRegistry{
 	}
 	
 	/**
-	 * Registers all items in-game.  Registers multiparts, then regular items, then itemblocks.
-	 * This order ensures correct order in creative tabs.
-	 * @param item
+	 * Registers all items (and itemblocks) present in this class.
+	 * Additionally registers multipart items and multipart part items
+	 * that were loaded into MTS earlier during init.  During this section we
+	 * also set up the creative tabs to hold the packs and set any registered
+	 * items to the appropriate tab.
 	 */
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event){
-		List<String> nameList = new ArrayList<String>(PackParserSystem.getRegisteredNames());
-		Collections.sort(nameList);
-		for(String name : nameList){
-			MultipartTypes type = PackParserSystem.getMultipartType(name);
-			if(type != null){
-				ItemMultipartMoving itemMultipart = new ItemMultipartMoving(name);
-				multipartItemMap.put(name, itemMultipart);
-				event.getRegistry().register(itemMultipart.setRegistryName(name).setUnlocalizedName(name));
-				MTSRegistry.itemList.add(itemMultipart);
-			}
-		}
-		
+		//First register all core items.
 		for(Field field : MTSRegistry.class.getFields()){
 			if(field.getType().equals(Item.class)){
 				try{
@@ -199,12 +177,62 @@ public final class MTSRegistry{
 				}
 			}
 		}
+		
+		
+		//Next register multipart items.
+		List<String> nameList = new ArrayList<String>(PackParserSystem.getAllMultipartPackNames());
+		for(String name : nameList){
+			MultipartTypes type = PackParserSystem.getMultipartType(name);
+			if(type != null){
+				ItemMultipart itemMultipart = new ItemMultipart(name);
+				multipartItemMap.put(name, itemMultipart);
+				event.getRegistry().register(itemMultipart);
+				MTSRegistry.itemList.add(itemMultipart);
+			}
+		}
+		
+		//Finally, register all parts.
+		nameList = new ArrayList<String>(PackParserSystem.getAllPartPackNames());
+		for(String name : nameList){
+			PackPartObject partPack = PackParserSystem.getPartPack(name);
+			AItemPart itemPart;
+			if(partPack.general.type.contains("engine")){
+				if(partPack.general.type.contains("aircraft")){
+					
+				}else if(partPack.general.type.contains("car")){
+					
+				}
+			}else if(partPack.general.type.equals("ground_device")){
+				itemPart = new 
+			}else if(partPack.general.type.equals("propeller")){
+				
+			}else{
+				itemPart = null;
+			}
+			if(type != null){
+				AItemPart itemPart = new ItemMultipart(name);
+				partItemMap.put(name, itemPart);
+				event.getRegistry().register(itemPart);
+				MTSRegistry.itemList.add(itemPart);
+			}
+			AItemPart itemPart= new AItemPart(name);
+			multipartItemMap.put(name, itemMultipart);
+			event.getRegistry().register(itemMultipart.setRegistryName(name).setUnlocalizedName(name));
+			MTSRegistry.itemList.add(itemMultipart);
+		}
+		
+
 		MTSAchievements.init();
 	}
 
-	private static void initEntities(){
+	/**
+	 * Registers all entities with the entity registry.
+	 * For multiparts we only register the main classes as
+	 * the pack data stored in NBT is what makes for different vehicles.
+	 */
+	private static void initMultipartEntities(){
 		for(MultipartTypes type : PackParserSystem.MultipartTypes.values()){
-			registerEntity(type.multipartClass);
+			EntityRegistry.registerModEntity(type.multipartClass, type.multipartClass.getSimpleName().substring(6).toLowerCase(), entityNumber++, MTS.MODID, 80, 5, false);
 		}
 	}
 	
@@ -354,28 +382,28 @@ public final class MTSRegistry{
 	
 	private static void initEngineRecipes(){
 		//New engines
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineAMCI4, false),
+		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineAMCI4, false),
 				"AAA",
 				"BCB",
 				"BBB",
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.IRON_INGOT);
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineLycomingO360, false),
+		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineLycomingO360, false),
 				"ABA",
 				"BCB",
 				"ABA",
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.IRON_INGOT);
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineBristolMercury, false),
+		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineBristolMercury, false),
 				"ABA",
 				"ACA",
 				"ABA",
 				'A', Blocks.PISTON,
 				'B', Blocks.OBSIDIAN,
 				'C', Items.IRON_INGOT);
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineDetroitDiesel, false),
+		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineDetroitDiesel, false),
 				"AAA",
 				"ACA",
 				"BBB",
@@ -384,25 +412,25 @@ public final class MTSRegistry{
 				'C', Items.IRON_INGOT);
 		
 		//Repaired engines
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineAMCI4, false),
+		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineAMCI4, false),
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.OBSIDIAN,
 				'C', MTSRegistry.engineAMCI4);
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineLycomingO360, false),
+		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineLycomingO360, false),
 				"B B",
 				" C ",
 				"B B",
 				'B', Blocks.OBSIDIAN,
 				'C', MTSRegistry.engineLycomingO360);
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineBristolMercury, false),
+		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineBristolMercury, false),
 				"B B",
 				"BCB",
 				"B B",
 				'B', Blocks.OBSIDIAN,
 				'C', MTSRegistry.engineBristolMercury);
-		registerRecipe(ItemEngine.getStackWithData((ItemEngine) MTSRegistry.engineDetroitDiesel, false),
+		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineDetroitDiesel, false),
 				"B B",
 				"BCB",
 				"B B",
@@ -567,10 +595,9 @@ public final class MTSRegistry{
 	}
 
 	private static void initPackRecipes(){
-		for(Entry<String, ItemMultipartMoving> mapEntry : multipartItemMap.entrySet()){
+		for(Entry<String, ItemMultipart> mapEntry : multipartItemMap.entrySet()){
 			String name = mapEntry.getKey();
 			try{
-				MultipartTypes type = PackParserSystem.getMultipartType(name);
 				//Init multipart recipes.
 				//Convert strings into ItemStacks
 				Character[] indexes = new Character[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'};
@@ -606,14 +633,6 @@ public final class MTSRegistry{
 				MTS.MTSLog.error("ERROR ADDING CRAFTING RECIPE FOR: " + name);
 			}
 		}
-	}
-
-	/**
-	 * Registers an entity.
-	 * @param entityClass
-	 */
-	private static void registerEntity(Class<? extends Entity> entityClass){
-		EntityRegistry.registerModEntity(entityClass, entityClass.getSimpleName().substring(6).toLowerCase(), entityNumber++, MTS.MODID, 80, 5, false);
 	}
 	
 	/**

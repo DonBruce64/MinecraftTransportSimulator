@@ -35,8 +35,6 @@ public final class MTSRegistryClient{
 	
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
-		MTSExternalResourcePack.init();
-
 		//Register the TESRs.
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPropellerBench.class, new RenderPropellerBench());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityFuelPump.class, new RenderFuelPump());

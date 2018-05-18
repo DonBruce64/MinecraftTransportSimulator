@@ -1,8 +1,8 @@
-package minecrafttransportsimulator.items;
+package minecrafttransportsimulator.items.core;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
-import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackCollisionBox;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -15,13 +15,15 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public class ItemMultipartMoving extends Item{
+public class ItemMultipart extends Item{
 	public final String name;
 	
-	public ItemMultipartMoving(String name){
+	public ItemMultipart(String name){
 		super();
 		this.name = name;
-		this.setCreativeTab(MTSCreativeTabs.tabMTSVehicles);
+		this.setRegistryName(name);
+		this.setUnlocalizedName(name);
+		this.setCreativeTab(MTSRegistry.packTabs.get(name.substring(0, name.indexOf(':'))));
 	}
 	
 	@Override
@@ -36,7 +38,7 @@ public class ItemMultipartMoving extends Item{
 			if(heldStack.getItem() != null){
 				//We want to spawn above this block.
 				pos = pos.up();
-				String entityName = ((ItemMultipartMoving) heldStack.getItem()).name;
+				String entityName = ((ItemMultipart) heldStack.getItem()).name;
 				try{
 					EntityMultipartMoving newEntity = PackParserSystem.getMultipartType(entityName).multipartClass.getConstructor(World.class, float.class, float.class, float.class, float.class, String.class).newInstance(world, pos.getX(), pos.getY(), pos.getZ(), player.rotationYaw, entityName);
 					float minHeight = 0;

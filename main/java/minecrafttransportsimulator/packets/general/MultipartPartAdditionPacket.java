@@ -9,7 +9,7 @@ import minecrafttransportsimulator.entities.core.EntityMultipartChild;
 import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
 import minecrafttransportsimulator.entities.core.EntityMultipartParent;
 import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.items.ItemPart;
+import minecrafttransportsimulator.items.parts.AItemPart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -57,9 +57,9 @@ public class MultipartPartAdditionPacket implements IMessage{
 						EntityPlayer player = (EntityPlayer) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.player);
 						ItemStack heldStack = player.getHeldItemMainhand();
 						if(heldStack != null){
-							if(heldStack.getItem() instanceof ItemPart){
+							if(heldStack.getItem() instanceof AItemPart){
 								//Player is holding a valid part.  Now check if part goes to this multipart.
-								ItemPart partItem = (ItemPart) heldStack.getItem();
+								AItemPart partItem = (AItemPart) heldStack.getItem();
 								PackPart packPart = mover.pack.parts.get(message.partIndex);
 								for(String partName : packPart.names){
 									if(heldStack.getItem().getRegistryName().getResourcePath().equals(partName)){

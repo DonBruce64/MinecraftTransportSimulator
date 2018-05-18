@@ -86,14 +86,14 @@ public abstract class APart{
 	/**Gets the location of the model for this part. 
 	 */
 	public final ResourceLocation getModelLocation(){
-		return new ResourceLocation(this.pack.general.packID, "objmodels/parts/" + this.pack.general.partUniqueName + ".obj");
+		return new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + ".obj");
 	}
 	
 	/**Gets the location of the texture for this part.
 	 * This can be changed for data-dependent part texture. 
 	 */
 	public final ResourceLocation getTextureLocation(){
-		return new ResourceLocation(this.pack.general.packID, "textures/parts/" + this.pack.general.partUniqueName + ".png");
+		return new ResourceLocation(partName.substring(0, partName.indexOf(':')), "textures/parts/" + partName.substring(partName.indexOf(':') + 1) + ".png");
 	}
 	
 	public final MultipartAxisAlignedBB getAABBWithOffset(Vec3d boxOffset){

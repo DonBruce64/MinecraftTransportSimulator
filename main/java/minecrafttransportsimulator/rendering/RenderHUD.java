@@ -10,7 +10,6 @@ import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrumen
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
@@ -93,7 +92,6 @@ public final class RenderHUD{
 	}
 	
 	private static void drawInstruments(EntityMultipartE_Vehicle vehicle, int width, int height, int minX, int maxX, int maxY, boolean inGUI, boolean main){
-		MultipartTypes vehicleType = PackParserSystem.getMultipartType(vehicle.multipartName);
 		for(byte i=0; i<vehicle.pack.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.pack.motorized.instruments.get(i);
 			//Only render instruments not in the panel
@@ -115,7 +113,6 @@ public final class RenderHUD{
 	}
 	
 	private static void drawControls(EntityMultipartE_Vehicle vehicle, int width, int height, boolean inGUI){
-		MultipartTypes vehicleType = PackParserSystem.getMultipartType(vehicle.multipartName);
 		for(byte i=0; i<vehicle.pack.motorized.controls.size(); ++i){
 			PackControl packControl = vehicle.pack.motorized.controls.get(i);
 			for(Controls control : Controls.values()){

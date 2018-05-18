@@ -4,12 +4,12 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
-import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
+import minecrafttransportsimulator.dataclasses.CreativeTabCollection;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.guis.GUIConfig;
 import minecrafttransportsimulator.guis.GUIPackMissing;
-import minecrafttransportsimulator.items.ItemPart;
+import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
 import minecrafttransportsimulator.multipart.main.EntityMultipartC_Colliding;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
@@ -115,7 +115,7 @@ public final class ClientEventSystem{
 					//If this item is a part, find if we are right-clicking a valid part area.
 					//If so, send the info to the server to add a new part.
 					//Note that the server will check if we can actually add the part in question.
-			    	if(event.getItemStack().getItem() instanceof ItemPart){
+			    	if(event.getItemStack().getItem() instanceof AItemPart){
 	    				for(byte i=0; i<multipart.pack.parts.size(); ++i){
 	    					PackPart packPart = multipart.pack.parts.get(i);
 	    					Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
@@ -311,7 +311,7 @@ public final class ClientEventSystem{
     	if(PackParserSystem.getRegisteredNames().isEmpty()){
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
-	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()].equals(MTSCreativeTabs.tabMTSVehicles)){
+	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()].equals(CreativeTabCollection.tabMTSVehicles)){
 	    			FMLCommonHandler.instance().showGuiScreen(new GUIPackMissing());
 	    		}
 	    	}

@@ -6,7 +6,7 @@ import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
 import minecrafttransportsimulator.guis.GUIInstruments;
 import minecrafttransportsimulator.guis.GUIManual;
 import minecrafttransportsimulator.guis.GUIPropellerBench;
-import minecrafttransportsimulator.items.ItemManual;
+import minecrafttransportsimulator.items.core.ItemManual;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;

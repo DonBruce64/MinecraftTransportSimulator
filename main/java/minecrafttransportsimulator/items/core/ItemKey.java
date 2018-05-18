@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.items;
+package minecrafttransportsimulator.items.core;
 
 import java.util.List;
 

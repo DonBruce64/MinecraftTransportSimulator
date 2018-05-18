@@ -1,9 +1,9 @@
-package minecrafttransportsimulator.items;
+package minecrafttransportsimulator.items.parts;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
+import minecrafttransportsimulator.dataclasses.CreativeTabCollection;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.entities.parts.EntityPropeller;
 import net.minecraft.client.resources.I18n;
@@ -15,7 +15,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class ItemPropeller extends ItemPart{
+public class ItemPropeller extends AItemPart{
 	
 	public ItemPropeller(){
 		super(EntityPropeller.class);
@@ -47,7 +47,7 @@ public class ItemPropeller extends ItemPart{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
-		if(MTSCreativeTabs.tabMTSParts.equals(tab)){
+		if(CreativeTabCollection.tabMTSParts.equals(tab)){
 			List<Byte[]> propellerList = new ArrayList<Byte[]>();
 			propellerList.add(new Byte[]{0, 2, 70, 75});
 			propellerList.add(new Byte[]{0, 3, 70, 75});

@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.items;
+package minecrafttransportsimulator.items.core;
 
 import minecrafttransportsimulator.MTS;
 import net.minecraft.entity.player.EntityPlayer;

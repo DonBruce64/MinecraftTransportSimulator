@@ -1,10 +1,10 @@
-package minecrafttransportsimulator.items;
+package minecrafttransportsimulator.items.core;
 
 import java.util.List;
 
-import minecrafttransportsimulator.dataclasses.MTSCreativeTabs;
 import minecrafttransportsimulator.dataclasses.MTSInstruments;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -33,7 +33,7 @@ public class ItemInstrument extends Item{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
-		if(MTSCreativeTabs.tabMTSParts.equals(tab)){
+		if(MTSRegistry.coreTab.equals(tab)){
 			//Iterate though all the instruments and put them on this tab.
 			for(Instruments instrument : MTSInstruments.Instruments.values()){
 				subItems.add(new ItemStack(this, 1, instrument.ordinal()));

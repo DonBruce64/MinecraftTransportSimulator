@@ -94,9 +94,9 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 				if(vehicle.electricPower > 2){
 					starterLevel += pack.engine.starterDuration;
 					if(vehicle.electricPower > 6){
-						MTS.proxy.playSound(partPos, this.pack.general.packID + ":" + this.pack.general.partUniqueName + "_cranking", 1, 1);
+						MTS.proxy.playSound(partPos, partName + "_cranking", 1, 1);
 					}else{
-						MTS.proxy.playSound(partPos, this.pack.general.packID + ":" + this.pack.general.partUniqueName + "_cranking", 1, (float) (vehicle.electricPower/8F));
+						MTS.proxy.playSound(partPos, partName + "_cranking", 1, (float) (vehicle.electricPower/8F));
 					}
 				}
 			}
@@ -231,7 +231,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 			}else if(state.equals(EngineStates.RUNNING)){
 				state = EngineStates.ENGINE_OFF;
 				internalFuel = 100;
-				MTS.proxy.playSound(partPos, this.pack.general.packID + ":" + this.pack.general.partUniqueName + "_starting", 1, 1);
+				MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
 			}
 		}
 	}
@@ -269,7 +269,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 			return;
 		}
 		starterLevel += pack.engine.starterDuration;
-		MTS.proxy.playSound(partPos, this.pack.general.packID + ":" + this.pack.general.partUniqueName + "_cranking", 1, 1);
+		MTS.proxy.playSound(partPos, partName + "_cranking", 1, 1);
 	}
 	
 	public void backfireEngine(){
@@ -277,7 +277,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 		if(!multipart.worldObj.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngine(this, PacketEngineTypes.BACKFIRE));
 		}else{
-			MTS.proxy.playSound(partPos, this.pack.general.packID + ":" + this.pack.general.partUniqueName + "_sputter", 0.5F, 1);
+			MTS.proxy.playSound(partPos, partName + "_sputter", 0.5F, 1);
 			backfired = true;
 		}
 	}
@@ -295,7 +295,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 		if(!multipart.worldObj.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngine(this, PacketEngineTypes.START));
 		}else{
-			MTS.proxy.playSound(partPos, this.pack.general.packID + ":" + this.pack.general.partUniqueName + "_starting", 1, 1);
+			MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
 		}
 	}
 	
@@ -316,7 +316,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 					vehicle.fuel = 0;
 				}
 			}
-			MTS.proxy.playSound(partPos, this.pack.general.packID + ":" + this.pack.general.partUniqueName + "_starting", 1, 1);
+			MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
 		}
 	}
 	
@@ -340,7 +340,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public MovingSound getNewSound(){
-		return new AttenuatedSound(this.pack.general.packID + ":" + this.pack.general.partUniqueName + "_running", this);
+		return new AttenuatedSound(partName + "_running", this);
 	}
 
 	@Override

@@ -27,7 +27,7 @@ public class PackMultipartObject{
     	/**Description for this vehicle.  Will be present in the manual and in the drafting table.**/
     	public String description;
         /**Ingredients that need to be present to craft this vehicle.
-         * Should be a list of items in the format of [itemname]:[qty]:[metadata].
+         * Should be a list of items in the format of [itemname]:[metadata]:[qty].
          * Note that the itemname MUST contain the modId if modded materials are used.
          * This is the same format as the /give command, so use that for reference.
          */
@@ -42,7 +42,7 @@ public class PackMultipartObject{
     	 * Completely optional and may be left blank for single-vehicle JSONs.**/
     	public String subName;
     	/**Additional materials, if any, that need to be present to create this specific model of vehicle.
-    	 * Formatting is the same as the general config.**/
+    	 * Formatting is the same as the general materials.**/
     	public String[] extraMaterials;
     }
     

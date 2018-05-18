@@ -71,7 +71,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		this.setPositionAndRotation(posX, posY, posZ, playerRotation-90, 0);
 		
 		//This only gets done at the beginning when the entity is first spawned.
-		this.displayText = pack.general.defaultDisplayText;
+		this.displayText = pack.rendering.defaultDisplayText;
 	}
 	
 	@Override
@@ -132,7 +132,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 			//Since we didn't forward any attacks or do special events, we must have attacked this multipart directly.
 			//Send a packet to break a window if we need to.
 			Entity damageSource = source.getEntity() != null && !source.getEntity().equals(source.getSourceOfDamage()) ? source.getSourceOfDamage() : source.getEntity();
-			if(damageSource != null && this.brokenWindows < pack.general.numberWindows){
+			if(damageSource != null && this.brokenWindows < pack.rendering.numberWindows){
 				++brokenWindows;
 				this.playSound(SoundEvents.BLOCK_GLASS_BREAK, 2.0F, 1.0F);
 				MTS.MTSNet.sendToAll(new PacketMultipartWindowBreak(this));

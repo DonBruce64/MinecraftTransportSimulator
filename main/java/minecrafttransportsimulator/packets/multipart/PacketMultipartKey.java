@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.multipart;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.ItemKey;
+import minecrafttransportsimulator.items.core.ItemKey;
 import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import net.minecraft.entity.player.EntityPlayer;
