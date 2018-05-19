@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -13,7 +13,7 @@ public class ThrottlePacket implements IMessage{
 	private int id;
 	private byte throttle;
 
-	public ThrottlePacket() { }
+	public ThrottlePacket(){}
 	
 	public ThrottlePacket(int id, byte throttle){
 		this.id=id;
@@ -37,27 +37,27 @@ public class ThrottlePacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartVehicle thisEntity;
+					EntityMultipartE_Vehicle vehicle;
 					if(ctx.side.isServer()){
-						thisEntity = (EntityMultipartVehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						vehicle = (EntityMultipartE_Vehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 					}else{
 						if(Minecraft.getMinecraft().theWorld == null){
 							return;
 						}
-						thisEntity = (EntityMultipartVehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						vehicle = (EntityMultipartE_Vehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 						
 					}
-					if(thisEntity!=null){
+					if(vehicle!=null){
 						if(message.throttle == Byte.MAX_VALUE){
-							if(thisEntity.throttle < 100){
-								++thisEntity.throttle;
+							if(vehicle.throttle < 100){
+								++vehicle.throttle;
 							}
 						}else if(message.throttle == Byte.MIN_VALUE){
-							if(thisEntity.throttle > 0){
-								--thisEntity.throttle;
+							if(vehicle.throttle > 0){
+								--vehicle.throttle;
 							}
 						}else{
-							thisEntity.throttle = message.throttle;
+							vehicle.throttle = message.throttle;
 						}
 						if(ctx.side.isServer()){
 							MTS.MTSNet.sendToAll(message);

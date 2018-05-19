@@ -1,16 +1,14 @@
 package minecrafttransportsimulator.dataclasses;
 
-import java.io.File;
-import java.io.FileWriter;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityFuelPump;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
-import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
+import minecrafttransportsimulator.items.core.ItemMultipart;
+import minecrafttransportsimulator.items.parts.AItemPart;
+import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.rendering.blockrenders.RenderFuelPump;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPropellerBench;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -35,81 +33,55 @@ public final class MTSRegistryClient{
 	
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
-		//Register the TESRs.
+		//Register the TESRs for blocks.
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPropellerBench.class, new RenderPropellerBench());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityFuelPump.class, new RenderFuelPump());
 		
-		//Register the Entity rendering classes.
-		RenderingRegistry.registerEntityRenderingHandler(EntityMultipartMoving.class, MTSRenderFactory);
+		//Register the multipart rendering class.
+		RenderingRegistry.registerEntityRenderingHandler(EntityMultipartD_Moving.class, MTSRenderFactory);
 		
 		//Register the item models.
-		registerItemRender(MTSRegistry.wheelSmall);
-		registerItemRender(MTSRegistry.wheelMedium);
-		registerItemRender(MTSRegistry.wheelLarge);
-		registerItemRender(MTSRegistry.skid);
-		registerItemRender(MTSRegistry.pontoon);
-		registerItemRender(MTSRegistry.engineAMCI4);
-		registerItemRender(MTSRegistry.engineDetroitDiesel);
-		registerItemRender(MTSRegistry.engineLycomingO360);
-		registerItemRender(MTSRegistry.engineBristolMercury);
-		registerItemRenderSeries(MTSRegistry.propeller, 3);
-		registerItemRenderSeries(MTSRegistry.seat, 102);
-		registerItemRender(MTSRegistry.crate);
-		
-		registerItemRenderSeries(MTSRegistry.instrument, MTSInstruments.Instruments.values().length);
-		registerItemRender(MTSRegistry.pointerShort);
-		registerItemRender(MTSRegistry.pointerLong);
-		registerItemRender(MTSRegistry.wrench);
-		registerItemRender(MTSRegistry.key);
-		registerItemRender(MTSRegistry.manual);
-		registerItemRender(MTSRegistry.itemBlockPropellerBench);
-		registerItemRender(MTSRegistry.itemBlockFuelPump);
+		//First register the core items.
+		registerCoreItemRender(MTSRegistry.manual);
+		registerCoreItemRender(MTSRegistry.wrench);
+		registerCoreItemRender(MTSRegistry.key);
+		registerCoreItemRender(MTSRegistry.itemBlockPropellerBench);
+		registerCoreItemRender(MTSRegistry.itemBlockFuelPump);
+		registerCoreItemRender(MTSRegistry.pointerShort);
+		registerCoreItemRender(MTSRegistry.pointerLong);
+		registerCoreItemRenderSeries(MTSRegistry.instrument, MTSInstruments.Instruments.values().length);
 				
-		//Now register items for the pack data.
-		try{
-			//We manually create the JSON files, so get rid of what's in the directory first.
-			File jsonDir = new File(MTS.assetDir + File.separator + "models" + File.separator + "item");
-			for(File file : jsonDir.listFiles()){
-				if(file.getName().endsWith(".json")){
-					file.delete();
-				}
-			}
-			//Now create the files and register the item renders.
-			for(String name : MTSRegistry.multipartItemMap.keySet()){
-				String uniqueItemName = PackParserSystem.getDefinitionForPack(name).uniqueName;
-				FileWriter jsonWriter = new FileWriter(new File(jsonDir.getAbsolutePath() + File.separator + uniqueItemName + ".json"));
-				jsonWriter.write("{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + MTS.MODID + ":items/" + uniqueItemName + "\"}}");
-				ModelLoader.setCustomModelResourceLocation(MTSRegistry.multipartItemMap.get(name), 0, new ModelResourceLocation(MTS.MODID + ":" + PackParserSystem.getDefinitionForPack(name).uniqueName, "inventory"));
-				jsonWriter.close();
-			}
-		}catch(Exception e){
-			e.printStackTrace();
+		//Now register items for the packs.
+		for(ItemMultipart multipartItem : MTSRegistry.multipartItemMap.values()){
+			registerMultipartItemRender(multipartItem);
+		}
+		for(AItemPart partItem : MTSRegistry.partItemMap.values()){
+			registerPartItemRender(partItem);
 		}
 	}
 	
-	private static void registerItemRender(Item item){
+	private static void registerCoreItemRender(Item item){
 		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(MTS.MODID + ":" + item.getRegistryName().getResourcePath(), "inventory"));
 	}
 
-	private static void registerItemRenderSeries(Item item, int numberMetas){
+	private static void registerCoreItemRenderSeries(Item item, int numberMetas){
 		for(byte i=0; i<numberMetas; ++i){
-			//If items are called the same thing no matter the metadata, then they should simply gain a numerical suffix.
-			//Otherwise take their unlocalized name and use it for the JSON name.
-			//Example: Seats would fall into the first category, but flight instruments would fall into the second.
-			ModelResourceLocation model;
-			if(item.getUnlocalizedName(new ItemStack(item, 1, i)).equals(item.getUnlocalizedName())){
-				model = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName(new ItemStack(item, 1, i)).substring(5) + Integer.valueOf(i), "inventory");
-			}else{
-				model = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName(new ItemStack(item, 1, i)).substring(5), "inventory");
-			}
-			
+			ModelResourceLocation model = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName(new ItemStack(item, 1, i)).substring(5), "inventory");
 			ModelLoader.setCustomModelResourceLocation(item, i, model);
 		}
 	}
 	
-	private static final IRenderFactory<EntityMultipartMoving> MTSRenderFactory = new IRenderFactory<EntityMultipartMoving>(){
+	private static void registerMultipartItemRender(ItemMultipart item){
+		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(item.multipartName, "inventory"));
+	}
+	
+	private static void registerPartItemRender(AItemPart item){
+		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(item.partName, "inventory"));
+	}
+	
+	private static final IRenderFactory<EntityMultipartD_Moving> MTSRenderFactory = new IRenderFactory<EntityMultipartD_Moving>(){
 		@Override
-		public Render<? super EntityMultipartMoving> createRenderFor(RenderManager manager){
+		public Render<? super EntityMultipartD_Moving> createRenderFor(RenderManager manager){
 			return new RenderMultipart(manager);
 		}
 	};

@@ -7,7 +7,7 @@ import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceWheel;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
-import minecrafttransportsimulator.packets.parts.PacketPartFlat;
+import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceFlat;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.systems.SFXSystem.FXPart;
@@ -23,11 +23,12 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**Any child that touches the ground should extend this class.
- * It's used to perform ground physics and rendering.
+ * It's used to perform ground physics and rendering of wheels, pontoons, and whatever
+ * else people may want their vehicles to touch the ground with.
  * 
  * @author don_bruce
  */
-public final class PartGroundDevice extends APart implements FXPart{
+public class PartGroundDevice extends APart implements FXPart{
 	private static final Vec3d groundDetectionOffset = new Vec3d(0, -0.05F, 0);
 	
 	private boolean isFlat;
@@ -38,6 +39,12 @@ public final class PartGroundDevice extends APart implements FXPart{
 	
 	public PartGroundDevice(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
+		//If we are a long ground device, add a fake ground device at the offset to make us
+		//have a better contact area.  Make sure we don't call this from that constructor itself,
+		//otherwise we'll get infinite loops!
+		if(pack.groundDevice.isLongPart){
+			PartGroundDeviceFake fakeDevice = new PartGroundDeviceFake
+		}
 	}
 	
 	@Override
@@ -48,7 +55,7 @@ public final class PartGroundDevice extends APart implements FXPart{
 					this.setFlat();
 					Vec3d explosionPosition = partPos;
 					multipart.worldObj.newExplosion(multipart, explosionPosition.xCoord, explosionPosition.yCoord, explosionPosition.zCoord, 0.25F, false, false);
-					MTS.MTSNet.sendToAll(new PacketPartFlat(this));
+					MTS.MTSNet.sendToAll(new PacketPartGroundDeviceFlat(this));
 				}
 			}
 		}
@@ -115,6 +122,7 @@ public final class PartGroundDevice extends APart implements FXPart{
 	
 	@Override
 	public Item getItemForPart(){
+		//TODO add fake ground device for pontoons and other ground devices.
 		return this.isFlat ? null : super.getItemForPart();
 	}
 	

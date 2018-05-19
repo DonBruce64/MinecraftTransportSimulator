@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.multipart.parts;
 
 import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -79,8 +80,7 @@ public abstract class APart{
 	 * (either due to damage or other reasons) make this method return null.
 	 */
 	public Item getItemForPart(){
-		//TODO add method to return registered part items.
-		return null;
+		return MTSRegistry.partItemMap.get(this.partName);
 	}
 	
 	/**Gets the location of the model for this part. 

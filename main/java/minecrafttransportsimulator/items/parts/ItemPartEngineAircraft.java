@@ -2,7 +2,9 @@ package minecrafttransportsimulator.items.parts;
 
 import java.util.List;
 
-import minecrafttransportsimulator.multipart.parts.PartEngineAircraft;
+import minecrafttransportsimulator.dataclasses.PackPartObject;
+import minecrafttransportsimulator.multipart.parts.APartEngine;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -13,21 +15,24 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public final class ItemPartEngineAircraft extends AItemPartEngine{
 	
-	public ItemPartEngineAircraft(){
-		super(PartEngineAircraft.class);
+	public ItemPartEngineAircraft(String partName){
+		super(partName);
 	}
 	
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
 		NBTTagCompound stackTag = stack.getTagCompound();
+		PackPartObject pack = PackParserSystem.getPartPack(((ItemPartEngineAircraft) stack.getItem()).partName); 
+		
 		if(stackTag.getBoolean("isCreative")){
 			tooltipLines.add(TextFormatting.DARK_PURPLE + I18n.format("info.item.engine.creative"));
 		}
-		tooltipLines.add(I18n.format("info.item.engine.maxrpm") + stackTag.getInteger("maxRPM"));
-		tooltipLines.add(I18n.format("info.item.engine.maxsaferpm") + stackTag.getInteger("maxSafeRPM"));
-		tooltipLines.add(I18n.format("info.item.engine.fuelconsumption") + stackTag.getFloat("fuelConsumption"));
+		tooltipLines.add(I18n.format("info.item.engine.maxrpm") + pack.engine.maxRPM);
+		tooltipLines.add(I18n.format("info.item.engine.maxsaferpm") + APartEngine.getSafeRPMFromMax(pack.engine.maxRPM));
+		tooltipLines.add(I18n.format("info.item.engine.fuelconsumption") + pack.engine.fuelConsumption);
 		tooltipLines.add(I18n.format("info.item.engine.hours") + Math.round(stackTag.getDouble("hours")*100D)/100D);
+		tooltipLines.add(I18n.format("info.item.engine.gearratios") + pack.engine.gearRatios[0]);
 		if(stackTag.getBoolean("oilLeak")){
 			tooltipLines.add(TextFormatting.RED + I18n.format("info.item.engine.oilleak"));
 		}

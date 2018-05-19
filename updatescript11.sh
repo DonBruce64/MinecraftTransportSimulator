@@ -10,11 +10,6 @@ FILES=$(find $DSTPATH -not -type l -not -type d)
 
 for FILE in ${FILES[*]}; do
 
-#Don't check partmodels.  Those don't change.
-if echo $FILE | grep -q "partmodels"; then
-	continue
-fi
-
 echo "Checking file " $FILE
 
 #Global variable and method name changes

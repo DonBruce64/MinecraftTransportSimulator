@@ -7,16 +7,16 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public final class PacketPartFlat extends APacketPart{
-	public PacketPartFlat(){}
+public final class PacketPartGroundDeviceFlat extends APacketPart{
+	public PacketPartGroundDeviceFlat(){}
 	
-	public PacketPartFlat(APart part){
+	public PacketPartGroundDeviceFlat(APart part){
 		super(part);
 	}
 
-	public static class Handler implements IMessageHandler<PacketPartFlat, IMessage>{
+	public static class Handler implements IMessageHandler<PacketPartGroundDeviceFlat, IMessage>{
 		@Override
-		public IMessage onMessage(final PacketPartFlat message, final MessageContext ctx){
+		public IMessage onMessage(final PacketPartGroundDeviceFlat message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){

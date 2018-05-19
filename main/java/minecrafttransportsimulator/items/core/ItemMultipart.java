@@ -1,10 +1,12 @@
 package minecrafttransportsimulator.items.core;
 
+import java.lang.reflect.Constructor;
+
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
+import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackCollisionBox;
-import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
+import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -16,19 +18,14 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ItemMultipart extends Item{
-	public final String name;
+	public final String multipartName;
 	
-	public ItemMultipart(String name){
+	public ItemMultipart(String multipartName){
 		super();
-		this.name = name;
-		this.setRegistryName(name);
-		this.setUnlocalizedName(name);
-		this.setCreativeTab(MTSRegistry.packTabs.get(name.substring(0, name.indexOf(':'))));
-	}
-	
-	@Override
-	public String getItemStackDisplayName(ItemStack stack){
-		return PackParserSystem.getDefinitionForPack(name).itemDisplayName;
+		this.multipartName = multipartName;
+		this.setRegistryName(multipartName);
+		this.setUnlocalizedName(multipartName);
+		this.setCreativeTab(MTSRegistry.packTabs.get(multipartName.substring(0, multipartName.indexOf(':'))));
 	}
 	
 	@Override
@@ -38,27 +35,30 @@ public class ItemMultipart extends Item{
 			if(heldStack.getItem() != null){
 				//We want to spawn above this block.
 				pos = pos.up();
-				String entityName = ((ItemMultipart) heldStack.getItem()).name;
+				String multipartName = ((ItemMultipart) heldStack.getItem()).multipartName;
 				try{
-					EntityMultipartMoving newEntity = PackParserSystem.getMultipartType(entityName).multipartClass.getConstructor(World.class, float.class, float.class, float.class, float.class, String.class).newInstance(world, pos.getX(), pos.getY(), pos.getZ(), player.rotationYaw, entityName);
+					Class<? extends EntityMultipartD_Moving> multipartClass = PackParserSystem.getMultipartClass(multipartName);
+					Constructor<? extends EntityMultipartD_Moving> construct = multipartClass.getConstructor(World.class, float.class, float.class, float.class, float.class, String.class);
+					EntityMultipartD_Moving newMultipart = construct.newInstance(world, pos.getX(), pos.getY(), pos.getZ(), player.rotationYaw, multipartName);
+					
 					float minHeight = 0;
-					for(PackCollisionBox collisionBox : newEntity.pack.collision){
+					for(PackCollisionBox collisionBox : newMultipart.pack.collision){
 						minHeight = Math.min(collisionBox.pos[1] - collisionBox.height/2F, minHeight);
 					}
-					newEntity.posY += -minHeight;
+					newMultipart.posY += -minHeight;
 					
-					for(MTSAxisAlignedBB coreBox : newEntity.getCurrentCollisionBoxes()){
+					for(MultipartAxisAlignedBB coreBox : newMultipart.getCurrentCollisionBoxes()){
 						if(world.collidesWithAnyBlock(coreBox)){
-							newEntity.setDead();
+							newMultipart.setDead();
 							return EnumActionResult.FAIL;
 						}
 					}
 					
-					//If we are using a picked-up vehicle, make sure to get no free windows!
+					//If we are using a picked-up multipart make sure to get no free windows!
 					if(heldStack.hasTagCompound()){
-						newEntity.brokenWindows = heldStack.getTagCompound().getByte("brokenWindows");
+						newMultipart.brokenWindows = heldStack.getTagCompound().getByte("brokenWindows");
 					}
-					world.spawnEntityInWorld(newEntity);
+					world.spawnEntityInWorld(newMultipart);
 					if(!player.capabilities.isCreativeMode){
 						player.inventory.clearMatchingItems(heldStack.getItem(), heldStack.getItemDamage(), 1, heldStack.getTagCompound());
 					}

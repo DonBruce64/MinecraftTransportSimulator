@@ -14,10 +14,10 @@ import minecrafttransportsimulator.dataclasses.MTSInstruments;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
+import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartInstruments;
 import minecrafttransportsimulator.rendering.RenderHUD;
-import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
@@ -114,8 +114,8 @@ public class GUIInstruments extends GuiScreen{
 		for(byte i=MTSInstruments.numberBlanks; i<MTSInstruments.Instruments.values().length; ++i){
 			if(hasInstrument[i]){
 				boolean isInstrumentForVehicle = false;
-				for(MultipartTypes type : MTSInstruments.Instruments.values()[i].validTypes){
-					if(type.multipartClass.isAssignableFrom(vehicle.getClass())){
+				for(Class<? extends EntityMultipartD_Moving> validClass : MTSInstruments.Instruments.values()[i].validClasses){
+					if(validClass.isAssignableFrom(vehicle.getClass())){
 						isInstrumentForVehicle = true;
 						break;
 					}

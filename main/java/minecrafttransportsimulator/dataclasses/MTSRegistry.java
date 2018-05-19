@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.dataclasses;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockFuelPump;
@@ -17,6 +17,8 @@ import minecrafttransportsimulator.items.core.ItemMultipart;
 import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.items.parts.ItemPartEngine;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.BrakePacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
@@ -29,27 +31,29 @@ import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.general.ChatPacket;
-import minecrafttransportsimulator.packets.general.FuelPumpConnectDisconnectPacket;
+import minecrafttransportsimulator.packets.general.FuelPumpConnectionPacket;
 import minecrafttransportsimulator.packets.general.FuelPumpFillDrainPacket;
 import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
-import minecrafttransportsimulator.packets.general.MultipartPartAdditionPacket;
-import minecrafttransportsimulator.packets.general.MultipartPartInteractionPacket;
 import minecrafttransportsimulator.packets.general.PackReloadPacket;
 import minecrafttransportsimulator.packets.general.PropellerBenchUpdatePacket;
 import minecrafttransportsimulator.packets.general.TileEntityClientServerHandshakePacket;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartAttacked;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInit;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInitResponse;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartClientPartAddition;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartClientPartRemoval;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartDeltas;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartInstruments;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartKey;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartNameTag;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartServerPartAddition;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartWindowBreak;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartWindowFix;
-import minecrafttransportsimulator.packets.parts.PacketPartEngine;
-import minecrafttransportsimulator.packets.parts.PacketPartFlat;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
+import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceFlat;
+import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.init.Blocks;
@@ -87,9 +91,6 @@ public final class MTSRegistry{
 	/**Maps part item names to items.  All part items for all packs will be populated here.*/
 	public static Map<String, AItemPart> partItemMap = new HashMap<String, AItemPart>();
 	
-	/**Maps item names to their recipes.*/
-	public static Map<String, ItemStack[]> craftingItemMap = new HashMap<String, ItemStack[]>();
-	
 	/**Core creative tab for base MTS items**/
 	public static final CreativeTabCore coreTab = new CreativeTabCore();
 	
@@ -123,7 +124,6 @@ public final class MTSRegistry{
 		initPartRecipes();
 		initEngineRecipes();
 		initAircraftInstrumentRecipes();
-		initPackRecipes();
 	}
 	
 	/**
@@ -181,48 +181,27 @@ public final class MTSRegistry{
 		
 		//Next register multipart items.
 		List<String> nameList = new ArrayList<String>(PackParserSystem.getAllMultipartPackNames());
-		for(String name : nameList){
-			MultipartTypes type = PackParserSystem.getMultipartType(name);
-			if(type != null){
-				ItemMultipart itemMultipart = new ItemMultipart(name);
-				multipartItemMap.put(name, itemMultipart);
-				event.getRegistry().register(itemMultipart);
-				MTSRegistry.itemList.add(itemMultipart);
-			}
-		}
-		
-		//Finally, register all parts.
-		nameList = new ArrayList<String>(PackParserSystem.getAllPartPackNames());
-		for(String name : nameList){
-			PackPartObject partPack = PackParserSystem.getPartPack(name);
-			AItemPart itemPart;
-			if(partPack.general.type.contains("engine")){
-				if(partPack.general.type.contains("aircraft")){
-					
-				}else if(partPack.general.type.contains("car")){
-					
-				}
-			}else if(partPack.general.type.equals("ground_device")){
-				itemPart = new 
-			}else if(partPack.general.type.equals("propeller")){
-				
-			}else{
-				itemPart = null;
-			}
-			if(type != null){
-				AItemPart itemPart = new ItemMultipart(name);
-				partItemMap.put(name, itemPart);
-				event.getRegistry().register(itemPart);
-				MTSRegistry.itemList.add(itemPart);
-			}
-			AItemPart itemPart= new AItemPart(name);
-			multipartItemMap.put(name, itemMultipart);
-			event.getRegistry().register(itemMultipart.setRegistryName(name).setUnlocalizedName(name));
+		for(String multipartName : nameList){
+			ItemMultipart itemMultipart = new ItemMultipart(multipartName);
+			multipartItemMap.put(multipartName, itemMultipart);
+			event.getRegistry().register(itemMultipart);
 			MTSRegistry.itemList.add(itemMultipart);
 		}
 		
-
-		MTSAchievements.init();
+		//Now register part items.
+		nameList = new ArrayList<String>(PackParserSystem.getAllPartPackNames());
+		for(String partName : nameList){
+			try{
+				Class<? extends AItemPart> itemClass = PackParserSystem.getPartItemClass(partName);
+				Constructor<? extends AItemPart> construct = itemClass.getConstructor(String.class);
+				AItemPart itemPart = construct.newInstance(partName);
+				partItemMap.put(partName, itemPart);
+				event.getRegistry().register(itemPart);
+				MTSRegistry.itemList.add(itemPart);
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/**
@@ -231,38 +210,15 @@ public final class MTSRegistry{
 	 * the pack data stored in NBT is what makes for different vehicles.
 	 */
 	private static void initMultipartEntities(){
-		for(MultipartTypes type : PackParserSystem.MultipartTypes.values()){
-			EntityRegistry.registerModEntity(type.multipartClass, type.multipartClass.getSimpleName().substring(6).toLowerCase(), entityNumber++, MTS.MODID, 80, 5, false);
-		}
+		EntityRegistry.registerModEntity(EntityMultipartF_Car.class, "multipartcar", entityNumber++, MTS.MODID, 80, 5, false);
+		EntityRegistry.registerModEntity(EntityMultipartF_Plane.class, "multipartplane", entityNumber++, MTS.MODID, 80, 5, false);
 	}
 	
 	private static void initPackets(){
-		registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
-		registerPacket(PacketMultipartClientInit.class, PacketMultipartClientInit.Handler.class, false, true);
-		registerPacket(PacketPartFlat.class, PacketPartFlat.Handler.class, true, false);
-		registerPacket(FuelPumpConnectDisconnectPacket.class, FuelPumpConnectDisconnectPacket.Handler.class, true, false);
-		registerPacket(FuelPumpFillDrainPacket.class, FuelPumpFillDrainPacket.Handler.class, true, false);
-		registerPacket(PacketMultipartInstruments.class, PacketMultipartInstruments.Handler.class, true, true);
-		registerPacket(ManualPageUpdatePacket.class, ManualPageUpdatePacket.Handler.class, false, true);
-		
-		registerPacket(PacketMultipartAttacked.class, PacketMultipartAttacked.Handler.class, false, true);
-		registerPacket(PacketMultipartWindowFix.class, PacketMultipartWindowFix.Handler.class, true, true);
-		registerPacket(PacketMultipartKey.class, PacketMultipartKey.Handler.class, true, true);
-		registerPacket(PacketMultipartNameTag.class, PacketMultipartNameTag.Handler.class, true, true);
-		registerPacket(PacketMultipartDeltas.class, PacketMultipartDeltas.Handler.class, true, false);
-		registerPacket(PacketMultipartWindowBreak.class, PacketMultipartWindowBreak.Handler.class, true, false);
-		registerPacket(MultipartPartAdditionPacket.class, MultipartPartAdditionPacket.Handler.class, false, true);
-		registerPacket(MultipartPartInteractionPacket.class, MultipartPartInteractionPacket.Handler.class, false, true);
-		
-		registerPacket(PackReloadPacket.class, PackReloadPacket.Handler.class, true, true);
-		registerPacket(PropellerBenchUpdatePacket.class, PropellerBenchUpdatePacket.Handler.class, true, true);
-		registerPacket(PacketMultipartClientInitResponse.class, PacketMultipartClientInitResponse.Handler.class, true, false);
-		registerPacket(TileEntityClientServerHandshakePacket.class, TileEntityClientServerHandshakePacket.Handler.class, true, true);
-		
+		//Packets in packets.control
 		registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
 		registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);
 		registerPacket(ElevatorPacket.class, ElevatorPacket.Handler.class, true, true);
-		registerPacket(PacketPartEngine.class, PacketPartEngine.Handler.class, true, true);
 		registerPacket(FlapPacket.class, FlapPacket.Handler.class, true, true);
 		registerPacket(HornPacket.class, HornPacket.Handler.class, true, true);
 		registerPacket(LightPacket.class, LightPacket.Handler.class, true, true);
@@ -271,6 +227,35 @@ public final class MTSRegistry{
 		registerPacket(SteeringPacket.class, SteeringPacket.Handler.class, true, true);
 		registerPacket(ThrottlePacket.class, ThrottlePacket.Handler.class, true, true);
 		registerPacket(TrimPacket.class, TrimPacket.Handler.class, true, true);
+		
+		//Packets in packets.general
+		registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
+		registerPacket(FuelPumpConnectionPacket.class, FuelPumpConnectionPacket.Handler.class, true, false);
+		registerPacket(FuelPumpFillDrainPacket.class, FuelPumpFillDrainPacket.Handler.class, true, false);
+		registerPacket(ManualPageUpdatePacket.class, ManualPageUpdatePacket.Handler.class, false, true);
+		registerPacket(PackReloadPacket.class, PackReloadPacket.Handler.class, true, true);
+		registerPacket(PropellerBenchUpdatePacket.class, PropellerBenchUpdatePacket.Handler.class, true, true);
+		registerPacket(TileEntityClientServerHandshakePacket.class, TileEntityClientServerHandshakePacket.Handler.class, true, true);
+		
+		//Packets in packets.multipart.
+		registerPacket(PacketMultipartAttacked.class, PacketMultipartAttacked.Handler.class, false, true);
+		registerPacket(PacketMultipartClientInit.class, PacketMultipartClientInit.Handler.class, false, true);
+		registerPacket(PacketMultipartClientInitResponse.class, PacketMultipartClientInitResponse.Handler.class, true, false);
+		registerPacket(PacketMultipartClientPartAddition.class, PacketMultipartClientPartAddition.Handler.class, true, false);
+		registerPacket(PacketMultipartClientPartRemoval.class, PacketMultipartClientPartRemoval.Handler.class, true, false);
+		registerPacket(PacketMultipartDeltas.class, PacketMultipartDeltas.Handler.class, true, false);
+		registerPacket(PacketMultipartInstruments.class, PacketMultipartInstruments.Handler.class, true, true);
+		registerPacket(PacketMultipartKey.class, PacketMultipartKey.Handler.class, true, true);
+		registerPacket(PacketMultipartNameTag.class, PacketMultipartNameTag.Handler.class, true, true);
+		registerPacket(PacketMultipartServerPartAddition.class, PacketMultipartServerPartAddition.Handler.class, false, true);
+		registerPacket(PacketMultipartWindowBreak.class, PacketMultipartWindowBreak.Handler.class, true, false);
+		registerPacket(PacketMultipartWindowFix.class, PacketMultipartWindowFix.Handler.class, true, true);
+		
+		//Packets in packets.parts
+		registerPacket(PacketPartEngineDamage.class, PacketPartEngineDamage.Handler.class, true, false);
+		registerPacket(PacketPartEngineSignal.class, PacketPartEngineSignal.Handler.class, true, true);
+		registerPacket(PacketPartGroundDeviceFlat.class, PacketPartGroundDeviceFlat.Handler.class, true, false);
+		registerPacket(PacketPartInteraction.class, PacketPartInteraction.Handler.class, false, true);
 	}
 	
 	private static void initPartRecipes(){
@@ -592,47 +577,6 @@ public final class MTSRegistry{
 				'L', pointerLong,  
 				'G', new ItemStack(Items.DYE, 1, 10),
 				'R', new ItemStack(Items.DYE, 1, 1));
-	}
-
-	private static void initPackRecipes(){
-		for(Entry<String, ItemMultipart> mapEntry : multipartItemMap.entrySet()){
-			String name = mapEntry.getKey();
-			try{
-				//Init multipart recipes.
-				//Convert strings into ItemStacks
-				Character[] indexes = new Character[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'};
-				String[] craftingRows = new String[]{"", "", ""};
-				List<ItemStack> stacks = new ArrayList<ItemStack>();
-				ItemStack[] craftingArray = new ItemStack[9];
-				String[] recipe = PackParserSystem.getDefinitionForPack(name).recipe;
-				for(byte i=0; i<9; ++i){
-					if(!recipe[i].isEmpty()){
-						Item item = Item.getByNameOrId(recipe[i].substring(0, recipe[i].lastIndexOf(':')));
-						int damage = Integer.valueOf(recipe[i].substring(recipe[i].lastIndexOf(':') + 1));
-						craftingRows[i/3] = craftingRows[i/3] + indexes[stacks.size()];
-						stacks.add(new ItemStack(item, 1, damage));
-						craftingArray[i] = stacks.get(stacks.size() - 1); 
-					}else{
-						craftingRows[i/3] = craftingRows[i/3] + ' ';
-					}
-				}
-	
-				//Create the object array that is going to be registered.
-				Object[] registryObject = new Object[craftingRows.length + stacks.size()*2];
-				registryObject[0] = craftingRows[0];
-				registryObject[1] = craftingRows[1];
-				registryObject[2] = craftingRows[2];
-				for(byte i=0; i<stacks.size(); ++i){
-					registryObject[3 + i*2] = indexes[i];
-					registryObject[3 + i*2 + 1] = stacks.get(i);
-				}
-				//Now register the recipe and add the stacks to the crafting item map.
-				registerRecipe(new ItemStack(mapEntry.getValue()), registryObject);
-				craftingItemMap.put(name, craftingArray);
-			}catch(Exception e){
-				MTS.MTSLog.error("ERROR ADDING CRAFTING RECIPE FOR: " + name);
-			}
-		}
 	}
 	
 	/**

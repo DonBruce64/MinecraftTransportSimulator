@@ -10,17 +10,6 @@ FILES=$(find $DSTPATH -not -type l -not -type d)
 
 for FILE in ${FILES[*]}; do
 
-#Don't check partmodels.  Those don't change.
-if echo $FILE | grep -q "partmodels"; then
-	continue
-fi
-
-#Minecraft replaced Acheivements with Advancements in 1.12. Delete the Achivement file and skip
-if echo $FILE | grep -q "MTSAchievements"; then
-	rm $FILE
-	continue;
-fi
-
 echo "Checking file " $FILE
 
 #Global variable and method name changes
@@ -83,7 +72,7 @@ if echo $FILE | grep -q "MTSRegistry"; then
 	sed -i 's/GameRegistry.addShapedRecipe(output, params)/GameRegistry.addShapedRecipe(new ResourceLocation(MTS.MODID, output.getItem().getUnlocalizedName() + craftingNumber), null, output, params)/' $FILE
 fi
 
-#Block slipperiness was changed to be state-dependent, and vector coord names were shortened.
+#Block slipperiness was changed to be state-dependent.
 if echo $FILE | grep -q "EntityMultipartMoving"; then
 	sed -i 's/world.getBlockState(pos).getBlock().slipperiness/world.getBlockState(pos).getBlock().getSlipperiness(world.getBlockState(pos), world, pos, null)/' $FILE
 	sed -i 's/world.getBlockState(pos).getBlock().slipperiness/world.getBlockState(pos).getBlock().getSlipperiness(world.getBlockState(pos), world, pos, null)/' $FILE
@@ -92,9 +81,6 @@ fi
 if echo $FILE | grep -q "EntityEngineCar"; then
 	sed -i 's/world.getBlockState(wheel.getPosition().down()).getBlock().slipperiness/world.getBlockState(wheel.getPosition().down()).getBlock().getSlipperiness(world.getBlockState(wheel.getPosition().down()), world, wheel.getPosition().down(), null)/' $FILE
 fi
-
-#Remove possible references to the old Acheivement system.
-sed -i '/MTSAchievements/d' $FILE
 
 done
 

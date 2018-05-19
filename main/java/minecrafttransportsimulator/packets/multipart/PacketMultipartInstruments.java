@@ -2,7 +2,6 @@ package minecrafttransportsimulator.packets.multipart;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
@@ -67,7 +66,6 @@ public class PacketMultipartInstruments extends APacketMultipartPlayer{
 						
 						multipart.setInstrumentNumber(message.instrumentToChange, Instruments.values()[message.instrumentToChangeTo]);
 						if(ctx.side.isServer()){
-							MTSAchievements.triggerInstrument(player);
 							MTS.MTSNet.sendToAll(message);
 						}
 					}

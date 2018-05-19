@@ -13,7 +13,6 @@ import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
@@ -260,8 +259,8 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 		for(byte i = 0; i<pack.motorized.instruments.size(); ++i){
 			PackInstrument packDef = pack.motorized.instruments.get(i);
 			//Check to prevent loading of faulty instruments for the wrong vehicle due to updates or stupid people.
-			for(MultipartTypes type : Instruments.values()[instrumentsInSlots[i]].validTypes){
-				if(type.name().toLowerCase().equals(pack.general.type)){
+			for(Class<? extends EntityMultipartD_Moving>  validClass : Instruments.values()[instrumentsInSlots[i]].validClasses){
+				if(validClass.isAssignableFrom(this.getClass())){
 					instruments.put(i, Instruments.values()[instrumentsInSlots[i]]);
 				}
 			}

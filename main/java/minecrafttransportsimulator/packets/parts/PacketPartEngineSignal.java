@@ -8,12 +8,12 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class PacketPartEngine extends APacketPart{
+public class PacketPartEngineSignal extends APacketPart{
 	private byte packetType;
 
-	public PacketPartEngine(){}
+	public PacketPartEngineSignal(){}
 	
-	public PacketPartEngine(APartEngine engine, PacketEngineTypes packetType){
+	public PacketPartEngineSignal(APartEngine engine, PacketEngineTypes packetType){
 		super(engine);
 		this.packetType = (byte) packetType.ordinal();
 	}
@@ -30,8 +30,8 @@ public class PacketPartEngine extends APacketPart{
 		buf.writeByte(this.packetType);
 	}
 
-	public static class Handler implements IMessageHandler<PacketPartEngine, IMessage>{
-		public IMessage onMessage(final PacketPartEngine message, final MessageContext ctx){
+	public static class Handler implements IMessageHandler<PacketPartEngineSignal, IMessage>{
+		public IMessage onMessage(final PacketPartEngineSignal message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){

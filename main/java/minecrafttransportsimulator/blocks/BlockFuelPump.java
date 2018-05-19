@@ -3,7 +3,6 @@ package minecrafttransportsimulator.blocks;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import net.minecraft.block.material.Material;
@@ -63,7 +62,6 @@ public class BlockFuelPump extends ABlockRotateable{
     			if(nearestEntity != null){
     				pump.setConnectedVehicle((EntityMultipartE_Vehicle) nearestEntity);
 					MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.connect"), (EntityPlayerMP) player);
-					MTSAchievements.triggerFuel(player);
     			}else{
     				MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.toofar"), (EntityPlayerMP) player);
     			}

@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.multipart.parts;
 
-import minecrafttransportsimulator.entities.parts.PartPropeller;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import net.minecraft.nbt.NBTTagCompound;
@@ -39,7 +38,7 @@ public class PartEngineAircraft extends APartEngine{
 	@Override
 	protected void explodeEngine(){
 		super.explodeEngine();
-		if(this.propeller != null){
+		if(this.propeller != null && !multipart.worldObj.isRemote){
 			multipart.removePart(propeller, true);
 		}
 	}

@@ -2,8 +2,8 @@ package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.parts.EntityEngineCar;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
+import minecrafttransportsimulator.multipart.parts.PartEngineCar;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -45,14 +45,14 @@ public class ShiftPacket implements IMessage{
 						thisEntity = (EntityMultipartF_Car) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
-						EntityEngineCar carEngine = (EntityEngineCar) thisEntity.getEngineByNumber((byte) 1);
+						PartEngineCar carEngine = (PartEngineCar) thisEntity.getEngineByNumber((byte) 1);
 						if(carEngine != null){
 							if(message.shiftUp){
-								if(carEngine.isAutomatic ? carEngine.getCurrentGear() < 1 : true){
+								if(carEngine.pack.engine.isAutomatic ? carEngine.currentGear < 1 : true){
 									carEngine.shiftUp();
 								}
 							}else{
-								if(carEngine.isAutomatic ? carEngine.getCurrentGear() > -1 : true){
+								if(carEngine.pack.engine.isAutomatic ? carEngine.currentGear > -1 : true){
 									carEngine.shiftDown();
 								}
 							}

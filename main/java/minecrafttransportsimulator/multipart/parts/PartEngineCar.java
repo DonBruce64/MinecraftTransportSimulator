@@ -46,9 +46,9 @@ public class PartEngineCar extends APartEngine{
 		//Do automatic transmission functions if needed.
 		if(state.running && pack.engine.isAutomatic){
 			if(currentGear > 0){
-				if(RPM > getMaxSafeRPM()*0.5F*(1.0F + car.throttle/100F)){
+				if(RPM > getSafeRPMFromMax(this.pack.engine.maxRPM)*0.5F*(1.0F + car.throttle/100F)){
 					shiftUp();
-				}else if(RPM < getMaxSafeRPM()*0.25*(1.0F + car.throttle/100F) && currentGear > 1){
+				}else if(RPM < getSafeRPMFromMax(this.pack.engine.maxRPM)*0.25*(1.0F + car.throttle/100F) && currentGear > 1){
 					shiftDown();
 				}
 			}
@@ -71,7 +71,7 @@ public class PartEngineCar extends APartEngine{
 		if(state.running || state.esOn){
 			double engineTargetRPM = car.throttle/100F*(pack.engine.maxRPM - engineStartRPM/1.25 - hours) + engineStartRPM/1.25;
 			if(getRatioForCurrentGear() != 0){
-				double engineTorque = RPM/(getMaxSafeRPM() - 3000*(1500/getMaxSafeRPM()))*getRatioForCurrentGear()*pack.engine.fuelConsumption*2.0F;
+				double engineTorque = RPM/(getSafeRPMFromMax(this.pack.engine.maxRPM) - 3000*(1500/getSafeRPMFromMax(this.pack.engine.maxRPM)))*getRatioForCurrentGear()*pack.engine.fuelConsumption*2.0F;
 				
 				//Check to see if the wheels have enough friction to affect the engine.
 				engineForce = (engineTargetRPM - RPM)/pack.engine.maxRPM*engineTorque;
@@ -92,7 +92,7 @@ public class PartEngineCar extends APartEngine{
 				}
 			}else{
 				RPM += (engineTargetRPM - RPM)/10;
-				if(RPM > getMaxSafeRPM()){
+				if(RPM > getSafeRPMFromMax(this.pack.engine.maxRPM)){
 					RPM -= (engineTargetRPM - RPM)/5;
 				}
 				engineForce = 0;

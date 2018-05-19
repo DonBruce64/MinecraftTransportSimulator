@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.entities.core.EntityMultipartMoving;
+import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -38,21 +38,21 @@ public class BrakePacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartMoving thisEntity;
+					EntityMultipartD_Moving multipart;
 					if(ctx.side.isServer()){
-						thisEntity = (EntityMultipartMoving) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						multipart = (EntityMultipartD_Moving) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 					}else{
-						thisEntity = (EntityMultipartMoving) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						multipart = (EntityMultipartD_Moving) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
-					if(thisEntity!=null){
+					if(multipart!=null){
 						if((message.brakeCode & 2) == 2){
-							thisEntity.brakeOn = (message.brakeCode & 1) == 1 ? true : false;
+							multipart.brakeOn = (message.brakeCode & 1) == 1 ? true : false;
 						}
 						if((message.brakeCode & 8) == 8){
-							boolean wasParkingBrakeOn = thisEntity.parkingBrakeOn;
-							thisEntity.parkingBrakeOn = (message.brakeCode & 4) == 4 ? true : false;
-							if(thisEntity.parkingBrakeOn && !wasParkingBrakeOn && thisEntity instanceof EntityMultipartF_Car && thisEntity.pack != null && thisEntity.pack.car.isBigTruck){
-								MTS.proxy.playSound(thisEntity, MTS.MODID + ":air_brake_activating", 1.0F, 1);
+							boolean wasParkingBrakeOn = multipart.parkingBrakeOn;
+							multipart.parkingBrakeOn = (message.brakeCode & 4) == 4 ? true : false;
+							if(multipart.parkingBrakeOn && !wasParkingBrakeOn && multipart instanceof EntityMultipartF_Car && multipart.pack != null && multipart.pack.car.isBigTruck){
+								MTS.proxy.playSound(multipart.getPositionVector(), MTS.MODID + ":air_brake_activating", 1.0F, 1);
 							}
 						}
 						if(ctx.side.isServer()){

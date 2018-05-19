@@ -2,7 +2,9 @@ package minecrafttransportsimulator.items.parts;
 
 import java.util.List;
 
-import minecrafttransportsimulator.multipart.parts.PartEngineCar;
+import minecrafttransportsimulator.dataclasses.PackPartObject;
+import minecrafttransportsimulator.multipart.parts.APartEngine;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -13,23 +15,32 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public final class ItemPartEngineCar extends AItemPartEngine{
 	
-	public ItemPartEngineCar(){
-		super(PartEngineCar.class);
+	public ItemPartEngineCar(String partName){
+		super(partName);
 	}
 	
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
 		NBTTagCompound stackTag = stack.getTagCompound();
+		PackPartObject pack = PackParserSystem.getPartPack(((ItemPartEngineCar) stack.getItem()).partName); 
+		
 		if(stackTag.getBoolean("isCreative")){
 			tooltipLines.add(TextFormatting.DARK_PURPLE + I18n.format("info.item.engine.creative"));
 		}
-		tooltipLines.add(stackTag.getBoolean("isAutomatic") ? I18n.format("info.item.engine.automatic") : I18n.format("info.item.engine.manual"));
-		tooltipLines.add(I18n.format("info.item.engine.numbergears") + stackTag.getByte("numberGears"));
-		tooltipLines.add(I18n.format("info.item.engine.maxrpm") + stackTag.getInteger("maxRPM"));
-		tooltipLines.add(I18n.format("info.item.engine.maxsaferpm") + stackTag.getInteger("maxSafeRPM"));
-		tooltipLines.add(I18n.format("info.item.engine.fuelconsumption") + stackTag.getFloat("fuelConsumption"));
+		tooltipLines.add(I18n.format("info.item.engine.maxrpm") + pack.engine.maxRPM);
+		tooltipLines.add(I18n.format("info.item.engine.maxsaferpm") + APartEngine.getSafeRPMFromMax(pack.engine.maxRPM));
+		tooltipLines.add(I18n.format("info.item.engine.fuelconsumption") + pack.engine.fuelConsumption);
 		tooltipLines.add(I18n.format("info.item.engine.hours") + Math.round(stackTag.getDouble("hours")*100D)/100D);
+		tooltipLines.add(I18n.format("info.item.engine.gearratios"));
+		for(byte i=1; i<pack.engine.gearRatios.length; i+=2){
+			String gearRatios = String.valueOf(pack.engine.gearRatios[i]);
+			if(i+1 < pack.engine.gearRatios.length){
+				gearRatios += ",   " + String.valueOf(pack.engine.gearRatios[i+1]);
+			}
+			tooltipLines.add(gearRatios);
+		}
+		
 		if(stackTag.getBoolean("oilLeak")){
 			tooltipLines.add(TextFormatting.RED + I18n.format("info.item.engine.oilleak"));
 		}

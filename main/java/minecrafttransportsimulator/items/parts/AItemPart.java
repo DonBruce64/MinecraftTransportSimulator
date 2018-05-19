@@ -1,14 +1,17 @@
 package minecrafttransportsimulator.items.parts;
 
-import minecrafttransportsimulator.multipart.parts.APart;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import net.minecraft.item.Item;
 
 public abstract class AItemPart extends Item{
-	public final Class<? extends APart> partClass;
+	public final String partName;
 	
-	public AItemPart(Class<? extends APart> partClass){
-		this.partClass = partClass;
-		this.hasSubtypes=true;
+	public AItemPart(String partName){
+		super();
 		this.setMaxStackSize(1);
+		this.partName = partName;
+		this.setRegistryName(partName);
+		this.setUnlocalizedName(partName);
+		this.setCreativeTab(MTSRegistry.packTabs.get(partName.substring(0, partName.indexOf(':'))));
 	}
 }

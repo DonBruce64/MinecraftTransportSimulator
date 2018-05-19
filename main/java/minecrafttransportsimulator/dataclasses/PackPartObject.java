@@ -8,8 +8,7 @@ public class PackPartObject{
 
     public class PartGeneralConfig{
     	public String type;
-    	public String partDisplayName;
-    	public String[] craftingIngredients;
+    	public String[] materials;
     }
     
     public class PartEngineConfig{

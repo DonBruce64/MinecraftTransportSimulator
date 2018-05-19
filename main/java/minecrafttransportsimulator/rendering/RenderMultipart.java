@@ -10,27 +10,23 @@ import java.util.Map.Entry;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MTSAxisAlignedBB;
+import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackControl;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackDisplayText;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackFileDefinitions;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackRotatableModelObject;
-import minecrafttransportsimulator.entities.core.EntityMultipartChild;
-import minecrafttransportsimulator.entities.core.EntityMultipartVehicle;
-import minecrafttransportsimulator.entities.parts.EntityEngineCar;
-import minecrafttransportsimulator.entities.parts.EntitySeat;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
+import minecrafttransportsimulator.multipart.parts.APart;
+import minecrafttransportsimulator.multipart.parts.PartEngineCar;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -59,19 +55,26 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
  */
 public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	private static final Minecraft minecraft = Minecraft.getMinecraft();
-	/**Display list GL integers.  Keyed by model name.*/
+	
+	/**Display list GL integers.  Keyed by multipart JSON name or part name.*/
 	private static final Map<String, Integer> displayLists = new HashMap<String, Integer>();
-	/**Rotatable parts for models.  Keyed by model name.*/
+	
+	/**Rotatable parts for models.  Keyed by multipart JSON name.*/
 	private static final Map<String, List<RotatablePart>> rotatableLists = new HashMap<String, List<RotatablePart>>();
-	/**Window parts for models.  Keyed by model name.*/
+	
+	/**Window parts for models.  Keyed by multipart JSON name.*/
 	private static final Map<String, List<WindowPart>> windowLists = new HashMap<String, List<WindowPart>>();
-	/**Lights for models.  Keyed by model name.*/
+	
+	/**Lights for models.  Keyed by multipart JSON name.*/
 	private static final Map<String, List<LightPart>> lightLists = new HashMap<String, List<LightPart>>();
-	/**Model texture name.  Keyed by model name.*/
+	
+	/**Multipart texture name.  Keyed by multipart name (NOT JSON!) or part name.*/
 	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
+	
 	private static final Map<EntityMultipartD_Moving, Byte> lastRenderPass = new HashMap<EntityMultipartD_Moving, Byte>();
 	private static final Map<EntityMultipartD_Moving, Long> lastRenderTick = new HashMap<EntityMultipartD_Moving, Long>();
 	private static final Map<EntityMultipartD_Moving, Float> lastRenderPartial = new HashMap<EntityMultipartD_Moving, Float>();
+		
 	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lensflare.png");
 	private static final ResourceLocation lightTexture = new ResourceLocation(MTS.MODID, "textures/rendering/light.png");
@@ -79,7 +82,6 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	
 	public RenderMultipart(RenderManager renderManager){
 		super(renderManager);
-		RenderMultipartChild.init();
 	}
 
 	@Override
@@ -121,7 +123,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	}
 	
 	public static boolean doesMultipartHaveLight(EntityMultipartE_Vehicle vehicle, LightTypes light){
-		for(LightPart lightPart : lightLists.get(vehicle.pack.rendering.modelName)){
+		for(LightPart lightPart : lightLists.get(vehicle.multipartJSONName)){
 			if(lightPart.type.equals(light)){
 				return true;
 			}
@@ -153,15 +155,10 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
         RenderHelper.enableStandardItemLighting();
         
 		//Bind texture.  Adds new element to cache if needed.
-		PackFileDefinitions definition = PackParserSystem.getDefinitionForPack(multipart.pack.general.name);
-		if(!textureMap.containsKey(definition.modelTexture)){
-			if(definition.modelTexture.contains(":")){
-				textureMap.put(multipart.pack.general.name, new ResourceLocation(definition.modelTexture));
-			}else{
-				textureMap.put(multipart.pack.general.name, new ResourceLocation(MTS.MODID, "textures/models/" + definition.modelTexture));
-			}
+		if(!textureMap.containsKey(multipart.multipartName)){
+			textureMap.put(multipart.multipartName, new ResourceLocation(multipart.multipartName.substring(0, multipart.multipartName.indexOf(':')), "textures/models/" + multipart.multipartName.substring(multipart.multipartName.indexOf(':') + 1)));
 		}
-		minecraft.getTextureManager().bindTexture(textureMap.get(multipart.pack.general.name));
+		minecraft.getTextureManager().bindTexture(textureMap.get(multipart.multipartName));
 		//Render all the model parts except windows.
 		//Those need to be rendered after the player if the player is rendered manually.
 		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
@@ -170,7 +167,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	        GL11.glRotated(rotatePitch, 1, 0, 0);
 	        GL11.glRotated(rotateRoll, 0, 0, 1);
 			renderMainModel(multipart);
-			renderChildren(multipart, partialTicks);
+			renderParts(multipart, partialTicks);
 			GL11.glEnable(GL11.GL_NORMALIZE);
 			renderWindows(multipart);
 			renderTextMarkings(multipart);
@@ -202,7 +199,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		//Lights and beacons get rendered in two passes.
 		//The first renders the cases and bulbs, the second renders the beams and effects.
 		//Make sure the light list is populated here before we try to render this, as loading de-syncs can leave it null.
-		if(multipart instanceof EntityMultipartE_Vehicle && lightLists.get(multipart.pack.rendering.modelName) != null){
+		if(multipart instanceof EntityMultipartE_Vehicle && lightLists.get(multipart.multipartJSONName) != null){
 			EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) multipart;
 			float sunLight = vehicle.worldObj.getSunBrightness(0)*vehicle.worldObj.getLightBrightness(vehicle.getPosition());
 			float blockLight = vehicle.worldObj.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, vehicle.getPosition())/15F;
@@ -246,12 +243,12 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glPushMatrix();
 		//Normally we use the pack name, but since all displaylists
 		//are the same for all models, this is more appropriate.
-		if(displayLists.containsKey(multipart.pack.rendering.modelName)){
-			GL11.glCallList(displayLists.get(multipart.pack.rendering.modelName));
+		if(displayLists.containsKey(multipart.multipartJSONName)){
+			GL11.glCallList(displayLists.get(multipart.multipartJSONName));
 			
 			//The display list only renders static parts.  We need to render dynamic ones manually.
 			//If this is a window, don't render it as that gets done all at once later.
-			for(RotatablePart rotatable : rotatableLists.get(multipart.pack.rendering.modelName)){
+			for(RotatablePart rotatable : rotatableLists.get(multipart.multipartJSONName)){
 				if(!rotatable.name.contains("window")){
 					GL11.glPushMatrix();
 					rotateObject(multipart, rotatable);
@@ -266,7 +263,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				}
 			}
 		}else{
-			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/" + PackParserSystem.getPack(multipart.name).rendering.modelName));
+			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(new ResourceLocation(multipart.multipartName.substring(0, multipart.multipartName.indexOf(':')), "objmodels/vehicles/" + multipart.multipartJSONName + ".obj"));
 			int displayListIndex = GL11.glGenLists(1);
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 			GL11.glBegin(GL11.GL_TRIANGLES);
@@ -299,12 +296,12 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			}
 			
 			//Now finalize the maps.
-			rotatableLists.put(multipart.pack.rendering.modelName, rotatableParts);
-			windowLists.put(multipart.pack.rendering.modelName, windows);
-			lightLists.put(multipart.pack.rendering.modelName, lightParts);
+			rotatableLists.put(multipart.multipartJSONName, rotatableParts);
+			windowLists.put(multipart.multipartJSONName, windows);
+			lightLists.put(multipart.multipartJSONName, lightParts);
 			GL11.glEnd();
 			GL11.glEndList();
-			displayLists.put(multipart.pack.rendering.modelName, displayListIndex);
+			displayLists.put(multipart.multipartJSONName, displayListIndex);
 		}
 		GL11.glPopMatrix();
 	}
@@ -321,11 +318,11 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	private static float getRotationAngleForVariable(EntityMultipartD_Moving multipart, String variable){
 		switch(variable){
 			case("door"): return multipart.parkingBrakeOn && multipart.velocity == 0 && !multipart.locked ? 60 : 0;
-			case("throttle"): return ((EntityMultipartVehicle) multipart).throttle/4F;
+			case("throttle"): return ((EntityMultipartE_Vehicle) multipart).throttle/4F;
 			case("brake"): return multipart.brakeOn ? 30 : 0;
 			case("p_brake"): return multipart.parkingBrakeOn ? 30 : 0;
-			case("gearshift"): return ((EntityMultipartVehicle) multipart).getEngineByNumber((byte) 1) != null ? (((EntityEngineCar) ((EntityMultipartVehicle) multipart).getEngineByNumber((byte) 1)).isAutomatic ? Math.min(1, ((EntityEngineCar) ((EntityMultipartVehicle) multipart).getEngineByNumber((byte) 1)).getCurrentGear()) : ((EntityEngineCar) ((EntityMultipartVehicle) multipart).getEngineByNumber((byte) 1)).getCurrentGear())*5 : 0;
-			case("driveshaft"): return (float) (((EntityMultipartVehicle) multipart).getEngineByNumber((byte) 1) != null ? ((EntityMultipartVehicle) multipart).getEngineByNumber((byte) 1).RPM/((EntityEngineCar) ((EntityMultipartVehicle) multipart).getEngineByNumber((byte) 1)).getRatioForGear(((EntityEngineCar) ((EntityMultipartVehicle) multipart).getEngineByNumber((byte) 1)).getCurrentGear()) : 0);
+			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).pack.engine.isAutomatic ? Math.min(1, ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).currentGear) : ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).currentGear)*5 : 0;
+			case("driveshaft"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1) != null ? ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1).RPM/((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).pack.engine.gearRatios[((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).currentGear] : 0);
 			case("steeringwheel"): return multipart.getSteerAngle();
 			
 			case("aileron"): return ((EntityMultipartF_Plane) multipart).aileronAngle/10F;
@@ -336,18 +333,47 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 	}
 	
-	private static void renderChildren(EntityMultipartD_Moving multipart, float partialTicks){
-		for(EntityMultipartChild child : multipart.getChildren()){
+	private static void renderParts(EntityMultipartD_Moving multipart, float partialTicks){
+		for(APart part : multipart.getMultipartParts()){
+			if(part.getModelLocation() == null){
+				continue;
+			}
+			
 			GL11.glPushMatrix();
-    		GL11.glTranslatef(child.offsetX, child.offsetY, child.offsetZ);
-    		if(child.turnsWithSteer){
-    			if(child.offsetZ >= 0){
+    		GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
+    		if(part.turnsWithSteer){
+    			if(part.offset.zCoord >= 0){
     				GL11.glRotatef(multipart.getSteerAngle(), 0, 1, 0);
     			}else{
     				GL11.glRotatef(-multipart.getSteerAngle(), 0, 1, 0);
     			}
     		}
-    		RenderMultipartChild.renderChildEntity(child, partialTicks);
+    		
+    		if(!displayLists.containsKey(part.partName)){
+    			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(part.getModelLocation());
+    			int displayListIndex = GL11.glGenLists(1);
+    			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
+    			GL11.glBegin(GL11.GL_TRIANGLES);
+    			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
+    				for(Float[] vertex : entry.getValue()){
+    					GL11.glTexCoord2f(vertex[3], vertex[4]);
+    					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+    					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+    				}
+    			}
+    			GL11.glEnd();
+    			GL11.glEndList();
+    			displayLists.put(part.partName, displayListIndex);
+    			textureMap.put(part.partName, part.getTextureLocation());
+    		}
+    		
+    		GL11.glPushMatrix();
+    		GL11.glRotated(part.getRotation(partialTicks).xCoord, 1, 0, 0);
+    		GL11.glRotated(part.getRotation(partialTicks).yCoord, 0, 1, 0);
+    		GL11.glRotated(part.getRotation(partialTicks).zCoord, 0, 0, 1);
+    		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
+			GL11.glCallList(displayLists.get(part.partName));
+			GL11.glPopMatrix();
 			GL11.glPopMatrix();
         }
 	}
@@ -355,13 +381,13 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	private static void renderWindows(EntityMultipartD_Moving multipart){
 		minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
 		//Iterate through all windows.
-		for(byte i=0; i<windowLists.get(multipart.pack.rendering.modelName).size(); ++i){
+		for(byte i=0; i<windowLists.get(multipart.multipartJSONName).size(); ++i){
 			if(i >= multipart.brokenWindows){
 				GL11.glPushMatrix();
 				//This is a window or set of windows.  Like the model, it will be triangle-based.
 				//However, windows may be rotatable.  Check this before continuing.
-				WindowPart window = windowLists.get(multipart.pack.rendering.modelName).get(i);
-				for(RotatablePart rotatable : rotatableLists.get(multipart.pack.rendering.modelName)){
+				WindowPart window = windowLists.get(multipart.multipartJSONName).get(i);
+				for(RotatablePart rotatable : rotatableLists.get(multipart.multipartJSONName)){
 					if(rotatable.name.equals(window.name)){
 						rotateObject(multipart, rotatable);
 					}
@@ -409,7 +435,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	}
 	
 	private static void renderLights(EntityMultipartE_Vehicle vehicle, float sunLight, float blockLight, float lightBrightness, float electricFactor, boolean wasRenderedPrior){
-		for(LightPart light : lightLists.get(vehicle.pack.rendering.modelName)){
+		for(LightPart light : lightLists.get(vehicle.multipartJSONName)){
 			boolean lightSwitchOn = vehicle.isLightOn(light.type);
 			//Fun with bit shifting!  20 bits make up the light on index here, so align to a 20 tick cycle.
 			boolean lightActuallyOn = lightSwitchOn && ((light.flashBits >> vehicle.ticksExisted%20) & 1) > 0;
@@ -418,7 +444,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			
 			GL11.glPushMatrix();
 			//This light may be rotatable.  Check this before continuing.
-			for(RotatablePart rotatable : rotatableLists.get(vehicle.pack.rendering.modelName)){
+			for(RotatablePart rotatable : rotatableLists.get(vehicle.multipartJSONName)){
 				if(rotatable.name.equals(light.name)){
 					rotateObject(vehicle, rotatable);
 				}
@@ -587,35 +613,35 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glColor3f(0.0F, 0.0F, 0.0F);
 		GL11.glLineWidth(3.0F);
-		for(MTSAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
+		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
 			//box = box.offset(-multipart.posX, -multipart.posY, -multipart.posZ);
 			GL11.glBegin(GL11.GL_LINES);
-			GL11.glVertex3d(box.relX - box.width/2F, box.relY - box.height/2F, box.relZ - box.width/2F);
-			GL11.glVertex3d(box.relX + box.width/2F, box.relY - box.height/2F, box.relZ - box.width/2F);
-			GL11.glVertex3d(box.relX - box.width/2F, box.relY - box.height/2F, box.relZ + box.width/2F);
-			GL11.glVertex3d(box.relX + box.width/2F, box.relY - box.height/2F, box.relZ + box.width/2F);
-			GL11.glVertex3d(box.relX - box.width/2F, box.relY + box.height/2F, box.relZ - box.width/2F);
-			GL11.glVertex3d(box.relX + box.width/2F, box.relY + box.height/2F, box.relZ - box.width/2F);
-			GL11.glVertex3d(box.relX - box.width/2F, box.relY + box.height/2F, box.relZ + box.width/2F);
-			GL11.glVertex3d(box.relX + box.width/2F, box.relY + box.height/2F, box.relZ + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
 			
-			GL11.glVertex3d(box.relX - box.width/2F, box.relY - box.height/2F, box.relZ - box.width/2F);
-			GL11.glVertex3d(box.relX - box.width/2F, box.relY - box.height/2F, box.relZ + box.width/2F);
-			GL11.glVertex3d(box.relX + box.width/2F, box.relY - box.height/2F, box.relZ - box.width/2F);
-			GL11.glVertex3d(box.relX + box.width/2F, box.relY - box.height/2F, box.relZ + box.width/2F);
-			GL11.glVertex3d(box.relX - box.width/2F, box.relY + box.height/2F, box.relZ - box.width/2F);
-			GL11.glVertex3d(box.relX - box.width/2F, box.relY + box.height/2F, box.relZ + box.width/2F);
-			GL11.glVertex3d(box.relX + box.width/2F, box.relY + box.height/2F, box.relZ - box.width/2F);
-			GL11.glVertex3d(box.relX + box.width/2F, box.relY + box.height/2F, box.relZ + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
 			
-			GL11.glVertex3d(box.relX - box.width/2F, box.relY - box.height/2F, box.relZ - box.width/2F);
-			GL11.glVertex3d(box.relX - box.width/2F, box.relY + box.height/2F, box.relZ - box.width/2F);
-			GL11.glVertex3d(box.relX + box.width/2F, box.relY - box.height/2F, box.relZ - box.width/2F);
-			GL11.glVertex3d(box.relX + box.width/2F, box.relY + box.height/2F, box.relZ - box.width/2F);
-			GL11.glVertex3d(box.relX - box.width/2F, box.relY - box.height/2F, box.relZ + box.width/2F);
-			GL11.glVertex3d(box.relX - box.width/2F, box.relY + box.height/2F, box.relZ + box.width/2F);
-			GL11.glVertex3d(box.relX + box.width/2F, box.relY - box.height/2F, box.relZ + box.width/2F);
-			GL11.glVertex3d(box.relX + box.width/2F, box.relY + box.height/2F, box.relZ + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
 			GL11.glEnd();
 		}
 		GL11.glLineWidth(1.0F);
@@ -634,8 +660,9 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			for(PackPart packPart : multipart.pack.parts){
 				boolean isPresent = false;
 				boolean isHoldingPart = false;
-				for(EntityMultipartChild child : multipart.getChildren()){
-					if(child.offsetX == packPart.pos[0] && child.offsetY == packPart.pos[1] && child.offsetZ == packPart.pos[2]){
+				Vec3d partPos = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
+				for(APart part : multipart.getMultipartParts()){
+					if(part.offset.equals(partPos)){
 						isPresent = true;
 						break;
 					}
@@ -649,7 +676,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				}
 						
 				if(!isPresent && isHoldingPart){
-					Vec3d offset = RotationSystem.getRotatedPoint(packPart.pos[0], packPart.pos[1], packPart.pos[2], multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
+					Vec3d offset = RotationSystem.getRotatedPoint(partPos, multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
 					AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.75F, (float) (offset.yCoord) - 0.75F, (float) (offset.zCoord) - 0.75F, (float) (offset.xCoord) + 0.75F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.75F);
 					
 					GL11.glPushMatrix();

@@ -3,7 +3,6 @@ package minecrafttransportsimulator.blocks;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -29,9 +28,6 @@ public class BlockPropellerBench extends ABlockRotateable{
 			TileEntityPropellerBench bench = (TileEntityPropellerBench) world.getTileEntity(pos);
 			if(bench.getPropellerOnBench() != null){
 				bench.dropPropellerAt(player.posX, player.posY, player.posZ);
-				if(!world.isRemote){
-					MTSAchievements.triggerPropeller(player);
-				}
 			}else{
 				if(bench.isRunning()){
 					if(!world.isRemote){

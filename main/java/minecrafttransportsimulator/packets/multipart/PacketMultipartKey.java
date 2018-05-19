@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.packets.multipart;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSAchievements;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.core.ItemKey;
 import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
@@ -87,7 +86,6 @@ public class PacketMultipartKey extends APacketMultipartPlayer{
 				stack.setTagCompound(tag);
 				
 				multipart.locked = true;
-				MTSAchievements.triggerKey(player);
 				return "interact.key.info.lock";
 			}else if(!vehicleUUID.equals(multipart.getUniqueID().toString())){
 				return "interact.key.failure.wrongkey";

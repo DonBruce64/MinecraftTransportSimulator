@@ -8,8 +8,10 @@ import com.google.common.collect.ImmutableList;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInit;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartClientPartRemoval;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
@@ -36,6 +38,13 @@ public abstract class EntityMultipartA_Base extends Entity{
 	 * during save/load operations, as well as determine some properties dynamically.
 	 */
 	public String multipartName="";
+	
+	/**Similar to the name above, this name is for the JSON file that the multipart came from.
+	 * Used heavily in rendering operations as those are NOT unique to pack definitions
+	 * like the individual multiparts are.
+	 */
+	public String multipartJSONName="";
+	
 	/**The pack for this multipart.  This is set upon NBT load on the server, but needs a packet
 	 * to be present on the client.  Do NOT assume this will be valid simply because
 	 * the multipart has been loaded!
@@ -58,6 +67,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 	public EntityMultipartA_Base(World world, String multipartName){
 		this(world);
 		this.multipartName = multipartName;
+		this.multipartJSONName = PackParserSystem.getMultipartJSONName(multipartName);
 		this.pack = PackParserSystem.getMultipartPack(multipartName); 
 	}
 	
@@ -100,14 +110,21 @@ public abstract class EntityMultipartA_Base extends Entity{
 				}
 			}
 		}
-		//TODO add a new packet for add/remove part events.
-		//this.sendDataToClient();
 	}
 	
 	public void removePart(APart part, boolean playBreakSound){
 		parts.remove(part);
-		if(playBreakSound){
-			this.playSound(SoundEvents.ITEM_SHIELD_BREAK, 2.0F, 1.0F);
+		if(!worldObj.isRemote){
+			if(playBreakSound){
+				this.playSound(SoundEvents.ITEM_SHIELD_BREAK, 2.0F, 1.0F);
+			}
+			for(byte i=0; i<this.pack.parts.size(); ++i){
+				PackPart packPart = this.pack.parts.get(i);
+				Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
+				if(partOffset.equals(part.offset)){
+					MTS.MTSNet.sendToAll(new PacketMultipartClientPartRemoval(this, i));
+				}
+			}
 		}
 	}
 	
@@ -139,17 +156,18 @@ public abstract class EntityMultipartA_Base extends Entity{
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
-		this.multipartName=tagCompound.getString("multipartName");
-		this.pack=PackParserSystem.getMultipartPack(multipartName);
+		this.multipartName = tagCompound.getString("multipartName");
+		this.multipartJSONName = PackParserSystem.getMultipartJSONName(multipartName);
+		this.pack = PackParserSystem.getMultipartPack(multipartName);
 		
 		if(this.parts.size() == 0){
 			NBTTagList partTagList = tagCompound.getTagList("Parts", 10);
 			for(byte i=0; i<partTagList.tagCount(); ++i){
 				try{
-					NBTTagCompound partTag = partTagList.getCompoundTagAt(i);
-					Class partClass = Class.forName(partTag.getString("className"));
-					Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartA_Base.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
-					APart savedPart = construct.newInstance(this, new Vec3d(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ")), partTag.getBoolean("isController"), partTag.getBoolean("turnsWithSteer"), partTag.getString("partName"), partTag);
+					NBTTagCompound partTag = partTagList.getCompoundTagAt(i);					
+					Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partTag.getString("partName"));
+					Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
+					APart savedPart = construct.newInstance((EntityMultipartD_Moving) this, new Vec3d(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ")), partTag.getBoolean("isController"), partTag.getBoolean("turnsWithSteer"), partTag.getString("partName"), partTag);
 					this.addPart(savedPart);
 				}catch(Exception e){
 					MTS.MTSLog.error("ERROR IN LOADING PART FROM NBT!");
@@ -169,14 +187,13 @@ public abstract class EntityMultipartA_Base extends Entity{
 			NBTTagCompound partTag = part.getPartNBTTag();
 			//We need to set some extra data here for the part to allow this multipart to know where it went.
 			//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
-			partTag.setString("className", part.getClass().getName());
 			partTag.setString("partName", part.partName);
 			partTag.setDouble("offsetX", part.offset.xCoord);
 			partTag.setDouble("offsetY", part.offset.yCoord);
 			partTag.setDouble("offsetZ", part.offset.zCoord);
 			partTag.setBoolean("isController", part.isController);
 			partTag.setBoolean("turnsWithSteer", part.turnsWithSteer);
-			partTagList.appendTag(part.getPartNBTTag());
+			partTagList.appendTag(partTag);
 		}
 		tagCompound.setTag("Parts", partTagList);
 		return tagCompound;

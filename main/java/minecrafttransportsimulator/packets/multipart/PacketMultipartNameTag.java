@@ -30,7 +30,7 @@ public class PacketMultipartNameTag extends APacketMultipartPlayer{
 					ItemStack heldStack = player.getHeldItemMainhand();
 					if(heldStack != null){
 						if(Items.NAME_TAG.equals(heldStack.getItem())){
-							int maxText = multipart.pack.general.displayTextMaxLength;
+							int maxText = multipart.pack.rendering.displayTextMaxLength;
 							multipart.displayText = heldStack.getDisplayName().length() > maxText ? heldStack.getDisplayName().substring(0, maxText - 1) : heldStack.getDisplayName();
 							if(ctx.side.isServer()){
 								MTS.MTSNet.sendToAll(message);

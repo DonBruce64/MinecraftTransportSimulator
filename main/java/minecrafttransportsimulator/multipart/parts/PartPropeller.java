@@ -1,21 +1,17 @@
-package minecrafttransportsimulator.entities.parts;
+package minecrafttransportsimulator.multipart.parts;
 
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourcePropellor;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
-import minecrafttransportsimulator.multipart.parts.APart;
-import minecrafttransportsimulator.multipart.parts.PartEngineAircraft;
-import minecrafttransportsimulator.packets.general.ChatPacket;
-import minecrafttransportsimulator.packets.parts.PacketPartEngine;
-import minecrafttransportsimulator.packets.parts.PacketPartEngine.PacketEngineTypes;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -47,15 +43,13 @@ public class PartPropeller extends APart{
 					if(part.offset.distanceTo(this.offset) < 2){
 						this.connectedEngine = ((PartEngineAircraft) part);
 						connectedEngine.propeller = this;
-						//TODO this needs to go in the spawning section of the code.
-						if(((PartEngineAircraft) part).getPropellerForcePenalty() >= 5){
-							MTS.MTSNet.sendTo(new ChatPacket("interact.failure.propellertoobig"), (EntityPlayerMP) player);
-						}
+						return;
 					}
 				}
 			}
 		}
-		if(connectedEngine == null){
+		connectedEngine = null;
+		if(!multipart.worldObj.isRemote){
 			this.dropAsItem();
 		}
 	}
@@ -67,7 +61,7 @@ public class PartPropeller extends APart{
 			if(player.getHeldItemMainhand() == null){
 				if(!multipart.equals(player.getRidingEntity())){
 					connectedEngine.handStartEngine();
-					MTS.MTSNet.sendToAll(new PacketPartEngine(connectedEngine, PacketEngineTypes.HS_ON));
+					MTS.MTSNet.sendToAll(new PacketPartEngineSignal(connectedEngine, PacketEngineTypes.HS_ON));
 				}
 				return;
 			}
@@ -128,7 +122,7 @@ public class PartPropeller extends APart{
 	
 	private void damagePropeller(float damage){
 		health -= damage;
-		if(health <= 0){
+		if(health <= 0 && !multipart.worldObj.isRemote){
 			multipart.removePart(this, true);
 		}
 	}

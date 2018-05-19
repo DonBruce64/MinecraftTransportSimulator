@@ -4,7 +4,6 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
-import minecrafttransportsimulator.dataclasses.CreativeTabCollection;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.guis.GUIConfig;
@@ -14,15 +13,13 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
 import minecrafttransportsimulator.multipart.main.EntityMultipartC_Colliding;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.parts.APart;
-import minecrafttransportsimulator.packets.general.MultipartPartAdditionPacket;
-import minecrafttransportsimulator.packets.general.PackReloadPacket;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartAttacked;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartKey;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartNameTag;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartServerPartAddition;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartWindowFix;
 import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.rendering.RenderHUD;
-import minecrafttransportsimulator.rendering.RenderMultipart;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.creativetab.CreativeTabs;
@@ -133,7 +130,7 @@ public final class ClientEventSystem{
 										}
 									}
 	        						if(!isPartPresent){
-		        						MTS.MTSNet.sendToServer(new MultipartPartAdditionPacket(multipart.getEntityId(), player.getEntityId(), i));
+		        						MTS.MTSNet.sendToServer(new PacketMultipartServerPartAddition(multipart, player, i));
 		        						return;
 	        						}
 	        					}
@@ -304,14 +301,14 @@ public final class ClientEventSystem{
     }
     
     /**
-     * Renders a warning on the MTS creative tab if there is no pack data.
+     * Renders a warning on the MTS core creative tab if there is no pack data.
      */
     @SubscribeEvent
     public static void on(DrawScreenEvent.Post event){
-    	if(PackParserSystem.getRegisteredNames().isEmpty()){
+    	if(PackParserSystem.getAllMultipartPackNames().isEmpty()){
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
-	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()].equals(CreativeTabCollection.tabMTSVehicles)){
+	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()].equals(MTSRegistry.coreTab)){
 	    			FMLCommonHandler.instance().showGuiScreen(new GUIPackMissing());
 	    		}
 	    	}

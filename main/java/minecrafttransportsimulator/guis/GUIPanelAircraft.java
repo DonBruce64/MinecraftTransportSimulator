@@ -10,8 +10,8 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.packets.control.LightPacket;
-import minecrafttransportsimulator.packets.parts.PacketPartEngine;
-import minecrafttransportsimulator.packets.parts.PacketPartEngine.PacketEngineTypes;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderInstruments;
 import minecrafttransportsimulator.rendering.RenderMultipart;
@@ -171,7 +171,7 @@ public class GUIPanelAircraft extends GuiScreen{
 			for(byte i=0; i<magnetoButtonCoords.length; ++i){
 				if(engines[i] != null){
 					if(x > magnetoButtonCoords[i][0] && x < magnetoButtonCoords[i][1] && y < magnetoButtonCoords[i][2] && y > magnetoButtonCoords[i][3]){
-						MTS.MTSNet.sendToServer(new PacketPartEngine(engines[i], engines[i].state.magnetoOn ? PacketEngineTypes.MAGNETO_OFF : PacketEngineTypes.MAGNETO_ON));
+						MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines[i], engines[i].state.magnetoOn ? PacketEngineTypes.MAGNETO_OFF : PacketEngineTypes.MAGNETO_ON));
 					}
 				}
 			}
@@ -181,7 +181,7 @@ public class GUIPanelAircraft extends GuiScreen{
 				if(engines[i] != null){
 					if(x > starterButtonCoords[i][0] && x < starterButtonCoords[i][1] && y < starterButtonCoords[i][2] && y > starterButtonCoords[i][3]){
 						if(!engines[i].state.esOn){
-							MTS.MTSNet.sendToServer(new PacketPartEngine(engines[i], PacketEngineTypes.ES_ON));
+							MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines[i], PacketEngineTypes.ES_ON));
 						}
 						lastEngineStarted = i;
 					}
@@ -194,7 +194,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	protected void mouseReleased(int mouseX, int mouseY, int actionType){
 	    if(actionType == 0){
 	    	if(lastEngineStarted != -1 && starterButtonCoords.length > 0){
-	    		MTS.MTSNet.sendToServer(new PacketPartEngine(engines[lastEngineStarted], PacketEngineTypes.ES_OFF));
+	    		MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines[lastEngineStarted], PacketEngineTypes.ES_OFF));
 	    	}
 	    }
 	}

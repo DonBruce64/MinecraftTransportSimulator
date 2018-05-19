@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.dataclasses;
 
-import minecrafttransportsimulator.systems.PackParserSystem.MultipartTypes;
+import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 
 public final class MTSInstruments{
 	/**Number of blank-type instruments present at the top of the enum.
@@ -9,41 +10,41 @@ public final class MTSInstruments{
 	public static final byte numberBlanks = 1;
 	
 	public enum Instruments{
-		AIRCRAFT_BLANK(false, MultipartTypes.PLANE),
-    	AIRCRAFT_ATTITUDE(false, MultipartTypes.PLANE),
-    	AIRCRAFT_ALTIMETER(false, MultipartTypes.PLANE),
-    	AIRCRAFT_HEADING(false, MultipartTypes.PLANE),
-    	AIRCRAFT_AIRSPEED(false, MultipartTypes.PLANE),
-    	AIRCRAFT_TURNCOORD(false, MultipartTypes.PLANE),
-    	AIRCRAFT_TURNSLIP(false, MultipartTypes.PLANE),
-    	AIRCRAFT_VERTICALSPEED(false, MultipartTypes.PLANE),
-    	AIRCRAFT_LIFTRESERVE(false, MultipartTypes.PLANE),
-    	AIRCRAFT_TRIM(false, MultipartTypes.PLANE),
-    	AIRCRAFT_ELECTRIC(true, MultipartTypes.PLANE),
-    	AIRCRAFT_FUELQTY(false, MultipartTypes.PLANE),
-    	AIRCRAFT_TACHOMETER(true, MultipartTypes.PLANE),
-    	AIRCRAFT_FUELFLOW(true, MultipartTypes.PLANE),
-    	AIRCRAFT_ENGINETEMP(true, MultipartTypes.PLANE),
-    	AIRCRAFT_OILPRESSURE(true, MultipartTypes.PLANE);
+		AIRCRAFT_BLANK(false, EntityMultipartF_Plane.class),
+    	AIRCRAFT_ATTITUDE(false, EntityMultipartF_Plane.class),
+    	AIRCRAFT_ALTIMETER(false, EntityMultipartF_Plane.class),
+    	AIRCRAFT_HEADING(false, EntityMultipartF_Plane.class),
+    	AIRCRAFT_AIRSPEED(false, EntityMultipartF_Plane.class),
+    	AIRCRAFT_TURNCOORD(false, EntityMultipartF_Plane.class),
+    	AIRCRAFT_TURNSLIP(false, EntityMultipartF_Plane.class),
+    	AIRCRAFT_VERTICALSPEED(false, EntityMultipartF_Plane.class),
+    	AIRCRAFT_LIFTRESERVE(false, EntityMultipartF_Plane.class),
+    	AIRCRAFT_TRIM(false, EntityMultipartF_Plane.class),
+    	AIRCRAFT_ELECTRIC(true, EntityMultipartF_Plane.class),
+    	AIRCRAFT_FUELQTY(false, EntityMultipartF_Plane.class),
+    	AIRCRAFT_TACHOMETER(true, EntityMultipartF_Plane.class),
+    	AIRCRAFT_FUELFLOW(true, EntityMultipartF_Plane.class),
+    	AIRCRAFT_ENGINETEMP(true, EntityMultipartF_Plane.class),
+    	AIRCRAFT_OILPRESSURE(true, EntityMultipartF_Plane.class);
     	
     	public final boolean canConnectToEngines;
-    	public final MultipartTypes[] validTypes;
+    	public final Class<? extends EntityMultipartD_Moving>[] validClasses;
     	
-    	private Instruments(boolean canConnectToEngines, MultipartTypes... validTypes){
+    	private Instruments(boolean canConnectToEngines, Class<? extends EntityMultipartD_Moving>... validClasses){
     		this.canConnectToEngines = canConnectToEngines;
-    		this.validTypes = validTypes;
+    		this.validClasses = validClasses;
     	}
     }
     
     public enum Controls{
-    	AIRCRAFT_THROTTLE(MultipartTypes.PLANE),
-    	PARKING_BRAKE(MultipartTypes.PLANE),
-    	AIRCRAFT_FLAPS(MultipartTypes.PLANE);
+    	AIRCRAFT_THROTTLE(EntityMultipartF_Plane.class),
+    	PARKING_BRAKE(EntityMultipartF_Plane.class),
+    	AIRCRAFT_FLAPS(EntityMultipartF_Plane.class);
     	
-    	public final MultipartTypes[] vaildTypes;
+    	public final Class<? extends EntityMultipartD_Moving>[] validClasses;
     	
-    	private Controls(MultipartTypes... validTypes){
-    		this.vaildTypes = validTypes;
+    	private Controls(Class<? extends EntityMultipartD_Moving>... validClasses){
+    		this.validClasses = validClasses;
     	}
     }
 }

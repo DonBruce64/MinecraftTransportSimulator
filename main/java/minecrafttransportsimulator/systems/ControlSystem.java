@@ -24,8 +24,8 @@ import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
-import minecrafttransportsimulator.packets.parts.PacketPartEngine;
-import minecrafttransportsimulator.packets.parts.PacketPartEngine.PacketEngineTypes;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
@@ -430,15 +430,15 @@ public final class ControlSystem{
 		if(ControlsKeyboard.CAR_START.isPressed()){
 			if(car.getEngineByNumber((byte) 1) != null){
 				if(ControlsKeyboard.CAR_MOD.isPressed()){
-					MTS.MTSNet.sendToServer(new PacketPartEngine(car.getEngineByNumber((byte) 1), PacketEngineTypes.MAGNETO_OFF));
+					MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 1), PacketEngineTypes.MAGNETO_OFF));
 				}else{
-					MTS.MTSNet.sendToServer(new PacketPartEngine(car.getEngineByNumber((byte) 1), PacketEngineTypes.MAGNETO_ON));
-					MTS.MTSNet.sendToServer(new PacketPartEngine(car.getEngineByNumber((byte) 1), PacketEngineTypes.ES_ON));
+					MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 1), PacketEngineTypes.MAGNETO_ON));
+					MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 1), PacketEngineTypes.ES_ON));
 				}
 			}
 		}else{
 			if(car.getEngineByNumber((byte) 1) != null){
-				MTS.MTSNet.sendToServer(new PacketPartEngine(car.getEngineByNumber((byte) 1), PacketEngineTypes.ES_OFF));
+				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 1), PacketEngineTypes.ES_OFF));
 			}
 		}
 		

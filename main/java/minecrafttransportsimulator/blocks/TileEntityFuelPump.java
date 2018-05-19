@@ -5,7 +5,7 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.packets.general.ChatPacket;
-import minecrafttransportsimulator.packets.general.FuelPumpConnectDisconnectPacket;
+import minecrafttransportsimulator.packets.general.FuelPumpConnectionPacket;
 import minecrafttransportsimulator.packets.general.FuelPumpFillDrainPacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.nbt.NBTTagCompound;
@@ -87,7 +87,7 @@ public class TileEntityFuelPump extends ATileEntityRotatable implements IFluidTa
 			this.totalTransfered = 0;
 		}
 		if(!worldObj.isRemote){
-			MTS.MTSNet.sendToAll(new FuelPumpConnectDisconnectPacket(this, connectedVehicle != null ? connectedVehicle.getEntityId() : -1, this.tankInfo.fluid != null ? this.tankInfo.fluid.amount : 0, this.totalTransfered));
+			MTS.MTSNet.sendToAll(new FuelPumpConnectionPacket(this, connectedVehicle != null ? connectedVehicle.getEntityId() : -1, this.tankInfo.fluid != null ? this.tankInfo.fluid.amount : 0, this.totalTransfered));
 		}
 	}
 

@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.multipart;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
+import minecrafttransportsimulator.multipart.main.EntityMultipartA_Base;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -11,7 +11,7 @@ public abstract class APacketMultipartPlayer extends APacketMultipart{
 
 	public APacketMultipartPlayer(){}
 	
-	public APacketMultipartPlayer(EntityMultipartB_Existing multipart, EntityPlayer player){
+	public APacketMultipartPlayer(EntityMultipartA_Base multipart, EntityPlayer player){
 		super(multipart);
 		this.player = player.getEntityId();
 	}

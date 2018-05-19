@@ -3,8 +3,9 @@ package minecrafttransportsimulator.multipart.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
-import minecrafttransportsimulator.packets.parts.PacketPartEngine;
-import minecrafttransportsimulator.packets.parts.PacketPartEngine.PacketEngineTypes;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.sounds.AttenuatedSound;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
@@ -73,14 +74,15 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 			if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
 			if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
 			if(!brokenStarter)brokenStarter = Math.random() < 0.05;
+			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, damage*10));
 		}else{
 			hours += damage;
 			if(source.isProjectile()){
 				if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
 				if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
 			}
+			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, damage));
 		}
-		//TODO send damage data to client.
 	}
 	
 	@Override
@@ -139,19 +141,19 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 			if(RPM > engineStartRPM*1.5 && temp < engineColdTemp){//Not warmed up
 				hours += 0.001*(RPM/engineStartRPM - 1);
 			}
-			if(RPM > getMaxSafeRPM()){//Too fast
-				hours += 0.001*(RPM - getMaxSafeRPM())/10F;
-				temp += (RPM - getMaxSafeRPM())/1000;
+			if(RPM > getSafeRPMFromMax(this.pack.engine.maxRPM)){//Too fast
+				hours += 0.001*(RPM - getSafeRPMFromMax(this.pack.engine.maxRPM))/10F;
+				temp += (RPM - getSafeRPMFromMax(this.pack.engine.maxRPM))/1000;
 			}
 			if(temp > engineOverheatTemp1){//Too hot
 				hours += 0.001*(temp - engineOverheatTemp1);
-				if(temp > engineFailureTemp){
+				if(temp > engineFailureTemp && !multipart.worldObj.isRemote){
 					explodeEngine();
 				}
 			}
 			
 			if(hours > 200 && !multipart.worldObj.isRemote){
-				if(Math.random() < hours/10000*(getMaxSafeRPM()/(RPM+getMaxSafeRPM()/2))){
+				if(Math.random() < hours/10000*(getSafeRPMFromMax(this.pack.engine.maxRPM)/(RPM+getSafeRPMFromMax(this.pack.engine.maxRPM)/2))){
 					backfireEngine();
 				}
 			}
@@ -275,7 +277,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 	public void backfireEngine(){
 		RPM -= 100;
 		if(!multipart.worldObj.isRemote){
-			MTS.MTSNet.sendToAll(new PacketPartEngine(this, PacketEngineTypes.BACKFIRE));
+			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.BACKFIRE));
 		}else{
 			MTS.proxy.playSound(partPos, partName + "_sputter", 0.5F, 1);
 			backfired = true;
@@ -293,7 +295,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 		starterLevel = 0;
 		oilPressure = 60;
 		if(!multipart.worldObj.isRemote){
-			MTS.MTSNet.sendToAll(new PacketPartEngine(this, PacketEngineTypes.START));
+			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.START));
 		}else{
 			MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
 		}
@@ -308,7 +310,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 			state = EngineStates.MAGNETO_ON_HS_ON;
 		}
 		if(!multipart.worldObj.isRemote){
-			MTS.MTSNet.sendToAll(new PacketPartEngine(this, packetType));
+			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, packetType));
 		}else{
 			if(!packetType.equals(PacketEngineTypes.DROWN)){
 				internalFuel = 100;
@@ -329,8 +331,8 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 		multipart.removePart(this, true);
 	}
 	
-	public int getMaxSafeRPM(){
-		return pack.engine.maxRPM - (pack.engine.maxRPM - 2500)/2;
+	public static int getSafeRPMFromMax(int maxRPM){
+		return maxRPM - (maxRPM - 2500)/2;
 	}
 	
 	protected boolean isInLiquid(){

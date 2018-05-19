@@ -10,9 +10,9 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
@@ -65,11 +65,11 @@ public class GUIManual extends GuiScreen{
 		dataPageStart = maxPages;
 		
 		//Now add the Vehicle Data pages.
-		List<String> nameList = new ArrayList<String>(PackParserSystem.getRegisteredNames());
+		List<String> nameList = new ArrayList<String>(PackParserSystem.getAllMultipartPackNames());
 		Collections.sort(nameList);
 		for(String name : nameList){
-			if(!packList.contains(PackParserSystem.getPack(name))){
-				packList.add(PackParserSystem.getPack(name));
+			if(!packList.contains(PackParserSystem.getMultipartPack(name))){
+				packList.add(PackParserSystem.getMultipartPack(name));
 				maxPages += 2;
 			}
 		}

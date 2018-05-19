@@ -2,14 +2,11 @@ package minecrafttransportsimulator.rendering;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackControl;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackFileDefinitions;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.systems.CameraSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
@@ -18,19 +15,8 @@ public final class RenderHUD{
 	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	
 	public static void drawMainHUD(EntityMultipartE_Vehicle vehicle, int width, int height, boolean inGUI){
-		final PackFileDefinitions definition = PackParserSystem.getDefinitionForPack(vehicle.multipartName);
-		final ResourceLocation backplateTexture;
-		final ResourceLocation mouldingTexture;
-		if(definition.backplateTexture.contains(":")){
-			backplateTexture = new ResourceLocation(definition.backplateTexture);
-		}else{
-			backplateTexture = new ResourceLocation(MTS.MODID, "textures/hud/" + definition.backplateTexture);
-		}
-		if(definition.mouldingTexture.contains(":")){
-			mouldingTexture = new ResourceLocation(definition.mouldingTexture);
-		}else{
-			mouldingTexture = new ResourceLocation(MTS.MODID, "textures/hud/" + definition.mouldingTexture);
-		}
+		final ResourceLocation backplateTexture = new ResourceLocation(vehicle.multipartName.substring(0, vehicle.multipartName.indexOf(':')), "textures/hud/" + vehicle.multipartName.substring(vehicle.multipartName.indexOf(':') + 1) + "_backplate.png");
+		final ResourceLocation mouldingTexture = new ResourceLocation(vehicle.multipartName.substring(0, vehicle.multipartName.indexOf(':')), "textures/hud/" + vehicle.multipartName.substring(vehicle.multipartName.indexOf(':') + 1) + "_moulding.png");
 		
 		GL11.glPushMatrix();
 		GL11.glColor4f(1, 1, 1, 1);
@@ -64,19 +50,8 @@ public final class RenderHUD{
 	}
 	
 	public static void drawAuxiliaryHUD(EntityMultipartE_Vehicle vehicle, int width, int height, boolean inGUI){
-		final PackFileDefinitions definition = PackParserSystem.getDefinitionForPack(vehicle.multipartName);
-		final ResourceLocation backplateTexture;
-		final ResourceLocation mouldingTexture;
-		if(definition.backplateTexture.startsWith("minecraft:")){
-			backplateTexture = new ResourceLocation(definition.backplateTexture);
-		}else{
-			backplateTexture = new ResourceLocation(MTS.MODID, "textures/hud/" + definition.backplateTexture);
-		}
-		if(definition.mouldingTexture.startsWith("minecraft:")){
-			mouldingTexture = new ResourceLocation(definition.mouldingTexture);
-		}else{
-			mouldingTexture = new ResourceLocation(MTS.MODID, "textures/hud/" + definition.mouldingTexture);
-		}
+		final ResourceLocation backplateTexture = new ResourceLocation(vehicle.multipartName.substring(0, vehicle.multipartName.indexOf(':')), "textures/hud/" + vehicle.multipartName.substring(vehicle.multipartName.indexOf(':') + 1) + "_backplate.png");
+		final ResourceLocation mouldingTexture = new ResourceLocation(vehicle.multipartName.substring(0, vehicle.multipartName.indexOf(':')), "textures/hud/" + vehicle.multipartName.substring(vehicle.multipartName.indexOf(':') + 1) + "_moulding.png");
 		
 		GL11.glPushMatrix();
 		GL11.glColor4f(1, 1, 1, 1);
