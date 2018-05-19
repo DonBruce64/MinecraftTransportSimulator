@@ -3,34 +3,26 @@ package minecrafttransportsimulator.guis;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
 public class GUIManual extends GuiScreen{
-	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/manual.png");
+	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/manual_pages.png");
 	private static final ResourceLocation cover = new ResourceLocation(MTS.MODID, "textures/guis/manual_cover.png");
-	private static final ResourceLocation crafting = new ResourceLocation("minecraft", "textures/gui/container/crafting_table.png");
 	
 	private short pageNumber;
-	private short dataPageStart;
 	private short maxPages;
 	private int guiLeft;
 	private int guiTop;
@@ -59,19 +51,6 @@ public class GUIManual extends GuiScreen{
 		//Calculate the number of info pages, add those to maxPages.
 		for(InfoPages pageDef : InfoPages.values()){
 			maxPages += pageDef.pages%2 == 1 ? pageDef.pages + 1 : pageDef.pages;
-		}
-		
-		//This is where the Vehicle Data pages start, save this number.
-		dataPageStart = maxPages;
-		
-		//Now add the Vehicle Data pages.
-		List<String> nameList = new ArrayList<String>(PackParserSystem.getAllMultipartPackNames());
-		Collections.sort(nameList);
-		for(String name : nameList){
-			if(!packList.contains(PackParserSystem.getMultipartPack(name))){
-				packList.add(PackParserSystem.getMultipartPack(name));
-				maxPages += 2;
-			}
 		}
 	}
 	
@@ -136,10 +115,8 @@ public class GUIManual extends GuiScreen{
 			 drawCover();
 		}else if(pageNumber == 1){
 			drawContentsPage();
-		}else if(pageNumber < dataPageStart){
-			drawInfoPage();
 		}else{
-			drawDataPage();
+			drawInfoPage();
 		}
 	}
 
@@ -212,6 +189,7 @@ public class GUIManual extends GuiScreen{
 		}
 	}
 	
+	/*TODO move this to the drafting table.
 	private void drawDataPage(){
 		PackMultipartObject packObject = packList.get((pageNumber - dataPageStart)/2);
 		byte index = (byte) (mc.theWorld.getTotalWorldTime()/40%packObject.definitions.size());
@@ -329,7 +307,7 @@ public class GUIManual extends GuiScreen{
 		}
 		RenderHelper.disableStandardItemLighting();
 		GL11.glPopMatrix();
-	}
+	}*/
 	
 	@Override
     protected void actionPerformed(GuiButton buttonClicked) throws IOException{
@@ -366,8 +344,7 @@ public class GUIManual extends GuiScreen{
 		IN_FLIGHT((byte) 2),
 		LANDING((byte) 2),
 		INSTRUMENTS((byte) 2),
-		PROPELLER_SPECS((byte) 2),
-		VEHICLE_DATA((byte) 1);
+		PROPELLER_SPECS((byte) 2);
 		
 		public final byte pages;
 		

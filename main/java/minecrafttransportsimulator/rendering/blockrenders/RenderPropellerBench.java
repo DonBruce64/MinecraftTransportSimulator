@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.rendering.blockrenders;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
@@ -11,10 +13,12 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.ResourceLocation;
 
 public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPropellerBench>{
-	private static final ResourceLocation tierOneTexture = new ResourceLocation("minecraft", "textures/blocks/planks_oak.png");
-	private static final ResourceLocation tierTwoTexture = new ResourceLocation("minecraft", "textures/blocks/iron_block.png");
-	private static final ResourceLocation tierThreeTexture = new ResourceLocation("minecraft", "textures/blocks/obsidian.png");
 	private static final ResourceLocation benchTexture = new ResourceLocation(MTS.MODID, "textures/blocks/propellerbench.png");
+	private static final ResourceLocation woodTexture = new ResourceLocation("minecraft", "textures/blocks/planks_oak.png");
+	private static final ResourceLocation metalTexture = new ResourceLocation("minecraft", "textures/blocks/iron_block.png");
+	private static final Map<String, ResourceLocation> propellerModels = new HashMap<String, ResourceLocation>();
+	private static final Map<String, ResourceLocation> propellerPartTextures = new HashMap<String, ResourceLocation>();
+	private static final Map<String, ResourceLocation> propellerMaterialTextures = new HashMap<String, ResourceLocation>();
 	
 	private static int baseDisplayListIndex = -1;
 	private static Float[][] tableCoords;
@@ -120,15 +124,18 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPr
 	}
 
 	private void renderMaterial(TileEntityPropellerBench bench){
-		switch(bench.propellerType){
-			case 0: bindTexture(tierOneTexture); break;
-			case 1: bindTexture(tierTwoTexture); break;
-			case 2: bindTexture(tierThreeTexture); break;
+		if(!propellerModels.containsKey(bench.selectedPropeller)){
+			String propellerMod = bench.selectedPropeller.partName.substring(0, bench.selectedPropeller.partName.indexOf(':'));
+			String propellerName = bench.selectedPropeller.partName.substring(bench.selectedPropeller.partName.indexOf(':') + 1);
+			propellerModels.put(bench.selectedPropeller.partName, new ResourceLocation(propellerMod, "objmodels/parts/" + propellerName + ".obj"));
+			propellerPartTextures.put(bench.selectedPropeller.partName, new ResourceLocation(propellerMod, "textures/parts/" + propellerName + ".png"));
+			propellerMaterialTextures.put(bench.selectedPropeller.partName, new ResourceLocation(propellerMod, "textures/parts/" + propellerName + "_material.png"));
 		}
 		
 		short timeLeft = (short) (bench.timeOperationFinished - bench.getWorld().getTotalWorldTime());
 		if(bench.isRunning()){
 			GL11.glPushMatrix();
+			bindTexture(propellerMaterialTextures.get(bench.propellerOnBench.partName));
 			if(timeLeft > 945){
 				renderMaterialBlock(-0.5F, 0.5F, -0.25F, 0.3125F);
 			}else if(timeLeft > 55 && timeLeft <= 945){
@@ -143,19 +150,28 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPr
 			}
 			GL11.glPopMatrix();
 		}
-		if((timeLeft >= 0 && timeLeft <= 945 && bench.isRunning()) || bench.getPropellerOnBench() != null){
+		if((timeLeft >= 0 && timeLeft <= 945 && bench.isRunning()) || bench.propellerOnBench != null){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(0, 0.125F, 0);
 			GL11.glRotatef(90, 1, 0, 0);
 			GL11.glScalef(0.25F, 0.25F, 0.25F);
-			propellerModel.renderPropeller(bench.numberBlades, bench.diameter, 0);
+			bindTexture(propellerPartTextures.get(bench.selectedPropeller));
+			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(propellerModels.get(bench.selectedPropeller));
+			GL11.glBegin(GL11.GL_TRIANGLES);
+			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
+				for(Float[] vertex : entry.getValue()){
+					GL11.glTexCoord2f(vertex[3], vertex[4]);
+					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+				}
+			}
+			GL11.glEnd();
 			GL11.glPopMatrix();
 		}
 		
 	}
 	
 	private void renderMaterialBlock(float x1, float x2, float z1, float z2){
-		//This whole system is backwards.  +Y is actually down due to Techne model flipping.
 		GL11.glPushMatrix();
 		GL11.glBegin(GL11.GL_QUADS);
 		//Not sure why I only need one of these rather than one for each vertex, but eh...
