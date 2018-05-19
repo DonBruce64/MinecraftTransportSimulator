@@ -16,7 +16,6 @@ import minecrafttransportsimulator.items.core.ItemManual;
 import minecrafttransportsimulator.items.core.ItemMultipart;
 import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.parts.AItemPart;
-import minecrafttransportsimulator.items.parts.ItemPartEngine;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.packets.control.AileronPacket;
@@ -121,8 +120,7 @@ public final class MTSRegistry{
 	public static void init(){
 		initMultipartEntities();
 		initPackets();
-		initPartRecipes();
-		initEngineRecipes();
+		initCoreItemRecipes();
 		initAircraftInstrumentRecipes();
 	}
 	
@@ -258,68 +256,7 @@ public final class MTSRegistry{
 		registerPacket(PacketPartInteraction.class, PacketPartInteraction.Handler.class, false, true);
 	}
 	
-	private static void initPartRecipes(){
-		//Seats
-		for(int i=0; i<96; ++i){
-			registerRecipe(new ItemStack(seat, 1, i),
-				" BA",
-				" BA",
-				"AAA",
-				'A', new ItemStack(Blocks.WOODEN_SLAB, 1, i%6),
-				'B', new ItemStack(Blocks.WOOL, 1, i/6));
-		}
-		for(int i=0; i<6; ++i){
-			registerRecipe(new ItemStack(seat, 1, 96 + i),
-				" BA",
-				" BA",
-				"AAA",
-				'A', new ItemStack(Blocks.WOODEN_SLAB, 1, i%6),
-				'B', new ItemStack(Items.LEATHER));
-		}
-		
-		//Wheels
-		registerRecipe(new ItemStack(wheelSmall, 2),
-				"ABA",
-				"ACA",
-				"ABA",
-				'A', Blocks.WOOL,
-				'B', new ItemStack(Items.DYE, 1, 0),
-				'C', Items.IRON_INGOT);
-		registerRecipe(new ItemStack(wheelMedium, 2),
-				"ABA",
-				"BCB",
-				"ABA",
-				'A', Blocks.WOOL,
-				'B', new ItemStack(Items.DYE, 1, 0),
-				'C', Items.IRON_INGOT);
-		registerRecipe(new ItemStack(wheelLarge, 2),
-				"BBB",
-				"ACA",
-				"BBB",
-				'A', Blocks.WOOL,
-				'B', new ItemStack(Items.DYE, 1, 0),
-				'C', Items.IRON_INGOT);
-		//Skid
-		registerRecipe(new ItemStack(skid),
-				"A A",
-				" A ",
-				"  A",
-				'A', Blocks.IRON_BARS);
-		//Pontoon
-		registerRecipe(new ItemStack(pontoon, 2),
-				"AAA",
-				"BBB",
-				"AAA",
-				'A', Items.IRON_INGOT,
-				'B', Blocks.WOOL);
-		//Crate
-		registerRecipe(new ItemStack(crate),
-				"AAA",
-				"ABA",
-				"AAA",
-				'A', Blocks.PLANKS,
-				'B', Blocks.WOODEN_SLAB);
-		
+	private static void initCoreItemRecipes(){
 		//Propeller bench
 		registerRecipe(new ItemStack(itemBlockPropellerBench),
 				"AAA",
@@ -363,64 +300,6 @@ public final class MTSRegistry{
 				" A ",
 				"A  ",
 				'A', Items.IRON_INGOT);
-	}
-	
-	private static void initEngineRecipes(){
-		//New engines
-		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineAMCI4, false),
-				"AAA",
-				"BCB",
-				"BBB",
-				'A', Blocks.PISTON,
-				'B', Blocks.OBSIDIAN,
-				'C', Items.IRON_INGOT);
-		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineLycomingO360, false),
-				"ABA",
-				"BCB",
-				"ABA",
-				'A', Blocks.PISTON,
-				'B', Blocks.OBSIDIAN,
-				'C', Items.IRON_INGOT);
-		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineBristolMercury, false),
-				"ABA",
-				"ACA",
-				"ABA",
-				'A', Blocks.PISTON,
-				'B', Blocks.OBSIDIAN,
-				'C', Items.IRON_INGOT);
-		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineDetroitDiesel, false),
-				"AAA",
-				"ACA",
-				"BBB",
-				'A', Blocks.PISTON,
-				'B', Blocks.OBSIDIAN,
-				'C', Items.IRON_INGOT);
-		
-		//Repaired engines
-		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineAMCI4, false),
-				"B B",
-				" C ",
-				"B B",
-				'B', Blocks.OBSIDIAN,
-				'C', MTSRegistry.engineAMCI4);
-		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineLycomingO360, false),
-				"B B",
-				" C ",
-				"B B",
-				'B', Blocks.OBSIDIAN,
-				'C', MTSRegistry.engineLycomingO360);
-		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineBristolMercury, false),
-				"B B",
-				"BCB",
-				"B B",
-				'B', Blocks.OBSIDIAN,
-				'C', MTSRegistry.engineBristolMercury);
-		registerRecipe(ItemPartEngine.getStackWithData((ItemPartEngine) MTSRegistry.engineDetroitDiesel, false),
-				"B B",
-				"BCB",
-				"B B",
-				'B', Blocks.OBSIDIAN,
-				'C', MTSRegistry.engineDetroitDiesel);
 	}
 	
 	private static void initAircraftInstrumentRecipes(){		
