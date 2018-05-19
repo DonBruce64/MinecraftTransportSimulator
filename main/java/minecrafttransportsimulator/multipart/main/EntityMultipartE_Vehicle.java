@@ -13,6 +13,7 @@ import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
@@ -120,14 +121,14 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 		if(part instanceof APartEngine){
 			//Because parts is a list, the #1 engine will always come before the #2 engine.
 			//We can use this to determine where in the list this engine needs to go.
-			byte engineNumber = 1;
+			byte engineNumber = 0;
 			for(PackPart packPart : pack.parts){
 				for(String name : packPart.names){
-					if(name.contains("engine")){
+					if(PackParserSystem.getPartPack(name).general.type.contains("engine")){
+						++engineNumber;
 						if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
 							engineByNumber.put(engineNumber, (APartEngine) part);
 						}
-						++engineNumber;
 					}
 				}
 			}
@@ -137,15 +138,15 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 	@Override
 	public void removePart(APart part, boolean playBreakSound){
 		super.removePart(part, playBreakSound);
-		byte engineNumber = 1;
+		byte engineNumber = 0;
 		for(PackPart packPart : pack.parts){
 			for(String name : packPart.names){
-				if(name.contains("engine")){
+				if(PackParserSystem.getPartPack(name).general.type.contains("engine")){
+					++engineNumber;
 					if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
 						engineByNumber.remove(engineNumber);
 						return;
 					}
-					++engineNumber;
 				}
 			}
 		}

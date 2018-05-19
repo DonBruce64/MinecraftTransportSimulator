@@ -41,11 +41,8 @@ fi
 sed -i 's/world.getCollisionBoxes(/world.getCollisionBoxes(null, /' $FILE
 sed -i 's/addCollisionBoxToList(world, pos, box, collidingAABBList, null)/addCollisionBoxToList(world, pos, box, collidingAABBList, null, false)/' $FILE
 
-#Blank Item slots are no longer null; they're AIR.  Check for that when players hit propellers to start them.
-if echo $FILE | grep -q "EntityPropeller"; then
-	sed -i 's/((EntityPlayer) source.getEntity()).getHeldItemMainhand() == null/((EntityPlayer) source.getEntity()).getHeldItemMainhand().getItem().equals(Items.AIR)/' $FILE
-	sed -i '3iimport net.minecraft.init.Items;' $FILE;
-fi
+#Blank Item slots are no longer null; they're empty.
+sed -i 's/.getHeldItemMainhand() == null/.getHeldItemMainhand().isEmpty()/' $FILE
 
 #Fluid handler was split into regular and item-based.  Change fuel pump to reflect this.
 if echo $FILE | grep -q "BlockFuelPump"; then

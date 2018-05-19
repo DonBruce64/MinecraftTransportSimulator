@@ -3,7 +3,6 @@ package minecrafttransportsimulator.multipart.main;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.multipart.parts.APart;
-import minecrafttransportsimulator.multipart.parts.PartEngineAircraft;
 import minecrafttransportsimulator.multipart.parts.PartPropeller;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
@@ -62,16 +61,6 @@ public final class EntityMultipartF_Plane extends EntityMultipartE_Vehicle{
 	
 	public EntityMultipartF_Plane(World world, float posX, float posY, float posZ, float rotation, String name){
 		super(world, posX, posY, posZ, rotation, name);
-	}
-		
-	@Override
-	public void removePart(APart part, boolean playBreakSound){
-		super.removePart(part, playBreakSound);
-		if(part instanceof PartEngineAircraft){
-			if(((PartEngineAircraft) part).propeller != null && !worldObj.isRemote){
-				((PartEngineAircraft) part).propeller.dropAsItem();
-			}
-		}
 	}
 	
 	@Override

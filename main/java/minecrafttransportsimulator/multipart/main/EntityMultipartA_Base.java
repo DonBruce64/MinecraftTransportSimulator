@@ -113,6 +113,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 	}
 	
 	public void removePart(APart part, boolean playBreakSound){
+		part.removePart();
 		parts.remove(part);
 		if(!worldObj.isRemote){
 			if(playBreakSound){

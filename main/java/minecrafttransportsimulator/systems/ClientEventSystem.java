@@ -61,6 +61,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(PlayerInteractEvent.RightClickEmpty event){
+    	//TODO see if we need this.  Don't need it in 1.11+
     	if(event.getWorld().isRemote){
 	    	for(Entity entity : minecraft.theWorld.loadedEntityList){
 				if(entity instanceof EntityMultipartC_Colliding){

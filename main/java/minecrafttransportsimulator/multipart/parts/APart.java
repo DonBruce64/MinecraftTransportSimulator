@@ -63,6 +63,11 @@ public abstract class APart{
 		this.partPos = this.multipart.getPositionVector().add(this.offset);
 	}
 	
+	/**Called right before the master multipart is about to remove this part.
+	 * Allows for parts to trigger logic that happens when they are removed.
+	 */
+	public void removePart(){}
+	
 	/**Return the part data in NBT form.
 	 * This is called when removing the part from a multipart to return an item.
 	 * This is also called when saving this part, so ensure EVERYTHING you need to make this
@@ -85,14 +90,14 @@ public abstract class APart{
 	
 	/**Gets the location of the model for this part. 
 	 */
-	public final ResourceLocation getModelLocation(){
+	public ResourceLocation getModelLocation(){
 		return new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + ".obj");
 	}
 	
 	/**Gets the location of the texture for this part.
 	 * This can be changed for data-dependent part texture. 
 	 */
-	public final ResourceLocation getTextureLocation(){
+	public ResourceLocation getTextureLocation(){
 		return new ResourceLocation(partName.substring(0, partName.indexOf(':')), "textures/parts/" + partName.substring(partName.indexOf(':') + 1) + ".png");
 	}
 	

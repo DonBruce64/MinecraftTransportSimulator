@@ -17,6 +17,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
@@ -30,6 +31,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  */
 public class PartGroundDevice extends APart implements FXPart{
 	private static final Vec3d groundDetectionOffset = new Vec3d(0, -0.05F, 0);
+	private final PartGroundDeviceFake fakePart;
 	
 	private boolean isFlat;
 	private boolean contactThisTick = false;
@@ -39,11 +41,16 @@ public class PartGroundDevice extends APart implements FXPart{
 	
 	public PartGroundDevice(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
+		this.isFlat = dataTag.getBoolean("isFlat");
 		//If we are a long ground device, add a fake ground device at the offset to make us
-		//have a better contact area.  Make sure we don't call this from that constructor itself,
+		//have a better contact area.  Make sure we don't call this from the main constructor itself,
 		//otherwise we'll get infinite loops!
-		if(pack.groundDevice.isLongPart){
-			PartGroundDeviceFake fakeDevice = new PartGroundDeviceFake
+		if(pack.groundDevice.isLongPart && !partName.contains("_fake")){
+			Vec3d fakeOffset = offset.addVector(0, 0, pack.groundDevice.extraCollisionBoxOffset);
+			fakePart = new PartGroundDeviceFake(this, fakeOffset, partName + "_fake", dataTag);
+			multipart.addPart(fakePart);
+		}else{
+			fakePart = null;
 		}
 	}
 	
@@ -104,6 +111,13 @@ public class PartGroundDevice extends APart implements FXPart{
 	}
 	
 	@Override
+	public void removePart(){
+		if(this.fakePart != null){
+			multipart.removePart(fakePart, false);
+		}
+	}
+	
+	@Override
 	public NBTTagCompound getPartNBTTag(){
 		NBTTagCompound dataTag = new NBTTagCompound();
 		dataTag.setBoolean("isFlat", this.isFlat);
@@ -122,8 +136,12 @@ public class PartGroundDevice extends APart implements FXPart{
 	
 	@Override
 	public Item getItemForPart(){
-		//TODO add fake ground device for pontoons and other ground devices.
 		return this.isFlat ? null : super.getItemForPart();
+	}
+	
+	@Override
+	public ResourceLocation getModelLocation(){
+		return !this.isFlat ? super.getModelLocation() : new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + "_flat.obj");
 	}
 	
 	@Override

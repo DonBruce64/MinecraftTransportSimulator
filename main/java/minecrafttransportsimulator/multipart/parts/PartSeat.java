@@ -42,6 +42,13 @@ public final class PartSeat extends APart{
     }
 	
 	@Override
+	public void removePart(){
+		if(multipart.getRiderForSeat(this) != null){
+			multipart.getRiderForSeat(this).dismountRidingEntity();
+		}
+	}
+	
+	@Override
 	public NBTTagCompound getPartNBTTag(){
 		NBTTagCompound dataTag = new NBTTagCompound();
 		dataTag.setByte("rotation", this.rotation);
