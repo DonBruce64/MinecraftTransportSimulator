@@ -53,19 +53,19 @@ public class GUIPackMissing extends GuiScreen{
 		GL11.glPushMatrix();
 		GL11.glTranslatef(guiLeft + 10, guiTop + 90, 0);
 		GL11.glScalef(0.75F, 0.75F, 0.75F);
-		fontRendererObj.drawSplitString(I18n.format("gui.packmissing.misplaced"),0, 0, 320, Color.BLACK.getRGB());
+		fontRendererObj.drawSplitString(I18n.format("gui.packmissing.modlink"),0, 0, 320, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(guiLeft + 10, guiTop + 115, 0);
 		GL11.glScalef(0.75F, 0.75F, 0.75F);
-		fontRendererObj.drawSplitString(I18n.format("gui.packmissing.versionerror"),0, 0, 320, Color.BLACK.getRGB());
+		fontRendererObj.drawSplitString(I18n.format("gui.packmissing.misplaced"),0, 0, 320, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(guiLeft + 10, guiTop + 150, 0);
 		GL11.glScalef(0.75F, 0.75F, 0.75F);
-		fontRendererObj.drawSplitString(I18n.format("gui.packmissing.checklogs"),0, 0, 320, Color.BLACK.getRGB());
+		fontRendererObj.drawSplitString(I18n.format("gui.packmissing.versionerror"),0, 0, 320, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
 	}
 	
