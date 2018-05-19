@@ -186,7 +186,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(TickEvent.RenderTickEvent event){
-    	if(event.phase.equals(event.phase.START)){
+    	if(event.phase.equals(event.phase.START) && minecraft.thePlayer != null){
     		if(minecraft.thePlayer.getRidingEntity() instanceof EntityMultipartC_Colliding){
     			if(minecraft.gameSettings.thirdPersonView != 0){
     				CameraSystem.runCustomCamera(event.renderTickTime);
