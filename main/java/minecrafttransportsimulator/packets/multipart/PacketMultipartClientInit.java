@@ -22,7 +22,7 @@ public class PacketMultipartClientInit extends APacketMultipart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartA_Base multipart = getMultipartFromMessage(message, ctx);
+					EntityMultipartA_Base multipart = getMultipart(message, ctx);
 					if(multipart!=null){
 						NBTTagCompound tagCompound = new NBTTagCompound();
 						multipart.writeToNBT(tagCompound);

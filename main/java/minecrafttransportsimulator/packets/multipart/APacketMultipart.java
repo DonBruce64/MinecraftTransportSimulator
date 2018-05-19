@@ -25,7 +25,7 @@ public abstract class APacketMultipart implements IMessage{
 		buf.writeInt(this.id);
 	}
 	
-	protected static EntityMultipartA_Base getMultipartFromMessage(APacketMultipart message, MessageContext ctx){
+	protected static EntityMultipartA_Base getMultipart(APacketMultipart message, MessageContext ctx){
 		if(ctx.side.isServer()){
 			return (EntityMultipartA_Base) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 		}else{

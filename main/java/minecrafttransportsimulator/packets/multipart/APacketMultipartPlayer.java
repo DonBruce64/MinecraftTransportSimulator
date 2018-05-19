@@ -28,7 +28,7 @@ public abstract class APacketMultipartPlayer extends APacketMultipart{
 		buf.writeInt(this.player);
 	}
 	
-	protected static EntityPlayer getPlayerFromMessage(APacketMultipartPlayer message, MessageContext ctx){
+	protected static EntityPlayer getPlayer(APacketMultipartPlayer message, MessageContext ctx){
 		if(ctx.side.isServer()){
 			return (EntityPlayer) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.player);
 		}else{

@@ -25,8 +25,8 @@ public class PacketMultipartWindowFix extends APacketMultipartPlayer{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartB_Existing multipart = (EntityMultipartB_Existing) getMultipartFromMessage(message, ctx);
-					EntityPlayer player = getPlayerFromMessage(message, ctx);
+					EntityMultipartB_Existing multipart = (EntityMultipartB_Existing) getMultipart(message, ctx);
+					EntityPlayer player = getPlayer(message, ctx);
 					
 					ItemStack heldStack = player.getHeldItemMainhand();
 					if(heldStack != null){

@@ -26,7 +26,7 @@ public class BlockPropellerBench extends ABlockRotateable{
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ){
 		if(Math.sqrt(player.getDistanceSq(pos)) < 5){
 			TileEntityPropellerBench bench = (TileEntityPropellerBench) world.getTileEntity(pos);
-			if(bench.getPropellerOnBench() != null){
+			if(bench.propellerOnBench != null){
 				bench.dropPropellerAt(player.posX, player.posY, player.posZ);
 			}else{
 				if(bench.isRunning()){
@@ -45,9 +45,7 @@ public class BlockPropellerBench extends ABlockRotateable{
 	
 	@Override
     public void breakBlock(World world, BlockPos pos, IBlockState state){
-		if(((TileEntityPropellerBench) world.getTileEntity(pos)).getPropellerOnBench() != null){
-			((TileEntityPropellerBench) world.getTileEntity(pos)).dropPropellerAt(pos.getX(), pos.getY(), pos.getZ());
-		}
+		((TileEntityPropellerBench) world.getTileEntity(pos)).dropPropellerAt(pos.getX(), pos.getY(), pos.getZ());
 		super.breakBlock(world, pos, state);
     }
 	

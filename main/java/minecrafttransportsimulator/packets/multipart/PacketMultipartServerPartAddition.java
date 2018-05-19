@@ -48,8 +48,8 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
 				@Override
 				public void run(){
 					//Check to make sure we can actually add this part before we do so.
-					EntityMultipartA_Base multipart = (EntityMultipartA_Base) getMultipartFromMessage(message, ctx);
-					EntityPlayer player = getPlayerFromMessage(message, ctx);
+					EntityMultipartA_Base multipart = (EntityMultipartA_Base) getMultipart(message, ctx);
+					EntityPlayer player = getPlayer(message, ctx);
 					
 					ItemStack heldStack = player.getHeldItemMainhand();
 					if(heldStack != null){

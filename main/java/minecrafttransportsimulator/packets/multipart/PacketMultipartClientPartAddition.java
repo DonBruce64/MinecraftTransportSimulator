@@ -51,7 +51,7 @@ public class PacketMultipartClientPartAddition extends APacketMultipart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartA_Base multipart = (EntityMultipartA_Base) getMultipartFromMessage(message, ctx);
+					EntityMultipartA_Base multipart = (EntityMultipartA_Base) getMultipart(message, ctx);
 					PackPart packPart = multipart.pack.parts.get(message.partIndex);
 					String partName = ((AItemPart) message.partStack.getItem()).partName;
 					Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);

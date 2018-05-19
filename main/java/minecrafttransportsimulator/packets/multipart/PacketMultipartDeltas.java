@@ -55,7 +55,7 @@ public class PacketMultipartDeltas extends APacketMultipart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartD_Moving multipart = (EntityMultipartD_Moving) getMultipartFromMessage(message, ctx);
+					EntityMultipartD_Moving multipart = (EntityMultipartD_Moving) getMultipart(message, ctx);
 					if(multipart != null){
 						multipart.addToServerDeltas(message.deltaX, message.deltaY, message.deltaZ, message.deltaYaw, message.deltaPitch, message.deltaRoll);
 					}

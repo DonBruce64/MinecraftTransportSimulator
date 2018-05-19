@@ -43,8 +43,8 @@ public class PacketMultipartInstruments extends APacketMultipartPlayer{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartE_Vehicle multipart = (EntityMultipartE_Vehicle) getMultipartFromMessage(message, ctx);
-					EntityPlayer player = getPlayerFromMessage(message, ctx);
+					EntityMultipartE_Vehicle multipart = (EntityMultipartE_Vehicle) getMultipart(message, ctx);
+					EntityPlayer player = getPlayer(message, ctx);
 					
 					if(multipart != null && player != null){
 						byte blankInstrumentNumber = (byte) multipart.getBlankInstrument().ordinal();

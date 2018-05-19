@@ -2,7 +2,10 @@ package minecrafttransportsimulator.blocks;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.parts.ItemPartPropeller;
+import minecrafttransportsimulator.packets.crafting.PropellerBenchUpdatePacket;
 import minecrafttransportsimulator.sounds.BenchSound;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.SFXSystem.SoundPart;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.entity.item.EntityItem;
@@ -14,13 +17,9 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class TileEntityPropellerBench extends ATileEntityRotatable implements SoundPart, ITickable{
-	public byte propellerType = 0;
-	public byte numberBlades = 2;
-	public byte pitch = 64;
-	public byte diameter = 70;
 	public long timeOperationFinished = 0;
-	
-	private ItemStack propellerOnBench = null;
+	public ItemPartPropeller selectedPropeller = null;
+	public ItemPartPropeller propellerOnBench = null;
 	private BenchSound benchSound;
 	
 	public TileEntityPropellerBench(){
@@ -31,20 +30,7 @@ public class TileEntityPropellerBench extends ATileEntityRotatable implements So
 	public void update(){
 		if(timeOperationFinished == worldObj.getTotalWorldTime()){
 			timeOperationFinished = 0;
-			propellerOnBench = new ItemStack(MTSRegistry.propeller, 1, this.propellerType);
-			NBTTagCompound stackTag = new NBTTagCompound();
-			stackTag.setByte("type", propellerType);
-			stackTag.setInteger("numberBlades", numberBlades);
-			stackTag.setInteger("pitch", pitch);
-			stackTag.setInteger("diameter", diameter);
-			if(propellerType==1){
-				stackTag.setFloat("health", 500);
-			}else if(propellerType==2){
-				stackTag.setFloat("health", 1000);
-			}else{
-				stackTag.setFloat("health", 100);
-			}
-			propellerOnBench.setTagCompound(stackTag);
+			propellerOnBench = selectedPropeller;
 		}
 		MTS.proxy.updateSoundPart(this, worldObj);
 	}
@@ -53,15 +39,16 @@ public class TileEntityPropellerBench extends ATileEntityRotatable implements So
 		return timeOperationFinished != 0 && timeOperationFinished > worldObj.getTotalWorldTime();
 	}
 	
-	public ItemStack getPropellerOnBench(){
-		return propellerOnBench;
-	}
-	
 	public void dropPropellerAt(double x, double y, double z){
-		if(!worldObj.isRemote){
-			worldObj.spawnEntityInWorld(new EntityItem(worldObj, x, y, z, propellerOnBench));
+		if(!worldObj.isRemote && propellerOnBench != null){
+			ItemStack propellerStack = new ItemStack(propellerOnBench);
+			NBTTagCompound stackTag = new NBTTagCompound();
+			stackTag.setFloat("health", PackParserSystem.getPartPack(propellerOnBench.partName).propeller.startingHealth);
+			propellerStack.setTagCompound(stackTag);
+			worldObj.spawnEntityInWorld(new EntityItem(worldObj, x, y, z, propellerStack));
+			propellerOnBench = null;
+			MTS.MTSNet.sendToAll(new PropellerBenchUpdatePacket(this, null));
 		}
-		propellerOnBench = null;
 	}
 
 	@Override
@@ -103,27 +90,24 @@ public class TileEntityPropellerBench extends ATileEntityRotatable implements So
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
-    	this.propellerType = tagCompound.getByte("propellerType");
-    	this.numberBlades = tagCompound.getByte("numberBlades");
-    	this.pitch = tagCompound.getByte("pitch");
-    	this.diameter = tagCompound.getByte("diameter");
     	this.timeOperationFinished = tagCompound.getLong("timeOperationFinished");
+    	if(tagCompound.hasKey("selectedPropeller")){
+    		this.selectedPropeller = (ItemPartPropeller) MTSRegistry.partItemMap.get(tagCompound.getString("selectedPropeller"));
+    	}
     	if(tagCompound.hasKey("propellerOnBench")){
-    		NBTTagCompound itemTag = tagCompound.getCompoundTag("propellerOnBench");
-    		this.propellerOnBench = ItemStack.loadItemStackFromNBT(itemTag);
+    		this.propellerOnBench = (ItemPartPropeller) MTSRegistry.partItemMap.get(tagCompound.getString("propellerOnBench"));
     	}
     }
     
 	@Override
     public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
-        tagCompound.setByte("propellerType", propellerType);
-        tagCompound.setByte("numberBlades", numberBlades);
-        tagCompound.setByte("pitch", pitch);
-        tagCompound.setByte("diameter", diameter);
         tagCompound.setLong("timeOperationFinished", timeOperationFinished);
+        if(selectedPropeller != null){
+        	tagCompound.setString("selectedPropeller", selectedPropeller.partName);
+        }
         if(propellerOnBench != null){
-        	tagCompound.setTag("propellerOnBench", propellerOnBench.writeToNBT(new NBTTagCompound()));
+        	tagCompound.setString("propellerOnBench", propellerOnBench.partName);
         }
 		return tagCompound;
     }
