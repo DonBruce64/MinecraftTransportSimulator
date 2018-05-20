@@ -58,7 +58,7 @@ public class PacketMultipartClientPartAddition extends APacketMultipart{
 					try{
 						Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partName);
 						Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
-						APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, partOffset, packPart.isController, packPart.turnsWithSteer, partName, message.partStack.getTagCompound());
+						APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, partOffset, packPart.isController, packPart.turnsWithSteer, partName, message.partStack.hasTagCompound() ? message.partStack.getTagCompound() : new NBTTagCompound());
 						multipart.addPart(newPart);
 					}catch(Exception e){
 						MTS.MTSLog.error("ERROR SPAWING PART ON CLIENT!");
