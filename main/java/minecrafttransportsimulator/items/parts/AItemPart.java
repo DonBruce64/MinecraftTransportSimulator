@@ -10,8 +10,7 @@ public abstract class AItemPart extends Item{
 		super();
 		this.setMaxStackSize(1);
 		this.partName = partName;
-		this.setRegistryName(partName);
-		this.setUnlocalizedName(partName);
+		this.setUnlocalizedName(partName.substring(partName.indexOf(':') + 1));
 		this.setCreativeTab(MTSRegistry.packTabs.get(partName.substring(0, partName.indexOf(':'))));
 	}
 }

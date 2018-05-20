@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.systems;
 
-import java.io.File;
-import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,15 +61,15 @@ public final class PackParserSystem{
     
     //-----START OF INIT LOGIC-----
     
-    /**Packs should call this upon load to add their multiparts to the mod.  This should be the location of the JSON file.**/
-    public static void addMultipartDefinition(File jsonFile, String modID){
+    /**Packs should call this upon load to add their multiparts to the mod.**/
+    public static void addMultipartDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
-    		PackMultipartObject pack = new Gson().fromJson(new FileReader(jsonFile), PackMultipartObject.class);
+    		PackMultipartObject pack = new Gson().fromJson(jsonReader, PackMultipartObject.class);
     		for(PackFileDefinitions definition : pack.definitions){
     			if(definition != null){
-    				String multipartName = jsonFile.getName().substring(0, jsonFile.getName().length() - ".json".length());
-    				multipartPackMap.put(modID + ":" + multipartName + definition.subName, pack);
-    				multipartJSONMap.put(modID + ":" + multipartName + definition.subName, multipartName);
+    				String multipartName = modID + ":" + jsonFileName + definition.subName;
+    				multipartPackMap.put(multipartName, pack);
+    				multipartJSONMap.put(multipartName, jsonFileName);
     				if(!MTSRegistry.packTabs.containsKey(modID)){
     					MTSRegistry.packTabs.put(modID, new CreativeTabPack(modID));
     				}
@@ -93,17 +92,17 @@ public final class PackParserSystem{
     			}
     		}
     	}catch(Exception e){
-    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFile.getName());
+    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
     		logList.add(e.getMessage());
     	}
     }
     
     /**Packs should call this upon load to add their parts to the mod.  This should be the location of the JSON file.**/
-    public static void addPartDefinition(File jsonFile, String modID){
+    public static void addPartDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
-    		String partName = jsonFile.getName().substring(0, jsonFile.getName().length() - ".json".length());
-	    	PackPartObject pack =  new Gson().fromJson(new FileReader(jsonFile), PackPartObject.class);
-	    	partPackMap.put(modID + ":" + partName, pack);
+	    	PackPartObject pack =  new Gson().fromJson(jsonReader, PackPartObject.class);
+	    	String partName = modID + ":" + jsonFileName;
+	    	partPackMap.put(partName, pack);
 	    	
 			//Now that the part is registered, set the crafting.
 			final List<ItemStack> materialList = new ArrayList<ItemStack>();
@@ -118,7 +117,7 @@ public final class PackParserSystem{
 			}
 			craftingItemMap.put(partName, materialList);
     	}catch(Exception e){
-    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFile.getName());
+    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
     		logList.add(e.getMessage());
     	}
     }

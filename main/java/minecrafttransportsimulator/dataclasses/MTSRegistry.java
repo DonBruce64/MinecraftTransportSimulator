@@ -125,6 +125,25 @@ public final class MTSRegistry{
 	}
 	
 	/**
+	 * This is called by packs to query what items they have registered.
+	 * Used to allow packs to register their own items after core mod processing.
+	 */
+	public static List<Item> getItemsForPack(String modID){
+		List<Item> packItems = new ArrayList<Item>();
+		for(ItemMultipart item : multipartItemMap.values()){
+			if(item.multipartName.startsWith(modID)){
+				packItems.add(item);
+			}
+		}
+		for(AItemPart item : partItemMap.values()){
+			if(item.partName.startsWith(modID)){
+				packItems.add(item);
+			}
+		}
+		return packItems;
+	}
+	
+	/**
 	 * Registers all blocks present in this class.
 	 * Also adds the respective TileEntity if the block has one.
 	 */
@@ -149,10 +168,12 @@ public final class MTSRegistry{
 	
 	/**
 	 * Registers all items (and itemblocks) present in this class.
-	 * Additionally registers multipart items and multipart part items
-	 * that were loaded into MTS earlier during init.  During this section we
-	 * also set up the creative tabs to hold the packs and set any registered
-	 * items to the appropriate tab.
+	 * Does not register any items from packs as Forge doesn't like us
+	 * registering pack-mod prefixed items from the core class.
+	 * We can, however, add them to the appropriate maps pending the registration
+	 * on the pack side.  That way all the pack has to do is set the
+	 * registry name of an item and register it, which doesn't involve
+	 * anything complicated.
 	 */
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event){
@@ -177,16 +198,15 @@ public final class MTSRegistry{
 		}
 		
 		
-		//Next register multipart items.
+		//Next add multipart items to the lists and creative tabs.
 		List<String> nameList = new ArrayList<String>(PackParserSystem.getAllMultipartPackNames());
 		for(String multipartName : nameList){
 			ItemMultipart itemMultipart = new ItemMultipart(multipartName);
 			multipartItemMap.put(multipartName, itemMultipart);
-			event.getRegistry().register(itemMultipart);
 			MTSRegistry.itemList.add(itemMultipart);
 		}
 		
-		//Now register part items.
+		//Now add part items to the lists.
 		nameList = new ArrayList<String>(PackParserSystem.getAllPartPackNames());
 		for(String partName : nameList){
 			try{
@@ -194,7 +214,6 @@ public final class MTSRegistry{
 				Constructor<? extends AItemPart> construct = itemClass.getConstructor(String.class);
 				AItemPart itemPart = construct.newInstance(partName);
 				partItemMap.put(partName, itemPart);
-				event.getRegistry().register(itemPart);
 				MTSRegistry.itemList.add(itemPart);
 			}catch(Exception e){
 				e.printStackTrace();
