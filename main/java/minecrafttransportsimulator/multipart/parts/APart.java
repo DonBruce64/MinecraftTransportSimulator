@@ -5,6 +5,7 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
@@ -60,7 +61,7 @@ public abstract class APart{
 	 * Use this for reactions that this part can take based on its surroundings if need be.
 	 */
 	public void updatePart(){
-		this.partPos = this.multipart.getPositionVector().add(this.offset);
+		this.partPos = RotationSystem.getRotatedPoint(this.offset, multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll).add(this.multipart.getPositionVector());
 	}
 	
 	/**Called right before the master multipart is about to remove this part.
