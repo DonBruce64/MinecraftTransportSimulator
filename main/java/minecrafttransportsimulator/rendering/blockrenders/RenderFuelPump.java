@@ -42,6 +42,7 @@ public class RenderFuelPump extends TileEntitySpecialRenderer<TileEntityFuelPump
 		GL11.glTranslated(x, y, z);
 		GL11.glTranslatef(0.5F, 0F, 0.5F);
 		GL11.glRotatef(180 - 45*pump.rotation, 0, 1, 0);
+		GL11.glColor3f(1.0F, 1.0F, 1.0F);
 		bindTexture(texture);
 		GL11.glCallList(displayListIndex);
 		
