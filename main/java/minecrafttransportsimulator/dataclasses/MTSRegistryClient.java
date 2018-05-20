@@ -72,11 +72,15 @@ public final class MTSRegistryClient{
 	}
 	
 	private static void registerMultipartItemRender(ItemMultipart item){
-		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(item.multipartName, "inventory"));
+		String itemModID = item.multipartName.substring(0, item.multipartName.indexOf(':'));
+		String itemName = item.multipartName.substring(item.multipartName.indexOf(':') + 1);
+		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(itemModID + ":vehicles/" + itemName, "inventory"));
 	}
 	
 	private static void registerPartItemRender(AItemPart item){
-		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(item.partName, "inventory"));
+		String itemModID = item.partName.substring(0, item.partName.indexOf(':'));
+		String itemName = item.partName.substring(item.partName.indexOf(':') + 1);
+		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(itemModID + ":parts/" + itemName, "inventory"));
 	}
 	
 	private static final IRenderFactory<EntityMultipartD_Moving> MTSRenderFactory = new IRenderFactory<EntityMultipartD_Moving>(){
