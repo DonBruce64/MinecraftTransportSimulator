@@ -18,6 +18,7 @@ import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackDisplayTe
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackRotatableModelObject;
+import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
@@ -655,73 +656,74 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		EntityPlayer player = minecraft.thePlayer;
 		ItemStack heldStack = player.getHeldItemMainhand();
 		if(heldStack != null){
-			String partBoxToRender = heldStack.getItem().getRegistryName().getResourcePath();
-			
-			for(PackPart packPart : multipart.pack.parts){
-				boolean isPresent = false;
-				boolean isHoldingPart = false;
-				Vec3d partPos = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
-				for(APart part : multipart.getMultipartParts()){
-					if(part.offset.equals(partPos)){
-						isPresent = true;
-						break;
+			if(heldStack.getItem() instanceof AItemPart){
+				AItemPart heldItem = (AItemPart) heldStack.getItem();
+				for(PackPart packPart : multipart.pack.parts){
+					boolean isPresent = false;
+					boolean isHoldingPart = false;
+					Vec3d partPos = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
+					for(APart part : multipart.getMultipartParts()){
+						if(part.offset.equals(partPos)){
+							isPresent = true;
+							break;
+						}
 					}
-				}
-	
-				for(String partName : packPart.names){
-					if(partName.equals(partBoxToRender)){
-						isHoldingPart = true;
-						break;
+		
+					for(String partName : packPart.names){
+						if(partName.equals(heldItem.partName)){
+							isHoldingPart = true;
+							break;
+						}
 					}
-				}
+							
+					if(!isPresent && isHoldingPart){
+						Vec3d offset = RotationSystem.getRotatedPoint(partPos, multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
+						AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.75F, (float) (offset.yCoord) - 0.75F, (float) (offset.zCoord) - 0.75F, (float) (offset.xCoord) + 0.75F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.75F);
 						
-				if(!isPresent && isHoldingPart){
-					Vec3d offset = RotationSystem.getRotatedPoint(partPos, multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
-					AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.75F, (float) (offset.yCoord) - 0.75F, (float) (offset.zCoord) - 0.75F, (float) (offset.xCoord) + 0.75F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.75F);
-					
-					GL11.glPushMatrix();
-					GL11.glDisable(GL11.GL_TEXTURE_2D);
-					GL11.glDisable(GL11.GL_LIGHTING);
-					GL11.glEnable(GL11.GL_BLEND);
-					GL11.glColor4f(0, 1, 0, 0.25F);
-					GL11.glBegin(GL11.GL_QUADS);
-					
-					GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
-					GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
-					GL11.glVertex3d(box.minX, box.minY, box.maxZ);
-					GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
-					
-					GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
-					GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
-					GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
-					GL11.glVertex3d(box.maxX, box.minY, box.minZ);
-					
-					GL11.glVertex3d(box.maxX, box.minY, box.minZ);
-					GL11.glVertex3d(box.minX, box.minY, box.minZ);
-					GL11.glVertex3d(box.minX, box.maxY, box.minZ);
-					GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
-					
-					GL11.glVertex3d(box.minX, box.minY, box.minZ);
-					GL11.glVertex3d(box.minX, box.minY, box.maxZ);
-					GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
-					GL11.glVertex3d(box.minX, box.maxY, box.minZ);
-					
-					GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
-					GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
-					GL11.glVertex3d(box.minX, box.maxY, box.minZ);
-					GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
-					
-					GL11.glVertex3d(box.minX, box.minY, box.maxZ);
-					GL11.glVertex3d(box.minX, box.minY, box.minZ);
-					GL11.glVertex3d(box.maxX, box.minY, box.minZ);
-					GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
-					GL11.glEnd();
+						GL11.glPushMatrix();
+						GL11.glDisable(GL11.GL_TEXTURE_2D);
+						GL11.glDisable(GL11.GL_LIGHTING);
+						GL11.glEnable(GL11.GL_BLEND);
+						GL11.glColor4f(0, 1, 0, 0.25F);
+						GL11.glBegin(GL11.GL_QUADS);
+						
+						GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+						GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+						GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+						GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+						
+						GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+						GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+						GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+						GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+						
+						GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+						GL11.glVertex3d(box.minX, box.minY, box.minZ);
+						GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+						GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+						
+						GL11.glVertex3d(box.minX, box.minY, box.minZ);
+						GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+						GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+						GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+						
+						GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+						GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+						GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+						GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+						
+						GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+						GL11.glVertex3d(box.minX, box.minY, box.minZ);
+						GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+						GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+						GL11.glEnd();
 
-					GL11.glColor4f(1, 1, 1, 1);
-					GL11.glDisable(GL11.GL_BLEND);
-					GL11.glEnable(GL11.GL_LIGHTING);
-					GL11.glEnable(GL11.GL_TEXTURE_2D);
-					GL11.glPopMatrix();
+						GL11.glColor4f(1, 1, 1, 1);
+						GL11.glDisable(GL11.GL_BLEND);
+						GL11.glEnable(GL11.GL_LIGHTING);
+						GL11.glEnable(GL11.GL_TEXTURE_2D);
+						GL11.glPopMatrix();
+					}
 				}
 			}
 		}
