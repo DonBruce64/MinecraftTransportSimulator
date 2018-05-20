@@ -58,7 +58,7 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
 							AItemPart partItem = (AItemPart) heldStack.getItem();
 							PackPart packPart = multipart.pack.parts.get(message.partIndex);
 							for(String partName : packPart.names){
-								if(((AItemPart) heldStack.getItem()).partName.equals(partName)){
+								if(partItem.partName.equals(partName)){
 									//This part does go to this multipart.  Now check if one is already there.
 									Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
 	        						for(APart part : multipart.getMultipartParts()){
@@ -72,15 +72,16 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
 									try{
 										Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partItem.partName);
 										Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
-										APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, partOffset, packPart.isController, packPart.turnsWithSteer, partName, heldStack.getTagCompound());
+										APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, partOffset, packPart.isController, packPart.turnsWithSteer, partName, heldStack.hasTagCompound() ? heldStack.getTagCompound() : new NBTTagCompound());
 										multipart.addPart(newPart);
 										if(!player.capabilities.isCreativeMode){
-											player.inventory.clearMatchingItems(heldStack.getItem(), heldStack.getItemDamage(), 1, heldStack.getTagCompound());
+											player.inventory.clearMatchingItems(partItem, heldStack.getItemDamage(), 1, heldStack.getTagCompound());
 										}
 										MTS.MTSNet.sendToAll(new PacketMultipartClientPartAddition(multipart, message.partIndex, heldStack));
 									}catch(Exception e){
 										MTS.MTSLog.error("ERROR SPAWING PART ON SERVER!");
 										MTS.MTSLog.error(e.getMessage());
+										e.printStackTrace();
 									}
 								}
 							}
