@@ -35,6 +35,8 @@ public abstract class APart{
 	public PackPartObject pack;
 	
 	public Vec3d partPos;
+	
+	private ResourceLocation modelLocation;
 		
 	public APart(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		this.isController = isController;
@@ -92,7 +94,10 @@ public abstract class APart{
 	/**Gets the location of the model for this part. 
 	 */
 	public ResourceLocation getModelLocation(){
-		return new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + ".obj");
+		if(modelLocation == null){
+			modelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + ".obj"); 
+		}
+		return modelLocation;
 	}
 	
 	/**Gets the location of the texture for this part.

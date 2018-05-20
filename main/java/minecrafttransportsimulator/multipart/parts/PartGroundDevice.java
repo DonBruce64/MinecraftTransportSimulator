@@ -32,6 +32,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class PartGroundDevice extends APart implements FXPart{
 	private static final Vec3d groundDetectionOffset = new Vec3d(0, -0.05F, 0);
 	private final PartGroundDeviceFake fakePart;
+	private ResourceLocation flatModelLocation;
 	
 	private boolean isFlat;
 	private boolean contactThisTick = false;
@@ -141,7 +142,14 @@ public class PartGroundDevice extends APart implements FXPart{
 	
 	@Override
 	public ResourceLocation getModelLocation(){
-		return !this.isFlat ? super.getModelLocation() : new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + "_flat.obj");
+		if(this.isFlat){
+			if(flatModelLocation == null){
+				flatModelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + "_flat.obj");
+			}
+			return flatModelLocation;
+		}else{
+			return super.getModelLocation();
+		}
 	}
 	
 	@Override

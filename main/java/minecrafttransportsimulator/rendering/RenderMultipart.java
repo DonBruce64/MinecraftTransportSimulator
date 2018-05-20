@@ -57,8 +57,11 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	private static final Minecraft minecraft = Minecraft.getMinecraft();
 	
-	/**Display list GL integers.  Keyed by multipart JSON name or part name.*/
-	private static final Map<String, Integer> displayLists = new HashMap<String, Integer>();
+	/**Display list GL integers.  Keyed by multipart name name.*/
+	private static final Map<String, Integer> multipartDisplayLists = new HashMap<String, Integer>();
+	
+	/**Display list GL integers.  Keyed by part ResourceLocation (this allows for part model changes).*/
+	private static final Map<ResourceLocation, Integer> partDisplayLists = new HashMap<ResourceLocation, Integer>();
 	
 	/**Rotatable parts for models.  Keyed by multipart JSON name.*/
 	private static final Map<String, List<RotatablePart>> rotatableLists = new HashMap<String, List<RotatablePart>>();
@@ -114,10 +117,11 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	}
 	
 	public static void resetRenders(){
-		for(Integer displayList : displayLists.values()){
+		for(Integer displayList : multipartDisplayLists.values()){
 			GL11.glDeleteLists(displayList, 1);
 		}
-		displayLists.clear();
+		multipartDisplayLists.clear();
+		partDisplayLists.clear();
 		rotatableLists.clear();
 		windowLists.clear();
 		lightLists.clear();
@@ -244,8 +248,8 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glPushMatrix();
 		//Normally we use the pack name, but since all displaylists
 		//are the same for all models, this is more appropriate.
-		if(displayLists.containsKey(multipart.multipartJSONName)){
-			GL11.glCallList(displayLists.get(multipart.multipartJSONName));
+		if(multipartDisplayLists.containsKey(multipart.multipartJSONName)){
+			GL11.glCallList(multipartDisplayLists.get(multipart.multipartJSONName));
 			
 			//The display list only renders static parts.  We need to render dynamic ones manually.
 			//If this is a window, don't render it as that gets done all at once later.
@@ -302,7 +306,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			lightLists.put(multipart.multipartJSONName, lightParts);
 			GL11.glEnd();
 			GL11.glEndList();
-			displayLists.put(multipart.multipartJSONName, displayListIndex);
+			multipartDisplayLists.put(multipart.multipartJSONName, displayListIndex);
 		}
 		GL11.glPopMatrix();
 	}
@@ -336,7 +340,8 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	
 	private static void renderParts(EntityMultipartD_Moving multipart, float partialTicks){
 		for(APart part : multipart.getMultipartParts()){
-			if(part.getModelLocation() == null){
+			ResourceLocation partModelLocation = part.getModelLocation();
+			if(partModelLocation == null){
 				continue;
 			}
 			
@@ -350,8 +355,8 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
     			}
     		}
     		
-    		if(!displayLists.containsKey(part.partName)){
-    			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(part.getModelLocation());
+    		if(!partDisplayLists.containsKey(partModelLocation)){
+    			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation);
     			int displayListIndex = GL11.glGenLists(1);
     			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
     			GL11.glBegin(GL11.GL_TRIANGLES);
@@ -364,7 +369,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
     			}
     			GL11.glEnd();
     			GL11.glEndList();
-    			displayLists.put(part.partName, displayListIndex);
+    			partDisplayLists.put(partModelLocation, displayListIndex);
     			textureMap.put(part.partName, part.getTextureLocation());
     		}
     		
@@ -373,7 +378,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
     		GL11.glRotated(part.getRotation(partialTicks).yCoord, 0, 1, 0);
     		GL11.glRotated(part.getRotation(partialTicks).zCoord, 0, 0, 1);
     		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
-			GL11.glCallList(displayLists.get(part.partName));
+			GL11.glCallList(partDisplayLists.get(partModelLocation));
 			GL11.glPopMatrix();
 			GL11.glPopMatrix();
         }
