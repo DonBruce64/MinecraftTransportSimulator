@@ -156,7 +156,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
         
 		//Bind texture.  Adds new element to cache if needed.
 		if(!textureMap.containsKey(multipart.multipartName)){
-			textureMap.put(multipart.multipartName, new ResourceLocation(multipart.multipartName.substring(0, multipart.multipartName.indexOf(':')), "textures/models/" + multipart.multipartName.substring(multipart.multipartName.indexOf(':') + 1) + ".png"));
+			textureMap.put(multipart.multipartName, new ResourceLocation(multipart.multipartName.substring(0, multipart.multipartName.indexOf(':')), "textures/vehicles/" + multipart.multipartName.substring(multipart.multipartName.indexOf(':') + 1) + ".png"));
 		}
 		minecraft.getTextureManager().bindTexture(textureMap.get(multipart.multipartName));
 		//Render all the model parts except windows.
