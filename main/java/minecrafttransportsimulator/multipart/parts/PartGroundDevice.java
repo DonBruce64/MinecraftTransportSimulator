@@ -183,8 +183,11 @@ public class PartGroundDevice extends APart implements FXPart{
 	    	for(int i = minX; i < maxX; ++i){
 	    		for(int j = minY; j < maxY; ++j){
 	    			for(int k = minZ; k < maxZ; ++k){
-	    				if(multipart.worldObj.getBlockState(new BlockPos(i, j, k)).getMaterial().isLiquid()){
-	    					return true;
+	    				BlockPos checkPos = new BlockPos(i, j, k);
+	    				if(multipart.worldObj.isBlockLoaded(checkPos)){
+		    				if(multipart.worldObj.getBlockState(checkPos).getMaterial().isLiquid()){
+		    					return true;
+		    				}
 	    				}
 	    			}
 	    		}
