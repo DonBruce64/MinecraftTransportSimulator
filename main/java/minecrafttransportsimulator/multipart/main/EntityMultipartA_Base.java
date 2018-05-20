@@ -112,6 +112,7 @@ public abstract class EntityMultipartA_Base extends Entity{
     }
 	
 	public void addPart(APart part){
+		parts.add(part);
 		if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
 			Vec3d boost = new Vec3d(0, Math.max(0, -part.offset.yCoord), 0);
 			this.setPositionAndRotation(posX, posY + boost.yCoord, posZ, rotationYaw, 0);
