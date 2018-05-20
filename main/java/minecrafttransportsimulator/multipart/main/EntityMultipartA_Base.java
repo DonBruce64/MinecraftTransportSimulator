@@ -55,13 +55,11 @@ public abstract class EntityMultipartA_Base extends Entity{
 	 * Use the getMultipartsParts() method instead to return a loop-safe array.*/
 	private final List<APart> parts = new ArrayList<APart>();
 
+	/**Cooldown byte to prevent packet spam requests during client-side loading of part packs.**/
+	private byte clientPackPacketCooldown = 0;
+	
 	public EntityMultipartA_Base(World world){
 		super(world);
-		//This constructor is called on clients and servers.
-		//If this is a client, we need to request NBT data from the server to get our parts.
-		if(world.isRemote){
-			MTS.MTSNet.sendToServer(new PacketMultipartClientInit(this));
-		}
 	}
 	
 	public EntityMultipartA_Base(World world, String multipartName){
@@ -69,6 +67,23 @@ public abstract class EntityMultipartA_Base extends Entity{
 		this.multipartName = multipartName;
 		this.multipartJSONName = PackParserSystem.getMultipartJSONName(multipartName);
 		this.pack = PackParserSystem.getMultipartPack(multipartName); 
+	}
+	
+	@Override
+	public void onEntityUpdate(){
+		//We need to get pack data manually if we are on the client-side.
+		///Although we could call this in the constructor, Minecraft changes the
+		//entity IDs after spawning and that fouls things up.
+		if(pack == null){
+			if(worldObj.isRemote){
+				if(clientPackPacketCooldown == 0){
+					clientPackPacketCooldown = 40;
+					MTS.MTSNet.sendToServer(new PacketMultipartClientInit(this));
+				}else{
+					--clientPackPacketCooldown;
+				}
+			}
+		}
 	}
 	
 	@Override
