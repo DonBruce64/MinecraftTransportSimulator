@@ -3,6 +3,7 @@ package minecrafttransportsimulator.systems;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,13 +45,13 @@ import scala.actors.threadpool.Arrays;
  */
 public final class PackParserSystem{
 	/**Map that keys the unique name of a multipart to it's pack.  Used for associating packs with saved multiparts.**/
-    private static final Map<String, PackMultipartObject> multipartPackMap = new HashMap<String, PackMultipartObject>();
+    private static final Map<String, PackMultipartObject> multipartPackMap = new LinkedHashMap<String, PackMultipartObject>();
    
     /**Map that keys the unique name of a multipart to it's JSON file name.**/
     private static final Map<String, String> multipartJSONMap = new HashMap<String, String>();
    
     /**Same function as the multipart map, just for parts.**/
-    private static final Map<String, PackPartObject> partPackMap = new HashMap<String, PackPartObject>();
+    private static final Map<String, PackPartObject> partPackMap = new LinkedHashMap<String, PackPartObject>();
     
 	/**Maps multipart and part names to their crafting ingredients.*/
 	private static final Map<String, List<ItemStack>> craftingItemMap = new HashMap<String, List<ItemStack>>();

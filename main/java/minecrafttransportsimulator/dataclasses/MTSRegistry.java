@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -81,14 +82,14 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @Mod.EventBusSubscriber
 public final class MTSRegistry{
-	/**All registered items are stored in this list as they are added.  Used to sort items in creative tabs.**/
+	/**All registered core items are stored in this list as they are added.  Used to sort items in the creative tab.**/
 	public static List<Item> itemList = new ArrayList<Item>();
 	
 	/**Maps multipart item names to items.  All multipart items for all packs will be populated here.*/
-	public static Map<String, ItemMultipart> multipartItemMap = new HashMap<String, ItemMultipart>();
+	public static Map<String, ItemMultipart> multipartItemMap = new LinkedHashMap<String, ItemMultipart>();
 	
 	/**Maps part item names to items.  All part items for all packs will be populated here.*/
-	public static Map<String, AItemPart> partItemMap = new HashMap<String, AItemPart>();
+	public static Map<String, AItemPart> partItemMap = new LinkedHashMap<String, AItemPart>();
 	
 	/**Core creative tab for base MTS items**/
 	public static final CreativeTabCore coreTab = new CreativeTabCore();
@@ -199,22 +200,18 @@ public final class MTSRegistry{
 		
 		
 		//Next add multipart items to the lists and creative tabs.
-		List<String> nameList = new ArrayList<String>(PackParserSystem.getAllMultipartPackNames());
-		for(String multipartName : nameList){
+		for(String multipartName : PackParserSystem.getAllMultipartPackNames()){
 			ItemMultipart itemMultipart = new ItemMultipart(multipartName);
 			multipartItemMap.put(multipartName, itemMultipart);
-			MTSRegistry.itemList.add(itemMultipart);
 		}
 		
 		//Now add part items to the lists.
-		nameList = new ArrayList<String>(PackParserSystem.getAllPartPackNames());
-		for(String partName : nameList){
+		for(String partName : PackParserSystem.getAllPartPackNames()){
 			try{
 				Class<? extends AItemPart> itemClass = PackParserSystem.getPartItemClass(partName);
 				Constructor<? extends AItemPart> construct = itemClass.getConstructor(String.class);
 				AItemPart itemPart = construct.newInstance(partName);
 				partItemMap.put(partName, itemPart);
-				MTSRegistry.itemList.add(itemPart);
 			}catch(Exception e){
 				e.printStackTrace();
 			}

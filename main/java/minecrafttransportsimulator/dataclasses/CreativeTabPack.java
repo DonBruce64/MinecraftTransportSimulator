@@ -32,7 +32,14 @@ public final class CreativeTabPack extends CreativeTabs{
     @SideOnly(Side.CLIENT)
     public void displayAllRelevantItems(List<ItemStack> givenList){
 		givenList.clear();
-		for(Item item : MTSRegistry.itemList){
+		for(Item item : MTSRegistry.multipartItemMap.values()){
+			for(CreativeTabs tab : item.getCreativeTabs()){
+				if(tab.equals(this)){
+					item.getSubItems(item, tab, givenList);
+				}
+			}
+		}
+		for(Item item : MTSRegistry.partItemMap.values()){
 			for(CreativeTabs tab : item.getCreativeTabs()){
 				if(tab.equals(this)){
 					item.getSubItems(item, tab, givenList);
@@ -45,9 +52,9 @@ public final class CreativeTabPack extends CreativeTabs{
 	@SideOnly(Side.CLIENT)
     public ItemStack getIconItemStack(){
 		List<ItemStack> tabStacks = new ArrayList<ItemStack>();
-		for(ItemMultipart movingItem : MTSRegistry.multipartItemMap.values()){
-			if(movingItem.getRegistryName().getResourceDomain().equals(getTabLabel())){
-				tabStacks.add(new ItemStack(movingItem));
+		for(ItemMultipart multipartItem : MTSRegistry.multipartItemMap.values()){
+			if(multipartItem.getRegistryName().getResourceDomain().equals(getTabLabel())){
+				tabStacks.add(new ItemStack(multipartItem));
 			}
 		}
 		return tabStacks.isEmpty() ? new ItemStack(MTSRegistry.wrench) : tabStacks.get((int) (Minecraft.getMinecraft().theWorld.getTotalWorldTime()/20%tabStacks.size()));
