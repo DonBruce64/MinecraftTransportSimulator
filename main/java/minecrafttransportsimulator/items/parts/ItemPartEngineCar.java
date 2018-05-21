@@ -33,10 +33,13 @@ public final class ItemPartEngineCar extends AItemPartEngine{
 		tooltipLines.add(I18n.format("info.item.engine.fuelconsumption") + pack.engine.fuelConsumption);
 		tooltipLines.add(I18n.format("info.item.engine.hours") + Math.round(stackTag.getDouble("hours")*100D)/100D);
 		tooltipLines.add(I18n.format("info.item.engine.gearratios"));
-		for(byte i=1; i<pack.engine.gearRatios.length; i+=2){
+		for(byte i=0; i<pack.engine.gearRatios.length; i+=3){
 			String gearRatios = String.valueOf(pack.engine.gearRatios[i]);
 			if(i+1 < pack.engine.gearRatios.length){
 				gearRatios += ",   " + String.valueOf(pack.engine.gearRatios[i+1]);
+			}
+			if(i+2 < pack.engine.gearRatios.length){
+				gearRatios += ",   " + String.valueOf(pack.engine.gearRatios[i+2]);
 			}
 			tooltipLines.add(gearRatios);
 		}
