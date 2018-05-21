@@ -14,7 +14,7 @@ public final class PartCrate extends APart{
 	
 	public PartCrate(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
-		this.crateInventory = new InventoryBasic("entity." + MTS.MODID + ".crate.name", false, 27);
+		this.crateInventory = new InventoryBasic("", false, 27);
 		NBTTagList stackTagList = dataTag.getTagList("Items", 10);
         for (byte i = 0; i < stackTagList.tagCount(); ++i){
             NBTTagCompound stackTag = stackTagList.getCompoundTagAt(i);
@@ -52,11 +52,11 @@ public final class PartCrate extends APart{
 	
 	@Override
 	public float getWidth(){
-		return 0.75F;
+		return 1.0F;
 	}
 
 	@Override
 	public float getHeight(){
-		return 0.75F;
+		return 1.0F;
 	}
 }
