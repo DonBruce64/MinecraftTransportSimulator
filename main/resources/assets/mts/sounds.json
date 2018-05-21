@@ -1,29 +1,8 @@
 {    
-    "enginelycomingo360_cranking"    : {"category": "master", "sounds": [{"name": "mts:enginelycomingo360_cranking","stream": false}]},
-    "enginelycomingo360_starting"    : {"category": "master", "sounds": [{"name": "mts:enginelycomingo360_starting","stream": false}]},
-    "enginelycomingo360_running"     : {"category": "master", "sounds": [{"name": "mts:enginelycomingo360_running","stream": false}]},
-    
-    "enginebristolmercury_cranking"     : {"category": "master", "sounds": [{"name": "mts:enginebristolmercury_cranking","stream": false}]},
-	"enginebristolmercury_starting"    : {"category": "master", "sounds": [{"name": "mts:enginebristolmercury_starting","stream": false}]},
-    "enginebristolmercury_running"     : {"category": "master", "sounds": [{"name": "mts:enginebristolmercury_running","stream": false}]},
- 
-    "engineamci4_cranking"     : {"category": "master", "sounds": [{"name": "mts:engineamci4_cranking","stream": false}]},
-    "engineamci4_starting"     : {"category": "master", "sounds": [{"name": "mts:engineamci4_starting","stream": false}]},
-    "engineamci4_running"     : {"category": "master", "sounds": [{"name": "mts:engineamci4_running","stream": false}]},
-   
-    "enginedetroitdiesel_cranking"     : {"category": "master", "sounds": [{"name": "mts:enginedetroitdiesel_cranking","stream": false}]},
-    "enginedetroitdiesel_starting"     : {"category": "master", "sounds": [{"name": "mts:enginedetroitdiesel_starting","stream": false}]},
-    "enginedetroitdiesel_running"     : {"category": "master", "sounds": [{"name": "mts:enginedetroitdiesel_running","stream": false}]},
-   
-    "engine_sputter"    : {"category": "master", "sounds": [{"name": "mts:engine_sputter","stream": false}]},
     "engine_shifting_grinding"    : {"category": "master", "sounds": [{"name": "mts:engine_shifting_grinding","stream": false}]},
-    
-    "horn_car1"    : {"category": "master", "sounds": [{"name": "mts:horn_car1","stream": false}]},
-    "horn_truck"    : {"category": "master", "sounds": [{"name": "mts:horn_truck","stream": false}]},
-    
     "bench_running"    : {"category": "master", "sounds": [{"name": "mts:bench_running","stream": false}]},
-	"stall_buzzer"     : {"category": "master", "sounds": [{"name": "mts:stall_buzzer","stream": false}]},
-	"wheel_striking"     : {"category": "master", "sounds": [{"name": "mts:wheel_striking","stream": false}]},
-	"air_brake_activating"     : {"category": "master", "sounds": [{"name": "mts:air_brake_activating","stream": false}]},
-	"backup_beeper"     : {"category": "master", "sounds": [{"name": "mts:backup_beeper","stream": false}]}
+    "stall_buzzer"     : {"category": "master", "sounds": [{"name": "mts:stall_buzzer","stream": false}]},
+    "wheel_striking"     : {"category": "master", "sounds": [{"name": "mts:wheel_striking","stream": false}]},
+    "air_brake_activating"     : {"category": "master", "sounds": [{"name": "mts:air_brake_activating","stream": false}]},
+    "backup_beeper"     : {"category": "master", "sounds": [{"name": "mts:backup_beeper","stream": false}]}
 }
