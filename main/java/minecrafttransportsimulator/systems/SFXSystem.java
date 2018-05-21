@@ -32,7 +32,7 @@ public final class SFXSystem{
 	public static void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){
 		volume = isPlayerInsideEnclosedVehicle() ? volume*0.5F : volume;
 		double soundDistance = Minecraft.getMinecraft().thePlayer.getPositionVector().distanceTo(soundPosition);
-        PositionedSoundRecord sound = new PositionedSoundRecord(getSoundEventFromName(soundName), SoundCategory.MASTER, volume, pitch, (float)soundPosition.xCoord, (float)soundPosition.xCoord, (float)soundPosition.xCoord);
+        PositionedSoundRecord sound = new PositionedSoundRecord(getSoundEventFromName(soundName), SoundCategory.MASTER, volume, pitch, (float)soundPosition.xCoord, (float)soundPosition.yCoord, (float)soundPosition.zCoord);
         if(soundDistance > 10.0D){
         	Minecraft.getMinecraft().getSoundHandler().playDelayedSound(sound, (int)(soundDistance/2));
         }else{
