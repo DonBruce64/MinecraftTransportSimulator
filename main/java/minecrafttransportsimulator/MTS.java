@@ -4,7 +4,6 @@ import org.apache.logging.log4j.Logger;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.ForgeContainerGUISystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
@@ -45,6 +44,5 @@ public class MTS {
 	public void init(FMLInitializationEvent event){
 		MTSRegistry.init();
 		ConfigSystem.initFuels();
-		NetworkRegistry.INSTANCE.registerGuiHandler(instance, new ForgeContainerGUISystem());
 	}
 }

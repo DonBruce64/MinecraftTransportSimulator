@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.multipart.parts;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.InventoryBasic;
@@ -27,8 +26,6 @@ public final class PartCrate extends APart{
 	public boolean interactPart(EntityPlayer player){
 		if(!player.worldObj.isRemote){
 			player.displayGUIChest(this.crateInventory);
-			//TODO see if we need this or not.
-			//player.openGui(MTS.instance, this.multipart.getEntityId(), player.worldObj, (int) this.offset.xCoord, (int) this.offset.yCoord, (int) this.offset.zCoord);
 		}
 		return true;
     }
