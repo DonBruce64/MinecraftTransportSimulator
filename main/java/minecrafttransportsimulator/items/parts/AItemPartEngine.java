@@ -19,11 +19,15 @@ public abstract class AItemPartEngine extends AItemPart{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
-		super.getSubItems(item, tab, subItems);
-		ItemStack engineStack = new ItemStack(item);
+		ItemStack engineStackRegular = new ItemStack(item);
+		engineStackRegular.setTagCompound(new NBTTagCompound());
+		subItems.add(engineStackRegular);
+		
+		ItemStack engineStackCreative = new ItemStack(item);
+		engineStackRegular.setTagCompound(new NBTTagCompound());
 		NBTTagCompound stackTag = new NBTTagCompound();
 		stackTag.setBoolean("isCreative", true);
-		engineStack.setTagCompound(stackTag);
-		subItems.add(engineStack);
+		engineStackCreative.setTagCompound(stackTag);
+		subItems.add(engineStackCreative);		
     }
 }
