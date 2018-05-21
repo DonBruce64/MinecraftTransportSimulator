@@ -59,13 +59,13 @@ public class FuelPumpConnectionPacket implements IMessage{
 					if(pump != null){
 						if(message.id != -1){
 							pump.setConnectedVehicle((EntityMultipartE_Vehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id));
-							pump.getInfo().fluid.amount = message.amountPresent;
-							pump.totalTransfered = message.amountTransferred;
 						}else{
 							pump.setConnectedVehicle(null);
-							pump.getInfo().fluid.amount = message.amountPresent;
-							pump.totalTransfered = message.amountTransferred;
 						}
+						if(pump.getInfo().fluid != null){
+							pump.getInfo().fluid.amount = message.amountPresent;
+						}
+						pump.totalTransfered = message.amountTransferred;
 					}
 				}
 			});
