@@ -15,7 +15,7 @@ public class PackPartObject{
     	public boolean isAutomatic;
     	public byte starterPower;
     	public byte starterDuration;
-    	public byte maxRPM;
+    	public int maxRPM;
     	public float fuelConsumption;
     	public float[] gearRatios;
     	public String[] repairMaterials;
