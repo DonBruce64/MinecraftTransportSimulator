@@ -12,13 +12,13 @@ public class PackPartObject{
     }
     
     public class PartEngineConfig{
-    	public String type;
     	public boolean isAutomatic;
     	public byte starterPower;
     	public byte starterDuration;
     	public byte maxRPM;
     	public float fuelConsumption;
     	public float[] gearRatios;
+    	public String[] repairMaterials;
     }
     
     public class PartGroundDeviceConfig{
