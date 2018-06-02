@@ -10,6 +10,8 @@ import java.util.Map;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockFuelPump;
+import minecrafttransportsimulator.blocks.BlockMetalPole;
+import minecrafttransportsimulator.blocks.BlockPartial;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
 import minecrafttransportsimulator.items.core.ItemInstrument;
 import minecrafttransportsimulator.items.core.ItemKey;
@@ -56,6 +58,7 @@ import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
+import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -97,19 +100,29 @@ public final class MTSRegistry{
 	/**Map of creative tabs for packs.  Keyed by pack IDs.  Populated by the {@link PackParserSystem}**/
 	public static final Map<String, CreativeTabPack> packTabs = new HashMap<String, CreativeTabPack>();
 
-	
+	//Multipart interaction items.
 	public static final Item manual = new ItemManual().setCreativeTab(coreTab);
 	public static final Item wrench = new ItemWrench().setCreativeTab(coreTab);
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
 	
+	//Crafting bench blocks.
 	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(coreTab);
 	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(coreTab);	
 	public static final Item itemBlockPropellerBench = new ItemBlock(propellerBench);
 	public static final Item itemBlockFuelPump = new ItemBlock(fuelPump);
 	
+	//Instrument items.
 	public static final Item pointerShort = new Item().setCreativeTab(coreTab);
 	public static final Item pointerLong = new Item().setCreativeTab(coreTab);
 	public static final Item instrument = new ItemInstrument().setCreativeTab(coreTab);
+	
+	//Decorative blocks.
+	public static final Block pole = new BlockMetalPole(false);
+	public static final Item itemBlockPole = new ItemBlock(pole);
+	public static final Block poleBase = new BlockMetalPole(true);
+	public static final Item itemBlockPoleBase = new ItemBlock(poleBase);
+	public static final Block trafficCone = new BlockPartial(Material.CLAY, 0.4375F, 0.75F).setHardness(0.6F);
+	public static final Item itemBlockTrafficCone = new ItemBlock(trafficCone);
 	
 	//Counters for registry systems.
 	private static int entityNumber = 0;
@@ -154,7 +167,7 @@ public final class MTSRegistry{
 			if(field.getType().equals(Block.class)){
 				try{
 					Block block = (Block) field.get(Block.class);
-					String name = block.getClass().getSimpleName().toLowerCase().substring(5);
+					String name = field.getName().toLowerCase();
 					event.getRegistry().register(block.setRegistryName(name).setUnlocalizedName(name));
 					if(block instanceof ITileEntityProvider){
 						Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();

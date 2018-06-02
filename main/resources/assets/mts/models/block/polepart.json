@@ -1,0 +1,21 @@
+{
+	"credit": "Made with Blockbench, a free, modern block model editor by JannisX11",
+	"textures": {
+		"0": "mts:blocks/pole",
+		"particle": "mts:blocks/pole"
+	},
+	"elements": [
+		{
+			"from": [7, 0, 7],
+			"to": [9, 7, 9],
+			"faces": {
+				"north": {"uv": [2, 5, 4, 12], "texture": "#0"},
+				"east": {"uv": [4, 5, 6, 12], "texture": "#0"},
+				"south": {"uv": [3, 5, 5, 12], "texture": "#0"},
+				"west": {"uv": [0, 0, 2, 7], "texture": "#0"},
+				"up": {"uv": [5, 9, 7, 11], "texture": "#0"},
+				"down": {"uv": [3, 12, 5, 14], "texture": "#0"}
+			}
+		}
+	]
+}

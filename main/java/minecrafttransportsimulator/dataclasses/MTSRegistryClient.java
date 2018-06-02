@@ -50,6 +50,9 @@ public final class MTSRegistryClient{
 		registerCoreItemRender(MTSRegistry.pointerShort);
 		registerCoreItemRender(MTSRegistry.pointerLong);
 		registerCoreItemRenderSeries(MTSRegistry.instrument, MTSInstruments.Instruments.values().length);
+		registerCoreItemRender(MTSRegistry.itemBlockPole);
+		registerCoreItemRender(MTSRegistry.itemBlockPoleBase);
+		registerCoreItemRender(MTSRegistry.itemBlockTrafficCone);
 				
 		//Now register items for the packs.
 		for(ItemMultipart multipartItem : MTSRegistry.multipartItemMap.values()){
