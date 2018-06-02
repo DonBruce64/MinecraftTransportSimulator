@@ -9,9 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.blocks.BlockDecor1Axis;
+import minecrafttransportsimulator.blocks.BlockDecor2Axis;
+import minecrafttransportsimulator.blocks.BlockDecor6Axis;
 import minecrafttransportsimulator.blocks.BlockFuelPump;
-import minecrafttransportsimulator.blocks.BlockMetalPole;
-import minecrafttransportsimulator.blocks.BlockPartial;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
 import minecrafttransportsimulator.items.core.ItemInstrument;
 import minecrafttransportsimulator.items.core.ItemKey;
@@ -117,12 +118,14 @@ public final class MTSRegistry{
 	public static final Item instrument = new ItemInstrument().setCreativeTab(coreTab);
 	
 	//Decorative blocks.
-	public static final Block pole = new BlockMetalPole(false);
+	public static final Block pole = new BlockDecor6Axis(Material.IRON, 5.0F, 10.0F, 0.25F, false);
 	public static final Item itemBlockPole = new ItemBlock(pole);
-	public static final Block poleBase = new BlockMetalPole(true);
+	public static final Block poleBase = new BlockDecor6Axis(Material.IRON, 5.0F, 10.0F, 0.25F, true);
 	public static final Item itemBlockPoleBase = new ItemBlock(poleBase);
-	public static final Block trafficCone = new BlockPartial(Material.CLAY, 0.4375F, 0.75F).setHardness(0.6F);
+	public static final Block trafficCone = new BlockDecor1Axis(Material.CLAY, 0.4375F, 0.75F, 0.6F, 0.75F);
 	public static final Item itemBlockTrafficCone = new ItemBlock(trafficCone);
+	public static final Block crashBarrier = new BlockDecor2Axis(Material.ROCK, 1.5F, 10.0F, 0.5625F, 0.84375F, 1.0F);
+	public static final Item itemBlockCrashBarrier = new ItemBlock(crashBarrier);
 	
 	//Counters for registry systems.
 	private static int entityNumber = 0;

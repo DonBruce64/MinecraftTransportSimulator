@@ -1,5 +1,41 @@
 {
     "multipart": [
-        {"apply": { "model": "mts:polebase"}}
+        {   "apply": { "model": "mts:polecenter" }},
+        {   "when": { "up": "true", "up_solid": "true" },
+            "apply": { "model": "mts:polebase", "x": 180, "uvlock": true }
+        },
+        {   "when": { "up": "true", "up_solid": "false" },
+            "apply": { "model": "mts:polepart", "x": 180, "uvlock": true }
+        },
+        {   "when": { "down": "true", "down_solid": "true" },
+            "apply": { "model": "mts:polebase", "uvlock": true }
+        },
+        {   "when": { "down": "true", "down_solid": "false" },
+            "apply": { "model": "mts:polepart", "uvlock": true }
+        },
+        {   "when": { "north": "true", "north_solid": "true" },
+            "apply": { "model": "mts:polebase", "x": 270, "uvlock": true }
+        },
+        {   "when": { "north": "true", "north_solid": "false" },
+            "apply": { "model": "mts:polepart", "x": 270, "uvlock": true }
+        },
+        {   "when": { "east": "true", "east_solid": "true" },
+            "apply": { "model": "mts:polebase", "x": 90, "y": 270, "uvlock": true }
+        },
+        {   "when": { "east": "true", "east_solid": "false" },
+            "apply": { "model": "mts:polepart", "x": 90, "y": 270, "uvlock": true }
+        },
+        {   "when": { "south": "true", "south_solid": "true" },
+            "apply": { "model": "mts:polebase", "x": 90, "uvlock": true }
+        },
+        {   "when": { "south": "true", "south_solid": "false" },
+            "apply": { "model": "mts:polepart", "x": 90, "uvlock": true }
+        },
+        {   "when": { "west": "true", "west_solid": "true" },
+            "apply": { "model": "mts:polebase", "x": 90, "y": 90, "uvlock": true }
+        },
+        {   "when": { "west": "true", "west_solid": "false" },
+            "apply": { "model": "mts:polepart", "x": 90, "y": 90, "uvlock": true }
+        }
     ]
 }

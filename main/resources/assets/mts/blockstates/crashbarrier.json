@@ -1,0 +1,10 @@
+{
+    "multipart": [
+        {   "when": { "rotated": "false" },
+            "apply": { "model": "mts:crashbarrier"}
+        },
+        {   "when": { "rotated": "true" },
+            "apply": { "model": "mts:crashbarrier", "y": 90, "uvlock": true }
+        }
+    ]
+}
