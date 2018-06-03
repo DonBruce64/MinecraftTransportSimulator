@@ -147,7 +147,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	public static void on(EntityMountEvent event){
 		if(event.getEntityBeingMounted() instanceof EntityMultipartB_Existing){
 			EntityMultipartB_Existing multipart = (EntityMultipartB_Existing) event.getEntityBeingMounted();
-			if(event.isDismounting()){
+			if(event.isDismounting() && !pauseDismountingLogic){
 				PartSeat seat = multipart.getSeatForRider(event.getEntityMounting());
 				if(seat != null){
 					Vec3d placePosition = RotationSystem.getRotatedPoint(seat.offset.addVector(seat.offset.xCoord > 0 ? 1 : -1, 2, 0), multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll).add(multipart.getPositionVector());
