@@ -224,7 +224,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 			for(String partType : packPart.types){
 				if(partType.equals("seat")){
 					if(packPart.pos[0] == seat.offset.xCoord && packPart.pos[1] == seat.offset.yCoord && packPart.pos[2] == seat.offset.zCoord){
-						return this.getPassengers().get(seatNumber);
+						return this.getPassengers().size() > seatNumber ?  this.getPassengers().get(seatNumber) : null;
 					}
 					++seatNumber;
 				}
