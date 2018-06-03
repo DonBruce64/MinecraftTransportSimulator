@@ -169,12 +169,14 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	
 	@Override
 	public void updatePassenger(Entity passenger){
-		PartSeat seat = this.getSeatForRider(passenger);
-		Vec3d posVec = RotationSystem.getRotatedPoint(seat.offset.addVector(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll);
-		passenger.setPosition(this.posX + posVec.xCoord, this.posY + posVec.yCoord - passenger.height, this.posZ + posVec.zCoord);
-		passenger.motionX = this.motionX;
-		passenger.motionY = this.motionY;
-		passenger.motionZ = this.motionZ;
+		if(this.pack != null){
+			PartSeat seat = this.getSeatForRider(passenger);
+			Vec3d posVec = RotationSystem.getRotatedPoint(seat.offset.addVector(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll);
+			passenger.setPosition(this.posX + posVec.xCoord, this.posY + posVec.yCoord - passenger.height, this.posZ + posVec.zCoord);
+			passenger.motionX = this.motionX;
+			passenger.motionY = this.motionY;
+			passenger.motionZ = this.motionZ;
+		}
 	}
 	
 	@Override

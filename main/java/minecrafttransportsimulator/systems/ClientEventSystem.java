@@ -206,7 +206,9 @@ public final class ClientEventSystem{
                     if(!Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen()){
                     	if(minecraft.thePlayer.getRidingEntity() instanceof EntityMultipartE_Vehicle){
                     		EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) minecraft.thePlayer.getRidingEntity();
-                    		ControlSystem.controlVehicle(vehicle, vehicle.getSeatForRider(minecraft.thePlayer).isController);
+                    		if(vehicle.pack != null){
+                    			ControlSystem.controlVehicle(vehicle, vehicle.getSeatForRider(minecraft.thePlayer).isController);
+                    		}
                         }
                     }
                     if(!minecraft.isGamePaused()){
@@ -292,9 +294,11 @@ public final class ClientEventSystem{
                 event.setCanceled(true);
             }else if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
                 if(minecraft.thePlayer.getRidingEntity() instanceof EntityMultipartE_Vehicle){
-                	EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) minecraft.thePlayer.getRidingEntity(); 
-                	if(vehicle.getSeatForRider(minecraft.thePlayer).isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
-                		RenderHUD.drawMainHUD(vehicle, event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight(), false);
+                	EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) minecraft.thePlayer.getRidingEntity();
+                	if(vehicle.pack != null){
+	                	if(vehicle.getSeatForRider(minecraft.thePlayer).isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
+	                		RenderHUD.drawMainHUD(vehicle, event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight(), false);
+	                	}
                 	}
                 }
             }
