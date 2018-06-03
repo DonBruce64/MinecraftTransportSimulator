@@ -13,7 +13,6 @@ import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
@@ -123,13 +122,11 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 			//We can use this to determine where in the list this engine needs to go.
 			byte engineNumber = 0;
 			for(PackPart packPart : pack.parts){
-				for(String name : packPart.names){
-					if(PackParserSystem.getPartPack(name) != null){
-						if(PackParserSystem.getPartPack(name).general.type.contains("engine")){
-							++engineNumber;
-							if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
-								engineByNumber.put(engineNumber, (APartEngine) part);
-							}
+				for(String type : packPart.types){
+					if(type.contains("engine")){
+						++engineNumber;
+						if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
+							engineByNumber.put(engineNumber, (APartEngine) part);
 						}
 					}
 				}
@@ -142,14 +139,12 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 		super.removePart(part, playBreakSound);
 		byte engineNumber = 0;
 		for(PackPart packPart : pack.parts){
-			for(String name : packPart.names){
-				if(PackParserSystem.getPartPack(name) != null){
-					if(PackParserSystem.getPartPack(name).general.type.contains("engine")){
-						++engineNumber;
-						if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
-							engineByNumber.remove(engineNumber);
-							return;
-						}
+			for(String type : packPart.types){
+				if(type.contains("engine")){
+					++engineNumber;
+					if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
+						engineByNumber.remove(engineNumber);
+						return;
 					}
 				}
 			}
@@ -196,8 +191,8 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 	public byte getNumberEngineBays(){
 		if(numberEngineBays == 0){
 			for(PackPart part : pack.parts){
-				for(String name : part.names){
-					if(name.contains("engine")){
+				for(String type : part.types){
+					if(type.contains("engine")){
 						++numberEngineBays;
 					}
 				}

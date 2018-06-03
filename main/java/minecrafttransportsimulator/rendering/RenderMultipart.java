@@ -666,6 +666,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				for(PackPart packPart : multipart.pack.parts){
 					boolean isPresent = false;
 					boolean isHoldingPart = false;
+					boolean isPartValid = false;
 					Vec3d partPos = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
 					for(APart part : multipart.getMultipartParts()){
 						if(part.offset.equals(partPos)){
@@ -674,9 +675,12 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 						}
 					}
 		
-					for(String partName : packPart.names){
-						if(partName.equals(heldItem.partName)){
+					for(String partType : packPart.types){
+						if(partType.equals(heldItem.partType)){
 							isHoldingPart = true;
+							if(packPart.minValue <= heldItem.getPartValue() && packPart.maxValue >= heldItem.getPartValue()){
+								isPartValid = true;
+							}
 							break;
 						}
 					}
@@ -689,7 +693,11 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 						GL11.glDisable(GL11.GL_TEXTURE_2D);
 						GL11.glDisable(GL11.GL_LIGHTING);
 						GL11.glEnable(GL11.GL_BLEND);
-						GL11.glColor4f(0, 1, 0, 0.25F);
+						if(isPartValid){
+							GL11.glColor4f(0, 1, 0, 0.25F);
+						}else{
+							GL11.glColor4f(1, 0, 0, 0.25F);
+						}
 						GL11.glBegin(GL11.GL_QUADS);
 						
 						GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);

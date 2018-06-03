@@ -20,6 +20,11 @@ public class ItemPartPropeller extends AItemPart{
 	}
 	
 	@Override
+	public float getPartValue(){
+		return PackParserSystem.getPartPack(partName).propeller.diameter;
+	}
+	
+	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
 		PackPartObject pack = PackParserSystem.getPartPack(((ItemPartPropeller) stack.getItem()).partName); 

@@ -57,8 +57,8 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
 							//Player is holding a valid part.  Now check if part goes to this multipart.
 							AItemPart partItem = (AItemPart) heldStack.getItem();
 							PackPart packPart = multipart.pack.parts.get(message.partIndex);
-							for(String partName : packPart.names){
-								if(partItem.partName.equals(partName)){
+							for(String partType : packPart.types){
+								if(partItem.partType.equals(partType)){
 									//This part does go to this multipart.  Now check if one is already there.
 									Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
 	        						for(APart part : multipart.getMultipartParts()){
@@ -67,12 +67,16 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
 											return;
 										}
 									}
+	        						if(packPart.minValue > partItem.getPartValue() || packPart.maxValue < partItem.getPartValue()){
+	    								//Part is a valid type, but is not a valid configuration.  Bail.
+	        							return;
+	    							}
 									
 									//All clear for adding a new part.  Do so now and tell all clients.
 									try{
 										Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partItem.partName);
 										Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
-										APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, partOffset, packPart.isController, packPart.turnsWithSteer, partName, heldStack.hasTagCompound() ? heldStack.getTagCompound() : new NBTTagCompound());
+										APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, partOffset, packPart.isController, packPart.turnsWithSteer, partItem.partName, heldStack.hasTagCompound() ? heldStack.getTagCompound() : new NBTTagCompound());
 										multipart.addPart(newPart);
 										if(!player.capabilities.isCreativeMode){
 											player.inventory.clearMatchingItems(partItem, heldStack.getItemDamage(), 1, heldStack.getTagCompound());

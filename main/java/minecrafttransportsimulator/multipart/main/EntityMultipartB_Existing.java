@@ -221,8 +221,8 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	public Entity getRiderForSeat(PartSeat seat){
 		byte seatNumber = 0;
 		for(PackPart packPart : this.pack.parts){
-			for(String partName : packPart.names){
-				if(partName.contains("seat")){
+			for(String partType : packPart.types){
+				if(partType.equals("seat")){
 					if(packPart.pos[0] == seat.offset.xCoord && packPart.pos[1] == seat.offset.yCoord && packPart.pos[2] == seat.offset.zCoord){
 						return this.getPassengers().get(seatNumber);
 					}
@@ -239,8 +239,8 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		}else{
 			byte seatNumber = (byte) this.getPassengers().indexOf(rider);
 			for(PackPart packPart : this.pack.parts){
-				for(String partName : packPart.names){
-					if(partName.contains("seat")){
+				for(String partType : packPart.types){
+					if(partType.equals("seat")){
 						if(seatNumber == 0){
 							for(APart part : this.getMultipartParts()){
 								if(part instanceof PartSeat){
