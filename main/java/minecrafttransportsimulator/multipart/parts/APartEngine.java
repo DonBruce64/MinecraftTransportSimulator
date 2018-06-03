@@ -60,11 +60,13 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 		this.vehicle = (EntityMultipartE_Vehicle) this.multipart;
 		this.state = EngineStates.ENGINE_OFF;
 		
-		isCreative=dataTag.getBoolean("isCreative");
-		oilLeak=dataTag.getBoolean("oilLeak");
-		fuelLeak=dataTag.getBoolean("fuelLeak");
-		brokenStarter=dataTag.getBoolean("brokenStarter");
+		isCreative = dataTag.getBoolean("isCreative");
+		oilLeak = dataTag.getBoolean("oilLeak");
+		fuelLeak = dataTag.getBoolean("fuelLeak");
+		brokenStarter = dataTag.getBoolean("brokenStarter");
 		hours = dataTag.getDouble("hours");
+		setMagnetoStatus(dataTag.getBoolean("magnetoOn"));
+		RPM = dataTag.getDouble("rpm");
 	}
 	
 	@Override
@@ -194,6 +196,11 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 	}
 	
 	@Override
+	public void removePart(){
+		this.state = EngineStates.ENGINE_OFF;
+	}
+	
+	@Override
 	public NBTTagCompound getPartNBTTag(){
 		NBTTagCompound partData = new NBTTagCompound();
 		partData.setBoolean("isCreative", this.isCreative);
@@ -201,6 +208,8 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 		partData.setBoolean("fuelLeak", this.fuelLeak);
 		partData.setBoolean("brokenStarter", this.brokenStarter);
 		partData.setDouble("hours", hours);
+		partData.setBoolean("magnetoOn", this.state.magnetoOn);
+		partData.setDouble("rpm", this.RPM);
 		return partData;
 	}
 	

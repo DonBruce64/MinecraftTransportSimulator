@@ -37,6 +37,7 @@ public class PartEngineAircraft extends APartEngine{
 	
 	@Override
 	public void removePart(){
+		super.removePart();
 		if(propeller != null && !multipart.worldObj.isRemote){
 			multipart.removePart(propeller, false);
 		}
