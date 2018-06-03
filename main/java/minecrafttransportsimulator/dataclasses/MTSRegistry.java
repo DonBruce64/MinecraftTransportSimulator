@@ -56,6 +56,7 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceFlat;
 import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
+import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -286,6 +287,7 @@ public final class MTSRegistry{
 		registerPacket(PacketPartEngineSignal.class, PacketPartEngineSignal.Handler.class, true, true);
 		registerPacket(PacketPartGroundDeviceFlat.class, PacketPartGroundDeviceFlat.Handler.class, true, false);
 		registerPacket(PacketPartInteraction.class, PacketPartInteraction.Handler.class, false, true);
+		registerPacket(PacketPartSeatRiderChange.class, PacketPartSeatRiderChange.Handler.class, true, false);
 	}
 	
 	private static void initCoreItemRecipes(){

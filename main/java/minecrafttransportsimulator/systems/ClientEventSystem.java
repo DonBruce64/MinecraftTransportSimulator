@@ -207,7 +207,7 @@ public final class ClientEventSystem{
                     if(!Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen()){
                     	if(minecraft.thePlayer.getRidingEntity() instanceof EntityMultipartE_Vehicle){
                     		EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) minecraft.thePlayer.getRidingEntity();
-                    		if(vehicle.pack != null){
+                    		if(vehicle.getSeatForRider(minecraft.thePlayer) != null){
                     			ControlSystem.controlVehicle(vehicle, vehicle.getSeatForRider(minecraft.thePlayer).isController);
                     		}
                         }
@@ -296,7 +296,7 @@ public final class ClientEventSystem{
             }else if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
                 if(minecraft.thePlayer.getRidingEntity() instanceof EntityMultipartE_Vehicle){
                 	EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) minecraft.thePlayer.getRidingEntity();
-                	if(vehicle.pack != null){
+                	if(vehicle.getSeatForRider(minecraft.thePlayer) != null){
 	                	if(vehicle.getSeatForRider(minecraft.thePlayer).isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
 	                		RenderHUD.drawMainHUD(vehicle, event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight(), false);
 	                	}

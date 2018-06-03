@@ -33,7 +33,7 @@ public final class PartSeat extends APart{
 				}
 				//If we got here we must have the seat number and it must be free.
 				//Let the player start riding at this point.
-				player.startRiding(multipart);
+				multipart.setRiderInSeat(player, this);
 			}else{
 				MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
 			}

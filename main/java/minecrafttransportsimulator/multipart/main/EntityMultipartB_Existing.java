@@ -1,9 +1,12 @@
 package minecrafttransportsimulator.multipart.main;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.Nullable;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
@@ -12,6 +15,7 @@ import minecrafttransportsimulator.multipart.parts.PartCrate;
 import minecrafttransportsimulator.multipart.parts.PartSeat;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartWindowBreak;
 import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
+import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.Entity;
@@ -54,7 +58,10 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	public Vec3d headingVec = Vec3d.ZERO;
 	
 	/**Cached map that links entities to the seats riding them.  Used for mounting/dismounting functions.*/
-	private final Map<Entity, PartSeat> riderSeats = new HashMap<Entity, PartSeat>();
+	private final BiMap<Entity, PartSeat> riderSeats = HashBiMap.create();
+	
+	/**List for storage of rider linkages to seats.  Populated during NBT load and used to populate the riderSeats map after riders load.*/
+	private List<Byte> riderSeatIDs = new ArrayList<Byte>();
 	
 	/**Temp bit to pause dismounting code to avoid getting stuck in a loop with the events.*/
 	private static boolean pauseDismountingLogic = false;
@@ -156,11 +163,10 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 						event.setCanceled(true);
 						pauseDismountingLogic = true;
 						event.getEntityMounting().dismountRidingEntity();
-			            multipart.removePassenger(event.getEntityMounting());
+			            multipart.removeRiderFromSeat(event.getEntityMounting(), seat);
 						event.getEntityMounting().setPosition(placePosition.xCoord, collisionDetectionBox.minY, placePosition.zCoord);
 						
 					}
-					multipart.riderSeats.remove(event.getEntityMounting());
 				}
 				pauseDismountingLogic = false;
 			}
@@ -169,13 +175,51 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	
 	@Override
 	public void updatePassenger(Entity passenger){
-		if(this.pack != null){
-			PartSeat seat = this.getSeatForRider(passenger);
+		PartSeat seat = this.getSeatForRider(passenger);
+		if(seat != null){
 			Vec3d posVec = RotationSystem.getRotatedPoint(seat.offset.addVector(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll);
 			passenger.setPosition(this.posX + posVec.xCoord, this.posY + posVec.yCoord - passenger.height, this.posZ + posVec.zCoord);
 			passenger.motionX = this.motionX;
 			passenger.motionY = this.motionY;
 			passenger.motionZ = this.motionZ;
+		}else if(pack != null){
+			byte riderSeatId = this.riderSeatIDs.get(this.getPassengers().indexOf(passenger));
+			
+			//Double-check the pack didn't change since last load.
+			if(pack.parts.size() > riderSeatId){
+				PackPart packPart = pack.parts.get(riderSeatId);
+				boolean isSeatPossible = false;
+				boolean wasSeatFound = false;
+				for(String partTypes : packPart.types){
+					if(partTypes.equals("seat")){
+						isSeatPossible = true;
+						for(APart part : this.getMultipartParts()){
+							if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
+								if(part instanceof PartSeat){
+									riderSeats.put(passenger, (PartSeat) part);
+									wasSeatFound = true;
+									break;
+								}
+							}
+						}
+					}
+				}
+				if(!wasSeatFound){
+					if(!isSeatPossible){
+						MTS.MTSLog.error("ERROR: NO JSON SEAT FOUND WHEN LINKING RIDER TO SEAT IN MULTIPART!");
+					}
+					if(!worldObj.isRemote){
+						passenger.dismountRidingEntity();
+					}
+					return;
+				}
+			}else{
+				MTS.MTSLog.error("ERROR: NO JSON PART DEFINITION FOUND WHEN LINKING RIDER TO SEAT IN MULTIPART!");
+				if(!worldObj.isRemote){
+					passenger.dismountRidingEntity();
+				}
+				return;
+			}
 		}
 	}
 	
@@ -220,46 +264,38 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		return null;
 	}
 	
-	public Entity getRiderForSeat(PartSeat seat){
-		byte seatNumber = 0;
-		for(PackPart packPart : this.pack.parts){
-			for(String partType : packPart.types){
-				if(partType.equals("seat")){
-					if(packPart.pos[0] == seat.offset.xCoord && packPart.pos[1] == seat.offset.yCoord && packPart.pos[2] == seat.offset.zCoord){
-						return this.getPassengers().size() > seatNumber ?  this.getPassengers().get(seatNumber) : null;
-					}
-					++seatNumber;
-				}
-			}
+    /**
+     * Adds a rider to this multipart and sets their seat.
+     * All riders MUST be added through this method.
+     */
+	public void setRiderInSeat(Entity rider, PartSeat seat){
+		riderSeats.put(rider, seat);
+		if(!worldObj.isRemote){
+			rider.startRiding(this);
+			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, true));
 		}
-		return null;
+	}
+	
+	/**
+     * Removes the rider safely from this multipart.
+     */
+	public void removeRiderFromSeat(Entity rider, PartSeat seat){
+		riderSeats.remove(rider);
+		if(riderSeatIDs.indexOf(rider) != -1){
+			riderSeatIDs.remove(riderSeatIDs.indexOf(rider));
+		}
+		if(!worldObj.isRemote){
+			rider.dismountRidingEntity();
+			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, false));
+		}
+	}
+	
+	public Entity getRiderForSeat(PartSeat seat){
+		return riderSeats.inverse().get(seat);
 	}
 	
 	public PartSeat getSeatForRider(Entity rider){
-		if(riderSeats.containsKey(rider)){
-			return riderSeats.get(rider);
-		}else{
-			byte seatNumber = (byte) this.getPassengers().indexOf(rider);
-			for(PackPart packPart : this.pack.parts){
-				for(String partType : packPart.types){
-					if(partType.equals("seat")){
-						if(seatNumber == 0){
-							for(APart part : this.getMultipartParts()){
-								if(part instanceof PartSeat){
-									if(packPart.pos[0] == part.offset.xCoord && packPart.pos[1] == part.offset.yCoord && packPart.pos[2] == part.offset.zCoord){
-										riderSeats.put(rider, (PartSeat) part);
-										return (PartSeat) part;
-									}
-								}
-							}
-						}else{
-							--seatNumber;
-						}
-					}
-				}
-			}	
-		}
-		return null;
+		return riderSeats.get(rider);
 	}
 	
 	/**
@@ -333,6 +369,11 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		this.rotationRoll=tagCompound.getFloat("rotationRoll");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
+		
+		this.riderSeatIDs.clear();
+		while(tagCompound.hasKey("Seat" + String.valueOf(riderSeatIDs.size()))){
+			riderSeatIDs.add(tagCompound.getByte("Seat" + String.valueOf(riderSeatIDs.size())));
+		}
 	}
     
 	@Override
@@ -343,6 +384,25 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		tagCompound.setFloat("rotationRoll", this.rotationRoll);
 		tagCompound.setString("ownerName", this.ownerName);
 		tagCompound.setString("displayText", this.displayText);
+		
+		//Correlate the order of passengers in the rider list with their location to save it to NBT.
+		//That way riders don't get re-ordered on world save/load.
+		for(byte i=0; i<this.getPassengers().size(); ++i){
+			Entity rider = this.getPassengers().get(i);
+			PartSeat seat = this.getSeatForRider(rider);
+			if(seat != null){
+				for(byte j=0; j<pack.parts.size(); ++j){
+					PackPart packPart = pack.parts.get(j);
+					for(String type : packPart.types){
+						if(type.equals("seat")){
+							if(seat.offset.xCoord == packPart.pos[0] && seat.offset.yCoord == packPart.pos[1] && seat.offset.zCoord == packPart.pos[2]){
+								tagCompound.setByte("Seat" + String.valueOf(i), j);
+							}
+						}
+					}
+				}
+			}
+		}
 		return tagCompound;
 	}
 }
