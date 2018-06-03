@@ -58,10 +58,11 @@ public final class ClientEventSystem{
     
     /**
      * Need this to do part interaction in cases when we aren't holding anything.
+     * Note that in 1.11+ this method is obsolete as the player is always holding an
+     * itemstack, it's just an "empty" itemstack.
      */
     @SubscribeEvent
     public static void on(PlayerInteractEvent.RightClickEmpty event){
-    	//TODO see if we need this.  Don't need it in 1.11+
     	if(event.getWorld().isRemote){
 	    	for(Entity entity : minecraft.theWorld.loadedEntityList){
 				if(entity instanceof EntityMultipartC_Colliding){
