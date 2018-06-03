@@ -31,6 +31,9 @@ public class MultipartAxisAlignedBBCollective extends MultipartAxisAlignedBB{
 		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
 			offsetX = box.calculateXOffset(other, offsetX);
 		}
+		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
+			offsetX = box.calculateXOffset(other, offsetX);
+		}
 		return offsetX;
     }
 	
@@ -38,6 +41,9 @@ public class MultipartAxisAlignedBBCollective extends MultipartAxisAlignedBB{
 	public double calculateYOffset(AxisAlignedBB other, double offsetY){
 		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
 			offsetY = box.calculateYOffset(other, offsetY);
+		}
+		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
+			offsetY = box.calculateXOffset(other, offsetY);
 		}
 		return offsetY;
     }
@@ -47,12 +53,20 @@ public class MultipartAxisAlignedBBCollective extends MultipartAxisAlignedBB{
 		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
 			offsetZ = box.calculateZOffset(other, offsetZ);
 		}
+		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
+			offsetZ = box.calculateXOffset(other, offsetZ);
+		}
 		return offsetZ;
     }
 	
 	@Override
     public boolean intersects(double x1, double y1, double z1, double x2, double y2, double z2){
 		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
+			if(box.intersects(x1, y1, z1, x2, y2, z2)){
+				return true;
+			}
+		}
+		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
 			if(box.intersects(x1, y1, z1, x2, y2, z2)){
 				return true;
 			}
@@ -67,6 +81,11 @@ public class MultipartAxisAlignedBBCollective extends MultipartAxisAlignedBB{
 				return true;
 			}
 		}
+		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
+			if(box.isVecInside(vec)){
+				return true;
+			}
+		}
 		return false;
     }
 	
@@ -75,6 +94,12 @@ public class MultipartAxisAlignedBBCollective extends MultipartAxisAlignedBB{
     public RayTraceResult calculateIntercept(Vec3d vecA, Vec3d vecB){
 		RayTraceResult result = null;
 		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
+			result = box.calculateIntercept(vecA, vecB);
+			if(result != null){
+				return result;
+			}
+		}
+		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
 			result = box.calculateIntercept(vecA, vecB);
 			if(result != null){
 				return result;

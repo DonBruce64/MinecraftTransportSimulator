@@ -37,7 +37,7 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 	private MultipartAxisAlignedBBCollective collisionFrame;
 	/**List of current collision boxes in this multipart.  Contains both multipart collision boxes and ground device collision boxes.*/
 	private final List<MultipartAxisAlignedBB> currentCollisionBoxes = new ArrayList<MultipartAxisAlignedBB>();
-	/**List of interaction boxes.  These are AABBs that can be clicked but NOT collided with.*/
+	/**List of interaction boxes.  These are AABBs that can be clicked but do NOT affect multipart collision.*/
 	private final List<MultipartAxisAlignedBB> currentInteractionBoxes = new ArrayList<MultipartAxisAlignedBB>();
 	/**Map that keys collision boxes of ground devices to the devices themselves.  Used for ground device collision operations.*/
 	protected final Map<MultipartAxisAlignedBB, PartGroundDevice> groundDeviceCollisionBoxMap = new HashMap<MultipartAxisAlignedBB, PartGroundDevice>();
@@ -93,10 +93,19 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 	/**
 	 * Called by systems needing information about collision with this entity.
 	 * This is a way to keep other bits from messing with the collision list
-	 * and a way to get collisions without going through the wrapper.
+	 * and a way to get collisions without going through the collective class wrapper.
 	 */
 	public List<MultipartAxisAlignedBB> getCurrentCollisionBoxes(){
 		return currentCollisionBoxes;
+	}
+	
+	/**
+	 * Called by the multipart AABB wrapper to allow entities to collide with
+	 * interactable parts.  This allows for part collision with entities,
+	 * but prevents the parts from being used in movement systems.
+	 */
+	public List<MultipartAxisAlignedBB> getCurrentInteractionBoxes(){
+		return currentInteractionBoxes;
 	}
     
 	/**
