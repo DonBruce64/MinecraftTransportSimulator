@@ -95,7 +95,11 @@ public abstract class APart{
 	 */
 	public ResourceLocation getModelLocation(){
 		if(modelLocation == null){
-			modelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + ".obj"); 
+			if(pack.general.modelName != null){
+				modelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + pack.general.modelName + ".obj");
+			}else{
+				modelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + ".obj");
+			}
 		}
 		return modelLocation;
 	}

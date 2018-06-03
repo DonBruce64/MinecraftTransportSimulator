@@ -144,7 +144,11 @@ public class PartGroundDevice extends APart implements FXPart{
 	public ResourceLocation getModelLocation(){
 		if(this.isFlat){
 			if(flatModelLocation == null){
-				flatModelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + "_flat.obj");
+				if(pack.general.modelName != null){
+					flatModelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + pack.general.modelName + "_flat.obj");
+				}else{
+					flatModelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + "_flat.obj");
+				}
 			}
 			return flatModelLocation;
 		}else{

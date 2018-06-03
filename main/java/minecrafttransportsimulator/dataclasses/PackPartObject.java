@@ -8,6 +8,7 @@ public class PackPartObject{
 
     public class PartGeneralConfig{
     	public String type;
+    	public String modelName;
     	public String[] materials;
     }
     
