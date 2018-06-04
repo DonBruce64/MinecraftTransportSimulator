@@ -8,6 +8,7 @@ import net.minecraft.util.math.Vec3d;
 
 public class PartEngineCar extends APartEngine{
 	public byte currentGear = 1;
+	private boolean spinningOut;
 	private double engineForce;
 	private final EntityMultipartF_Car car;
 
@@ -22,12 +23,14 @@ public class PartEngineCar extends APartEngine{
 		super.updatePart();
 		//Set the speed of the engine to the speed of the driving wheels.
 		float lowestSpeed = 999F;
+		float vehicleDesiredSpeed = -999F;
 		if(currentGear != 0){
 			for(PartGroundDevice wheel : car.wheels){
 				if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
 					//If we have grounded ground devices, and this wheel is not on the ground, don't take it into account.
 					if(wheel.isOnGround() || (car.groundedGroundDevices.size() == 0)){
 						lowestSpeed = Math.min(wheel.angularVelocity, lowestSpeed);
+						vehicleDesiredSpeed = (float) Math.max(car.velocity/wheel.getHeight(), vehicleDesiredSpeed);
 					}
 				}
 			}
@@ -71,24 +74,29 @@ public class PartEngineCar extends APartEngine{
 		if(state.running || state.esOn){
 			double engineTargetRPM = car.throttle/100F*(pack.engine.maxRPM - engineStartRPM/1.25 - hours) + engineStartRPM/1.25;
 			if(getRatioForCurrentGear() != 0){
-				double engineTorque = RPM/(getSafeRPMFromMax(this.pack.engine.maxRPM) - 3000*(1500/getSafeRPMFromMax(this.pack.engine.maxRPM)))*getRatioForCurrentGear()*pack.engine.fuelConsumption*2.0F;
-				
+				engineForce = (engineTargetRPM - RPM)/pack.engine.maxRPM*getRatioForCurrentGear()*pack.engine.fuelConsumption*2.0F;
 				//Check to see if the wheels have enough friction to affect the engine.
-				engineForce = (engineTargetRPM - RPM)/pack.engine.maxRPM*engineTorque;
-				if(Math.abs(engineForce/10) > wheelFriction){
-					engineForce /= 2F;
+				if(Math.abs(engineForce/10) > wheelFriction || Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) > 0.1){
+					engineForce *= car.currentMass/100000F;
 					for(PartGroundDevice wheel : car.wheels){
 						if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
-							wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity + 0.05);
+							wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity + 0.01*Math.signum(engineForce));
+							wheel.skipAngularCalcs = true;
 						}
 					}
 				}else{
 					//If we have wheels not on the ground and we drive them, adjust their velocity now.
 					for(PartGroundDevice wheel : car.wheels){
+						wheel.skipAngularCalcs = false;
 						if(!wheel.isOnGround() && ((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive))){
 							wheel.angularVelocity = lowestSpeed;
 						}
 					}
+				}
+				//Don't let us have negative engine force at low speeds.
+				//This causes odd reversing behavior when the engine tries to maintain speed.
+				if((engineForce < 0 && currentGear > 0 && car.velocity < 0.25) || (engineForce > 0 && currentGear < 0 && car.velocity > -0.25)){
+					engineForce = 0;
 				}
 			}else{
 				RPM += (engineTargetRPM - RPM)/10;
@@ -108,6 +116,16 @@ public class PartEngineCar extends APartEngine{
 	}
 	
 	@Override
+	public void removePart(){
+		super.removePart();
+		for(PartGroundDevice wheel : car.wheels){
+			if(!wheel.isOnGround() && ((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive))){
+				wheel.skipAngularCalcs = false;
+			}
+		}
+	}
+	
+	@Override
 	public NBTTagCompound getPartNBTTag(){
 		NBTTagCompound dataTag = super.getPartNBTTag();
 		dataTag.setByte("gearNumber", this.currentGear);
@@ -119,7 +137,7 @@ public class PartEngineCar extends APartEngine{
 	}
 	
 	public double getForceOutput(){
-		return engineForce*30;
+		return engineForce*30F;
 	}
 	
 	public void shiftUp(){
@@ -132,7 +150,7 @@ public class PartEngineCar extends APartEngine{
 				hours += 100;
 				MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
 			}
-		}else if(currentGear < pack.engine.gearRatios.length - 1){
+		}else if(currentGear < pack.engine.gearRatios.length - 2){
 			++currentGear;
 		}
 	}

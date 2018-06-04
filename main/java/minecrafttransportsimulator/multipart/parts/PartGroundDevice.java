@@ -36,6 +36,7 @@ public class PartGroundDevice extends APart implements FXPart{
 	
 	private boolean isFlat;
 	private boolean contactThisTick = false;
+	public boolean skipAngularCalcs = false;
 
 	public float angularPosition;
 	public float angularVelocity;
@@ -80,7 +81,10 @@ public class PartGroundDevice extends APart implements FXPart{
 						contactThisTick = true;
 					}
 				}
-				angularVelocity = (float) (multipart.velocity/this.getHeight());
+				
+				if(!skipAngularCalcs){
+					angularVelocity = (float) (multipart.velocity/this.getHeight());
+				}
 			}
 			
 			if(!multipart.worldObj.isRemote && multipart.velocity > 0.2F){
