@@ -1,54 +1,27 @@
 package minecrafttransportsimulator.guis;
 
-import java.awt.Color;
 import java.io.IOException;
 
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.packets.crafting.PropellerBenchUpdatePacket;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 public class GUIPropellerBench extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/long_blank.png");
 	
-	private static final ItemStack planksStack = new ItemStack(Blocks.PLANKS);
-	private static final ItemStack ingotStack = new ItemStack(Items.IRON_INGOT);
-	private static final ItemStack obsidianStack = new ItemStack(Blocks.OBSIDIAN);
-	private static final ItemStack redstoneStack = new ItemStack(Items.REDSTONE);
-	private static final ItemStack[] propellerStacks = new ItemStack[]{new ItemStack(MTSRegistry.propeller, 1, 0), new ItemStack(MTSRegistry.propeller, 1, 1), new ItemStack(MTSRegistry.propeller, 1, 2)};
-	
 	private int guiLeft;
 	private int guiTop;
 	private int propellerMaterialQty;
 	
-	private GuiButton tier0Button;
-	private GuiButton tier1Button;
-	private GuiButton tier2Button;
-	private GuiButton bladesUpButton;
-	private GuiButton bladesDownButton;
-	private GuiButton pitchUpButton;
-	private GuiButton pitchDownButton;
-	private GuiButton diameterUpButton;
-	private GuiButton diameterDownButton;
 	private GuiButton startButton;
 	
 	private TileEntityPropellerBench bench;
-	private int numberPlayerPlanks;
-	private int numberPlayerIronIngots;
-	private int numberPlayerObsidian;
-	private int numberPlayerRedstone;
 	private EntityPlayer player;
 	
 	public GUIPropellerBench(TileEntityPropellerBench bench, EntityPlayer player){
@@ -62,6 +35,7 @@ public class GUIPropellerBench extends GuiScreen{
 		guiLeft = (this.width - 176)/2;
 		guiTop = (this.height - 222)/2;
 	
+		/*
 		buttonList.add(tier0Button = new GuiButton(0, guiLeft + 10, guiTop + 10, 20, 20, ""));
 		buttonList.add(tier1Button = new GuiButton(0, guiLeft + 40, guiTop + 10, 20, 20, ""));
 		buttonList.add(tier2Button = new GuiButton(0, guiLeft + 70, guiTop + 10, 20, 20, ""));		
@@ -71,7 +45,7 @@ public class GUIPropellerBench extends GuiScreen{
 		buttonList.add(pitchUpButton = new GuiButton(0, guiLeft + 85, guiTop + 55, 20, 20, "+"));
 		buttonList.add(diameterDownButton = new GuiButton(0, guiLeft + 110, guiTop + 55, 20, 20, "-"));
 		buttonList.add(diameterUpButton = new GuiButton(0, guiLeft + 130, guiTop + 55, 20, 20, "+"));
-		buttonList.add(startButton = new GuiButton(0, guiLeft + 130, guiTop + 145, 20, 20, ""));
+		buttonList.add(startButton = new GuiButton(0, guiLeft + 130, guiTop + 145, 20, 20, ""));*/
 	}
 	
 	@Override
@@ -82,13 +56,11 @@ public class GUIPropellerBench extends GuiScreen{
 			return;
 		}
 		
-		propellerMaterialQty = bench.diameter < 90 ? bench.numberBlades : bench.numberBlades*2;
-		this.getPlayerMaterials();
 		GL11.glColor3f(1, 1, 1); //Not sure why buttons make this grey, but whatever...
 		this.drawDefaultBackground();
 		mc.getTextureManager().bindTexture(background);
 		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 176, 222);
-		
+		/*
 		tier0Button.enabled = bench.propellerType != 0;
 		tier1Button.enabled = bench.propellerType != 1;
 		tier2Button.enabled = bench.propellerType != 2;
@@ -147,31 +119,13 @@ public class GUIPropellerBench extends GuiScreen{
 		mc.fontRendererObj.drawString("/1", (guiLeft + 70)/2, (guiTop + 150)/2, Color.BLACK.getRGB());
 		mc.fontRendererObj.drawString(String.valueOf(numberPlayerRedstone), (guiLeft + 35)/2, (guiTop + 180)/2, numberPlayerRedstone >= 5 ? Color.GREEN.getRGB() : Color.RED.getRGB());
 		mc.fontRendererObj.drawString("/5", (guiLeft + 70)/2, (guiTop + 180)/2, Color.BLACK.getRGB());
-		GL11.glPopMatrix();
+		GL11.glPopMatrix();*/
 	}
     
 	@Override
     protected void actionPerformed(GuiButton buttonClicked) throws IOException {
 		super.actionPerformed(buttonClicked);
-		if(buttonClicked.equals(tier0Button)){
-			bench.propellerType=0;
-		}else if(buttonClicked.equals(tier1Button)){
-			bench.propellerType=1;
-		}else if(buttonClicked.equals(tier2Button)){
-			bench.propellerType=2;
-		}else if(buttonClicked.equals(bladesUpButton)){
-			bench.numberBlades+=1;
-		}else if(buttonClicked.equals(bladesDownButton)){
-			bench.numberBlades-=1;
-		}else if(buttonClicked.equals(pitchUpButton)){			
-			bench.pitch+=3;
-		}else if(buttonClicked.equals(pitchDownButton)){
-			bench.pitch-=3;
-		}else if(buttonClicked.equals(diameterUpButton)){
-			bench.diameter+=5;
-		}else if(buttonClicked.equals(diameterDownButton)){
-			bench.diameter-=5;
-		}else if(buttonClicked.equals(startButton)){
+		if(buttonClicked.equals(startButton)){
 			bench.timeOperationFinished = bench.getWorld().getTotalWorldTime() + 1000;
 			MTS.MTSNet.sendToServer(new PropellerBenchUpdatePacket(bench, player));
 			mc.thePlayer.closeScreen();
@@ -180,44 +134,8 @@ public class GUIPropellerBench extends GuiScreen{
 		MTS.MTSNet.sendToServer(new PropellerBenchUpdatePacket(bench, player));
 	}
 	
-	private void getPlayerMaterials(){
-		numberPlayerPlanks = 0;
-		numberPlayerIronIngots = 0;
-		numberPlayerObsidian = 0;
-		numberPlayerRedstone = 0;
-		if(player.capabilities.isCreativeMode){
-			numberPlayerPlanks = 999;
-			numberPlayerIronIngots = 999;
-			numberPlayerObsidian = 999;
-			numberPlayerRedstone = 999;
-		}else{
-			for(ItemStack stack : player.inventory.mainInventory){
-				if(stack != null){
-					if(stack.getItem().equals(Item.getItemFromBlock(Blocks.PLANKS))){
-						numberPlayerPlanks+=stack.stackSize;
-					}else if(stack.getItem().equals(Items.IRON_INGOT)){
-						numberPlayerIronIngots+=stack.stackSize;
-					}else if(stack.getItem().equals(Item.getItemFromBlock(Blocks.OBSIDIAN))){
-						numberPlayerObsidian+=stack.stackSize;
-					}else if(stack.getItem().equals(Items.REDSTONE)){
-						numberPlayerRedstone+=stack.stackSize;
-					}
-				}
-			}
-		}
-	}
-	
 	@Override
 	public boolean doesGuiPauseGame(){
 		return false;
-	}
-	
-	private boolean doesPlayerHaveMaterials(){
-		switch(bench.propellerType){
-			case(0): return numberPlayerPlanks >= propellerMaterialQty && numberPlayerIronIngots >= 1 && numberPlayerRedstone >= 5;
-			case(1): return numberPlayerIronIngots >= propellerMaterialQty + 1 && numberPlayerRedstone >= 5;
-			case(2): return numberPlayerObsidian >= propellerMaterialQty && numberPlayerIronIngots >= 1 && numberPlayerRedstone >= 5;
-			default: return false;
-		}
 	}
 }
