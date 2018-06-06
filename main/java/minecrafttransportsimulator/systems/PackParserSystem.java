@@ -35,7 +35,6 @@ import minecrafttransportsimulator.multipart.parts.PartPropeller;
 import minecrafttransportsimulator.multipart.parts.PartSeat;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import scala.actors.threadpool.Arrays;
 
 /**
  * Class responsible for parsing content pack data.  Gets properties from the text files that other parts
@@ -77,8 +76,12 @@ public final class PackParserSystem{
     				
     				//Now that the multipart is registered, set the crafting.
     				List<String> materials = new ArrayList<String>();
-    				materials.addAll(Arrays.asList(pack.general.materials));
-    				materials.addAll(Arrays.asList(definition.extraMaterials));
+    				for(String material : pack.general.materials){
+    					materials.add(material);
+    				}
+    				for(String material : definition.extraMaterials){
+    					materials.add(material);
+    				}
     				final List<ItemStack> materialList = new ArrayList<ItemStack>();
     				for(String itemText : materials){
     					int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
