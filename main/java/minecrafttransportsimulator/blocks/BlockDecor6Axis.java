@@ -61,6 +61,7 @@ public class BlockDecor6Axis extends ABlockDecor{
 	}
 	
 	@Override
+	@SuppressWarnings("deprecation")
     public void addCollisionBoxToList(IBlockState state, World worldIn, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entityIn){
         state = state.getActualState(worldIn, pos);
         addCollisionBoxToList(pos, entityBox, collidingBoxes, CENTER_AABB);
@@ -90,6 +91,7 @@ public class BlockDecor6Axis extends ABlockDecor{
     }
 	
 	@Override
+	@SuppressWarnings("deprecation")
     public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos){
 		for(EnumFacing facing : EnumFacing.VALUES){
 			state = this.setStatesFor(state, worldIn, pos, facing);

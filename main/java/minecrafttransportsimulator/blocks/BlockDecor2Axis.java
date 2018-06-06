@@ -30,6 +30,7 @@ public class BlockDecor2Axis extends ABlockDecor{
 	}
 	
 	@Override
+	@SuppressWarnings("deprecation")
     public void addCollisionBoxToList(IBlockState state, World worldIn, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entityIn){
         state = state.getActualState(worldIn, pos);
         if(state.getValue(ROTATED).booleanValue()){
@@ -45,6 +46,7 @@ public class BlockDecor2Axis extends ABlockDecor{
     }
 	
 	@Override
+	@SuppressWarnings("deprecation")
     public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos){
         return state.withProperty(ROTATED, this.isRotated(worldIn, pos));
     }
