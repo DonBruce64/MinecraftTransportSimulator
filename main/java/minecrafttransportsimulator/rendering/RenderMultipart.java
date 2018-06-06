@@ -343,19 +343,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			ResourceLocation partModelLocation = part.getModelLocation();
 			if(partModelLocation == null){
 				continue;
-			}
-			
-			GL11.glPushMatrix();
-    		GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
-    		if(part.turnsWithSteer){
-    			if(part.offset.zCoord >= 0){
-    				GL11.glRotatef(multipart.getSteerAngle(), 0, 1, 0);
-    			}else{
-    				GL11.glRotatef(-multipart.getSteerAngle(), 0, 1, 0);
-    			}
-    		}
-    		
-    		if(!partDisplayLists.containsKey(partModelLocation)){
+			}else if(!partDisplayLists.containsKey(partModelLocation)){
     			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation);
     			int displayListIndex = GL11.glGenLists(1);
     			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
@@ -372,14 +360,21 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
     			partDisplayLists.put(partModelLocation, displayListIndex);
     			textureMap.put(part.partName, part.getTextureLocation());
     		}
-    		
-    		GL11.glPushMatrix();
+			
+			GL11.glPushMatrix();
+    		GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
+    		if(part.turnsWithSteer){
+    			if(part.offset.zCoord >= 0){
+    				GL11.glRotatef(multipart.getSteerAngle(), 0, 1, 0);
+    			}else{
+    				GL11.glRotatef(-multipart.getSteerAngle(), 0, 1, 0);
+    			}
+    		}
     		GL11.glRotated(part.getRotation(partialTicks).xCoord, 1, 0, 0);
     		GL11.glRotated(part.getRotation(partialTicks).yCoord, 0, 1, 0);
     		GL11.glRotated(part.getRotation(partialTicks).zCoord, 0, 0, 1);
     		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
 			GL11.glCallList(partDisplayLists.get(partModelLocation));
-			GL11.glPopMatrix();
 			GL11.glPopMatrix();
         }
 	}

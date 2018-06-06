@@ -165,15 +165,15 @@ public class PartGroundDevice extends APart implements FXPart{
 		if(this.pack.groundDevice.rotatesOnShaft){
 			if(this.offset.xCoord > 0){
 				if(this.turnsWithSteer){
-					return new Vec3d(this.angularPosition + this.angularVelocity*partialTicks, multipart.getSteerAngle(), 0);
+					return new Vec3d(this.angularPosition + this.angularVelocity*partialTicks, 0, 0);
 				}else{
 					return new Vec3d(this.angularPosition + this.angularVelocity*partialTicks, 0, 0);
 				}
 			}else{
 				if(this.turnsWithSteer){
-					return new Vec3d(-(this.angularPosition + this.angularVelocity*partialTicks), 180 + multipart.getSteerAngle(), 0);
+					return new Vec3d(this.angularPosition + this.angularVelocity*partialTicks, 180, 0);
 				}else{
-					return new Vec3d(-(this.angularPosition + this.angularVelocity*partialTicks), 180, 0);
+					return new Vec3d(this.angularPosition + this.angularVelocity*partialTicks, 180, 0);
 				}
 			}
 		}else{
