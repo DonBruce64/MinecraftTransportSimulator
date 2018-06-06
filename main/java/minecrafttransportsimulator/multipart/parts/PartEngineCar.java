@@ -99,6 +99,9 @@ public class PartEngineCar extends APartEngine{
 					engineForce = 0;
 				}
 			}else{
+				for(PartGroundDevice wheel : car.wheels){
+					wheel.skipAngularCalcs = false;
+				}
 				RPM += (engineTargetRPM - RPM)/10;
 				if(RPM > getSafeRPMFromMax(this.pack.engine.maxRPM)){
 					RPM -= (engineTargetRPM - RPM)/5;
