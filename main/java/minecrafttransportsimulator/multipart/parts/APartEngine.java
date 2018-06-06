@@ -145,7 +145,6 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 			}
 			if(RPM > getSafeRPMFromMax(this.pack.engine.maxRPM)){//Too fast
 				hours += 0.001*(RPM - getSafeRPMFromMax(this.pack.engine.maxRPM))/10F;
-				temp += (RPM - getSafeRPMFromMax(this.pack.engine.maxRPM))/1000;
 			}
 			if(temp > engineOverheatTemp1){//Too hot
 				hours += 0.001*(temp - engineOverheatTemp1);
