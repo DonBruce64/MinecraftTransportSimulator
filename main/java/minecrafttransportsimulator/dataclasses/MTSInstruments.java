@@ -30,6 +30,7 @@ public final class MTSInstruments{
     	public final boolean canConnectToEngines;
     	public final Class<? extends EntityMultipartD_Moving>[] validClasses;
     	
+    	@SafeVarargs
     	private Instruments(boolean canConnectToEngines, Class<? extends EntityMultipartD_Moving>... validClasses){
     		this.canConnectToEngines = canConnectToEngines;
     		this.validClasses = validClasses;
@@ -43,6 +44,7 @@ public final class MTSInstruments{
     	
     	public final Class<? extends EntityMultipartD_Moving>[] validClasses;
     	
+    	@SafeVarargs
     	private Controls(Class<? extends EntityMultipartD_Moving>... validClasses){
     		this.validClasses = validClasses;
     	}
