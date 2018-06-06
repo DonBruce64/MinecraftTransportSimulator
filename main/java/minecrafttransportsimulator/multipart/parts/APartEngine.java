@@ -58,14 +58,17 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 	public APartEngine(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
 		this.vehicle = (EntityMultipartE_Vehicle) this.multipart;
-		this.state = EngineStates.ENGINE_OFF;
+		if(dataTag.hasKey("engineState")){
+			this.state = EngineStates.values()[dataTag.getByte("engineState")];
+		}else{
+			this.state = EngineStates.ENGINE_OFF;
+		}
 		
 		isCreative = dataTag.getBoolean("isCreative");
 		oilLeak = dataTag.getBoolean("oilLeak");
 		fuelLeak = dataTag.getBoolean("fuelLeak");
 		brokenStarter = dataTag.getBoolean("brokenStarter");
 		hours = dataTag.getDouble("hours");
-		setMagnetoStatus(dataTag.getBoolean("magnetoOn"));
 		RPM = dataTag.getDouble("rpm");
 	}
 	
@@ -207,7 +210,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 		partData.setBoolean("fuelLeak", this.fuelLeak);
 		partData.setBoolean("brokenStarter", this.brokenStarter);
 		partData.setDouble("hours", hours);
-		partData.setBoolean("magnetoOn", this.state.magnetoOn);
+		partData.setByte("engineState", (byte) this.state.ordinal());
 		partData.setDouble("rpm", this.RPM);
 		return partData;
 	}
