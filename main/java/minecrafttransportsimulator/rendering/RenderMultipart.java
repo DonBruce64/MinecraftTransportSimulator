@@ -358,8 +358,11 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
     			GL11.glEnd();
     			GL11.glEndList();
     			partDisplayLists.put(partModelLocation, displayListIndex);
-    			textureMap.put(part.partName, part.getTextureLocation());
     		}
+			
+			if(!textureMap.containsKey(part.partName)){
+				textureMap.put(part.partName, part.getTextureLocation());
+			}
 			
 			GL11.glPushMatrix();
     		GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
