@@ -11,7 +11,8 @@ import java.util.Map;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.BlockDecor1Axis;
 import minecrafttransportsimulator.blocks.BlockDecor2Axis;
-import minecrafttransportsimulator.blocks.BlockDecor6Axis;
+import minecrafttransportsimulator.blocks.BlockDecor6AxisAttachable;
+import minecrafttransportsimulator.blocks.BlockDecor6AxisIsolated;
 import minecrafttransportsimulator.blocks.BlockFuelPump;
 import minecrafttransportsimulator.blocks.BlockPropellerBench;
 import minecrafttransportsimulator.items.core.ItemInstrument;
@@ -119,9 +120,9 @@ public final class MTSRegistry{
 	public static final Item instrument = new ItemInstrument().setCreativeTab(coreTab);
 	
 	//Decorative blocks.
-	public static final Block pole = new BlockDecor6Axis(Material.IRON, 5.0F, 10.0F, 0.25F, false);
+	public static final Block pole = new BlockDecor6AxisIsolated(Material.IRON, 5.0F, 10.0F, 0.25F);
 	public static final Item itemBlockPole = new ItemBlock(pole);
-	public static final Block poleBase = new BlockDecor6Axis(Material.IRON, 5.0F, 10.0F, 0.25F, true);
+	public static final Block poleBase = new BlockDecor6AxisAttachable(Material.IRON, 5.0F, 10.0F, 0.25F);
 	public static final Item itemBlockPoleBase = new ItemBlock(poleBase);
 	public static final Block trafficCone = new BlockDecor1Axis(Material.CLAY, 0.4375F, 0.75F, 0.6F, 0.75F);
 	public static final Item itemBlockTrafficCone = new ItemBlock(trafficCone);
