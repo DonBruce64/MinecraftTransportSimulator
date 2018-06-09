@@ -182,7 +182,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 			passenger.motionX = this.motionX;
 			passenger.motionY = this.motionY;
 			passenger.motionZ = this.motionZ;
-		}else if(pack != null){
+		}else if(pack != null && !this.riderSeatIDs.isEmpty()){
 			byte riderSeatId = this.riderSeatIDs.get(this.getPassengers().indexOf(passenger));
 			
 			//Double-check the pack didn't change since last load.
