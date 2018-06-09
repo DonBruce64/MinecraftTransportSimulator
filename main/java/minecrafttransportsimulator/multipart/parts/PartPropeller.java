@@ -49,9 +49,11 @@ public class PartPropeller extends APart{
 			}
 		}
 		connectedEngine = null;
-		if(!multipart.worldObj.isRemote){
-			this.dropAsItem();
-		}
+	}
+	
+	@Override
+	public boolean isValid(){
+		return connectedEngine != null;
 	}
 	
 	@Override

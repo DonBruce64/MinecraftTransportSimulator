@@ -47,6 +47,13 @@ public abstract class APart{
 		this.pack = PackParserSystem.getPartPack(partName);
 		this.partPos = multipart.getPositionVector().add(offset);
 	}
+	
+	/**Called right before this part is added to the multipart.
+	 * Should this be false, the part will not be added.
+	 */
+	public boolean isValid(){
+		return true;
+	}
 
 	/**Called when checking if this part can be interacted with.
 	 * If a part does interctions it should do so and then return true.

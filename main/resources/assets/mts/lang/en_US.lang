@@ -38,6 +38,7 @@ interact.failure.seattaken=This seat is taken!
 interact.failure.vehiclelocked=This vehicle is locked!
 interact.failure.vehicleowned=You are not the owner of this vehicle and therefore cannot remove it or its parts!
 interact.failure.propellerbenchworking=This propeller bench is currently busy.
+interact.failure.missingpart=This part needs to be connected to another part and cannot go on here yet.
 
 input.aircraft.mod=Mod
 input.aircraft.camlock=CamLock

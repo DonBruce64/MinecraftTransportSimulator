@@ -9,8 +9,10 @@ import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartA_Base;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.parts.APart;
+import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
@@ -77,11 +79,15 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
 										Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partItem.partName);
 										Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
 										APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, partOffset, packPart.isController, packPart.turnsWithSteer, partItem.partName, heldStack.hasTagCompound() ? heldStack.getTagCompound() : new NBTTagCompound());
-										multipart.addPart(newPart, false);
-										if(!player.capabilities.isCreativeMode){
-											player.inventory.clearMatchingItems(partItem, heldStack.getItemDamage(), 1, heldStack.getTagCompound());
+										if(newPart.isValid()){
+											multipart.addPart(newPart, false);
+											if(!player.capabilities.isCreativeMode){
+												player.inventory.clearMatchingItems(partItem, heldStack.getItemDamage(), 1, heldStack.getTagCompound());
+											}
+											MTS.MTSNet.sendToAll(new PacketMultipartClientPartAddition(multipart, message.partIndex, heldStack));
+										}else{
+											MTS.MTSNet.sendTo(new ChatPacket("interact.failure.missingpart"), (EntityPlayerMP) player);
 										}
-										MTS.MTSNet.sendToAll(new PacketMultipartClientPartAddition(multipart, message.partIndex, heldStack));
 									}catch(Exception e){
 										MTS.MTSLog.error("ERROR SPAWING PART ON SERVER!");
 										MTS.MTSLog.error(e.getMessage());
