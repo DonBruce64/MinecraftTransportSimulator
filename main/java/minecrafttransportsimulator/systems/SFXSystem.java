@@ -30,7 +30,7 @@ public final class SFXSystem{
 	 * Placed here for ease of version updates and to allow custom volumes.
 	 */
 	public static void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){
-		if(Minecraft.getMinecraft().thePlayer != null){
+		if(Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().theWorld.isRemote){
 			volume = isPlayerInsideEnclosedVehicle() ? volume*0.5F : volume;
 			double soundDistance = Minecraft.getMinecraft().thePlayer.getPositionVector().distanceTo(soundPosition);
 	        PositionedSoundRecord sound = new PositionedSoundRecord(getSoundEventFromName(soundName), SoundCategory.MASTER, volume, pitch, (float)soundPosition.xCoord, (float)soundPosition.yCoord, (float)soundPosition.zCoord);
