@@ -39,7 +39,7 @@ public class PackPartObject{
     
     public class PartPropellerConfig{
     	public byte numberBlades;
-    	public byte pitch;
+    	public short pitch;
     	public int diameter;
     	public int startingHealth;
     }

@@ -224,13 +224,15 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	}
 	
 	@Override
-	public void addPart(APart part){
-		//Check if we are colliding and adjust roll before letting part addition continue.
-		//This is needed as the master multipart system doesn't know about roll.
-		if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
-			this.rotationRoll = 0;
+	public void addPart(APart part, boolean ignoreCollision){
+		if(!ignoreCollision){
+			//Check if we are colliding and adjust roll before letting part addition continue.
+			//This is needed as the master multipart system doesn't know about roll.
+			if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
+				this.rotationRoll = 0;
+			}
 		}
-		super.addPart(part);
+		super.addPart(part, ignoreCollision);
 	}
 	
     @Override

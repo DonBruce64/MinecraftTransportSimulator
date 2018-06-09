@@ -77,7 +77,7 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
 										Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partItem.partName);
 										Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
 										APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, partOffset, packPart.isController, packPart.turnsWithSteer, partItem.partName, heldStack.hasTagCompound() ? heldStack.getTagCompound() : new NBTTagCompound());
-										multipart.addPart(newPart);
+										multipart.addPart(newPart, false);
 										if(!player.capabilities.isCreativeMode){
 											player.inventory.clearMatchingItems(partItem, heldStack.getItemDamage(), 1, heldStack.getTagCompound());
 										}

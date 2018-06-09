@@ -47,10 +47,12 @@ public class PartGroundDevice extends APart implements FXPart{
 		//If we are a long ground device, add a fake ground device at the offset to make us
 		//have a better contact area.  Make sure we don't call this from the main constructor itself,
 		//otherwise we'll get infinite loops!
-		if(pack.groundDevice.isLongPart && !partName.contains("_fake")){
+		//If we are restoring from a multipart we will have extra tags in the NBT.
+		//If this is the case, don't add a fake part as that will already be present.
+		if(!dataTag.hasKey("offsetX") && pack.groundDevice.isLongPart && !partName.contains("_fake")){
 			Vec3d fakeOffset = offset.addVector(0, 0, pack.groundDevice.extraCollisionBoxOffset);
 			fakePart = new PartGroundDeviceFake(this, fakeOffset, partName + "_fake", dataTag);
-			multipart.addPart(fakePart);
+			multipart.addPart(fakePart, false);
 		}else{
 			fakePart = null;
 		}

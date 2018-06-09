@@ -115,8 +115,8 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 	}
 	
 	@Override
-	public void addPart(APart part){
-		super.addPart(part);
+	public void addPart(APart part, boolean ignoreCollision){
+		super.addPart(part, ignoreCollision);
 		if(part instanceof APartEngine){
 			//Because parts is a list, the #1 engine will always come before the #2 engine.
 			//We can use this to determine where in the list this engine needs to go.

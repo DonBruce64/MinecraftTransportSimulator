@@ -113,18 +113,20 @@ public abstract class EntityMultipartA_Base extends Entity{
     	this.ignoreFrustumCheck = true;
     }
 	
-	public void addPart(APart part){
+	public void addPart(APart part, boolean ignoreCollision){
 		parts.add(part);
-		if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
-			Vec3d boost = new Vec3d(0, Math.max(0, -part.offset.yCoord), 0);
-			this.setPositionAndRotation(posX, posY + boost.yCoord, posZ, rotationYaw, 0);
-			
-			//Sometimes parts can break off if the multipart rotates and shoves something under the ground.
-			//Check to make sure we don't do this.
-			for(APart testPart : this.getMultipartParts()){
-				if(testPart.isPartCollidingWithBlocks(boost)){
-					this.setPositionAndRotation(posX, posY + 1, posZ, rotationYaw, 0);
-					break;
+		if(!ignoreCollision){
+			if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
+				Vec3d boost = new Vec3d(0, Math.max(0, -part.offset.yCoord), 0);
+				this.setPositionAndRotation(posX, posY + boost.yCoord, posZ, rotationYaw, 0);
+				
+				//Sometimes parts can break off if the multipart rotates and shoves something under the ground.
+				//Check to make sure we don't do this.
+				for(APart testPart : this.getMultipartParts()){
+					if(testPart.isPartCollidingWithBlocks(boost)){
+						this.setPositionAndRotation(posX, posY + 1, posZ, rotationYaw, 0);
+						break;
+					}
 				}
 			}
 		}
@@ -187,7 +189,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 					Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partTag.getString("partName"));
 					Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
 					APart savedPart = construct.newInstance((EntityMultipartD_Moving) this, new Vec3d(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ")), partTag.getBoolean("isController"), partTag.getBoolean("turnsWithSteer"), partTag.getString("partName"), partTag);
-					this.addPart(savedPart);
+					this.addPart(savedPart, true);
 				}catch(Exception e){
 					MTS.MTSLog.error("ERROR IN LOADING PART FROM NBT!");
 					e.printStackTrace();

@@ -92,8 +92,8 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle impleme
 	
 	
 	@Override
-	public void addPart(APart part){
-		super.addPart(part);
+	public void addPart(APart part, boolean ignoreCollision){
+		super.addPart(part, ignoreCollision);
 		if(part instanceof PartGroundDevice){
 			if(((PartGroundDevice) part).pack.groundDevice.rotatesOnShaft){
 				wheels.add((PartGroundDevice) part);
