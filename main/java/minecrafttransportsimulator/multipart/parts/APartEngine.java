@@ -100,11 +100,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 			if(starterLevel == 0){
 				if(vehicle.electricPower > 2){
 					starterLevel += pack.engine.starterDuration;
-					if(vehicle.electricPower > 6){
-						MTS.proxy.playSound(partPos, partName + "_cranking", 1, 1);
-					}else{
-						MTS.proxy.playSound(partPos, partName + "_cranking", 1, (float) (vehicle.electricPower/8F));
-					}
+					MTS.proxy.playSound(partPos, partName + "_cranking", 1, (float) (RPM/engineStartRPM));
 				}
 			}
 			if(starterLevel > 0){
@@ -282,7 +278,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 			return;
 		}
 		starterLevel += pack.engine.starterDuration;
-		MTS.proxy.playSound(partPos, partName + "_cranking", 1, 1);
+		MTS.proxy.playSound(partPos, partName + "_cranking", 1, (float) (RPM/engineStartRPM));
 	}
 	
 	public void backfireEngine(){
