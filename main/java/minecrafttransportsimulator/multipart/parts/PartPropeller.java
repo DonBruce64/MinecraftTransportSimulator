@@ -112,12 +112,12 @@ public class PartPropeller extends APart{
 	
 	@Override
 	public float getWidth(){
-		return pack.propeller.diameter;
+		return pack.propeller.diameter*0.0254F;
 	}
 
 	@Override
 	public float getHeight(){
-		return pack.propeller.diameter;
+		return pack.propeller.diameter*0.0254F;
 	}
 	
 	private void damagePropeller(float damage){
