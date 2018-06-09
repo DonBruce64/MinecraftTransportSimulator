@@ -1,5 +1,17 @@
 {
     "multipart": [
+        {   "when": { "rotation": "north" },
+            "apply": { "model": "mts:trafficsignal", "y" : 180 }
+        },
+        {   "when": { "rotation": "east" },
+            "apply": { "model": "mts:trafficsignal", "y" : 270}
+        },
+        {   "when": { "rotation": "south" },
+            "apply": { "model": "mts:trafficsignal"}
+        },
+        {   "when": { "rotation": "west" },
+            "apply": { "model": "mts:trafficsignal", "y" : 90}
+        },
         {   "apply": { "model": "mts:polecenter" }},
         {   "when": { "up": "true" },
             "apply": { "model": "mts:polepart", "x": 180}

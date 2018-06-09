@@ -25,7 +25,7 @@ public abstract class ABlockRotateable extends BlockContainer{
         if(this.canRotateDiagonal()){
         	((ATileEntityRotatable) world.getTileEntity(pos)).rotation = Math.round(yaw%360/45) == 8 ? 0 : (byte) Math.round(yaw%360/45);
         }else{
-        	((ATileEntityRotatable) world.getTileEntity(pos)).rotation = (byte) (Math.round(yaw%360/90) == 8 ? 0 : Math.round(yaw%360/90)*2);
+        	((ATileEntityRotatable) world.getTileEntity(pos)).rotation = (byte) (Math.round(yaw%360/90) == 4 ? 0 : Math.round(yaw%360/90)*2);
         }
     }
 

@@ -11,7 +11,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 
-public class BlockDecor6AxisAttachable extends BlockDecor6AxisIsolated{
+public class BlockDecor6AxisSolidConnector extends BlockDecor6AxisRegular{
 	public static final PropertyBool UP_SOLID = PropertyBool.create("up_solid");
 	public static final PropertyBool DOWN_SOLID = PropertyBool.create("down_solid");
 	public static final PropertyBool NORTH_SOLID = PropertyBool.create("north_solid");
@@ -19,8 +19,8 @@ public class BlockDecor6AxisAttachable extends BlockDecor6AxisIsolated{
     public static final PropertyBool SOUTH_SOLID = PropertyBool.create("south_solid");
     public static final PropertyBool WEST_SOLID = PropertyBool.create("west_solid");
     
-	public BlockDecor6AxisAttachable(Material material, float hardness, float resistance, float diameter){
-		super(material, hardness, resistance, diameter);
+	public BlockDecor6AxisSolidConnector(Material material, float hardness, float resistance){
+		super(material, hardness, resistance);
 		this.setDefaultState(super.getDefaultState().
 				withProperty(UP_SOLID, false).
 				withProperty(DOWN_SOLID, false).
@@ -31,25 +31,19 @@ public class BlockDecor6AxisAttachable extends BlockDecor6AxisIsolated{
 	}
 	
 	@Override
-	protected IBlockState setStatesFor(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing facing){
-        IBlockState offsetState = worldIn.getBlockState(pos.offset(facing));
+	protected IBlockState setStatesFor(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing facing){
+		state = super.setStatesFor(state, world, pos, facing);
+        IBlockState offsetState = world.getBlockState(pos.offset(facing));
         Block block = offsetState.getBlock();
-        boolean connected = false;
-        boolean connectedToSolid = false;
-    	if(block instanceof BlockDecor6AxisIsolated){
-    		connected = true;
-    	}    	
-        if(!block.equals(Blocks.BARRIER) && offsetState.getMaterial().isOpaque() && offsetState.isFullCube() && offsetState.getMaterial() != Material.GOURD){
-        	connectedToSolid = true;
-        }
+        boolean connectedToSolid = !block.equals(Blocks.BARRIER) && offsetState.getMaterial().isOpaque() && offsetState.isFullCube() && offsetState.getMaterial() != Material.GOURD;
     	
 		switch (facing){
-			case UP: return state.withProperty(UP, connected).withProperty(UP_SOLID, connectedToSolid);
-			case DOWN: return state.withProperty(DOWN, connected).withProperty(DOWN_SOLID, connectedToSolid);
-			case NORTH: return state.withProperty(NORTH, connected).withProperty(NORTH_SOLID, connectedToSolid);
-			case EAST: return state.withProperty(EAST, connected).withProperty(EAST_SOLID, connectedToSolid);
-			case SOUTH: return state.withProperty(SOUTH, connected).withProperty(SOUTH_SOLID, connectedToSolid);
-			case WEST: return state.withProperty(WEST, connected).withProperty(WEST_SOLID, connectedToSolid);
+			case UP: return state.withProperty(UP_SOLID, connectedToSolid);
+			case DOWN: return state.withProperty(DOWN_SOLID, connectedToSolid);
+			case NORTH: return state.withProperty(NORTH_SOLID, connectedToSolid);
+			case EAST: return state.withProperty(EAST_SOLID, connectedToSolid);
+			case SOUTH: return state.withProperty(SOUTH_SOLID, connectedToSolid);
+			case WEST: return state.withProperty(WEST_SOLID, connectedToSolid);
 			default: return state;
 		}
 	}

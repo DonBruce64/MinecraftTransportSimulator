@@ -11,23 +11,29 @@ import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BlockDecor2Axis extends ABlockDecor{
+public class BlockDecor2AxisIsolated extends ABlockDecor{
 	public static final PropertyBool ROTATED = PropertyBool.create("rotated");
 	
 	private final AxisAlignedBB regularAABB;
 	private final AxisAlignedBB rotatedAABB;
 
-	public BlockDecor2Axis(Material material, float hardness, float resistance, float width, float height, float depth){
+	public BlockDecor2AxisIsolated(Material material, float hardness, float resistance, float width, float height, float depth){
 		super(material, hardness, resistance);
 		this.setDefaultState(this.blockState.getBaseState().withProperty(ROTATED, false));
 		this.regularAABB = new AxisAlignedBB(0.5F - width/2F, 0, 0.5F - depth/2F, 0.5F + width/2F, height, 0.5F +  depth/2F);
 		this.rotatedAABB = new AxisAlignedBB(0.5F - depth/2F, 0, 0.5F - width/2F, 0.5F + depth/2F, height, 0.5F +  width/2F);
 	}
+	
+    @Override
+    public boolean canConnectOnSide(IBlockAccess access, BlockPos pos, EnumFacing side){
+    	return false;
+    }
 	
 	@Override
 	@SuppressWarnings("deprecation")
@@ -47,8 +53,8 @@ public class BlockDecor2Axis extends ABlockDecor{
 	
 	@Override
 	@SuppressWarnings("deprecation")
-    public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos){
-        return state.withProperty(ROTATED, this.isRotated(worldIn, pos));
+    public IBlockState getActualState(IBlockState state, IBlockAccess access, BlockPos pos){
+        return state.withProperty(ROTATED, this.isRotated(access, pos));
     }
 	
 	private boolean isRotated(IBlockAccess worldIn, BlockPos pos){

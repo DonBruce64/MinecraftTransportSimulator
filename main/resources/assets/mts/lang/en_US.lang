@@ -237,6 +237,7 @@ tile.pole.name=Pole
 tile.polebase.name=Pole Base
 tile.trafficcone.name=Traffic Cone
 tile.crashbarrier.name=Crash Barrier
+tile.trafficsignal.name=Traffic Signal
 
 itemGroup.tabMTSCore=MTS Core Components
 key.categories.mts=Minecraft Transport Simulator
