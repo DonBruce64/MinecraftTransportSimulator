@@ -676,7 +676,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 					for(String partType : packPart.types){
 						if(partType.equals(heldItem.partType)){
 							isHoldingPart = true;
-							if(packPart.minValue <= heldItem.getPartValue() && packPart.maxValue >= heldItem.getPartValue()){
+							if(heldItem.isPartValueInRange(packPart.minValue, packPart.maxValue)){
 								isPartValid = true;
 							}
 							break;

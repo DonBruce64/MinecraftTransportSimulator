@@ -69,7 +69,7 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
 											return;
 										}
 									}
-	        						if(packPart.minValue > partItem.getPartValue() || packPart.maxValue < partItem.getPartValue()){
+	        						if(!partItem.isPartValueInRange(packPart.minValue, packPart.maxValue)){
 	    								//Part is a valid type, but is not a valid configuration.  Bail.
 	        							return;
 	    							}

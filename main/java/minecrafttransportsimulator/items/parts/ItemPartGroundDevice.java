@@ -9,7 +9,8 @@ public class ItemPartGroundDevice extends AItemPart{
 	}
 	
 	@Override
-	public float getPartValue(){
-		return PackParserSystem.getPartPack(partName).groundDevice.diameter;
+	public boolean isPartValueInRange(float minValue, float maxValue){
+		float diameter = PackParserSystem.getPartPack(partName).groundDevice.diameter;
+		return minValue <= diameter && maxValue >= diameter;
 	}
 }

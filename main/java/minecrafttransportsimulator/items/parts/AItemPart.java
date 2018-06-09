@@ -16,7 +16,5 @@ public abstract class AItemPart extends Item{
 		this.setCreativeTab(MTSRegistry.packTabs.get(partName.substring(0, partName.indexOf(':'))));
 	}
 	
-	public float getPartValue(){
-		return 0;
-	}
+	public abstract boolean isPartValueInRange(float minValue, float maxValue);
 }

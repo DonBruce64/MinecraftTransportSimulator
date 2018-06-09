@@ -20,8 +20,9 @@ public class ItemPartPropeller extends AItemPart{
 	}
 	
 	@Override
-	public float getPartValue(){
-		return PackParserSystem.getPartPack(partName).propeller.diameter;
+	public boolean isPartValueInRange(float minValue, float maxValue){
+		float propellerDiameter = PackParserSystem.getPartPack(partName).propeller.diameter;
+		return minValue <= propellerDiameter && maxValue >= propellerDiameter;
 	}
 	
 	@Override
