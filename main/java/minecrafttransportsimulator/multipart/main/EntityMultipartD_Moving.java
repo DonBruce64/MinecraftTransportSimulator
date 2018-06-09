@@ -357,33 +357,46 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 		
 		//Now that that the movement has been checked, move the multipart.
 		prevRotationRoll = rotationRoll;
-		if(!worldObj.isRemote){
-			rotationYaw += motionYaw;
-			rotationPitch += motionPitch;
-			rotationRoll += motionRoll;
-			setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
-			addToServerDeltas(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll);
-			MTS.MTSNet.sendToAll(new PacketMultipartDeltas(this, motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll));
-		}else{
-			//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.
-			if(!(serverDeltaX == 0 && serverDeltaY == 0 && serverDeltaZ == 0)){
-				double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/4F;
-				double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/4F;
-				double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/4F;
-				float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/4F;
-				float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/4F;
-				float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/4F;
-				
-				setPosition(posX + deltaX, posY + deltaY, posZ + deltaZ);
-				rotationYaw += deltaYaw;
-				rotationPitch += deltaPitch;
-				rotationRoll += deltaRoll;
-				addToClientDeltas(deltaX, deltaY, deltaZ, deltaYaw, deltaPitch, deltaRoll);
-			}else{
+		
+		//Make sure we don't try to move if we have a really small movement.
+		//This prevents odd jittering when idle.
+		if(Math.abs(motionX) < 0.001){
+			motionX = 0;
+		}
+		if(Math.abs(motionY) < 0.001){
+			motionY = 0;
+		}
+		if(Math.abs(motionZ) < 0.001){
+			motionZ = 0;
+		}
+		if(motionX != 0 || motionY != 0 || motionZ != 0 || motionPitch != 0 || motionYaw != 0 || motionRoll != 0){
+			if(!worldObj.isRemote){
 				rotationYaw += motionYaw;
 				rotationPitch += motionPitch;
 				rotationRoll += motionRoll;
 				setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
+				addToServerDeltas(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll);
+				MTS.MTSNet.sendToAll(new PacketMultipartDeltas(this, motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll));
+			}else{
+				//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.
+				if(!(serverDeltaX == 0 && serverDeltaY == 0 && serverDeltaZ == 0)){
+					double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/4F;
+					double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/4F;
+					double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/4F;
+					float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/4F;
+					float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/4F;
+					float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/4F;
+					setPosition(posX + deltaX, posY + deltaY, posZ + deltaZ);
+					rotationYaw += deltaYaw;
+					rotationPitch += deltaPitch;
+					rotationRoll += deltaRoll;
+					addToClientDeltas(deltaX, deltaY, deltaZ, deltaYaw, deltaPitch, deltaRoll);
+				}else{
+					rotationYaw += motionYaw;
+					rotationPitch += motionPitch;
+					rotationRoll += motionRoll;
+					setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
+				}
 			}
 		}
 	}
