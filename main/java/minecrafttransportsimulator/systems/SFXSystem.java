@@ -30,14 +30,16 @@ public final class SFXSystem{
 	 * Placed here for ease of version updates and to allow custom volumes.
 	 */
 	public static void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){
-		volume = isPlayerInsideEnclosedVehicle() ? volume*0.5F : volume;
-		double soundDistance = Minecraft.getMinecraft().thePlayer.getPositionVector().distanceTo(soundPosition);
-        PositionedSoundRecord sound = new PositionedSoundRecord(getSoundEventFromName(soundName), SoundCategory.MASTER, volume, pitch, (float)soundPosition.xCoord, (float)soundPosition.yCoord, (float)soundPosition.zCoord);
-        if(soundDistance > 10.0D){
-        	Minecraft.getMinecraft().getSoundHandler().playDelayedSound(sound, (int)(soundDistance/2));
-        }else{
-        	Minecraft.getMinecraft().getSoundHandler().playSound(sound);
-        }
+		if(Minecraft.getMinecraft().thePlayer != null){
+			volume = isPlayerInsideEnclosedVehicle() ? volume*0.5F : volume;
+			double soundDistance = Minecraft.getMinecraft().thePlayer.getPositionVector().distanceTo(soundPosition);
+	        PositionedSoundRecord sound = new PositionedSoundRecord(getSoundEventFromName(soundName), SoundCategory.MASTER, volume, pitch, (float)soundPosition.xCoord, (float)soundPosition.yCoord, (float)soundPosition.zCoord);
+	        if(soundDistance > 10.0D){
+	        	Minecraft.getMinecraft().getSoundHandler().playDelayedSound(sound, (int)(soundDistance/2));
+	        }else{
+	        	Minecraft.getMinecraft().getSoundHandler().playSound(sound);
+	        }
+		}
 	}
 	
 	public static SoundEvent getSoundEventFromName(String name){
@@ -54,9 +56,9 @@ public final class SFXSystem{
 			if(part.shouldSoundBePlaying()){
 				if(!soundMap.containsKey(part)){
 					soundMap.put(part, part.getNewSound());
-				}
-				if(!soundHandler.isSoundPlaying(soundMap.get(part))){
-					soundHandler.playSound(soundMap.get(part));
+					if(!soundHandler.isSoundPlaying(soundMap.get(part))){
+						soundHandler.playSound(soundMap.get(part));
+					}
 				}
 			}else if(soundMap.containsKey(part)){
 				soundMap.remove(part);
@@ -71,7 +73,7 @@ public final class SFXSystem{
 	}
 	
 	public static boolean isPlayerInsideEnclosedVehicle(){
-		if(Minecraft.getMinecraft().thePlayer.getRidingEntity() instanceof EntityMultipartD_Moving){
+		if(Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().thePlayer.getRidingEntity() instanceof EntityMultipartD_Moving){
 			return !((EntityMultipartD_Moving) Minecraft.getMinecraft().thePlayer.getRidingEntity()).pack.general.openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
 		}else{
 			return false;
