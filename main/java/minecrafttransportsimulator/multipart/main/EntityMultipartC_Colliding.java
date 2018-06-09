@@ -241,19 +241,22 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 						if(!worldObj.isRemote){
 							worldObj.destroyBlock(pos, true);
 						}
-						
-						if(hardnessHitThisTick > currentMass/100){
-							if(!worldObj.isRemote){
-								this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
-							}
-							return -2;
-						}
 					}else{
 						++blockPosIndex;
 					}
 				}
-				if(collidedBlockPos.isEmpty()){
+				if(hardnessHitThisTick > currentMass/100){
+					if(!worldObj.isRemote){
+						this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
+					}
+					return -2;
+				}else if(collidedBlockPos.isEmpty()){
 					return 0;
+				}else if(collisionDepth > 0.3){
+					if(!worldObj.isRemote){
+						this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
+					}
+					return -2;	
 				}
 			}
 		}
