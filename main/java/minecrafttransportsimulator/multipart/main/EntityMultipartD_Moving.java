@@ -111,7 +111,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 		for(MultipartAxisAlignedBB box : this.getCurrentCollisionBoxes()){
 			Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
 			MultipartAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor));
-			if(!getAABBCollisions(offsetBox, null).isEmpty()){
+			if(!getAABBCollisions(offsetBox, null, null).isEmpty()){
 				needCheck = true;
 			}
 		}
@@ -188,7 +188,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 					Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch, rotationYaw + motionYaw, rotationRoll);
 					//Raise this box ever so slightly because Floating Point errors are a PITA.
 					MultipartAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*speedFactor, motionY*speedFactor + 0.1, motionZ*speedFactor));
-					if(getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box)).isEmpty()){
+					if(getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box), null).isEmpty()){
 						break;
 					}
 					if(this.motionYaw > 0){
@@ -208,12 +208,12 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 				while(motionPitch != 0){
 					Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll);
 					MultipartAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor));
-					if(getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box)).isEmpty()){
+					if(getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box), null).isEmpty()){
 						break;
 					}else if(motionPitch < 0){
 						if(box.rel.zCoord <= 0){
 							float yBoost = 0;
-							for(AxisAlignedBB box2 : getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box))){
+							for(AxisAlignedBB box2 : getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box), null)){
 								if(box2.maxY > offsetBox.minY + yBoost){
 									yBoost += (box2.maxY - offsetBox.minY);
 								}
@@ -239,7 +239,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 				while(motionRoll != 0){
 					Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
 					MultipartAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor));
-					if(getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box)).isEmpty()){
+					if(getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box), null).isEmpty()){
 						break;
 					}
 					if(this.motionRoll > 0){
@@ -287,7 +287,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 					for(MultipartAxisAlignedBB box : this.getCurrentCollisionBoxes()){
 						Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
 						MultipartAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor));
-						if(!getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box)).isEmpty()){
+						if(!getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box), null).isEmpty()){
 							if(box.rel.zCoord > 0){
 								needPitchUp = true;
 								needPitchUpAnytime = true;

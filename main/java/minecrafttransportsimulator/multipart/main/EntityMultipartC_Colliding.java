@@ -14,6 +14,7 @@ import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -31,8 +32,6 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existing{
-	private float width;
-	private float height;
 	/**Collective wrapper that allows for the calling of multiple collision boxes in this multipart.  May be null on the first scan.*/
 	private MultipartAxisAlignedBBCollective collisionFrame;
 	/**List of current collision boxes in this multipart.  Contains both multipart collision boxes and ground device collision boxes.*/
@@ -43,6 +42,8 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 	protected final Map<MultipartAxisAlignedBB, PartGroundDevice> groundDeviceCollisionBoxMap = new HashMap<MultipartAxisAlignedBB, PartGroundDevice>();
 	
 	protected final double speedFactor = ConfigSystem.getDoubleConfig("SpeedFactor");
+	
+	private float hardnessHitThisTick = 0;
 			
 	public EntityMultipartC_Colliding(World world){
 		super(world);
@@ -66,6 +67,7 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 			currentInteractionBoxes.clear();
 			groundDeviceCollisionBoxMap.clear();
 			currentCollisionBoxes.addAll(this.getUpdatedCollisionBoxes());
+			hardnessHitThisTick = 0;
 			for(APart part : this.getMultipartParts()){
 				if(part instanceof PartGroundDevice){
 					currentCollisionBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));
@@ -167,7 +169,8 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 	 * Returns -3 if the collision is a ground device and could be moved upwards to not collide (only for X and Z axis).
 	 */
 	protected float getCollisionForAxis(MultipartAxisAlignedBB box, boolean xAxis, boolean yAxis, boolean zAxis, PartGroundDevice optionalGroundDevice){
-		box = box.offset(xAxis ? this.motionX*speedFactor : 0, yAxis ? this.motionY*speedFactor : 0, zAxis ? this.motionZ*speedFactor : 0);
+		Vec3d motion = new Vec3d(this.motionX*speedFactor, this.motionY*speedFactor, this.motionZ*speedFactor);
+		box = box.offset(xAxis ? motion.xCoord : 0, yAxis ? motion.yCoord : 0, zAxis ? motion.zCoord : 0);
 		
 		//Add a slight vertical offset to collisions in the X or Z axis to prevent them from catching the ground.
 		//Sometimes ground devices and the like end up with a lower level of 3.9999 due to floating-point errors
@@ -176,32 +179,34 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 		if(xAxis || zAxis){
 			box = box.offset(0, 0.05F, 0);
 		}
-		List<AxisAlignedBB> collidingAABBList = this.getAABBCollisions(box, optionalGroundDevice);
+		List<BlockPos> collidedBlockPos = new ArrayList<BlockPos>();
+		List<AxisAlignedBB> collidingAABBList = this.getAABBCollisions(box, optionalGroundDevice, collidedBlockPos);
 		
 		float collisionDepth = 0;
 		for(AxisAlignedBB box2 : collidingAABBList){
 			if(xAxis){
-				collisionDepth = (float) Math.max(collisionDepth, motionX > 0 ? box.maxX - box2.minX : box2.maxX - box.minX);
+				collisionDepth = (float) Math.max(collisionDepth, motion.xCoord > 0 ? box.maxX - box2.minX : box2.maxX - box.minX);
 			}
 			if(yAxis){
-				collisionDepth = (float) Math.max(collisionDepth, motionY > 0 ? box.maxY - box2.minY : box2.maxY - box.minY);
+				collisionDepth = (float) Math.max(collisionDepth, motion.yCoord > 0 ? box.maxY - box2.minY : box2.maxY - box.minY);
 			}
 			if(zAxis){
-				collisionDepth = (float) Math.max(collisionDepth, motionZ > 0 ? box.maxZ - box2.minZ : box2.maxZ - box.minZ);
+				collisionDepth = (float) Math.max(collisionDepth, motion.zCoord > 0 ? box.maxZ - box2.minZ : box2.maxZ - box.minZ);
 			}
 			if(collisionDepth > 0.3){
 				//This could be a collision, but it could also be that it's a ground device and moved
 				//into a block and another axis needs to collide here.  Check the motion and bail if so.
-				if((xAxis && (Math.abs(motionX) < collisionDepth)) || (yAxis && (Math.abs(motionY) < collisionDepth)) || (zAxis && (Math.abs(motionZ) < collisionDepth))){
+				if((xAxis && (Math.abs(motion.xCoord) < collisionDepth)) || (yAxis && (Math.abs(motion.yCoord) < collisionDepth)) || (zAxis && (Math.abs(motion.zCoord) < collisionDepth))){
 					return 0;
 				}
 			}
 		}
+		
 		if(optionalGroundDevice != null && !yAxis && collisionDepth > 0){
 			//Ground device has collided.
 			//Check to see if this collision can be avoided if the device is moved upwards.
 			//Expand this box slightly to ensure we see the collision even with floating-point errors.
-			collidingAABBList = getAABBCollisions(box.offset(xAxis ? this.motionX*speedFactor : 0, optionalGroundDevice.getHeight()*1.5F, zAxis ? this.motionZ*speedFactor : 0).expandXyz(0.05F), optionalGroundDevice);
+			collidingAABBList = getAABBCollisions(box.offset(xAxis ? motion.xCoord : 0, optionalGroundDevice.getHeight()*1.5F, zAxis ? motion.zCoord : 0).expandXyz(0.05F), optionalGroundDevice, null);
 			if(collidingAABBList.isEmpty()){
 				//Ground device can be moved upward out of the way.
 				//Return -3 and deal with this later.
@@ -216,28 +221,50 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 			}else{
 				return collisionDepth;
 			}
-		}else if(collisionDepth > 0.3){
+		}else if(!yAxis){
 			//Not a ground device, therefore we are a core collision box and
-			//hit too hard.  This results in an explosion and no more calculations.
-			if(!worldObj.isRemote){
-				this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
+			//need to check to see if we can break some blocks or if we need to explode.
+			//Don't bother with this logic if it's impossible for us to break anything.
+			double velocity = Math.hypot(motion.xCoord, motion.zCoord);
+			if(velocity > 0){
+				byte blockPosIndex = 0;
+				while(blockPosIndex < collidedBlockPos.size()){
+					BlockPos pos = collidedBlockPos.get(blockPosIndex);
+					float hardness = worldObj.getBlockState(pos).getBlockHardness(worldObj, pos);
+					if(hardness <= velocity*currentMass/100F && hardness >= 0){
+						collidedBlockPos.remove(blockPosIndex);
+						hardnessHitThisTick += hardness;
+						motionX *= Math.max(1.0F - hardness*0.5F/((500F + currentMass)/500F), 0.0F);
+						motionY *= Math.max(1.0F - hardness*0.5F/((500F + currentMass)/500F), 0.0F);
+						motionZ *= Math.max(1.0F - hardness*0.5F/((500F + currentMass)/500F), 0.0F);
+						
+						if(!worldObj.isRemote){
+							worldObj.destroyBlock(pos, true);
+						}
+						
+						if(hardnessHitThisTick > currentMass/100){
+							if(!worldObj.isRemote){
+								this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
+							}
+							return -2;
+						}
+					}else{
+						++blockPosIndex;
+					}
+				}
+				if(collidedBlockPos.isEmpty()){
+					return 0;
+				}
 			}
-			return -2;
-		}else{
-			return collisionDepth;
 		}
+		return collisionDepth;
 	}
 
 	
 	/**
 	 * Checks if an AABB is colliding with blocks, and returns the AABB of those blocks.
-	 * 
-	 * If a soft block is encountered and this entity is going fast enough,
-	 * it sets the soft block to air and slows down the entity.
-	 * Used to plow though leaves and snow and the like. 
 	 */
-	protected List<AxisAlignedBB> getAABBCollisions(AxisAlignedBB box, PartGroundDevice optionalGroundDevice){
-		//TODO re-do the slowdown physics here to make heavier vehicles not slow down as much.
+	protected List<AxisAlignedBB> getAABBCollisions(AxisAlignedBB box, PartGroundDevice optionalGroundDevice, List<BlockPos> collidedBlockPos){
 		int minX = (int) Math.floor(box.minX);
     	int maxX = (int) Math.floor(box.maxX + 1.0D);
     	int minY = (int) Math.floor(box.minY);
@@ -250,22 +277,16 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
     		for(int j = minY; j < maxY; ++j){
     			for(int k = minZ; k < maxZ; ++k){
     				BlockPos pos = new BlockPos(i, j, k);
-    				byte currentBoxes = (byte) collidingAABBList.size();
-    				worldObj.getBlockState(pos).addCollisionBoxToList(worldObj, pos, box, collidingAABBList, null);
-    				if(collidingAABBList.size() != currentBoxes){
-    					float hardness = worldObj.getBlockState(pos).getBlockHardness(worldObj, pos);
-    					if(hardness  <= 0.2F && hardness >= 0){
-    						worldObj.setBlockToAir(pos);
-    						motionX *= 0.95;
-    						motionY *= 0.95;
-    						motionZ *= 0.95;
-    						collidingAABBList.remove(currentBoxes);
-    					}
-    				}else{
-    					if(optionalGroundDevice != null && optionalGroundDevice.pack.groundDevice.canFloat && worldObj.getBlockState(pos).getMaterial().isLiquid()){
-    						collidingAABBList.add(worldObj.getBlockState(pos).getBoundingBox(worldObj, pos).offset(pos));
-    					}
+    				IBlockState state = worldObj.getBlockState(pos);
+    				if(state.getBlock().canCollideCheck(state, false)){
+    					state.addCollisionBoxToList(worldObj, pos, box, collidingAABBList, null);
+        				if(collidedBlockPos != null){
+        					collidedBlockPos.add(pos);
+        				}
     				}
+					if(optionalGroundDevice != null && optionalGroundDevice.pack.groundDevice.canFloat && state.getMaterial().isLiquid()){
+						collidingAABBList.add(state.getBoundingBox(worldObj, pos).offset(pos));
+					}
     			}
     		}
     	}
