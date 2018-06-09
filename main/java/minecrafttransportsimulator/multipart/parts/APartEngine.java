@@ -129,6 +129,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 		coolingFactor = 0.001 + vehicle.velocity/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		vehicle.electricUsage -= 0.01*RPM/pack.engine.maxRPM;
+		
 		if(state.running){
 			//First part is temp affect on oil, second is engine oil pump.
 			oilPressure = Math.min(90 - temp/10, oilPressure + RPM/500 - 0.5*(oilLeak ? 5F : 1F)*(oilPressure/engineOilDanger));
@@ -379,7 +380,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public float getSoundPitch(){
-		return (float) (RPM/2000F);
+		return (float) (RPM/(pack.engine.maxRPM/2F));
 	}
 
 	@Override
