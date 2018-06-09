@@ -180,7 +180,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 			if(RPM > engineStartRPM){
 				if(vehicle.fuel > 0 || isCreative){
 					if(!isInLiquid()){
-						if(state.magnetoOn){
+						if(state.magnetoOn && !multipart.worldObj.isRemote){
 							startEngine();
 						}
 					}
