@@ -104,6 +104,14 @@ public class PartPropeller extends APart{
 	}
 	
 	@Override
+	public void removePart(){
+		super.removePart();
+		if(connectedEngine != null){
+			connectedEngine.propeller = null;
+		}
+	}
+	
+	@Override
 	public NBTTagCompound getPartNBTTag(){
 		NBTTagCompound dataTag = new NBTTagCompound();		
 		dataTag.setFloat("health", health);
@@ -117,7 +125,7 @@ public class PartPropeller extends APart{
 
 	@Override
 	public float getHeight(){
-		return pack.propeller.diameter*0.0254F/2F;
+		return pack.propeller.diameter*0.0254F;
 	}
 
 	@Override
