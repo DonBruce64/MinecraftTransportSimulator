@@ -73,7 +73,7 @@ public class PartPropeller extends APart{
 	public void updatePart(){
 		super.updatePart();
 		if(multipart.worldObj.isRemote){
-			angularVelocity = (float) (360*connectedEngine.RPM/60F/20F/150F);
+			angularVelocity = (float) (360*connectedEngine.RPM/60F/20F);
 			angularPosition += angularVelocity;
 		}else{
 			if(connectedEngine.RPM >= 100){
@@ -112,12 +112,17 @@ public class PartPropeller extends APart{
 	
 	@Override
 	public float getWidth(){
-		return pack.propeller.diameter*0.0254F;
+		return pack.propeller.diameter*0.0254F/2F;
 	}
 
 	@Override
 	public float getHeight(){
-		return pack.propeller.diameter*0.0254F;
+		return pack.propeller.diameter*0.0254F/2F;
+	}
+
+	@Override
+	public Vec3d getRotation(float partialTicks){
+		return new Vec3d(0, 0, this.angularPosition + this.angularVelocity*partialTicks);
 	}
 	
 	private void damagePropeller(float damage){
