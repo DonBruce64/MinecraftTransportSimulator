@@ -116,17 +116,6 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 	}
 	
-	public static void resetRenders(){
-		for(Integer displayList : multipartDisplayLists.values()){
-			GL11.glDeleteLists(displayList, 1);
-		}
-		multipartDisplayLists.clear();
-		partDisplayLists.clear();
-		rotatableLists.clear();
-		windowLists.clear();
-		lightLists.clear();
-	}
-	
 	public static boolean doesMultipartHaveLight(EntityMultipartE_Vehicle vehicle, LightTypes light){
 		for(LightPart lightPart : lightLists.get(vehicle.multipartJSONName)){
 			if(lightPart.type.equals(light)){

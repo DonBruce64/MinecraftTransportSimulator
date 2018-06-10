@@ -125,15 +125,6 @@ public final class PackParserSystem{
     		logList.add(e.getMessage());
     	}
     }
-    
-    /**Removes all pack and part definitions and sends out a packet to cause packs to re-send their data.
-     * Used if dev mode is enabled to allow for quicker testing of new packs.**/
-    public static void resetPackMaps(){
-    	multipartPackMap.clear();
-    	multipartJSONMap.clear();
-    	partPackMap.clear();
-    	//TODO add packet to send to pack systems for a reload.
-    }
 
     public static void outputLog(){
     	for(String logLine : logList){
@@ -150,7 +141,6 @@ public final class PackParserSystem{
     
     
     //-----START OF MULTIPART LOOKUP LOGIC-----
-
     public static PackMultipartObject getMultipartPack(String name){
         return multipartPackMap.get(name);
     }
@@ -173,7 +163,6 @@ public final class PackParserSystem{
     
     
     //-----START OF PART LOOKUP LOGIC-----
-    
     public static PackPartObject getPartPack(String name){
         return partPackMap.get(name);
     }

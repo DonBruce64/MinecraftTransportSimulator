@@ -32,7 +32,6 @@ public final class ConfigSystem{
 		config = new Configuration(configFile);
 		config.load();
 		
-		booleanConfigMap.put("DevMode", config.get(COMMON_CONFIG, "DevMode", false, "Activates dev mode, which allows for the reloading of pack data by pressing P.  \nThis should only be done by pack developers or if asked by a dev to do so.").getBoolean());
 		doubleConfigMap.put("SpeedFactor", config.get(COMMON_CONFIG, "SpeedFactor", 0.35F, "Factor to apply to vehicle movement.  \n1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.").getDouble());
 		doubleConfigMap.put("FuelUsageFactor", config.get(COMMON_CONFIG, "FuelUsageFactor", 1.0F, "Factor times which engines use fuel.  \nChange this if you think engines use fuel too fast or slow.").getDouble());
 		stringConfigMap.put("HeavyItems", config.get(COMMON_CONFIG, "HeavyItems", "diamond, iron, gold, coal, ore, stone", "Any item that contains these words will be counted as heavy (double mass) when considering plane mass.  \nChange and tweak to your liking.").getString());

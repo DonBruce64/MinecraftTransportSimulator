@@ -40,7 +40,6 @@ import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.packets.general.FuelPumpConnectionPacket;
 import minecrafttransportsimulator.packets.general.FuelPumpFillDrainPacket;
 import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
-import minecrafttransportsimulator.packets.general.PackReloadPacket;
 import minecrafttransportsimulator.packets.general.TileEntityClientServerHandshakePacket;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartAttacked;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInit;
@@ -270,7 +269,6 @@ public final class MTSRegistry{
 		registerPacket(FuelPumpConnectionPacket.class, FuelPumpConnectionPacket.Handler.class, true, false);
 		registerPacket(FuelPumpFillDrainPacket.class, FuelPumpFillDrainPacket.Handler.class, true, false);
 		registerPacket(ManualPageUpdatePacket.class, ManualPageUpdatePacket.Handler.class, false, true);
-		registerPacket(PackReloadPacket.class, PackReloadPacket.Handler.class, true, true);
 		registerPacket(PropellerBenchUpdatePacket.class, PropellerBenchUpdatePacket.Handler.class, true, true);
 		registerPacket(TileEntityClientServerHandshakePacket.class, TileEntityClientServerHandshakePacket.Handler.class, true, true);
 		
