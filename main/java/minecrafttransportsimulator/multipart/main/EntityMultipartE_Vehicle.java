@@ -305,7 +305,7 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 		RIGHTINDICATORLIGHT(false),
 		RUNNINGLIGHT(false),
 		HEADLIGHT(true),
-		SEARCHLIGHT(true);
+		EMERGENCYLIGHT(false);
 		
 		public final boolean hasBeam;
 		
