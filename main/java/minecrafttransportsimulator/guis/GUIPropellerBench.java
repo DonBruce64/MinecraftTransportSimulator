@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
+import minecrafttransportsimulator.blocks.core.TileEntityPropellerBench;
 import minecrafttransportsimulator.packets.crafting.PropellerBenchUpdatePacket;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;

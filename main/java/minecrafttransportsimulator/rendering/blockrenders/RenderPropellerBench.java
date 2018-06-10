@@ -7,7 +7,7 @@ import java.util.Map.Entry;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
+import minecrafttransportsimulator.blocks.core.TileEntityPropellerBench;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.ResourceLocation;

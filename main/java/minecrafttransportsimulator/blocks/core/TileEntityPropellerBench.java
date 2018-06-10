@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.blocks;
+package minecrafttransportsimulator.blocks.core;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;

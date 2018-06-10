@@ -2,7 +2,7 @@ package minecrafttransportsimulator;
 
 import java.io.File;
 
-import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
+import minecrafttransportsimulator.blocks.core.TileEntityPropellerBench;
 import minecrafttransportsimulator.guis.GUIInstruments;
 import minecrafttransportsimulator.guis.GUIManual;
 import minecrafttransportsimulator.guis.GUIPropellerBench;

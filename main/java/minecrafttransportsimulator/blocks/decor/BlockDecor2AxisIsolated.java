@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.blocks;
+package minecrafttransportsimulator.blocks.decor;
 
 import java.util.List;
 

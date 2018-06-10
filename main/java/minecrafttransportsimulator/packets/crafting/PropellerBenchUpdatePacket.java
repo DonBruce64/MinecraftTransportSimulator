@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.crafting;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
+import minecrafttransportsimulator.blocks.core.TileEntityPropellerBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.parts.ItemPartPropeller;
 import net.minecraft.entity.player.EntityPlayer;

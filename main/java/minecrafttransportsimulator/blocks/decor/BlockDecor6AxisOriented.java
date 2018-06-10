@@ -1,5 +1,6 @@
-package minecrafttransportsimulator.blocks;
+package minecrafttransportsimulator.blocks.decor;
 
+import minecrafttransportsimulator.blocks.core.ATileEntityRotatable;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;

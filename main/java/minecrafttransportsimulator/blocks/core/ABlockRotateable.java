@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.blocks;
+package minecrafttransportsimulator.blocks.core;
 
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;

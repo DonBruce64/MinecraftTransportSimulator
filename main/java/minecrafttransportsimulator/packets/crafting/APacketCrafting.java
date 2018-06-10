@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.crafting;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.blocks.ATileEntityRotatable;
+import minecrafttransportsimulator.blocks.core.ATileEntityRotatable;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;

@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.sounds;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
+import minecrafttransportsimulator.blocks.core.TileEntityPropellerBench;
 import minecrafttransportsimulator.systems.SFXSystem;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.util.SoundCategory;

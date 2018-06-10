@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.blocks.TileEntityFuelPump;
+import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.tileentity.TileEntity;

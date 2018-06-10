@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.TileEntityFuelPump;
+import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;

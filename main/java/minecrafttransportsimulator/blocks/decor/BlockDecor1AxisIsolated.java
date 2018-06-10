@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.blocks;
+package minecrafttransportsimulator.blocks.decor;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;

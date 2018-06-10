@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.dataclasses;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.TileEntityDecor6AxisOriented;
-import minecrafttransportsimulator.blocks.TileEntityFuelPump;
-import minecrafttransportsimulator.blocks.TileEntityPropellerBench;
+import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
+import minecrafttransportsimulator.blocks.core.TileEntityPropellerBench;
+import minecrafttransportsimulator.blocks.decor.TileEntityDecor6AxisOriented;
 import minecrafttransportsimulator.items.core.ItemMultipart;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;

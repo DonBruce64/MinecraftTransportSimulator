@@ -5,7 +5,7 @@ import java.awt.Color;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.TileEntityDecor6AxisOriented;
+import minecrafttransportsimulator.blocks.decor.TileEntityDecor6AxisOriented;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;

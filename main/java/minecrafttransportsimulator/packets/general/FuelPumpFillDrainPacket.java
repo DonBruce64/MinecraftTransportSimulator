@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.blocks.TileEntityFuelPump;
+import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
