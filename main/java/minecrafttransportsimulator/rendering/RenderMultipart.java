@@ -811,7 +811,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			this.centerPoints = new Vec3d[masterVertices.length/6];
 			this.size = new Float[masterVertices.length/6];
 			
-			for(byte i=0; i<centerPoints.length; ++i){
+			for(short i=0; i<centerPoints.length; ++i){
 				double minX = 999;
 				double maxX = -999;
 				double minY = 999;
@@ -819,7 +819,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				double minZ = 999;
 				double maxZ = -999;
 				for(byte j=0; j<6; ++j){
-					Float[] masterVertex = masterVertices[((short) i)*6 + j];
+					Float[] masterVertex = masterVertices[i*6 + j];
 					minX = Math.min(masterVertex[0], minX);
 					maxX = Math.max(masterVertex[0], maxX);
 					minY = Math.min(masterVertex[1], minY);
