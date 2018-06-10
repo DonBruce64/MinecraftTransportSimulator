@@ -860,7 +860,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				this.centerPoints[i] = new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
 				this.size[i] = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*16F;
 			}
-			//Lights are in the format of "&NAME_XXXXXX_YYYYY_Z"
+			//Lights are in the format of "&NAME_XXXXXX_YYYYY_ZZZ"
 			//Where NAME is what switch it goes to.
 			//XXXXXX is the color.
 			//YYYYY is the blink rate.
