@@ -223,7 +223,7 @@ public class PartGroundDevice extends APart implements FXPart{
 	}
 	
 	public float getFrictionLoss(){
-		//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything extra should increase it.
+		//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
 		BlockPos pos = new BlockPos(partPos.addVector(0, -1, 0));
 		return 0.6F - multipart.worldObj.getBlockState(pos).getBlock().slipperiness;
 	}
