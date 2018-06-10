@@ -221,12 +221,12 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 			}else{
 				return collisionDepth;
 			}
-		}else if(!yAxis){
+		}else{
 			//Not a ground device, therefore we are a core collision box and
 			//need to check to see if we can break some blocks or if we need to explode.
 			//Don't bother with this logic if it's impossible for us to break anything.
 			double velocity = Math.hypot(motion.xCoord, motion.zCoord);
-			if(velocity > 0){
+			if(velocity > 0 && !yAxis){
 				byte blockPosIndex = 0;
 				while(blockPosIndex < collidedBlockPos.size()){
 					BlockPos pos = collidedBlockPos.get(blockPosIndex);
@@ -252,12 +252,13 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 					return -2;
 				}else if(collidedBlockPos.isEmpty()){
 					return 0;
-				}else if(collisionDepth > 0.3){
-					if(!worldObj.isRemote){
-						this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
-					}
-					return -2;	
 				}
+			}
+			if(collisionDepth > 0.3){
+				if(!worldObj.isRemote){
+					this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
+				}
+				return -2;	
 			}
 		}
 		return collisionDepth;
