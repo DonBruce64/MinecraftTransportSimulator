@@ -31,8 +31,7 @@ public abstract class APart{
 	public final Vec3d offset;
 	public final EntityMultipartD_Moving multipart;
 	public final String partName;
-	//This can't be final as it doesn't allow us to change this in dev mode on a reload.
-	public PackPartObject pack;
+	public final PackPartObject pack;
 	
 	public Vec3d partPos;
 	
@@ -50,6 +49,8 @@ public abstract class APart{
 	
 	/**Called right before this part is added to the multipart.
 	 * Should this be false, the part will not be added.
+	 * This is also called during save operations to see if the part
+	 * is still valid and should be saved.
 	 */
 	public boolean isValid(){
 		return true;
@@ -73,7 +74,7 @@ public abstract class APart{
 		this.partPos = RotationSystem.getRotatedPoint(this.offset, multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll).add(this.multipart.getPositionVector());
 	}
 	
-	/**Called right before the master multipart is about to remove this part.
+	/**Called when the master multipart removes this part.
 	 * Allows for parts to trigger logic that happens when they are removed.
 	 */
 	public void removePart(){}

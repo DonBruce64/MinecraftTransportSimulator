@@ -44,14 +44,14 @@ public class PartGroundDevice extends APart implements FXPart{
 	public PartGroundDevice(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
 		this.isFlat = dataTag.getBoolean("isFlat");
+		
+		//This constructor is the super for fake parts.  Intercept these calls and bypass fake part creation.
 		//If we are a long ground device, add a fake ground device at the offset to make us
-		//have a better contact area.  Make sure we don't call this from the main constructor itself,
-		//otherwise we'll get infinite loops!
-		//If we are restoring from a multipart we will have extra tags in the NBT.
-		//If this is the case, don't add a fake part as that will already be present.
-		if(!dataTag.hasKey("offsetX") && pack.groundDevice.isLongPart && !partName.contains("_fake")){
+		//have a better contact area.  If we are a fake part calling this as a super constructor,
+		//we will be invalid.  Check that to prevent loops.
+		if(this.isValid() && pack.groundDevice.isLongPart){
 			Vec3d fakeOffset = offset.addVector(0, 0, pack.groundDevice.extraCollisionBoxOffset);
-			fakePart = new PartGroundDeviceFake(this, fakeOffset, partName + "_fake", dataTag);
+			fakePart = new PartGroundDeviceFake(this, fakeOffset, partName, dataTag);
 			multipart.addPart(fakePart, false);
 		}else{
 			fakePart = null;

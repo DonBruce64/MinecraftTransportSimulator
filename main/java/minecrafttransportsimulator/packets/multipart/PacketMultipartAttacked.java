@@ -8,6 +8,7 @@ import minecrafttransportsimulator.packets.general.ChatPacket;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -58,12 +59,15 @@ public class PacketMultipartAttacked extends APacketMultipartPlayer{
 									boolean isPlayerOP = player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
 									if(multipart.ownerName.isEmpty() || player.getUUID(player.getGameProfile()).toString().equals(multipart.ownerName) || isPlayerOP){
 										//Player can remove part.  Spawn item in the world and remove part.
-										ItemStack droppedItem = new ItemStack(hitPart.getItemForPart());
-										droppedItem.setTagCompound(hitPart.getPartNBTTag());
-										if(droppedItem != null){
-											multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, hitPart.partPos.xCoord, hitPart.partPos.yCoord, hitPart.partPos.zCoord, droppedItem));
-										}
+										//Make sure to remove the part before spawning the item.  Some parts
+										//care about this order and won't spawn items unless they've been removed.
 										multipart.removePart(hitPart, false);
+										Item droppedItem = hitPart.getItemForPart();
+										if(droppedItem != null){
+											ItemStack droppedStack = new ItemStack(droppedItem);
+											droppedStack.setTagCompound(hitPart.getPartNBTTag());
+											multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, hitPart.partPos.xCoord, hitPart.partPos.yCoord, hitPart.partPos.zCoord, droppedStack));
+										}
 									}else{
 										MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehicleowned"), (EntityPlayerMP) player);
 									}

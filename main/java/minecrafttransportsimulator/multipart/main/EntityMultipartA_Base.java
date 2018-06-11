@@ -133,17 +133,19 @@ public abstract class EntityMultipartA_Base extends Entity{
 	}
 	
 	public void removePart(APart part, boolean playBreakSound){
-		part.removePart();
-		parts.remove(part);
-		if(!worldObj.isRemote){
-			if(playBreakSound){
-				this.playSound(SoundEvents.ITEM_SHIELD_BREAK, 2.0F, 1.0F);
-			}
-			for(byte i=0; i<this.pack.parts.size(); ++i){
-				PackPart packPart = this.pack.parts.get(i);
-				Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
-				if(partOffset.equals(part.offset)){
-					MTS.MTSNet.sendToAll(new PacketMultipartClientPartRemoval(this, i));
+		if(parts.contains(part)){
+			parts.remove(part);
+			part.removePart();
+			if(!worldObj.isRemote){
+				if(playBreakSound){
+					this.playSound(SoundEvents.ITEM_SHIELD_BREAK, 2.0F, 1.0F);
+				}
+				for(byte i=0; i<this.pack.parts.size(); ++i){
+					PackPart packPart = this.pack.parts.get(i);
+					Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
+					if(partOffset.equals(part.offset)){
+						MTS.MTSNet.sendToAll(new PacketMultipartClientPartRemoval(this, i));
+					}
 				}
 			}
 		}
@@ -205,16 +207,19 @@ public abstract class EntityMultipartA_Base extends Entity{
 		
 		NBTTagList partTagList = new NBTTagList();
 		for(APart part : this.getMultipartParts()){
-			NBTTagCompound partTag = part.getPartNBTTag();
-			//We need to set some extra data here for the part to allow this multipart to know where it went.
-			//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
-			partTag.setString("partName", part.partName);
-			partTag.setDouble("offsetX", part.offset.xCoord);
-			partTag.setDouble("offsetY", part.offset.yCoord);
-			partTag.setDouble("offsetZ", part.offset.zCoord);
-			partTag.setBoolean("isController", part.isController);
-			partTag.setBoolean("turnsWithSteer", part.turnsWithSteer);
-			partTagList.appendTag(partTag);
+			//Don't save invalid parts.  That's a bad idea...
+			if(part.isValid()){
+				NBTTagCompound partTag = part.getPartNBTTag();
+				//We need to set some extra data here for the part to allow this multipart to know where it went.
+				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
+				partTag.setString("partName", part.partName);
+				partTag.setDouble("offsetX", part.offset.xCoord);
+				partTag.setDouble("offsetY", part.offset.yCoord);
+				partTag.setDouble("offsetZ", part.offset.zCoord);
+				partTag.setBoolean("isController", part.isController);
+				partTag.setBoolean("turnsWithSteer", part.turnsWithSteer);
+				partTagList.appendTag(partTag);
+			}
 		}
 		tagCompound.setTag("Parts", partTagList);
 		return tagCompound;
