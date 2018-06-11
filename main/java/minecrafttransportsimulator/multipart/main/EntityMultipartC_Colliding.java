@@ -195,9 +195,12 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 			}
 			if(collisionDepth > 0.3){
 				//This could be a collision, but it could also be that it's a ground device and moved
-				//into a block and another axis needs to collide here.  Check the motion and bail if so.
+				//into a block and another axis needs to collide here.  Check the motion and bail if we
+				//aren't a ground device and shouldn't be colliding here.
 				if((xAxis && (Math.abs(motion.xCoord) < collisionDepth)) || (yAxis && (Math.abs(motion.yCoord) < collisionDepth)) || (zAxis && (Math.abs(motion.zCoord) < collisionDepth))){
-					return 0;
+					if(optionalGroundDevice == null){
+						return 0;
+					}
 				}
 			}
 		}
@@ -218,10 +221,8 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 					this.removePart(optionalGroundDevice, true);
 				}
 				return -1;
-			}else{
-				return collisionDepth;
 			}
-		}else{
+		}else if(optionalGroundDevice == null){
 			//Not a ground device, therefore we are a core collision box and
 			//need to check to see if we can break some blocks or if we need to explode.
 			//Don't bother with this logic if it's impossible for us to break anything.
