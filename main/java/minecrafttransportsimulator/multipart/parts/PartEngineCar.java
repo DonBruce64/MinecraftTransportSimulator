@@ -59,7 +59,7 @@ public class PartEngineCar extends APartEngine{
 		
 		//Get friction of wheels.
 		float wheelFriction = 0;
-		for(PartGroundDevice wheel : car.groundedGroundDevices){
+		for(PartGroundDevice wheel : car.wheels){
 			if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
 				wheelFriction = wheel.getMotiveFriction() - wheel.getFrictionLoss();
 			}
@@ -73,7 +73,7 @@ public class PartEngineCar extends APartEngine{
 		//If running, use the friction of the wheels to determine the new speed.
 		if(state.running || state.esOn){
 			double engineTargetRPM = car.throttle/100F*(pack.engine.maxRPM - engineStartRPM/1.25 - hours) + engineStartRPM/1.25;
-			if(getRatioForCurrentGear() != 0){
+			if(getRatioForCurrentGear() != 0 && car.wheels.size() > 0){
 				engineForce = (engineTargetRPM - RPM)/pack.engine.maxRPM*getRatioForCurrentGear()*pack.engine.fuelConsumption*2.0F;
 				//Check to see if the wheels have enough friction to affect the engine.
 				if(Math.abs(engineForce/10) > wheelFriction || Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) > 0.1){
