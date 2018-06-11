@@ -46,8 +46,6 @@ public final class CameraSystem{
 	
 	public static void updatePlayerYawAndPitch(EntityPlayer player, EntityMultipartB_Existing multipart){
 		boolean mouseYoke = ConfigSystem.getBooleanConfig("MouseYoke");
-		
-		player.renderYawOffset += multipart.rotationYaw - multipart.prevRotationYaw;
 		if((!mouseYoke && lockedView) || (mouseYoke && !lockedView)){
 			player.rotationYaw += multipart.rotationYaw - multipart.prevRotationYaw;
 			if(multipart.rotationPitch > 90 || multipart.rotationPitch < -90){

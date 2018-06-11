@@ -257,6 +257,10 @@ public final class ClientEventSystem{
         if(event.getEntityPlayer().getRidingEntity() instanceof EntityMultipartC_Colliding){
         	EntityMultipartC_Colliding multipart = (EntityMultipartC_Colliding) event.getEntityPlayer().getRidingEntity();
             GL11.glPushMatrix();
+            //First restrict the player's yaw to prevent them from being able to rotate their body in a seat.
+            event.getEntityPlayer().renderYawOffset = multipart.rotationYaw;
+            
+            //Now add the pitch rotation.
             if(!event.getEntityPlayer().equals(minecraft.thePlayer)){
                 EntityPlayer masterPlayer = Minecraft.getMinecraft().thePlayer;
                 EntityPlayer renderedPlayer = event.getEntityPlayer();
