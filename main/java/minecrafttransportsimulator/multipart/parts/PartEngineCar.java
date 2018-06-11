@@ -76,11 +76,15 @@ public class PartEngineCar extends APartEngine{
 			if(getRatioForCurrentGear() != 0 && car.wheels.size() > 0){
 				engineForce = (engineTargetRPM - RPM)/pack.engine.maxRPM*getRatioForCurrentGear()*pack.engine.fuelConsumption*2.0F;
 				//Check to see if the wheels have enough friction to affect the engine.
-				if(Math.abs(engineForce/10) > wheelFriction || Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) > 0.1){
+				if(Math.abs(engineForce/10F) > wheelFriction || (Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) > 0.1 && Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) < Math.abs(engineForce/10F))){
 					engineForce *= car.currentMass/100000F;
 					for(PartGroundDevice wheel : car.wheels){
 						if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
-							wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity + 0.01*Math.signum(engineForce));
+							if(getRatioForCurrentGear() > 0){
+								wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity + 0.01*Math.signum(engineForce));
+							}else{
+								wheel.angularVelocity = (float) Math.max(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity + 0.01*Math.signum(engineForce));
+							}
 							wheel.skipAngularCalcs = true;
 						}
 					}
