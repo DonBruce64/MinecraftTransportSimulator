@@ -42,8 +42,6 @@ public class PartEngineCar extends APartEngine{
 					RPM -= (RPM - engineStallRPM)/10;
 				}
 			}
-		}else{
-			RPM = Math.max(RPM - 10, 0);
 		}
 		
 		//Do automatic transmission functions if needed.
@@ -118,6 +116,7 @@ public class PartEngineCar extends APartEngine{
 				engineForce = -RPM/pack.engine.maxRPM;
 			}else{
 				engineForce = 0;
+				RPM = Math.max(RPM - 10, 0);
 			}
 		}
 	}
