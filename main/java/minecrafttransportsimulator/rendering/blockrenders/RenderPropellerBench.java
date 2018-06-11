@@ -29,7 +29,7 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPr
 	@Override
 	public void renderTileEntityAt(TileEntityPropellerBench bench, double x, double y, double z, float partialTicks, int destroyStage){
 		super.renderTileEntityAt(bench, x, y, z, partialTicks, destroyStage);
-		
+		/**
 		if(baseDisplayListIndex == -1){
 			baseDisplayListIndex = GL11.glGenLists(1);
 			GL11.glNewList(baseDisplayListIndex, GL11.GL_COMPILE);
@@ -120,7 +120,7 @@ public class RenderPropellerBench extends TileEntitySpecialRenderer<TileEntityPr
 		GL11.glTranslatef(0, 1.0F, -0.125F);
 		renderMaterial(bench);
 		GL11.glPopMatrix();
-		GL11.glPopMatrix();
+		GL11.glPopMatrix();**/
 	}
 
 	private void renderMaterial(TileEntityPropellerBench bench){
