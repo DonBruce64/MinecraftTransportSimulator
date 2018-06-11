@@ -37,6 +37,7 @@ public class PartGroundDevice extends APart implements FXPart{
 	private boolean isFlat;
 	private boolean contactThisTick = false;
 	public boolean skipAngularCalcs = false;
+	private int ticksCalcsSkipped = 0;
 
 	public float angularPosition;
 	public float angularVelocity;
@@ -86,6 +87,19 @@ public class PartGroundDevice extends APart implements FXPart{
 				
 				if(!skipAngularCalcs){
 					angularVelocity = (float) (multipart.velocity/this.getHeight());
+					if(ticksCalcsSkipped > 0 && pack.groundDevice.canBeFlat && !isFlat){
+						--ticksCalcsSkipped;
+					}
+				}else if(pack.groundDevice.canBeFlat && !isFlat){
+					++ticksCalcsSkipped;
+					if(Math.random()*50000 < ticksCalcsSkipped){
+						if(!multipart.worldObj.isRemote){
+							this.setFlat();
+							Vec3d explosionPosition = partPos;
+							multipart.worldObj.newExplosion(multipart, explosionPosition.xCoord, explosionPosition.yCoord, explosionPosition.zCoord, 0.25F, false, false);
+							MTS.MTSNet.sendToAll(new PacketPartGroundDeviceFlat(this));
+						}
+					}
 				}
 			}
 			
