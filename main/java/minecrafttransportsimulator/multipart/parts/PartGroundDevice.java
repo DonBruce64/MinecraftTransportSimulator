@@ -187,7 +187,7 @@ public class PartGroundDevice extends APart implements FXPart{
 	public boolean isPartCollidingWithBlocks(Vec3d collisionOffset){
 		if(super.isPartCollidingWithBlocks(collisionOffset)){
 			return true;
-    	}else if(this.pack.groundDevice.canFloat){
+    	}else if(!this.pack.groundDevice.canFloat){
     		return false;
     	}else{
     		MultipartAxisAlignedBB collisionBox = this.getAABBWithOffset(collisionOffset);
@@ -245,6 +245,11 @@ public class PartGroundDevice extends APart implements FXPart{
 			}
 			MTS.proxy.playSound(this.partPos, MTS.MODID + ":" + "wheel_striking", 1, 1);
 			contactThisTick = false;
+		}
+		if(skipAngularCalcs){
+			for(byte i=0; i<4; ++i){
+				Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.WhiteSmokeFX(multipart.worldObj, partPos.xCoord, partPos.yCoord, partPos.zCoord, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05));
+			}
 		}
 	}
 }
