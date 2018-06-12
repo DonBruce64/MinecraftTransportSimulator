@@ -66,7 +66,7 @@ public class PartEngineCar extends APartEngine{
 		float wheelFriction = 0;
 		for(PartGroundDevice wheel : car.wheels){
 			if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
-				wheelFriction = wheel.getMotiveFriction() - wheel.getFrictionLoss();
+				wheelFriction += wheel.getMotiveFriction() - wheel.getFrictionLoss();
 			}
 		}
 		
