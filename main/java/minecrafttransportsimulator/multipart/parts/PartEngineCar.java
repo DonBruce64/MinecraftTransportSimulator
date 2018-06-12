@@ -47,6 +47,8 @@ public class PartEngineCar extends APartEngine{
 					RPM -= (RPM - engineStallRPM)/10;
 				}
 			}
+		}else{
+			driveShaftDesiredSpeed = 0;
 		}
 		
 		//Do automatic transmission functions if needed.
