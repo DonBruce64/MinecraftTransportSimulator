@@ -10,6 +10,8 @@ public class PartEngineCar extends APartEngine{
 	public byte currentGear = 1;
 	private boolean spinningOut;
 	private double engineForce;
+	private double engineDriveshaftRotation;
+	private double engineDriveshaftRotationLast;
 	private final EntityMultipartF_Car car;
 
 	public PartEngineCar(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
@@ -24,6 +26,7 @@ public class PartEngineCar extends APartEngine{
 		//Set the speed of the engine to the speed of the driving wheels.
 		float lowestSpeed = 999F;
 		float vehicleDesiredSpeed = -999F;
+		float driveShaftDesiredSpeed = -999F;
 		if(currentGear != 0){
 			for(PartGroundDevice wheel : car.wheels){
 				if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
@@ -32,8 +35,10 @@ public class PartEngineCar extends APartEngine{
 						lowestSpeed = Math.min(wheel.angularVelocity, lowestSpeed);
 						vehicleDesiredSpeed = (float) Math.max(car.velocity/wheel.getHeight(), vehicleDesiredSpeed);
 					}
+					driveShaftDesiredSpeed = (float) Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
 				}
 			}
+			driveShaftDesiredSpeed = (float) Math.toDegrees(driveShaftDesiredSpeed*Math.signum(car.velocity));
 			if(lowestSpeed != 999){
 				//Don't let the engine stall while being stopped.
 				if(lowestSpeed*1200F*getRatioForCurrentGear() > engineStallRPM || (!state.running && !state.esOn)){
@@ -119,6 +124,10 @@ public class PartEngineCar extends APartEngine{
 				RPM = Math.max(RPM - 10, 0);
 			}
 		}
+		
+		//Set driveshaft rotations for rendering of parts of models.
+		engineDriveshaftRotationLast = engineDriveshaftRotation;
+		engineDriveshaftRotation += driveShaftDesiredSpeed;
 	}
 	
 	@Override
@@ -138,8 +147,12 @@ public class PartEngineCar extends APartEngine{
 		return dataTag;
 	}
 	
-	public float getRatioForCurrentGear(){
+	private float getRatioForCurrentGear(){
 		return currentGear == -1 ? pack.engine.gearRatios[0] : currentGear > 0 ? pack.engine.gearRatios[currentGear + 1] : 0;
+	}
+	
+	public double getDriveshaftRotation(float partialTicks){
+		return engineDriveshaftRotation + (engineDriveshaftRotation - engineDriveshaftRotationLast)*partialTicks;
 	}
 	
 	public double getForceOutput(){

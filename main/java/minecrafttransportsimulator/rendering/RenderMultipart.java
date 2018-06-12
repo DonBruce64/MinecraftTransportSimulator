@@ -160,10 +160,10 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			GL11.glRotated(rotateYaw, 0, 1, 0);
 	        GL11.glRotated(rotatePitch, 1, 0, 0);
 	        GL11.glRotated(rotateRoll, 0, 0, 1);
-			renderMainModel(multipart);
+			renderMainModel(multipart, partialTicks);
 			renderParts(multipart, partialTicks);
 			GL11.glEnable(GL11.GL_NORMALIZE);
-			renderWindows(multipart);
+			renderWindows(multipart, partialTicks);
 			renderTextMarkings(multipart);
 			if(multipart instanceof EntityMultipartE_Vehicle){
 				renderInstrumentsAndControls((EntityMultipartE_Vehicle) multipart);
@@ -205,7 +205,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			GL11.glRotated(rotateYaw, 0, 1, 0);
 	        GL11.glRotated(rotatePitch, 1, 0, 0);
 	        GL11.glRotated(rotateRoll, 0, 0, 1);
-	        renderLights(vehicle, sunLight, blockLight, lightBrightness, electricFactor, wasRenderedPrior);
+	        renderLights(vehicle, sunLight, blockLight, lightBrightness, electricFactor, wasRenderedPrior, partialTicks);
 			GL11.glDisable(GL11.GL_NORMALIZE);
 			GL11.glPopMatrix();
 			
@@ -233,7 +233,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		 GL11.glPopMatrix();
 	}
 	
-	private static void renderMainModel(EntityMultipartD_Moving multipart){
+	private static void renderMainModel(EntityMultipartD_Moving multipart, float partialTicks){
 		GL11.glPushMatrix();
 		//Normally we use the pack name, but since all displaylists
 		//are the same for all models, this is more appropriate.
@@ -245,7 +245,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			for(RotatablePart rotatable : rotatableLists.get(multipart.multipartJSONName)){
 				if(!rotatable.name.contains("window")){
 					GL11.glPushMatrix();
-					rotateObject(multipart, rotatable);
+					rotateObject(multipart, rotatable, partialTicks);
 					GL11.glBegin(GL11.GL_TRIANGLES);
 					for(Float[] vertex : rotatable.vertices){
 						GL11.glTexCoord2f(vertex[3], vertex[4]);
@@ -300,8 +300,8 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glPopMatrix();
 	}
 	
-	private static void rotateObject(EntityMultipartD_Moving multipart, RotatablePart rotatable){
-		float rotation = getRotationAngleForVariable(multipart, rotatable.rotationVariable);
+	private static void rotateObject(EntityMultipartD_Moving multipart, RotatablePart rotatable, float partialTicks){
+		float rotation = getRotationAngleForVariable(multipart, rotatable.rotationVariable, partialTicks);
 		if(rotation != 0){
 			GL11.glTranslated(rotatable.rotationPoint.xCoord, rotatable.rotationPoint.yCoord, rotatable.rotationPoint.zCoord);
 			GL11.glRotated(rotation*rotatable.rotationMagnitude, rotatable.rotationAxis.xCoord, rotatable.rotationAxis.yCoord, rotatable.rotationAxis.zCoord);
@@ -309,14 +309,14 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 	}
 	
-	private static float getRotationAngleForVariable(EntityMultipartD_Moving multipart, String variable){
+	private static float getRotationAngleForVariable(EntityMultipartD_Moving multipart, String variable, float partialTicks){
 		switch(variable){
-			case("door"): return multipart.parkingBrakeOn && multipart.velocity == 0 && !multipart.locked ? 60 : 0;
+			case("door"): return multipart.parkingBrakeOn && multipart.velocity == 0 && !multipart.locked ? 60 : 60;
 			case("throttle"): return ((EntityMultipartE_Vehicle) multipart).throttle/4F;
 			case("brake"): return multipart.brakeOn ? 30 : 0;
 			case("p_brake"): return multipart.parkingBrakeOn ? 30 : 0;
 			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).pack.engine.isAutomatic ? Math.min(1, ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).currentGear) : ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).currentGear)*5 : 0;
-			case("driveshaft"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1) != null ? ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1).RPM/((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).getRatioForCurrentGear() : 0);
+			case("driveshaft"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1) != null ? ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).getDriveshaftRotation(partialTicks) : 0);
 			case("steeringwheel"): return multipart.getSteerAngle();
 			
 			case("aileron"): return ((EntityMultipartF_Plane) multipart).aileronAngle/10F;
@@ -371,7 +371,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
         }
 	}
 	
-	private static void renderWindows(EntityMultipartD_Moving multipart){
+	private static void renderWindows(EntityMultipartD_Moving multipart, float partialTicks){
 		minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
 		//Iterate through all windows.
 		for(byte i=0; i<windowLists.get(multipart.multipartJSONName).size(); ++i){
@@ -382,7 +382,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				WindowPart window = windowLists.get(multipart.multipartJSONName).get(i);
 				for(RotatablePart rotatable : rotatableLists.get(multipart.multipartJSONName)){
 					if(rotatable.name.equals(window.name)){
-						rotateObject(multipart, rotatable);
+						rotateObject(multipart, rotatable, partialTicks);
 					}
 				}
 				//If this window is a quad, draw quads.  Otherwise draw tris.
@@ -427,7 +427,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		RenderHelper.enableStandardItemLighting();
 	}
 	
-	private static void renderLights(EntityMultipartE_Vehicle vehicle, float sunLight, float blockLight, float lightBrightness, float electricFactor, boolean wasRenderedPrior){
+	private static void renderLights(EntityMultipartE_Vehicle vehicle, float sunLight, float blockLight, float lightBrightness, float electricFactor, boolean wasRenderedPrior, float partialTicks){
 		for(LightPart light : lightLists.get(vehicle.multipartJSONName)){
 			boolean lightSwitchOn = vehicle.isLightOn(light.type);
 			//Fun with bit shifting!  20 bits make up the light on index here, so align to a 20 tick cycle.
@@ -439,7 +439,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			//This light may be rotatable.  Check this before continuing.
 			for(RotatablePart rotatable : rotatableLists.get(vehicle.multipartJSONName)){
 				if(rotatable.name.equals(light.name)){
-					rotateObject(vehicle, rotatable);
+					rotateObject(vehicle, rotatable, partialTicks);
 				}
 			}
 			
