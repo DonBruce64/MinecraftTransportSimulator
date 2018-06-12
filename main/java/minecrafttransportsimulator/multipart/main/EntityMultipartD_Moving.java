@@ -369,6 +369,15 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 		if(Math.abs(motionZ) < 0.001){
 			motionZ = 0;
 		}
+		if(Math.abs(motionYaw) < 0.001){
+			motionYaw = 0;
+		}
+		if(Math.abs(motionPitch) < 0.001){
+			motionPitch = 0;
+		}
+		if(Math.abs(motionRoll) < 0.001){
+			motionRoll = 0;
+		}
 		if(motionX != 0 || motionY != 0 || motionZ != 0 || motionPitch != 0 || motionYaw != 0 || motionRoll != 0){
 			if(!worldObj.isRemote){
 				rotationYaw += motionYaw;
