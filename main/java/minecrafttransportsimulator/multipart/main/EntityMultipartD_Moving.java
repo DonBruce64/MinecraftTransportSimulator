@@ -111,7 +111,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 		for(MultipartAxisAlignedBB box : this.getCurrentCollisionBoxes()){
 			Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
 			MultipartAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor));
-			if(!getAABBCollisions(offsetBox, null, null).isEmpty()){
+			if(!getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box), null).isEmpty()){
 				needCheck = true;
 			}
 		}
