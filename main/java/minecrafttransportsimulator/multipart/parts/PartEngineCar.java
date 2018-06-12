@@ -138,7 +138,7 @@ public class PartEngineCar extends APartEngine{
 		return dataTag;
 	}
 	
-	private float getRatioForCurrentGear(){
+	public float getRatioForCurrentGear(){
 		return currentGear == -1 ? pack.engine.gearRatios[0] : currentGear > 0 ? pack.engine.gearRatios[currentGear + 1] : 0;
 	}
 	
