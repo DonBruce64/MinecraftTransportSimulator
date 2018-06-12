@@ -316,7 +316,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			case("brake"): return multipart.brakeOn ? 30 : 0;
 			case("p_brake"): return multipart.parkingBrakeOn ? 30 : 0;
 			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).pack.engine.isAutomatic ? Math.min(1, ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).currentGear) : ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).currentGear)*5 : 0;
-			case("driveshaft"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1) != null ? ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1).RPM/((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).pack.engine.gearRatios[((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).currentGear] : 0);
+			case("driveshaft"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1) != null ? ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1).RPM/((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).getRatioForCurrentGear() : 0);
 			case("steeringwheel"): return multipart.getSteerAngle();
 			
 			case("aileron"): return ((EntityMultipartF_Plane) multipart).aileronAngle/10F;
