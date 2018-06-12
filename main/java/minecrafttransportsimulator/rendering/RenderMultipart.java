@@ -311,7 +311,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	
 	private static float getRotationAngleForVariable(EntityMultipartD_Moving multipart, String variable, float partialTicks){
 		switch(variable){
-			case("door"): return multipart.parkingBrakeOn && multipart.velocity == 0 && !multipart.locked ? 60 : 60;
+			case("door"): return multipart.parkingBrakeOn && multipart.velocity == 0 && !multipart.locked ? 60 : 0;
 			case("throttle"): return ((EntityMultipartE_Vehicle) multipart).throttle/4F;
 			case("brake"): return multipart.brakeOn ? 30 : 0;
 			case("p_brake"): return multipart.parkingBrakeOn ? 30 : 0;
