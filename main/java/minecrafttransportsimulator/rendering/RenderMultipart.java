@@ -301,11 +301,13 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	}
 	
 	private static void rotateObject(EntityMultipartD_Moving multipart, RotatablePart rotatable, float partialTicks){
-		float rotation = getRotationAngleForVariable(multipart, rotatable.rotationVariable, partialTicks);
-		if(rotation != 0){
-			GL11.glTranslated(rotatable.rotationPoint.xCoord, rotatable.rotationPoint.yCoord, rotatable.rotationPoint.zCoord);
-			GL11.glRotated(rotation*rotatable.rotationMagnitude, rotatable.rotationAxis.xCoord, rotatable.rotationAxis.yCoord, rotatable.rotationAxis.zCoord);
-			GL11.glTranslated(-rotatable.rotationPoint.xCoord, -rotatable.rotationPoint.yCoord, -rotatable.rotationPoint.zCoord);
+		for(byte i=0; i<rotatable.rotationVariables.length; ++i){
+			float rotation = getRotationAngleForVariable(multipart, rotatable.rotationVariables[i], partialTicks);
+			if(rotation != 0){
+				GL11.glTranslated(rotatable.rotationPoints[i].xCoord, rotatable.rotationPoints[i].yCoord, rotatable.rotationPoints[i].zCoord);
+				GL11.glRotated(rotation*rotatable.rotationMagnitudes[i], rotatable.rotationAxis[i].xCoord, rotatable.rotationAxis[i].yCoord, rotatable.rotationAxis[i].zCoord);
+				GL11.glTranslated(-rotatable.rotationPoints[i].xCoord, -rotatable.rotationPoints[i].yCoord, -rotatable.rotationPoints[i].zCoord);
+			}
 		}
 	}
 	
@@ -733,52 +735,60 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		private final String name;
 		private final Float[][] vertices;
 		
-		private final Vec3d rotationPoint;
-		private final Vec3d rotationAxis;
-		private final float rotationMagnitude;
-		private final String rotationVariable;
+		private final Vec3d[] rotationPoints;
+		private final Vec3d[] rotationAxis;
+		private final float[] rotationMagnitudes;
+		private final String[] rotationVariables;
 		
 		private RotatablePart(EntityMultipartD_Moving multipart, String name, Float[][] vertices){
 			this.name = name.toLowerCase();
 			this.vertices = vertices;
-			this.rotationPoint = getRotationPoint(multipart, name);
-			Vec3d rotationAxisTemp = getRotationAxis(multipart, name);
-			this.rotationAxis = rotationAxisTemp.normalize();
-			this.rotationMagnitude = (float) rotationAxisTemp.lengthVector();
-			this.rotationVariable = getRotationVariable(multipart, name);
+			this.rotationPoints = getRotationPoints(multipart, name);
+			
+			Vec3d rotationAxisTemp[] = getRotationAxis(multipart, name);
+			this.rotationAxis = new Vec3d[rotationAxisTemp.length];
+			this.rotationMagnitudes = new float[rotationAxisTemp.length];
+			for(byte i=0; i<rotationAxisTemp.length; ++i){
+				rotationAxis[i] = rotationAxisTemp[i].normalize();
+				rotationMagnitudes[i] = (float) rotationAxisTemp[i].lengthVector();
+			}
+			this.rotationVariables = getRotationVariables(multipart, name);
 		}
 		
-		private static Vec3d getRotationPoint(EntityMultipartD_Moving multipart, String name){
+		private static Vec3d[] getRotationPoints(EntityMultipartD_Moving multipart, String name){
+			List<Vec3d> rotationPoints = new ArrayList<Vec3d>();
 			for(PackRotatableModelObject rotatable : multipart.pack.rendering.rotatableModelObjects){
 				if(rotatable.partName.equals(name)){
 					if(rotatable.rotationPoint != null){
-						return new Vec3d(rotatable.rotationPoint[0], rotatable.rotationPoint[1], rotatable.rotationPoint[2]);
+						rotationPoints.add(new Vec3d(rotatable.rotationPoint[0], rotatable.rotationPoint[1], rotatable.rotationPoint[2]));
 					}
 				}
 			}
-			return Vec3d.ZERO;
+			return rotationPoints.toArray(new Vec3d[rotationPoints.size()]);
 		}
 		
-		private static Vec3d getRotationAxis(EntityMultipartD_Moving multipart, String name){
+		private static Vec3d[] getRotationAxis(EntityMultipartD_Moving multipart, String name){
+			List<Vec3d> rotationAxis = new ArrayList<Vec3d>();
 			for(PackRotatableModelObject rotatable : multipart.pack.rendering.rotatableModelObjects){
 				if(rotatable.partName.equals(name)){
 					if(rotatable.rotationAxis != null){
-						return new Vec3d(rotatable.rotationAxis[0], rotatable.rotationAxis[1], rotatable.rotationAxis[2]);
+						rotationAxis.add(new Vec3d(rotatable.rotationAxis[0], rotatable.rotationAxis[1], rotatable.rotationAxis[2]));
 					}
 				}
 			}
-			return Vec3d.ZERO;
+			return rotationAxis.toArray(new Vec3d[rotationAxis.size()]);
 		}
 		
-		private static String getRotationVariable(EntityMultipartD_Moving multipart, String name){
+		private static String[] getRotationVariables(EntityMultipartD_Moving multipart, String name){
+			List<String> rotationVariables = new ArrayList<String>();
 			for(PackRotatableModelObject rotatable : multipart.pack.rendering.rotatableModelObjects){
 				if(rotatable.partName.equals(name)){
 					if(rotatable.partName != null){
-						return rotatable.rotationVariable.toLowerCase();
+						rotationVariables.add(rotatable.rotationVariable.toLowerCase());
 					}
 				}
 			}
-			return "";
+			return rotationVariables.toArray(new String[rotationVariables.size()]);
 		}
 	}
 	
