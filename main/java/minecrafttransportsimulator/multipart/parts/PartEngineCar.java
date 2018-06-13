@@ -26,7 +26,6 @@ public class PartEngineCar extends APartEngine{
 		//Set the speed of the engine to the speed of the driving wheels.
 		float lowestSpeed = 999F;
 		float vehicleDesiredSpeed = -999F;
-		float driveShaftDesiredSpeed = -999F;
 		if(currentGear != 0){
 			for(PartGroundDevice wheel : car.wheels){
 				if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
@@ -35,10 +34,9 @@ public class PartEngineCar extends APartEngine{
 						lowestSpeed = Math.min(wheel.angularVelocity, lowestSpeed);
 						vehicleDesiredSpeed = (float) Math.max(car.velocity/wheel.getHeight(), vehicleDesiredSpeed);
 					}
-					driveShaftDesiredSpeed = (float) Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
 				}
 			}
-			driveShaftDesiredSpeed = (float) Math.toDegrees(driveShaftDesiredSpeed*Math.signum(car.velocity));
+			
 			if(lowestSpeed != 999){
 				//Don't let the engine stall while being stopped.
 				if(lowestSpeed*1200F*getRatioForCurrentGear() > engineStallRPM || (!state.running && !state.esOn)){
@@ -47,8 +45,6 @@ public class PartEngineCar extends APartEngine{
 					RPM -= (RPM - engineStallRPM)/10;
 				}
 			}
-		}else{
-			driveShaftDesiredSpeed = 0;
 		}
 		
 		//Do automatic transmission functions if needed.
@@ -128,6 +124,13 @@ public class PartEngineCar extends APartEngine{
 		}
 		
 		//Set driveshaft rotations for rendering of parts of models.
+		float driveShaftDesiredSpeed = -999F;
+		for(PartGroundDevice wheel : car.wheels){
+			if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
+				driveShaftDesiredSpeed = (float) Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
+			}
+		}
+		driveShaftDesiredSpeed = (float) Math.toDegrees(driveShaftDesiredSpeed*Math.signum(car.velocity));
 		engineDriveshaftRotationLast = engineDriveshaftRotation;
 		engineDriveshaftRotation += driveShaftDesiredSpeed;
 	}
