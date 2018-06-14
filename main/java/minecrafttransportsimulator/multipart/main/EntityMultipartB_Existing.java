@@ -19,6 +19,7 @@ import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.IInventory;
@@ -32,6 +33,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityMountEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /**This is the next class level above the base multipart.
@@ -57,14 +59,20 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	public String displayText="";
 	public Vec3d headingVec = Vec3d.ZERO;
 	
-	/**Cached map that links entities to the seats riding them.  Used for mounting/dismounting functions.*/
-	private final BiMap<Entity, PartSeat> riderSeats = HashBiMap.create();
+	/**Cached map that links entity IDs to the seats riding them.  Used for mounting/dismounting functions.*/
+	private final BiMap<Integer, PartSeat> riderSeats = HashBiMap.create();
 	
 	/**List for storage of rider linkages to seats.  Populated during NBT load and used to populate the riderSeats map after riders load.*/
 	private List<Byte> riderSeatIDs = new ArrayList<Byte>();
 	
-	/**Temp bit to pause dismounting code to avoid getting stuck in a loop with the events.*/
-	private static boolean pauseDismountingLogic = false;
+	/**Names for reflection to get the entity any entity is riding.**/
+	private static final String[] ridingEntityNames = { "ridingEntity", "field_73141_v", "field_184239_as"};
+	
+	/**ID of the current rider that wants to dismount this tick.  This gets set when the multipart detects that an entity wants to dismount.**/
+	private int riderIDToDismountThisTick = -1;
+	
+	/**Boolean paired with above to determine if dismounting code needs to be inhibited or if we are just changing seats.**/
+	private boolean didRiderClickSeat;
 			
 	public EntityMultipartB_Existing(World world){
 		super(world);
@@ -89,6 +97,18 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 			airDensity = 1.225*Math.pow(2, -posY/500);
 			getBasicProperties();
 		}
+		
+		if(riderIDToDismountThisTick != -1){
+			Entity riderToDismount = worldObj.getEntityByID(riderIDToDismountThisTick);
+			PartSeat seat = this.getSeatForRider(riderToDismount);
+			if(seat != null){
+				if(this.removeRiderFromSeat(riderToDismount, seat)){
+					riderIDToDismountThisTick = -1;
+				}
+			}
+		}
+		
+		didRiderClickSeat = false;
 	}
 	
 	@Override
@@ -148,28 +168,26 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		return true;
 	}
 	
-	//Prevent dismounting from this multipart naturally as MC sucks at finding good spots to dismount.
-	//Instead, chose a better spot manually to prevent the player from getting stuck inside things.
+	/**
+	 * Prevent dismounting from this multipart naturally as MC sucks at finding good spots to dismount.
+	 * Instead, chose a better spot manually to prevent the player from getting stuck inside things.
+	 * This event is used to populate a list of riders to dismount the next tick.  This list is cleared when the operation
+	 * is done successfully.  If the operation fails, the rider will still be in the list so there's 
+	 */
 	@SubscribeEvent
 	public static void on(EntityMountEvent event){
-		if(event.getEntityBeingMounted() instanceof EntityMultipartB_Existing){
+		if(event.getEntityBeingMounted() instanceof EntityMultipartB_Existing  && event.isDismounting() && event.getEntityMounting() != null && !event.getWorldObj().isRemote){
 			EntityMultipartB_Existing multipart = (EntityMultipartB_Existing) event.getEntityBeingMounted();
-			if(event.isDismounting() && !pauseDismountingLogic){
-				PartSeat seat = multipart.getSeatForRider(event.getEntityMounting());
-				if(seat != null){
-					Vec3d placePosition = RotationSystem.getRotatedPoint(seat.offset.addVector(seat.offset.xCoord > 0 ? 1 : -1, 2, 0), multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll).add(multipart.getPositionVector());
-					AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(placePosition)).expand(2, 2, 2);
-					if(!multipart.worldObj.collidesWithAnyBlock(collisionDetectionBox)){
-						event.setCanceled(true);
-						pauseDismountingLogic = true;
-						event.getEntityMounting().dismountRidingEntity();
-			            multipart.removeRiderFromSeat(event.getEntityMounting(), seat);
-						event.getEntityMounting().setPosition(placePosition.xCoord, collisionDetectionBox.minY, placePosition.zCoord);
-						
-					}
+			if(!multipart.didRiderClickSeat){
+				if(multipart.riderIDToDismountThisTick == -1){
+					multipart.riderIDToDismountThisTick = event.getEntityMounting().getEntityId();
+					event.setCanceled(true);
+				}else{
+					multipart.riderIDToDismountThisTick = -1;
+					event.setCanceled(false);
 				}
-				pauseDismountingLogic = false;
 			}
+			multipart.didRiderClickSeat = false;
 		}
 	 }
 	
@@ -196,7 +214,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 						for(APart part : this.getMultipartParts()){
 							if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
 								if(part instanceof PartSeat){
-									riderSeats.put(passenger, (PartSeat) part);
+									riderSeats.put(passenger.getEntityId(), (PartSeat) part);
 									wasSeatFound = true;
 									break;
 								}
@@ -271,33 +289,47 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
      * All riders MUST be added through this method.
      */
 	public void setRiderInSeat(Entity rider, PartSeat seat){
-		riderSeats.put(rider, seat);
+		this.didRiderClickSeat = true;
+		riderSeats.put(rider.getEntityId(), seat);
+		rider.startRiding(this, true);
 		if(!worldObj.isRemote){
-			rider.startRiding(this);
 			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, true));
 		}
 	}
 	
 	/**
-     * Removes the rider safely from this multipart.
+     * Removes the rider safely from this multipart.  Returns true if removal was good, false if it failed.
      */
-	public void removeRiderFromSeat(Entity rider, PartSeat seat){
-		riderSeats.remove(rider);
-		if(riderSeatIDs.indexOf(rider) != -1){
-			riderSeatIDs.remove(riderSeatIDs.indexOf(rider));
-		}
+	public boolean removeRiderFromSeat(Entity rider, PartSeat seat){
+		try{
+			ObfuscationReflectionHelper.setPrivateValue(Entity.class, rider, null, ridingEntityNames);
+		}catch (Exception e){
+			MTS.MTSLog.fatal("ERROR IN MULTIPART RIDER REFLECTION!");
+			return false;
+   	    }
+		
+		riderSeats.remove(rider.getEntityId());
+		this.removePassenger(rider);
 		if(!worldObj.isRemote){
-			rider.dismountRidingEntity();
+			Vec3d placePosition = RotationSystem.getRotatedPoint(seat.offset.addVector(seat.offset.xCoord > 0 ? 2 : -2, 2, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());
+			AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(placePosition)).expand(2, 2, 2);
+			if(!worldObj.collidesWithAnyBlock(collisionDetectionBox)){
+				rider.setPositionAndRotation(placePosition.xCoord, collisionDetectionBox.minY, placePosition.zCoord, rider.rotationYaw, rider.rotationPitch);
+			}else if(rider instanceof EntityLivingBase){
+				((EntityLivingBase) rider).dismountEntity(this);
+			}
 			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, false));
+			return true;
 		}
+		return false;
 	}
 	
 	public Entity getRiderForSeat(PartSeat seat){
-		return riderSeats.inverse().get(seat);
+		return riderSeats.inverse().containsKey(seat) ? worldObj.getEntityByID(riderSeats.inverse().get(seat)) : null;
 	}
 	
 	public PartSeat getSeatForRider(Entity rider){
-		return riderSeats.get(rider);
+		return riderSeats.get(rider.getEntityId());
 	}
 	
 	/**
