@@ -67,7 +67,7 @@ public class PartEngineCar extends APartEngine{
 		}
 		
 		//If running, in reverse, and we are a big truck, fire the backup beepers.
-		if(state.running && this.currentGear == -1 && car.pack != null && car.pack.car.isBigTruck && car.electricPower > 4 && car.worldObj.getTotalWorldTime()%20==1){
+		if(state.running && this.currentGear == -1 && car.pack != null && car.pack.car.isBigTruck && car.electricPower > 4 && car.worldObj.getTotalWorldTime()%20==1 && multipart.worldObj.isRemote){
 			MTS.proxy.playSound(multipart.getPositionVector(), MTS.MODID + ":backup_beeper", 1.0F, 1);
 		}
 		
@@ -172,7 +172,9 @@ public class PartEngineCar extends APartEngine{
 				currentGear = 1;
 			}else{
 				hours += 100;
-				MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
+				if(multipart.worldObj.isRemote){
+					MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
+				}
 			}
 		}else if(currentGear < pack.engine.gearRatios.length - 2){
 			++currentGear;
@@ -190,7 +192,9 @@ public class PartEngineCar extends APartEngine{
 					currentGear = -1;
 				}else{
 					hours += 100;
-					MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
+					if(multipart.worldObj.isRemote){
+						MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
+					}
 				}
 			}
 		}

@@ -51,7 +51,7 @@ public class BrakePacket implements IMessage{
 						if((message.brakeCode & 8) == 8){
 							boolean wasParkingBrakeOn = multipart.parkingBrakeOn;
 							multipart.parkingBrakeOn = (message.brakeCode & 4) == 4 ? true : false;
-							if(multipart.parkingBrakeOn && !wasParkingBrakeOn && multipart instanceof EntityMultipartF_Car && multipart.pack != null && multipart.pack.car.isBigTruck){
+							if(multipart.parkingBrakeOn && !wasParkingBrakeOn && multipart instanceof EntityMultipartF_Car && multipart.pack != null && multipart.pack.car.isBigTruck && multipart.worldObj.isRemote){
 								MTS.proxy.playSound(multipart.getPositionVector(), MTS.MODID + ":air_brake_activating", 1.0F, 1);
 							}
 						}
