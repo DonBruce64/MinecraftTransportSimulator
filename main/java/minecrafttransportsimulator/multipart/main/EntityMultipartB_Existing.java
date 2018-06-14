@@ -310,6 +310,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		
 		riderSeats.remove(rider.getEntityId());
 		this.removePassenger(rider);
+		rider.setSneaking(false);
 		if(!worldObj.isRemote){
 			Vec3d placePosition = RotationSystem.getRotatedPoint(seat.offset.addVector(seat.offset.xCoord > 0 ? 2 : -2, 2, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());
 			AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(placePosition)).expand(2, 2, 2);
