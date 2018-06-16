@@ -553,7 +553,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 	}
 	
-    private static void drawCone(Vec3d endPoint, double radius, boolean reverse){
+    public static void drawCone(Vec3d endPoint, double radius, boolean reverse){
 		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
 		GL11.glTexCoord2f(0, 0);
 		GL11.glVertex3d(0, 0, 0);

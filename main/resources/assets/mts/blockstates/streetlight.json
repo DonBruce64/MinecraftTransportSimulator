@@ -1,0 +1,29 @@
+{
+    "multipart": [
+        {   "when": { "rotation": "north" },
+            "apply": { "model": "mts:streetlight", "y" : 180 }
+        },
+        {   "when": { "rotation": "east" },
+            "apply": { "model": "mts:streetlight", "y" : 270}
+        },
+        {   "when": { "rotation": "south" },
+            "apply": { "model": "mts:streetlight"}
+        },
+        {   "when": { "rotation": "west" },
+            "apply": { "model": "mts:streetlight", "y" : 90}
+        },
+        {   "apply": { "model": "mts:polecenter" }},
+        {   "when": { "north": "true", "rotation": "south" },
+            "apply": { "model": "mts:polepart", "x": 270}
+        },
+        {   "when": { "east": "true", "rotation": "west" },
+            "apply": { "model": "mts:polepart", "x": 90, "y": 270}
+        },
+        {   "when": { "south": "true", "rotation": "north" },
+            "apply": { "model": "mts:polepart", "x": 90}
+        },
+        {   "when": { "west": "true", "rotation": "east" },
+            "apply": { "model": "mts:polepart", "x": 90, "y": 90}
+        }
+    ]
+}

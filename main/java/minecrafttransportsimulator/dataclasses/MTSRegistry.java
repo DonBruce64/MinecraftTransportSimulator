@@ -128,6 +128,8 @@ public final class MTSRegistry{
 	public static final Item itemBlockPoleBase = new ItemBlock(poleBase);
 	public static final Block trafficSignal = new BlockDecor6AxisOriented(Material.IRON, 5.0F, 10.0F);
 	public static final Item itemBlockTrafficSignal = new ItemBlock(trafficSignal);
+	public static final Block streetLight = new BlockDecor6AxisOriented(Material.IRON, 5.0F, 10.0F);
+	public static final Item itemBlockStreetLight = new ItemBlock(streetLight);
 		
 	//Decorative ground blocks.
 	public static final Block trafficCone = new BlockDecor1AxisIsolated(Material.CLAY, 0.4375F, 0.75F, 0.6F, 0.75F);
