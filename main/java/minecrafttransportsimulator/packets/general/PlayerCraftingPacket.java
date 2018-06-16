@@ -7,7 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -85,7 +84,6 @@ public class PlayerCraftingPacket implements IMessage{
 						if(doesPlayerHaveMaterials(player, message.selectedPart)){
 							removeMaterials(player, message.selectedPart);
 							ItemStack partStack = new ItemStack(MTSRegistry.partItemMap.get(message.selectedPart));
-							partStack.setTagCompound(new NBTTagCompound());
 							player.getEntityWorld().spawnEntityInWorld(new EntityItem(player.getEntityWorld(), player.posX, player.posY, player.posZ, partStack));
 						}
 					}

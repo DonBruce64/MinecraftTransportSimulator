@@ -20,7 +20,7 @@ import net.minecraft.util.math.Vec3d;
 public class PartPropeller extends APart{	
 	public float angularPosition;
 	public float angularVelocity;
-	public float health;
+	public float damage;
 	
 	private byte linkingTicks = 0;
 	private final PartEngineAircraft connectedEngine;
@@ -28,10 +28,7 @@ public class PartPropeller extends APart{
 	
 	public PartPropeller(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
-		this.health = dataTag.getFloat("health");
-		if(health == 0){
-			this.health = pack.propeller.startingHealth;
-		}
+		this.damage = dataTag.getFloat("damage");
 		//Due to linking timings, it will be impossible for players to add propellers without engines and
 		//have them be saved to multiparts.  Because of this, we can check for engines here as they MUST
 		//be present or this propeller is invalid and should be dropped as an item.
@@ -116,7 +113,7 @@ public class PartPropeller extends APart{
 	@Override
 	public NBTTagCompound getPartNBTTag(){
 		NBTTagCompound dataTag = new NBTTagCompound();		
-		dataTag.setFloat("health", health);
+		dataTag.setFloat("damage", damage);
 		return dataTag;
 	}
 	
@@ -136,8 +133,8 @@ public class PartPropeller extends APart{
 	}
 	
 	private void damagePropeller(float damage){
-		health -= damage;
-		if(health <= 0 && !multipart.worldObj.isRemote){
+		damage += damage;
+		if(damage > pack.propeller.startingHealth && !multipart.worldObj.isRemote){
 			multipart.removePart(this, true);
 		}
 	}
