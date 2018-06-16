@@ -1,51 +1,40 @@
-package minecrafttransportsimulator.packets.general;
+package minecrafttransportsimulator.packets.tileentities;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import net.minecraft.client.Minecraft;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class FuelPumpConnectionPacket implements IMessage{
-	private int x;
-	private int y;
-	private int z;
-	private int id;
+public class FuelPumpConnectionPacket extends APacketTileEntity{
+	private int connectedMultipartID;
 	private int amountPresent;
 	private int amountTransferred;
 
 	public FuelPumpConnectionPacket(){}
 	
-	public FuelPumpConnectionPacket(TileEntity tile, int id, int amountPresent, int amountTransferred){
-		this.x = tile.getPos().getX();
-		this.y = tile.getPos().getY();
-		this.z = tile.getPos().getZ();
-		this.id=id;
+	public FuelPumpConnectionPacket(TileEntityFuelPump tile, int id, int amountPresent, int amountTransferred){
+		super(tile);
+		this.connectedMultipartID=id;
 		this.amountPresent=amountPresent;
 		this.amountTransferred=amountTransferred;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
-		this.x=buf.readInt();
-		this.y=buf.readInt();
-		this.z=buf.readInt();
-		this.id=buf.readInt();
+		super.fromBytes(buf);
+		this.connectedMultipartID=buf.readInt();
 		this.amountPresent=buf.readInt();
 		this.amountTransferred=buf.readInt();
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
-		buf.writeInt(this.x);
-		buf.writeInt(this.y);
-		buf.writeInt(this.z);
-		buf.writeInt(this.id);
+		super.toBytes(buf);
+		buf.writeInt(this.connectedMultipartID);
 		buf.writeInt(this.amountPresent);
 		buf.writeInt(this.amountTransferred);
 	}
@@ -55,10 +44,10 @@ public class FuelPumpConnectionPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					TileEntityFuelPump pump = (TileEntityFuelPump) Minecraft.getMinecraft().theWorld.getTileEntity(new BlockPos(message.x, message.y, message.z));
+					TileEntityFuelPump pump = (TileEntityFuelPump) getTileEntity(message, ctx);
 					if(pump != null){
-						if(message.id != -1){
-							pump.setConnectedVehicle((EntityMultipartE_Vehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id));
+						if(message.connectedMultipartID != -1){
+							pump.setConnectedVehicle((EntityMultipartE_Vehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.connectedMultipartID));
 						}else{
 							pump.setConnectedVehicle(null);
 						}

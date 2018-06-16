@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.blocks.core;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.packets.general.TileEntityClientServerHandshakePacket;
+import minecrafttransportsimulator.packets.tileentities.TileEntityClientServerHandshakePacket;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 

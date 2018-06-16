@@ -10,7 +10,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.BlockFuelPump;
-import minecrafttransportsimulator.blocks.core.BlockPropellerBench;
+import minecrafttransportsimulator.blocks.core.BlockPartBench;
 import minecrafttransportsimulator.blocks.decor.BlockDecor1AxisIsolated;
 import minecrafttransportsimulator.blocks.decor.BlockDecor2AxisIsolated;
 import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisOriented;
@@ -35,12 +35,9 @@ import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
-import minecrafttransportsimulator.packets.crafting.PropellerBenchUpdatePacket;
 import minecrafttransportsimulator.packets.general.ChatPacket;
-import minecrafttransportsimulator.packets.general.FuelPumpConnectionPacket;
-import minecrafttransportsimulator.packets.general.FuelPumpFillDrainPacket;
 import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
-import minecrafttransportsimulator.packets.general.TileEntityClientServerHandshakePacket;
+import minecrafttransportsimulator.packets.general.PlayerCraftingPacket;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartAttacked;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInit;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInitResponse;
@@ -58,6 +55,9 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceFlat;
 import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
+import minecrafttransportsimulator.packets.tileentities.FuelPumpConnectionPacket;
+import minecrafttransportsimulator.packets.tileentities.FuelPumpFillDrainPacket;
+import minecrafttransportsimulator.packets.tileentities.TileEntityClientServerHandshakePacket;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -109,9 +109,11 @@ public final class MTSRegistry{
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
 	
 	//Crafting bench blocks.
-	public static final Block propellerBench = new BlockPropellerBench().setCreativeTab(coreTab);
-	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(coreTab);	
+	public static final Block propellerBench = new BlockPartBench("propeller").setCreativeTab(coreTab);
 	public static final Item itemBlockPropellerBench = new ItemBlock(propellerBench);
+	
+	//Fuel pump.
+	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(coreTab);		
 	public static final Item itemBlockFuelPump = new ItemBlock(fuelPump);
 	
 	//Instrument items.
@@ -266,10 +268,12 @@ public final class MTSRegistry{
 		
 		//Packets in packets.general
 		registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
+		registerPacket(ManualPageUpdatePacket.class, ManualPageUpdatePacket.Handler.class, false, true);
+		registerPacket(PlayerCraftingPacket.class, PlayerCraftingPacket.Handler.class, false, true);
+		
+		//Packets in packets.tileentity
 		registerPacket(FuelPumpConnectionPacket.class, FuelPumpConnectionPacket.Handler.class, true, false);
 		registerPacket(FuelPumpFillDrainPacket.class, FuelPumpFillDrainPacket.Handler.class, true, false);
-		registerPacket(ManualPageUpdatePacket.class, ManualPageUpdatePacket.Handler.class, false, true);
-		registerPacket(PropellerBenchUpdatePacket.class, PropellerBenchUpdatePacket.Handler.class, true, true);
 		registerPacket(TileEntityClientServerHandshakePacket.class, TileEntityClientServerHandshakePacket.Handler.class, true, true);
 		
 		//Packets in packets.multipart.
