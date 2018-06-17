@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -43,6 +44,8 @@ public class TileEntityClientServerHandshakePacket extends APacketTileEntity{
 							MTS.MTSNet.sendTo(new TileEntityClientServerHandshakePacket(tile, tile.writeToNBT(new NBTTagCompound())), ctx.getServerHandler().playerEntity);
 						}else{
 							tile.readFromNBT(message.tag);
+							BlockPos pos = tile.getPos();
+							tile.getWorld().notifyBlockUpdate(pos, tile.getWorld().getBlockState(pos), tile.getWorld().getBlockState(pos).getActualState(tile.getWorld(), pos), 3);
 						}
 					}
 				}
