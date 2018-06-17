@@ -4,6 +4,12 @@
 		"0": "mts:blocks/trafficsignal",
 		"particle": "mts:blocks/trafficsignal"
 	},
+	"display": {
+        "gui": {
+            "rotation": [ 30, 315, 0 ],
+            "translation": [ 3, 5, 0]
+        }
+    },
 	"elements": [
 		{
 			"from": [6, 7, 11],

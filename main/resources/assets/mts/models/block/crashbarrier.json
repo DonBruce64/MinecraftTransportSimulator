@@ -4,6 +4,13 @@
 		"0": "mts:blocks/concrete",
 		"particle": "mts:blocks/concrete"
 	},
+   "display": {
+        "gui": {
+            "rotation": [ 30, 315, 0 ],
+            "translation": [ 0, 1, 0],
+            "scale":[0.75, 0.75, 0.75]
+        }
+    },
 	"elements": [
 		{
 			"name": "Base",
