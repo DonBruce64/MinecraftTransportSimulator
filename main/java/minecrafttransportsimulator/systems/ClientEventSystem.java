@@ -114,7 +114,7 @@ public final class ClientEventSystem{
 					//If this item is a part, find if we are right-clicking a valid part area.
 					//If so, send the info to the server to add a new part.
 					//Note that the server will check if we can actually add the part in question.
-			    	if(event.getItemStack().getItem() instanceof AItemPart){
+			    	if(event.getItemStack().getItem() instanceof AItemPart && multipart.pack != null){
 	    				for(byte i=0; i<multipart.pack.parts.size(); ++i){
 	    					PackPart packPart = multipart.pack.parts.get(i);
 	    					Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
