@@ -1,6 +1,3 @@
 {
-    "parent": "mts:item/basic",
-    "textures": {
-        "layer0": "mts:items/propellerbench"
-    }
+    "parent": "mts:block/propellerbench"
 }

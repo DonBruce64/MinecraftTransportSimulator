@@ -77,9 +77,4 @@ public class BlockFuelPump extends ABlockRotateable{
 	public ATileEntityRotatable createNewTileEntity(World worldIn, int meta){
 		return new TileEntityFuelPump();
 	}
-	
-	@Override
-	protected boolean canRotateDiagonal(){
-		return false;
-	}
 }

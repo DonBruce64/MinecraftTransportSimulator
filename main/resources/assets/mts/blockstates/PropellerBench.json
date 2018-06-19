@@ -1,5 +1,16 @@
 {
-    "variants": {
-        "normal": { "model": "mts:propellerbench" }
-    }
+    "multipart": [
+        {   "when": { "rotation": "north" },
+            "apply": { "model": "mts:propellerbench", "y" : 180 }
+        },
+        {   "when": { "rotation": "east" },
+            "apply": { "model": "mts:propellerbench", "y" : 270}
+        },
+        {   "when": { "rotation": "south" },
+            "apply": { "model": "mts:propellerbench"}
+        },
+        {   "when": { "rotation": "west" },
+            "apply": { "model": "mts:propellerbench", "y" : 90}
+        }
+    ]
 }

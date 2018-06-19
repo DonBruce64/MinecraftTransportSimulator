@@ -1,50 +1,37 @@
 package minecrafttransportsimulator.rendering.blockrenders;
 
 import java.awt.Color;
-import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
-import minecrafttransportsimulator.systems.OBJParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.Vec3i;
 
 public class RenderFuelPump extends TileEntitySpecialRenderer<TileEntityFuelPump>{
-	private static final ResourceLocation texture = new ResourceLocation(MTS.MODID, "textures/blocks/fuelpump.png");
-	private static int displayListIndex = -1;
 	
 	public RenderFuelPump(){}
 	
 	@Override
 	public void renderTileEntityAt(TileEntityFuelPump pump, double x, double y, double z, float partialTicks, int destroyStage){
 		super.renderTileEntityAt(pump, x, y, z, partialTicks, destroyStage);
+		final Vec3i facingVec = EnumFacing.VALUES[pump.rotation].getDirectionVec();
 		
-		if(displayListIndex == -1){
-			displayListIndex = GL11.glGenLists(1);
-			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-			GL11.glBegin(GL11.GL_TRIANGLES);
-			for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(new ResourceLocation(MTS.MODID, "objmodels/fuelpump.obj")).entrySet()){
-				for(Float[] vertex : entry.getValue()){
-					GL11.glTexCoord2f(vertex[3], vertex[4]);
-					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-				}
-			}
-			GL11.glEnd();
-			GL11.glEndList();
-		}
-
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glTranslatef(0.5F, 0F, 0.5F);
-		GL11.glRotatef(180 - 45*pump.rotation, 0, 1, 0);
-		GL11.glColor3f(1.0F, 1.0F, 1.0F);
-		bindTexture(texture);
-		GL11.glCallList(displayListIndex);
+		
+		if(facingVec.getX() == 1){
+			GL11.glRotatef(90, 0, 1, 0);
+		}else if(facingVec.getX() == -1){
+			GL11.glRotatef(270, 0, 1, 0);
+		}else if(facingVec.getZ() == -1){
+			GL11.glRotatef(180, 0, 1, 0);
+		}
 		
 		GL11.glPushMatrix();
 		GL11.glScalef(0.0625F, 0.0625F, 0.0625F);

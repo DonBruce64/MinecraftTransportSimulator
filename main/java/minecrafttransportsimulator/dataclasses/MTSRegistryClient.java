@@ -2,7 +2,6 @@ package minecrafttransportsimulator.dataclasses;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
-import minecrafttransportsimulator.blocks.core.TileEntityPartBench;
 import minecrafttransportsimulator.blocks.decor.TileEntityDecor6AxisOriented;
 import minecrafttransportsimulator.items.core.ItemMultipart;
 import minecrafttransportsimulator.items.parts.AItemPart;
@@ -10,7 +9,6 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.rendering.blockrenders.RenderDecor;
 import minecrafttransportsimulator.rendering.blockrenders.RenderFuelPump;
-import minecrafttransportsimulator.rendering.blockrenders.RenderPartBench.RenderPropellerBench;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -36,7 +34,6 @@ public final class MTSRegistryClient{
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
 		//Register the TESRs for blocks.
-		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPartBench.class, new RenderPropellerBench());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityFuelPump.class, new RenderFuelPump());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDecor6AxisOriented.class, new RenderDecor());
 		
