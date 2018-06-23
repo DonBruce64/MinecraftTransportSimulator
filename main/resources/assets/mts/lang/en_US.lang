@@ -183,21 +183,6 @@ info.item.key.line3=Sneak-use to take ownership.
 info.item.key.line4=Sneak-use again to relinquish.
 info.item.key.line5=Owned vehicles may only be destroyed by you and OPs.
 
-item.seat.name=Seat
-item.skid.name=Skid
-item.pontoon.name=Pontoon
-item.wheelsmall.name=Small Wheel
-item.wheelmedium.name=Medium Wheel
-item.wheellarge.name=Large Wheel
-item.crate.name=Crate
-item.propeller_wood.name=Wooden Propeller
-item.propeller_iron.name=Iron Propeller
-item.propeller_obsidian.name=Obsidian Propeller
-item.enginelycomingo360.name=Lycoming O-360 Aircraft Engine
-item.enginebristolmercury.name=Bristol Mercury Aircraft Engine
-item.engineamci4.name=AMC Inline 4 Car Engine
-item.enginedetroitdiesel.name=Detroit Diesel Engine
-
 item.wrench.name=Wrench
 item.key.name=Key
 item.manual.name=MTS Manual (READ ME!)
