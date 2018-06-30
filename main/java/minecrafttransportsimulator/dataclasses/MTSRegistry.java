@@ -97,6 +97,9 @@ public final class MTSRegistry{
 	/**Maps part item names to items.  All part items for all packs will be populated here.*/
 	public static Map<String, AItemPart> partItemMap = new LinkedHashMap<String, AItemPart>();
 	
+	/**Maps instrument item names to items.  All instrument items for all packs will be populated here.*/
+	public static Map<String, ItemInstrument> instrumentItemMap = new LinkedHashMap<String, ItemInstrument>();
+	
 	/**Core creative tab for base MTS items**/
 	public static final CreativeTabCore coreTab = new CreativeTabCore();
 	
@@ -115,11 +118,6 @@ public final class MTSRegistry{
 	//Fuel pump.
 	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(coreTab);		
 	public static final Item itemBlockFuelPump = new ItemBlock(fuelPump);
-	
-	//Instrument items.
-	public static final Item pointerShort = new Item().setCreativeTab(coreTab);
-	public static final Item pointerLong = new Item().setCreativeTab(coreTab);
-	public static final Item instrument = new ItemInstrument().setCreativeTab(coreTab);
 	
 	//Decorative pole-based blocks.
 	public static final Block pole = new BlockDecor6AxisRegular(Material.IRON, 5.0F, 10.0F);
@@ -148,7 +146,7 @@ public final class MTSRegistry{
 		initMultipartEntities();
 		initPackets();
 		initCoreItemRecipes();
-		initAircraftInstrumentRecipes();
+		//initAircraftInstrumentRecipes();
 	}
 	
 	/**
@@ -164,6 +162,11 @@ public final class MTSRegistry{
 		}
 		for(AItemPart item : partItemMap.values()){
 			if(item.partName.startsWith(modID)){
+				packItems.add(item);
+			}
+		}
+		for(ItemInstrument item : instrumentItemMap.values()){
+			if(item.instrumentName.startsWith(modID)){
 				packItems.add(item);
 			}
 		}
@@ -241,6 +244,12 @@ public final class MTSRegistry{
 			}catch(Exception e){
 				e.printStackTrace();
 			}
+		}
+		
+		//Then add instrument items to the lists.
+		for(String instrumentName : PackParserSystem.getAllInstruments()){
+			ItemInstrument itemInstrument = new ItemInstrument(instrumentName);
+			instrumentItemMap.put(instrumentName, itemInstrument);
 		}
 	}
 
@@ -344,162 +353,6 @@ public final class MTSRegistry{
 				" A ",
 				"A  ",
 				'A', Items.IRON_INGOT);
-	}
-	
-	private static void initAircraftInstrumentRecipes(){		
-		registerRecipe(new ItemStack(pointerShort, 2),
-				" WW",
-				" WW",
-				"I  ",
-				'W', new ItemStack(Items.DYE, 1, 15),
-				'I', Items.IRON_INGOT);
-		
-		registerRecipe(new ItemStack(pointerLong, 2),
-				"  W",
-				" W ",
-				"I  ",
-				'W', new ItemStack(Items.DYE, 1, 15),
-				'I', Items.IRON_INGOT);
-		
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 16, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()),
-				"III",
-				"IGI",
-				"III",
-				'I', Items.IRON_INGOT,
-				'G', Blocks.GLASS_PANE);
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_ATTITUDE.ordinal()),
-				"LLL",
-				"RRR",
-				" B ",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'L', new ItemStack(Items.DYE, 1, 4),
-				'R', new ItemStack(Items.DYE, 1, 3));
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_ALTIMETER.ordinal()),
-				"WLW",
-				"WSW",
-				" B ",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'L', pointerLong, 
-				'S', pointerShort, 
-				'W', new ItemStack(Items.DYE, 1, 15));
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_HEADING.ordinal()),
-				" W ",
-				"WIW",
-				" B ",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'I', Items.IRON_INGOT,
-				'W', new ItemStack(Items.DYE, 1, 15));
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_AIRSPEED.ordinal()),
-				"R W",
-				"YLG",
-				"GBG",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'L', pointerLong, 
-				'R', new ItemStack(Items.DYE, 1, 1),
-				'Y', new ItemStack(Items.DYE, 1, 11),
-				'G', new ItemStack(Items.DYE, 1, 10),
-				'W', new ItemStack(Items.DYE, 1, 15));
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_TURNCOORD.ordinal()),
-				"   ",
-				"WIW",
-				"WBW",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'I', Items.IRON_INGOT,
-				'W', new ItemStack(Items.DYE, 1, 15));
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_TURNSLIP.ordinal()),
-				"WWW",
-				" I ",
-				"WBW",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'I', Items.IRON_INGOT,
-				'W', new ItemStack(Items.DYE, 1, 15));
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_VERTICALSPEED.ordinal()),
-				"W W",
-				" L ",
-				"WBW",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'L', pointerLong, 
-				'W', new ItemStack(Items.DYE, 1, 15));
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_LIFTRESERVE.ordinal()),
-				"RYG",
-				" LG",
-				" B ",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'L', pointerLong, 
-				'R', new ItemStack(Items.DYE, 1, 1),
-				'Y', new ItemStack(Items.DYE, 1, 11),
-				'G', new ItemStack(Items.DYE, 1, 10));
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_TRIM.ordinal()),
-				"GLG",
-				"LGL",
-				" B ",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'L', pointerLong, 
-				'G', new ItemStack(Items.DYE, 1, 10));
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_ELECTRIC.ordinal()),
-				"G W",
-				"LGL",
-				"RBW",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'L', pointerLong, 
-				'G', new ItemStack(Items.DYE, 1, 10),
-				'R', new ItemStack(Items.DYE, 1, 1),
-				'W', new ItemStack(Items.DYE, 1, 15));
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_TACHOMETER.ordinal()),
-				"W W",
-				" L ",
-				"WBR",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'L', pointerLong, 
-				'R', new ItemStack(Items.DYE, 1, 1),
-				'W', new ItemStack(Items.DYE, 1, 15));
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_FUELQTY.ordinal()),
-				"RWW",
-				" L ",
-				" B ",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'L', pointerLong, 
-				'R', new ItemStack(Items.DYE, 1, 1),
-				'W', new ItemStack(Items.DYE, 1, 15));
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_FUELFLOW.ordinal()),
-				" W ",
-				"WLW",
-				" B ",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'L', pointerLong, 
-				'W', new ItemStack(Items.DYE, 1, 15));
-		
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_ENGINETEMP.ordinal()),
-				"YGR",
-				" L ",
-				" B ",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'L', pointerLong, 
-				'Y', new ItemStack(Items.DYE, 1, 11),
-				'G', new ItemStack(Items.DYE, 1, 10),
-				'R', new ItemStack(Items.DYE, 1, 1));
-				
-		registerRecipe(new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_OILPRESSURE.ordinal()),
-				"   ",
-				"LGL",
-				"RB ",
-				'B', new ItemStack(MTSRegistry.instrument, 1, MTSInstruments.Instruments.AIRCRAFT_BLANK.ordinal()), 
-				'L', pointerLong,  
-				'G', new ItemStack(Items.DYE, 1, 10),
-				'R', new ItemStack(Items.DYE, 1, 1));
 	}
 	
 	/**

@@ -6,13 +6,13 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
-import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
+import minecrafttransportsimulator.dataclasses.PackInstrumentObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
@@ -37,7 +37,7 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 	
 	private byte numberEngineBays = 0;
 	private final Map<Byte, APartEngine> engineByNumber = new HashMap<Byte, APartEngine>();
-	private final Map<Byte, Instruments> instruments = new HashMap<Byte, Instruments>();
+	private final Map<Byte, VehicleInstrument> instruments = new HashMap<Byte, VehicleInstrument>();
 	private final List<LightTypes> lightsOn = new ArrayList<LightTypes>();
 	
 	public EntityMultipartE_Vehicle(World world){
@@ -57,9 +57,9 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 			if(electricPower > 2){
 				for(LightTypes light : lightsOn){
 					if(light.hasBeam){
-						electricUsage += 0.00005F;
+						electricUsage += 0.0005F;
 					}else{
-						electricUsage += 0.00001F;
+						electricUsage += 0.0001F;
 					}
 				}
 			}
@@ -72,11 +72,9 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 	@Override
 	public void setDead(){
 		if(!worldObj.isRemote){
-			for(Instruments instrument : this.instruments.values()){
-				if(!instrument.equals(this.getBlankInstrument())){
-					ItemStack stack = new ItemStack(MTSRegistry.instrument, 1, instrument.ordinal());
-					worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
-				}
+			for(VehicleInstrument instrument : this.instruments.values()){
+				ItemStack stack = new ItemStack(MTSRegistry.instrumentItemMap.get(instrument.name));
+				worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
 			}
 		}
 		super.setDead();
@@ -124,10 +122,10 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 			for(PackPart packPart : pack.parts){
 				for(String type : packPart.types){
 					if(type.contains("engine")){
-						++engineNumber;
 						if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
 							engineByNumber.put(engineNumber, (APartEngine) part);
 						}
+						++engineNumber;
 					}
 				}
 			}
@@ -141,11 +139,11 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 		for(PackPart packPart : pack.parts){
 			for(String type : packPart.types){
 				if(type.contains("engine")){
-					++engineNumber;
 					if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
 						engineByNumber.remove(engineNumber);
 						return;
 					}
+					++engineNumber;
 				}
 			}
 		}
@@ -225,16 +223,18 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 		return lightsOn.contains(light);
 	}
 	
-	public Instruments getInstrumentNumber(byte number){
-		return instruments.containsKey(number) ? instruments.get(number) : getBlankInstrument();
+	public VehicleInstrument getInstrumentInfoInSlot(byte slot){
+		return instruments.containsKey(slot) ? instruments.get(slot) : null;
 	}
 	
-	public void setInstrumentNumber(byte number, Instruments instrument){
-		instruments.put(number, instrument);
+	public void setInstrumentInSlot(byte slot, String instrument){
+		if(instrument.isEmpty()){
+			instruments.remove(slot);
+		}else{
+			instruments.put(slot, new VehicleInstrument(instrument));
+		}
 	}
-	
-	public abstract Instruments getBlankInstrument();
-	
+		
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
@@ -255,13 +255,13 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 			lightsOnString = lightsOnString.substring(lightsOnString.indexOf(',') + 1);
 		}
 		
-		byte[] instrumentsInSlots = tagCompound.getByteArray("instrumentsInSlots");
 		for(byte i = 0; i<pack.motorized.instruments.size(); ++i){
-			PackInstrument packDef = pack.motorized.instruments.get(i);
-			//Check to prevent loading of faulty instruments for the wrong vehicle due to updates or stupid people.
-			for(Class<? extends EntityMultipartD_Moving>  validClass : Instruments.values()[instrumentsInSlots[i]].validClasses){
-				if(validClass.isAssignableFrom(this.getClass())){
-					instruments.put(i, Instruments.values()[instrumentsInSlots[i]]);
+			if(tagCompound.hasKey("instrumentInSlot" + i)){
+				String instrumentInSlot = tagCompound.getString("instrumentInSlot" + i);
+				VehicleInstrument instrument = new VehicleInstrument(instrumentInSlot);
+				//Check to prevent loading of faulty instruments for the wrong vehicle due to updates or stupid people.
+				if(instrument != null && instrument.pack.general.validVehicles.contains(this.pack.general.type)){
+					instruments.put(i, instrument);
 				}
 			}
 		}
@@ -280,15 +280,12 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 		}
 		tagCompound.setString("lightsOn", lightsOnString);
 		
-		byte[] instrumentsInSlots = new byte[pack.motorized.instruments.size()];
+		String[] instrumentsInSlots = new String[pack.motorized.instruments.size()];
 		for(byte i=0; i<instrumentsInSlots.length; ++i){
 			if(instruments.containsKey(i)){
-				instrumentsInSlots[i] = (byte) instruments.get(i).ordinal();
-			}else{
-				instrumentsInSlots[i] = (byte) this.getBlankInstrument().ordinal();
+				tagCompound.setString("instrumentInSlot" + i, instruments.get(i).name);
 			}
 		}
-		tagCompound.setByteArray("instrumentsInSlots", instrumentsInSlots);
 		return tagCompound;
 	}
 	
@@ -311,6 +308,16 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 		
 		private LightTypes(boolean hasBeam){
 			this.hasBeam = hasBeam;
+		}
+	}
+	
+	public static class VehicleInstrument{
+		public final String name;
+		public final PackInstrumentObject pack;
+		
+		public VehicleInstrument(String name){
+			this.name = name;
+			this.pack = PackParserSystem.getInstrument(name);
 		}
 	}
 }

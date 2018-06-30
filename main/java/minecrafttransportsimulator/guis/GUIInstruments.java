@@ -1,23 +1,20 @@
 package minecrafttransportsimulator.guis;
 
 import java.awt.Color;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSInstruments;
-import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
-import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
+import minecrafttransportsimulator.items.core.ItemInstrument;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartInstruments;
 import minecrafttransportsimulator.rendering.RenderHUD;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
@@ -26,30 +23,14 @@ import net.minecraft.item.ItemStack;
 public class GUIInstruments extends GuiScreen{
 	private final EntityMultipartE_Vehicle vehicle;
 	private final EntityPlayer player;
-	private final byte numberEngineBays;
-	private final Map<Float[], Byte> instrumentCoords;
 	
-	private boolean fault;
-	private byte lastInstrumentClicked = -1;
-	private List<Byte> renderedInstruments = new ArrayList<Byte>();
+	private PackInstrument lastInstrumentClicked = null;
+	private final Map<String, ItemStack> playerInstruments = new HashMap<String, ItemStack>();
+	private final Map<String, Integer[]> renderedPlayerInstrumentsBounds = new HashMap<String, Integer[]>();
 	
 	public GUIInstruments(EntityMultipartE_Vehicle vehicle, EntityPlayer player){
 		this.vehicle = vehicle;
 		this.player = player;
-		numberEngineBays = vehicle.getNumberEngineBays();
-		instrumentCoords = new HashMap<Float[], Byte>();
-	}
-	
-	@Override
-	public void initGui(){
-		for(byte i=0; i<vehicle.pack.motorized.instruments.size(); ++i){
-			PackInstrument packInstrument = vehicle.pack.motorized.instruments.get(i);
-			if(packInstrument.optionalEngineNumber == 0){
-				instrumentCoords.put(new Float[]{width/2 + 0.5F*packInstrument.hudpos[0]*width/100F, 0.5F*packInstrument.hudpos[1]*height/100F, packInstrument.hudScale}, i);
-			}else{
-				instrumentCoords.put(new Float[]{width/2 + 0.5F*packInstrument.hudpos[0]*width/100F, 3*height/8 + 0.5F*packInstrument.hudpos[1]*height/100F, packInstrument.hudScale}, i);
-			}
-		}
 	}
 
 	@Override
@@ -59,6 +40,7 @@ public class GUIInstruments extends GuiScreen{
 			return;
 		}
 		
+		//Draw the main HUD.
 		this.drawDefaultBackground();
 		GL11.glPushMatrix();
 		GL11.glTranslatef(width/2, 0, 0);
@@ -68,6 +50,7 @@ public class GUIInstruments extends GuiScreen{
 		mc.entityRenderer.disableLightmap();
 		GL11.glPopMatrix();
 		
+		//Draw the engine HUD.
 		GL11.glPushMatrix();
 		GL11.glTranslatef(width/2, 3*height/8, 0);
 		GL11.glScalef(0.5F, 0.5F, 0.5F);
@@ -76,24 +59,51 @@ public class GUIInstruments extends GuiScreen{
 		mc.entityRenderer.disableLightmap();
 		GL11.glPopMatrix();
 		
-		if(lastInstrumentClicked != -1){
+		//Draw a blank square for any instruments that aren't present to let the player know they can be clicked.
+		GL11.glPushMatrix();
+		GL11.glDisable(GL11.GL_TEXTURE_2D);
+		GL11.glColor3f(54F/255F, 57F/255F, 62F/255F);
+		for(byte i=0; i<vehicle.pack.motorized.instruments.size(); ++i){
+			if(vehicle.getInstrumentInfoInSlot(i) == null){
+				PackInstrument packInstrument = vehicle.pack.motorized.instruments.get(i);
+				GL11.glPushMatrix();
+		    	if(packInstrument.optionalEngineNumber == 0){
+		    		GL11.glTranslated(width/2 + width*packInstrument.hudpos[0]/200F, height*packInstrument.hudpos[1]/200F, 0);
+		    	}else{
+		    		GL11.glTranslated(width/2 + width*packInstrument.hudpos[0]/200F, 3*height/8 + height*packInstrument.hudpos[1]/200F, 0);
+		    	}
+		    	GL11.glScalef(packInstrument.hudScale/2F, packInstrument.hudScale/2F, packInstrument.hudScale/2F);
+		    	GL11.glBegin(GL11.GL_QUADS);
+		    	GL11.glVertex2d(-64, 64);
+		    	GL11.glVertex2d(64, 64);
+		    	GL11.glVertex2d(64, -64);
+		    	GL11.glVertex2d(-64, -64);
+		    	GL11.glEnd();
+				GL11.glPopMatrix();
+			}
+		}
+		GL11.glColor3f(1.0F, 1.0F, 1.0F);
+		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GL11.glPopMatrix();
+		
+		//If we clicked an instrument, highlight it.
+		if(lastInstrumentClicked != null){
 			GL11.glPushMatrix();
 	    	GL11.glColor4f(1, 1, 1, 1);
+	    	if(lastInstrumentClicked.optionalEngineNumber == 0){
+	    		GL11.glTranslated(width/2 + width*lastInstrumentClicked.hudpos[0]/200F, height*lastInstrumentClicked.hudpos[1]/200F, 0);
+	    	}else{
+	    		GL11.glTranslated(width/2 + width*lastInstrumentClicked.hudpos[0]/200F, 3*height/8 + height*lastInstrumentClicked.hudpos[1]/200F, 0);
+	    	}
+	    	GL11.glScalef(lastInstrumentClicked.hudScale/2F, lastInstrumentClicked.hudScale/2F, lastInstrumentClicked.hudScale/2F);
 	    	GL11.glDisable(GL11.GL_TEXTURE_2D);
 	    	GL11.glEnable(GL11.GL_BLEND);
 	    	GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
-	    	GL11.glBegin(GL11.GL_TRIANGLES);
-	    	for(Entry<Float[], Byte> instrumentCoordEntry : instrumentCoords.entrySet()){
-	    		if(lastInstrumentClicked == instrumentCoordEntry.getValue()){
-	    			Float[] coords = instrumentCoordEntry.getKey();
-	    			GL11.glVertex2d(coords[0]-12*coords[2], coords[1]-12*coords[2]);
-	    			GL11.glVertex2d(coords[0]-12*coords[2], coords[1]+12*coords[2]);
-	    			GL11.glVertex2d(coords[0]+12*coords[2], coords[1]+12*coords[2]);
-	    			GL11.glVertex2d(coords[0]+12*coords[2], coords[1]+12*coords[2]);
-	    			GL11.glVertex2d(coords[0]+12*coords[2], coords[1]-12*coords[2]);
-	    			GL11.glVertex2d(coords[0]-12*coords[2], coords[1]-12*coords[2]);
-	    		}
-	    	}
+	    	GL11.glBegin(GL11.GL_QUADS);
+	    	GL11.glVertex2d(-64, 64);
+	    	GL11.glVertex2d(64, 64);
+	    	GL11.glVertex2d(64, -64);
+	    	GL11.glVertex2d(-64, -64);
 	    	GL11.glEnd();
 	    	GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 	    	GL11.glDisable(GL11.GL_BLEND);
@@ -101,42 +111,49 @@ public class GUIInstruments extends GuiScreen{
 			GL11.glPopMatrix();
 		}
 		
-		boolean[] hasInstrument = new boolean[Instruments.values().length];
-		for(byte i=0; i<MTSInstruments.Instruments.values().length; ++i){
-			if(player.capabilities.isCreativeMode){
-				hasInstrument[i] = true;
-			}else{
-				hasInstrument[i] = player.inventory.hasItemStack(new ItemStack(MTSRegistry.instrument, 1, i));
-			}
-		}
-
-		renderedInstruments.clear();
-		for(byte i=MTSInstruments.numberBlanks; i<MTSInstruments.Instruments.values().length; ++i){
-			if(hasInstrument[i]){
-				boolean isInstrumentForVehicle = false;
-				for(Class<? extends EntityMultipartD_Moving> validClass : MTSInstruments.Instruments.values()[i].validClasses){
-					if(validClass.isAssignableFrom(vehicle.getClass())){
-						isInstrumentForVehicle = true;
-						break;
+		//Get all the instruments that fit this vehicle that the player currently has.
+		playerInstruments.clear();
+		renderedPlayerInstrumentsBounds.clear();
+		if(!player.capabilities.isCreativeMode){
+			for(ItemStack stack : player.inventory.mainInventory){
+				if(stack != null){
+					if(stack.getItem() instanceof ItemInstrument){
+						ItemInstrument instrumentItem = (ItemInstrument) stack.getItem();
+						if(PackParserSystem.getInstrument(instrumentItem.instrumentName).general.validVehicles.contains(vehicle.pack.general.type)){
+							if(!playerInstruments.containsKey(instrumentItem.instrumentName)){
+								byte xIndex = (byte) (playerInstruments.size()%6);
+								byte yIndex = (byte) (playerInstruments.size()/6);
+								renderedPlayerInstrumentsBounds.put(instrumentItem.instrumentName, new Integer[]{width/8 + xIndex*24-12, width/8 + xIndex*24+12, height/4 + yIndex*24-12, height/4 + yIndex*24+12});
+								playerInstruments.put(instrumentItem.instrumentName, stack);
+								
+							}	
+						}					
 					}
 				}
-				if(isInstrumentForVehicle){
-					GL11.glPushMatrix();
-					GL11.glTranslatef((renderedInstruments.size()%4-2)*width/20 + width/4, renderedInstruments.size()/4*(height/10) + height/4, 0);
-					GL11.glScalef(1.5F, 1.5F, 1.5F);
-					mc.getRenderItem().renderItemIntoGUI(new ItemStack(MTSRegistry.instrument, 1, i), 0, 0);
-					GL11.glPopMatrix();
-					renderedInstruments.add(i);
+			}
+		}else{
+			for(ItemInstrument instrumentItem : MTSRegistry.instrumentItemMap.values()){
+				if(PackParserSystem.getInstrument(instrumentItem.instrumentName).general.validVehicles.contains(vehicle.pack.general.type)){
+					byte xIndex = (byte) (playerInstruments.size()%6);
+					byte yIndex = (byte) (playerInstruments.size()/6);
+					renderedPlayerInstrumentsBounds.put(instrumentItem.instrumentName, new Integer[]{width/8 + xIndex*24-12, width/8 + xIndex*24+12, height/4 + yIndex*24-12, height/4 + yIndex*24+12});
+					playerInstruments.put(instrumentItem.instrumentName, new ItemStack(instrumentItem));
+				}else{
+					//System.out.println(PackParserSystem.getInstrument(instrumentItem.instrumentName).general.validVehicles.size());
 				}
 			}
 		}
 		
-		GL11.glPushMatrix();
-		GL11.glTranslatef(width/4 - 15, 11*height/16 + 15, 0);
-		GL11.glScalef(2.0F, 2.0F, 2.0F);
-		mc.getRenderItem().renderItemIntoGUI(new ItemStack(MTSRegistry.instrument, 1, vehicle.getBlankInstrument().ordinal()), 0, 0);
-		GL11.glPopMatrix();
+		//Now render these instruments.
+		for(Entry<String, Integer[]> renderedInstrumentsEntry : renderedPlayerInstrumentsBounds.entrySet()){
+			GL11.glPushMatrix();
+			GL11.glTranslatef(renderedInstrumentsEntry.getValue()[0], renderedInstrumentsEntry.getValue()[2], 0);
+			GL11.glScalef(1.5F, 1.5F, 1.5F);
+			mc.getRenderItem().renderItemIntoGUI(playerInstruments.get(renderedInstrumentsEntry.getKey()), 0, 0);
+			GL11.glPopMatrix();
+		}
 		
+		//Render text into the GUI.
 		GL11.glPushMatrix();
 		GL11.glTranslatef(3*width/4, 2.5F*height/16, 0);
 		GL11.glScalef(1.5F, 1.5F, 1.5F);
@@ -149,8 +166,7 @@ public class GUIInstruments extends GuiScreen{
 		fontRendererObj.drawString(I18n.format("gui.instruments.control"), (int) (-fontRendererObj.getStringWidth(I18n.format("gui.instruments.control"))/2), 0, Color.WHITE.getRGB());
 		GL11.glPopMatrix();
 				
-		
-		if(lastInstrumentClicked == -1){
+		if(lastInstrumentClicked == null){
 			if(vehicle.ticksExisted%40 >= 20){
 				GL11.glPushMatrix();
 				GL11.glTranslatef(3*width/4, height/16, 0);
@@ -160,25 +176,10 @@ public class GUIInstruments extends GuiScreen{
 			}
 		}else{
 			GL11.glPushMatrix();
-			GL11.glTranslatef(10, 6, 0);
+			GL11.glTranslatef(width/2, height/16, 0);
 			GL11.glScalef(1.5F, 1.5F, 1.5F);
-			fontRendererObj.drawString(String.valueOf(lastInstrumentClicked), 0, 0, Color.WHITE.getRGB());
+			fontRendererObj.drawString(I18n.format("gui.instruments.decide"), (int) (-fontRendererObj.getStringWidth(I18n.format("gui.instruments.decide"))/2), 0, Color.WHITE.getRGB());
 			GL11.glPopMatrix();
-			if(!fault){
-				GL11.glPushMatrix();
-				GL11.glTranslatef(width/2, height/16, 0);
-				GL11.glScalef(1.5F, 1.5F, 1.5F);
-				fontRendererObj.drawString(I18n.format("gui.instruments.decide"), (int) (-fontRendererObj.getStringWidth(I18n.format("gui.instruments.decide"))/2), 0, Color.WHITE.getRGB());
-				GL11.glPopMatrix();
-			}else{
-				if(vehicle.ticksExisted%20 >= 10){
-					GL11.glPushMatrix();
-					GL11.glTranslatef(width/2, height/16, 0);
-					GL11.glScalef(1.5F, 1.5F, 1.5F);
-					fontRendererObj.drawString(I18n.format("gui.instruments.fault"), (int) (-fontRendererObj.getStringWidth(I18n.format("gui.instruments.fault"))/2), 0, Color.RED.getRGB());
-					GL11.glPopMatrix();
-				}
-			}
 		}
 		
 		GL11.glPushMatrix();
@@ -187,59 +188,56 @@ public class GUIInstruments extends GuiScreen{
 		GL11.glPopMatrix();
 		
 		//Need to do mouseover after main rendering or you get rendering issues.
-		for(byte i=0; i<renderedInstruments.size(); ++i){
-			float xStart = (i%4-2)*width/20 + width/4;
-			float xEnd = (i%4-1)*width/20 + width/4;
-			float yStart = i/4*(height/10) + height/4;
-			float yEnd = (i/4+1)*(height/10) + height/4;
-			if(mouseX > xStart && mouseX < xEnd && mouseY > yStart && mouseY < yEnd){
-				renderToolTip(new ItemStack(MTSRegistry.instrument, 1, renderedInstruments.get(i)), mouseX,  mouseY);
+		for(Entry<String, Integer[]> renderedInstrumentsEntry : renderedPlayerInstrumentsBounds.entrySet()){
+			if(mouseX > renderedInstrumentsEntry.getValue()[0] && mouseX < renderedInstrumentsEntry.getValue()[1] && mouseY > renderedInstrumentsEntry.getValue()[2] && mouseY < renderedInstrumentsEntry.getValue()[3]){
+				renderToolTip(playerInstruments.get(renderedInstrumentsEntry.getKey()), mouseX,  mouseY);
 			}
 		}
 	}
 	
 	@Override
-    protected void mouseClicked(int x, int y, int button){
-		for(Entry<Float[], Byte> entry : instrumentCoords.entrySet()){
-			float xCenter = entry.getKey()[0];
-			float yCenter = entry.getKey()[1];
-			float scale = entry.getKey()[2];
-			if(x > xCenter-12*scale && x < xCenter+12*scale && y > yCenter-12*scale && y < yCenter+12*scale){
-				lastInstrumentClicked = entry.getValue();
+    protected void mouseClicked(int mouseX, int mouseY, int button){
+		//Check to see if we clicked an instrument on the HUD.
+		for(PackInstrument instrument : vehicle.pack.motorized.instruments){
+			final int xCenter = width/2 + width*instrument.hudpos[0]/200;
+			final int yCenter = instrument.optionalEngineNumber == 0 ? height*instrument.hudpos[1]/200 : 3*height/8 + height*instrument.hudpos[1]/200;
+			float scale = instrument.hudScale/2F;
+			if(mouseX > xCenter - 64*scale && mouseX < xCenter + 64*scale && mouseY > yCenter - 64*scale && mouseY < yCenter + 64*scale){
+				lastInstrumentClicked = instrument;
 				return;
 			}
 		}
-		
-		if(lastInstrumentClicked != -1){
+
+		//If we didn't click an instrument on the HUD, and have already selected one on the HUD, see if we clicked one from the inventory.
+		if(lastInstrumentClicked != null){
 			//Check to see if the player clicked an instrument, and if so which one.
-			for(byte i=0; i<renderedInstruments.size(); ++i){
-				float xStart = (i%4-2)*width/20 + width/4;
-				float xEnd = (i%4-1)*width/20 + width/4;
-				float yStart = i/4*(height/10) + height/4;
-				float yEnd = (i/4+1)*(height/10) + height/4;
-				if(x > xStart && x < xEnd && y > yStart && y < yEnd){
-					//Check to make sure we don't try to put a regular instrument in the motor section.
-					if(vehicle.pack.motorized.instruments.get(lastInstrumentClicked).optionalEngineNumber != 0 && !MTSInstruments.Instruments.values()[renderedInstruments.get(i)].canConnectToEngines){
-						fault = true;
-						return;
-					}else{
-						fault = false;
-					}
-					MTS.MTSNet.sendToServer(new PacketMultipartInstruments(vehicle, player, lastInstrumentClicked, renderedInstruments.get(i)));
-					lastInstrumentClicked = -1;
+			for(Entry<String, Integer[]> renderedInstrumentsEntry : renderedPlayerInstrumentsBounds.entrySet()){
+				if(mouseX > renderedInstrumentsEntry.getValue()[0] && mouseX < renderedInstrumentsEntry.getValue()[1] && mouseY > renderedInstrumentsEntry.getValue()[2] && mouseY < renderedInstrumentsEntry.getValue()[3]){
+					MTS.MTSNet.sendToServer(new PacketMultipartInstruments(vehicle, player, getIndexOfLastInstrumentClicked(), renderedInstrumentsEntry.getKey()));
+					lastInstrumentClicked = null;
 					return;
 				}
 			}
 			
-			//Either the player didn't click an instrument, or they clicked the blank.
-			if(x > width/4 - 15 && x < width/4 + 15 && y > 11*height/16 + 15 && y < 11*height/16 + 45){
-				if(!vehicle.getInstrumentNumber(lastInstrumentClicked).equals(vehicle.getBlankInstrument())){
-					MTS.MTSNet.sendToServer(new PacketMultipartInstruments(vehicle, player, lastInstrumentClicked, (byte) vehicle.getBlankInstrument().ordinal()));
-					lastInstrumentClicked = -1;
+			//Either the player didn't click an instrument, or they clicked the CLEAR.
+			if(mouseX > width/4 - 15 && mouseX < width/4 + 15 && mouseY > 11*height/16 - 15 && mouseY < 11*height/16 + 15){
+				if(vehicle.getInstrumentInfoInSlot(getIndexOfLastInstrumentClicked()) != null){
+					MTS.MTSNet.sendToServer(new PacketMultipartInstruments(vehicle, player, getIndexOfLastInstrumentClicked(), ""));
+					lastInstrumentClicked = null;
 					return;
 				}
 			}
 		}
+	}
+	
+	private byte getIndexOfLastInstrumentClicked(){
+		for(byte i=0; i<vehicle.pack.motorized.instruments.size(); ++i){
+			PackInstrument packInstrument = vehicle.pack.motorized.instruments.get(i);
+			if(packInstrument.equals(lastInstrumentClicked)){
+				return i;
+			}
+		}
+		return -1;
 	}
 	
 	@Override

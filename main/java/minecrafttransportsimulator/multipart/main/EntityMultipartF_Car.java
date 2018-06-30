@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartEngineCar;
 import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
@@ -112,11 +111,6 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle impleme
 		if(part.equals(engine)){
 			engine = null;
 		}
-	}
-
-	@Override
-	public Instruments getBlankInstrument(){
-		return Instruments.AIRCRAFT_BLANK;
 	}
 	
 	@Override

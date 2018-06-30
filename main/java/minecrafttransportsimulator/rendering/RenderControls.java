@@ -2,13 +2,13 @@ package minecrafttransportsimulator.rendering;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
+import minecrafttransportsimulator.dataclasses.MTSControls.Controls;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 
 public final class RenderControls extends RenderInstruments{	
 	public static void drawControl(EntityMultipartE_Vehicle vehicle, Controls control, boolean hud){
-		textureManager.bindTexture(instrumentTexture);
+		textureManager.bindTexture(controlsTexture);
 		switch(control){
 			case PARKING_BRAKE: drawParkingBrake((EntityMultipartF_Plane) vehicle, hud); break;	
 			case AIRCRAFT_THROTTLE: drawAircraftThrottle((EntityMultipartF_Plane) vehicle, hud); break;
@@ -109,7 +109,7 @@ public final class RenderControls extends RenderInstruments{
     	GL11.glRotatef(-180, 0, 0, 1);
 		
     	GL11.glTranslatef(0, 7-plane.flapAngle/25, 0);
-    	textureManager.bindTexture(instrumentTexture);
+    	textureManager.bindTexture(controlsTexture);
     	if(!hud){
     		GL11.glTranslatef(1.875F, 0.5F, -3.75F);
     		renderSquareUV(7.5F, 0, 7F, 0.421875F, 0.453125F, 0.921875F, 0.953125F);

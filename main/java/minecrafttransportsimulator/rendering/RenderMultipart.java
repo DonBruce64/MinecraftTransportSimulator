@@ -11,8 +11,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
-import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
-import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
+import minecrafttransportsimulator.dataclasses.MTSControls.Controls;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackControl;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackDisplayText;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
@@ -22,6 +21,7 @@ import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.VehicleInstrument;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartEngineCar;
@@ -317,8 +317,8 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			case("throttle"): return ((EntityMultipartE_Vehicle) multipart).throttle/4F;
 			case("brake"): return multipart.brakeOn ? 30 : 0;
 			case("p_brake"): return multipart.parkingBrakeOn ? 30 : 0;
-			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).pack.engine.isAutomatic ? Math.min(1, ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).currentGear) : ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).currentGear)*5 : 0;
-			case("driveshaft"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1) != null ? ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 1)).getDriveshaftRotation(partialTicks) : 0);
+			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).pack.engine.isAutomatic ? Math.min(1, ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).currentGear) : ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).currentGear)*5 : 0;
+			case("driveshaft"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).getDriveshaftRotation(partialTicks) : 0);
 			case("steeringwheel"): return multipart.getSteerAngle();
 			
 			case("aileron"): return ((EntityMultipartF_Plane) multipart).aileronAngle/10F;
@@ -575,18 +575,18 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glPushMatrix();
 		GL11.glScalef(1F/16F/8F, 1F/16F/8F, 1F/16F/8F);
 		for(byte i=0; i<vehicle.pack.motorized.instruments.size(); ++i){
-			Instruments instrument = vehicle.getInstrumentNumber(i);
 			PackInstrument packInstrument = vehicle.pack.motorized.instruments.get(i);
-			if(instrument != null && packInstrument != null){
-				GL11.glPushMatrix();
-				GL11.glTranslatef(packInstrument.pos[0]*8, packInstrument.pos[1]*8, packInstrument.pos[2]*8);
-				GL11.glRotatef(packInstrument.rot[0], 1, 0, 0);
-				GL11.glRotatef(packInstrument.rot[1], 0, 1, 0);
-				GL11.glRotatef(packInstrument.rot[2], 0, 0, 1);
-				GL11.glScalef(packInstrument.scale, packInstrument.scale, packInstrument.scale);
-				RenderInstruments.drawInstrument(vehicle, 0, 0, instrument, false, packInstrument.optionalEngineNumber);
-				GL11.glPopMatrix();
+			GL11.glPushMatrix();
+			GL11.glTranslatef(packInstrument.pos[0]*8, packInstrument.pos[1]*8, packInstrument.pos[2]*8);
+			GL11.glRotatef(packInstrument.rot[0], 1, 0, 0);
+			GL11.glRotatef(packInstrument.rot[1], 0, 1, 0);
+			GL11.glRotatef(packInstrument.rot[2], 0, 0, 1);
+			GL11.glScalef(packInstrument.scale, packInstrument.scale, packInstrument.scale);
+			VehicleInstrument instrument = vehicle.getInstrumentInfoInSlot(i);
+			if(instrument != null){
+				RenderInstruments.drawInstrument(vehicle, instrument, false, packInstrument.optionalEngineNumber);
 			}
+			GL11.glPopMatrix();
 		}
 		for(byte i=0; i<vehicle.pack.motorized.controls.size(); ++i){
 			PackControl packControl = vehicle.pack.motorized.controls.get(i);

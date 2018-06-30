@@ -45,7 +45,7 @@ public class ShiftPacket implements IMessage{
 						thisEntity = (EntityMultipartF_Car) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
-						PartEngineCar carEngine = (PartEngineCar) thisEntity.getEngineByNumber((byte) 1);
+						PartEngineCar carEngine = (PartEngineCar) thisEntity.getEngineByNumber((byte) 0);
 						if(carEngine != null){
 							if(message.shiftUp){
 								if(carEngine.pack.engine.isAutomatic ? carEngine.currentGear < 1 : true){

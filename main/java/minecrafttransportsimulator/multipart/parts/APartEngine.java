@@ -106,7 +106,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 				}
 			}
 			if(starterLevel > 0){
-				vehicle.electricUsage += 0.01F;
+				vehicle.electricUsage += 0.05F;
 				if(vehicle.fuel > pack.engine.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor") && !isCreative){
 					vehicle.fuel -= pack.engine.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor");
 					fuelFlow += pack.engine.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor");
@@ -130,7 +130,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 		ambientTemp = 25*multipart.worldObj.getBiome(multipart.getPosition()).getTemperature() - 5*(Math.pow(2, multipart.posY/400) - 1);
 		coolingFactor = 0.001 + vehicle.velocity/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
-		vehicle.electricUsage -= 0.01*RPM/pack.engine.maxRPM;
+		vehicle.electricUsage -= 0.05*RPM/pack.engine.maxRPM;
 		
 		if(state.running){
 			//First part is temp affect on oil, second is engine oil pump.

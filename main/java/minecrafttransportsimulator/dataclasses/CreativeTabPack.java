@@ -31,6 +31,8 @@ public final class CreativeTabPack extends CreativeTabs{
 	@Override
     @SideOnly(Side.CLIENT)
     public void displayAllRelevantItems(List<ItemStack> givenList){
+		//This is needed to re-sort the items here to get them in the correct order.
+		//MC will re-order these by ID if we let it.
 		givenList.clear();
 		for(Item item : MTSRegistry.multipartItemMap.values()){
 			for(CreativeTabs tab : item.getCreativeTabs()){
@@ -40,6 +42,13 @@ public final class CreativeTabPack extends CreativeTabs{
 			}
 		}
 		for(Item item : MTSRegistry.partItemMap.values()){
+			for(CreativeTabs tab : item.getCreativeTabs()){
+				if(tab.equals(this)){
+					item.getSubItems(item, tab, givenList);
+				}
+			}
+		}
+		for(Item item : MTSRegistry.instrumentItemMap.values()){
 			for(CreativeTabs tab : item.getCreativeTabs()){
 				if(tab.equals(this)){
 					item.getSubItems(item, tab, givenList);

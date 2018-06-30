@@ -2,10 +2,11 @@ package minecrafttransportsimulator.rendering;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.dataclasses.MTSInstruments.Controls;
+import minecrafttransportsimulator.dataclasses.MTSControls.Controls;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackControl;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.VehicleInstrument;
 import minecrafttransportsimulator.systems.CameraSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -37,7 +38,7 @@ public final class RenderHUD{
 					CameraSystem.hudMode == 1 && !inGUI ? width*1/4 : 0,
 					CameraSystem.hudMode == 1 && !inGUI  ? width*3/4 : width,
 					CameraSystem.hudMode != 3 && !inGUI ? height*3/4 : height,
-					inGUI, true);
+					true);
 		}
 		if(CameraSystem.hudMode > 1 && !inGUI){
 			drawControls(vehicle, width, height, inGUI);
@@ -59,14 +60,14 @@ public final class RenderHUD{
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		}
 		drawAuxiliaryPanel(width, height, backplateTexture, mouldingTexture);
-		drawInstruments(vehicle, width, height, 0, width, height, inGUI, false);
+		drawInstruments(vehicle, width, height, 0, width, height, false);
 		if(!inGUI){
 			Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		}
 		GL11.glPopMatrix();
 	}
 	
-	private static void drawInstruments(EntityMultipartE_Vehicle vehicle, int width, int height, int minX, int maxX, int maxY, boolean inGUI, boolean main){
+	private static void drawInstruments(EntityMultipartE_Vehicle vehicle, int width, int height, int minX, int maxX, int maxY, boolean main){
 		for(byte i=0; i<vehicle.pack.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.pack.motorized.instruments.get(i);
 			//Only render instruments not in the panel
@@ -76,10 +77,11 @@ public final class RenderHUD{
 						GL11.glPushMatrix();
 						GL11.glTranslated(packInstrument.hudpos[0]*width/100, packInstrument.hudpos[1]*height/100, 0);
 						GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-						if(inGUI){
-							GL11.glRotatef(180, 0, 0, 1);
+						
+						VehicleInstrument instrument = vehicle.getInstrumentInfoInSlot(i);
+						if(instrument != null){
+							RenderInstruments.drawInstrument(vehicle, instrument, true, packInstrument.optionalEngineNumber);
 						}
-						RenderInstruments.drawInstrument(vehicle, 0, 0, vehicle.getInstrumentNumber(i), !inGUI, packInstrument.optionalEngineNumber);
 						GL11.glPopMatrix();
 					}
 				}

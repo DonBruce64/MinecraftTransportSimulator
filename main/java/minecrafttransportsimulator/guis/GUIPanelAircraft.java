@@ -45,8 +45,8 @@ public class GUIPanelAircraft extends GuiScreen{
 		super();
 		this.aircraft = aircraft;
 		engines = new APartEngine[aircraft.getNumberEngineBays()];
-		for(byte i=1; i<=engines.length; ++i){
-			engines[i-1] = aircraft.getEngineByNumber(i);
+		for(byte i=0; i<engines.length; ++i){
+			engines[i] = aircraft.getEngineByNumber(i);
 		}
 		hasLight = new boolean[4];
 		lightButtonCoords = new int[4][4];

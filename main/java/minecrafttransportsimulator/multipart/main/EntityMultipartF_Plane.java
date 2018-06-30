@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.multipart.main;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartPropeller;
 import minecrafttransportsimulator.packets.control.AileronPacket;
@@ -142,11 +141,6 @@ public final class EntityMultipartF_Plane extends EntityMultipartE_Vehicle{
 		}else{
 			--rudderCooldown;
 		}
-	}
-	
-	@Override
-	public Instruments getBlankInstrument(){
-		return Instruments.AIRCRAFT_BLANK;
 	}
 	
 	@Override

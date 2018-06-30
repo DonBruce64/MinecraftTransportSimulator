@@ -3,6 +3,7 @@ package minecrafttransportsimulator.dataclasses;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
 import minecrafttransportsimulator.blocks.decor.TileEntityDecor6AxisOriented;
+import minecrafttransportsimulator.items.core.ItemInstrument;
 import minecrafttransportsimulator.items.core.ItemMultipart;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
@@ -13,7 +14,6 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -47,9 +47,6 @@ public final class MTSRegistryClient{
 		registerCoreItemRender(MTSRegistry.key);
 		registerCoreItemRender(MTSRegistry.itemBlockPropellerBench);
 		registerCoreItemRender(MTSRegistry.itemBlockFuelPump);
-		registerCoreItemRender(MTSRegistry.pointerShort);
-		registerCoreItemRender(MTSRegistry.pointerLong);
-		registerCoreItemRenderSeries(MTSRegistry.instrument, MTSInstruments.Instruments.values().length);
 		registerCoreItemRender(MTSRegistry.itemBlockPole);
 		registerCoreItemRender(MTSRegistry.itemBlockPoleBase);
 		registerCoreItemRender(MTSRegistry.itemBlockTrafficCone);
@@ -59,34 +56,24 @@ public final class MTSRegistryClient{
 				
 		//Now register items for the packs.
 		for(ItemMultipart multipartItem : MTSRegistry.multipartItemMap.values()){
-			registerMultipartItemRender(multipartItem);
+			registerPackItemRender(multipartItem, multipartItem.multipartName, "vehicles");
 		}
 		for(AItemPart partItem : MTSRegistry.partItemMap.values()){
-			registerPartItemRender(partItem);
+			registerPackItemRender(partItem, partItem.partName, "parts");
+		}
+		for(ItemInstrument instrumentItem : MTSRegistry.instrumentItemMap.values()){
+			registerPackItemRender(instrumentItem, instrumentItem.instrumentName, "instruments");
 		}
 	}
 	
 	private static void registerCoreItemRender(Item item){
 		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(MTS.MODID + ":" + item.getRegistryName().getResourcePath(), "inventory"));
 	}
-
-	private static void registerCoreItemRenderSeries(Item item, int numberMetas){
-		for(byte i=0; i<numberMetas; ++i){
-			ModelResourceLocation model = new ModelResourceLocation(MTS.MODID + ":" + item.getUnlocalizedName(new ItemStack(item, 1, i)).substring(5), "inventory");
-			ModelLoader.setCustomModelResourceLocation(item, i, model);
-		}
-	}
 	
-	private static void registerMultipartItemRender(ItemMultipart item){
-		String itemModID = item.multipartName.substring(0, item.multipartName.indexOf(':'));
-		String itemName = item.multipartName.substring(item.multipartName.indexOf(':') + 1);
-		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(itemModID + ":vehicles/" + itemName, "inventory"));
-	}
-	
-	private static void registerPartItemRender(AItemPart item){
-		String itemModID = item.partName.substring(0, item.partName.indexOf(':'));
-		String itemName = item.partName.substring(item.partName.indexOf(':') + 1);
-		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(itemModID + ":parts/" + itemName, "inventory"));
+	private static void registerPackItemRender(Item item, String wholeName, String renderFolder){
+		String itemModID = wholeName.substring(0, wholeName.indexOf(':'));
+		String itemName = wholeName.substring(wholeName.indexOf(':') + 1);
+		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(itemModID + ":" + renderFolder + "/" + itemName, "inventory"));
 	}
 	
 	private static final IRenderFactory<EntityMultipartD_Moving> MTSRenderFactory = new IRenderFactory<EntityMultipartD_Moving>(){

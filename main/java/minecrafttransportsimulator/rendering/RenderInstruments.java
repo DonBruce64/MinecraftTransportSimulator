@@ -1,24 +1,142 @@
 package minecrafttransportsimulator.rendering;
 
 import java.awt.Color;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSInstruments.Instruments;
+import minecrafttransportsimulator.dataclasses.PackInstrumentObject.PackInstrumentComponent;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.VehicleInstrument;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 
 public abstract class RenderInstruments{
 	protected static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
-	protected static final ResourceLocation instrumentTexture = new ResourceLocation(MTS.MODID, "textures/instruments_aircraft.png");
+	protected static final ResourceLocation controlsTexture = new ResourceLocation(MTS.MODID, "textures/controls_aircraft.png");
 	
-	public static void drawInstrument(EntityMultipartE_Vehicle vehicle, int x, int y, Instruments instrument, boolean hud, byte engineNumber){
-		if(instrument.name().startsWith("AIRCRAFT_")){
-			RenderInstrumentsAircraft.drawAircraftInstrument(vehicle, x, y, instrument, hud, engineNumber);
+	/**Map for texture sheets.  First keyed by vehicle, then keyed by the gauge itself.**/
+	private static Map<String, Map<String, ResourceLocation>> instrumentTextureSheets = new HashMap<String, Map<String, ResourceLocation>>();
+	
+	public static void drawInstrument(EntityMultipartE_Vehicle vehicle, VehicleInstrument instrument, boolean hud, byte engineNumber){
+		//First get the appropriate texture file for this vehicle/instrument combination.
+		if(!instrumentTextureSheets.containsKey(vehicle.pack.general.type)){
+			instrumentTextureSheets.put(vehicle.pack.general.type, new HashMap<String, ResourceLocation>());
+		}
+		if(!instrumentTextureSheets.get(vehicle.pack.general.type).containsKey(instrument.name)){			
+			instrumentTextureSheets.get(vehicle.pack.general.type).put(instrument.name, new ResourceLocation(instrument.name.substring(0, instrument.name.indexOf(':')), "textures/instruments/" + vehicle.pack.general.type + ".png"));
+		}
+		textureManager.bindTexture(instrumentTextureSheets.get(vehicle.pack.general.type).get(instrument.name));
+		
+		//Next get the appropriate starting sector for this instrument.
+		//This is based on a 1024x1024 texture sheet divided into 8 - 128x128 sectors.
+		float textureUStart = (instrument.pack.general.textureXSectorStart - 1)/8F;
+		float textureVStart = (instrument.pack.general.textureYSectorStart - 1)/8F;
+		
+		//If we are in the HUD, invert the rendering to get correct orientation.
+		if(hud){
+			GL11.glScalef(-1, -1, 0);
+		}
+		
+		//Check if the lights are on.  If so, disable the lightmap.
+		boolean lightsOn = lightsOn(vehicle);
+		
+		//Finally, render the instrument based on the JSON definitions.
+		byte currentLayer = 0;
+		for(PackInstrumentComponent component : instrument.pack.components){
+			GL11.glPushMatrix();
+			//Translate slightly away from the instrument location to prevent clipping.
+			GL11.glTranslatef(0, 0, -currentLayer*0.1F);
+			
+			//If the vehicle lights are on, disable the lightmap.
+			if(lightsOn){
+				Minecraft.getMinecraft().entityRenderer.disableLightmap();
+			}else{
+				Minecraft.getMinecraft().entityRenderer.enableLightmap();
+			}
+			
+			//Set the UV location for the render.
+			float layerHeight = 128;
+			float layerUStart = textureUStart;
+			float layerUEnd = textureUStart + 0.125F;
+			float layerVStart = textureVStart + currentLayer/8F;
+			float layerVEnd = textureVStart + (1 + currentLayer)/8F;
+			
+			//If we use a rotation variable, rotate now.
+			//Otherwise, just render normally.
+			if(component.rotationVariable != null && !component.rotationVariable.isEmpty()){
+				double rotation = component.rotationOffset + getVariableValue(vehicle, component.rotationVariable, engineNumber)*component.rotationFactor;
+				GL11.glTranslatef(-component.xRotationPositionOffset, component.yRotationPositionOffset, 0);
+				GL11.glRotated(rotation, 0, 0, 1);
+				GL11.glTranslatef(component.xRotationPositionOffset, -component.yRotationPositionOffset, 0);
+			}
+			
+			//If we have a visibility variable, adjust the UV mapping.
+			if(component.visibilityVariable != null && !component.visibilityVariable.isEmpty()){
+				double height = getVariableValue(vehicle, component.visibilityVariable, engineNumber)*component.visibilityFactor;
+				//If the height is locked, move the UV map to the variable.
+				//If not, increase the UV map height with the variable.
+				if(!component.dynamicVisibility){
+					layerHeight = component.visibleSectionHeight;
+					layerVStart = (float) ((64F + component.visibilityOffset + height - component.visibleSectionHeight/2F)/1024F);
+					layerVEnd = layerVStart + component.visibleSectionHeight/1024F;
+				}else{
+					layerHeight = (float) (component.visibilityOffset + height);
+					layerVStart += (component.visibilityOffset)/1024F;
+					layerVEnd = (float) (layerVStart + layerHeight/1024F);
+					GL11.glTranslatef(0, layerHeight/2F, 0);
+				}
+			}
+			
+			//Finally, render the instrument shape.
+			if(!component.lightOverlay){
+				renderSquareUV(128, layerHeight, 0, layerUStart, layerUEnd, layerVStart, layerVEnd);
+			}else if(lightsOn){
+				GL11.glEnable(GL11.GL_BLEND);
+				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+			    renderSquareUV(128, 128, 0, layerUStart, layerUEnd, layerVStart, layerVEnd);
+			}
+			++currentLayer;
+			GL11.glPopMatrix();
+		}
+		
+		//Reset blend functions changed in light operations.
+		if(lightsOn){
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+			Minecraft.getMinecraft().entityRenderer.enableLightmap();
+		}
+	}
+	
+	private static double getVariableValue(EntityMultipartE_Vehicle vehicle, String variable, byte engineNumber){
+		switch(variable){
+			case("yaw"): return -vehicle.rotationYaw;
+			case("pitch"): return Math.max(Math.min(vehicle.rotationPitch, 25), -25);
+			case("roll"): return vehicle.rotationRoll;
+			case("altitude"): return vehicle.posY - (ConfigSystem.getBooleanConfig("SeaLevelOffset") ? vehicle.worldObj.provider.getAverageGroundLevel() : 0);
+			case("speed"): return vehicle.velocity*ConfigSystem.getDoubleConfig("SpeedFactor")*20;
+			case("turn_coordinator"): return Math.max(Math.min(((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F, 50), -50);
+			case("turn_indicator"): return Math.max(Math.min((vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F, 50), -50);
+			case("slip"): return 75*((EntityMultipartF_Plane) vehicle).sideVec.dotProduct(vehicle.velocityVec);
+			case("vertical_speed"): return vehicle.motionY*20;
+			case("lift_reserve"): return Math.max(Math.min(((EntityMultipartF_Plane) vehicle).trackAngle*3 + 20, 35), -35);
+			case("trim_rudder"): return ((EntityMultipartF_Plane) vehicle).rudderTrim/10F;
+			case("trim_elevator"): return ((EntityMultipartF_Plane) vehicle).elevatorTrim/10F;
+			case("trim_aileron"): return ((EntityMultipartF_Plane) vehicle).aileronTrim/10F;
+			case("electric_power"): return vehicle.electricPower;
+			case("electric_usage"): return Math.min(vehicle.electricFlow*20, 1);
+			case("fuel"): return vehicle.fuel/vehicle.pack.motorized.fuelCapacity*100F;
+			case("rpm"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).RPM : 0;
+			case("rpm_max"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).pack.engine.maxRPM : 0;
+			case("fuel_flow"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).fuelFlow*20F*60F/1000F : 0;
+			case("temp"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).temp : 0;
+			case("oil"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).oilPressure : 0;
+			default: return 0;
 		}
 	}
 	
@@ -51,82 +169,6 @@ public abstract class RenderInstruments{
 	}
 	
     /**
-     * Draws a series of white lines in a polar array.  Used for gauge markers.
-     * Lines draw inward from offset, so offset should be the edge of the gauge.
-     */
-	protected static void drawDialIncrements(int centerX, int centerY, float startingAngle, float endingAngle, int offset, int length, int numberElements){
-    	float angleIncrement = (endingAngle-startingAngle)/(numberElements-1);
-        GL11.glPushMatrix();
-        GL11.glColor4f(1, 1, 1, 1);
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
-        GL11.glLineWidth(2);
-        for(float theta=startingAngle; theta<=endingAngle; theta+=angleIncrement){
-        	GL11.glBegin(GL11.GL_LINES);
-            GL11.glVertex2d(centerX+offset*Math.sin(Math.toRadians(theta)), centerY-offset*Math.cos(Math.toRadians(-theta)));
-            GL11.glVertex2d(centerX+(offset-length)*Math.sin(Math.toRadians(theta)), centerY-(offset-length)*Math.cos(Math.toRadians(-theta)));
-            GL11.glEnd();
-        }
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glPopMatrix();
-    }
-    /**
-     * Draws numbers in a clockwise rotation offset from a center point.
-     * Angles are in degrees.  The number size can be altered with the scale parameter.
-     */
-	protected static void drawDialNumbers(int centerX, int centerY, float startingAngle, float endingAngle,  int offset, int startingNumber, int numberDelta, int numberNumbers, float scale){
-    	float angleIncrement = (endingAngle-startingAngle)/(numberNumbers);
-    	float currentNumber = startingNumber;
-    	float corrector=0;
-    	for(float theta = startingAngle; currentNumber <= numberNumbers*numberDelta+startingNumber; theta += angleIncrement){
-    		if(currentNumber>=100){
-    			corrector=8.5F;
-    		}else if(currentNumber>=10){
-    			corrector=5.5F;
-    		}else{
-    			corrector=1.0F;
-    		}
-        	GL11.glPushMatrix();
-        	GL11.glScalef(scale, scale, 1);
-        	GL11.glTranslated(-corrector,-0.75F,0);
-        	GL11.glTranslated(
-        			(centerX + offset*Math.sin(Math.toRadians(theta)))/scale,
-        			(centerY-offset*Math.cos(Math.toRadians(theta)))/scale,
-        			0);
-        	drawString(String.valueOf(Math.round(currentNumber)), Math.round(-3*scale), Math.round(-3*scale));
-        	GL11.glPopMatrix();
-        	currentNumber+=numberDelta;
-        }
-    }
-    
-    /**
-     * Draws what can be considered a curved, colored line in an arc between the 
-     * specified angles.  Offset is the distance from the center point to the outside
-     * of the line, while color is a standard float color array.
-     */
-	protected static void drawDialColoring(int centerX, int centerY, float startingAngle, float endingAngle, int offset, int thickness, float[] colorRGB){
-        GL11.glPushMatrix();
-        GL11.glColor3f(colorRGB[0], colorRGB[1], colorRGB[2]);
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
-        GL11.glLineWidth(2);
-        for(float theta = startingAngle; theta <= endingAngle; theta += 0.25F){
-        	GL11.glBegin(GL11.GL_LINES);
-	        GL11.glVertex2d(centerX+offset*Math.sin(Math.toRadians(theta)), centerY-offset*Math.cos(-Math.toRadians(theta)));
-	        GL11.glVertex2d(centerX+(offset-thickness)*Math.sin(Math.toRadians(theta)), centerY-(offset-thickness)*Math.cos(-Math.toRadians(theta)));
-	        GL11.glEnd();	        
-	    }	    
-	    GL11.glEnable(GL11.GL_TEXTURE_2D);
-	    GL11.glColor3f(1, 1, 1);
-        GL11.glPopMatrix();
-    }
-    
-    /**
-     * Draws a string without scaling with the bottom-left at x, y.
-     */
-	protected static void drawString(String string, int x, int y){
-		Minecraft.getMinecraft().fontRendererObj.drawString(string, x, y, Color.WHITE.getRGB());
-	}
-	
-    /**
      * Draws a scaled string with the bottom-left at x, y.
      */
 	protected static void drawScaledString(String string, int x, int y, float scale){
@@ -134,15 +176,6 @@ public abstract class RenderInstruments{
     	GL11.glScalef(scale, scale, scale);
     	Minecraft.getMinecraft().fontRendererObj.drawString(string, x, y, Color.WHITE.getRGB());
     	GL11.glPopMatrix();
-    }
-    
-    /**
-     * Rotates an object on the given coordinates.
-     */
-	protected static void rotationHelper(int x, int y, float angle){
-        GL11.glTranslatef(x, y, 0);
-        GL11.glRotatef(angle, 0, 0, 1);
-        GL11.glTranslatef(-x, -y, 0);
     }
 }
 

@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.CreativeTabPack;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.dataclasses.PackInstrumentObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackFileDefinitions;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
@@ -52,7 +53,10 @@ public final class PackParserSystem{
     /**Same function as the multipart map, just for parts.**/
     private static final Map<String, PackPartObject> partPackMap = new LinkedHashMap<String, PackPartObject>();
     
-	/**Maps multipart and part names to their crafting ingredients.*/
+    /**Same function as the multipart map, just for instruments.**/
+    private static final Map<String, PackInstrumentObject> partInstrumentMap = new LinkedHashMap<String, PackInstrumentObject>();
+    
+	/**Maps multipart, part, and instrument names to their crafting ingredients.*/
 	private static final Map<String, List<ItemStack>> craftingItemMap = new HashMap<String, List<ItemStack>>();
   
     /**Listing of log messages.  Stored here on bootstrap and outputted once the logging system comes online.**/
@@ -60,7 +64,6 @@ public final class PackParserSystem{
     
     
     //-----START OF INIT LOGIC-----
-    
     /**Packs should call this upon load to add their multiparts to the mod.**/
     public static void addMultipartDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
@@ -74,7 +77,6 @@ public final class PackParserSystem{
     					MTSRegistry.packTabs.put(modID, new CreativeTabPack(modID));
     				}
     				
-    				//Now that the multipart is registered, set the crafting.
     				List<String> materials = new ArrayList<String>();
     				for(String material : pack.general.materials){
     					materials.add(material);
@@ -82,17 +84,7 @@ public final class PackParserSystem{
     				for(String material : definition.extraMaterials){
     					materials.add(material);
     				}
-    				final List<ItemStack> materialList = new ArrayList<ItemStack>();
-    				for(String itemText : materials){
-    					int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-    					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-    					
-    					int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-    					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-    					
-    					materialList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata));
-    				}
-    				craftingItemMap.put(multipartName, materialList);
+    				registerCrafting(multipartName, materials.toArray(new String[materials.size()]));
     			}
     		}
     	}catch(Exception e){
@@ -107,23 +99,38 @@ public final class PackParserSystem{
 	    	PackPartObject pack =  new Gson().fromJson(jsonReader, PackPartObject.class);
 	    	String partName = modID + ":" + jsonFileName;
 	    	partPackMap.put(partName, pack);
-	    	
-			//Now that the part is registered, set the crafting.
-			final List<ItemStack> materialList = new ArrayList<ItemStack>();
-			for(String itemText : pack.general.materials){
-				int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-				itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-				
-				int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-				itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-				
-				materialList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata));
-			}
-			craftingItemMap.put(partName, materialList);
+	    	registerCrafting(partName, pack.general.materials);
     	}catch(Exception e){
     		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
     		logList.add(e.getMessage());
     	}
+    }
+    
+    /**Packs should call this upon load to add their instrument set to the mod.  This should be the location of the JSON file.**/
+    public static void addInstrumentDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
+    	try{
+	    	PackInstrumentObject pack =  new Gson().fromJson(jsonReader, PackInstrumentObject.class);
+	    	String instrumentName = modID + ":" + jsonFileName;
+    		partInstrumentMap.put(instrumentName, pack);
+    		registerCrafting(instrumentName, pack.general.materials.toArray(new String[pack.general.materials.size()]));
+    	}catch(Exception e){
+    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
+    		logList.add(e.getMessage());
+    	}
+    }
+    
+    private static void registerCrafting(String itemName, String[] materials){
+		final List<ItemStack> materialList = new ArrayList<ItemStack>();
+		for(String itemText : materials){
+			int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+			
+			int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+			
+			materialList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata));
+		}
+		craftingItemMap.put(itemName, materialList);
     }
 
     public static void outputLog(){
@@ -193,5 +200,15 @@ public final class PackParserSystem{
 			case "seat": return ItemPartSeat.class;
 			default: return null;
 		}
+    }
+    
+    
+    //-----START OF INSTRUMENT LOOKUP LOGIC-----
+    public static PackInstrumentObject getInstrument(String name){
+        return partInstrumentMap.get(name);
+    }
+    
+    public static Set<String> getAllInstruments(){
+        return partInstrumentMap.keySet();
     }
 }
