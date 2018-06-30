@@ -22,10 +22,10 @@ public class PackInstrumentObject{
     	public float rotationFactor;
     	
     	public String visibilityVariable;
+    	public boolean dynamicVisibility;
     	public int visibleSectionHeight;
     	public float visibilityOffset;
     	public float visibilityFactor;
-    	public boolean dynamicVisibility;
     	
     	public boolean lightOverlay;
     }
