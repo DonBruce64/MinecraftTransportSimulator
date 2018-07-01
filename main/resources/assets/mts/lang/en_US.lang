@@ -187,6 +187,7 @@ item.key.name=Key
 item.manual.name=MTS Manual (READ ME!)
 
 tile.propellerbench.name=Propeller Bench
+tile.enginehoist.name=Engine Hoist
 tile.fuelpump.name=Fuel Pump
 tile.fuelpump.level=LVL:
 tile.fuelpump.dispensed=DISP:

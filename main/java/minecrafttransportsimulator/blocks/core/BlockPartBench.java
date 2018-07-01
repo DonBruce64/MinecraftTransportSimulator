@@ -14,9 +14,9 @@ import net.minecraft.world.World;
 
 public class BlockPartBench extends ABlockRotateable{
 	
-	public final String partTypes;
+	public final String[] partTypes;
 	
-	public BlockPartBench(String partTypes){
+	public BlockPartBench(String[] partTypes){
 		super(Material.IRON);
 		this.fullBlock = false;
 		this.setHardness(5.0F);

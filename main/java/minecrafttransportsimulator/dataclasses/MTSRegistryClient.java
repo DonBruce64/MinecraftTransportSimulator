@@ -46,6 +46,7 @@ public final class MTSRegistryClient{
 		registerCoreItemRender(MTSRegistry.wrench);
 		registerCoreItemRender(MTSRegistry.key);
 		registerCoreItemRender(MTSRegistry.itemBlockPropellerBench);
+		registerCoreItemRender(MTSRegistry.itemBlockEngineHoist);
 		registerCoreItemRender(MTSRegistry.itemBlockFuelPump);
 		registerCoreItemRender(MTSRegistry.itemBlockPole);
 		registerCoreItemRender(MTSRegistry.itemBlockPoleBase);

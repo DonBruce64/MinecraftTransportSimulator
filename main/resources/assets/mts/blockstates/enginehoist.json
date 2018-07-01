@@ -1,0 +1,16 @@
+{
+    "multipart": [
+        {   "when": { "rotation": "north" },
+            "apply": { "model": "mts:enginehoist", "y" : 180 }
+        },
+        {   "when": { "rotation": "east" },
+            "apply": { "model": "mts:enginehoist", "y" : 270}
+        },
+        {   "when": { "rotation": "south" },
+            "apply": { "model": "mts:enginehoist"}
+        },
+        {   "when": { "rotation": "west" },
+            "apply": { "model": "mts:enginehoist", "y" : 90}
+        }
+    ]
+}

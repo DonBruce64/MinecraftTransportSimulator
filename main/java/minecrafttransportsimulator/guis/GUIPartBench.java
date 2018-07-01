@@ -27,7 +27,7 @@ import net.minecraft.util.ResourceLocation;
 
 public class GUIPartBench extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting_parts.png");	
-	private final String partTypes;
+	private final String[] partTypes;
 	private final EntityPlayer player;
 	
 	private GuiButton leftPackButton;
@@ -208,26 +208,28 @@ public class GUIPartBench extends GuiScreen{
 		boolean passedPack = false;
 		boolean passedPart = false;
 		for(String name : MTSRegistry.partItemMap.keySet()){
-			if(PackParserSystem.getPartPack(name).general.type.equals(partTypes)){
-				if(packName.isEmpty()){
-					packName = name.substring(0, name.indexOf(':'));
-				}else if(!passedPack && !name.startsWith(packName)){
-					prevPackName = name.substring(0, name.indexOf(':'));
-				}
-				if(name.startsWith(packName)){
-					passedPack = true;
-					if(partName.isEmpty()){
-						partName = name;
-						passedPart = true;
-					}else if(partName.equals(name)){
-						passedPart = true;
-					}else if(!passedPart){
-						prevPartName = name;
-					}else if(nextPartName.isEmpty()){
-						nextPartName = name;
+			for(String partType : partTypes){
+				if(PackParserSystem.getPartPack(name).general.type.equals(partType)){
+					if(packName.isEmpty()){
+						packName = name.substring(0, name.indexOf(':'));
+					}else if(!passedPack && !name.startsWith(packName)){
+						prevPackName = name.substring(0, name.indexOf(':'));
 					}
-				}else if(nextPackName.isEmpty() && passedPack){
-					nextPackName = name.substring(0, name.indexOf(':'));
+					if(name.startsWith(packName)){
+						passedPack = true;
+						if(partName.isEmpty()){
+							partName = name;
+							passedPart = true;
+						}else if(partName.equals(name)){
+							passedPart = true;
+						}else if(!passedPart){
+							prevPartName = name;
+						}else if(nextPartName.isEmpty()){
+							nextPartName = name;
+						}
+					}else if(nextPackName.isEmpty() && passedPack){
+						nextPackName = name.substring(0, name.indexOf(':'));
+					}
 				}
 			}
 		}

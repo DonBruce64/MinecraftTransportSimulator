@@ -112,8 +112,10 @@ public final class MTSRegistry{
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
 	
 	//Crafting bench blocks.
-	public static final Block propellerBench = new BlockPartBench("propeller").setCreativeTab(coreTab);
+	public static final Block propellerBench = new BlockPartBench(new String[]{"propeller"}).setCreativeTab(coreTab);
 	public static final Item itemBlockPropellerBench = new ItemBlock(propellerBench);
+	public static final Block engineHoist = new BlockPartBench(new String[]{"engine_aircraft", "engine_car"}).setCreativeTab(coreTab);
+	public static final Item itemBlockEngineHoist = new ItemBlock(engineHoist);
 	
 	//Fuel pump.
 	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(coreTab);		
