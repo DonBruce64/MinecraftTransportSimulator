@@ -180,6 +180,8 @@ public final class MTSRegistry{
 	 */
 	@SubscribeEvent
 	public static void registerBlocks(RegistryEvent.Register<Block> event){
+		//Need to keep track of which TE classes we've registered so we don't double-register them for blocks that use the same TE.
+		List<Class<? extends TileEntity>> registeredTileEntityClasses = new ArrayList<Class<? extends TileEntity>>();
 		for(Field field : MTSRegistry.class.getFields()){
 			if(field.getType().equals(Block.class)){
 				try{
@@ -188,7 +190,10 @@ public final class MTSRegistry{
 					event.getRegistry().register(block.setRegistryName(name).setUnlocalizedName(name));
 					if(block instanceof ITileEntityProvider){
 						Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
-						GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
+						if(!registeredTileEntityClasses.contains(tileEntityClass)){
+							GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
+							registeredTileEntityClasses.add(tileEntityClass);
+						}
 					}
 				}catch(Exception e){
 					e.printStackTrace();
