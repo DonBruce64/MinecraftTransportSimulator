@@ -319,6 +319,15 @@ public final class MTSRegistry{
 				'A', Items.IRON_INGOT,
 				'B', Items.DIAMOND,
 				'C', Blocks.ANVIL);
+		//Engine hoist
+		registerRecipe(new ItemStack(itemBlockEngineHoist),
+				"AAA",
+				"BDA",
+				" CC",
+				'A', Items.IRON_INGOT,
+				'B', Blocks.IRON_BARS,
+				'C', Blocks.IRON_BLOCK,
+				'D', new ItemStack(Items.DYE, 1, 1));
 		
 		//Fuel pump
 		registerRecipe(new ItemStack(itemBlockFuelPump),
