@@ -93,7 +93,7 @@ public final class PackParserSystem{
     	}
     }
     
-    /**Packs should call this upon load to add their parts to the mod.  This should be the location of the JSON file.**/
+    /**Packs should call this upon load to add their parts to the mod.**/
     public static void addPartDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
 	    	PackPartObject pack =  new Gson().fromJson(jsonReader, PackPartObject.class);
@@ -106,7 +106,7 @@ public final class PackParserSystem{
     	}
     }
     
-    /**Packs should call this upon load to add their instrument set to the mod.  This should be the location of the JSON file.**/
+    /**Packs should call this upon load to add their instrument set to the mod.**/
     public static void addInstrumentDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
 	    	PackInstrumentObject pack =  new Gson().fromJson(jsonReader, PackInstrumentObject.class);
@@ -119,6 +119,7 @@ public final class PackParserSystem{
     	}
     }
     
+    /**Helper method to parse crafting strings and register items in the internal MTS crafting system.**/
     private static void registerCrafting(String itemName, String[] materials){
 		final List<ItemStack> materialList = new ArrayList<ItemStack>();
 		for(String itemText : materials){
