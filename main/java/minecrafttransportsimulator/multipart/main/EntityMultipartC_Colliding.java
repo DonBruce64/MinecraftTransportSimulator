@@ -248,7 +248,7 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 				}
 				if(hardnessHitThisTick > currentMass/100){
 					if(!worldObj.isRemote){
-						this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
+						this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord, true);
 					}
 					return -2;
 				}else if(collidedBlockPos.isEmpty()){
@@ -257,7 +257,7 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 			}
 			if(collisionDepth > 0.3){
 				if(!worldObj.isRemote){
-					this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
+					this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord, true);
 				}
 				return -2;	
 			}

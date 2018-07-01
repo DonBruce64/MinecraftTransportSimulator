@@ -46,7 +46,7 @@ public class PacketMultipartAttacked extends APacketMultipartPlayer{
 									stackTag.setByte("brokenWindows", multipart.brokenWindows);
 									stack.setTagCompound(stackTag);
 									multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, multipart.posX, multipart.posY, multipart.posZ, stack));
-									multipart.setDead();
+									multipart.destroyAtPosition(player.posX, player.posY, player.posZ, false);
 								}else{
 									MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehicleowned"), (EntityPlayerMP) player);
 								}

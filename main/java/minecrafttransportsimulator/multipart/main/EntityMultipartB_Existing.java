@@ -20,6 +20,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.IInventory;
@@ -334,11 +335,24 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	}
 	
 	/**
-	 * Called when this multipart crashes.  Explosions may not occur 
-	 * depending on config settings or a lack of fuel or explodable cargo.
+	 * Call this to remove this multipart.  Set crashed to true to indicate a crash and damage players.
+	 * Explosions may not occur in crashes depending on config settings or a lack of fuel or explodable cargo.
 	 */
-	protected void destroyAtPosition(double x, double y, double z){
+	public void destroyAtPosition(double x, double y, double z, boolean crashed){
 		this.setDead();
+		//If we are destroyed on the server, make sure to drop all the parts we have on the ground.
+		if(!worldObj.isRemote && !crashed){
+			for(APart part : getMultipartParts()){
+				if(part.getItemForPart() != null){
+					ItemStack partStack = new ItemStack(part.getItemForPart());
+					NBTTagCompound stackTag = part.getPartNBTTag();
+					if(stackTag != null){
+						partStack.setTagCompound(stackTag);
+					}
+					worldObj.spawnEntityInWorld(new EntityItem(worldObj, part.partPos.xCoord, part.partPos.yCoord, part.partPos.zCoord, partStack));
+				}
+			}
+		}
 	}
 	
 	protected float getCurrentMass(){

@@ -98,29 +98,31 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 	}
 	
 	@Override
-	protected void destroyAtPosition(double x, double y, double z){
-		super.destroyAtPosition(x, y, z);
-		//First find the controller to see who to display as the killer in the death message.
-		Entity controller = null;
-		for(Entity passenger : this.getPassengers()){
-			if(this.getSeatForRider(passenger).isController && controller != null){
-				controller = passenger;
-				break;
+	public void destroyAtPosition(double x, double y, double z, boolean crashed){
+		super.destroyAtPosition(x, y, z, crashed);
+		if(crashed){
+			//First find the controller to see who to display as the killer in the death message.
+			Entity controller = null;
+			for(Entity passenger : this.getPassengers()){
+				if(this.getSeatForRider(passenger).isController && controller != null){
+					controller = passenger;
+					break;
+				}
 			}
-		}
-		
-		//Now damage all passengers, including the controller.
-		for(Entity passenger : this.getPassengers()){
-			if(passenger.equals(controller)){
-				passenger.attackEntityFrom(new DamageSourceCrash(null, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
-			}else{
-				passenger.attackEntityFrom(new DamageSourceCrash(controller, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
+			
+			//Now damage all passengers, including the controller.
+			for(Entity passenger : this.getPassengers()){
+				if(passenger.equals(controller)){
+					passenger.attackEntityFrom(new DamageSourceCrash(null, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
+				}else{
+					passenger.attackEntityFrom(new DamageSourceCrash(controller, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
+				}
 			}
-		}
-		
-		//Oh, and add explosions.  Because those are always fun.
-		if(ConfigSystem.getBooleanConfig("Explosions")){
-			worldObj.newExplosion(this, x, y, z, (float) (fuel/1000F + 1F), true, true);
+			
+			//Oh, and add explosions.  Because those are always fun.
+			if(ConfigSystem.getBooleanConfig("Explosions")){
+				worldObj.newExplosion(this, x, y, z, (float) (fuel/1000F + 1F), true, true);
+			}
 		}
 	}
 	

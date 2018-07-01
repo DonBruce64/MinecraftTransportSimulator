@@ -14,9 +14,7 @@ import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInit;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartClientPartRemoval;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.SoundEvents;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.Vec3d;
@@ -89,19 +87,6 @@ public abstract class EntityMultipartA_Base extends Entity{
 	@Override
 	public void setDead(){
 		super.setDead();
-		//If we are set dead on the server, make sure to drop all the parts we have on the ground.
-		if(!worldObj.isRemote){
-			for(APart part : getMultipartParts()){
-				if(part.getItemForPart() != null){
-					ItemStack partStack = new ItemStack(part.getItemForPart());
-					NBTTagCompound stackTag = part.getPartNBTTag();
-					if(stackTag != null){
-						partStack.setTagCompound(stackTag);
-					}
-					worldObj.spawnEntityInWorld(new EntityItem(worldObj, part.partPos.xCoord, part.partPos.yCoord, part.partPos.zCoord, partStack));
-				}
-			}
-		}
 	}
 	
     @Override
