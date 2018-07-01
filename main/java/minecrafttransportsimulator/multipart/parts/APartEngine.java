@@ -52,7 +52,6 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 	public static final float engineOverheatTemp2 = 121.111F;
 	public static final float engineFailureTemp = 132.222F;
 	public static final float engineOilDanger = 40F;
-	public static final float engineOilCritical = 10F;
 	
 	
 	public APartEngine(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
