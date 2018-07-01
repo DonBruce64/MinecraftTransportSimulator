@@ -8,11 +8,11 @@ import minecrafttransportsimulator.guis.GUIManual;
 import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.items.core.ItemManual;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
+import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.systems.SFXSystem.FXPart;
-import minecrafttransportsimulator.systems.SFXSystem.SoundPart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3d;
@@ -22,7 +22,8 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**Class responsible for performing client-only updates and operations.
- * Any version-updatable, client-based method should be put in here.
+ * This class acts as a forwarding system rather than code executor.
+ * Code operations should be in their own classes, if possible.
  * 
  * @author don_bruce
  */
@@ -55,8 +56,13 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	@Override
-	public void updateSoundPart(SoundPart part, World world){
-		SFXSystem.doSound(part, world);
+	public void updateVehicleSounds(EntityMultipartE_Vehicle vehicle, World world){
+		SFXSystem.doSound(vehicle, world);
+	}
+	
+	@Override
+	public void addVehicleEngineSound(EntityMultipartE_Vehicle vehicle, APartEngine engine){
+		SFXSystem.addVehicleEngineSound(vehicle, engine);
 	}
 	
 	@Override

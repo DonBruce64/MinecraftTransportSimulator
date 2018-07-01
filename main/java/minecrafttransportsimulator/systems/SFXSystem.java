@@ -3,11 +3,13 @@ package minecrafttransportsimulator.systems;
 import java.util.HashMap;
 import java.util.Map;
 
+import minecrafttransportsimulator.baseclasses.VehicleSound;
+import minecrafttransportsimulator.baseclasses.VehicleSound.SoundTypes;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
+import minecrafttransportsimulator.multipart.parts.APartEngine;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.MovingSound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.particle.ParticleDrip;
@@ -23,7 +25,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public final class SFXSystem{
 	private static SoundHandler soundHandler;
 	private static final Map<String, SoundEvent> cachedSoundEvents = new HashMap<String, SoundEvent>();
-	private static final Map<SoundPart, ISound> soundMap = new HashMap<SoundPart, ISound>();
 
 	/**
 	 * Plays a single sound in the same way as World.playSound.
@@ -50,19 +51,26 @@ public final class SFXSystem{
 		return cachedSoundEvents.get(name);
 	}
 	
-	public static void doSound(SoundPart part, World world){
+	public static void doSound(EntityMultipartE_Vehicle vehicle, World world){
 		if(world.isRemote){
 			soundHandler = Minecraft.getMinecraft().getSoundHandler();
-			if(part.shouldSoundBePlaying()){
-				if(!soundMap.containsKey(part)){
-					soundMap.put(part, part.getNewSound());
-					if(!soundHandler.isSoundPlaying(soundMap.get(part))){
-						soundHandler.playSound(soundMap.get(part));
-					}
-				}
-			}else if(soundMap.containsKey(part)){
-				soundMap.remove(part);
+			//If we are a new vehicle without sounds, init them.
+			//If we are old, we can assume to not have any sounds right now.
+			if(vehicle.soundsNeedInit){
+				vehicle.initSounds();
+				vehicle.soundsNeedInit = false;
 			}
+			for(VehicleSound sound : vehicle.getSounds()){
+				if(!sound.isDonePlaying() && !soundHandler.isSoundPlaying(sound) && sound.isSoundActive()){
+					soundHandler.playSound(sound);
+				}
+			}
+		}
+	}
+	
+	public static void addVehicleEngineSound(EntityMultipartE_Vehicle vehicle, APartEngine engine){
+		if(vehicle.worldObj.isRemote){
+			vehicle.addSound(SoundTypes.ENGINE, engine);
 		}
 	}
 	
@@ -108,26 +116,6 @@ public final class SFXSystem{
 			super.onUpdate();
 			this.setRBGColorF(1, 1, 1);
 		}
-	}
-	
-	public static interface SoundPart{		
-		@SideOnly(Side.CLIENT)
-		public MovingSound getNewSound();
-		
-		@SideOnly(Side.CLIENT)
-		public abstract boolean shouldSoundBePlaying();
-		
-		@SideOnly(Side.CLIENT)
-		public abstract Vec3d getSoundPosition();
-		
-		@SideOnly(Side.CLIENT)
-		public abstract Vec3d getSoundMotion();
-		
-		@SideOnly(Side.CLIENT)
-		public abstract float getSoundVolume();
-		
-		@SideOnly(Side.CLIENT)
-		public abstract float getSoundPitch();
 	}
 	
 	public static interface FXPart{

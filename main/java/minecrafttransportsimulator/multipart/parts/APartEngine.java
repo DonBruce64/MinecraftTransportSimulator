@@ -6,13 +6,10 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
-import minecrafttransportsimulator.sounds.AttenuatedSound;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.systems.SFXSystem.FXPart;
-import minecrafttransportsimulator.systems.SFXSystem.SoundPart;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.MovingSound;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
@@ -21,7 +18,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class APartEngine extends APart implements SoundPart, FXPart{
+public abstract class APartEngine extends APart implements FXPart{
 	
 	//NBT data
 	public boolean isCreative;
@@ -69,6 +66,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 		brokenStarter = dataTag.getBoolean("brokenStarter");
 		hours = dataTag.getDouble("hours");
 		RPM = dataTag.getDouble("rpm");
+		MTS.proxy.addVehicleEngineSound(vehicle, this);
 	}
 	
 	@Override
@@ -242,7 +240,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 			}else if(state.equals(EngineStates.RUNNING)){
 				state = EngineStates.ENGINE_OFF;
 				internalFuel = 100;
-				//MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
+				MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
 			}
 		}
 	}
@@ -308,7 +306,7 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 		if(!multipart.worldObj.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.START));
 		}else{
-			//MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
+			MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
 		}
 	}
 	
@@ -348,42 +346,6 @@ public abstract class APartEngine extends APart implements SoundPart, FXPart{
 	
 	protected boolean isInLiquid(){
 		return multipart.worldObj.getBlockState(new BlockPos(partPos)).getMaterial().isLiquid();
-	}
-
-	@Override
-	@SideOnly(Side.CLIENT)
-	public MovingSound getNewSound(){
-		return new AttenuatedSound(partName + "_running", this);
-	}
-
-	@Override
-	@SideOnly(Side.CLIENT)
-	public boolean shouldSoundBePlaying(){
-		return (state.running || internalFuel > 0) && !multipart.isDead;
-	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public Vec3d getSoundPosition(){
-		return partPos;
-	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public Vec3d getSoundMotion(){
-		return new Vec3d(multipart.motionX, multipart.motionY, multipart.motionZ);
-	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public float getSoundVolume(){
-		return (float) (30*RPM/2000F);
-	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public float getSoundPitch(){
-		return (float) (RPM/(pack.engine.maxRPM/2F));
 	}
 
 	@Override

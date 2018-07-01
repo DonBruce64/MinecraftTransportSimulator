@@ -50,7 +50,7 @@ public class PartPropeller extends APart{
 	
 	@Override
 	public boolean isValid(){
-		return connectedEngine != null;
+		return connectedEngine != null ? super.isValid() : false;
 	}
 	
 	@Override

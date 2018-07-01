@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.VehicleSound;
+import minecrafttransportsimulator.baseclasses.VehicleSound.SoundTypes;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackInstrumentObject;
@@ -13,12 +16,15 @@ import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.systems.SFXSystem.FXPart;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**This class is built on the base multipart D level and is is tailored for moving vehicles 
  * such as planes, helicopters, and automobiles.
@@ -28,6 +34,8 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
+	public boolean soundsNeedInit;
+	public boolean hornOn;
 	public byte throttle;
 	public double fuel;
 	public double electricPower = 12;
@@ -39,6 +47,7 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 	private final Map<Byte, APartEngine> engineByNumber = new HashMap<Byte, APartEngine>();
 	private final Map<Byte, VehicleInstrument> instruments = new HashMap<Byte, VehicleInstrument>();
 	private final List<LightTypes> lightsOn = new ArrayList<LightTypes>();
+	private final List<VehicleSound> sounds = new ArrayList<VehicleSound>();
 	
 	public EntityMultipartE_Vehicle(World world){
 		super(world);
@@ -66,6 +75,14 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 			electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
 			electricFlow = electricUsage;
 			electricUsage = 0;
+			
+			//Update SFX.
+			MTS.proxy.updateVehicleSounds(this, worldObj);
+			for(APart part : this.getMultipartParts()){
+				if(part instanceof FXPart){
+					MTS.proxy.updateFXPart((FXPart) part, worldObj);
+				}
+			}
 		}
 	}
 
@@ -124,6 +141,7 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 					if(type.contains("engine")){
 						if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
 							engineByNumber.put(engineNumber, (APartEngine) part);
+							
 						}
 						++engineNumber;
 					}
@@ -182,6 +200,8 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 		motionYaw += getTurningFactor();
 	}
 	
+	
+	//-----START OF ENGINE CODE-----
 	/**
 	 * Gets the number of bays available for engines.
 	 * Cached for efficiency.
@@ -207,6 +227,8 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 		return engineByNumber.get(number);
 	}
 	
+	
+	//-----START OF LIGHT CODE-----
 	public void changeLightStatus(LightTypes light, boolean isOn){
 		if(isOn){
 			if(!lightsOn.contains(light)){
@@ -223,6 +245,8 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 		return lightsOn.contains(light);
 	}
 	
+	
+	//-----START OF INSTRUMENT CODE-----
 	public VehicleInstrument getInstrumentInfoInSlot(byte slot){
 		return instruments.containsKey(slot) ? instruments.get(slot) : null;
 	}
@@ -234,10 +258,32 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 			instruments.put(slot, new VehicleInstrument(instrument));
 		}
 	}
-		
+	
+	//-----START OF SOUND CODE-----
+	@SideOnly(Side.CLIENT)
+	public final void initSounds(){
+		if(pack.motorized.hornSound != null){
+			addSound(SoundTypes.HORN, null);
+		}
+		if(pack.motorized.sirenSound != null){
+			addSound(SoundTypes.SIREN, null);
+		}
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public final List<VehicleSound> getSounds(){
+		return this.sounds;
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public final void addSound(SoundTypes typeToAdd, APart optionalPart){
+		sounds.add(new VehicleSound(this, optionalPart, typeToAdd));
+	}
+			
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
-		super.readFromNBT(tagCompound);
+    	this.soundsNeedInit = worldObj.isRemote && pack == null; 
+    	super.readFromNBT(tagCompound);
 		this.throttle=tagCompound.getByte("throttle");
 		this.fuel=tagCompound.getDouble("fuel");
 		this.electricPower=tagCompound.getDouble("electricPower");

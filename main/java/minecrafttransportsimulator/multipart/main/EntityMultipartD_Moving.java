@@ -9,8 +9,6 @@ import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartDeltas;
 import minecrafttransportsimulator.systems.RotationSystem;
-import minecrafttransportsimulator.systems.SFXSystem.FXPart;
-import minecrafttransportsimulator.systems.SFXSystem.SoundPart;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -78,21 +76,9 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 				}
 			}
 			
-			//Finally, update parts and sounds.
+			//Finally, update parts.
 			for(APart part : this.getMultipartParts()){
 				part.updatePart();
-				if(part instanceof SoundPart){
-					MTS.proxy.updateSoundPart((SoundPart) part, worldObj);
-				}
-				if(part instanceof FXPart){
-					MTS.proxy.updateFXPart((FXPart) part, worldObj);
-				}
-			}
-			if(this instanceof SoundPart){
-				MTS.proxy.updateSoundPart((SoundPart) this, worldObj);
-			}
-			if(this instanceof FXPart){
-				MTS.proxy.updateFXPart((FXPart) this, worldObj);
 			}
 		}
 	}

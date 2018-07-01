@@ -35,6 +35,7 @@ public abstract class APart{
 	
 	public Vec3d partPos;
 	
+	private boolean isValid;
 	private ResourceLocation modelLocation;
 		
 	public APart(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
@@ -45,6 +46,7 @@ public abstract class APart{
 		this.partName = partName;
 		this.pack = PackParserSystem.getPartPack(partName);
 		this.partPos = multipart.getPositionVector().add(offset);
+		this.isValid = true;
 	}
 	
 	/**Called right before this part is added to the multipart.
@@ -53,7 +55,7 @@ public abstract class APart{
 	 * is still valid and should be saved.
 	 */
 	public boolean isValid(){
-		return true;
+		return this.isValid;
 	}
 
 	/**Called when checking if this part can be interacted with.
@@ -77,7 +79,9 @@ public abstract class APart{
 	/**Called when the master multipart removes this part.
 	 * Allows for parts to trigger logic that happens when they are removed.
 	 */
-	public void removePart(){}
+	public void removePart(){
+		this.isValid = false;
+	}
 	
 	/**Return the part data in NBT form.
 	 * This is called when removing the part from a multipart to return an item.

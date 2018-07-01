@@ -8,18 +8,12 @@ import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartEngineCar;
 import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
-import minecrafttransportsimulator.sounds.AttenuatedSound;
-import minecrafttransportsimulator.systems.SFXSystem.SoundPart;
-import net.minecraft.client.audio.MovingSound;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 
-public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle implements SoundPart{	
-	public boolean hornOn;
+public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle{	
 	//Note that angle variable should be divided by 10 to get actual angle.
 	public short steeringAngle;
 	public short steeringCooldown;
@@ -32,7 +26,6 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle impleme
 	private double gravitationalForce;//kg*m/ticks^2
 	private double gravitationalTorque;//kg*m^2/ticks^2
 	private PartEngineCar engine;
-	private AttenuatedSound hornSound;
 	
 	public EntityMultipartF_Car(World world){
 		super(world);
@@ -117,43 +110,7 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle impleme
 	public float getSteerAngle(){
 		return -steeringAngle/10F;
 	}
-
-	@Override
-	@SideOnly(Side.CLIENT)
-	public MovingSound getNewSound(){
-		return new AttenuatedSound(pack.car.hornSound, this);
-	}
-
-	@Override
-	@SideOnly(Side.CLIENT)
-	public boolean shouldSoundBePlaying(){
-		return hornOn && !isDead;
-	}
 	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public Vec3d getSoundPosition(){
-		return this.getPositionVector();
-	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public Vec3d getSoundMotion(){
-		return new Vec3d(this.motionX, this.motionY, this.motionZ);
-	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public float getSoundVolume(){
-		return 5.0F;
-	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public float getSoundPitch(){
-		return 1.0F;
-	}
-
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);

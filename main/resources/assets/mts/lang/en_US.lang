@@ -85,6 +85,7 @@ input.car.shift_u=ShiftUp
 input.car.shift_d=ShiftDown
 input.car.start=StartEngine
 input.car.horn=Horn
+input.car.siren=Siren
 input.car.lights=Lights
 input.car.park=ParkingBrake
 input.car.zoom_i=ZoomIn

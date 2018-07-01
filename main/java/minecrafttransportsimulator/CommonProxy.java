@@ -3,9 +3,10 @@ package minecrafttransportsimulator;
 import java.io.File;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
+import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.SFXSystem.FXPart;
-import minecrafttransportsimulator.systems.SFXSystem.SoundPart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -23,6 +24,7 @@ public class CommonProxy{
 	public void initControls(){}
 	public void openGUI(Object clicked, EntityPlayer clicker){}
 	public void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){}
-	public void updateSoundPart(SoundPart part, World world){}
+	public void updateVehicleSounds(EntityMultipartE_Vehicle vehicle, World world){}
+	public void addVehicleEngineSound(EntityMultipartE_Vehicle vehicle, APartEngine engine){}
 	public void updateFXPart(FXPart part, World world){}
 }

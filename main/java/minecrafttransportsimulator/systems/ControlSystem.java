@@ -392,8 +392,10 @@ public final class ControlSystem{
 			}
 		}
 		
-		//Check steering, turn signals, and regular lights.
-		if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_R.isPressed()){
+		//Check steering, turn signals, and lights.
+		if(ControlsKeyboardDynamic.CAR_SIREN.isPressed()){
+			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.EMERGENCYLIGHT));
+		}else if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_R.isPressed()){
 			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.RIGHTTURNLIGHT));
 		}else if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_L.isPressed()){
 			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.LEFTTURNLIGHT));
@@ -620,6 +622,7 @@ public final class ControlSystem{
 		CAR_CHANGEHUD(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_MOD),
 		CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD),
 		CAR_STOP(ControlsKeyboard.CAR_START, ControlsKeyboard.CAR_MOD),
+		CAR_SIREN(ControlsKeyboard.CAR_LIGHTS, ControlsKeyboard.CAR_MOD),
 		CAR_TURNSIGNAL_R(ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_LIGHTS),
 		CAR_TURNSIGNAL_L(ControlsKeyboard.CAR_TURN_L, ControlsKeyboard.CAR_LIGHTS);
 		

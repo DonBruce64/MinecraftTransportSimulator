@@ -47,6 +47,8 @@ public class PackMultipartObject{
     public class PackMotorizedConfig{
     	/**Capacity of the vehicle's fuel tank (in mB).**/
     	public int fuelCapacity;
+    	public String hornSound;
+    	public String sirenSound;
         public List<PackInstrument> instruments = new ArrayList<PackInstrument>();
         public List<PackControl> controls = new ArrayList<PackControl>();
     }
@@ -66,7 +68,6 @@ public class PackMultipartObject{
         public boolean isFrontWheelDrive;
         public boolean isRearWheelDrive;
         public float dragCoefficient;
-        public String hornSound;
     }
     
     public class PackPart{

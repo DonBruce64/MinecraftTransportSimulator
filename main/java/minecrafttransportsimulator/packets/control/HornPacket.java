@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -37,11 +37,11 @@ public class HornPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartF_Car thisEntity;
+					EntityMultipartE_Vehicle thisEntity;
 					if(ctx.side.isServer()){
-						thisEntity = (EntityMultipartF_Car) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						thisEntity = (EntityMultipartE_Vehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 					}else{
-						thisEntity = (EntityMultipartF_Car) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						thisEntity = (EntityMultipartE_Vehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
 						thisEntity.hornOn = message.hornOn;
