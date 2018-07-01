@@ -1,0 +1,16 @@
+{
+    "multipart": [
+        {   "when": { "rotation": "north" },
+            "apply": { "model": "mts:draftingtable", "y" : 180 }
+        },
+        {   "when": { "rotation": "east" },
+            "apply": { "model": "mts:draftingtable", "y" : 270}
+        },
+        {   "when": { "rotation": "south" },
+            "apply": { "model": "mts:draftingtable"}
+        },
+        {   "when": { "rotation": "west" },
+            "apply": { "model": "mts:draftingtable", "y" : 90}
+        }
+    ]
+}

@@ -33,9 +33,4 @@ public class BlockPartBench extends ABlockRotateable{
 		}
 		return true;
 	}
-	
-	@Override
-	public ATileEntityRotatable createNewTileEntity(World worldIn, int meta){
-		return new TileEntityPartBench();
-	}
 }

@@ -5,7 +5,7 @@ import minecrafttransportsimulator.packets.tileentities.TileEntityClientServerHa
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 
-public abstract class ATileEntityRotatable extends TileEntity{
+public class TileEntityRotatable extends TileEntity{
 	public byte rotation;
 
 	@Override
@@ -28,6 +28,4 @@ public abstract class ATileEntityRotatable extends TileEntity{
         tagCompound.setByte("rotation", rotation);
         return tagCompound;
     }
-
-
 }

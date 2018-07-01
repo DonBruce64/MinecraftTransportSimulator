@@ -24,7 +24,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 
-public class TileEntityFuelPump extends ATileEntityRotatable implements IFluidTank, IFluidHandler, ITickable{
+public class TileEntityFuelPump extends TileEntityRotatable implements IFluidTank, IFluidHandler, ITickable{
     private EntityMultipartE_Vehicle connectedVehicle;
     public int totalTransfered;
     

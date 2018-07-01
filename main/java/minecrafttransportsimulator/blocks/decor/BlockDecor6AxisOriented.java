@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.decor;
 
-import minecrafttransportsimulator.blocks.core.ATileEntityRotatable;
+import minecrafttransportsimulator.blocks.core.TileEntityRotatable;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
@@ -23,7 +23,7 @@ public class BlockDecor6AxisOriented extends BlockDecor6AxisRegular implements I
 	
 	@Override
     public boolean canConnectOnSide(IBlockAccess access, BlockPos pos, EnumFacing side){
-		ATileEntityRotatable tile = (ATileEntityRotatable) access.getTileEntity(pos);
+		TileEntityRotatable tile = (TileEntityRotatable) access.getTileEntity(pos);
 		if(tile != null){
 			return !side.equals(EnumFacing.VALUES[tile.rotation]);
 		}else{
@@ -34,7 +34,7 @@ public class BlockDecor6AxisOriented extends BlockDecor6AxisRegular implements I
 	@Override
     public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase entity, ItemStack stack){
         super.onBlockPlacedBy(world, pos, state, entity, stack);
-        ((ATileEntityRotatable) world.getTileEntity(pos)).rotation = (byte) entity.getHorizontalFacing().getOpposite().ordinal();
+        ((TileEntityRotatable) world.getTileEntity(pos)).rotation = (byte) entity.getHorizontalFacing().getOpposite().ordinal();
     }
 	
 	@Override
@@ -46,7 +46,7 @@ public class BlockDecor6AxisOriented extends BlockDecor6AxisRegular implements I
 	@Override
 	@SuppressWarnings("deprecation")
     public IBlockState getActualState(IBlockState state, IBlockAccess access, BlockPos pos){
-		ATileEntityRotatable tile = (ATileEntityRotatable) access.getTileEntity(pos);
+		TileEntityRotatable tile = (TileEntityRotatable) access.getTileEntity(pos);
 		if(tile != null){
 			return super.getActualState(state, access, pos).withProperty(ROTATION, EnumFacing.VALUES[tile.rotation]);
 		}else{
@@ -55,7 +55,7 @@ public class BlockDecor6AxisOriented extends BlockDecor6AxisRegular implements I
     }
 	
 	@Override
-	public ATileEntityRotatable createNewTileEntity(World worldIn, int meta){
+	public TileEntityRotatable createNewTileEntity(World worldIn, int meta){
 		return new TileEntityDecor6AxisOriented();
 	}
 	

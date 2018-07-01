@@ -26,7 +26,7 @@ public abstract class ABlockRotateable extends Block implements ITileEntityProvi
 	@Override
     public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase entity, ItemStack stack){
         super.onBlockPlacedBy(world, pos, state, entity, stack);
-        ((ATileEntityRotatable) world.getTileEntity(pos)).rotation = (byte) entity.getHorizontalFacing().getOpposite().ordinal();
+        ((TileEntityRotatable) world.getTileEntity(pos)).rotation = (byte) entity.getHorizontalFacing().getOpposite().ordinal();
     }
 	
 	@Override
@@ -43,7 +43,7 @@ public abstract class ABlockRotateable extends Block implements ITileEntityProvi
 	@Override
 	@SuppressWarnings("deprecation")
     public IBlockState getActualState(IBlockState state, IBlockAccess access, BlockPos pos){
-		ATileEntityRotatable tile = (ATileEntityRotatable) access.getTileEntity(pos);
+		TileEntityRotatable tile = (TileEntityRotatable) access.getTileEntity(pos);
 		if(tile != null && tile.rotation < EnumFacing.VALUES.length){
 			return super.getActualState(state, access, pos).withProperty(ROTATION, EnumFacing.VALUES[tile.rotation]);
 		}else{
@@ -64,7 +64,9 @@ public abstract class ABlockRotateable extends Block implements ITileEntityProvi
     }
     
 	@Override
-	public abstract ATileEntityRotatable createNewTileEntity(World worldIn, int meta);
+	public TileEntityRotatable createNewTileEntity(World worldIn, int meta){
+		return new TileEntityRotatable();
+	}
     
     @Override
     protected BlockStateContainer createBlockState(){

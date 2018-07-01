@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.blocks.decor;
 
-import minecrafttransportsimulator.blocks.core.ATileEntityRotatable;
+import minecrafttransportsimulator.blocks.core.TileEntityRotatable;
 
-public class TileEntityDecor6AxisOriented extends ATileEntityRotatable{
+public class TileEntityDecor6AxisOriented extends TileEntityRotatable{
 	public TileEntityDecor6AxisOriented(){
 		super();
 	}
