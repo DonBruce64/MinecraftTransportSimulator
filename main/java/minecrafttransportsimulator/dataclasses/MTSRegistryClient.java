@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.dataclasses;
 
+import java.lang.reflect.Field;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
 import minecrafttransportsimulator.blocks.decor.TileEntityDecor6AxisOriented;
@@ -42,19 +44,16 @@ public final class MTSRegistryClient{
 		
 		//Register the item models.
 		//First register the core items.
-		registerCoreItemRender(MTSRegistry.manual);
-		registerCoreItemRender(MTSRegistry.wrench);
-		registerCoreItemRender(MTSRegistry.key);
-		registerCoreItemRender(MTSRegistry.itemBlockPropellerBench);
-		registerCoreItemRender(MTSRegistry.itemBlockEngineHoist);
-		registerCoreItemRender(MTSRegistry.itemBlockFuelPump);
-		registerCoreItemRender(MTSRegistry.itemBlockPole);
-		registerCoreItemRender(MTSRegistry.itemBlockPoleBase);
-		registerCoreItemRender(MTSRegistry.itemBlockTrafficCone);
-		registerCoreItemRender(MTSRegistry.itemBlockCrashBarrier);
-		registerCoreItemRender(MTSRegistry.itemBlockTrafficSignal);
-		registerCoreItemRender(MTSRegistry.itemBlockStreetLight);
-				
+		for(Field field : MTSRegistry.class.getFields()){
+			if(field.getType().equals(Item.class)){
+				try{
+					registerCoreItemRender((Item) field.get(Item.class));
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		//Now register items for the packs.
 		for(ItemMultipart multipartItem : MTSRegistry.multipartItemMap.values()){
 			registerPackItemRender(multipartItem, multipartItem.multipartName, "vehicles");
