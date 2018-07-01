@@ -177,7 +177,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	 */
 	@SubscribeEvent
 	public static void on(EntityMountEvent event){
-		if(event.getEntityBeingMounted() instanceof EntityMultipartB_Existing  && event.isDismounting() && event.getEntityMounting() != null && !event.getWorldObj().isRemote){
+		if(event.getEntityBeingMounted() instanceof EntityMultipartB_Existing  && event.isDismounting() && event.getEntityMounting() != null && !event.getWorldObj().isRemote && !event.getEntityBeingMounted().isDead){
 			EntityMultipartB_Existing multipart = (EntityMultipartB_Existing) event.getEntityBeingMounted();
 			if(!multipart.didRiderClickSeat){
 				if(multipart.riderIDToDismountThisTick == -1){
