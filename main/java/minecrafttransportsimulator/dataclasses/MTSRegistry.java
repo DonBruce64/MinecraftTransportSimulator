@@ -148,7 +148,6 @@ public final class MTSRegistry{
 		initMultipartEntities();
 		initPackets();
 		initCoreItemRecipes();
-		//initAircraftInstrumentRecipes();
 	}
 	
 	/**
