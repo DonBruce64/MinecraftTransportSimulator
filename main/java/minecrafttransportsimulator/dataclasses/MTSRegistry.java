@@ -356,6 +356,12 @@ public final class MTSRegistry{
 				'A', Items.IRON_INGOT);
 	}
 	
+	/**Registers a crafting recipe.  This is segmented out here as the method changes in 1.12 and the single location makes it easy for the script to update it.**/
+	private static void registerRecipe(ItemStack output, Object...params){
+		GameRegistry.addShapedRecipe(output, params);
+		++craftingNumber;
+	}
+	
 	/**
 	 * Registers a packet and its handler on the client and/or the server.
 	 * @param packetClass
@@ -366,10 +372,5 @@ public final class MTSRegistry{
 	private static <REQ extends IMessage, REPLY extends IMessage> void registerPacket(Class<REQ> packetClass, Class<? extends IMessageHandler<REQ, REPLY>> handlerClass, boolean client, boolean server){
 		if(client)MTS.MTSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.CLIENT);
 		if(server)MTS.MTSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.SERVER);
-	}
-	
-	private static void registerRecipe(ItemStack output, Object...params){
-		GameRegistry.addShapedRecipe(output, params);
-		++craftingNumber;
 	}
 }
