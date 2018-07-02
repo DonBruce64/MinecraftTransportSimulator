@@ -209,16 +209,14 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 				PackPart packPart = pack.parts.get(riderSeatId);
 				boolean isSeatPossible = false;
 				boolean wasSeatFound = false;
-				for(String partTypes : packPart.types){
-					if(partTypes.equals("seat")){
-						isSeatPossible = true;
-						for(APart part : this.getMultipartParts()){
-							if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
-								if(part instanceof PartSeat){
-									riderSeats.put(passenger.getEntityId(), (PartSeat) part);
-									wasSeatFound = true;
-									break;
-								}
+				if(packPart.types.contains("seat")){
+					isSeatPossible = true;
+					for(APart part : this.getMultipartParts()){
+						if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
+							if(part instanceof PartSeat){
+								riderSeats.put(passenger.getEntityId(), (PartSeat) part);
+								wasSeatFound = true;
+								break;
 							}
 						}
 					}
@@ -442,11 +440,9 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 			if(seat != null){
 				for(byte j=0; j<pack.parts.size(); ++j){
 					PackPart packPart = pack.parts.get(j);
-					for(String type : packPart.types){
-						if(type.equals("seat")){
-							if(seat.offset.xCoord == packPart.pos[0] && seat.offset.yCoord == packPart.pos[1] && seat.offset.zCoord == packPart.pos[2]){
-								tagCompound.setByte("Seat" + String.valueOf(i), j);
-							}
+					if(packPart.types.contains("seat")){
+						if(seat.offset.xCoord == packPart.pos[0] && seat.offset.yCoord == packPart.pos[1] && seat.offset.zCoord == packPart.pos[2]){
+							tagCompound.setByte("Seat" + String.valueOf(i), j);
 						}
 					}
 				}

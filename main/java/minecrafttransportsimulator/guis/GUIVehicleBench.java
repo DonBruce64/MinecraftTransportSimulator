@@ -98,13 +98,11 @@ public class GUIVehicleBench extends GuiScreen{
 			}else{
 				boolean canAcceptSeat = false;
 				boolean canAcceptChest = false;
-				for(String type : part.types){
-					if(type.equals("seat")){
-						canAcceptSeat = true;
-					}
-					if(type.equals("crate")){
-						canAcceptChest = true;
-					}
+				if(part.types.contains("seat")){
+					canAcceptSeat = true;
+				}
+				if(part.types.contains("crate")){
+					canAcceptChest = true;
 				}
 				if(canAcceptSeat && !canAcceptChest){
 					++passengers;

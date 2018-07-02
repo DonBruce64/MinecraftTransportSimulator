@@ -59,40 +59,38 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
 							//Player is holding a valid part.  Now check if part goes to this multipart.
 							AItemPart partItem = (AItemPart) heldStack.getItem();
 							PackPart packPart = multipart.pack.parts.get(message.partIndex);
-							for(String partType : packPart.types){
-								if(partItem.partType.equals(partType)){
-									//This part does go to this multipart.  Now check if one is already there.
-									Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
-	        						for(APart part : multipart.getMultipartParts()){
-										if(part.offset.equals(partOffset)){
-											//Part already exists.  Bail.
-											return;
-										}
+							if(packPart.types.contains(partItem.partType)){
+								//This part does go to this multipart.  Now check if one is already there.
+								Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
+        						for(APart part : multipart.getMultipartParts()){
+									if(part.offset.equals(partOffset)){
+										//Part already exists.  Bail.
+										return;
 									}
-	        						if(!partItem.isPartValueInRange(packPart.minValue, packPart.maxValue)){
-	    								//Part is a valid type, but is not a valid configuration.  Bail.
-	        							return;
-	    							}
-									
-									//All clear for adding a new part.  Do so now and tell all clients.
-									try{
-										Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partItem.partName);
-										Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
-										APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, partOffset, packPart.isController, packPart.turnsWithSteer, partItem.partName, heldStack.hasTagCompound() ? heldStack.getTagCompound() : new NBTTagCompound());
-										if(newPart.isValid()){
-											multipart.addPart(newPart, false);
-											if(!player.capabilities.isCreativeMode){
-												player.inventory.clearMatchingItems(partItem, heldStack.getItemDamage(), 1, heldStack.getTagCompound());
-											}
-											MTS.MTSNet.sendToAll(new PacketMultipartClientPartAddition(multipart, message.partIndex, heldStack));
-										}else{
-											MTS.MTSNet.sendTo(new ChatPacket("interact.failure.missingpart"), (EntityPlayerMP) player);
+								}
+        						if(!partItem.isPartValueInRange(packPart.minValue, packPart.maxValue)){
+    								//Part is a valid type, but is not a valid configuration.  Bail.
+        							return;
+    							}
+								
+								//All clear for adding a new part.  Do so now and tell all clients.
+								try{
+									Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partItem.partName);
+									Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
+									APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, partOffset, packPart.isController, packPart.turnsWithSteer, partItem.partName, heldStack.hasTagCompound() ? heldStack.getTagCompound() : new NBTTagCompound());
+									if(newPart.isValid()){
+										multipart.addPart(newPart, false);
+										if(!player.capabilities.isCreativeMode){
+											player.inventory.clearMatchingItems(partItem, heldStack.getItemDamage(), 1, heldStack.getTagCompound());
 										}
-									}catch(Exception e){
-										MTS.MTSLog.error("ERROR SPAWING PART ON SERVER!");
-										MTS.MTSLog.error(e.getMessage());
-										e.printStackTrace();
+										MTS.MTSNet.sendToAll(new PacketMultipartClientPartAddition(multipart, message.partIndex, heldStack));
+									}else{
+										MTS.MTSNet.sendTo(new ChatPacket("interact.failure.missingpart"), (EntityPlayerMP) player);
 									}
+								}catch(Exception e){
+									MTS.MTSLog.error("ERROR SPAWING PART ON SERVER!");
+									MTS.MTSLog.error(e.getMessage());
+									e.printStackTrace();
 								}
 							}
 						}

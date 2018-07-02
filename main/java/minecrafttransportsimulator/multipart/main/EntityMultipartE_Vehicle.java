@@ -140,7 +140,7 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 			byte engineNumber = 0;
 			for(PackPart packPart : pack.parts){
 				for(String type : packPart.types){
-					if(type.contains("engine")){
+					if(type.startsWith("engine")){
 						if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
 							engineByNumber.put(engineNumber, (APartEngine) part);
 							
@@ -158,7 +158,7 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 		byte engineNumber = 0;
 		for(PackPart packPart : pack.parts){
 			for(String type : packPart.types){
-				if(type.contains("engine")){
+				if(type.startsWith("engine")){
 					if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
 						engineByNumber.remove(engineNumber);
 						return;
@@ -212,7 +212,7 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 		if(numberEngineBays == 0){
 			for(PackPart part : pack.parts){
 				for(String type : part.types){
-					if(type.contains("engine")){
+					if(type.startsWith("engine")){
 						++numberEngineBays;
 					}
 				}

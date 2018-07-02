@@ -72,7 +72,7 @@ public class PackMultipartObject{
         public float[] pos;
         public boolean turnsWithSteer;
         public boolean isController;
-        public String[] types;
+        public List<String> types;
         public float minValue;
         public float maxValue;
     }
