@@ -22,8 +22,6 @@ public class PackMultipartObject{
     	public int emptyMass;
         /**Vehicle type.  See {@link PackParserSystem} for a complete list.**/
     	public String type;
-    	/**Description for this vehicle.  Will be present in the manual and in the drafting table.**/
-    	public String description;
         /**Ingredients that need to be present to craft this vehicle.
          * Should be a list of items in the format of [itemname]:[metadata]:[qty].
          * Note that the itemname MUST contain the modId if modded materials are used.

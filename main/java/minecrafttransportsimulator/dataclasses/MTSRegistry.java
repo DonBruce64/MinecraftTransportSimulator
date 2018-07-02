@@ -11,6 +11,7 @@ import java.util.Map;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.BlockFuelPump;
 import minecrafttransportsimulator.blocks.core.BlockPartBench;
+import minecrafttransportsimulator.blocks.core.BlockVehicleBench;
 import minecrafttransportsimulator.blocks.decor.BlockDecor1AxisIsolated;
 import minecrafttransportsimulator.blocks.decor.BlockDecor2AxisIsolated;
 import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisOriented;
@@ -112,6 +113,8 @@ public final class MTSRegistry{
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
 	
 	//Crafting bench blocks.
+	public static final Block draftingTable = new BlockVehicleBench().setCreativeTab(coreTab);
+	public static final Item itemBlockDraftingTable = new ItemBlock(draftingTable);
 	public static final Block propellerBench = new BlockPartBench(new String[]{"propeller"}).setCreativeTab(coreTab);
 	public static final Item itemBlockPropellerBench = new ItemBlock(propellerBench);
 	public static final Block engineHoist = new BlockPartBench(new String[]{"engine_aircraft", "engine_car"}).setCreativeTab(coreTab);

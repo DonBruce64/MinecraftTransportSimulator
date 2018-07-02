@@ -15,25 +15,25 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PlayerCraftingPacket implements IMessage{
 	private int playerID;
-	private String selectedPart;
+	private String selectedItem;
 
 	public PlayerCraftingPacket(){}
 	
-	public PlayerCraftingPacket(EntityPlayer player, String selectedPart){
+	public PlayerCraftingPacket(EntityPlayer player, String selectedItem){
 		this.playerID = player.getEntityId();
-		this.selectedPart = selectedPart;
+		this.selectedItem = selectedItem;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		this.playerID = buf.readInt();
-		this.selectedPart = ByteBufUtils.readUTF8String(buf);
+		this.selectedItem = ByteBufUtils.readUTF8String(buf);
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		buf.writeInt(this.playerID);
-		ByteBufUtils.writeUTF8String(buf, this.selectedPart);
+		ByteBufUtils.writeUTF8String(buf, this.selectedItem);
 	}
 	
 	protected static EntityPlayer getPlayer(PlayerCraftingPacket message, MessageContext ctx){
@@ -80,11 +80,15 @@ public class PlayerCraftingPacket implements IMessage{
 				public void run(){
 					EntityPlayer player = getPlayer(message, ctx);
 					if(player != null){
-						//Start button was clicked.  Remove materials and start process.
-						if(doesPlayerHaveMaterials(player, message.selectedPart)){
-							removeMaterials(player, message.selectedPart);
-							ItemStack partStack = new ItemStack(MTSRegistry.partItemMap.get(message.selectedPart));
-							player.getEntityWorld().spawnEntityInWorld(new EntityItem(player.getEntityWorld(), player.posX, player.posY, player.posZ, partStack));
+						if(doesPlayerHaveMaterials(player, message.selectedItem)){
+							removeMaterials(player, message.selectedItem);
+							ItemStack stack;
+							if(MTSRegistry.multipartItemMap.containsKey(message.selectedItem)){
+								stack = new ItemStack(MTSRegistry.multipartItemMap.get(message.selectedItem));
+							}else{
+								stack = new ItemStack(MTSRegistry.partItemMap.get(message.selectedItem));
+							}
+							player.getEntityWorld().spawnEntityInWorld(new EntityItem(player.getEntityWorld(), player.posX, player.posY, player.posZ, stack));
 						}
 					}
 				}

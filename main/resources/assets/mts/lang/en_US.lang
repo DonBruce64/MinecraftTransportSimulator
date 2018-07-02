@@ -101,6 +101,14 @@ input.car.stop=StopEngine
 input.car.turnsignal_r=RightTurnSignal
 input.car.turnsignal_l=LeftTurnSignal
 
+gui.vehicle_bench.type=Type
+gui.vehicle_bench.weight=Weight (kg)
+gui.vehicle_bench.fuel=Fuel Cap. (mb)
+gui.vehicle_bench.controllers=Drivers/Pilots
+gui.vehicle_bench.passengers=Passengers
+gui.vehicle_bench.cargo=Cargo
+gui.vehicle_bench.mixed=Mixed
+
 gui.panel.navigationlights=NAV
 gui.panel.strobelights=STROBE
 gui.panel.taxilights=TAXI
@@ -187,6 +195,7 @@ item.wrench.name=Wrench
 item.key.name=Key
 item.manual.name=MTS Manual (READ ME!)
 
+tile.draftingtable.name=Drafting Table
 tile.propellerbench.name=Propeller Bench
 tile.enginehoist.name=Engine Hoist
 tile.fuelpump.name=Fuel Pump
@@ -284,13 +293,3 @@ manual.instruments.2=Instruments are added to vehicles by using the wrench on th
 manual.propeller_specs.title=Propeller Specs
 manual.propeller_specs.1=One of the most frequently asked questions about aircraft is, "What propeller is the best."  The answer, like most things, is, "It depends.".  The amount of thrust a propeller generates is dependent on the blade diameter, with higher-diameter propellers providing more force.
 manual.propeller_specs.2=The extra force, however, results in a larger load on the engine and thus a lower max RPM.  The pitch of the propeller determines the optimal speed at any RPM.  Anything below this speed will speed the plane up, anything below will slow it down, so propeller choice is all about engine configuration and how you plan on flying the plane.  Blades have little effect on propeller design besides making the propeller slightly more efficient and looking cooler.
-
-manual.vehicle_data.title=Vehicle Data
-manual.vehicle_data.1=The following pages contain a complete listing of every vehicle currently installed in all content packs.  These listings contain the crafting recipes for the vehicles, a few of their key properties, and a short description provided by the content creators.
-manual.vehicle_data.type=Type
-manual.vehicle_data.weight=Weight
-manual.vehicle_data.fuel=Fuel Capacity
-manual.vehicle_data.controllers=Drivers/Pilots
-manual.vehicle_data.passengers=Seats/Cargo
-manual.vehicle_data.cargo=Cargo Only
-manual.vehicle_data.components=Components

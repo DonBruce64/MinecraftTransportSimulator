@@ -76,10 +76,13 @@ public class GUIPartBench extends GuiScreen{
     public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
 		super.drawScreen(mouseX, mouseY, renderPartialTicks);
 		
-		//Draw header text and buttons.
+		//Draw header text, graphics, and buttons.
 		GL11.glColor3f(1, 1, 1); //Not sure why buttons make this grey, but whatever...
 		mc.getTextureManager().bindTexture(background);
 		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 201);
+		if(startButton.enabled){
+			drawTexturedModalRect(guiLeft + 140, guiTop + 173, 0, 201, 44, 16);
+		}
 		drawCenteredString(!packName.isEmpty() ? I18n.format("itemGroup." + packName) : "", guiLeft + 130, guiTop + 10);
 		drawCenteredString(!partName.isEmpty() ? I18n.format(MTSRegistry.partItemMap.get(partName).getUnlocalizedName() + ".name") : "", guiLeft + 130, guiTop + 30);
 		
@@ -151,6 +154,7 @@ public class GUIPartBench extends GuiScreen{
 		GL11.glRotatef(180, 0, 0, 1);
 		GL11.glRotatef(45, 0, 1, 0);
 		GL11.glRotatef(35.264F, 1, 0, 1);
+		GL11.glRotatef(-player.worldObj.getTotalWorldTime()*2, 0, 1, 0);
 		float scale = 30F;
 		GL11.glScalef(scale, scale, scale);
 		GL11.glCallList(partDisplayLists.get(partName));
