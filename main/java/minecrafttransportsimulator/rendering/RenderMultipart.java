@@ -87,6 +87,21 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	public RenderMultipart(RenderManager renderManager){
 		super(renderManager);
 	}
+	
+	/**Used to clear out the rendering caches in dev mode to allow the re-loading of models.**/
+	public static void clearCaches(){
+		for(Integer index : multipartDisplayLists.values()){
+			GL11.glDeleteLists(index, 1);
+		}
+		multipartDisplayLists.clear();
+		for(Integer index : partDisplayLists.values()){
+			GL11.glDeleteLists(index, 1);
+		}
+		partDisplayLists.clear();
+		rotatableLists.clear();
+		windowLists.clear();
+		lightLists.clear();
+	}
 
 	@Override
 	protected ResourceLocation getEntityTexture(EntityMultipartD_Moving entity){

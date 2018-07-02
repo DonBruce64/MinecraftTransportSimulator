@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.gson.Gson;
@@ -34,8 +35,10 @@ import minecrafttransportsimulator.multipart.parts.PartEngineCar;
 import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
 import minecrafttransportsimulator.multipart.parts.PartPropeller;
 import minecrafttransportsimulator.multipart.parts.PartSeat;
+import net.minecraft.client.Minecraft;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 
 /**
  * Class responsible for parsing content pack data.  Gets properties from the text files that other parts
@@ -142,6 +145,44 @@ public final class PackParserSystem{
     }
     
     
+    //-----START OF RELOAD LOGIC-----
+    public static void reloadPackData(){
+    	try{
+	    	//We need to shove the strings into a list to keep us from getting CMEs while iterating the map.
+	    	List<String> jsonFilesToReload = new ArrayList<String>();
+	    	for(Entry<String, String> multipartJSONEntry : multipartJSONMap.entrySet()){
+	    		jsonFilesToReload.add(multipartJSONEntry.getKey().substring(0, multipartJSONEntry.getKey().indexOf(':') + 1) + multipartJSONEntry.getValue());
+	    	}
+	    	for(String jsonFile : jsonFilesToReload){
+	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/vehicles/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
+	    		addMultipartDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
+	    	}
+	    	jsonFilesToReload.clear();
+	    	
+	    	for(String partJSONFile : partPackMap.keySet()){
+	    		jsonFilesToReload.add(partJSONFile);
+	    	}
+	    	for(String jsonFile : jsonFilesToReload){
+	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/parts/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
+	    		addPartDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
+	    	}
+	    	jsonFilesToReload.clear();
+	    	
+	    	for(String instrumentJSONFile : partInstrumentMap.keySet()){
+	    		jsonFilesToReload.add(instrumentJSONFile);
+	    	}
+	    	for(String jsonFile : jsonFilesToReload){
+	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/instruments/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
+	    		addInstrumentDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
+	    	}	    	
+    	}catch(Exception e){
+    		logList.add("AN I/O ERROR WAS ENCOUNTERED WHEN TRYING TO RELOAD PACK DATA");
+    		e.printStackTrace();
+    	}
+    	outputLog();
+    }
+    
+    
     //-----START OF GENERAL LOOKUP LOGIC-----
     public static List<ItemStack> getMaterials(String componentName){
     	return craftingItemMap.get(componentName);
@@ -179,6 +220,8 @@ public final class PackParserSystem{
         return partPackMap.keySet();
     }
     
+    
+    //-----START OF CONSTANTS AND SWITCHES-----
     public static Class<? extends APart> getPartPartClass(String partName){
     	switch(getPartPack(partName).general.type){
 			case "crate": return PartCrate.class;

@@ -54,6 +54,7 @@ public final class ConfigSystem{
 	
 	public static void initClient(File configFile){
 		initCommon(configFile);
+		booleanConfigMap.put("DevMode", config.get(CLIENT_CONFIG, "DevMode", false, "If enabled, MTS will re-load all resources every time the config key (P) is pressed.  \nThis includes textures for vehicles and parts, JSON files, and OBJ models.  \nThis is intended for use in pack creation with pack components  \nbeing placed in an un-zipped resource pack.  \nNote that every re-load will also re-load EVERY resource, not just MTS resources.  \nMake sure not to have lots of mods installed when you are doing this!").getBoolean());
 		booleanConfigMap.put("SeaLevelOffset", config.get(CLIENT_CONFIG, "SeaLevelOffset", false, "Does altimiter read zero at average sea level instead of Y=0?").getBoolean());
 		booleanConfigMap.put("MouseYoke", config.get(CLIENT_CONFIG, "MouseYoke", false, "Enable mouse yoke for vehicles? \nPrevents looking around unless unlocked.  Think MCHeli controls.").getBoolean());
 		booleanConfigMap.put("InnerWindows", config.get(CLIENT_CONFIG, "InnerWindows", true, "Render the insides of windows on vehicles?").getBoolean());

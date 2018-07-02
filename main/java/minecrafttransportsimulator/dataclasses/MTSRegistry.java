@@ -38,6 +38,7 @@ import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
+import minecrafttransportsimulator.packets.general.PackReloadPacket;
 import minecrafttransportsimulator.packets.general.PlayerCraftingPacket;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartAttacked;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInit;
@@ -289,6 +290,7 @@ public final class MTSRegistry{
 		//Packets in packets.general
 		registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
 		registerPacket(ManualPageUpdatePacket.class, ManualPageUpdatePacket.Handler.class, false, true);
+		registerPacket(PackReloadPacket.class, PackReloadPacket.Handler.class, false, true);
 		registerPacket(PlayerCraftingPacket.class, PlayerCraftingPacket.Handler.class, false, true);
 		
 		//Packets in packets.tileentity

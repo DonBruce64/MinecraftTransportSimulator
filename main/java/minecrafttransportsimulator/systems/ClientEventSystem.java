@@ -9,10 +9,12 @@ import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.guis.GUIConfig;
 import minecrafttransportsimulator.guis.GUIPackMissing;
 import minecrafttransportsimulator.items.parts.AItemPart;
+import minecrafttransportsimulator.multipart.main.EntityMultipartA_Base;
 import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
 import minecrafttransportsimulator.multipart.main.EntityMultipartC_Colliding;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.parts.APart;
+import minecrafttransportsimulator.packets.general.PackReloadPacket;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartAttacked;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartKey;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartNameTag;
@@ -20,6 +22,7 @@ import minecrafttransportsimulator.packets.multipart.PacketMultipartServerPartAd
 import minecrafttransportsimulator.packets.multipart.PacketMultipartWindowFix;
 import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.rendering.RenderHUD;
+import minecrafttransportsimulator.rendering.RenderMultipart;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.creativetab.CreativeTabs;
@@ -331,6 +334,18 @@ public final class ClientEventSystem{
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent event){
         if(ControlSystem.isMasterControlButttonPressed()){
+        	if(ConfigSystem.getBooleanConfig("DevMode") && minecraft.isSingleplayer()){
+        		PackParserSystem.reloadPackData();
+        		RenderMultipart.clearCaches();
+        		minecraft.refreshResources();
+        		for(Entity entity : minecraft.getMinecraft().theWorld.loadedEntityList){
+					if(entity instanceof EntityMultipartA_Base){
+						EntityMultipartA_Base multipart = (EntityMultipartA_Base) entity;
+						multipart.pack = PackParserSystem.getMultipartPack(multipart.multipartName);
+					}
+				}
+        		MTS.MTSNet.sendToServer(new PackReloadPacket());
+        	}
             if(minecraft.currentScreen == null){
             	FMLCommonHandler.instance().showGuiScreen(new GUIConfig());
             }
