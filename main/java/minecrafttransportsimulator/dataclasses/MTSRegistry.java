@@ -126,19 +126,19 @@ public final class MTSRegistry{
 	public static final Item itemBlockFuelPump = new ItemBlock(fuelPump);
 	
 	//Decorative pole-based blocks.
-	public static final Block pole = new BlockDecor6AxisRegular(Material.IRON, 5.0F, 10.0F);
+	public static final Block pole = new BlockDecor6AxisRegular(Material.IRON, 5.0F, 30.0F);
 	public static final Item itemBlockPole = new ItemBlock(pole);
-	public static final Block poleBase = new BlockDecor6AxisSolidConnector(Material.IRON, 5.0F, 10.0F);
+	public static final Block poleBase = new BlockDecor6AxisSolidConnector(Material.IRON, 5.0F, 30.0F);
 	public static final Item itemBlockPoleBase = new ItemBlock(poleBase);
-	public static final Block trafficSignal = new BlockDecor6AxisOriented(Material.IRON, 5.0F, 10.0F);
+	public static final Block trafficSignal = new BlockDecor6AxisOriented(Material.IRON, 5.0F, 30.0F);
 	public static final Item itemBlockTrafficSignal = new ItemBlock(trafficSignal);
-	public static final Block streetLight = new BlockDecor6AxisOriented(Material.IRON, 5.0F, 10.0F);
+	public static final Block streetLight = new BlockDecor6AxisOriented(Material.IRON, 5.0F, 30.0F);
 	public static final Item itemBlockStreetLight = new ItemBlock(streetLight);
 		
 	//Decorative ground blocks.
 	public static final Block trafficCone = new BlockDecor1AxisIsolated(Material.CLAY, 0.4375F, 0.75F, 0.6F, 0.75F);
 	public static final Item itemBlockTrafficCone = new ItemBlock(trafficCone);
-	public static final Block crashBarrier = new BlockDecor2AxisIsolated(Material.ROCK, 1.5F, 10.0F, 0.5625F, 0.84375F, 1.0F);
+	public static final Block crashBarrier = new BlockDecor2AxisIsolated(Material.IRON, 5.0F, 30.0F, 0.5625F, 0.84375F, 1.0F);
 	public static final Item itemBlockCrashBarrier = new ItemBlock(crashBarrier);
 	
 	//Counters for registry systems.
@@ -152,6 +152,8 @@ public final class MTSRegistry{
 		initMultipartEntities();
 		initPackets();
 		initCoreItemRecipes();
+		initCraftingBenchItemRecipes();
+		initDecorItemRecipes();
 	}
 	
 	/**
@@ -321,6 +323,49 @@ public final class MTSRegistry{
 	}
 	
 	private static void initCoreItemRecipes(){
+		//Manual
+		registerRecipe(new ItemStack(manual),
+				" A ",
+				"CBC",
+				" D ",
+				'A', Items.FEATHER,
+				'B', Items.BOOK,
+				'C', new ItemStack(Items.DYE, 1, 0),
+				'D', Items.PAPER);
+		//Wrench
+		registerRecipe(new ItemStack(wrench),
+				"  A",
+				" A ",
+				"A  ",
+				'A', Items.IRON_INGOT);
+		//Key
+		registerRecipe(new ItemStack(key),
+				" A ",
+				" A ",
+				" S ",
+				'A', Items.IRON_INGOT,
+				'S', Items.STRING);
+		//Fuel pump
+		registerRecipe(new ItemStack(itemBlockFuelPump),
+				"DED",
+				"CBC",
+				"AAA",
+				'A', new ItemStack(Blocks.STONE_SLAB, 1, 0),
+				'B', Items.IRON_INGOT,
+				'C', new ItemStack(Items.DYE, 1, 0),
+				'D', new ItemStack(Items.DYE, 1, 1),
+				'E', Blocks.GLASS_PANE);
+	}
+	
+	private static void initCraftingBenchItemRecipes(){
+		//Drafting table
+		registerRecipe(new ItemStack(itemBlockDraftingTable),
+				"WWW",
+				"WGW",
+				"F F",
+				'W', Blocks.PLANKS,
+				'F', Blocks.OAK_FENCE,
+				'G', Blocks.GLASS_PANE);
 		//Propeller bench
 		registerRecipe(new ItemStack(itemBlockPropellerBench),
 				"AAA",
@@ -338,41 +383,56 @@ public final class MTSRegistry{
 				'B', Blocks.IRON_BARS,
 				'C', Blocks.IRON_BLOCK,
 				'D', new ItemStack(Items.DYE, 1, 1));
-		
-		//Fuel pump
-		registerRecipe(new ItemStack(itemBlockFuelPump),
-				"DED",
-				"CBC",
-				"AAA",
-				'A', new ItemStack(Blocks.STONE_SLAB, 1, 0),
-				'B', Items.IRON_INGOT,
-				'C', new ItemStack(Items.DYE, 1, 0),
-				'D', new ItemStack(Items.DYE, 1, 1),
-				'E', Blocks.GLASS_PANE);
-		
-		//Manual
-		registerRecipe(new ItemStack(manual),
-				" A ",
-				"CBC",
-				" D ",
-				'A', Items.FEATHER,
-				'B', Items.BOOK,
-				'C', new ItemStack(Items.DYE, 1, 0),
-				'D', Items.PAPER);
-		
-		//Key
-		registerRecipe(new ItemStack(key),
-				" A ",
-				" A ",
+	}
+	
+	private static void initDecorItemRecipes(){
+		//Regular pole
+		registerRecipe(new ItemStack(itemBlockPole, 4),
 				" S ",
-				'A', Items.IRON_INGOT,
-				'S', Items.STRING);
-		//Wrench
-		registerRecipe(new ItemStack(wrench),
-				"  A",
-				" A ",
-				"A  ",
-				'A', Items.IRON_INGOT);
+				" S ",
+				" S ",
+				'S', Blocks.COBBLESTONE_WALL);
+		//Base pole
+		registerRecipe(new ItemStack(itemBlockPoleBase),
+				"   ",
+				" P ",
+				" S ",
+				'S', Blocks.STONE_SLAB,
+				'P', itemBlockPole);
+		//Crash barrier
+		registerRecipe(new ItemStack(itemBlockCrashBarrier, 4),
+				"   ",
+				"SSS",
+				"SSS",
+				'S', Blocks.COBBLESTONE_WALL);
+		//Street light
+		registerRecipe(new ItemStack(itemBlockStreetLight),
+				" SP",
+				" G ",
+				"   ",
+				'S', Blocks.STONE_SLAB,
+				'P', itemBlockPole,
+				'G', Items.GLOWSTONE_DUST);
+		//Traffic signal
+		registerRecipe(new ItemStack(itemBlockTrafficSignal),
+				"RLS",
+				"YLP",
+				"GLA",
+				'R', new ItemStack(Items.DYE, 1, 1),
+				'Y', new ItemStack(Items.DYE, 1, 11),
+				'G', new ItemStack(Items.DYE, 1, 10),
+				'L', Items.GLOWSTONE_DUST,
+				'A', Items.REDSTONE,
+				'S', Blocks.STONE_SLAB,
+				'P', itemBlockPole);
+		//Traffic cone
+		registerRecipe(new ItemStack(itemBlockTrafficCone, 2),
+				" O ",
+				"WWW",
+				"OSO",
+				'O', new ItemStack(Items.DYE, 1, 14),
+				'W', new ItemStack(Items.DYE, 1, 15),
+				'S', Items.SLIME_BALL);
 	}
 	
 	/**Registers a crafting recipe.  This is segmented out here as the method changes in 1.12 and the single location makes it easy for the script to update it.**/
