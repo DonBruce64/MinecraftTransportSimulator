@@ -26,7 +26,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 public class GUIVehicleBench extends GuiScreen{
-	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting_parts.png");	
+	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting.png");	
 	private final EntityPlayer player;
 	
 	private GuiButton leftPackButton;
