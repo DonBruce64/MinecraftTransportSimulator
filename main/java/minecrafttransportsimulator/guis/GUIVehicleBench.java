@@ -253,17 +253,24 @@ public class GUIVehicleBench extends GuiScreen{
 	}
 	
 	@Override
-	public boolean doesGuiPauseGame(){
-		return false;
-	}
-	
-	@Override
     public void onGuiClosed(){
 		//Clear out the displaylists to free RAM once we no longer need them here.
 		for(int displayListID : vehicleDisplayLists.values()){
 			GL11.glDeleteLists(displayListID, 1);
 		}
     }
+	
+	@Override
+	public boolean doesGuiPauseGame(){
+		return false;
+	}
+	
+	@Override
+	protected void keyTyped(char typedChar, int keyCode) throws IOException{
+		if(keyCode == 1 || mc.gameSettings.keyBindInventory.isActiveAndMatches(keyCode)){
+			super.keyTyped('0', 1);
+        }
+	}
 	
 	private void drawCenteredString(String stringToDraw, int x, int y){
 		mc.fontRendererObj.drawString(stringToDraw, x - mc.fontRendererObj.getStringWidth(stringToDraw)/2, y, 4210752);

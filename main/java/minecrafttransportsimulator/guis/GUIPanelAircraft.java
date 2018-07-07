@@ -16,7 +16,6 @@ import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderInstruments;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.systems.CameraSystem;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
@@ -198,16 +197,11 @@ public class GUIPanelAircraft extends GuiScreen{
 	    	}
 	    }
 	}
-
-
 	
-    @Override
-    protected void keyTyped(char key, int bytecode) throws IOException {
-    	super.keyTyped(key, bytecode);
-    	if(bytecode == Minecraft.getMinecraft().gameSettings.keyBindInventory.getKeyCode() || bytecode == Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode()){
-    		super.keyTyped('0', 1);
-    	}
-    }
+	@Override
+	public void onGuiClosed(){
+		CameraSystem.disableHUD = false;
+	}
 	
 	@Override
 	public boolean doesGuiPauseGame(){
@@ -215,7 +209,9 @@ public class GUIPanelAircraft extends GuiScreen{
 	}
 	
 	@Override
-	public void onGuiClosed(){
-		CameraSystem.disableHUD = false;
+	protected void keyTyped(char typedChar, int keyCode) throws IOException{
+		if(keyCode == 1 || mc.gameSettings.keyBindInventory.isActiveAndMatches(keyCode) || mc.gameSettings.keyBindSneak.isActiveAndMatches(keyCode)){
+			super.keyTyped('0', 1);
+        }
 	}
 }

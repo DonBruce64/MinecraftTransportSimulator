@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.guis;
 
 import java.awt.Color;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -243,5 +244,12 @@ public class GUIInstruments extends GuiScreen{
 	@Override
 	public boolean doesGuiPauseGame(){
 		return false;
+	}
+	
+	@Override
+	protected void keyTyped(char typedChar, int keyCode) throws IOException{
+		if(keyCode == 1 || mc.gameSettings.keyBindInventory.isActiveAndMatches(keyCode)){
+			super.keyTyped('0', 1);
+        }
 	}
 }

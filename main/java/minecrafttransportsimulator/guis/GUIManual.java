@@ -212,6 +212,13 @@ public class GUIManual extends GuiScreen{
 		return false;
 	}
 	
+	@Override
+	protected void keyTyped(char typedChar, int keyCode) throws IOException{
+		if(keyCode == 1 || mc.gameSettings.keyBindInventory.isActiveAndMatches(keyCode)){
+			super.keyTyped('0', 1);
+        }
+	}
+	
 	public static enum InfoPages{
 		INTRODUCTION((byte) 3),
 		BASIC_CRAFTING((byte) 2),
