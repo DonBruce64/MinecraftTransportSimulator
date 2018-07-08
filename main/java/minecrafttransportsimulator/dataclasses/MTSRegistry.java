@@ -191,7 +191,7 @@ public final class MTSRegistry{
 		for(Field field : MTSRegistry.class.getFields()){
 			if(field.getType().equals(Block.class)){
 				try{
-					Block block = (Block) field.get(Block.class);
+					Block block = (Block) field.get(null);
 					String name = field.getName().toLowerCase();
 					event.getRegistry().register(block.setRegistryName(name).setUnlocalizedName(name));
 					if(block instanceof ITileEntityProvider){
@@ -223,7 +223,7 @@ public final class MTSRegistry{
 		for(Field field : MTSRegistry.class.getFields()){
 			if(field.getType().equals(Item.class)){
 				try{
-					Item item = (Item) field.get(Item.class);
+					Item item = (Item) field.get(null);
 					String name = field.getName().toLowerCase();
 					if(!name.startsWith("itemblock")){
 						event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));

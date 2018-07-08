@@ -47,7 +47,7 @@ public final class MTSRegistryClient{
 		for(Field field : MTSRegistry.class.getFields()){
 			if(field.getType().equals(Item.class)){
 				try{
-					registerCoreItemRender((Item) field.get(Item.class));
+					registerCoreItemRender((Item) field.get(null));
 				}catch(Exception e){
 					e.printStackTrace();
 				}
