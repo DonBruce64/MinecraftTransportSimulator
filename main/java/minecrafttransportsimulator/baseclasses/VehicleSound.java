@@ -8,13 +8,10 @@ import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.SFXSystem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.ITickableSound;
-import net.minecraft.client.audio.PositionedSound;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.Vec3d;
 
-public final class VehicleSound extends PositionedSound implements ITickableSound{
+public final class VehicleSound{
 	private final EntityMultipartE_Vehicle vehicle;
 	private final APart optionalPart;
 	private final EntityPlayer player;
@@ -24,21 +21,27 @@ public final class VehicleSound extends PositionedSound implements ITickableSoun
 	private Vec3d sourcePos;
 	
 	public VehicleSound(EntityMultipartE_Vehicle vehicle, APart optionalPart, SoundTypes soundType){
-		super(SFXSystem.getSoundEventFromName(getSoundName(vehicle, optionalPart, soundType)), SoundCategory.MASTER);
 		this.vehicle = vehicle;
 		this.optionalPart = optionalPart;
 		this.player = Minecraft.getMinecraft().thePlayer;
 		this.soundType = soundType;
-		this.repeat = true;
 		
 		this.playerPos = new Vec3d(player.posX, player.posY, player.posZ);
 		this.sourcePos = optionalPart != null ? optionalPart.partPos : vehicle.getPositionVector();
-		this.xPosF = (float) sourcePos.xCoord;
-		this.yPosF = (float) sourcePos.yCoord;
-		this.zPosF = (float) sourcePos.zCoord;
 	}
 	
-    @Override
+	public float getPosX(){
+		return (float) (optionalPart != null ? optionalPart.partPos.xCoord : vehicle.posX);
+	}
+	
+	public float getPosY(){
+		return (float) (optionalPart != null ? optionalPart.partPos.yCoord : vehicle.posY);
+	}
+	
+	public float getPosZ(){
+		return (float) (optionalPart != null ? optionalPart.partPos.zCoord : vehicle.posZ);
+	}
+	
 	public float getVolume(){
 		if(isSoundActive()){
 			//If this source is internal, only make noise if we are in first-person.
@@ -52,9 +55,6 @@ public final class VehicleSound extends PositionedSound implements ITickableSoun
 			}
 			
 			//Sound is not internal and player is not riding the source.  Volume is player distance.
-			this.xPosF = (float) player.posX;
-			this.yPosF = (float) player.posY;
-			this.zPosF = (float) player.posZ;
 			this.playerPos = new Vec3d(player.posX, player.posY, player.posZ);
 			this.sourcePos = optionalPart != null ? optionalPart.partPos : vehicle.getPositionVector();
 			return (float) (getCurrentVolume()/playerPos.distanceTo(sourcePos)*(SFXSystem.isPlayerInsideEnclosedVehicle() ? 0.5F : 1.0F));
@@ -63,14 +63,7 @@ public final class VehicleSound extends PositionedSound implements ITickableSoun
 		}
     }
     
-    @Override
     public float getPitch(){
-		this.xPosF = (float) player.posX;
-		this.yPosF = (float) player.posY;
-		this.zPosF = (float) player.posZ;
-		sourcePos = optionalPart != null ? optionalPart.partPos : vehicle.getPositionVector();
-		playerPos = new Vec3d(player.posX, player.posY, player.posZ);
-		
 		//If the player is riding the sound source, don't apply a doppler effect.
 		if(vehicle.equals(player.getRidingEntity())){
 			return getCurrentPitch();
@@ -78,20 +71,33 @@ public final class VehicleSound extends PositionedSound implements ITickableSoun
 		
 		//Only adjust pitch for doppler sounds.
 		if(!soundType.internal && !vehicle.equals(player.getRidingEntity())){
+			sourcePos = optionalPart != null ? optionalPart.partPos : vehicle.getPositionVector();
+			playerPos = new Vec3d(player.posX, player.posY, player.posZ);
 			double soundVelocity = playerPos.distanceTo(sourcePos) - playerPos.addVector(player.motionX, player.motionY, player.motionZ).distanceTo(sourcePos.addVector(vehicle.motionX, vehicle.motionY, vehicle.motionZ));
 			return (float) (getCurrentPitch()*(1+soundVelocity/10F));
 		}else{
 			return 1.0F;
 		}
     }
+    
 	
-	@Override
-	public boolean isDonePlaying(){
-		return vehicle.isDead || (optionalPart != null && !optionalPart.isValid());
+	public String getSoundName(){
+		switch(soundType){
+			case ENGINE: return optionalPart.partName + "_running";
+			case HORN: return vehicle.pack.motorized.hornSound;
+			case SIREN: return vehicle.pack.motorized.sirenSound;
+			case STALL_BUZZER: return MTS.MODID + ":stall_buzzer";
+			default: return "";
+		}
 	}
 	
-	@Override
-	public void update(){}
+	public String getSoundUniqueName(){
+		return optionalPart != null ? getSoundName() + String.valueOf(optionalPart.offset.xCoord) + String.valueOf(optionalPart.offset.yCoord) + String.valueOf(optionalPart.offset.zCoord) : getSoundName();
+	}
+	
+	public boolean isSoundSourceActive(){
+		return vehicle.isDead ? false : (optionalPart != null ? optionalPart.isValid() : true);
+	}
     
 	public boolean isSoundActive(){
 		switch(soundType){
@@ -116,16 +122,6 @@ public final class VehicleSound extends PositionedSound implements ITickableSoun
 		switch(soundType){
 			case ENGINE: return (float) (((APartEngine) optionalPart).RPM/(optionalPart.pack.engine.maxRPM/2F));
 			default: return 1.0F;
-		}
-	}
-	
-	private static String getSoundName(EntityMultipartE_Vehicle vehicle, APart optionalPart, SoundTypes soundType){
-		switch(soundType){
-			case ENGINE: return optionalPart.partName + "_running";
-			case HORN: return vehicle.pack.motorized.hornSound;
-			case SIREN: return vehicle.pack.motorized.sirenSound;
-			case STALL_BUZZER: return MTS.MODID + ":stall_buzzer";
-			default: return "";
 		}
 	}
 	

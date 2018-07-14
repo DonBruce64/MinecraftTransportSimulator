@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.systems;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.URL;
 
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleSound;
 import minecrafttransportsimulator.baseclasses.VehicleSound.SoundTypes;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
@@ -10,59 +12,122 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
+import net.minecraft.client.audio.SoundManager;
 import net.minecraft.client.particle.ParticleDrip;
 import net.minecraft.client.particle.ParticleSmokeNormal;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import paulscode.sound.SoundSystem;
+import paulscode.sound.SoundSystemConfig;
 
-public final class SFXSystem{
-	private static SoundHandler soundHandler;
-	private static final Map<String, SoundEvent> cachedSoundEvents = new HashMap<String, SoundEvent>();
+/**This class handles all sounds for MTS.  Single sounds call playSound in a fashion similar
+ * to default MC, while looping sounds are checked when doSound is called with a vehicle.
+ * All methods call the paulscode SoundSystem class directly.  This is done to avoid having to make
+ * sounds.json files for packs, as well as allowing us to bypass the stupid SoundEvent crud MC 
+ * thinks is so good.  If paulscode uses Strings for IDs, why can't MC?!
+ *
+ * @author don_bruce
+ */
+public final class SFXSystem{	
+	private static final String[] soundManagerNames = { "sndManager", "field_147694_f" };
+	private static final String[] soundSystemNames = { "sndSystem", "field_148620_e" };
+	private static final String[] soundSystemURLNames = { "getURLForSoundResource", "func_148612_a" };
+	private static SoundSystem mcSoundSystem;
+	private static Method getURLMethod;
 
+	
 	/**
-	 * Plays a single sound in the same way as World.playSound.
-	 * Placed here for ease of version updates and to allow custom volumes.
+	 * Populates the static soundsystem fields when called.  Used when either the regular or
+	 * looping sound systems first try to play a sound and notice they are not populated yet.
+	 */
+	private static void initSoundSystemHooks(){
+		try{
+			//First get the SoundManager from the SoundHandler.
+			SoundHandler soundHandler = Minecraft.getMinecraft().getSoundHandler();
+			Field soundManagerField = ReflectionHelper.findField(SoundHandler.class, soundManagerNames);
+			SoundManager mcSoundManager = (SoundManager) soundManagerField.get(soundHandler);
+			
+			//Now get the SoundSystem from the SoundManager. 
+			Field soundSystemField = ReflectionHelper.findField(SoundManager.class, soundSystemNames);
+			mcSoundSystem = (SoundSystem) soundSystemField.get(mcSoundManager);
+			
+			//Also get the helper URL method for adding sounds from resource locations.
+			getURLMethod = ReflectionHelper.findMethod(SoundManager.class, mcSoundManager, soundSystemURLNames, ResourceLocation.class);
+		}catch (Exception e){
+			MTS.MTSLog.fatal("ERROR IN SOUND SYSTEM REFLECTION!");
+			throw new RuntimeException(e);
+   	    }
+	}
+	
+	/**
+	 * Plays a single sound.
 	 */
 	public static void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){
 		if(Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().theWorld.isRemote){
+			//If we don't have the running instance of the SoundSystem, get it now.
+			if(mcSoundSystem == null){
+				initSoundSystemHooks();
+			}
+			
 			volume = isPlayerInsideEnclosedVehicle() ? volume*0.5F : volume;
 			double soundDistance = Minecraft.getMinecraft().thePlayer.getPositionVector().distanceTo(soundPosition);
-	        PositionedSoundRecord sound = new PositionedSoundRecord(getSoundEventFromName(soundName), SoundCategory.MASTER, volume, pitch, (float)soundPosition.xCoord, (float)soundPosition.yCoord, (float)soundPosition.zCoord);
-	        if(soundDistance > 10.0D){
-	        	Minecraft.getMinecraft().getSoundHandler().playDelayedSound(sound, (int)(soundDistance/2));
-	        }else{
-	        	Minecraft.getMinecraft().getSoundHandler().playSound(sound);
-	        }
+			
+			try{
+				ResourceLocation soundFileLocation = new ResourceLocation(soundName);
+				soundFileLocation = new ResourceLocation(soundFileLocation.getResourceDomain(), "sounds/" + soundFileLocation.getResourcePath() + ".ogg");
+				URL soundURL = (URL) getURLMethod.invoke(null, soundFileLocation);
+				mcSoundSystem.quickPlay(false, soundURL, soundFileLocation.toString(), false, (float) soundPosition.xCoord, (float) soundPosition.yCoord, (float) soundPosition.zCoord, SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
+			}catch(Exception e){
+				MTS.MTSLog.error("COULD NOT PLAY VEHICLE SOUND:" + soundName);
+				throw new RuntimeException(e);
+			}
 		}
 	}
 	
-	public static SoundEvent getSoundEventFromName(String name){
-		if(!cachedSoundEvents.containsKey(name)){
-			SoundEvent newEvent = new SoundEvent(new ResourceLocation(name));
-			cachedSoundEvents.put(name, newEvent);
-		}
-		return cachedSoundEvents.get(name);
-	}
-	
+	/**
+	 * Does sound updates for the multipart vehicle sounds.
+	 */
 	public static void doSound(EntityMultipartE_Vehicle vehicle, World world){
 		if(world.isRemote){
-			soundHandler = Minecraft.getMinecraft().getSoundHandler();
+			//If we don't have the running instance of the SoundSystem, get it now.
+			if(mcSoundSystem == null){
+				initSoundSystemHooks();
+			}
+			
 			//If we are a new vehicle without sounds, init them.
 			//If we are old, we can assume to not have any sounds right now.
 			if(vehicle.soundsNeedInit){
 				vehicle.initSounds();
 				vehicle.soundsNeedInit = false;
 			}
+			EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+			mcSoundSystem.setListenerVelocity((float) player.motionX, (float) player.motionY, (float) player.motionZ);
 			for(VehicleSound sound : vehicle.getSounds()){
-				if(!sound.isDonePlaying() && !soundHandler.isSoundPlaying(sound) && sound.isSoundActive()){
-					soundHandler.playSound(sound);
+				String soundID = sound.getSoundUniqueName();
+				if(sound.isSoundSourceActive() && sound.isSoundActive()){
+					if(!mcSoundSystem.playing(soundID)){
+						try{
+							ResourceLocation soundFileLocation = new ResourceLocation(sound.getSoundName());
+							soundFileLocation = new ResourceLocation(soundFileLocation.getResourceDomain(), "sounds/" + soundFileLocation.getResourcePath() + ".ogg");
+							URL soundURL = (URL) getURLMethod.invoke(null, soundFileLocation);
+							mcSoundSystem.newSource(false, soundID, soundURL, soundFileLocation.toString(), true, sound.getPosX(), sound.getPosY(), sound.getPosZ(), SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
+							mcSoundSystem.play(soundID);
+						}catch(Exception e){
+							MTS.MTSLog.error("COULD NOT PLAY LOOPING VEHICLE SOUND:" + sound.getSoundName());
+							throw new RuntimeException(e);
+						}
+					}
+					mcSoundSystem.setVolume(soundID, sound.getVolume());
+					mcSoundSystem.setPitch(soundID, sound.getPitch());
+					mcSoundSystem.setPosition(soundID, sound.getPosX(), sound.getPosY(), sound.getPosZ());
+				}else if(mcSoundSystem.playing(soundID)){
+					mcSoundSystem.stop(soundID);
 				}
 			}
 		}
