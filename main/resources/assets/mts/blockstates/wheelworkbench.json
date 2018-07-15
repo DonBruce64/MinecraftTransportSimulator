@@ -1,0 +1,16 @@
+{
+    "multipart": [
+        {   "when": { "rotation": "north" },
+            "apply": { "model": "mts:wheelworkbench", "y" : 180 }
+        },
+        {   "when": { "rotation": "east" },
+            "apply": { "model": "mts:wheelworkbench", "y" : 270}
+        },
+        {   "when": { "rotation": "south" },
+            "apply": { "model": "mts:wheelworkbench"}
+        },
+        {   "when": { "rotation": "west" },
+            "apply": { "model": "mts:wheelworkbench", "y" : 90}
+        }
+    ]
+}

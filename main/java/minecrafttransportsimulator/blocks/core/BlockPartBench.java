@@ -3,6 +3,7 @@ package minecrafttransportsimulator.blocks.core;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,6 +23,7 @@ public class BlockPartBench extends ABlockRotateable{
 		this.setHardness(5.0F);
 		this.setResistance(10.0F);
 		this.partTypes = partTypes;
+		this.setCreativeTab(MTSRegistry.coreTab);
 	}
 	
 	@Override

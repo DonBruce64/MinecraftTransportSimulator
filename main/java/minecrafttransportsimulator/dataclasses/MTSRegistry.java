@@ -114,12 +114,14 @@ public final class MTSRegistry{
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
 	
 	//Crafting bench blocks.
-	public static final Block draftingTable = new BlockVehicleBench().setCreativeTab(coreTab);
+	public static final Block draftingTable = new BlockVehicleBench();
 	public static final Item itemBlockDraftingTable = new ItemBlock(draftingTable);
-	public static final Block propellerBench = new BlockPartBench(new String[]{"propeller"}).setCreativeTab(coreTab);
+	public static final Block propellerBench = new BlockPartBench(new String[]{"propeller"});
 	public static final Item itemBlockPropellerBench = new ItemBlock(propellerBench);
-	public static final Block engineHoist = new BlockPartBench(new String[]{"engine_aircraft", "engine_car"}).setCreativeTab(coreTab);
+	public static final Block engineHoist = new BlockPartBench(new String[]{"engine_aircraft", "engine_car"});
 	public static final Item itemBlockEngineHoist = new ItemBlock(engineHoist);
+	public static final Block wheelWorkbench = new BlockPartBench(new String[]{"ground_device"});
+	public static final Item itemBlockWheelWorkbench = new ItemBlock(wheelWorkbench);
 	
 	//Fuel pump.
 	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(coreTab);		
@@ -383,6 +385,14 @@ public final class MTSRegistry{
 				'B', Blocks.IRON_BARS,
 				'C', Blocks.IRON_BLOCK,
 				'D', new ItemStack(Items.DYE, 1, 1));
+		//Wheel workbench
+		registerRecipe(new ItemStack(itemBlockWheelWorkbench),
+				"A  ",
+				"ACC",
+				"BCC",
+				'A', Items.IRON_INGOT,
+				'B', Blocks.ANVIL,
+				'C', Blocks.PLANKS);
 	}
 	
 	private static void initDecorItemRecipes(){
