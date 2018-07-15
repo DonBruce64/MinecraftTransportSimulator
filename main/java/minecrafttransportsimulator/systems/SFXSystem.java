@@ -144,7 +144,6 @@ public final class SFXSystem{
 			}
 			
 			EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-			mcSoundSystem.setListenerVelocity((float) player.motionX, (float) player.motionY, (float) player.motionZ);
 			for(VehicleSound sound : vehicle.getSounds()){
 				String soundID = sound.getSoundUniqueName();
 				if(sound.isSoundSourceActive() && sound.isSoundActive()){
