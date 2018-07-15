@@ -16,10 +16,15 @@ import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.audio.SoundManager;
 import net.minecraft.client.particle.ParticleDrip;
 import net.minecraft.client.particle.ParticleSmokeNormal;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.sound.SoundLoadEvent;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -34,6 +39,8 @@ import paulscode.sound.SoundSystemConfig;
  *
  * @author don_bruce
  */
+@Mod.EventBusSubscriber(Side.CLIENT)
+@SideOnly(Side.CLIENT)
 public final class SFXSystem{	
 	private static final String[] soundManagerNames = { "sndManager", "field_147694_f" };
 	private static final String[] soundSystemNames = { "sndSystem", "field_148620_e" };
@@ -63,6 +70,35 @@ public final class SFXSystem{
 			MTS.MTSLog.fatal("ERROR IN SOUND SYSTEM REFLECTION!");
 			throw new RuntimeException(e);
    	    }
+	}
+	
+	/**
+	 * Runs right after SoundSystem start.
+	 * If we have the MC sound system saved, discard it as
+	 * it has been reset and is no longer valid.
+	 */
+	@SubscribeEvent
+	public static void on(SoundLoadEvent event){
+		mcSoundSystem = null;
+	}
+	
+	/**
+	 * Make sure we stop any of the sounds that are running when the world closes.
+	 */
+	@SubscribeEvent
+	public static void on(WorldEvent.Unload event){
+		if(event.getWorld().isRemote){
+			for(Entity entity : event.getWorld().loadedEntityList){
+				if(entity instanceof EntityMultipartE_Vehicle){
+					for(VehicleSound sound : ((EntityMultipartE_Vehicle) entity).getSounds()){
+						String soundID = sound.getSoundUniqueName();
+						if(mcSoundSystem.playing(soundID)){
+							mcSoundSystem.stop(soundID);
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	/**
@@ -106,6 +142,7 @@ public final class SFXSystem{
 				vehicle.initSounds();
 				vehicle.soundsNeedInit = false;
 			}
+			
 			EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 			mcSoundSystem.setListenerVelocity((float) player.motionX, (float) player.motionY, (float) player.motionZ);
 			for(VehicleSound sound : vehicle.getSounds()){
