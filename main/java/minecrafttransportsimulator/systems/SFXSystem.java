@@ -102,6 +102,18 @@ public final class SFXSystem{
 	}
 	
 	/**
+	 * Returns true if a player is determined to be inside a vehicle.
+	 * This is used to determine the volume of MTS sounds.
+	 */
+	public static boolean isPlayerInsideEnclosedVehicle(){
+		if(Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().thePlayer.getRidingEntity() instanceof EntityMultipartD_Moving){
+			return !((EntityMultipartD_Moving) Minecraft.getMinecraft().thePlayer.getRidingEntity()).pack.general.openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
+		}else{
+			return false;
+		}
+	}
+	
+	/**
 	 * Plays a single sound.
 	 */
 	public static void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){
@@ -178,14 +190,6 @@ public final class SFXSystem{
 	public static void doFX(FXPart part, World world){
 		if(world.isRemote){
 			part.spawnParticles();
-		}
-	}
-	
-	public static boolean isPlayerInsideEnclosedVehicle(){
-		if(Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().thePlayer.getRidingEntity() instanceof EntityMultipartD_Moving){
-			return !((EntityMultipartD_Moving) Minecraft.getMinecraft().thePlayer.getRidingEntity()).pack.general.openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
-		}else{
-			return false;
 		}
 	}
 	
