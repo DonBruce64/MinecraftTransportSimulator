@@ -13,6 +13,8 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.BlockPartBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.packets.general.PlayerCraftingPacket;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -21,14 +23,17 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
 public class GUIPartBench extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting.png");	
-	private final String[] partTypes;
+	private final List<String> partTypes;
 	private final EntityPlayer player;
+	private final boolean isForVehicles;
+	private final Map<String, ? extends Item> itemMap;
 	
 	private GuiButton leftPackButton;
 	private GuiButton rightPackButton;
@@ -49,6 +54,7 @@ public class GUIPartBench extends GuiScreen{
 	
 	/**Display list GL integers.  Keyed by part name.*/
 	private final Map<String, Integer> partDisplayLists = new HashMap<String, Integer>();
+	private final Map<String, Float> partScalingFactors = new HashMap<String, Float>();
 	
 	/**Part texture name.  Keyed by part name.*/
 	private final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
@@ -56,14 +62,16 @@ public class GUIPartBench extends GuiScreen{
 	public GUIPartBench(BlockPartBench bench, EntityPlayer player){
 		this.partTypes = bench.partTypes;
 		this.player = player;
+		this.isForVehicles = this.partTypes.contains("plane") || this.partTypes.contains("car");
+		this.itemMap = isForVehicles ? MTSRegistry.multipartItemMap : MTSRegistry.partItemMap;
 		updatePartNames();
 	}
 	
 	@Override 
 	public void initGui(){
 		super.initGui();
-		guiLeft = (this.width - 256)/2;
-		guiTop = (this.height - 201)/2;
+		guiLeft = this.isForVehicles ? (this.width - 356)/2 : (this.width - 256)/2;
+		guiTop = (this.height - 220)/2;
 		
 		buttonList.add(leftPackButton = new GuiButton(0, guiLeft + 25, guiTop + 5, 20, 20, "<"));
 		buttonList.add(rightPackButton = new GuiButton(0, guiLeft + 215, guiTop + 5, 20, 20, ">"));
@@ -75,26 +83,30 @@ public class GUIPartBench extends GuiScreen{
 	@Override
     public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
 		super.drawScreen(mouseX, mouseY, renderPartialTicks);
-		
-		//Draw header text, graphics, and buttons.
+		//Draw background layer.
 		GL11.glColor3f(1, 1, 1); //Not sure why buttons make this grey, but whatever...
 		mc.getTextureManager().bindTexture(background);
 		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 201);
+		
+		//If we are for vehicles, draw an extra segment to the right for the info text.
+		if(this.isForVehicles){
+			drawTexturedModalRect(guiLeft + 250, guiTop, 144, 0, 111, 201);
+		}
+		
+		//If we can make this part, draw the start arrow.
 		if(startButton.enabled){
 			drawTexturedModalRect(guiLeft + 140, guiTop + 173, 0, 201, 44, 16);
 		}
+		
+		//Render the text headers.
 		drawCenteredString(!packName.isEmpty() ? I18n.format("itemGroup." + packName) : "", guiLeft + 130, guiTop + 10);
-		drawCenteredString(!partName.isEmpty() ? I18n.format(MTSRegistry.partItemMap.get(partName).getUnlocalizedName() + ".name") : "", guiLeft + 130, guiTop + 30);
+		drawCenteredString(!partName.isEmpty() ? I18n.format(itemMap.get(partName).getUnlocalizedName() + ".name") : "", guiLeft + 130, guiTop + 30);
 		
 		//Render descriptive text.
-		ItemStack tempStack = new ItemStack(MTSRegistry.partItemMap.get(partName));
-		tempStack.setTagCompound(new NBTTagCompound());
-		List<String> descriptiveLines = new ArrayList<String>();
-		tempStack.getItem().addInformation(tempStack, player, descriptiveLines, false);
-		int lineOffset = 55;
-		for(String line : descriptiveLines){
-			mc.fontRendererObj.drawStringWithShadow(line, guiLeft + 10, guiTop + lineOffset, Color.WHITE.getRGB());
-			lineOffset += 10;
+		if(this.isForVehicles){
+			renderVehicleInfoText();
+		}else{
+			renderPartInfoText();
 		}
 		
 		//Set button states and render.
@@ -118,35 +130,45 @@ public class GUIPartBench extends GuiScreen{
 			stackOffset += 18;
 		}
 		
-		//Render the 3D model.  Cache the model if we haven't done so already.
+		//Parse the model if we haven't already.
 		if(!partDisplayLists.containsKey(partName)){
-			ResourceLocation partModelLocation;
-			if(PackParserSystem.getPartPack(partName).general.modelName != null){
-				partModelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + PackParserSystem.getPartPack(partName).general.modelName + ".obj");
+			if(this.isForVehicles){
+				String jsonName = PackParserSystem.getMultipartJSONName(partName);
+				//Check to make sure we haven't parsed this model for another item with another texture but same model.
+				for(String parsedItemName : partDisplayLists.keySet()){
+					if(PackParserSystem.getMultipartJSONName(parsedItemName).equals(jsonName)){
+						partDisplayLists.put(partName, partDisplayLists.get(parsedItemName));
+						partScalingFactors.put(partName, partScalingFactors.get(parsedItemName));
+						break;
+					}
+				}
+				
+				//If we didn't find an existing model, parse one now.
+				if(!partDisplayLists.containsKey(partName)){
+					ResourceLocation vehicleModelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/vehicles/" + jsonName + ".obj");
+					parseModel(vehicleModelLocation);
+				}
 			}else{
-				partModelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + ".obj");
-			}
-			
-			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation);
-			int displayListIndex = GL11.glGenLists(1);
-			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-			GL11.glBegin(GL11.GL_TRIANGLES);
-			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
-				for(Float[] vertex : entry.getValue()){
-					GL11.glTexCoord2f(vertex[3], vertex[4]);
-					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-					GL11.glVertex3f(-vertex[0], vertex[1], vertex[2]);
+				if(PackParserSystem.getPartPack(partName).general.modelName != null){
+					parseModel(new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + PackParserSystem.getPartPack(partName).general.modelName + ".obj"));
+				}else{
+					parseModel(new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + ".obj"));
 				}
 			}
-			GL11.glEnd();
-			GL11.glEndList();
-			partDisplayLists.put(partName, displayListIndex);
 		}
+		
+		//Cache the texture mapping if we haven't seen this part before.
 		if(!textureMap.containsKey(partName)){
-			ResourceLocation partTextureLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "textures/parts/" + partName.substring(partName.indexOf(':') + 1) + ".png");
+			final ResourceLocation partTextureLocation;
+			if(this.isForVehicles){
+				partTextureLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "textures/vehicles/" + partName.substring(partName.indexOf(':') + 1) + ".png");
+			}else{
+				partTextureLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "textures/parts/" + partName.substring(partName.indexOf(':') + 1) + ".png");
+			}
 			textureMap.put(partName, partTextureLocation);
 		}
 		
+		//Render the part in the GUI.
 		GL11.glPushMatrix();
 		GL11.glDisable(GL11.GL_LIGHTING);
 		mc.getTextureManager().bindTexture(textureMap.get(partName));
@@ -155,13 +177,119 @@ public class GUIPartBench extends GuiScreen{
 		GL11.glRotatef(45, 0, 1, 0);
 		GL11.glRotatef(35.264F, 1, 0, 1);
 		GL11.glRotatef(-player.worldObj.getTotalWorldTime()*2, 0, 1, 0);
-		float scale = 30F;
+		float scale = 30F*partScalingFactors.get(partName);
 		GL11.glScalef(scale, scale, scale);
 		GL11.glCallList(partDisplayLists.get(partName));
 		GL11.glPopMatrix();
 		
 	}
+	
+	private void renderVehicleInfoText(){
+		PackMultipartObject pack = PackParserSystem.getMultipartPack(partName);
+		byte controllers = 0;
+		byte passengers = 0;
+		byte cargo = 0;
+		byte mixed = 0;
+		for(PackPart part : pack.parts){
+			if(part.isController){
+				++controllers;
+			}else{
+				boolean canAcceptSeat = false;
+				boolean canAcceptChest = false;
+				if(part.types.contains("seat")){
+					canAcceptSeat = true;
+				}
+				if(part.types.contains("crate")){
+					canAcceptChest = true;
+				}
+				if(canAcceptSeat && !canAcceptChest){
+					++passengers;
+				}else if(canAcceptChest && !canAcceptSeat){
+					++cargo;
+				}else if(canAcceptChest && canAcceptSeat){
+					++mixed;
+				}
+			}
+		}
+		
+		List<String> headerLines = new ArrayList<String>();
+		headerLines.add(I18n.format("gui.vehicle_bench.type") + ":");
+		headerLines.add(I18n.format("gui.vehicle_bench.weight") + ":");
+		headerLines.add(I18n.format("gui.vehicle_bench.fuel") + ":");
+		headerLines.add(I18n.format("gui.vehicle_bench.controllers") + ":");
+		headerLines.add(I18n.format("gui.vehicle_bench.passengers") + ":");
+		headerLines.add(I18n.format("gui.vehicle_bench.cargo") + ":");
+		headerLines.add(I18n.format("gui.vehicle_bench.mixed") + ":");
+		int lineOffset = 55;
+		for(String line : headerLines){
+			mc.fontRendererObj.drawStringWithShadow(line, guiLeft + 10, guiTop + lineOffset, Color.WHITE.getRGB());
+			lineOffset += 10;
+		}
+		
+		List<String> descriptiveLines = new ArrayList<String>();
+		descriptiveLines.add(String.valueOf(pack.general.type));
+		descriptiveLines.add(String.valueOf(pack.general.emptyMass));
+		descriptiveLines.add(String.valueOf(pack.motorized.fuelCapacity));
+		descriptiveLines.add(String.valueOf(controllers));
+		descriptiveLines.add(String.valueOf(passengers));
+		descriptiveLines.add(String.valueOf(cargo));
+		descriptiveLines.add(String.valueOf(mixed));
+		lineOffset = 55;
+		for(String line : descriptiveLines){
+			mc.fontRendererObj.drawStringWithShadow(line, guiLeft + 90, guiTop + lineOffset, Color.WHITE.getRGB());
+			lineOffset += 10;
+		}
+
+		GL11.glPushMatrix();
+		GL11.glTranslatef(guiLeft + 255, guiTop + 55, 0);
+		GL11.glScalef(0.8F, 0.8F, 0.8F);
+		fontRendererObj.drawSplitString(I18n.format("description." + PackParserSystem.getMultipartJSONName(partName)), 0, 0, 120, Color.WHITE.getRGB());
+		GL11.glPopMatrix();
+	}
+	
+	private void renderPartInfoText(){
+		ItemStack tempStack = new ItemStack(itemMap.get(partName));
+		tempStack.setTagCompound(new NBTTagCompound());
+		List<String> descriptiveLines = new ArrayList<String>();
+		tempStack.getItem().addInformation(tempStack, player, descriptiveLines, false);
+		int lineOffset = 55;
+		for(String line : descriptiveLines){
+			mc.fontRendererObj.drawStringWithShadow(line, guiLeft + 10, guiTop + lineOffset, Color.WHITE.getRGB());
+			lineOffset += 10;
+		}
+	}
     
+	private void parseModel(ResourceLocation partModelLocation){
+		float minX = 999;
+		float maxX = -999;
+		float minY = 999;
+		float maxY = -999;
+		float minZ = 999;
+		float maxZ = -999;
+		Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation);
+		int displayListIndex = GL11.glGenLists(1);
+		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
+		GL11.glBegin(GL11.GL_TRIANGLES);
+		for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
+			for(Float[] vertex : entry.getValue()){
+				GL11.glTexCoord2f(vertex[3], vertex[4]);
+				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+				GL11.glVertex3f(-vertex[0], vertex[1], vertex[2]);
+				minX = Math.min(minX, vertex[0]);
+				maxX = Math.max(maxX, vertex[0]);
+				minY = Math.min(minY, vertex[1]);
+				maxY = Math.max(maxY, vertex[1]);
+				minZ = Math.min(minZ, vertex[2]);
+				maxZ = Math.max(maxZ, vertex[2]);
+			}
+		}
+		float globalMax = Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
+		partScalingFactors.put(partName, globalMax > 1.5 ? 1.5F/globalMax : 1.0F);
+		GL11.glEnd();
+		GL11.glEndList();
+		partDisplayLists.put(partName, displayListIndex);
+	}
+	
 	@Override
     protected void actionPerformed(GuiButton buttonClicked) throws IOException{
 		super.actionPerformed(buttonClicked);
@@ -218,29 +346,28 @@ public class GUIPartBench extends GuiScreen{
 		
 		boolean passedPack = false;
 		boolean passedPart = false;
-		for(String name : MTSRegistry.partItemMap.keySet()){
-			for(String partType : partTypes){
-				if(PackParserSystem.getPartPack(name).general.type.equals(partType)){
-					if(packName.isEmpty()){
-						packName = name.substring(0, name.indexOf(':'));
-					}else if(!passedPack && !name.startsWith(packName)){
-						prevPackName = name.substring(0, name.indexOf(':'));
+		for(String partItemName : itemMap.keySet()){
+			String partType = this.isForVehicles ? PackParserSystem.getMultipartPack(partItemName).general.type : PackParserSystem.getPartPack(partItemName).general.type;
+			if(partTypes.contains(partType)){
+				if(packName.isEmpty()){
+					packName = partItemName.substring(0, partItemName.indexOf(':'));
+				}else if(!passedPack && !partItemName.startsWith(packName)){
+					prevPackName = partItemName.substring(0, partItemName.indexOf(':'));
+				}
+				if(partItemName.startsWith(packName)){
+					passedPack = true;
+					if(partName.isEmpty()){
+						partName = partItemName;
+						passedPart = true;
+					}else if(partName.equals(partItemName)){
+						passedPart = true;
+					}else if(!passedPart){
+						prevPartName = partItemName;
+					}else if(nextPartName.isEmpty()){
+						nextPartName = partItemName;
 					}
-					if(name.startsWith(packName)){
-						passedPack = true;
-						if(partName.isEmpty()){
-							partName = name;
-							passedPart = true;
-						}else if(partName.equals(name)){
-							passedPart = true;
-						}else if(!passedPart){
-							prevPartName = name;
-						}else if(nextPartName.isEmpty()){
-							nextPartName = name;
-						}
-					}else if(nextPackName.isEmpty() && passedPack){
-						nextPackName = name.substring(0, name.indexOf(':'));
-					}
+				}else if(nextPackName.isEmpty() && passedPack){
+					nextPackName = partItemName.substring(0, partItemName.indexOf(':'));
 				}
 			}
 		}

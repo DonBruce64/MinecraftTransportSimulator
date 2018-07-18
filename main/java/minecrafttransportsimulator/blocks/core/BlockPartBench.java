@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.blocks.core;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
@@ -12,17 +14,18 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import scala.actors.threadpool.Arrays;
 
 public class BlockPartBench extends ABlockRotateable{
 	
-	public final String[] partTypes;
+	public final List<String> partTypes;
 	
-	public BlockPartBench(String[] partTypes){
+	public BlockPartBench(String... partTypes){
 		super(Material.IRON);
 		this.fullBlock = false;
 		this.setHardness(5.0F);
 		this.setResistance(10.0F);
-		this.partTypes = partTypes;
+		this.partTypes = Arrays.asList(partTypes);
 		this.setCreativeTab(MTSRegistry.coreTab);
 	}
 	
