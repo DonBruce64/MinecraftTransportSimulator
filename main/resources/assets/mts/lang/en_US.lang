@@ -199,6 +199,7 @@ tile.vehiclebench.name=Drafting Table
 tile.propellerbench.name=Propeller Bench
 tile.enginebench.name=Engine Hoist
 tile.wheelbench.name=Wheel Workbench
+tile.instrumentbench.name=Instrument Bench
 
 tile.fuelpump.name=Fuel Pump
 tile.fuelpump.level=LVL:

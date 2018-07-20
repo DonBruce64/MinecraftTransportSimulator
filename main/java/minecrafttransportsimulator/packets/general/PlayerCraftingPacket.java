@@ -85,8 +85,10 @@ public class PlayerCraftingPacket implements IMessage{
 							ItemStack stack;
 							if(MTSRegistry.multipartItemMap.containsKey(message.selectedItem)){
 								stack = new ItemStack(MTSRegistry.multipartItemMap.get(message.selectedItem));
-							}else{
+							}else if(MTSRegistry.partItemMap.containsKey(message.selectedItem)){
 								stack = new ItemStack(MTSRegistry.partItemMap.get(message.selectedItem));
+							}else{
+								stack = new ItemStack(MTSRegistry.instrumentItemMap.get(message.selectedItem));
 							}
 							player.getEntityWorld().spawnEntityInWorld(new EntityItem(player.getEntityWorld(), player.posX, player.posY, player.posZ, stack));
 						}

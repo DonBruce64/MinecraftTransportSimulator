@@ -33,6 +33,7 @@ public class GUIPartBench extends GuiScreen{
 	private final List<String> partTypes;
 	private final EntityPlayer player;
 	private final boolean isForVehicles;
+	private final boolean isForInstruments;
 	private final Map<String, ? extends Item> itemMap;
 	
 	private GuiButton leftPackButton;
@@ -63,7 +64,8 @@ public class GUIPartBench extends GuiScreen{
 		this.partTypes = bench.partTypes;
 		this.player = player;
 		this.isForVehicles = this.partTypes.contains("plane") || this.partTypes.contains("car");
-		this.itemMap = isForVehicles ? MTSRegistry.multipartItemMap : MTSRegistry.partItemMap;
+		this.isForInstruments = this.partTypes.contains("instrument");
+		this.itemMap = isForVehicles ? MTSRegistry.multipartItemMap : (isForInstruments ? MTSRegistry.instrumentItemMap : MTSRegistry.partItemMap);
 		updatePartNames();
 	}
 	
@@ -105,8 +107,10 @@ public class GUIPartBench extends GuiScreen{
 		//Render descriptive text.
 		if(this.isForVehicles){
 			renderVehicleInfoText();
-		}else{
+		}else if(!this.isForInstruments){
 			renderPartInfoText();
+		}else{
+			renderInstrumentInfoText();
 		}
 		
 		//Set button states and render.
@@ -128,6 +132,16 @@ public class GUIPartBench extends GuiScreen{
 			this.itemRender.renderItemAndEffectIntoGUI(craftingStack, guiLeft + stackOffset, guiTop + 172);
 			this.itemRender.renderItemOverlays(fontRendererObj, craftingStack, guiLeft + stackOffset, guiTop + 172);
 			stackOffset += 18;
+		}
+		
+		//If we are for instruments, render the 2D item and be done.
+		if(this.isForInstruments){
+			GL11.glPushMatrix();
+			GL11.glTranslatef(guiLeft + 172.5F, guiTop + 82.5F, 0);
+			GL11.glScalef(3, 3, 3);
+			this.itemRender.renderItemAndEffectIntoGUI(new ItemStack(itemMap.get(partName)), 0, 0);
+			GL11.glPopMatrix();
+			return;
 		}
 		
 		//Parse the model if we haven't already.
@@ -258,6 +272,10 @@ public class GUIPartBench extends GuiScreen{
 			lineOffset += 10;
 		}
 	}
+	
+	private void renderInstrumentInfoText(){
+		fontRendererObj.drawSplitString(I18n.format(itemMap.get(partName).getUnlocalizedName() + ".description"), guiLeft + 10, guiTop + 55, 120, Color.WHITE.getRGB());
+	}
     
 	private void parseModel(ResourceLocation partModelLocation){
 		float minX = 999;
@@ -347,8 +365,15 @@ public class GUIPartBench extends GuiScreen{
 		boolean passedPack = false;
 		boolean passedPart = false;
 		for(String partItemName : itemMap.keySet()){
-			String partType = this.isForVehicles ? PackParserSystem.getMultipartPack(partItemName).general.type : PackParserSystem.getPartPack(partItemName).general.type;
-			if(partTypes.contains(partType)){
+			final boolean isValid;
+			if(this.isForVehicles){
+				isValid = partTypes.contains(PackParserSystem.getMultipartPack(partItemName).general.type);
+			}else if(!this.isForInstruments){
+				isValid = partTypes.contains(PackParserSystem.getPartPack(partItemName).general.type);
+			}else{
+				isValid = true;
+			}
+			if(isValid){
 				if(packName.isEmpty()){
 					packName = partItemName.substring(0, partItemName.indexOf(':'));
 				}else if(!passedPack && !partItemName.startsWith(packName)){
