@@ -9,7 +9,6 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartCrate;
 import minecrafttransportsimulator.multipart.parts.PartSeat;
@@ -64,7 +63,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	private final BiMap<Integer, PartSeat> riderSeats = HashBiMap.create();
 	
 	/**List for storage of rider linkages to seats.  Populated during NBT load and used to populate the riderSeats map after riders load.*/
-	private List<Byte> riderSeatIDs = new ArrayList<Byte>();
+	private List<Double[]> riderSeatPositions = new ArrayList<Double[]>();
 	
 	/**Names for reflection to get the entity any entity is riding.**/
 	private static final String[] ridingEntityNames = { "ridingEntity", "field_73141_v", "field_184239_as"};
@@ -201,37 +200,13 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 			passenger.motionX = this.motionX;
 			passenger.motionY = this.motionY;
 			passenger.motionZ = this.motionZ;
-		}else if(pack != null && !this.riderSeatIDs.isEmpty()){
-			byte riderSeatId = this.riderSeatIDs.get(this.getPassengers().indexOf(passenger));
-			
-			//Double-check the pack didn't change since last load.
-			if(pack.parts.size() > riderSeatId){
-				PackPart packPart = pack.parts.get(riderSeatId);
-				boolean isSeatPossible = false;
-				boolean wasSeatFound = false;
-				if(packPart.types.contains("seat")){
-					isSeatPossible = true;
-					for(APart part : this.getMultipartParts()){
-						if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
-							if(part instanceof PartSeat){
-								riderSeats.put(passenger.getEntityId(), (PartSeat) part);
-								wasSeatFound = true;
-								break;
-							}
-						}
-					}
-				}
-				if(!wasSeatFound){
-					if(!isSeatPossible){
-						MTS.MTSLog.error("ERROR: NO JSON SEAT FOUND WHEN LINKING RIDER TO SEAT IN MULTIPART!");
-					}
-					if(!worldObj.isRemote){
-						passenger.dismountRidingEntity();
-					}
-					return;
-				}
+		}else if(pack != null && !this.riderSeatPositions.isEmpty()){
+			Double[] seatLocation = this.riderSeatPositions.get(this.getPassengers().indexOf(passenger));
+			APart part = getPartAtLocation(seatLocation[0], seatLocation[1], seatLocation[2]);
+			if(part instanceof PartSeat){
+				riderSeats.put(passenger.getEntityId(), (PartSeat) part);
 			}else{
-				MTS.MTSLog.error("ERROR: NO JSON PART DEFINITION FOUND WHEN LINKING RIDER TO SEAT IN MULTIPART!");
+				MTS.MTSLog.error("ERROR: NO SEAT FOUND WHEN LINKING RIDER TO SEAT IN MULTIPART!");
 				if(!worldObj.isRemote){
 					passenger.dismountRidingEntity();
 				}
@@ -417,9 +392,13 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
 		
-		this.riderSeatIDs.clear();
-		while(tagCompound.hasKey("Seat" + String.valueOf(riderSeatIDs.size()))){
-			riderSeatIDs.add(tagCompound.getByte("Seat" + String.valueOf(riderSeatIDs.size())));
+		this.riderSeatPositions.clear();
+		while(tagCompound.hasKey("Seat" + String.valueOf(riderSeatPositions.size()) + "0")){
+			Double[] seatPosition = new Double[3];
+			seatPosition[0] = tagCompound.getDouble("Seat" + String.valueOf(riderSeatPositions.size()) + "0");
+			seatPosition[1] = tagCompound.getDouble("Seat" + String.valueOf(riderSeatPositions.size()) + "1");
+			seatPosition[2] = tagCompound.getDouble("Seat" + String.valueOf(riderSeatPositions.size()) + "2");
+			riderSeatPositions.add(seatPosition);
 		}
 	}
     
@@ -433,19 +412,14 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		tagCompound.setString("displayText", this.displayText);
 		
 		//Correlate the order of passengers in the rider list with their location to save it to NBT.
-		//That way riders don't get re-ordered on world save/load.
+		//That way riders don't get moved to other seats on world save/load.
 		for(byte i=0; i<this.getPassengers().size(); ++i){
 			Entity rider = this.getPassengers().get(i);
 			PartSeat seat = this.getSeatForRider(rider);
 			if(seat != null){
-				for(byte j=0; j<pack.parts.size(); ++j){
-					PackPart packPart = pack.parts.get(j);
-					if(packPart.types.contains("seat")){
-						if(seat.offset.xCoord == packPart.pos[0] && seat.offset.yCoord == packPart.pos[1] && seat.offset.zCoord == packPart.pos[2]){
-							tagCompound.setByte("Seat" + String.valueOf(i), j);
-						}
-					}
-				}
+				tagCompound.setDouble("Seat" + String.valueOf(i) + "0", seat.offset.xCoord);
+				tagCompound.setDouble("Seat" + String.valueOf(i) + "1", seat.offset.yCoord);
+				tagCompound.setDouble("Seat" + String.valueOf(i) + "2", seat.offset.zCoord);
 			}
 		}
 		return tagCompound;

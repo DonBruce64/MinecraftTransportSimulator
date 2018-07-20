@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items.parts;
 
 import java.util.List;
 
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -18,9 +19,9 @@ public abstract class AItemPartEngine extends AItemPart{
 	}
 	
 	@Override
-	public boolean isPartValueInRange(float minValue, float maxValue){
+	public boolean isPartValidForPackDef(PackPart packPart){
 		float fuelConsumption = PackParserSystem.getPartPack(partName).engine.fuelConsumption;
-		return minValue <= fuelConsumption && maxValue >= fuelConsumption;
+		return packPart.minValue <= fuelConsumption && packPart.maxValue >= fuelConsumption ? super.isPartValidForPackDef(packPart) : false;
 	}
 	
 	@Override

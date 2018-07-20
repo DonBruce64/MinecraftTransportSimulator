@@ -20,6 +20,7 @@ import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackFileDefin
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.items.parts.ItemPartCrate;
+import minecrafttransportsimulator.items.parts.ItemPartCustom;
 import minecrafttransportsimulator.items.parts.ItemPartEngineAircraft;
 import minecrafttransportsimulator.items.parts.ItemPartEngineCar;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDevice;
@@ -30,6 +31,7 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartCrate;
+import minecrafttransportsimulator.multipart.parts.PartCustom;
 import minecrafttransportsimulator.multipart.parts.PartEngineAircraft;
 import minecrafttransportsimulator.multipart.parts.PartEngineCar;
 import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
@@ -230,6 +232,7 @@ public final class PackParserSystem{
 			case "ground_device": return PartGroundDevice.class;
 			case "propeller": return PartPropeller.class;
 			case "seat": return PartSeat.class;
+			case "custom": return PartCustom.class;
 			default: return null;
 		}
     }
@@ -242,6 +245,7 @@ public final class PackParserSystem{
 			case "ground_device": return ItemPartGroundDevice.class;
 			case "propeller": return ItemPartPropeller.class;
 			case "seat": return ItemPartSeat.class;
+			case "custom": return ItemPartCustom.class;
 			default: return null;
 		}
     }

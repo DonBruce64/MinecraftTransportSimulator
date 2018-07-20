@@ -73,8 +73,10 @@ public class PackMultipartObject{
         public boolean turnsWithSteer;
         public boolean isController;
         public List<String> types;
+        public List<String> customTypes;
         public float minValue;
         public float maxValue;
+        public PackPart additionalPart;
     }
     
     public class PackCollisionBox{

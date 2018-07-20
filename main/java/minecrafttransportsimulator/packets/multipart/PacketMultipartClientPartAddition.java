@@ -19,29 +19,25 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class PacketMultipartClientPartAddition extends APacketMultipart{
-	private byte partIndex;
+public class PacketMultipartClientPartAddition extends APacketMultipartPart{
 	private ItemStack partStack;
 
 	public PacketMultipartClientPartAddition(){}
 	
-	public PacketMultipartClientPartAddition(EntityMultipartA_Base multipart, byte partIndex, ItemStack partStack){
-		super(multipart);
-		this.partIndex = partIndex;
+	public PacketMultipartClientPartAddition(EntityMultipartA_Base multipart, double offsetX, double offsetY, double offsetZ, ItemStack partStack){
+		super(multipart, offsetX, offsetY, offsetZ);
 		this.partStack = partStack;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		super.fromBytes(buf);
-		this.partIndex=buf.readByte();
 		this.partStack=ByteBufUtils.readItemStack(buf);
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		super.toBytes(buf);
-		buf.writeByte(this.partIndex);
 		ByteBufUtils.writeItemStack(buf, partStack);
 	}
 
@@ -52,7 +48,7 @@ public class PacketMultipartClientPartAddition extends APacketMultipart{
 				@Override
 				public void run(){
 					EntityMultipartA_Base multipart = (EntityMultipartA_Base) getMultipart(message, ctx);
-					PackPart packPart = multipart.pack.parts.get(message.partIndex);
+					PackPart packPart = multipart.getPackDefForLocation(message.offsetX, message.offsetY, message.offsetZ);
 					String partName = ((AItemPart) message.partStack.getItem()).partName;
 					Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
 					try{

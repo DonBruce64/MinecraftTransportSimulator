@@ -1,15 +1,23 @@
 package minecrafttransportsimulator.dataclasses;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
+
 public class PackPartObject{
 	public PartGeneralConfig general;
     public PartEngineConfig engine;
     public PartGroundDeviceConfig groundDevice;
     public PartPropellerConfig propeller;
+    public PartCustomConfig custom;
+    public List<PackPart> extraParts = new ArrayList<PackPart>();
 
     public class PartGeneralConfig{
     	public String type;
     	public String modelName;
     	public String[] materials;
+    	public String customType;
     }
     
     public class PartEngineConfig{
@@ -42,5 +50,10 @@ public class PackPartObject{
     	public short pitch;
     	public int diameter;
     	public int startingHealth;
+    }
+    
+    public class PartCustomConfig{
+    	public float width;
+    	public float height;
     }
 }

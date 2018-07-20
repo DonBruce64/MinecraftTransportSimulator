@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.systems;
 
+import java.util.Map.Entry;
+
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
@@ -117,31 +119,27 @@ public final class ClientEventSystem{
 					//If this item is a part, find if we are right-clicking a valid part area.
 					//If so, send the info to the server to add a new part.
 					//Note that the server will check if we can actually add the part in question.
+					//All we do is get the first position we click that we *could* place a part.
 			    	if(event.getItemStack().getItem() instanceof AItemPart && multipart.pack != null){
-	    				for(byte i=0; i<multipart.pack.parts.size(); ++i){
-	    					PackPart packPart = multipart.pack.parts.get(i);
-	    					Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
-	    					Vec3d offset = RotationSystem.getRotatedPoint(partOffset.addVector(0, 0.25F, 0), multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
-	    					MultipartAxisAlignedBB partBox = new MultipartAxisAlignedBB(multipart.getPositionVector().add(offset), partOffset.addVector(0, 0.25F, 0), 1.5F, 2.0F);	    					
-	    					Vec3d lookVec = player.getLook(1.0F);
-	        				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
-	        				for(float f=1.0F; f<4.0F; f += 0.1F){
-	        					if(partBox.isVecInside(clickedVec)){
-	        						boolean isPartPresent = false;
-	        						for(APart part : multipart.getMultipartParts()){
-										if(part.offset.equals(partOffset)){
-											isPartPresent = true;
-											break;
-										}
+			    		Vec3d lookVec = player.getLook(1.0F);
+        				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
+			    		for(float f=1.0F; f<4.0F; f += 0.1F){
+			    			for(Entry<Vec3d, PackPart> packPartEntry : multipart.getAllPossiblePackParts().entrySet()){
+		    					Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey().addVector(0, 0.25F, 0), multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
+		    					MultipartAxisAlignedBB partBox = new MultipartAxisAlignedBB(multipart.getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0.25F, 0), 1.5F, 2.0F);	    					
+		    					
+		    					if(partBox.isVecInside(clickedVec)){
+	        						//If we clicked an occupied spot, don't do anything.
+	        						if(multipart.getPartAtLocation(packPartEntry.getKey().xCoord, packPartEntry.getKey().yCoord, packPartEntry.getKey().zCoord) != null){
+										return;
 									}
-	        						if(!isPartPresent){
-		        						MTS.MTSNet.sendToServer(new PacketMultipartServerPartAddition(multipart, player, i));
-		        						return;
-	        						}
+	        						//Spot is not occupied, send packet to server to spawn part if able.
+		        					MTS.MTSNet.sendToServer(new PacketMultipartServerPartAddition(multipart, packPartEntry.getKey().xCoord, packPartEntry.getKey().yCoord, packPartEntry.getKey().zCoord, player));
+		        					return;
 	        					}
-	        					clickedVec = clickedVec.addVector(lookVec.xCoord*0.1F, lookVec.yCoord*0.1F, lookVec.zCoord*0.1F);
-	        				}
-	    				}
+		    				}
+        					clickedVec = clickedVec.addVector(lookVec.xCoord*0.1F, lookVec.yCoord*0.1F, lookVec.zCoord*0.1F);
+        				}
 	    			}else{
 	    				//If we are not holding a part, see if we at least clicked the multipart.
 	    				//If so, and we are holding a wrench or key or name tag or glass pane, act on that.

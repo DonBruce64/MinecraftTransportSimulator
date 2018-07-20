@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items.parts;
 
 import java.util.List;
 
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.resources.I18n;
@@ -17,9 +18,9 @@ public class ItemPartPropeller extends AItemPart{
 	}
 	
 	@Override
-	public boolean isPartValueInRange(float minValue, float maxValue){
+	public boolean isPartValidForPackDef(PackPart packPart){
 		float propellerDiameter = PackParserSystem.getPartPack(partName).propeller.diameter;
-		return minValue <= propellerDiameter && maxValue >= propellerDiameter;
+		return packPart.minValue <= propellerDiameter && packPart.maxValue >= propellerDiameter ? super.isPartValidForPackDef(packPart) : false;
 	}
 	
 	@Override

@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items.parts;
 
 import java.util.List;
 
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.resources.I18n;
@@ -17,9 +18,9 @@ public class ItemPartGroundDevice extends AItemPart{
 	}
 	
 	@Override
-	public boolean isPartValueInRange(float minValue, float maxValue){
+	public boolean isPartValidForPackDef(PackPart packPart){
 		float diameter = PackParserSystem.getPartPack(partName).groundDevice.diameter;
-		return minValue <= diameter && maxValue >= diameter;
+		return packPart.minValue <= diameter && packPart.maxValue >= diameter ? super.isPartValidForPackDef(packPart) : false;
 	}
 	
 	@Override

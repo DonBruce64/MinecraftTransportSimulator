@@ -5,12 +5,14 @@ import java.lang.reflect.Constructor;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
+import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartA_Base;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -21,26 +23,26 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
-	private byte partIndex;
+public class PacketMultipartServerPartAddition extends APacketMultipartPart{
+	private int player;
 
 	public PacketMultipartServerPartAddition(){}
 	
-	public PacketMultipartServerPartAddition(EntityMultipartA_Base multipart, EntityPlayer player, byte partIndex){
-		super(multipart, player);
-		this.partIndex = partIndex;
+	public PacketMultipartServerPartAddition(EntityMultipartA_Base multipart, double offsetX, double offsetY, double offsetZ, EntityPlayer player){
+		super(multipart, offsetX, offsetY, offsetZ);
+		this.player = player.getEntityId();
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		super.fromBytes(buf);
-		this.partIndex=buf.readByte();
+		this.player = buf.readInt();
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		super.toBytes(buf);
-		buf.writeByte(this.partIndex);
+		buf.writeInt(this.player);
 	}
 
 	public static class Handler implements IMessageHandler<PacketMultipartServerPartAddition, IMessage>{
@@ -51,15 +53,21 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
 				public void run(){
 					//Check to make sure we can actually add this part before we do so.
 					EntityMultipartA_Base multipart = (EntityMultipartA_Base) getMultipart(message, ctx);
-					EntityPlayer player = getPlayer(message, ctx);
+					EntityPlayer player;
+					if(ctx.side.isServer()){
+						player = (EntityPlayer) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.player);
+					}else{
+						player = (EntityPlayer) Minecraft.getMinecraft().theWorld.getEntityByID(message.player);
+					}
 					
 					ItemStack heldStack = player.getHeldItemMainhand();
 					if(heldStack != null){
 						if(heldStack.getItem() instanceof AItemPart){
 							//Player is holding a valid part.  Now check if part goes to this multipart.
 							AItemPart partItem = (AItemPart) heldStack.getItem();
-							PackPart packPart = multipart.pack.parts.get(message.partIndex);
-							if(packPart.types.contains(partItem.partType)){
+							PackPart packPart = multipart.getPackDefForLocation(message.offsetX, message.offsetY, message.offsetZ);
+							PackPartObject itemPack = PackParserSystem.getPartPack(partItem.partName);
+							if(packPart.types.contains(itemPack.general.type)){
 								//This part does go to this multipart.  Now check if one is already there.
 								Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
         						for(APart part : multipart.getMultipartParts()){
@@ -68,7 +76,8 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
 										return;
 									}
 								}
-        						if(!partItem.isPartValueInRange(packPart.minValue, packPart.maxValue)){
+        						PackParserSystem.getPartPack(partItem.partName);
+        						if(!partItem.isPartValidForPackDef(packPart)){
     								//Part is a valid type, but is not a valid configuration.  Bail.
         							return;
     							}
@@ -83,7 +92,7 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
 										if(!player.capabilities.isCreativeMode){
 											player.inventory.clearMatchingItems(partItem, heldStack.getItemDamage(), 1, heldStack.getTagCompound());
 										}
-										MTS.MTSNet.sendToAll(new PacketMultipartClientPartAddition(multipart, message.partIndex, heldStack));
+										MTS.MTSNet.sendToAll(new PacketMultipartClientPartAddition(multipart, newPart.offset.xCoord, newPart.offset.yCoord, newPart.offset.zCoord, heldStack));
 									}else{
 										MTS.MTSNet.sendTo(new ChatPacket("interact.failure.missingpart"), (EntityPlayerMP) player);
 									}
@@ -100,5 +109,4 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPlayer{
 			return null;
 		}
 	}
-
 }

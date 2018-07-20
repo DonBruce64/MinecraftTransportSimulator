@@ -2,7 +2,9 @@ package minecrafttransportsimulator.multipart.main;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 
@@ -125,13 +127,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 				if(playBreakSound){
 					this.playSound(SoundEvents.ITEM_SHIELD_BREAK, 2.0F, 1.0F);
 				}
-				for(byte i=0; i<this.pack.parts.size(); ++i){
-					PackPart packPart = this.pack.parts.get(i);
-					Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
-					if(partOffset.equals(part.offset)){
-						MTS.MTSNet.sendToAll(new PacketMultipartClientPartRemoval(this, i));
-					}
-				}
+				MTS.MTSNet.sendToAll(new PacketMultipartClientPartRemoval(this, part.offset.xCoord, part.offset.yCoord, part.offset.zCoord));
 			}
 		}
 	}
@@ -145,20 +141,88 @@ public abstract class EntityMultipartA_Base extends Entity{
 	}
 	
 	/**
-	 * Returns the part index for a part.  Useful for packets and 
-	 * other data transmission where you need to specify a specific part
-	 * without sending the whole offset data. 
+	 * Gets the part at the specified location.
 	 */
-	public byte getMultipartPartIndex(APart part){
-		return (byte) parts.indexOf(part);
+	public APart getPartAtLocation(double offsetX, double offsetY, double offsetZ){
+		for(APart part : this.parts){
+			if(part.offset.xCoord == offsetX && part.offset.yCoord == offsetY && part.offset.zCoord == offsetZ){
+				return part;
+			}
+		}
+		return null;
 	}
 	
 	/**
-	 * Returns a part given an index.  Note that this can change if parts are added or removed,
-	 * so only count on indexes being valid for a short time!
+	 * Gets all possible pack parts.  This includes additional parts on the multipart
+	 * and extra parts of parts on other parts.  Map returned is the position of the
+	 * part positions and the part pack information at those positions.
+	 * Note that additional parts will not be added if no part is present
+	 * in the primary location.
 	 */
-	public APart getMultipartPartByIndex(byte index){
-		return parts.get(index);
+	public Map<Vec3d, PackPart> getAllPossiblePackParts(){
+		Map<Vec3d, PackPart> packParts = new HashMap<Vec3d, PackPart>();
+		//First get all the regular part spots.
+		for(PackPart packPart : pack.parts){
+			Vec3d partPos = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
+			packParts.put(partPos, packPart);
+			
+			//Check to see if we can put an additional part in this location.
+			if(packPart.additionalPart != null){
+				for(APart part : this.parts){
+					if(part.offset.equals(partPos)){
+						packParts.put(new Vec3d(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]), packPart.additionalPart);
+						break;
+					}
+				}				
+			}
+		}
+		
+		//Next get any extra parts on parts that are present.
+		for(APart part : this.parts){
+			if(part.pack.extraParts != null){
+				for(PackPart extraPackPart : part.pack.extraParts){
+					packParts.put(new Vec3d(extraPackPart.pos[0], extraPackPart.pos[1], extraPackPart.pos[2]).add(part.offset), extraPackPart);
+				}
+			}
+			
+		}
+		return packParts;
+	}
+	
+	/**
+	 * Gets the pack definition at the specified location.
+	 */
+	public PackPart getPackDefForLocation(double offsetX, double offsetY, double offsetZ){
+		//Check to see if this is a main part.
+		for(PackPart packPart : pack.parts){
+			if(packPart.pos[0] == offsetX && packPart.pos[1] == offsetY && packPart.pos[2] == offsetZ){
+				return packPart;
+			}
+			
+			//Not a main part.  Check if this is an additional part.
+			if(packPart.additionalPart != null){
+				if(packPart.additionalPart.pos[0] == offsetX && packPart.additionalPart.pos[1] == offsetY && packPart.additionalPart.pos[2] == offsetZ){
+					return packPart.additionalPart;
+				}
+			}
+		}
+		
+		//If this is not a main part or an additional part, check the extra parts.
+		for(APart part : this.parts){
+			if(part.pack.extraParts != null){
+				for(PackPart extraPackPart : part.pack.extraParts){
+					//Convert from relative extra part positions to absolute positions.
+					double relativeOffsetX = part.offset.xCoord + extraPackPart.pos[0];
+					double relativeOffsetY = part.offset.yCoord + extraPackPart.pos[1];
+					double relativeOffsetZ = part.offset.zCoord + extraPackPart.pos[2];
+					if(relativeOffsetX == offsetX && relativeOffsetY == offsetY && relativeOffsetZ == offsetZ){
+						return extraPackPart;
+					}
+				}
+			}
+		}
+		
+		return null;
 	}
 			
     @Override

@@ -28,6 +28,7 @@ import minecrafttransportsimulator.multipart.parts.PartEngineCar;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -667,27 +668,24 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		if(heldStack != null){
 			if(heldStack.getItem() instanceof AItemPart){
 				AItemPart heldItem = (AItemPart) heldStack.getItem();
-				for(PackPart packPart : multipart.pack.parts){
+				for(Entry<Vec3d, PackPart> packPartEntry : multipart.getAllPossiblePackParts().entrySet()){
 					boolean isPresent = false;
 					boolean isHoldingPart = false;
 					boolean isPartValid = false;
-					Vec3d partPos = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
-					for(APart part : multipart.getMultipartParts()){
-						if(part.offset.equals(partPos)){
-							isPresent = true;
-							break;
-						}
+					
+					if(multipart.getPartAtLocation(packPartEntry.getKey().xCoord, packPartEntry.getKey().yCoord, packPartEntry.getKey().zCoord) != null){
+						isPresent = true;
 					}
 					
-					if(packPart.types.contains(heldItem.partType)){
+					if(packPartEntry.getValue().types.contains(PackParserSystem.getPartPack(heldItem.partName).general.type)){
 						isHoldingPart = true;
-						if(heldItem.isPartValueInRange(packPart.minValue, packPart.maxValue)){
+						if(heldItem.isPartValidForPackDef(packPartEntry.getValue())){
 							isPartValid = true;
 						}
 					}
 							
 					if(!isPresent && isHoldingPart){
-						Vec3d offset = RotationSystem.getRotatedPoint(partPos, multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
+						Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
 						AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.75F, (float) (offset.yCoord) - 0.75F, (float) (offset.zCoord) - 0.75F, (float) (offset.xCoord) + 0.75F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.75F);
 						
 						GL11.glPushMatrix();
