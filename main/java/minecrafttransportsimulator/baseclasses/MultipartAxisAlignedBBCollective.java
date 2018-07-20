@@ -60,6 +60,21 @@ public class MultipartAxisAlignedBBCollective extends MultipartAxisAlignedBB{
     }
 	
 	@Override
+    public boolean intersectsWith(AxisAlignedBB other){
+		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
+			if(box.intersectsWith(other)){
+				return true;
+			}
+		}
+		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
+			if(box.intersectsWith(other)){
+				return true;
+			}
+		}
+		return false;
+    }
+	
+	@Override
     public boolean intersects(double x1, double y1, double z1, double x2, double y2, double z2){
 		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
 			if(box.intersects(x1, y1, z1, x2, y2, z2)){
