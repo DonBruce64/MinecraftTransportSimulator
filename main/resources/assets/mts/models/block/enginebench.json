@@ -1,8 +1,8 @@
 ﻿{
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "mts:blocks/enginehoist",
-		"particle": "mts:blocks/enginehoist"
+		"0": "mts:blocks/enginebench",
+		"particle": "mts:blocks/enginebench"
 	},
 	"display": {
 			"gui": {

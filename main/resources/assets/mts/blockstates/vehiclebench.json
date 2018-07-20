@@ -1,16 +1,16 @@
 {
     "multipart": [
         {   "when": { "rotation": "north" },
-            "apply": { "model": "mts:enginehoist", "y" : 180 }
+            "apply": { "model": "mts:vehiclebench", "y" : 180 }
         },
         {   "when": { "rotation": "east" },
-            "apply": { "model": "mts:enginehoist", "y" : 270}
+            "apply": { "model": "mts:vehiclebench", "y" : 270}
         },
         {   "when": { "rotation": "south" },
-            "apply": { "model": "mts:enginehoist"}
+            "apply": { "model": "mts:vehiclebench"}
         },
         {   "when": { "rotation": "west" },
-            "apply": { "model": "mts:enginehoist", "y" : 90}
+            "apply": { "model": "mts:vehiclebench", "y" : 90}
         }
     ]
 }

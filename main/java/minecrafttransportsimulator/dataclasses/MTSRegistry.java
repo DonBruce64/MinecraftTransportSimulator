@@ -113,14 +113,14 @@ public final class MTSRegistry{
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
 	
 	//Crafting bench blocks.
-	public static final Block draftingTable = new BlockPartBench("plane", "car");
-	public static final Item itemBlockDraftingTable = new ItemBlock(draftingTable);
+	public static final Block vehicleBench = new BlockPartBench("plane", "car");
+	public static final Item itemBlockVehicleBench = new ItemBlock(vehicleBench);
 	public static final Block propellerBench = new BlockPartBench("propeller");
 	public static final Item itemBlockPropellerBench = new ItemBlock(propellerBench);
-	public static final Block engineHoist = new BlockPartBench("engine_aircraft", "engine_car");
-	public static final Item itemBlockEngineHoist = new ItemBlock(engineHoist);
-	public static final Block wheelWorkbench = new BlockPartBench("ground_device");
-	public static final Item itemBlockWheelWorkbench = new ItemBlock(wheelWorkbench);
+	public static final Block engineBench = new BlockPartBench("engine_aircraft", "engine_car");
+	public static final Item itemBlockEngineBench = new ItemBlock(engineBench);
+	public static final Block wheelBench = new BlockPartBench("ground_device");
+	public static final Item itemBlockWheelBench = new ItemBlock(wheelBench);
 	
 	//Fuel pump.
 	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(coreTab);		
@@ -359,8 +359,8 @@ public final class MTSRegistry{
 	}
 	
 	private static void initCraftingBenchItemRecipes(){
-		//Drafting table
-		registerRecipe(new ItemStack(itemBlockDraftingTable),
+		//Vehicle bench
+		registerRecipe(new ItemStack(itemBlockVehicleBench),
 				"WWW",
 				"WGW",
 				"F F",
@@ -375,8 +375,8 @@ public final class MTSRegistry{
 				'A', Items.IRON_INGOT,
 				'B', Items.DIAMOND,
 				'C', Blocks.ANVIL);
-		//Engine hoist
-		registerRecipe(new ItemStack(itemBlockEngineHoist),
+		//Engine bench
+		registerRecipe(new ItemStack(itemBlockEngineBench),
 				"AAA",
 				"BDA",
 				" CC",
@@ -384,8 +384,8 @@ public final class MTSRegistry{
 				'B', Blocks.IRON_BARS,
 				'C', Blocks.IRON_BLOCK,
 				'D', new ItemStack(Items.DYE, 1, 1));
-		//Wheel workbench
-		registerRecipe(new ItemStack(itemBlockWheelWorkbench),
+		//Wheel bench
+		registerRecipe(new ItemStack(itemBlockWheelBench),
 				"A  ",
 				"ACC",
 				"BCC",

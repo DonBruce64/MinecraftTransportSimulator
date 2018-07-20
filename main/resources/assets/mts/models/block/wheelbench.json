@@ -1,8 +1,8 @@
 ﻿{
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "mts:blocks/wheelworkbench",
-		"particle": "mts:blocks/wheelworkbench"
+		"0": "mts:blocks/wheelbench",
+		"particle": "mts:blocks/wheelbench"
 	},
 	"display": {
 			"gui": {

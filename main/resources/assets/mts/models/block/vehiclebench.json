@@ -1,8 +1,8 @@
 ﻿{
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "mts:blocks/draftingtable",
-		"particle": "mts:blocks/draftingtable"
+		"0": "mts:blocks/vehiclebench",
+		"particle": "mts:blocks/vehiclebench"
 	},
 	"display": {
 			"gui": {

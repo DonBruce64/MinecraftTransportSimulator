@@ -195,10 +195,10 @@ item.wrench.name=Wrench
 item.key.name=Key
 item.manual.name=MTS Manual (READ ME!)
 
-tile.draftingtable.name=Drafting Table
+tile.vehiclebench.name=Drafting Table
 tile.propellerbench.name=Propeller Bench
-tile.enginehoist.name=Engine Hoist
-tile.wheelworkbench.name=Wheel Workbench
+tile.enginebench.name=Engine Hoist
+tile.wheelbench.name=Wheel Workbench
 
 tile.fuelpump.name=Fuel Pump
 tile.fuelpump.level=LVL:

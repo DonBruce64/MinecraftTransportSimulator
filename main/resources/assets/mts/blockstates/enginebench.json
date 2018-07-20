@@ -1,16 +1,16 @@
 {
     "multipart": [
         {   "when": { "rotation": "north" },
-            "apply": { "model": "mts:draftingtable", "y" : 180 }
+            "apply": { "model": "mts:enginebench", "y" : 180 }
         },
         {   "when": { "rotation": "east" },
-            "apply": { "model": "mts:draftingtable", "y" : 270}
+            "apply": { "model": "mts:enginebench", "y" : 270}
         },
         {   "when": { "rotation": "south" },
-            "apply": { "model": "mts:draftingtable"}
+            "apply": { "model": "mts:enginebench"}
         },
         {   "when": { "rotation": "west" },
-            "apply": { "model": "mts:draftingtable", "y" : 90}
+            "apply": { "model": "mts:enginebench", "y" : 90}
         }
     ]
 }
