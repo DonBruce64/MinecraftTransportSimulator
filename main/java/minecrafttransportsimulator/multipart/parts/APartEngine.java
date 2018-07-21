@@ -195,6 +195,7 @@ public abstract class APartEngine extends APart implements FXPart{
 	
 	@Override
 	public void removePart(){
+		super.removePart();
 		this.state = EngineStates.ENGINE_OFF;
 	}
 	

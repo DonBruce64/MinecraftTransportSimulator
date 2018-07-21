@@ -11,7 +11,7 @@ public class PackPartObject{
     public PartGroundDeviceConfig groundDevice;
     public PartPropellerConfig propeller;
     public PartCustomConfig custom;
-    public List<PackPart> extraParts = new ArrayList<PackPart>();
+    public List<PackPart> subParts = new ArrayList<PackPart>();
 
     public class PartGeneralConfig{
     	public String type;

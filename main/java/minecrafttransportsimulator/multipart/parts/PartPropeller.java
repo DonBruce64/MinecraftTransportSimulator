@@ -29,9 +29,8 @@ public class PartPropeller extends APart{
 	public PartPropeller(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
 		this.damage = dataTag.getFloat("damage");
-		//Due to linking timings, it will be impossible for players to add propellers without engines and
-		//have them be saved to multiparts.  Because of this, we can check for engines here as they MUST
-		//be present or this propeller is invalid and should be dropped as an item.
+		//Due to JSON setup, it will be impossible for players to add propellers without engines and
+		//have them be saved to multiparts.  Because of this, we can check for engines here as they MUST be present.
 		for(APart part : multipart.getMultipartParts()){
 			if(part instanceof PartEngineAircraft){
 				if(part.offset.xCoord == this.offset.xCoord || part.offset.yCoord == this.offset.yCoord || part.offset.zCoord == this.offset.zCoord){
@@ -46,11 +45,6 @@ public class PartPropeller extends APart{
 			}
 		}
 		connectedEngine = null;
-	}
-	
-	@Override
-	public boolean isValid(){
-		return connectedEngine != null ? super.isValid() : false;
 	}
 	
 	@Override

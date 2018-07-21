@@ -2,12 +2,15 @@ package minecrafttransportsimulator.multipart.parts;
 
 import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
@@ -78,9 +81,25 @@ public abstract class APart{
 	
 	/**Called when the master multipart removes this part.
 	 * Allows for parts to trigger logic that happens when they are removed.
+	 * By default, this removes all sub-parts from the multipart.
 	 */
 	public void removePart(){
 		this.isValid = false;
+		if(pack.subParts != null){
+			for(PackPart packPart : pack.subParts){
+				APart subPart = multipart.getPartAtLocation(this.offset.xCoord + packPart.pos[0], this.offset.yCoord + packPart.pos[1], this.offset.zCoord + packPart.pos[2]);
+				if(subPart != null){
+					multipart.removePart(subPart, false);
+					subPart.removePart();
+					Item droppedItem = subPart.getItemForPart();
+					if(droppedItem != null){
+						ItemStack droppedStack = new ItemStack(droppedItem);
+						droppedStack.setTagCompound(subPart.getPartNBTTag());
+						multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, subPart.partPos.xCoord, subPart.partPos.yCoord, subPart.partPos.zCoord, droppedStack));
+					}
+				}
+			}
+		}
 	}
 	
 	/**Return the part data in NBT form.
