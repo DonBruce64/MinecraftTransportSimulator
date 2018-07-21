@@ -37,7 +37,6 @@ interact.fuelpump.toofar=The fuel pump is too far away from the vehicle.  The pu
 interact.failure.seattaken=This seat is taken!
 interact.failure.vehiclelocked=This vehicle is locked!
 interact.failure.vehicleowned=You are not the owner of this vehicle and therefore cannot remove it or its parts!
-interact.failure.missingpart=This part needs to be connected to another part and cannot go on here yet.
 
 input.aircraft.mod=Mod
 input.aircraft.camlock=CamLock
