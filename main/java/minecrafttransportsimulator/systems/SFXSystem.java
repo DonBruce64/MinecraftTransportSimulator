@@ -130,7 +130,9 @@ public final class SFXSystem{
 				ResourceLocation soundFileLocation = new ResourceLocation(soundName);
 				soundFileLocation = new ResourceLocation(soundFileLocation.getResourceDomain(), "sounds/" + soundFileLocation.getResourcePath() + ".ogg");
 				URL soundURL = (URL) getURLMethod.invoke(null, soundFileLocation);
-				mcSoundSystem.quickPlay(false, soundURL, soundFileLocation.toString(), false, (float) soundPosition.xCoord, (float) soundPosition.yCoord, (float) soundPosition.zCoord, SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
+				String soundTempName = mcSoundSystem.quickPlay(false, soundURL, soundFileLocation.toString(), false, (float) soundPosition.xCoord, (float) soundPosition.yCoord, (float) soundPosition.zCoord, SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
+				mcSoundSystem.setVolume(soundTempName, volume);
+				mcSoundSystem.setPitch(soundTempName, pitch);
 			}catch(Exception e){
 				MTS.MTSLog.error("COULD NOT PLAY VEHICLE SOUND:" + soundName);
 				throw new RuntimeException(e);
