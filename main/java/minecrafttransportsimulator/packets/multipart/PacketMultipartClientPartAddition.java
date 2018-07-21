@@ -50,7 +50,7 @@ public class PacketMultipartClientPartAddition extends APacketMultipartPart{
 					EntityMultipartA_Base multipart = (EntityMultipartA_Base) getMultipart(message, ctx);
 					PackPart packPart = multipart.getPackDefForLocation(message.offsetX, message.offsetY, message.offsetZ);
 					String partName = ((AItemPart) message.partStack.getItem()).partName;
-					Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
+					Vec3d partOffset = new Vec3d(message.offsetX, message.offsetY, message.offsetZ);
 					try{
 						Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partName);
 						Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);

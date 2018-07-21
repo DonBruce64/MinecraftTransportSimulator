@@ -10,11 +10,9 @@ import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartA_Base;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.parts.APart;
-import minecrafttransportsimulator.packets.general.ChatPacket;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
@@ -69,7 +67,7 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPart{
 							PackPartObject itemPack = PackParserSystem.getPartPack(partItem.partName);
 							if(packPart.types.contains(itemPack.general.type)){
 								//This part does go to this multipart.  Now check if one is already there.
-								Vec3d partOffset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
+								Vec3d partOffset = new Vec3d(message.offsetX, message.offsetY, message.offsetZ);
         						for(APart part : multipart.getMultipartParts()){
 									if(part.offset.equals(partOffset)){
 										//Part already exists.  Bail.
@@ -87,15 +85,11 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPart{
 									Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partItem.partName);
 									Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
 									APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, partOffset, packPart.isController, packPart.turnsWithSteer, partItem.partName, heldStack.hasTagCompound() ? heldStack.getTagCompound() : new NBTTagCompound());
-									if(newPart.isValid()){
-										multipart.addPart(newPart, false);
-										if(!player.capabilities.isCreativeMode){
-											player.inventory.clearMatchingItems(partItem, heldStack.getItemDamage(), 1, heldStack.getTagCompound());
-										}
-										MTS.MTSNet.sendToAll(new PacketMultipartClientPartAddition(multipart, newPart.offset.xCoord, newPart.offset.yCoord, newPart.offset.zCoord, heldStack));
-									}else{
-										MTS.MTSNet.sendTo(new ChatPacket("interact.failure.missingpart"), (EntityPlayerMP) player);
+									multipart.addPart(newPart, false);
+									if(!player.capabilities.isCreativeMode){
+										player.inventory.clearMatchingItems(partItem, heldStack.getItemDamage(), 1, heldStack.getTagCompound());
 									}
+									MTS.MTSNet.sendToAll(new PacketMultipartClientPartAddition(multipart, message.offsetX, message.offsetY, message.offsetZ, heldStack));
 								}catch(Exception e){
 									MTS.MTSLog.error("ERROR SPAWING PART ON SERVER!");
 									MTS.MTSLog.error(e.getMessage());
