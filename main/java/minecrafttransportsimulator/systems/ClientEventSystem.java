@@ -129,13 +129,16 @@ public final class ClientEventSystem{
 		    					MultipartAxisAlignedBB partBox = new MultipartAxisAlignedBB(multipart.getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0.25F, 0), 1.5F, 2.0F);	    					
 		    					
 		    					if(partBox.isVecInside(clickedVec)){
-	        						//If we clicked an occupied spot, don't do anything.
-	        						if(multipart.getPartAtLocation(packPartEntry.getKey().xCoord, packPartEntry.getKey().yCoord, packPartEntry.getKey().zCoord) != null){
-										return;
-									}
-	        						//Spot is not occupied, send packet to server to spawn part if able.
-		        					MTS.MTSNet.sendToServer(new PacketMultipartServerPartAddition(multipart, packPartEntry.getKey().xCoord, packPartEntry.getKey().yCoord, packPartEntry.getKey().zCoord, player));
-		        					return;
+		    						//Check to make sure this spot is valid (server gets final say).
+		    						if(packPartEntry.getValue().types.contains(PackParserSystem.getPartPack(((AItemPart) event.getItemStack().getItem()).partName).general.type)){
+		    							//If we clicked an occupied spot with the same part type, don't do anything.
+		        						if(multipart.getPartAtLocation(packPartEntry.getKey().xCoord, packPartEntry.getKey().yCoord, packPartEntry.getKey().zCoord) != null){
+		        							return;
+										}
+		        						//Spot is not occupied, send packet to server to spawn part if able.
+			        					MTS.MTSNet.sendToServer(new PacketMultipartServerPartAddition(multipart, packPartEntry.getKey().xCoord, packPartEntry.getKey().yCoord, packPartEntry.getKey().zCoord, player));
+			        					return;
+        							}
 	        					}
 		    				}
         					clickedVec = clickedVec.addVector(lookVec.xCoord*0.1F, lookVec.yCoord*0.1F, lookVec.zCoord*0.1F);
