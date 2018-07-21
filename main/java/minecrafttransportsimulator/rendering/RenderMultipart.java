@@ -331,7 +331,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		switch(variable){
 			case("door"): return multipart.parkingBrakeOn && multipart.velocity == 0 && !multipart.locked ? 60 : 0;
 			case("throttle"): return ((EntityMultipartE_Vehicle) multipart).throttle/4F;
-			case("brake"): return multipart.brakeOn ? 30 : 0;
+			case("brake"): return multipart.brakeOn ? 25 : 0;
 			case("p_brake"): return multipart.parkingBrakeOn ? 30 : 0;
 			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).pack.engine.isAutomatic ? Math.min(1, ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).currentGear) : ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).currentGear)*5 : 0;
 			case("driveshaft"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).getDriveshaftRotation(partialTicks) : 0);
