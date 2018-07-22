@@ -121,7 +121,6 @@ public final class MTSRegistry{
 	public static final Item itemBlockEngineBench = new ItemBlock(engineBench);
 	public static final Block wheelBench = new BlockPartBench("ground_device");
 	public static final Item itemBlockWheelBench = new ItemBlock(wheelBench);
-	//TODO add new bench here.
 	public static final Block instrumentBench = new BlockPartBench("instrument");
 	public static final Item itemBlockInstrumentBench = new ItemBlock(instrumentBench);
 	
@@ -395,7 +394,15 @@ public final class MTSRegistry{
 				'A', Items.IRON_INGOT,
 				'B', Blocks.ANVIL,
 				'C', Blocks.PLANKS);
-		//TODO add new crafting for instrument bench here.
+		//Instrument bench
+		registerRecipe(new ItemStack(itemBlockInstrumentBench),
+				"AGA",
+				"PRP",
+				"P P",
+				'A', Items.IRON_INGOT,
+				'G', Blocks.GLOWSTONE,
+				'R', Blocks.REDSTONE_BLOCK,
+				'P', Blocks.PLANKS);
 	}
 	
 	private static void initDecorItemRecipes(){
