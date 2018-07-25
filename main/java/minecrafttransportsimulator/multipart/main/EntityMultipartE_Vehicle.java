@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleSound;
 import minecrafttransportsimulator.baseclasses.VehicleSound.SoundTypes;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
@@ -16,7 +15,6 @@ import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.systems.SFXSystem.FXPart;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
@@ -75,14 +73,6 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 			electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
 			electricFlow = electricUsage;
 			electricUsage = 0;
-			
-			//Update SFX.
-			MTS.proxy.updateVehicleSounds(this, worldObj);
-			for(APart part : this.getMultipartParts()){
-				if(part instanceof FXPart){
-					MTS.proxy.updateFXPart((FXPart) part, worldObj);
-				}
-			}
 		}
 	}
 

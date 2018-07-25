@@ -143,7 +143,7 @@ public final class SFXSystem{
 	/**
 	 * Does sound updates for the multipart vehicle sounds.
 	 */
-	public static void doSound(EntityMultipartE_Vehicle vehicle, World world){
+	public static void updateMultipartSounds(EntityMultipartE_Vehicle vehicle, World world, float partialTicks){
 		if(world.isRemote){
 			//If we don't have the running instance of the SoundSystem, get it now.
 			if(mcSoundSystem == null){
@@ -160,7 +160,7 @@ public final class SFXSystem{
 			EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 			for(VehicleSound sound : vehicle.getSounds()){
 				String soundID = sound.getSoundUniqueName();
-				if(sound.isSoundSourceActive() && sound.isSoundActive()){
+				if(sound.isSoundSourceActive() && sound.isSoundActive() && !Minecraft.getMinecraft().isGamePaused()){
 					if(!mcSoundSystem.playing(soundID)){
 						try{
 							ResourceLocation soundFileLocation = new ResourceLocation(sound.getSoundName());
@@ -175,7 +175,7 @@ public final class SFXSystem{
 					}
 					mcSoundSystem.setVolume(soundID, sound.getVolume());
 					mcSoundSystem.setPitch(soundID, sound.getPitch());
-					mcSoundSystem.setPosition(soundID, sound.getPosX(), sound.getPosY(), sound.getPosZ());
+					mcSoundSystem.setPosition(soundID, sound.getPosX() + sound.getMotX()*partialTicks, sound.getPosY() + sound.getMotY()*partialTicks, sound.getPosZ() + sound.getMotZ()*partialTicks);
 				}else if(mcSoundSystem.playing(soundID)){
 					mcSoundSystem.stop(soundID);
 				}

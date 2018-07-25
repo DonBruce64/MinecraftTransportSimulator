@@ -12,11 +12,9 @@ import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
-import minecrafttransportsimulator.systems.SFXSystem.FXPart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -56,17 +54,7 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	@Override
-	public void updateVehicleSounds(EntityMultipartE_Vehicle vehicle, World world){
-		SFXSystem.doSound(vehicle, world);
-	}
-	
-	@Override
 	public void addVehicleEngineSound(EntityMultipartE_Vehicle vehicle, APartEngine engine){
 		SFXSystem.addVehicleEngineSound(vehicle, engine);
-	}
-	
-	@Override
-	public void updateFXPart(FXPart part, World world){
-		SFXSystem.doFX(part, world);
 	}
 }

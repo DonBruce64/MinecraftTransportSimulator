@@ -6,10 +6,8 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.SFXSystem.FXPart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 
 /**Contains registration methods used by {@link MTSRegistry} and methods overridden by ClientProxy. 
  * See the latter for more info on overridden methods.
@@ -24,7 +22,5 @@ public class CommonProxy{
 	public void initControls(){}
 	public void openGUI(Object clicked, EntityPlayer clicker){}
 	public void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){}
-	public void updateVehicleSounds(EntityMultipartE_Vehicle vehicle, World world){}
 	public void addVehicleEngineSound(EntityMultipartE_Vehicle vehicle, APartEngine engine){}
-	public void updateFXPart(FXPart part, World world){}
 }

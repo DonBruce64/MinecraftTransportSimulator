@@ -30,6 +30,8 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
+import minecrafttransportsimulator.systems.SFXSystem;
+import minecrafttransportsimulator.systems.SFXSystem.FXPart;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
@@ -246,7 +248,18 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			RenderHelper.enableStandardItemLighting();
 			minecraft.entityRenderer.enableLightmap();
 		}
-		 GL11.glPopMatrix();
+		GL11.glPopMatrix();
+		
+		//Update SFX.
+		if(!wasRenderedPrior && multipart instanceof EntityMultipartE_Vehicle){
+			EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) multipart;
+			SFXSystem.updateMultipartSounds(vehicle, vehicle.worldObj, partialTicks);
+			for(APart part : vehicle.getMultipartParts()){
+				if(part instanceof FXPart){
+					SFXSystem.doFX((FXPart) part, vehicle.worldObj);
+				}
+			}
+		}
 	}
 	
 	private static void renderMainModel(EntityMultipartD_Moving multipart, float partialTicks){

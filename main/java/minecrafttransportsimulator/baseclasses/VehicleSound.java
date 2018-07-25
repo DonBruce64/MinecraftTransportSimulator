@@ -42,6 +42,18 @@ public final class VehicleSound{
 		return (float) (optionalPart != null ? optionalPart.partPos.zCoord : vehicle.posZ);
 	}
 	
+	public float getMotX(){
+		return (float) (vehicle.motionX*vehicle.speedFactor);
+	}
+	
+	public float getMotY(){
+		return (float) (vehicle.motionY*vehicle.speedFactor);
+	}
+	
+	public float getMotZ(){
+		return (float) (vehicle.motionZ*vehicle.speedFactor);
+	}
+	
 	public float getVolume(){
 		if(isSoundActive()){
 			//If this source is internal, only make noise if we are in first-person.

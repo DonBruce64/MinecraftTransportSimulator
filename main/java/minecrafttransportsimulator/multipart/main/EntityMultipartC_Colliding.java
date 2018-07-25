@@ -41,7 +41,7 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 	/**Map that keys collision boxes of ground devices to the devices themselves.  Used for ground device collision operations.*/
 	protected final Map<MultipartAxisAlignedBB, PartGroundDevice> groundDeviceCollisionBoxMap = new HashMap<MultipartAxisAlignedBB, PartGroundDevice>();
 	
-	protected final double speedFactor = ConfigSystem.getDoubleConfig("SpeedFactor");
+	public final double speedFactor = ConfigSystem.getDoubleConfig("SpeedFactor");
 	
 	private float hardnessHitThisTick = 0;
 			
