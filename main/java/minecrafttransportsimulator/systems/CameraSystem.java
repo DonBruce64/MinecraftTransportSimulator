@@ -53,7 +53,7 @@ public final class CameraSystem{
 			}else{
 				player.rotationPitch += multipart.rotationPitch - multipart.prevRotationPitch;
 			}
-			if((multipart.rotationPitch > 90 || multipart.rotationPitch < -90) ^ multipart.prevRotationPitch > 90 || multipart.prevRotationPitch < -90){
+			if((multipart.rotationPitch > 90 || multipart.rotationPitch < -90) ^ (multipart.prevRotationPitch > 90 || multipart.prevRotationPitch < -90)){
 				player.rotationYaw+=180;
 			}
 		}else if(mouseYoke){
