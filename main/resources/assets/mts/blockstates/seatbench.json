@@ -1,0 +1,16 @@
+{
+    "multipart": [
+        {   "when": { "rotation": "north" },
+            "apply": { "model": "mts:seatbench", "y" : 180 }
+        },
+        {   "when": { "rotation": "east" },
+            "apply": { "model": "mts:seatbench", "y" : 270}
+        },
+        {   "when": { "rotation": "south" },
+            "apply": { "model": "mts:seatbench"}
+        },
+        {   "when": { "rotation": "west" },
+            "apply": { "model": "mts:seatbench", "y" : 90}
+        }
+    ]
+}
