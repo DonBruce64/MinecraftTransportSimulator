@@ -46,6 +46,7 @@ public class PackPartObject{
     }
     
     public class PartPropellerConfig{
+    	public boolean isDynamicPitch;
     	public byte numberBlades;
     	public short pitch;
     	public int diameter;

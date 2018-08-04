@@ -21,6 +21,7 @@ public class PartPropeller extends APart{
 	public float angularPosition;
 	public float angularVelocity;
 	public float damage;
+	public short currentPitch;
 	
 	private byte linkingTicks = 0;
 	private final PartEngineAircraft connectedEngine;
@@ -29,6 +30,7 @@ public class PartPropeller extends APart{
 	public PartPropeller(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
 		this.damage = dataTag.getFloat("damage");
+		this.currentPitch = pack.propeller.pitch;
 		//Due to JSON setup, it will be impossible for players to add propellers without engines and
 		//have them be saved to multiparts.  Because of this, we can check for engines here as they MUST be present.
 		for(APart part : multipart.getMultipartParts()){
@@ -65,6 +67,14 @@ public class PartPropeller extends APart{
 	@Override
 	public void updatePart(){
 		super.updatePart();
+		//If we are a dynamic-pitch propeller, adjust ourselves to the speed of the engine.
+		if(pack.propeller.isDynamicPitch){
+			if(connectedEngine.RPM < connectedEngine.pack.engine.maxRPM*0.87 && currentPitch > 45){
+				--currentPitch;
+			}else if(connectedEngine.RPM > connectedEngine.pack.engine.maxRPM*0.93 && currentPitch < pack.propeller.pitch){
+				++currentPitch;
+			}
+		}
 		if(multipart.worldObj.isRemote){
 			angularVelocity = (float) (360*connectedEngine.RPM/60F/20F);
 			angularPosition += angularVelocity;
@@ -138,15 +148,15 @@ public class PartPropeller extends APart{
 			//Get what the pitch velocity of the propeller would be at the current velocity.
 			double currentPitchVelocity = multipart.velocity*20D;
 			//Get the effective pitch velocity of the propeller at the current RPM.
-			double effectivePitchVelocity = 0.0254D*pack.propeller.pitch*connectedEngine.RPM/60D;
+			double effectivePitchVelocity = 0.0254D*currentPitch*connectedEngine.RPM/60D;
 			//Multiply by a factor to get the true effective pitch velocity.  This is slightly higher than ideal.
-			effectivePitchVelocity *= (1D*pack.propeller.pitch/pack.propeller.diameter + 0.2D)/(1D*pack.propeller.pitch/pack.propeller.diameter);
+			effectivePitchVelocity *= (1D*currentPitch/pack.propeller.diameter + 0.2D)/(1D*currentPitch/pack.propeller.diameter);
 			//Get the angle of attack of the propeller.
 			double angleOfAttack = Math.abs(effectivePitchVelocity - currentPitchVelocity);
 			//Now return the thrust equation.  If the angle of attack is greater than 25, sap power off the propeller for stalling.
 			return multipart.airDensity*Math.PI*Math.pow(0.0254*pack.propeller.diameter/2D, 2)*
 					(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
-					Math.pow(pack.propeller.diameter/2D/pack.propeller.pitch + pack.propeller.numberBlades/1000D, 1.5)/
+					Math.pow(pack.propeller.diameter/2D/currentPitch + pack.propeller.numberBlades/1000D, 1.5)/
 					400D*(angleOfAttack > 15 ? 15/angleOfAttack : 1.0D);
 		}else{
 			return 0;
