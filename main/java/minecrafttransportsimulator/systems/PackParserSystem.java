@@ -69,8 +69,19 @@ public final class PackParserSystem{
     
     
     //-----START OF INIT LOGIC-----
-    /**Packs should call this upon load to add their multiparts to the mod.**/
-    public static void addMultipartDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
+    /**Packs should call this upon load to add their content to the mod.
+     * This will return an array of strings that correspond to content types.
+     * These content types will be content that has items in the jsondefs folder
+     * that the pack should send to MTS.  The pack should only send the ResourceLocation
+     * of such an item as it will allow MTS to load the information from ResourcePacks in modpacks.
+     * This is done to allow server owners to modify pack JSONs to their liking (say for crafting recipes)
+     * and distribute them in their modpacks without having to modify the actual pack JSON.**/
+    public static String[] getValidPackContentNames(){
+    	return new String[]{"vehicle", "part", "instrument"};
+    }
+    
+    /**Packs should call this upon load to add their vehicles to the mod.**/
+    public static void addVehicleDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
     		PackMultipartObject pack = new Gson().fromJson(jsonReader, PackMultipartObject.class);
     		for(PackFileDefinitions definition : pack.definitions){
@@ -157,7 +168,7 @@ public final class PackParserSystem{
 	    	}
 	    	for(String jsonFile : jsonFilesToReload){
 	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/vehicles/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
-	    		addMultipartDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
+	    		addVehicleDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
 	    	}
 	    	jsonFilesToReload.clear();
 	    	
