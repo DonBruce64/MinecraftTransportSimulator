@@ -47,6 +47,11 @@ public abstract class RenderInstruments{
 		//Check if the lights are on.  If so, disable the lightmap.
 		boolean lightsOn = lightsOn(vehicle);
 		
+		//Subtract 1 from the current engine number (if greater than 0) to account for zero-indexed engine mappings.
+		if(engineNumber > 0){
+			--engineNumber;
+		}
+		
 		//Finally, render the instrument based on the JSON definitions.
 		byte currentLayer = 0;
 		for(PackInstrumentComponent component : instrument.pack.components){
