@@ -257,7 +257,7 @@ public class GUIPartBench extends GuiScreen{
 		GL11.glPushMatrix();
 		GL11.glTranslatef(guiLeft + 255, guiTop + 55, 0);
 		GL11.glScalef(0.8F, 0.8F, 0.8F);
-		fontRendererObj.drawSplitString(I18n.format("description." + PackParserSystem.getMultipartJSONName(partName)), 0, 0, 120, Color.WHITE.getRGB());
+		fontRendererObj.drawSplitString(I18n.format("description." + partName.substring(0, partName.indexOf(':')) + "." + PackParserSystem.getMultipartJSONName(partName)), 0, 0, 120, Color.WHITE.getRGB());
 		GL11.glPopMatrix();
 	}
 	
