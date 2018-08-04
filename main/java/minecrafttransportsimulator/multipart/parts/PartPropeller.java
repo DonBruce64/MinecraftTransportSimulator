@@ -135,12 +135,19 @@ public class PartPropeller extends APart{
 	
 	public double getThrustForce(){
 		if(connectedEngine != null){
-			//Get the ideal zero-pitch velocity.
-			double pitchVelocity = 0.0254D*pack.propeller.pitch*connectedEngine.RPM/60D;
-			//Multiply by a factor to get the true ideal velocity.  This is slightly higher than ideal.
-			pitchVelocity *= (1D*pack.propeller.pitch/pack.propeller.diameter + 0.2D)/(1D*pack.propeller.pitch/pack.propeller.diameter);
-			//Now return the thrust equation.
-			return multipart.airDensity*Math.PI*Math.pow(0.0254*pack.propeller.diameter/2D, 2)*(pitchVelocity*pitchVelocity - pitchVelocity*multipart.velocity*20)*Math.pow(pack.propeller.diameter/2D/pack.propeller.pitch + pack.propeller.numberBlades/1000D, 1.5)/400D;
+			//Get what the pitch velocity of the propeller would be at the current velocity.
+			double currentPitchVelocity = multipart.velocity*20D;
+			//Get the effective pitch velocity of the propeller at the current RPM.
+			double effectivePitchVelocity = 0.0254D*pack.propeller.pitch*connectedEngine.RPM/60D;
+			//Multiply by a factor to get the true effective pitch velocity.  This is slightly higher than ideal.
+			effectivePitchVelocity *= (1D*pack.propeller.pitch/pack.propeller.diameter + 0.2D)/(1D*pack.propeller.pitch/pack.propeller.diameter);
+			//Get the angle of attack of the propeller.
+			double angleOfAttack = Math.abs(effectivePitchVelocity - currentPitchVelocity);
+			//Now return the thrust equation.  If the angle of attack is greater than 25, sap power off the propeller for stalling.
+			return multipart.airDensity*Math.PI*Math.pow(0.0254*pack.propeller.diameter/2D, 2)*
+					(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
+					Math.pow(pack.propeller.diameter/2D/pack.propeller.pitch + pack.propeller.numberBlades/1000D, 1.5)/
+					400D*(angleOfAttack > 15 ? 15/angleOfAttack : 1.0D);
 		}else{
 			return 0;
 		}

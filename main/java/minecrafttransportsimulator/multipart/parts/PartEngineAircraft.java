@@ -21,7 +21,7 @@ public class PartEngineAircraft extends APartEngine{
 			double engineTargetRPM = plane.throttle/100F*(pack.engine.maxRPM - engineStartRPM*1.25 - hours) + engineStartRPM*1.25;
 			double engineRPMDifference = engineTargetRPM - RPM;
 			if(propeller != null){
-				double propellerFeedback = -(plane.velocity - 0.0254*propeller.pack.propeller.pitch * RPM/60/20 - this.getPropellerForcePenalty())*15;
+				double propellerFeedback = -(plane.velocity - 0.0254*propeller.pack.propeller.pitch*RPM/60/20 - this.getPropellerForcePenalty())*25;
 				RPM += engineRPMDifference/10 - propellerFeedback;
 			}else{
 				RPM += engineRPMDifference/10;
