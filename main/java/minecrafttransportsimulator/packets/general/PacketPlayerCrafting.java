@@ -13,13 +13,13 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class PlayerCraftingPacket implements IMessage{
+public class PacketPlayerCrafting implements IMessage{
 	private int playerID;
 	private String selectedItem;
 
-	public PlayerCraftingPacket(){}
+	public PacketPlayerCrafting(){}
 	
-	public PlayerCraftingPacket(EntityPlayer player, String selectedItem){
+	public PacketPlayerCrafting(EntityPlayer player, String selectedItem){
 		this.playerID = player.getEntityId();
 		this.selectedItem = selectedItem;
 	}
@@ -36,7 +36,7 @@ public class PlayerCraftingPacket implements IMessage{
 		ByteBufUtils.writeUTF8String(buf, this.selectedItem);
 	}
 	
-	protected static EntityPlayer getPlayer(PlayerCraftingPacket message, MessageContext ctx){
+	protected static EntityPlayer getPlayer(PacketPlayerCrafting message, MessageContext ctx){
 		if(message.playerID != -1){
 			if(ctx.side.isServer()){
 				return (EntityPlayer) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.playerID);
@@ -73,8 +73,8 @@ public class PlayerCraftingPacket implements IMessage{
 		}
 	}
 	
-	public static class Handler implements IMessageHandler<PlayerCraftingPacket, IMessage>{
-		public IMessage onMessage(final PlayerCraftingPacket message, final MessageContext ctx){
+	public static class Handler implements IMessageHandler<PacketPlayerCrafting, IMessage>{
+		public IMessage onMessage(final PacketPlayerCrafting message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){

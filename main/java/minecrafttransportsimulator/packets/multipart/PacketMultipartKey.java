@@ -4,7 +4,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.core.ItemKey;
 import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
-import minecrafttransportsimulator.packets.general.ChatPacket;
+import minecrafttransportsimulator.packets.general.PacketChat;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -46,7 +46,7 @@ public class PacketMultipartKey extends APacketMultipartPlayer{
 							if(ctx.side.isServer()){
 								MTS.MTSNet.sendToAll(message);
 								if(!messageString.isEmpty()){ 
-									MTS.MTSNet.sendTo(new ChatPacket(messageString), (EntityPlayerMP) player);
+									MTS.MTSNet.sendTo(new PacketChat(messageString), (EntityPlayerMP) player);
 								}
 							}
 						}

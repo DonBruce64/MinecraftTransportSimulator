@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.blocks.core;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.packets.tileentities.TileEntityClientServerHandshakePacket;
+import minecrafttransportsimulator.packets.tileentities.PacketTileEntityClientServerHandshake;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 
@@ -12,7 +12,7 @@ public class TileEntityRotatable extends TileEntity{
     public void validate(){
 		super.validate();
         if(worldObj.isRemote){
-        	MTS.MTSNet.sendToServer(new TileEntityClientServerHandshakePacket(this, null));
+        	MTS.MTSNet.sendToServer(new PacketTileEntityClientServerHandshake(this, null));
         }
     }
 	

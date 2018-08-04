@@ -4,7 +4,7 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
-import minecrafttransportsimulator.packets.general.ChatPacket;
+import minecrafttransportsimulator.packets.general.PacketChat;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -61,13 +61,13 @@ public class BlockFuelPump extends ABlockRotateable{
     			}
     			if(nearestEntity != null){
     				pump.setConnectedVehicle((EntityMultipartE_Vehicle) nearestEntity);
-					MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.connect"), (EntityPlayerMP) player);
+					MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.connect"), (EntityPlayerMP) player);
     			}else{
-    				MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.toofar"), (EntityPlayerMP) player);
+    				MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.toofar"), (EntityPlayerMP) player);
     			}
     		}else{
     			pump.setConnectedVehicle(null);
-    			MTS.MTSNet.sendTo(new ChatPacket("interact.fuelpump.disconnect"), (EntityPlayerMP) player);
+    			MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.disconnect"), (EntityPlayerMP) player);
     		}
 		}
 		return true;

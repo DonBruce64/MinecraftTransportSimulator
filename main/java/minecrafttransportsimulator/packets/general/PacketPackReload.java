@@ -9,8 +9,8 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class PackReloadPacket implements IMessage{
-	public PackReloadPacket(){}
+public class PacketPackReload implements IMessage{
+	public PacketPackReload(){}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){}
@@ -18,9 +18,9 @@ public class PackReloadPacket implements IMessage{
 	@Override
 	public void toBytes(ByteBuf buf){}
 
-	public static class Handler implements IMessageHandler<PackReloadPacket, IMessage>{
+	public static class Handler implements IMessageHandler<PacketPackReload, IMessage>{
 		@Override
-		public IMessage onMessage(final PackReloadPacket message, final MessageContext ctx){
+		public IMessage onMessage(final PacketPackReload message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){

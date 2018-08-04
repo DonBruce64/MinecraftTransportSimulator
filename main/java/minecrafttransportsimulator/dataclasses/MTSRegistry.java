@@ -35,10 +35,10 @@ import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
-import minecrafttransportsimulator.packets.general.ChatPacket;
-import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
-import minecrafttransportsimulator.packets.general.PackReloadPacket;
-import minecrafttransportsimulator.packets.general.PlayerCraftingPacket;
+import minecrafttransportsimulator.packets.general.PacketChat;
+import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
+import minecrafttransportsimulator.packets.general.PacketPackReload;
+import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartAttacked;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInit;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInitResponse;
@@ -56,9 +56,9 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceFlat;
 import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
-import minecrafttransportsimulator.packets.tileentities.FuelPumpConnectionPacket;
-import minecrafttransportsimulator.packets.tileentities.FuelPumpFillDrainPacket;
-import minecrafttransportsimulator.packets.tileentities.TileEntityClientServerHandshakePacket;
+import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpConnection;
+import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
+import minecrafttransportsimulator.packets.tileentities.PacketTileEntityClientServerHandshake;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -295,15 +295,15 @@ public final class MTSRegistry{
 		registerPacket(TrimPacket.class, TrimPacket.Handler.class, true, true);
 		
 		//Packets in packets.general
-		registerPacket(ChatPacket.class, ChatPacket.Handler.class, true, false);
-		registerPacket(ManualPageUpdatePacket.class, ManualPageUpdatePacket.Handler.class, false, true);
-		registerPacket(PackReloadPacket.class, PackReloadPacket.Handler.class, false, true);
-		registerPacket(PlayerCraftingPacket.class, PlayerCraftingPacket.Handler.class, false, true);
+		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);
+		registerPacket(PacketManualPageUpdate.class, PacketManualPageUpdate.Handler.class, false, true);
+		registerPacket(PacketPackReload.class, PacketPackReload.Handler.class, false, true);
+		registerPacket(PacketPlayerCrafting.class, PacketPlayerCrafting.Handler.class, false, true);
 		
 		//Packets in packets.tileentity
-		registerPacket(FuelPumpConnectionPacket.class, FuelPumpConnectionPacket.Handler.class, true, false);
-		registerPacket(FuelPumpFillDrainPacket.class, FuelPumpFillDrainPacket.Handler.class, true, false);
-		registerPacket(TileEntityClientServerHandshakePacket.class, TileEntityClientServerHandshakePacket.Handler.class, true, true);
+		registerPacket(PacketFuelPumpConnection.class, PacketFuelPumpConnection.Handler.class, true, false);
+		registerPacket(PacketFuelPumpFillDrain.class, PacketFuelPumpFillDrain.Handler.class, true, false);
+		registerPacket(PacketTileEntityClientServerHandshake.class, PacketTileEntityClientServerHandshake.Handler.class, true, true);
 		
 		//Packets in packets.multipart.
 		registerPacket(PacketMultipartAttacked.class, PacketMultipartAttacked.Handler.class, false, true);

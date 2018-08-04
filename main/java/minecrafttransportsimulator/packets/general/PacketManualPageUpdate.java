@@ -8,12 +8,12 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class ManualPageUpdatePacket implements IMessage{
+public class PacketManualPageUpdate implements IMessage{
 	private short pageNumber;
 
-	public ManualPageUpdatePacket() {}
+	public PacketManualPageUpdate() {}
 	
-	public ManualPageUpdatePacket(short pageNumber){
+	public PacketManualPageUpdate(short pageNumber){
 		this.pageNumber = pageNumber;
 	}
 	
@@ -27,9 +27,9 @@ public class ManualPageUpdatePacket implements IMessage{
 		buf.writeShort(this.pageNumber);
 	}
 
-	public static class Handler implements IMessageHandler<ManualPageUpdatePacket, IMessage>{
+	public static class Handler implements IMessageHandler<PacketManualPageUpdate, IMessage>{
 		@Override
-		public IMessage onMessage(final ManualPageUpdatePacket message, final MessageContext ctx){
+		public IMessage onMessage(final PacketManualPageUpdate message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){

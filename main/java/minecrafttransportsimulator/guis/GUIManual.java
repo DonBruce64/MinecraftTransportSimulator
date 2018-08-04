@@ -10,7 +10,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject;
-import minecrafttransportsimulator.packets.general.ManualPageUpdatePacket;
+import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
@@ -201,7 +201,7 @@ public class GUIManual extends GuiScreen{
 	
 	@Override
 	public void onGuiClosed(){
-		MTS.MTSNet.sendToServer(new ManualPageUpdatePacket(pageNumber));
+		MTS.MTSNet.sendToServer(new PacketManualPageUpdate(pageNumber));
 		stackTag.setShort("page", pageNumber);
 		stack.setTagCompound(stackTag);
 	}

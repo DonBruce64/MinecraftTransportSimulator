@@ -16,7 +16,7 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
 import minecrafttransportsimulator.multipart.main.EntityMultipartC_Colliding;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.parts.APart;
-import minecrafttransportsimulator.packets.general.PackReloadPacket;
+import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartAttacked;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartKey;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartNameTag;
@@ -345,7 +345,7 @@ public final class ClientEventSystem{
 						multipart.pack = PackParserSystem.getMultipartPack(multipart.multipartName);
 					}
 				}
-        		MTS.MTSNet.sendToServer(new PackReloadPacket());
+        		MTS.MTSNet.sendToServer(new PacketPackReload());
         	}
             if(minecraft.currentScreen == null){
             	FMLCommonHandler.instance().showGuiScreen(new GUIConfig());

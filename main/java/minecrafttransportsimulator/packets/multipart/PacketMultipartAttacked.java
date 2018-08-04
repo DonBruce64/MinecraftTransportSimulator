@@ -4,7 +4,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
 import minecrafttransportsimulator.multipart.parts.APart;
-import minecrafttransportsimulator.packets.general.ChatPacket;
+import minecrafttransportsimulator.packets.general.PacketChat;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -48,7 +48,7 @@ public class PacketMultipartAttacked extends APacketMultipartPlayer{
 									multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, multipart.posX, multipart.posY, multipart.posZ, stack));
 									multipart.destroyAtPosition(player.posX, player.posY, player.posZ, false);
 								}else{
-									MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehicleowned"), (EntityPlayerMP) player);
+									MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehicleowned"), (EntityPlayerMP) player);
 								}
 								return;
 							}else{
@@ -69,7 +69,7 @@ public class PacketMultipartAttacked extends APacketMultipartPlayer{
 											multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, hitPart.partPos.xCoord, hitPart.partPos.yCoord, hitPart.partPos.zCoord, droppedStack));
 										}
 									}else{
-										MTS.MTSNet.sendTo(new ChatPacket("interact.failure.vehicleowned"), (EntityPlayerMP) player);
+										MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehicleowned"), (EntityPlayerMP) player);
 									}
 								}
 							}

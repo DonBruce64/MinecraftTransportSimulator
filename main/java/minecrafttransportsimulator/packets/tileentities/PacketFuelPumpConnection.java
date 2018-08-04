@@ -9,14 +9,14 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class FuelPumpConnectionPacket extends APacketTileEntity{
+public class PacketFuelPumpConnection extends APacketTileEntity{
 	private int connectedMultipartID;
 	private int amountPresent;
 	private int amountTransferred;
 
-	public FuelPumpConnectionPacket(){}
+	public PacketFuelPumpConnection(){}
 	
-	public FuelPumpConnectionPacket(TileEntityFuelPump tile, int id, int amountPresent, int amountTransferred){
+	public PacketFuelPumpConnection(TileEntityFuelPump tile, int id, int amountPresent, int amountTransferred){
 		super(tile);
 		this.connectedMultipartID=id;
 		this.amountPresent=amountPresent;
@@ -39,8 +39,8 @@ public class FuelPumpConnectionPacket extends APacketTileEntity{
 		buf.writeInt(this.amountTransferred);
 	}
 
-	public static class Handler implements IMessageHandler<FuelPumpConnectionPacket, IMessage>{
-		public IMessage onMessage(final FuelPumpConnectionPacket message, final MessageContext ctx){
+	public static class Handler implements IMessageHandler<PacketFuelPumpConnection, IMessage>{
+		public IMessage onMessage(final PacketFuelPumpConnection message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){

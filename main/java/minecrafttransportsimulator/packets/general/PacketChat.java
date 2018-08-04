@@ -10,12 +10,12 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class ChatPacket implements IMessage{
+public class PacketChat implements IMessage{
 	private String translatableMessage;
 
-	public ChatPacket() { }
+	public PacketChat() { }
 	
-	public ChatPacket(String translatableMessage){
+	public PacketChat(String translatableMessage){
 		this.translatableMessage=translatableMessage;
 	}
 	
@@ -29,9 +29,9 @@ public class ChatPacket implements IMessage{
 		ByteBufUtils.writeUTF8String(buf, this.translatableMessage);
 	}
 
-	public static class Handler implements IMessageHandler<ChatPacket, IMessage>{
+	public static class Handler implements IMessageHandler<PacketChat, IMessage>{
 		@Override
-		public IMessage onMessage(final ChatPacket message, final MessageContext ctx){
+		public IMessage onMessage(final PacketChat message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){

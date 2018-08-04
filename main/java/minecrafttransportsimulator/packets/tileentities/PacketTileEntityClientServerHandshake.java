@@ -11,12 +11,12 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class TileEntityClientServerHandshakePacket extends APacketTileEntity{
+public class PacketTileEntityClientServerHandshake extends APacketTileEntity{
 	private NBTTagCompound tag = new NBTTagCompound();
 
-	public TileEntityClientServerHandshakePacket() {}
+	public PacketTileEntityClientServerHandshake() {}
 	
-	public TileEntityClientServerHandshakePacket(TileEntity tile, NBTTagCompound tag){
+	public PacketTileEntityClientServerHandshake(TileEntity tile, NBTTagCompound tag){
 		super(tile);
 		this.tag = tag;
 	}
@@ -33,15 +33,15 @@ public class TileEntityClientServerHandshakePacket extends APacketTileEntity{
 		ByteBufUtils.writeTag(buf, tag);
 	}
 
-	public static class Handler implements IMessageHandler<TileEntityClientServerHandshakePacket, IMessage>{
-		public IMessage onMessage(final TileEntityClientServerHandshakePacket message, final MessageContext ctx){
+	public static class Handler implements IMessageHandler<PacketTileEntityClientServerHandshake, IMessage>{
+		public IMessage onMessage(final PacketTileEntityClientServerHandshake message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
 					TileEntity tile = getTileEntity(message, ctx);
 					if(tile != null){
 						if(ctx.side.isServer()){
-							MTS.MTSNet.sendTo(new TileEntityClientServerHandshakePacket(tile, tile.writeToNBT(new NBTTagCompound())), ctx.getServerHandler().playerEntity);
+							MTS.MTSNet.sendTo(new PacketTileEntityClientServerHandshake(tile, tile.writeToNBT(new NBTTagCompound())), ctx.getServerHandler().playerEntity);
 						}else{
 							tile.readFromNBT(message.tag);
 							BlockPos pos = tile.getPos();

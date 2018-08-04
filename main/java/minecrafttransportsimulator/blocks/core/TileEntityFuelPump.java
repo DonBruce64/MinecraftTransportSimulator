@@ -4,9 +4,9 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
-import minecrafttransportsimulator.packets.general.ChatPacket;
-import minecrafttransportsimulator.packets.tileentities.FuelPumpConnectionPacket;
-import minecrafttransportsimulator.packets.tileentities.FuelPumpFillDrainPacket;
+import minecrafttransportsimulator.packets.general.PacketChat;
+import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpConnection;
+import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -53,19 +53,19 @@ public class TileEntityFuelPump extends TileEntityRotatable implements IFluidTan
 						setConnectedVehicle(null);
 						this.tankInfo = emptyTankInfo;
 						if(!worldObj.isRemote){
-							MTS.MTSNet.sendToAllAround(new ChatPacket("interact.fuelpump.empty"), new TargetPoint(worldObj.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
+							MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.empty"), new TargetPoint(worldObj.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
 						}
 					}
 				}else{
 					setConnectedVehicle(null);
 					if(!worldObj.isRemote){
-						MTS.MTSNet.sendToAllAround(new ChatPacket("interact.fuelpump.empty"), new TargetPoint(worldObj.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
+						MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.empty"), new TargetPoint(worldObj.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
 					}
 				}
 			}else{
 				setConnectedVehicle(null);
 				if(!worldObj.isRemote){
-					MTS.MTSNet.sendToAllAround(new ChatPacket("interact.fuelpump.complete"), new TargetPoint(worldObj.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
+					MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.complete"), new TargetPoint(worldObj.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
 				}
 			}
 		}
@@ -87,7 +87,7 @@ public class TileEntityFuelPump extends TileEntityRotatable implements IFluidTan
 			this.totalTransfered = 0;
 		}
 		if(!worldObj.isRemote){
-			MTS.MTSNet.sendToAll(new FuelPumpConnectionPacket(this, connectedVehicle != null ? connectedVehicle.getEntityId() : -1, this.tankInfo.fluid != null ? this.tankInfo.fluid.amount : 0, this.totalTransfered));
+			MTS.MTSNet.sendToAll(new PacketFuelPumpConnection(this, connectedVehicle != null ? connectedVehicle.getEntityId() : -1, this.tankInfo.fluid != null ? this.tankInfo.fluid.amount : 0, this.totalTransfered));
 		}
 	}
 
@@ -128,7 +128,7 @@ public class TileEntityFuelPump extends TileEntityRotatable implements IFluidTan
 				}
 				tankInfo.fluid.amount += amountToFill;
 				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(tankInfo.fluid, worldObj, getPos(), this, amountToFill));
-				MTS.MTSNet.sendToAll(new FuelPumpFillDrainPacket(this, new FluidStack(tankInfo.fluid, amountToFill)));
+				MTS.MTSNet.sendToAll(new PacketFuelPumpFillDrain(this, new FluidStack(tankInfo.fluid, amountToFill)));
 			}
 			return amountToFill;
 		}else{

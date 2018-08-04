@@ -10,12 +10,12 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class FuelPumpFillDrainPacket extends APacketTileEntity{
+public class PacketFuelPumpFillDrain extends APacketTileEntity{
 	private FluidStack stack;
 
-	public FuelPumpFillDrainPacket() {}
+	public PacketFuelPumpFillDrain() {}
 	
-	public FuelPumpFillDrainPacket(TileEntityFuelPump tile, FluidStack stack){
+	public PacketFuelPumpFillDrain(TileEntityFuelPump tile, FluidStack stack){
 		super(tile);
 		this.stack=stack;
 	}
@@ -32,8 +32,8 @@ public class FuelPumpFillDrainPacket extends APacketTileEntity{
 		ByteBufUtils.writeTag(buf, this.stack.writeToNBT(new NBTTagCompound()));
 	}
 
-	public static class Handler implements IMessageHandler<FuelPumpFillDrainPacket, IMessage>{
-		public IMessage onMessage(final FuelPumpFillDrainPacket message, final MessageContext ctx){
+	public static class Handler implements IMessageHandler<PacketFuelPumpFillDrain, IMessage>{
+		public IMessage onMessage(final PacketFuelPumpFillDrain message, final MessageContext ctx){
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){

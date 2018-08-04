@@ -15,7 +15,7 @@ import minecrafttransportsimulator.blocks.core.BlockPartBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
-import minecrafttransportsimulator.packets.general.PlayerCraftingPacket;
+import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
@@ -114,7 +114,7 @@ public class GUIPartBench extends GuiScreen{
 		}
 		
 		//Set button states and render.
-		startButton.enabled = PlayerCraftingPacket.doesPlayerHaveMaterials(player, partName);
+		startButton.enabled = PacketPlayerCrafting.doesPlayerHaveMaterials(player, partName);
 		leftPackButton.enabled = !prevPackName.isEmpty();
 		rightPackButton.enabled = !nextPackName.isEmpty();
 		leftPartButton.enabled = !prevPartName.isEmpty();
@@ -313,7 +313,7 @@ public class GUIPartBench extends GuiScreen{
 		super.actionPerformed(buttonClicked);
 		if(buttonClicked.equals(startButton)){
 			MTS.proxy.playSound(player.getPositionVector(), MTS.MODID + ":bench_running", 1, 1);
-			MTS.MTSNet.sendToServer(new PlayerCraftingPacket(player, partName));
+			MTS.MTSNet.sendToServer(new PacketPlayerCrafting(player, partName));
 			mc.thePlayer.closeScreen();
 			return;
 		}else{
