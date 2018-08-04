@@ -135,11 +135,12 @@ public class PartPropeller extends APart{
 	
 	public double getThrustForce(){
 		if(connectedEngine != null){
-			//TODO
-			//Need to align this to radius at 75% blade with pitch to get new
-			//force equation that uses pitch to take into account flow of air.
-			//Current model only works for small-diameter propellers.
-			return multipart.airDensity*Math.PI*Math.pow(0.0254*pack.propeller.diameter/2D, 2)*(Math.pow(connectedEngine.RPM*0.0254*pack.propeller.pitch/60D, 2)-(connectedEngine.RPM*0.0254*pack.propeller.pitch/60D)*multipart.velocity*20)*Math.pow(pack.propeller.diameter/2D/pack.propeller.pitch + pack.propeller.numberBlades/1000D, 1.5)/400D;
+			//Get the ideal zero-pitch velocity.
+			double pitchVelocity = 0.0254D*pack.propeller.pitch*connectedEngine.RPM/60D;
+			//Multiply by a factor to get the true ideal velocity.  This is slightly higher than ideal.
+			pitchVelocity *= (1D*pack.propeller.pitch/pack.propeller.diameter + 0.2D)/(1D*pack.propeller.pitch/pack.propeller.diameter);
+			//Now return the thrust equation.
+			return multipart.airDensity*Math.PI*Math.pow(0.0254*pack.propeller.diameter/2D, 2)*(pitchVelocity*pitchVelocity - pitchVelocity*multipart.velocity*20)*Math.pow(pack.propeller.diameter/2D/pack.propeller.pitch + pack.propeller.numberBlades/1000D, 1.5)/400D;
 		}else{
 			return 0;
 		}

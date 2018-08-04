@@ -52,6 +52,6 @@ public class PartEngineAircraft extends APartEngine{
 	}
 	
 	public double getPropellerForcePenalty(){
-		return (propeller.pack.propeller.diameter - 70)/(50*this.pack.engine.fuelConsumption - 15);
+		return (propeller.pack.propeller.diameter - 75)/(50*this.pack.engine.fuelConsumption - 15);
 	}
 }
