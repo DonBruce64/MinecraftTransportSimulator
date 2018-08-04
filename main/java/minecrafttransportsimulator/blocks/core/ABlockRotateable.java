@@ -15,7 +15,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 	
 public abstract class ABlockRotateable extends Block implements ITileEntityProvider{
-	public static final PropertyDirection ROTATION = PropertyDirection.create("rotation");
+	public static final PropertyDirection ROTATION = PropertyDirection.create("rotation", EnumFacing.Plane.HORIZONTAL);
 	
     public ABlockRotateable(Material material){
 		super(material);
