@@ -4,6 +4,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourcePropellor;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
@@ -34,16 +35,13 @@ public class PartPropeller extends APart{
 		this.currentPitch = pack.propeller.pitch;
 		//Due to JSON setup, it will be impossible for players to add propellers without engines and
 		//have them be saved to multiparts.  Because of this, we can check for engines here as they MUST be present.
+		//This engine must also have the propeller as a sub-part, so we can just find which engine has us as a sub-part and link to that.
 		for(APart part : multipart.getMultipartParts()){
-			if(part instanceof PartEngineAircraft){
-				if(part.offset.xCoord == this.offset.xCoord || part.offset.yCoord == this.offset.yCoord || part.offset.zCoord == this.offset.zCoord){
-					//If we align with any axis for any engine we must be linked to that engine.
-					//Do a quick distance check to make sure, however, and then link.
-					if(part.offset.distanceTo(this.offset) < 2){
-						this.connectedEngine = ((PartEngineAircraft) part);
-						connectedEngine.propeller = this;
-						return;
-					}
+			for(PackPart subPart : part.pack.subParts){
+				if(part.offset.addVector(subPart.pos[0], subPart.pos[1], subPart.pos[2]).equals(this.offset)){
+					this.connectedEngine = ((PartEngineAircraft) part);
+					connectedEngine.propeller = this;
+					return;
 				}
 			}
 		}
