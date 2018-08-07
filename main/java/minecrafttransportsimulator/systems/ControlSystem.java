@@ -19,6 +19,7 @@ import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.FlapPacket;
 import minecrafttransportsimulator.packets.control.HornPacket;
 import minecrafttransportsimulator.packets.control.LightPacket;
+import minecrafttransportsimulator.packets.control.PropellerPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
@@ -284,11 +285,17 @@ public final class ControlSystem{
 		if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_THROTTLE.joystickAssigned) && ControlsJoystick.AIRCRAFT_THROTTLE.joystickButton != NULL_COMPONENT){
 			MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.AIRCRAFT_THROTTLE, (short) 0)));
 		}else{
+			//Always override the down button with the up button for throttle to allow for reversing.
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()){
 				MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MAX_VALUE));
-			}
-			if(ControlsKeyboard.AIRCRAFT_THROTTLE_D.isPressed()){
+				if(aircraft.propellersReversed && !ControlsKeyboard.AIRCRAFT_THROTTLE_D.isPressed()){
+					MTS.MTSNet.sendToServer(new PropellerPacket(aircraft.getEntityId(), false));
+				}
+			}else if(ControlsKeyboard.AIRCRAFT_THROTTLE_D.isPressed()){
 				MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MIN_VALUE));
+				if(aircraft.throttle == 0){
+					MTS.MTSNet.sendToServer(new PropellerPacket(aircraft.getEntityId(), true));
+				}
 			}
 		}
 		

@@ -27,6 +27,7 @@ public class ItemPartPropeller extends AItemPart{
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
 		PackPartObject pack = PackParserSystem.getPartPack(((ItemPartPropeller) stack.getItem()).partName); 
+		tooltipLines.add(I18n.format(pack.propeller.isDynamicPitch ? "info.item.propeller.dynamicPitch" : "info.item.propeller.staticPitch"));
 		tooltipLines.add(I18n.format("info.item.propeller.numberBlades") + pack.propeller.numberBlades);
 		tooltipLines.add(I18n.format("info.item.propeller.pitch") + pack.propeller.pitch);
 		tooltipLines.add(I18n.format("info.item.propeller.diameter") + pack.propeller.diameter);

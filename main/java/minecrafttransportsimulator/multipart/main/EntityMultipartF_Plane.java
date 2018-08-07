@@ -11,7 +11,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
-public final class EntityMultipartF_Plane extends EntityMultipartE_Vehicle{	
+public final class EntityMultipartF_Plane extends EntityMultipartE_Vehicle{
+	public boolean propellersReversed;
 	//Note that angle variable should be divided by 10 to get actual angle.
 	public short aileronAngle;
 	public short elevatorAngle;

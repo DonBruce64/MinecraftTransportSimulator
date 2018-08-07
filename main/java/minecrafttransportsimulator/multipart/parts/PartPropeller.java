@@ -5,6 +5,7 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourcePropellor;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -69,7 +70,11 @@ public class PartPropeller extends APart{
 		super.updatePart();
 		//If we are a dynamic-pitch propeller, adjust ourselves to the speed of the engine.
 		if(pack.propeller.isDynamicPitch){
-			if(connectedEngine.RPM < connectedEngine.pack.engine.maxRPM*0.87 && currentPitch > 45){
+			if(((EntityMultipartF_Plane) multipart).propellersReversed && currentPitch > -45){
+				--currentPitch;
+			}else if(!((EntityMultipartF_Plane) multipart).propellersReversed && currentPitch < 45){
+				++currentPitch;
+			}else if(connectedEngine.RPM < connectedEngine.pack.engine.maxRPM*0.87 && currentPitch > 45){
 				--currentPitch;
 			}else if(connectedEngine.RPM > connectedEngine.pack.engine.maxRPM*0.93 && currentPitch < pack.propeller.pitch){
 				++currentPitch;
@@ -144,23 +149,24 @@ public class PartPropeller extends APart{
 	}
 	
 	public double getThrustForce(){
-		if(connectedEngine != null){
+		if(currentPitch != 0){
 			//Get what the pitch velocity of the propeller would be at the current velocity.
 			double currentPitchVelocity = multipart.velocity*20D;
 			//Get the effective pitch velocity of the propeller at the current RPM.
 			double effectivePitchVelocity = 0.0254D*currentPitch*connectedEngine.RPM/60D;
 			//Multiply by a factor to get the true effective pitch velocity.  This is slightly higher than ideal.
 			effectivePitchVelocity *= (1D*currentPitch/pack.propeller.diameter + 0.2D)/(1D*currentPitch/pack.propeller.diameter);
-			//Get the angle of attack of the propeller.
-			double angleOfAttack = Math.abs(effectivePitchVelocity - currentPitchVelocity);
-			//Now return the thrust equation.  If the angle of attack is greater than 25, sap power off the propeller for stalling.
-			return multipart.airDensity*Math.PI*Math.pow(0.0254*pack.propeller.diameter/2D, 2)*
-					(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
-					Math.pow(pack.propeller.diameter/2D/currentPitch + pack.propeller.numberBlades/1000D, 1.5)/
-					400D*(angleOfAttack > 15 ? 15/angleOfAttack : 1.0D);
-		}else{
-			return 0;
+			if(connectedEngine != null && effectivePitchVelocity != 0){
+				//Get the angle of attack of the propeller.
+				double angleOfAttack = Math.abs(effectivePitchVelocity - currentPitchVelocity);
+				//Now return the thrust equation.  If the angle of attack is greater than 25, sap power off the propeller for stalling.
+				return multipart.airDensity*Math.PI*Math.pow(0.0254*pack.propeller.diameter/2D, 2)*
+						(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
+						Math.pow(pack.propeller.diameter/2D/Math.abs(effectivePitchVelocity) + pack.propeller.numberBlades/1000D, 1.5)/
+						400D*(angleOfAttack > 15 ? 15/angleOfAttack : 1.0D)*Math.signum(effectivePitchVelocity);
+			}
 		}
+		return 0;
 	}
 	
 	public void dropAsItem(){
