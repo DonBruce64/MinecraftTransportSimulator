@@ -27,7 +27,6 @@ public class PartPropeller extends APart{
 	
 	private byte linkingTicks = 0;
 	private final PartEngineAircraft connectedEngine;
-	private final Vec3d collisionBoundingOffset = new Vec3d(0.1, 0.1, 0.1);
 	
 	public PartPropeller(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
@@ -98,7 +97,7 @@ public class PartPropeller extends APart{
 						}
 					}
 				}
-				if(this.isPartCollidingWithBlocks(collisionBoundingOffset)){
+				if(this.isPartCollidingWithBlocks(Vec3d.ZERO)){
 					damagePropeller(1);
 					
 				}
@@ -120,7 +119,7 @@ public class PartPropeller extends APart{
 	@Override
 	public NBTTagCompound getPartNBTTag(){
 		NBTTagCompound dataTag = new NBTTagCompound();		
-		dataTag.setFloat("damage", damage);
+		dataTag.setFloat("damage", this.damage);
 		return dataTag;
 	}
 	
@@ -140,8 +139,8 @@ public class PartPropeller extends APart{
 	}
 	
 	private void damagePropeller(float damage){
-		damage += damage;
-		if(damage > pack.propeller.startingHealth && !multipart.worldObj.isRemote){
+		this.damage += damage;
+		if(this.damage > pack.propeller.startingHealth && !multipart.worldObj.isRemote){
 			multipart.removePart(this, true);
 		}
 	}
