@@ -415,11 +415,13 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 		
 		//Now get any contributions from the colliding collision bits.
 		for(MultipartAxisAlignedBB box : this.getCurrentCollisionBoxes()){
-			if(!worldObj.getCollisionBoxes(box.offset(0, -0.05F, 0)).isEmpty()){
-				//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
-				BlockPos pos = new BlockPos(box.pos.addVector(0, -1, 0));
-				float frictionLoss = 0.6F - worldObj.getBlockState(pos).getBlock().slipperiness;
-				brakingFactor += Math.max(2.0 - frictionLoss, 0);
+			if(!groundDeviceCollisionBoxMap.containsKey(box)){
+				if(!worldObj.getCollisionBoxes(box.offset(0, -0.05F, 0)).isEmpty()){
+					//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
+					BlockPos pos = new BlockPos(box.pos.addVector(0, -1, 0));
+					float frictionLoss = 0.6F - worldObj.getBlockState(pos).getBlock().slipperiness;
+					brakingFactor += Math.max(2.0 - frictionLoss, 0);
+				}
 			}
 		}
 		return brakingFactor;
