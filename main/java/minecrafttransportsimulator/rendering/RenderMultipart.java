@@ -105,7 +105,12 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		windowLists.clear();
 		lightLists.clear();
 	}
-
+	
+	/**Returns the currently cached texture for the multipart.  Static for use in other functions.**/
+	public static ResourceLocation getTextureForMultipart(EntityMultipartD_Moving entity){
+		return textureMap.get(entity.multipartName);
+	}
+	
 	@Override
 	protected ResourceLocation getEntityTexture(EntityMultipartD_Moving entity){
 		return null;

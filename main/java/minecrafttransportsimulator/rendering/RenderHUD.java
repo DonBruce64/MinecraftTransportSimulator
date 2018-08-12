@@ -9,29 +9,25 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.VehicleInstrument;
 import minecrafttransportsimulator.systems.CameraSystem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 
 public final class RenderHUD{
-	private static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	
-	public static void drawMainHUD(EntityMultipartE_Vehicle vehicle, int width, int height, boolean inGUI){
-		final ResourceLocation backplateTexture = new ResourceLocation(vehicle.multipartName.substring(0, vehicle.multipartName.indexOf(':')), "textures/hud/" + vehicle.multipartName.substring(vehicle.multipartName.indexOf(':') + 1) + "_backplate.png");
-		final ResourceLocation mouldingTexture = new ResourceLocation(vehicle.multipartName.substring(0, vehicle.multipartName.indexOf(':')), "textures/hud/" + vehicle.multipartName.substring(vehicle.multipartName.indexOf(':') + 1) + "_moulding.png");
-		
+	public static void drawMainHUD(EntityMultipartE_Vehicle vehicle, int width, int height, boolean inGUI){		
 		GL11.glPushMatrix();
 		GL11.glColor4f(1, 1, 1, 1);
+		Minecraft.getMinecraft().getTextureManager().bindTexture(RenderMultipart.getTextureForMultipart(vehicle));
 		if(!inGUI){
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		}
 
 		if(CameraSystem.hudMode == 3 || inGUI){
-			drawLowerPanel(width, height, backplateTexture);
+			drawLowerPanel(width, height, vehicle.pack.rendering.hudBackplaneTexturePercentages);
 		}else{
 			GL11.glTranslatef(0, height/4, 0);
 		}
 		if(CameraSystem.hudMode == 2 || CameraSystem.hudMode == 3 || inGUI){
-			drawUpperPanel(width, height, backplateTexture, mouldingTexture);
+			drawUpperPanel(width, height, vehicle.pack.rendering.hudBackplaneTexturePercentages, vehicle.pack.rendering.hudMouldingTexturePercentages);
 		}
 		if(CameraSystem.hudMode > 0 || inGUI){
 			drawInstruments(vehicle, width, height, 
@@ -50,16 +46,14 @@ public final class RenderHUD{
 		GL11.glPopMatrix();
 	}
 	
-	public static void drawAuxiliaryHUD(EntityMultipartE_Vehicle vehicle, int width, int height, boolean inGUI){
-		final ResourceLocation backplateTexture = new ResourceLocation(vehicle.multipartName.substring(0, vehicle.multipartName.indexOf(':')), "textures/hud/" + vehicle.multipartName.substring(vehicle.multipartName.indexOf(':') + 1) + "_backplate.png");
-		final ResourceLocation mouldingTexture = new ResourceLocation(vehicle.multipartName.substring(0, vehicle.multipartName.indexOf(':')), "textures/hud/" + vehicle.multipartName.substring(vehicle.multipartName.indexOf(':') + 1) + "_moulding.png");
-		
+	public static void drawAuxiliaryHUD(EntityMultipartE_Vehicle vehicle, int width, int height, boolean inGUI){		
 		GL11.glPushMatrix();
 		GL11.glColor4f(1, 1, 1, 1);
+		Minecraft.getMinecraft().getTextureManager().bindTexture(RenderMultipart.getTextureForMultipart(vehicle));
 		if(!inGUI){
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		}
-		drawAuxiliaryPanel(width, height, backplateTexture, mouldingTexture);
+		drawAuxiliaryPanel(width, height, vehicle.pack.rendering.hudBackplaneTexturePercentages, vehicle.pack.rendering.hudMouldingTexturePercentages);
 		drawInstruments(vehicle, width, height, 0, width, height, false);
 		if(!inGUI){
 			Minecraft.getMinecraft().entityRenderer.disableLightmap();
@@ -103,95 +97,94 @@ public final class RenderHUD{
 		}
 	}
 	
-	private static void drawUpperPanel(int width, int height, ResourceLocation backplateTexture, ResourceLocation mouldingTexture){
-		textureManager.bindTexture(backplateTexture);
+	private static void drawUpperPanel(int width, int height, float[] backplanePercentages, float[] mouldingPercentages){
 		GL11.glBegin(GL11.GL_QUAD_STRIP);
-		GL11.glTexCoord2f(0.0F, 0.5F);
+		//Left backplane (left side)
+		GL11.glTexCoord2f(backplanePercentages[0], 0.5F*backplanePercentages[3]);
 		GL11.glVertex2d(0, 5*height/8);
-		GL11.glTexCoord2f(0, 1.0F);
+		GL11.glTexCoord2f(backplanePercentages[0], backplanePercentages[3]);
 		GL11.glVertex2d(0.0F, 3*height/4);
-		GL11.glTexCoord2f(1.5F, 0.0F);
+		
+		//Left backplane (right side)
+		GL11.glTexCoord2f(0.25F*backplanePercentages[1], backplanePercentages[2]);
 		GL11.glVertex2d(width/4, height/2);
-		GL11.glTexCoord2f(1.5F, 1.0F);
+		GL11.glTexCoord2f(0.25F*backplanePercentages[1], backplanePercentages[3]);
 		GL11.glVertex2d(width/4, 3*height/4);
-		GL11.glTexCoord2f(4.5F, 0.0F);
+		
+		//Center backlplane (right side)
+		GL11.glTexCoord2f(0.75F*backplanePercentages[1], backplanePercentages[2]);
 		GL11.glVertex2d(3*width/4, height/2);
-		GL11.glTexCoord2f(4.5F, 1.0F);
+		GL11.glTexCoord2f(0.75F*backplanePercentages[1], backplanePercentages[3]);
 		GL11.glVertex2d(3*width/4, 3*height/4);
-		GL11.glTexCoord2f(6.0F, 0.5F);
+		
+		//Right backplane (right side)
+		GL11.glTexCoord2f(backplanePercentages[1], 0.5F*backplanePercentages[3]);
 		GL11.glVertex2d(width, 5*height/8);
-		GL11.glTexCoord2f(6.0F, 1.0F);
+		GL11.glTexCoord2f(backplanePercentages[1], backplanePercentages[3]);
 		GL11.glVertex2d(width, 3*height/4);		
 		GL11.glEnd();
     	
-		textureManager.bindTexture(mouldingTexture);
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(0.0F, 0.0F);
-		GL11.glVertex2d(width/4, height/2 - 16);
-		GL11.glTexCoord2f(0.0F, 4.0F);
+		GL11.glBegin(GL11.GL_QUAD_STRIP);
+		//Left moulding (left side)
+		GL11.glTexCoord2f(mouldingPercentages[0], mouldingPercentages[2]);
 		GL11.glVertex2d(0, 5*height/8 - 16);
-		GL11.glTexCoord2f(1.0F, 4.0F);
+		GL11.glTexCoord2f(mouldingPercentages[0], mouldingPercentages[3]);
 		GL11.glVertex2d(0, 5*height/8);
-		GL11.glTexCoord2f(1.0F, 0.0F);
-		GL11.glVertex2d(width/4, height/2);
 		
-		GL11.glTexCoord2f(0.0F, 8.0F);
-		GL11.glVertex2d(3*width/4, height/2 - 16);
-		GL11.glTexCoord2f(0.0F, 0.0F);
+		//Left moulding (right side)
+		GL11.glTexCoord2f(0.25F*mouldingPercentages[1], mouldingPercentages[2]);
 		GL11.glVertex2d(width/4, height/2 - 16);
-		GL11.glTexCoord2f(1.0F, 0.0F);
+		GL11.glTexCoord2f(0.25F*mouldingPercentages[1], mouldingPercentages[3]);
 		GL11.glVertex2d(width/4, height/2);
-		GL11.glTexCoord2f(1.0F, 8.0F);
+		
+		//Center moulding (right side)
+		GL11.glTexCoord2f(0.75F*mouldingPercentages[1], mouldingPercentages[2]);
+		GL11.glVertex2d(3*width/4, height/2 - 16);
+		GL11.glTexCoord2f(0.75F*mouldingPercentages[1], mouldingPercentages[3]);
 		GL11.glVertex2d(3*width/4, height/2);
 		
-		GL11.glTexCoord2f(0.0F, 0.0F);
+		//Right moulding (right side)
+		GL11.glTexCoord2f(mouldingPercentages[1], mouldingPercentages[2]);
 		GL11.glVertex2d(width, 5*height/8 - 16);
-		GL11.glTexCoord2f(0.0F, 4.0F);
-		GL11.glVertex2d(3*width/4, height/2 - 16);
-		GL11.glTexCoord2f(1.0F, 4.0F);
-		GL11.glVertex2d(3*width/4, height/2);
-		GL11.glTexCoord2f(1.0F, 0.0F);
+		GL11.glTexCoord2f(mouldingPercentages[1], mouldingPercentages[3]);
 		GL11.glVertex2d(width, 5*height/8);
 		GL11.glEnd();
     }
     
-	private static void drawLowerPanel(int width, int height, ResourceLocation backplateTexture){
-		textureManager.bindTexture(backplateTexture);
+	private static void drawLowerPanel(int width, int height, float[] backplanePercentages){
 		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(0.0F, 0.0F);
+		GL11.glTexCoord2f(backplanePercentages[0], backplanePercentages[2]);
 		GL11.glVertex2d(0, 3*height/4);
-		GL11.glTexCoord2f(0.0F, 1.0F);
+		GL11.glTexCoord2f(backplanePercentages[0], backplanePercentages[3]);
 		GL11.glVertex2d(0, height);
-		GL11.glTexCoord2f(6.0F, 1.0F);
+		GL11.glTexCoord2f(backplanePercentages[1], backplanePercentages[3]);
 		GL11.glVertex2d(width, height);
-		GL11.glTexCoord2f(6.0F, 0.0F);
+		GL11.glTexCoord2f(backplanePercentages[1], backplanePercentages[2]);
 		GL11.glVertex2d(width, 3*height/4);
 		GL11.glEnd();
     }
 
-	private static void drawAuxiliaryPanel(int width, int height, ResourceLocation backplateTexture, ResourceLocation mouldingTexture){
-		textureManager.bindTexture(backplateTexture);
+	private static void drawAuxiliaryPanel(int width, int height, float[] backplanePercentages, float[] mouldingPercentages){
 		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(0.0F, 0.0F);
+		GL11.glTexCoord2f(backplanePercentages[0], backplanePercentages[2]);
 		GL11.glVertex2d(0, height/2+16);
-		GL11.glTexCoord2f(0.0F, 1.75F);
+		GL11.glTexCoord2f(backplanePercentages[0], backplanePercentages[3]);
 		GL11.glVertex2d(0, height);
-		GL11.glTexCoord2f(6.0F, 1.75F);
+		GL11.glTexCoord2f(backplanePercentages[1], backplanePercentages[3]);
 		GL11.glVertex2d(width, height);
-		GL11.glTexCoord2f(6.0F, 0.0F);
+		GL11.glTexCoord2f(backplanePercentages[1], backplanePercentages[2]);
 		GL11.glVertex2d(width, height/2+16);
 		GL11.glEnd();
     	
-		textureManager.bindTexture(mouldingTexture);
 		GL11.glBegin(GL11.GL_QUADS);
-    	GL11.glTexCoord2f(0.0F, 16.0F);
-		GL11.glVertex2d(width, height/2);
-		GL11.glTexCoord2f(0.0F, 0.0F);
-		GL11.glVertex2d(0, height/2);
-		GL11.glTexCoord2f(1.0F, 0.0F);
+    	GL11.glTexCoord2f(mouldingPercentages[0], mouldingPercentages[2]);
+    	GL11.glVertex2d(0, height/2);
+		GL11.glTexCoord2f(mouldingPercentages[0], mouldingPercentages[3]);
 		GL11.glVertex2d(0, height/2 + 16);
-		GL11.glTexCoord2f(1.0F, 16.0F);
+		GL11.glTexCoord2f(mouldingPercentages[1], mouldingPercentages[3]);
 		GL11.glVertex2d(width, height/2 + 16);
+		GL11.glTexCoord2f(mouldingPercentages[1], mouldingPercentages[2]);
+		GL11.glVertex2d(width, height/2);
 		GL11.glEnd();
     }
 }

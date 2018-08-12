@@ -101,16 +101,12 @@ public class PackMultipartObject{
     }
     
     public class PackRenderingConfig{
-    	/**The max number of characters that can be used with the text markings.  Prevents players from using overly-long names.**/
     	public int displayTextMaxLength;
-    	/**Number of windows for this vehicle.  MUST match the number of windows in the model.**/
     	public byte numberWindows;
-    	/**Default text for the display text.  This is the text the vehicle will spawn with.**/
         public String defaultDisplayText;
-    	/**A list of text marking objects that will be rendered after the model.  May be empty, but MUST be present to avoid errors.**/
+        public float[] hudBackplaneTexturePercentages;
+        public float[] hudMouldingTexturePercentages;
         public List<PackDisplayText> textMarkings = new ArrayList<PackDisplayText>();
-        /**A list of rotatable model definitions.  Like the text markings this can be omitted and empty,
-         * but would you really want to make a model that has not a single animated part?**/
         public List<PackRotatableModelObject> rotatableModelObjects = new ArrayList<PackRotatableModelObject>();
     }
     
