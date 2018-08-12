@@ -880,7 +880,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 					this.vertices[((short) i)*6 + j] = newVertex;
 				}
 				this.centerPoints[i] = new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
-				this.size[i] = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*16F;
+				this.size[i] = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*32F;
 			}
 			//Lights are in the format of "&NAME_XXXXXX_YYYYY_ZZZ"
 			//Where NAME is what switch it goes to.
