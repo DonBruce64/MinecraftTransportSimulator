@@ -100,25 +100,25 @@ public final class RenderHUD{
 	private static void drawUpperPanel(int width, int height, float[] backplanePercentages, float[] mouldingPercentages){
 		GL11.glBegin(GL11.GL_QUAD_STRIP);
 		//Left backplane (left side)
-		GL11.glTexCoord2f(backplanePercentages[0], 0.5F*backplanePercentages[3]);
+		GL11.glTexCoord2f(backplanePercentages[0], backplanePercentages[2] + 0.5F*(backplanePercentages[3] - backplanePercentages[2]));
 		GL11.glVertex2d(0, 5*height/8);
 		GL11.glTexCoord2f(backplanePercentages[0], backplanePercentages[3]);
 		GL11.glVertex2d(0.0F, 3*height/4);
 		
 		//Left backplane (right side)
-		GL11.glTexCoord2f(0.25F*backplanePercentages[1], backplanePercentages[2]);
+		GL11.glTexCoord2f(backplanePercentages[0] + 0.25F*(backplanePercentages[1] - backplanePercentages[0]), backplanePercentages[2]);
 		GL11.glVertex2d(width/4, height/2);
-		GL11.glTexCoord2f(0.25F*backplanePercentages[1], backplanePercentages[3]);
+		GL11.glTexCoord2f(backplanePercentages[0] + 0.25F*(backplanePercentages[1] - backplanePercentages[0]), backplanePercentages[3]);
 		GL11.glVertex2d(width/4, 3*height/4);
 		
 		//Center backlplane (right side)
-		GL11.glTexCoord2f(0.75F*backplanePercentages[1], backplanePercentages[2]);
+		GL11.glTexCoord2f(backplanePercentages[0] + 0.75F*(backplanePercentages[1] - backplanePercentages[0]), backplanePercentages[2]);
 		GL11.glVertex2d(3*width/4, height/2);
-		GL11.glTexCoord2f(0.75F*backplanePercentages[1], backplanePercentages[3]);
+		GL11.glTexCoord2f(backplanePercentages[0] + 0.75F*(backplanePercentages[1] - backplanePercentages[0]), backplanePercentages[3]);
 		GL11.glVertex2d(3*width/4, 3*height/4);
 		
 		//Right backplane (right side)
-		GL11.glTexCoord2f(backplanePercentages[1], 0.5F*backplanePercentages[3]);
+		GL11.glTexCoord2f(backplanePercentages[1], backplanePercentages[2] + 0.5F*(backplanePercentages[3] - backplanePercentages[2]));
 		GL11.glVertex2d(width, 5*height/8);
 		GL11.glTexCoord2f(backplanePercentages[1], backplanePercentages[3]);
 		GL11.glVertex2d(width, 3*height/4);		
@@ -132,15 +132,15 @@ public final class RenderHUD{
 		GL11.glVertex2d(0, 5*height/8);
 		
 		//Left moulding (right side)
-		GL11.glTexCoord2f(0.25F*mouldingPercentages[1], mouldingPercentages[2]);
+		GL11.glTexCoord2f(mouldingPercentages[0] + 0.25F*(mouldingPercentages[1] - mouldingPercentages[0]), mouldingPercentages[2]);
 		GL11.glVertex2d(width/4, height/2 - 16);
-		GL11.glTexCoord2f(0.25F*mouldingPercentages[1], mouldingPercentages[3]);
+		GL11.glTexCoord2f(mouldingPercentages[0] + 0.25F*(mouldingPercentages[1] - mouldingPercentages[0]), mouldingPercentages[3]);
 		GL11.glVertex2d(width/4, height/2);
 		
 		//Center moulding (right side)
-		GL11.glTexCoord2f(0.75F*mouldingPercentages[1], mouldingPercentages[2]);
+		GL11.glTexCoord2f(mouldingPercentages[0] + 0.75F*(mouldingPercentages[1] - mouldingPercentages[0]), mouldingPercentages[2]);
 		GL11.glVertex2d(3*width/4, height/2 - 16);
-		GL11.glTexCoord2f(0.75F*mouldingPercentages[1], mouldingPercentages[3]);
+		GL11.glTexCoord2f(mouldingPercentages[0] + 0.75F*(mouldingPercentages[1] - mouldingPercentages[0]), mouldingPercentages[3]);
 		GL11.glVertex2d(3*width/4, height/2);
 		
 		//Right moulding (right side)
