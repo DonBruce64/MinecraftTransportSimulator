@@ -184,7 +184,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 					}
 				}
 			}
-			
+
 			//Now do pitch.
 			//Make sure to take into account yaw as it's already been checked.
 			//Note that pitch is special in that it can add a slight Y to multiparts if the multipart is
@@ -196,21 +196,19 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 					MultipartAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor));
 					if(getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box), null).isEmpty()){
 						break;
-					}else if(motionPitch < 0){
-						if(box.rel.zCoord <= 0){
-							float yBoost = 0;
-							for(AxisAlignedBB box2 : getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box), null)){
-								if(box2.maxY > offsetBox.minY + yBoost){
-									yBoost += (box2.maxY - offsetBox.minY);
-								}
+					}else if((motionPitch < 0 && box.rel.zCoord <= 0) || (motionPitch > 0 && rotationPitch < -10 && box.rel.zCoord > 0 && originalMotionY > 0)){
+						float yBoost = 0;
+						for(AxisAlignedBB box2 : getAABBCollisions(offsetBox, groundDeviceCollisionBoxMap.get(box), null)){
+							if(box2.maxY > offsetBox.minY + yBoost){
+								yBoost += (box2.maxY - offsetBox.minY);
 							}
-							//Clamp the boost relative to the speed of the vehicle.
-							//Otherwise things get bouncy.
-							yBoost = (float) Math.min(Math.min(this.velocity, -motionPitch), yBoost/speedFactor);
-							motionY += yBoost;
-							originalMotionY += yBoost;
-							break;
 						}
+						//Clamp the boost relative to the speed of the vehicle.
+						//Otherwise things get bouncy.
+						yBoost = (float) Math.min(Math.min(this.velocity, Math.abs(motionPitch)), yBoost/speedFactor);
+						motionY += yBoost;
+						originalMotionY += yBoost;
+						break;
 					}
 					if(this.motionPitch > 0){
 						this.motionPitch = Math.max(motionPitch - 0.1F, 0);
