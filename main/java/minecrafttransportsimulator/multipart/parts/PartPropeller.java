@@ -159,8 +159,8 @@ public class PartPropeller extends APart{
 				//Now return the thrust equation.  If the angle of attack is greater than 25, sap power off the propeller for stalling.
 				return multipart.airDensity*Math.PI*Math.pow(0.0254*pack.propeller.diameter/2D, 2)*
 						(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
-						Math.pow(pack.propeller.diameter/2D/Math.abs(effectivePitchVelocity) + pack.propeller.numberBlades/1000D, 1.5)/
-						400D*(angleOfAttack > 15 ? 15/angleOfAttack : 1.0D)*Math.signum(effectivePitchVelocity);
+						Math.pow(pack.propeller.diameter/2D/Math.abs(effectivePitchVelocity) + pack.propeller.numberBlades/1000D, 1.5)/400D
+						*(angleOfAttack > 35 ? 35/angleOfAttack : 1.0D)*Math.signum(effectivePitchVelocity);
 			}
 		}
 		return 0;
