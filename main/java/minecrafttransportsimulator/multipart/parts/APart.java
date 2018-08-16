@@ -48,7 +48,7 @@ public abstract class APart{
 		this.multipart = multipart;
 		this.partName = partName;
 		this.pack = PackParserSystem.getPartPack(partName);
-		this.partPos = multipart.getPositionVector().add(offset);
+		this.partPos = RotationSystem.getRotatedPoint(this.offset, multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll).add(this.multipart.getPositionVector());
 		this.isValid = true;
 	}
 	
