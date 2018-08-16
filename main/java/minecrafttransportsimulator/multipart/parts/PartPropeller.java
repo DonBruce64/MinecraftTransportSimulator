@@ -71,9 +71,9 @@ public class PartPropeller extends APart{
 				--currentPitch;
 			}else if(!((EntityMultipartF_Plane) multipart).propellersReversed && currentPitch < 45){
 				++currentPitch;
-			}else if(connectedEngine.RPM < connectedEngine.pack.engine.maxRPM*0.87 && currentPitch > 45){
+			}else if(connectedEngine.RPM < connectedEngine.pack.engine.maxRPM*0.85 && currentPitch > 45){
 				--currentPitch;
-			}else if(connectedEngine.RPM > connectedEngine.pack.engine.maxRPM*0.93 && currentPitch < pack.propeller.pitch){
+			}else if(connectedEngine.RPM > connectedEngine.pack.engine.maxRPM*0.88 && currentPitch < pack.propeller.pitch){
 				++currentPitch;
 			}
 		}
