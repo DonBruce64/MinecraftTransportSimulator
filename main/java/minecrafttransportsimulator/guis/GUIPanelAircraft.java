@@ -57,13 +57,11 @@ public class GUIPanelAircraft extends GuiScreen{
 	public void initGui(){
 		for(byte i=0; i<lightButtonCoords.length; ++i){
 			hasLight[i] = RenderMultipart.doesMultipartHaveLight(aircraft, lights[i]);
-			lightButtonCoords[i] = new int[]{this.width/20-8, this.width/20+8, (i+6)*this.height/10+16, (i+6)*this.height/10-0};
+			lightButtonCoords[i] = new int[]{16, 48, 280+50*i+32, 280+50*i};
 		}
 		for(byte i=0; i<magnetoButtonCoords.length; ++i){
-			magnetoButtonCoords[i] = new int[]{3*this.width/18-16, 3*this.width/18+0, (i+6)*this.height/10+16, (i+6)*this.height/10-0};
-			if(starterButtonCoords.length > 0){
-				starterButtonCoords[i] = new int[]{3*this.width/18, 3*this.width/18+16, (i+6)*this.height/10+16, (i+6)*this.height/10-0};
-			}
+			magnetoButtonCoords[i] = new int[]{64, 96, 280+50*i+32, 280+50*i};
+			starterButtonCoords[i] = new int[]{96, 128, 280+50*i+32, 280+50*i};
 		}
 	}
 	
@@ -82,10 +80,15 @@ public class GUIPanelAircraft extends GuiScreen{
 		
 		//Disable the main HUD overlay if it's active.
 		CameraSystem.disableHUD = true;
+		
+		//Scale this HUD by the current screen ratio.
+		GL11.glPushMatrix();
+		GL11.glScalef(1.0F*this.width/RenderHUD.screenDefaultX, 1.0F*this.height/RenderHUD.screenDefaultY, 0);
+		
 		//Render the main backplate and instruments.
 		//Note that while this is technically a GUI, the GUI parameter is for the instrument GUI.
 		RenderHUD.drawAuxiliaryHUD(aircraft, width, height, false);
-
+		
 		//Render the 4 light buttons if we have lights for them.
 		for(byte i=0; i<hasLight.length; ++i){
 			if(hasLight[i]){
@@ -96,13 +99,9 @@ public class GUIPanelAircraft extends GuiScreen{
 		//Render the engine buttons.
 		//Check if an engine is present and render the status if so.
 		//Otherwise just leave the lights off.
-		//Engine button are rendered from the bottom upwards.
 		for(byte i=0; i<magnetoButtonCoords.length; ++i){
 			drawRedstoneButton(magnetoButtonCoords[i], engines[i] != null ? engines[i].state.magnetoOn : false);
-			//Don't render the starter button if electric start is disabled.
-			if(starterButtonCoords.length > 0){
-				drawRedstoneButton(starterButtonCoords[i], engines[i] != null ? engines[i].state.esOn : false);
-			}
+			drawRedstoneButton(starterButtonCoords[i], engines[i] != null ? engines[i].state.esOn : false);
 		}
 
 		//Render light button text.
@@ -110,11 +109,7 @@ public class GUIPanelAircraft extends GuiScreen{
 			if(hasLight[i]){
 				int textX = lightButtonCoords[i][0] + (lightButtonCoords[i][1] - lightButtonCoords[i][0])/2;
 				int textY = lightButtonCoords[i][2] + 2; 
-				GL11.glPushMatrix();
-				GL11.glTranslatef(textX, textY, 0);
-				GL11.glScalef(0.6F, 0.6F, 0.6F);
-				fontRendererObj.drawString(lightText[i], -fontRendererObj.getStringWidth(lightText[i])/2, 0, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
-				GL11.glPopMatrix();
+				fontRendererObj.drawString(lightText[i], textX - fontRendererObj.getStringWidth(lightText[i])/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 			}
 		}
 		
@@ -122,19 +117,10 @@ public class GUIPanelAircraft extends GuiScreen{
 		for(byte i=0; i<magnetoButtonCoords.length; ++i){
 			int textX = magnetoButtonCoords[i][0] + (magnetoButtonCoords[i][1] - magnetoButtonCoords[i][0])/2;
 			int textY = magnetoButtonCoords[i][2] + 2;
-			GL11.glPushMatrix();
-			GL11.glTranslatef(textX, textY, 0);
-			GL11.glScalef(0.6F, 0.6F, 0.6F);
-			fontRendererObj.drawString(I18n.format("gui.panel.magneto"), -fontRendererObj.getStringWidth(I18n.format("gui.panel.magneto"))/2, 0, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
-			GL11.glPopMatrix();
-			if(starterButtonCoords.length > 0){
-				GL11.glPushMatrix();
-				GL11.glTranslatef(textX+16, textY, 0);
-				GL11.glScalef(0.6F, 0.6F, 0.6F);
-				fontRendererObj.drawString(I18n.format("gui.panel.starter"), -fontRendererObj.getStringWidth(I18n.format("gui.panel.starter"))/2, 0, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
-				GL11.glPopMatrix();
-			}
+			fontRendererObj.drawString(I18n.format("gui.panel.magneto"), textX - fontRendererObj.getStringWidth(I18n.format("gui.panel.magneto"))/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+			fontRendererObj.drawString(I18n.format("gui.panel.starter"), textX - fontRendererObj.getStringWidth(I18n.format("gui.panel.starter"))/2 + 32, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		}
+		GL11.glPopMatrix();
 	}
 	
 	private void drawRedstoneButton(int[] coords, boolean isOn){
@@ -153,8 +139,11 @@ public class GUIPanelAircraft extends GuiScreen{
 	
 	@Override
     protected void mouseClicked(int x, int y, int button){
+		//Scale clicks to the scaled GUI;
+		x = (int) (1.0F*x/width*RenderHUD.screenDefaultX);
+		y = (int) (1.0F*y/height*RenderHUD.screenDefaultY);
 		lastEngineStarted = -1;
-		if(y < height/2){
+		if(y < RenderHUD.screenDefaultY/2){
 			mc.thePlayer.closeScreen();
 		}else{
 			//Check if a light button has been pressed.

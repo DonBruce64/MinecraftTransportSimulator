@@ -9,6 +9,7 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 public final class RenderControls extends RenderInstruments{	
 	public static void drawControl(EntityMultipartE_Vehicle vehicle, Controls control, boolean hud){
 		textureManager.bindTexture(controlsTexture);
+		GL11.glScalef(2.0F, 2.0F, 2.0F);
 		switch(control){
 			case PARKING_BRAKE: drawParkingBrake((EntityMultipartF_Plane) vehicle, hud); break;	
 			case AIRCRAFT_THROTTLE: drawAircraftThrottle((EntityMultipartF_Plane) vehicle, hud); break;

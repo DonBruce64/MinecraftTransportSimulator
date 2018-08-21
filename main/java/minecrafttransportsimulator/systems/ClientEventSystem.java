@@ -306,7 +306,10 @@ public final class ClientEventSystem{
                 	EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) minecraft.thePlayer.getRidingEntity();
                 	if(vehicle.getSeatForRider(minecraft.thePlayer) != null){
 	                	if(vehicle.getSeatForRider(minecraft.thePlayer).isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
-	                		RenderHUD.drawMainHUD(vehicle, event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight(), false);
+	                		GL11.glPushMatrix();
+	                		GL11.glScalef(1.0F*event.getResolution().getScaledWidth()/RenderHUD.screenDefaultX, 1.0F*event.getResolution().getScaledHeight()/RenderHUD.screenDefaultY, 0);
+	                		RenderHUD.drawMainHUD(vehicle, false);
+	                		GL11.glPopMatrix();
 	                	}
                 	}
                 }

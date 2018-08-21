@@ -607,15 +607,14 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	
 	private static void renderInstrumentsAndControls(EntityMultipartE_Vehicle vehicle){
 		GL11.glPushMatrix();
-		GL11.glScalef(1F/16F/8F, 1F/16F/8F, 1F/16F/8F);
 		for(byte i=0; i<vehicle.pack.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.pack.motorized.instruments.get(i);
 			GL11.glPushMatrix();
-			GL11.glTranslatef(packInstrument.pos[0]*8, packInstrument.pos[1]*8, packInstrument.pos[2]*8);
+			GL11.glTranslatef(packInstrument.pos[0], packInstrument.pos[1], packInstrument.pos[2]);
 			GL11.glRotatef(packInstrument.rot[0], 1, 0, 0);
 			GL11.glRotatef(packInstrument.rot[1], 0, 1, 0);
 			GL11.glRotatef(packInstrument.rot[2], 0, 0, 1);
-			GL11.glScalef(packInstrument.scale, packInstrument.scale, packInstrument.scale);
+			GL11.glScalef(packInstrument.scale/16F, packInstrument.scale/16F, packInstrument.scale/16F);
 			VehicleInstrument instrument = vehicle.getInstrumentInfoInSlot(i);
 			if(instrument != null){
 				RenderInstruments.drawInstrument(vehicle, instrument, false, packInstrument.optionalEngineNumber);
@@ -625,7 +624,8 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		for(byte i=0; i<vehicle.pack.motorized.controls.size(); ++i){
 			PackControl packControl = vehicle.pack.motorized.controls.get(i);
 			GL11.glPushMatrix();
-			GL11.glTranslatef(packControl.pos[0]*8, packControl.pos[1]*8, packControl.pos[2]*8);
+			GL11.glTranslatef(packControl.pos[0], packControl.pos[1], packControl.pos[2]);
+			GL11.glScalef(1F/16F/16F, 1F/16F/16F, 1F/16F/16F);
 			for(Controls control : Controls.values()){
 				if(control.name().toLowerCase().equals(packControl.controlName)){
 					RenderControls.drawControl(vehicle, control, false);

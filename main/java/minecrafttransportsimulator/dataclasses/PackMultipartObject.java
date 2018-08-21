@@ -88,7 +88,7 @@ public class PackMultipartObject{
     public class PackInstrument{
         public float[] pos;
         public float[] rot;
-        public int[] hudpos;
+        public float[] hudpos;
         public float scale;
         public float hudScale;
         public byte optionalEngineNumber;
