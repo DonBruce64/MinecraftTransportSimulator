@@ -146,7 +146,7 @@ public class PartPropeller extends APart{
 	}
 	
 	public double getThrustForce(){
-		if(currentPitch != 0){
+		if(currentPitch != 0 && this.connectedEngine.state.running){
 			//Get what the pitch velocity of the propeller would be at the current velocity.
 			double currentPitchVelocity = multipart.velocity*20D;
 			//Get the effective pitch velocity of the propeller at the current RPM.
@@ -156,7 +156,7 @@ public class PartPropeller extends APart{
 			if(connectedEngine != null && effectivePitchVelocity != 0){
 				//Get the angle of attack of the propeller.
 				double angleOfAttack = Math.abs(effectivePitchVelocity - currentPitchVelocity);
-				//Now return the thrust equation.  If the angle of attack is greater than 25, sap power off the propeller for stalling.
+				//Now return the thrust equation.  If the angle of attack is greater than 35, sap power off the propeller for stalling.
 				return multipart.airDensity*Math.PI*Math.pow(0.0254*pack.propeller.diameter/2D, 2)*
 						(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
 						Math.pow(pack.propeller.diameter/2D/Math.abs(effectivePitchVelocity) + pack.propeller.numberBlades/1000D, 1.5)/400D
