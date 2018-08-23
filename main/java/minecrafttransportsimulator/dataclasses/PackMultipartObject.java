@@ -16,34 +16,18 @@ public class PackMultipartObject{
     public PackRenderingConfig rendering;
     
     public class PackGeneralConfig{
-    	/**Set this to true to disable the quieter sounds while riding this vehicle.**/
     	public boolean openTop;
-    	/**Vehicle mass while empty (kg).**/
     	public int emptyMass;
-        /**Vehicle type.  See {@link PackParserSystem} for a complete list.**/
     	public String type;
-        /**Ingredients that need to be present to craft this vehicle.
-         * Should be a list of items in the format of [itemname]:[metadata]:[qty].
-         * Note that the itemname MUST contain the modId if modded materials are used.
-         * This is the same format as the /give command, so use that for reference.
-         * As an example, 
-         */
         public String[] materials;
     }
     
     public class PackFileDefinitions{
-    	/**A bit of text to be appended to the main vehicle name to allow for sub-types (different colors, configurations, etc.).
-    	 * Completely optional and may be left blank for single-vehicle JSONs.**/
     	public String subName;
-    	/**Additional materials, if any, that need to be present to create this specific model of vehicle.
-    	 * Note that these can be omitted even for JSONs that have multiple definitions in one file.
-    	 * Formatting is the same as the general materials.
-    	 **/
     	public String[] extraMaterials;
     }
     
     public class PackMotorizedConfig{
-    	/**Capacity of the vehicle's fuel tank (in mB).**/
     	public int fuelCapacity;
     	public String hornSound;
     	public String sirenSound;
