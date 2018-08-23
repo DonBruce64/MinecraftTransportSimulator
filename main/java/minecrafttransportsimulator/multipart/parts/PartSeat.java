@@ -10,12 +10,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 
 public final class PartSeat extends APart{
-	public final byte rotation;
-	private static final Vec3d[] seatRotations = new Vec3d[]{new Vec3d(0, 0, 0), new Vec3d(0, 90, 0), new Vec3d(0, 180, 0), new Vec3d(0, 270, 0)}; 
 	
 	public PartSeat(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
 		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
-		this.rotation = dataTag.getByte("rotation");
 	}
 	
 	@Override
@@ -50,9 +47,7 @@ public final class PartSeat extends APart{
 	
 	@Override
 	public NBTTagCompound getPartNBTTag(){
-		NBTTagCompound dataTag = new NBTTagCompound();
-		dataTag.setByte("rotation", this.rotation);
-		return dataTag;
+		return new NBTTagCompound();
 	}
 
 	@Override
@@ -63,10 +58,5 @@ public final class PartSeat extends APart{
 	@Override
 	public float getHeight(){
 		return 0.75F;
-	}
-	
-	@Override
-	public Vec3d getRotation(float partialTicks){
-		return seatRotations[this.rotation/90];
 	}
 }

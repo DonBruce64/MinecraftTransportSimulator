@@ -31,6 +31,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  */
 public class PartGroundDevice extends APart implements FXPart{
 	private static final Vec3d groundDetectionOffset = new Vec3d(0, -0.05F, 0);
+	private static final Vec3d mirrorRotation = new Vec3d(0, 180, 0);
 	private final PartGroundDeviceFake fakePart;
 	private ResourceLocation flatModelLocation;
 	
@@ -177,21 +178,9 @@ public class PartGroundDevice extends APart implements FXPart{
 	}
 	
 	@Override
-	public Vec3d getRotation(float partialTicks){
+	public Vec3d getActionRotation(float partialTicks){
 		if(this.pack.groundDevice.rotatesOnShaft){
-			if(this.offset.xCoord > 0){
-				if(this.turnsWithSteer){
-					return new Vec3d(this.angularPosition + this.angularVelocity*partialTicks, 0, 0);
-				}else{
-					return new Vec3d(this.angularPosition + this.angularVelocity*partialTicks, 0, 0);
-				}
-			}else{
-				if(this.turnsWithSteer){
-					return new Vec3d(this.angularPosition + this.angularVelocity*partialTicks, 180, 0);
-				}else{
-					return new Vec3d(this.angularPosition + this.angularVelocity*partialTicks, 180, 0);
-				}
-			}
+			return new Vec3d(this.angularPosition + this.angularVelocity*partialTicks, 0, 0);
 		}else{
 			return Vec3d.ZERO;
 		}

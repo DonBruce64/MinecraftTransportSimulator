@@ -134,7 +134,7 @@ public class PartPropeller extends APart{
 	}
 
 	@Override
-	public Vec3d getRotation(float partialTicks){
+	public Vec3d getActionRotation(float partialTicks){
 		return new Vec3d(0, 0, this.angularPosition + this.angularVelocity*partialTicks);
 	}
 	

@@ -398,11 +398,24 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
     				GL11.glRotatef(-multipart.getSteerAngle(), 0, 1, 0);
     			}
     		}
-    		GL11.glRotated(part.getRotation(partialTicks).xCoord, 1, 0, 0);
-    		GL11.glRotated(part.getRotation(partialTicks).yCoord, 0, 1, 0);
-    		GL11.glRotated(part.getRotation(partialTicks).zCoord, 0, 0, 1);
+    		
+    		if(part.offset.xCoord < 0){
+    			GL11.glScalef(-1.0F, 1.0F, 1.0F);
+    			GL11.glCullFace(GL11.GL_FRONT);
+    		}
+    		
+    		GL11.glRotated(part.partRotation.xCoord, 1, 0, 0);
+    		GL11.glRotated(part.partRotation.yCoord, 0, 1, 0);
+    		GL11.glRotated(part.partRotation.zCoord, 0, 0, 1);
+    		
+    		Vec3d actionRotation = part.getActionRotation(partialTicks);
+    		GL11.glRotated(actionRotation.xCoord, 1, 0, 0);
+    		GL11.glRotated(actionRotation.yCoord, 0, 1, 0);
+    		GL11.glRotated(actionRotation.zCoord, 0, 0, 1);
+    		
     		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
 			GL11.glCallList(partDisplayLists.get(partModelLocation));
+			GL11.glCullFace(GL11.GL_BACK);
 			GL11.glPopMatrix();
         }
 	}

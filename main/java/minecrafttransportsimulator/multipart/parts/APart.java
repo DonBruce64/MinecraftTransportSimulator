@@ -37,6 +37,7 @@ public abstract class APart{
 	public final PackPartObject pack;
 	
 	public Vec3d partPos;
+	public Vec3d partRotation;
 	
 	private boolean isValid;
 	private ResourceLocation modelLocation;
@@ -49,6 +50,8 @@ public abstract class APart{
 		this.partName = partName;
 		this.pack = PackParserSystem.getPartPack(partName);
 		this.partPos = RotationSystem.getRotatedPoint(this.offset, multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll).add(this.multipart.getPositionVector());
+		float rotation[] = multipart.getPackDefForLocation(offset.xCoord, offset.yCoord, offset.zCoord).rot;
+		this.partRotation = rotation != null ? new Vec3d(rotation[0], rotation[1], rotation[2]) : Vec3d.ZERO;
 		this.isValid = true;
 	}
 	
@@ -147,13 +150,14 @@ public abstract class APart{
 		return new MultipartAxisAlignedBB(totalOffset, this.offset, this.getWidth(), this.getHeight());
 	}
 	
-	/**Gets the current rotation for rendering.
-	 * This is used for rotating this part by the rendering
-	 * system and also represents the general "state" of this
-	 * part on it's offset point.  Used for multiple things
-	 * in multiple places. 
+	/**Gets the rotation vector for rendering.
+	 * This comes from the part itself and is only
+	 * changed on the client for animation purposes.
+	 * Both this and partRotation are used
+	 * to determine the final rotation of a part
+	 * during rendering.
 	 */
-	public Vec3d getRotation(float partialTicks){
+	public Vec3d getActionRotation(float partialTicks){
 		return Vec3d.ZERO;
 	}
 

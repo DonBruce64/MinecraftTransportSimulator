@@ -54,6 +54,7 @@ public class PackMultipartObject{
     
     public class PackPart{
         public float[] pos;
+        public float[] rot;
         public boolean turnsWithSteer;
         public boolean isController;
         public List<String> types;
