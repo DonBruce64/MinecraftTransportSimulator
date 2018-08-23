@@ -11,25 +11,21 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PropellerPacket implements IMessage{
 	private int id;
-	private boolean reversed;
 
 	public PropellerPacket(){}
 	
-	public PropellerPacket(int id, boolean reversed){
+	public PropellerPacket(int id){
 		this.id = id;
-		this.reversed = reversed;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		this.id=buf.readInt();
-		this.reversed = buf.readBoolean();
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		buf.writeInt(this.id);
-		buf.writeBoolean(this.reversed);
 	}
 
 	public static class Handler implements IMessageHandler<PropellerPacket, IMessage>{
@@ -44,7 +40,7 @@ public class PropellerPacket implements IMessage{
 						thisEntity = (EntityMultipartF_Plane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
-						thisEntity.propellersReversed = message.reversed;
+						thisEntity.propellersReversed = !thisEntity.propellersReversed;
 						if(ctx.side.isServer()){
 							MTS.MTSNet.sendToAll(message);
 						}

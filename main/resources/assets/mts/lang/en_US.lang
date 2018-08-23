@@ -72,6 +72,7 @@ input.aircraft.trim_pitch_u=TrimPitchUp
 input.aircraft.trim_pitch_d=TrimPitchDown
 input.aircraft.trim_roll_r=TrimRollRight
 input.aircraft.trim_roll_l=TrimRollLeft
+input.aircraft.reverse=Reverse
 
 input.car.mod=Mod
 input.car.camlock=CamLock
@@ -114,6 +115,9 @@ gui.panel.taxilights=TAXI
 gui.panel.landinglights=LAND
 gui.panel.magneto=MAG
 gui.panel.starter=START
+gui.panel.trim_roll=ROLL TRIM
+gui.panel.trim_pitch=PITCH TRIM
+gui.panel.trim_yaw=YAW TRIM
 
 gui.instruments.main=Main Instruments
 gui.instruments.control=Control Panel

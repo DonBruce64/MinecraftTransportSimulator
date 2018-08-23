@@ -10,12 +10,14 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.packets.control.LightPacket;
+import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderInstruments;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.systems.CameraSystem;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
@@ -28,17 +30,25 @@ import net.minecraft.util.ResourceLocation;
 public class GUIPanelAircraft extends GuiScreen{
 	private static final ResourceLocation toggleOn = new ResourceLocation("textures/blocks/redstone_lamp_on.png");
 	private static final ResourceLocation toggleOff = new ResourceLocation("textures/blocks/redstone_lamp_off.png");
+	private static final LightTypes[] lights = new LightTypes[]{LightTypes.NAVIGATIONLIGHT, LightTypes.STROBELIGHT, LightTypes.TAXILIGHT, LightTypes.LANDINGLIGHT};
+	private static final String[] lightText = new String[]{I18n.format("gui.panel.navigationlights"), I18n.format("gui.panel.strobelights"), I18n.format("gui.panel.taxilights"), I18n.format("gui.panel.landinglights")};
 	
 	private final EntityMultipartE_Vehicle aircraft;
 	private final APartEngine[] engines;
 	private final boolean[] hasLight;
-	private final LightTypes[] lights = new LightTypes[]{LightTypes.NAVIGATIONLIGHT, LightTypes.STROBELIGHT, LightTypes.TAXILIGHT, LightTypes.LANDINGLIGHT};
-	String[] lightText = new String[]{I18n.format("gui.panel.navigationlights"), I18n.format("gui.panel.strobelights"), I18n.format("gui.panel.taxilights"), I18n.format("gui.panel.landinglights")};
 	private final int[][] lightButtonCoords;
 	private final int[][] magnetoButtonCoords;
 	private final int[][] starterButtonCoords;
 	
+	private GuiButton aileronTrimUpButton;
+	private GuiButton aileronTrimDownButton;
+	private GuiButton elevatorTrimUpButton;
+	private GuiButton elevatorTrimDownButton;
+	private GuiButton rudderTrimUpButton;
+	private GuiButton rudderTrimDownButton;
+	
 	private byte lastEngineStarted;
+	private GuiButton lastButtonPressed;
 	
 	public GUIPanelAircraft(EntityMultipartE_Vehicle aircraft){
 		super();
@@ -49,20 +59,30 @@ public class GUIPanelAircraft extends GuiScreen{
 		}
 		hasLight = new boolean[4];
 		lightButtonCoords = new int[4][4];
+		for(byte i=0; i<lightButtonCoords.length; ++i){
+			lightButtonCoords[i] = new int[]{16, 48, 280+50*i+32, 280+50*i};
+		}
 		magnetoButtonCoords = new int[engines.length][4];
+		for(byte i=0; i<magnetoButtonCoords.length; ++i){
+			magnetoButtonCoords[i] = new int[]{64, 96, 280+50*i+32, 280+50*i};
+		}
 		starterButtonCoords = new int[engines.length][4];
+		for(byte i=0; i<starterButtonCoords.length; ++i){
+			starterButtonCoords[i] = new int[]{96, 128, 280+50*i+32, 280+50*i};
+		}
 	}
 	
 	@Override
 	public void initGui(){
 		for(byte i=0; i<lightButtonCoords.length; ++i){
 			hasLight[i] = RenderMultipart.doesMultipartHaveLight(aircraft, lights[i]);
-			lightButtonCoords[i] = new int[]{16, 48, 280+50*i+32, 280+50*i};
 		}
-		for(byte i=0; i<magnetoButtonCoords.length; ++i){
-			magnetoButtonCoords[i] = new int[]{64, 96, 280+50*i+32, 280+50*i};
-			starterButtonCoords[i] = new int[]{96, 128, 280+50*i+32, 280+50*i};
-		}
+		buttonList.add(aileronTrimUpButton = new GuiButton(0, 90, 175, 20, 20, "<"));
+		buttonList.add(aileronTrimDownButton = new GuiButton(0, 110, 175, 20, 20, ">"));
+		buttonList.add(elevatorTrimUpButton = new GuiButton(0, 90, 215, 20, 20, "/\\"));
+		buttonList.add(elevatorTrimDownButton = new GuiButton(0, 110, 215, 20, 20, "\\/"));
+		buttonList.add(rudderTrimUpButton = new GuiButton(0, 90, 255, 20, 20, "<"));
+		buttonList.add(rudderTrimDownButton = new GuiButton(0, 110, 255, 20, 20, ">"));
 	}
 	
 	@Override
@@ -103,6 +123,17 @@ public class GUIPanelAircraft extends GuiScreen{
 			drawRedstoneButton(magnetoButtonCoords[i], engines[i] != null ? engines[i].state.magnetoOn : false);
 			drawRedstoneButton(starterButtonCoords[i], engines[i] != null ? engines[i].state.esOn : false);
 		}
+		
+		//Render the trim buttons.
+		//Scale mouse position to the scaled GUI;
+		mouseX = (int) (1.0F*mouseX/width*RenderHUD.screenDefaultX*20F/32F);
+		mouseY = (int) (1.0F*mouseY/height*RenderHUD.screenDefaultY*20F/32F);
+		GL11.glPushMatrix();
+		GL11.glScalef(32F/20F, 32F/20F, 0);
+		for(GuiButton button : buttonList){
+			button.drawButton(mc, mouseX, mouseY);
+		}
+		GL11.glPopMatrix();
 
 		//Render light button text.
 		for(byte i=0; i<lightButtonCoords.length; ++i){
@@ -120,6 +151,12 @@ public class GUIPanelAircraft extends GuiScreen{
 			fontRendererObj.drawString(I18n.format("gui.panel.magneto"), textX - fontRendererObj.getStringWidth(I18n.format("gui.panel.magneto"))/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 			fontRendererObj.drawString(I18n.format("gui.panel.starter"), textX - fontRendererObj.getStringWidth(I18n.format("gui.panel.starter"))/2 + 32, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		}
+		
+		//Render trim button text.
+		fontRendererObj.drawString(I18n.format("gui.panel.trim_roll"), 176 - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_roll"))/2, 312 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.panel.trim_pitch"), 176 - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_pitch"))/2, 376 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.panel.trim_yaw"), 176 - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_yaw"))/2, 440 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		
 		GL11.glPopMatrix();
 	}
 	
@@ -138,17 +175,17 @@ public class GUIPanelAircraft extends GuiScreen{
 	}
 	
 	@Override
-    protected void mouseClicked(int x, int y, int button){
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException{
 		//Scale clicks to the scaled GUI;
-		x = (int) (1.0F*x/width*RenderHUD.screenDefaultX);
-		y = (int) (1.0F*y/height*RenderHUD.screenDefaultY);
+		mouseX = (int) (1.0F*mouseX/width*RenderHUD.screenDefaultX);
+		mouseY = (int) (1.0F*mouseY/height*RenderHUD.screenDefaultY);
 		lastEngineStarted = -1;
-		if(y < RenderHUD.screenDefaultY/2){
+		if(mouseY < RenderHUD.screenDefaultY/2){
 			mc.thePlayer.closeScreen();
 		}else{
 			//Check if a light button has been pressed.
 			for(byte i=0; i<lightButtonCoords.length; ++i){
-				if(x > lightButtonCoords[i][0] && x < lightButtonCoords[i][1] && y < lightButtonCoords[i][2] && y > lightButtonCoords[i][3]){
+				if(mouseX > lightButtonCoords[i][0] && mouseX < lightButtonCoords[i][1] && mouseY < lightButtonCoords[i][2] && mouseY > lightButtonCoords[i][3]){
 					if(hasLight[i]){
 						MTS.MTSNet.sendToServer(new LightPacket(aircraft.getEntityId(), lights[i]));
 					}
@@ -158,7 +195,7 @@ public class GUIPanelAircraft extends GuiScreen{
 			//Check if a magneto button has been pressed.
 			for(byte i=0; i<magnetoButtonCoords.length; ++i){
 				if(engines[i] != null){
-					if(x > magnetoButtonCoords[i][0] && x < magnetoButtonCoords[i][1] && y < magnetoButtonCoords[i][2] && y > magnetoButtonCoords[i][3]){
+					if(mouseX > magnetoButtonCoords[i][0] && mouseX < magnetoButtonCoords[i][1] && mouseY < magnetoButtonCoords[i][2] && mouseY > magnetoButtonCoords[i][3]){
 						MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines[i], engines[i].state.magnetoOn ? PacketEngineTypes.MAGNETO_OFF : PacketEngineTypes.MAGNETO_ON));
 					}
 				}
@@ -167,12 +204,21 @@ public class GUIPanelAircraft extends GuiScreen{
 			//Check if a starter button has been pressed.
 			for(byte i=0; i<starterButtonCoords.length; ++i){
 				if(engines[i] != null){
-					if(x > starterButtonCoords[i][0] && x < starterButtonCoords[i][1] && y < starterButtonCoords[i][2] && y > starterButtonCoords[i][3]){
+					if(mouseX > starterButtonCoords[i][0] && mouseX < starterButtonCoords[i][1] && mouseY < starterButtonCoords[i][2] && mouseY > starterButtonCoords[i][3]){
 						if(!engines[i].state.esOn){
 							MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines[i], PacketEngineTypes.ES_ON));
 						}
 						lastEngineStarted = i;
 					}
+				}
+			}
+			
+			//Check if a trim button has been pressed.
+			lastButtonPressed = null;
+			for(GuiButton button : buttonList){
+				if(button.isMouseOver()){
+					lastButtonPressed = button;
+					return;
 				}
 			}
 		}
@@ -184,7 +230,28 @@ public class GUIPanelAircraft extends GuiScreen{
 	    	if(lastEngineStarted != -1 && starterButtonCoords.length > 0){
 	    		MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines[lastEngineStarted], PacketEngineTypes.ES_OFF));
 	    	}
+	    	lastButtonPressed = null;
 	    }
+	}
+	
+	@Override
+	public void updateScreen(){
+		super.updateScreen();
+		if(lastButtonPressed != null){
+			if(lastButtonPressed.equals(aileronTrimUpButton)){
+				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 0));
+			}else if(lastButtonPressed.equals(aileronTrimDownButton)){
+				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 8));
+			}else if(lastButtonPressed.equals(elevatorTrimUpButton)){
+				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 9));
+			}else if(lastButtonPressed.equals(elevatorTrimDownButton)){
+				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 1));
+			}else if(lastButtonPressed.equals(rudderTrimUpButton)){
+				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 2));
+			}else if(lastButtonPressed.equals(rudderTrimDownButton)){
+				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 10));
+			}
+		}
 	}
 	
 	@Override

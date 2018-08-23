@@ -297,7 +297,7 @@ public class GUIConfig extends GuiScreen{
 		byte offset = 0;
 		for(ControlsKeyboardDynamic dynamicControl : ControlsKeyboardDynamic.values()){
 			if(dynamicControl.name().contains(vehicleConfiguring.toUpperCase())){
-				fontRendererObj.drawString(I18n.format(dynamicControl.buttonName) + ": " + dynamicControl.modControl.getCurrentButton() + " + " + dynamicControl.mainControl.getCurrentButton(), guiLeft + 10, guiTop + 100 + offset, Color.BLACK.getRGB());
+				fontRendererObj.drawString(I18n.format(dynamicControl.buttonName) + ": " + dynamicControl.modControl.getCurrentButton() + " + " + dynamicControl.mainControl.getCurrentButton(), guiLeft + 10, guiTop + 115 + offset, Color.BLACK.getRGB());
 				offset+=11;
 			}
 		}
@@ -493,7 +493,7 @@ public class GUIConfig extends GuiScreen{
 				GuiTextField box = new GuiTextField(0, fontRendererObj, guiLeft + horizontalOffset, guiTop + verticalOffset, 40, 10);
 				keyboardBoxes.put(keyboardControl, box);
 				verticalOffset += 11;
-				if(verticalOffset > 10 + 11*7){
+				if(verticalOffset > 10 + 11*8){
 					verticalOffset = 10;
 					horizontalOffset += 120;
 				}
