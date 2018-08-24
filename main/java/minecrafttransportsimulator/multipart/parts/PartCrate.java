@@ -1,7 +1,10 @@
 package minecrafttransportsimulator.multipart.parts;
 
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
+import minecrafttransportsimulator.packets.general.PacketChat;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -25,7 +28,11 @@ public final class PartCrate extends APart{
 	@Override
 	public boolean interactPart(EntityPlayer player){
 		if(!player.worldObj.isRemote){
-			player.displayGUIChest(this.crateInventory);
+			if(!multipart.locked){
+				player.displayGUIChest(this.crateInventory);
+			}else{
+				MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
+			}
 		}
 		return true;
     }
