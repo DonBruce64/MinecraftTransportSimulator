@@ -23,7 +23,6 @@ public class GUIManual extends GuiScreen{
 	private static final ResourceLocation cover = new ResourceLocation(MTS.MODID, "textures/guis/manual_cover.png");
 	
 	private short pageNumber;
-	private short maxPages;
 	private int guiLeft;
 	private int guiTop;
 	private int leftSideOffset;
@@ -31,6 +30,7 @@ public class GUIManual extends GuiScreen{
 	private final ItemStack stack;
 	private final NBTTagCompound stackTag;
 	private final List<PackMultipartObject> packList = new ArrayList<PackMultipartObject>();
+	private final byte totalInfoPages;
 	
 	private GuiButton leftButton;
 	private GuiButton rightButton;
@@ -45,13 +45,16 @@ public class GUIManual extends GuiScreen{
 		}
 		this.pageNumber = stackTag.getShort("page");
 		
-		//Add two pages for the table of contents.
-		this.maxPages += 2;
-		
-		//Calculate the number of info pages, add those to maxPages.
-		for(InfoPages pageDef : InfoPages.values()){
-			maxPages += pageDef.pages%2 == 1 ? pageDef.pages + 1 : pageDef.pages;
+		for(byte i=1; i<50; ++i){
+			if(I18n.format("manual." + String.valueOf(i) + ".title").equals("manual." + String.valueOf(i) + ".title")){
+				this.totalInfoPages = (byte) ((i - 1)*2);
+				if(pageNumber > totalInfoPages + 2){
+					pageNumber = 0;
+				}
+				return;
+			}
 		}
+		this.totalInfoPages = 0;
 	}
 	
 	@Override 
@@ -71,29 +74,26 @@ public class GUIManual extends GuiScreen{
 		
 		if(Mouse.isCreated() && Mouse.hasWheel()){
 			int wheelMovement = Mouse.getDWheel();
-			if(wheelMovement > 0 && pageNumber < maxPages - 1){
+			if(wheelMovement > 0 && pageNumber < totalInfoPages + 1){
 				pageNumber += pageNumber == 0 ? 1 : 2;
 			}else if(wheelMovement < 0 && pageNumber > 0){
 				pageNumber -= pageNumber == 1 ? 1 : 2;
 			}
 		}
 		
-		if(pageNumber > maxPages){
-			pageNumber = maxPages;
-		}
 		GL11.glColor3f(1, 1, 1);
 		if(pageNumber != 0){
 			this.mc.getTextureManager().bindTexture(background);
 			this.drawModalRectWithCustomSizedTexture(guiLeft, guiTop, 0, 0, 280, 180, 512, 256);
-			fontRendererObj.drawString(String.valueOf(pageNumber) + "/" + String.valueOf(maxPages), guiLeft + 15, guiTop + 10, Color.BLACK.getRGB());
-			fontRendererObj.drawString(String.valueOf(pageNumber + 1) + "/" + String.valueOf(maxPages), guiLeft + 240, guiTop + 10, Color.BLACK.getRGB());
+			fontRendererObj.drawString(String.valueOf(pageNumber) + "/" + String.valueOf(totalInfoPages + 2), guiLeft + 15, guiTop + 10, Color.BLACK.getRGB());
+			fontRendererObj.drawString(String.valueOf(pageNumber + 1) + "/" + String.valueOf(totalInfoPages + 2), guiLeft + 240, guiTop + 10, Color.BLACK.getRGB());
 			
 			leftButton.visible = true;
 			leftButton.enabled = true;
 			leftButton.drawButton(mc, mouseX, mouseY);
 
 			
-			if(pageNumber < maxPages - 1){
+			if(pageNumber < totalInfoPages + 1){
 				rightButton.visible = true;
 				rightButton.enabled = true;
 				rightButton.drawButton(mc, mouseX, mouseY);
@@ -142,10 +142,9 @@ public class GUIManual extends GuiScreen{
 		short pageCount = 3;
 		
 		fontRendererObj.drawString("CONTENTS", guiLeft + 50, guiTop + 25, Color.BLACK.getRGB());
-		for(InfoPages pageDef : InfoPages.values()){
-			String title = I18n.format("manual." + pageDef.name().toLowerCase() + ".title");
-			fontRendererObj.drawString(String.valueOf(pageCount) + ": " + title, contentsCount < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*contentsLine, Color.BLACK.getRGB());
-			pageCount += pageDef.pages%2 == 1 ? pageDef.pages + 1 : pageDef.pages;
+		for(byte i=1; i<totalInfoPages/2; ++i){
+			String title = I18n.format("manual." + String.valueOf(i) + ".title");
+			fontRendererObj.drawString(String.valueOf(i*2 + 1) + ": " + title, contentsCount < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*contentsLine, Color.BLACK.getRGB());
 			++contentsCount;
 			++contentsLine;
 			if(contentsLine == 10){
@@ -155,38 +154,19 @@ public class GUIManual extends GuiScreen{
 	}
 	
 	private void drawInfoPage(){
-		short pageIndex = 3;
-		int TopOffset = guiTop + 25;
+		int topOffset = guiTop + 25;
+		byte headerOffset = 20;
+		byte sectionNumber = (byte) ((pageNumber - 1)/2);
 		
-		for(InfoPages pageDef : InfoPages.values()){
-			if(pageNumber > pageIndex + pageDef.pages - 1){
-				//If there's and odd number of pages in this section add an extra one so sections don't start on the right side.
-				pageIndex += pageDef.pages%2 == 1 ? pageDef.pages + 1 : pageDef.pages;
-				continue;
-			}else{
-				String sectionName = pageDef.name().toLowerCase();
-				//Check if this section would contain the title and put it on the left page.
-				byte headerOffset = 0;
-				if(pageNumber == pageIndex){
-					String title = I18n.format("manual." + sectionName + ".title");
-					fontRendererObj.drawString(title, (guiLeft + 75 - fontRendererObj.getStringWidth(title) / 2), TopOffset, Color.BLACK.getRGB());
-					headerOffset = 20;
-				}
-				
-				//If odd page, render on the left side of the book.  Even goes on the right.
-				GL11.glPushMatrix();
-				GL11.glTranslatef(leftSideOffset, TopOffset + headerOffset, 0);
-				GL11.glScalef(0.75F, 0.75F, 0.75F);
-				fontRendererObj.drawSplitString(I18n.format("manual." + sectionName + "." + String.valueOf(pageNumber - pageIndex + 1)), 0, 0, 150, Color.BLACK.getRGB());	
-				if(pageNumber - pageIndex + 2 <= pageDef.pages){
-					GL11.glTranslatef((rightSideOffset - leftSideOffset)/0.75F, -headerOffset/0.75F, 0);
-					fontRendererObj.drawSplitString(I18n.format("manual." + sectionName + "." + String.valueOf(pageNumber - pageIndex + 2)), 0, 0, 150, Color.BLACK.getRGB());
-				}
-				GL11.glPopMatrix();
-				return;
-				
-			}
-		}
+		String title = I18n.format("manual." + sectionNumber  + ".title");
+		fontRendererObj.drawString(title, (guiLeft + 75 - fontRendererObj.getStringWidth(title) / 2), topOffset, Color.BLACK.getRGB());
+		GL11.glPushMatrix();
+		GL11.glTranslatef(leftSideOffset, topOffset + headerOffset, 0);
+		GL11.glScalef(0.75F, 0.75F, 0.75F);
+		fontRendererObj.drawSplitString(I18n.format("manual." + sectionNumber + "." + "1"), 0, 0, 150, Color.BLACK.getRGB());	
+		GL11.glTranslatef((rightSideOffset - leftSideOffset)/0.75F, -headerOffset/0.75F, 0);
+		fontRendererObj.drawSplitString(I18n.format("manual." + sectionNumber + "." + "2"), 0, 0, 150, Color.BLACK.getRGB());
+		GL11.glPopMatrix();
 	}
 	
 	@Override
@@ -217,26 +197,5 @@ public class GUIManual extends GuiScreen{
 		if(keyCode == 1 || mc.gameSettings.keyBindInventory.isActiveAndMatches(keyCode)){
 			super.keyTyped('0', 1);
         }
-	}
-	
-	public static enum InfoPages{
-		INTRODUCTION((byte) 3),
-		BASIC_CRAFTING((byte) 2),
-		VEHICLE_ASSEMBLY((byte) 3),
-		FUELING((byte) 2),
-		CONTROLS((byte) 4),
-		ENGINES((byte) 2),
-		THEFT_PREVENTION((byte) 2),
-		PRE_FLIGHT_PREP((byte) 2),
-		IN_FLIGHT((byte) 2),
-		LANDING((byte) 2),
-		INSTRUMENTS((byte) 2),
-		PROPELLER_SPECS((byte) 2);
-		
-		public final byte pages;
-		
-		private InfoPages(byte pages){
-			this.pages = pages;
-		}
 	}
 }
