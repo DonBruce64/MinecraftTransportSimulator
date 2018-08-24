@@ -170,11 +170,8 @@ public class PartEngineCar extends APartEngine{
 		}else if(currentGear == 0){
 			if(car.velocity > -0.1){
 				currentGear = 1;
-			}else{
-				hours += 100;
-				if(multipart.worldObj.isRemote){
-					MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
-				}
+			}else if(multipart.worldObj.isRemote){
+				MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
 			}
 		}else if(currentGear < pack.engine.gearRatios.length - 2){
 			++currentGear;
@@ -190,11 +187,8 @@ public class PartEngineCar extends APartEngine{
 			}else if(currentGear == 0){
 				if(car.velocity < 0.1){
 					currentGear = -1;
-				}else{
-					hours += 100;
-					if(multipart.worldObj.isRemote){
-						MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
-					}
+				}else if(multipart.worldObj.isRemote){
+					MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
 				}
 			}
 		}
