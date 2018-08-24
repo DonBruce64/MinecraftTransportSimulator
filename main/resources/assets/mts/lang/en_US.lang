@@ -118,6 +118,7 @@ gui.panel.starter=START
 gui.panel.trim_roll=ROLL TRIM
 gui.panel.trim_pitch=PITCH TRIM
 gui.panel.trim_yaw=YAW TRIM
+gui.panel.reverse=REVERSE THRUST
 
 gui.instruments.main=Main Instruments
 gui.instruments.control=Control Panel

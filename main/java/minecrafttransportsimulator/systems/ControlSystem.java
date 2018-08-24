@@ -19,7 +19,7 @@ import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.FlapPacket;
 import minecrafttransportsimulator.packets.control.HornPacket;
 import minecrafttransportsimulator.packets.control.LightPacket;
-import minecrafttransportsimulator.packets.control.PropellerPacket;
+import minecrafttransportsimulator.packets.control.PropellerReversePacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
@@ -281,20 +281,21 @@ public final class ControlSystem{
 			}
 		}
 		
-		//Increment or decrement throttle.
-		if(ControlsKeyboard.AIRCRAFT_REVERSE.isPressed() || ControlsJoystick.AIRCRAFT_REVERSE.isPressed()){
+		//Check for propeller reverse button.
+		if(ControlsJoystick.AIRCRAFT_REVERSE.isPressed()){
 			MTS.proxy.playSound(aircraft.getPositionVector(), MTS.MODID + ":stall_buzzer", 1.0F, 1.0F);
-			MTS.MTSNet.sendToServer(new PropellerPacket(aircraft.getEntityId()));
+			MTS.MTSNet.sendToServer(new PropellerReversePacket(aircraft.getEntityId(), !aircraft.propellersReversed));
+		}
+		
+		//Increment or decrement throttle.
+		if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_THROTTLE.joystickAssigned) && ControlsJoystick.AIRCRAFT_THROTTLE.joystickButton != NULL_COMPONENT){
+			MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.AIRCRAFT_THROTTLE, (short) 0)));
 		}else{
-			if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_THROTTLE.joystickAssigned) && ControlsJoystick.AIRCRAFT_THROTTLE.joystickButton != NULL_COMPONENT){
-				MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.AIRCRAFT_THROTTLE, (short) 0)));
-			}else{
-				if(ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()){
-					MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MAX_VALUE));
-				}
-				if(ControlsKeyboard.AIRCRAFT_THROTTLE_D.isPressed()){
-					MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MIN_VALUE));
-				}
+			if(ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()){
+				MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MAX_VALUE));
+			}
+			if(ControlsKeyboard.AIRCRAFT_THROTTLE_D.isPressed()){
+				MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MIN_VALUE));
 			}
 		}		
 		
@@ -482,7 +483,6 @@ public final class ControlSystem{
 		AIRCRAFT_PANEL(Keyboard.KEY_U, ControlsJoystick.AIRCRAFT_PANEL, true),
 		AIRCRAFT_ZOOM_I(Keyboard.KEY_PRIOR, ControlsJoystick.AIRCRAFT_ZOOM_I, true),
 		AIRCRAFT_ZOOM_O(Keyboard.KEY_NEXT, ControlsJoystick.AIRCRAFT_ZOOM_O, true),
-		AIRCRAFT_REVERSE(Keyboard.KEY_O, ControlsJoystick.AIRCRAFT_REVERSE, true),
 		AIRCRAFT_MOD(Keyboard.KEY_RSHIFT, ControlsJoystick.AIRCRAFT_MOD, false),
 		
 		CAR_MOD(Keyboard.KEY_RSHIFT, ControlsJoystick.CAR_MOD, false),

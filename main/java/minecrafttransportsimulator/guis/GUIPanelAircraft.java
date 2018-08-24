@@ -8,8 +8,10 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
+import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.packets.control.LightPacket;
+import minecrafttransportsimulator.packets.control.PropellerReversePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
@@ -39,6 +41,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	private final int[][] lightButtonCoords;
 	private final int[][] magnetoButtonCoords;
 	private final int[][] starterButtonCoords;
+	private final int[] reverseButtonCoords;
 	
 	private GuiButton aileronTrimUpButton;
 	private GuiButton aileronTrimDownButton;
@@ -70,6 +73,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		for(byte i=0; i<starterButtonCoords.length; ++i){
 			starterButtonCoords[i] = new int[]{96, 128, 280+50*i+32, 280+50*i};
 		}
+		reverseButtonCoords = new int[]{160, 160+32, 430+32, 430};
 	}
 	
 	@Override
@@ -79,10 +83,10 @@ public class GUIPanelAircraft extends GuiScreen{
 		}
 		buttonList.add(aileronTrimUpButton = new GuiButton(0, 90, 175, 20, 20, "<"));
 		buttonList.add(aileronTrimDownButton = new GuiButton(0, 110, 175, 20, 20, ">"));
-		buttonList.add(elevatorTrimUpButton = new GuiButton(0, 90, 215, 20, 20, "/\\"));
-		buttonList.add(elevatorTrimDownButton = new GuiButton(0, 110, 215, 20, 20, "\\/"));
-		buttonList.add(rudderTrimUpButton = new GuiButton(0, 90, 255, 20, 20, "<"));
-		buttonList.add(rudderTrimDownButton = new GuiButton(0, 110, 255, 20, 20, ">"));
+		buttonList.add(elevatorTrimUpButton = new GuiButton(0, 90, 206, 20, 20, "/\\"));
+		buttonList.add(elevatorTrimDownButton = new GuiButton(0, 110, 206, 20, 20, "\\/"));
+		buttonList.add(rudderTrimUpButton = new GuiButton(0, 90, 237, 20, 20, "<"));
+		buttonList.add(rudderTrimDownButton = new GuiButton(0, 110, 237, 20, 20, ">"));
 	}
 	
 	@Override
@@ -134,6 +138,11 @@ public class GUIPanelAircraft extends GuiScreen{
 			button.drawButton(mc, mouseX, mouseY);
 		}
 		GL11.glPopMatrix();
+		
+		//Render the reverse button if we have such a feature.
+		if(aircraft instanceof EntityMultipartF_Plane){
+			drawRedstoneButton(reverseButtonCoords, ((EntityMultipartF_Plane) aircraft).propellersReversed);
+		}
 
 		//Render light button text.
 		for(byte i=0; i<lightButtonCoords.length; ++i){
@@ -154,8 +163,13 @@ public class GUIPanelAircraft extends GuiScreen{
 		
 		//Render trim button text.
 		fontRendererObj.drawString(I18n.format("gui.panel.trim_roll"), 176 - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_roll"))/2, 312 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
-		fontRendererObj.drawString(I18n.format("gui.panel.trim_pitch"), 176 - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_pitch"))/2, 376 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
-		fontRendererObj.drawString(I18n.format("gui.panel.trim_yaw"), 176 - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_yaw"))/2, 440 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.panel.trim_pitch"), 176 - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_pitch"))/2, 362 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.panel.trim_yaw"), 176 - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_yaw"))/2, 412 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		
+		//Render the reverse button text if we have such a feature.
+		if(aircraft instanceof EntityMultipartF_Plane){
+			fontRendererObj.drawString(I18n.format("gui.panel.reverse"), 176 - fontRendererObj.getStringWidth(I18n.format("gui.panel.reverse"))/2, 462 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		}
 		
 		GL11.glPopMatrix();
 	}
@@ -210,6 +224,14 @@ public class GUIPanelAircraft extends GuiScreen{
 						}
 						lastEngineStarted = i;
 					}
+				}
+			}
+			
+			//Check if the reverse button was pressed.
+			if(aircraft instanceof EntityMultipartF_Plane){
+				if(mouseX > reverseButtonCoords[0] && mouseX < reverseButtonCoords[1] && mouseY < reverseButtonCoords[2] && mouseY > reverseButtonCoords[3]){
+					MTS.MTSNet.sendToServer(new PropellerReversePacket(aircraft.getEntityId(), !((EntityMultipartF_Plane) aircraft).propellersReversed));
+					MTS.proxy.playSound(aircraft.getPositionVector(), MTS.MODID + ":stall_buzzer", 1.0F, 1.0F);
 				}
 			}
 			
