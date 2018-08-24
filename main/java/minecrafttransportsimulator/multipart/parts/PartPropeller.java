@@ -71,9 +71,9 @@ public class PartPropeller extends APart{
 				--currentPitch;
 			}else if(!((EntityMultipartF_Plane) multipart).propellersReversed && currentPitch < 45){
 				++currentPitch;
-			}else if(connectedEngine.RPM < connectedEngine.pack.engine.maxRPM*0.85 && currentPitch > 45){
+			}else if(connectedEngine.RPM < connectedEngine.pack.engine.maxRPM*0.80 && currentPitch > 45){
 				--currentPitch;
-			}else if(connectedEngine.RPM > connectedEngine.pack.engine.maxRPM*0.88 && currentPitch < pack.propeller.pitch){
+			}else if(connectedEngine.RPM > connectedEngine.pack.engine.maxRPM*0.85 && currentPitch < pack.propeller.pitch){
 				++currentPitch;
 			}
 		}
@@ -159,7 +159,7 @@ public class PartPropeller extends APart{
 				//Now return the thrust equation.  If the angle of attack is greater than 35, sap power off the propeller for stalling.
 				return multipart.airDensity*Math.PI*Math.pow(0.0254*pack.propeller.diameter/2D, 2)*
 						(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
-						Math.pow(pack.propeller.diameter/2D/Math.abs(effectivePitchVelocity) + pack.propeller.numberBlades/1000D, 1.5)/400D
+						Math.pow(pack.propeller.diameter/2D/Math.abs(currentPitch) + pack.propeller.numberBlades/1000D, 1.5)/400D
 						*(angleOfAttack > 35 ? 35/angleOfAttack : 1.0D)*Math.signum(effectivePitchVelocity);
 			}
 		}
