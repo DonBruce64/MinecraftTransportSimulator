@@ -399,7 +399,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
     			}
     		}
     		
-    		if(part.offset.xCoord < 0){
+    		if(part.offset.xCoord < 0 && !part.overrideMirror){
     			GL11.glScalef(-1.0F, 1.0F, 1.0F);
     			GL11.glCullFace(GL11.GL_FRONT);
     		}

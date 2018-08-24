@@ -57,6 +57,7 @@ public class PackMultipartObject{
         public float[] rot;
         public boolean turnsWithSteer;
         public boolean isController;
+        public boolean overrideMirror;
         public List<String> types;
         public List<String> customTypes;
         public float minValue;

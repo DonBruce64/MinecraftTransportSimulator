@@ -35,9 +35,10 @@ public abstract class APart{
 	public final EntityMultipartD_Moving multipart;
 	public final String partName;
 	public final PackPartObject pack;
+	public final Vec3d partRotation;
+	public final boolean overrideMirror;
 	
 	public Vec3d partPos;
-	public Vec3d partRotation;
 	
 	private boolean isValid;
 	private ResourceLocation modelLocation;
@@ -50,8 +51,9 @@ public abstract class APart{
 		this.partName = partName;
 		this.pack = PackParserSystem.getPartPack(partName);
 		this.partPos = RotationSystem.getRotatedPoint(this.offset, multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll).add(this.multipart.getPositionVector());
-		float rotation[] = multipart.getPackDefForLocation(offset.xCoord, offset.yCoord, offset.zCoord).rot;
-		this.partRotation = rotation != null ? new Vec3d(rotation[0], rotation[1], rotation[2]) : Vec3d.ZERO;
+		PackPart packPart = multipart.getPackDefForLocation(offset.xCoord, offset.yCoord, offset.zCoord);
+		this.partRotation = packPart.rot != null ? new Vec3d(packPart.rot[0], packPart.rot[1], packPart.rot[2]) : Vec3d.ZERO;
+		this.overrideMirror = packPart.overrideMirror;
 		this.isValid = true;
 	}
 	
