@@ -78,7 +78,7 @@ public class PartPropeller extends APart{
 			}
 		}
 		if(multipart.worldObj.isRemote){
-			angularVelocity = (float) (360*connectedEngine.RPM/60F/20F);
+			angularVelocity = (float) (360*connectedEngine.RPM*connectedEngine.pack.engine.gearRatios[0]/60F/20F);
 			angularPosition += angularVelocity;
 		}else{
 			if(connectedEngine.RPM >= 100){
@@ -93,7 +93,7 @@ public class PartPropeller extends APart{
 					}
 					for(int i=0; i < collidedEntites.size(); ++i){
 						if(!multipart.equals(collidedEntites.get(i).getRidingEntity())){
-							collidedEntites.get(i).attackEntityFrom(new DamageSourcePropellor(attacker), (float) (ConfigSystem.getDoubleConfig("PropellerDamageFactor")*connectedEngine.RPM/500F));
+							collidedEntites.get(i).attackEntityFrom(new DamageSourcePropellor(attacker), (float) (ConfigSystem.getDoubleConfig("PropellerDamageFactor")*connectedEngine.RPM*connectedEngine.pack.engine.gearRatios[0]/500F));
 						}
 					}
 				}
@@ -101,7 +101,7 @@ public class PartPropeller extends APart{
 					damagePropeller(1);
 					
 				}
-				if(connectedEngine.RPM/60*Math.PI*pack.propeller.diameter*0.0254 > 340.29){
+				if(connectedEngine.RPM*connectedEngine.pack.engine.gearRatios[0]/60*Math.PI*pack.propeller.diameter*0.0254 > 340.29){
 					damagePropeller(9999);
 				}
 			}
@@ -150,7 +150,7 @@ public class PartPropeller extends APart{
 			//Get what the pitch velocity of the propeller would be at the current velocity.
 			double currentPitchVelocity = multipart.velocity*20D;
 			//Get the effective pitch velocity of the propeller at the current RPM.
-			double effectivePitchVelocity = 0.0254D*currentPitch*connectedEngine.RPM/60D;
+			double effectivePitchVelocity = 0.0254D*currentPitch*connectedEngine.RPM*connectedEngine.pack.engine.gearRatios[0]/60D;
 			//Multiply by a factor to get the true effective pitch velocity.  This is slightly higher than ideal.
 			effectivePitchVelocity *= (1D*currentPitch/pack.propeller.diameter + 0.2D)/(1D*currentPitch/pack.propeller.diameter);
 			if(connectedEngine != null && effectivePitchVelocity != 0){
