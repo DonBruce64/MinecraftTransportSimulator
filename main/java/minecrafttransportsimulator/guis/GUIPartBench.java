@@ -104,15 +104,6 @@ public class GUIPartBench extends GuiScreen{
 		drawCenteredString(!packName.isEmpty() ? I18n.format("itemGroup." + packName) : "", guiLeft + 130, guiTop + 10);
 		drawCenteredString(!partName.isEmpty() ? I18n.format(itemMap.get(partName).getUnlocalizedName() + ".name") : "", guiLeft + 130, guiTop + 30);
 		
-		//Render descriptive text.
-		if(this.isForVehicles){
-			renderVehicleInfoText();
-		}else if(!this.isForInstruments){
-			renderPartInfoText();
-		}else{
-			renderInstrumentInfoText();
-		}
-		
 		//Set button states and render.
 		startButton.enabled = PacketPlayerCrafting.doesPlayerHaveMaterials(player, partName);
 		leftPackButton.enabled = !prevPackName.isEmpty();
@@ -123,6 +114,20 @@ public class GUIPartBench extends GuiScreen{
 			((GuiButton) obj).drawButton(mc, mouseX, mouseY);
 		}
 		this.drawRect(guiLeft + 190, guiTop + 188, guiLeft + 206, guiTop + 172, startButton.enabled ? Color.GREEN.getRGB() : Color.RED.getRGB());
+		
+		//If we don't have any parts of this type, don't do anything else.
+		if(partName.isEmpty()){
+			return;
+		}
+		
+		//Render descriptive text.
+		if(this.isForVehicles){
+			renderVehicleInfoText();
+		}else if(!this.isForInstruments){
+			renderPartInfoText();
+		}else{
+			renderInstrumentInfoText();
+		}
 		
 		//Render materials in the bottom slots.
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
