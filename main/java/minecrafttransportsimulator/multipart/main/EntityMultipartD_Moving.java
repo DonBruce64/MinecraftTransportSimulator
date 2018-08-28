@@ -373,12 +373,12 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 			}else{
 				//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.
 				if(!(serverDeltaX == 0 && serverDeltaY == 0 && serverDeltaZ == 0)){
-					double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/4F;
-					double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/4F;
-					double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/4F;
-					float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/4F;
-					float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/4F;
-					float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/4F;
+					double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/200F;
+					double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/200F;
+					double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/200F;
+					float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/200F;
+					float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/200F;
+					float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/200F;
 					setPosition(posX + deltaX, posY + deltaY, posZ + deltaZ);
 					rotationYaw += deltaYaw;
 					rotationPitch += deltaPitch;
