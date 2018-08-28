@@ -124,6 +124,8 @@ public final class MTSRegistry{
 	public static final Item itemBlockWheelBench = new ItemBlock(wheelBench);
 	public static final Block seatBench = new BlockPartBench("seat", "crate");
 	public static final Item itemBlockSeatBench = new ItemBlock(seatBench);
+	public static final Block customBench = new BlockPartBench("custom");
+	public static final Item itemBlockCustomBench = new ItemBlock(customBench);
 	public static final Block instrumentBench = new BlockPartBench("instrument");
 	public static final Item itemBlockInstrumentBench = new ItemBlock(instrumentBench);
 	
@@ -405,6 +407,13 @@ public final class MTSRegistry{
 				"A A",
 				'A', Items.IRON_INGOT,
 				'B', Items.IRON_AXE);
+		//Custom bench
+		registerRecipe(new ItemStack(itemBlockCustomBench),
+				"AAA",
+				"ABA",
+				"AAA",
+				'A', Items.IRON_INGOT,
+				'B', Blocks.CHEST);
 		//Instrument bench
 		registerRecipe(new ItemStack(itemBlockInstrumentBench),
 				"AGA",

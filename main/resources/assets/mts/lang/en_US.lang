@@ -206,6 +206,7 @@ tile.propellerbench.name=Propeller Bench
 tile.enginebench.name=Engine Hoist
 tile.wheelbench.name=Wheel Workbench
 tile.seatbench.name=Table Saw
+tile.custombench.name=Tool Bench
 tile.instrumentbench.name=Instrument Bench
 
 tile.fuelpump.name=Fuel Pump
