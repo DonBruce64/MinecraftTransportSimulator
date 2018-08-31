@@ -156,6 +156,10 @@ public class PartEngineCar extends APartEngine{
 		return currentGear == -1 ? pack.engine.gearRatios[0] : currentGear > 0 ? pack.engine.gearRatios[currentGear + 1] : 0;
 	}
 	
+	public float getGearshiftRotation(){
+		return pack.engine.isAutomatic ? Math.min(1, currentGear)*15F : currentGear*5;
+	}
+	
 	public double getDriveshaftRotation(float partialTicks){
 		return engineDriveshaftRotation + (engineDriveshaftRotation - engineDriveshaftRotationLast)*partialTicks;
 	}
