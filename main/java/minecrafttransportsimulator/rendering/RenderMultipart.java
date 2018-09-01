@@ -359,7 +359,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			case("elevator"): return ((EntityMultipartF_Plane) multipart).elevatorAngle/10F;
 			case("rudder"): return ((EntityMultipartF_Plane) multipart).rudderAngle/10F;
 			case("flap"): return ((EntityMultipartF_Plane) multipart).flapAngle/10F;
-			case("reverser"): return ((EntityMultipartF_Plane) multipart).reversePercent/100F;
+			case("reverser"): return ((EntityMultipartF_Plane) multipart).reversePercent/1F;
 			default: return 0;
 		}
 	}
