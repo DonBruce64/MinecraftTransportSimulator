@@ -3,6 +3,8 @@ package minecrafttransportsimulator.systems;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleSound;
@@ -45,6 +47,8 @@ public final class SFXSystem{
 	private static final String[] soundManagerNames = { "sndManager", "field_147694_f" };
 	private static final String[] soundSystemNames = { "sndSystem", "field_148620_e" };
 	private static final String[] soundSystemURLNames = { "getURLForSoundResource", "func_148612_a" };
+	
+	private static final List<String> playingSounds = new ArrayList<String>();
 	private static SoundSystem mcSoundSystem;
 	private static Method getURLMethod;
 
@@ -143,42 +147,73 @@ public final class SFXSystem{
 	/**
 	 * Does sound updates for the multipart vehicle sounds.
 	 */
-	public static void updateMultipartSounds(EntityMultipartE_Vehicle vehicle, World world, float partialTicks){
-		if(world.isRemote){
-			//If we don't have the running instance of the SoundSystem, get it now.
-			if(mcSoundSystem == null){
-				initSoundSystemHooks();
-			}
+	public static void updateMultipartSounds(EntityMultipartE_Vehicle vehicle, float partialTicks){
+		//If we don't have the running instance of the SoundSystem, get it now.
+		if(mcSoundSystem == null){
+			initSoundSystemHooks();
+		}
+		
+		//If we are a new vehicle without sounds, init them.
+		//If we are old, we can assume to not have any sounds right now.
+		if(vehicle.soundsNeedInit){
+			vehicle.initSounds();
+			vehicle.soundsNeedInit = false;
+		}
+		
+		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+		for(VehicleSound sound : vehicle.getSounds()){
+			String soundID = sound.getSoundUniqueName();
 			
-			//If we are a new vehicle without sounds, init them.
-			//If we are old, we can assume to not have any sounds right now.
-			if(vehicle.soundsNeedInit){
-				vehicle.initSounds();
-				vehicle.soundsNeedInit = false;
-			}
-			
-			EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-			for(VehicleSound sound : vehicle.getSounds()){
-				String soundID = sound.getSoundUniqueName();
-				if(sound.isSoundSourceActive() && sound.isSoundActive() && !Minecraft.getMinecraft().isGamePaused()){
-					if(!mcSoundSystem.playing(soundID)){
-						try{
-							ResourceLocation soundFileLocation = new ResourceLocation(sound.getSoundName());
-							soundFileLocation = new ResourceLocation(soundFileLocation.getResourceDomain(), "sounds/" + soundFileLocation.getResourcePath() + ".ogg");
-							URL soundURL = (URL) getURLMethod.invoke(null, soundFileLocation);
-							mcSoundSystem.newSource(false, soundID, soundURL, soundFileLocation.toString(), true, sound.getPosX(), sound.getPosY(), sound.getPosZ(), SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
-							mcSoundSystem.play(soundID);
-						}catch(Exception e){
-							MTS.MTSLog.error("COULD NOT PLAY LOOPING VEHICLE SOUND:" + sound.getSoundName());
-							throw new RuntimeException(e);
-						}
+			//First check to see if this source is active.
+			if(sound.isSoundSourceActive() && sound.isSoundActive()){
+				//If we haven't created the sound, and we should be playing it, create it now.
+				if(!playingSounds.contains(soundID) && !Minecraft.getMinecraft().isGamePaused()){
+					try{
+						ResourceLocation soundFileLocation = new ResourceLocation(sound.getSoundName());
+						soundFileLocation = new ResourceLocation(soundFileLocation.getResourceDomain(), "sounds/" + soundFileLocation.getResourcePath() + ".ogg");
+						URL soundURL = (URL) getURLMethod.invoke(null, soundFileLocation);
+						mcSoundSystem.newSource(false, soundID, soundURL, soundFileLocation.toString(), true, sound.getPosX(), sound.getPosY(), sound.getPosZ(), SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
+						mcSoundSystem.play(soundID);
+						playingSounds.add(soundID);
+					}catch(Exception e){
+						MTS.MTSLog.error("COULD NOT PLAY LOOPING VEHICLE SOUND:" + sound.getSoundName());
+						throw new RuntimeException(e);
 					}
+				}
+				
+				//If the sound is created, update it.
+				if(playingSounds.contains(soundID)){
 					mcSoundSystem.setVolume(soundID, sound.getVolume());
 					mcSoundSystem.setPitch(soundID, sound.getPitch());
 					mcSoundSystem.setPosition(soundID, sound.getPosX() + sound.getMotX()*partialTicks, sound.getPosY() + sound.getMotY()*partialTicks, sound.getPosZ() + sound.getMotZ()*partialTicks);
-				}else if(mcSoundSystem.playing(soundID)){
-					mcSoundSystem.stop(soundID);
+					if(Minecraft.getMinecraft().isGamePaused()){
+						mcSoundSystem.pause(soundID);
+					}else{
+						mcSoundSystem.play(soundID);
+					}
 				}
+				
+			}else if(mcSoundSystem.playing(soundID)){
+				//If we aren't supposed to be playing this source, and it's still playing, delete it. 
+				mcSoundSystem.stop(soundID);
+				playingSounds.remove(soundID);
+			}
+		}
+	}
+	
+	/**
+	 * Stops all sounds for the multipart.  Normally, this happens automatically when the multipart is removed,
+	 * however it may not happen sometimes due to oddities in the thread systems.  This method is called
+	 * whenever a vehicle is set as dead and is responsible for ensuring the sounds have indeed stopped.
+	 */
+	public static void stopMultipartSounds(EntityMultipartE_Vehicle vehicle){
+		//Make sure we are dead now, otherwise the sounds will just start again.
+		vehicle.setDead();
+		for(VehicleSound sound : vehicle.getSounds()){
+			String soundID = sound.getSoundUniqueName();
+			if(playingSounds.contains(soundID)){
+				mcSoundSystem.stop(soundID);
+				playingSounds.remove(soundID);
 			}
 		}
 	}

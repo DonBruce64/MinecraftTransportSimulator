@@ -258,7 +258,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		//Update SFX.
 		if(!wasRenderedPrior && multipart instanceof EntityMultipartE_Vehicle){
 			EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) multipart;
-			SFXSystem.updateMultipartSounds(vehicle, vehicle.worldObj, partialTicks);
+			SFXSystem.updateMultipartSounds(vehicle, partialTicks);
 			for(APart part : vehicle.getMultipartParts()){
 				if(part instanceof FXPart){
 					SFXSystem.doFX((FXPart) part, vehicle.worldObj);

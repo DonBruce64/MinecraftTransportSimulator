@@ -45,6 +45,7 @@ import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInit;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInitResponse;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartClientPartAddition;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartClientPartRemoval;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartClientRemoval;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartDeltas;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartInstruments;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartKey;
@@ -315,6 +316,7 @@ public final class MTSRegistry{
 		registerPacket(PacketMultipartClientInitResponse.class, PacketMultipartClientInitResponse.Handler.class, true, false);
 		registerPacket(PacketMultipartClientPartAddition.class, PacketMultipartClientPartAddition.Handler.class, true, false);
 		registerPacket(PacketMultipartClientPartRemoval.class, PacketMultipartClientPartRemoval.Handler.class, true, false);
+		registerPacket(PacketMultipartClientRemoval.class, PacketMultipartClientRemoval.Handler.class, true, false);
 		registerPacket(PacketMultipartDeltas.class, PacketMultipartDeltas.Handler.class, true, false);
 		registerPacket(PacketMultipartInstruments.class, PacketMultipartInstruments.Handler.class, true, true);
 		registerPacket(PacketMultipartKey.class, PacketMultipartKey.Handler.class, true, true);

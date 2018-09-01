@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleSound;
 import minecrafttransportsimulator.baseclasses.VehicleSound.SoundTypes;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
@@ -13,6 +14,7 @@ import minecrafttransportsimulator.dataclasses.PackInstrumentObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartClientRemoval;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.Entity;
@@ -83,6 +85,7 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 				ItemStack stack = new ItemStack(MTSRegistry.instrumentItemMap.get(instrument.name));
 				worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
 			}
+			MTS.MTSNet.sendToAll(new PacketMultipartClientRemoval(this));
 		}
 		super.setDead();
 	}
