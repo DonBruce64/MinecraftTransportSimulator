@@ -30,7 +30,7 @@ import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.FlapPacket;
 import minecrafttransportsimulator.packets.control.HornPacket;
 import minecrafttransportsimulator.packets.control.LightPacket;
-import minecrafttransportsimulator.packets.control.PropellerReversePacket;
+import minecrafttransportsimulator.packets.control.ReverseThrustPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
@@ -292,7 +292,7 @@ public final class MTSRegistry{
 		registerPacket(FlapPacket.class, FlapPacket.Handler.class, true, true);
 		registerPacket(HornPacket.class, HornPacket.Handler.class, true, true);
 		registerPacket(LightPacket.class, LightPacket.Handler.class, true, true);
-		registerPacket(PropellerReversePacket.class, PropellerReversePacket.Handler.class, true, true);
+		registerPacket(ReverseThrustPacket.class, ReverseThrustPacket.Handler.class, true, true);
 		registerPacket(RudderPacket.class, RudderPacket.Handler.class, true, true);
 		registerPacket(ShiftPacket.class, ShiftPacket.Handler.class, true, true);
 		registerPacket(SteeringPacket.class, SteeringPacket.Handler.class, true, true);

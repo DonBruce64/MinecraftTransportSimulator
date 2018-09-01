@@ -11,7 +11,7 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.Light
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.packets.control.LightPacket;
-import minecrafttransportsimulator.packets.control.PropellerReversePacket;
+import minecrafttransportsimulator.packets.control.ReverseThrustPacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
@@ -141,7 +141,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		
 		//Render the reverse button if we have such a feature.
 		if(aircraft instanceof EntityMultipartF_Plane){
-			drawRedstoneButton(reverseButtonCoords, ((EntityMultipartF_Plane) aircraft).propellersReversed);
+			drawRedstoneButton(reverseButtonCoords, ((EntityMultipartF_Plane) aircraft).reverseThrust);
 		}
 
 		//Render light button text.
@@ -230,7 +230,7 @@ public class GUIPanelAircraft extends GuiScreen{
 			//Check if the reverse button was pressed.
 			if(aircraft instanceof EntityMultipartF_Plane){
 				if(mouseX > reverseButtonCoords[0] && mouseX < reverseButtonCoords[1] && mouseY < reverseButtonCoords[2] && mouseY > reverseButtonCoords[3]){
-					MTS.MTSNet.sendToServer(new PropellerReversePacket(aircraft.getEntityId(), !((EntityMultipartF_Plane) aircraft).propellersReversed));
+					MTS.MTSNet.sendToServer(new ReverseThrustPacket(aircraft.getEntityId(), !((EntityMultipartF_Plane) aircraft).reverseThrust));
 					MTS.proxy.playSound(aircraft.getPositionVector(), MTS.MODID + ":stall_buzzer", 1.0F, 1.0F);
 				}
 			}

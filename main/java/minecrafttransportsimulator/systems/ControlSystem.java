@@ -19,7 +19,7 @@ import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.FlapPacket;
 import minecrafttransportsimulator.packets.control.HornPacket;
 import minecrafttransportsimulator.packets.control.LightPacket;
-import minecrafttransportsimulator.packets.control.PropellerReversePacket;
+import minecrafttransportsimulator.packets.control.ReverseThrustPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
@@ -281,10 +281,10 @@ public final class ControlSystem{
 			}
 		}
 		
-		//Check for propeller reverse button.
+		//Check for thrust reverse button.
 		if(ControlsJoystick.AIRCRAFT_REVERSE.isPressed()){
 			MTS.proxy.playSound(aircraft.getPositionVector(), MTS.MODID + ":stall_buzzer", 1.0F, 1.0F);
-			MTS.MTSNet.sendToServer(new PropellerReversePacket(aircraft.getEntityId(), !aircraft.propellersReversed));
+			MTS.MTSNet.sendToServer(new ReverseThrustPacket(aircraft.getEntityId(), !aircraft.reverseThrust));
 		}
 		
 		//Increment or decrement throttle.

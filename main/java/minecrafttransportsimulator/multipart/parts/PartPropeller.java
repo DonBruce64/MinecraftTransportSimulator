@@ -67,9 +67,9 @@ public class PartPropeller extends APart{
 		super.updatePart();
 		//If we are a dynamic-pitch propeller, adjust ourselves to the speed of the engine.
 		if(pack.propeller.isDynamicPitch){
-			if(((EntityMultipartF_Plane) multipart).propellersReversed && currentPitch > -45){
+			if(((EntityMultipartF_Plane) multipart).reverseThrust && currentPitch > -45){
 				--currentPitch;
-			}else if(!((EntityMultipartF_Plane) multipart).propellersReversed && currentPitch < 45){
+			}else if(!((EntityMultipartF_Plane) multipart).reverseThrust && currentPitch < 45){
 				++currentPitch;
 			}else if(connectedEngine.RPM < connectedEngine.pack.engine.maxRPM*0.80 && currentPitch > 45){
 				--currentPitch;

@@ -12,7 +12,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public final class EntityMultipartF_Plane extends EntityMultipartE_Vehicle{
-	public boolean propellersReversed;
+	public boolean reverseThrust;
+	public short reversePercent;
+	
 	//Note that angle variable should be divided by 10 to get actual angle.
 	public short aileronAngle;
 	public short elevatorAngle;
@@ -65,6 +67,11 @@ public final class EntityMultipartF_Plane extends EntityMultipartE_Vehicle{
 	
 	@Override
 	protected void getBasicProperties(){
+		if(reverseThrust && reversePercent < 100){
+			++reversePercent;
+		}else if(!reverseThrust && reversePercent > 0){
+			--reversePercent;
+		}
 		momentRoll = (float) (pack.general.emptyMass*(1.5F+(fuel/10000F)));
 		momentPitch = (float) (2*currentMass);
 		momentYaw = (float) (3*currentMass);
