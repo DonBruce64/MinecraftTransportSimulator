@@ -40,6 +40,7 @@ public final class PartSeat extends APart{
 	
 	@Override
 	public void removePart(){
+		super.removePart();
 		if(multipart.getRiderForSeat(this) != null){
 			multipart.getRiderForSeat(this).dismountRidingEntity();
 		}

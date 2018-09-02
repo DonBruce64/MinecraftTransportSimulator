@@ -86,6 +86,7 @@ public abstract class APart{
 	/**Called when the master multipart removes this part.
 	 * Allows for parts to trigger logic that happens when they are removed.
 	 * By default, this removes all sub-parts from the multipart.
+	 * It also removes any extra parts as defined in the multipart JSON.
 	 */
 	public void removePart(){
 		this.isValid = false;
@@ -101,6 +102,20 @@ public abstract class APart{
 						droppedStack.setTagCompound(subPart.getPartNBTTag());
 						multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, subPart.partPos.xCoord, subPart.partPos.yCoord, subPart.partPos.zCoord, droppedStack));
 					}
+				}
+			}
+		}
+		PackPart packPart = multipart.getPackDefForLocation(this.offset.xCoord, this.offset.yCoord, this.offset.zCoord);
+		if(packPart != null && packPart.additionalPart != null){
+			APart additionalPart = multipart.getPartAtLocation(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]);
+			if(additionalPart != null){
+				multipart.removePart(additionalPart, false);
+				additionalPart.removePart();
+				Item droppedItem = additionalPart.getItemForPart();
+				if(droppedItem != null){
+					ItemStack droppedStack = new ItemStack(droppedItem);
+					droppedStack.setTagCompound(additionalPart.getPartNBTTag());
+					multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, additionalPart.partPos.xCoord, additionalPart.partPos.yCoord, additionalPart.partPos.zCoord, droppedStack));
 				}
 			}
 		}

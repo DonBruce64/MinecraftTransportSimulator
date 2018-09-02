@@ -136,6 +136,7 @@ public class PartGroundDevice extends APart implements FXPart{
 	
 	@Override
 	public void removePart(){
+		super.removePart();
 		if(this.fakePart != null){
 			multipart.removePart(fakePart, false);
 		}
