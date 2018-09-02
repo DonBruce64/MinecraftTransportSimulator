@@ -179,7 +179,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 		
 		//Next get any sub parts on parts that are present.
 		for(APart part : this.parts){
-			if(part.pack.subParts != null){
+			if(part.isValid() && part.pack.subParts != null){
 				PackPart parentPack = getPackDefForLocation(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
 				for(PackPart extraPackPart : part.pack.subParts){
 					PackPart correctedPack = getPackForSubPart(parentPack, extraPackPart);
@@ -211,7 +211,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 		
 		//If this is not a main part or an additional part, check the sub-parts.
 		for(APart part : this.parts){
-			if(part.pack.subParts != null){
+			if(part.isValid() && part.pack.subParts != null){
 				PackPart parentPack = getPackDefForLocation(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
 				for(PackPart extraPackPart : part.pack.subParts){
 					PackPart correctedPack = getPackForSubPart(parentPack, extraPackPart);
@@ -292,14 +292,17 @@ public abstract class EntityMultipartA_Base extends Entity{
 		
 		NBTTagList partTagList = new NBTTagList();
 		for(APart part : this.getMultipartParts()){
-			NBTTagCompound partTag = part.getPartNBTTag();
-			//We need to set some extra data here for the part to allow this multipart to know where it went.
-			//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
-			partTag.setString("partName", part.partName);
-			partTag.setDouble("offsetX", part.offset.xCoord);
-			partTag.setDouble("offsetY", part.offset.yCoord);
-			partTag.setDouble("offsetZ", part.offset.zCoord);
-			partTagList.appendTag(partTag);
+			//Don't save the part if it's not valid.
+			if(part.isValid()){
+				NBTTagCompound partTag = part.getPartNBTTag();
+				//We need to set some extra data here for the part to allow this multipart to know where it went.
+				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
+				partTag.setString("partName", part.partName);
+				partTag.setDouble("offsetX", part.offset.xCoord);
+				partTag.setDouble("offsetY", part.offset.yCoord);
+				partTag.setDouble("offsetZ", part.offset.zCoord);
+				partTagList.appendTag(partTag);
+			}
 		}
 		tagCompound.setTag("Parts", partTagList);
 		return tagCompound;
