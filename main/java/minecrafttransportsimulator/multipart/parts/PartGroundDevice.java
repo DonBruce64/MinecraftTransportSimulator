@@ -5,6 +5,7 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceWheel;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceFlat;
@@ -43,8 +44,8 @@ public class PartGroundDevice extends APart implements FXPart{
 	public float angularPosition;
 	public float angularVelocity;
 	
-	public PartGroundDevice(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
-		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
+	public PartGroundDevice(EntityMultipartD_Moving multipart, PackPart packPart, String partName, NBTTagCompound dataTag){
+		super(multipart, packPart, partName, dataTag);
 		this.isFlat = dataTag.getBoolean("isFlat");
 		
 		//This constructor is the super for fake parts.  Intercept these calls and bypass fake part creation.
@@ -52,9 +53,10 @@ public class PartGroundDevice extends APart implements FXPart{
 		//have a better contact area.  If we are a fake part calling this as a super constructor,
 		//we will be invalid.  Check that to prevent loops.
 		if(this.isValid() && pack.groundDevice.isLongPart){
-			Vec3d fakeOffset = offset.addVector(0, 0, pack.groundDevice.extraCollisionBoxOffset);
-			fakePart = new PartGroundDeviceFake(this, fakeOffset, partName, dataTag);
+			packPart.pos[2] += pack.groundDevice.extraCollisionBoxOffset;
+			fakePart = new PartGroundDeviceFake(this, packPart, partName, dataTag);
 			multipart.addPart(fakePart, false);
+			packPart.pos[2] -= pack.groundDevice.extraCollisionBoxOffset;
 		}else{
 			fakePart = null;
 		}

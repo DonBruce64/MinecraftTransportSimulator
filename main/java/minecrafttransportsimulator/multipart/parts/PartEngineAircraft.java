@@ -1,16 +1,16 @@
 package minecrafttransportsimulator.multipart.parts;
 
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.Vec3d;
 
 public class PartEngineAircraft extends APartEngine{
 	public PartPropeller propeller;
 	private final EntityMultipartF_Plane plane;
 
-	public PartEngineAircraft(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
-		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
+	public PartEngineAircraft(EntityMultipartD_Moving multipart, PackPart packPart, String partName, NBTTagCompound dataTag){
+		super(multipart, packPart, partName, dataTag);
 		this.plane = (EntityMultipartF_Plane) multipart;
 	}
 	

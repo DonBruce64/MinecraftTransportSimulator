@@ -43,16 +43,15 @@ public abstract class APart{
 	private boolean isValid;
 	private ResourceLocation modelLocation;
 		
-	public APart(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
-		this.isController = isController;
-		this.turnsWithSteer = turnsWithSteer;
-		this.offset = offset;
+	public APart(EntityMultipartD_Moving multipart, PackPart packPart, String partName, NBTTagCompound dataTag){
 		this.multipart = multipart;
+		this.offset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
 		this.partName = partName;
 		this.pack = PackParserSystem.getPartPack(partName);
 		this.partPos = RotationSystem.getRotatedPoint(this.offset, multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll).add(this.multipart.getPositionVector());
-		PackPart packPart = multipart.getPackDefForLocation(offset.xCoord, offset.yCoord, offset.zCoord);
 		this.partRotation = packPart.rot != null ? new Vec3d(packPart.rot[0], packPart.rot[1], packPart.rot[2]) : Vec3d.ZERO;
+		this.isController = packPart.isController;
+		this.turnsWithSteer = packPart.turnsWithSteer;
 		this.overrideMirror = packPart.overrideMirror;
 		this.isValid = true;
 	}

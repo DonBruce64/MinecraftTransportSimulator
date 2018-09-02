@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.multipart.parts;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
@@ -14,7 +15,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -51,8 +51,8 @@ public abstract class APartEngine extends APart implements FXPart{
 	public static final float engineOilDanger = 40F;
 	
 	
-	public APartEngine(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
-		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
+	public APartEngine(EntityMultipartD_Moving multipart, PackPart packPart, String partName, NBTTagCompound dataTag){
+		super(multipart, packPart, partName, dataTag);
 		this.vehicle = (EntityMultipartE_Vehicle) this.multipart;
 		if(dataTag.hasKey("engineState")){
 			this.state = EngineStates.values()[dataTag.getByte("engineState")];

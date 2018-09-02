@@ -28,16 +28,19 @@ public class PartPropeller extends APart{
 	private byte linkingTicks = 0;
 	private final PartEngineAircraft connectedEngine;
 	
-	public PartPropeller(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
-		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
+	public PartPropeller(EntityMultipartD_Moving multipart, PackPart packPart, String partName, NBTTagCompound dataTag){
+		super(multipart, packPart, partName, dataTag);
 		this.damage = dataTag.getFloat("damage");
 		this.currentPitch = pack.propeller.pitch;
 		//Due to JSON setup, it will be impossible for players to add propellers without engines and
 		//have them be saved to multiparts.  Because of this, we can check for engines here as they MUST be present.
 		//This engine must also have the propeller as a sub-part, so we can just find which engine has us as a sub-part and link to that.
+		
+		//Note that we need to do float addition rather that double, as the offsets for parts are technically all floats.
+		//Doing double addition using the Vec3d will cause enough floating-point errors to return wrong values.
 		for(APart part : multipart.getMultipartParts()){
 			for(PackPart subPart : part.pack.subParts){
-				if(part.offset.addVector(subPart.pos[0], subPart.pos[1], subPart.pos[2]).equals(this.offset)){
+				if((float) part.offset.xCoord + subPart.pos[0] == (float) this.offset.xCoord && (float) part.offset.yCoord + subPart.pos[1] == (float) this.offset.yCoord && (float) part.offset.zCoord + subPart.pos[2] == (float) this.offset.zCoord){
 					this.connectedEngine = ((PartEngineAircraft) part);
 					connectedEngine.propeller = this;
 					return;

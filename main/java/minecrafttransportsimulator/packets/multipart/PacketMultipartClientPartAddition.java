@@ -12,7 +12,6 @@ import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -50,11 +49,10 @@ public class PacketMultipartClientPartAddition extends APacketMultipartPart{
 					EntityMultipartA_Base multipart = (EntityMultipartA_Base) getMultipart(message, ctx);
 					PackPart packPart = multipart.getPackDefForLocation(message.offsetX, message.offsetY, message.offsetZ);
 					String partName = ((AItemPart) message.partStack.getItem()).partName;
-					Vec3d partOffset = new Vec3d(message.offsetX, message.offsetY, message.offsetZ);
 					try{
 						Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partName);
-						Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
-						APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, partOffset, packPart.isController, packPart.turnsWithSteer, partName, message.partStack.hasTagCompound() ? message.partStack.getTagCompound() : new NBTTagCompound());
+						Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, PackPart.class, String.class, NBTTagCompound.class);
+						APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, packPart, partName, message.partStack.hasTagCompound() ? message.partStack.getTagCompound() : new NBTTagCompound());
 						multipart.addPart(newPart, false);
 					}catch(Exception e){
 						MTS.MTSLog.error("ERROR SPAWING PART ON CLIENT!");

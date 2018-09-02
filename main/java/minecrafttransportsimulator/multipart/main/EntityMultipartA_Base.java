@@ -180,8 +180,10 @@ public abstract class EntityMultipartA_Base extends Entity{
 		//Next get any sub parts on parts that are present.
 		for(APart part : this.parts){
 			if(part.pack.subParts != null){
+				PackPart parentPack = getPackDefForLocation(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
 				for(PackPart extraPackPart : part.pack.subParts){
-					packParts.put(new Vec3d(extraPackPart.pos[0], extraPackPart.pos[1], extraPackPart.pos[2]).add(part.offset), extraPackPart);
+					PackPart correctedPack = getPackForSubPart(parentPack, extraPackPart);
+					packParts.put(new Vec3d(correctedPack.pos[0], correctedPack.pos[1], correctedPack.pos[2]), correctedPack);
 				}
 			}
 			
@@ -210,19 +212,52 @@ public abstract class EntityMultipartA_Base extends Entity{
 		//If this is not a main part or an additional part, check the sub-parts.
 		for(APart part : this.parts){
 			if(part.pack.subParts != null){
+				PackPart parentPack = getPackDefForLocation(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
 				for(PackPart extraPackPart : part.pack.subParts){
-					//Convert from relative sub-part positions to absolute positions.
-					double relativeOffsetX = part.offset.xCoord + extraPackPart.pos[0];
-					double relativeOffsetY = part.offset.yCoord + extraPackPart.pos[1];
-					double relativeOffsetZ = part.offset.zCoord + extraPackPart.pos[2];
-					if(relativeOffsetX == offsetX && relativeOffsetY == offsetY && relativeOffsetZ == offsetZ){
-						return extraPackPart;
+					PackPart correctedPack = getPackForSubPart(parentPack, extraPackPart);
+					if(correctedPack.pos[0] == offsetX && correctedPack.pos[1] == offsetY && correctedPack.pos[2] == offsetZ){
+						return correctedPack;
 					}
 				}
 			}
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * Returns a PackPart with the correct properties for a SubPart.  This is because
+	 * subParts inherit some properties from their parent parts. 
+	 */
+	private PackPart getPackForSubPart(PackPart parentPack, PackPart subPack){
+		PackPart correctPack = this.pack.new PackPart();
+		correctPack.pos = new float[3];
+		correctPack.pos[0] = parentPack.pos[0] + subPack.pos[0];
+		correctPack.pos[1] = parentPack.pos[1] + subPack.pos[1];
+		correctPack.pos[2] = parentPack.pos[2] + subPack.pos[2];
+		
+		if(parentPack.rot != null || subPack.rot != null){
+			correctPack.rot = new float[3];
+		}
+		if(parentPack.rot != null){
+			correctPack.rot[0] += parentPack.rot[0];
+			correctPack.rot[1] += parentPack.rot[1];
+			correctPack.rot[2] += parentPack.rot[2];
+		}
+		if(subPack.rot != null){
+			correctPack.rot[0] += subPack.rot[0];
+			correctPack.rot[1] += subPack.rot[1];
+			correctPack.rot[2] += subPack.rot[2];
+		}
+		
+		correctPack.turnsWithSteer = parentPack.turnsWithSteer;
+		correctPack.isController = subPack.isController;
+		correctPack.overrideMirror = parentPack.overrideMirror;
+		correctPack.types = subPack.types;
+		correctPack.customTypes = subPack.customTypes;
+		correctPack.minValue = subPack.minValue;
+		correctPack.maxValue = subPack.maxValue;
+		return correctPack;
 	}
 			
     @Override
@@ -236,10 +271,11 @@ public abstract class EntityMultipartA_Base extends Entity{
 			NBTTagList partTagList = tagCompound.getTagList("Parts", 10);
 			for(byte i=0; i<partTagList.tagCount(); ++i){
 				try{
-					NBTTagCompound partTag = partTagList.getCompoundTagAt(i);					
+					NBTTagCompound partTag = partTagList.getCompoundTagAt(i);
+					PackPart packPart = getPackDefForLocation(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ"));
 					Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partTag.getString("partName"));
-					Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
-					APart savedPart = construct.newInstance((EntityMultipartD_Moving) this, new Vec3d(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ")), partTag.getBoolean("isController"), partTag.getBoolean("turnsWithSteer"), partTag.getString("partName"), partTag);
+					Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, PackPart.class, String.class, NBTTagCompound.class);
+					APart savedPart = construct.newInstance((EntityMultipartD_Moving) this, packPart, partTag.getString("partName"), partTag);
 					this.addPart(savedPart, true);
 				}catch(Exception e){
 					MTS.MTSLog.error("ERROR IN LOADING PART FROM NBT!");
@@ -263,8 +299,6 @@ public abstract class EntityMultipartA_Base extends Entity{
 			partTag.setDouble("offsetX", part.offset.xCoord);
 			partTag.setDouble("offsetY", part.offset.yCoord);
 			partTag.setDouble("offsetZ", part.offset.zCoord);
-			partTag.setBoolean("isController", part.isController);
-			partTag.setBoolean("turnsWithSteer", part.turnsWithSteer);
 			partTagList.appendTag(partTag);
 		}
 		tagCompound.setTag("Parts", partTagList);

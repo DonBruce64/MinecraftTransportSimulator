@@ -83,8 +83,8 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPart{
 								//All clear for adding a new part.  Do so now and tell all clients.
 								try{
 									Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partItem.partName);
-									Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, Vec3d.class, boolean.class, boolean.class, String.class, NBTTagCompound.class);
-									APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, partOffset, packPart.isController, packPart.turnsWithSteer, partItem.partName, heldStack.hasTagCompound() ? heldStack.getTagCompound() : new NBTTagCompound());
+									Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, PackPart.class, String.class, NBTTagCompound.class);
+									APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, packPart, partItem.partName, heldStack.hasTagCompound() ? heldStack.getTagCompound() : new NBTTagCompound());
 									multipart.addPart(newPart, false);
 									if(!player.capabilities.isCreativeMode){
 										player.inventory.clearMatchingItems(partItem, heldStack.getItemDamage(), 1, heldStack.getTagCompound());

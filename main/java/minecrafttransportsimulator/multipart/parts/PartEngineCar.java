@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.multipart.parts;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.Vec3d;
 
 public class PartEngineCar extends APartEngine{
 	public byte currentGear = 1;
@@ -14,8 +14,8 @@ public class PartEngineCar extends APartEngine{
 	private double engineDriveshaftRotationLast;
 	private final EntityMultipartF_Car car;
 
-	public PartEngineCar(EntityMultipartD_Moving multipart, Vec3d offset, boolean isController, boolean turnsWithSteer, String partName, NBTTagCompound dataTag){
-		super(multipart, offset, isController, turnsWithSteer, partName, dataTag);
+	public PartEngineCar(EntityMultipartD_Moving multipart, PackPart packPart, String partName, NBTTagCompound dataTag){
+		super(multipart, packPart, partName, dataTag);
 		this.car = (EntityMultipartF_Car) multipart;
 		this.currentGear = dataTag.getByte("gearNumber");
 	}

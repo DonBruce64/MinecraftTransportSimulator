@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.multipart.parts;
 
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.Vec3d;
 
 /**A fake ground device that will be added to the multipart when long ground devices are present.
  * Does not render and will be removed in tandem with the ground device that's linked to it.
@@ -15,8 +15,8 @@ public final class PartGroundDeviceFake extends PartGroundDevice{
 	private final PartGroundDevice masterPart;
 	private boolean wasRemovedFromMultipart = false;
 	
-	public PartGroundDeviceFake(PartGroundDevice masterPart, Vec3d offset, String partName, NBTTagCompound dataTag){
-		super(masterPart.multipart, offset, false, false, partName, dataTag);
+	public PartGroundDeviceFake(PartGroundDevice masterPart, PackPart packPart, String partName, NBTTagCompound dataTag){
+		super(masterPart.multipart, packPart, partName, dataTag);
 		this.masterPart = masterPart;
 	}
 	
