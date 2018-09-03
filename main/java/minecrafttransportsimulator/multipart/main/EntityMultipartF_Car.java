@@ -18,6 +18,7 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle{
 	public short steeringAngle;
 	public short steeringCooldown;
 	public List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
+	public List<PartGroundDevice> groundedWheels = new ArrayList<PartGroundDevice>();
 	
 	//Internal car variables
 	private float momentPitch;
@@ -33,6 +34,20 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle{
 	
 	public EntityMultipartF_Car(World world, float posX, float posY, float posZ, float rotation, String name){
 		super(world, posX, posY, posZ, rotation, name);
+	}
+	
+	@Override
+	public void onEntityUpdate(){
+		super.onEntityUpdate();
+		if(pack != null){
+			//Populate grounded wheels.  Needs to be independent of non-wheeled ground devices.
+			groundedWheels.clear();
+			for(PartGroundDevice wheel : this.wheels){
+				if(wheel.isOnGround()){
+					groundedWheels.add(wheel);
+				}
+			}
+		}
 	}
 	
 	@Override

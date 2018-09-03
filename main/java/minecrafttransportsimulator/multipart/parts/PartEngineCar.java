@@ -30,13 +30,13 @@ public class PartEngineCar extends APartEngine{
 			for(PartGroundDevice wheel : car.wheels){
 				if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
 					//If we have grounded ground devices, and this wheel is not on the ground, don't take it into account.
-					if(wheel.isOnGround() || (car.groundedGroundDevices.size() == 0)){
+					if(wheel.isOnGround() || (car.groundedWheels.size() == 0)){
 						lowestSpeed = Math.min(wheel.angularVelocity, lowestSpeed);
 						vehicleDesiredSpeed = (float) Math.max(car.velocity/wheel.getHeight(), vehicleDesiredSpeed);
 					}
 				}
 			}
-			
+						
 			if(lowestSpeed != 999){
 				//Don't let the engine stall while being stopped.
 				if(lowestSpeed*1200F*getRatioForCurrentGear() > engineStallRPM || (!state.running && !state.esOn)){
@@ -60,7 +60,7 @@ public class PartEngineCar extends APartEngine{
 		
 		//Get friction of wheels.
 		float wheelFriction = 0;
-		for(PartGroundDevice wheel : car.wheels){
+		for(PartGroundDevice wheel : car.groundedWheels){
 			if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
 				wheelFriction += wheel.getMotiveFriction() - wheel.getFrictionLoss();
 			}

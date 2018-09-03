@@ -89,33 +89,35 @@ public abstract class APart{
 	 * It also removes any extra parts as defined in the multipart JSON.
 	 */
 	public void removePart(){
-		this.isValid = false;
-		if(pack.subParts != null){
-			for(PackPart packPart : pack.subParts){
-				APart subPart = multipart.getPartAtLocation(this.offset.xCoord + packPart.pos[0], this.offset.yCoord + packPart.pos[1], this.offset.zCoord + packPart.pos[2]);
-				if(subPart != null){
-					multipart.removePart(subPart, false);
-					subPart.removePart();
-					Item droppedItem = subPart.getItemForPart();
-					if(droppedItem != null){
-						ItemStack droppedStack = new ItemStack(droppedItem);
-						droppedStack.setTagCompound(subPart.getPartNBTTag());
-						multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, subPart.partPos.xCoord, subPart.partPos.yCoord, subPart.partPos.zCoord, droppedStack));
+		if(this.isValid){
+			this.isValid = false;
+			if(pack.subParts != null){
+				for(PackPart packPart : pack.subParts){
+					APart subPart = multipart.getPartAtLocation(this.offset.xCoord + packPart.pos[0], this.offset.yCoord + packPart.pos[1], this.offset.zCoord + packPart.pos[2]);
+					if(subPart != null){
+						multipart.removePart(subPart, false);
+						subPart.removePart();
+						Item droppedItem = subPart.getItemForPart();
+						if(droppedItem != null){
+							ItemStack droppedStack = new ItemStack(droppedItem);
+							droppedStack.setTagCompound(subPart.getPartNBTTag());
+							multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, subPart.partPos.xCoord, subPart.partPos.yCoord, subPart.partPos.zCoord, droppedStack));
+						}
 					}
 				}
 			}
-		}
-		PackPart packPart = multipart.getPackDefForLocation(this.offset.xCoord, this.offset.yCoord, this.offset.zCoord);
-		if(packPart != null && packPart.additionalPart != null){
-			APart additionalPart = multipart.getPartAtLocation(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]);
-			if(additionalPart != null){
-				multipart.removePart(additionalPart, false);
-				additionalPart.removePart();
-				Item droppedItem = additionalPart.getItemForPart();
-				if(droppedItem != null){
-					ItemStack droppedStack = new ItemStack(droppedItem);
-					droppedStack.setTagCompound(additionalPart.getPartNBTTag());
-					multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, additionalPart.partPos.xCoord, additionalPart.partPos.yCoord, additionalPart.partPos.zCoord, droppedStack));
+			PackPart packPart = multipart.getPackDefForLocation(this.offset.xCoord, this.offset.yCoord, this.offset.zCoord);
+			if(packPart != null && packPart.additionalPart != null){
+				APart additionalPart = multipart.getPartAtLocation(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]);
+				if(additionalPart != null){
+					multipart.removePart(additionalPart, false);
+					additionalPart.removePart();
+					Item droppedItem = additionalPart.getItemForPart();
+					if(droppedItem != null){
+						ItemStack droppedStack = new ItemStack(droppedItem);
+						droppedStack.setTagCompound(additionalPart.getPartNBTTag());
+						multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, additionalPart.partPos.xCoord, additionalPart.partPos.yCoord, additionalPart.partPos.zCoord, droppedStack));
+					}
 				}
 			}
 		}
