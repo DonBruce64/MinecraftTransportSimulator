@@ -29,7 +29,8 @@ public class PartEngineCar extends APartEngine{
 		if(currentGear != 0){
 			for(PartGroundDevice wheel : car.wheels){
 				if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
-					//If we have grounded ground devices, and this wheel is not on the ground, don't take it into account.
+					//If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
+					//If we don't have any grounded wheels, use them all to calculate the speeds.
 					if(wheel.isOnGround() || (car.groundedWheels.size() == 0)){
 						lowestSpeed = Math.min(wheel.angularVelocity, lowestSpeed);
 						vehicleDesiredSpeed = (float) Math.max(car.velocity/wheel.getHeight(), vehicleDesiredSpeed);
@@ -78,13 +79,22 @@ public class PartEngineCar extends APartEngine{
 				engineForce = (engineTargetRPM - RPM)/pack.engine.maxRPM*getRatioForCurrentGear()*pack.engine.fuelConsumption*2.0F;
 				//Check to see if the wheels have enough friction to affect the engine.
 				if(Math.abs(engineForce/10F) > wheelFriction || (Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) > 0.1 && Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) < Math.abs(engineForce/10F))){
-					engineForce *= car.currentMass/100000F;
+					engineForce *= car.currentMass/100000F*wheelFriction/Math.abs(engineForce/10F);					
 					for(PartGroundDevice wheel : car.wheels){
 						if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
 							if(getRatioForCurrentGear() > 0){
-								wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity + 0.01*Math.signum(engineForce));
+								if(engineForce >= 0){
+									wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity + 0.01);
+								}else{
+									wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity - 0.01);
+								}
 							}else{
-								wheel.angularVelocity = (float) Math.max(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity + 0.01*Math.signum(engineForce));
+								if(engineForce > 0){
+									wheel.angularVelocity = (float) Math.max(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity + 0.01);
+								}else{
+									
+									wheel.angularVelocity = (float) Math.max(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity - 0.01);
+								}
 							}
 							wheel.skipAngularCalcs = true;
 						}
