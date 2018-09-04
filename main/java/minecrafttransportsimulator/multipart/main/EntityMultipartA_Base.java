@@ -123,7 +123,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 		if(parts.contains(part)){
 			parts.remove(part);
 			part.removePart();
-			if(!worldObj.isRemote){
+			if(!worldObj.isRemote && part.isValid()){
 				if(playBreakSound){
 					this.playSound(SoundEvents.ITEM_SHIELD_BREAK, 2.0F, 1.0F);
 				}
