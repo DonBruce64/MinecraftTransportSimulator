@@ -252,7 +252,7 @@ public class PartGroundDevice extends APart implements FXPart{
 			MTS.proxy.playSound(this.partPos, MTS.MODID + ":" + "wheel_striking", 1, 1);
 			contactThisTick = false;
 		}
-		if(skipAngularCalcs){
+		if(skipAngularCalcs && this.isOnGround()){
 			for(byte i=0; i<4; ++i){
 				Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.WhiteSmokeFX(multipart.worldObj, partPos.xCoord, partPos.yCoord, partPos.zCoord, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05));
 			}
