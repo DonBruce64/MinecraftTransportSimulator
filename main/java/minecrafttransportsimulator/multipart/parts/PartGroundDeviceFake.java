@@ -27,7 +27,9 @@ public final class PartGroundDeviceFake extends PartGroundDevice{
 	
 	@Override
 	public void removePart(){
-		multipart.removePart(masterPart, false);
+		if(masterPart.isValid()){
+			multipart.removePart(masterPart, false);
+		}
 		wasRemovedFromMultipart = true;
 	}
 	

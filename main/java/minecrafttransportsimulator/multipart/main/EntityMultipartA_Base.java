@@ -122,12 +122,15 @@ public abstract class EntityMultipartA_Base extends Entity{
 	public void removePart(APart part, boolean playBreakSound){
 		if(parts.contains(part)){
 			parts.remove(part);
-			part.removePart();
+			//If the part is valid, tell the client to remove it.
 			if(!worldObj.isRemote && part.isValid()){
+				MTS.MTSNet.sendToAll(new PacketMultipartClientPartRemoval(this, part.offset.xCoord, part.offset.yCoord, part.offset.zCoord));
+			}
+			part.removePart();
+			if(!worldObj.isRemote){
 				if(playBreakSound){
 					this.playSound(SoundEvents.ITEM_SHIELD_BREAK, 2.0F, 1.0F);
 				}
-				MTS.MTSNet.sendToAll(new PacketMultipartClientPartRemoval(this, part.offset.xCoord, part.offset.yCoord, part.offset.zCoord));
 			}
 		}
 	}
