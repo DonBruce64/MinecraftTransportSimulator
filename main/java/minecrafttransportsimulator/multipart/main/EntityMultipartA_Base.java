@@ -232,7 +232,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 	private PackPart getPackForSubPart(PackPart parentPack, PackPart subPack){
 		PackPart correctPack = this.pack.new PackPart();
 		correctPack.pos = new float[3];
-		correctPack.pos[0] = parentPack.pos[0] + subPack.pos[0];
+		correctPack.pos[0] = parentPack.pos[0] >= 0 || parentPack.overrideMirror ? parentPack.pos[0] + subPack.pos[0] : parentPack.pos[0] - subPack.pos[0];
 		correctPack.pos[1] = parentPack.pos[1] + subPack.pos[1];
 		correctPack.pos[2] = parentPack.pos[2] + subPack.pos[2];
 		
