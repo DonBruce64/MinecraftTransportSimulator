@@ -115,6 +115,10 @@ public final class PackParserSystem{
 	    	PackPartObject pack =  new Gson().fromJson(jsonReader, PackPartObject.class);
 	    	String partName = modID + ":" + jsonFileName;
 	    	partPackMap.put(partName, pack);
+	    	if(!MTSRegistry.packTabs.containsKey(modID)){
+				MTSRegistry.packTabs.put(modID, new CreativeTabPack(modID));
+			}
+	    	
 	    	registerCrafting(partName, pack.general.materials);
     	}catch(Exception e){
     		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);

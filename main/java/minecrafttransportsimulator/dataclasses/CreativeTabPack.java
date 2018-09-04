@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.items.core.ItemMultipart;
+import minecrafttransportsimulator.items.parts.AItemPart;
 import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -66,6 +67,13 @@ public final class CreativeTabPack extends CreativeTabs{
 				tabStacks.add(new ItemStack(multipartItem));
 			}
 		}
-		return tabStacks.isEmpty() ? new ItemStack(MTSRegistry.wrench) : tabStacks.get((int) (Minecraft.getMinecraft().theWorld.getTotalWorldTime()/20%tabStacks.size()));
+		if(tabStacks.isEmpty()){
+			for(AItemPart partItem : MTSRegistry.partItemMap.values()){
+				if(partItem.getRegistryName().getResourceDomain().equals(getTabLabel())){
+					tabStacks.add(new ItemStack(partItem));
+				}
+			}
+		}
+		return tabStacks.get((int) (Minecraft.getMinecraft().theWorld.getTotalWorldTime()/20%tabStacks.size()));
     }
 }
