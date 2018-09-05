@@ -232,12 +232,12 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 				while(blockPosIndex < collidedBlockPos.size()){
 					BlockPos pos = collidedBlockPos.get(blockPosIndex);
 					float hardness = worldObj.getBlockState(pos).getBlockHardness(worldObj, pos);
-					if(hardness <= velocity*currentMass/100F && hardness >= 0){
+					if(hardness <= velocity*currentMass/250F && hardness >= 0){
 						collidedBlockPos.remove(blockPosIndex);
 						hardnessHitThisTick += hardness;
-						motionX *= Math.max(1.0F - hardness*0.5F/((500F + currentMass)/500F), 0.0F);
-						motionY *= Math.max(1.0F - hardness*0.5F/((500F + currentMass)/500F), 0.0F);
-						motionZ *= Math.max(1.0F - hardness*0.5F/((500F + currentMass)/500F), 0.0F);
+						motionX *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
+						motionY *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
+						motionZ *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
 						
 						if(!worldObj.isRemote){
 							worldObj.destroyBlock(pos, true);
@@ -246,7 +246,8 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 						++blockPosIndex;
 					}
 				}
-				if(hardnessHitThisTick > currentMass/100){
+
+				if(hardnessHitThisTick > currentMass/(0.75+velocity)/250F){
 					if(!worldObj.isRemote){
 						this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord, true);
 					}
