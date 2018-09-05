@@ -362,34 +362,35 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 		if(Math.abs(motionRoll) < 0.001){
 			motionRoll = 0;
 		}
-		if(motionX != 0 || motionY != 0 || motionZ != 0 || motionPitch != 0 || motionYaw != 0 || motionRoll != 0){
-			if(!worldObj.isRemote){
+
+		if(!worldObj.isRemote){
+			if(motionX != 0 || motionY != 0 || motionZ != 0 || motionPitch != 0 || motionYaw != 0 || motionRoll != 0){
 				rotationYaw += motionYaw;
 				rotationPitch += motionPitch;
 				rotationRoll += motionRoll;
 				setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
 				addToServerDeltas(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll);
 				MTS.MTSNet.sendToAll(new PacketMultipartDeltas(this, motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll));
+			}
+		}else{
+			//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.
+			if(!(serverDeltaX == 0 && serverDeltaY == 0 && serverDeltaZ == 0)){
+				double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/100F;
+				double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/100F;
+				double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/100F;
+				float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/100F;
+				float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/100F;
+				float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/100F;
+				setPosition(posX + deltaX, posY + deltaY, posZ + deltaZ);
+				rotationYaw += deltaYaw;
+				rotationPitch += deltaPitch;
+				rotationRoll += deltaRoll;
+				addToClientDeltas(deltaX, deltaY, deltaZ, deltaYaw, deltaPitch, deltaRoll);
 			}else{
-				//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.
-				if(!(serverDeltaX == 0 && serverDeltaY == 0 && serverDeltaZ == 0)){
-					double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/200F;
-					double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/200F;
-					double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/200F;
-					float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/200F;
-					float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/200F;
-					float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/200F;
-					setPosition(posX + deltaX, posY + deltaY, posZ + deltaZ);
-					rotationYaw += deltaYaw;
-					rotationPitch += deltaPitch;
-					rotationRoll += deltaRoll;
-					addToClientDeltas(deltaX, deltaY, deltaZ, deltaYaw, deltaPitch, deltaRoll);
-				}else{
-					rotationYaw += motionYaw;
-					rotationPitch += motionPitch;
-					rotationRoll += motionRoll;
-					setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
-				}
+				rotationYaw += motionYaw;
+				rotationPitch += motionPitch;
+				rotationRoll += motionRoll;
+				setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
 			}
 		}
 	}
