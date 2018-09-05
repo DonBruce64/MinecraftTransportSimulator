@@ -337,6 +337,28 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 					++loopCount;
 				}while(continueLoop && loopCount < 20);
 			}
+			
+			//As a final check, take a bit of extra movement off of the motions.
+			//This is done to prevent vehicles from moving into blocks when they shouldn't
+			//due to floating-point errors.
+			if(motionX > 0){
+				motionX -= 0.002F;
+			}
+			if(motionX < 0){
+				motionX += 0.002F;
+			}
+			if(motionY > 0){
+				motionY -= 0.002F;
+			}
+			if(motionY < 0){
+				motionY += 0.002F;
+			}
+			if(motionZ > 0){
+				motionZ -= 0.002F;
+			}
+			if(motionZ < 0){
+				motionZ += 0.002F;
+			}
 		}
 		
 		//Now that that the movement has been checked, move the multipart.
@@ -375,12 +397,12 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 		}else{
 			//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.
 			if(!(serverDeltaX == 0 && serverDeltaY == 0 && serverDeltaZ == 0)){
-				double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/100F;
-				double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/100F;
-				double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/100F;
-				float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/100F;
-				float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/100F;
-				float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/100F;
+				double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/25F*Math.abs(serverDeltaX - clientDeltaX);
+				double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/25F*Math.abs(serverDeltaY - clientDeltaY);
+				double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/25F*Math.abs(serverDeltaZ - clientDeltaZ);
+				float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/25F*Math.abs(serverDeltaYaw - clientDeltaYaw);
+				float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/25F*Math.abs(serverDeltaPitch - clientDeltaPitch);
+				float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/25F*Math.abs(serverDeltaRoll - clientDeltaRoll);
 				setPosition(posX + deltaX, posY + deltaY, posZ + deltaZ);
 				rotationYaw += deltaYaw;
 				rotationPitch += deltaPitch;
