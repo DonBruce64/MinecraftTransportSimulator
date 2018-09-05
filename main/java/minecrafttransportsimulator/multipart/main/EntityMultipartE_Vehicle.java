@@ -272,7 +272,15 @@ public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 	
 	@SideOnly(Side.CLIENT)
 	public final void addSound(SoundTypes typeToAdd, APart optionalPart){
-		sounds.add(new VehicleSound(this, optionalPart, typeToAdd));
+		VehicleSound newSound = new VehicleSound(this, optionalPart, typeToAdd);
+		//If we already have a sound for this part, remove it before adding this new one.
+		for(byte i=0; i<sounds.size(); ++i){
+			if(sounds.get(i).getSoundUniqueName().equals(newSound.getSoundUniqueName())){
+				sounds.remove(i);
+				break;
+			}
+		}
+		sounds.add(newSound);
 	}
 			
     @Override
