@@ -89,11 +89,11 @@ public class PartEngineCar extends APartEngine{
 									wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity - 0.01);
 								}
 							}else{
-								if(engineForce > 0){
-									wheel.angularVelocity = (float) Math.max(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity + 0.01);
+								if(engineForce >= 0){
+									wheel.angularVelocity = (float) Math.max(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity - 0.01);
 								}else{
 									
-									wheel.angularVelocity = (float) Math.max(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity - 0.01);
+									wheel.angularVelocity = (float) Math.max(engineTargetRPM/1200F/getRatioForCurrentGear(), wheel.angularVelocity + 0.01);
 								}
 							}
 							wheel.skipAngularCalcs = true;
@@ -119,14 +119,14 @@ public class PartEngineCar extends APartEngine{
 				}
 				RPM += (engineTargetRPM - RPM)/10;
 				if(RPM > getSafeRPMFromMax(this.pack.engine.maxRPM)){
-					RPM -= (engineTargetRPM - RPM)/5;
+					RPM -= Math.abs(engineTargetRPM - RPM)/5;
 				}
 				engineForce = 0;
 			}
 		}else{
 			//Not running, so either inhibit motion if not in neutral or just don't do anything.
 			if(currentGear != 0){
-				engineForce = -RPM/pack.engine.maxRPM;
+				engineForce = -RPM/pack.engine.maxRPM*Math.signum(currentGear);
 			}else{
 				engineForce = 0;
 				RPM = Math.max(RPM - 10, 0);
