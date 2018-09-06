@@ -12,6 +12,7 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.VehicleInstrument;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
+import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -137,7 +138,7 @@ public abstract class RenderInstruments{
 			case("electric_usage"): return Math.min(vehicle.electricFlow*20, 1);
 			case("fuel"): return vehicle.fuel/vehicle.pack.motorized.fuelCapacity*100F;
 			case("rpm"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).RPM : 0;
-			case("rpm_max"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).pack.engine.maxRPM : 0;
+			case("rpm_max"): return vehicle.getEngineByNumber(engineNumber) != null ? APartEngine.getSafeRPMFromMax(vehicle.getEngineByNumber(engineNumber).pack.engine.maxRPM) : 0;
 			case("fuel_flow"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).fuelFlow*20F*60F/1000F : 0;
 			case("temp"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).temp : 0;
 			case("oil"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).oilPressure : 0;
