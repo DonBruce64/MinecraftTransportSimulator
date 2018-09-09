@@ -87,6 +87,9 @@ public abstract class APart{
 	 * Allows for parts to trigger logic that happens when they are removed.
 	 * By default, this removes all sub-parts from the multipart.
 	 * It also removes any extra parts as defined in the multipart JSON.
+	 * Make sure to call these parts removal methods PRIOR to removing them
+	 * from their multipart as they need to be set invalid to prevent
+	 * bad packets from arriving on the client.
 	 */
 	public void removePart(){
 		if(this.isValid){
@@ -95,13 +98,15 @@ public abstract class APart{
 				for(PackPart packPart : pack.subParts){
 					APart subPart = multipart.getPartAtLocation(this.offset.xCoord + packPart.pos[0], this.offset.yCoord + packPart.pos[1], this.offset.zCoord + packPart.pos[2]);
 					if(subPart != null){
-						multipart.removePart(subPart, false);
 						subPart.removePart();
-						Item droppedItem = subPart.getItemForPart();
-						if(droppedItem != null){
-							ItemStack droppedStack = new ItemStack(droppedItem);
-							droppedStack.setTagCompound(subPart.getPartNBTTag());
-							multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, subPart.partPos.xCoord, subPart.partPos.yCoord, subPart.partPos.zCoord, droppedStack));
+						multipart.removePart(subPart, false);
+						if(!multipart.worldObj.isRemote){
+							Item droppedItem = subPart.getItemForPart();
+							if(droppedItem != null){
+								ItemStack droppedStack = new ItemStack(droppedItem);
+								droppedStack.setTagCompound(subPart.getPartNBTTag());
+								multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, subPart.partPos.xCoord, subPart.partPos.yCoord, subPart.partPos.zCoord, droppedStack));
+							}
 						}
 					}
 				}
@@ -110,13 +115,15 @@ public abstract class APart{
 			if(packPart != null && packPart.additionalPart != null){
 				APart additionalPart = multipart.getPartAtLocation(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]);
 				if(additionalPart != null){
-					multipart.removePart(additionalPart, false);
 					additionalPart.removePart();
-					Item droppedItem = additionalPart.getItemForPart();
-					if(droppedItem != null){
-						ItemStack droppedStack = new ItemStack(droppedItem);
-						droppedStack.setTagCompound(additionalPart.getPartNBTTag());
-						multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, additionalPart.partPos.xCoord, additionalPart.partPos.yCoord, additionalPart.partPos.zCoord, droppedStack));
+					multipart.removePart(additionalPart, false);
+					if(!multipart.worldObj.isRemote){
+						Item droppedItem = additionalPart.getItemForPart();
+						if(droppedItem != null){
+							ItemStack droppedStack = new ItemStack(droppedItem);
+							droppedStack.setTagCompound(additionalPart.getPartNBTTag());
+							multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, additionalPart.partPos.xCoord, additionalPart.partPos.yCoord, additionalPart.partPos.zCoord, droppedStack));
+						}
 					}
 				}
 			}
