@@ -33,8 +33,18 @@ if echo $FILE | grep -q "GUI"; then
 	sed -i 's/drawButton(mc, mouseX, mouseY)/drawButton(mc, mouseX, mouseY, 0)/g' $FILE
 fi
 
+#Items now use ITooltipFlag rather than a simple boolean.
+if echo $FILE | grep -q "GUIPartBench"; then 
+	sed -i 's/addInformation(tempStack, player, descriptiveLines, false)/addInformation(tempStack, player.world, descriptiveLines, ITooltipFlag.TooltipFlags.NORMAL)/' $FILE
+	sed -i '3iimport net.minecraft.client.util.ITooltipFlag;' $FILE
+fi
+
+#AABBs had a method name change from intersectsWith to intersects.
+if echo $FILE | grep -q "MultipartAxisAlignedBBCollective"; then
+	sed -i 's/intersectsWith/intersects/' $FILE
+fi
+
 #Rendering brightness was changed to remove partialTicks parameter.  About time seeing as it hasn't been used since 1.7.10.
-#Vector coord names were also changed.
 if echo $FILE | grep -q "RenderMultipart"; then
 	sed -i 's/getBrightnessForRender(partialTicks)/getBrightnessForRender()/' $FILE
 fi
@@ -45,9 +55,9 @@ if echo $FILE | grep -q "RenderFuelPump"; then
 	sed -i 's/super.renderTileEntityAt(pump, x, y, z, partialTicks, destroyStage)/super.render(pump, x, y, z, partialTicks, destroyStage, alpha)/' $FILE
 fi
 
-if echo $FILE | grep -q "RenderPropellerBench"; then
-	sed -i 's/renderTileEntityAt(TileEntityPropellerBench bench, double x, double y, double z, float partialTicks, int destroyStage)/render(TileEntityPropellerBench bench, double x, double y, double z, float partialTicks, int destroyStage, float alpha)/' $FILE
-	sed -i 's/super.renderTileEntityAt(bench, x, y, z, partialTicks, destroyStage)/super.render(bench, x, y, z, partialTicks, destroyStage, alpha)/' $FILE
+if echo $FILE | grep -q "RenderDecor"; then
+	sed -i 's/renderTileEntityAt(TileEntityDecor6AxisOriented decor, double x, double y, double z, float partialTicks, int destroyStage)/render(TileEntityDecor6AxisOriented decor, double x, double y, double z, float partialTicks, int destroyStage, float alpha)/' $FILE
+	sed -i 's/super.renderTileEntityAt(decor, x, y, z, partialTicks, destroyStage)/super.render(decor, x, y, z, partialTicks, destroyStage, alpha)/' $FILE
 fi
 
 #Items had a few changes on their methods with respect to parameters.
@@ -65,7 +75,9 @@ fi
 sed -i 's/item.getSubItems(item, tab, givenList)/item.getSubItems(tab, givenList)/g' $FILE
 
 #Temperature was changed to be position-dependent.
-sed -i 's/getBiome(this.getPosition()).getTemperature()/getBiome(this.getPosition()).getTemperature(this.getPosition())/' $FILE
+if echo $FILE | grep -q "APartEngine"; then
+	sed -i 's/getBiome(multipart.getPosition()).getTemperature()/getBiome(multipart.getPosition()).getTemperature(multipart.getPosition())/' $FILE
+fi
 
 #Registration for crafting has a new ResourceLocation parameter as a UID.  Here's where we get to use craftingNumber.
 if echo $FILE | grep -q "MTSRegistry"; then
@@ -73,13 +85,13 @@ if echo $FILE | grep -q "MTSRegistry"; then
 fi
 
 #Block slipperiness was changed to be state-dependent.
-if echo $FILE | grep -q "EntityMultipartMoving"; then
+if echo $FILE | grep -q "EntityMultipartD_Moving"; then
 	sed -i 's/world.getBlockState(pos).getBlock().slipperiness/world.getBlockState(pos).getBlock().getSlipperiness(world.getBlockState(pos), world, pos, null)/' $FILE
 	sed -i 's/world.getBlockState(pos).getBlock().slipperiness/world.getBlockState(pos).getBlock().getSlipperiness(world.getBlockState(pos), world, pos, null)/' $FILE
 fi
 
-if echo $FILE | grep -q "EntityEngineCar"; then
-	sed -i 's/world.getBlockState(wheel.getPosition().down()).getBlock().slipperiness/world.getBlockState(wheel.getPosition().down()).getBlock().getSlipperiness(world.getBlockState(wheel.getPosition().down()), world, wheel.getPosition().down(), null)/' $FILE
+if echo $FILE | grep -q "PartGroundDevice"; then
+	sed -i 's/multipart.world.getBlockState(pos).getBlock().slipperiness/multipart.world.getBlockState(pos).getBlock().getSlipperiness(multipart.world.getBlockState(pos), multipart.world, pos, null)/' $FILE
 fi
 
 done

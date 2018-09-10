@@ -29,8 +29,18 @@ sed -i 's/processInitialInteract(player, stack, hand)/processInitialInteract(pla
 sed -i 's/onItemUse(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)/onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)/' $FILE
 sed -i 's/onItemRightClick(ItemStack stack, World world, EntityPlayer player, EnumHand hand)/onItemRightClick(World world, EntityPlayer player, EnumHand hand)/' $FILE
 
+#Blocks now take an extra boolean paramter.  Because of course they need to.
+if echo $FILE | grep -q "Block"; then
+	sed -i 's/public void addCollisionBoxToList(IBlockState state, World worldIn, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entityIn)/public void addCollisionBoxToList(IBlockState state, World worldIn, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entityIn, boolean p_185477_7_)/' $FILE
+fi
+
+#Itemstacks created from NBT are now constructors rather than methods.
+if echo $FILE | grep -q "Crate"; then
+	sed -i 's/ItemStack.loadItemStackFromNBT(stackTag)/new ItemStack(stackTag)/' $FILE
+fi
+
 #Creative tabs were changed to take an ItemStack as their icon rather than an Item.
-if echo $FILE | grep -q "MTSCreativeTabs"; then
+if echo $FILE | grep -q "CreativeTab"; then
 	sed -i 's/displayAllRelevantItems(List<ItemStack> givenList)/displayAllRelevantItems(NonNullList<ItemStack> givenList)/' $FILE
 	sed -i 's/public Item getTabIconItem()/public ItemStack getTabIconItem()/' $FILE
 	sed -i 's/defaultStack = new ItemStack(this.getTabIconItem())/defaultStack = this.getTabIconItem()/' $FILE
@@ -61,18 +71,9 @@ sed -i 's/stackSize/getCount()/g' $FILE
 
 #Entity registration now requires a ResourceLocation for stuff.  Why we need that and still need a unique name is beyond me...
 if echo $FILE | grep -q "MTSRegistry"; then
-	sed -i 's/EntityRegistry.registerModEntity(/EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, entityClass.getSimpleName().substring(6).toLowerCase()), /' $FILE
+	sed -i 's/EntityRegistry.registerModEntity(EntityMultipartF_Plane.class/EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityMultipartF_Plane.class.getSimpleName().substring(6).toLowerCase()), EntityMultipartF_Plane.class/' $FILE
+	sed -i 's/EntityRegistry.registerModEntity(EntityMultipartF_Car.class/EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityMultipartF_Car.class.getSimpleName().substring(6).toLowerCase()), EntityMultipartF_Car.class/' $FILE
 	sed -i '3iimport net.minecraft.util.ResourceLocation;' $FILE;
-fi
-
-#Need to convert the inventory system on the chests to use NonNullList and ItemStack.EMPTY rather than an array and nulls.
-if echo $FILE | grep -q "EntityChildInventory"; then
-	sed -i 's/ItemStack\[\] contents = new ItemStack\[27\]/NonNullList<ItemStack> contents = NonNullList.<ItemStack>withSize(27, ItemStack.EMPTY)/' $FILE
-	sed -i 's/this.contents\[slot\] = null;/this.contents.set(slot, ItemStack.EMPTY);/g' $FILE
-	sed -i 's/this.contents\[slot\] = stack;/this.contents.set(slot, stack);/g' $FILE
-	sed -i 's/this.contents\[slot\] = new ItemStack(itemTag)/this.contents.set(slot, new ItemStack(itemTag))/' $FILE
-	sed -i 's/this.contents\[slot\]/this.contents.get(slot)/g' $FILE
-	sed -i '/this.contents = new ItemStack\[27\];/d' $FILE
 fi
 
 #Need to import NonNullList anywhere we use it as it's new to 1.11.
