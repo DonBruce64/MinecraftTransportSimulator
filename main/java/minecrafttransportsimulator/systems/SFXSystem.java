@@ -58,22 +58,56 @@ public final class SFXSystem{
 	 * looping sound systems first try to play a sound and notice they are not populated yet.
 	 */
 	private static void initSoundSystemHooks(){
-		try{
-			//First get the SoundManager from the SoundHandler.
-			SoundHandler soundHandler = Minecraft.getMinecraft().getSoundHandler();
-			Field soundManagerField = ReflectionHelper.findField(SoundHandler.class, soundManagerNames);
-			SoundManager mcSoundManager = (SoundManager) soundManagerField.get(soundHandler);
-			
-			//Now get the SoundSystem from the SoundManager. 
-			Field soundSystemField = ReflectionHelper.findField(SoundManager.class, soundSystemNames);
-			mcSoundSystem = (SoundSystem) soundSystemField.get(mcSoundManager);
-			
-			//Also get the helper URL method for adding sounds from resource locations.
-			getURLMethod = ReflectionHelper.findMethod(SoundManager.class, mcSoundManager, soundSystemURLNames, ResourceLocation.class);
-		}catch (Exception e){
-			MTS.MTSLog.fatal("ERROR IN SOUND SYSTEM REFLECTION!");
-			throw new RuntimeException(e);
-   	    }
+		Exception lastException = null;
+		
+		//First get the SoundManager from the SoundHandler.
+		SoundHandler soundHandler = Minecraft.getMinecraft().getSoundHandler();
+		SoundManager mcSoundManager = null;
+		for(String soundManagerName : soundManagerNames){
+			try{
+				Field soundManagerField = SoundHandler.class.getDeclaredField(soundManagerName);
+				soundManagerField.setAccessible(true);
+				mcSoundManager = (SoundManager) soundManagerField.get(soundHandler);
+			}catch (Exception e){
+				lastException = e;
+				continue;
+			}
+		}
+		if(mcSoundManager == null){
+			MTS.MTSLog.fatal("ERROR IN SOUND SYSTEM REFLECTION!  COULD NOT FIND SOUNDMANAGER!");
+			throw new RuntimeException(lastException);
+		}
+		
+		//Now get the SoundSystem from the SoundManager.
+		for(String soundSystemName : soundSystemNames){
+			try{
+				Field soundSystemField = SoundManager.class.getDeclaredField(soundSystemName);
+				soundSystemField.setAccessible(true);
+				mcSoundSystem = (SoundSystem) soundSystemField.get(mcSoundManager);
+			}catch (Exception e){
+				lastException = e;
+				continue;
+			}
+		}
+		if(mcSoundSystem == null){
+			MTS.MTSLog.fatal("ERROR IN SOUND SYSTEM REFLECTION!  COULD NOT FIND SOUNDSYSTEM!");
+			throw new RuntimeException(lastException);
+		}
+		
+		//Also get the helper URL method for adding sounds from resource locations.
+		for(String soundSystemURLName : soundSystemURLNames){
+			try{
+				getURLMethod = SoundManager.class.getDeclaredMethod(soundSystemURLName, ResourceLocation.class);
+				getURLMethod.setAccessible(true);
+			}catch (Exception e){
+				lastException = e;
+				continue;
+			}
+		}
+		if(getURLMethod == null){
+			MTS.MTSLog.fatal("ERROR IN SOUND SYSTEM REFLECTION!  COULD NOT FIND URLMETHOD!");
+			throw new RuntimeException(lastException);
+		}
 	}
 	
 	/**
