@@ -103,18 +103,14 @@ public abstract class EntityMultipartA_Base extends Entity{
 	public void addPart(APart part, boolean ignoreCollision){
 		parts.add(part);
 		if(!ignoreCollision){
+			//Check for collision, and boost if needed.
 			if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
-				Vec3d boost = new Vec3d(0, Math.max(0, -part.offset.yCoord), 0);
-				this.setPositionAndRotation(posX, posY + boost.yCoord, posZ, rotationYaw, rotationPitch);
-				
-				//Sometimes parts can break off if the multipart rotates and shoves something under the ground.
-				//Check to make sure we don't do this.
-				for(APart testPart : this.getMultipartParts()){
-					if(testPart.isPartCollidingWithBlocks(boost)){
-						this.setPositionAndRotation(posX, posY + 1, posZ, rotationYaw, rotationPitch);
-						break;
-					}
-				}
+				this.setPositionAndRotation(posX, posY +  Math.max(0, -part.offset.yCoord) + part.getHeight(), posZ, rotationYaw, rotationPitch);
+			}
+			
+			//Sometimes we need to do this for parts that are deeper into the ground.
+			if(part.isPartCollidingWithBlocks(new Vec3d(0, Math.max(0, -part.offset.yCoord) + part.getHeight(), 0))){
+				this.setPositionAndRotation(posX, posY +  part.getHeight(), posZ, rotationYaw, rotationPitch);
 			}
 		}
 	}
