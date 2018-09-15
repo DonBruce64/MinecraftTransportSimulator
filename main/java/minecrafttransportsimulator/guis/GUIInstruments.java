@@ -126,7 +126,7 @@ public class GUIInstruments extends GuiScreen{
 							if(!playerInstruments.containsKey(instrumentItem.instrumentName)){
 								byte xIndex = (byte) (playerInstruments.size()%6);
 								byte yIndex = (byte) (playerInstruments.size()/6);
-								renderedPlayerInstrumentsBounds.put(instrumentItem.instrumentName, new Integer[]{RenderHUD.screenDefaultX/8 + xIndex*24-12, RenderHUD.screenDefaultX/8 + xIndex*24+12, RenderHUD.screenDefaultY/4 + yIndex*24-12, RenderHUD.screenDefaultY/4 + yIndex*24+12});
+								renderedPlayerInstrumentsBounds.put(instrumentItem.instrumentName, new Integer[]{RenderHUD.screenDefaultX/8+xIndex*24, RenderHUD.screenDefaultX/8+xIndex*24+48, RenderHUD.screenDefaultY/4+yIndex*24, RenderHUD.screenDefaultY/4+yIndex*24+48});
 								playerInstruments.put(instrumentItem.instrumentName, stack);
 								
 							}	
