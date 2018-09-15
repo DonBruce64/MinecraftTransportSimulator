@@ -122,13 +122,12 @@ public class GUIInstruments extends GuiScreen{
 				if(stack != null){
 					if(stack.getItem() instanceof ItemInstrument){
 						ItemInstrument instrumentItem = (ItemInstrument) stack.getItem();
-						if(PackParserSystem.getInstrument(instrumentItem.instrumentName).general.validVehicles.contains(vehicle.pack.general.type)){
-							if(!playerInstruments.containsKey(instrumentItem.instrumentName)){
+						if(!playerInstruments.containsKey(instrumentItem.instrumentName)){
+							if(PackParserSystem.getInstrument(instrumentItem.instrumentName).general.validVehicles.contains(vehicle.pack.general.type)){
 								byte xIndex = (byte) (playerInstruments.size()%6);
 								byte yIndex = (byte) (playerInstruments.size()/6);
-								renderedPlayerInstrumentsBounds.put(instrumentItem.instrumentName, new Integer[]{RenderHUD.screenDefaultX/8+xIndex*24, RenderHUD.screenDefaultX/8+xIndex*24+48, RenderHUD.screenDefaultY/4+yIndex*24, RenderHUD.screenDefaultY/4+yIndex*24+48});
+								renderedPlayerInstrumentsBounds.put(instrumentItem.instrumentName, new Integer[]{64 + xIndex*64-32, 64 + xIndex*64+32, RenderHUD.screenDefaultY/4 + yIndex*64-32, RenderHUD.screenDefaultY/4 + yIndex*64+32});
 								playerInstruments.put(instrumentItem.instrumentName, stack);
-								
 							}	
 						}					
 					}
