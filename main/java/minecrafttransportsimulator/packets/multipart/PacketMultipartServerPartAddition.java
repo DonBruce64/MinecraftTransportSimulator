@@ -86,10 +86,10 @@ public class PacketMultipartServerPartAddition extends APacketMultipartPart{
 									Constructor<? extends APart> construct = partClass.getConstructor(EntityMultipartD_Moving.class, PackPart.class, String.class, NBTTagCompound.class);
 									APart newPart = construct.newInstance((EntityMultipartD_Moving) multipart, packPart, partItem.partName, heldStack.hasTagCompound() ? heldStack.getTagCompound() : new NBTTagCompound());
 									multipart.addPart(newPart, false);
+									MTS.MTSNet.sendToAll(new PacketMultipartClientPartAddition(multipart, message.offsetX, message.offsetY, message.offsetZ, heldStack));
 									if(!player.capabilities.isCreativeMode){
 										player.inventory.clearMatchingItems(partItem, heldStack.getItemDamage(), 1, heldStack.getTagCompound());
 									}
-									MTS.MTSNet.sendToAll(new PacketMultipartClientPartAddition(multipart, message.offsetX, message.offsetY, message.offsetZ, heldStack));
 								}catch(Exception e){
 									MTS.MTSLog.error("ERROR SPAWING PART ON SERVER!");
 									MTS.MTSLog.error(e.getMessage());
