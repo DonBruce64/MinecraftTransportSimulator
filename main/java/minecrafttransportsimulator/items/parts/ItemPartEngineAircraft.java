@@ -25,22 +25,25 @@ public final class ItemPartEngineAircraft extends AItemPartEngine{
 		NBTTagCompound stackTag = stack.getTagCompound();
 		PackPartObject pack = PackParserSystem.getPartPack(((ItemPartEngineAircraft) stack.getItem()).partName); 
 		
-		if(stackTag.getBoolean("isCreative")){
+		if(stackTag != null && stackTag.getBoolean("isCreative")){
 			tooltipLines.add(TextFormatting.DARK_PURPLE + I18n.format("info.item.engine.creative"));
 		}
 		tooltipLines.add(I18n.format("info.item.engine.maxrpm") + pack.engine.maxRPM);
 		tooltipLines.add(I18n.format("info.item.engine.maxsaferpm") + APartEngine.getSafeRPMFromMax(pack.engine.maxRPM));
 		tooltipLines.add(I18n.format("info.item.engine.fuelconsumption") + pack.engine.fuelConsumption);
-		tooltipLines.add(I18n.format("info.item.engine.hours") + Math.round(stackTag.getDouble("hours")*100D)/100D);
+		tooltipLines.add(I18n.format("info.item.engine.hours") + (stackTag != null ? Math.round(stackTag.getDouble("hours")*100D)/100D : 0));
 		tooltipLines.add(I18n.format("info.item.engine.gearratios") + pack.engine.gearRatios[0]);
-		if(stackTag.getBoolean("oilLeak")){
-			tooltipLines.add(TextFormatting.RED + I18n.format("info.item.engine.oilleak"));
-		}
-		if(stackTag.getBoolean("fuelLeak")){
-			tooltipLines.add(TextFormatting.RED + I18n.format("info.item.engine.fuelleak"));
-		}
-		if(stackTag.getBoolean("brokenStarter")){
-			tooltipLines.add(TextFormatting.RED + I18n.format("info.item.engine.brokenstarter"));
+		
+		if(stackTag != null){
+			if(stackTag.getBoolean("oilLeak")){
+				tooltipLines.add(TextFormatting.RED + I18n.format("info.item.engine.oilleak"));
+			}
+			if(stackTag.getBoolean("fuelLeak")){
+				tooltipLines.add(TextFormatting.RED + I18n.format("info.item.engine.fuelleak"));
+			}
+			if(stackTag.getBoolean("brokenStarter")){
+				tooltipLines.add(TextFormatting.RED + I18n.format("info.item.engine.brokenstarter"));
+			}
 		}
 	}
 }
