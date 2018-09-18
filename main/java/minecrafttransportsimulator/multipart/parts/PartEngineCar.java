@@ -10,6 +10,8 @@ public class PartEngineCar extends APartEngine{
 	public byte currentGear = 1;
 	private boolean spinningOut;
 	private double engineForce;
+	private double engineRotationLast;
+	private double engineRotation;
 	private double engineDriveshaftRotation;
 	private double engineDriveshaftRotationLast;
 	private final EntityMultipartF_Car car;
@@ -133,7 +135,10 @@ public class PartEngineCar extends APartEngine{
 			}
 		}
 		
-		//Set driveshaft rotations for rendering of parts of models.
+		//Set engine and driveshaft rotations for rendering of parts of models.
+		engineRotationLast = engineRotation;
+		engineRotation += RPM*1200D/360D;
+		
 		float driveShaftDesiredSpeed = -999F;
 		for(PartGroundDevice wheel : car.wheels){
 			if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
@@ -168,6 +173,10 @@ public class PartEngineCar extends APartEngine{
 	
 	public float getGearshiftRotation(){
 		return pack.engine.isAutomatic ? Math.min(1, currentGear)*15F : currentGear*5;
+	}
+	
+	public double getEngineRotation(float partialTicks){
+		return engineRotation + (engineRotation - engineRotationLast)*partialTicks;
 	}
 	
 	public double getDriveshaftRotation(float partialTicks){
