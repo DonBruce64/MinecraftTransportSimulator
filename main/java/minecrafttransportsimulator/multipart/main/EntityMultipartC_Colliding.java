@@ -242,6 +242,8 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 							if(!worldObj.isRemote){
 								worldObj.destroyBlock(pos, true);
 							}
+						}else{
+							++blockPosIndex;
 						}
 					}else{
 						++blockPosIndex;
