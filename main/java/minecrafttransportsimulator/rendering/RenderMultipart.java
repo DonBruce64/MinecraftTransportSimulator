@@ -73,7 +73,10 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	private static final Map<String, List<WindowPart>> windowLists = new HashMap<String, List<WindowPart>>();
 	
 	/**Lights for models.  Keyed by multipart JSON name.*/
-	private static final Map<String, List<LightPart>> lightLists = new HashMap<String, List<LightPart>>();
+	private static final Map<String, List<LightPart>> multipartLightLists = new HashMap<String, List<LightPart>>();
+	
+	/**Lights for parts.  Keyed by a combination of part name and position.*/
+	private static final Map<String, List<LightPart>> partLightLists = new HashMap<String, List<LightPart>>();
 	
 	/**Multipart texture name.  Keyed by multipart name (NOT JSON!) or part name.*/
 	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
@@ -103,7 +106,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		partDisplayLists.clear();
 		rotatableLists.clear();
 		windowLists.clear();
-		lightLists.clear();
+		multipartLightLists.clear();
 	}
 	
 	/**Returns the currently cached texture for the multipart.  Static for use in other functions.**/
@@ -140,7 +143,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	}
 	
 	public static boolean doesMultipartHaveLight(EntityMultipartE_Vehicle vehicle, LightTypes light){
-		for(LightPart lightPart : lightLists.get(vehicle.multipartJSONName)){
+		for(LightPart lightPart : multipartLightLists.get(vehicle.multipartJSONName)){
 			if(lightPart.type.equals(light)){
 				return true;
 			}
@@ -216,7 +219,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		//Lights and beacons get rendered in two passes.
 		//The first renders the cases and bulbs, the second renders the beams and effects.
 		//Make sure the light list is populated here before we try to render this, as loading de-syncs can leave it null.
-		if(multipart instanceof EntityMultipartE_Vehicle && lightLists.get(multipart.multipartJSONName) != null){
+		if(multipart instanceof EntityMultipartE_Vehicle && multipartLightLists.get(multipart.multipartJSONName) != null){
 			EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) multipart;
 			float sunLight = vehicle.worldObj.getSunBrightness(0)*vehicle.worldObj.getLightBrightness(vehicle.getPosition());
 			float blockLight = vehicle.worldObj.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, vehicle.getPosition())/15F;
@@ -322,13 +325,13 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 					}
 				}
 			}
+			GL11.glEnd();
+			GL11.glEndList();
 			
 			//Now finalize the maps.
 			rotatableLists.put(multipart.multipartJSONName, rotatableParts);
 			windowLists.put(multipart.multipartJSONName, windows);
-			lightLists.put(multipart.multipartJSONName, lightParts);
-			GL11.glEnd();
-			GL11.glEndList();
+			multipartLightLists.put(multipart.multipartJSONName, lightParts);
 			multipartDisplayLists.put(multipart.multipartJSONName, displayListIndex);
 		}
 		GL11.glPopMatrix();
@@ -368,6 +371,32 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 	}
 	
+	private static void rotatePart(APart part, float partialTicks, boolean cullface){
+		if(part.turnsWithSteer){
+			if(part.offset.zCoord >= 0){
+				GL11.glRotatef(part.multipart.getSteerAngle(), 0, 1, 0);
+			}else{
+				GL11.glRotatef(-part.multipart.getSteerAngle(), 0, 1, 0);
+			}
+		}
+		
+		if(part.offset.xCoord < 0 && !part.overrideMirror){
+			GL11.glScalef(-1.0F, 1.0F, 1.0F);
+			if(cullface){
+				GL11.glCullFace(GL11.GL_FRONT);
+			}
+		}
+		
+		GL11.glRotated(part.partRotation.xCoord, 1, 0, 0);
+		GL11.glRotated(part.partRotation.yCoord, 0, 1, 0);
+		GL11.glRotated(part.partRotation.zCoord, 0, 0, 1);
+		
+		Vec3d actionRotation = part.getActionRotation(partialTicks);
+		GL11.glRotated(actionRotation.xCoord, 1, 0, 0);
+		GL11.glRotated(actionRotation.yCoord, 0, 1, 0);
+		GL11.glRotated(actionRotation.zCoord, 0, 0, 1);
+	}
+	
 	private static void renderParts(EntityMultipartD_Moving multipart, float partialTicks){
 		for(APart part : multipart.getMultipartParts()){
 			ResourceLocation partModelLocation = part.getModelLocation();
@@ -388,36 +417,23 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
     			GL11.glEnd();
     			GL11.glEndList();
     			partDisplayLists.put(partModelLocation, displayListIndex);
-    		}
+    		}else if(!partLightLists.containsKey(part.partName + part.offset.toString())){
+				List<LightPart> lightParts = new ArrayList<LightPart>();
+				for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(partModelLocation).entrySet()){
+					if(entry.getKey().contains("&")){
+						lightParts.add(new LightPart(entry.getKey(), entry.getValue()));
+					}
+    			}
+				multipartLightLists.put(part.partName + part.offset.toString(), lightParts);
+			}
 			
 			if(!textureMap.containsKey(part.partName)){
 				textureMap.put(part.partName, part.getTextureLocation());
 			}
 			
 			GL11.glPushMatrix();
-    		GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
-    		if(part.turnsWithSteer){
-    			if(part.offset.zCoord >= 0){
-    				GL11.glRotatef(multipart.getSteerAngle(), 0, 1, 0);
-    			}else{
-    				GL11.glRotatef(-multipart.getSteerAngle(), 0, 1, 0);
-    			}
-    		}
-    		
-    		if(part.offset.xCoord < 0 && !part.overrideMirror){
-    			GL11.glScalef(-1.0F, 1.0F, 1.0F);
-    			GL11.glCullFace(GL11.GL_FRONT);
-    		}
-    		
-    		GL11.glRotated(part.partRotation.xCoord, 1, 0, 0);
-    		GL11.glRotated(part.partRotation.yCoord, 0, 1, 0);
-    		GL11.glRotated(part.partRotation.zCoord, 0, 0, 1);
-    		
-    		Vec3d actionRotation = part.getActionRotation(partialTicks);
-    		GL11.glRotated(actionRotation.xCoord, 1, 0, 0);
-    		GL11.glRotated(actionRotation.yCoord, 0, 1, 0);
-    		GL11.glRotated(actionRotation.zCoord, 0, 0, 1);
-    		
+			GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
+			rotatePart(part, partialTicks, true);
     		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
 			GL11.glCallList(partDisplayLists.get(partModelLocation));
 			GL11.glCullFace(GL11.GL_BACK);
@@ -482,7 +498,21 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	}
 	
 	private static void renderLights(EntityMultipartE_Vehicle vehicle, float sunLight, float blockLight, float lightBrightness, float electricFactor, boolean wasRenderedPrior, float partialTicks){
-		for(LightPart light : lightLists.get(vehicle.multipartJSONName)){
+		List<LightPart> vehicleLights = multipartLightLists.get(vehicle.multipartJSONName);
+		Map<LightPart, APart> partLights = new HashMap<LightPart, APart>();
+		List<LightPart> allLights = new ArrayList<LightPart>();
+		allLights.addAll(vehicleLights);
+		for(APart part : vehicle.getMultipartParts()){
+			String partKey = part.partName + part.offset.toString();
+			if(multipartLightLists.containsKey(partKey)){
+				for(LightPart partLight : multipartLightLists.get(partKey)){
+					allLights.add(partLight);
+					partLights.put(partLight, part);
+				}
+			}
+		}
+
+		for(LightPart light : allLights){
 			boolean lightSwitchOn = vehicle.isLightOn(light.type);
 			//Fun with bit shifting!  20 bits make up the light on index here, so align to a 20 tick cycle.
 			boolean lightActuallyOn = lightSwitchOn && ((light.flashBits >> vehicle.ticksExisted%20) & 1) > 0;
@@ -491,12 +521,19 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			
 			GL11.glPushMatrix();
 			//This light may be rotatable.  Check this before continuing.
-			for(RotatablePart rotatable : rotatableLists.get(vehicle.multipartJSONName)){
-				if(rotatable.name.equals(light.name)){
-					rotateObject(vehicle, rotatable, partialTicks);
+			//It could rotate based on a vehicle rotation variable, or a part rotation.
+			if(vehicleLights.contains(light)){
+				for(RotatablePart rotatable : rotatableLists.get(vehicle.multipartJSONName)){
+					if(rotatable.name.equals(light.name)){
+						rotateObject(vehicle, rotatable, partialTicks);
+					}
 				}
+			}else{
+				APart part = partLights.get(light);
+				GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
+				rotatePart(part, partialTicks, false);
 			}
-			
+
 			if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
 				GL11.glPushMatrix();
 				if(overrideCaseBrightness){
@@ -507,7 +544,6 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 					minecraft.entityRenderer.enableLightmap();
 				}
 				GL11.glDisable(GL11.GL_BLEND);
-				
 				//Cover rendering.
 				if(light.renderCover){
 					minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
@@ -600,11 +636,11 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				GL11.glEnable(GL11.GL_LIGHTING);
 				GL11.glPopMatrix();
 			}
-			
 			GL11.glPopMatrix();
 		}
 	}
 	
+	//TODO split this off to the other class.
     public static void drawCone(Vec3d endPoint, double radius, boolean reverse){
 		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
 		GL11.glTexCoord2f(0, 0);
