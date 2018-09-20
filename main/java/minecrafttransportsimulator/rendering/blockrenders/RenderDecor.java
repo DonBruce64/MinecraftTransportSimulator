@@ -8,7 +8,6 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisOriented;
 import minecrafttransportsimulator.blocks.decor.TileEntityDecor6AxisOriented;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.rendering.RenderMultipart;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.EnumFacing;
@@ -147,14 +146,32 @@ public class RenderDecor extends TileEntitySpecialRenderer<TileEntityDecor6AxisO
 		Vec3d endpointVec = new Vec3d(0, 0, 6);
 		GL11.glDepthMask(false);
 		for(byte j=0; j<=2; ++j){
-    		RenderMultipart.drawCone(endpointVec, 3.0F, false);
+			drawLightCone(endpointVec, false);
     	}
-		RenderMultipart.drawCone(endpointVec, 3.0F, true);
+		drawLightCone(endpointVec, true);
 		GL11.glPopMatrix();
 		
     	GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
     	GL11.glDepthMask(true);
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glPopMatrix();
+	}
+	
+	private static void drawLightCone(Vec3d endPoint, boolean reverse){
+		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+		GL11.glTexCoord2f(0, 0);
+		GL11.glVertex3d(0, 0, 0);
+		if(reverse){
+			for(float theta=0; theta < 2*Math.PI + 0.1; theta += 2F*Math.PI/40F){
+				GL11.glTexCoord2f(theta, 1);
+				GL11.glVertex3d(endPoint.xCoord + 3.0F*Math.cos(theta), endPoint.yCoord + 3.0F*Math.sin(theta), endPoint.zCoord);
+			}
+		}else{
+			for(float theta=(float) (2*Math.PI); theta>=0 - 0.1; theta -= 2F*Math.PI/40F){
+				GL11.glTexCoord2f(theta, 1);
+				GL11.glVertex3d(endPoint.xCoord + 3.0F*Math.cos(theta), endPoint.yCoord + 3.0F*Math.sin(theta), endPoint.zCoord);
+			}
+		}
+		GL11.glEnd();
 	}
 }

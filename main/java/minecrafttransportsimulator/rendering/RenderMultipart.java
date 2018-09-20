@@ -625,9 +625,9 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 					//Now that we are at the starting location for the beam, rotate the matrix to get the correct direction.
 					GL11.glDepthMask(false);
 					for(byte j=0; j<=2; ++j){
-			    		drawCone(endpointVec, light.size[i], false);
+			    		drawLightCone(endpointVec, light.size[i], false);
 			    	}
-					drawCone(endpointVec, light.size[i], true);
+					drawLightCone(endpointVec, light.size[i], true);
 					GL11.glPopMatrix();
 				}
 		    	GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -640,8 +640,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 	}
 	
-	//TODO split this off to the other class.
-    public static void drawCone(Vec3d endPoint, double radius, boolean reverse){
+    private static void drawLightCone(Vec3d endPoint, double radius, boolean reverse){
 		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
 		GL11.glTexCoord2f(0, 0);
 		GL11.glVertex3d(0, 0, 0);
