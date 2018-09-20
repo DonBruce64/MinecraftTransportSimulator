@@ -9,6 +9,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartCrate;
 import minecrafttransportsimulator.multipart.parts.PartSeat;
@@ -172,7 +173,8 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	 * Prevent dismounting from this multipart naturally as MC sucks at finding good spots to dismount.
 	 * Instead, chose a better spot manually to prevent the player from getting stuck inside things.
 	 * This event is used to populate a list of riders to dismount the next tick.  This list is cleared when the operation
-	 * is done successfully.  If the operation fails, the rider will still be in the list so there's 
+	 * is done successfully.  If the operation fails, the rider will still be in the list so in that case the
+	 * event should procede as normal to allow regular MC dismounting.
 	 */
 	@SubscribeEvent
 	public static void on(EntityMountEvent event){
@@ -286,8 +288,14 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		this.removePassenger(rider);
 		rider.setSneaking(false);
 		if(!worldObj.isRemote){
-			Vec3d placePosition = RotationSystem.getRotatedPoint(seat.offset.addVector(seat.offset.xCoord > 0 ? 2 : -2, 2, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());
-			AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(placePosition)).expand(2, 2, 2);
+			Vec3d placePosition;
+			PackPart packPart = this.getPackDefForLocation(seat.offset.xCoord, seat.offset.yCoord, seat.offset.zCoord);
+			if(packPart.dismountPos != null){
+				placePosition = RotationSystem.getRotatedPoint(new Vec3d(packPart.dismountPos[0], packPart.dismountPos[1], packPart.dismountPos[2]), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());
+			}else{
+				placePosition = RotationSystem.getRotatedPoint(seat.offset.addVector(seat.offset.xCoord > 0 ? 2 : -2, 0, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());	
+			}
+			AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(placePosition));
 			if(!worldObj.collidesWithAnyBlock(collisionDetectionBox)){
 				rider.setPositionAndRotation(placePosition.xCoord, collisionDetectionBox.minY, placePosition.zCoord, rider.rotationYaw, rider.rotationPitch);
 			}else if(rider instanceof EntityLivingBase){

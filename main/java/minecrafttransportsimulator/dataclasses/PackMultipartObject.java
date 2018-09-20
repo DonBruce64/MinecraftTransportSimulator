@@ -62,6 +62,7 @@ public class PackMultipartObject{
         public List<String> customTypes;
         public float minValue;
         public float maxValue;
+        public float[] dismountPos;
         public PackPart additionalPart;
     }
     
