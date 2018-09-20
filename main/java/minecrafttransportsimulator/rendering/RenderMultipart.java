@@ -47,12 +47,9 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 
-/**Main render class for all multipart entities.
- * Renders the parent model, and all child models that have been registered by
- * {@link registerChildRender}.  Ensures all parts are rendered in the exact
- * location they should be in as all rendering is done in the same operation.
- * Entities don't render above 255 well due to the new chunk visibility system.
- * This code is present to be called manually from
+/**Main render class for all multipart entities.  Renders the multipart, along with all parts.
+ * As entities don't render above 255 well due to the new chunk visibility system, 
+ * this code is called both from the regular render loop and manually from
  * {@link ClientEventSystem#on(RenderWorldLastEvent)}.
  *
  * @author don_bruce
