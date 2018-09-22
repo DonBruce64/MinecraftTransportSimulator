@@ -96,7 +96,7 @@ public abstract class APart{
 			this.isValid = false;
 			if(pack.subParts != null){
 				for(PackPart packPart : pack.subParts){
-					APart subPart = multipart.getPartAtLocation(this.offset.xCoord + packPart.pos[0], this.offset.yCoord + packPart.pos[1], this.offset.zCoord + packPart.pos[2]);
+					APart subPart = multipart.getPartAtLocation((float) this.offset.xCoord + packPart.pos[0], (float) this.offset.yCoord + packPart.pos[1], (float) this.offset.zCoord + packPart.pos[2]);
 					if(subPart != null){
 						subPart.removePart();
 						multipart.removePart(subPart, false);
