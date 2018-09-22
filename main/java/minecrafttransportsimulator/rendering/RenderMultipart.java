@@ -754,7 +754,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 							
 					if(!isPresent && isHoldingPart){
 						Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
-						AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.75F, (float) (offset.yCoord) - 0.75F, (float) (offset.zCoord) - 0.75F, (float) (offset.xCoord) + 0.75F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.75F);
+						AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.5F, (float) (offset.yCoord) - 0.5F, (float) (offset.zCoord) - 0.5F, (float) (offset.xCoord) + 0.5F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.5F);
 						
 						GL11.glPushMatrix();
 						GL11.glDisable(GL11.GL_TEXTURE_2D);

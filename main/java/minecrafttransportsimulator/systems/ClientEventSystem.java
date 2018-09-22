@@ -126,7 +126,7 @@ public final class ClientEventSystem{
 			    		for(float f=1.0F; f<4.0F; f += 0.1F){
 			    			for(Entry<Vec3d, PackPart> packPartEntry : multipart.getAllPossiblePackParts().entrySet()){
 		    					Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey().addVector(0, 0.25F, 0), multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
-		    					MultipartAxisAlignedBB partBox = new MultipartAxisAlignedBB(multipart.getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0.25F, 0), 1.5F, 2.0F);	    					
+		    					MultipartAxisAlignedBB partBox = new MultipartAxisAlignedBB(multipart.getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0.5F, 0), 1.0F, 1.75F);
 		    					
 		    					if(partBox.isVecInside(clickedVec)){
 		    						//Check to make sure this spot is valid (server gets final say).
