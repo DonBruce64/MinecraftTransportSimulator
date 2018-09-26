@@ -19,6 +19,7 @@ sed -i 's/source.getEntity()/source.getTrueSource()/g' $FILE
 sed -i 's/source.getSourceOfDamage()/source.getImmediateSource()/g' $FILE
 sed -i 's/player.getLastAttacker()/player.getAttackingEntity()/g' $FILE
 sed -i 's/player.getDistanceToEntity(/player.getDistance(/g' $FILE
+sed -i 's/intersectsWith/intersects/' $FILE
 sed -i 's/isVecInside(/contains(/g' $FILE
 sed -i 's/expandXyz(/grow(/g' $FILE
 sed -i 's/\.xCoord/\.x/g' $FILE
@@ -37,11 +38,6 @@ fi
 if echo $FILE | grep -q "GUIPartBench"; then 
 	sed -i 's/addInformation(tempStack, player, descriptiveLines, false)/addInformation(tempStack, player.world, descriptiveLines, ITooltipFlag.TooltipFlags.NORMAL)/' $FILE
 	sed -i '3iimport net.minecraft.client.util.ITooltipFlag;' $FILE
-fi
-
-#AABBs had a method name change from intersectsWith to intersects.
-if echo $FILE | grep -q "MultipartAxisAlignedBBCollective"; then
-	sed -i 's/intersectsWith/intersects/' $FILE
 fi
 
 #Rendering brightness was changed to remove partialTicks parameter.  About time seeing as it hasn't been used since 1.7.10.
