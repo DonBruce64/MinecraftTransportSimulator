@@ -172,7 +172,7 @@ public abstract class APart{
 	
 	public final MultipartAxisAlignedBB getAABBWithOffset(Vec3d boxOffset){
 		Vec3d totalOffset = partPos.add(boxOffset);
-		return new MultipartAxisAlignedBB(totalOffset, this.offset, this.getWidth(), this.getHeight());
+		return new MultipartAxisAlignedBB(totalOffset, this.offset, this.getWidth(), this.getHeight(), false);
 	}
 	
 	/**Gets the rotation vector for rendering.

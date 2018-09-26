@@ -123,13 +123,13 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 			for(PackCollisionBox box : pack.collision){
 				Vec3d partOffset = new Vec3d(box.pos[0], box.pos[1], box.pos[2]);
 				Vec3d offset = RotationSystem.getRotatedPoint(partOffset, rotationPitch, rotationYaw, rotationRoll);
-				MultipartAxisAlignedBB newBox = new MultipartAxisAlignedBB(this.getPositionVector().add(offset), partOffset, box.width, box.height);
+				MultipartAxisAlignedBB newBox = new MultipartAxisAlignedBB(this.getPositionVector().add(offset), partOffset, box.width, box.height, box.isInterior);
 				boxList.add(newBox);
 				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.xCoord) + box.width/2F);
-				furthestHeight = (float) Math.max(furthestHeight, Math.abs(newBox.rel.yCoord) + box.height);
+				furthestHeight = (float) Math.max(furthestHeight, Math.abs(newBox.rel.yCoord) + box.height/2F);
 				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.zCoord) + box.width/2F);
 			}
-			this.collisionFrame = new MultipartAxisAlignedBBCollective(this, (float) furthestWidth*2F+0.5F, (float) furthestHeight+0.5F);
+			this.collisionFrame = new MultipartAxisAlignedBBCollective(this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F);
 			return boxList;
 		}else{
 			return new ArrayList<MultipartAxisAlignedBB>(0);

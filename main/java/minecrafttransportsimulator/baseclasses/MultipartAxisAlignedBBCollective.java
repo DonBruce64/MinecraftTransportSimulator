@@ -17,7 +17,7 @@ public class MultipartAxisAlignedBBCollective extends MultipartAxisAlignedBB{
 	private final EntityMultipartC_Colliding multipart;
 	
 	public MultipartAxisAlignedBBCollective(EntityMultipartC_Colliding multipart, float width, float height){
-		super(multipart.getPositionVector(), Vec3d.ZERO, width, height);
+		super(multipart.getPositionVector(), Vec3d.ZERO, width, height, false);
 		this.multipart = multipart;
 	}
 	

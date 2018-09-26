@@ -13,21 +13,23 @@ import net.minecraft.util.math.Vec3d;
  * @author don_bruce
  */
 public class MultipartAxisAlignedBB extends AxisAlignedBB{
+	public final boolean isInterior;
 	public final Vec3d pos;
 	public final Vec3d rel;
 	public final float width;
 	public final float height;
 	
-	public MultipartAxisAlignedBB(Vec3d pos, Vec3d rel, float width, float height){
+	public MultipartAxisAlignedBB(Vec3d pos, Vec3d rel, float width, float height, boolean isInterior){
 		super(pos.xCoord - width/2F, pos.yCoord - height/2F, pos.zCoord - width/2F, pos.xCoord + width/2F, pos.yCoord + height/2F, pos.zCoord + width/2F);
 		this.pos = pos;
 		this.rel = rel;
 		this.width = width;
 		this.height = height;
+		this.isInterior = isInterior;
 	}
 	
 	public MultipartAxisAlignedBB getBoxWithOrigin(Vec3d pos){
-		return new MultipartAxisAlignedBB(pos, this.rel, this.width, this.height);
+		return new MultipartAxisAlignedBB(pos, this.rel, this.width, this.height, this.isInterior);
 	}
 	
 	@Override
@@ -37,6 +39,6 @@ public class MultipartAxisAlignedBB extends AxisAlignedBB{
 	
 	@Override
 	public MultipartAxisAlignedBB expandXyz(double value){
-		return new MultipartAxisAlignedBB(this.pos, this.rel, (float) (this.width + value*2F), (float) (this.height + value*2F));
+		return new MultipartAxisAlignedBB(this.pos, this.rel, (float) (this.width + value*2F), (float) (this.height + value*2F), this.isInterior);
     }
 }

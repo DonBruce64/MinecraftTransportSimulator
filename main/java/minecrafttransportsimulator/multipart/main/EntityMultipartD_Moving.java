@@ -9,6 +9,7 @@ import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartDeltas;
 import minecrafttransportsimulator.systems.RotationSystem;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -397,12 +398,51 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 		}else{
 			//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.
 			if(!(serverDeltaX == 0 && serverDeltaY == 0 && serverDeltaZ == 0)){
-				double deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/25F*Math.abs(serverDeltaX - clientDeltaX);
-				double deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/25F*Math.abs(serverDeltaY - clientDeltaY);
-				double deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/25F*Math.abs(serverDeltaZ - clientDeltaZ);
-				float deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/25F*Math.abs(serverDeltaYaw - clientDeltaYaw);
-				float deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/25F*Math.abs(serverDeltaPitch - clientDeltaPitch);
-				float deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/25F*Math.abs(serverDeltaRoll - clientDeltaRoll);
+				//Check to make sure the delta is non-zero before trying to do complex math to calculate it.
+				//Saves a bit of CPU power due to division and multiplication operations, and prevents constant
+				//movement due to floating-point errors.
+				final double deltaX;
+				if(serverDeltaX - clientDeltaX != 0){
+					deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/25D*Math.abs(serverDeltaX - clientDeltaX);
+				}else{
+					deltaX = 0;
+				}
+				
+				final double deltaY; 
+				if(serverDeltaY - clientDeltaY !=  0){
+					deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/25D*Math.abs(serverDeltaY - clientDeltaY);
+				}else{
+					deltaY = 0;
+				}
+				
+				final double deltaZ; 
+				if(serverDeltaZ - clientDeltaZ !=  0){
+					deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/25D*Math.abs(serverDeltaZ - clientDeltaZ);
+				}else{
+					deltaZ = 0;
+				}
+				
+				final float deltaYaw; 
+				if(serverDeltaYaw - clientDeltaYaw != 0){
+					deltaYaw = motionYaw + (serverDeltaYaw - clientDeltaYaw)/25F*Math.abs(serverDeltaYaw - clientDeltaYaw);
+				}else{
+					deltaYaw = 0;
+				}
+				
+				final float deltaPitch; 
+				if(serverDeltaPitch - clientDeltaPitch != 0){
+					deltaPitch = motionPitch + (serverDeltaPitch - clientDeltaPitch)/25F*Math.abs(serverDeltaPitch - clientDeltaPitch);
+				}else{
+					deltaPitch = 0;
+				}
+				
+				final float deltaRoll; 
+				if(serverDeltaRoll - clientDeltaRoll != 0){
+					deltaRoll = motionRoll + (serverDeltaRoll - clientDeltaRoll)/25F*Math.abs(serverDeltaRoll - clientDeltaRoll);
+				}else{
+					deltaRoll = 0;
+				}
+
 				setPosition(posX + deltaX, posY + deltaY, posZ + deltaZ);
 				rotationYaw += deltaYaw;
 				rotationPitch += deltaPitch;
@@ -413,6 +453,27 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 				rotationPitch += motionPitch;
 				rotationRoll += motionRoll;
 				setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
+			}
+		}
+		
+		//After all movement is done, try and move players on hitboxes.
+		//Note that we need to interpolate the delta here based on actual movement, so don't use motionX!
+		if(this.velocity != 0){
+			for(EntityPlayer player : worldObj.playerEntities){
+				for(MultipartAxisAlignedBB box : this.getCurrentCollisionBoxes()){
+					//Add a slight yOffset to every box to "grab" players standing on collision points.
+					if(box.offset(this.posX - this.prevPosX, this.posY - this.prevPosY + 0.1F, this.posZ - this.prevPosZ).intersectsWith(player.getEntityBoundingBox())){
+						//Player has collided with this multipart.  Adjust movement to allow them to ride on it.
+						//If we are going too fast, the player should slip off the collision box if it's not an interior box.
+						if(Math.abs(this.velocity) <= 0.25 || box.isInterior){
+							player.setPosition(player.posX + (this.posX - this.prevPosX), player.posY + (this.posY - this.prevPosY), player.posZ + (this.posZ - this.prevPosZ));
+						}else if(Math.abs(this.velocity) < 0.5){
+							double slip = (0.5 - Math.abs(this.velocity))*4D;
+							player.setPosition(player.posX + (this.posX - this.prevPosX)*slip, player.posY + (this.posY - this.prevPosY)*slip, player.posZ + (this.posZ - this.prevPosZ)*slip);
+						}
+						break;
+					}
+				}
 			}
 		}
 	}

@@ -70,6 +70,7 @@ public class PackMultipartObject{
         public float[] pos;
         public float width;
         public float height;
+        public boolean isInterior;
     }
     
     public class PackInstrument{

@@ -71,6 +71,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 	
 	@Override
 	public void onEntityUpdate(){
+		super.onEntityUpdate();
 		//We need to get pack data manually if we are on the client-side.
 		///Although we could call this in the constructor, Minecraft changes the
 		//entity IDs after spawning and that fouls things up.
