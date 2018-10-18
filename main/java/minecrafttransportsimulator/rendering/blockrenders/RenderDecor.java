@@ -8,6 +8,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisOriented;
 import minecrafttransportsimulator.blocks.decor.TileEntityDecor6AxisOriented;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.EnumFacing;
@@ -28,7 +29,13 @@ public class RenderDecor extends TileEntitySpecialRenderer<TileEntityDecor6AxisO
 	public void renderTileEntityAt(TileEntityDecor6AxisOriented decor, double x, double y, double z, float partialTicks, int destroyStage){
 		super.renderTileEntityAt(decor, x, y, z, partialTicks, destroyStage);
 		final Vec3i facingVec = EnumFacing.VALUES[decor.rotation].getDirectionVec();
-		final BlockDecor6AxisOriented decorBlock = (BlockDecor6AxisOriented) decor.getWorld().getBlockState(decor.getPos()).getBlock();
+		final Block block = decor.getWorld().getBlockState(decor.getPos()).getBlock();
+		//Check to make sure we have the right block before continuing.
+		//We may not have the right one due to the TE being orphaned for some reason.
+		if(!(block instanceof BlockDecor6AxisOriented)){
+			return;
+		}
+		final BlockDecor6AxisOriented decorBlock = (BlockDecor6AxisOriented) block;
 		final float sunLight = decor.getWorld().getSunBrightness(0)*decor.getWorld().getLightBrightness(decor.getPos());
 		final float blockLight = decor.getWorld().getLightFromNeighborsFor(EnumSkyBlock.BLOCK, decor.getPos())/15F;
 		final float lightBrightness = (float) Math.min((1 - Math.max(sunLight, blockLight)), 1);
