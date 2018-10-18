@@ -8,6 +8,7 @@ import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartDeltas;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -47,7 +48,9 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 	
 	/**List of ground devices on the ground.  Populated after each movement to be used in turning/braking calculations.*/
 	public final List<PartGroundDevice> groundedGroundDevices = new ArrayList<PartGroundDevice>();
-			
+	
+	public final double clingSpeed = ConfigSystem.getDoubleConfig("ClingSpeed");
+	
 	public EntityMultipartD_Moving(World world){
 		super(world);
 	}
@@ -465,10 +468,10 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 					if(box.offset(this.posX - this.prevPosX, this.posY - this.prevPosY + 0.1F, this.posZ - this.prevPosZ).intersectsWith(player.getEntityBoundingBox())){
 						//Player has collided with this multipart.  Adjust movement to allow them to ride on it.
 						//If we are going too fast, the player should slip off the collision box if it's not an interior box.
-						if(Math.abs(this.velocity) <= 0.25 || box.isInterior){
+						if(Math.abs(this.velocity)/speedFactor <= clingSpeed || box.isInterior){
 							player.setPosition(player.posX + (this.posX - this.prevPosX), player.posY + (this.posY - this.prevPosY), player.posZ + (this.posZ - this.prevPosZ));
-						}else if(Math.abs(this.velocity) < 0.5){
-							double slip = (0.5 - Math.abs(this.velocity))*4D;
+						}else if(Math.abs(this.velocity)/speedFactor < 2F*clingSpeed){
+							double slip = (2F*clingSpeed - Math.abs(this.velocity)/speedFactor)*4D;
 							player.setPosition(player.posX + (this.posX - this.prevPosX)*slip, player.posY + (this.posY - this.prevPosY)*slip, player.posZ + (this.posZ - this.prevPosZ)*slip);
 						}
 						break;
