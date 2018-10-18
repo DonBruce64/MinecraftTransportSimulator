@@ -265,6 +265,11 @@ public final class ClientEventSystem{
 	            //First restrict the player's yaw to prevent them from being able to rotate their body in a seat.
 	            Vec3d placementRotation = multipart.getSeatForRider(event.getEntityPlayer()).partRotation;
 	            event.getEntityPlayer().renderYawOffset = (float) (multipart.rotationYaw + placementRotation.yCoord);
+	            if(multipart.rotationPitch > 90 || multipart.rotationPitch < -90){
+	            	event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw*-1F;
+	            }else{
+		            event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw;
+	            }
 	            
 	            //Now add the pitch rotation.
 	            if(!event.getEntityPlayer().equals(minecraft.thePlayer)){
