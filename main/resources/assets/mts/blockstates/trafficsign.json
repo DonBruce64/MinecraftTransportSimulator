@@ -1,0 +1,23 @@
+{
+    "multipart": [
+        {   "apply": { "model": "mts:polecenter" }},
+        {   "when": { "up": "true" },
+            "apply": { "model": "mts:polepart", "x": 180}
+        },
+        {   "when": { "down": "true" },
+            "apply": { "model": "mts:polepart"}
+        },
+        {   "when": { "north": "true" },
+            "apply": { "model": "mts:polepart", "x": 270}
+        },
+        {   "when": { "east": "true" },
+            "apply": { "model": "mts:polepart", "x": 90, "y": 270}
+        },
+        {   "when": { "south": "true" },
+            "apply": { "model": "mts:polepart", "x": 90}
+        },
+        {   "when": { "west": "true" },
+            "apply": { "model": "mts:polepart", "x": 90, "y": 90}
+        }
+    ]
+}

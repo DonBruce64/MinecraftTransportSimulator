@@ -18,6 +18,7 @@ import minecrafttransportsimulator.dataclasses.PackInstrumentObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackFileDefinitions;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
+import minecrafttransportsimulator.dataclasses.PackSignObject;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.items.parts.ItemPartCrate;
 import minecrafttransportsimulator.items.parts.ItemPartCustom;
@@ -49,10 +50,10 @@ import net.minecraft.util.ResourceLocation;
  * @author don_bruce
  */
 public final class PackParserSystem{
-	/**Map that keys the unique name of a multipart to it's pack.  Used for associating packs with saved multiparts.**/
+	/**Map that keys the unique name of a multipart to its pack.  Used for associating packs with saved multiparts.**/
     private static final Map<String, PackMultipartObject> multipartPackMap = new LinkedHashMap<String, PackMultipartObject>();
    
-    /**Map that keys the unique name of a multipart to it's JSON file name.**/
+    /**Map that keys the unique name of a multipart to its JSON file name.**/
     private static final Map<String, String> multipartJSONMap = new HashMap<String, String>();
    
     /**Same function as the multipart map, just for parts.**/
@@ -60,6 +61,9 @@ public final class PackParserSystem{
     
     /**Same function as the multipart map, just for instruments.**/
     private static final Map<String, PackInstrumentObject> partInstrumentMap = new LinkedHashMap<String, PackInstrumentObject>();
+    
+    /**Map that keys the unique name of a sign to its pack.*/
+    private static final Map<String, PackSignObject> signPackMap = new LinkedHashMap<String, PackSignObject>();
     
 	/**Maps multipart, part, and instrument names to their crafting ingredients.*/
 	private static final Map<String, List<ItemStack>> craftingItemMap = new HashMap<String, List<ItemStack>>();
@@ -77,7 +81,7 @@ public final class PackParserSystem{
      * This is done to allow server owners to modify pack JSONs to their liking (say for crafting recipes)
      * and distribute them in their modpacks without having to modify the actual pack JSON.**/
     public static String[] getValidPackContentNames(){
-    	return new String[]{"vehicle", "part", "instrument"};
+    	return new String[]{"vehicle", "part", "instrument", "sign"};
     }
     
     /**Packs should call this upon load to add their vehicles to the mod.**/
@@ -139,6 +143,18 @@ public final class PackParserSystem{
     	}
     }
     
+    /**Packs should call this upon load to add their signs to the mod.**/
+    public static void addSignDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
+    	try{
+	    	PackSignObject pack =  new Gson().fromJson(jsonReader, PackSignObject.class);
+	    	String signName = modID + ":" + jsonFileName;
+    		signPackMap.put(signName, pack);
+    	}catch(Exception e){
+    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
+    		logList.add(e.getMessage());
+    	}
+    }
+    
     /**Helper method to parse crafting strings and register items in the internal MTS crafting system.**/
     private static void registerCrafting(String itemName, String[] materials){
 		final List<ItemStack> materialList = new ArrayList<ItemStack>();
@@ -191,7 +207,14 @@ public final class PackParserSystem{
 	    	for(String jsonFile : jsonFilesToReload){
 	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/instruments/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
 	    		addInstrumentDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
-	    	}	    	
+	    	}
+	    	for(String signJSONFile : signPackMap.keySet()){
+	    		jsonFilesToReload.add(signJSONFile);
+	    	}
+	    	for(String jsonFile : jsonFilesToReload){
+	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/signs/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
+	    		addSignDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
+	    	}	
     	}catch(Exception e){
     		logList.add("AN I/O ERROR WAS ENCOUNTERED WHEN TRYING TO RELOAD PACK DATA");
     		e.printStackTrace();
@@ -238,6 +261,26 @@ public final class PackParserSystem{
     }
     
     
+    //-----START OF INSTRUMENT LOOKUP LOGIC-----
+    public static PackInstrumentObject getInstrument(String name){
+        return partInstrumentMap.get(name);
+    }
+    
+    public static Set<String> getAllInstruments(){
+        return partInstrumentMap.keySet();
+    }
+    
+    
+    //-----START OF SIGN LOOKUP LOGIC-----
+    public static PackSignObject getSign(String name){
+        return signPackMap.get(name);
+    }
+    
+    public static Set<String> getAllSigns(){
+        return signPackMap.keySet();
+    }
+    
+    
     //-----START OF CONSTANTS AND SWITCHES-----
     public static Class<? extends APart> getPartPartClass(String partName){
     	switch(getPartPack(partName).general.type){
@@ -263,15 +306,5 @@ public final class PackParserSystem{
 			case "custom": return ItemPartCustom.class;
 			default: return null;
 		}
-    }
-    
-    
-    //-----START OF INSTRUMENT LOOKUP LOGIC-----
-    public static PackInstrumentObject getInstrument(String name){
-        return partInstrumentMap.get(name);
-    }
-    
-    public static Set<String> getAllInstruments(){
-        return partInstrumentMap.keySet();
     }
 }

@@ -17,13 +17,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.EnumSkyBlock;
 
-public class RenderDecor extends TileEntitySpecialRenderer<TileEntityDecor6AxisOriented>{
+public class RenderDecorLighted extends TileEntitySpecialRenderer<TileEntityDecor6AxisOriented>{
 	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lensflare.png");
 	private static final ResourceLocation lightTexture = new ResourceLocation(MTS.MODID, "textures/rendering/light.png");
 	private static final ResourceLocation lightBeamTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lightbeam.png");
 		
-	public RenderDecor(){}
+	public RenderDecorLighted(){}
 	
 	@Override
 	public void renderTileEntityAt(TileEntityDecor6AxisOriented decor, double x, double y, double z, float partialTicks, int destroyStage){

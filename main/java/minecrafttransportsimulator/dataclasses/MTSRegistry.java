@@ -15,6 +15,7 @@ import minecrafttransportsimulator.blocks.decor.BlockDecor1AxisIsolated;
 import minecrafttransportsimulator.blocks.decor.BlockDecor2AxisIsolated;
 import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisOriented;
 import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisRegular;
+import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisSign;
 import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisSolidConnector;
 import minecrafttransportsimulator.items.core.ItemInstrument;
 import minecrafttransportsimulator.items.core.ItemKey;
@@ -60,6 +61,7 @@ import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpConnection;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
+import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
 import minecrafttransportsimulator.packets.tileentities.PacketTileEntityClientServerHandshake;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
@@ -143,6 +145,8 @@ public final class MTSRegistry{
 	public static final Item itemBlockTrafficSignal = new ItemBlock(trafficSignal);
 	public static final Block streetLight = new BlockDecor6AxisOriented(Material.IRON, 5.0F, 30.0F);
 	public static final Item itemBlockStreetLight = new ItemBlock(streetLight);
+	public static final Block trafficSign = new BlockDecor6AxisSign(Material.IRON, 5.0F, 30.0F);
+	public static final Item itemBlockTrafficSign = new ItemBlock(trafficSign);
 		
 	//Decorative ground blocks.
 	public static final Block trafficCone = new BlockDecor1AxisIsolated(Material.CLAY, 0.4375F, 0.75F, 0.6F, 0.75F);
@@ -308,6 +312,7 @@ public final class MTSRegistry{
 		//Packets in packets.tileentity
 		registerPacket(PacketFuelPumpConnection.class, PacketFuelPumpConnection.Handler.class, true, false);
 		registerPacket(PacketFuelPumpFillDrain.class, PacketFuelPumpFillDrain.Handler.class, true, false);
+		registerPacket(PacketSignChange.class, PacketSignChange.Handler.class, true, true);
 		registerPacket(PacketTileEntityClientServerHandshake.class, PacketTileEntityClientServerHandshake.Handler.class, true, true);
 		
 		//Packets in packets.multipart.
@@ -466,6 +471,13 @@ public final class MTSRegistry{
 				'L', Items.GLOWSTONE_DUST,
 				'A', Items.REDSTONE,
 				'S', Blocks.STONE_SLAB,
+				'P', itemBlockPole);
+		//Traffic sign
+		registerRecipe(new ItemStack(itemBlockTrafficSign),
+				"   ",
+				" I ",
+				" P ",
+				'I', Items.IRON_INGOT,
 				'P', itemBlockPole);
 		//Traffic cone
 		registerRecipe(new ItemStack(itemBlockTrafficCone, 2),

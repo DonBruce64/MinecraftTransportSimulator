@@ -219,6 +219,7 @@ tile.trafficcone.name=Traffic Cone
 tile.crashbarrier.name=Crash Barrier
 tile.trafficsignal.name=Traffic Signal
 tile.streetlight.name=Street Light
+tile.trafficsign.name=Traffic Sign
 
 itemGroup.tabMTSCore=MTS Core Components
 key.categories.mts=Minecraft Transport Simulator
