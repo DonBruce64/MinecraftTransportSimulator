@@ -23,7 +23,7 @@ public class ItemMultipart extends Item{
 	public ItemMultipart(String multipartName){
 		super();
 		this.multipartName = multipartName;
-		this.setUnlocalizedName(multipartName.substring(multipartName.indexOf(':') + 1));
+		this.setUnlocalizedName(multipartName.replace(":", "."));
 		this.setCreativeTab(MTSRegistry.packTabs.get(multipartName.substring(0, multipartName.indexOf(':'))));
 	}
 	

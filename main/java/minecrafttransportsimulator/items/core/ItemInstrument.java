@@ -19,7 +19,7 @@ public class ItemInstrument extends Item{
 		super();
 		this.instrumentName = instrumentName;
 		this.validVehicles = PackParserSystem.getInstrument(instrumentName).general.validVehicles;
-		this.setUnlocalizedName(instrumentName.substring(instrumentName.indexOf(':') + 1));
+		this.setUnlocalizedName(instrumentName.replace(":", "."));
 		this.setCreativeTab(MTSRegistry.packTabs.get(instrumentName.substring(0, instrumentName.indexOf(':'))));
 	}
 	

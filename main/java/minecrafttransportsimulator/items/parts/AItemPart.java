@@ -12,7 +12,7 @@ public abstract class AItemPart extends Item{
 	public AItemPart(String partName){
 		super();
 		this.partName = partName;
-		this.setUnlocalizedName(partName.substring(partName.indexOf(':') + 1));
+		this.setUnlocalizedName(partName.replace(":", "."));
 		this.setCreativeTab(MTSRegistry.packTabs.get(partName.substring(0, partName.indexOf(':'))));
 	}
 	
