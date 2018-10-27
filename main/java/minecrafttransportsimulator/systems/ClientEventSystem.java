@@ -16,6 +16,7 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
 import minecrafttransportsimulator.multipart.main.EntityMultipartC_Colliding;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.parts.APart;
+import minecrafttransportsimulator.multipart.parts.PartSeat;
 import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartAttacked;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartKey;
@@ -262,34 +263,37 @@ public final class ClientEventSystem{
         	GL11.glPushMatrix();
         	EntityMultipartC_Colliding multipart = (EntityMultipartC_Colliding) event.getEntityPlayer().getRidingEntity();
 	        if(multipart.pack != null){
-	            //First restrict the player's yaw to prevent them from being able to rotate their body in a seat.
-	            Vec3d placementRotation = multipart.getSeatForRider(event.getEntityPlayer()).partRotation;
-	            event.getEntityPlayer().renderYawOffset = (float) (multipart.rotationYaw + placementRotation.yCoord);
-	            if(multipart.rotationPitch > 90 || multipart.rotationPitch < -90){
-	            	event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw*-1F;
-	            }else{
-		            event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw;
-	            }
-	            
-	            //Now add the pitch rotation.
-	            if(!event.getEntityPlayer().equals(minecraft.thePlayer)){
-	                EntityPlayer masterPlayer = Minecraft.getMinecraft().thePlayer;
-	                EntityPlayer renderedPlayer = event.getEntityPlayer();
-	                float playerDistanceX = (float) (renderedPlayer.posX - masterPlayer.posX);
-	                float playerDistanceY = (float) (renderedPlayer.posY - masterPlayer.posY);
-	                float playerDistanceZ = (float) (renderedPlayer.posZ - masterPlayer.posZ);
-	                GL11.glTranslatef(playerDistanceX, playerDistanceY, playerDistanceZ);
-	                GL11.glTranslated(0, masterPlayer.getEyeHeight(), 0);
-	                GL11.glRotated(multipart.rotationPitch + placementRotation.xCoord, Math.cos(multipart.rotationYaw  * 0.017453292F), 0, Math.sin(multipart.rotationYaw * 0.017453292F));
-	                GL11.glRotated(multipart.rotationRoll + placementRotation.zCoord, -Math.sin(multipart.rotationYaw  * 0.017453292F), 0, Math.cos(multipart.rotationYaw * 0.017453292F));
-	                GL11.glTranslated(0, -masterPlayer.getEyeHeight(), 0);
-	                GL11.glTranslatef(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
-	            }else{
-	                GL11.glTranslated(0, event.getEntityPlayer().getEyeHeight(), 0);
-	                GL11.glRotated(multipart.rotationPitch + placementRotation.xCoord, Math.cos(multipart.rotationYaw  * 0.017453292F), 0, Math.sin(multipart.rotationYaw * 0.017453292F));
-	                GL11.glRotated(multipart.rotationRoll + placementRotation.zCoord, -Math.sin(multipart.rotationYaw  * 0.017453292F), 0, Math.cos(multipart.rotationYaw * 0.017453292F));
-	                GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
-	            }
+	        	PartSeat seat = multipart.getSeatForRider(event.getEntityPlayer());
+	        	if(seat != null){
+		            //First restrict the player's yaw to prevent them from being able to rotate their body in a seat.
+		            Vec3d placementRotation = seat.partRotation;
+		            event.getEntityPlayer().renderYawOffset = (float) (multipart.rotationYaw + placementRotation.yCoord);
+		            if(multipart.rotationPitch > 90 || multipart.rotationPitch < -90){
+		            	event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw*-1F;
+		            }else{
+			            event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw;
+		            }
+		            
+		            //Now add the pitch rotation.
+		            if(!event.getEntityPlayer().equals(minecraft.thePlayer)){
+		                EntityPlayer masterPlayer = Minecraft.getMinecraft().thePlayer;
+		                EntityPlayer renderedPlayer = event.getEntityPlayer();
+		                float playerDistanceX = (float) (renderedPlayer.posX - masterPlayer.posX);
+		                float playerDistanceY = (float) (renderedPlayer.posY - masterPlayer.posY);
+		                float playerDistanceZ = (float) (renderedPlayer.posZ - masterPlayer.posZ);
+		                GL11.glTranslatef(playerDistanceX, playerDistanceY, playerDistanceZ);
+		                GL11.glTranslated(0, masterPlayer.getEyeHeight(), 0);
+		                GL11.glRotated(multipart.rotationPitch + placementRotation.xCoord, Math.cos(multipart.rotationYaw  * 0.017453292F), 0, Math.sin(multipart.rotationYaw * 0.017453292F));
+		                GL11.glRotated(multipart.rotationRoll + placementRotation.zCoord, -Math.sin(multipart.rotationYaw  * 0.017453292F), 0, Math.cos(multipart.rotationYaw * 0.017453292F));
+		                GL11.glTranslated(0, -masterPlayer.getEyeHeight(), 0);
+		                GL11.glTranslatef(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
+		            }else{
+		                GL11.glTranslated(0, event.getEntityPlayer().getEyeHeight(), 0);
+		                GL11.glRotated(multipart.rotationPitch + placementRotation.xCoord, Math.cos(multipart.rotationYaw  * 0.017453292F), 0, Math.sin(multipart.rotationYaw * 0.017453292F));
+		                GL11.glRotated(multipart.rotationRoll + placementRotation.zCoord, -Math.sin(multipart.rotationYaw  * 0.017453292F), 0, Math.cos(multipart.rotationYaw * 0.017453292F));
+		                GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
+		            }
+	        	}
         	}
         }
     }
