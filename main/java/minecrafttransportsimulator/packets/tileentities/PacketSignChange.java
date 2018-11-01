@@ -29,8 +29,10 @@ public class PacketSignChange extends APacketTileEntity{
 	public void fromBytes(ByteBuf buf){
 		super.fromBytes(buf);
 		this.definition = ByteBufUtils.readUTF8String(buf);
-		for(byte i=0; i<PackParserSystem.getSign(definition).general.textLines.length; ++i){
-			this.text.add(ByteBufUtils.readUTF8String(buf));
+		if(PackParserSystem.getSign(definition).general.textLines != null){
+			for(byte i=0; i<PackParserSystem.getSign(definition).general.textLines.length; ++i){
+				this.text.add(ByteBufUtils.readUTF8String(buf));
+			}
 		}
 	}
 
@@ -38,8 +40,10 @@ public class PacketSignChange extends APacketTileEntity{
 	public void toBytes(ByteBuf buf){
 		super.toBytes(buf);
 		ByteBufUtils.writeUTF8String(buf, this.definition);
-		for(byte i=0; i<PackParserSystem.getSign(definition).general.textLines.length; ++i){
-			ByteBufUtils.writeUTF8String(buf, text.get(i));
+		if(PackParserSystem.getSign(definition).general.textLines != null){
+			for(byte i=0; i<PackParserSystem.getSign(definition).general.textLines.length; ++i){
+				ByteBufUtils.writeUTF8String(buf, text.get(i));
+			}
 		}
 	}
 
