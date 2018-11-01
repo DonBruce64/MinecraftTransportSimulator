@@ -4,13 +4,21 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject;
+import minecrafttransportsimulator.dataclasses.PackPartObject;
+import minecrafttransportsimulator.items.core.ItemMultipart;
+import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
+import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.OBJParserSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
@@ -34,6 +42,11 @@ public class GUIManual extends GuiScreen{
 	
 	private GuiButton leftButton;
 	private GuiButton rightButton;
+	
+	//These are only used in devMode for making fake item icons from models for item icon images.
+	int xOffset = 160;
+	int yOffset = 200;
+	float scale = 6F;
 	
 	public GUIManual(ItemStack stack){
 		//Get saved page data
@@ -123,6 +136,55 @@ public class GUIManual extends GuiScreen{
 	
 	private void drawCover(){
 		GL11.glPushMatrix();
+		
+		//We cheat and render an item here in devMode for making item icon pictures.
+		//If no devMode, then do things as normal.
+		if(ConfigSystem.getBooleanConfig("DevMode") && mc.isSingleplayer()){
+			ItemStack stack = mc.thePlayer.getHeldItemOffhand();
+			if(stack != null && stack.getItem() != null){
+				final ResourceLocation modelLocation;
+				final ResourceLocation textureLocation;
+				if(stack.getItem() instanceof ItemMultipart){
+					ItemMultipart item = (ItemMultipart) stack.getItem();
+					String packName = item.multipartName.substring(0, item.multipartName.indexOf(':'));
+					modelLocation = new ResourceLocation(packName, "objmodels/vehicles/" + PackParserSystem.getMultipartJSONName(item.multipartName) + ".obj");
+					textureLocation = new ResourceLocation(packName, "textures/vehicles/" + item.multipartName.substring(item.multipartName.indexOf(':') + 1) + ".png");
+				}else if(stack.getItem() instanceof AItemPart){
+					AItemPart item = (AItemPart) stack.getItem();
+					PackPartObject pack = PackParserSystem.getPartPack(item.partName);
+					String packName = item.partName.substring(0, item.partName.indexOf(':'));
+					if(pack.general.modelName != null){
+						modelLocation = new ResourceLocation(packName, "objmodels/parts/" + pack.general.modelName + ".obj");
+					}else{
+						modelLocation = new ResourceLocation(packName, "objmodels/parts/" + item.partName.substring(item.partName.indexOf(':') + 1) + ".obj");
+					}
+					textureLocation = new ResourceLocation(packName, "textures/parts/" + item.partName.substring(item.partName.indexOf(':') + 1) + ".png");
+				}else{
+					modelLocation = null;
+					textureLocation = null;
+				}
+				
+				if(modelLocation != null){
+					this.mc.getTextureManager().bindTexture(textureLocation);
+					GL11.glTranslatef(guiLeft + xOffset, guiTop + yOffset, 0);
+					GL11.glRotatef(180, 0, 0, 1);
+					GL11.glRotatef(45, 0, 1, 0);
+					GL11.glRotatef(35.264F, 1, 0, 1);
+					GL11.glScalef(scale, scale, scale);
+					GL11.glBegin(GL11.GL_TRIANGLES);
+					for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(modelLocation).entrySet()){
+						for(Float[] vertex : entry.getValue()){
+							GL11.glTexCoord2f(vertex[3], vertex[4]);
+							GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+							GL11.glVertex3f(-vertex[0], vertex[1], vertex[2]);
+						}
+					}
+					GL11.glEnd();
+				}
+			}
+		}
+		
+		
 		GL11.glTranslatef(guiLeft + 170, guiTop + 25, 0);
 		GL11.glScalef(1.5F, 1.5F, 1.5F);
 		fontRendererObj.drawString("MINECRAFT", 0, 10, Color.WHITE.getRGB());
@@ -196,6 +258,21 @@ public class GUIManual extends GuiScreen{
 	protected void keyTyped(char typedChar, int keyCode) throws IOException{
 		if(keyCode == 1 || mc.gameSettings.keyBindInventory.isActiveAndMatches(keyCode)){
 			super.keyTyped('0', 1);
+        }else if(ConfigSystem.getBooleanConfig("DevMode") && mc.isSingleplayer()){
+        	//Do devMode manipulation here.
+        	if(keyCode == Keyboard.KEY_UP){
+        		--yOffset;
+        	}else if(keyCode == Keyboard.KEY_DOWN){
+        		++yOffset;
+        	}else if(keyCode == Keyboard.KEY_LEFT){
+        		--xOffset;
+        	}else if(keyCode == Keyboard.KEY_RIGHT){
+        		++xOffset;
+        	}else if(keyCode == Keyboard.KEY_PRIOR){
+        		scale += 0.5F;
+        	}else if(keyCode == Keyboard.KEY_NEXT){
+        		scale -= 0.5F;
+        	}
         }
 	}
 }
