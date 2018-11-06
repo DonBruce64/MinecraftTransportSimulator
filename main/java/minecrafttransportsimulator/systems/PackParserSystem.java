@@ -208,6 +208,8 @@ public final class PackParserSystem{
 	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/instruments/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
 	    		addInstrumentDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
 	    	}
+	    	jsonFilesToReload.clear();
+	    	
 	    	for(String signJSONFile : signPackMap.keySet()){
 	    		jsonFilesToReload.add(signJSONFile);
 	    	}
