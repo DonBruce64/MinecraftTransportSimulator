@@ -50,9 +50,7 @@ public class GUISign extends GuiScreen{
 		
 	public GUISign(BlockDecor6AxisSign block, EntityPlayer player){
 		this.decor = (TileEntityDecor6AxisSign) player.worldObj.getTileEntity(block.lastClickedPos);
-		this.decorTemp = new TileEntityDecor6AxisSign();
-		decorTemp.definition = decor.definition;
-		decorTemp.text = decor.text;
+		this.decorTemp = new TileEntityDecor6AxisSign();		
 		this.player = player;
 		if(!decor.definition.isEmpty()){
 			packName = decor.definition.substring(0, decor.definition.indexOf(':'));
@@ -113,7 +111,18 @@ public class GUISign extends GuiScreen{
 		
 		//Now make the selected sign render in the GUI using the TE code.
 		if(!signName.isEmpty()){
+			//Set the definition and text of the sign.
 			decorTemp.definition = signName;
+			if(pack.general.textLines != null){
+				for(byte i=0; i<PackParserSystem.getSign(decorTemp.definition).general.textLines.length; ++i){
+					if(decor.definition.equals(decorTemp.definition) && decor.text.size() > i){
+						decorTemp.text.add(decor.text.get(i));
+					}else{
+						decorTemp.text.add("");
+					}
+				}
+			}
+			
 			GL11.glPushMatrix();
 			GL11.glDisable(GL11.GL_LIGHTING);
 			GL11.glTranslatef(guiLeft + 196, guiTop + 107, 100);
@@ -127,11 +136,7 @@ public class GUISign extends GuiScreen{
 			if(pack.general.textLines != null){
 				for(byte i=0; i<pack.general.textLines.length; ++i){
 					GuiTextField textBox = signTextBoxes.get(i);
-					if(decorTemp.text.isEmpty() || decorTemp.text.get(i).isEmpty()){
-						textBox.setText("");
-					}else{
-						textBox.setText(decorTemp.text.get(i));
-					}
+					textBox.setText(decorTemp.text.get(i));
 					textBox.setMaxStringLength(pack.general.textLines[i].characters);
 					textBox.drawTextBox();
 					textBox.setEnabled(true);
@@ -232,6 +237,7 @@ public class GUISign extends GuiScreen{
 				textBox.setText("");
 				textBox.setEnabled(false);
 			}
+			decorTemp.text.clear();
 		}
 	}
 }
