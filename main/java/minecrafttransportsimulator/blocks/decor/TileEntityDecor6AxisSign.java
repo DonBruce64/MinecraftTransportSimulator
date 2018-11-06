@@ -22,12 +22,14 @@ public class TileEntityDecor6AxisSign extends TileEntityDecor6AxisOriented{
         PackSignObject pack = PackParserSystem.getSign(definition);
         if(pack != null){
 	        text.clear();
-	        for(byte i=0; i<PackParserSystem.getSign(definition).general.textLines.length; ++i){
-	        	if(tagCompound.hasKey("text" + String.valueOf(i))){
-	        		text.add(tagCompound.getString("text" + String.valueOf(i)));
-	        	}else{
-	        		text.add("");
-	        	}
+	        if(PackParserSystem.getSign(definition).general.textLines != null){
+		        for(byte i=0; i<PackParserSystem.getSign(definition).general.textLines.length; ++i){
+		        	if(tagCompound.hasKey("text" + String.valueOf(i))){
+		        		text.add(tagCompound.getString("text" + String.valueOf(i)));
+		        	}else{
+		        		text.add("");
+		        	}
+		        }
 	        }
         }
     }
