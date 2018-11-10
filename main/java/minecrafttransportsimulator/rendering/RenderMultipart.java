@@ -368,7 +368,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 	}
 	
-	private static void rotatePart(APart part, float partialTicks, boolean cullface){
+	private static void rotatePart(APart part, Vec3d actionRotation, boolean cullface){
 		if(part.turnsWithSteer){
 			if(part.offset.zCoord >= 0){
 				GL11.glRotatef(part.multipart.getSteerAngle(), 0, 1, 0);
@@ -388,7 +388,6 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glRotated(part.partRotation.yCoord, 0, 1, 0);
 		GL11.glRotated(part.partRotation.zCoord, 0, 0, 1);
 		
-		Vec3d actionRotation = part.getActionRotation(partialTicks);
 		GL11.glRotated(actionRotation.xCoord, 1, 0, 0);
 		GL11.glRotated(actionRotation.yCoord, 0, 1, 0);
 		GL11.glRotated(actionRotation.zCoord, 0, 0, 1);
@@ -421,16 +420,17 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 						lightParts.add(new LightPart(entry.getKey(), entry.getValue()));
 					}
     			}
-				multipartLightLists.put(part.partName + part.offset.toString(), lightParts);
+				partLightLists.put(part.partName + part.offset.toString(), lightParts);
 			}
 			
 			if(!textureMap.containsKey(part.partName)){
 				textureMap.put(part.partName, part.getTextureLocation());
 			}
 			
+			Vec3d actionRotation = part.getActionRotation(partialTicks);
 			GL11.glPushMatrix();
 			GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
-			rotatePart(part, partialTicks, true);
+			rotatePart(part, actionRotation, true);
     		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
 			GL11.glCallList(partDisplayLists.get(partModelLocation));
 			GL11.glCullFace(GL11.GL_BACK);
@@ -501,8 +501,8 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		allLights.addAll(vehicleLights);
 		for(APart part : vehicle.getMultipartParts()){
 			String partKey = part.partName + part.offset.toString();
-			if(multipartLightLists.containsKey(partKey)){
-				for(LightPart partLight : multipartLightLists.get(partKey)){
+			if(partLightLists.containsKey(partKey)){
+				for(LightPart partLight : partLightLists.get(partKey)){
 					allLights.add(partLight);
 					partLights.put(partLight, part);
 				}
@@ -528,7 +528,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			}else{
 				APart part = partLights.get(light);
 				GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
-				rotatePart(part, partialTicks, false);
+				rotatePart(part, part.getActionRotation(partialTicks), false);
 			}
 
 			if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
