@@ -205,65 +205,67 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 			}
 		}
 		
-		if(optionalGroundDevice != null && !yAxis && collisionDepth > 0){
-			//Ground device has collided.
-			//Check to see if this collision can be avoided if the device is moved upwards.
-			//Expand this box slightly to ensure we see the collision even with floating-point errors.
-			collidingAABBList = getAABBCollisions(box.offset(xAxis ? motion.xCoord : 0, optionalGroundDevice.getHeight()*1.5F, zAxis ? motion.zCoord : 0).expandXyz(0.05F), optionalGroundDevice, null);
-			if(collidingAABBList.isEmpty()){
-				//Ground device can be moved upward out of the way.
-				//Return -3 and deal with this later.
-				return -3;
-			}else if(collisionDepth > 0.3){
-				//Ground device couldn't be moved out of the way and hit too fast;
-				//Break it off the multipart and return.
-				if(!worldObj.isRemote){
-					this.removePart(optionalGroundDevice, true);
+		if(collisionDepth > 0){
+			if(optionalGroundDevice != null && !yAxis){
+				//Ground device has collided.
+				//Check to see if this collision can be avoided if the device is moved upwards.
+				//Expand this box slightly to ensure we see the collision even with floating-point errors.
+				collidingAABBList = getAABBCollisions(box.offset(xAxis ? motion.xCoord : 0, optionalGroundDevice.getHeight()*1.5F, zAxis ? motion.zCoord : 0).expandXyz(0.05F), optionalGroundDevice, null);
+				if(collidingAABBList.isEmpty()){
+					//Ground device can be moved upward out of the way.
+					//Return -3 and deal with this later.
+					return -3;
+				}else if(collisionDepth > 0.3){
+					//Ground device couldn't be moved out of the way and hit too fast;
+					//Break it off the multipart and return.
+					if(!worldObj.isRemote){
+						this.removePart(optionalGroundDevice, true);
+					}
+					return -1;
 				}
-				return -1;
-			}
-		}else if(optionalGroundDevice == null){
-			//Not a ground device, therefore we are a core collision box and
-			//need to check to see if we can break some blocks or if we need to explode.
-			//Don't bother with this logic if it's impossible for us to break anything.
-			double velocity = Math.hypot(motion.xCoord, motion.zCoord);
-			if(velocity > 0 && !yAxis){
-				byte blockPosIndex = 0;
-				while(blockPosIndex < collidedBlockPos.size()){
-					BlockPos pos = collidedBlockPos.get(blockPosIndex);
-					float hardness = worldObj.getBlockState(pos).getBlockHardness(worldObj, pos);
-					if(hardness <= velocity*currentMass/250F && hardness >= 0){
-						hardnessHitThisTick += hardness;
-						if(ConfigSystem.getBooleanConfig("BlockBreakage")){
-							collidedBlockPos.remove(blockPosIndex);
-							motionX *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
-							motionY *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
-							motionZ *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
-							if(!worldObj.isRemote){
-								worldObj.destroyBlock(pos, true);
+			}else if(optionalGroundDevice == null){
+				//Not a ground device, therefore we are a core collision box and
+				//need to check to see if we can break some blocks or if we need to explode.
+				//Don't bother with this logic if it's impossible for us to break anything.
+				double velocity = Math.hypot(motion.xCoord, motion.zCoord);
+				if(velocity > 0 && !yAxis){
+					byte blockPosIndex = 0;
+					while(blockPosIndex < collidedBlockPos.size()){
+						BlockPos pos = collidedBlockPos.get(blockPosIndex);
+						float hardness = worldObj.getBlockState(pos).getBlockHardness(worldObj, pos);
+						if(hardness <= velocity*currentMass/250F && hardness >= 0){
+							hardnessHitThisTick += hardness;
+							if(ConfigSystem.getBooleanConfig("BlockBreakage")){
+								collidedBlockPos.remove(blockPosIndex);
+								motionX *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
+								motionY *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
+								motionZ *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
+								if(!worldObj.isRemote){
+									worldObj.destroyBlock(pos, true);
+								}
+							}else{
+								++blockPosIndex;
 							}
 						}else{
 							++blockPosIndex;
 						}
-					}else{
-						++blockPosIndex;
+					}
+	
+					if(hardnessHitThisTick > currentMass/(0.75+velocity)/250F){
+						if(!worldObj.isRemote){
+							this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord, true);
+						}
+						return -2;
+					}else if(collidedBlockPos.isEmpty()){
+						return 0;
 					}
 				}
-
-				if(hardnessHitThisTick > currentMass/(0.75+velocity)/250F){
+				if(collisionDepth > 0.3){
 					if(!worldObj.isRemote){
 						this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord, true);
 					}
-					return -2;
-				}else if(collidedBlockPos.isEmpty()){
-					return 0;
+					return -2;	
 				}
-			}
-			if(collisionDepth > 0.3){
-				if(!worldObj.isRemote){
-					this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord, true);
-				}
-				return -2;	
 			}
 		}
 		return collisionDepth;
