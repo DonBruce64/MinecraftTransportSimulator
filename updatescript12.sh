@@ -51,9 +51,18 @@ if echo $FILE | grep -q "RenderFuelPump"; then
 	sed -i 's/super.renderTileEntityAt(pump, x, y, z, partialTicks, destroyStage)/super.render(pump, x, y, z, partialTicks, destroyStage, alpha)/' $FILE
 fi
 
-if echo $FILE | grep -q "RenderDecor"; then
+if echo $FILE | grep -q "RenderDecorLighted"; then
 	sed -i 's/renderTileEntityAt(TileEntityDecor6AxisOriented decor, double x, double y, double z, float partialTicks, int destroyStage)/render(TileEntityDecor6AxisOriented decor, double x, double y, double z, float partialTicks, int destroyStage, float alpha)/' $FILE
 	sed -i 's/super.renderTileEntityAt(decor, x, y, z, partialTicks, destroyStage)/super.render(decor, x, y, z, partialTicks, destroyStage, alpha)/' $FILE
+fi
+
+if echo $FILE | grep -q "RenderDecorSign"; then
+	sed -i 's/renderTileEntityAt(TileEntityDecor6AxisSign decor, double x, double y, double z, float partialTicks, int destroyStage)/render(TileEntityDecor6AxisSign decor, double x, double y, double z, float partialTicks, int destroyStage, float alpha)/' $FILE
+	sed -i 's/super.renderTileEntityAt(decor, x, y, z, partialTicks, destroyStage)/super.render(decor, x, y, z, partialTicks, destroyStage, alpha)/' $FILE
+fi
+
+if echo $FILE | grep -q "GUISign"; then
+	sed -i 's/TileEntityRendererDispatcher.instance.renderTileEntityAt(decorTemp, -0.5F, -0.5F, -0.5F, renderPartialTicks)/TileEntityRendererDispatcher.instance.render(decorTemp, -0.5F, -0.5F, -0.5F, renderPartialTicks, 0)/' $FILE
 fi
 
 #Items had a few changes on their methods with respect to parameters.
