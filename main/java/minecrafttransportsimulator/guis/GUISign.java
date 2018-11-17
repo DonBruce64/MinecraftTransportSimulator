@@ -184,9 +184,13 @@ public class GUISign extends GuiScreen{
 			super.keyTyped('0', 1);
         }else{
         	for(byte i=0; i<signTextBoxes.size(); ++i){
-        		GuiTextField box = signTextBoxes.get(i);
-        		if(box.textboxKeyTyped(typedChar, keyCode)){
-        			decorTemp.text.set(i, box.getText());
+        		//This check *shouldn't* be needed, but some users crash without it.
+        		//Likely other mods not playing nice with GUIs....
+        		if(decorTemp.text.size() > i){
+	        		GuiTextField box = signTextBoxes.get(i);
+	        		if(box.textboxKeyTyped(typedChar, keyCode)){
+	        			decorTemp.text.set(i, box.getText());
+	        		}
         		}
         	}
         }
