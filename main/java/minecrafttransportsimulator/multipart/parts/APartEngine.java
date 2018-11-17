@@ -41,6 +41,12 @@ public abstract class APartEngine extends APart implements FXPart{
 	private double coolingFactor;
 	private final EntityMultipartE_Vehicle vehicle;
 	
+	//Rotation data.  Should be set by each engine type individually.
+	protected double engineRotationLast;
+	protected double engineRotation;
+	protected double engineDriveshaftRotation;
+	protected double engineDriveshaftRotationLast;
+	
 	//Constants
 	public static final float engineStallRPM = 300;
 	public static final float engineStartRPM = 500;
@@ -347,6 +353,14 @@ public abstract class APartEngine extends APart implements FXPart{
 	
 	protected boolean isInLiquid(){
 		return multipart.worldObj.getBlockState(new BlockPos(partPos)).getMaterial().isLiquid();
+	}
+	
+	public double getEngineRotation(float partialTicks){
+		return engineRotation + (engineRotation - engineRotationLast)*partialTicks;
+	}
+	
+	public double getDriveshaftRotation(float partialTicks){
+		return engineDriveshaftRotation + (engineDriveshaftRotation - engineDriveshaftRotationLast)*partialTicks;
 	}
 
 	@Override

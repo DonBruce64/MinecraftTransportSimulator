@@ -24,6 +24,7 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.Light
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.VehicleInstrument;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.multipart.parts.APart;
+import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.multipart.parts.PartEngineCar;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -64,7 +65,10 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	private static final Map<ResourceLocation, Integer> partDisplayLists = new HashMap<ResourceLocation, Integer>();
 	
 	/**Rotatable parts for models.  Keyed by multipart JSON name.*/
-	private static final Map<String, List<RotatablePart>> rotatableLists = new HashMap<String, List<RotatablePart>>();
+	private static final Map<String, List<RotatablePart>> multipartRotatableLists = new HashMap<String, List<RotatablePart>>();
+	
+	/**Rotatable parts for parts.  Keyed by part name.*/
+	private static final Map<String, List<RotatablePart>> partRotatableLists = new HashMap<String, List<RotatablePart>>();
 	
 	/**Window parts for models.  Keyed by multipart JSON name.*/
 	private static final Map<String, List<WindowPart>> windowLists = new HashMap<String, List<WindowPart>>();
@@ -101,7 +105,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			GL11.glDeleteLists(index, 1);
 		}
 		partDisplayLists.clear();
-		rotatableLists.clear();
+		multipartRotatableLists.clear();
 		windowLists.clear();
 		multipartLightLists.clear();
 	}
@@ -276,10 +280,10 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			
 			//The display list only renders static parts.  We need to render dynamic ones manually.
 			//If this is a window, don't render it as that gets done all at once later.
-			for(RotatablePart rotatable : rotatableLists.get(multipart.multipartJSONName)){
+			for(RotatablePart rotatable : multipartRotatableLists.get(multipart.multipartJSONName)){
 				if(!rotatable.name.contains("window")){
 					GL11.glPushMatrix();
-					rotateObject(multipart, rotatable, partialTicks);
+					rotateModelObject(multipart, rotatable, partialTicks);
 					GL11.glBegin(GL11.GL_TRIANGLES);
 					for(Float[] vertex : rotatable.vertices){
 						GL11.glTexCoord2f(vertex[3], vertex[4]);
@@ -304,7 +308,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				//Do add lights, as they will be rendered both as part of the model and with special things.
 				boolean shouldShapeBeInDL = true;
 				if(entry.getKey().contains("$")){
-					rotatableParts.add(new RotatablePart(multipart, entry.getKey(), entry.getValue()));
+					rotatableParts.add(new RotatablePart(entry.getKey(), entry.getValue(), multipart.pack.rendering.rotatableModelObjects));
 					shouldShapeBeInDL = false;
 				}
 				if(entry.getKey().contains("&")){
@@ -326,7 +330,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			GL11.glEndList();
 			
 			//Now finalize the maps.
-			rotatableLists.put(multipart.multipartJSONName, rotatableParts);
+			multipartRotatableLists.put(multipart.multipartJSONName, rotatableParts);
 			windowLists.put(multipart.multipartJSONName, windows);
 			multipartLightLists.put(multipart.multipartJSONName, lightParts);
 			multipartDisplayLists.put(multipart.multipartJSONName, displayListIndex);
@@ -334,9 +338,9 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glPopMatrix();
 	}
 	
-	private static void rotateObject(EntityMultipartD_Moving multipart, RotatablePart rotatable, float partialTicks){
+	private static void rotateModelObject(EntityMultipartD_Moving multipart, RotatablePart rotatable, float partialTicks){
 		for(byte i=0; i<rotatable.rotationVariables.length; ++i){
-			float rotation = getRotationAngleForVariable(multipart, rotatable.rotationVariables[i], partialTicks);
+			float rotation = getRotationAngleForModelVariable(multipart, rotatable.rotationVariables[i], partialTicks);
 			if(rotation != 0){
 				GL11.glTranslated(rotatable.rotationPoints[i].xCoord, rotatable.rotationPoints[i].yCoord, rotatable.rotationPoints[i].zCoord);
 				GL11.glRotated(rotation*rotatable.rotationMagnitudes[i], rotatable.rotationAxis[i].xCoord, rotatable.rotationAxis[i].yCoord, rotatable.rotationAxis[i].zCoord);
@@ -345,15 +349,15 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 	}
 	
-	private static float getRotationAngleForVariable(EntityMultipartD_Moving multipart, String variable, float partialTicks){
+	private static float getRotationAngleForModelVariable(EntityMultipartD_Moving multipart, String variable, float partialTicks){
 		switch(variable){
 			case("door"): return multipart.parkingBrakeOn && multipart.velocity == 0 && !multipart.locked ? 60 : 0;
 			case("throttle"): return ((EntityMultipartE_Vehicle) multipart).throttle/4F;
 			case("brake"): return multipart.brakeOn ? 25 : 0;
 			case("p_brake"): return multipart.parkingBrakeOn ? 30 : 0;
 			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0))).getGearshiftRotation() : 0;
-			case("engine"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) : 0);
-			case("driveshaft"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? ((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).getDriveshaftRotation(partialTicks) : 0);
+			case("engine"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? ((APartEngine) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) : 0);
+			case("driveshaft"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? ((APartEngine) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).getDriveshaftRotation(partialTicks) : 0);
 			case("steeringwheel"): return multipart.getSteerAngle();
 			
 			case("aileron"): return ((EntityMultipartF_Plane) multipart).aileronAngle/10F;
@@ -364,6 +368,99 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			case("trim_elevator"): return ((EntityMultipartF_Plane) multipart).elevatorTrim/10F;
 			case("trim_rudder"): return ((EntityMultipartF_Plane) multipart).rudderTrim/10F;
 			case("reverser"): return ((EntityMultipartF_Plane) multipart).reversePercent/1F;
+			default: return 0;
+		}
+	}
+	
+	private static void renderParts(EntityMultipartD_Moving multipart, float partialTicks){
+		for(APart part : multipart.getMultipartParts()){
+			ResourceLocation partModelLocation = part.getModelLocation();
+			if(partModelLocation == null){
+				continue;
+			}else if(!partDisplayLists.containsKey(partModelLocation)){
+    			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation);
+    			int displayListIndex = GL11.glGenLists(1);
+    			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
+    			GL11.glBegin(GL11.GL_TRIANGLES);
+    			List<RotatablePart> rotatableParts = new ArrayList<RotatablePart>();
+    			
+    			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
+    				if(entry.getKey().contains("$")){
+    					rotatableParts.add(new RotatablePart(entry.getKey(), entry.getValue(), part.pack.rendering.rotatableModelObjects));
+    				}else{
+	    				for(Float[] vertex : entry.getValue()){
+	    					GL11.glTexCoord2f(vertex[3], vertex[4]);
+	    					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+	    					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+	    				}
+    				}
+    			}
+    			GL11.glEnd();
+    			GL11.glEndList();
+    			partDisplayLists.put(partModelLocation, displayListIndex);
+    			partRotatableLists.put(part.partName, rotatableParts);
+    		}else if(!partLightLists.containsKey(part.partName + part.offset.toString())){
+				List<LightPart> lightParts = new ArrayList<LightPart>();
+				for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(partModelLocation).entrySet()){
+					if(entry.getKey().contains("&")){
+						lightParts.add(new LightPart(entry.getKey(), entry.getValue()));
+					}
+    			}
+				partLightLists.put(part.partName + part.offset.toString(), lightParts);
+			}
+			
+			if(!textureMap.containsKey(part.partName)){
+				textureMap.put(part.partName, part.getTextureLocation());
+			}
+			
+			Vec3d actionRotation = part.getActionRotation(partialTicks);
+			GL11.glPushMatrix();
+			GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
+			rotatePart(part, actionRotation, true);
+    		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
+			GL11.glCallList(partDisplayLists.get(partModelLocation));
+			
+			//The display list only renders static parts.  We need to render dynamic ones manually.
+			for(RotatablePart rotatable : partRotatableLists.get(part.partName)){
+				GL11.glPushMatrix();
+				rotatePartObject(part, rotatable, partialTicks);
+				GL11.glBegin(GL11.GL_TRIANGLES);
+				for(Float[] vertex : rotatable.vertices){
+					GL11.glTexCoord2f(vertex[3], vertex[4]);
+					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+				}
+				GL11.glEnd();
+				GL11.glPopMatrix();
+			}
+			
+			GL11.glCullFace(GL11.GL_BACK);
+			GL11.glPopMatrix();
+        }
+	}
+	
+	private static void rotatePartObject(APart part, RotatablePart rotatable, float partialTicks){
+		for(byte i=0; i<rotatable.rotationVariables.length; ++i){
+			float rotation = getRotationAngleForPartVariable(part, rotatable.rotationVariables[i], partialTicks);
+			if(rotation != 0){
+				GL11.glTranslated(rotatable.rotationPoints[i].xCoord, rotatable.rotationPoints[i].yCoord, rotatable.rotationPoints[i].zCoord);
+				GL11.glRotated(rotation*rotatable.rotationMagnitudes[i], rotatable.rotationAxis[i].xCoord, rotatable.rotationAxis[i].yCoord, rotatable.rotationAxis[i].zCoord);
+				GL11.glTranslated(-rotatable.rotationPoints[i].xCoord, -rotatable.rotationPoints[i].yCoord, -rotatable.rotationPoints[i].zCoord);
+			}
+		}
+	}
+	
+	private static float getRotationAngleForPartVariable(APart part, String variable, float partialTicks){
+		if(part instanceof APartEngine){
+			APartEngine engine = (APartEngine) part;
+			switch(variable){
+				case("engine"): return (float) engine.getEngineRotation(partialTicks);
+				case("driveshaft"): return (float) engine.getDriveshaftRotation(partialTicks);
+			}
+		}
+		switch(variable){
+			case("door"): return part.multipart.parkingBrakeOn && part.multipart.velocity == 0 && !part.multipart.locked ? 60 : 0;
+			case("steeringwheel"): return part.multipart.getSteerAngle();
 			default: return 0;
 		}
 	}
@@ -393,51 +490,6 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glRotated(actionRotation.zCoord, 0, 0, 1);
 	}
 	
-	private static void renderParts(EntityMultipartD_Moving multipart, float partialTicks){
-		for(APart part : multipart.getMultipartParts()){
-			ResourceLocation partModelLocation = part.getModelLocation();
-			if(partModelLocation == null){
-				continue;
-			}else if(!partDisplayLists.containsKey(partModelLocation)){
-    			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation);
-    			int displayListIndex = GL11.glGenLists(1);
-    			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-    			GL11.glBegin(GL11.GL_TRIANGLES);
-    			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
-    				for(Float[] vertex : entry.getValue()){
-    					GL11.glTexCoord2f(vertex[3], vertex[4]);
-    					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-    					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-    				}
-    			}
-    			GL11.glEnd();
-    			GL11.glEndList();
-    			partDisplayLists.put(partModelLocation, displayListIndex);
-    		}else if(!partLightLists.containsKey(part.partName + part.offset.toString())){
-				List<LightPart> lightParts = new ArrayList<LightPart>();
-				for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(partModelLocation).entrySet()){
-					if(entry.getKey().contains("&")){
-						lightParts.add(new LightPart(entry.getKey(), entry.getValue()));
-					}
-    			}
-				partLightLists.put(part.partName + part.offset.toString(), lightParts);
-			}
-			
-			if(!textureMap.containsKey(part.partName)){
-				textureMap.put(part.partName, part.getTextureLocation());
-			}
-			
-			Vec3d actionRotation = part.getActionRotation(partialTicks);
-			GL11.glPushMatrix();
-			GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
-			rotatePart(part, actionRotation, true);
-    		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
-			GL11.glCallList(partDisplayLists.get(partModelLocation));
-			GL11.glCullFace(GL11.GL_BACK);
-			GL11.glPopMatrix();
-        }
-	}
-	
 	private static void renderWindows(EntityMultipartD_Moving multipart, float partialTicks){
 		minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
 		//Iterate through all windows.
@@ -447,9 +499,9 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				//This is a window or set of windows.  Like the model, it will be triangle-based.
 				//However, windows may be rotatable.  Check this before continuing.
 				WindowPart window = windowLists.get(multipart.multipartJSONName).get(i);
-				for(RotatablePart rotatable : rotatableLists.get(multipart.multipartJSONName)){
+				for(RotatablePart rotatable : multipartRotatableLists.get(multipart.multipartJSONName)){
 					if(rotatable.name.equals(window.name)){
-						rotateObject(multipart, rotatable, partialTicks);
+						rotateModelObject(multipart, rotatable, partialTicks);
 					}
 				}
 				//If this window is a quad, draw quads.  Otherwise draw tris.
@@ -520,15 +572,20 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			//This light may be rotatable.  Check this before continuing.
 			//It could rotate based on a vehicle rotation variable, or a part rotation.
 			if(vehicleLights.contains(light)){
-				for(RotatablePart rotatable : rotatableLists.get(vehicle.multipartJSONName)){
+				for(RotatablePart rotatable : multipartRotatableLists.get(vehicle.multipartJSONName)){
 					if(rotatable.name.equals(light.name)){
-						rotateObject(vehicle, rotatable, partialTicks);
+						rotateModelObject(vehicle, rotatable, partialTicks);
 					}
 				}
 			}else{
 				APart part = partLights.get(light);
 				GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
 				rotatePart(part, part.getActionRotation(partialTicks), false);
+				for(RotatablePart rotatable : partRotatableLists.get(part.partName)){
+					if(rotatable.name.equals(light.name)){
+						rotatePartObject(part, rotatable, partialTicks);
+					}
+				}
 			}
 
 			if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
@@ -818,24 +875,24 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		private final float[] rotationMagnitudes;
 		private final String[] rotationVariables;
 		
-		private RotatablePart(EntityMultipartD_Moving multipart, String name, Float[][] vertices){
+		private RotatablePart(String name, Float[][] vertices, List<PackRotatableModelObject> rotatableModelObjects){
 			this.name = name.toLowerCase();
 			this.vertices = vertices;
-			this.rotationPoints = getRotationPoints(multipart, name);
+			this.rotationPoints = getRotationPoints(name, rotatableModelObjects);
 			
-			Vec3d rotationAxisTemp[] = getRotationAxis(multipart, name);
+			Vec3d rotationAxisTemp[] = getRotationAxis(name, rotatableModelObjects);
 			this.rotationAxis = new Vec3d[rotationAxisTemp.length];
 			this.rotationMagnitudes = new float[rotationAxisTemp.length];
 			for(byte i=0; i<rotationAxisTemp.length; ++i){
 				rotationAxis[i] = rotationAxisTemp[i].normalize();
 				rotationMagnitudes[i] = (float) rotationAxisTemp[i].lengthVector();
 			}
-			this.rotationVariables = getRotationVariables(multipart, name);
+			this.rotationVariables = getRotationVariables(name, rotatableModelObjects);
 		}
 		
-		private static Vec3d[] getRotationPoints(EntityMultipartD_Moving multipart, String name){
+		private static Vec3d[] getRotationPoints(String name, List<PackRotatableModelObject> rotatableModelObjects){
 			List<Vec3d> rotationPoints = new ArrayList<Vec3d>();
-			for(PackRotatableModelObject rotatable : multipart.pack.rendering.rotatableModelObjects){
+			for(PackRotatableModelObject rotatable : rotatableModelObjects){
 				if(rotatable.partName.equals(name)){
 					if(rotatable.rotationPoint != null){
 						rotationPoints.add(new Vec3d(rotatable.rotationPoint[0], rotatable.rotationPoint[1], rotatable.rotationPoint[2]));
@@ -845,9 +902,9 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			return rotationPoints.toArray(new Vec3d[rotationPoints.size()]);
 		}
 		
-		private static Vec3d[] getRotationAxis(EntityMultipartD_Moving multipart, String name){
+		private static Vec3d[] getRotationAxis(String name, List<PackRotatableModelObject> rotatableModelObjects){
 			List<Vec3d> rotationAxis = new ArrayList<Vec3d>();
-			for(PackRotatableModelObject rotatable : multipart.pack.rendering.rotatableModelObjects){
+			for(PackRotatableModelObject rotatable : rotatableModelObjects){
 				if(rotatable.partName.equals(name)){
 					if(rotatable.rotationAxis != null){
 						rotationAxis.add(new Vec3d(rotatable.rotationAxis[0], rotatable.rotationAxis[1], rotatable.rotationAxis[2]));
@@ -857,9 +914,9 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			return rotationAxis.toArray(new Vec3d[rotationAxis.size()]);
 		}
 		
-		private static String[] getRotationVariables(EntityMultipartD_Moving multipart, String name){
+		private static String[] getRotationVariables(String name, List<PackRotatableModelObject> rotatableModelObjects){
 			List<String> rotationVariables = new ArrayList<String>();
-			for(PackRotatableModelObject rotatable : multipart.pack.rendering.rotatableModelObjects){
+			for(PackRotatableModelObject rotatable : rotatableModelObjects){
 				if(rotatable.partName.equals(name)){
 					if(rotatable.partName != null){
 						rotationVariables.add(rotatable.rotationVariable.toLowerCase());

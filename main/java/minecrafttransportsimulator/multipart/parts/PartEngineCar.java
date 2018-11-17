@@ -10,10 +10,6 @@ public class PartEngineCar extends APartEngine{
 	public byte currentGear = 1;
 	private boolean spinningOut;
 	private double engineForce;
-	private double engineRotationLast;
-	private double engineRotation;
-	private double engineDriveshaftRotation;
-	private double engineDriveshaftRotationLast;
 	private final EntityMultipartF_Car car;
 
 	public PartEngineCar(EntityMultipartD_Moving multipart, PackPart packPart, String partName, NBTTagCompound dataTag){
@@ -173,14 +169,6 @@ public class PartEngineCar extends APartEngine{
 	
 	public float getGearshiftRotation(){
 		return pack.engine.isAutomatic ? Math.min(1, currentGear)*15F : currentGear*5;
-	}
-	
-	public double getEngineRotation(float partialTicks){
-		return engineRotation + (engineRotation - engineRotationLast)*partialTicks;
-	}
-	
-	public double getDriveshaftRotation(float partialTicks){
-		return engineDriveshaftRotation + (engineDriveshaftRotation - engineDriveshaftRotationLast)*partialTicks;
 	}
 	
 	public double getForceOutput(){

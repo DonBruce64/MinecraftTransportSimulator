@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackRotatableModelObject;
 
 public class PackPartObject{
 	public PartGeneralConfig general;
@@ -12,6 +13,7 @@ public class PackPartObject{
     public PartPropellerConfig propeller;
     public PartCustomConfig custom;
     public List<PackPart> subParts = new ArrayList<PackPart>();
+    public PartRenderingConfig rendering;
 
     public class PartGeneralConfig{
     	public String type;
@@ -56,5 +58,9 @@ public class PackPartObject{
     public class PartCustomConfig{
     	public float width;
     	public float height;
+    }
+    
+    public class PartRenderingConfig{
+        public List<PackRotatableModelObject> rotatableModelObjects = new ArrayList<PackRotatableModelObject>();
     }
 }

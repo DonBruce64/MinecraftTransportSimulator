@@ -33,6 +33,11 @@ public class PartEngineAircraft extends APartEngine{
 				RPM = Math.max(RPM - 10, 0);
 			}
 		}
+		
+		engineRotationLast = engineRotation;
+		engineRotation += RPM*1200D/360D;
+		engineDriveshaftRotationLast = engineDriveshaftRotation;
+		engineDriveshaftRotation += RPM*1200D/360D*pack.engine.gearRatios[0];
 	}
 	
 	@Override
