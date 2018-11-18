@@ -497,12 +497,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 						rotateModelObject(multipart, rotatable, partialTicks);
 					}
 				}
-				//If this window is a quad, draw quads.  Otherwise draw tris.
-				if(window.vertices.length == 4){
-					GL11.glBegin(GL11.GL_QUADS);
-				}else{
-					GL11.glBegin(GL11.GL_TRIANGLES);
-				}
+				GL11.glBegin(GL11.GL_TRIANGLES);
 				for(Float[] vertex : window.vertices){
 					GL11.glTexCoord2f(vertex[3], vertex[4]);
 					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
