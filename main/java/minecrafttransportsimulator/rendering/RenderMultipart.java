@@ -67,8 +67,8 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	/**Rotatable parts for models.  Keyed by multipart JSON name.*/
 	private static final Map<String, List<RotatablePart>> multipartRotatableLists = new HashMap<String, List<RotatablePart>>();
 	
-	/**Rotatable parts for parts.  Keyed by part name.*/
-	private static final Map<String, List<RotatablePart>> partRotatableLists = new HashMap<String, List<RotatablePart>>();
+	/**Rotatable parts for parts.  Keyed by part ResourceLocation (this allows for part model changes).*/
+	private static final Map<ResourceLocation, List<RotatablePart>> partRotatableLists = new HashMap<ResourceLocation, List<RotatablePart>>();
 	
 	/**Window parts for models.  Keyed by multipart JSON name.*/
 	private static final Map<String, List<WindowPart>> windowLists = new HashMap<String, List<WindowPart>>();
@@ -398,7 +398,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
     			GL11.glEnd();
     			GL11.glEndList();
     			partDisplayLists.put(partModelLocation, displayListIndex);
-    			partRotatableLists.put(part.partName, rotatableParts);
+    			partRotatableLists.put(partModelLocation, rotatableParts);
     		}else if(!partLightLists.containsKey(part.partName + part.offset.toString())){
 				List<LightPart> lightParts = new ArrayList<LightPart>();
 				for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(partModelLocation).entrySet()){
@@ -421,7 +421,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			GL11.glCallList(partDisplayLists.get(partModelLocation));
 			
 			//The display list only renders static parts.  We need to render dynamic ones manually.
-			for(RotatablePart rotatable : partRotatableLists.get(part.partName)){
+			for(RotatablePart rotatable : partRotatableLists.get(partModelLocation)){
 				GL11.glPushMatrix();
 				rotatePartObject(part, rotatable, partialTicks);
 				GL11.glBegin(GL11.GL_TRIANGLES);
