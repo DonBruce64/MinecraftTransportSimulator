@@ -441,20 +441,17 @@ public final class ControlSystem{
 		}
 		
 		//Check starter.
-		if(ControlsKeyboard.CAR_START.isPressed()){
-			if(car.getEngineByNumber((byte) 0) != null){
-				if(ControlsKeyboard.CAR_MOD.isPressed()){
-					MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_OFF));
-				}else{
-					MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_ON));
-					MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 0), PacketEngineTypes.ES_ON));
-				}
-			}
-		}else{
-			if(car.getEngineByNumber((byte) 0) != null){
+		if(car.getEngineByNumber((byte) 0) != null){
+			if(ControlsKeyboardDynamic.CAR_STOP.isPressed() || ControlsJoystick.CAR_STOP.isPressed()){
+				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_OFF));
+			}else if(ControlsKeyboard.CAR_START.isPressed()){
+				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_ON));
+				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 0), PacketEngineTypes.ES_ON));
+			}else{
 				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 0), PacketEngineTypes.ES_OFF));
 			}
 		}
+		
 		
 		//Check if we are shifting.
 		if(ControlsKeyboard.CAR_SHIFT_U.isPressed()){
@@ -582,6 +579,7 @@ public final class ControlSystem{
 		CAR_SHIFT_D(false, true),
 		CAR_HORN(false, false),
 		CAR_START(false, false),
+		CAR_STOP(false, false),
 		CAR_LIGHTS(false, true),
 		CAR_LIGHTS_SPECIAL(false, true),
 		CAR_PARK(false, true),
