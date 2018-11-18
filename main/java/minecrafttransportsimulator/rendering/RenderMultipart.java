@@ -343,6 +343,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	
 	private static float getRotationAngleForModelVariable(EntityMultipartD_Moving multipart, String variable, float partialTicks){
 		switch(variable){
+			case("cycle"): return multipart.worldObj.getTotalWorldTime()%20;
 			case("door"): return multipart.parkingBrakeOn && multipart.velocity == 0 && !multipart.locked ? 60 : 0;
 			case("throttle"): return ((EntityMultipartE_Vehicle) multipart).throttle/4F;
 			case("brake"): return multipart.brakeOn ? 25 : 0;
@@ -450,6 +451,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			}
 		}
 		switch(variable){
+			case("cycle"): return part.multipart.worldObj.getTotalWorldTime()%20;
 			case("door"): return part.multipart.parkingBrakeOn && part.multipart.velocity == 0 && !part.multipart.locked ? 60 : 0;
 			case("steeringwheel"): return part.multipart.getSteerAngle();
 			default: return 0;
