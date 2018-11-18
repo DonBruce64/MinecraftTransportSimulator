@@ -58,34 +58,26 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	private static final Minecraft minecraft = Minecraft.getMinecraft();
 	
-	/**Display list GL integers.  Keyed by multipart name name.*/
+	//MULTIPART MAPS.  Maps are keyed by JSON name.
 	private static final Map<String, Integer> multipartDisplayLists = new HashMap<String, Integer>();
-	
-	/**Display list GL integers.  Keyed by part ResourceLocation (this allows for part model changes).*/
-	private static final Map<ResourceLocation, Integer> partDisplayLists = new HashMap<ResourceLocation, Integer>();
-	
-	/**Rotatable parts for models.  Keyed by multipart JSON name.*/
 	private static final Map<String, List<RotatablePart>> multipartRotatableLists = new HashMap<String, List<RotatablePart>>();
-	
-	/**Rotatable parts for parts.  Keyed by part ResourceLocation (this allows for part model changes).*/
-	private static final Map<ResourceLocation, List<RotatablePart>> partRotatableLists = new HashMap<ResourceLocation, List<RotatablePart>>();
-	
-	/**Window parts for models.  Keyed by multipart JSON name.*/
+	private static final Map<String, List<LightPart>> multipartLightLists = new HashMap<String, List<LightPart>>();
 	private static final Map<String, List<WindowPart>> windowLists = new HashMap<String, List<WindowPart>>();
 	
-	/**Lights for models.  Keyed by multipart JSON name.*/
-	private static final Map<String, List<LightPart>> multipartLightLists = new HashMap<String, List<LightPart>>();
+	//PART MAPS.  Maps are keyed by the part model location.
+	private static final Map<ResourceLocation, Integer> partDisplayLists = new HashMap<ResourceLocation, Integer>();
+	private static final Map<ResourceLocation, List<RotatablePart>> partRotatableLists = new HashMap<ResourceLocation, List<RotatablePart>>();
+	private static final Map<ResourceLocation, List<LightPart>> partLightLists = new HashMap<ResourceLocation, List<LightPart>>();
 	
-	/**Lights for parts.  Keyed by a combination of part name and position.*/
-	private static final Map<String, List<LightPart>> partLightLists = new HashMap<String, List<LightPart>>();
-	
-	/**Multipart texture name.  Keyed by multipart name (NOT JSON!) or part name.*/
+	//COMMON MAPS.  Keyed by either multipart name or part name.
 	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
 	
+	//Maps to check last render times for each multipart.
 	private static final Map<EntityMultipartD_Moving, Byte> lastRenderPass = new HashMap<EntityMultipartD_Moving, Byte>();
 	private static final Map<EntityMultipartD_Moving, Long> lastRenderTick = new HashMap<EntityMultipartD_Moving, Long>();
 	private static final Map<EntityMultipartD_Moving, Float> lastRenderPartial = new HashMap<EntityMultipartD_Moving, Float>();
-		
+	
+	//Constants for built-in textures.
 	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lensflare.png");
 	private static final ResourceLocation lightTexture = new ResourceLocation(MTS.MODID, "textures/rendering/light.png");
@@ -295,13 +287,13 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				}
 			}
 		}else{
+			List<RotatablePart> rotatableParts = new ArrayList<RotatablePart>();
+			List<LightPart> lightParts = new ArrayList<LightPart>();
+			List<WindowPart> windows = new ArrayList<WindowPart>();
 			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(new ResourceLocation(multipart.multipartName.substring(0, multipart.multipartName.indexOf(':')), "objmodels/vehicles/" + multipart.multipartJSONName + ".obj"));
 			int displayListIndex = GL11.glGenLists(1);
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 			GL11.glBegin(GL11.GL_TRIANGLES);
-			List<RotatablePart> rotatableParts = new ArrayList<RotatablePart>();
-			List<WindowPart> windows = new ArrayList<WindowPart>();
-			List<LightPart> lightParts = new ArrayList<LightPart>();
 			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
 				//Don't add rotatable model parts or windows to the display list.
 				//Those go in separate maps, with windows going into both a rotatable and window mapping.
@@ -331,8 +323,8 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			
 			//Now finalize the maps.
 			multipartRotatableLists.put(multipart.multipartJSONName, rotatableParts);
-			windowLists.put(multipart.multipartJSONName, windows);
 			multipartLightLists.put(multipart.multipartJSONName, lightParts);
+			windowLists.put(multipart.multipartJSONName, windows);
 			multipartDisplayLists.put(multipart.multipartJSONName, displayListIndex);
 		}
 		GL11.glPopMatrix();
@@ -378,64 +370,63 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			if(partModelLocation == null){
 				continue;
 			}else if(!partDisplayLists.containsKey(partModelLocation)){
-    			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation);
+				List<RotatablePart> rotatableParts = new ArrayList<RotatablePart>();
+    			List<LightPart> lightParts = new ArrayList<LightPart>();
+				Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation);
     			int displayListIndex = GL11.glGenLists(1);
     			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
     			GL11.glBegin(GL11.GL_TRIANGLES);
-    			List<RotatablePart> rotatableParts = new ArrayList<RotatablePart>();
-    			
     			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
+    				boolean shouldShapeBeInDL = true;
     				if(entry.getKey().contains("$")){
     					rotatableParts.add(new RotatablePart(entry.getKey(), entry.getValue(), part.pack.rendering.rotatableModelObjects));
-    				}else{
-	    				for(Float[] vertex : entry.getValue()){
-	    					GL11.glTexCoord2f(vertex[3], vertex[4]);
-	    					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-	    					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-	    				}
+    					shouldShapeBeInDL = false;
+    				}
+    				if(entry.getKey().contains("&")){
+    					lightParts.add(new LightPart(entry.getKey(), entry.getValue()));
+    				}
+    				if(shouldShapeBeInDL){
+    					for(Float[] vertex : entry.getValue()){
+    						GL11.glTexCoord2f(vertex[3], vertex[4]);
+    						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+    						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+    					}
     				}
     			}
     			GL11.glEnd();
     			GL11.glEndList();
     			partDisplayLists.put(partModelLocation, displayListIndex);
     			partRotatableLists.put(partModelLocation, rotatableParts);
-    		}else if(!partLightLists.containsKey(part.partName + part.offset.toString())){
-				List<LightPart> lightParts = new ArrayList<LightPart>();
-				for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(partModelLocation).entrySet()){
-					if(entry.getKey().contains("&")){
-						lightParts.add(new LightPart(entry.getKey(), entry.getValue()));
-					}
+    			partLightLists.put(partModelLocation, lightParts);
+    		}else{
+    			if(!textureMap.containsKey(part.partName)){
+    				textureMap.put(part.partName, part.getTextureLocation());
     			}
-				partLightLists.put(part.partName + part.offset.toString(), lightParts);
-			}
-			
-			if(!textureMap.containsKey(part.partName)){
-				textureMap.put(part.partName, part.getTextureLocation());
-			}
-			
-			Vec3d actionRotation = part.getActionRotation(partialTicks);
-			GL11.glPushMatrix();
-			GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
-			rotatePart(part, actionRotation, true);
-    		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
-			GL11.glCallList(partDisplayLists.get(partModelLocation));
-			
-			//The display list only renders static parts.  We need to render dynamic ones manually.
-			for(RotatablePart rotatable : partRotatableLists.get(partModelLocation)){
-				GL11.glPushMatrix();
-				rotatePartObject(part, rotatable, partialTicks);
-				GL11.glBegin(GL11.GL_TRIANGLES);
-				for(Float[] vertex : rotatable.vertices){
-					GL11.glTexCoord2f(vertex[3], vertex[4]);
-					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-				}
-				GL11.glEnd();
-				GL11.glPopMatrix();
-			}
-			
-			GL11.glCullFace(GL11.GL_BACK);
-			GL11.glPopMatrix();
+    			
+    			Vec3d actionRotation = part.getActionRotation(partialTicks);
+    			GL11.glPushMatrix();
+    			GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
+    			rotatePart(part, actionRotation, true);
+        		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
+    			GL11.glCallList(partDisplayLists.get(partModelLocation));
+    			
+    			//The display list only renders static parts.  We need to render dynamic ones manually.
+    			for(RotatablePart rotatable : partRotatableLists.get(partModelLocation)){
+    				GL11.glPushMatrix();
+    				rotatePartObject(part, rotatable, partialTicks);
+    				GL11.glBegin(GL11.GL_TRIANGLES);
+    				for(Float[] vertex : rotatable.vertices){
+    					GL11.glTexCoord2f(vertex[3], vertex[4]);
+    					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+    					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+    				}
+    				GL11.glEnd();
+    				GL11.glPopMatrix();
+    			}
+    			
+    			GL11.glCullFace(GL11.GL_BACK);
+    			GL11.glPopMatrix();
+    		}
         }
 	}
 	
@@ -552,12 +543,9 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		List<LightPart> allLights = new ArrayList<LightPart>();
 		allLights.addAll(vehicleLights);
 		for(APart part : vehicle.getMultipartParts()){
-			String partKey = part.partName + part.offset.toString();
-			if(partLightLists.containsKey(partKey)){
-				for(LightPart partLight : partLightLists.get(partKey)){
-					allLights.add(partLight);
-					partLights.put(partLight, part);
-				}
+			for(LightPart partLight : partLightLists.get(part.getModelLocation())){
+				allLights.add(partLight);
+				partLights.put(partLight, part);
 			}
 		}
 
@@ -581,7 +569,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				APart part = partLights.get(light);
 				GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
 				rotatePart(part, part.getActionRotation(partialTicks), false);
-				for(RotatablePart rotatable : partRotatableLists.get(part.partName)){
+				for(RotatablePart rotatable : partRotatableLists.get(part.getModelLocation())){
 					if(rotatable.name.equals(light.name)){
 						rotatePartObject(part, rotatable, partialTicks);
 					}
