@@ -22,6 +22,7 @@ import minecrafttransportsimulator.packets.control.LightPacket;
 import minecrafttransportsimulator.packets.control.ReverseThrustPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.packets.control.ShiftPacket;
+import minecrafttransportsimulator.packets.control.SirenPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
@@ -401,8 +402,13 @@ public final class ControlSystem{
 		
 		//Check steering, turn signals, and lights.
 		if(ControlsKeyboardDynamic.CAR_SIREN.isPressed()){
+			MTS.MTSNet.sendToServer(new SirenPacket(car.getEntityId()));
+		}else if(ControlsKeyboard.CAR_LIGHTS_SPECIAL.isPressed()){
 			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.EMERGENCYLIGHT));
-		}else if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_R.isPressed()){
+		}
+			
+			
+		if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_R.isPressed()){
 			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.RIGHTTURNLIGHT));
 		}else if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_L.isPressed()){
 			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.LEFTTURNLIGHT));
@@ -496,6 +502,7 @@ public final class ControlSystem{
 		CAR_HORN(Keyboard.KEY_C, ControlsJoystick.CAR_HORN, false),
 		CAR_START(Keyboard.KEY_Z, ControlsJoystick.CAR_START, false),
 		CAR_LIGHTS(Keyboard.KEY_X, ControlsJoystick.CAR_LIGHTS, true),
+		CAR_LIGHTS_SPECIAL(Keyboard.KEY_V, ControlsJoystick.CAR_LIGHTS_SPECIAL, true),
 		CAR_ZOOM_I(Keyboard.KEY_PRIOR, ControlsJoystick.CAR_ZOOM_I, true),
 		CAR_ZOOM_O(Keyboard.KEY_NEXT, ControlsJoystick.CAR_ZOOM_O, true);
 		
@@ -577,6 +584,7 @@ public final class ControlSystem{
 		CAR_HORN(false, false),
 		CAR_START(false, false),
 		CAR_LIGHTS(false, true),
+		CAR_LIGHTS_SPECIAL(false, true),
 		CAR_PARK(false, true),
 		CAR_ZOOM_I(false, true),
 		CAR_ZOOM_O(false, true),
@@ -624,7 +632,7 @@ public final class ControlSystem{
 		CAR_CHANGEHUD(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_MOD),
 		CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD),
 		CAR_STOP(ControlsKeyboard.CAR_START, ControlsKeyboard.CAR_MOD),
-		CAR_SIREN(ControlsKeyboard.CAR_LIGHTS, ControlsKeyboard.CAR_MOD),
+		CAR_SIREN(ControlsKeyboard.CAR_LIGHTS_SPECIAL, ControlsKeyboard.CAR_MOD),
 		CAR_TURNSIGNAL_R(ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_LIGHTS),
 		CAR_TURNSIGNAL_L(ControlsKeyboard.CAR_TURN_L, ControlsKeyboard.CAR_LIGHTS);
 		

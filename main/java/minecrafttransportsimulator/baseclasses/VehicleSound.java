@@ -2,7 +2,6 @@ package minecrafttransportsimulator.baseclasses;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
 import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
@@ -115,7 +114,7 @@ public final class VehicleSound{
 		switch(soundType){
 			case ENGINE: return ((APartEngine) optionalPart).state.running || ((APartEngine) optionalPart).internalFuel > 0;
 			case HORN: return vehicle.hornOn;
-			case SIREN: return vehicle.isLightOn(LightTypes.EMERGENCYLIGHT);
+			case SIREN: return vehicle.sirenOn;
 			case STALL_BUZZER: return ((EntityMultipartF_Plane) vehicle).trackAngle <= -17;
 			default: return true;
 		}

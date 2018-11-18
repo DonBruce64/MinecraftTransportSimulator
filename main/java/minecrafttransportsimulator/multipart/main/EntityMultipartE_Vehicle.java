@@ -36,6 +36,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public abstract class EntityMultipartE_Vehicle extends EntityMultipartD_Moving{
 	public boolean soundsNeedInit;
 	public boolean hornOn;
+	public boolean sirenOn;
 	public byte throttle;
 	public double fuel;
 	public double electricPower = 12;
