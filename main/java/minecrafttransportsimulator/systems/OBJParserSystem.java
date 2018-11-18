@@ -138,16 +138,19 @@ public final class OBJParserSystem{
 		//If we are parsing windows override the texture coords.
 		List<Float[]> textureArray = new ArrayList<Float[]>();
 		if(isWindow){
-			textureArray.add(new Float[]{0.0F, 1.0F});
-			textureArray.add(new Float[]{1.0F, 1.0F});
-			textureArray.add(new Float[]{1.0F, 0.0F});
-			//Since all windows must be a separate shape we will either have 3 or 6 texture points.
-			//3 points for triangles, 6 for squares (2 duplicates).
-			//Duplicate texture points just like vertices in this case.
-			if(vertexArray.size() > 3){
-				textureArray.add(new Float[]{1.0F, 0.0F});
-				textureArray.add(new Float[]{0.0F, 0.0F});
+			for(int i=0; i<faceValues.size(); i+=3){
 				textureArray.add(new Float[]{0.0F, 1.0F});
+				textureArray.add(new Float[]{1.0F, 1.0F});
+				textureArray.add(new Float[]{1.0F, 0.0F});
+				//If we have only 3 points, it means this window is just a single triangle.
+				//Don't add the 4th fake point and just end compilation here.
+				if(vertexArray.size() > 3){
+					textureArray.add(new Float[]{1.0F, 0.0F});
+					textureArray.add(new Float[]{0.0F, 0.0F});
+					textureArray.add(new Float[]{0.0F, 1.0F});
+				}else{
+					break;
+				}
 			}
 		}else{
 			for(Integer[] face : faceValues){
