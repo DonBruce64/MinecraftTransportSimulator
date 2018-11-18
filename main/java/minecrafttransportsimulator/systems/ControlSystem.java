@@ -170,7 +170,7 @@ public final class ControlSystem{
 		if(joystickMap.containsKey(control.joystickAssigned)){
 			joystickMap.get(control.joystickAssigned).poll();
 			float pollValue = joystickMap.get(control.joystickAssigned).getComponents()[control.joystickButton].getPollData();
-			if(Math.abs(pollValue) > ConfigSystem.getDoubleConfig("JoystickDeadZone")){
+			if(Math.abs(pollValue) > ConfigSystem.getDoubleConfig("JoystickDeadZone") || pollBounds == 0){
 				//Clamp the poll value to the defined axis bounds set during config to prevent over and under-runs.
 				pollValue = (float) Math.max(control.joystickMinTravel, pollValue);
 				pollValue = (float) Math.min(control.joystickMaxTravel, pollValue);				
@@ -191,7 +191,6 @@ public final class ControlSystem{
 					return (short) (pollValue*100);
 				}
 			}
-			
 		}
 		return 0;
 	}
