@@ -18,6 +18,12 @@ public abstract class AItemPart extends Item{
 	
 	public boolean isPartValidForPackDef(PackPart packPart){
 		PackPartObject itemPack = PackParserSystem.getPartPack(partName);
-		return packPart.customTypes == null || itemPack.general.customType == null ? true : packPart.customTypes.contains(itemPack.general.customType);
+		if(packPart.customTypes == null){
+			return itemPack.general.customType == null;
+		}else if(itemPack.general.customType == null){
+			return packPart.customTypes == null;
+		}else{
+			return packPart.customTypes.contains(itemPack.general.customType);
+		}
 	}
 }
