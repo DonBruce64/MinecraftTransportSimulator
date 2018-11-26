@@ -540,9 +540,11 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		List<LightPart> allLights = new ArrayList<LightPart>();
 		allLights.addAll(vehicleLights);
 		for(APart part : vehicle.getMultipartParts()){
-			for(LightPart partLight : partLightLists.get(part.getModelLocation())){
-				allLights.add(partLight);
-				partLights.put(partLight, part);
+			if(partLightLists.containsKey(part.getModelLocation())){
+				for(LightPart partLight : partLightLists.get(part.getModelLocation())){
+					allLights.add(partLight);
+					partLights.put(partLight, part);
+				}
 			}
 		}
 
