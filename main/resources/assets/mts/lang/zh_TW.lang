@@ -1,0 +1,298 @@
+#Translated by HJ_zhtw
+
+death.attack.propellor.null.null=%1$s 被螺旋槳絞碎了
+death.attack.propellor.null.player=%1$s 在和 %2$s 戰鬥時被螺旋槳絞碎了
+death.attack.propellor.player.null=%1$s 被 %2$s 用螺旋槳絞碎了
+death.attack.propellor.player.player=%1$s 在和 %3$s 戰鬥時被 %2$s 用螺旋槳絞碎了
+
+death.attack.wheel.null.null=%1$s 被輾死了
+death.attack.wheel.null.player=%1$s 在和 %2$s 戰鬥時被輾死了
+death.attack.wheel.player.null=%1$s 被 %2$s 輾死了
+death.attack.wheel.player.player=%1$s 在和 %3$s 戰鬥時被 %2$s 輾死了
+ 
+death.attack.planecrash.null.null=%1$s 在空難中死亡
+death.attack.planecrash.null.player=%1$s 在和 %2$s 戰鬥時因為分心而墜機死亡
+death.attack.planecrash.player.null=%2$s 摧毀了他們的飛機並殺了 %1$s
+death.attack.planecrash.player.player=%1$s 在和 %2$s 戰鬥時因為分心而讓 %3$s 開飛機撞上他們
+ 
+death.attack.carcrash.null.null=%1$s 在車禍中死亡
+death.attack.carcrash.null.player=%1$s 在和 %2$s 戰鬥時因為分心而在車禍中死亡
+death.attack.carcrash.player.null=%2$s 摧毀了他們的車並殺了 %1$s
+death.attack.carcrash.player.player=%1$s 在和 %2$s 戰鬥時因為分心而讓 %3$s 開車撞上他們
+ 
+interact.key.info.lock=鎖定載具！
+interact.key.info.unlock=解鎖載具！
+interact.key.info.own=你現在是載具的主人！
+interact.key.info.unown=已不再擁有載具！
+interact.key.failure.notowner=只有載具的主人能做新鑰匙！
+interact.key.failure.wrongkey=鑰匙與車子不符！
+interact.key.failure.alreadyowned=你不是載具的主人，所以不能變更擁有權！
+
+interact.fuelpump.connect=已連結燃油泵並開始作用。
+interact.fuelpump.complete=載具已加滿燃料，正在斷開連結。
+interact.fuelpump.empty=燃油泵是空的，正在斷開連結。
+interact.fuelpump.disconnect=正在斷開連結並停止燃油泵作用。
+interact.fuelpump.toofar=燃油泵距離載具太遠。燃油泵須在 16 格方塊內。
+ 
+interact.failure.seattaken=座位已被使用！
+interact.failure.vehiclelocked=載具已鎖定！
+interact.failure.vehicleowned=你不能移除這個載具及它的零件，因為你不是載具的主人！
+
+input.aircraft.mod=Mod
+input.aircraft.camlock=凸輪鎖扣
+input.aircraft.yaw=偏航
+input.aircraft.yaw_r=偏右
+input.aircraft.yaw_l=偏左
+input.aircraft.pitch=俯仰
+input.aircraft.pitch_u=仰視
+input.aircraft.pitch_d=俯視
+input.aircraft.roll=滾轉
+input.aircraft.roll_r=右滾
+input.aircraft.roll_l=左滾
+input.aircraft.throttle=油門
+input.aircraft.throttle_u=加速
+input.aircraft.throttle_d=減速
+input.aircraft.flaps_u=襟翼向上
+input.aircraft.flaps_d=襟翼向下
+input.aircraft.brake=煞車
+input.aircraft.panel=面板
+input.aircraft.park=手煞車
+input.aircraft.zoom_i=放大
+input.aircraft.zoom_o=縮小
+input.aircraft.changeview=改變視角
+input.aircraft.look_l=左看
+input.aircraft.look_r=右看
+input.aircraft.look_u=往上看
+input.aircraft.look_d=往下看
+input.aircraft.look_a=定向看
+input.aircraft.changehud=抬頭顯示器模式
+input.aircraft.trim_yaw_r=配平偏右
+input.aircraft.trim_yaw_l=配平偏左
+input.aircraft.trim_pitch_u=配平仰望
+input.aircraft.trim_pitch_d=配平俯瞰
+input.aircraft.trim_roll_r=配平右滾
+input.aircraft.trim_roll_l=配平左滾
+input.aircraft.reverse=反轉
+
+input.car.mod=Mod
+input.car.camlock=凸輪鎖扣
+input.car.turn=轉彎
+input.car.turn_r=右轉
+input.car.turn_l=左轉
+input.car.gas=汽油
+input.car.brake=煞車
+input.car.shift_u=上移
+input.car.shift_d=下移
+input.car.start=啟動引擎
+input.car.horn=鳴笛
+input.car.siren=警報器
+input.car.lights=行車燈
+input.car.park=手煞車
+input.car.zoom_i=放大
+input.car.zoom_o=縮小
+input.car.changeview=改變視角
+input.car.look_l=左看
+input.car.look_r=右看
+input.car.look_u=往上看
+input.car.look_d=往下看
+input.car.look_a=定向看
+input.car.changehud=抬頭顯示器模式
+input.car.stop=停止引擎
+input.car.turnsignal_r=右轉燈
+input.car.turnsignal_l=左轉燈
+
+gui.vehicle_bench.type=類型
+gui.vehicle_bench.weight=重量（公斤）
+gui.vehicle_bench.fuel=油箱蓋（mb）
+gui.vehicle_bench.controllers=駕駛
+gui.vehicle_bench.passengers=乘客
+gui.vehicle_bench.cargo=貨物
+gui.vehicle_bench.mixed=混合
+
+gui.panel.navigationlights=航行燈
+gui.panel.strobelights=防撞燈
+gui.panel.taxilights=滑行燈
+gui.panel.landinglights=落地燈
+gui.panel.magneto=磁電機
+gui.panel.starter=啟動器
+gui.panel.trim_roll=配平滾動
+gui.panel.trim_pitch=配平升降
+gui.panel.trim_yaw=配平偏航
+gui.panel.reverse=推力反向器
+
+gui.instruments.main=主要儀表
+gui.instruments.control=控制面板
+gui.instruments.clear=清除
+gui.instruments.idle=選擇一個儀表。
+gui.instruments.decide=點擊一個儀表以新增或是清除。
+
+gui.config.header.config=配置
+gui.config.header.controls=控制
+gui.config.controls.title=選擇一個要改變的配置：
+gui.config.controls.aircraft.keyboard=飛機鍵盤
+gui.config.controls.aircraft.joystick=飛機搖桿
+gui.config.controls.car.keyboard=汽車鍵盤
+gui.config.controls.car.joystick=汽車搖桿
+gui.config.controls.confirm=確認
+gui.config.joystick.error=錯誤：模組無法初始化控制系統！這可能是因為裝置誤認搖桿是控制 Java 的搖桿。滑鼠特別可能有這個問題（尤其品牌是海盜船的），嘗試換別的滑鼠。如果問題持續發生請聯絡 Mod 作者。
+gui.config.joystick.select=選擇搖桿：
+gui.config.joystick.name=名稱：
+gui.config.joystick.type=類型：
+gui.config.joystick.mapping=映射：
+gui.config.joystick.deadzone=盲區：
+gui.config.joystick.state=狀態：
+gui.config.joystick.assignment=指定給：
+gui.config.joystick.cancel=取消
+gui.config.joystick.clear=清除指定
+gui.config.joystick.choosemap=選擇是什麼映射到這個按鈕。
+gui.config.joystick.selectdigital=這個數位按鈕可以控制：
+gui.config.joystick.selectanalog=這個模擬按鈕可以控制：
+gui.config.joystick.calibrate1=移動軸直到數字停止變化。
+gui.config.joystick.calibrate2=然後按下確認以儲存設定。
+gui.config.joystick.axismode=軸模式：:
+gui.config.joystick.normal=一般
+gui.config.joystick.invert=相反
+gui.config.joystick.confirm=確認
+
+gui.packmissing.title=※警告※
+gui.packmissing.reason=模組偵測到遊戲開始時沒有內容包。這將會導致沒有載具出現。
+gui.packmissing.nomod=如果你安裝模組時沒有內容包，請參考模組在 Curse 頁面上（在下面）的連結。
+gui.packmissing.modlink=模組連結：https://minecraft.curseforge.com/projects/minecraft-transport-simulator
+gui.packmissing.misplaced=如果你確實下載了內容包，請確定它跟你其他的模組是在同一個位置。它不應該放在 MTS 資料夾中，而且那個資料夾在不為內容包所用後就已經可以刪除了。
+gui.packmissing.versionerror=如果內容包已經在那個位置但你卻持續看到這個訊息，請確定你的內容包版本是正確的。舊版本的內容包沒有內建版本檢查功能，所以在現在版本的 MTS 只會不斷地讀取失敗。
+
+info.item.engine.automatic=傳動：自動
+info.item.engine.manual=傳動：手動
+info.item.engine.numbergears=齒輪數：
+info.item.engine.gearratios=齒輪比例： 
+info.item.engine.maxrpm=最大可能轉速：
+info.item.engine.maxsaferpm=最大安全轉速：
+info.item.engine.fuelconsumption=燃料消耗量 (mb/t):
+info.item.engine.hours=運作時間：
+info.item.engine.oilleak=漏油了！
+info.item.engine.fuelleak=燃料洩漏了！
+info.item.engine.brokenstarter=電氣啟動器壞了！
+info.item.engine.creative=創造模式：無須燃料
+info.item.ground_device.diameter=攀爬高度：
+info.item.ground_device.motivefriction=動力摩擦：
+info.item.ground_device.lateralfriction=轉向摩擦：
+info.item.ground_device.rotatesonshaft_true=是輪子
+info.item.ground_device.rotatesonshaft_false=不是輪子
+info.item.ground_device.canfloat_true=飄移
+info.item.ground_device.canfloat_false=不飄移
+info.item.propeller.staticPitch=靜態升降
+info.item.propeller.dynamicPitch=動態升降
+info.item.propeller.numberBlades=葉片：
+info.item.propeller.pitch=升降：
+info.item.propeller.diameter=直徑： 
+info.item.propeller.maxrpm=最高每分鐘轉速： 
+info.item.propeller.health=生命值：
+
+info.item.wrench.use=在載具上變更儀表。
+info.item.wrench.attack=攻擊要移除的零件。
+info.item.wrench.sneakattack=蹲下並攻擊以移除載具。
+info.item.key.line1=用於鎖住載具。
+info.item.key.line2=載具只能用鑰匙開啟。
+info.item.key.line3=蹲下並右鍵以取得擁有權。
+info.item.key.line4=再次蹲下並右鍵以放棄擁有權。
+info.item.key.line5=所擁有的載具只能被你和管理員摧毀。
+
+item.wrench.name=扳手
+item.key.name=鑰匙
+item.manual.name=MTS 模組說明書（讀我！）
+
+tile.vehiclebench.name=Drafting Table
+tile.propellerbench.name=螺旋槳工作台
+tile.enginebench.name=引擎升降機
+tile.wheelbench.name=輪子工作台
+tile.seatbench.name=鋸床
+tile.custombench.name=工具台
+tile.instrumentbench.name=儀表工作台
+
+tile.fuelpump.name=燃油泵
+tile.fuelpump.level=等級：
+tile.fuelpump.dispensed=分配：
+
+tile.pole.name=桿子
+tile.polebase.name=桿子底座
+tile.trafficcone.name=三角椎
+tile.crashbarrier.name=防撞護欄
+tile.trafficsignal.name=交通號誌
+tile.streetlight.name=路燈
+
+itemGroup.tabMTSCore=MTS 核心組件
+key.categories.mts=Minecraft Transport Simulator
+key.config=開啟配置畫面
+
+manual.introduction.title=介紹
+manual.introduction.1=感謝你下載 Minecraft Transport Simulator，由 Minecraft Flight Simulator 改良而成！這個說明書有很多重要的資訊，所以請仔細看。如果你要飛行的話，強烈建議你閱讀飛行的部分，尤其是你沒有在遊戲或模擬器以外的地方開過飛機的話。
+manual.1.2=如果有什麼是這一本說明書沒有提到的，請在 Discord 上尋找 MTS 團隊。我們將樂意回覆你，並將問題在下次更新中加入說明書中。最後要注意的事是：說明書會記住你在哪一頁關閉，所以你可以做許多本書並翻到你常看的那頁。如果你的滑鼠只有一個的話，你還可以用滾輪翻書。
+
+manual.2.title=基本合成
+manual.2.1=Like most mods that have packs and lots of content, MTS uses crafting benches for crafting.  The Drafting Table is used to craft vehicles, while the other benches craft their own parts.  You'll likely want to start filling your garage early with these benches as most vehicles use at least one type of every part.
+manual.2.2=If you're looking to edit the recipes for crafting for use on servers you will need to do so in the JSON files included in the packs you have downloaded.  Look for the materials[] section and edit those values to your liking.
+
+manual.3.title=載具總成
+manual.3.1=Assembling vehicles is a simple as clicking them with the required parts.  When holding a valid part a green hologram will appear in locations where you can place it.  Simply right-click with that part and it will attach to the vehicle.  Note that some parts may require other parts to be installed before they may be placed, such as propellers that connect to aircraft engines.
+manual.3.2=Also note that you must not be inside the vehicle in order to work on it, so no mid-air repairs of failing plane engines!  If you are holding a part and the hologram is red, it means the part is the correct type, but the wrong size.  One common example is a wheel that is too big or too small for the vehicle.  You may also have a vehicle that the pack creator specified a specific part for (such as a specific wheel), so try parts from the pack first.
+
+manual.4.title=載具損毀
+manual.4.1=你有時可能會發現你需要修理載具上的某個零件。可能是因為一個討厭的弓箭手而爆胎，或是因為飛行太久而導致的引擎爆炸。只要簡單地手持扳手並以左鍵點擊目標零件，該零件便會掉落（如果它沒壞掉的話）。你也可以蹲下並左鍵點擊以摧毀載具。這將會讓載具的所有零件掉落。
+manual.4.2=Sometimes, however, the destruction of your vehicle may not be your choice.  Hitting blocks at speed is likely to result in something breaking, and if you do it fast enough you should expect an explosion, with more fuel equaling more explosion.  Note that while parts will be spawned when a vehicle crashes, a big enough explosion is likely to destroy them.  Explosions may be disabled in the config if you are a server owner and don't feel like getting into the road-repair business.
+
+manual.5.title=加油
+manual.5.1=Vehicles are fueled from the fuel pump block.  Just click the fuel pump and it will automatically connect to the nearest vehicle.  The pump will then transfer fuel at a rate of 10 mb/t.  The pump itself has a 15000mb reservoir and can be filled directly from liquid-holding containers, or by connecting a pipe to the bottom from pipe systems compatible with Forge liquids.
+manual.5.2=What exactly MTS considers a fuel is determined by the settings in the config file.  Lava is set as fuel by default, but other liquids can be added to the config by running MTS once with them installed.  Fuel is determined by a number that represents how much the fuel fills the tanks of vehicles (all new liquids are set to 0.0 by default).  Again, that value is NOT potency of the fuel, but the conversion factor; adjust fuel potency using the FuelUsageFactor in the config file.
+
+manual.6.title=防盜
+manual.6.1=The only thing worse than getting your nice car blown up by a creeper is having it (or parts of it) stolen by other players.  Normally vehicles can be messed with by anyone, but by using a key you can mark them as owned allowing only you to change their parts.  This also extends to entering the vehicle or accessing the contents of inventories inside of it.
+manual.6.2=You can even lock yourself in vehicles while moving to prevent stowaways.  Keys can be given to other players, allowing them to enter, but not modify, your vehicles.  It is HIGHLY recommended to make more than one key, as locked vehicles cannot be unlocked without their keys, nor can owned vehicles be relinquished.  Note that OPs bypass these restrictions to allow server admins to move/remove abandoned vehicles.
+
+manual.7.title=鍵盤控制
+manual.7.1=MTS offers multiple control schemes.  The standard scheme is the keyboard control.  Unlike other mods, MTS is equipped with a no-bind system.  This prevents it from clogging up keybindings and from intercepting and taking other mod's keystrokes.  Configuration for this mode, and the other control modes, can be activated by pressing the config key (P by default).
+manual.7.2=This key is the only one that's bound in the standard way in the controls menu, and may be double-bound by default in some modpacks, so if you can't bring up the config menu check your keybindings.  Do note that while MTS will not block other mod's key signals, it may still be affected by the signals of other mods who do not use context-sensitive triggers.  Keep this in mind when controlling vehicles.
+
+manual.8.title=搖桿控制
+manual.8.1=The second control scheme is a Joystick-Keyboard hybrid.  This controller MUST be connected at the time you start Minecraft.  Configuration is done though the JOYSTICK section of the P-key menu.  When an axis such as yaw or pitch is being controlled by a joystick it will be unavailable on the keyboard.  Button inputs will also be disabled, but can be re-enabled though a CONFIG setting.
+manual.8.2=The final method of control available is a mouse-yoke system similar to both Flan's and MCHeli.  This system is currently in Beta and is not perfect, but should be functional enough for general use.  For all of these controls, there are a few extra settings in the P-key CONFIG menu.  These can be used to control joystick dead-zone, sensitivity, keyboard cooldown, as well as other general control settings.
+
+manual.9.title=引擎
+manual.9.1=No matter if they are in cars or planes, engines form the heart of your vehicle.  Not having one is like having a base without a furnace.  Engines come in a variety of fuel consumptions and max RPMs, so chose carefully based on your application.  There is even a fuel-less engine in the creative inventory if you don't want to mess with fuel.  Engines are crafted on the engine hoist.
+manual.9.2=Beware: engines will gradually accumulate hours and lose their power, going so far as to start backfiring when really worn out.  Over-revving, over-heating, and running the engine too fast before it has warmed up will quickly add hours to an otherwise new engine.  You can re-build your engines to restore them to factory state, so do this if you start belching smoke like a locomotive.  Engines may also accumulate hours from damage, going so far as to spring leaks or lose their electric starters.
+
+manual.10.title=地上裝置
+manual.10.1=If it touches the ground, it's a ground device.  Ground devices come in all sorts of configurations and types.  The most common ground device you will encounter are wheels.  These may be powered or un-powered depending on how the vehicle is set up.  Floating ground devices like pontoons are also available, so check the stats of the device before you decide to make it.
+manual.10.2=Wheels also have a few rules that do not apply to other ground devices.  The first is that for cars, wheels MUST be used on the axles if they are to provide power.  While you can equip a vehicle with half pontoons and half wheels, only the wheels will provide power.  Wheels may also blow out if spun too much, so that white smoke you see when doing burnouts is there for more that just show.  All ground devices are created on the Wheel Workbench.
+
+manual.11.title=螺旋槳
+manual.11.1=If you're going to fly an aircraft, it will likely need one of these (well, unless it's a jet).  Larger diameter propellers provide more thrust than smaller ones; however, larger-diameter propellers also need larger engines to turn, so it may be that a weak engine can produce more thrust with a smaller propeller than a larger one.  Propellers are created on the Propeller Bench.
+manual.11.2=Propeller pitch is also important, perhaps moreso than diameter, as it determines the optimal speed at any RPM.  Anything below this speed will speed the aircraft up, anything below will slow it down.  Note that propellers that have dynamic pitch will adjust their pitch in flight to maintain optimum thrust, and may also be reversed by pressing the REVERSE THRUST button in the plane panel.  Reversed propellers are not very effective, so make sure to use plenty of throttle and watch your temps!
+
+manual.12.title=座位、箱子
+manual.12.1=Seats and crates may both be placed in vehicles, however exactly where they may be placed depends on the vehicle itself.  The total number of seats and crates a vehicle can contain is shown in the Drafting Table, so use this to determine if the vehicle meets your needs or not.  Some vehicles allow
+ for either seats or crates in some spots, which means you can add or remove them as you see fit.
+manual.12.2=Note that crates hold their inventory when in item form and will still have that inventory if placed in another vehicle or if the vehicle they are in is destroyed.  This allows for quick transfer of items from one vehicle to another.  Both seats and crates are created on the Table Saw.
+
+manual.13.title=儀表
+manual.13.1=Instruments make piloting a plane and driving a car much more immersive.  They are also useful for monitoring key properties like fuel levels, RPM, and engine temps, and make flying in the dark much less hazardous.
+manual.13.2=Instruments are added to vehicles by using the wrench on them.  The resulting GUI shows a view of the HUD and all instruments in your possession that work on that vehicle.  Simply click the slot you want to put the instrument in, and click that instrument.  Instruments are created on the Instrument Workbench.
+
+manual.14.title=駕駛人訓練班
+manual.14.1=Driving a car is so simple, even a villager could do it.  Simply hop in a car and press the Z key to turn engage the starter.  Once the engine is running press the R key to shift into forwards gear and press the W key to give it some gas and off you go!  The A and D keys can be used to steer the car, while S key activates the brake.  Some vehicles are also equipped with lights, horns, sirens, or even turn signals.
+manual.14.2=Do note that all cars start in neutral, and you pressing R puts them into forwards.  Pressing F will shift into neutral, and F again will shift into reverse.  Shifting should be done while stopped to avoid scary transmission noises.  The only exception are engines with manual transmissions.  These must be shifted up and down manually, which means they have multiple "forwards" gears for you to shift though.  If you hear the engine getting noisy and red-lining, it means it's time to shift!
+
+manual.15.title=飛囉！
+manual.15.1=Before your first flight you should be aware of a few key facts.  First, planes do not go up when you pull up.  We repeat: PLANES DO NOT GO UP WHEN YOU PULL UP!  This is the #1 cause of crashes for new pilots.  In MTS, and in real-life, planes gain lift through moving air over the wings.  Therefore the proper way to lift off the ground is to go fast so lots of air moves over the wings and makes lots of lift.
+manual.15.2=This means that you will need a decent runway for takeoff, and it is highly recommended you avoid taking off towards high things like trees and mountains.  If you are piloting a plane equipped with flaps you can set a few notches to increase the lifting power of the plane.  Note that this will cause a loss in fuel efficiency and add extra drag, so only use flaps when performing takeoffs and landings.  Also note that weight (items in inventory and cargo) is a factor in plane handling, so make sure not to overload your plane.
+
+manual.16.title=飛機引擎面板
+manual.16.1=Unlike cars, plane starting is a bit more involved.  The first thing you need to do is open the plane panel by getting in the pilot's seat and pressing U.  From there, you need to turn the magnetos (MAG) on.  These are essentially the on/off switches for the engines.  Once these are on, hold the stater button next to them and wait for the engines to catch.
+manual.16.2=Numerous other things are located on this panel besides the starters.  The switches for the different lights are on the left side, and trim controls for the aircraft are towards the middle-left.  These don't give any indication as to the trim status, so installation of a trim indicator is a wise investment if you plan on using these.  You can also find the thrust reverse button, which will cause the plane to move backward if equipped with dynamic-pitch propellers.
+
+manual.17.title=飛行中
+manual.17.1=Once your plane is up in the air flying just becomes a matter of two things: not crashing into wild mountains, and not crashing into the ground.  The former can simply be dodged by banking the plane into a turn by rolling the airplane (A and D) or simply flying above build height.  Turns will slowly decrease your altitude, so watch that if you're close to terrain.
+manual.17.2=While flying you may have to keep holding inputs to make your plane behave the way you want.  If you keep climbing, it's because you have too much thrust and should let off the throttle.  You can also add some trim and keep the throttle up to get a bit more speed at the cost of fuel economy.  You may also move to other seats while flying by right-clicking them, and some planes even allow for multiple pilots.  Check the Vehicle Data section for specifics on seat and pilot counts.
+
+manual.18.title=降落
+manual.18.1=There is a fine line between successfully landing a plane and a controlled crash.  To avoid that second category it is important to remember the saying, "To go down you need to slow down."  Speed is what keeps your plane aloft, so a reduction in speed is needed to land.  This can be as simple as lowering the throttle and applying the flaps.
+manual.18.2=Some times, however, you end up in that second category.  Running out of fuel is the most common way to get down quickly, but is not necessarily deadly.  Planes can glide without engines, giving you a short amount of time to pick a flat spot to become an impromptu runway.  Should one not be available a body of water is also a good choice as it will prevent explosions on a hard crash or will allow you to bail while in mid-air.  Anything hilly should be avoided at all costs.
