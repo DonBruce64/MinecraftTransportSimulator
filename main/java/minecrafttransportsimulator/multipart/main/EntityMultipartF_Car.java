@@ -26,7 +26,6 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle{
 	private double dragForce;//kg*m/ticks^2
 	private double gravitationalForce;//kg*m/ticks^2
 	private double gravitationalTorque;//kg*m^2/ticks^2
-	private PartEngineCar engine;
 	
 	public EntityMultipartF_Car(World world){
 		super(world);
@@ -61,13 +60,13 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle{
 		changeLightStatus(LightTypes.BRAKELIGHT, brakeOn);
 		changeLightStatus(LightTypes.LEFTINDICATORLIGHT, brakeOn && !this.isLightOn(LightTypes.LEFTTURNLIGHT));
 		changeLightStatus(LightTypes.RIGHTINDICATORLIGHT, brakeOn && !this.isLightOn(LightTypes.RIGHTTURNLIGHT));
-		changeLightStatus(LightTypes.BACKUPLIGHT, this.engine != null && this.engine.currentGear < 0);
+		changeLightStatus(LightTypes.BACKUPLIGHT, getEngineByNumber((byte) 0) != null && ((PartEngineCar) getEngineByNumber((byte) 0)).getGearshiftRotation() < 0);
 	}
 	
 	@Override
 	protected void getForcesAndMotions(){
-		if(engine != null){
-			wheelForce = engine.getForceOutput();
+		if(getEngineByNumber((byte) 0) != null){
+			wheelForce = getEngineByNumber((byte) 0).getForceOutput();
 		}else{
 			wheelForce = 0;
 		}
@@ -105,8 +104,6 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle{
 			if(((PartGroundDevice) part).pack.groundDevice.rotatesOnShaft){
 				wheels.add((PartGroundDevice) part);
 			}
-		}else if(part instanceof PartEngineCar){
-			engine = (PartEngineCar) part;
 		}
 	}
 	
@@ -115,9 +112,6 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle{
 		super.removePart(part, playBreakSound);
 		if(wheels.contains(part)){
 			wheels.remove(part);
-		}
-		if(part.equals(engine)){
-			engine = null;
 		}
 	}
 	

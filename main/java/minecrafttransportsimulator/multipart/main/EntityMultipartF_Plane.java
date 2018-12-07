@@ -2,14 +2,21 @@ package minecrafttransportsimulator.multipart.main;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.multipart.parts.APart;
-import minecrafttransportsimulator.multipart.parts.PartPropeller;
+import minecrafttransportsimulator.multipart.parts.APartEngine;
+import minecrafttransportsimulator.multipart.parts.PartSeat;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.systems.RotationSystem;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameType;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import scala.reflect.internal.Trees.This;
 
 public final class EntityMultipartF_Plane extends EntityMultipartE_Vehicle{
 	public boolean reverseThrust;
@@ -94,11 +101,12 @@ public final class EntityMultipartF_Plane extends EntityMultipartE_Vehicle{
 	@Override
 	protected void getForcesAndMotions(){
 		thrustForce = thrustTorque = 0;
-		for(APart part : this.getMultipartParts()){
-			if(part instanceof PartPropeller){
-				thrust = ((PartPropeller) part).getThrustForce();
+		for(byte i=0; i<this.getNumberEngineBays(); ++i){
+			APartEngine engine = getEngineByNumber(i);
+			if(engine != null){
+				thrust = engine.getForceOutput();
 				thrustForce += thrust;
-				thrustTorque += thrust*part.offset.xCoord;
+				thrustTorque += thrust*engine.offset.xCoord;
 			}
 		}
 		

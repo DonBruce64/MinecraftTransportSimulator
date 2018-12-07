@@ -362,6 +362,8 @@ public abstract class APartEngine extends APart implements FXPart{
 	public double getDriveshaftRotation(float partialTicks){
 		return engineDriveshaftRotation + (engineDriveshaftRotation - engineDriveshaftRotationLast)*partialTicks;
 	}
+	
+	public abstract double getForceOutput();
 
 	@Override
 	@SideOnly(Side.CLIENT)

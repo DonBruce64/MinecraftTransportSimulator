@@ -12,9 +12,7 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEn
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.Vec3d;
@@ -25,29 +23,13 @@ public class PartPropeller extends APart{
 	public float damage;
 	public short currentPitch;
 	
-	private byte linkingTicks = 0;
 	private final PartEngineAircraft connectedEngine;
 	
 	public PartPropeller(EntityMultipartD_Moving multipart, PackPart packPart, String partName, NBTTagCompound dataTag){
 		super(multipart, packPart, partName, dataTag);
 		this.damage = dataTag.getFloat("damage");
 		this.currentPitch = pack.propeller.pitch;
-		//Due to JSON setup, it will be impossible for players to add propellers without engines and
-		//have them be saved to multiparts.  Because of this, we can check for engines here as they MUST be present.
-		//This engine must also have the propeller as a sub-part, so we can just find which engine has us as a sub-part and link to that.
-		
-		//Note that we need to do float addition rather that double, as the offsets for parts are technically all floats.
-		//Doing double addition using the Vec3d will cause enough floating-point errors to return wrong values.
-		for(APart part : multipart.getMultipartParts()){
-			for(PackPart subPart : part.pack.subParts){
-				if((float) part.offset.xCoord + subPart.pos[0] == (float) this.offset.xCoord && (float) part.offset.yCoord + subPart.pos[1] == (float) this.offset.yCoord && (float) part.offset.zCoord + subPart.pos[2] == (float) this.offset.zCoord){
-					this.connectedEngine = ((PartEngineAircraft) part);
-					connectedEngine.propeller = this;
-					return;
-				}
-			}
-		}
-		connectedEngine = null;
+		this.connectedEngine = (PartEngineAircraft) parentPart;
 	}
 	
 	@Override
@@ -112,14 +94,6 @@ public class PartPropeller extends APart{
 	}
 	
 	@Override
-	public void removePart(){
-		super.removePart();
-		if(connectedEngine != null){
-			connectedEngine.propeller = null;
-		}
-	}
-	
-	@Override
 	public NBTTagCompound getPartNBTTag(){
 		NBTTagCompound dataTag = new NBTTagCompound();		
 		dataTag.setFloat("damage", this.damage);
@@ -146,33 +120,5 @@ public class PartPropeller extends APart{
 		if(this.damage > pack.propeller.startingHealth && !multipart.worldObj.isRemote){
 			multipart.removePart(this, true);
 		}
-	}
-	
-	public double getThrustForce(){
-		if(currentPitch != 0 && this.connectedEngine.state.running){
-			//Get what the pitch velocity of the propeller would be at the current velocity.
-			double currentPitchVelocity = multipart.velocity*20D;
-			//Get the effective pitch velocity of the propeller at the current RPM.
-			double effectivePitchVelocity = 0.0254D*currentPitch*connectedEngine.RPM*connectedEngine.pack.engine.gearRatios[0]/60D;
-			//Multiply by a factor to get the true effective pitch velocity.  This is slightly higher than ideal.
-			effectivePitchVelocity *= (1D*currentPitch/pack.propeller.diameter + 0.2D)/(1D*currentPitch/pack.propeller.diameter);
-			if(connectedEngine != null && effectivePitchVelocity != 0){
-				//Get the angle of attack of the propeller.
-				double angleOfAttack = Math.abs(effectivePitchVelocity - currentPitchVelocity);
-				//Now return the thrust equation.  If the angle of attack is greater than 35, sap power off the propeller for stalling.
-				return multipart.airDensity*Math.PI*Math.pow(0.0254*pack.propeller.diameter/2D, 2)*
-						(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
-						Math.pow(pack.propeller.diameter/2D/Math.abs(currentPitch) + pack.propeller.numberBlades/1000D, 1.5)/400D
-						*(angleOfAttack > 35 ? 35/angleOfAttack : 1.0D)*Math.signum(effectivePitchVelocity);
-			}
-		}
-		return 0;
-	}
-	
-	public void dropAsItem(){
-		multipart.removePart(this, false);
-		ItemStack propellerStack = new ItemStack(this.getItemForPart());
-		propellerStack.setTagCompound(this.getPartNBTTag());
-		multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, partPos.xCoord, partPos.yCoord, partPos.zCoord, propellerStack));
 	}
 }

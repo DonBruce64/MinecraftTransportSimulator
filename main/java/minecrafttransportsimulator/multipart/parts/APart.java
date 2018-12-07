@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.multipart.parts;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
@@ -37,6 +40,10 @@ public abstract class APart{
 	public final PackPartObject pack;
 	public final Vec3d partRotation;
 	public final boolean overrideMirror;
+	/**The parent of this part, if this part is a sub-part of a part or an additional part for a vehicle.*/
+	public final APart parentPart;
+	/**Children to this part.  Can be either additional parts or sub-parts.*/
+	public final List<APart> childParts = new ArrayList<APart>();
 	
 	public Vec3d partPos;
 	
@@ -54,6 +61,29 @@ public abstract class APart{
 		this.turnsWithSteer = packPart.turnsWithSteer;
 		this.overrideMirror = packPart.overrideMirror;
 		this.isValid = true;
+		
+		//Check to see if we are an additional part to a part on our parent.
+		for(PackPart parentPackPart : multipart.pack.parts){
+			if(packPart.equals(parentPackPart.additionalPart)){
+				parentPart = multipart.getPartAtLocation(parentPackPart.pos[0], parentPackPart.pos[1], parentPackPart.pos[2]);
+				parentPart.childParts.add(this);
+				return;
+			}
+		}
+		
+		//If we aren't an additional part, see if we are a sub-part.
+		for(APart multipartPart : multipart.getMultipartParts()){
+			if(multipartPart.pack.subParts != null){
+				for(PackPart multipartPartSubPartPack : multipartPart.pack.subParts){
+					if((float) multipartPart.offset.xCoord + multipartPartSubPartPack.pos[0] == (float) this.offset.xCoord && (float) multipartPart.offset.yCoord + multipartPartSubPartPack.pos[1] == (float) this.offset.yCoord && (float) multipartPart.offset.zCoord + multipartPartSubPartPack.pos[2] == (float) this.offset.zCoord){
+						parentPart = multipartPart;
+						parentPart.childParts.add(this);
+						return;
+					}
+				}
+			}
+		}
+		parentPart = null;
 	}
 	
 	/**Called right before this part is added to the multipart.
@@ -66,7 +96,7 @@ public abstract class APart{
 	}
 
 	/**Called when checking if this part can be interacted with.
-	 * If a part does interctions it should do so and then return true.
+	 * If a part does interactions it should do so and then return true.
 	 */
 	public boolean interactPart(EntityPlayer player){
 		return false;
@@ -92,41 +122,22 @@ public abstract class APart{
 	 * bad packets from arriving on the client.
 	 */
 	public void removePart(){
-		if(this.isValid){
-			this.isValid = false;
-			if(pack.subParts != null){
-				for(PackPart packPart : pack.subParts){
-					APart subPart = multipart.getPartAtLocation((float) this.offset.xCoord + packPart.pos[0], (float) this.offset.yCoord + packPart.pos[1], (float) this.offset.zCoord + packPart.pos[2]);
-					if(subPart != null){
-						subPart.removePart();
-						multipart.removePart(subPart, false);
-						if(!multipart.worldObj.isRemote){
-							Item droppedItem = subPart.getItemForPart();
-							if(droppedItem != null){
-								ItemStack droppedStack = new ItemStack(droppedItem);
-								droppedStack.setTagCompound(subPart.getPartNBTTag());
-								multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, subPart.partPos.xCoord, subPart.partPos.yCoord, subPart.partPos.zCoord, droppedStack));
-							}
-						}
-					}
+		this.isValid = false;
+		while(childParts.size() > 0){
+			APart childPart = childParts.get(0);
+			childPart.removePart();
+			multipart.removePart(childPart, false);
+			if(!multipart.worldObj.isRemote){
+				Item droppedItem = childPart.getItemForPart();
+				if(droppedItem != null){
+					ItemStack droppedStack = new ItemStack(droppedItem);
+					droppedStack.setTagCompound(childPart.getPartNBTTag());
+					multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, childPart.partPos.xCoord, childPart.partPos.yCoord, childPart.partPos.zCoord, droppedStack));
 				}
 			}
-			PackPart packPart = multipart.getPackDefForLocation(this.offset.xCoord, this.offset.yCoord, this.offset.zCoord);
-			if(packPart != null && packPart.additionalPart != null){
-				APart additionalPart = multipart.getPartAtLocation(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]);
-				if(additionalPart != null){
-					additionalPart.removePart();
-					multipart.removePart(additionalPart, false);
-					if(!multipart.worldObj.isRemote){
-						Item droppedItem = additionalPart.getItemForPart();
-						if(droppedItem != null){
-							ItemStack droppedStack = new ItemStack(droppedItem);
-							droppedStack.setTagCompound(additionalPart.getPartNBTTag());
-							multipart.worldObj.spawnEntityInWorld(new EntityItem(multipart.worldObj, additionalPart.partPos.xCoord, additionalPart.partPos.yCoord, additionalPart.partPos.zCoord, droppedStack));
-						}
-					}
-				}
-			}
+		}
+		if(this.parentPart != null){
+			this.parentPart.childParts.remove(this);
 		}
 	}
 	

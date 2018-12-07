@@ -180,7 +180,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 		
 		//Next get any sub parts on parts that are present.
 		for(APart part : this.parts){
-			if(part.isValid() && part.pack.subParts != null){
+			if(part.pack.subParts != null){
 				PackPart parentPack = getPackDefForLocation(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
 				for(PackPart extraPackPart : part.pack.subParts){
 					PackPart correctedPack = getPackForSubPart(parentPack, extraPackPart);
@@ -212,7 +212,7 @@ public abstract class EntityMultipartA_Base extends Entity{
 		
 		//If this is not a main part or an additional part, check the sub-parts.
 		for(APart part : this.parts){
-			if(part.isValid() && part.pack.subParts.size() > 0){
+			if(part.pack.subParts.size() > 0){
 				PackPart parentPack = getPackDefForLocation(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
 				for(PackPart extraPackPart : part.pack.subParts){
 					PackPart correctedPack = getPackForSubPart(parentPack, extraPackPart);
