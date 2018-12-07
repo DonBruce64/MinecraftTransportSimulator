@@ -7,7 +7,7 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class PartEngineCar extends APartEngine{
-	public byte currentGear = 1;
+	private byte currentGear;
 	private boolean spinningOut;
 	private double engineForce;
 	private final EntityMultipartF_Car car;
@@ -15,7 +15,11 @@ public class PartEngineCar extends APartEngine{
 	public PartEngineCar(EntityMultipartD_Moving multipart, PackPart packPart, String partName, NBTTagCompound dataTag){
 		super(multipart, packPart, partName, dataTag);
 		this.car = (EntityMultipartF_Car) multipart;
-		this.currentGear = dataTag.getByte("gearNumber");
+		if(dataTag.hasKey("gearNumber")){
+			this.currentGear = dataTag.getByte("gearNumber");
+		}else{
+			this.currentGear = 1;
+		}
 	}
 	
 	@Override
@@ -50,9 +54,9 @@ public class PartEngineCar extends APartEngine{
 		if(state.running && pack.engine.isAutomatic){
 			if(currentGear > 0){
 				if(RPM > getSafeRPMFromMax(this.pack.engine.maxRPM)*0.5F*(1.0F + car.throttle/100F)){
-					shiftUp();
+					shiftUp(false);
 				}else if(RPM < getSafeRPMFromMax(this.pack.engine.maxRPM)*0.25*(1.0F + car.throttle/100F) && currentGear > 1){
-					shiftDown();
+					shiftDown(false);
 				}
 			}
 		}
@@ -175,7 +179,7 @@ public class PartEngineCar extends APartEngine{
 		return engineForce*30F;
 	}
 	
-	public void shiftUp(){
+	public void shiftUp(boolean packet){
 		if(currentGear == -1){
 			currentGear = 0;
 		}else if(currentGear == 0){
@@ -185,22 +189,26 @@ public class PartEngineCar extends APartEngine{
 				MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
 			}
 		}else if(currentGear < pack.engine.gearRatios.length - 2){
-			++currentGear;
+			if(pack.engine.isAutomatic && packet){
+				currentGear = 1;
+			}else{
+				++currentGear;
+			}
 		}
 	}
 	
-	public void shiftDown(){
+	public void shiftDown(boolean packet){
 		if(currentGear > 0){
-			--currentGear;
-		}else{
-			if(currentGear == 1){
+			if(pack.engine.isAutomatic && packet){
 				currentGear = 0;
-			}else if(currentGear == 0){
-				if(car.velocity < 0.1){
-					currentGear = -1;
-				}else if(multipart.worldObj.isRemote){
-					MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
-				}
+			}else{
+				--currentGear;
+			}
+		}else if(currentGear == 0){
+			if(car.velocity < 0.1){
+				currentGear = -1;
+			}else if(multipart.worldObj.isRemote){
+				MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
 			}
 		}
 	}
