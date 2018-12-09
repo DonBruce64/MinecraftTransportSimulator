@@ -31,11 +31,13 @@ import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -223,6 +225,37 @@ public final class ClientEventSystem{
                 }
             }
         }
+    }
+    
+    
+    private static int defaultRenderDistance;
+	private static int currentRenderDistance;
+	private static int renderReductionHeight;
+    /**
+     * Automatically lowers render distance when flying above the world to reduce worldgen.
+     * Results in significant TPS improvements at high speeds.
+     * Note that this only runs on the integrated server.
+     */
+    @SubscribeEvent
+    public static void on(TickEvent.PlayerTickEvent event){
+    	if(event.side.isServer() && event.phase.equals(event.phase.END)){
+    		EntityPlayerMP serverPlayer = (EntityPlayerMP) event.player;
+    		if(((WorldServer) serverPlayer.worldObj).getMinecraftServer().isSinglePlayer()){
+	    		if(defaultRenderDistance == 0){
+	    			defaultRenderDistance = ((WorldServer) serverPlayer.worldObj).getMinecraftServer().getPlayerList().getViewDistance();
+	    			currentRenderDistance = defaultRenderDistance;
+	    			renderReductionHeight = ConfigSystem.getIntegerConfig("RenderReductionHeight");
+				}
+	    		
+	    		if(serverPlayer.posY > renderReductionHeight && currentRenderDistance != 1){
+	    			currentRenderDistance = 1;
+	    			((WorldServer) serverPlayer.worldObj).getPlayerChunkMap().setPlayerViewRadius(1);
+	    		}else if(serverPlayer.posY < renderReductionHeight - 10 && currentRenderDistance == 1){
+	    			currentRenderDistance = defaultRenderDistance;
+	    			((WorldServer) serverPlayer.worldObj).getPlayerChunkMap().setPlayerViewRadius(defaultRenderDistance);
+	    		}
+	    	}
+    	}
     }
 
     /**
