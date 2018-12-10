@@ -142,7 +142,7 @@ public class PartEngineCar extends APartEngine{
 		float driveShaftDesiredSpeed = -999F;
 		for(PartGroundDevice wheel : car.wheels){
 			if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
-				driveShaftDesiredSpeed = (float) Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
+				driveShaftDesiredSpeed = (float) Math.max(Math.abs(wheel.angularVelocity*car.speedFactor), driveShaftDesiredSpeed);
 			}
 		}
 		driveShaftDesiredSpeed = (float) Math.toDegrees(driveShaftDesiredSpeed*Math.signum(car.velocity));
