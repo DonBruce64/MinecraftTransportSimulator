@@ -95,7 +95,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		super.onEntityUpdate();
 		if(pack != null){
 			currentMass = getCurrentMass();
-			airDensity = 1.225*Math.pow(2, -posY/500);
+			airDensity = 1.225*Math.pow(2, -posY/(500D*worldObj.getHeight()/256D));
 			getBasicProperties();
 		}
 		
