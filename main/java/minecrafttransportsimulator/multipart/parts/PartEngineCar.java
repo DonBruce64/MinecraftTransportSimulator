@@ -15,11 +15,7 @@ public class PartEngineCar extends APartEngine{
 	public PartEngineCar(EntityMultipartD_Moving multipart, PackPart packPart, String partName, NBTTagCompound dataTag){
 		super(multipart, packPart, partName, dataTag);
 		this.car = (EntityMultipartF_Car) multipart;
-		if(dataTag.hasKey("gearNumber")){
-			this.currentGear = dataTag.getByte("gearNumber");
-		}else{
-			this.currentGear = 1;
-		}
+		this.currentGear = dataTag.getByte("gearNumber");
 	}
 	
 	@Override
