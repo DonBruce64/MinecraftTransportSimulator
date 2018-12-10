@@ -65,30 +65,6 @@ public final class ClientEventSystem{
     private static final Minecraft minecraft = Minecraft.getMinecraft();
     
     /**
-     * Need this to do part interaction in cases when we aren't holding anything.
-     * Note that in 1.11+ this method is obsolete as the player is always holding an
-     * itemstack, it's just an "empty" itemstack.
-     */
-    @SubscribeEvent
-    public static void on(PlayerInteractEvent.RightClickEmpty event){
-    	if(event.getWorld().isRemote){
-	    	for(Entity entity : minecraft.theWorld.loadedEntityList){
-				if(entity instanceof EntityMultipartC_Colliding){
-					EntityMultipartC_Colliding multipart = (EntityMultipartC_Colliding) entity;
-					EntityPlayer player = event.getEntityPlayer();
-					APart hitPart = multipart.getHitPart(player);
-					if(hitPart != null){
-						if(hitPart.interactPart(player)){
-							MTS.MTSNet.sendToServer(new PacketPartInteraction(hitPart, player.getEntityId()));
-							return;
-						}
-					}
-				}
-	    	}
-    	}
-    }
-    
-    /**
      * Checks if a player has right-clicked a multipart with a valid item.
      * If so, does an action depending on what was clicked and what the player is holding.
      */

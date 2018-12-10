@@ -116,7 +116,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		//In all cases, interaction will be handled on the client and forwarded to the server.
 		//However, there is one case where we can't forward an event, and that is if a player
 		//right-clicks this with an empty hand.
-		if(worldObj.isRemote && player.getHeldItemMainhand() == null){
+		if(worldObj.isRemote && hand.equals(hand.MAIN_HAND) && player.getHeldItemMainhand() == null){
 			APart hitPart = getHitPart(player);
 			if(hitPart != null){
 				if(hitPart.interactPart(player)){
