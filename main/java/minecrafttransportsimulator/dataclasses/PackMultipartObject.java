@@ -3,8 +3,6 @@ package minecrafttransportsimulator.dataclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.systems.PackParserSystem;
-
 public class PackMultipartObject{
 	public PackGeneralConfig general;
 	public List<PackFileDefinitions> definitions = new ArrayList<PackFileDefinitions>();
@@ -96,6 +94,7 @@ public class PackMultipartObject{
         public float[] hudMouldingTexturePercentages;
         public List<PackDisplayText> textMarkings = new ArrayList<PackDisplayText>();
         public List<PackRotatableModelObject> rotatableModelObjects = new ArrayList<PackRotatableModelObject>();
+        public List<PackTranslatableModelObject> translatableModelObjects = new ArrayList<PackTranslatableModelObject>();
     }
     
     public class PackDisplayText{
@@ -110,5 +109,11 @@ public class PackMultipartObject{
     	public float[] rotationPoint;
     	public float[] rotationAxis;
     	public String rotationVariable;
+    }
+    
+    public class PackTranslatableModelObject{
+    	public String partName;
+    	public float[] translationAxis;
+    	public String translationVariable;
     }
 }

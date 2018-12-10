@@ -17,6 +17,7 @@ import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackDisplayTe
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackRotatableModelObject;
+import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackTranslatableModelObject;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
@@ -61,6 +62,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	//MULTIPART MAPS.  Maps are keyed by JSON name.
 	private static final Map<String, Integer> multipartDisplayLists = new HashMap<String, Integer>();
 	private static final Map<String, List<RotatablePart>> multipartRotatableLists = new HashMap<String, List<RotatablePart>>();
+	private static final Map<String, List<TranslatablePart>> multipartTranslatableLists = new HashMap<String, List<TranslatablePart>>();
 	private static final Map<String, List<LightPart>> multipartLightLists = new HashMap<String, List<LightPart>>();
 	private static final Map<String, List<WindowPart>> windowLists = new HashMap<String, List<WindowPart>>();
 	
@@ -275,6 +277,14 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			for(RotatablePart rotatable : multipartRotatableLists.get(multipart.multipartJSONName)){
 				if(!rotatable.name.contains("window")){
 					GL11.glPushMatrix();
+					if(rotatable.name.contains("%")){
+						for(TranslatablePart translatable : multipartTranslatableLists.get(multipart.multipartJSONName)){
+							if(translatable.name.equals(rotatable.name)){
+								translateModelObject(multipart, translatable, partialTicks);
+								break;
+							}
+						}
+					}
 					rotateModelObject(multipart, rotatable, partialTicks);
 					GL11.glBegin(GL11.GL_TRIANGLES);
 					for(Float[] vertex : rotatable.vertices){
@@ -286,8 +296,23 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 					GL11.glPopMatrix();
 				}
 			}
+			for(TranslatablePart translatable : multipartTranslatableLists.get(multipart.multipartJSONName)){
+				if(!translatable.name.contains("window") && !translatable.name.contains("$")){
+					GL11.glPushMatrix();
+					translateModelObject(multipart, translatable, partialTicks);
+					GL11.glBegin(GL11.GL_TRIANGLES);
+					for(Float[] vertex : translatable.vertices){
+						GL11.glTexCoord2f(vertex[3], vertex[4]);
+						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+					}
+					GL11.glEnd();
+					GL11.glPopMatrix();
+				}
+			}
 		}else{
 			List<RotatablePart> rotatableParts = new ArrayList<RotatablePart>();
+			List<TranslatablePart> translatableParts = new ArrayList<TranslatablePart>();
 			List<LightPart> lightParts = new ArrayList<LightPart>();
 			List<WindowPart> windows = new ArrayList<WindowPart>();
 			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(new ResourceLocation(multipart.multipartName.substring(0, multipart.multipartName.indexOf(':')), "objmodels/vehicles/" + multipart.multipartJSONName + ".obj"));
@@ -301,6 +326,10 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				boolean shouldShapeBeInDL = true;
 				if(entry.getKey().contains("$")){
 					rotatableParts.add(new RotatablePart(entry.getKey(), entry.getValue(), multipart.pack.rendering.rotatableModelObjects));
+					shouldShapeBeInDL = false;
+				}
+				if(entry.getKey().contains("%")){
+					translatableParts.add(new TranslatablePart(entry.getKey(), entry.getValue(), multipart.pack.rendering.translatableModelObjects));
 					shouldShapeBeInDL = false;
 				}
 				if(entry.getKey().contains("&")){
@@ -323,6 +352,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			
 			//Now finalize the maps.
 			multipartRotatableLists.put(multipart.multipartJSONName, rotatableParts);
+			multipartTranslatableLists.put(multipart.multipartJSONName, translatableParts);
 			multipartLightLists.put(multipart.multipartJSONName, lightParts);
 			windowLists.put(multipart.multipartJSONName, windows);
 			multipartDisplayLists.put(multipart.multipartJSONName, displayListIndex);
@@ -348,9 +378,12 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			case("throttle"): return ((EntityMultipartE_Vehicle) multipart).throttle/4F;
 			case("brake"): return multipart.brakeOn ? 25 : 0;
 			case("p_brake"): return multipart.parkingBrakeOn ? 30 : 0;
+			case("horn"): return ((EntityMultipartE_Vehicle) multipart).hornOn ? 30 : 0;
 			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0))).getGearshiftRotation() : 0;
 			case("engine"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? ((APartEngine) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) : 0);
-			case("driveshaft"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? ((APartEngine) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).getDriveshaftRotation(partialTicks) : 0);
+			case("driveshaft"): return getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks);
+			case("driveshaft_periodic"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks) + 180F)))/2F;
+			case("driveshaft_periodic_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks) + 180F));
 			case("steeringwheel"): return multipart.getSteerAngle();
 			
 			case("aileron"): return ((EntityMultipartF_Plane) multipart).aileronAngle/10F;
@@ -363,6 +396,50 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			case("reverser"): return ((EntityMultipartF_Plane) multipart).reversePercent/1F;
 			default: return 0;
 		}
+	}
+	
+	private static void translateModelObject(EntityMultipartD_Moving multipart, TranslatablePart translatable, float partialTicks){
+		for(byte i=0; i<translatable.translationVariables.length; ++i){
+			float translation = getTranslationLengthForModelVariable(multipart, translatable.translationVariables[i], partialTicks);
+			if(translation != 0){
+				float translationMagnitude = translation*translatable.translationMagnitudes[i];
+				GL11.glTranslated(translationMagnitude*translatable.translationAxis[i].xCoord, translationMagnitude*translatable.translationAxis[i].yCoord, translationMagnitude*translatable.translationAxis[i].zCoord);
+			}
+		}
+	}
+	
+	private static float getTranslationLengthForModelVariable(EntityMultipartD_Moving multipart, String variable, float partialTicks){
+		switch(variable){
+			case("cycle"): return multipart.worldObj.getTotalWorldTime()%20;
+			case("door"): return multipart.parkingBrakeOn && multipart.velocity == 0 && !multipart.locked ? 1 : 0;
+			case("throttle"): return ((EntityMultipartE_Vehicle) multipart).throttle/100F;
+			case("brake"): return multipart.brakeOn ? 1 : 0;
+			case("p_brake"): return multipart.parkingBrakeOn ? 1 : 0;
+			case("horn"): return ((EntityMultipartE_Vehicle) multipart).hornOn ? 1 : 0;
+			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0))).getGearshiftRotation()/15F : 0;
+			case("engine"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? ((APartEngine) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).getEngineRotation(partialTicks)%180/180F : 0);
+			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks) + 180F)))/2F;
+			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks)));
+			case("steeringwheel"): return multipart.getSteerAngle()/35F;
+			
+			case("aileron"): return ((EntityMultipartF_Plane) multipart).aileronAngle/350F;
+			case("elevator"): return ((EntityMultipartF_Plane) multipart).elevatorAngle/350F;
+			case("rudder"): return ((EntityMultipartF_Plane) multipart).rudderAngle/350F;
+			case("flap"): return ((EntityMultipartF_Plane) multipart).flapAngle/350F;
+			case("trim_aileron"): return ((EntityMultipartF_Plane) multipart).aileronTrim/350F;
+			case("trim_elevator"): return ((EntityMultipartF_Plane) multipart).elevatorTrim/350F;
+			case("trim_rudder"): return ((EntityMultipartF_Plane) multipart).rudderTrim/350F;
+			case("reverser"): return ((EntityMultipartF_Plane) multipart).reversePercent/1F;
+			default: return 0;
+		}
+	}
+	
+	private static float getDriveshaftValue(EntityMultipartE_Vehicle vehicle, float partialTicks){
+		if(vehicle.getEngineByNumber((byte) 0) != null){
+			return (float) (vehicle.getEngineByNumber((byte) 0).getDriveshaftRotation(partialTicks)%360);
+		}else{
+			return 0;
+		}		
 	}
 	
 	private static void renderParts(EntityMultipartD_Moving multipart, float partialTicks){
@@ -913,6 +990,53 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				}
 			}
 			return rotationVariables.toArray(new String[rotationVariables.size()]);
+		}
+	}
+	
+	private static final class TranslatablePart{
+		private final String name;
+		private final Float[][] vertices;
+		
+		private final Vec3d[] translationAxis;
+		private final float[] translationMagnitudes;
+		private final String[] translationVariables;
+		
+		private TranslatablePart(String name, Float[][] vertices, List<PackTranslatableModelObject> translatableModelObjects){
+			this.name = name.toLowerCase();
+			this.vertices = vertices;
+			
+			Vec3d translationAxisTemp[] = getRotationAxis(name, translatableModelObjects);
+			this.translationAxis = new Vec3d[translationAxisTemp.length];
+			this.translationMagnitudes = new float[translationAxisTemp.length];
+			for(byte i=0; i<translationAxisTemp.length; ++i){
+				translationAxis[i] = translationAxisTemp[i].normalize();
+				translationMagnitudes[i] = (float) translationAxisTemp[i].lengthVector();
+			}
+			this.translationVariables = getRotationVariables(name, translatableModelObjects);
+		}
+		
+		private static Vec3d[] getRotationAxis(String name, List<PackTranslatableModelObject> translatableModelObjects){
+			List<Vec3d> translationAxis = new ArrayList<Vec3d>();
+			for(PackTranslatableModelObject translatable : translatableModelObjects){
+				if(translatable.partName.equals(name)){
+					if(translatable.translationAxis != null){
+						translationAxis.add(new Vec3d(translatable.translationAxis[0], translatable.translationAxis[1], translatable.translationAxis[2]));
+					}
+				}
+			}
+			return translationAxis.toArray(new Vec3d[translationAxis.size()]);
+		}
+		
+		private static String[] getRotationVariables(String name, List<PackTranslatableModelObject> translatableModelObjects){
+			List<String> translationVariables = new ArrayList<String>();
+			for(PackTranslatableModelObject translatable : translatableModelObjects){
+				if(translatable.partName.equals(name)){
+					if(translatable.partName != null){
+						translationVariables.add(translatable.translationVariable.toLowerCase());
+					}
+				}
+			}
+			return translationVariables.toArray(new String[translationVariables.size()]);
 		}
 	}
 	
