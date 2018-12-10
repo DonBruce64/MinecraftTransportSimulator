@@ -102,11 +102,10 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		if(riderIDToDismountThisTick != -1){
 			Entity riderToDismount = worldObj.getEntityByID(riderIDToDismountThisTick);
 			PartSeat seat = this.getSeatForRider(riderToDismount);
-			if(seat != null){
-				if(this.removeRiderFromSeat(riderToDismount, seat)){
-					riderIDToDismountThisTick = -1;
-				}
+			if(riderToDismount != null && seat != null){
+				removeRiderFromSeat(riderToDismount, seat);
 			}
+			riderIDToDismountThisTick = -1;
 		}
 		
 		didRiderClickSeat = false;
@@ -276,12 +275,12 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 	/**
      * Removes the rider safely from this multipart.  Returns true if removal was good, false if it failed.
      */
-	public boolean removeRiderFromSeat(Entity rider, PartSeat seat){
+	public void removeRiderFromSeat(Entity rider, PartSeat seat){
 		try{
 			ObfuscationReflectionHelper.setPrivateValue(Entity.class, rider, null, ridingEntityNames);
 		}catch (Exception e){
 			MTS.MTSLog.fatal("ERROR IN MULTIPART RIDER REFLECTION!");
-			return false;
+			return;
    	    }
 		
 		riderSeats.remove(rider.getEntityId());
@@ -302,9 +301,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 				((EntityLivingBase) rider).dismountEntity(this);
 			}
 			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, false));
-			return true;
 		}
-		return false;
 	}
 	
 	public Entity getRiderForSeat(PartSeat seat){
