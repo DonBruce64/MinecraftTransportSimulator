@@ -415,7 +415,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			case("brake"): return multipart.brakeOn ? 1 : 0;
 			case("p_brake"): return multipart.parkingBrakeOn ? 1 : 0;
 			case("horn"): return ((EntityMultipartE_Vehicle) multipart).hornOn ? 1 : 0;
-			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0))).getGearshiftRotation()/15F : 0;
+			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0))).getGearshiftRotation()/5F : 0;
 			case("engine"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? ((APartEngine) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).getEngineRotation(partialTicks)%180/180F : 0);
 			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks) + 180F)))/2F;
 			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks)));
