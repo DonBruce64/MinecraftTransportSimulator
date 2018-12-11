@@ -626,7 +626,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				}
 			}
 		}
-
+		
 		for(LightPart light : allLights){
 			boolean lightSwitchOn = vehicle.isLightOn(light.type);
 			//Fun with bit shifting!  20 bits make up the light on index here, so align to a 20 tick cycle.
@@ -740,14 +740,17 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				//Use the center point arrays for this; normals are the same for all 6 vertex sets so use whichever.
 				for(byte i=0; i<light.centerPoints.length; ++i){
 					GL11.glPushMatrix();
+					//Translate light to the center of the cone beam.
 					GL11.glTranslated(light.centerPoints[i].xCoord - light.vertices[i*6][5]*0.15F, light.centerPoints[i].yCoord - light.vertices[i*6][6]*0.15F, light.centerPoints[i].zCoord - light.vertices[i*6][7]*0.15F);
-					Vec3d endpointVec = new Vec3d(light.vertices[i*6][5]*light.size[i]*3F, light.vertices[i*6][6]*light.size[i]*3F, light.vertices[i*6][7]*light.size[i]*3F);
-					//Now that we are at the starting location for the beam, rotate the matrix to get the correct direction.
+					//Rotate beam to the normal face.
+					GL11.glRotatef((float) Math.toDegrees(Math.atan2(light.vertices[i*6][6], light.vertices[i*6][5])), 0, 0, 1);
+					GL11.glRotatef((float) Math.toDegrees(Math.acos(light.vertices[i*6][7])), 0, 1, 0);
+					//Now draw the beam
 					GL11.glDepthMask(false);
 					for(byte j=0; j<=2; ++j){
-			    		drawLightCone(endpointVec, light.size[i], false);
+			    		drawLightCone(light.size[i], false);
 			    	}
-					drawLightCone(endpointVec, light.size[i], true);
+					drawLightCone(light.size[i], true);
 					GL11.glPopMatrix();
 				}
 		    	GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -760,19 +763,19 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 	}
 	
-    private static void drawLightCone(Vec3d endPoint, double radius, boolean reverse){
+    private static void drawLightCone(double radius, boolean reverse){
 		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
 		GL11.glTexCoord2f(0, 0);
 		GL11.glVertex3d(0, 0, 0);
     	if(reverse){
     		for(float theta=0; theta < 2*Math.PI + 0.1; theta += 2F*Math.PI/40F){
     			GL11.glTexCoord2f(theta, 1);
-    			GL11.glVertex3d(endPoint.xCoord + radius*Math.cos(theta), endPoint.yCoord + radius*Math.sin(theta), endPoint.zCoord);
+    			GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
     		}
     	}else{
     		for(float theta=(float) (2*Math.PI); theta>=0 - 0.1; theta -= 2F*Math.PI/40F){
     			GL11.glTexCoord2f(theta, 1);
-    			GL11.glVertex3d(endPoint.xCoord + radius*Math.cos(theta), endPoint.yCoord + radius*Math.sin(theta), endPoint.zCoord);
+    			GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
     		}
     	}
     	GL11.glEnd();
