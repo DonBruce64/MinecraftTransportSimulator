@@ -428,7 +428,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			case("trim_aileron"): return ((EntityMultipartF_Plane) multipart).aileronTrim/350F;
 			case("trim_elevator"): return ((EntityMultipartF_Plane) multipart).elevatorTrim/350F;
 			case("trim_rudder"): return ((EntityMultipartF_Plane) multipart).rudderTrim/350F;
-			case("reverser"): return ((EntityMultipartF_Plane) multipart).reversePercent/1F;
+			case("reverser"): return ((EntityMultipartF_Plane) multipart).reversePercent/100F;
 			default: return 0;
 		}
 	}
