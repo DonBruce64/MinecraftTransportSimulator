@@ -382,8 +382,8 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0))).getGearshiftRotation() : 0;
 			case("engine"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? ((APartEngine) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) : 0);
 			case("driveshaft"): return getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks);
-			case("driveshaft_periodic"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks) + 180F)))/2F;
-			case("driveshaft_periodic_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks) + 180F));
+			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks) + 180F)))/2F;
+			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks) + 180F));
 			case("steeringwheel"): return multipart.getSteerAngle();
 			
 			case("aileron"): return ((EntityMultipartF_Plane) multipart).aileronAngle/10F;
