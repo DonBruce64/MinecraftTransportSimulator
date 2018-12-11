@@ -410,7 +410,6 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	
 	private static float getTranslationLengthForModelVariable(EntityMultipartD_Moving multipart, String variable, float partialTicks){
 		switch(variable){
-			case("cycle"): return multipart.worldObj.getTotalWorldTime()%20;
 			case("door"): return multipart.parkingBrakeOn && multipart.velocity == 0 && !multipart.locked ? 1 : 0;
 			case("throttle"): return ((EntityMultipartE_Vehicle) multipart).throttle/100F;
 			case("brake"): return multipart.brakeOn ? 1 : 0;
