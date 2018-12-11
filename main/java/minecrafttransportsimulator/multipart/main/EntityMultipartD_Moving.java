@@ -556,11 +556,13 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 				steeringAngle /= turningDistance;
 				//Another thing that can affect the steering angle is speed.
 				//More speed makes for less wheel turn to prevent crazy circles.
-				if(Math.abs(velocity) - turningFactor/3F > 0){
-					steeringAngle *= Math.pow(0.25F, Math.abs(velocity) - turningFactor/3F);
+				if(Math.abs(velocity*speedFactor/0.35F) - turningFactor/3F > 0){
+					steeringAngle *= Math.pow(0.25F, (Math.abs(velocity*(0.75F + speedFactor/0.35F/4F)) - turningFactor/3F));
 				}
 				//Adjust turn force to steer angle based on turning factor.
 				turningForce = -(float) (steeringAngle*velocity/2F);
+				//Correct for speedFactor changes.
+				turningForce *= speedFactor/0.35F;
 				//Now add the sign to this force.
 				turningForce *= Math.signum(this.getSteerAngle());
 			}

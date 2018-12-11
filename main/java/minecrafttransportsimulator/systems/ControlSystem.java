@@ -421,13 +421,13 @@ public final class ControlSystem{
 				if(CameraSystem.lockedView && Minecraft.getMinecraft().currentScreen == null){
 					int dx = Mouse.getDX();
 					if(Math.abs(dx) < 100){
-						mousePosX = (short) Math.max(Math.min(mousePosX + dx*10, 350), -350);
+						mousePosX = (short) Math.max(Math.min(mousePosX + dx*10, 450), -450);
 					}
 					MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), mousePosX));
 				}
 			}else{
 				if(joystickMap.containsKey(ControlsJoystick.CAR_TURN.joystickAssigned) && ControlsJoystick.CAR_TURN.joystickButton != NULL_COMPONENT){
-					MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), getJoystickAxisState(ControlsJoystick.CAR_TURN, (short) 350)));
+					MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), getJoystickAxisState(ControlsJoystick.CAR_TURN, (short) 450)));
 				}else{
 					boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
 					boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();
