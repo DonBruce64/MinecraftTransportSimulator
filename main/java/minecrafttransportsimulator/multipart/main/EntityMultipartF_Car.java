@@ -5,8 +5,8 @@ import java.util.List;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.multipart.parts.APart;
+import minecrafttransportsimulator.multipart.parts.APartGroundDevice;
 import minecrafttransportsimulator.multipart.parts.PartEngineCar;
-import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
@@ -17,8 +17,8 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle{
 	//Note that angle variable should be divided by 10 to get actual angle.
 	public short steeringAngle;
 	public short steeringCooldown;
-	public List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
-	public List<PartGroundDevice> groundedWheels = new ArrayList<PartGroundDevice>();
+	public List<APartGroundDevice> wheels = new ArrayList<APartGroundDevice>();
+	public List<APartGroundDevice> groundedWheels = new ArrayList<APartGroundDevice>();
 	
 	//Internal car variables
 	private float momentPitch;
@@ -41,7 +41,7 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle{
 		if(pack != null){
 			//Populate grounded wheels.  Needs to be independent of non-wheeled ground devices.
 			groundedWheels.clear();
-			for(PartGroundDevice wheel : this.wheels){
+			for(APartGroundDevice wheel : this.wheels){
 				if(wheel.isOnGround()){
 					groundedWheels.add(wheel);
 				}
@@ -100,9 +100,9 @@ public final class EntityMultipartF_Car extends EntityMultipartE_Vehicle{
 	@Override
 	public void addPart(APart part, boolean ignoreCollision){
 		super.addPart(part, ignoreCollision);
-		if(part instanceof PartGroundDevice){
-			if(((PartGroundDevice) part).pack.groundDevice.rotatesOnShaft){
-				wheels.add((PartGroundDevice) part);
+		if(part instanceof APartGroundDevice){
+			if(((APartGroundDevice) part).canBeDrivenByEngine()){
+				wheels.add((APartGroundDevice) part);
 			}
 		}
 	}

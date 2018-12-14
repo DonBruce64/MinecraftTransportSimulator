@@ -9,7 +9,10 @@ import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackRotatable
 public class PackPartObject{
 	public PartGeneralConfig general;
     public PartEngineConfig engine;
-    public PartGroundDeviceConfig groundDevice;
+    public PartWheelConfig wheel;
+    public PartPontoonConfig pontoon;
+    public PartSkidConfig skid;
+    public PartTreadConfig tread;
     public PartPropellerConfig propeller;
     public PartCustomConfig custom;
     public List<PackPart> subParts = new ArrayList<PackPart>();
@@ -32,19 +35,32 @@ public class PackPartObject{
     	public String[] repairMaterials;
     }
     
-    public class PartGroundDeviceConfig{
-    	public boolean canBeFlat;
-    	public boolean canFloat;
-        public boolean rotatesOnShaft;
-        public boolean isLongPart;
-        public float diameter;
-        public float thickness;
+    public class PartWheelConfig{
+    	public float diameter;
         public float motiveFriction;
         public float lateralFriction;
-        
-        //These parameters are extra and depend on what is chosen in the booleans above.
+    }
+    
+    public class PartPontoonConfig{
+    	public float width;
+    	public float lateralFriction;
         public float extraCollisionBoxOffset;
-        public float flatDiameter;
+    }
+    
+    public class PartSkidConfig{
+    	public float width;
+    	public float lateralFriction;
+    }
+    
+    public class PartTreadConfig{
+    	public float width;
+    	public float motiveFriction;
+        public float lateralFriction;
+        public float extraCollisionBoxOffset;
+        public float spacing;
+        public float[] yCoords;
+        public float[] zCoords;
+        public float[] angles;
     }
     
     public class PartPropellerConfig{

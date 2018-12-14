@@ -27,6 +27,7 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.multipart.parts.PartEngineCar;
+import minecrafttransportsimulator.multipart.parts.PartGroundDeviceTread;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
@@ -70,6 +71,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	private static final Map<ResourceLocation, Integer> partDisplayLists = new HashMap<ResourceLocation, Integer>();
 	private static final Map<ResourceLocation, List<RotatablePart>> partRotatableLists = new HashMap<ResourceLocation, List<RotatablePart>>();
 	private static final Map<ResourceLocation, List<LightPart>> partLightLists = new HashMap<ResourceLocation, List<LightPart>>();
+	private static final Map<ResourceLocation, List<Float[]>> treadDeltas = new HashMap<ResourceLocation, List<Float[]>>();
 	
 	//COMMON MAPS.  Keyed by either multipart name or part name.
 	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
@@ -95,13 +97,17 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			GL11.glDeleteLists(index, 1);
 		}
 		multipartDisplayLists.clear();
+		multipartRotatableLists.clear();
+		multipartTranslatableLists.clear();
+		multipartLightLists.clear();
+		windowLists.clear();
 		for(Integer index : partDisplayLists.values()){
 			GL11.glDeleteLists(index, 1);
 		}
 		partDisplayLists.clear();
-		multipartRotatableLists.clear();
-		windowLists.clear();
-		multipartLightLists.clear();
+		partRotatableLists.clear();
+		partLightLists.clear();
+		treadDeltas.clear();
 	}
 	
 	/**Returns the currently cached texture for the multipart.  Static for use in other functions.**/
@@ -270,7 +276,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		//Normally we use the pack name, but since all displaylists
 		//are the same for all models, this is more appropriate.
 		if(multipartDisplayLists.containsKey(multipart.multipartJSONName)){
-			GL11.glCallList(multipartDisplayLists.get(multipart.multipartJSONName));
+			//GL11.glCallList(multipartDisplayLists.get(multipart.multipartJSONName));
 			
 			//The display list only renders static parts.  We need to render dynamic ones manually.
 			//If this is a window, don't render it as that gets done all at once later.
@@ -485,7 +491,14 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
     			GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
     			rotatePart(part, actionRotation, true);
         		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
-    			GL11.glCallList(partDisplayLists.get(partModelLocation));
+        		
+        		//If we are a tread, do the tread-specific render.
+        		//Otherwise render like all other parts.
+        		if(part instanceof PartGroundDeviceTread){
+        			doTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));
+        		}else{
+        			GL11.glCallList(partDisplayLists.get(partModelLocation));
+        		}
     			
     			//The display list only renders static parts.  We need to render dynamic ones manually.
     			for(RotatablePart rotatable : partRotatableLists.get(partModelLocation)){
@@ -558,6 +571,141 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glRotated(actionRotation.xCoord, 1, 0, 0);
 		GL11.glRotated(actionRotation.yCoord, 0, 1, 0);
 		GL11.glRotated(actionRotation.zCoord, 0, 0, 1);
+	}
+	
+	private static void doTreadRender(PartGroundDeviceTread treadPart, float partialTicks, int displayListIndex){
+		List<Float[]> deltas = treadDeltas.get(treadPart.getModelLocation());
+		if(deltas == null){
+			//If we don't have the deltas, calculate them based on the points in the JSON.
+			//First calculate the total distance the treads need to be rendered.
+			float totalDistance = 0;
+			float lastY = treadPart.pack.tread.yCoords[0];
+			float lastZ = treadPart.pack.tread.zCoords[0];
+			for(byte i=1; i<treadPart.pack.tread.yCoords.length; ++i){
+				totalDistance += Math.hypot((treadPart.pack.tread.yCoords[i] - lastY), (treadPart.pack.tread.yCoords[i] - lastZ));
+				lastY = treadPart.pack.tread.yCoords[i];
+				lastZ = treadPart.pack.tread.zCoords[i];
+			}
+			
+			//Now that we have the total distance, generate a set of points for the path.
+			//These points should be as far apart as the spacing parameter.
+			deltas = new ArrayList<Float[]>();
+			final float spacing = treadPart.pack.tread.spacing;
+			byte pointIndex = 0;
+			float currentY = treadPart.pack.tread.yCoords[pointIndex];
+			float currentZ = treadPart.pack.tread.zCoords[pointIndex];
+			float nextY = treadPart.pack.tread.yCoords[pointIndex + 1];
+			float nextZ = treadPart.pack.tread.zCoords[pointIndex + 1];
+			float deltaYBeforeSegment = 0;
+			float deltaZBeforeSegment = 0;
+			float deltaBeforeSegment = 0;
+			float segmentDeltaY = (nextY - currentY);
+			float segmentDeltaZ = (nextZ - currentZ);
+			float segmentDeltaTotal = (float) Math.hypot(segmentDeltaY, segmentDeltaZ);
+			float angle = treadPart.pack.tread.angles[pointIndex];
+			float currentAngle = 0;
+			
+			//Keep moving along the sets of points, making another set of evenly-spaced points.
+			//This set of points will be used for rendering.
+			while(totalDistance > 0){
+				//If we are further than the delta between points, go to the next one.
+				//Set the points to the next index set and increment delta and angle.
+				while(deltaBeforeSegment + segmentDeltaTotal < spacing){
+					++pointIndex;
+					System.out.println("POINT" + pointIndex);
+					//If we run out of points go back to the start of the point set.
+					//If we are out again, exit the loop.
+					if(pointIndex + 1 == treadPart.pack.tread.yCoords.length){
+						currentY = treadPart.pack.tread.yCoords[pointIndex];
+						currentZ = treadPart.pack.tread.zCoords[pointIndex];
+						nextY = treadPart.pack.tread.yCoords[0];
+						nextZ = treadPart.pack.tread.zCoords[0];
+						//Ensure we rotate the angle by the correct amount for the joint.
+						//It's possible that we will add a negative angle here due to going from something like 270 to 0.
+						//This will cause a -270 rotation rather than the +30 we want.
+						float angleToAdd = treadPart.pack.tread.angles[0] - treadPart.pack.tread.angles[pointIndex];
+						while(angleToAdd < 0){
+							angleToAdd += 360; 
+						}
+						angle += angleToAdd;
+					}else if(pointIndex + 1 > treadPart.pack.tread.yCoords.length){
+						break;
+					}else{
+						currentY = treadPart.pack.tread.yCoords[pointIndex];
+						currentZ = treadPart.pack.tread.zCoords[pointIndex];
+						nextY = treadPart.pack.tread.yCoords[pointIndex + 1];
+						nextZ = treadPart.pack.tread.zCoords[pointIndex + 1];
+						angle += treadPart.pack.tread.angles[pointIndex] - treadPart.pack.tread.angles[pointIndex - 1];
+					}
+					
+					//Update deltas.
+					deltaBeforeSegment += segmentDeltaTotal;
+					deltaYBeforeSegment += segmentDeltaY;
+					deltaZBeforeSegment += segmentDeltaZ;
+					segmentDeltaY = nextY - currentY;
+					segmentDeltaZ = nextZ - currentZ;
+					segmentDeltaTotal = (float) Math.hypot(segmentDeltaY, segmentDeltaZ);
+				}
+				
+				//If we have enough distance for a segment, make one.
+				//Otherwise add the end distance and set the total to 0.
+				if(deltaBeforeSegment + segmentDeltaTotal >= spacing){
+					//We are now at a point where the distance between the current point and the next point
+					//are greater than the inter-point distance.  Use the slope of these two points to make a delta.
+					//If we have any delta before the point, make sure we take that into account when getting the new point.
+					float segmentPercentage = (spacing - deltaBeforeSegment)/segmentDeltaTotal;
+					float segmentY = deltaYBeforeSegment + segmentDeltaY*segmentPercentage;
+					float segmentZ = deltaZBeforeSegment + segmentDeltaZ*segmentPercentage;
+					
+					//Normally we could add the point now, but since OpenGL rotation changes the coordinate system
+					//we need to correct for that here.  Use trigonometry to rotate the segment before adding it.
+					currentAngle += angle;
+					float correctedZ = (float) (Math.cos(Math.toRadians(currentAngle))*segmentZ - Math.sin(Math.toRadians(currentAngle))*segmentY);
+					float correctedY = (float) (Math.sin(Math.toRadians(currentAngle))*segmentZ + Math.cos(Math.toRadians(currentAngle))*segmentY);
+					deltas.add(new Float[]{correctedY, correctedZ, angle});
+					System.out.format("ADDING POINT RY:%f RZ:%f RA:%f Y:%f Z:%f A:%f\n", segmentY, segmentZ, currentAngle, correctedY, correctedZ, angle);
+					//Decrement distance traveled off the variables.
+					totalDistance -= spacing;
+					segmentDeltaTotal -= spacing;
+					segmentDeltaY -= segmentDeltaY*segmentPercentage;
+					segmentDeltaZ -= segmentDeltaZ*segmentPercentage;
+					deltaBeforeSegment = 0;
+					deltaYBeforeSegment = 0;
+					deltaZBeforeSegment = 0;
+					angle = 0;
+				}else{
+					//If we have half or more a link left, make an extra one before exiting.
+					if(deltaBeforeSegment + segmentDeltaTotal > spacing/2F){
+						deltas.add(deltas.get(deltas.size() - 1));
+					}
+					totalDistance = 0;
+				}
+			}
+			//Add the finalized delta list to the map.
+			treadDeltas.put(treadPart.getModelLocation(), deltas);
+		}
+		
+		float treadMovementPercentage = (float) ((treadPart.angularPosition + treadPart.angularVelocity*partialTicks)%treadPart.pack.tread.spacing/treadPart.pack.tread.spacing);
+		GL11.glPushMatrix();
+		//First translate to the initial point.
+		GL11.glTranslatef(0, treadPart.pack.tread.yCoords[0], treadPart.pack.tread.zCoords[0]);
+		//Next use the deltas to get the amount needed to translate and rotate each link.
+		for(Float[] point : deltas){
+			if(point[2] != 0){
+				GL11.glRotatef(point[2], 1, 0, 0);
+				GL11.glTranslatef(0, point[0]*treadMovementPercentage, point[1]*treadMovementPercentage);
+				GL11.glRotatef(-point[2]*(1 - treadMovementPercentage), 1, 0, 0);
+				GL11.glCallList(displayListIndex);
+				GL11.glRotatef(point[2]*(1 - treadMovementPercentage), 1, 0, 0);
+				GL11.glTranslatef(0, point[0]*(1 - treadMovementPercentage), point[1]*( 1 - treadMovementPercentage));
+			}else{
+				GL11.glTranslatef(0, point[0]*treadMovementPercentage, point[1]*treadMovementPercentage);
+				GL11.glCallList(displayListIndex);
+				GL11.glTranslatef(0, point[0]*(1 - treadMovementPercentage), point[1]*( 1 - treadMovementPercentage));
+			}
+			
+		}
+		GL11.glPopMatrix();
 	}
 	
 	private static void renderWindows(EntityMultipartD_Moving multipart, float partialTicks){

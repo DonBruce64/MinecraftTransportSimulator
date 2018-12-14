@@ -7,15 +7,14 @@ import net.minecraft.util.ResourceLocation;
 
 /**A fake ground device that will be added to the multipart when long ground devices are present.
  * Does not render and will be removed in tandem with the ground device that's linked to it.
- * These longer parts cannot go flat, therefore some methods have been simplified here.
  * 
  * @author don_bruce
  */
-public final class PartGroundDeviceFake extends PartGroundDevice{
-	private final PartGroundDevice masterPart;
+public final class PartGroundDeviceFake extends APartGroundDevice{
+	private final APartGroundDevice masterPart;
 	private boolean wasRemovedFromMultipart = false;
 	
-	public PartGroundDeviceFake(PartGroundDevice masterPart, PackPart packPart, String partName, NBTTagCompound dataTag){
+	public PartGroundDeviceFake(APartGroundDevice masterPart, PackPart packPart, String partName, NBTTagCompound dataTag){
 		super(masterPart.multipart, packPart, partName, dataTag);
 		this.masterPart = masterPart;
 	}
@@ -39,6 +38,16 @@ public final class PartGroundDeviceFake extends PartGroundDevice{
 	}
 	
 	@Override
+	public float getWidth(){
+		return masterPart.getWidth();
+	}
+	
+	@Override
+	public float getHeight(){
+		return masterPart.getHeight();
+	}
+	
+	@Override
 	public Item getItemForPart(){
 		return wasRemovedFromMultipart ? super.getItemForPart() : null;
 	}
@@ -51,5 +60,25 @@ public final class PartGroundDeviceFake extends PartGroundDevice{
 	@Override
 	public ResourceLocation getTextureLocation(){
 		return null;
+	}
+	
+	@Override
+	public float getMotiveFriction(){
+		return masterPart.getMotiveFriction();
+	}
+	
+	@Override
+	public float getLateralFriction(){
+		return masterPart.getLateralFriction();
+	}
+	
+	@Override
+	public float getLongPartOffset(){
+		return -masterPart.getLongPartOffset();
+	}
+	
+	@Override
+	public boolean canBeDrivenByEngine(){
+		return masterPart.canBeDrivenByEngine();
 	}
 }

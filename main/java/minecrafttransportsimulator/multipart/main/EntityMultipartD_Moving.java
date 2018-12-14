@@ -6,7 +6,7 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.multipart.parts.APart;
-import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
+import minecrafttransportsimulator.multipart.parts.APartGroundDevice;
 import minecrafttransportsimulator.packets.multipart.PacketMultipartDeltas;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -47,7 +47,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 	private float serverDeltaRoll;
 	
 	/**List of ground devices on the ground.  Populated after each movement to be used in turning/braking calculations.*/
-	public final List<PartGroundDevice> groundedGroundDevices = new ArrayList<PartGroundDevice>();
+	public final List<APartGroundDevice> groundedGroundDevices = new ArrayList<APartGroundDevice>();
 	
 	public final double clingSpeed = ConfigSystem.getDoubleConfig("ClingSpeed");
 	
@@ -73,9 +73,9 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 			//Populate the ground device list for use in the methods here.
 			groundedGroundDevices.clear();
 			for(APart part : this.getMultipartParts()){
-				if(part instanceof PartGroundDevice){
-					if(((PartGroundDevice) part).isOnGround()){
-						groundedGroundDevices.add((PartGroundDevice) part);
+				if(part instanceof APartGroundDevice){
+					if(((APartGroundDevice) part).isOnGround()){
+						groundedGroundDevices.add((APartGroundDevice) part);
 					}
 				}
 			}
@@ -488,7 +488,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 	protected float getBrakingForceFactor(){
 		float brakingFactor = 0;
 		//First get the ground device braking contributions.
-		for(PartGroundDevice groundDevice : this.groundedGroundDevices){
+		for(APartGroundDevice groundDevice : this.groundedGroundDevices){
 			float addedFactor = 0;
 			if(brakeOn || parkingBrakeOn){
 				addedFactor = groundDevice.getMotiveFriction();
@@ -521,7 +521,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 	 */
 	protected float getSkiddingFactor(){
 		float skiddingFactor = 0;
-		for(PartGroundDevice groundDevice : this.groundedGroundDevices){
+		for(APartGroundDevice groundDevice : this.groundedGroundDevices){
 			skiddingFactor += groundDevice.getLateralFriction() - groundDevice.getFrictionLoss();
 		}
 		return skiddingFactor > 0 ? skiddingFactor : 0;
@@ -538,7 +538,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 		if(steeringAngle != 0){
 			float turningFactor = 0;
 			float turningDistance = 0;
-			for(PartGroundDevice groundDevice : this.groundedGroundDevices){
+			for(APartGroundDevice groundDevice : this.groundedGroundDevices){
 				float frictionLoss = groundDevice.getFrictionLoss();
 				//Do we have enough friction to change yaw?
 				if(groundDevice.turnsWithSteer && groundDevice.getLateralFriction() - frictionLoss > 0){

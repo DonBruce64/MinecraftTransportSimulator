@@ -11,7 +11,8 @@ import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBBCollective;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackCollisionBox;
 import minecrafttransportsimulator.multipart.parts.APart;
-import minecrafttransportsimulator.multipart.parts.PartGroundDevice;
+import minecrafttransportsimulator.multipart.parts.APartGroundDevice;
+import minecrafttransportsimulator.multipart.parts.PartGroundDevicePontoon;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.block.state.IBlockState;
@@ -39,7 +40,7 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 	/**List of interaction boxes.  These are AABBs that can be clicked but do NOT affect multipart collision.*/
 	private final List<MultipartAxisAlignedBB> currentInteractionBoxes = new ArrayList<MultipartAxisAlignedBB>();
 	/**Map that keys collision boxes of ground devices to the devices themselves.  Used for ground device collision operations.*/
-	protected final Map<MultipartAxisAlignedBB, PartGroundDevice> groundDeviceCollisionBoxMap = new HashMap<MultipartAxisAlignedBB, PartGroundDevice>();
+	protected final Map<MultipartAxisAlignedBB, APartGroundDevice> groundDeviceCollisionBoxMap = new HashMap<MultipartAxisAlignedBB, APartGroundDevice>();
 	
 	public final double speedFactor = ConfigSystem.getDoubleConfig("SpeedFactor");
 	
@@ -69,9 +70,9 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 			currentCollisionBoxes.addAll(this.getUpdatedCollisionBoxes());
 			hardnessHitThisTick = 0;
 			for(APart part : this.getMultipartParts()){
-				if(part instanceof PartGroundDevice){
+				if(part instanceof APartGroundDevice){
 					currentCollisionBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));
-					groundDeviceCollisionBoxMap.put(currentCollisionBoxes.get(currentCollisionBoxes.size() -1 ), (PartGroundDevice) part);
+					groundDeviceCollisionBoxMap.put(currentCollisionBoxes.get(currentCollisionBoxes.size() -1 ), (APartGroundDevice) part);
 				}else{
 					currentInteractionBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));
 				}
@@ -168,7 +169,7 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 	 * Returns -2 destroys the multipart if it hit a core collision box at too high a speed.
 	 * Returns -3 if the collision is a ground device and could be moved upwards to not collide (only for X and Z axis).
 	 */
-	protected float getCollisionForAxis(MultipartAxisAlignedBB box, boolean xAxis, boolean yAxis, boolean zAxis, PartGroundDevice optionalGroundDevice){
+	protected float getCollisionForAxis(MultipartAxisAlignedBB box, boolean xAxis, boolean yAxis, boolean zAxis, APartGroundDevice optionalGroundDevice){
 		Vec3d motion = new Vec3d(this.motionX*speedFactor, this.motionY*speedFactor, this.motionZ*speedFactor);
 		box = box.offset(xAxis ? motion.xCoord : 0, yAxis ? motion.yCoord : 0, zAxis ? motion.zCoord : 0);
 		
@@ -275,7 +276,7 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 	/**
 	 * Checks if an AABB is colliding with blocks, and returns the AABB of those blocks.
 	 */
-	protected List<AxisAlignedBB> getAABBCollisions(AxisAlignedBB box, PartGroundDevice optionalGroundDevice, List<BlockPos> collidedBlockPos){
+	protected List<AxisAlignedBB> getAABBCollisions(AxisAlignedBB box, APartGroundDevice optionalGroundDevice, List<BlockPos> collidedBlockPos){
 		int minX = (int) Math.floor(box.minX);
     	int maxX = (int) Math.floor(box.maxX + 1.0D);
     	int minY = (int) Math.floor(box.minY);
@@ -295,7 +296,7 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
         					collidedBlockPos.add(pos);
         				}
     				}
-					if(optionalGroundDevice != null && optionalGroundDevice.pack.groundDevice.canFloat && state.getMaterial().isLiquid()){
+					if(optionalGroundDevice instanceof PartGroundDevicePontoon && state.getMaterial().isLiquid()){
 						collidingAABBList.add(state.getBoundingBox(worldObj, pos).offset(pos));
 					}
     			}

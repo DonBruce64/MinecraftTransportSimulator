@@ -25,7 +25,7 @@ public class PartEngineCar extends APartEngine{
 		float lowestSpeed = 999F;
 		float vehicleDesiredSpeed = -999F;
 		if(currentGear != 0){
-			for(PartGroundDevice wheel : car.wheels){
+			for(APartGroundDevice wheel : car.wheels){
 				if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
 					//If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
 					//If we don't have any grounded wheels, use them all to calculate the speeds.
@@ -59,7 +59,7 @@ public class PartEngineCar extends APartEngine{
 		
 		//Get friction of wheels.
 		float wheelFriction = 0;
-		for(PartGroundDevice wheel : car.groundedWheels){
+		for(APartGroundDevice wheel : car.groundedWheels){
 			if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
 				wheelFriction += wheel.getMotiveFriction() - wheel.getFrictionLoss();
 			}
@@ -78,7 +78,7 @@ public class PartEngineCar extends APartEngine{
 				//Check to see if the wheels have enough friction to affect the engine.
 				if(Math.abs(engineForce/10F) > wheelFriction || (Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) > 0.1 && Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) < Math.abs(engineForce/10F))){
 					engineForce *= car.currentMass/100000F*wheelFriction/Math.abs(engineForce/10F);					
-					for(PartGroundDevice wheel : car.wheels){
+					for(APartGroundDevice wheel : car.wheels){
 						if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
 							if(getRatioForCurrentGear() > 0){
 								if(engineForce >= 0){
@@ -99,7 +99,7 @@ public class PartEngineCar extends APartEngine{
 					}
 				}else{
 					//If we have wheels not on the ground and we drive them, adjust their velocity now.
-					for(PartGroundDevice wheel : car.wheels){
+					for(APartGroundDevice wheel : car.wheels){
 						wheel.skipAngularCalcs = false;
 						if(!wheel.isOnGround() && ((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive))){
 							wheel.angularVelocity = lowestSpeed;
@@ -112,7 +112,7 @@ public class PartEngineCar extends APartEngine{
 					engineForce = 0;
 				}
 			}else{
-				for(PartGroundDevice wheel : car.wheels){
+				for(APartGroundDevice wheel : car.wheels){
 					wheel.skipAngularCalcs = false;
 				}
 				RPM += (engineTargetRPM - RPM)/10;
@@ -136,7 +136,7 @@ public class PartEngineCar extends APartEngine{
 		engineRotation += RPM*1200D/360D;
 		
 		float driveShaftDesiredSpeed = -999F;
-		for(PartGroundDevice wheel : car.wheels){
+		for(APartGroundDevice wheel : car.wheels){
 			if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
 				driveShaftDesiredSpeed = (float) Math.max(Math.abs(wheel.angularVelocity*car.speedFactor), driveShaftDesiredSpeed);
 			}
@@ -149,7 +149,7 @@ public class PartEngineCar extends APartEngine{
 	@Override
 	public void removePart(){
 		super.removePart();
-		for(PartGroundDevice wheel : car.wheels){
+		for(APartGroundDevice wheel : car.wheels){
 			if(!wheel.isOnGround() && ((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive))){
 				wheel.skipAngularCalcs = false;
 			}

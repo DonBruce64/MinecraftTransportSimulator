@@ -11,26 +11,26 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class ItemPartGroundDevice extends AItemPart{
+public class ItemPartGroundDeviceWheel extends AItemPart{
 	
-	public ItemPartGroundDevice(String partName){
+	public ItemPartGroundDeviceWheel(String partName){
 		super(partName);
 	}
 	
 	@Override
 	public boolean isPartValidForPackDef(PackPart packPart){
-		float diameter = PackParserSystem.getPartPack(partName).groundDevice.diameter;
+		float diameter = PackParserSystem.getPartPack(partName).wheel.diameter;
 		return packPart.minValue <= diameter && packPart.maxValue >= diameter ? super.isPartValidForPackDef(packPart) : false;
 	}
 	
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
-		PackPartObject pack = PackParserSystem.getPartPack(((ItemPartGroundDevice) stack.getItem()).partName); 
-		tooltipLines.add(I18n.format("info.item.ground_device.diameter") + pack.groundDevice.diameter*1.5F);
-		tooltipLines.add(I18n.format("info.item.ground_device.motivefriction") + pack.groundDevice.motiveFriction);
-		tooltipLines.add(I18n.format("info.item.ground_device.lateralfriction") + pack.groundDevice.lateralFriction);
-		tooltipLines.add(I18n.format("info.item.ground_device.rotatesonshaft_" + String.valueOf(pack.groundDevice.rotatesOnShaft)));
-		tooltipLines.add(I18n.format("info.item.ground_device.canfloat_" + String.valueOf(pack.groundDevice.canFloat)));
+		PackPartObject pack = PackParserSystem.getPartPack(((ItemPartGroundDeviceWheel) stack.getItem()).partName); 
+		tooltipLines.add(I18n.format("info.item.ground_device.diameter") + pack.wheel.diameter*1.5F);
+		tooltipLines.add(I18n.format("info.item.ground_device.motivefriction") + pack.wheel.motiveFriction);
+		tooltipLines.add(I18n.format("info.item.ground_device.lateralfriction") + pack.wheel.lateralFriction);
+		tooltipLines.add(I18n.format("info.item.ground_device.rotatesonshaft_true"));
+		tooltipLines.add(I18n.format("info.item.ground_device.canfloat_false"));
 	}
 }
