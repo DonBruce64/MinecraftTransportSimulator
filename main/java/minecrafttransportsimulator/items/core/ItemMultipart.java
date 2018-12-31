@@ -3,7 +3,7 @@ package minecrafttransportsimulator.items.core;
 import java.lang.reflect.Constructor;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
+import minecrafttransportsimulator.collision.RotatableAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackCollisionBox;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
@@ -46,7 +46,7 @@ public class ItemMultipart extends Item{
 					}
 					newMultipart.posY += -minHeight;
 					
-					for(MultipartAxisAlignedBB coreBox : newMultipart.getCurrentCollisionBoxes()){
+					for(RotatableAxisAlignedBB coreBox : newMultipart.allBoxes){
 						if(world.collidesWithAnyBlock(coreBox)){
 							newMultipart.setDead();
 							return EnumActionResult.FAIL;

@@ -105,13 +105,9 @@ public abstract class EntityMultipartA_Base extends Entity{
 		parts.add(part);
 		if(!ignoreCollision){
 			//Check for collision, and boost if needed.
-			if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
+			//TODO fix this so we don't bounce when adding parts and we don't break any either.
+			if(part.isPartCollidingWithBlocks()){
 				this.setPositionAndRotation(posX, posY +  Math.max(0, -part.offset.yCoord) + part.getHeight(), posZ, rotationYaw, rotationPitch);
-			}
-			
-			//Sometimes we need to do this for parts that are deeper into the ground.
-			if(part.isPartCollidingWithBlocks(new Vec3d(0, Math.max(0, -part.offset.yCoord) + part.getHeight(), 0))){
-				this.setPositionAndRotation(posX, posY +  part.getHeight(), posZ, rotationYaw, rotationPitch);
 			}
 		}
 	}

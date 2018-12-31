@@ -5,7 +5,7 @@ import java.util.Map.Entry;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
+import minecrafttransportsimulator.collision.RotatableAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.guis.GUIConfig;
@@ -36,6 +36,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
@@ -104,9 +105,9 @@ public final class ClientEventSystem{
         				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
 			    		for(float f=1.0F; f<4.0F; f += 0.1F){
 			    			for(Entry<Vec3d, PackPart> packPartEntry : multipart.getAllPossiblePackParts().entrySet()){
-		    					Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey().addVector(0, 0.25F, 0), multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
-		    					MultipartAxisAlignedBB partBox = new MultipartAxisAlignedBB(multipart.getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0.5F, 0), 1.0F, 1.75F, false);
-		    					
+			    				//TODO check this to make sure we didn't change this relative to the green hologram.
+			    				Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
+								AxisAlignedBB partBox = new AxisAlignedBB((float) (offset.xCoord) - 0.5F, (float) (offset.yCoord) - 0.5F, (float) (offset.zCoord) - 0.5F, (float) (offset.xCoord) + 0.5F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.5F);
 		    					if(partBox.isVecInside(clickedVec)){
 		    						//Check to make sure this spot is valid (server gets final say).
 		    						if(packPartEntry.getValue().types.contains(PackParserSystem.getPartPack(((AItemPart) event.getItemStack().getItem()).partName).general.type)){

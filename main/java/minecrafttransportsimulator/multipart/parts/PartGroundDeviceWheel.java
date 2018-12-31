@@ -85,6 +85,11 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	}
 	
 	@Override
+	public float getLength(){
+		return this.getHeight();
+	}
+	
+	@Override
 	public float getHeight(){
 		return this.isFlat ? this.pack.wheel.diameter/2F : this.pack.wheel.diameter;
 	}
@@ -123,11 +128,6 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	@Override
 	public float getLateralFriction(){
 		return !this.isFlat ? this.pack.wheel.lateralFriction : this.pack.wheel.lateralFriction/10F;
-	}
-	
-	@Override
-	public float getLongPartOffset(){
-		return 0;
 	}
 	
 	@Override

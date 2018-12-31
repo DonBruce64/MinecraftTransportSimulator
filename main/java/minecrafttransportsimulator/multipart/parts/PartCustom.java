@@ -19,6 +19,11 @@ public final class PartCustom extends APart{
 	public float getWidth(){
 		return pack.custom.width;
 	}
+	
+	@Override
+	public float getLength(){
+		return pack.custom.length;
+	}
 
 	@Override
 	public float getHeight(){

@@ -1,8 +1,12 @@
 package minecrafttransportsimulator.collision;
 
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.systems.RotationSystem;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**This class contains a custom bounding box that is specifically designed for MTS vehicle collision.
  * Unlike the AABB Minecraft uses, this box can rotate.  It also allows for mutation of the center position of the
@@ -84,14 +88,14 @@ public class RotatableBB{
 		
 		//Next get the 8 points that make up this RBB.
 		Vec3d[] points = new Vec3d[8];
-		points[0] = RotationSystem.getRotatedPoint(new Vec3d(-width/2F, height/2F, depth/2F), rotationX, rotationY, rotationZ);
-		points[1] = RotationSystem.getRotatedPoint(new Vec3d(width/2F, height/2F, depth/2F), rotationX, rotationY, rotationZ);
-		points[2] = RotationSystem.getRotatedPoint(new Vec3d(-width/2F, height/2F, -depth/2F), rotationX, rotationY, rotationZ);
-		points[3] = RotationSystem.getRotatedPoint(new Vec3d(width/2F, height/2F, -depth/2F), rotationX, rotationY, rotationZ);
-		points[4] = RotationSystem.getRotatedPoint(new Vec3d(-width/2F, -height/2F, depth/2F), rotationX, rotationY, rotationZ);
-		points[5] = RotationSystem.getRotatedPoint(new Vec3d(width/2F, -height/2F, depth/2F), rotationX, rotationY, rotationZ);
-		points[6] = RotationSystem.getRotatedPoint(new Vec3d(-width/2F, -height/2F, -depth/2F), rotationX, rotationY, rotationZ);
-		points[7] = RotationSystem.getRotatedPoint(new Vec3d(width/2F, -height/2F, -depth/2F), rotationX, rotationY, rotationZ);
+		points[0] = RotationSystem.getRotatedPoint(new Vec3d(-width/2F, height/2F, depth/2F), rotationX, rotationY, rotationZ).addVector(xPos, yPos, zPos);
+		points[1] = RotationSystem.getRotatedPoint(new Vec3d(width/2F, height/2F, depth/2F), rotationX, rotationY, rotationZ).addVector(xPos, yPos, zPos);
+		points[2] = RotationSystem.getRotatedPoint(new Vec3d(-width/2F, height/2F, -depth/2F), rotationX, rotationY, rotationZ).addVector(xPos, yPos, zPos);
+		points[3] = RotationSystem.getRotatedPoint(new Vec3d(width/2F, height/2F, -depth/2F), rotationX, rotationY, rotationZ).addVector(xPos, yPos, zPos);
+		points[4] = RotationSystem.getRotatedPoint(new Vec3d(-width/2F, -height/2F, depth/2F), rotationX, rotationY, rotationZ).addVector(xPos, yPos, zPos);
+		points[5] = RotationSystem.getRotatedPoint(new Vec3d(width/2F, -height/2F, depth/2F), rotationX, rotationY, rotationZ).addVector(xPos, yPos, zPos);
+		points[6] = RotationSystem.getRotatedPoint(new Vec3d(-width/2F, -height/2F, -depth/2F), rotationX, rotationY, rotationZ).addVector(xPos, yPos, zPos);
+		points[7] = RotationSystem.getRotatedPoint(new Vec3d(width/2F, -height/2F, -depth/2F), rotationX, rotationY, rotationZ).addVector(xPos, yPos, zPos);
 		for(byte i=0; i<8; ++i){
 			this.xCoords[i] = points[i].xCoord;
 			this.yCoords[i] = points[i].yCoord;
@@ -121,8 +125,8 @@ public class RotatableBB{
 			if(zCoords[i] < zCoords[minZ]){
 				minZ = i;
 			}
-			if(zCoords[i] > zCoords[minZ]){
-				minZ = i;
+			if(zCoords[i] > zCoords[maxZ]){
+				maxZ = i;
 			}
 		}
 		
@@ -132,12 +136,12 @@ public class RotatableBB{
 		collisionZAxisNormal = points[1].subtract(points[2]).normalize();
 		
 		//Finally, get the projection values for the axis.
-		minXProjection = collisionXAxisNormal.xCoord*xCoords[minX] + collisionXAxisNormal.yCoord*yCoords[minX] + collisionXAxisNormal.zCoord*zCoords[minX];
-		maxXProjection = collisionXAxisNormal.xCoord*xCoords[maxX] + collisionXAxisNormal.yCoord*yCoords[maxX] + collisionXAxisNormal.zCoord*zCoords[maxX];
-		minYProjection = collisionYAxisNormal.xCoord*xCoords[minY] + collisionYAxisNormal.yCoord*yCoords[minY] + collisionYAxisNormal.zCoord*zCoords[minY];
-		maxYProjection = collisionYAxisNormal.xCoord*xCoords[maxY] + collisionYAxisNormal.yCoord*yCoords[maxY] + collisionYAxisNormal.zCoord*zCoords[maxY];
-		minZProjection = collisionZAxisNormal.xCoord*xCoords[minZ] + collisionZAxisNormal.yCoord*yCoords[minZ] + collisionZAxisNormal.zCoord*zCoords[minZ];
-		maxZProjection = collisionZAxisNormal.xCoord*xCoords[maxZ] + collisionZAxisNormal.yCoord*yCoords[maxZ] + collisionZAxisNormal.zCoord*zCoords[maxZ];
+		minXProjection = collisionXAxisNormal.xCoord*xCoords[minX] + collisionXAxisNormal.yCoord*xCoords[minX] + collisionXAxisNormal.zCoord*xCoords[minX];
+		maxXProjection = collisionXAxisNormal.xCoord*xCoords[maxX] + collisionXAxisNormal.yCoord*xCoords[maxX] + collisionXAxisNormal.zCoord*xCoords[maxX];
+		minYProjection = collisionYAxisNormal.xCoord*yCoords[minY] + collisionYAxisNormal.yCoord*yCoords[minY] + collisionYAxisNormal.zCoord*yCoords[minY];
+		maxYProjection = collisionYAxisNormal.xCoord*yCoords[maxY] + collisionYAxisNormal.yCoord*yCoords[maxY] + collisionYAxisNormal.zCoord*yCoords[maxY];
+		minZProjection = collisionZAxisNormal.xCoord*zCoords[minZ] + collisionZAxisNormal.yCoord*zCoords[minZ] + collisionZAxisNormal.zCoord*zCoords[minZ];
+		maxZProjection = collisionZAxisNormal.xCoord*zCoords[maxZ] + collisionZAxisNormal.yCoord*zCoords[maxZ] + collisionZAxisNormal.zCoord*zCoords[maxZ];
 		updateStaticAABB();
 	}
 		
@@ -152,7 +156,7 @@ public class RotatableBB{
 		//0.70710678118F is sin/cos 45.  We angle the box here to get the extreme points at a 45 degree rotation.
 		float maxX = 0.70710678118F*width/2F - 0.70710678118F*height/2F;
 		float maxY = 0.70710678118F*width/2F + 0.70710678118F*height/2F;
-		encompassingAABB = new AxisAlignedBB(this.xPos - maxX, this.yPos - maxY, this.zPos - maxX, this.xPos + maxX, this.yPos + maxY, this.zPos + maxX); 
+		encompassingAABB = new AxisAlignedBB(this.xPos - maxX, this.yPos - maxY, this.zPos - maxX, this.xPos + maxX, this.yPos + maxY, this.zPos + maxX);
 	}
 
 	/**
@@ -165,6 +169,8 @@ public class RotatableBB{
 	 */
 	public double getPredictiveCollision(AxisAlignedBB box, byte axis, double offset){
 		if(!box.intersectsWith(this.encompassingAABB)){
+			return offset;
+		}else if(box.intersectsWith(this.encompassingAABB)){
 			return offset;
 		}
 
@@ -378,5 +384,40 @@ public class RotatableBB{
 	
 	public RotatableBB getOffsetBox(double xOffset, double yOffset, double zOffset){
 		return new RotatableBB(this.xPos + xOffset, this.yPos + yOffset, this.zPos + zOffset, this.rotationX, this.rotationY, this.rotationZ, this.width, this.height, this.depth);
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public void renderBox(){
+		GL11.glBegin(GL11.GL_LINES);
+		//Top segments.
+		GL11.glVertex3d(xCoords[0], yCoords[0], zCoords[0]);
+		GL11.glVertex3d(xCoords[1], yCoords[1], zCoords[1]);
+		GL11.glVertex3d(xCoords[1], yCoords[1], zCoords[1]);
+		GL11.glVertex3d(xCoords[3], yCoords[3], zCoords[3]);
+		GL11.glVertex3d(xCoords[3], yCoords[3], zCoords[3]);
+		GL11.glVertex3d(xCoords[2], yCoords[2], zCoords[2]);
+		GL11.glVertex3d(xCoords[2], yCoords[2], zCoords[2]);
+		GL11.glVertex3d(xCoords[0], yCoords[0], zCoords[0]);
+
+		//Bottom segments.
+		GL11.glVertex3d(xCoords[4], yCoords[4], zCoords[4]);
+		GL11.glVertex3d(xCoords[5], yCoords[5], zCoords[5]);
+		GL11.glVertex3d(xCoords[5], yCoords[5], zCoords[5]);
+		GL11.glVertex3d(xCoords[7], yCoords[7], zCoords[7]);
+		GL11.glVertex3d(xCoords[7], yCoords[7], zCoords[7]);
+		GL11.glVertex3d(xCoords[6], yCoords[6], zCoords[6]);
+		GL11.glVertex3d(xCoords[6], yCoords[6], zCoords[6]);
+		GL11.glVertex3d(xCoords[4], yCoords[4], zCoords[4]);
+		
+		//Vertical segments.
+		GL11.glVertex3d(xCoords[0], yCoords[0], zCoords[0]);
+		GL11.glVertex3d(xCoords[4], yCoords[4], zCoords[4]);
+		GL11.glVertex3d(xCoords[1], yCoords[1], zCoords[1]);
+		GL11.glVertex3d(xCoords[5], yCoords[5], zCoords[5]);
+		GL11.glVertex3d(xCoords[2], yCoords[2], zCoords[2]);
+		GL11.glVertex3d(xCoords[6], yCoords[6], zCoords[6]);
+		GL11.glVertex3d(xCoords[3], yCoords[3], zCoords[3]);
+		GL11.glVertex3d(xCoords[7], yCoords[7], zCoords[7]);		
+		GL11.glEnd();
 	}
 }

@@ -3,7 +3,7 @@ package minecrafttransportsimulator.multipart.parts;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
+import minecrafttransportsimulator.collision.RotatableAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
@@ -49,6 +49,7 @@ public abstract class APart{
 	
 	private boolean isValid;
 	private ResourceLocation modelLocation;
+	private RotatableAxisAlignedBB partBox;
 		
 	public APart(EntityMultipartD_Moving multipart, PackPart packPart, String partName, NBTTagCompound dataTag){
 		this.multipart = multipart;
@@ -61,6 +62,7 @@ public abstract class APart{
 		this.turnsWithSteer = packPart.turnsWithSteer;
 		this.overrideMirror = packPart.overrideMirror;
 		this.isValid = true;
+		this.partBox = new RotatableAxisAlignedBB(partPos.xCoord, partPos.yCoord, partPos.zCoord, multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll, this.getWidth(), this.getHeight(), this.getLength());
 		
 		//Check to see if we are an additional part to a part on our parent.
 		for(PackPart parentPackPart : multipart.pack.parts){
@@ -111,6 +113,7 @@ public abstract class APart{
 	 */
 	public void updatePart(){
 		this.partPos = RotationSystem.getRotatedPoint(this.offset, multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll).add(this.multipart.getPositionVector());
+		this.getPartBox().update(this.partPos.xCoord, this.partPos.yCoord, this.partPos.zCoord, multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
 	}
 	
 	/**Called when the master multipart removes this part.
@@ -152,6 +155,8 @@ public abstract class APart{
 	
 	public abstract float getWidth();
 	
+	public abstract float getLength();
+	
 	public abstract float getHeight();
 	
 	/**Gets the item for this part.  If the part should not return an item 
@@ -181,9 +186,8 @@ public abstract class APart{
 		return new ResourceLocation(partName.substring(0, partName.indexOf(':')), "textures/parts/" + partName.substring(partName.indexOf(':') + 1) + ".png");
 	}
 	
-	public final MultipartAxisAlignedBB getAABBWithOffset(Vec3d boxOffset){
-		Vec3d totalOffset = partPos.add(boxOffset);
-		return new MultipartAxisAlignedBB(totalOffset, this.offset, this.getWidth(), this.getHeight(), false);
+	public final RotatableAxisAlignedBB getPartBox(){
+		return partBox;
 	}
 	
 	/**Gets the rotation vector for rendering.
@@ -198,10 +202,9 @@ public abstract class APart{
 	}
 
 	/**Checks to see if this part is collided with any collidable blocks.
-	 * Uses a regular Vanilla check, as well as a liquid check for applicable parts.
-	 * Can be given an offset vector to check for potential collisions. 
+	 * Uses a regular Vanilla check, as well as a liquid check for applicable parts. 
 	 */
-	public boolean isPartCollidingWithBlocks(Vec3d collisionOffset){
-		return !multipart.worldObj.getCollisionBoxes(this.getAABBWithOffset(collisionOffset)).isEmpty();
+	public boolean isPartCollidingWithBlocks(){
+		return !multipart.worldObj.getCollisionBoxes(this.partBox).isEmpty();
     }
 }

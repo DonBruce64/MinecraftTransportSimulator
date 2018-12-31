@@ -7,6 +7,8 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**This class is an upgraded AABB class that contains a {@link RotatableBB}.
  * This allows it to be sensitive to rotation, while still being compatible with Minecraft's
@@ -17,6 +19,10 @@ import net.minecraft.util.math.Vec3d;
  * required when this class is re-generated.  Note that this system is geared towards letting
  * MC do collisions with a static rotatable body, NOT for use in performing collision checks with
  * said body.  Because of this, most of the methods are not optimized for predictive collisions.
+ * Also note that the AABB min/max parameters are NOT updated once this class is constructed.
+ * This means that they are only valid ONCE during the inital construction!  This allows for AABB
+ * checks with bounds during spawning of vehicles and parts where compatibility with MC systems is
+ * required.
  * 
  * @author don_bruce
  */
@@ -24,7 +30,7 @@ public class RotatableAxisAlignedBB extends AxisAlignedBB{
 	private final RotatableBB rotatableBox;
 	
 	public RotatableAxisAlignedBB(double xPos, double yPos, double zPos, float rotationX, float rotationY, float rotationZ, float width, float height, float depth){
-		super(0, 0, 0, 1, 1, 1);
+		super(xPos - width/2F, yPos - height/2F, zPos - depth/2F, xPos + width/2F, yPos + height/2F, depth + zPos/2F);
 		this.rotatableBox = new RotatableBB(xPos, yPos, zPos, rotationX, rotationY, rotationZ, width, height, depth);
 	}
 	
@@ -33,9 +39,18 @@ public class RotatableAxisAlignedBB extends AxisAlignedBB{
 		this.rotatableBox = rotatableBox;
 	}
 	
+	public void update(double xPos, double yPos, double zPos, float rotationX, float rotationY, float rotationZ){
+		rotatableBox.recalculatePoints(xPos, yPos, zPos, rotationX, rotationY, rotationZ);
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public void renderBox(){
+		rotatableBox.renderBox();
+	}
+	
 	@Override
-	public RotatableAxisAlignedBB expandXyz(double value){
-		return new RotatableAxisAlignedBB(rotatableBox.getExpandedBox((float) value, (float) value, (float) value));
+	public RotatableAxisAlignedBB expand(double x, double y, double z){
+		return new RotatableAxisAlignedBB(rotatableBox.getExpandedBox((float) x, (float) y, (float) z));
     }
 	
 	@Override
@@ -80,7 +95,7 @@ public class RotatableAxisAlignedBB extends AxisAlignedBB{
 	
 	/**
 	 * Best I can tell, this method is used to detect if this AABB is hit.  MC usually passes in the
-	 * the vector start position as the first parameter, and the action vector as the second.
+	 * the vector start position as the first parameter, and the end vector as the second.
 	 * So for players the first parameter is their eyes, and the second is their hit vector,
 	 * while for projectiles the first parameter is their position, and the second is their velocity.
 	 * In general, MC seems to expect a hit/miss result, with the side being hit appearing to only be
@@ -91,8 +106,8 @@ public class RotatableAxisAlignedBB extends AxisAlignedBB{
 	@Override
 	@Nullable
     public RayTraceResult calculateIntercept(Vec3d vecA, Vec3d vecB){
-		double lengthTrace = vecB.lengthVector();
-		for(double d=0; d<=lengthTrace; d = (d + rotatableBox.smallestDistance > lengthTrace ? lengthTrace : rotatableBox.smallestDistance/lengthTrace)){
+		double lengthTrace = vecB.subtract(vecA).lengthVector();
+		for(double d=0; d<=lengthTrace; d = (d + (rotatableBox.smallestDistance > lengthTrace ? lengthTrace : rotatableBox.smallestDistance/lengthTrace))){
 			if(rotatableBox.isPointInsideBox(vecA.xCoord + vecB.xCoord*d, vecA.yCoord + vecB.yCoord*d, vecA.zCoord + vecB.zCoord*d)){
 				return new RayTraceResult(new Vec3d(vecA.xCoord + vecB.xCoord*d, vecA.yCoord + vecB.yCoord*d, vecA.zCoord + vecB.zCoord*d), EnumFacing.DOWN);
 			}

@@ -67,7 +67,7 @@ public class PartPropeller extends APart{
 			angularPosition += angularVelocity;
 		}else{
 			if(connectedEngine.RPM >= 100){
-				List<EntityLivingBase> collidedEntites = multipart.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(Vec3d.ZERO).expand(0.2F, 0.2F, 0.2F));
+				List<EntityLivingBase> collidedEntites = multipart.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, this.getPartBox());
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
 					for(Entity passenger : multipart.getPassengers()){
@@ -82,7 +82,7 @@ public class PartPropeller extends APart{
 						}
 					}
 				}
-				if(this.isPartCollidingWithBlocks(Vec3d.ZERO)){
+				if(this.isPartCollidingWithBlocks()){
 					damagePropeller(1);
 					
 				}
@@ -103,6 +103,11 @@ public class PartPropeller extends APart{
 	@Override
 	public float getWidth(){
 		return pack.propeller.diameter*0.0254F/2F;
+	}
+	
+	@Override
+	public float getLength(){
+		return 0.5F;
 	}
 
 	@Override

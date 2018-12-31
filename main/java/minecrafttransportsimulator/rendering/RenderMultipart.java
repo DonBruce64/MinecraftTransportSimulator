@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
+import minecrafttransportsimulator.collision.RotatableAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSControls.Controls;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackControl;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackDisplayText;
@@ -159,7 +159,6 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
 		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
         
-        
         double thisX = multipart.lastTickPosX + (multipart.posX - multipart.lastTickPosX) * (double)partialTicks;
         double thisY = multipart.lastTickPosY + (multipart.posY - multipart.lastTickPosY) * (double)partialTicks;
         double thisZ = multipart.lastTickPosZ + (multipart.posZ - multipart.lastTickPosZ) * (double)partialTicks;
@@ -196,9 +195,6 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				renderInstrumentsAndControls((EntityMultipartE_Vehicle) multipart);
 			}
 			GL11.glDisable(GL11.GL_NORMALIZE);
-			if(Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()){
-				renderBoundingBoxes(multipart);
-			}
 			GL11.glPopMatrix();
 		}
 		
@@ -259,6 +255,16 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 		GL11.glPopMatrix();
 		
+		//Render bounding boxes.
+		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
+			if(Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()){
+				GL11.glPushMatrix();
+		        GL11.glTranslated(-playerX, -playerY, -playerZ);
+				renderBoundingBoxes(multipart);
+				GL11.glPopMatrix();
+			}
+		}
+		
 		//Update SFX.
 		if(!wasRenderedPrior && multipart instanceof EntityMultipartE_Vehicle){
 			EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) multipart;
@@ -276,7 +282,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		//Normally we use the pack name, but since all displaylists
 		//are the same for all models, this is more appropriate.
 		if(multipartDisplayLists.containsKey(multipart.multipartJSONName)){
-			//GL11.glCallList(multipartDisplayLists.get(multipart.multipartJSONName));
+			GL11.glCallList(multipartDisplayLists.get(multipart.multipartJSONName));
 			
 			//The display list only renders static parts.  We need to render dynamic ones manually.
 			//If this is a window, don't render it as that gets done all at once later.
@@ -964,37 +970,10 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glColor3f(0.0F, 0.0F, 0.0F);
 		GL11.glLineWidth(3.0F);
-		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
-			//box = box.offset(-multipart.posX, -multipart.posY, -multipart.posZ);
-			GL11.glBegin(GL11.GL_LINES);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
-			
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
-			
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glEnd();
+		for(RotatableAxisAlignedBB box : multipart.allBoxes){
+			box.renderBox();
 		}
+		GL11.glTranslated(multipart.posX, multipart.posY, multipart.posZ);
 		GL11.glLineWidth(1.0F);
 		GL11.glColor3f(1.0F, 1.0F, 1.0F);
 		GL11.glEnable(GL11.GL_LIGHTING);

@@ -2,7 +2,6 @@ package minecrafttransportsimulator.collision;
 
 import javax.annotation.Nullable;
 
-import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.multipart.main.EntityMultipartC_Colliding;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
@@ -20,8 +19,8 @@ import net.minecraft.util.math.Vec3d;
 public class RotatableAxisAlignedBBCollective extends AxisAlignedBB{
 	private final EntityMultipartC_Colliding multipart;
 	
-	public RotatableAxisAlignedBBCollective(EntityMultipartC_Colliding multipart, float width, float height){
-		super(multipart.posX - width/2F, multipart.posY - height/2F, multipart.posZ - width/2F, multipart.posX + width/2F, multipart.posY + height/2F, multipart.posZ + width/2F);
+	public RotatableAxisAlignedBBCollective(EntityMultipartC_Colliding multipart, float width, float height, float depth){
+		super(multipart.posX - width/2F, multipart.posY - height/2F, multipart.posZ - depth/2F, multipart.posX + width/2F, multipart.posY + height/2F, multipart.posZ + depth/2F);
 		this.multipart = multipart;
 	}
 	
@@ -32,10 +31,7 @@ public class RotatableAxisAlignedBBCollective extends AxisAlignedBB{
 	
 	@Override
 	public double calculateXOffset(AxisAlignedBB other, double offsetX){
-		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
-			offsetX = box.calculateXOffset(other, offsetX);
-		}
-		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
+		for(RotatableAxisAlignedBB box : multipart.allBoxes){
 			offsetX = box.calculateXOffset(other, offsetX);
 		}
 		return offsetX;
@@ -43,34 +39,23 @@ public class RotatableAxisAlignedBBCollective extends AxisAlignedBB{
 	
 	@Override
 	public double calculateYOffset(AxisAlignedBB other, double offsetY){
-		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
+		for(RotatableAxisAlignedBB box : multipart.allBoxes){
 			offsetY = box.calculateYOffset(other, offsetY);
-		}
-		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
-			offsetY = box.calculateXOffset(other, offsetY);
 		}
 		return offsetY;
     }
 	
 	@Override
 	public double calculateZOffset(AxisAlignedBB other, double offsetZ){
-		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
+		for(RotatableAxisAlignedBB box : multipart.allBoxes){
 			offsetZ = box.calculateZOffset(other, offsetZ);
-		}
-		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
-			offsetZ = box.calculateXOffset(other, offsetZ);
 		}
 		return offsetZ;
     }
 	
 	@Override
     public boolean intersectsWith(AxisAlignedBB other){
-		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
-			if(box.intersectsWith(other)){
-				return true;
-			}
-		}
-		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
+		for(RotatableAxisAlignedBB box : multipart.allBoxes){
 			if(box.intersectsWith(other)){
 				return true;
 			}
@@ -80,12 +65,7 @@ public class RotatableAxisAlignedBBCollective extends AxisAlignedBB{
 	
 	@Override
     public boolean intersects(double x1, double y1, double z1, double x2, double y2, double z2){
-		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
-			if(box.intersects(x1, y1, z1, x2, y2, z2)){
-				return true;
-			}
-		}
-		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
+		for(RotatableAxisAlignedBB box : multipart.allBoxes){
 			if(box.intersects(x1, y1, z1, x2, y2, z2)){
 				return true;
 			}
@@ -95,12 +75,7 @@ public class RotatableAxisAlignedBBCollective extends AxisAlignedBB{
 	
 	@Override
 	public boolean isVecInside(Vec3d vec){
-		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
-			if(box.isVecInside(vec)){
-				return true;
-			}
-		}
-		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
+		for(RotatableAxisAlignedBB box : multipart.allBoxes){
 			if(box.isVecInside(vec)){
 				return true;
 			}
@@ -112,13 +87,7 @@ public class RotatableAxisAlignedBBCollective extends AxisAlignedBB{
 	@Nullable
     public RayTraceResult calculateIntercept(Vec3d vecA, Vec3d vecB){
 		RayTraceResult result = null;
-		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
-			result = box.calculateIntercept(vecA, vecB);
-			if(result != null){
-				return result;
-			}
-		}
-		for(MultipartAxisAlignedBB box : multipart.getCurrentInteractionBoxes()){
+		for(RotatableAxisAlignedBB box : multipart.allBoxes){
 			result = box.calculateIntercept(vecA, vecB);
 			if(result != null){
 				return result;

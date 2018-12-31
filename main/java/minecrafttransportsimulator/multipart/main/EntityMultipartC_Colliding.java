@@ -7,18 +7,15 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
-import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBBCollective;
+import minecrafttransportsimulator.collision.RotatableAxisAlignedBB;
+import minecrafttransportsimulator.collision.RotatableAxisAlignedBBCollective;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackCollisionBox;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.APartGroundDevice;
-import minecrafttransportsimulator.multipart.parts.PartGroundDevicePontoon;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -34,13 +31,19 @@ import net.minecraft.world.World;
  */
 public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existing{
 	/**Collective wrapper that allows for the calling of multiple collision boxes in this multipart.  May be null on the first scan.*/
-	private MultipartAxisAlignedBBCollective collisionFrame;
-	/**List of current collision boxes in this multipart.  Contains both multipart collision boxes and ground device collision boxes.*/
-	private final List<MultipartAxisAlignedBB> currentCollisionBoxes = new ArrayList<MultipartAxisAlignedBB>();
-	/**List of interaction boxes.  These are AABBs that can be clicked but do NOT affect multipart collision.*/
-	private final List<MultipartAxisAlignedBB> currentInteractionBoxes = new ArrayList<MultipartAxisAlignedBB>();
+	private RotatableAxisAlignedBBCollective collisionFrame;
+	
+	/**List of current collision boxes in this multipart.  Contains only collision boxes for the multipart JSON.*/
+	private final List<RotatableAxisAlignedBB> multipartCollisionBoxes = new ArrayList<RotatableAxisAlignedBB>();
+	
+	/**List of interaction boxes.  This contains all part boxes that do not affect collision (seats, chests, etc.)*/
+	private final List<RotatableAxisAlignedBB> partInteractionBoxes = new ArrayList<RotatableAxisAlignedBB>();
+	
 	/**Map that keys collision boxes of ground devices to the devices themselves.  Used for ground device collision operations.*/
-	protected final Map<MultipartAxisAlignedBB, APartGroundDevice> groundDeviceCollisionBoxMap = new HashMap<MultipartAxisAlignedBB, APartGroundDevice>();
+	protected final Map<RotatableAxisAlignedBB, APartGroundDevice> groundDeviceCollisionBoxMap = new HashMap<RotatableAxisAlignedBB, APartGroundDevice>();
+	
+	/**List of all boxes in this multipart.  Contains boxes from multipartCollisionBoxes, partInterationBoxes, and groundDeviceCollisionMap.*/
+	public final List<RotatableAxisAlignedBB> allBoxes = new ArrayList<RotatableAxisAlignedBB>();
 	
 	public final double speedFactor = ConfigSystem.getDoubleConfig("SpeedFactor");
 	
@@ -52,6 +55,8 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 	
 	public EntityMultipartC_Colliding(World world, float posX, float posY, float posZ, float playerRotation, String multipartName){
 		super(world, posX, posY, posZ, playerRotation, multipartName);
+		//Make sure to update collision boxes on the first spawn tick on servers for initial collision detection.
+		this.updateCollisionBoxes();
 	}
 	
 	@Override
@@ -63,20 +68,12 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 				World.MAX_ENTITY_RADIUS = 32;
 			}
 			
-			//Populate the box lists.
-			currentCollisionBoxes.clear();
-			currentInteractionBoxes.clear();
-			groundDeviceCollisionBoxMap.clear();
-			currentCollisionBoxes.addAll(this.getUpdatedCollisionBoxes());
+			//Update boxes.
+			//Parts get updated in their tick loops and will be changed from the prior tick.
+			this.updateCollisionBoxes();
+			
+			//Clear variable.
 			hardnessHitThisTick = 0;
-			for(APart part : this.getMultipartParts()){
-				if(part instanceof APartGroundDevice){
-					currentCollisionBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));
-					groundDeviceCollisionBoxMap.put(currentCollisionBoxes.get(currentCollisionBoxes.size() -1 ), (APartGroundDevice) part);
-				}else{
-					currentInteractionBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));
-				}
-			}
 		}
 	}
 	
@@ -88,27 +85,40 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 	
 	@Override
     @Nullable
-    public MultipartAxisAlignedBBCollective getCollisionBoundingBox(){
+    public RotatableAxisAlignedBBCollective getCollisionBoundingBox(){
 		//Return custom AABB for multi-collision.
-		return this.collisionFrame != null ? this.collisionFrame : new MultipartAxisAlignedBBCollective(this, 1, 1);
+		return this.collisionFrame != null ? this.collisionFrame : new RotatableAxisAlignedBBCollective(this, 1, 1, 1);
     }
+	
+	@Override
+	public void addPart(APart part, boolean ignoreCollision){
+		super.addPart(part, ignoreCollision);
+		if(part instanceof APartGroundDevice){
+			groundDeviceCollisionBoxMap.put(part.getPartBox(), (APartGroundDevice) part);
+		}else{
+			partInteractionBoxes.add(part.getPartBox());
+		}
+		allBoxes.add(part.getPartBox());
+	}
+	
+	@Override
+	public void removePart(APart part, boolean playBreakSound){
+		super.removePart(part, playBreakSound);
+		if(part instanceof APartGroundDevice){
+			groundDeviceCollisionBoxMap.remove(part.getPartBox());
+		}else{
+			partInteractionBoxes.remove(part.getPartBox());
+		}
+		allBoxes.remove(part.getPartBox());
+	}
 	
 	/**
 	 * Called by systems needing information about collision with this entity.
 	 * This is a way to keep other bits from messing with the collision list
 	 * and a way to get collisions without going through the collective class wrapper.
 	 */
-	public List<MultipartAxisAlignedBB> getCurrentCollisionBoxes(){
-		return currentCollisionBoxes;
-	}
-	
-	/**
-	 * Called by the multipart AABB wrapper to allow entities to collide with
-	 * interactable parts.  This allows for part collision with entities,
-	 * but prevents the parts from being used in movement systems.
-	 */
-	public List<MultipartAxisAlignedBB> getCurrentInteractionBoxes(){
-		return currentInteractionBoxes;
+	public List<RotatableAxisAlignedBB> getCollisionBoxes(){
+		return multipartCollisionBoxes;
 	}
     
 	/**
@@ -116,24 +126,41 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 	 * Do NOT call more than once a tick as this operation is complex and
 	 * CPU and RAM intensive!
 	 */
-	private List<MultipartAxisAlignedBB> getUpdatedCollisionBoxes(){
+	private void updateCollisionBoxes(){
 		if(this.pack != null){
+			boolean newBoxes = pack.collision.size() != multipartCollisionBoxes.size();
 			double furthestWidth = 0;
 			double furthestHeight = 0;
-			List<MultipartAxisAlignedBB> boxList = new ArrayList<MultipartAxisAlignedBB>();
-			for(PackCollisionBox box : pack.collision){
-				Vec3d partOffset = new Vec3d(box.pos[0], box.pos[1], box.pos[2]);
-				Vec3d offset = RotationSystem.getRotatedPoint(partOffset, rotationPitch, rotationYaw, rotationRoll);
-				MultipartAxisAlignedBB newBox = new MultipartAxisAlignedBB(this.getPositionVector().add(offset), partOffset, box.width, box.height, box.isInterior);
-				boxList.add(newBox);
-				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.xCoord) + box.width/2F);
-				furthestHeight = (float) Math.max(furthestHeight, Math.abs(newBox.rel.yCoord) + box.height/2F);
-				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.zCoord) + box.width/2F);
+			double furthestDepth = 0;
+			if(newBoxes){
+				multipartCollisionBoxes.clear();
+				allBoxes.clear();
 			}
-			this.collisionFrame = new MultipartAxisAlignedBBCollective(this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F);
-			return boxList;
-		}else{
-			return new ArrayList<MultipartAxisAlignedBB>(0);
+			for(short i=0; i<pack.collision.size(); ++i){
+				PackCollisionBox box = pack.collision.get(i);
+				Vec3d collisionPointOffset = new Vec3d(box.pos[0], box.pos[1], box.pos[2]);
+				Vec3d offset = RotationSystem.getRotatedPoint(collisionPointOffset, rotationPitch, rotationYaw, rotationRoll);
+				collisionPointOffset = this.getPositionVector().add(offset);
+				//TODO remove this when we get rid of boxes!
+				box.depth = box.width;
+				if(newBoxes){
+					RotatableAxisAlignedBB newBox = new RotatableAxisAlignedBB(collisionPointOffset.xCoord, collisionPointOffset.yCoord, collisionPointOffset.zCoord, this.rotationPitch, this.rotationYaw, this.rotationRoll, box.width, box.height, box.depth); 
+					multipartCollisionBoxes.add(newBox);
+					allBoxes.add(newBox);
+				}else{
+					multipartCollisionBoxes.get(i).update(collisionPointOffset.xCoord, collisionPointOffset.yCoord, collisionPointOffset.zCoord, this.rotationPitch, this.rotationYaw, this.rotationRoll);
+				}
+				furthestWidth = (float) Math.max(furthestWidth, Math.abs(offset.xCoord) + box.width/2F);
+				furthestHeight = (float) Math.max(furthestHeight, Math.abs(offset.yCoord) + box.height/2F);
+				furthestDepth = (float) Math.max(furthestDepth, Math.abs(offset.zCoord) + box.depth/2F);
+			}
+			this.collisionFrame = new RotatableAxisAlignedBBCollective(this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, (float) furthestDepth*2F+0.5F);
+			
+			//If we had a new box and reset the allBoxes list, update it now.
+			if(newBoxes){
+				allBoxes.addAll(partInteractionBoxes);
+				allBoxes.addAll(groundDeviceCollisionBoxMap.keySet());
+			}
 		}
 	}
 	
@@ -146,18 +173,11 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 		Vec3d hitVec = entity.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
 		for(float f=1.0F; f<4.0F; f += 0.1F){
 			//First check the collision boxes.
-			for(MultipartAxisAlignedBB box : this.currentCollisionBoxes){
+			for(RotatableAxisAlignedBB box : allBoxes){
 				if(box.isVecInside(hitVec)){
 					return true;
 				}
 			}
-			//If we didn't hit a collision box we may have hit an interaction box instead.
-			for(MultipartAxisAlignedBB box : this.currentInteractionBoxes){
-				if(box.isVecInside(hitVec)){
-					return true;
-				}
-			}
-			
 			hitVec = hitVec.addVector(lookVec.xCoord*0.1F, lookVec.yCoord*0.1F, lookVec.zCoord*0.1F);
 		}
 		return false;
@@ -169,7 +189,8 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 	 * Returns -2 destroys the multipart if it hit a core collision box at too high a speed.
 	 * Returns -3 if the collision is a ground device and could be moved upwards to not collide (only for X and Z axis).
 	 */
-	protected float getCollisionForAxis(MultipartAxisAlignedBB box, boolean xAxis, boolean yAxis, boolean zAxis, APartGroundDevice optionalGroundDevice){
+	/*
+	protected float getCollisionForAxis(RotatableAxisAlignedBB box, boolean xAxis, boolean yAxis, boolean zAxis, APartGroundDevice optionalGroundDevice){
 		Vec3d motion = new Vec3d(this.motionX*speedFactor, this.motionY*speedFactor, this.motionZ*speedFactor);
 		box = box.offset(xAxis ? motion.xCoord : 0, yAxis ? motion.yCoord : 0, zAxis ? motion.zCoord : 0);
 		
@@ -270,12 +291,13 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
 			}
 		}
 		return collisionDepth;
-	}
+	}*/
 
 	
 	/**
 	 * Checks if an AABB is colliding with blocks, and returns the AABB of those blocks.
 	 */
+	/*
 	protected List<AxisAlignedBB> getAABBCollisions(AxisAlignedBB box, APartGroundDevice optionalGroundDevice, List<BlockPos> collidedBlockPos){
 		int minX = (int) Math.floor(box.minX);
     	int maxX = (int) Math.floor(box.maxX + 1.0D);
@@ -303,5 +325,5 @@ public abstract class EntityMultipartC_Colliding extends EntityMultipartB_Existi
     		}
     	}
 		return collidingAABBList;
-	}
+	}*/
 }
