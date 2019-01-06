@@ -222,11 +222,6 @@ public abstract class APartEngine extends APart implements FXPart{
 	public float getWidth(){
 		return 1.0F;
 	}
-	
-	@Override
-	public float getLength(){
-		return 1.0F;
-	}
 
 	@Override
 	public float getHeight(){

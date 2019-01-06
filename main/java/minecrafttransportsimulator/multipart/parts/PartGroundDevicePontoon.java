@@ -1,10 +1,11 @@
 package minecrafttransportsimulator.multipart.parts;
 
-import minecrafttransportsimulator.collision.RotatableAxisAlignedBB;
+import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 
 public final class PartGroundDevicePontoon extends APartGroundDevice{
 	public PartGroundDevicePontoon(EntityMultipartD_Moving multipart, PackPart packPart, String partName, NBTTagCompound dataTag){
@@ -22,21 +23,16 @@ public final class PartGroundDevicePontoon extends APartGroundDevice{
 	}
 	
 	@Override
-	public float getLength(){
-		return this.pack.pontoon.length;
-	}
-	
-	@Override
 	public float getHeight(){
 		return this.getWidth();
 	}
 	
 	@Override
-	public boolean isPartCollidingWithBlocks(){
-		if(super.isPartCollidingWithBlocks()){
+	public boolean isPartCollidingWithBlocks(Vec3d collisionOffset){
+		if(super.isPartCollidingWithBlocks(collisionOffset)){
 			return true;
     	}else{
-    		RotatableAxisAlignedBB collisionBox = this.getPartBox();    		
+    		MultipartAxisAlignedBB collisionBox = this.getAABBWithOffset(collisionOffset);
 			int minX = (int) Math.floor(collisionBox.minX);
 	    	int maxX = (int) Math.floor(collisionBox.maxX + 1.0D);
 	    	int minY = (int) Math.floor(collisionBox.minY);
@@ -68,6 +64,11 @@ public final class PartGroundDevicePontoon extends APartGroundDevice{
 	@Override
 	public float getLateralFriction(){
 		return this.pack.pontoon.lateralFriction;
+	}
+	
+	@Override
+	public float getLongPartOffset(){
+		return pack.pontoon.extraCollisionBoxOffset;
 	}
 	
 	@Override

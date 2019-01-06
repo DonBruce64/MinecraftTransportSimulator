@@ -46,6 +46,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	public void updatePart(){
 		super.updatePart();
 		if(this.isOnGround()){
+			//Set contact for wheel skid.
 			if(angularVelocity/(multipart.velocity/this.getHeight()) < 0.25 && multipart.velocity > 0.3){
 				BlockPos blockBelow = new BlockPos(partPos).down();
 				if(multipart.worldObj.getBlockState(blockBelow).getBlockHardness(multipart.worldObj, blockBelow) >= 1.5){
@@ -53,8 +54,8 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 				}
 			}
 			
+			//If we have a slipping wheel, count down and possibly pop it.
 			if(!skipAngularCalcs){
-				angularVelocity = (float) (multipart.velocity/this.getHeight());
 				if(ticksCalcsSkipped > 0 && !isFlat){
 					--ticksCalcsSkipped;
 				}
@@ -85,11 +86,6 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	}
 	
 	@Override
-	public float getLength(){
-		return this.getHeight();
-	}
-	
-	@Override
 	public float getHeight(){
 		return this.isFlat ? this.pack.wheel.diameter/2F : this.pack.wheel.diameter;
 	}
@@ -117,7 +113,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	
 	@Override
 	public Vec3d getActionRotation(float partialTicks){
-		return new Vec3d(this.angularPosition + this.angularVelocity*partialTicks, 0, 0);
+		return new Vec3d(Math.toDegrees(this.angularPosition + this.angularVelocity*partialTicks), 0, 0);
 	}
 	
 	@Override
@@ -128,6 +124,11 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	@Override
 	public float getLateralFriction(){
 		return !this.isFlat ? this.pack.wheel.lateralFriction : this.pack.wheel.lateralFriction/10F;
+	}
+	
+	@Override
+	public float getLongPartOffset(){
+		return 0;
 	}
 	
 	@Override

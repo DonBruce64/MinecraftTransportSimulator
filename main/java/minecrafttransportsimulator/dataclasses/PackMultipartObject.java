@@ -68,7 +68,6 @@ public class PackMultipartObject{
         public float[] pos;
         public float width;
         public float height;
-        public float depth;
         public boolean isInterior;
     }
     

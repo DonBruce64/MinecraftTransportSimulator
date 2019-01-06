@@ -137,7 +137,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 				for(APart part : this.getMultipartParts()){
 					//Expand this box by the speed of the projectile just in case the projectile is custom and
 					//calls its attack code before it actually gets inside the collision box.
-					if(part.getPartBox().expand(Math.abs(projectile.motionX), Math.abs(projectile.motionY), Math.abs(projectile.motionZ)).isVecInside(projectile.getPositionVector())){
+					if(part.getAABBWithOffset(Vec3d.ZERO).expand(Math.abs(projectile.motionX), Math.abs(projectile.motionY), Math.abs(projectile.motionZ)).isVecInside(projectile.getPositionVector())){
 						part.attackPart(source, damage);
 						return true;
 					}
@@ -221,7 +221,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		if(!ignoreCollision){
 			//Check if we are colliding and adjust roll before letting part addition continue.
 			//This is needed as the master multipart system doesn't know about roll.
-			if(part.isPartCollidingWithBlocks()){
+			if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
 				this.rotationRoll = 0;
 			}
 		}
@@ -250,7 +250,7 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		Vec3d hitVec = entity.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
 		for(float f=1.0F; f<4.0F; f += 0.1F){
 			for(APart part : this.getMultipartParts()){
-				if(part.getPartBox().isVecInside(hitVec)){
+				if(part.getAABBWithOffset(Vec3d.ZERO).isVecInside(hitVec)){
 					return part;
 				}
 			}

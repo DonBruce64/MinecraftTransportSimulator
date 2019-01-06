@@ -58,11 +58,6 @@ public final class PartCrate extends APart{
 	public float getWidth(){
 		return 1.0F;
 	}
-	
-	@Override
-	public float getLength(){
-		return 1.0F;
-	}
 
 	@Override
 	public float getHeight(){

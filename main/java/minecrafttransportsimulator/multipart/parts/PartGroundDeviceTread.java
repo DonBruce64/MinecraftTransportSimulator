@@ -20,11 +20,6 @@ public final class PartGroundDeviceTread extends APartGroundDevice{
 	}
 	
 	@Override
-	public float getLength(){
-		return this.pack.tread.length;
-	}
-	
-	@Override
 	public float getHeight(){
 		return this.getWidth();
 	}
@@ -37,6 +32,11 @@ public final class PartGroundDeviceTread extends APartGroundDevice{
 	@Override
 	public float getLateralFriction(){
 		return this.pack.tread.lateralFriction;
+	}
+	
+	@Override
+	public float getLongPartOffset(){
+		return pack.tread.extraCollisionBoxOffset;
 	}
 	
 	@Override

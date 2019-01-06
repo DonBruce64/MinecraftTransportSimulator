@@ -41,23 +41,22 @@ public class PackPartObject{
         public float lateralFriction;
     }
     
-    public class PartPontoonConfig{
+    public class PartSkidConfig{
     	public float width;
-    	public float length;
     	public float lateralFriction;
     }
     
-    public class PartSkidConfig{
+    public class PartPontoonConfig{
     	public float width;
-    	public float length;
     	public float lateralFriction;
+        public float extraCollisionBoxOffset;
     }
     
     public class PartTreadConfig{
     	public float width;
-    	public float length;
     	public float motiveFriction;
         public float lateralFriction;
+        public float extraCollisionBoxOffset;
         public float spacing;
         public float[] yCoords;
         public float[] zCoords;
@@ -74,7 +73,6 @@ public class PackPartObject{
     
     public class PartCustomConfig{
     	public float width;
-    	public float length;
     	public float height;
     }
     

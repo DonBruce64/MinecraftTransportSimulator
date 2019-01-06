@@ -295,10 +295,10 @@ public final class PackParserSystem{
 			case "crate": return PartCrate.class;
 			case "engine_aircraft": return PartEngineAircraft.class;
 			case "engine_car": return PartEngineCar.class;
-			case "pontoon": return PartGroundDevicePontoon.class;
-			case "skid": return PartGroundDeviceSkid.class;
-			case "tread": return PartGroundDeviceTread.class;
 			case "wheel": return PartGroundDeviceWheel.class;
+			case "skid": return PartGroundDeviceSkid.class;
+			case "pontoon": return PartGroundDevicePontoon.class;
+			case "tread": return PartGroundDeviceTread.class;
 			case "propeller": return PartPropeller.class;
 			case "seat": return PartSeat.class;
 			case "custom": return PartCustom.class;
@@ -311,10 +311,10 @@ public final class PackParserSystem{
 			case "crate": return ItemPartCrate.class;
 			case "engine_aircraft": return ItemPartEngineAircraft.class;
 			case "engine_car": return ItemPartEngineCar.class;
-			case "pontoon": return ItemPartGroundDevicePontoon.class;
-			case "skid": return ItemPartGroundDeviceSkid.class;
-			case "tread": return ItemPartGroundDeviceTread.class;
 			case "wheel": return ItemPartGroundDeviceWheel.class;
+			case "skid": return ItemPartGroundDeviceSkid.class;
+			case "pontoon": return ItemPartGroundDevicePontoon.class;
+			case "tread": return ItemPartGroundDeviceTread.class;
 			case "propeller": return ItemPartPropeller.class;
 			case "seat": return ItemPartSeat.class;
 			case "custom": return ItemPartCustom.class;

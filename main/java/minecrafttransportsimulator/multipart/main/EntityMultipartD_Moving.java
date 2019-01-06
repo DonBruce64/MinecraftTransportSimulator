@@ -3,11 +3,16 @@ package minecrafttransportsimulator.multipart.main;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.collision.RotatableAxisAlignedBB;
+import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.multipart.parts.APart;
 import minecrafttransportsimulator.multipart.parts.APartGroundDevice;
+import minecrafttransportsimulator.packets.multipart.PacketMultipartDeltas;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.RotationSystem;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -92,7 +97,6 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 		boolean groundDeviceNeedsLifting = false;
 		double originalMotionY = motionY;
 		
-		/*
 		//First try to add the current motion and see if we need to check anything.
 		for(MultipartAxisAlignedBB box : this.getCurrentCollisionBoxes()){
 			Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
@@ -474,7 +478,7 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 					}
 				}
 			}
-		}*/
+		}
 	}
 	
 	/**
@@ -494,17 +498,17 @@ public abstract class EntityMultipartD_Moving extends EntityMultipartC_Colliding
 			}
 		}
 		
-		//TODO add manual braking factor here based on main update collision loop.
-		/*
 		//Now get any contributions from the colliding collision bits.
-		for(RotatableAxisAlignedBB box : this.getCollisionBoxes()){
-			if(!worldObj.getCollisionBoxes(box.offset(0, -0.05F, 0)).isEmpty()){
-				//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
-				BlockPos pos = new BlockPos(box.pos.addVector(0, -1, 0));
-				float frictionLoss = 0.6F - worldObj.getBlockState(pos).getBlock().slipperiness;
-				brakingFactor += Math.max(2.0 - frictionLoss, 0);
+		for(MultipartAxisAlignedBB box : this.getCurrentCollisionBoxes()){
+			if(!groundDeviceCollisionBoxMap.containsKey(box)){
+				if(!worldObj.getCollisionBoxes(box.offset(0, -0.05F, 0)).isEmpty()){
+					//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
+					BlockPos pos = new BlockPos(box.pos.addVector(0, -1, 0));
+					float frictionLoss = 0.6F - worldObj.getBlockState(pos).getBlock().slipperiness;
+					brakingFactor += Math.max(2.0 - frictionLoss, 0);
+				}
 			}
-		}*/
+		}
 		return brakingFactor;
 	}
 	

@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.collision.RotatableAxisAlignedBB;
+import minecrafttransportsimulator.baseclasses.MultipartAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSControls.Controls;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackControl;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackDisplayText;
@@ -159,6 +159,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
 		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
         
+        
         double thisX = multipart.lastTickPosX + (multipart.posX - multipart.lastTickPosX) * (double)partialTicks;
         double thisY = multipart.lastTickPosY + (multipart.posY - multipart.lastTickPosY) * (double)partialTicks;
         double thisZ = multipart.lastTickPosZ + (multipart.posZ - multipart.lastTickPosZ) * (double)partialTicks;
@@ -195,6 +196,9 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				renderInstrumentsAndControls((EntityMultipartE_Vehicle) multipart);
 			}
 			GL11.glDisable(GL11.GL_NORMALIZE);
+			if(Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()){
+				renderBoundingBoxes(multipart);
+			}
 			GL11.glPopMatrix();
 		}
 		
@@ -254,16 +258,6 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			minecraft.entityRenderer.enableLightmap();
 		}
 		GL11.glPopMatrix();
-		
-		//Render bounding boxes.
-		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
-			if(Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()){
-				GL11.glPushMatrix();
-		        GL11.glTranslated(-playerX, -playerY, -playerZ);
-				renderBoundingBoxes(multipart);
-				GL11.glPopMatrix();
-			}
-		}
 		
 		//Update SFX.
 		if(!wasRenderedPrior && multipart instanceof EntityMultipartE_Vehicle){
@@ -618,7 +612,6 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				//Set the points to the next index set and increment delta and angle.
 				while(deltaBeforeSegment + segmentDeltaTotal < spacing){
 					++pointIndex;
-					System.out.println("POINT" + pointIndex);
 					//If we run out of points go back to the start of the point set.
 					//If we are out again, exit the loop.
 					if(pointIndex + 1 == treadPart.pack.tread.yCoords.length){
@@ -669,7 +662,6 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 					float correctedZ = (float) (Math.cos(Math.toRadians(currentAngle))*segmentZ - Math.sin(Math.toRadians(currentAngle))*segmentY);
 					float correctedY = (float) (Math.sin(Math.toRadians(currentAngle))*segmentZ + Math.cos(Math.toRadians(currentAngle))*segmentY);
 					deltas.add(new Float[]{correctedY, correctedZ, angle});
-					System.out.format("ADDING POINT RY:%f RZ:%f RA:%f Y:%f Z:%f A:%f\n", segmentY, segmentZ, currentAngle, correctedY, correctedZ, angle);
 					//Decrement distance traveled off the variables.
 					totalDistance -= spacing;
 					segmentDeltaTotal -= spacing;
@@ -691,7 +683,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			treadDeltas.put(treadPart.getModelLocation(), deltas);
 		}
 		
-		float treadMovementPercentage = (float) ((treadPart.angularPosition + treadPart.angularVelocity*partialTicks)%treadPart.pack.tread.spacing/treadPart.pack.tread.spacing);
+		float treadMovementPercentage = (float) ((treadPart.angularPosition + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.pack.tread.spacing/treadPart.pack.tread.spacing);
 		GL11.glPushMatrix();
 		//First translate to the initial point.
 		GL11.glTranslatef(0, treadPart.pack.tread.yCoords[0], treadPart.pack.tread.zCoords[0]);
@@ -970,10 +962,37 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glColor3f(0.0F, 0.0F, 0.0F);
 		GL11.glLineWidth(3.0F);
-		for(RotatableAxisAlignedBB box : multipart.allBoxes){
-			box.renderBox();
+		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
+			//box = box.offset(-multipart.posX, -multipart.posY, -multipart.posZ);
+			GL11.glBegin(GL11.GL_LINES);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
+			
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
+			
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glEnd();
 		}
-		GL11.glTranslated(multipart.posX, multipart.posY, multipart.posZ);
 		GL11.glLineWidth(1.0F);
 		GL11.glColor3f(1.0F, 1.0F, 1.0F);
 		GL11.glEnable(GL11.GL_LIGHTING);

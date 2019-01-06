@@ -20,11 +20,6 @@ public final class PartGroundDeviceSkid extends APartGroundDevice{
 	}
 	
 	@Override
-	public float getLength(){
-		return this.pack.skid.length;
-	}
-	
-	@Override
 	public float getHeight(){
 		return this.getWidth();
 	}
@@ -37,6 +32,11 @@ public final class PartGroundDeviceSkid extends APartGroundDevice{
 	@Override
 	public float getLateralFriction(){
 		return this.pack.skid.lateralFriction;
+	}
+	
+	@Override
+	public float getLongPartOffset(){
+		return 0;
 	}
 	
 	@Override
