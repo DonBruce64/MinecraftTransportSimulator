@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
@@ -30,6 +31,8 @@ import net.minecraft.util.ResourceLocation;
 
 public class GUIPartBench extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting.png");	
+	private static final Map<String, String[]> lastOpenedItem = new HashMap<String, String[]>();
+	
 	private final List<String> partTypes;
 	private final EntityPlayer player;
 	private final boolean isForVehicles;
@@ -66,6 +69,10 @@ public class GUIPartBench extends GuiScreen{
 		this.isForVehicles = this.partTypes.contains("plane") || this.partTypes.contains("car");
 		this.isForInstruments = this.partTypes.contains("instrument");
 		this.itemMap = isForVehicles ? MTSRegistry.multipartItemMap : (isForInstruments ? MTSRegistry.instrumentItemMap : MTSRegistry.partItemMap);
+		if(lastOpenedItem.containsKey(bench.partTypes.get(0))){
+			packName = lastOpenedItem.get(bench.partTypes.get(0))[0];
+			partName = lastOpenedItem.get(bench.partTypes.get(0))[1];
+		}
 		updatePartNames();
 	}
 	
@@ -337,12 +344,32 @@ public class GUIPartBench extends GuiScreen{
 		}
 	}
 	
+	
+	/**
+	 * We also use the mouse wheel for selections as well as buttons.
+	 */
+	@Override
+    public void handleMouseInput() throws IOException{
+        super.handleMouseInput();
+        int i = Mouse.getEventDWheel();
+        if(i > 0 && rightPartButton.enabled){
+        	partName = nextPartName;
+        	updatePartNames();
+        }else if(i < 0 && leftPartButton.enabled){
+        	partName = prevPartName;
+			updatePartNames();
+        }
+	}
+	
 	@Override
     public void onGuiClosed(){
 		//Clear out the displaylists to free RAM once we no longer need them here.
 		for(int displayListID : partDisplayLists.values()){
 			GL11.glDeleteLists(displayListID, 1);
 		}
+		
+		//Save the last clicked part for reference later.
+		lastOpenedItem.put(partTypes.get(0), new String[]{packName, partName});
     }
 	
 	@Override
