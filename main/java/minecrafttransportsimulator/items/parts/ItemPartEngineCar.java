@@ -32,6 +32,7 @@ public final class ItemPartEngineCar extends AItemPartEngine{
 		tooltipLines.add(I18n.format("info.item.engine.maxsaferpm") + APartEngine.getSafeRPMFromMax(pack.engine.maxRPM));
 		tooltipLines.add(I18n.format("info.item.engine.fuelconsumption") + pack.engine.fuelConsumption);
 		tooltipLines.add(I18n.format("info.item.engine.hours") + (stackTag != null ? Math.round(stackTag.getDouble("hours")*100D)/100D : 0));
+		tooltipLines.add(pack.engine.isAutomatic ? I18n.format("info.item.engine.automatic") : I18n.format("info.item.engine.manual"));
 		tooltipLines.add(I18n.format("info.item.engine.gearratios"));
 		for(byte i=0; i<pack.engine.gearRatios.length; i+=3){
 			String gearRatios = String.valueOf(pack.engine.gearRatios[i]);
