@@ -8,8 +8,8 @@ import java.util.List;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisSign;
-import minecrafttransportsimulator.blocks.decor.TileEntityDecor6AxisSign;
+import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
+import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
 import minecrafttransportsimulator.dataclasses.PackSignObject;
 import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -24,8 +24,8 @@ import net.minecraft.util.ResourceLocation;
 public class GUISign extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting.png");	
 	private final EntityPlayer player;
-	private final TileEntityDecor6AxisSign decor;
-	private final TileEntityDecor6AxisSign decorTemp;
+	private final TileEntityPoleSign decor;
+	private final TileEntityPoleSign decorTemp;
 	private final List<GuiTextField> signTextBoxes = new ArrayList<GuiTextField>();
 	
 	private GuiButton leftPackButton;
@@ -48,9 +48,9 @@ public class GUISign extends GuiScreen{
 	
 	private PackSignObject pack;
 		
-	public GUISign(BlockDecor6AxisSign block, EntityPlayer player){
-		this.decor = (TileEntityDecor6AxisSign) player.worldObj.getTileEntity(block.lastClickedPos);
-		this.decorTemp = new TileEntityDecor6AxisSign();		
+	public GUISign(BlockPoleSign block, EntityPlayer player){
+		this.decor = (TileEntityPoleSign) player.worldObj.getTileEntity(block.lastClickedPos);
+		this.decorTemp = new TileEntityPoleSign();		
 		this.player = player;
 		if(!decor.definition.isEmpty()){
 			packName = decor.definition.substring(0, decor.definition.indexOf(':'));

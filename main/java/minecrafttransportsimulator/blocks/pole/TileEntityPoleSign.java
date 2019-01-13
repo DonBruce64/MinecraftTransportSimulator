@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.blocks.decor;
+package minecrafttransportsimulator.blocks.pole;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,11 +7,11 @@ import minecrafttransportsimulator.dataclasses.PackSignObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.nbt.NBTTagCompound;
 
-public class TileEntityDecor6AxisSign extends TileEntityDecor6AxisOriented{
+public class TileEntityPoleSign extends TileEntityPoleWallConnector{
 	public String definition = "";
 	public List<String> text = new ArrayList<String>();
 	
-	public TileEntityDecor6AxisSign(){
+	public TileEntityPoleSign(){
 		super();
 	}
 	

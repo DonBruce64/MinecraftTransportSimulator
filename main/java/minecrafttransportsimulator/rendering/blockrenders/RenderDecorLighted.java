@@ -5,8 +5,8 @@ import java.awt.Color;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisOriented;
-import minecrafttransportsimulator.blocks.decor.TileEntityDecor6AxisOriented;
+import minecrafttransportsimulator.blocks.pole.BlockPoleAttachment;
+import minecrafttransportsimulator.blocks.pole.TileEntityPoleWallConnector;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -17,7 +17,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.EnumSkyBlock;
 
-public class RenderDecorLighted extends TileEntitySpecialRenderer<TileEntityDecor6AxisOriented>{
+public class RenderDecorLighted extends TileEntitySpecialRenderer<TileEntityPoleWallConnector>{
 	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lensflare.png");
 	private static final ResourceLocation lightTexture = new ResourceLocation(MTS.MODID, "textures/rendering/light.png");
@@ -26,16 +26,16 @@ public class RenderDecorLighted extends TileEntitySpecialRenderer<TileEntityDeco
 	public RenderDecorLighted(){}
 	
 	@Override
-	public void renderTileEntityAt(TileEntityDecor6AxisOriented decor, double x, double y, double z, float partialTicks, int destroyStage){
+	public void renderTileEntityAt(TileEntityPoleWallConnector decor, double x, double y, double z, float partialTicks, int destroyStage){
 		super.renderTileEntityAt(decor, x, y, z, partialTicks, destroyStage);
 		final Vec3i facingVec = EnumFacing.VALUES[decor.rotation].getDirectionVec();
 		final Block block = decor.getWorld().getBlockState(decor.getPos()).getBlock();
 		//Check to make sure we have the right block before continuing.
 		//We may not have the right one due to the TE being orphaned for some reason.
-		if(!(block instanceof BlockDecor6AxisOriented)){
+		if(!(block instanceof BlockPoleAttachment)){
 			return;
 		}
-		final BlockDecor6AxisOriented decorBlock = (BlockDecor6AxisOriented) block;
+		final BlockPoleAttachment decorBlock = (BlockPoleAttachment) block;
 		final float sunLight = decor.getWorld().getSunBrightness(0)*decor.getWorld().getLightBrightness(decor.getPos());
 		final float blockLight = decor.getWorld().getLightFromNeighborsFor(EnumSkyBlock.BLOCK, decor.getPos())/15F;
 		final float lightBrightness = (float) Math.min((1 - Math.max(sunLight, blockLight)), 1);
@@ -97,7 +97,7 @@ public class RenderDecorLighted extends TileEntitySpecialRenderer<TileEntityDeco
 		GL11.glDisable(GL11.GL_BLEND);
 	}
 	
-	private void renderTrafficSignal(TileEntityDecor6AxisOriented decor, Vec3i facingVec, float lightBrightness){
+	private void renderTrafficSignal(TileEntityPoleWallConnector decor, Vec3i facingVec, float lightBrightness){
 		//Render the lights for the traffic signal.  What lights we render depends on the world time.
 		final float lightYPos;
 		final Color lightColor;
@@ -132,7 +132,7 @@ public class RenderDecorLighted extends TileEntitySpecialRenderer<TileEntityDeco
 		renderLightedSquare(4F/16F, lightBrightness, lightColor);
 	}
 
-	private void renderStreetLight(TileEntityDecor6AxisOriented decor, Vec3i facingVec, float lightBrightness){
+	private void renderStreetLight(TileEntityPoleWallConnector decor, Vec3i facingVec, float lightBrightness){
 		//Render light square
 		GL11.glTranslatef(0, 6.45F/16F, 6F/16F);
 		GL11.glRotatef(90, 1, 0, 0);

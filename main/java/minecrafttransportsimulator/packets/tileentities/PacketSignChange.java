@@ -5,7 +5,7 @@ import java.util.List;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.decor.TileEntityDecor6AxisSign;
+import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -19,7 +19,7 @@ public class PacketSignChange extends APacketTileEntity{
 
 	public PacketSignChange(){}
 	
-	public PacketSignChange(TileEntityDecor6AxisSign tile, String definition, List<String> text){
+	public PacketSignChange(TileEntityPoleSign tile, String definition, List<String> text){
 		super(tile);
 		this.definition = definition;
 		this.text = text;
@@ -52,7 +52,7 @@ public class PacketSignChange extends APacketTileEntity{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					TileEntityDecor6AxisSign decor = (TileEntityDecor6AxisSign) getTileEntity(message, ctx);
+					TileEntityPoleSign decor = (TileEntityPoleSign) getTileEntity(message, ctx);
 					if(decor != null){
 						decor.definition = message.definition;
 						decor.text = message.text;

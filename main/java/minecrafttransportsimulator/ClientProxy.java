@@ -3,7 +3,7 @@ package minecrafttransportsimulator;
 import java.io.File;
 
 import minecrafttransportsimulator.blocks.core.BlockPartBench;
-import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisSign;
+import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
 import minecrafttransportsimulator.guis.GUIInstruments;
 import minecrafttransportsimulator.guis.GUIManual;
 import minecrafttransportsimulator.guis.GUIPartBench;
@@ -47,8 +47,8 @@ public class ClientProxy extends CommonProxy{
 			FMLCommonHandler.instance().showGuiScreen(new GUIPartBench((BlockPartBench) clicked, clicker));
 		}else if(clicked instanceof ItemStack && ((ItemStack) clicked).getItem() instanceof ItemManual){
 			FMLCommonHandler.instance().showGuiScreen(new GUIManual((ItemStack) clicked));
-		}else if(clicked instanceof BlockDecor6AxisSign){
-			FMLCommonHandler.instance().showGuiScreen(new GUISign((BlockDecor6AxisSign) clicked, clicker));
+		}else if(clicked instanceof BlockPoleSign){
+			FMLCommonHandler.instance().showGuiScreen(new GUISign((BlockPoleSign) clicked, clicker));
 		}
 	}
 	

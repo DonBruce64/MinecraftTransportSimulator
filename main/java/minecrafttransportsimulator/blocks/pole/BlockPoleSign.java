@@ -1,10 +1,9 @@
-package minecrafttransportsimulator.blocks.decor;
+package minecrafttransportsimulator.blocks.pole;
 
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.TileEntityRotatable;
-import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -15,13 +14,13 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public class BlockDecor6AxisSign extends BlockDecor6AxisOriented{
+public class BlockPoleSign extends BlockPoleAttachment{
 	public static final PropertyDirection ROTATION = PropertyDirection.create("rotation");
     
 	public BlockPos lastClickedPos;
 	
-	public BlockDecor6AxisSign(Material material, float hardness, float resistance){
-		super(material, hardness, resistance);
+	public BlockPoleSign(float poleRadius){
+		super(poleRadius);
 	}
 	
 	@Override
@@ -46,6 +45,6 @@ public class BlockDecor6AxisSign extends BlockDecor6AxisOriented{
 	
 	@Override
 	public TileEntityRotatable createNewTileEntity(World worldIn, int meta){
-		return new TileEntityDecor6AxisSign();
+		return new TileEntityPoleSign();
 	}
 }

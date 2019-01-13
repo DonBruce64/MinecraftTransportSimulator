@@ -11,8 +11,10 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.PackDecorObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
+import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemMultipart;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
@@ -159,6 +161,12 @@ public class GUIManual extends GuiScreen{
 						modelLocation = new ResourceLocation(packName, "objmodels/parts/" + item.partName.substring(item.partName.indexOf(':') + 1) + ".obj");
 					}
 					textureLocation = new ResourceLocation(packName, "textures/parts/" + item.partName.substring(item.partName.indexOf(':') + 1) + ".png");
+				}else if(stack.getItem() instanceof ItemDecor){
+					ItemDecor item = (ItemDecor) stack.getItem();
+					PackDecorObject pack = PackParserSystem.getDecorBlock(item.decorName);
+					String packName = item.decorName.substring(0, item.decorName.indexOf(':'));
+					modelLocation = new ResourceLocation(packName, "objmodels/decors/" + item.decorName.substring(item.decorName.indexOf(':') + 1) + ".obj");
+					textureLocation = new ResourceLocation(packName, "textures/decors/" + item.decorName.substring(item.decorName.indexOf(':') + 1) + ".png");
 				}else{
 					modelLocation = null;
 					textureLocation = null;

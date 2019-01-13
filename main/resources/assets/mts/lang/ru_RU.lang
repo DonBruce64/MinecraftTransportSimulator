@@ -215,8 +215,6 @@ tile.fuelpump.dispensed=DISP:
 
 tile.pole.name=Опора
 tile.polebase.name=База опоры
-tile.trafficcone.name=Дорожный ограничительный конус
-tile.crashbarrier.name=Дорожный ограничительный барьер
 tile.trafficsignal.name=Светофор
 tile.streetlight.name=Уличный фонарь
 

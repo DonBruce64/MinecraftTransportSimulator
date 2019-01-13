@@ -216,8 +216,6 @@ tile.fuelpump.dispensed=DISP:
 
 tile.pole.name=Pole
 tile.polebase.name=Pole Base
-tile.trafficcone.name=Traffic Cone
-tile.crashbarrier.name=Crash Barrier
 tile.trafficsignal.name=Traffic Signal
 tile.streetlight.name=Street Light
 tile.trafficsign.name=Traffic Sign

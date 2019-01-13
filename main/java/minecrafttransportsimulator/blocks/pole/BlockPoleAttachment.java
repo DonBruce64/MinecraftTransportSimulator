@@ -1,8 +1,7 @@
-package minecrafttransportsimulator.blocks.decor;
+package minecrafttransportsimulator.blocks.pole;
 
 import minecrafttransportsimulator.blocks.core.TileEntityRotatable;
 import net.minecraft.block.ITileEntityProvider;
-import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockStateContainer;
@@ -14,11 +13,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BlockDecor6AxisOriented extends BlockDecor6AxisRegular implements ITileEntityProvider{
+public class BlockPoleAttachment extends BlockPoleNormal implements ITileEntityProvider{
 	public static final PropertyDirection ROTATION = PropertyDirection.create("rotation");
     
-	public BlockDecor6AxisOriented(Material material, float hardness, float resistance){
-		super(material, hardness, resistance);
+	public BlockPoleAttachment(float poleRadius){
+		super(poleRadius);
 	}
 	
 	@Override
@@ -56,7 +55,7 @@ public class BlockDecor6AxisOriented extends BlockDecor6AxisRegular implements I
 	
 	@Override
 	public TileEntityRotatable createNewTileEntity(World worldIn, int meta){
-		return new TileEntityDecor6AxisOriented();
+		return new TileEntityPoleWallConnector();
 	}
 	
     @Override

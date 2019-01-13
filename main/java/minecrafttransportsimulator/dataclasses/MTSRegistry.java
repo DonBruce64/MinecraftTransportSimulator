@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.blocks.core.BlockDecor;
 import minecrafttransportsimulator.blocks.core.BlockFuelPump;
 import minecrafttransportsimulator.blocks.core.BlockPartBench;
-import minecrafttransportsimulator.blocks.decor.BlockDecor1AxisIsolated;
-import minecrafttransportsimulator.blocks.decor.BlockDecor2AxisIsolated;
-import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisOriented;
-import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisRegular;
-import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisSign;
-import minecrafttransportsimulator.blocks.decor.BlockDecor6AxisSolidConnector;
+import minecrafttransportsimulator.blocks.pole.BlockPoleAttachment;
+import minecrafttransportsimulator.blocks.pole.BlockPoleNormal;
+import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
+import minecrafttransportsimulator.blocks.pole.BlockPoleWallConnector;
+import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemInstrument;
 import minecrafttransportsimulator.items.core.ItemKey;
 import minecrafttransportsimulator.items.core.ItemManual;
@@ -67,7 +67,6 @@ import minecrafttransportsimulator.packets.tileentities.PacketTileEntityClientSe
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
-import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -106,6 +105,9 @@ public final class MTSRegistry{
 	/**Maps instrument item names to items.  All instrument items for all packs will be populated here.*/
 	public static Map<String, ItemInstrument> instrumentItemMap = new LinkedHashMap<String, ItemInstrument>();
 	
+	/**Maps decor item names to items.  All decor items for all packs will be populated here.*/
+	public static Map<String, ItemDecor> decorItemMap = new LinkedHashMap<String, ItemDecor>();
+	
 	/**Core creative tab for base MTS items**/
 	public static final CreativeTabCore coreTab = new CreativeTabCore();
 	
@@ -137,23 +139,23 @@ public final class MTSRegistry{
 	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(coreTab);		
 	public static final Item itemBlockFuelPump = new ItemBlock(fuelPump);
 	
-	//Decorative pole-based blocks.
-	public static final Block pole = new BlockDecor6AxisRegular(Material.IRON, 5.0F, 30.0F);
+	//Pole-based blocks.
+	public static final Block pole = new BlockPoleNormal(0.125F);
 	public static final Item itemBlockPole = new ItemBlock(pole);
-	public static final Block poleBase = new BlockDecor6AxisSolidConnector(Material.IRON, 5.0F, 30.0F);
+	public static final Block poleBase = new BlockPoleWallConnector(0.125F);
 	public static final Item itemBlockPoleBase = new ItemBlock(poleBase);
-	public static final Block trafficSignal = new BlockDecor6AxisOriented(Material.IRON, 5.0F, 30.0F);
+	public static final Block trafficSignal = new BlockPoleAttachment(0.125F);
 	public static final Item itemBlockTrafficSignal = new ItemBlock(trafficSignal);
-	public static final Block streetLight = new BlockDecor6AxisOriented(Material.IRON, 5.0F, 30.0F);
+	public static final Block streetLight = new BlockPoleAttachment(0.125F);
 	public static final Item itemBlockStreetLight = new ItemBlock(streetLight);
-	public static final Block trafficSign = new BlockDecor6AxisSign(Material.IRON, 5.0F, 30.0F);
+	public static final Block trafficSign = new BlockPoleSign(0.125F);
 	public static final Item itemBlockTrafficSign = new ItemBlock(trafficSign);
 		
-	//Decorative ground blocks.
-	public static final Block trafficCone = new BlockDecor1AxisIsolated(Material.CLAY, 0.4375F, 0.75F, 0.6F, 0.75F);
-	public static final Item itemBlockTrafficCone = new ItemBlock(trafficCone);
-	public static final Block crashBarrier = new BlockDecor2AxisIsolated(Material.IRON, 5.0F, 30.0F, 0.5625F, 0.84375F, 1.0F);
-	public static final Item itemBlockCrashBarrier = new ItemBlock(crashBarrier);
+	//Decor blocks.
+	public static final Block decorBasicDark = new BlockDecor(false, false);
+	public static final Block decorOrientedDark = new BlockDecor(true, false);
+	public static final Block decorBasicLight = new BlockDecor(false, true);
+	public static final Block decorOrientedLight = new BlockDecor(true, true);
 	
 	//Counters for registry systems.
 	private static int entityNumber = 0;
@@ -188,6 +190,11 @@ public final class MTSRegistry{
 		}
 		for(ItemInstrument item : instrumentItemMap.values()){
 			if(item.instrumentName.startsWith(modID)){
+				packItems.add(item);
+			}
+		}
+		for(ItemDecor item : decorItemMap.values()){
+			if(item.decorName.startsWith(modID)){
 				packItems.add(item);
 			}
 		}
@@ -276,6 +283,12 @@ public final class MTSRegistry{
 		for(String instrumentName : PackParserSystem.getAllInstruments()){
 			ItemInstrument itemInstrument = new ItemInstrument(instrumentName);
 			instrumentItemMap.put(instrumentName, itemInstrument);
+		}
+		
+		//Next add decor items to the lists.
+		for(String decorName : PackParserSystem.getAllDecor()){
+			ItemDecor itemDecor = new ItemDecor(decorName);
+			decorItemMap.put(decorName, itemDecor);
 		}
 	}
 
@@ -448,13 +461,6 @@ public final class MTSRegistry{
 				" S ",
 				'S', Blocks.STONE_SLAB,
 				'P', itemBlockPole);
-		//Crash barrier
-		registerRecipe(new ItemStack(itemBlockCrashBarrier, 4),
-				"   ",
-				"SSS",
-				"SSS",
-				'S', Blocks.COBBLESTONE_WALL);
-		//Street light
 		registerRecipe(new ItemStack(itemBlockStreetLight),
 				" SP",
 				" G ",
@@ -481,14 +487,6 @@ public final class MTSRegistry{
 				" P ",
 				'I', Items.IRON_INGOT,
 				'P', itemBlockPole);
-		//Traffic cone
-		registerRecipe(new ItemStack(itemBlockTrafficCone, 2),
-				" O ",
-				"WWW",
-				"OSO",
-				'O', new ItemStack(Items.DYE, 1, 14),
-				'W', new ItemStack(Items.DYE, 1, 15),
-				'S', Items.SLIME_BALL);
 	}
 	
 	/**Registers a crafting recipe.  This is segmented out here as the method changes in 1.12 and the single location makes it easy for the script to update it.**/

@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.blocks.decor;
+package minecrafttransportsimulator.blocks.pole;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -11,7 +11,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 
-public class BlockDecor6AxisSolidConnector extends BlockDecor6AxisRegular{
+public class BlockPoleWallConnector extends BlockPoleNormal{
 	public static final PropertyBool UP_SOLID = PropertyBool.create("up_solid");
 	public static final PropertyBool DOWN_SOLID = PropertyBool.create("down_solid");
 	public static final PropertyBool NORTH_SOLID = PropertyBool.create("north_solid");
@@ -19,8 +19,8 @@ public class BlockDecor6AxisSolidConnector extends BlockDecor6AxisRegular{
     public static final PropertyBool SOUTH_SOLID = PropertyBool.create("south_solid");
     public static final PropertyBool WEST_SOLID = PropertyBool.create("west_solid");
     
-	public BlockDecor6AxisSolidConnector(Material material, float hardness, float resistance){
-		super(material, hardness, resistance);
+	public BlockPoleWallConnector(float poleRadius){
+		super(poleRadius);
 		this.setDefaultState(super.getDefaultState().
 				withProperty(UP_SOLID, false).
 				withProperty(DOWN_SOLID, false).

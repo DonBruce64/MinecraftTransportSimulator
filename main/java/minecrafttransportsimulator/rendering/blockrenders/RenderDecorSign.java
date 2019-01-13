@@ -7,7 +7,7 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.decor.TileEntityDecor6AxisSign;
+import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
 import minecrafttransportsimulator.dataclasses.PackSignObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
@@ -17,7 +17,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3i;
 
-public class RenderDecorSign extends TileEntitySpecialRenderer<TileEntityDecor6AxisSign>{
+public class RenderDecorSign extends TileEntitySpecialRenderer<TileEntityPoleSign>{
 	private static final ResourceLocation defaultSignTexture = new ResourceLocation(MTS.MODID, "textures/blocks/trafficsign.png");
 	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
 	private static final Map<String, FontRenderer> fontMap = new HashMap<String, FontRenderer>();
@@ -26,7 +26,7 @@ public class RenderDecorSign extends TileEntitySpecialRenderer<TileEntityDecor6A
 	public RenderDecorSign(){}
 	
 	@Override
-	public void renderTileEntityAt(TileEntityDecor6AxisSign decor, double x, double y, double z, float partialTicks, int destroyStage){
+	public void renderTileEntityAt(TileEntityPoleSign decor, double x, double y, double z, float partialTicks, int destroyStage){
 		super.renderTileEntityAt(decor, x, y, z, partialTicks, destroyStage);
 		final Vec3i facingVec = EnumFacing.VALUES[decor.rotation].getDirectionVec();		
 		GL11.glPushMatrix();
