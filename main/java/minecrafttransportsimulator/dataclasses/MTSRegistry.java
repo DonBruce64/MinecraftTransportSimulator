@@ -126,7 +126,7 @@ public final class MTSRegistry{
 	public static final Item itemBlockPropellerBench = new ItemBlock(propellerBench);
 	public static final Block engineBench = new BlockPartBench("engine_aircraft", "engine_car");
 	public static final Item itemBlockEngineBench = new ItemBlock(engineBench);
-	public static final Block wheelBench = new BlockPartBench("ground_device");
+	public static final Block wheelBench = new BlockPartBench("pontoon", "skid", "tread", "wheel");
 	public static final Item itemBlockWheelBench = new ItemBlock(wheelBench);
 	public static final Block seatBench = new BlockPartBench("seat", "crate");
 	public static final Item itemBlockSeatBench = new ItemBlock(seatBench);
