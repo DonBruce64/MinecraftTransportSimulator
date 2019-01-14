@@ -163,7 +163,7 @@ public class GUIManual extends GuiScreen{
 					textureLocation = new ResourceLocation(packName, "textures/parts/" + item.partName.substring(item.partName.indexOf(':') + 1) + ".png");
 				}else if(stack.getItem() instanceof ItemDecor){
 					ItemDecor item = (ItemDecor) stack.getItem();
-					PackDecorObject pack = PackParserSystem.getDecorBlock(item.decorName);
+					PackDecorObject pack = PackParserSystem.getDecor(item.decorName);
 					String packName = item.decorName.substring(0, item.decorName.indexOf(':'));
 					modelLocation = new ResourceLocation(packName, "objmodels/decors/" + item.decorName.substring(item.decorName.indexOf(':') + 1) + ".obj");
 					textureLocation = new ResourceLocation(packName, "textures/decors/" + item.decorName.substring(item.decorName.indexOf(':') + 1) + ".png");
