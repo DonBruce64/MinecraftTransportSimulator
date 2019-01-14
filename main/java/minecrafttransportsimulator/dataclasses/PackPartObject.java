@@ -32,7 +32,6 @@ public class PackPartObject{
     	public int maxRPM;
     	public float fuelConsumption;
     	public float[] gearRatios;
-    	public String[] repairMaterials;
     }
     
     public class PartWheelConfig{
