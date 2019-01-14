@@ -25,6 +25,7 @@ import minecrafttransportsimulator.items.parts.ItemPartCrate;
 import minecrafttransportsimulator.items.parts.ItemPartCustom;
 import minecrafttransportsimulator.items.parts.ItemPartEngineAircraft;
 import minecrafttransportsimulator.items.parts.ItemPartEngineCar;
+import minecrafttransportsimulator.items.parts.ItemPartEngineJet;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDevicePontoon;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceSkid;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceTread;
@@ -39,6 +40,7 @@ import minecrafttransportsimulator.multipart.parts.PartCrate;
 import minecrafttransportsimulator.multipart.parts.PartCustom;
 import minecrafttransportsimulator.multipart.parts.PartEngineAircraft;
 import minecrafttransportsimulator.multipart.parts.PartEngineCar;
+import minecrafttransportsimulator.multipart.parts.PartEngineJet;
 import minecrafttransportsimulator.multipart.parts.PartGroundDevicePontoon;
 import minecrafttransportsimulator.multipart.parts.PartGroundDeviceSkid;
 import minecrafttransportsimulator.multipart.parts.PartGroundDeviceTread;
@@ -330,6 +332,7 @@ public final class PackParserSystem{
     	switch(getPartPack(partName).general.type){
 			case "crate": return PartCrate.class;
 			case "engine_aircraft": return PartEngineAircraft.class;
+			case "engine_jet": return PartEngineJet.class;
 			case "engine_car": return PartEngineCar.class;
 			case "wheel": return PartGroundDeviceWheel.class;
 			case "skid": return PartGroundDeviceSkid.class;
@@ -346,6 +349,7 @@ public final class PackParserSystem{
     	switch(getPartPack(partName).general.type){
 			case "crate": return ItemPartCrate.class;
 			case "engine_aircraft": return ItemPartEngineAircraft.class;
+			case "engine_jet": return ItemPartEngineJet.class;
 			case "engine_car": return ItemPartEngineCar.class;
 			case "wheel": return ItemPartGroundDeviceWheel.class;
 			case "skid": return ItemPartGroundDeviceSkid.class;
