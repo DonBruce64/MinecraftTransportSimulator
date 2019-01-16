@@ -21,7 +21,7 @@ public class BlockPartBench extends ABlockRotateable{
 	public final List<String> partTypes;
 	
 	public BlockPartBench(String... partTypes){
-		super(Material.IRON);
+		super(Material.ROCK);
 		this.fullBlock = false;
 		this.setHardness(5.0F);
 		this.setResistance(10.0F);
