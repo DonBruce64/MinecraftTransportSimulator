@@ -53,8 +53,16 @@ public class PacketPlayerCrafting implements IMessage{
 			for(ItemStack materialStack : PackParserSystem.getMaterials(partToCraft)){
 				int requiredMaterialCount = materialStack.stackSize;
 				for(ItemStack stack : player.inventory.mainInventory){
-					if(ItemStack.areItemsEqual(stack, materialStack)){
-						requiredMaterialCount -= stack.stackSize;
+					if(stack != null){
+						if(materialStack.getItemDamage() == Integer.MAX_VALUE){
+							if(materialStack.getItem().equals(stack.getItem())){
+								requiredMaterialCount -= stack.stackSize;
+							}
+						}else{
+							if(ItemStack.areItemsEqual(stack, materialStack)){
+								requiredMaterialCount -= stack.stackSize;
+							}
+						}
 					}
 				}
 				if(requiredMaterialCount > 0){
@@ -68,7 +76,7 @@ public class PacketPlayerCrafting implements IMessage{
 	protected static void removeMaterials(EntityPlayer player, String partToCraft){
 		if(!player.capabilities.isCreativeMode){
 			for(ItemStack materialStack : PackParserSystem.getMaterials(partToCraft)){
-				player.inventory.clearMatchingItems(materialStack.getItem(), materialStack.getMetadata(), materialStack.stackSize, null);
+				player.inventory.clearMatchingItems(materialStack.getItem(), materialStack.getMetadata() == Integer.MAX_VALUE ? -1 : materialStack.getMetadata(), materialStack.stackSize, null);
 			}
 		}
 	}

@@ -141,8 +141,9 @@ public class GUIPartBench extends GuiScreen{
         RenderHelper.enableGUIStandardItemLighting();
 		int stackOffset = 9;
 		for(ItemStack craftingStack : PackParserSystem.getMaterials(partName)){
-			this.itemRender.renderItemAndEffectIntoGUI(craftingStack, guiLeft + stackOffset, guiTop + 172);
-			this.itemRender.renderItemOverlays(fontRendererObj, craftingStack, guiLeft + stackOffset, guiTop + 172);
+			ItemStack renderedStack = new ItemStack(craftingStack.getItem(), craftingStack.stackSize, craftingStack.getMetadata() == Integer.MAX_VALUE ? 0 : craftingStack.getMetadata());
+			this.itemRender.renderItemAndEffectIntoGUI(renderedStack, guiLeft + stackOffset, guiTop + 172);
+			this.itemRender.renderItemOverlays(fontRendererObj, renderedStack, guiLeft + stackOffset, guiTop + 172);
 			stackOffset += 18;
 		}
 		

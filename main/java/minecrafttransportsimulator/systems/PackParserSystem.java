@@ -190,7 +190,7 @@ public final class PackParserSystem{
 			int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
 			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
 			
-			materialList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata));
+			materialList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata == -1 ? Integer.MAX_VALUE :itemMetadata));
 		}
 		craftingItemMap.put(itemName, materialList);
     }
