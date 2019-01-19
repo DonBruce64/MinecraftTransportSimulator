@@ -27,7 +27,7 @@ public class BlockDecor extends Block implements ITileEntityProvider{
 		super(Material.ROCK);
 		this.isOriented = isOriented;
 		this.fullBlock = false;
-		this.setLightLevel(lighted ? 15 : 0);
+		this.setLightLevel(lighted ? 1.0F : 0);
 		this.setHardness(5.0F);
 		this.setResistance(10.0F);
 	}
