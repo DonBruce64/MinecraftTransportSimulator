@@ -81,7 +81,7 @@ public class BlockDecor extends Block implements ITileEntityProvider{
 	@SuppressWarnings("deprecation")
     public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entity){
 		if(!this.isOriented){
-			super.addCollisionBoxToList(state, world, pos, entityBox, collidingBoxes, entity);
+			addCollisionBoxToList(pos, entityBox, collidingBoxes, FULL_BLOCK_AABB);
 		}else{
 			if(this.regularAABB == null){
     			TileEntityDecor tile = ((TileEntityDecor) world.getTileEntity(pos));
@@ -92,7 +92,7 @@ public class BlockDecor extends Block implements ITileEntityProvider{
     					this.rotatedAABB = !this.isOriented ? regularAABB : new AxisAlignedBB(0.5F - pack.general.depth/2F, 0, 0.5F - pack.general.width/2F, 0.5F + pack.general.depth/2F, pack.general.height, 0.5F +  pack.general.width/2F);
     				}
     			}
-    			super.addCollisionBoxToList(state, world, pos, entityBox, collidingBoxes, entity);
+    			addCollisionBoxToList(pos, entityBox, collidingBoxes, FULL_BLOCK_AABB);
     		}else{
     			TileEntityDecor tile = ((TileEntityDecor) world.getTileEntity(pos));
     			if(tile != null){

@@ -31,7 +31,7 @@ sed -i 's/onItemRightClick(ItemStack stack, World world, EntityPlayer player, En
 
 #Blocks now take an extra boolean paramter.  Because of course they need to.
 if echo $FILE | grep -q "Block"; then
-	sed -i 's/public void addCollisionBoxToList(IBlockState state, World worldIn, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entityIn)/public void addCollisionBoxToList(IBlockState state, World worldIn, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entityIn, boolean p_185477_7_)/' $FILE
+	sed -i 's/public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entity)/public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entity, boolean p_185477_7_)/' $FILE
 fi
 
 #Itemstacks created from NBT are now constructors rather than methods.

@@ -101,13 +101,34 @@ public abstract class EntityMultipartB_Existing extends EntityMultipartA_Base{
 		
 		if(riderIDToDismountThisTick != -1){
 			Entity riderToDismount = worldObj.getEntityByID(riderIDToDismountThisTick);
-			PartSeat seat = this.getSeatForRider(riderToDismount);
-			if(riderToDismount != null && seat != null){
-				removeRiderFromSeat(riderToDismount, seat);
+			if(riderToDismount != null){
+				PartSeat seat = this.getSeatForRider(riderToDismount);
+				if(seat != null){
+					removeRiderFromSeat(riderToDismount, seat);
+					riderIDToDismountThisTick = -1;
+				}
+			}
+			
+			if(riderIDToDismountThisTick != -1){
+				//We couldn't dismount this rider.
+				//Likely a Sponge issue, so find the missing rider and remove him.
+				Integer missingRiderID = -1;
+				for(Integer entityID : riderSeats.keySet()){
+					boolean passengerIsValid = false;
+					for(Entity passenger : getPassengers()){
+						if(passenger.getEntityId() == entityID){
+							passengerIsValid = true;
+							break;
+						}
+					}
+					if(!passengerIsValid){
+						missingRiderID = entityID;
+					}
+				}
+				riderSeats.remove(missingRiderID);
 			}
 			riderIDToDismountThisTick = -1;
 		}
-		
 		didRiderClickSeat = false;
 	}
 	
