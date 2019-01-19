@@ -451,7 +451,7 @@ public final class MTSRegistry{
 				"ABA",
 				"AAA",
 				'A', Items.IRON_INGOT,
-				'B', Blocks.CHEST);
+				'B', Blocks.CRAFTING_TABLE);
 		//Instrument bench
 		registerRecipe(new ItemStack(itemBlockInstrumentBench),
 				"AGA",
