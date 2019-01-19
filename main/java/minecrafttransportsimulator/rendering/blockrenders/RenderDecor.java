@@ -26,7 +26,9 @@ public class RenderDecor extends TileEntitySpecialRenderer<TileEntityDecor>{
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glTranslatef(0.5F, 0.0F, 0.5F);
-		GL11.glRotatef(-90F*decor.rotation, 0, 1, 0);		
+		if(decor.rotation != 0){
+			GL11.glRotatef(-90F*decor.rotation, 0, 1, 0);
+		}
 		
 		//If we don't have the displaylist and texture cached, do it now.
 		if(!displayListMap.containsKey(decor.decorName)){
