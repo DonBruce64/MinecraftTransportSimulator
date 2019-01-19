@@ -1,0 +1,16 @@
+{
+    "multipart": [
+        {   "when": { "rotation": "north" },
+            "apply": { "model": "mts:trafficsignalcontroller", "y" : 180 }
+        },
+        {   "when": { "rotation": "east" },
+            "apply": { "model": "mts:trafficsignalcontroller", "y" : 270}
+        },
+        {   "when": { "rotation": "south" },
+            "apply": { "model": "mts:trafficsignalcontroller"}
+        },
+        {   "when": { "rotation": "west" },
+            "apply": { "model": "mts:trafficsignalcontroller", "y" : 90}
+        }
+    ]
+}

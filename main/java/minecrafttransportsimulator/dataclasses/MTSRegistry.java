@@ -12,6 +12,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.BlockDecor;
 import minecrafttransportsimulator.blocks.core.BlockFuelPump;
 import minecrafttransportsimulator.blocks.core.BlockPartBench;
+import minecrafttransportsimulator.blocks.core.BlockTrafficSignalController;
 import minecrafttransportsimulator.blocks.pole.BlockPoleAttachment;
 import minecrafttransportsimulator.blocks.pole.BlockPoleNormal;
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
@@ -64,6 +65,7 @@ import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpConnection
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
 import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
 import minecrafttransportsimulator.packets.tileentities.PacketTileEntityClientServerHandshake;
+import minecrafttransportsimulator.packets.tileentities.PacketTrafficSignalControllerChange;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -138,6 +140,10 @@ public final class MTSRegistry{
 	//Fuel pump.
 	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(coreTab);		
 	public static final Item itemBlockFuelPump = new ItemBlock(fuelPump);
+	
+	//Traffic Controller
+	public static final Block trafficSignalController = new BlockTrafficSignalController();
+	public static final Item itemBlockTrafficSignalController = new ItemBlock(trafficSignalController);
 	
 	//Pole-based blocks.
 	public static final Block pole = new BlockPoleNormal(0.125F);
@@ -329,6 +335,7 @@ public final class MTSRegistry{
 		registerPacket(PacketFuelPumpFillDrain.class, PacketFuelPumpFillDrain.Handler.class, true, false);
 		registerPacket(PacketSignChange.class, PacketSignChange.Handler.class, true, true);
 		registerPacket(PacketTileEntityClientServerHandshake.class, PacketTileEntityClientServerHandshake.Handler.class, true, true);
+		registerPacket(PacketTrafficSignalControllerChange.class, PacketTrafficSignalControllerChange.Handler.class, true, true);
 		
 		//Packets in packets.multipart.
 		registerPacket(PacketMultipartAttacked.class, PacketMultipartAttacked.Handler.class, false, true);
@@ -386,6 +393,15 @@ public final class MTSRegistry{
 				'C', new ItemStack(Items.DYE, 1, 0),
 				'D', new ItemStack(Items.DYE, 1, 1),
 				'E', Blocks.GLASS_PANE);
+		//Traffic Signal Controller
+		registerRecipe(new ItemStack(itemBlockTrafficSignalController),
+				"AAA",
+				"BCB",
+				"DBD",
+				'A', new ItemStack(Blocks.STONE_SLAB, 1, 0),
+				'B', Items.IRON_INGOT,
+				'C', Items.COMPARATOR,
+				'D', Items.REDSTONE);
 	}
 	
 	private static void initCraftingBenchItemRecipes(){
@@ -461,6 +477,7 @@ public final class MTSRegistry{
 				" S ",
 				'S', Blocks.STONE_SLAB,
 				'P', itemBlockPole);
+		//Street light
 		registerRecipe(new ItemStack(itemBlockStreetLight),
 				" SP",
 				" G ",

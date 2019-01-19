@@ -102,6 +102,19 @@ input.car.stop=StopEngine
 input.car.turnsignal_r=RightTurnSignal
 input.car.turnsignal_l=LeftTurnSignal
 
+gui.trafficsignalcontroller.scan=Scan For Signals & Components
+gui.trafficsignalcontroller.scandistance=Scan Distance: 
+gui.trafficsignalcontroller.scanfound=Scan Found:
+gui.trafficsignalcontroller.primary=Primary axis: 
+gui.trafficsignalcontroller.signalmode=Mode: 
+gui.trafficsignalcontroller.modetime=Time Delay
+gui.trafficsignalcontroller.modetrigger=Vehicle Trigger
+gui.trafficsignalcontroller.greenmaintime=Time main signal is Green:
+gui.trafficsignalcontroller.greencrosstime=Time cross signal is Green: 
+gui.trafficsignalcontroller.yellowtime=Time all signals are Yellow: 
+gui.trafficsignalcontroller.allredtime=Time all signals are Red:
+gui.trafficsignalcontroller.confirm=CONRFIRM 
+
 gui.vehicle_bench.type=Type
 gui.vehicle_bench.weight=Weight (kg)
 gui.vehicle_bench.fuel=Fuel Cap. (mb)
@@ -214,6 +227,8 @@ tile.instrumentbench.name=Instrument Bench
 tile.fuelpump.name=Fuel Pump
 tile.fuelpump.level=LVL:
 tile.fuelpump.dispensed=DISP:
+
+tile.trafficsignalcontroller.name=Traffic Signal Controller
 
 tile.pole.name=Pole
 tile.polebase.name=Pole Base
