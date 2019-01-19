@@ -51,14 +51,19 @@ if echo $FILE | grep -q "RenderFuelPump"; then
 	sed -i 's/super.renderTileEntityAt(pump, x, y, z, partialTicks, destroyStage)/super.render(pump, x, y, z, partialTicks, destroyStage, alpha)/' $FILE
 fi
 
-if echo $FILE | grep -q "RenderDecorLighted"; then
-	sed -i 's/renderTileEntityAt(TileEntityDecor6AxisOriented decor, double x, double y, double z, float partialTicks, int destroyStage)/render(TileEntityDecor6AxisOriented decor, double x, double y, double z, float partialTicks, int destroyStage, float alpha)/' $FILE
+if echo $FILE | grep -q "RenderDecor"; then
+	sed -i 's/renderTileEntityAt(TileEntityDecor decor, double x, double y, double z, float partialTicks, int destroyStage)/render(TileEntityDecor decor, double x, double y, double z, float partialTicks, int destroyStage, float alpha)/' $FILE
 	sed -i 's/super.renderTileEntityAt(decor, x, y, z, partialTicks, destroyStage)/super.render(decor, x, y, z, partialTicks, destroyStage, alpha)/' $FILE
 fi
 
-if echo $FILE | grep -q "RenderDecorSign"; then
-	sed -i 's/renderTileEntityAt(TileEntityDecor6AxisSign decor, double x, double y, double z, float partialTicks, int destroyStage)/render(TileEntityDecor6AxisSign decor, double x, double y, double z, float partialTicks, int destroyStage, float alpha)/' $FILE
-	sed -i 's/super.renderTileEntityAt(decor, x, y, z, partialTicks, destroyStage)/super.render(decor, x, y, z, partialTicks, destroyStage, alpha)/' $FILE
+if echo $FILE | grep -q "RenderPoleLighted"; then
+	sed -i 's/renderTileEntityAt(TileEntityPoleWallConnector polePart, double x, double y, double z, float partialTicks, int destroyStage)/render(TileEntityPoleWallConnector polePart, double x, double y, double z, float partialTicks, int destroyStage, float alpha)/' $FILE
+	sed -i 's/super.renderTileEntityAt(polePart, x, y, z, partialTicks, destroyStage)/super.render(polePart, x, y, z, partialTicks, destroyStage, alpha)/' $FILE
+fi
+
+if echo $FILE | grep -q "RenderPoleSign"; then
+	sed -i 's/renderTileEntityAt(TileEntityPoleSign sign, double x, double y, double z, float partialTicks, int destroyStage)/render(TileEntityPoleSign sign, double x, double y, double z, float partialTicks, int destroyStage, float alpha)/' $FILE
+	sed -i 's/super.renderTileEntityAt(sign, x, y, z, partialTicks, destroyStage)/super.render(sign, x, y, z, partialTicks, destroyStage, alpha)/' $FILE
 fi
 
 if echo $FILE | grep -q "GUISign"; then

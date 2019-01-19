@@ -24,13 +24,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.EnumSkyBlock;
 
-public class RenderDecorLighted extends TileEntitySpecialRenderer<TileEntityPoleWallConnector>{
+public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleWallConnector>{
 	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lensflare.png");
 	private static final ResourceLocation lightTexture = new ResourceLocation(MTS.MODID, "textures/rendering/light.png");
 	private static final ResourceLocation lightBeamTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lightbeam.png");
 		
-	public RenderDecorLighted(){}
+	public RenderPoleLighted(){}
 	
 	@Override
 	public void renderTileEntityAt(TileEntityPoleWallConnector polePart, double x, double y, double z, float partialTicks, int destroyStage){

@@ -579,12 +579,12 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			//If we don't have the deltas, calculate them based on the points in the JSON.
 			//First calculate the total distance the treads need to be rendered.
 			float totalDistance = 0;
-			float lastY = treadPart.pack.tread.yCoords[0];
-			float lastZ = treadPart.pack.tread.zCoords[0];
-			for(byte i=1; i<treadPart.pack.tread.yCoords.length; ++i){
-				totalDistance += Math.hypot((treadPart.pack.tread.yCoords[i] - lastY), (treadPart.pack.tread.yCoords[i] - lastZ));
-				lastY = treadPart.pack.tread.yCoords[i];
-				lastZ = treadPart.pack.tread.zCoords[i];
+			float lastY = treadPart.pack.tread.yPoints[0];
+			float lastZ = treadPart.pack.tread.zPoints[0];
+			for(byte i=1; i<treadPart.pack.tread.yPoints.length; ++i){
+				totalDistance += Math.hypot((treadPart.pack.tread.yPoints[i] - lastY), (treadPart.pack.tread.yPoints[i] - lastZ));
+				lastY = treadPart.pack.tread.yPoints[i];
+				lastZ = treadPart.pack.tread.zPoints[i];
 			}
 			
 			//Now that we have the total distance, generate a set of points for the path.
@@ -592,10 +592,10 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			deltas = new ArrayList<Float[]>();
 			final float spacing = treadPart.pack.tread.spacing;
 			byte pointIndex = 0;
-			float currentY = treadPart.pack.tread.yCoords[pointIndex];
-			float currentZ = treadPart.pack.tread.zCoords[pointIndex];
-			float nextY = treadPart.pack.tread.yCoords[pointIndex + 1];
-			float nextZ = treadPart.pack.tread.zCoords[pointIndex + 1];
+			float currentY = treadPart.pack.tread.yPoints[pointIndex];
+			float currentZ = treadPart.pack.tread.zPoints[pointIndex];
+			float nextY = treadPart.pack.tread.yPoints[pointIndex + 1];
+			float nextZ = treadPart.pack.tread.zPoints[pointIndex + 1];
 			float deltaYBeforeSegment = 0;
 			float deltaZBeforeSegment = 0;
 			float deltaBeforeSegment = 0;
@@ -614,11 +614,11 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 					++pointIndex;
 					//If we run out of points go back to the start of the point set.
 					//If we are out again, exit the loop.
-					if(pointIndex + 1 == treadPart.pack.tread.yCoords.length){
-						currentY = treadPart.pack.tread.yCoords[pointIndex];
-						currentZ = treadPart.pack.tread.zCoords[pointIndex];
-						nextY = treadPart.pack.tread.yCoords[0];
-						nextZ = treadPart.pack.tread.zCoords[0];
+					if(pointIndex + 1 == treadPart.pack.tread.yPoints.length){
+						currentY = treadPart.pack.tread.yPoints[pointIndex];
+						currentZ = treadPart.pack.tread.zPoints[pointIndex];
+						nextY = treadPart.pack.tread.yPoints[0];
+						nextZ = treadPart.pack.tread.zPoints[0];
 						//Ensure we rotate the angle by the correct amount for the joint.
 						//It's possible that we will add a negative angle here due to going from something like 270 to 0.
 						//This will cause a -270 rotation rather than the +30 we want.
@@ -627,13 +627,13 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 							angleToAdd += 360; 
 						}
 						angle += angleToAdd;
-					}else if(pointIndex + 1 > treadPart.pack.tread.yCoords.length){
+					}else if(pointIndex + 1 > treadPart.pack.tread.yPoints.length){
 						break;
 					}else{
-						currentY = treadPart.pack.tread.yCoords[pointIndex];
-						currentZ = treadPart.pack.tread.zCoords[pointIndex];
-						nextY = treadPart.pack.tread.yCoords[pointIndex + 1];
-						nextZ = treadPart.pack.tread.zCoords[pointIndex + 1];
+						currentY = treadPart.pack.tread.yPoints[pointIndex];
+						currentZ = treadPart.pack.tread.zPoints[pointIndex];
+						nextY = treadPart.pack.tread.yPoints[pointIndex + 1];
+						nextZ = treadPart.pack.tread.zPoints[pointIndex + 1];
 						angle += treadPart.pack.tread.angles[pointIndex] - treadPart.pack.tread.angles[pointIndex - 1];
 					}
 					
@@ -686,7 +686,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		float treadMovementPercentage = (float) ((treadPart.angularPosition + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.pack.tread.spacing/treadPart.pack.tread.spacing);
 		GL11.glPushMatrix();
 		//First translate to the initial point.
-		GL11.glTranslatef(0, treadPart.pack.tread.yCoords[0], treadPart.pack.tread.zCoords[0]);
+		GL11.glTranslatef(0, treadPart.pack.tread.yPoints[0], treadPart.pack.tread.zPoints[0]);
 		//Next use the deltas to get the amount needed to translate and rotate each link.
 		for(Float[] point : deltas){
 			if(point[2] != 0){
