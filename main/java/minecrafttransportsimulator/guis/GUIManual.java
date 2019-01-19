@@ -12,10 +12,10 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackDecorObject;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.items.core.ItemDecor;
-import minecrafttransportsimulator.items.core.ItemMultipart;
+import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -39,7 +39,7 @@ public class GUIManual extends GuiScreen{
 	private int rightSideOffset;
 	private final ItemStack stack;
 	private final NBTTagCompound stackTag;
-	private final List<PackMultipartObject> packList = new ArrayList<PackMultipartObject>();
+	private final List<PackVehicleObject> packList = new ArrayList<PackVehicleObject>();
 	private final byte totalInfoPages;
 	
 	private GuiButton leftButton;
@@ -146,11 +146,11 @@ public class GUIManual extends GuiScreen{
 			if(stack != null && stack.getItem() != null){
 				final ResourceLocation modelLocation;
 				final ResourceLocation textureLocation;
-				if(stack.getItem() instanceof ItemMultipart){
-					ItemMultipart item = (ItemMultipart) stack.getItem();
-					String packName = item.multipartName.substring(0, item.multipartName.indexOf(':'));
-					modelLocation = new ResourceLocation(packName, "objmodels/vehicles/" + PackParserSystem.getMultipartJSONName(item.multipartName) + ".obj");
-					textureLocation = new ResourceLocation(packName, "textures/vehicles/" + item.multipartName.substring(item.multipartName.indexOf(':') + 1) + ".png");
+				if(stack.getItem() instanceof ItemVehicle){
+					ItemVehicle item = (ItemVehicle) stack.getItem();
+					String packName = item.vehicleName.substring(0, item.vehicleName.indexOf(':'));
+					modelLocation = new ResourceLocation(packName, "objmodels/vehicles/" + PackParserSystem.getVehicleJSONName(item.vehicleName) + ".obj");
+					textureLocation = new ResourceLocation(packName, "textures/vehicles/" + item.vehicleName.substring(item.vehicleName.indexOf(':') + 1) + ".png");
 				}else if(stack.getItem() instanceof AItemPart){
 					AItemPart item = (AItemPart) stack.getItem();
 					PackPartObject pack = PackParserSystem.getPartPack(item.partName);

@@ -3,7 +3,7 @@ package minecrafttransportsimulator.dataclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.items.core.ItemMultipart;
+import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
@@ -35,7 +35,7 @@ public final class CreativeTabPack extends CreativeTabs{
 		//This is needed to re-sort the items here to get them in the correct order.
 		//MC will re-order these by ID if we let it.
 		givenList.clear();
-		for(Item item : MTSRegistry.multipartItemMap.values()){
+		for(Item item : MTSRegistry.vehicleItemMap.values()){
 			for(CreativeTabs tab : item.getCreativeTabs()){
 				if(tab.equals(this)){
 					item.getSubItems(item, tab, givenList);
@@ -69,9 +69,9 @@ public final class CreativeTabPack extends CreativeTabs{
 	@SideOnly(Side.CLIENT)
     public ItemStack getIconItemStack(){
 		List<ItemStack> tabStacks = new ArrayList<ItemStack>();
-		for(ItemMultipart multipartItem : MTSRegistry.multipartItemMap.values()){
-			if(multipartItem.getRegistryName().getResourceDomain().equals(getTabLabel())){
-				tabStacks.add(new ItemStack(multipartItem));
+		for(ItemVehicle vehicleItem : MTSRegistry.vehicleItemMap.values()){
+			if(vehicleItem.getRegistryName().getResourceDomain().equals(getTabLabel())){
+				tabStacks.add(new ItemStack(vehicleItem));
 			}
 		}
 		if(tabStacks.isEmpty()){

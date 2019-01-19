@@ -3,8 +3,8 @@ package minecrafttransportsimulator.dataclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackRotatableModelObject;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackRotatableModelObject;
 
 public class PackPartObject{
 	public PartGeneralConfig general;

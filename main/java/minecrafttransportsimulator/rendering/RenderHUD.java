@@ -3,11 +3,11 @@ package minecrafttransportsimulator.rendering;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.dataclasses.MTSControls.Controls;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackControl;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.VehicleInstrument;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackControl;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackInstrument;
 import minecrafttransportsimulator.systems.CameraSystem;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
 import net.minecraft.client.Minecraft;
 
 /**Main render class for the HUD.
@@ -21,10 +21,10 @@ public final class RenderHUD{
 	public static final int screenDefaultX = 854;
 	public static final int screenDefaultY = 480;
 	
-	public static void drawMainHUD(EntityMultipartE_Vehicle vehicle, boolean inGUI){		
+	public static void drawMainHUD(EntityVehicleE_Powered vehicle, boolean inGUI){		
 		GL11.glPushMatrix();
 		GL11.glColor4f(1, 1, 1, 1);
-		Minecraft.getMinecraft().getTextureManager().bindTexture(RenderMultipart.getTextureForMultipart(vehicle));
+		Minecraft.getMinecraft().getTextureManager().bindTexture(RenderVehicle.getTextureForVehicle(vehicle));
 		
 		if(!inGUI){
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
@@ -55,10 +55,10 @@ public final class RenderHUD{
 		GL11.glPopMatrix();
 	}
 	
-	public static void drawAuxiliaryHUD(EntityMultipartE_Vehicle vehicle, int width, int height, boolean inGUI){		
+	public static void drawAuxiliaryHUD(EntityVehicleE_Powered vehicle, int width, int height, boolean inGUI){		
 		GL11.glPushMatrix();
 		GL11.glColor4f(1, 1, 1, 1);
-		Minecraft.getMinecraft().getTextureManager().bindTexture(RenderMultipart.getTextureForMultipart(vehicle));
+		Minecraft.getMinecraft().getTextureManager().bindTexture(RenderVehicle.getTextureForVehicle(vehicle));
 		if(!inGUI){
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		}
@@ -70,7 +70,7 @@ public final class RenderHUD{
 		GL11.glPopMatrix();
 	}
 	
-	private static void drawInstruments(EntityMultipartE_Vehicle vehicle, int minX, int maxX, int maxY, boolean main){
+	private static void drawInstruments(EntityVehicleE_Powered vehicle, int minX, int maxX, int maxY, boolean main){
 		for(byte i=0; i<vehicle.pack.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.pack.motorized.instruments.get(i);
 			//Render the instruments in the correct panel.
@@ -91,7 +91,7 @@ public final class RenderHUD{
 		}
 	}
 	
-	private static void drawControls(EntityMultipartE_Vehicle vehicle, boolean inGUI){
+	private static void drawControls(EntityVehicleE_Powered vehicle, boolean inGUI){
 		for(byte i=0; i<vehicle.pack.motorized.controls.size(); ++i){
 			PackControl packControl = vehicle.pack.motorized.controls.get(i);
 			for(Controls control : Controls.values()){

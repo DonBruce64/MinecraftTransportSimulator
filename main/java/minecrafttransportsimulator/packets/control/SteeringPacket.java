@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -47,33 +47,33 @@ public class SteeringPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartF_Car thisEntity;
+					EntityVehicleF_Car vehicle;
 					if(ctx.side.isServer()){
-						thisEntity = (EntityMultipartF_Car) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						vehicle = (EntityVehicleF_Car) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 					}else{
 						if(Minecraft.getMinecraft().theWorld == null){
 							return;
 						}
-						thisEntity = (EntityMultipartF_Car) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						vehicle = (EntityVehicleF_Car) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
-					if(thisEntity!=null){
+					if(vehicle!=null){
 						if(message.packetType == 1){
-							thisEntity.steeringCooldown = message.steeringData;
-							if(thisEntity.steeringAngle + 20 <= 450){
-								thisEntity.steeringAngle += 20;
+							vehicle.steeringCooldown = message.steeringData;
+							if(vehicle.steeringAngle + 20 <= 450){
+								vehicle.steeringAngle += 20;
 							}else{
 								return;
 							}
 						}else if(message.packetType == -1){
-							thisEntity.steeringCooldown = message.steeringData;
-							if(thisEntity.steeringAngle - 20 >= -450){
-								thisEntity.steeringAngle -= 20;
+							vehicle.steeringCooldown = message.steeringData;
+							if(vehicle.steeringAngle - 20 >= -450){
+								vehicle.steeringAngle -= 20;
 							}else{
 								return;
 							}
 						}else{
-							thisEntity.steeringAngle = message.steeringData;
-							thisEntity.steeringCooldown = Short.MAX_VALUE;
+							vehicle.steeringAngle = message.steeringData;
+							vehicle.steeringCooldown = Short.MAX_VALUE;
 						}
 						if(ctx.side.isServer()){
 							MTS.MTSNet.sendToAll(message);

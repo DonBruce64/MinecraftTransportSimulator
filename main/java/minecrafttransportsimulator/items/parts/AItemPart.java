@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.items.parts;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.Item;

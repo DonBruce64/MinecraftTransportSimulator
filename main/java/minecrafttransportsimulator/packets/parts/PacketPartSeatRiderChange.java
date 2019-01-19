@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.multipart.parts.APart;
-import minecrafttransportsimulator.multipart.parts.PartSeat;
+import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -43,12 +43,12 @@ public class PacketPartSeatRiderChange extends APacketPart{
 				@Override
 				public void run(){
 					Entity rider = Minecraft.getMinecraft().theWorld.getEntityByID(message.rider);
-					PartSeat seat = (PartSeat) getMultipartPartFromMessage(message, ctx);
+					PartSeat seat = (PartSeat) getVehiclePartFromMessage(message, ctx);
 					if(rider != null && seat != null){
 						if(message.mount){
-							seat.multipart.setRiderInSeat(rider, seat);
+							seat.vehicle.setRiderInSeat(rider, seat);
 						}else{
-							seat.multipart.removeRiderFromSeat(rider, seat);
+							seat.vehicle.removeRiderFromSeat(rider, seat);
 						}
 					}
 				}

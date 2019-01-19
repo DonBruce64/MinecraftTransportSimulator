@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -37,11 +37,11 @@ public class ReverseThrustPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartF_Plane thisEntity;
+					EntityVehicleF_Plane thisEntity;
 					if(ctx.side.isServer()){
-						thisEntity = (EntityMultipartF_Plane) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						thisEntity = (EntityVehicleF_Plane) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 					}else{
-						thisEntity = (EntityMultipartF_Plane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						thisEntity = (EntityVehicleF_Plane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
 						thisEntity.reverseThrust = message.reversed;

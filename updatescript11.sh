@@ -71,8 +71,8 @@ sed -i 's/stackSize/getCount()/g' $FILE
 
 #Entity registration now requires a ResourceLocation for stuff.  Why we need that and still need a unique name is beyond me...
 if echo $FILE | grep -q "MTSRegistry"; then
-	sed -i 's/EntityRegistry.registerModEntity(EntityMultipartF_Plane.class/EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityMultipartF_Plane.class.getSimpleName().substring(6).toLowerCase()), EntityMultipartF_Plane.class/' $FILE
-	sed -i 's/EntityRegistry.registerModEntity(EntityMultipartF_Car.class/EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityMultipartF_Car.class.getSimpleName().substring(6).toLowerCase()), EntityMultipartF_Car.class/' $FILE
+	sed -i 's/EntityRegistry.registerModEntity(EntityVehicleF_Plane.class/EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleF_Plane.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleF_Plane.class/' $FILE
+	sed -i 's/EntityRegistry.registerModEntity(EntityVehicleF_Car.class/EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleF_Car.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleF_Car.class/' $FILE
 	sed -i '3iimport net.minecraft.util.ResourceLocation;' $FILE;
 fi
 

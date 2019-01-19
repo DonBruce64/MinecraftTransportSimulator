@@ -1,17 +1,17 @@
 package minecrafttransportsimulator.baseclasses;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
-import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
-import minecrafttransportsimulator.multipart.parts.APart;
-import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.SFXSystem;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
+import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.Vec3d;
 
 public final class VehicleSound{
-	private final EntityMultipartE_Vehicle vehicle;
+	private final EntityVehicleE_Powered vehicle;
 	private final APart optionalPart;
 	private final EntityPlayer player;
 	private final SoundTypes soundType;
@@ -19,7 +19,7 @@ public final class VehicleSound{
 	private Vec3d playerPos;
 	private Vec3d sourcePos;
 	
-	public VehicleSound(EntityMultipartE_Vehicle vehicle, APart optionalPart, SoundTypes soundType){
+	public VehicleSound(EntityVehicleE_Powered vehicle, APart optionalPart, SoundTypes soundType){
 		this.vehicle = vehicle;
 		this.optionalPart = optionalPart;
 		this.player = Minecraft.getMinecraft().thePlayer;
@@ -115,7 +115,7 @@ public final class VehicleSound{
 			case ENGINE: return ((APartEngine) optionalPart).state.running || ((APartEngine) optionalPart).internalFuel > 0;
 			case HORN: return vehicle.hornOn;
 			case SIREN: return vehicle.sirenOn;
-			case STALL_BUZZER: return ((EntityMultipartF_Plane) vehicle).trackAngle <= -17;
+			case STALL_BUZZER: return ((EntityVehicleF_Plane) vehicle).trackAngle <= -17;
 			default: return true;
 		}
 	}

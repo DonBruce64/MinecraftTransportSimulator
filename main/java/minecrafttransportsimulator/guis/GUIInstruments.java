@@ -10,26 +10,26 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackInstrument;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackInstrument;
 import minecrafttransportsimulator.items.core.ItemInstrument;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartInstruments;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 public class GUIInstruments extends GuiScreen{
-	private final EntityMultipartE_Vehicle vehicle;
+	private final EntityVehicleE_Powered vehicle;
 	private final EntityPlayer player;
 	
 	private PackInstrument lastInstrumentClicked = null;
 	private final Map<String, ItemStack> playerInstruments = new HashMap<String, ItemStack>();
 	private final Map<String, Integer[]> renderedPlayerInstrumentsBounds = new HashMap<String, Integer[]>();
 	
-	public GUIInstruments(EntityMultipartE_Vehicle vehicle, EntityPlayer player){
+	public GUIInstruments(EntityVehicleE_Powered vehicle, EntityPlayer player){
 		this.vehicle = vehicle;
 		this.player = player;
 	}
@@ -227,7 +227,7 @@ public class GUIInstruments extends GuiScreen{
 			//Check to see if the player clicked an instrument, and if so which one.
 			for(Entry<String, Integer[]> renderedInstrumentsEntry : renderedPlayerInstrumentsBounds.entrySet()){
 				if(mouseX > renderedInstrumentsEntry.getValue()[0] && mouseX < renderedInstrumentsEntry.getValue()[1] && mouseY > renderedInstrumentsEntry.getValue()[2] && mouseY < renderedInstrumentsEntry.getValue()[3]){
-					MTS.MTSNet.sendToServer(new PacketMultipartInstruments(vehicle, player, getIndexOfLastInstrumentClicked(), renderedInstrumentsEntry.getKey()));
+					MTS.MTSNet.sendToServer(new PacketVehicleInstruments(vehicle, player, getIndexOfLastInstrumentClicked(), renderedInstrumentsEntry.getKey()));
 					lastInstrumentClicked = null;
 					return;
 				}
@@ -236,7 +236,7 @@ public class GUIInstruments extends GuiScreen{
 			//Either the player didn't click an instrument, or they clicked the CLEAR.
 			if(mouseX > RenderHUD.screenDefaultX/4 - 30 && mouseX < RenderHUD.screenDefaultX/4 + 30 && mouseY > 11*RenderHUD.screenDefaultY/16 - 30 && mouseY < 11*RenderHUD.screenDefaultY/16 + 30){
 				if(vehicle.getInstrumentInfoInSlot(getIndexOfLastInstrumentClicked()) != null){
-					MTS.MTSNet.sendToServer(new PacketMultipartInstruments(vehicle, player, getIndexOfLastInstrumentClicked(), ""));
+					MTS.MTSNet.sendToServer(new PacketVehicleInstruments(vehicle, player, getIndexOfLastInstrumentClicked(), ""));
 					lastInstrumentClicked = null;
 					return;
 				}

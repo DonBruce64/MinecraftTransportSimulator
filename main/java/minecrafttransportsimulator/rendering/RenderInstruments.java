@@ -8,12 +8,12 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackInstrumentObject.PackInstrumentComponent;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.VehicleInstrument;
-import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
-import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
+import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
@@ -25,7 +25,7 @@ public abstract class RenderInstruments{
 	/**Map for texture sheets.  First keyed by vehicle, then keyed by the gauge itself.**/
 	private static Map<String, Map<String, ResourceLocation>> instrumentTextureSheets = new HashMap<String, Map<String, ResourceLocation>>();
 	
-	public static void drawInstrument(EntityMultipartE_Vehicle vehicle, VehicleInstrument instrument, boolean hud, byte engineNumber){
+	public static void drawInstrument(EntityVehicleE_Powered vehicle, VehicleInstrument instrument, boolean hud, byte engineNumber){
 		//First get the appropriate texture file for this vehicle/instrument combination.
 		if(!instrumentTextureSheets.containsKey(vehicle.pack.general.type)){
 			instrumentTextureSheets.put(vehicle.pack.general.type, new HashMap<String, ResourceLocation>());
@@ -119,7 +119,7 @@ public abstract class RenderInstruments{
 		}
 	}
 	
-	private static double getVariableValue(EntityMultipartE_Vehicle vehicle, String variable, byte engineNumber){
+	private static double getVariableValue(EntityVehicleE_Powered vehicle, String variable, byte engineNumber){
 		switch(variable){
 			case("yaw"): return -vehicle.rotationYaw;
 			case("pitch"): return Math.max(Math.min(vehicle.rotationPitch, 25), -25);
@@ -128,12 +128,12 @@ public abstract class RenderInstruments{
 			case("speed"): return Math.abs(vehicle.velocity*vehicle.speedFactor*20);
 			case("turn_coordinator"): return Math.max(Math.min(((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F, 50), -50);
 			case("turn_indicator"): return Math.max(Math.min((vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F, 50), -50);
-			case("slip"): return 75*((EntityMultipartF_Plane) vehicle).sideVec.dotProduct(vehicle.velocityVec);
+			case("slip"): return 75*((EntityVehicleF_Plane) vehicle).sideVec.dotProduct(vehicle.velocityVec);
 			case("vertical_speed"): return vehicle.motionY*20;
-			case("lift_reserve"): return Math.max(Math.min(((EntityMultipartF_Plane) vehicle).trackAngle*3 + 20, 35), -35);
-			case("trim_rudder"): return ((EntityMultipartF_Plane) vehicle).rudderTrim/10F;
-			case("trim_elevator"): return ((EntityMultipartF_Plane) vehicle).elevatorTrim/10F;
-			case("trim_aileron"): return ((EntityMultipartF_Plane) vehicle).aileronTrim/10F;
+			case("lift_reserve"): return Math.max(Math.min(((EntityVehicleF_Plane) vehicle).trackAngle*3 + 20, 35), -35);
+			case("trim_rudder"): return ((EntityVehicleF_Plane) vehicle).rudderTrim/10F;
+			case("trim_elevator"): return ((EntityVehicleF_Plane) vehicle).elevatorTrim/10F;
+			case("trim_aileron"): return ((EntityVehicleF_Plane) vehicle).aileronTrim/10F;
 			case("electric_power"): return vehicle.electricPower;
 			case("electric_usage"): return Math.min(vehicle.electricFlow*20, 1);
 			case("fuel"): return vehicle.fuel/vehicle.pack.motorized.fuelCapacity*100F;
@@ -149,7 +149,7 @@ public abstract class RenderInstruments{
     /**
      * Checks if lights are on for this vehicle and instruments need to be lit up.
      */
-	public static boolean lightsOn(EntityMultipartE_Vehicle vehicle){
+	public static boolean lightsOn(EntityVehicleE_Powered vehicle){
 		return (vehicle.isLightOn(LightTypes.NAVIGATIONLIGHT) || vehicle.isLightOn(LightTypes.HEADLIGHT)) && vehicle.electricPower > 3;
 	}
 	

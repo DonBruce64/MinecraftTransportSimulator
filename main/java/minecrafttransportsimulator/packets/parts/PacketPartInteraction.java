@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.multipart.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -36,7 +36,7 @@ public class PacketPartInteraction extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					APart part = getMultipartPartFromMessage(message, ctx);
+					APart part = getVehiclePartFromMessage(message, ctx);
 					EntityPlayer player = (EntityPlayer) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.player);
 					if(part != null && player != null){
 						part.interactPart(player);

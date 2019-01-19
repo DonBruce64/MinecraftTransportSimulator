@@ -3,11 +3,11 @@ package minecrafttransportsimulator.blocks.core;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpConnection;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
@@ -25,7 +25,7 @@ import net.minecraftforge.fluids.capability.IFluidTankProperties;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 
 public class TileEntityFuelPump extends TileEntityRotatable implements IFluidTank, IFluidHandler, ITickable{
-    private EntityMultipartE_Vehicle connectedVehicle;
+    private EntityVehicleE_Powered connectedVehicle;
     public int totalTransfered;
     
 	private FluidTankInfo tankInfo;
@@ -75,11 +75,11 @@ public class TileEntityFuelPump extends TileEntityRotatable implements IFluidTan
 		tankInfo = new FluidTankInfo(new FluidStack(fluid, 0), emptyTankInfo.capacity);
 	}
 	
-	public EntityMultipartE_Vehicle getConnectedVehicle(){
+	public EntityVehicleE_Powered getConnectedVehicle(){
 		return this.connectedVehicle;
 	}
 	
-	public void setConnectedVehicle(EntityMultipartE_Vehicle vehicle){
+	public void setConnectedVehicle(EntityVehicleE_Powered vehicle){
 		if(vehicle == null){
 			this.connectedVehicle = null;
 		}else{

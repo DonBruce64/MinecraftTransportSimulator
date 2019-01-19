@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.multipart.main.EntityMultipartA_Base;
-import minecrafttransportsimulator.multipart.parts.APart;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
+import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -16,7 +16,7 @@ public abstract class APacketPart implements IMessage{
 	public APacketPart(){}
 	
 	public APacketPart(APart part){
-		this.id = part.multipart.getEntityId();
+		this.id = part.vehicle.getEntityId();
 		this.x = part.offset.xCoord;
 		this.y = part.offset.yCoord;
 		this.z = part.offset.zCoord;
@@ -38,15 +38,15 @@ public abstract class APacketPart implements IMessage{
 		buf.writeDouble(this.z);
 	}
 	
-	protected static APart getMultipartPartFromMessage(APacketPart message, MessageContext ctx){
-		EntityMultipartA_Base multipart;
+	protected static APart getVehiclePartFromMessage(APacketPart message, MessageContext ctx){
+		EntityVehicleA_Base vehicle;
 		if(ctx.side.isServer()){
-			multipart = (EntityMultipartA_Base) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+			vehicle = (EntityVehicleA_Base) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 		}else{
-			multipart = (EntityMultipartA_Base) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+			vehicle = (EntityVehicleA_Base) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 		}
-		if(multipart != null){
-			for(APart part : multipart.getMultipartParts()){
+		if(vehicle != null){
+			for(APart part : vehicle.getVehicleParts()){
 				if(part.offset.xCoord == message.x && part.offset.yCoord == message.y && part.offset.zCoord == message.z){
 					return part;
 				}

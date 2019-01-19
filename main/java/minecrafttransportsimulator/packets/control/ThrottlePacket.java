@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -37,14 +37,14 @@ public class ThrottlePacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartE_Vehicle vehicle;
+					EntityVehicleE_Powered vehicle;
 					if(ctx.side.isServer()){
-						vehicle = (EntityMultipartE_Vehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						vehicle = (EntityVehicleE_Powered) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 					}else{
 						if(Minecraft.getMinecraft().theWorld == null){
 							return;
 						}
-						vehicle = (EntityMultipartE_Vehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						vehicle = (EntityVehicleE_Powered) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 						
 					}
 					if(vehicle!=null){

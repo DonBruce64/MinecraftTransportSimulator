@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.multipart.main.EntityMultipartB_Existing;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.renderer.EntityRenderer;
@@ -44,22 +44,22 @@ public final class CameraSystem{
 		Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
 	}
 	
-	public static void updatePlayerYawAndPitch(EntityPlayer player, EntityMultipartB_Existing multipart){
+	public static void updatePlayerYawAndPitch(EntityPlayer player, EntityVehicleB_Existing vehicle){
 		boolean mouseYoke = ConfigSystem.getBooleanConfig("MouseYoke");
 		if((!mouseYoke && lockedView) || (mouseYoke && !lockedView)){
-			player.rotationYaw += multipart.rotationYaw - multipart.prevRotationYaw;
-			if(multipart.rotationPitch > 90 || multipart.rotationPitch < -90){
-				player.rotationPitch -= multipart.rotationPitch - multipart.prevRotationPitch;
+			player.rotationYaw += vehicle.rotationYaw - vehicle.prevRotationYaw;
+			if(vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90){
+				player.rotationPitch -= vehicle.rotationPitch - vehicle.prevRotationPitch;
 			}else{
-				player.rotationPitch += multipart.rotationPitch - multipart.prevRotationPitch;
+				player.rotationPitch += vehicle.rotationPitch - vehicle.prevRotationPitch;
 			}
-			if((multipart.rotationPitch > 90 || multipart.rotationPitch < -90) ^ (multipart.prevRotationPitch > 90 || multipart.prevRotationPitch < -90)){
+			if((vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90) ^ (vehicle.prevRotationPitch > 90 || vehicle.prevRotationPitch < -90)){
 				player.rotationYaw+=180;
 			}
 		}else if(mouseYoke){
 			if(lockedView){
-				player.rotationYaw = multipart.rotationYaw;
-				player.rotationPitch = multipart.rotationPitch;
+				player.rotationYaw = vehicle.rotationYaw;
+				player.rotationPitch = vehicle.rotationPitch;
 			}
 		}
 	}

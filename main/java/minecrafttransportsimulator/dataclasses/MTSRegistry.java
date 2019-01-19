@@ -21,11 +21,9 @@ import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemInstrument;
 import minecrafttransportsimulator.items.core.ItemKey;
 import minecrafttransportsimulator.items.core.ItemManual;
-import minecrafttransportsimulator.items.core.ItemMultipart;
+import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.parts.AItemPart;
-import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
-import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.BrakePacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
@@ -43,19 +41,6 @@ import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
 import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartAttacked;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInit;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartClientInitResponse;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartClientPartAddition;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartClientPartRemoval;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartClientRemoval;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartDeltas;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartInstruments;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartKey;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartNameTag;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartServerPartAddition;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartWindowBreak;
-import minecrafttransportsimulator.packets.multipart.PacketMultipartWindowFix;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
@@ -66,7 +51,22 @@ import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
 import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
 import minecrafttransportsimulator.packets.tileentities.PacketTileEntityClientServerHandshake;
 import minecrafttransportsimulator.packets.tileentities.PacketTrafficSignalControllerChange;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInitResponse;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartAddition;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartRemoval;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientRemoval;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleServerPartAddition;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowFix;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.init.Blocks;
@@ -98,8 +98,8 @@ public final class MTSRegistry{
 	/**All registered core items are stored in this list as they are added.  Used to sort items in the creative tab.**/
 	public static List<Item> itemList = new ArrayList<Item>();
 	
-	/**Maps multipart item names to items.  All multipart items for all packs will be populated here.*/
-	public static Map<String, ItemMultipart> multipartItemMap = new LinkedHashMap<String, ItemMultipart>();
+	/**Maps vehicle item names to items.  All vehicle items for all packs will be populated here.*/
+	public static Map<String, ItemVehicle> vehicleItemMap = new LinkedHashMap<String, ItemVehicle>();
 	
 	/**Maps part item names to items.  All part items for all packs will be populated here.*/
 	public static Map<String, AItemPart> partItemMap = new LinkedHashMap<String, AItemPart>();
@@ -116,7 +116,7 @@ public final class MTSRegistry{
 	/**Map of creative tabs for packs.  Keyed by pack IDs.  Populated by the {@link PackParserSystem}**/
 	public static final Map<String, CreativeTabPack> packTabs = new HashMap<String, CreativeTabPack>();
 
-	//Multipart interaction items.
+	//Vehicle interaction items.
 	public static final Item manual = new ItemManual().setCreativeTab(coreTab);
 	public static final Item wrench = new ItemWrench().setCreativeTab(coreTab);
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
@@ -171,7 +171,7 @@ public final class MTSRegistry{
 	
 	/**All run-time things go here.**/
 	public static void init(){
-		initMultipartEntities();
+		initVehicleEntities();
 		initPackets();
 		initCoreItemRecipes();
 		initCraftingBenchItemRecipes();
@@ -184,8 +184,8 @@ public final class MTSRegistry{
 	 */
 	public static List<Item> getItemsForPack(String modID){
 		List<Item> packItems = new ArrayList<Item>();
-		for(ItemMultipart item : multipartItemMap.values()){
-			if(item.multipartName.startsWith(modID)){
+		for(ItemVehicle item : vehicleItemMap.values()){
+			if(item.vehicleName.startsWith(modID)){
 				packItems.add(item);
 			}
 		}
@@ -268,9 +268,9 @@ public final class MTSRegistry{
 		
 		
 		//Next add multipart items to the lists and creative tabs.
-		for(String multipartName : PackParserSystem.getAllMultipartPackNames()){
-			ItemMultipart itemMultipart = new ItemMultipart(multipartName);
-			multipartItemMap.put(multipartName, itemMultipart);
+		for(String multipartName : PackParserSystem.getAllVehiclePackNames()){
+			ItemVehicle itemMultipart = new ItemVehicle(multipartName);
+			vehicleItemMap.put(multipartName, itemMultipart);
 		}
 		
 		//Now add part items to the lists.
@@ -300,12 +300,12 @@ public final class MTSRegistry{
 
 	/**
 	 * Registers all entities with the entity registry.
-	 * For multiparts we only register the main classes as
+	 * For vehicles we only register the main classes as
 	 * the pack data stored in NBT is what makes for different vehicles.
 	 */
-	private static void initMultipartEntities(){
-		EntityRegistry.registerModEntity(EntityMultipartF_Car.class, "multipartcar", entityNumber++, MTS.MODID, 80, 5, false);
-		EntityRegistry.registerModEntity(EntityMultipartF_Plane.class, "multipartplane", entityNumber++, MTS.MODID, 80, 5, false);
+	private static void initVehicleEntities(){
+		EntityRegistry.registerModEntity(EntityVehicleF_Car.class, "vehiclecar", entityNumber++, MTS.MODID, 80, 5, false);
+		EntityRegistry.registerModEntity(EntityVehicleF_Plane.class, "vehicleplane", entityNumber++, MTS.MODID, 80, 5, false);
 	}
 	
 	private static void initPackets(){
@@ -337,20 +337,20 @@ public final class MTSRegistry{
 		registerPacket(PacketTileEntityClientServerHandshake.class, PacketTileEntityClientServerHandshake.Handler.class, true, true);
 		registerPacket(PacketTrafficSignalControllerChange.class, PacketTrafficSignalControllerChange.Handler.class, true, true);
 		
-		//Packets in packets.multipart.
-		registerPacket(PacketMultipartAttacked.class, PacketMultipartAttacked.Handler.class, false, true);
-		registerPacket(PacketMultipartClientInit.class, PacketMultipartClientInit.Handler.class, false, true);
-		registerPacket(PacketMultipartClientInitResponse.class, PacketMultipartClientInitResponse.Handler.class, true, false);
-		registerPacket(PacketMultipartClientPartAddition.class, PacketMultipartClientPartAddition.Handler.class, true, false);
-		registerPacket(PacketMultipartClientPartRemoval.class, PacketMultipartClientPartRemoval.Handler.class, true, false);
-		registerPacket(PacketMultipartClientRemoval.class, PacketMultipartClientRemoval.Handler.class, true, false);
-		registerPacket(PacketMultipartDeltas.class, PacketMultipartDeltas.Handler.class, true, false);
-		registerPacket(PacketMultipartInstruments.class, PacketMultipartInstruments.Handler.class, true, true);
-		registerPacket(PacketMultipartKey.class, PacketMultipartKey.Handler.class, true, true);
-		registerPacket(PacketMultipartNameTag.class, PacketMultipartNameTag.Handler.class, true, true);
-		registerPacket(PacketMultipartServerPartAddition.class, PacketMultipartServerPartAddition.Handler.class, false, true);
-		registerPacket(PacketMultipartWindowBreak.class, PacketMultipartWindowBreak.Handler.class, true, false);
-		registerPacket(PacketMultipartWindowFix.class, PacketMultipartWindowFix.Handler.class, true, true);
+		//Packets in packets.vehicles.
+		registerPacket(PacketVehicleAttacked.class, PacketVehicleAttacked.Handler.class, false, true);
+		registerPacket(PacketVehicleClientInit.class, PacketVehicleClientInit.Handler.class, false, true);
+		registerPacket(PacketVehicleClientInitResponse.class, PacketVehicleClientInitResponse.Handler.class, true, false);
+		registerPacket(PacketVehicleClientPartAddition.class, PacketVehicleClientPartAddition.Handler.class, true, false);
+		registerPacket(PacketVehicleClientPartRemoval.class, PacketVehicleClientPartRemoval.Handler.class, true, false);
+		registerPacket(PacketVehicleClientRemoval.class, PacketVehicleClientRemoval.Handler.class, true, false);
+		registerPacket(PacketVehicleDeltas.class, PacketVehicleDeltas.Handler.class, true, false);
+		registerPacket(PacketVehicleInstruments.class, PacketVehicleInstruments.Handler.class, true, true);
+		registerPacket(PacketVehicleKey.class, PacketVehicleKey.Handler.class, true, true);
+		registerPacket(PacketVehicleNameTag.class, PacketVehicleNameTag.Handler.class, true, true);
+		registerPacket(PacketVehicleServerPartAddition.class, PacketVehicleServerPartAddition.Handler.class, false, true);
+		registerPacket(PacketVehicleWindowBreak.class, PacketVehicleWindowBreak.Handler.class, true, false);
+		registerPacket(PacketVehicleWindowFix.class, PacketVehicleWindowFix.Handler.class, true, true);
 		
 		//Packets in packets.parts
 		registerPacket(PacketPartEngineDamage.class, PacketPartEngineDamage.Handler.class, true, false);

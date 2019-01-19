@@ -11,11 +11,11 @@ import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.guis.GUISign;
 import minecrafttransportsimulator.guis.GUITrafficSignalController;
 import minecrafttransportsimulator.items.core.ItemManual;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
-import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3d;
@@ -43,8 +43,8 @@ public class ClientProxy extends CommonProxy{
 	}
 	@Override
 	public void openGUI(Object clicked, EntityPlayer clicker){
-		if(clicked instanceof EntityMultipartE_Vehicle){
-			FMLCommonHandler.instance().showGuiScreen(new GUIInstruments((EntityMultipartE_Vehicle) clicked, clicker));
+		if(clicked instanceof EntityVehicleE_Powered){
+			FMLCommonHandler.instance().showGuiScreen(new GUIInstruments((EntityVehicleE_Powered) clicked, clicker));
 		}else if(clicked instanceof BlockPartBench){
 			FMLCommonHandler.instance().showGuiScreen(new GUIPartBench((BlockPartBench) clicked, clicker));
 		}else if(clicked instanceof ItemStack && ((ItemStack) clicked).getItem() instanceof ItemManual){
@@ -62,7 +62,7 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	@Override
-	public void addVehicleEngineSound(EntityMultipartE_Vehicle vehicle, APartEngine engine){
+	public void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine engine){
 		SFXSystem.addVehicleEngineSound(vehicle, engine);
 	}
 }

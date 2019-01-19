@@ -1,18 +1,18 @@
 package minecrafttransportsimulator.dataclasses;
 
-import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
-import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleD_Moving;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 
 public final class MTSControls{ 
     public enum Controls{
-    	AIRCRAFT_THROTTLE(EntityMultipartF_Plane.class),
-    	PARKING_BRAKE(EntityMultipartF_Plane.class),
-    	AIRCRAFT_FLAPS(EntityMultipartF_Plane.class);
+    	AIRCRAFT_THROTTLE(EntityVehicleF_Plane.class),
+    	PARKING_BRAKE(EntityVehicleF_Plane.class),
+    	AIRCRAFT_FLAPS(EntityVehicleF_Plane.class);
     	
-    	public final Class<? extends EntityMultipartD_Moving>[] validClasses;
+    	public final Class<? extends EntityVehicleD_Moving>[] validClasses;
     	
     	@SafeVarargs
-    	private Controls(Class<? extends EntityMultipartD_Moving>... validClasses){
+    	private Controls(Class<? extends EntityVehicleD_Moving>... validClasses){
     		this.validClasses = validClasses;
     	}
     }

@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.tileentities;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -10,7 +10,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketFuelPumpConnection extends APacketTileEntity{
-	private int connectedMultipartID;
+	private int connectedVehicleID;
 	private int amountPresent;
 	private int amountTransferred;
 
@@ -18,7 +18,7 @@ public class PacketFuelPumpConnection extends APacketTileEntity{
 	
 	public PacketFuelPumpConnection(TileEntityFuelPump tile, int id, int amountPresent, int amountTransferred){
 		super(tile);
-		this.connectedMultipartID=id;
+		this.connectedVehicleID=id;
 		this.amountPresent=amountPresent;
 		this.amountTransferred=amountTransferred;
 	}
@@ -26,7 +26,7 @@ public class PacketFuelPumpConnection extends APacketTileEntity{
 	@Override
 	public void fromBytes(ByteBuf buf){
 		super.fromBytes(buf);
-		this.connectedMultipartID=buf.readInt();
+		this.connectedVehicleID=buf.readInt();
 		this.amountPresent=buf.readInt();
 		this.amountTransferred=buf.readInt();
 	}
@@ -34,7 +34,7 @@ public class PacketFuelPumpConnection extends APacketTileEntity{
 	@Override
 	public void toBytes(ByteBuf buf){
 		super.toBytes(buf);
-		buf.writeInt(this.connectedMultipartID);
+		buf.writeInt(this.connectedVehicleID);
 		buf.writeInt(this.amountPresent);
 		buf.writeInt(this.amountTransferred);
 	}
@@ -46,8 +46,8 @@ public class PacketFuelPumpConnection extends APacketTileEntity{
 				public void run(){
 					TileEntityFuelPump pump = (TileEntityFuelPump) getTileEntity(message, ctx);
 					if(pump != null){
-						if(message.connectedMultipartID != -1){
-							pump.setConnectedVehicle((EntityMultipartE_Vehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.connectedMultipartID));
+						if(message.connectedVehicleID != -1){
+							pump.setConnectedVehicle((EntityVehicleE_Powered) Minecraft.getMinecraft().theWorld.getEntityByID(message.connectedVehicleID));
 						}else{
 							pump.setConnectedVehicle(null);
 						}

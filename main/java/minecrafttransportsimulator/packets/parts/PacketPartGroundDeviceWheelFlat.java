@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.packets.parts;
 
-import minecrafttransportsimulator.multipart.parts.PartGroundDeviceWheel;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceWheel;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -19,7 +19,7 @@ public final class PacketPartGroundDeviceWheelFlat extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					PartGroundDeviceWheel wheel = (PartGroundDeviceWheel) getMultipartPartFromMessage(message, ctx);
+					PartGroundDeviceWheel wheel = (PartGroundDeviceWheel) getVehiclePartFromMessage(message, ctx);
 					if(wheel != null){
 						wheel.setFlat();
 					}

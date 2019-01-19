@@ -91,8 +91,8 @@ public class PacketPlayerCrafting implements IMessage{
 						if(doesPlayerHaveMaterials(player, message.selectedItem)){
 							removeMaterials(player, message.selectedItem);
 							ItemStack stack;
-							if(MTSRegistry.multipartItemMap.containsKey(message.selectedItem)){
-								stack = new ItemStack(MTSRegistry.multipartItemMap.get(message.selectedItem));
+							if(MTSRegistry.vehicleItemMap.containsKey(message.selectedItem)){
+								stack = new ItemStack(MTSRegistry.vehicleItemMap.get(message.selectedItem));
 							}else if(MTSRegistry.partItemMap.containsKey(message.selectedItem)){
 								stack = new ItemStack(MTSRegistry.partItemMap.get(message.selectedItem));
 							}else{

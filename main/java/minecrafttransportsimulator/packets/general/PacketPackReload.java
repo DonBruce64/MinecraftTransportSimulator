@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.multipart.main.EntityMultipartA_Base;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -26,9 +26,9 @@ public class PacketPackReload implements IMessage{
 				public void run(){
 					PackParserSystem.reloadPackData();
 					for(Entity entity : ctx.getServerHandler().playerEntity.worldObj.loadedEntityList){
-						if(entity instanceof EntityMultipartA_Base){
-							EntityMultipartA_Base multipart = (EntityMultipartA_Base) entity;
-							multipart.pack = PackParserSystem.getMultipartPack(multipart.multipartName);
+						if(entity instanceof EntityVehicleA_Base){
+							EntityVehicleA_Base vehicle = (EntityVehicleA_Base) entity;
+							vehicle.pack = PackParserSystem.getVehiclePack(vehicle.vehicleName);
 						}
 					}
 				}

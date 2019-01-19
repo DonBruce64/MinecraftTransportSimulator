@@ -2,7 +2,7 @@ package minecrafttransportsimulator.items.parts;
 
 import java.util.List;
 
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;

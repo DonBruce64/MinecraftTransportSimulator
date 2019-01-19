@@ -3,8 +3,8 @@ package minecrafttransportsimulator.blocks.core;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.packets.general.PacketChat;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -51,7 +51,7 @@ public class BlockFuelPump extends ABlockRotateable{
     			Entity nearestEntity = null;
     			float lowestDistance = 99;
     			for(Entity entity : world.loadedEntityList){
-    				if(entity instanceof EntityMultipartE_Vehicle){
+    				if(entity instanceof EntityVehicleE_Powered){
     					float distance = (float) Math.sqrt(entity.getPosition().distanceSq(pump.getPos()));
     					if(distance < lowestDistance){
     						lowestDistance = distance;
@@ -60,7 +60,7 @@ public class BlockFuelPump extends ABlockRotateable{
     				}
     			}
     			if(nearestEntity != null){
-    				pump.setConnectedVehicle((EntityMultipartE_Vehicle) nearestEntity);
+    				pump.setConnectedVehicle((EntityVehicleE_Powered) nearestEntity);
 					MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.connect"), (EntityPlayerMP) player);
     			}else{
     				MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.toofar"), (EntityPlayerMP) player);

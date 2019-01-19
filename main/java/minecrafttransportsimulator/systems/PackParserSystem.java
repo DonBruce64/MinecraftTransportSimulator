@@ -16,10 +16,10 @@ import minecrafttransportsimulator.dataclasses.CreativeTabPack;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackDecorObject;
 import minecrafttransportsimulator.dataclasses.PackInstrumentObject;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackFileDefinitions;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.dataclasses.PackSignObject;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackFileDefinitions;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.items.parts.ItemPartCrate;
 import minecrafttransportsimulator.items.parts.ItemPartCustom;
@@ -32,21 +32,21 @@ import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceTread;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceWheel;
 import minecrafttransportsimulator.items.parts.ItemPartPropeller;
 import minecrafttransportsimulator.items.parts.ItemPartSeat;
-import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
-import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
-import minecrafttransportsimulator.multipart.main.EntityMultipartF_Plane;
-import minecrafttransportsimulator.multipart.parts.APart;
-import minecrafttransportsimulator.multipart.parts.PartCrate;
-import minecrafttransportsimulator.multipart.parts.PartCustom;
-import minecrafttransportsimulator.multipart.parts.PartEngineAircraft;
-import minecrafttransportsimulator.multipart.parts.PartEngineCar;
-import minecrafttransportsimulator.multipart.parts.PartEngineJet;
-import minecrafttransportsimulator.multipart.parts.PartGroundDevicePontoon;
-import minecrafttransportsimulator.multipart.parts.PartGroundDeviceSkid;
-import minecrafttransportsimulator.multipart.parts.PartGroundDeviceTread;
-import minecrafttransportsimulator.multipart.parts.PartGroundDeviceWheel;
-import minecrafttransportsimulator.multipart.parts.PartPropeller;
-import minecrafttransportsimulator.multipart.parts.PartSeat;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
+import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartCrate;
+import minecrafttransportsimulator.vehicles.parts.PartCustom;
+import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
+import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
+import minecrafttransportsimulator.vehicles.parts.PartEngineJet;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceSkid;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceWheel;
+import minecrafttransportsimulator.vehicles.parts.PartPropeller;
+import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -59,16 +59,16 @@ import net.minecraft.util.ResourceLocation;
  * @author don_bruce
  */
 public final class PackParserSystem{
-	/**Map that keys the unique name of a multipart to its pack.  Used for associating packs with saved multiparts.**/
-    private static final Map<String, PackMultipartObject> multipartPackMap = new LinkedHashMap<String, PackMultipartObject>();
+	/**Map that keys the unique name of a vehicle to its pack.  Used for associating packs with saved vehicles.**/
+    private static final Map<String, PackVehicleObject> vehiclePackMap = new LinkedHashMap<String, PackVehicleObject>();
    
-    /**Map that keys the unique name of a multipart to its JSON file name.**/
-    private static final Map<String, String> multipartJSONMap = new HashMap<String, String>();
+    /**Map that keys the unique name of a vehicle to its JSON file name.**/
+    private static final Map<String, String> vehicleJSONMap = new HashMap<String, String>();
    
-    /**Same function as the multipart map, just for parts.**/
+    /**Same function as the vehicle map, just for parts.**/
     private static final Map<String, PackPartObject> partPackMap = new LinkedHashMap<String, PackPartObject>();
     
-    /**Same function as the multipart map, just for instruments.**/
+    /**Same function as the vehicle map, just for instruments.**/
     private static final Map<String, PackInstrumentObject> partInstrumentMap = new LinkedHashMap<String, PackInstrumentObject>();
     
     /**Map that keys the unique name of a sign to its pack.*/
@@ -77,7 +77,7 @@ public final class PackParserSystem{
     /**Map that keys the unique name of a decor block to its pack.*/
     private static final Map<String, PackDecorObject> decorPackMap = new LinkedHashMap<String, PackDecorObject>();
     
-	/**Maps multipart, part, instrument, and decor names to their crafting ingredients.*/
+	/**Maps vehicle, part, instrument, and decor names to their crafting ingredients.*/
 	private static final Map<String, List<ItemStack>> craftingItemMap = new HashMap<String, List<ItemStack>>();
   
     /**Listing of log messages.  Stored here on bootstrap and outputted once the logging system comes online.**/
@@ -99,12 +99,12 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their vehicles to the mod.**/
     public static void addVehicleDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
-    		PackMultipartObject pack = new Gson().fromJson(jsonReader, PackMultipartObject.class);
+    		PackVehicleObject pack = new Gson().fromJson(jsonReader, PackVehicleObject.class);
     		for(PackFileDefinitions definition : pack.definitions){
     			if(definition != null){
-    				String multipartName = modID + ":" + jsonFileName + definition.subName;
-    				multipartPackMap.put(multipartName, pack);
-    				multipartJSONMap.put(multipartName, jsonFileName);
+    				String vehicleName = modID + ":" + jsonFileName + definition.subName;
+    				vehiclePackMap.put(vehicleName, pack);
+    				vehicleJSONMap.put(vehicleName, jsonFileName);
     				if(!MTSRegistry.packTabs.containsKey(modID)){
     					MTSRegistry.packTabs.put(modID, new CreativeTabPack(modID));
     				}
@@ -116,7 +116,7 @@ public final class PackParserSystem{
     				for(String material : definition.extraMaterials){
     					materials.add(material);
     				}
-    				registerCrafting(multipartName, materials.toArray(new String[materials.size()]));
+    				registerCrafting(vehicleName, materials.toArray(new String[materials.size()]));
     			}
     		}
     	}catch(Exception e){
@@ -208,8 +208,8 @@ public final class PackParserSystem{
     	try{
 	    	//We need to shove the strings into a list to keep us from getting CMEs while iterating the map.
 	    	List<String> jsonFilesToReload = new ArrayList<String>();
-	    	for(Entry<String, String> multipartJSONEntry : multipartJSONMap.entrySet()){
-	    		jsonFilesToReload.add(multipartJSONEntry.getKey().substring(0, multipartJSONEntry.getKey().indexOf(':') + 1) + multipartJSONEntry.getValue());
+	    	for(Entry<String, String> vehicleJSONEntry : vehicleJSONMap.entrySet()){
+	    		jsonFilesToReload.add(vehicleJSONEntry.getKey().substring(0, vehicleJSONEntry.getKey().indexOf(':') + 1) + vehicleJSONEntry.getValue());
 	    	}
 	    	for(String jsonFile : jsonFilesToReload){
 	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/vehicles/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
@@ -265,23 +265,23 @@ public final class PackParserSystem{
     }
     
     
-    //-----START OF MULTIPART LOOKUP LOGIC-----
-    public static PackMultipartObject getMultipartPack(String name){
-        return multipartPackMap.get(name);
+    //-----START OF VEHICLE LOOKUP LOGIC-----
+    public static PackVehicleObject getVehiclePack(String name){
+        return vehiclePackMap.get(name);
     }
     
-    public static Set<String> getAllMultipartPackNames(){
-        return multipartPackMap.keySet();
+    public static Set<String> getAllVehiclePackNames(){
+        return vehiclePackMap.keySet();
     }
     
-    public static String getMultipartJSONName(String name){
-    	return multipartJSONMap.get(name);
+    public static String getVehicleJSONName(String name){
+    	return vehicleJSONMap.get(name);
     }
     
-    public static Class<? extends EntityMultipartD_Moving> getMultipartClass(String multipartName){
-    	switch(getMultipartPack(multipartName).general.type){
-			case "car": return EntityMultipartF_Car.class;
-			case "plane": return EntityMultipartF_Plane.class;
+    public static Class<? extends EntityVehicleE_Powered> getVehicleClass(String vehicleName){
+    	switch(getVehiclePack(vehicleName).general.type){
+			case "car": return EntityVehicleF_Car.class;
+			case "plane": return EntityVehicleF_Plane.class;
 			default: return null;
 		}
     }

@@ -9,9 +9,9 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleSound;
 import minecrafttransportsimulator.baseclasses.VehicleSound.SoundTypes;
-import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
-import minecrafttransportsimulator.multipart.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleD_Moving;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundHandler;
@@ -27,7 +27,6 @@ import net.minecraftforge.client.event.sound.SoundLoadEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import paulscode.sound.SoundSystem;
@@ -127,8 +126,8 @@ public final class SFXSystem{
 	public static void on(WorldEvent.Unload event){
 		if(event.getWorld().isRemote){
 			for(Entity entity : event.getWorld().loadedEntityList){
-				if(entity instanceof EntityMultipartE_Vehicle){
-					for(VehicleSound sound : ((EntityMultipartE_Vehicle) entity).getSounds()){
+				if(entity instanceof EntityVehicleE_Powered){
+					for(VehicleSound sound : ((EntityVehicleE_Powered) entity).getSounds()){
 						String soundID = sound.getSoundUniqueName();
 						if(mcSoundSystem.playing(soundID)){
 							mcSoundSystem.stop(soundID);
@@ -144,8 +143,8 @@ public final class SFXSystem{
 	 * This is used to determine the volume of MTS sounds.
 	 */
 	public static boolean isPlayerInsideEnclosedVehicle(){
-		if(Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().thePlayer.getRidingEntity() instanceof EntityMultipartD_Moving){
-			return !((EntityMultipartD_Moving) Minecraft.getMinecraft().thePlayer.getRidingEntity()).pack.general.openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
+		if(Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().thePlayer.getRidingEntity() instanceof EntityVehicleD_Moving){
+			return !((EntityVehicleD_Moving) Minecraft.getMinecraft().thePlayer.getRidingEntity()).pack.general.openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
 		}else{
 			return false;
 		}
@@ -179,9 +178,9 @@ public final class SFXSystem{
 	}
 	
 	/**
-	 * Does sound updates for the multipart vehicle sounds.
+	 * Does sound updates for the vehicle sounds.
 	 */
-	public static void updateMultipartSounds(EntityMultipartE_Vehicle vehicle, float partialTicks){
+	public static void updateVehicleSounds(EntityVehicleE_Powered vehicle, float partialTicks){
 		//If we don't have the running instance of the SoundSystem, get it now.
 		if(mcSoundSystem == null){
 			initSoundSystemHooks();
@@ -236,11 +235,11 @@ public final class SFXSystem{
 	}
 	
 	/**
-	 * Stops all sounds for the multipart.  Normally, this happens automatically when the multipart is removed,
+	 * Stops all sounds for the vehicle.  Normally, this happens automatically when the vehicle is removed,
 	 * however it may not happen sometimes due to oddities in the thread systems.  This method is called
 	 * whenever a vehicle is set as dead and is responsible for ensuring the sounds have indeed stopped.
 	 */
-	public static void stopMultipartSounds(EntityMultipartE_Vehicle vehicle){
+	public static void stopVehicleSounds(EntityVehicleE_Powered vehicle){
 		//Make sure we are dead now, otherwise the sounds will just start again.
 		vehicle.setDead();
 		for(VehicleSound sound : vehicle.getSounds()){
@@ -252,7 +251,7 @@ public final class SFXSystem{
 		}
 	}
 	
-	public static void addVehicleEngineSound(EntityMultipartE_Vehicle vehicle, APartEngine engine){
+	public static void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine engine){
 		if(vehicle.worldObj.isRemote){
 			vehicle.addSound(SoundTypes.ENGINE, engine);
 		}

@@ -14,8 +14,8 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.BlockPartBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject;
-import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -68,7 +68,7 @@ public class GUIPartBench extends GuiScreen{
 		this.player = player;
 		this.isForVehicles = this.partTypes.contains("plane") || this.partTypes.contains("car");
 		this.isForInstruments = this.partTypes.contains("instrument");
-		this.itemMap = isForVehicles ? MTSRegistry.multipartItemMap : (isForInstruments ? MTSRegistry.instrumentItemMap : MTSRegistry.partItemMap);
+		this.itemMap = isForVehicles ? MTSRegistry.vehicleItemMap : (isForInstruments ? MTSRegistry.instrumentItemMap : MTSRegistry.partItemMap);
 		if(lastOpenedItem.containsKey(bench.partTypes.get(0))){
 			packName = lastOpenedItem.get(bench.partTypes.get(0))[0];
 			partName = lastOpenedItem.get(bench.partTypes.get(0))[1];
@@ -160,10 +160,10 @@ public class GUIPartBench extends GuiScreen{
 		//Parse the model if we haven't already.
 		if(!partDisplayLists.containsKey(partName)){
 			if(this.isForVehicles){
-				String jsonName = PackParserSystem.getMultipartJSONName(partName);
+				String jsonName = PackParserSystem.getVehicleJSONName(partName);
 				//Check to make sure we haven't parsed this model for another item with another texture but same model.
 				for(String parsedItemName : partDisplayLists.keySet()){
-					if(PackParserSystem.getMultipartJSONName(parsedItemName).equals(jsonName)){
+					if(PackParserSystem.getVehicleJSONName(parsedItemName).equals(jsonName)){
 						partDisplayLists.put(partName, partDisplayLists.get(parsedItemName));
 						partScalingFactors.put(partName, partScalingFactors.get(parsedItemName));
 						break;
@@ -212,7 +212,7 @@ public class GUIPartBench extends GuiScreen{
 	}
 	
 	private void renderVehicleInfoText(){
-		PackMultipartObject pack = PackParserSystem.getMultipartPack(partName);
+		PackVehicleObject pack = PackParserSystem.getVehiclePack(partName);
 		byte controllers = 0;
 		byte passengers = 0;
 		byte cargo = 0;
@@ -270,7 +270,7 @@ public class GUIPartBench extends GuiScreen{
 		GL11.glPushMatrix();
 		GL11.glTranslatef(guiLeft + 255, guiTop + 55, 0);
 		GL11.glScalef(0.8F, 0.8F, 0.8F);
-		fontRendererObj.drawSplitString(I18n.format("description." + partName.substring(0, partName.indexOf(':')) + "." + PackParserSystem.getMultipartJSONName(partName)), 0, 0, 120, Color.WHITE.getRGB());
+		fontRendererObj.drawSplitString(I18n.format("description." + partName.substring(0, partName.indexOf(':')) + "." + PackParserSystem.getVehicleJSONName(partName)), 0, 0, 120, Color.WHITE.getRGB());
 		GL11.glPopMatrix();
 	}
 	
@@ -400,7 +400,7 @@ public class GUIPartBench extends GuiScreen{
 		for(String partItemName : itemMap.keySet()){
 			final boolean isValid;
 			if(this.isForVehicles){
-				isValid = partTypes.contains(PackParserSystem.getMultipartPack(partItemName).general.type);
+				isValid = partTypes.contains(PackParserSystem.getVehiclePack(partItemName).general.type);
 			}else if(!this.isForInstruments){
 				isValid = partTypes.contains(PackParserSystem.getPartPack(partItemName).general.type);
 			}else{

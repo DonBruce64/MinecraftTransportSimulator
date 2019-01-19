@@ -41,7 +41,7 @@ if echo $FILE | grep -q "GUIPartBench"; then
 fi
 
 #Rendering brightness was changed to remove partialTicks parameter.  About time seeing as it hasn't been used since 1.7.10.
-if echo $FILE | grep -q "RenderMultipart"; then
+if echo $FILE | grep -q "RenderVehicle"; then
 	sed -i 's/getBrightnessForRender(partialTicks)/getBrightnessForRender()/' $FILE
 fi
 
@@ -86,7 +86,7 @@ sed -i 's/item.getSubItems(item, tab, givenList)/item.getSubItems(tab, givenList
 
 #Temperature was changed to be position-dependent.
 if echo $FILE | grep -q "APartEngine"; then
-	sed -i 's/getBiome(multipart.getPosition()).getTemperature()/getBiome(multipart.getPosition()).getTemperature(multipart.getPosition())/' $FILE
+	sed -i 's/getBiome(vehicle.getPosition()).getTemperature()/getBiome(vehicle.getPosition()).getTemperature(vehicle.getPosition())/' $FILE
 fi
 
 #Registration for crafting has a new ResourceLocation parameter as a UID.  Here's where we get to use craftingNumber.
@@ -95,13 +95,13 @@ if echo $FILE | grep -q "MTSRegistry"; then
 fi
 
 #Block slipperiness was changed to be state-dependent.
-if echo $FILE | grep -q "EntityMultipartD_Moving"; then
+if echo $FILE | grep -q "EntityVehicleD_Moving"; then
 	sed -i 's/world.getBlockState(pos).getBlock().slipperiness/world.getBlockState(pos).getBlock().getSlipperiness(world.getBlockState(pos), world, pos, null)/' $FILE
 	sed -i 's/world.getBlockState(pos).getBlock().slipperiness/world.getBlockState(pos).getBlock().getSlipperiness(world.getBlockState(pos), world, pos, null)/' $FILE
 fi
 
 if echo $FILE | grep -q "PartGroundDevice"; then
-	sed -i 's/multipart.world.getBlockState(pos).getBlock().slipperiness/multipart.world.getBlockState(pos).getBlock().getSlipperiness(multipart.world.getBlockState(pos), multipart.world, pos, null)/' $FILE
+	sed -i 's/vehicle.world.getBlockState(pos).getBlock().slipperiness/vehicle.world.getBlockState(pos).getBlock().getSlipperiness(vehicle.world.getBlockState(pos), vehicle.world, pos, null)/' $FILE
 fi
 
 done

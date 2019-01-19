@@ -3,8 +3,8 @@ package minecrafttransportsimulator.items.parts;
 import java.util.List;
 
 import minecrafttransportsimulator.dataclasses.PackPartObject;
-import minecrafttransportsimulator.multipart.parts.APartEngine;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;

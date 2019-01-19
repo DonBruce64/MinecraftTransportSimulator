@@ -2,8 +2,8 @@ package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
-import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -38,11 +38,11 @@ public class LightPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityMultipartE_Vehicle thisEntity;
+					EntityVehicleE_Powered thisEntity;
 					if(ctx.side.isServer()){
-						thisEntity = (EntityMultipartE_Vehicle) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						thisEntity = (EntityVehicleE_Powered) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
 					}else{
-						thisEntity = (EntityMultipartE_Vehicle) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						thisEntity = (EntityVehicleE_Powered) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
 						thisEntity.changeLightStatus(LightTypes.values()[message.lightOrdinal], !thisEntity.isLightOn(LightTypes.values()[message.lightOrdinal]));

@@ -11,7 +11,7 @@ import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController
 import minecrafttransportsimulator.blocks.pole.BlockPoleAttachment;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleWallConnector;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.multipart.main.EntityMultipartF_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -177,7 +177,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleW
 								//Now we have min-max, check for any vehicles in the area.
 								//We need to check along the non-primary axis.
 								for(Entity entity : controller.getWorld().loadedEntityList){
-									if(entity instanceof EntityMultipartF_Car){
+									if(entity instanceof EntityVehicleF_Car){
 										if(controller.orientedOnX){
 											if((entity.posZ > minZ && entity.posZ < minZ + (maxZ - minZ)/2F) || (entity.posZ < maxZ && entity.posZ > maxZ - (maxZ - minZ)/2F)){
 												if(entity.posX > minX && entity.posX < maxX){
