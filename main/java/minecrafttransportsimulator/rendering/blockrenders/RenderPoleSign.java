@@ -17,18 +17,18 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3i;
 
-public class RenderDecorSign extends TileEntitySpecialRenderer<TileEntityPoleSign>{
+public class RenderPoleSign extends TileEntitySpecialRenderer<TileEntityPoleSign>{
 	private static final ResourceLocation defaultSignTexture = new ResourceLocation(MTS.MODID, "textures/blocks/trafficsign.png");
 	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
 	private static final Map<String, FontRenderer> fontMap = new HashMap<String, FontRenderer>();
 	
 	
-	public RenderDecorSign(){}
+	public RenderPoleSign(){}
 	
 	@Override
-	public void renderTileEntityAt(TileEntityPoleSign decor, double x, double y, double z, float partialTicks, int destroyStage){
-		super.renderTileEntityAt(decor, x, y, z, partialTicks, destroyStage);
-		final Vec3i facingVec = EnumFacing.VALUES[decor.rotation].getDirectionVec();		
+	public void renderTileEntityAt(TileEntityPoleSign sign, double x, double y, double z, float partialTicks, int destroyStage){
+		super.renderTileEntityAt(sign, x, y, z, partialTicks, destroyStage);
+		final Vec3i facingVec = EnumFacing.VALUES[sign.rotation].getDirectionVec();		
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glTranslatef(0.5F, 0.5F, 0.5F);
@@ -43,13 +43,13 @@ public class RenderDecorSign extends TileEntitySpecialRenderer<TileEntityPoleSig
 		
 		GL11.glTranslatef(0F, 0F, 0.0635F);
 		//Bind the sign texture.
-		if(decor.definition.isEmpty()){
+		if(sign.definition.isEmpty()){
 			bindTexture(defaultSignTexture);
 		}else{
-			if(!textureMap.containsKey(decor.definition)){
-				textureMap.put(decor.definition, new ResourceLocation(decor.definition.substring(0, decor.definition.indexOf(':')), "textures/signs/" + decor.definition.substring(decor.definition.indexOf(':') + 1) + ".png"));
+			if(!textureMap.containsKey(sign.definition)){
+				textureMap.put(sign.definition, new ResourceLocation(sign.definition.substring(0, sign.definition.indexOf(':')), "textures/signs/" + sign.definition.substring(sign.definition.indexOf(':') + 1) + ".png"));
 			}
-			bindTexture(textureMap.get(decor.definition));
+			bindTexture(textureMap.get(sign.definition));
 		}
 	
 		//Now render the texture.
@@ -93,7 +93,7 @@ public class RenderDecorSign extends TileEntitySpecialRenderer<TileEntityPoleSig
 		GL11.glEnd();
 		
 		//Now render the text.
-		PackSignObject pack = PackParserSystem.getSign(decor.definition);
+		PackSignObject pack = PackParserSystem.getSign(sign.definition);
 		if(pack != null){
 			if(pack.general.textLines != null){
 				if(!fontMap.containsKey(pack.general.font)){
@@ -112,7 +112,7 @@ public class RenderDecorSign extends TileEntitySpecialRenderer<TileEntityPoleSig
 					GL11.glTranslatef(pack.general.textLines[i].xPos - 0.5F, pack.general.textLines[i].yPos - 0.5F, 0.01F);
 					GL11.glScalef(pack.general.textLines[i].scale/16F, pack.general.textLines[i].scale/16F, pack.general.textLines[i].scale/16F);
 					GL11.glRotatef(180, 1, 0, 0);
-					currentFont.drawString(decor.text.get(i), -currentFont.getStringWidth(decor.text.get(i))/2, 0, Color.decode(pack.general.textLines[i].color).getRGB());
+					currentFont.drawString(sign.text.get(i), -currentFont.getStringWidth(sign.text.get(i))/2, 0, Color.decode(pack.general.textLines[i].color).getRGB());
 					GL11.glPopMatrix();
 				}
 			}

@@ -15,7 +15,7 @@ import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.rendering.blockrenders.RenderDecor;
 import minecrafttransportsimulator.rendering.blockrenders.RenderDecorLighted;
-import minecrafttransportsimulator.rendering.blockrenders.RenderDecorSign;
+import minecrafttransportsimulator.rendering.blockrenders.RenderPoleSign;
 import minecrafttransportsimulator.rendering.blockrenders.RenderFuelPump;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
@@ -43,7 +43,7 @@ public final class MTSRegistryClient{
 		//Register the TESRs for blocks.
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityFuelPump.class, new RenderFuelPump());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPoleWallConnector.class, new RenderDecorLighted());
-		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPoleSign.class, new RenderDecorSign());
+		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPoleSign.class, new RenderPoleSign());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDecor.class, new RenderDecor());
 		
 		//Register the multipart rendering class.
