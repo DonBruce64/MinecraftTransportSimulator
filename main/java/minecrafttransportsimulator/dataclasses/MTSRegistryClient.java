@@ -11,12 +11,12 @@ import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemInstrument;
 import minecrafttransportsimulator.items.core.ItemMultipart;
 import minecrafttransportsimulator.items.parts.AItemPart;
-import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
+import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.rendering.RenderMultipart;
 import minecrafttransportsimulator.rendering.blockrenders.RenderDecor;
+import minecrafttransportsimulator.rendering.blockrenders.RenderFuelPump;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPoleLighted;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPoleSign;
-import minecrafttransportsimulator.rendering.blockrenders.RenderFuelPump;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -47,7 +47,7 @@ public final class MTSRegistryClient{
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDecor.class, new RenderDecor());
 		
 		//Register the multipart rendering class.
-		RenderingRegistry.registerEntityRenderingHandler(EntityMultipartD_Moving.class, MTSRenderFactory);
+		RenderingRegistry.registerEntityRenderingHandler(EntityMultipartE_Vehicle.class, MTSRenderFactory);
 		
 		//Register the item models.
 		//First register the core items.
@@ -86,9 +86,9 @@ public final class MTSRegistryClient{
 		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(itemModID + ":" + renderFolder + "/" + itemName, "inventory"));
 	}
 	
-	private static final IRenderFactory<EntityMultipartD_Moving> MTSRenderFactory = new IRenderFactory<EntityMultipartD_Moving>(){
+	private static final IRenderFactory<EntityMultipartE_Vehicle> MTSRenderFactory = new IRenderFactory<EntityMultipartE_Vehicle>(){
 		@Override
-		public Render<? super EntityMultipartD_Moving> createRenderFor(RenderManager manager){
+		public Render<? super EntityMultipartE_Vehicle> createRenderFor(RenderManager manager){
 			return new RenderMultipart(manager);
 		}
 	};

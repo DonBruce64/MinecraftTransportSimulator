@@ -89,6 +89,7 @@ public class PackMultipartObject{
     public class PackRenderingConfig{
     	public int displayTextMaxLength;
     	public byte numberWindows;
+        public boolean textLighted;
         public String defaultDisplayText;
         public float[] hudBackplaneTexturePercentages;
         public float[] hudMouldingTexturePercentages;
@@ -98,7 +99,7 @@ public class PackMultipartObject{
     }
     
     public class PackDisplayText{
-        public float[] pos;
+    	public float[] pos;
         public float[] rot;
         public float scale;
         public String color;

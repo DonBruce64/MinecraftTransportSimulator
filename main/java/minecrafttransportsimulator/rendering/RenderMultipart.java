@@ -19,7 +19,6 @@ import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackPart;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackRotatableModelObject;
 import minecrafttransportsimulator.dataclasses.PackMultipartObject.PackTranslatableModelObject;
 import minecrafttransportsimulator.items.parts.AItemPart;
-import minecrafttransportsimulator.multipart.main.EntityMultipartD_Moving;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.LightTypes;
 import minecrafttransportsimulator.multipart.main.EntityMultipartE_Vehicle.VehicleInstrument;
@@ -57,7 +56,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
  *
  * @author don_bruce
  */
-public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
+public final class RenderMultipart extends Render<EntityMultipartE_Vehicle>{
 	private static final Minecraft minecraft = Minecraft.getMinecraft();
 	
 	//MULTIPART MAPS.  Maps are keyed by JSON name.
@@ -77,9 +76,9 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
 	
 	//Maps to check last render times for each multipart.
-	private static final Map<EntityMultipartD_Moving, Byte> lastRenderPass = new HashMap<EntityMultipartD_Moving, Byte>();
-	private static final Map<EntityMultipartD_Moving, Long> lastRenderTick = new HashMap<EntityMultipartD_Moving, Long>();
-	private static final Map<EntityMultipartD_Moving, Float> lastRenderPartial = new HashMap<EntityMultipartD_Moving, Float>();
+	private static final Map<EntityMultipartE_Vehicle, Byte> lastRenderPass = new HashMap<EntityMultipartE_Vehicle, Byte>();
+	private static final Map<EntityMultipartE_Vehicle, Long> lastRenderTick = new HashMap<EntityMultipartE_Vehicle, Long>();
+	private static final Map<EntityMultipartE_Vehicle, Float> lastRenderPartial = new HashMap<EntityMultipartE_Vehicle, Float>();
 	
 	//Constants for built-in textures.
 	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
@@ -111,35 +110,35 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 	}
 	
 	/**Returns the currently cached texture for the multipart.  Static for use in other functions.**/
-	public static ResourceLocation getTextureForMultipart(EntityMultipartD_Moving entity){
+	public static ResourceLocation getTextureForMultipart(EntityMultipartE_Vehicle entity){
 		return textureMap.get(entity.multipartName);
 	}
 	
 	@Override
-	protected ResourceLocation getEntityTexture(EntityMultipartD_Moving entity){
+	protected ResourceLocation getEntityTexture(EntityMultipartE_Vehicle entity){
 		return null;
 	}
 	
 	@Override
-	public void doRender(EntityMultipartD_Moving multipart, double x, double y, double z, float entityYaw, float partialTicks){
+	public void doRender(EntityMultipartE_Vehicle vehicle, double x, double y, double z, float entityYaw, float partialTicks){
 		boolean didRender = false;
-		if(multipart.pack != null){ 
-			if(lastRenderPass.containsKey(multipart)){
+		if(vehicle.pack != null){ 
+			if(lastRenderPass.containsKey(vehicle)){
 				//Did we render this tick?
-				if(lastRenderTick.get(multipart) == multipart.worldObj.getTotalWorldTime() && lastRenderPartial.get(multipart) == partialTicks){
+				if(lastRenderTick.get(vehicle) == vehicle.worldObj.getTotalWorldTime() && lastRenderPartial.get(vehicle) == partialTicks){
 					//If we rendered last on a pass of 0 or 1 this tick, don't re-render some things.
-					if(lastRenderPass.get(multipart) != -1 && MinecraftForgeClient.getRenderPass() == -1){
-						render(multipart, Minecraft.getMinecraft().thePlayer, partialTicks, true);
+					if(lastRenderPass.get(vehicle) != -1 && MinecraftForgeClient.getRenderPass() == -1){
+						render(vehicle, Minecraft.getMinecraft().thePlayer, partialTicks, true);
 						didRender = true;
 					}
 				}
 			}
 			if(!didRender){
-				render(multipart, Minecraft.getMinecraft().thePlayer, partialTicks, false);
+				render(vehicle, Minecraft.getMinecraft().thePlayer, partialTicks, false);
 			}
-			lastRenderPass.put(multipart, (byte) MinecraftForgeClient.getRenderPass());
-			lastRenderTick.put(multipart, multipart.worldObj.getTotalWorldTime());
-			lastRenderPartial.put(multipart, partialTicks);
+			lastRenderPass.put(vehicle, (byte) MinecraftForgeClient.getRenderPass());
+			lastRenderTick.put(vehicle, vehicle.worldObj.getTotalWorldTime());
+			lastRenderPartial.put(vehicle, partialTicks);
 		}
 	}
 	
@@ -152,7 +151,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		return false;
 	}
 	
-	private static void render(EntityMultipartD_Moving multipart, EntityPlayer playerRendering, float partialTicks, boolean wasRenderedPrior){
+	private static void render(EntityMultipartE_Vehicle vehicle, EntityPlayer playerRendering, float partialTicks, boolean wasRenderedPrior){
 		//Calculate various things.
 		Entity renderViewEntity = minecraft.getRenderViewEntity();
 		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * (double)partialTicks;
@@ -160,26 +159,26 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
         
         
-        double thisX = multipart.lastTickPosX + (multipart.posX - multipart.lastTickPosX) * (double)partialTicks;
-        double thisY = multipart.lastTickPosY + (multipart.posY - multipart.lastTickPosY) * (double)partialTicks;
-        double thisZ = multipart.lastTickPosZ + (multipart.posZ - multipart.lastTickPosZ) * (double)partialTicks;
-        double rotateYaw = -multipart.rotationYaw + (multipart.rotationYaw - multipart.prevRotationYaw)*(double)(1 - partialTicks);
-        double rotatePitch = multipart.rotationPitch - (multipart.rotationPitch - multipart.prevRotationPitch)*(double)(1 - partialTicks);
-        double rotateRoll = multipart.rotationRoll - (multipart.rotationRoll - multipart.prevRotationRoll)*(double)(1 - partialTicks);
+        double thisX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * (double)partialTicks;
+        double thisY = vehicle.lastTickPosY + (vehicle.posY - vehicle.lastTickPosY) * (double)partialTicks;
+        double thisZ = vehicle.lastTickPosZ + (vehicle.posZ - vehicle.lastTickPosZ) * (double)partialTicks;
+        double rotateYaw = -vehicle.rotationYaw + (vehicle.rotationYaw - vehicle.prevRotationYaw)*(double)(1 - partialTicks);
+        double rotatePitch = vehicle.rotationPitch - (vehicle.rotationPitch - vehicle.prevRotationPitch)*(double)(1 - partialTicks);
+        double rotateRoll = vehicle.rotationRoll - (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)(1 - partialTicks);
 
         //Set up position and lighting.
         GL11.glPushMatrix();
         GL11.glTranslated(thisX - playerX, thisY - playerY, thisZ - playerZ);
-        int lightVar = multipart.getBrightnessForRender(partialTicks);
+        int lightVar = vehicle.getBrightnessForRender(partialTicks);
         minecraft.entityRenderer.enableLightmap();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
         RenderHelper.enableStandardItemLighting();
         
 		//Bind texture.  Adds new element to cache if needed.
-		if(!textureMap.containsKey(multipart.multipartName)){
-			textureMap.put(multipart.multipartName, new ResourceLocation(multipart.multipartName.substring(0, multipart.multipartName.indexOf(':')), "textures/vehicles/" + multipart.multipartName.substring(multipart.multipartName.indexOf(':') + 1) + ".png"));
+		if(!textureMap.containsKey(vehicle.multipartName)){
+			textureMap.put(vehicle.multipartName, new ResourceLocation(vehicle.multipartName.substring(0, vehicle.multipartName.indexOf(':')), "textures/vehicles/" + vehicle.multipartName.substring(vehicle.multipartName.indexOf(':') + 1) + ".png"));
 		}
-		minecraft.getTextureManager().bindTexture(textureMap.get(multipart.multipartName));
+		minecraft.getTextureManager().bindTexture(textureMap.get(vehicle.multipartName));
 		//Render all the model parts except windows.
 		//Those need to be rendered after the player if the player is rendered manually.
 		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
@@ -187,17 +186,15 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			GL11.glRotated(rotateYaw, 0, 1, 0);
 	        GL11.glRotated(rotatePitch, 1, 0, 0);
 	        GL11.glRotated(rotateRoll, 0, 0, 1);
-			renderMainModel(multipart, partialTicks);
-			renderParts(multipart, partialTicks);
+			renderMainModel(vehicle, partialTicks);
+			renderParts(vehicle, partialTicks);
 			GL11.glEnable(GL11.GL_NORMALIZE);
-			renderWindows(multipart, partialTicks);
-			renderTextMarkings(multipart);
-			if(multipart instanceof EntityMultipartE_Vehicle){
-				renderInstrumentsAndControls((EntityMultipartE_Vehicle) multipart);
-			}
+			renderWindows(vehicle, partialTicks);
+			renderTextMarkings(vehicle);
+			renderInstrumentsAndControls(vehicle);
 			GL11.glDisable(GL11.GL_NORMALIZE);
 			if(Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()){
-				renderBoundingBoxes(multipart);
+				renderBoundingBoxes(vehicle);
 			}
 			GL11.glPopMatrix();
 		}
@@ -207,10 +204,10 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
  		//Due to inconsistent culling based on view angle, this can lead to double-renders.
  		//Better than not rendering at all I suppose.
 		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
-			for(Entity passenger : multipart.getPassengers()){
+			for(Entity passenger : vehicle.getPassengers()){
 				if(!(minecraft.thePlayer.equals(passenger) && minecraft.gameSettings.thirdPersonView == 0) && passenger.posY > passenger.worldObj.getHeight()){
 		        	 GL11.glPushMatrix();
-		        	 GL11.glTranslated(passenger.posX - multipart.posX, passenger.posY - multipart.posY, passenger.posZ - multipart.posZ);
+		        	 GL11.glTranslated(passenger.posX - vehicle.posX, passenger.posY - vehicle.posY, passenger.posZ - vehicle.posZ);
 		        	 Minecraft.getMinecraft().getRenderManager().renderEntityStatic(passenger, partialTicks, false);
 		        	 GL11.glPopMatrix();
 		         }
@@ -220,8 +217,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		//Lights and beacons get rendered in two passes.
 		//The first renders the cases and bulbs, the second renders the beams and effects.
 		//Make sure the light list is populated here before we try to render this, as loading de-syncs can leave it null.
-		if(multipart instanceof EntityMultipartE_Vehicle && multipartLightLists.get(multipart.multipartJSONName) != null){
-			EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) multipart;
+		if(multipartLightLists.get(vehicle.multipartJSONName) != null){
 			float sunLight = vehicle.worldObj.getSunBrightness(0)*vehicle.worldObj.getLightBrightness(vehicle.getPosition());
 			float blockLight = vehicle.worldObj.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, vehicle.getPosition())/15F;
 			float electricFactor = (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1);
@@ -246,7 +242,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		
 		//Render holograms for missing parts if applicable.
 		if(MinecraftForgeClient.getRenderPass() != 0){
-			renderPartBoxes(multipart);
+			renderPartBoxes(vehicle);
 		}
 		
 		//Make sure lightmaps are set correctly.
@@ -260,8 +256,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glPopMatrix();
 		
 		//Update SFX.
-		if(!wasRenderedPrior && multipart instanceof EntityMultipartE_Vehicle){
-			EntityMultipartE_Vehicle vehicle = (EntityMultipartE_Vehicle) multipart;
+		if(!wasRenderedPrior){
 			SFXSystem.updateMultipartSounds(vehicle, partialTicks);
 			for(APart part : vehicle.getMultipartParts()){
 				if(part instanceof FXPart){
@@ -271,27 +266,27 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 	}
 	
-	private static void renderMainModel(EntityMultipartD_Moving multipart, float partialTicks){
+	private static void renderMainModel(EntityMultipartE_Vehicle vehicle, float partialTicks){
 		GL11.glPushMatrix();
 		//Normally we use the pack name, but since all displaylists
 		//are the same for all models, this is more appropriate.
-		if(multipartDisplayLists.containsKey(multipart.multipartJSONName)){
-			GL11.glCallList(multipartDisplayLists.get(multipart.multipartJSONName));
+		if(multipartDisplayLists.containsKey(vehicle.multipartJSONName)){
+			GL11.glCallList(multipartDisplayLists.get(vehicle.multipartJSONName));
 			
 			//The display list only renders static parts.  We need to render dynamic ones manually.
 			//If this is a window, don't render it as that gets done all at once later.
-			for(RotatablePart rotatable : multipartRotatableLists.get(multipart.multipartJSONName)){
+			for(RotatablePart rotatable : multipartRotatableLists.get(vehicle.multipartJSONName)){
 				if(!rotatable.name.contains("window")){
 					GL11.glPushMatrix();
 					if(rotatable.name.contains("%")){
-						for(TranslatablePart translatable : multipartTranslatableLists.get(multipart.multipartJSONName)){
+						for(TranslatablePart translatable : multipartTranslatableLists.get(vehicle.multipartJSONName)){
 							if(translatable.name.equals(rotatable.name)){
-								translateModelObject(multipart, translatable, partialTicks);
+								translateModelObject(vehicle, translatable, partialTicks);
 								break;
 							}
 						}
 					}
-					rotateModelObject(multipart, rotatable, partialTicks);
+					rotateModelObject(vehicle, rotatable, partialTicks);
 					GL11.glBegin(GL11.GL_TRIANGLES);
 					for(Float[] vertex : rotatable.vertices){
 						GL11.glTexCoord2f(vertex[3], vertex[4]);
@@ -302,10 +297,10 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 					GL11.glPopMatrix();
 				}
 			}
-			for(TranslatablePart translatable : multipartTranslatableLists.get(multipart.multipartJSONName)){
+			for(TranslatablePart translatable : multipartTranslatableLists.get(vehicle.multipartJSONName)){
 				if(!translatable.name.contains("window") && !translatable.name.contains("$")){
 					GL11.glPushMatrix();
-					translateModelObject(multipart, translatable, partialTicks);
+					translateModelObject(vehicle, translatable, partialTicks);
 					GL11.glBegin(GL11.GL_TRIANGLES);
 					for(Float[] vertex : translatable.vertices){
 						GL11.glTexCoord2f(vertex[3], vertex[4]);
@@ -321,7 +316,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			List<TranslatablePart> translatableParts = new ArrayList<TranslatablePart>();
 			List<LightPart> lightParts = new ArrayList<LightPart>();
 			List<WindowPart> windows = new ArrayList<WindowPart>();
-			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(new ResourceLocation(multipart.multipartName.substring(0, multipart.multipartName.indexOf(':')), "objmodels/vehicles/" + multipart.multipartJSONName + ".obj"));
+			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(new ResourceLocation(vehicle.multipartName.substring(0, vehicle.multipartName.indexOf(':')), "objmodels/vehicles/" + vehicle.multipartJSONName + ".obj"));
 			int displayListIndex = GL11.glGenLists(1);
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 			GL11.glBegin(GL11.GL_TRIANGLES);
@@ -331,11 +326,11 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 				//Do add lights, as they will be rendered both as part of the model and with special things.
 				boolean shouldShapeBeInDL = true;
 				if(entry.getKey().contains("$")){
-					rotatableParts.add(new RotatablePart(entry.getKey(), entry.getValue(), multipart.pack.rendering.rotatableModelObjects));
+					rotatableParts.add(new RotatablePart(entry.getKey(), entry.getValue(), vehicle.pack.rendering.rotatableModelObjects));
 					shouldShapeBeInDL = false;
 				}
 				if(entry.getKey().contains("%")){
-					translatableParts.add(new TranslatablePart(entry.getKey(), entry.getValue(), multipart.pack.rendering.translatableModelObjects));
+					translatableParts.add(new TranslatablePart(entry.getKey(), entry.getValue(), vehicle.pack.rendering.translatableModelObjects));
 					shouldShapeBeInDL = false;
 				}
 				if(entry.getKey().contains("&")){
@@ -357,18 +352,18 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			GL11.glEndList();
 			
 			//Now finalize the maps.
-			multipartRotatableLists.put(multipart.multipartJSONName, rotatableParts);
-			multipartTranslatableLists.put(multipart.multipartJSONName, translatableParts);
-			multipartLightLists.put(multipart.multipartJSONName, lightParts);
-			windowLists.put(multipart.multipartJSONName, windows);
-			multipartDisplayLists.put(multipart.multipartJSONName, displayListIndex);
+			multipartRotatableLists.put(vehicle.multipartJSONName, rotatableParts);
+			multipartTranslatableLists.put(vehicle.multipartJSONName, translatableParts);
+			multipartLightLists.put(vehicle.multipartJSONName, lightParts);
+			windowLists.put(vehicle.multipartJSONName, windows);
+			multipartDisplayLists.put(vehicle.multipartJSONName, displayListIndex);
 		}
 		GL11.glPopMatrix();
 	}
 	
-	private static void rotateModelObject(EntityMultipartD_Moving multipart, RotatablePart rotatable, float partialTicks){
+	private static void rotateModelObject(EntityMultipartE_Vehicle vehicle, RotatablePart rotatable, float partialTicks){
 		for(byte i=0; i<rotatable.rotationVariables.length; ++i){
-			float rotation = getRotationAngleForModelVariable(multipart, rotatable.rotationVariables[i], partialTicks);
+			float rotation = getRotationAngleForModelVariable(vehicle, rotatable.rotationVariables[i], partialTicks);
 			if(rotation != 0){
 				GL11.glTranslated(rotatable.rotationPoints[i].xCoord, rotatable.rotationPoints[i].yCoord, rotatable.rotationPoints[i].zCoord);
 				GL11.glRotated(rotation*rotatable.rotationMagnitudes[i], rotatable.rotationAxis[i].xCoord, rotatable.rotationAxis[i].yCoord, rotatable.rotationAxis[i].zCoord);
@@ -377,36 +372,36 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 	}
 	
-	private static float getRotationAngleForModelVariable(EntityMultipartD_Moving multipart, String variable, float partialTicks){
+	private static float getRotationAngleForModelVariable(EntityMultipartE_Vehicle vehicle, String variable, float partialTicks){
 		switch(variable){
-			case("cycle"): return multipart.worldObj.getTotalWorldTime()%20;
-			case("door"): return multipart.parkingBrakeOn && multipart.velocity == 0 && !multipart.locked ? 60 : 0;
-			case("throttle"): return ((EntityMultipartE_Vehicle) multipart).throttle/4F;
-			case("brake"): return multipart.brakeOn ? 25 : 0;
-			case("p_brake"): return multipart.parkingBrakeOn ? 30 : 0;
-			case("horn"): return ((EntityMultipartE_Vehicle) multipart).hornOn ? 30 : 0;
-			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0))).getGearshiftRotation() : 0;
-			case("engine"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? ((APartEngine) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) : 0);
-			case("driveshaft"): return getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks);
-			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks) + 180F)))/2F;
-			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks) + 180F));
-			case("steeringwheel"): return multipart.getSteerAngle();
+			case("cycle"): return vehicle.worldObj.getTotalWorldTime()%20;
+			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity == 0 && !vehicle.locked ? 60 : 0;
+			case("throttle"): return vehicle.throttle/4F;
+			case("brake"): return vehicle.brakeOn ? 25 : 0;
+			case("p_brake"): return vehicle.parkingBrakeOn ? 30 : 0;
+			case("horn"): return vehicle.hornOn ? 30 : 0;
+			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((PartEngineCar) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation() : 0;
+			case("engine"): return (float) (vehicle.getEngineByNumber((byte) 0) != null ? ((APartEngine) vehicle.getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) : 0);
+			case("driveshaft"): return getDriveshaftValue(vehicle, partialTicks);
+			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue(vehicle, partialTicks) + 180F)))/2F;
+			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue(vehicle, partialTicks) + 180F));
+			case("steeringwheel"): return vehicle.getSteerAngle();
 			
-			case("aileron"): return ((EntityMultipartF_Plane) multipart).aileronAngle/10F;
-			case("elevator"): return ((EntityMultipartF_Plane) multipart).elevatorAngle/10F;
-			case("rudder"): return ((EntityMultipartF_Plane) multipart).rudderAngle/10F;
-			case("flap"): return ((EntityMultipartF_Plane) multipart).flapAngle/10F;
-			case("trim_aileron"): return ((EntityMultipartF_Plane) multipart).aileronTrim/10F;
-			case("trim_elevator"): return ((EntityMultipartF_Plane) multipart).elevatorTrim/10F;
-			case("trim_rudder"): return ((EntityMultipartF_Plane) multipart).rudderTrim/10F;
-			case("reverser"): return ((EntityMultipartF_Plane) multipart).reversePercent/1F;
+			case("aileron"): return ((EntityMultipartF_Plane) vehicle).aileronAngle/10F;
+			case("elevator"): return ((EntityMultipartF_Plane) vehicle).elevatorAngle/10F;
+			case("rudder"): return ((EntityMultipartF_Plane) vehicle).rudderAngle/10F;
+			case("flap"): return ((EntityMultipartF_Plane) vehicle).flapAngle/10F;
+			case("trim_aileron"): return ((EntityMultipartF_Plane) vehicle).aileronTrim/10F;
+			case("trim_elevator"): return ((EntityMultipartF_Plane) vehicle).elevatorTrim/10F;
+			case("trim_rudder"): return ((EntityMultipartF_Plane) vehicle).rudderTrim/10F;
+			case("reverser"): return ((EntityMultipartF_Plane) vehicle).reversePercent/1F;
 			default: return 0;
 		}
 	}
 	
-	private static void translateModelObject(EntityMultipartD_Moving multipart, TranslatablePart translatable, float partialTicks){
+	private static void translateModelObject(EntityMultipartE_Vehicle vehicle, TranslatablePart translatable, float partialTicks){
 		for(byte i=0; i<translatable.translationVariables.length; ++i){
-			float translation = getTranslationLengthForModelVariable(multipart, translatable.translationVariables[i], partialTicks);
+			float translation = getTranslationLengthForModelVariable(vehicle, translatable.translationVariables[i], partialTicks);
 			if(translation != 0){
 				float translationMagnitude = translation*translatable.translationMagnitudes[i];
 				GL11.glTranslated(translationMagnitude*translatable.translationAxis[i].xCoord, translationMagnitude*translatable.translationAxis[i].yCoord, translationMagnitude*translatable.translationAxis[i].zCoord);
@@ -414,27 +409,27 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 	}
 	
-	private static float getTranslationLengthForModelVariable(EntityMultipartD_Moving multipart, String variable, float partialTicks){
+	private static float getTranslationLengthForModelVariable(EntityMultipartE_Vehicle vehicle, String variable, float partialTicks){
 		switch(variable){
-			case("door"): return multipart.parkingBrakeOn && multipart.velocity == 0 && !multipart.locked ? 1 : 0;
-			case("throttle"): return ((EntityMultipartE_Vehicle) multipart).throttle/100F;
-			case("brake"): return multipart.brakeOn ? 1 : 0;
-			case("p_brake"): return multipart.parkingBrakeOn ? 1 : 0;
-			case("horn"): return ((EntityMultipartE_Vehicle) multipart).hornOn ? 1 : 0;
-			case("gearshift"): return ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? (((PartEngineCar) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0))).getGearshiftRotation()/5F : 0;
-			case("engine_sin"): return (float) (((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0) != null ? (1 + Math.cos(Math.toRadians(((APartEngine) ((EntityMultipartE_Vehicle) multipart).getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) + 180F)))/2F : 0);
-			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks) + 180F)))/2F;
-			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue((EntityMultipartE_Vehicle) multipart, partialTicks)));
-			case("steeringwheel"): return multipart.getSteerAngle()/35F;
+			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity == 0 && !vehicle.locked ? 1 : 0;
+			case("throttle"): return vehicle.throttle/100F;
+			case("brake"): return vehicle.brakeOn ? 1 : 0;
+			case("p_brake"): return vehicle.parkingBrakeOn ? 1 : 0;
+			case("horn"): return vehicle.hornOn ? 1 : 0;
+			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((PartEngineCar) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation()/5F : 0;
+			case("engine_sin"): return (float) (vehicle.getEngineByNumber((byte) 0) != null ? (1 + Math.cos(Math.toRadians(((APartEngine) vehicle.getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) + 180F)))/2F : 0);
+			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue(vehicle, partialTicks) + 180F)))/2F;
+			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue(vehicle, partialTicks)));
+			case("steeringwheel"): return vehicle.getSteerAngle()/35F;
 			
-			case("aileron"): return ((EntityMultipartF_Plane) multipart).aileronAngle/350F;
-			case("elevator"): return ((EntityMultipartF_Plane) multipart).elevatorAngle/350F;
-			case("rudder"): return ((EntityMultipartF_Plane) multipart).rudderAngle/350F;
-			case("flap"): return ((EntityMultipartF_Plane) multipart).flapAngle/350F;
-			case("trim_aileron"): return ((EntityMultipartF_Plane) multipart).aileronTrim/350F;
-			case("trim_elevator"): return ((EntityMultipartF_Plane) multipart).elevatorTrim/350F;
-			case("trim_rudder"): return ((EntityMultipartF_Plane) multipart).rudderTrim/350F;
-			case("reverser"): return ((EntityMultipartF_Plane) multipart).reversePercent/100F;
+			case("aileron"): return ((EntityMultipartF_Plane) vehicle).aileronAngle/350F;
+			case("elevator"): return ((EntityMultipartF_Plane) vehicle).elevatorAngle/350F;
+			case("rudder"): return ((EntityMultipartF_Plane) vehicle).rudderAngle/350F;
+			case("flap"): return ((EntityMultipartF_Plane) vehicle).flapAngle/350F;
+			case("trim_aileron"): return ((EntityMultipartF_Plane) vehicle).aileronTrim/350F;
+			case("trim_elevator"): return ((EntityMultipartF_Plane) vehicle).elevatorTrim/350F;
+			case("trim_rudder"): return ((EntityMultipartF_Plane) vehicle).rudderTrim/350F;
+			case("reverser"): return ((EntityMultipartF_Plane) vehicle).reversePercent/100F;
 			default: return 0;
 		}
 	}
@@ -447,8 +442,8 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}		
 	}
 	
-	private static void renderParts(EntityMultipartD_Moving multipart, float partialTicks){
-		for(APart part : multipart.getMultipartParts()){
+	private static void renderParts(EntityMultipartE_Vehicle vehicle, float partialTicks){
+		for(APart part : vehicle.getMultipartParts()){
 			ResourceLocation partModelLocation = part.getModelLocation();
 			if(partModelLocation == null){
 				continue;
@@ -706,18 +701,18 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glPopMatrix();
 	}
 	
-	private static void renderWindows(EntityMultipartD_Moving multipart, float partialTicks){
+	private static void renderWindows(EntityMultipartE_Vehicle vehicle, float partialTicks){
 		minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
 		//Iterate through all windows.
-		for(byte i=0; i<windowLists.get(multipart.multipartJSONName).size(); ++i){
-			if(i >= multipart.brokenWindows){
+		for(byte i=0; i<windowLists.get(vehicle.multipartJSONName).size(); ++i){
+			if(i >= vehicle.brokenWindows){
 				GL11.glPushMatrix();
 				//This is a window or set of windows.  Like the model, it will be triangle-based.
 				//However, windows may be rotatable.  Check this before continuing.
-				WindowPart window = windowLists.get(multipart.multipartJSONName).get(i);
-				for(RotatablePart rotatable : multipartRotatableLists.get(multipart.multipartJSONName)){
+				WindowPart window = windowLists.get(vehicle.multipartJSONName).get(i);
+				for(RotatablePart rotatable : multipartRotatableLists.get(vehicle.multipartJSONName)){
 					if(rotatable.name.equals(window.name)){
-						rotateModelObject(multipart, rotatable, partialTicks);
+						rotateModelObject(vehicle, rotatable, partialTicks);
 					}
 				}
 				GL11.glBegin(GL11.GL_TRIANGLES);
@@ -740,8 +735,12 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		}
 	}
 	
-	private static void renderTextMarkings(EntityMultipartD_Moving multipart){
-		for(PackDisplayText text : multipart.pack.rendering.textMarkings){
+	private static void renderTextMarkings(EntityMultipartE_Vehicle vehicle){
+		if(vehicle.pack.rendering.textLighted && RenderInstruments.lightsOn(vehicle)){
+			GL11.glDisable(GL11.GL_LIGHTING);
+			minecraft.entityRenderer.disableLightmap();
+		}
+		for(PackDisplayText text : vehicle.pack.rendering.textMarkings){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(text.pos[0], text.pos[1], text.pos[2]);
 			GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
@@ -750,11 +749,15 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 			GL11.glRotatef(text.rot[2] + 180, 0, 0, 1);
 			GL11.glScalef(text.scale, text.scale, text.scale);
 			RenderHelper.disableStandardItemLighting();
-			minecraft.fontRendererObj.drawString(multipart.displayText, -minecraft.fontRendererObj.getStringWidth(multipart.displayText)/2, 0, Color.decode(text.color).getRGB());
+			minecraft.fontRendererObj.drawString(vehicle.displayText, -minecraft.fontRendererObj.getStringWidth(vehicle.displayText)/2, 0, Color.decode(text.color).getRGB());
 			GL11.glPopMatrix();
 		}
 		GL11.glColor3f(1.0F, 1.0F, 1.0F);
 		RenderHelper.enableStandardItemLighting();
+		if(vehicle.pack.rendering.textLighted){
+			GL11.glEnable(GL11.GL_LIGHTING);
+			minecraft.entityRenderer.enableLightmap();
+		}
 	}
 	
 	private static void renderLights(EntityMultipartE_Vehicle vehicle, float sunLight, float blockLight, float lightBrightness, float electricFactor, boolean wasRenderedPrior, float partialTicks){
@@ -956,13 +959,13 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glPopMatrix();
 	}
 	
-	private static void renderBoundingBoxes(EntityMultipartD_Moving multipart){
+	private static void renderBoundingBoxes(EntityMultipartE_Vehicle vehicle){
 		GL11.glPushMatrix();
 		GL11.glDisable(GL11.GL_LIGHTING);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glColor3f(0.0F, 0.0F, 0.0F);
 		GL11.glLineWidth(3.0F);
-		for(MultipartAxisAlignedBB box : multipart.getCurrentCollisionBoxes()){
+		for(MultipartAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
 			//box = box.offset(-multipart.posX, -multipart.posY, -multipart.posZ);
 			GL11.glBegin(GL11.GL_LINES);
 			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
@@ -1000,18 +1003,18 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 		GL11.glPopMatrix();
 	}
 	
-	private static void renderPartBoxes(EntityMultipartD_Moving multipart){
+	private static void renderPartBoxes(EntityMultipartE_Vehicle vehicle){
 		EntityPlayer player = minecraft.thePlayer;
 		ItemStack heldStack = player.getHeldItemMainhand();
 		if(heldStack != null){
 			if(heldStack.getItem() instanceof AItemPart){
 				AItemPart heldItem = (AItemPart) heldStack.getItem();
-				for(Entry<Vec3d, PackPart> packPartEntry : multipart.getAllPossiblePackParts().entrySet()){
+				for(Entry<Vec3d, PackPart> packPartEntry : vehicle.getAllPossiblePackParts().entrySet()){
 					boolean isPresent = false;
 					boolean isHoldingPart = false;
 					boolean isPartValid = false;
 					
-					if(multipart.getPartAtLocation(packPartEntry.getKey().xCoord, packPartEntry.getKey().yCoord, packPartEntry.getKey().zCoord) != null){
+					if(vehicle.getPartAtLocation(packPartEntry.getKey().xCoord, packPartEntry.getKey().yCoord, packPartEntry.getKey().zCoord) != null){
 						isPresent = true;
 					}
 					
@@ -1023,7 +1026,7 @@ public final class RenderMultipart extends Render<EntityMultipartD_Moving>{
 					}
 							
 					if(!isPresent && isHoldingPart){
-						Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), multipart.rotationPitch, multipart.rotationYaw, multipart.rotationRoll);
+						Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
 						AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.5F, (float) (offset.yCoord) - 0.5F, (float) (offset.zCoord) - 0.5F, (float) (offset.xCoord) + 0.5F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.5F);
 						
 						GL11.glPushMatrix();
