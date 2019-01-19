@@ -405,14 +405,16 @@ public final class MTSRegistry{
 	}
 	
 	private static void initCraftingBenchItemRecipes(){
-		//Vehicle bench
-		registerRecipe(new ItemStack(itemBlockVehicleBench),
-				"WWW",
-				"WGW",
-				"F F",
-				'W', Blocks.PLANKS,
-				'F', Blocks.OAK_FENCE,
-				'G', Blocks.GLASS_PANE);
+		//Vehicle benches.  Need to iterate through all fence types.
+		for(Block fenceBlock : new Block[]{Blocks.OAK_FENCE, Blocks.SPRUCE_FENCE, Blocks.BIRCH_FENCE, Blocks.JUNGLE_FENCE, Blocks.ACACIA_FENCE, Blocks.DARK_OAK_FENCE}){
+			registerRecipe(new ItemStack(itemBlockVehicleBench),
+					"AAA",
+					"ACA",
+					"B B",
+					'A', Blocks.PLANKS,
+					'B', fenceBlock,
+					'C', Blocks.GLASS_PANE);
+		}
 		//Propeller bench
 		registerRecipe(new ItemStack(itemBlockPropellerBench),
 				"AAA",
