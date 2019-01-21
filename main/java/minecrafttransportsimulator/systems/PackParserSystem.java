@@ -248,8 +248,8 @@ public final class PackParserSystem{
 	    		jsonFilesToReload.add(decorJSONFile);
 	    	}
 	    	for(String jsonFile : jsonFilesToReload){
-	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/decor/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
-	    		addSignDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
+	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/decors/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
+	    		addDecorDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
 	    	}
     	}catch(Exception e){
     		logList.add("AN I/O ERROR WAS ENCOUNTERED WHEN TRYING TO RELOAD PACK DATA");
