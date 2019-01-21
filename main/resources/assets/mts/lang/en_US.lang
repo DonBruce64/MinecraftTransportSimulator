@@ -113,7 +113,7 @@ gui.trafficsignalcontroller.greenmaintime=Time main signal is Green:
 gui.trafficsignalcontroller.greencrosstime=Time cross signal is Green: 
 gui.trafficsignalcontroller.yellowtime=Time all signals are Yellow: 
 gui.trafficsignalcontroller.allredtime=Time all signals are Red:
-gui.trafficsignalcontroller.confirm=CONRFIRM 
+gui.trafficsignalcontroller.confirm=CONFIRM 
 
 gui.vehicle_bench.type=Type
 gui.vehicle_bench.weight=Weight (kg)
