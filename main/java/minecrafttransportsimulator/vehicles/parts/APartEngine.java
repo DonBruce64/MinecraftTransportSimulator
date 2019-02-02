@@ -46,17 +46,19 @@ public abstract class APartEngine extends APart implements FXPart{
 	protected double engineDriveshaftRotationLast;
 	
 	//Constants
-	public static final float engineStallRPM = 300;
-	public static final float engineStartRPM = 500;
 	public static final float engineColdTemp = 30F;
 	public static final float engineOverheatTemp1 = 115.556F;
 	public static final float engineOverheatTemp2 = 121.111F;
 	public static final float engineFailureTemp = 132.222F;
 	public static final float engineOilDanger = 40F;
+	public final float engineStallRPM;
+	public final float engineStartRPM;
 	
 	
 	public APartEngine(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
+		engineStallRPM = pack.engine.maxRPM < 15000 ? 300 : 1500;
+		engineStartRPM = pack.engine.maxRPM < 15000 ? 500 : 2000;
 		if(dataTag.hasKey("engineState")){
 			this.state = EngineStates.values()[dataTag.getByte("engineState")];
 		}else{
@@ -120,10 +122,10 @@ public abstract class APartEngine extends APart implements FXPart{
 		
 		if(starterLevel > 0){
 			--starterLevel;
-			if(RPM < 600){
-				RPM = Math.min(RPM + pack.engine.starterPower, 600);
+			if(RPM < engineStartRPM*1.2){
+				RPM = Math.min(RPM + pack.engine.starterPower, engineStartRPM*1.2);
 			}else{
-				RPM = Math.max(RPM - pack.engine.starterPower, 600);
+				RPM = Math.max(RPM - pack.engine.starterPower, engineStartRPM*1.2);
 			}
 		}
 		
@@ -134,7 +136,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		
 		if(state.running){
 			//First part is temp affect on oil, second is engine oil pump.
-			oilPressure = Math.min(90 - temp/10, oilPressure + RPM/500 - 0.5*(oilLeak ? 5F : 1F)*(oilPressure/engineOilDanger));
+			oilPressure = Math.min(90 - temp/10, oilPressure + RPM/engineStartRPM - 0.5*(oilLeak ? 5F : 1F)*(oilPressure/engineOilDanger));
 			if(oilPressure < engineOilDanger){
 				temp += Math.max(0, (20*RPM/pack.engine.maxRPM)/20);
 				hours += 0.01;
@@ -189,7 +191,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			//Internal fuel is used for engine sound wind down.  NOT used for power.
 			if(internalFuel > 0){
 				--internalFuel;
-				if(RPM < 500){
+				if(RPM < engineStartRPM){
 					internalFuel = 0;
 				}
 			}
@@ -288,7 +290,7 @@ public abstract class APartEngine extends APart implements FXPart{
 	}
 	
 	public void backfireEngine(){
-		RPM -= 100;
+		RPM -= pack.engine.maxRPM < 15000 ? 100 : 500;
 		if(!vehicle.worldObj.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.BACKFIRE));
 		}else{
@@ -345,7 +347,7 @@ public abstract class APartEngine extends APart implements FXPart{
 	}
 	
 	public static int getSafeRPMFromMax(int maxRPM){
-		return maxRPM - (maxRPM - 2500)/2;
+		return maxRPM < 10000 ? maxRPM - (maxRPM - 2500)/2 : (int) (maxRPM/1.1);
 	}
 	
 	protected boolean isInLiquid(){
