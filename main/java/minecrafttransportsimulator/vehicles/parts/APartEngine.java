@@ -347,7 +347,7 @@ public abstract class APartEngine extends APart implements FXPart{
 	}
 	
 	public static int getSafeRPMFromMax(int maxRPM){
-		return maxRPM < 10000 ? maxRPM - (maxRPM - 2500)/2 : (int) (maxRPM/1.1);
+		return maxRPM < 15000 ? maxRPM - (maxRPM - 2500)/2 : (int) (maxRPM/1.1);
 	}
 	
 	protected boolean isInLiquid(){
