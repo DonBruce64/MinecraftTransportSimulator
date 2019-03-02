@@ -1,4 +1,4 @@
-#Translated by HJ_zhtw
+#Translated by HJ_zhtw - Contact Me on Telegram@HJ_25
 
 death.attack.propellor.null.null=%1$s 被螺旋槳絞碎了
 death.attack.propellor.null.player=%1$s 在和 %2$s 戰鬥時被螺旋槳絞碎了
@@ -87,6 +87,7 @@ input.car.start=啟動引擎
 input.car.horn=鳴笛
 input.car.siren=警報器
 input.car.lights=行車燈
+input.car.lights_special=特殊燈
 input.car.park=手煞車
 input.car.zoom_i=放大
 input.car.zoom_o=縮小
@@ -100,6 +101,19 @@ input.car.changehud=抬頭顯示器模式
 input.car.stop=停止引擎
 input.car.turnsignal_r=右轉燈
 input.car.turnsignal_l=左轉燈
+
+gui.trafficsignalcontroller.scan=掃描訊號和組件
+gui.trafficsignalcontroller.scandistance=掃描距離：
+gui.trafficsignalcontroller.scanfound=掃描發現：
+gui.trafficsignalcontroller.primary=主軸： 
+gui.trafficsignalcontroller.signalmode=模式：
+gui.trafficsignalcontroller.modetime=時間延遲
+gui.trafficsignalcontroller.modetrigger=載具觸發器
+gui.trafficsignalcontroller.greenmaintime=Time main signal 為綠：
+gui.trafficsignalcontroller.greencrosstime=Time cross signal 為綠：
+gui.trafficsignalcontroller.yellowtime=Time all signals 為黃：
+gui.trafficsignalcontroller.allredtime=Time all signals 為紅：
+gui.trafficsignalcontroller.confirm=確認
 
 gui.vehicle_bench.type=類型
 gui.vehicle_bench.weight=重量（公斤）
@@ -164,7 +178,8 @@ gui.packmissing.versionerror=如果內容包已經在那個位置但你卻持續
 info.item.engine.automatic=傳動：自動
 info.item.engine.manual=傳動：手動
 info.item.engine.numbergears=齒輪數：
-info.item.engine.gearratios=齒輪比例： 
+info.item.engine.gearratios=齒輪比：
+info.item.engine.bypassratio=旁通比：
 info.item.engine.maxrpm=最大可能轉速：
 info.item.engine.maxsaferpm=最大安全轉速：
 info.item.engine.fuelconsumption=燃料消耗量 (mb/t):
@@ -213,12 +228,13 @@ tile.fuelpump.name=燃油泵
 tile.fuelpump.level=等級：
 tile.fuelpump.dispensed=分配：
 
+tile.trafficsignalcontroller.name=交通號誌控制器
+
 tile.pole.name=桿子
 tile.polebase.name=桿子底座
-tile.trafficcone.name=三角椎
-tile.crashbarrier.name=防撞護欄
 tile.trafficsignal.name=交通號誌
 tile.streetlight.name=路燈
+tile.trafficsign.name=交通標誌
 
 itemGroup.tabMTSCore=MTS 核心組件
 key.categories.mts=Minecraft Transport Simulator
@@ -258,7 +274,7 @@ manual.8.2=The final method of control available is a mouse-yoke system similar 
 
 manual.9.title=引擎
 manual.9.1=No matter if they are in cars or planes, engines form the heart of your vehicle.  Not having one is like having a base without a furnace.  Engines come in a variety of fuel consumptions and max RPMs, so chose carefully based on your application.  There is even a fuel-less engine in the creative inventory if you don't want to mess with fuel.  Engines are crafted on the engine hoist.
-manual.9.2=Beware: engines will gradually accumulate hours and lose their power, going so far as to start backfiring when really worn out.  Over-revving, over-heating, and running the engine too fast before it has warmed up will quickly add hours to an otherwise new engine.  You can re-build your engines to restore them to factory state, so do this if you start belching smoke like a locomotive.  Engines may also accumulate hours from damage, going so far as to spring leaks or lose their electric starters.
+manual.9.2=Beware: engines will gradually accumulate hours and lose their power, going so far as to start backfiring when really worn out.  Over-revving, over-heating, and running the engine too fast before it has warmed up will quickly add hours to an otherwise new engine.  Engines may also accumulate hours from damage, going so far as to spring leaks or lose their electric starters.
 
 manual.10.title=地上裝置
 manual.10.1=If it touches the ground, it's a ground device.  Ground devices come in all sorts of configurations and types.  The most common ground device you will encounter are wheels.  These may be powered or un-powered depending on how the vehicle is set up.  Floating ground devices like pontoons are also available, so check the stats of the device before you decide to make it.
