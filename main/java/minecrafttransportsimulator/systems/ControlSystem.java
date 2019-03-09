@@ -283,7 +283,7 @@ public final class ControlSystem{
 		
 		//Check for thrust reverse button.
 		if(ControlsJoystick.AIRCRAFT_REVERSE.isPressed()){
-			MTS.proxy.playSound(aircraft.getPositionVector(), MTS.MODID + ":stall_buzzer", 1.0F, 1.0F);
+			MTS.proxy.playSound(aircraft.getPositionVector(), MTS.MODID + ":panel_buzzer", 1.0F, 1.0F);
 			MTS.MTSNet.sendToServer(new ReverseThrustPacket(aircraft.getEntityId(), !aircraft.reverseThrust));
 		}
 		

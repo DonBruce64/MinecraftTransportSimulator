@@ -1,9 +1,7 @@
 package minecrafttransportsimulator.baseclasses;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.client.Minecraft;
@@ -55,11 +53,6 @@ public final class VehicleSound{
 	
 	public float getVolume(){
 		if(isSoundActive()){
-			//If this source is internal, only make noise if we are in first-person.
-			if(soundType.internal){
-				return Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 ? 1 : 0;
-			}
-			
 			//If the player is riding the source, volume will either be 1.0 or 0.5.
 			if(vehicle.equals(player.getRidingEntity())){
 				return SFXSystem.isPlayerInsideEnclosedVehicle() ? 0.5F : 1.0F;
@@ -78,16 +71,11 @@ public final class VehicleSound{
 		//If the player is riding the sound source, don't apply a doppler effect.
 		if(vehicle.equals(player.getRidingEntity())){
 			return getCurrentPitch();
-		}
-		
-		//Only adjust pitch for doppler sounds.
-		if(!soundType.internal && !vehicle.equals(player.getRidingEntity())){
+		}else{
 			sourcePos = optionalPart != null ? optionalPart.partPos : vehicle.getPositionVector();
 			playerPos = new Vec3d(player.posX, player.posY, player.posZ);
 			double soundVelocity = playerPos.distanceTo(sourcePos) - playerPos.addVector(player.motionX, player.motionY, player.motionZ).distanceTo(sourcePos.addVector(vehicle.motionX, vehicle.motionY, vehicle.motionZ));
 			return (float) (getCurrentPitch()*(1+soundVelocity/10F));
-		}else{
-			return 1.0F;
 		}
     }
     
@@ -97,7 +85,6 @@ public final class VehicleSound{
 			case ENGINE: return optionalPart.partName + "_running";
 			case HORN: return vehicle.pack.motorized.hornSound;
 			case SIREN: return vehicle.pack.motorized.sirenSound;
-			case STALL_BUZZER: return MTS.MODID + ":stall_buzzer";
 			default: return "";
 		}
 	}
@@ -115,7 +102,6 @@ public final class VehicleSound{
 			case ENGINE: return ((APartEngine) optionalPart).state.running || ((APartEngine) optionalPart).internalFuel > 0;
 			case HORN: return vehicle.hornOn;
 			case SIREN: return vehicle.sirenOn;
-			case STALL_BUZZER: return ((EntityVehicleF_Plane) vehicle).trackAngle <= -17;
 			default: return true;
 		}
 	}
@@ -137,15 +123,8 @@ public final class VehicleSound{
 	}
 	
 	public enum SoundTypes{
-		ENGINE(false),
-		HORN(false),
-		SIREN(false),
-		STALL_BUZZER(true);
-		
-		private final boolean internal;
-		
-		private SoundTypes(boolean internal){
-			this.internal = internal;
-		}
+		ENGINE(),
+		HORN(),
+		SIREN();
 	}
 }
