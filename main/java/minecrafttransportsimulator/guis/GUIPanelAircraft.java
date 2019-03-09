@@ -67,13 +67,16 @@ public class GUIPanelAircraft extends GuiScreen{
 		}
 		magnetoButtonCoords = new int[engines.length][4];
 		for(byte i=0; i<magnetoButtonCoords.length; ++i){
-			magnetoButtonCoords[i] = new int[]{64, 96, 280+50*i+32, 280+50*i};
+			int xOffset = i < 4 ? 64 : 144;
+			magnetoButtonCoords[i] = new int[]{xOffset, xOffset + 32, 280+50*(i%4)+32, 280+50*(i%4)};
 		}
 		starterButtonCoords = new int[engines.length][4];
 		for(byte i=0; i<starterButtonCoords.length; ++i){
-			starterButtonCoords[i] = new int[]{96, 128, 280+50*i+32, 280+50*i};
+			int xOffset = i < 4 ? 96 : 176;
+			starterButtonCoords[i] = new int[]{xOffset, xOffset + 32, 280+50*(i%4)+32, 280+50*(i%4)};
 		}
-		reverseButtonCoords = new int[]{160, 160+32, 430+32, 430};
+		int xOffset = engines.length < 4 ? 160 : 240;
+		reverseButtonCoords = new int[]{xOffset, xOffset+32, 430+32, 430};
 	}
 	
 	@Override
@@ -81,12 +84,13 @@ public class GUIPanelAircraft extends GuiScreen{
 		for(byte i=0; i<lightButtonCoords.length; ++i){
 			hasLight[i] = RenderVehicle.doesVehicleHaveLight(aircraft, lights[i]);
 		}
-		buttonList.add(aileronTrimUpButton = new GuiButton(0, 90, 175, 20, 20, "<"));
-		buttonList.add(aileronTrimDownButton = new GuiButton(0, 110, 175, 20, 20, ">"));
-		buttonList.add(elevatorTrimUpButton = new GuiButton(0, 90, 206, 20, 20, "/\\"));
-		buttonList.add(elevatorTrimDownButton = new GuiButton(0, 110, 206, 20, 20, "\\/"));
-		buttonList.add(rudderTrimUpButton = new GuiButton(0, 90, 237, 20, 20, "<"));
-		buttonList.add(rudderTrimDownButton = new GuiButton(0, 110, 237, 20, 20, ">"));
+		int xOffset = engines.length < 4 ? 90 : 140;
+		buttonList.add(aileronTrimUpButton = new GuiButton(0, xOffset, 175, 20, 20, "<"));
+		buttonList.add(aileronTrimDownButton = new GuiButton(0, xOffset + 20, 175, 20, 20, ">"));
+		buttonList.add(elevatorTrimUpButton = new GuiButton(0, xOffset, 206, 20, 20, "/\\"));
+		buttonList.add(elevatorTrimDownButton = new GuiButton(0, xOffset + 20, 206, 20, 20, "\\/"));
+		buttonList.add(rudderTrimUpButton = new GuiButton(0, xOffset, 237, 20, 20, "<"));
+		buttonList.add(rudderTrimDownButton = new GuiButton(0, xOffset + 20, 237, 20, 20, ">"));
 	}
 	
 	@Override
@@ -162,13 +166,14 @@ public class GUIPanelAircraft extends GuiScreen{
 		}
 		
 		//Render trim button text.
-		fontRendererObj.drawString(I18n.format("gui.panel.trim_roll"), 176 - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_roll"))/2, 312 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
-		fontRendererObj.drawString(I18n.format("gui.panel.trim_pitch"), 176 - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_pitch"))/2, 362 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
-		fontRendererObj.drawString(I18n.format("gui.panel.trim_yaw"), 176 - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_yaw"))/2, 412 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		int xOffset = engines.length < 4 ? 176 : 256;
+		fontRendererObj.drawString(I18n.format("gui.panel.trim_roll"), xOffset - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_roll"))/2, 312 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.panel.trim_pitch"), xOffset - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_pitch"))/2, 362 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		fontRendererObj.drawString(I18n.format("gui.panel.trim_yaw"), xOffset - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_yaw"))/2, 412 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		
 		//Render the reverse button text if we have such a feature.
 		if(aircraft instanceof EntityVehicleF_Plane){
-			fontRendererObj.drawString(I18n.format("gui.panel.reverse"), 176 - fontRendererObj.getStringWidth(I18n.format("gui.panel.reverse"))/2, 462 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+			fontRendererObj.drawString(I18n.format("gui.panel.reverse"), xOffset - fontRendererObj.getStringWidth(I18n.format("gui.panel.reverse"))/2, 462 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		}
 		
 		GL11.glPopMatrix();
