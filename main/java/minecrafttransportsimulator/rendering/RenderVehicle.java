@@ -376,6 +376,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		switch(variable){
 			case("cycle"): return vehicle.worldObj.getTotalWorldTime()%20;
 			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity == 0 && !vehicle.locked ? 60 : 0;
+			case("hood"): return vehicle.getEngineByNumber((byte) 0) == null ? 60 : 0;
 			case("throttle"): return vehicle.throttle/4F;
 			case("brake"): return vehicle.brakeOn ? 25 : 0;
 			case("p_brake"): return vehicle.parkingBrakeOn ? 30 : 0;
@@ -538,6 +539,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("engine"): return (float) (part.vehicle.getEngineByNumber((byte) 0) != null ? part.vehicle.getEngineByNumber((byte) 0).getEngineRotation(partialTicks) : 0);
 			case("driveshaft"): return (float) (part.vehicle.getEngineByNumber((byte) 0) != null ? part.vehicle.getEngineByNumber((byte) 0).getDriveshaftRotation(partialTicks) : 0);
 			case("door"): return part.vehicle.parkingBrakeOn && part.vehicle.velocity == 0 && !part.vehicle.locked ? 60 : 0;
+			case("hood"): return part.vehicle.getEngineByNumber((byte) 0) == null ? 60 : 0;
 			case("steeringwheel"): return part.vehicle.getSteerAngle();
 			default: return 0;
 		}
