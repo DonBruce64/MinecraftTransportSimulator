@@ -121,6 +121,14 @@ public final class EntityVehicleF_Plane extends EntityVehicleE_Powered{
 		elevatorTorque = elevatorForce*pack.plane.tailDistance;
 		rudderTorque = rudderForce*pack.plane.tailDistance;
 		gravitationalTorque = gravitationalForce*1;
+		
+		//As a special case, if the plane is pointed upwards and stalling, add a forwards pitch to allow the plane to right itself.
+		//This is needed to prevent the plane from getting stuck in a vertical position and crashing.
+		if(velocity < 0 && groundedGroundDevices.isEmpty()){
+			if(rotationPitch < 0 && rotationPitch >= -120){
+				elevatorTorque += 100;
+			}
+		}
 				
 		motionX += (headingVec.xCoord*thrustForce - velocityVec.xCoord*dragForce + verticalVec.xCoord*(wingForce + elevatorForce))/currentMass;
 		motionZ += (headingVec.zCoord*thrustForce - velocityVec.zCoord*dragForce + verticalVec.zCoord*(wingForce + elevatorForce))/currentMass;
