@@ -17,6 +17,13 @@ public class TileEntityRotatable extends TileEntity{
     }
 	
 	@Override
+	public void handleUpdateTag(NBTTagCompound tag){
+		//Do nothing here now instead of calling readFromNBT.
+		//MC sends incomplete data here in later versions that doesn't contain any of the tags besides the core xyz position.
+		//Loading from that tag will wipe all custom data, and that's bad.
+	}
+	
+	@Override
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
         this.rotation = tagCompound.getByte("rotation");
