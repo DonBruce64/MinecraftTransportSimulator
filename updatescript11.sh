@@ -54,11 +54,19 @@ sed -i 's/addCollisionBoxToList(world, pos, box, collidingAABBList, null)/addCol
 #Blank Item slots are no longer null; they're empty.
 sed -i 's/.getHeldItemMainhand() == null/.getHeldItemMainhand().isEmpty()/' $FILE
 
-#Fluid handler was split into regular and item-based.  Change fuel pump to reflect this.
+#Fluid handler was split into regular and item-based.  Change fuel pump and barrel to reflect this.
 if echo $FILE | grep -q "BlockFuelPump"; then
 	sed -i 's/FLUID_HANDLER_CAPABILITY/FLUID_HANDLER_ITEM_CAPABILITY/' $FILE
 	sed -i 's/IFluidHandler/IFluidHandlerItem/' $FILE
 	sed -i '/pump.fill(drainedStack, true);/a \\t\t\t\t\t\t\tplayer.setHeldItem(hand, handler.getContainer());' $FILE
+fi
+
+if echo $FILE | grep -q "PartBarrel"; then
+	sed -i 's/FLUID_HANDLER_CAPABILITY/FLUID_HANDLER_ITEM_CAPABILITY/' $FILE
+	sed -i 's/IFluidHandler handler/IFluidHandlerItem handler/' $FILE
+	sed -i 's/\/\/player.setHeldItem/player.setHeldItem/' $FILE
+	sed -i '3iimport net.minecraftforge.fluids.capability.IFluidHandlerItem;' $FILE;
+	sed -i '3iimport net.minecraft.util.EnumHand;' $FILE;
 fi
 
 #Item method getSubItems was changed to use NonNullList.

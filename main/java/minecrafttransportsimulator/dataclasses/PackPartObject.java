@@ -14,6 +14,7 @@ public class PackPartObject{
     public PartSkidConfig skid;
     public PartTreadConfig tread;
     public PartPropellerConfig propeller;
+    public PartBarrelConfig barrel;
     public PartCustomConfig custom;
     public List<PackPart> subParts = new ArrayList<PackPart>();
     public PartRenderingConfig rendering;
@@ -68,6 +69,10 @@ public class PackPartObject{
     	public short pitch;
     	public int diameter;
     	public int startingHealth;
+    }
+    
+    public class PartBarrelConfig{
+    	public int capacity;
     }
     
     public class PartCustomConfig{

@@ -130,7 +130,7 @@ public final class MTSRegistry{
 	public static final Item itemBlockEngineBench = new ItemBlock(engineBench);
 	public static final Block wheelBench = new BlockPartBench("pontoon", "skid", "tread", "wheel");
 	public static final Item itemBlockWheelBench = new ItemBlock(wheelBench);
-	public static final Block seatBench = new BlockPartBench("seat", "crate");
+	public static final Block seatBench = new BlockPartBench("seat", "crate", "barrel");
 	public static final Item itemBlockSeatBench = new ItemBlock(seatBench);
 	public static final Block customBench = new BlockPartBench("custom");
 	public static final Item itemBlockCustomBench = new ItemBlock(customBench);

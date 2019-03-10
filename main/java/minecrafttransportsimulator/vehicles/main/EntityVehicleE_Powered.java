@@ -17,12 +17,14 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -115,7 +117,19 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 			
 			//Oh, and add explosions.  Because those are always fun.
 			if(ConfigSystem.getBooleanConfig("Explosions")){
-				worldObj.newExplosion(this, x, y, z, (float) (fuel/1000F + 1F), true, true);
+				double fuelPresent = this.fuel;
+				for(APart part : getVehicleParts()){
+					if(part instanceof PartBarrel){
+						PartBarrel barrel = (PartBarrel) part;
+						if(barrel.getFluid() != null){
+							double fuelFactor = ConfigSystem.getFuelValue(FluidRegistry.getFluidName(barrel.getFluid().getFluid()));
+							if(fuelFactor > 0){
+								fuelPresent += barrel.getFluidAmount()*fuelFactor;
+							}
+						}
+					}
+				}
+				worldObj.newExplosion(this, x, y, z, (float) (fuelPresent/1000F + 1F), true, true);
 			}
 		}
 	}

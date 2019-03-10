@@ -16,6 +16,7 @@ import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.vehicles.parts.PartCrate;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.entity.Entity;
@@ -359,6 +360,8 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		for(APart part : this.getVehicleParts()){
 			if(part instanceof PartCrate){
 				currentMass += calculateInventoryWeight(((PartCrate) part).crateInventory);
+			}else if(part instanceof PartBarrel){
+				currentMass += ((PartBarrel) part).getFluidAmount()/50;
 			}else{
 				currentMass += 50;
 			}

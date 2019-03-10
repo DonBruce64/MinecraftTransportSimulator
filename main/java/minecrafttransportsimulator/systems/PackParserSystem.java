@@ -21,6 +21,7 @@ import minecrafttransportsimulator.dataclasses.PackSignObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackFileDefinitions;
 import minecrafttransportsimulator.items.parts.AItemPart;
+import minecrafttransportsimulator.items.parts.ItemPartBarrel;
 import minecrafttransportsimulator.items.parts.ItemPartCrate;
 import minecrafttransportsimulator.items.parts.ItemPartCustom;
 import minecrafttransportsimulator.items.parts.ItemPartEngineAircraft;
@@ -36,6 +37,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.vehicles.parts.PartCrate;
 import minecrafttransportsimulator.vehicles.parts.PartCustom;
 import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
@@ -331,6 +333,7 @@ public final class PackParserSystem{
     public static Class<? extends APart> getPartPartClass(String partName){
     	switch(getPartPack(partName).general.type){
 			case "crate": return PartCrate.class;
+			case "barrel": return PartBarrel.class;
 			case "engine_aircraft": return PartEngineAircraft.class;
 			case "engine_jet": return PartEngineJet.class;
 			case "engine_car": return PartEngineCar.class;
@@ -348,6 +351,7 @@ public final class PackParserSystem{
     public static Class<? extends AItemPart> getPartItemClass(String partName){
     	switch(getPartPack(partName).general.type){
 			case "crate": return ItemPartCrate.class;
+			case "barrel": return ItemPartBarrel.class;
 			case "engine_aircraft": return ItemPartEngineAircraft.class;
 			case "engine_jet": return ItemPartEngineJet.class;
 			case "engine_car": return ItemPartEngineCar.class;
