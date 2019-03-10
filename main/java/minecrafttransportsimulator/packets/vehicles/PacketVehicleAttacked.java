@@ -42,11 +42,10 @@ public class PacketVehicleAttacked extends APacketVehiclePlayer{
 								boolean isPlayerOP = player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
 								if(vehicle.ownerName.isEmpty() || player.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName) || isPlayerOP){
 									ItemStack stack = new ItemStack(MTSRegistry.vehicleItemMap.get(vehicle.vehicleName));
-									NBTTagCompound stackTag = new NBTTagCompound();
-									stackTag.setByte("brokenWindows", vehicle.brokenWindows);
+									NBTTagCompound stackTag = vehicle.writeToNBT(new NBTTagCompound());
 									stack.setTagCompound(stackTag);
 									vehicle.worldObj.spawnEntityInWorld(new EntityItem(vehicle.worldObj, vehicle.posX, vehicle.posY, vehicle.posZ, stack));
-									vehicle.destroyAtPosition(player.posX, player.posY, player.posZ, false);
+									vehicle.setDead();
 								}else{
 									MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehicleowned"), (EntityPlayerMP) player);
 								}

@@ -84,53 +84,53 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	@Override
 	public void setDead(){
 		if(!worldObj.isRemote){
-			for(VehicleInstrument instrument : this.instruments.values()){
-				ItemStack stack = new ItemStack(MTSRegistry.instrumentItemMap.get(instrument.name));
-				worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
-			}
 			MTS.MTSNet.sendToAll(new PacketVehicleClientRemoval(this));
 		}
 		super.setDead();
 	}
 	
 	@Override
-	public void destroyAtPosition(double x, double y, double z, boolean crashed){
-		super.destroyAtPosition(x, y, z, crashed);
-		if(crashed){
-			//First find the controller to see who to display as the killer in the death message.
-			Entity controller = null;
-			for(Entity passenger : this.getPassengers()){
-				if(this.getSeatForRider(passenger).isController && controller != null){
-					controller = passenger;
-					break;
-				}
+	public void destroyAtPosition(double x, double y, double z){
+		super.destroyAtPosition(x, y, z);
+		//Spawn instruments in the world.
+		for(VehicleInstrument instrument : this.instruments.values()){
+			ItemStack stack = new ItemStack(MTSRegistry.instrumentItemMap.get(instrument.name));
+			worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
+		}
+		
+		//Now find the controller to see who to display as the killer in the death message.
+		Entity controller = null;
+		for(Entity passenger : this.getPassengers()){
+			if(this.getSeatForRider(passenger).isController && controller != null){
+				controller = passenger;
+				break;
 			}
-			
-			//Now damage all passengers, including the controller.
-			for(Entity passenger : this.getPassengers()){
-				if(passenger.equals(controller)){
-					passenger.attackEntityFrom(new DamageSourceCrash(null, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
-				}else{
-					passenger.attackEntityFrom(new DamageSourceCrash(controller, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
-				}
+		}
+		
+		//Now damage all passengers, including the controller.
+		for(Entity passenger : this.getPassengers()){
+			if(passenger.equals(controller)){
+				passenger.attackEntityFrom(new DamageSourceCrash(null, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
+			}else{
+				passenger.attackEntityFrom(new DamageSourceCrash(controller, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
 			}
-			
-			//Oh, and add explosions.  Because those are always fun.
-			if(ConfigSystem.getBooleanConfig("Explosions")){
-				double fuelPresent = this.fuel;
-				for(APart part : getVehicleParts()){
-					if(part instanceof PartBarrel){
-						PartBarrel barrel = (PartBarrel) part;
-						if(barrel.getFluid() != null){
-							double fuelFactor = ConfigSystem.getFuelValue(FluidRegistry.getFluidName(barrel.getFluid().getFluid()));
-							if(fuelFactor > 0){
-								fuelPresent += barrel.getFluidAmount()*fuelFactor;
-							}
+		}
+		
+		//Oh, and add explosions.  Because those are always fun.
+		if(ConfigSystem.getBooleanConfig("Explosions")){
+			double fuelPresent = this.fuel;
+			for(APart part : getVehicleParts()){
+				if(part instanceof PartBarrel){
+					PartBarrel barrel = (PartBarrel) part;
+					if(barrel.getFluid() != null){
+						double fuelFactor = ConfigSystem.getFuelValue(FluidRegistry.getFluidName(barrel.getFluid().getFluid()));
+						if(fuelFactor > 0){
+							fuelPresent += barrel.getFluidAmount()*fuelFactor;
 						}
 					}
 				}
-				worldObj.newExplosion(this, x, y, z, (float) (fuelPresent/1000F + 1F), true, true);
 			}
+			worldObj.newExplosion(this, x, y, z, (float) (fuelPresent/1000F + 1F), true, true);
 		}
 	}
 	

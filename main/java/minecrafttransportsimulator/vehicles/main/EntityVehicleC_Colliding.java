@@ -254,7 +254,7 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	
 					if(hardnessHitThisTick > currentMass/(0.75+velocity)/250F){
 						if(!worldObj.isRemote){
-							this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord, true);
+							this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
 						}
 						return -2;
 					}else if(collidedBlockPos.isEmpty()){
@@ -263,7 +263,7 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 				}
 				if(collisionDepth > 0.3){
 					if(!worldObj.isRemote){
-						this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord, true);
+						this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
 					}
 					return -2;	
 				}

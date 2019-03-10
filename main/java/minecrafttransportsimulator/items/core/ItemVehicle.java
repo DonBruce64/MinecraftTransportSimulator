@@ -6,11 +6,16 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackCollisionBox;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
+import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -36,16 +41,71 @@ public class ItemVehicle extends Item{
 				pos = pos.up();
 				String vehicleToSpawnName = ((ItemVehicle) heldStack.getItem()).vehicleName;
 				try{
+					//First construct the class.
 					Class<? extends EntityVehicleE_Powered> vehicleClass = PackParserSystem.getVehicleClass(vehicleToSpawnName);
 					Constructor<? extends EntityVehicleE_Powered> construct = vehicleClass.getConstructor(World.class, float.class, float.class, float.class, float.class, String.class);
 					EntityVehicleE_Powered newVehicle = construct.newInstance(world, pos.getX(), pos.getY(), pos.getZ(), player.rotationYaw, vehicleToSpawnName);
 					
-					float minHeight = 0;
+					//Now that the class exists, use the NTB data from this item to add back components.
+					if(stack.hasTagCompound()){
+						NBTTagCompound tagCompound = stack.getTagCompound();
+						//A-level
+						NBTTagList partTagList = tagCompound.getTagList("Parts", 10);
+						for(byte i=0; i<partTagList.tagCount(); ++i){
+							try{
+								NBTTagCompound partTag = partTagList.getCompoundTagAt(i);
+								PackPart packPart = newVehicle.getPackDefForLocation(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ"));
+								Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partTag.getString("partName"));
+								Constructor<? extends APart> partConstruct = partClass.getConstructor(EntityVehicleE_Powered.class, PackPart.class, String.class, NBTTagCompound.class);
+								APart savedPart = partConstruct.newInstance((EntityVehicleE_Powered) newVehicle, packPart, partTag.getString("partName"), partTag);
+								newVehicle.addPart(savedPart, true);
+							}catch(Exception e){
+								MTS.MTSLog.error("ERROR IN LOADING PART FROM NBT!");
+								e.printStackTrace();
+							}
+						}
+						
+						//B-level
+						newVehicle.locked=tagCompound.getBoolean("locked");
+						newVehicle.brokenWindows=tagCompound.getByte("brokenWindows");
+						newVehicle.ownerName=tagCompound.getString("ownerName");
+						newVehicle.displayText=tagCompound.getString("displayText");
+						
+						//C-level
+						
+						//D-level
+						newVehicle.parkingBrakeOn=tagCompound.getBoolean("parkingBrakeOn");
+						
+						//E-level
+						newVehicle.fuel=tagCompound.getDouble("fuel");
+						newVehicle.electricPower=tagCompound.getDouble("electricPower");
+						for(byte i = 0; i<newVehicle.pack.motorized.instruments.size(); ++i){
+							if(tagCompound.hasKey("instrumentInSlot" + i)){
+								String instrumentInSlot = tagCompound.getString("instrumentInSlot" + i);
+								VehicleInstrument instrument = new VehicleInstrument(instrumentInSlot);
+								//Check to prevent loading of faulty instruments for the wrong vehicle due to updates or stupid people.
+								if(instrument != null && instrument.pack.general.validVehicles.contains(newVehicle.pack.general.type)){
+									newVehicle.setInstrumentInSlot(i, instrumentInSlot);
+								}
+							}
+						}
+					}
+					
+					//Get how far above the ground the vehicle needs to be, and move it to that position.
+					//First boost Y based on collision boxes.
+					double minHeight = 0;
 					for(PackCollisionBox collisionBox : newVehicle.pack.collision){
 						minHeight = Math.min(collisionBox.pos[1] - collisionBox.height/2F, minHeight);
 					}
-					newVehicle.posY += -minHeight;
 					
+					//Next, boost based on parts.
+					for(APart part : newVehicle.getVehicleParts()){
+						minHeight = Math.min(part.offset.xCoord - part.getHeight()/2F, minHeight);
+					}
+					
+					//Apply the boost, and check collisions.
+					//If the core collisions are colliding, set the vehicle as dead and abort.
+					newVehicle.posY += -minHeight;
 					for(VehicleAxisAlignedBB coreBox : newVehicle.getCurrentCollisionBoxes()){
 						if(world.collidesWithAnyBlock(coreBox)){
 							newVehicle.setDead();
@@ -53,10 +113,7 @@ public class ItemVehicle extends Item{
 						}
 					}
 					
-					//If we are using a picked-up vehicle make sure to get no free windows!
-					if(heldStack.hasTagCompound()){
-						newVehicle.brokenWindows = heldStack.getTagCompound().getByte("brokenWindows");
-					}
+					//If we didn't collide with anything, let the vehicle remain in the world.
 					world.spawnEntityInWorld(newVehicle);
 					if(!player.capabilities.isCreativeMode){
 						player.inventory.clearMatchingItems(heldStack.getItem(), heldStack.getItemDamage(), 1, heldStack.getTagCompound());

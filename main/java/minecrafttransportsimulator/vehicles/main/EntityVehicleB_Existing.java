@@ -335,13 +335,13 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	/**
-	 * Call this to remove this vehicle.  Set crashed to true to indicate a crash and damage players.
+	 * Call this to remove this vehicle.  This should be called when the vehicle has crashed, as it
+	 * ejects all parts and damages all players.
 	 * Explosions may not occur in crashes depending on config settings or a lack of fuel or explodable cargo.
 	 */
-	public void destroyAtPosition(double x, double y, double z, boolean crashed){
+	public void destroyAtPosition(double x, double y, double z){
 		this.setDead();
-		//If we are destroyed on the server, make sure to drop all the parts we have on the ground.
-		if(!worldObj.isRemote && !crashed){
+		if(!worldObj.isRemote){
 			for(APart part : getVehicleParts()){
 				if(part.getItemForPart() != null){
 					ItemStack partStack = new ItemStack(part.getItemForPart());
