@@ -47,8 +47,8 @@ public class ItemVehicle extends Item{
 					EntityVehicleE_Powered newVehicle = construct.newInstance(world, pos.getX(), pos.getY(), pos.getZ(), player.rotationYaw, vehicleToSpawnName);
 					
 					//Now that the class exists, use the NTB data from this item to add back components.
-					if(stack.hasTagCompound()){
-						NBTTagCompound tagCompound = stack.getTagCompound();
+					if(heldStack.hasTagCompound()){
+						NBTTagCompound tagCompound = heldStack.getTagCompound();
 						//A-level
 						NBTTagList partTagList = tagCompound.getTagList("Parts", 10);
 						for(byte i=0; i<partTagList.tagCount(); ++i){
