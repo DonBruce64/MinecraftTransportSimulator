@@ -290,6 +290,8 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		this.didRiderClickSeat = true;
 		riderSeats.put(rider.getEntityId(), seat);
 		rider.startRiding(this, true);
+		//Set the player's yaw to the same yaw as the vehicle to ensure we don't have 360+ rotations to deal with.
+		rider.rotationYaw =  (float) (this.rotationYaw + seat.partRotation.yCoord);
 		if(!worldObj.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, true));
 		}
