@@ -183,6 +183,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//Those need to be rendered after the player if the player is rendered manually.
 		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
 			GL11.glPushMatrix();
+			GL11.glShadeModel(GL11.GL_SMOOTH);
 			GL11.glRotated(rotateYaw, 0, 1, 0);
 	        GL11.glRotated(rotatePitch, 1, 0, 0);
 	        GL11.glRotated(rotateRoll, 0, 0, 1);
@@ -196,6 +197,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			if(Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()){
 				renderBoundingBoxes(vehicle);
 			}
+			GL11.glShadeModel(GL11.GL_FLAT);
 			GL11.glPopMatrix();
 		}
 		
@@ -316,7 +318,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			List<TranslatablePart> translatableParts = new ArrayList<TranslatablePart>();
 			List<LightPart> lightParts = new ArrayList<LightPart>();
 			List<WindowPart> windows = new ArrayList<WindowPart>();
-			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(new ResourceLocation(vehicle.vehicleName.substring(0, vehicle.vehicleName.indexOf(':')), "objmodels/vehicles/" + vehicle.vehicleJSONName + ".obj"));
+			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(vehicle.vehicleName.substring(0, vehicle.vehicleName.indexOf(':')), "objmodels/vehicles/" + vehicle.vehicleJSONName + ".obj");
 			int displayListIndex = GL11.glGenLists(1);
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 			GL11.glBegin(GL11.GL_TRIANGLES);
@@ -451,7 +453,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}else if(!partDisplayLists.containsKey(partModelLocation)){
 				List<RotatablePart> rotatableParts = new ArrayList<RotatablePart>();
     			List<LightPart> lightParts = new ArrayList<LightPart>();
-				Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation);
+				Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation.getResourceDomain(), partModelLocation.getResourcePath());
     			int displayListIndex = GL11.glGenLists(1);
     			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
     			GL11.glBegin(GL11.GL_TRIANGLES);

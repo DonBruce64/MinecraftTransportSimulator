@@ -12,8 +12,8 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackDecorObject;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
+import minecrafttransportsimulator.dataclasses.PackVehicleObject;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.parts.AItemPart;
@@ -180,7 +180,7 @@ public class GUIManual extends GuiScreen{
 					GL11.glRotatef(35.264F, 1, 0, 1);
 					GL11.glScalef(scale, scale, scale);
 					GL11.glBegin(GL11.GL_TRIANGLES);
-					for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(modelLocation).entrySet()){
+					for(Entry<String, Float[][]> entry : OBJParserSystem.parseOBJModel(modelLocation.getResourceDomain(), modelLocation.getResourcePath()).entrySet()){
 						for(Float[] vertex : entry.getValue()){
 							GL11.glTexCoord2f(vertex[3], vertex[4]);
 							GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);

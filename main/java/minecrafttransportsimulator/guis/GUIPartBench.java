@@ -172,14 +172,13 @@ public class GUIPartBench extends GuiScreen{
 				
 				//If we didn't find an existing model, parse one now.
 				if(!partDisplayLists.containsKey(partName)){
-					ResourceLocation vehicleModelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/vehicles/" + jsonName + ".obj");
-					parseModel(vehicleModelLocation);
+					parseModel(partName.substring(0, partName.indexOf(':')), "objmodels/vehicles/" + jsonName + ".obj");
 				}
 			}else{
 				if(PackParserSystem.getPartPack(partName).general.modelName != null){
-					parseModel(new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + PackParserSystem.getPartPack(partName).general.modelName + ".obj"));
+					parseModel(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + PackParserSystem.getPartPack(partName).general.modelName + ".obj");
 				}else{
-					parseModel(new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + ".obj"));
+					parseModel(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + ".obj");
 				}
 			}
 		}
@@ -290,14 +289,14 @@ public class GUIPartBench extends GuiScreen{
 		fontRendererObj.drawSplitString(I18n.format(itemMap.get(partName).getUnlocalizedName() + ".description"), guiLeft + 10, guiTop + 55, 120, Color.WHITE.getRGB());
 	}
     
-	private void parseModel(ResourceLocation partModelLocation){
+	private void parseModel(String partPack, String partModelLocation){
 		float minX = 999;
 		float maxX = -999;
 		float minY = 999;
 		float maxY = -999;
 		float minZ = 999;
 		float maxZ = -999;
-		Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation);
+		Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partPack, partModelLocation);
 		int displayListIndex = GL11.glGenLists(1);
 		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 		GL11.glBegin(GL11.GL_TRIANGLES);

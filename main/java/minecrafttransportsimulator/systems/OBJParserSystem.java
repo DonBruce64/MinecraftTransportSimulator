@@ -7,24 +7,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.lwjgl.util.vector.Vector3f;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.ResourceLocation;
-
 /**Class responsible for parsing OBJ models into arrays that can be fed to the GPU.
  * Much more versatile than the Forge system.
  * 
  * @author don_bruce
  */
 public final class OBJParserSystem{
-	public static Map<String, Float[][]> parseOBJModel(ResourceLocation location){
+	public static Map<String, Float[][]> parseOBJModel(String packID, String modelLocation){
 		try{
 			Map<String, Float[][]> partMap = new HashMap<String, Float[][]>();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(location).getInputStream()));
+			BufferedReader reader = new BufferedReader(new InputStreamReader (OBJParserSystem.class.getResourceAsStream("/assets/" + packID + "/" + modelLocation)));
 			
 			String partName = null;
 			final List<Float[]> vertexList = new ArrayList<Float[]>();
+			final List<Float[]> normalList = new ArrayList<Float[]>();
 			final List<Float[]> textureList = new ArrayList<Float[]>();
 			final List<String> faceList = new ArrayList<String>();
 			while(reader.ready()){
@@ -36,8 +32,9 @@ public final class OBJParserSystem{
 					//Declaration of an object.
 					//Save current part we are parsing (if any) and start new part.
 					if(partName != null){
-						partMap.put(partName, compileVertexArray(vertexList, textureList, faceList, partName.toLowerCase().contains("window")));
+						partMap.put(partName, compileVertexArray(vertexList, normalList, textureList, faceList, partName.toLowerCase().contains("window")));
 						vertexList.clear();
+						normalList.clear();
 						textureList.clear();
 						faceList.clear();
 					}
@@ -59,13 +56,20 @@ public final class OBJParserSystem{
 						coords[0] = Float.valueOf(line.substring(0, space));
 						coords[1] = 1 - Float.valueOf(line.substring(space + 1, vertexEnd));
 						textureList.add(coords);
+					}else if(line.startsWith("vn ")){
+						Float[] coords = new Float[3];
+						line = line.trim().substring(2, line.trim().length()).trim();
+						coords[0] = Float.valueOf(line.substring(0, line.indexOf(' ')));
+						coords[1] = Float.valueOf(line.substring(line.indexOf(' ') + 1, line.lastIndexOf(' ')));
+						coords[2] = Float.valueOf(line.substring(line.lastIndexOf(' ') + 1, line.length()));
+						normalList.add(coords);
 					}else if(line.startsWith("f ")){
 						faceList.add(line.trim().substring(2, line.trim().length()));
 					}
 				}
 			}
 			//End of file.  Save the last part in process and close the file.
-			partMap.put(partName, compileVertexArray(vertexList, textureList, faceList, partName.toLowerCase().contains("window")));
+			partMap.put(partName, compileVertexArray(vertexList, normalList, textureList, faceList, partName.toLowerCase().contains("window")));
 			reader.close();
 			return partMap;
 		}catch (Exception e){
@@ -74,30 +78,33 @@ public final class OBJParserSystem{
 		}
 	}
 	
-	private static Float[][] compileVertexArray(List<Float[]> vertexList, List<Float[]> textureList, List<String> faceList, boolean isWindow){
+	private static Float[][] compileVertexArray(List<Float[]> vertexList, List<Float[]> normalList, List<Float[]> textureList, List<String> faceList, boolean isWindow){
 		List<Integer[]> faceValues = new ArrayList<Integer[]>();
 		for(String faceString : faceList){
 			for(byte i=0; i<3; ++i){
+				//Get the face string in format X/Y/Z.  Use the space as a separator between vertices making up the face.
 				int defEnd = faceString.indexOf(' ');
 				String faceDef;
 				if(defEnd != -1){
+					//Take the faceDef from the faceString and store it.
 					faceDef = faceString.substring(0, defEnd);
 					faceString = faceString.substring(defEnd + 1);
 				}else{
+					//We are at the last face vertex here, so just mark the face as the existing string.
 					faceDef = faceString;
 					faceString = "";
 				}
-				int slash = faceDef.indexOf('/');
-				int faceEnd = faceDef.lastIndexOf('/') == slash ? faceDef.length() : faceDef.lastIndexOf('/');
-				int vertexNumber = Integer.valueOf(faceDef.substring(0, slash)) - 1;
-				//Make sure texture is defined for this shape before trying to load it in.
-				if(faceDef.substring(slash + 1, faceEnd).equals("")){
-					faceString = "";
-					break;
-				}else{
-					int textureNumber = Integer.valueOf(faceDef.substring(slash + 1, faceEnd)) - 1;
-					faceValues.add(new Integer[]{vertexNumber, textureNumber});
-				}
+				//Vertex number is the first entry before the slash.
+				//Texture number is the second entry between the two slashes.
+				//Normal number is the third entry after the second slash.
+				//Parse all these out and store them in the array.
+				int firstSlash = faceDef.indexOf('/');
+				int secondSlash = faceDef.lastIndexOf('/');
+				int vertexNumber = Integer.valueOf(faceDef.substring(0, firstSlash)) - 1;
+				int textureNumber = Integer.valueOf(faceDef.substring(firstSlash + 1, secondSlash)) - 1;
+				int normalNumber = Integer.valueOf(faceDef.substring(secondSlash + 1)) - 1;
+				faceValues.add(new Integer[]{vertexNumber, textureNumber, normalNumber});
+				
 			}
 			
 			if(!faceString.isEmpty()){
@@ -110,11 +117,12 @@ public final class OBJParserSystem{
 				}
 				
 				faceValues.add(faceValues.get(faceValues.size() - 1));
-				int slash = faceString.indexOf('/');
-				int faceEnd = faceString.lastIndexOf('/') == slash ? faceString.length() : faceString.lastIndexOf('/');
-				int vertexNumber = Integer.valueOf(faceString.substring(0, slash)) - 1;
-				int textureNumber = Integer.valueOf(faceString.substring(slash + 1, faceEnd)) - 1;
-				faceValues.add(new Integer[]{vertexNumber, textureNumber});
+				int firstSlash = faceString.indexOf('/');
+				int secondSlash = faceString.lastIndexOf('/');
+				int vertexNumber = Integer.valueOf(faceString.substring(0, firstSlash)) - 1;
+				int textureNumber = Integer.valueOf(faceString.substring(firstSlash + 1, secondSlash)) - 1;
+				int normalNumber = Integer.valueOf(faceString.substring(secondSlash + 1)) - 1;
+				faceValues.add(new Integer[]{vertexNumber, textureNumber, normalNumber});
 				faceValues.add(faceValues.get(faceValues.size() - 5));
 			}
 		}
@@ -123,9 +131,11 @@ public final class OBJParserSystem{
 		//Find the smallest face number and use that as the offset.
 		int vertexOffset = Integer.MAX_VALUE;
 		int textureOffset = Integer.MAX_VALUE;
+		int normalOffset = Integer.MAX_VALUE;
 		for(Integer[] face : faceValues){
 			vertexOffset = Math.min(vertexOffset, face[0]);
 			textureOffset = Math.min(textureOffset, face[1]);
+			normalOffset = Math.min(normalOffset, face[2]);
 		}
 		
 		//Populate the vertex array in order of the vertcies used in the faces.
@@ -157,24 +167,13 @@ public final class OBJParserSystem{
 				textureArray.add(textureList.get(face[1] - textureOffset));
 			}
 		}
-
-		//Finally, create a normal array from the vertex array.
-		List<Float[]> normalArray = new ArrayList<Float[]>();
-		for(int i=0; i<=vertexArray.size() - 3; i += 3){
-			Float[] faceVertex1 = vertexArray.get(i);
-			Float[] faceVertex2 = vertexArray.get(i + 1);
-			Float[] faceVertex3 = vertexArray.get(i + 2);
-			Vector3f v1 = new Vector3f(faceVertex1[0], faceVertex1[1], faceVertex1[2]);
-			Vector3f v2 = new Vector3f(faceVertex2[0], faceVertex2[1], faceVertex2[2]);
-			Vector3f v3 = new Vector3f(faceVertex3[0], faceVertex3[1], faceVertex3[2]);
-			Vector3f norm = Vector3f.cross(Vector3f.sub(v2, v1, null), Vector3f.sub(v3, v1, null), null).normalise(null);
-			
-			//Add once for each vertex that was parsed.
-			normalArray.add(new Float[]{norm.x, norm.y, norm.z});
-			normalArray.add(new Float[]{norm.x, norm.y, norm.z});
-			normalArray.add(new Float[]{norm.x, norm.y, norm.z});
-		}
 		
+		//Finally, populate the normal array.
+		List<Float[]> normalArray = new ArrayList<Float[]>();
+		for(Integer[] face : faceValues){
+			normalArray.add(normalList.get(face[2] - normalOffset));
+		}
+
 		//Compile arrays and return.
 		List<Float[]> compiledArray = new ArrayList<Float[]>();
 		for(int i=0; i<vertexArray.size(); ++i){
