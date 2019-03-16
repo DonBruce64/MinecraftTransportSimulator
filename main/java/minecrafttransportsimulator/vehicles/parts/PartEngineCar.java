@@ -8,7 +8,6 @@ import net.minecraft.nbt.NBTTagCompound;
 
 public class PartEngineCar extends APartEngine{
 	private byte currentGear;
-	private boolean spinningOut;
 	private double engineForce;
 	private final EntityVehicleF_Car car;
 
