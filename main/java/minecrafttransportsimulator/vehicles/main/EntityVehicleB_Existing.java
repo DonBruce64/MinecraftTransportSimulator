@@ -14,6 +14,7 @@ import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
@@ -336,20 +337,30 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	
 	/**
 	 * Call this to remove this vehicle.  This should be called when the vehicle has crashed, as it
-	 * ejects all parts and damages all players.
-	 * Explosions may not occur in crashes depending on config settings or a lack of fuel or explodable cargo.
+	 * ejects all parts and damages all players.  Explosions may not occur in crashes depending on config 
+	 * settings or a lack of fuel or explodable cargo.  Call only on the SERVER as this is for item-spawning 
+	 * code and player damage code.
 	 */
 	public void destroyAtPosition(double x, double y, double z){
 		this.setDead();
-		if(!worldObj.isRemote){
-			for(APart part : getVehicleParts()){
-				if(part.getItemForPart() != null){
-					ItemStack partStack = new ItemStack(part.getItemForPart());
-					NBTTagCompound stackTag = part.getPartNBTTag();
-					if(stackTag != null){
-						partStack.setTagCompound(stackTag);
-					}
-					worldObj.spawnEntityInWorld(new EntityItem(worldObj, part.partPos.xCoord, part.partPos.yCoord, part.partPos.zCoord, partStack));
+		//Remove all parts from the vehicle and place them as items.
+		for(APart part : getVehicleParts()){
+			if(part.getItemForPart() != null){
+				ItemStack partStack = new ItemStack(part.getItemForPart());
+				NBTTagCompound stackTag = part.getPartNBTTag();
+				if(stackTag != null){
+					partStack.setTagCompound(stackTag);
+				}
+				worldObj.spawnEntityInWorld(new EntityItem(worldObj, part.partPos.xCoord, part.partPos.yCoord, part.partPos.zCoord, partStack));
+			}
+		}
+		
+		//Also drop some crafting ingredients as items.
+		double crashItemDropPercentage = ConfigSystem.getDoubleConfig("CrashItemDropPercentage");
+		for(ItemStack craftingStack : PackParserSystem.getMaterials(this.vehicleName)){
+			for(byte i=0; i<craftingStack.stackSize; ++i){
+				if(this.rand.nextDouble() < crashItemDropPercentage){
+					worldObj.spawnEntityInWorld(new EntityItem(worldObj, this.posX, this.posY, this.posZ, new ItemStack(craftingStack.getItem(), 1, craftingStack.getMetadata())));
 				}
 			}
 		}

@@ -117,6 +117,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		}
 		
 		//Oh, and add explosions.  Because those are always fun.
+		//Note that this is done after spawning all parts here and in the super call,
+		//so although all parts are DROPPED, not all parts may actually survive the explosion.
 		if(ConfigSystem.getBooleanConfig("Explosions")){
 			double fuelPresent = this.fuel;
 			for(APart part : getVehicleParts()){

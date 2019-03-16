@@ -32,19 +32,21 @@ public final class ConfigSystem{
 		config = new Configuration(configFile);
 		config.load();
 		
+		//COMMON_CONFIG
 		integerConfigMap.put("RenderReductionHeight", config.get(COMMON_CONFIG, "RenderReductionHeight", 250, "When riding in a vehicle above this height MTS will reduce the render distance to 1.  \nThis provides a significant speedup for worldgen and render lag.  \nNote that this is only active on Singleplayer.").getInt());
 		doubleConfigMap.put("SpeedFactor", config.get(COMMON_CONFIG, "SpeedFactor", 0.35D, "Factor to apply to vehicle movement.  \n1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.").getDouble());
 		doubleConfigMap.put("FuelUsageFactor", config.get(COMMON_CONFIG, "FuelUsageFactor", 1.0D, "Factor times which engines use fuel.  \nChange this if you think engines use fuel too fast or slow.").getDouble());
 		doubleConfigMap.put("ClingSpeed", config.get(COMMON_CONFIG, "ClingSpeed", 0.25D, "Speed (in BLK/S) at which players start to slide off vehicles due to wind.  \nDoes not affect collision boxes set as interior in the vehicle JSON.").getDouble());
 		stringConfigMap.put("HeavyItems", config.get(COMMON_CONFIG, "HeavyItems", "diamond, iron, gold, coal, ore, stone", "Any item that contains these words will be counted as heavy (double mass) when considering plane mass.  \nChange and tweak to your liking.").getString());
 		
-		
+		//DAMAGE_CONFIG
 		booleanConfigMap.put("Explosions", config.get(DAMAGE_CONFIG, "Explosions", true, "Whether or not vehicles explode when crashed or shot down.").getBoolean());
 		booleanConfigMap.put("BlockBreakage", config.get(DAMAGE_CONFIG, "BlockBreakage", true, "Whether or not vehicles can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks.").getBoolean());
 		doubleConfigMap.put("PropellerDamageFactor", config.get(DAMAGE_CONFIG, "PropellerDamageFactor", 1.0D, "Factor for damage caused by a propeller.").getDouble());
 		doubleConfigMap.put("WheelDamageFactor", config.get(DAMAGE_CONFIG, "WheelDamageFactor", 1.0D, "Factor for damage caused by wheels on vehicles.").getDouble());
 		doubleConfigMap.put("CrashDamageFactor", config.get(DAMAGE_CONFIG, "CrashDamageFactor", 1.0D, "Factor for damage caused by crashes.").getDouble());
 		doubleConfigMap.put("EngineLeakProbability", config.get(DAMAGE_CONFIG, "EngineLeakProbability", 0.01D, "Chance an engine will spring a leak if hit.  \nExplosions cause 10x this chance.").getDouble());
+		doubleConfigMap.put("CrashItemDropPercentage", config.get(DAMAGE_CONFIG, "CrashItemDropPercentage", 0.75D, "Percent that a crafting ingredient will be dropped when a vehicle is crashed.  \nNote that fire/explosions may destroy these items if enabled, so just because they drop does not mean you will get all of them.").getDouble());
 		config.save();
 	}
 	
