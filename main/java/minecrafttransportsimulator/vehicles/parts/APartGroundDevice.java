@@ -51,7 +51,7 @@ public abstract class APartGroundDevice extends APart{
 		if(this.isOnGround()){
 			//If we aren't skipping angular calcs, change our velocity accordingly.
 			if(!skipAngularCalcs){
-				angularVelocity = (float) (vehicle.velocity/this.getHeight());
+				angularVelocity = (float) (vehicle.velocity/(this.getHeight()*Math.PI));
 			}
 			
 			//Check for colliding entities and damage them.

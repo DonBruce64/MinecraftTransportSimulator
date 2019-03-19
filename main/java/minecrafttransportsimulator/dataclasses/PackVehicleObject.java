@@ -47,6 +47,7 @@ public class PackVehicleObject{
         public boolean isBigTruck;
         public boolean isFrontWheelDrive;
         public boolean isRearWheelDrive;
+        public float axleRatio;
         public float dragCoefficient;
     }
     
