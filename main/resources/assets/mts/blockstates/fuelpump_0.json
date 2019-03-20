@@ -1,0 +1,5 @@
+{
+    "variants": {
+        "normal": { "model": "mts:fuelpump", "y" : 180}
+    }
+}

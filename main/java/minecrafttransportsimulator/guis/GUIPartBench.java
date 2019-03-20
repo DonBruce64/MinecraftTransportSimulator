@@ -12,7 +12,7 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.core.BlockPartBench;
+import minecrafttransportsimulator.blocks.core.BlockBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
@@ -63,7 +63,7 @@ public class GUIPartBench extends GuiScreen{
 	/**Part texture name.  Keyed by part name.*/
 	private final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
 	
-	public GUIPartBench(BlockPartBench bench, EntityPlayer player){
+	public GUIPartBench(BlockBench bench, EntityPlayer player){
 		this.partTypes = bench.partTypes;
 		this.player = player;
 		this.isForVehicles = this.partTypes.contains("plane") || this.partTypes.contains("car");

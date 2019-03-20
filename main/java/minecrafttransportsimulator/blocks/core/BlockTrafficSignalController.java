@@ -3,8 +3,8 @@ package minecrafttransportsimulator.blocks.core;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import net.minecraft.block.material.Material;
+import minecrafttransportsimulator.items.blocks.ItemBlockRotatable;
+import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -13,14 +13,10 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public class BlockTrafficSignalController extends ABlockRotateable{
+public class BlockTrafficSignalController extends BlockRotatable implements ITileEntityProvider{
 		
-	public BlockTrafficSignalController(){
-		super(Material.ROCK);
-		this.fullBlock = false;
-		this.setHardness(5.0F);
-		this.setResistance(10.0F);
-		this.setCreativeTab(MTSRegistry.coreTab);
+	public BlockTrafficSignalController(EnumFacing orientation, ItemBlockRotatable item){
+		super(orientation, item);
 	}
 	
 	@Override
@@ -32,6 +28,12 @@ public class BlockTrafficSignalController extends ABlockRotateable{
 		}
 		return true;
 	}
+	
+	@Override
+    public void breakBlock(World world, BlockPos pos, IBlockState state){
+        super.breakBlock(world, pos, state);
+        world.removeTileEntity(pos);
+    }
 	
 	@Override
 	public TileEntityTrafficSignalController createNewTileEntity(World worldIn, int meta){

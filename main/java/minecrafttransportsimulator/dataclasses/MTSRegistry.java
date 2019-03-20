@@ -10,13 +10,15 @@ import java.util.Map;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.BlockDecor;
-import minecrafttransportsimulator.blocks.core.BlockFuelPump;
-import minecrafttransportsimulator.blocks.core.BlockPartBench;
-import minecrafttransportsimulator.blocks.core.BlockTrafficSignalController;
+import minecrafttransportsimulator.blocks.core.BlockRotatable;
 import minecrafttransportsimulator.blocks.pole.BlockPoleAttachment;
 import minecrafttransportsimulator.blocks.pole.BlockPoleNormal;
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
 import minecrafttransportsimulator.blocks.pole.BlockPoleWallConnector;
+import minecrafttransportsimulator.items.blocks.ItemBlockBench;
+import minecrafttransportsimulator.items.blocks.ItemBlockFuelPump;
+import minecrafttransportsimulator.items.blocks.ItemBlockRotatable;
+import minecrafttransportsimulator.items.blocks.ItemBlockTrafficSignalController;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemInstrument;
 import minecrafttransportsimulator.items.core.ItemKey;
@@ -110,6 +112,9 @@ public final class MTSRegistry{
 	/**Maps decor item names to items.  All decor items for all packs will be populated here.*/
 	public static Map<String, ItemDecor> decorItemMap = new LinkedHashMap<String, ItemDecor>();
 	
+	/**Maps rotatable blocks to their items.  Used to return the correct item when they are broken.*/
+	public static Map<BlockRotatable, ItemBlockRotatable> rotatableItemMap = new LinkedHashMap<BlockRotatable, ItemBlockRotatable>();
+	
 	/**Core creative tab for base MTS items**/
 	public static final CreativeTabCore coreTab = new CreativeTabCore();
 	
@@ -121,29 +126,20 @@ public final class MTSRegistry{
 	public static final Item wrench = new ItemWrench().setCreativeTab(coreTab);
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
 	
-	//Crafting bench blocks.
-	public static final Block vehicleBench = new BlockPartBench("plane", "car");
-	public static final Item itemBlockVehicleBench = new ItemBlock(vehicleBench);
-	public static final Block propellerBench = new BlockPartBench("propeller");
-	public static final Item itemBlockPropellerBench = new ItemBlock(propellerBench);
-	public static final Block engineBench = new BlockPartBench("engine_aircraft", "engine_jet", "engine_car");
-	public static final Item itemBlockEngineBench = new ItemBlock(engineBench);
-	public static final Block wheelBench = new BlockPartBench("pontoon", "skid", "tread", "wheel");
-	public static final Item itemBlockWheelBench = new ItemBlock(wheelBench);
-	public static final Block seatBench = new BlockPartBench("seat", "crate", "barrel");
-	public static final Item itemBlockSeatBench = new ItemBlock(seatBench);
-	public static final Block customBench = new BlockPartBench("custom");
-	public static final Item itemBlockCustomBench = new ItemBlock(customBench);
-	public static final Block instrumentBench = new BlockPartBench("instrument");
-	public static final Item itemBlockInstrumentBench = new ItemBlock(instrumentBench);
+	//Crafting benches.
+	public static final Item vehicleBench = new ItemBlockBench("plane", "car").createBlocks();
+	public static final Item propellerBench = new ItemBlockBench("propeller").createBlocks();
+	public static final Item engineBench = new ItemBlockBench("engine_aircraft", "engine_jet", "engine_car").createBlocks();
+	public static final Item wheelBench = new ItemBlockBench("pontoon", "skid", "tread", "wheel").createBlocks();
+	public static final Item seatBench = new ItemBlockBench("seat", "crate", "barrel").createBlocks();
+	public static final Item customBench = new ItemBlockBench("custom").createBlocks();
+	public static final Item instrumentBench = new ItemBlockBench("instrument").createBlocks();
 	
 	//Fuel pump.
-	public static final Block fuelPump = new BlockFuelPump().setCreativeTab(coreTab);		
-	public static final Item itemBlockFuelPump = new ItemBlock(fuelPump);
+	public static final Item fuelPump = new ItemBlockFuelPump().createBlocks();		
 	
 	//Traffic Controller
-	public static final Block trafficSignalController = new BlockTrafficSignalController();
-	public static final Item itemBlockTrafficSignalController = new ItemBlock(trafficSignalController);
+	public static final Item trafficSignalController = new ItemBlockTrafficSignalController().createBlocks();
 	
 	//Pole-based blocks.
 	public static final Block pole = new BlockPoleNormal(0.125F);
@@ -208,7 +204,7 @@ public final class MTSRegistry{
 	}
 	
 	/**
-	 * Registers all blocks present in this class.
+	 * Registers all blocks present in this class, as well as blocks for rotatable items.
 	 * Also adds the respective TileEntity if the block has one.
 	 */
 	@SubscribeEvent
@@ -226,6 +222,20 @@ public final class MTSRegistry{
 						if(!registeredTileEntityClasses.contains(tileEntityClass)){
 							GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
 							registeredTileEntityClasses.add(tileEntityClass);
+						}
+					}
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}else if(field.getType().equals(Item.class)){
+				try{
+					if(field.get(null) instanceof ItemBlockRotatable){
+						ItemBlockRotatable item = (ItemBlockRotatable) field.get(null);
+						for(byte i=0; i<item.blocks.length; ++i){
+							BlockRotatable block = item.blocks[i];
+							String name = field.getName().toLowerCase() + "_" + i;
+							event.getRegistry().register(block.setRegistryName(name).setUnlocalizedName(name));
+							rotatableItemMap.put(block, item);
 						}
 					}
 				}catch(Exception e){
@@ -384,7 +394,7 @@ public final class MTSRegistry{
 				'A', Items.IRON_INGOT,
 				'S', Items.STRING);
 		//Fuel pump
-		registerRecipe(new ItemStack(itemBlockFuelPump),
+		registerRecipe(new ItemStack(fuelPump),
 				"DED",
 				"CBC",
 				"AAA",
@@ -394,7 +404,7 @@ public final class MTSRegistry{
 				'D', new ItemStack(Items.DYE, 1, 1),
 				'E', Blocks.GLASS_PANE);
 		//Traffic Signal Controller
-		registerRecipe(new ItemStack(itemBlockTrafficSignalController),
+		registerRecipe(new ItemStack(trafficSignalController),
 				"AAA",
 				"BCB",
 				"DBD",
@@ -407,7 +417,7 @@ public final class MTSRegistry{
 	private static void initCraftingBenchItemRecipes(){
 		//Vehicle benches.  Need to iterate through all fence types.
 		for(Block fenceBlock : new Block[]{Blocks.OAK_FENCE, Blocks.SPRUCE_FENCE, Blocks.BIRCH_FENCE, Blocks.JUNGLE_FENCE, Blocks.ACACIA_FENCE, Blocks.DARK_OAK_FENCE}){
-			registerRecipe(new ItemStack(itemBlockVehicleBench),
+			registerRecipe(new ItemStack(vehicleBench),
 					"AAA",
 					"ACA",
 					"B B",
@@ -416,7 +426,7 @@ public final class MTSRegistry{
 					'C', Blocks.GLASS_PANE);
 		}
 		//Propeller bench
-		registerRecipe(new ItemStack(itemBlockPropellerBench),
+		registerRecipe(new ItemStack(propellerBench),
 				"AAA",
 				" BA",
 				"ACA",
@@ -424,7 +434,7 @@ public final class MTSRegistry{
 				'B', Items.DIAMOND,
 				'C', Blocks.ANVIL);
 		//Engine bench
-		registerRecipe(new ItemStack(itemBlockEngineBench),
+		registerRecipe(new ItemStack(engineBench),
 				"AAA",
 				"BDA",
 				" CC",
@@ -433,7 +443,7 @@ public final class MTSRegistry{
 				'C', Blocks.IRON_BLOCK,
 				'D', new ItemStack(Items.DYE, 1, 1));
 		//Wheel bench
-		registerRecipe(new ItemStack(itemBlockWheelBench),
+		registerRecipe(new ItemStack(wheelBench),
 				"A  ",
 				"ACC",
 				"BCC",
@@ -441,21 +451,21 @@ public final class MTSRegistry{
 				'B', Blocks.ANVIL,
 				'C', Blocks.PLANKS);
 		//Seat bench
-		registerRecipe(new ItemStack(itemBlockSeatBench),
+		registerRecipe(new ItemStack(seatBench),
 				"   ",
 				"ABA",
 				"A A",
 				'A', Items.IRON_INGOT,
 				'B', Items.IRON_AXE);
 		//Custom bench
-		registerRecipe(new ItemStack(itemBlockCustomBench),
+		registerRecipe(new ItemStack(customBench),
 				"AAA",
 				"ABA",
 				"AAA",
 				'A', Items.IRON_INGOT,
 				'B', Blocks.CRAFTING_TABLE);
 		//Instrument bench
-		registerRecipe(new ItemStack(itemBlockInstrumentBench),
+		registerRecipe(new ItemStack(instrumentBench),
 				"AGA",
 				"PRP",
 				"P P",

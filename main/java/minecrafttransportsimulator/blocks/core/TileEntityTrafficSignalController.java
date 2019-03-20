@@ -6,7 +6,7 @@ import java.util.List;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 
-public class TileEntityTrafficSignalController extends TileEntityRotatable{
+public class TileEntityTrafficSignalController extends TileEntityBase{
 	public boolean orientedOnX;
 	public boolean triggerMode;
 	public int greenMainTime;

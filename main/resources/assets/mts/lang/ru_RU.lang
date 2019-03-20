@@ -201,17 +201,17 @@ item.wrench.name=Механоключ транспортный
 item.key.name=Ключ
 item.manual.name=MTS Руководство (прочитай меня!)
 
-tile.vehiclebench.name=Чертежный стол
-tile.propellerbench.name=Пропеллерная установка
-tile.enginebench.name=Двигательный подъемник
-tile.wheelbench.name=Колесный станок
-tile.seatbench.name=Настольная пила
-tile.custombench.name=Специальный станок
-tile.instrumentbench.name=Инструментальный станок
+item.vehiclebench.name=Чертежный стол
+item.propellerbench.name=Пропеллерная установка
+item.enginebench.name=Двигательный подъемник
+item.wheelbench.name=Колесный станок
+item.seatbench.name=Настольная пила
+item.custombench.name=Специальный станок
+item.instrumentbench.name=Инструментальный станок
 
-tile.fuelpump.name=Топливная колонка
-tile.fuelpump.level=LVL:
-tile.fuelpump.dispensed=DISP:
+item.fuelpump.name=Топливная колонка
+item.fuelpump.level=LVL:
+item.fuelpump.dispensed=DISP:
 
 tile.pole.name=Опора
 tile.polebase.name=База опоры

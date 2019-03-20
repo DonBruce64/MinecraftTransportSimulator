@@ -3,9 +3,10 @@ package minecrafttransportsimulator.blocks.core;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.items.blocks.ItemBlockRotatable;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import net.minecraft.block.material.Material;
+import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -19,12 +20,10 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
-public class BlockFuelPump extends ABlockRotateable{
+public class BlockFuelPump extends BlockRotatable implements ITileEntityProvider{
 
-	public BlockFuelPump(){
-		super(Material.IRON);
-		this.setHardness(5.0F);
-		this.setResistance(10.0F);
+	public BlockFuelPump(EnumFacing orientation, ItemBlockRotatable item){
+		super(orientation, item);
 	}
 	
 	@Override
@@ -74,7 +73,13 @@ public class BlockFuelPump extends ABlockRotateable{
 	}
 	
 	@Override
-	public TileEntityRotatable createNewTileEntity(World worldIn, int meta){
+    public void breakBlock(World world, BlockPos pos, IBlockState state){
+        super.breakBlock(world, pos, state);
+        world.removeTileEntity(pos);
+    }
+	
+	@Override
+	public TileEntityFuelPump createNewTileEntity(World worldIn, int meta){
 		return new TileEntityFuelPump();
 	}
 }

@@ -2,7 +2,7 @@ package minecrafttransportsimulator;
 
 import java.io.File;
 
-import minecrafttransportsimulator.blocks.core.BlockPartBench;
+import minecrafttransportsimulator.blocks.core.BlockBench;
 import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController;
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
 import minecrafttransportsimulator.guis.GUIInstruments;
@@ -45,8 +45,8 @@ public class ClientProxy extends CommonProxy{
 	public void openGUI(Object clicked, EntityPlayer clicker){
 		if(clicked instanceof EntityVehicleE_Powered){
 			FMLCommonHandler.instance().showGuiScreen(new GUIInstruments((EntityVehicleE_Powered) clicked, clicker));
-		}else if(clicked instanceof BlockPartBench){
-			FMLCommonHandler.instance().showGuiScreen(new GUIPartBench((BlockPartBench) clicked, clicker));
+		}else if(clicked instanceof BlockBench){
+			FMLCommonHandler.instance().showGuiScreen(new GUIPartBench((BlockBench) clicked, clicker));
 		}else if(clicked instanceof ItemStack && ((ItemStack) clicked).getItem() instanceof ItemManual){
 			FMLCommonHandler.instance().showGuiScreen(new GUIManual((ItemStack) clicked));
 		}else if(clicked instanceof BlockPoleSign){

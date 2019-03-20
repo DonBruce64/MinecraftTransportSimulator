@@ -216,19 +216,19 @@ item.wrench.name=扳手
 item.key.name=鑰匙
 item.manual.name=MTS 模組說明書（讀我！）
 
-tile.vehiclebench.name=Drafting Table
-tile.propellerbench.name=螺旋槳工作台
-tile.enginebench.name=引擎升降機
-tile.wheelbench.name=輪子工作台
-tile.seatbench.name=鋸床
-tile.custombench.name=工具台
-tile.instrumentbench.name=儀表工作台
+item.vehiclebench.name=Drafting Table
+item.propellerbench.name=螺旋槳工作台
+item.enginebench.name=引擎升降機
+item.wheelbench.name=輪子工作台
+item.seatbench.name=鋸床
+item.custombench.name=工具台
+item.instrumentbench.name=儀表工作台
 
-tile.fuelpump.name=燃油泵
-tile.fuelpump.level=等級：
-tile.fuelpump.dispensed=分配：
+item.fuelpump.name=燃油泵
+item.fuelpump.level=等級：
+item.fuelpump.dispensed=分配：
 
-tile.trafficsignalcontroller.name=交通號誌控制器
+item.trafficsignalcontroller.name=交通號誌控制器
 
 tile.pole.name=桿子
 tile.polebase.name=桿子底座
