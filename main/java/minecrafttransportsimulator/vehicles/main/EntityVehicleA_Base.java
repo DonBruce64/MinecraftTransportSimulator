@@ -87,11 +87,6 @@ public abstract class EntityVehicleA_Base extends Entity{
 		}
 	}
 	
-	@Override
-	public void setDead(){
-		super.setDead();
-	}
-	
     @Override
     @SideOnly(Side.CLIENT)
     public void setPositionAndRotationDirect(double posX, double posY, double posZ, float yaw, float pitch, int posRotationIncrements, boolean teleport){
