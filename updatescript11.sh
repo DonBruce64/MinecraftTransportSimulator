@@ -84,6 +84,12 @@ if echo $FILE | grep -q "MTSRegistry"; then
 	sed -i '3iimport net.minecraft.util.ResourceLocation;' $FILE;
 fi
 
+#Particle bounding-box methods got an arbitrary name change.
+if echo $FILE | grep -q "PartBullet"; then
+	sed -i 's/getEntityBoundingBox(/getBoundingBox(/' $FILE
+	sed -i 's/setEntityBoundingBox(/setBoundingBox(/' $FILE
+fi
+
 #Need to import NonNullList anywhere we use it as it's new to 1.11.
 if grep -q "NonNullList" $FILE; then $(sed -i '3iimport net.minecraft.util.NonNullList;' $FILE); fi
 

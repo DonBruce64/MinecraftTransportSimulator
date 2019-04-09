@@ -15,6 +15,8 @@ public class PackPartObject{
     public PartTreadConfig tread;
     public PartPropellerConfig propeller;
     public PartBarrelConfig barrel;
+    public PartGunConfig gun;
+    public PartBulletConfig bullet;
     public PartCustomConfig custom;
     public List<PackPart> subParts = new ArrayList<PackPart>();
     public PartRenderingConfig rendering;
@@ -73,6 +75,27 @@ public class PackPartObject{
     
     public class PartBarrelConfig{
     	public int capacity;
+    }
+    
+    public class PartGunConfig{
+    	public boolean autoReload;
+    	public int capacity;
+    	public int fireDelay;
+    	public int reloadTime;
+    	public int muzzleVelocity;
+    	public int minPitch;
+    	public int maxPitch;
+    	public int minYaw;
+    	public int maxYaw;
+    	public float diameter;
+    	public float length;
+    }
+    
+    public class PartBulletConfig{
+    	public String type;
+    	public int quantity;
+    	public float diameter;
+    	public float texturePercentage;
     }
     
     public class PartCustomConfig{

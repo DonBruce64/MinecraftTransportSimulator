@@ -24,10 +24,14 @@ import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
+import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
+import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.APartGun;
+import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
@@ -36,12 +40,15 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**Class that handles all control operations.
  * Keybinding lists are initiated during the {@link ClientProxy} init method.
  * 
  * @author don_bruce
  */
+@SideOnly(Side.CLIENT)
 public final class ControlSystem{	
 	private static boolean joystickEnabled = false;
 	private static final int NULL_COMPONENT = 999;
@@ -263,6 +270,25 @@ public final class ControlSystem{
 		}
 	}
 	
+	private static void controlGun(EntityVehicleE_Powered vehicle, ControlsKeyboard gun){
+		PartSeat seat = vehicle.getSeatForRider(Minecraft.getMinecraft().thePlayer);
+		if(seat != null){
+			if(seat.isController){
+				for(APart part : vehicle.getVehicleParts()){
+					if(part instanceof APartGun && part.parentPart == null){
+						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().thePlayer.getEntityId() : -1));
+					}
+				}
+			}else{
+				for(APart part : seat.childParts){
+					if(part instanceof APartGun){
+						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().thePlayer.getEntityId() : -1));
+					}
+				}
+			}
+		}
+	}
+	
 	private static void controlAircraft(EntityVehicleF_Plane aircraft, boolean isPlayerController){
 		controlCamera(ControlsKeyboardDynamic.AIRCRAFT_CHANGEHUD, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEHUD, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
@@ -270,6 +296,7 @@ public final class ControlSystem{
 			return;
 		}
 		controlBrake(ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_PARK, aircraft.getEntityId());
+		controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN);
 		
 		//Open or close the panel.
 		if(ControlsKeyboard.AIRCRAFT_PANEL.isPressed()){
@@ -387,6 +414,7 @@ public final class ControlSystem{
 			return;
 		}
 		controlBrake(ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_PARK, car.getEntityId());
+		controlGun(car, ControlsKeyboard.CAR_GUN);
 		
 		//Change gas to on or off.
 		if(joystickMap.containsKey(ControlsJoystick.CAR_GAS.joystickAssigned) && ControlsJoystick.CAR_GAS.joystickButton != NULL_COMPONENT){
@@ -483,6 +511,7 @@ public final class ControlSystem{
 		AIRCRAFT_FLAPS_D(Keyboard.KEY_H, ControlsJoystick.AIRCRAFT_FLAPS_D, true),
 		AIRCRAFT_BRAKE(Keyboard.KEY_B, ControlsJoystick.AIRCRAFT_BRAKE, false),
 		AIRCRAFT_PANEL(Keyboard.KEY_U, ControlsJoystick.AIRCRAFT_PANEL, true),
+		AIRCRAFT_GUN(Keyboard.KEY_SPACE, ControlsJoystick.AIRCRAFT_GUN, false),
 		AIRCRAFT_ZOOM_I(Keyboard.KEY_PRIOR, ControlsJoystick.AIRCRAFT_ZOOM_I, true),
 		AIRCRAFT_ZOOM_O(Keyboard.KEY_NEXT, ControlsJoystick.AIRCRAFT_ZOOM_O, true),
 		AIRCRAFT_MOD(Keyboard.KEY_RSHIFT, ControlsJoystick.AIRCRAFT_MOD, false),
@@ -499,6 +528,7 @@ public final class ControlSystem{
 		CAR_START(Keyboard.KEY_Z, ControlsJoystick.CAR_START, false),
 		CAR_LIGHTS(Keyboard.KEY_X, ControlsJoystick.CAR_LIGHTS, true),
 		CAR_LIGHTS_SPECIAL(Keyboard.KEY_V, ControlsJoystick.CAR_LIGHTS_SPECIAL, true),
+		CAR_GUN(Keyboard.KEY_SPACE, ControlsJoystick.CAR_GUN, false),
 		CAR_ZOOM_I(Keyboard.KEY_PRIOR, ControlsJoystick.CAR_ZOOM_I, true),
 		CAR_ZOOM_O(Keyboard.KEY_NEXT, ControlsJoystick.CAR_ZOOM_O, true);
 		
@@ -552,6 +582,7 @@ public final class ControlSystem{
 		AIRCRAFT_BRAKE(false, false),
 		AIRCRAFT_PANEL(false, true),
 		AIRCRAFT_PARK(false, true),
+		AIRCRAFT_GUN(false, true),
 		AIRCRAFT_ZOOM_I(false, true),
 		AIRCRAFT_ZOOM_O(false, true),
 		AIRCRAFT_CHANGEVIEW(false, true),
@@ -583,6 +614,7 @@ public final class ControlSystem{
 		CAR_LIGHTS(false, true),
 		CAR_LIGHTS_SPECIAL(false, true),
 		CAR_PARK(false, true),
+		CAR_GUN(false, true),
 		CAR_ZOOM_I(false, true),
 		CAR_ZOOM_O(false, true),
 		CAR_CHANGEVIEW(false, true),

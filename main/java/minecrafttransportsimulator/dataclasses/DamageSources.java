@@ -55,4 +55,16 @@ public abstract class DamageSources extends DamageSource{
 			super(entityCrashed + "crash", playerResponsible);
 		}
 	};
+	
+	public static class DamageSourceBullet extends DamageSources{
+		public DamageSourceBullet(Entity playerResponsible, String bulletType){
+			super("bullet." + bulletType, playerResponsible);
+			if(bulletType.equals("incendiary")){
+				this.setFireDamage();
+			}else if(bulletType.equals("armor_piercing")){
+				this.setDamageBypassesArmor();
+			}
+			//We don't need explosive damage here as that spawns explosions that will damage the player instead.
+		}
+	};
 }

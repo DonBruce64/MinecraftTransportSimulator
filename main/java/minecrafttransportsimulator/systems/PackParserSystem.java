@@ -22,6 +22,7 @@ import minecrafttransportsimulator.dataclasses.PackVehicleObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackFileDefinitions;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.items.parts.ItemPartBarrel;
+import minecrafttransportsimulator.items.parts.ItemPartBullet;
 import minecrafttransportsimulator.items.parts.ItemPartCrate;
 import minecrafttransportsimulator.items.parts.ItemPartCustom;
 import minecrafttransportsimulator.items.parts.ItemPartEngineAircraft;
@@ -31,6 +32,7 @@ import minecrafttransportsimulator.items.parts.ItemPartGroundDevicePontoon;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceSkid;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceTread;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceWheel;
+import minecrafttransportsimulator.items.parts.ItemPartGun;
 import minecrafttransportsimulator.items.parts.ItemPartPropeller;
 import minecrafttransportsimulator.items.parts.ItemPartSeat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -47,6 +49,7 @@ import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceSkid;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceWheel;
+import minecrafttransportsimulator.vehicles.parts.PartGunFixed;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
@@ -343,6 +346,10 @@ public final class PackParserSystem{
 			case "tread": return PartGroundDeviceTread.class;
 			case "propeller": return PartPropeller.class;
 			case "seat": return PartSeat.class;
+			case "gun_fixed": return PartGunFixed.class;
+			//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
+			//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
+			//case "bullet": return PartBullet.class;
 			case "custom": return PartCustom.class;
 			default: return null;
 		}
@@ -361,6 +368,8 @@ public final class PackParserSystem{
 			case "tread": return ItemPartGroundDeviceTread.class;
 			case "propeller": return ItemPartPropeller.class;
 			case "seat": return ItemPartSeat.class;
+			case "gun_fixed": return ItemPartGun.class;
+			case "bullet": return ItemPartBullet.class;
 			case "custom": return ItemPartCustom.class;
 			default: return null;
 		}

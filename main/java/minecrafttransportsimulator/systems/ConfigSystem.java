@@ -45,6 +45,7 @@ public final class ConfigSystem{
 		doubleConfigMap.put("PropellerDamageFactor", config.get(DAMAGE_CONFIG, "PropellerDamageFactor", 1.0D, "Factor for damage caused by a propeller.").getDouble());
 		doubleConfigMap.put("WheelDamageFactor", config.get(DAMAGE_CONFIG, "WheelDamageFactor", 1.0D, "Factor for damage caused by wheels on vehicles.").getDouble());
 		doubleConfigMap.put("CrashDamageFactor", config.get(DAMAGE_CONFIG, "CrashDamageFactor", 1.0D, "Factor for damage caused by crashes.").getDouble());
+		doubleConfigMap.put("BulletDamageFactor", config.get(DAMAGE_CONFIG, "BulletDamageFactor", 1.0D, "Factor for damage caused by bullets on vehicles.").getDouble());
 		doubleConfigMap.put("EngineLeakProbability", config.get(DAMAGE_CONFIG, "EngineLeakProbability", 0.01D, "Chance an engine will spring a leak if hit.  \nExplosions cause 10x this chance.").getDouble());
 		doubleConfigMap.put("CrashItemDropPercentage", config.get(DAMAGE_CONFIG, "CrashItemDropPercentage", 0.75D, "Percent that a crafting ingredient will be dropped when a vehicle is crashed.  \nNote that fire/explosions may destroy these items if enabled, so just because they drop does not mean you will get all of them.").getDouble());
 		config.save();

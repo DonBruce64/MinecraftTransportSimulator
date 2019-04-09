@@ -368,6 +368,31 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		}
 	}
 	
+	/**
+	 * This code is allow for this vehicle to be "attacked" without an entity present.
+	 * Normally the attack code will check the attacking entity to figure out what was
+	 * attacked on the vehicle, but for some situations this may not be desireable.
+	 * In particular, this is done for the particle-based bullet system as there are
+	 * no projectile entities to allow the attack system to automatically calculate
+	 * what was attacked on the vehicle.
+	 */
+	public void attackManuallyAtPosition(double x, double y, double z, DamageSource source, float damage){
+		//First check to see if we hit a part.
+		for(APart part : this.getVehicleParts()){
+			if(part.getAABBWithOffset(Vec3d.ZERO).isVecInside(new Vec3d(x, y, z))){
+				part.attackPart(source, damage);
+				return;
+			}
+		}
+		
+		//We didn't hit a part, so we must have hit a collision box.  Damage the main vehicle instead.
+		if(this.brokenWindows < pack.rendering.numberWindows){
+			++brokenWindows;
+			this.playSound(SoundEvents.BLOCK_GLASS_BREAK, 2.0F, 1.0F);
+			MTS.MTSNet.sendToAll(new PacketVehicleWindowBreak(this));
+		}
+	}
+	
 	protected float getCurrentMass(){
 		int currentMass = pack.general.emptyMass;
 		for(APart part : this.getVehicleParts()){

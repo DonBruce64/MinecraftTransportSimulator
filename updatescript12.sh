@@ -104,6 +104,12 @@ if echo $FILE | grep -q "PartGroundDevice"; then
 	sed -i 's/vehicle.world.getBlockState(pos).getBlock().slipperiness/vehicle.world.getBlockState(pos).getBlock().getSlipperiness(vehicle.world.getBlockState(pos), vehicle.world, pos, null)/' $FILE
 fi
 
+#VertexBuffer in Particle was changed to BufferBuilder.
+if echo $FILE | grep -q "PartBullet"; then
+	sed -i 's/VertexBuffer/BufferBuilder/' $FILE
+	sed -i 's/setEntityBoundingBox(/setBoundingBox(/' $FILE
+fi
+
 done
 
 #Now that we are done with changes, update build number in build.gradle and run buildscript.

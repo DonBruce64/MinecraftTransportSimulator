@@ -39,6 +39,7 @@ import minecrafttransportsimulator.packets.control.SirenPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
+import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
 import minecrafttransportsimulator.packets.general.PacketPackReload;
@@ -46,6 +47,8 @@ import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
+import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
+import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpConnection;
@@ -132,6 +135,7 @@ public final class MTSRegistry{
 	public static final Item engineBench = new ItemBlockBench("engine_aircraft", "engine_jet", "engine_car").createBlocks();
 	public static final Item wheelBench = new ItemBlockBench("pontoon", "skid", "tread", "wheel").createBlocks();
 	public static final Item seatBench = new ItemBlockBench("seat", "crate", "barrel").createBlocks();
+	public static final Item gunBench = new ItemBlockBench("gun_fixed", "gun_").createBlocks();
 	public static final Item customBench = new ItemBlockBench("custom").createBlocks();
 	public static final Item instrumentBench = new ItemBlockBench("instrument").createBlocks();
 	
@@ -167,7 +171,7 @@ public final class MTSRegistry{
 	
 	/**All run-time things go here.**/
 	public static void init(){
-		initVehicleEntities();
+		initEntities();
 		initPackets();
 		initCoreItemRecipes();
 		initCraftingBenchItemRecipes();
@@ -313,7 +317,7 @@ public final class MTSRegistry{
 	 * For vehicles we only register the main classes as
 	 * the pack data stored in NBT is what makes for different vehicles.
 	 */
-	private static void initVehicleEntities(){
+	private static void initEntities(){
 		EntityRegistry.registerModEntity(EntityVehicleF_Car.class, "vehiclecar", entityNumber++, MTS.MODID, 80, 5, false);
 		EntityRegistry.registerModEntity(EntityVehicleF_Plane.class, "vehicleplane", entityNumber++, MTS.MODID, 80, 5, false);
 	}
@@ -335,7 +339,9 @@ public final class MTSRegistry{
 		registerPacket(TrimPacket.class, TrimPacket.Handler.class, true, true);
 		
 		//Packets in packets.general
+		registerPacket(PacketBulletHit.class, PacketBulletHit.Handler.class, true, true);
 		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);
+		registerPacket(PacketPartGunReload.class, PacketPartGunReload.Handler.class, true, false);
 		registerPacket(PacketManualPageUpdate.class, PacketManualPageUpdate.Handler.class, false, true);
 		registerPacket(PacketPackReload.class, PacketPackReload.Handler.class, false, true);
 		registerPacket(PacketPlayerCrafting.class, PacketPlayerCrafting.Handler.class, false, true);
@@ -366,6 +372,7 @@ public final class MTSRegistry{
 		registerPacket(PacketPartEngineDamage.class, PacketPartEngineDamage.Handler.class, true, false);
 		registerPacket(PacketPartEngineSignal.class, PacketPartEngineSignal.Handler.class, true, true);
 		registerPacket(PacketPartGroundDeviceWheelFlat.class, PacketPartGroundDeviceWheelFlat.Handler.class, true, false);
+		registerPacket(PacketPartGunSignal.class, PacketPartGunSignal.Handler.class, true, true);
 		registerPacket(PacketPartInteraction.class, PacketPartInteraction.Handler.class, false, true);
 		registerPacket(PacketPartSeatRiderChange.class, PacketPartSeatRiderChange.Handler.class, true, false);
 	}
