@@ -260,13 +260,23 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlBrake(ControlsKeyboardDynamic dynamic, ControlsJoystick pBrake, int entityID){
-		if(dynamic.isPressed() || pBrake.isPressed()){
-			MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 12));
-		}else if(dynamic.mainControl.isPressed()){
-			MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 11));
+	private static void controlBrake(ControlsKeyboardDynamic dynamic, ControlsJoystick analogBrake, ControlsJoystick pBrake, int entityID){
+		if(joystickMap.containsKey(analogBrake.joystickAssigned) && analogBrake.joystickButton != NULL_COMPONENT){
+			if(pBrake.isPressed()){
+				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 12));
+			}else if(getJoystickAxisState(analogBrake, (short) 0) > 25){
+				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 11));
+			}else{
+				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 2));
+			}
 		}else{
-			MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 2));
+			if(dynamic.isPressed() || pBrake.isPressed()){
+				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 12));
+			}else if(dynamic.mainControl.isPressed()){
+				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 11));
+			}else{
+				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 2));
+			}
 		}
 	}
 	
@@ -295,7 +305,7 @@ public final class ControlSystem{
 		if(!isPlayerController){
 			return;
 		}
-		controlBrake(ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_PARK, aircraft.getEntityId());
+		controlBrake(ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_BRAKE_ANALOG, ControlsJoystick.AIRCRAFT_PARK, aircraft.getEntityId());
 		controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN);
 		
 		//Open or close the panel.
@@ -413,7 +423,7 @@ public final class ControlSystem{
 		if(!isPlayerController){
 			return;
 		}
-		controlBrake(ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_PARK, car.getEntityId());
+		controlBrake(ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE_ANALOG, ControlsJoystick.CAR_PARK, car.getEntityId());
 		controlGun(car, ControlsKeyboard.CAR_GUN);
 		
 		//Change gas to on or off.
@@ -580,6 +590,7 @@ public final class ControlSystem{
 		AIRCRAFT_FLAPS_U(false, true),
 		AIRCRAFT_FLAPS_D(false, true),
 		AIRCRAFT_BRAKE(false, false),
+		AIRCRAFT_BRAKE_ANALOG(true, false),
 		AIRCRAFT_PANEL(false, true),
 		AIRCRAFT_PARK(false, true),
 		AIRCRAFT_GUN(false, true),
@@ -606,6 +617,7 @@ public final class ControlSystem{
 		CAR_TURN(true, false),
 		CAR_GAS(true, false),
 		CAR_BRAKE(false, false),
+		CAR_BRAKE_ANALOG(true, false),
 		CAR_SHIFT_U(false, true),
 		CAR_SHIFT_D(false, true),
 		CAR_HORN(false, false),
