@@ -240,6 +240,13 @@ public final class MTSRegistry{
 							String name = field.getName().toLowerCase() + "_" + i;
 							event.getRegistry().register(block.setRegistryName(name).setUnlocalizedName(name));
 							rotatableItemMap.put(block, item);
+							if(block instanceof ITileEntityProvider){
+								Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
+								if(!registeredTileEntityClasses.contains(tileEntityClass)){
+									GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
+									registeredTileEntityClasses.add(tileEntityClass);
+								}
+							}
 						}
 					}
 				}catch(Exception e){
