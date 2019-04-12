@@ -2,7 +2,10 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.items.core.ItemJumperCable;
+import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -10,10 +13,14 @@ import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.systems.SFXSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -38,6 +45,7 @@ public abstract class APartEngine extends APart implements FXPart{
 	private double ambientTemp;
 	private double engineHeat;
 	private double coolingFactor;
+	public APartEngine linkedEngine;
 	
 	//Rotation data.  Should be set by each engine type individually.
 	protected double engineRotationLast;
@@ -75,6 +83,41 @@ public abstract class APartEngine extends APart implements FXPart{
 	}
 	
 	@Override
+	public boolean interactPart(EntityPlayer player){
+		if(!vehicle.worldObj.isRemote){
+			//Check to see if the player is holding jumper cables.
+			//If so, and we aren't linked, do engine linking logic.
+			ItemStack heldStack = player.getHeldItemMainhand();
+			if(heldStack != null && heldStack.getItem() instanceof ItemJumperCable){
+				ItemJumperCable jumperCableItem = (ItemJumperCable) heldStack.getItem();
+				if(linkedEngine == null){
+					if(jumperCableItem.lastEngineClicked == null){
+						jumperCableItem.lastEngineClicked = this;
+						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.firstlink"), (EntityPlayerMP) player);
+					}else if(!jumperCableItem.lastEngineClicked.equals(this)){
+						if(jumperCableItem.lastEngineClicked.vehicle.equals(this.vehicle)){
+							MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.samevehicle"), (EntityPlayerMP) player);
+							jumperCableItem.lastEngineClicked = null;
+						}else if(this.partPos.distanceTo(jumperCableItem.lastEngineClicked.partPos) < 15){
+							linkedEngine = jumperCableItem.lastEngineClicked;
+							jumperCableItem.lastEngineClicked.linkedEngine = this;
+							jumperCableItem.lastEngineClicked = null;
+							MTS.MTSNet.sendToAll(new PacketPartEngineLinked(this, linkedEngine));
+							MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.secondlink"), (EntityPlayerMP) player);	
+						}else{
+							MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.toofar"), (EntityPlayerMP) player);
+							jumperCableItem.lastEngineClicked = null;
+						}
+					}
+				}else{
+					MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.alreadylinked"), (EntityPlayerMP) player);
+				}
+			}
+		}
+		return true;
+    }
+	
+	@Override
 	public void attackPart(DamageSource source, float damage){
 		if(source.isExplosion()){
 			hours += damage*10;
@@ -96,6 +139,29 @@ public abstract class APartEngine extends APart implements FXPart{
 	public void updatePart(){
 		super.updatePart();
 		fuelFlow = 0;
+		
+		//Check to see if we are linked and need to equalize power between us and another engine.
+		if(linkedEngine != null){
+			if(linkedEngine.partPos.distanceTo(this.partPos) > 16){
+				linkedEngine.linkedEngine = null;
+				linkedEngine = null;
+				if(vehicle.worldObj.isRemote){
+					MTS.MTSNet.sendToAllAround(new PacketChat("interact.jumpercable.linkdropped"), new TargetPoint(vehicle.worldObj.provider.getDimension(), partPos.xCoord, partPos.yCoord, partPos.zCoord, 16));
+				}
+			}else if(vehicle.electricPower + 0.5 < linkedEngine.vehicle.electricPower){
+				linkedEngine.vehicle.electricPower -= 0.005F;
+				vehicle.electricPower += 0.005F;
+			}else if(vehicle.electricPower > linkedEngine.vehicle.electricPower + 0.5){
+				vehicle.electricPower -= 0.005F;
+				linkedEngine.vehicle.electricPower += 0.005F;
+			}else{
+				linkedEngine.linkedEngine = null;
+				linkedEngine = null;
+				if(vehicle.worldObj.isRemote){
+					MTS.MTSNet.sendToAllAround(new PacketChat("interact.jumpercable.powerequal"), new TargetPoint(vehicle.worldObj.provider.getDimension(), partPos.xCoord, partPos.yCoord, partPos.zCoord, 16));
+				}
+			}
+		}
 		
 		//Check to see if electric or hand starter can keep running.
 		if(state.esOn){

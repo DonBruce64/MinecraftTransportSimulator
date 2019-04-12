@@ -21,6 +21,7 @@ import minecrafttransportsimulator.items.blocks.ItemBlockRotatable;
 import minecrafttransportsimulator.items.blocks.ItemBlockTrafficSignalController;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemInstrument;
+import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.items.core.ItemKey;
 import minecrafttransportsimulator.items.core.ItemManual;
 import minecrafttransportsimulator.items.core.ItemVehicle;
@@ -45,6 +46,7 @@ import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
 import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
 import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
@@ -128,6 +130,7 @@ public final class MTSRegistry{
 	public static final Item manual = new ItemManual().setCreativeTab(coreTab);
 	public static final Item wrench = new ItemWrench().setCreativeTab(coreTab);
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
+	public static final Item jumperCable = new ItemJumperCable().setCreativeTab(coreTab);
 	
 	//Crafting benches.
 	public static final Item vehicleBench = new ItemBlockBench("plane", "car").createBlocks();
@@ -377,6 +380,7 @@ public final class MTSRegistry{
 		
 		//Packets in packets.parts
 		registerPacket(PacketPartEngineDamage.class, PacketPartEngineDamage.Handler.class, true, false);
+		registerPacket(PacketPartEngineLinked.class, PacketPartEngineLinked.Handler.class, true, false);
 		registerPacket(PacketPartEngineSignal.class, PacketPartEngineSignal.Handler.class, true, true);
 		registerPacket(PacketPartGroundDeviceWheelFlat.class, PacketPartGroundDeviceWheelFlat.Handler.class, true, false);
 		registerPacket(PacketPartGunSignal.class, PacketPartGunSignal.Handler.class, true, true);
@@ -407,6 +411,14 @@ public final class MTSRegistry{
 				" S ",
 				'A', Items.IRON_INGOT,
 				'S', Items.STRING);
+		//Jumper cables
+		registerRecipe(new ItemStack(jumperCable),
+				"I I",
+				"SRS",
+				"SSS",
+				'S', Items.STRING,
+				'R', Items.REDSTONE,
+				'I', Items.SHEARS);
 		//Fuel pump
 		registerRecipe(new ItemStack(fuelPump),
 				"DED",

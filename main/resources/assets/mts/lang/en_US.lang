@@ -38,6 +38,19 @@ interact.failure.seattaken=This seat is taken!
 interact.failure.vehiclelocked=This vehicle is locked!
 interact.failure.vehicleowned=You are not the owner of this vehicle and therefore cannot remove it or its parts!
 
+interact.fuelpump.connect=Fuel pump connected and pumping.
+interact.fuelpump.complete=Vehicle is full, disconnecting.
+interact.fuelpump.empty=Fuel pump is empty, disconnecting.
+interact.fuelpump.disconnect=Disconnecting and stopping pumping.
+
+interact.jumpercable.firstlink=Linking first engine to jumper cable.
+interact.jumpercable.secondlink=Engines linked.  Transmitting power.
+interact.jumpercable.linkdropped=The two engines have moved too far apart from one another.  Breaking link.
+interact.jumpercable.powerequal=The two engines now have the same battery level.  Breaking link.
+interact.jumpercable.alreadylinked=This engine is already linked to another engine and cannot be linked.
+interact.jumpercable.toofar=The two engines are too far away.  They should be no further than 16 blocks apart.
+interact.jumpercable.samevehicle=The two engines are on the same vehicle.  That's not going to work well...
+
 input.aircraft.mod=Mod
 input.aircraft.camlock=CamLock
 input.aircraft.yaw=Yaw
@@ -229,10 +242,16 @@ info.item.key.line2=Vehicle may only be opened with key.
 info.item.key.line3=Sneak-use to take ownership.
 info.item.key.line4=Sneak-use again to relinquish.
 info.item.key.line5=Owned vehicles may only be destroyed by you and OPs.
+info.item.jumpercable.line1=Use on an engine to select.
+info.item.jumpercable.line2=Use on second engine to link.
+info.item.jumpercable.line3=Linked engines will exchange power.
+info.item.jumpercable.line4=Engines will un-link when power is even, 
+info.item.jumpercable.line5=or if they get too far away.
 
 item.wrench.name=Wrench
 item.key.name=Key
 item.manual.name=MTS Manual (READ ME!)
+item.jumpercable.name=Jumper Cables
 
 item.vehiclebench.name=Drafting Table
 item.propellerbench.name=Propeller Bench
