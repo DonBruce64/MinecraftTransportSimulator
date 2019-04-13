@@ -14,6 +14,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTyp
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
@@ -90,7 +91,7 @@ public abstract class RenderInstruments{
 				//If not, increase the UV map height with the variable.
 				if(!component.dynamicVisibility){
 					layerHeight = component.visibleSectionHeight;
-					layerVStart = (float) ((64F + component.visibilityOffset + height - component.visibleSectionHeight/2F)/1024F);
+					layerVStart += (float) ((64F + component.visibilityOffset + height - component.visibleSectionHeight/2F)/1024F);
 					layerVEnd = layerVStart + component.visibleSectionHeight/1024F;
 				}else{
 					layerHeight = (float) (component.visibilityOffset + height);
@@ -106,7 +107,7 @@ public abstract class RenderInstruments{
 			}else if(lightsOn){
 				GL11.glEnable(GL11.GL_BLEND);
 				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-			    renderSquareUV(128, 128, 0, layerUStart, layerUEnd, layerVStart, layerVEnd);
+			    renderSquareUV(128, layerHeight, 0, layerUStart, layerUEnd, layerVStart, layerVEnd);
 			}
 			++currentLayer;
 			GL11.glPopMatrix();
@@ -142,6 +143,7 @@ public abstract class RenderInstruments{
 			case("fuel_flow"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).fuelFlow*20F*60F/1000F : 0;
 			case("temp"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).temp : 0;
 			case("oil"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).oilPressure : 0;
+			case("gear"): return vehicle.getEngineByNumber(engineNumber) != null ? ((PartEngineCar) vehicle.getEngineByNumber(engineNumber)).currentGear : 0;
 			default: return 0;
 		}
 	}

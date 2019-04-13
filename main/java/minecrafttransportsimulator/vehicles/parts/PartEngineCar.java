@@ -7,7 +7,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class PartEngineCar extends APartEngine{
-	private byte currentGear;
+	public byte currentGear;
 	private double engineForce;
 	private final EntityVehicleF_Car car;
 
