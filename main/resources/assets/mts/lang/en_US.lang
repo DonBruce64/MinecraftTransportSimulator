@@ -139,6 +139,8 @@ gui.vehicle_bench.controllers=Drivers/Pilots
 gui.vehicle_bench.passengers=Passengers
 gui.vehicle_bench.cargo=Cargo
 gui.vehicle_bench.mixed=Mixed
+gui.vehicle_bench.engine=Engine Size
+gui.vehicle_bench.wheel=Wheel Size
 
 gui.panel.navigationlights=NAV
 gui.panel.strobelights=STROBE

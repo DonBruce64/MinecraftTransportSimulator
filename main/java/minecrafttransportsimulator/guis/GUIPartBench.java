@@ -216,6 +216,10 @@ public class GUIPartBench extends GuiScreen{
 		byte passengers = 0;
 		byte cargo = 0;
 		byte mixed = 0;
+		float minFuelConsumption = 99;
+		float maxFuelConsumption = 0;
+		float minWheelSize = 99;
+		float maxWheelSize = 0;
 		for(PackPart part : pack.parts){
 			if(part.isController){
 				++controllers;
@@ -235,7 +239,30 @@ public class GUIPartBench extends GuiScreen{
 				}else if(canAcceptChest && canAcceptSeat){
 					++mixed;
 				}
+				
+				for(String partNameEntry : part.types){
+					if(partNameEntry.startsWith("engine")){
+						minFuelConsumption = Math.min(part.minValue, minFuelConsumption);
+						maxFuelConsumption = Math.max(part.maxValue, maxFuelConsumption);
+						break;
+					}
+				}
+				
+				if(part.types.contains("wheel")){
+					minWheelSize = Math.min(part.minValue, minWheelSize);
+					maxWheelSize = Math.max(part.maxValue, maxWheelSize);
+				}
 			}
+		}
+		
+		if(minFuelConsumption == 99){
+			minFuelConsumption = 0;
+			maxFuelConsumption = 99;
+		}
+		
+		if(minWheelSize == 99){
+			minWheelSize = 0;
+			maxWheelSize = 99;
 		}
 		
 		List<String> headerLines = new ArrayList<String>();
@@ -246,6 +273,9 @@ public class GUIPartBench extends GuiScreen{
 		headerLines.add(I18n.format("gui.vehicle_bench.passengers") + ":");
 		headerLines.add(I18n.format("gui.vehicle_bench.cargo") + ":");
 		headerLines.add(I18n.format("gui.vehicle_bench.mixed") + ":");
+		headerLines.add(I18n.format("gui.vehicle_bench.engine") + ":");
+		headerLines.add(I18n.format("gui.vehicle_bench.wheel") + ":");
+		
 		int lineOffset = 55;
 		for(String line : headerLines){
 			mc.fontRendererObj.drawStringWithShadow(line, guiLeft + 10, guiTop + lineOffset, Color.WHITE.getRGB());
@@ -260,6 +290,8 @@ public class GUIPartBench extends GuiScreen{
 		descriptiveLines.add(String.valueOf(passengers));
 		descriptiveLines.add(String.valueOf(cargo));
 		descriptiveLines.add(String.valueOf(mixed));
+		descriptiveLines.add(String.valueOf(minFuelConsumption) + "-" + String.valueOf(maxFuelConsumption));
+		descriptiveLines.add(String.valueOf(minWheelSize) + "-" + String.valueOf(maxWheelSize));
 		lineOffset = 55;
 		for(String line : descriptiveLines){
 			mc.fontRendererObj.drawStringWithShadow(line, guiLeft + 90, guiTop + lineOffset, Color.WHITE.getRGB());
