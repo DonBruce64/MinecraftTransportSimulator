@@ -147,6 +147,18 @@ public class GUIPartBench extends GuiScreen{
 			stackOffset += 18;
 		}
 		
+		//We render the text afterwards to ensure it doesn't render behind the items.
+		stackOffset = 9;
+		int itemTooltipBounds = 16;
+		for(ItemStack craftingStack : PackParserSystem.getMaterials(partName)){
+			if(mouseX > guiLeft + stackOffset && mouseX < guiLeft + stackOffset + itemTooltipBounds && mouseY > guiTop + 172 && mouseY < guiTop + 172 + itemTooltipBounds){
+				ItemStack renderedStack = new ItemStack(craftingStack.getItem(), craftingStack.stackSize, craftingStack.getMetadata() == Integer.MAX_VALUE ? 0 : craftingStack.getMetadata());
+				renderToolTip(renderedStack, guiLeft + stackOffset,  guiTop + 172);
+			}
+			stackOffset += 18;
+		}
+		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+		
 		//If we are for instruments, render the 2D item and be done.
 		if(this.isForInstruments){
 			GL11.glPushMatrix();
@@ -207,6 +219,8 @@ public class GUIPartBench extends GuiScreen{
 		GL11.glScalef(scale, scale, scale);
 		GL11.glCallList(partDisplayLists.get(partName));
 		GL11.glPopMatrix();
+		
+		
 		
 	}
 	
