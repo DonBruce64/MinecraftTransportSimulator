@@ -22,6 +22,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	private boolean isFlat;
 	private boolean contactThisTick = false;
 	private int ticksCalcsSkipped = 0;
+	private float prevAngularVelocity;
 	
 	public PartGroundDeviceWheel(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
@@ -44,10 +45,11 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	
 	@Override
 	public void updatePart(){
+		prevAngularVelocity = angularVelocity;
 		super.updatePart();
 		if(this.isOnGround()){
 			//Set contact for wheel skid.
-			if(angularVelocity/(vehicle.velocity/this.getHeight()) < 0.25 && vehicle.velocity > 0.3){
+			if(prevAngularVelocity/(vehicle.velocity/(this.getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
 				BlockPos blockBelow = new BlockPos(partPos).down();
 				if(vehicle.worldObj.getBlockState(blockBelow).getBlockHardness(vehicle.worldObj, blockBelow) >= 1.5){
 					contactThisTick = true;
