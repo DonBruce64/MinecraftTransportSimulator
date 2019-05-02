@@ -248,7 +248,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 		
 		correctPack.turnsWithSteer = parentPack.turnsWithSteer;
 		correctPack.isController = subPack.isController;
-		correctPack.overrideMirror = parentPack.overrideMirror;
+		correctPack.overrideMirror = subPack.overrideMirror;
 		correctPack.types = subPack.types;
 		correctPack.customTypes = subPack.customTypes;
 		correctPack.minValue = subPack.minValue;

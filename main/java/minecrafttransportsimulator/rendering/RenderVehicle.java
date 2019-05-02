@@ -766,19 +766,20 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	
 	private static void renderLights(EntityVehicleE_Powered vehicle, float sunLight, float blockLight, float lightBrightness, float electricFactor, boolean wasRenderedPrior, float partialTicks){
 		List<LightPart> vehicleLights = vehicleLightLists.get(vehicle.vehicleJSONName);
-		Map<LightPart, APart> partLights = new HashMap<LightPart, APart>();
+		Map<Integer, APart> lightIndexToParts = new HashMap<Integer, APart>();
 		List<LightPart> allLights = new ArrayList<LightPart>();
 		allLights.addAll(vehicleLights);
 		for(APart part : vehicle.getVehicleParts()){
 			if(partLightLists.containsKey(part.getModelLocation())){
 				for(LightPart partLight : partLightLists.get(part.getModelLocation())){
+					lightIndexToParts.put(allLights.size(), part);
 					allLights.add(partLight);
-					partLights.put(partLight, part);
 				}
 			}
 		}
 		
-		for(LightPart light : allLights){
+		for(int lightIndex=0; lightIndex<allLights.size(); ++lightIndex){
+			LightPart light = allLights.get(lightIndex);
 			boolean lightSwitchOn = vehicle.isLightOn(light.type);
 			//Fun with bit shifting!  20 bits make up the light on index here, so align to a 20 tick cycle.
 			boolean lightActuallyOn = lightSwitchOn && ((light.flashBits >> vehicle.ticksExisted%20) & 1) > 0;
@@ -795,7 +796,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 					}
 				}
 			}else{
-				APart part = partLights.get(light);
+				APart part = lightIndexToParts.get(lightIndex);
 				GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
 				rotatePart(part, part.getActionRotation(partialTicks), false);
 				for(RotatablePart rotatable : partRotatableLists.get(part.getModelLocation())){
