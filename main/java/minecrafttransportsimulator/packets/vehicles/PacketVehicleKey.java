@@ -63,7 +63,7 @@ public class PacketVehicleKey extends APacketVehiclePlayer{
 				return "interact.key.info.own";
 			}else{
 				//Already owned, check to see if we can disown.
-				boolean isPlayerOP = player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
+				boolean isPlayerOP = player.getServer() == null || player.getServer().isSinglePlayer() || player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null;
 				if(player.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName) || isPlayerOP){
 					vehicle.ownerName = "";
 					return "interact.key.info.unown";	
