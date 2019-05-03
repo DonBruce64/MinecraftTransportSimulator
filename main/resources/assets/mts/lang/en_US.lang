@@ -1,9 +1,19 @@
 #Translated by don_bruce
 
 death.attack.propellor.null.null=%1$s was shredded by a propeller
-death.attack.propellor.null.player=%1$s was was shredded by a propeller while fighting %2$s
-death.attack.propellor.player.null=%1$s was shredded by %2$s using a propeller
-death.attack.propellor.player.player=%1$s was was shredded by %2$s using propeller while fighting %3$s
+death.attack.propellor.null.player=%1$s was shredded by a propeller while fighting %2$s
+death.attack.propellor.player.null=%1$s was shredded by %2$s's propeller
+death.attack.propellor.player.player=%1$s was shredded by %2$s's propeller while fighting %3$s
+
+death.attack.jet_intake.null.null=%1$s was sucked into a jet engine
+death.attack.jet_intake.null.player=%1$s was sucked into a jet engine while fighting %2$s
+death.attack.jet_intake.player.null=%1$s was sucked into %2$s's jet engine
+death.attack.jet_intake.player.player=%1$s was sucked into %2$s's jet engine while fighting %3$s
+
+death.attack.jet_exhaust.null.null=%1$s was burnt to a crisp by a jet engine
+death.attack.jet_exhaust.null.player=%1$s was burnt to a crisp by a jet engine while fighting %2$s
+death.attack.jet_exhaust.player.null=%1$s was burnt to a crisp by %2$s's jet engine
+death.attack.jet_exhaust.player.player=%1$s was burnt to a crisp by %2$s's jet engine while fighting %3$s
 
 death.attack.wheel.null.null=%1$s was run over
 death.attack.wheel.null.player=%1$s was was run over while fighting %2$s

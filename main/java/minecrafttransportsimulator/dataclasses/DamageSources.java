@@ -44,6 +44,12 @@ public abstract class DamageSources extends DamageSource{
 		}
 	};
 	
+	public static class DamageSourceJet extends DamageSources{
+		public DamageSourceJet(Entity playerResponsible, boolean intake){
+			super("jet" + (intake ? "_intake" : "_exhaust"), playerResponsible);
+		}
+	};
+	
 	public static class DamageSourceWheel extends DamageSources{
 		public DamageSourceWheel(Entity playerResponsible){
 			super("wheel", playerResponsible);

@@ -43,6 +43,7 @@ public final class ConfigSystem{
 		booleanConfigMap.put("Explosions", config.get(DAMAGE_CONFIG, "Explosions", true, "Whether or not vehicles explode when crashed or shot down.").getBoolean());
 		booleanConfigMap.put("BlockBreakage", config.get(DAMAGE_CONFIG, "BlockBreakage", true, "Whether or not vehicles can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks.").getBoolean());
 		doubleConfigMap.put("PropellerDamageFactor", config.get(DAMAGE_CONFIG, "PropellerDamageFactor", 1.0D, "Factor for damage caused by a propeller.").getDouble());
+		doubleConfigMap.put("JetDamageFactor", config.get(DAMAGE_CONFIG, "JetDamageFactor", 1.0D, "Factor for damage caused by a jet engine.").getDouble());
 		doubleConfigMap.put("WheelDamageFactor", config.get(DAMAGE_CONFIG, "WheelDamageFactor", 1.0D, "Factor for damage caused by wheels on vehicles.").getDouble());
 		doubleConfigMap.put("CrashDamageFactor", config.get(DAMAGE_CONFIG, "CrashDamageFactor", 1.0D, "Factor for damage caused by crashes.").getDouble());
 		doubleConfigMap.put("BulletDamageFactor", config.get(DAMAGE_CONFIG, "BulletDamageFactor", 1.0D, "Factor for damage caused by bullets on vehicles.").getDouble());

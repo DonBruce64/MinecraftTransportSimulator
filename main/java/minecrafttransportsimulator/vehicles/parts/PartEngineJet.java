@@ -1,8 +1,14 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import java.util.List;
+
+import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceJet;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class PartEngineJet extends APartEngine{
@@ -24,6 +30,45 @@ public class PartEngineJet extends APartEngine{
 			RPM += pack.engine.fuelConsumption*engineRPMDifference/(10 + pack.engine.gearRatios[0])/vehicle.airDensity;
 		}else if(!state.esOn){
 			RPM = Math.max(RPM + (plane.velocity - 0.0254*250*RPM/60/20)*15 - 10, 0);
+		}
+		
+		if(!vehicle.worldObj.isRemote){
+			if(RPM >= 5000){
+				//Check for entities in front of the jet, and damage them if they are.
+				List<EntityLivingBase> collidedEntites = vehicle.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(vehicle.headingVec).expand(-0.25F, -0.25F, -0.25F));
+				if(!collidedEntites.isEmpty()){
+					Entity attacker = null;
+					for(Entity passenger : vehicle.getPassengers()){
+						if(vehicle.getSeatForRider(passenger).isController){
+							attacker = passenger;
+							break;
+						}
+					}
+					for(int i=0; i < collidedEntites.size(); ++i){
+						if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
+							collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, true), (float) (ConfigSystem.getDoubleConfig("JetDamageFactor")*RPM/1000F));
+						}
+					}
+				}
+				
+				//Check for entities behind the jet, and damage them with fire if they are.
+				collidedEntites = vehicle.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(vehicle.headingVec.scale(-1.0D)).expand(0.25F, 0.25F, 0.25F));
+				if(!collidedEntites.isEmpty()){
+					Entity attacker = null;
+					for(Entity passenger : vehicle.getPassengers()){
+						if(vehicle.getSeatForRider(passenger).isController){
+							attacker = passenger;
+							break;
+						}
+					}
+					for(int i=0; i < collidedEntites.size(); ++i){
+						if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
+							collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, false), (float) (ConfigSystem.getDoubleConfig("JetDamageFactor")*RPM/2000F));
+							collidedEntites.get(i).setFire(5);
+						}
+					}
+				}
+			}
 		}
 		
 		engineRotationLast = engineRotation;
