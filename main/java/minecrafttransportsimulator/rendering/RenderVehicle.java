@@ -399,6 +399,14 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("trim_elevator"): return ((EntityVehicleF_Plane) vehicle).elevatorTrim/10F;
 			case("trim_rudder"): return ((EntityVehicleF_Plane) vehicle).rudderTrim/10F;
 			case("reverser"): return ((EntityVehicleF_Plane) vehicle).reversePercent/1F;
+		}
+		
+		//If we aren't a static variable, we are a part-specific variable.
+		//Take off the part following the _, and check for that instead.
+		byte index = (byte) (Byte.valueOf(variable.substring(variable.lastIndexOf('_') + 1)) - 1);
+		switch(variable.substring(0, variable.lastIndexOf('_'))){
+			case("magneto"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.magnetoOn ? 30 : 0) : 0;
+			case("starter"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.esOn ? 30 : 0) : 0;
 			default: return 0;
 		}
 	}
@@ -434,6 +442,14 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("trim_elevator"): return ((EntityVehicleF_Plane) vehicle).elevatorTrim/350F;
 			case("trim_rudder"): return ((EntityVehicleF_Plane) vehicle).rudderTrim/350F;
 			case("reverser"): return ((EntityVehicleF_Plane) vehicle).reversePercent/100F;
+		}
+		
+		//If we aren't a static variable, we are a part-specific variable.
+		//Take off the part following the _, and check for that instead.
+		byte index = (byte) (Byte.valueOf(variable.substring(variable.lastIndexOf('_') + 1)) - 1);
+		switch(variable.substring(0, variable.lastIndexOf('_'))){
+			case("magneto"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.magnetoOn ? 1 : 0) : 0;
+			case("starter"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.esOn ? 1 : 0) : 0;
 			default: return 0;
 		}
 	}
