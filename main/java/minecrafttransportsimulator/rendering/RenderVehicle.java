@@ -34,6 +34,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
+import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
@@ -535,6 +536,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			switch(variable){
 				case("engine"): return (float) engine.getEngineRotation(partialTicks);
 				case("driveshaft"): return (float) engine.getDriveshaftRotation(partialTicks);
+			}
+		}else if(part instanceof PartPropeller){
+			if(variable.equals("propellerpitch")){
+				return ((PartPropeller) part).currentPitch;
 			}
 		}
 		switch(variable){
