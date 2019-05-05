@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
@@ -18,11 +19,11 @@ import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.audio.SoundManager;
 import net.minecraft.client.particle.ParticleDrip;
 import net.minecraft.client.particle.ParticleSmokeNormal;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.sound.SoundLoadEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -113,10 +114,12 @@ public final class SFXSystem{
 	 * Runs right after SoundSystem start.
 	 * If we have the MC sound system saved, discard it as
 	 * it has been reset and is no longer valid.
+	 * Also clear out the playingSounds list as those sounds will have stopped.
 	 */
 	@SubscribeEvent
 	public static void on(SoundLoadEvent event){
 		mcSoundSystem = null;
+		playingSounds.clear();
 	}
 	
 	/**
@@ -125,18 +128,33 @@ public final class SFXSystem{
 	@SubscribeEvent
 	public static void on(WorldEvent.Unload event){
 		if(event.getWorld().isRemote){
-			for(Entity entity : event.getWorld().loadedEntityList){
-				if(entity instanceof EntityVehicleE_Powered){
-					for(VehicleSound sound : ((EntityVehicleE_Powered) entity).getSounds()){
-						String soundID = sound.getSoundUniqueName();
-						if(mcSoundSystem.playing(soundID)){
-							mcSoundSystem.stop(soundID);
-						}
-					}
+			for(String soundID : playingSounds){
+				if(mcSoundSystem.playing(soundID)){
+					mcSoundSystem.stop(soundID);
 				}
 			}
+			playingSounds.clear();
 		}
 	}
+	
+	/**
+	 * Check for orphaned sounds, and delete them if they are present.
+	 * We do this by verifying there is an entity with the given ID still present.
+	 * This can happen if something changes the entityID of a vehicle mid-game.
+	 * Usually another mod, but could be due to other reasons.
+	 */
+	@SubscribeEvent
+    public static void on(RenderWorldLastEvent event){
+		Iterator<String> soundIterator = playingSounds.iterator();
+		while(soundIterator.hasNext()){
+			String soundID = soundIterator.next();
+			int entityID = Integer.valueOf(soundID.substring(0, soundID.indexOf('_')));
+			if(Minecraft.getMinecraft().theWorld.getEntityByID(entityID) == null){
+				mcSoundSystem.stop(soundID);
+				soundIterator.remove();
+			}
+		}
+    }
 	
 	/**
 	 * Returns true if a player is determined to be inside a vehicle.

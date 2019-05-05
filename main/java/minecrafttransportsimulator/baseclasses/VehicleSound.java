@@ -90,7 +90,7 @@ public final class VehicleSound{
 	}
 	
 	public String getSoundUniqueName(){
-		return vehicle.getEntityId() + (optionalPart != null ? getSoundName() + String.valueOf(optionalPart.offset.xCoord) + String.valueOf(optionalPart.offset.yCoord) + String.valueOf(optionalPart.offset.zCoord) : getSoundName());
+		return vehicle.getEntityId() + "_" + (optionalPart != null ? getSoundName() + String.valueOf(optionalPart.offset.xCoord) + String.valueOf(optionalPart.offset.yCoord) + String.valueOf(optionalPart.offset.zCoord) : getSoundName());
 	}
 	
 	public boolean isSoundSourceActive(){
