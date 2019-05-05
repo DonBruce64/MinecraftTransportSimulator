@@ -132,7 +132,7 @@ public class PartEngineCar extends APartEngine{
 		
 		//Set engine and driveshaft rotations for rendering of parts of models.
 		engineRotationLast = engineRotation;
-		engineRotation += RPM*1200D/360D;
+		engineRotation += 360D*RPM/1200D;
 		
 		float driveShaftDesiredSpeed = -999F;
 		for(APartGroundDevice wheel : car.wheels){
