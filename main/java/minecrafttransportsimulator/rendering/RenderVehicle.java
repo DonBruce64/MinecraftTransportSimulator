@@ -559,11 +559,17 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}
 		switch(variable){
-			case("engine"): return (float) (part.vehicle.getEngineByNumber((byte) 0) != null ? part.vehicle.getEngineByNumber((byte) 0).getEngineRotation(partialTicks) : 0);
-			case("driveshaft"): return (float) (part.vehicle.getEngineByNumber((byte) 0) != null ? part.vehicle.getEngineByNumber((byte) 0).getDriveshaftRotation(partialTicks) : 0);
 			case("door"): return part.vehicle.parkingBrakeOn && part.vehicle.velocity == 0 && !part.vehicle.locked ? 60 : 0;
-			case("hood"): return part.vehicle.getEngineByNumber((byte) 0) == null ? 60 : 0;
 			case("steeringwheel"): return part.vehicle.getSteerAngle();
+		}
+		
+		//If we are an engine-specific variable, get the engine now.
+		//Otherwise, get the 1st engine.
+		APartEngine engine = (APartEngine) (part.parentPart instanceof APartEngine ? part.parentPart : part.vehicle.getEngineByNumber((byte) 0));
+		switch(variable){
+			case("engine"): return (float) (engine != null ? engine.getEngineRotation(partialTicks) : 0);
+			case("driveshaft"): return (float) (engine != null ? engine.getDriveshaftRotation(partialTicks) : 0);
+			case("hood"): return engine == null ? 60 : 0;
 			default: return 0;
 		}
 	}
