@@ -7,6 +7,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.guis.GUIConfig;
 import minecrafttransportsimulator.guis.GUIPackMissing;
@@ -102,14 +103,22 @@ public final class ClientEventSystem{
 			    	if(event.getItemStack().getItem() instanceof AItemPart && vehicle.pack != null){
 			    		Vec3d lookVec = player.getLook(1.0F);
         				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
+        				PackPartObject heldItemPack = PackParserSystem.getPartPack(((AItemPart) event.getItemStack().getItem()).partName);
 			    		for(float f=1.0F; f<4.0F; f += 0.1F){
 			    			for(Entry<Vec3d, PackPart> packPartEntry : vehicle.getAllPossiblePackParts().entrySet()){
-		    					Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey().addVector(0, 0.25F, 0), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
-		    					VehicleAxisAlignedBB partBox = new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0.5F, 0), 0.75F, 1.75F, false);
+		    					//If we are a custom part, use the custom hitbox.  Otherwise use the regular one.
+		    					VehicleAxisAlignedBB partBox;
+								if(packPartEntry.getValue().types.contains("custom") && heldItemPack.general.type.equals("custom")){
+									Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
+									partBox = new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset), packPartEntry.getKey(), heldItemPack.custom.width, heldItemPack.custom.height, false);		
+								}else{
+									Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey().addVector(0, 0.25F, 0), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
+									partBox = new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0.5F, 0), 0.75F, 1.75F, false);
+								}
 		    					
 		    					if(partBox.isVecInside(clickedVec)){
 		    						//Check to make sure this spot is valid (server gets final say).
-		    						if(packPartEntry.getValue().types.contains(PackParserSystem.getPartPack(((AItemPart) event.getItemStack().getItem()).partName).general.type)){
+		    						if(packPartEntry.getValue().types.contains(heldItemPack.general.type)){
 		    							//If we clicked an occupied spot with the same part type, don't do anything.
 		        						if(vehicle.getPartAtLocation(packPartEntry.getKey().xCoord, packPartEntry.getKey().yCoord, packPartEntry.getKey().zCoord) != null){
 		        							return;

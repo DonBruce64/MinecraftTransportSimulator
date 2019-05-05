@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSControls.Controls;
+import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackControl;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackDisplayText;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackInstrument;
@@ -1049,6 +1050,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 						isPresent = true;
 					}
 					
+					PackPartObject heldItemPack = PackParserSystem.getPartPack(heldItem.partName);
 					if(packPartEntry.getValue().types.contains(PackParserSystem.getPartPack(heldItem.partName).general.type)){
 						isHoldingPart = true;
 						if(heldItem.isPartValidForPackDef(packPartEntry.getValue())){
@@ -1058,7 +1060,13 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 							
 					if(!isPresent && isHoldingPart){
 						Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
-						AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.375F, (float) (offset.yCoord) - 0.5F, (float) (offset.zCoord) - 0.375F, (float) (offset.xCoord) + 0.375F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.375F);
+						//If we are a custom part, use the custom hitbox.  Otherwise use the regular one.
+						AxisAlignedBB box;
+						if(packPartEntry.getValue().types.contains("custom") && heldItemPack.general.type.equals("custom")){
+							box = new AxisAlignedBB((float) (offset.xCoord) - heldItemPack.custom.width/2F, (float) (offset.yCoord) - heldItemPack.custom.height/2F, (float) (offset.zCoord) - heldItemPack.custom.width/2F, (float) (offset.xCoord) + heldItemPack.custom.width/2F, (float) (offset.yCoord) + heldItemPack.custom.height/2F, (float) (offset.zCoord) + heldItemPack.custom.width/2F);		
+						}else{
+							box = new AxisAlignedBB((float) (offset.xCoord) - 0.375F, (float) (offset.yCoord) - 0.5F, (float) (offset.zCoord) - 0.375F, (float) (offset.xCoord) + 0.375F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.375F);
+						}
 						
 						GL11.glPushMatrix();
 						GL11.glDisable(GL11.GL_TEXTURE_2D);
