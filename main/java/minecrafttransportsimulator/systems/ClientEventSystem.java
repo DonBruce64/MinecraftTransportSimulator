@@ -105,7 +105,7 @@ public final class ClientEventSystem{
 			    		for(float f=1.0F; f<4.0F; f += 0.1F){
 			    			for(Entry<Vec3d, PackPart> packPartEntry : vehicle.getAllPossiblePackParts().entrySet()){
 		    					Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey().addVector(0, 0.25F, 0), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
-		    					VehicleAxisAlignedBB partBox = new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0.5F, 0), 1.0F, 1.75F, false);
+		    					VehicleAxisAlignedBB partBox = new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0.5F, 0), 0.75F, 1.75F, false);
 		    					
 		    					if(partBox.isVecInside(clickedVec)){
 		    						//Check to make sure this spot is valid (server gets final say).

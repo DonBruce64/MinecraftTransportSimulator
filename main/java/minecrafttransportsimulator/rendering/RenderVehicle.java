@@ -1058,7 +1058,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 							
 					if(!isPresent && isHoldingPart){
 						Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
-						AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.5F, (float) (offset.yCoord) - 0.5F, (float) (offset.zCoord) - 0.5F, (float) (offset.xCoord) + 0.5F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.5F);
+						AxisAlignedBB box = new AxisAlignedBB((float) (offset.xCoord) - 0.375F, (float) (offset.yCoord) - 0.5F, (float) (offset.zCoord) - 0.375F, (float) (offset.xCoord) + 0.375F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.375F);
 						
 						GL11.glPushMatrix();
 						GL11.glDisable(GL11.GL_TEXTURE_2D);
