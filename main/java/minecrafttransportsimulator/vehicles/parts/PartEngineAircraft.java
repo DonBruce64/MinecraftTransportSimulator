@@ -71,4 +71,13 @@ public class PartEngineAircraft extends APartEngine{
 		}
 		return 0;
 	}
+	
+	@Override
+	public void setElectricStarterStatus(boolean engaged){
+		super.setElectricStarterStatus(engaged);
+		//Set throttle to 10 to prevent stalling during electric starting operations.
+		if(engaged && vehicle.throttle < 10){
+			vehicle.throttle = 10;
+		}
+	}
 }
