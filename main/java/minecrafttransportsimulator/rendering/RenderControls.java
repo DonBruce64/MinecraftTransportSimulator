@@ -109,7 +109,7 @@ public final class RenderControls extends RenderInstruments{
     	drawScaledString("35", 8, 10, 0.5F);
     	GL11.glRotatef(-180, 0, 0, 1);
 		
-    	GL11.glTranslatef(0, 7-plane.flapAngle/25, 0);
+    	GL11.glTranslatef(0, 7-plane.flapDesiredAngle/25, 0);
     	textureManager.bindTexture(controlsTexture);
     	if(!hud){
     		GL11.glTranslatef(1.875F, 0.5F, -3.75F);

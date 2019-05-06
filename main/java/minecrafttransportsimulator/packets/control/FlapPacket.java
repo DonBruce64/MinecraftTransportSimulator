@@ -45,12 +45,12 @@ public class FlapPacket implements IMessage{
 					}
 					if(thisEntity!=null){
 						if(ctx.side.isServer()){
-							if(message.flapAngle + thisEntity.flapAngle >= 0 && message.flapAngle + thisEntity.flapAngle <= 350){
-								thisEntity.flapAngle += message.flapAngle;
+							if(message.flapAngle + thisEntity.flapDesiredAngle >= 0 && message.flapAngle + thisEntity.flapDesiredAngle <= 350){
+								thisEntity.flapDesiredAngle += message.flapAngle;
 								MTS.MTSNet.sendToAll(message);
 							}
 						}else{
-							thisEntity.flapAngle += message.flapAngle;
+							thisEntity.flapDesiredAngle += message.flapAngle;
 						}
 					}
 				}

@@ -5,18 +5,10 @@ import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.systems.RotationSystem;
-import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
-import minecrafttransportsimulator.vehicles.parts.PartSeat;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameType;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
-import scala.reflect.internal.Trees.This;
 
 public final class EntityVehicleF_Plane extends EntityVehicleE_Powered{
 	public boolean reverseThrust;
@@ -26,7 +18,8 @@ public final class EntityVehicleF_Plane extends EntityVehicleE_Powered{
 	public short aileronAngle;
 	public short elevatorAngle;
 	public short rudderAngle;
-	public short flapAngle;
+	public short flapDesiredAngle;
+	public short flapCurrentAngle;
 	public short aileronTrim;
 	public short elevatorTrim;
 	public short rudderTrim;
@@ -79,10 +72,17 @@ public final class EntityVehicleF_Plane extends EntityVehicleE_Powered{
 		}else if(!reverseThrust && reversePercent > 0){
 			--reversePercent;
 		}
+		
+		if(flapCurrentAngle < flapDesiredAngle){
+			++flapCurrentAngle;
+		}else if(flapCurrentAngle > flapDesiredAngle){
+			--flapCurrentAngle;
+		}
+		
 		momentRoll = (float) (pack.general.emptyMass*(1.5F+(fuel/10000F)));
 		momentPitch = (float) (2*currentMass);
 		momentYaw = (float) (3*currentMass);
-		currentWingArea = pack.plane.wingArea + pack.plane.wingArea*flapAngle/250F;
+		currentWingArea = pack.plane.wingArea + pack.plane.wingArea*flapCurrentAngle/250F;
 		
 		verticalVec = RotationSystem.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
 		sideVec = headingVec.crossProduct(verticalVec);
@@ -92,7 +92,7 @@ public final class EntityVehicleF_Plane extends EntityVehicleE_Powered{
 		
 		trackAngle = Math.toDegrees(Math.atan2(velocityVec.dotProduct(verticalVec), velocityVec.dotProduct(headingVec)));
 		dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
-		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapAngle/350F);
+		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapCurrentAngle/350F);
 		aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
 		elevatorLiftCoeff = getLiftCoeff(pack.plane.defaultElevatorAngle - trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
 		rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.atan2(velocityVec.dotProduct(sideVec), velocityVec.dotProduct(headingVec))), 2);
@@ -192,7 +192,8 @@ public final class EntityVehicleF_Plane extends EntityVehicleE_Powered{
 		this.aileronAngle=tagCompound.getShort("aileronAngle");
 		this.elevatorAngle=tagCompound.getShort("elevatorAngle");
 		this.rudderAngle=tagCompound.getShort("rudderAngle");
-		this.flapAngle=tagCompound.getShort("flapAngle");
+		this.flapDesiredAngle=tagCompound.getShort("flapDesiredAngle");
+		this.flapCurrentAngle=tagCompound.getShort("flapCurrentAngle");
 		this.aileronTrim=tagCompound.getShort("aileronTrim");
 		this.elevatorTrim=tagCompound.getShort("elevatorTrim");
 		this.rudderTrim=tagCompound.getShort("rudderTrim");
@@ -204,7 +205,8 @@ public final class EntityVehicleF_Plane extends EntityVehicleE_Powered{
 		tagCompound.setShort("aileronAngle", this.aileronAngle);
 		tagCompound.setShort("elevatorAngle", this.elevatorAngle);
 		tagCompound.setShort("rudderAngle", this.rudderAngle);
-		tagCompound.setShort("flapAngle", this.flapAngle);
+		tagCompound.setShort("flapDesiredAngle", this.flapDesiredAngle);
+		tagCompound.setShort("flapCurrentAngle", this.flapCurrentAngle);
 		tagCompound.setShort("aileronTrim", this.aileronTrim);
 		tagCompound.setShort("elevatorTrim", this.elevatorTrim);
 		tagCompound.setShort("rudderTrim", this.rudderTrim);

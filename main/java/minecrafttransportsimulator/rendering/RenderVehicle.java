@@ -395,7 +395,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("aileron"): return ((EntityVehicleF_Plane) vehicle).aileronAngle/10F;
 			case("elevator"): return ((EntityVehicleF_Plane) vehicle).elevatorAngle/10F;
 			case("rudder"): return ((EntityVehicleF_Plane) vehicle).rudderAngle/10F;
-			case("flap"): return ((EntityVehicleF_Plane) vehicle).flapAngle/10F;
+			case("flap"): return ((EntityVehicleF_Plane) vehicle).flapCurrentAngle/10F;
 			case("trim_aileron"): return ((EntityVehicleF_Plane) vehicle).aileronTrim/10F;
 			case("trim_elevator"): return ((EntityVehicleF_Plane) vehicle).elevatorTrim/10F;
 			case("trim_rudder"): return ((EntityVehicleF_Plane) vehicle).rudderTrim/10F;
@@ -438,7 +438,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("aileron"): return ((EntityVehicleF_Plane) vehicle).aileronAngle/350F;
 			case("elevator"): return ((EntityVehicleF_Plane) vehicle).elevatorAngle/350F;
 			case("rudder"): return ((EntityVehicleF_Plane) vehicle).rudderAngle/350F;
-			case("flap"): return ((EntityVehicleF_Plane) vehicle).flapAngle/350F;
+			case("flap"): return ((EntityVehicleF_Plane) vehicle).flapCurrentAngle/350F;
 			case("trim_aileron"): return ((EntityVehicleF_Plane) vehicle).aileronTrim/350F;
 			case("trim_elevator"): return ((EntityVehicleF_Plane) vehicle).elevatorTrim/350F;
 			case("trim_rudder"): return ((EntityVehicleF_Plane) vehicle).rudderTrim/350F;
