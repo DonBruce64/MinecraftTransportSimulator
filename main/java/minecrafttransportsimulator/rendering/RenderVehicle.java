@@ -556,7 +556,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}else if(part instanceof PartPropeller){
 			if(variable.equals("propellerpitch")){
-				return ((PartPropeller) part).currentPitch;
+				return (float) Math.toDegrees(Math.atan(((PartPropeller) part).currentPitch / (((PartPropeller) part).pack.propeller.diameter*0.75D*Math.PI)));
 			}
 		}
 		switch(variable){
