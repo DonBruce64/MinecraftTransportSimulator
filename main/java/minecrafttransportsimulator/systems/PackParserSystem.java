@@ -83,7 +83,7 @@ public final class PackParserSystem{
     private static final Map<String, PackDecorObject> decorPackMap = new LinkedHashMap<String, PackDecorObject>();
     
 	/**Maps vehicle, part, instrument, and decor names to their crafting ingredients.*/
-	private static final Map<String, List<ItemStack>> craftingItemMap = new HashMap<String, List<ItemStack>>();
+	private static final Map<String, String[]> craftingItemMap = new HashMap<String, String[]>();
   
     /**Listing of log messages.  Stored here on bootstrap and outputted once the logging system comes online.**/
     private static final List<String> logList = new ArrayList<String>();
@@ -121,7 +121,7 @@ public final class PackParserSystem{
     				for(String material : definition.extraMaterials){
     					materials.add(material);
     				}
-    				registerCrafting(vehicleName, materials.toArray(new String[materials.size()]));
+    				craftingItemMap.put(vehicleName, materials.toArray(new String[materials.size()]));
     			}
     		}
     	}catch(Exception e){
@@ -139,8 +139,7 @@ public final class PackParserSystem{
 	    	if(!MTSRegistry.packTabs.containsKey(modID)){
 				MTSRegistry.packTabs.put(modID, new CreativeTabPack(modID));
 			}
-	    	
-	    	registerCrafting(partName, pack.general.materials);
+	    	craftingItemMap.put(partName, pack.general.materials);
     	}catch(Exception e){
     		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
     		logList.add(e.getMessage());
@@ -153,7 +152,7 @@ public final class PackParserSystem{
 	    	PackInstrumentObject pack =  new Gson().fromJson(jsonReader, PackInstrumentObject.class);
 	    	String instrumentName = modID + ":" + jsonFileName;
     		partInstrumentMap.put(instrumentName, pack);
-    		registerCrafting(instrumentName, pack.general.materials.toArray(new String[pack.general.materials.size()]));
+    		craftingItemMap.put(instrumentName, pack.general.materials);
     	}catch(Exception e){
     		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
     		logList.add(e.getMessage());
@@ -178,26 +177,11 @@ public final class PackParserSystem{
 	    	PackDecorObject pack =  new Gson().fromJson(jsonReader, PackDecorObject.class);
 	    	String decorName = modID + ":" + jsonFileName;
     		decorPackMap.put(decorName, pack);
-    		registerCrafting(decorName, pack.general.materials);
+    		craftingItemMap.put(decorName, pack.general.materials);
     	}catch(Exception e){
     		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
     		logList.add(e.getMessage());
     	}
-    }
-    
-    /**Helper method to parse crafting strings and register items in the internal MTS crafting system.**/
-    private static void registerCrafting(String itemName, String[] materials){
-		final List<ItemStack> materialList = new ArrayList<ItemStack>();
-		for(String itemText : materials){
-			int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-			
-			int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-			
-			materialList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata == -1 ? Integer.MAX_VALUE :itemMetadata));
-		}
-		craftingItemMap.put(itemName, materialList);
     }
 
     public static void outputLog(){
@@ -266,7 +250,17 @@ public final class PackParserSystem{
     
     //-----START OF GENERAL LOOKUP LOGIC-----
     public static List<ItemStack> getMaterials(String componentName){
-    	return craftingItemMap.get(componentName);
+    	final List<ItemStack> materialList = new ArrayList<ItemStack>();
+		for(String itemText : craftingItemMap.get(componentName)){
+			int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+			
+			int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+			
+			materialList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata == -1 ? Integer.MAX_VALUE :itemMetadata));
+		}
+    	return materialList;
     }
     
     

@@ -9,7 +9,7 @@ public class PackInstrumentObject{
 
     public class PackInstrumentDefinition{
     	public List<String> validVehicles;
-    	public List<String> materials;
+    	public String[] materials;
     	public int textureXSectorStart;
     	public int textureYSectorStart;
     }
