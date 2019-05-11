@@ -151,6 +151,7 @@ gui.vehicle_bench.cargo=Cargo
 gui.vehicle_bench.mixed=Mixed
 gui.vehicle_bench.engine=Engine Size
 gui.vehicle_bench.wheel=Wheel Size
+gui.vehicle_bench.color=Color
 
 gui.panel.navigationlights=NAV
 gui.panel.strobelights=STROBE

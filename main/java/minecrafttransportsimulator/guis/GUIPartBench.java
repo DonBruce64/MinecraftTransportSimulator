@@ -43,6 +43,8 @@ public class GUIPartBench extends GuiScreen{
 	private GuiButton rightPackButton;
 	private GuiButton leftPartButton;
 	private GuiButton rightPartButton;
+	private GuiButton leftColorButton;
+	private GuiButton rightColorButton;
 	private GuiButton startButton;
 	
 	private int guiLeft;
@@ -55,6 +57,10 @@ public class GUIPartBench extends GuiScreen{
 	private String partName = "";
 	private String prevPartName = "";
 	private String nextPartName = "";
+	
+	private String colorName = "";
+	private String prevColorName = "";
+	private String nextColorName = "";
 	
 	/**Display list GL integers.  Keyed by part name.*/
 	private final Map<String, Integer> partDisplayLists = new HashMap<String, Integer>();
@@ -82,10 +88,14 @@ public class GUIPartBench extends GuiScreen{
 		guiLeft = this.isForVehicles ? (this.width - 356)/2 : (this.width - 256)/2;
 		guiTop = (this.height - 220)/2;
 		
-		buttonList.add(leftPackButton = new GuiButton(0, guiLeft + 25, guiTop + 5, 20, 20, "<"));
-		buttonList.add(rightPackButton = new GuiButton(0, guiLeft + 215, guiTop + 5, 20, 20, ">"));
-		buttonList.add(leftPartButton = new GuiButton(0, guiLeft + 25, guiTop + 25, 20, 20, "<"));
-		buttonList.add(rightPartButton = new GuiButton(0, guiLeft + 215, guiTop + 25, 20, 20, ">"));
+		buttonList.add(leftPackButton = new GuiButton(0, guiLeft + 10, guiTop + 5, 20, 20, "<"));
+		buttonList.add(rightPackButton = new GuiButton(0, guiLeft + 226, guiTop + 5, 20, 20, ">"));
+		buttonList.add(leftPartButton = new GuiButton(0, guiLeft + 10, guiTop + 25, 20, 20, "<"));
+		buttonList.add(rightPartButton = new GuiButton(0, guiLeft + 226, guiTop + 25, 20, 20, ">"));
+		if(isForVehicles){
+			buttonList.add(leftColorButton = new GuiButton(0, guiLeft + 280, guiTop + 25, 20, 20, "<"));
+			buttonList.add(rightColorButton = new GuiButton(0, guiLeft + 300, guiTop + 25, 20, 20, ">"));
+		}
 		buttonList.add(startButton = new GuiButton(0, guiLeft + 188, guiTop + 170, 20, 20, ""));
 	}
 	
@@ -110,13 +120,25 @@ public class GUIPartBench extends GuiScreen{
 		//Render the text headers.
 		drawCenteredString(!packName.isEmpty() ? I18n.format("itemGroup." + packName) : "", guiLeft + 130, guiTop + 10);
 		drawCenteredString(!partName.isEmpty() ? I18n.format(itemMap.get(partName).getUnlocalizedName() + ".name") : "", guiLeft + 130, guiTop + 30);
+		if(this.isForVehicles){
+			drawCenteredString(I18n.format("gui.vehicle_bench.color"), guiLeft + 300, guiTop + 10);
+		}
 		
 		//Set button states and render.
 		startButton.enabled = PacketPlayerCrafting.doesPlayerHaveMaterials(player, partName);
 		leftPackButton.enabled = !prevPackName.isEmpty();
 		rightPackButton.enabled = !nextPackName.isEmpty();
-		leftPartButton.enabled = !prevPartName.isEmpty();
-		rightPartButton.enabled = !nextPartName.isEmpty();
+		if(this.isForVehicles){
+			//If we are for vehicles, don't enable the part button if there's not a part that doesn't match the color.
+			//We need to enable the color button instead for that.
+			leftPartButton.enabled = !prevPartName.isEmpty();
+			rightPartButton.enabled = !nextPartName.isEmpty();
+			leftColorButton.enabled = !prevColorName.isEmpty();
+			rightColorButton.enabled = !nextColorName.isEmpty();
+		}else{
+			leftPartButton.enabled = !prevPartName.isEmpty();
+			rightPartButton.enabled = !nextPartName.isEmpty();
+		}
 		for(Object obj : buttonList){
 			((GuiButton) obj).drawButton(mc, mouseX, mouseY);
 		}
@@ -385,25 +407,27 @@ public class GUIPartBench extends GuiScreen{
 				partName = prevPartName;
 			}else if(buttonClicked.equals(rightPartButton)){
 				partName = nextPartName;
+			}else if(buttonClicked.equals(leftColorButton)){
+				partName = prevColorName;
+			}else if(buttonClicked.equals(rightColorButton)){
+				partName = nextColorName;
 			}
 			updatePartNames();
 		}
 	}
 	
-	
 	/**
 	 * We also use the mouse wheel for selections as well as buttons.
+	 * Forward the call to the button input system for processing.
 	 */
 	@Override
     public void handleMouseInput() throws IOException{
         super.handleMouseInput();
         int i = Mouse.getEventDWheel();
         if(i > 0 && rightPartButton.enabled){
-        	partName = nextPartName;
-        	updatePartNames();
+        	this.actionPerformed(rightPartButton);
         }else if(i < 0 && leftPartButton.enabled){
-        	partName = prevPartName;
-			updatePartNames();
+        	this.actionPerformed(leftPartButton);
         }
 	}
 	
@@ -434,15 +458,27 @@ public class GUIPartBench extends GuiScreen{
 		mc.fontRendererObj.drawString(stringToDraw, x - mc.fontRendererObj.getStringWidth(stringToDraw)/2, y, 4210752);
 	}
 	
+	/**
+	 * Loop responsible for updating pack/part names whenever an action occurs.
+	 * Looks through all items in the list that was passed-in on GUI construction time and
+	 * uses the order to determine which pack/item to scroll to when a button is clicked.
+	 * Sets the variables to be used on a button action, so once an action is performed this
+	 * logic MUST be called to update the button action states!
+	 */
 	private void updatePartNames(){
+		//Set all prev/next variables blank before executing the loop.
 		prevPackName = "";
 		nextPackName = "";	
 		prevPartName = "";
 		nextPartName = "";
+		prevColorName = "";
+		nextColorName = "";
 		
 		boolean passedPack = false;
 		boolean passedPart = false;
+		boolean passedColor = false;
 		for(String partItemName : itemMap.keySet()){
+			//First check to make sure this item matches the type on the bench.
 			final boolean isValid;
 			if(this.isForVehicles){
 				isValid = partTypes.contains(PackParserSystem.getVehiclePack(partItemName).general.type);
@@ -452,25 +488,72 @@ public class GUIPartBench extends GuiScreen{
 				isValid = true;
 			}
 			if(isValid){
+				//If packName is empty, set it now.  Otherwise, if we haven't seen the pack for the
+				//currently-selected item, and the pack is different than the item, set the prevPack.
+				//This will continue to be set until we see the same pack as the current item, so it
+				//will be the pack of the closest item in the list with a different pack.
 				if(packName.isEmpty()){
 					packName = partItemName.substring(0, partItemName.indexOf(':'));
 				}else if(!passedPack && !partItemName.startsWith(packName)){
 					prevPackName = partItemName.substring(0, partItemName.indexOf(':'));
 				}
 				if(partItemName.startsWith(packName)){
+					//Set the variable to show we are in the same pack.
+					//Subsequent logic is executed to set other variables, and differs depending on
+					//if this GUI is for vehicles.  This is done because vehicles have a color selector
+					//so even though the pack might be the same, the vehicle may just be 6 colors rather
+					//that 6 unique vehicles.  This keeps packs with 16-colors of sedans from taking
+					//up 100s of part slots.
 					passedPack = true;
-					if(partName.isEmpty()){
-						partName = partItemName;
-						passedPart = true;
-					}else if(partName.equals(partItemName)){
-						passedPart = true;
-					}else if(!passedPart){
-						prevPartName = partItemName;
-					}else if(nextPartName.isEmpty()){
-						nextPartName = partItemName;
+					if(this.isForVehicles){
+						if(partName.isEmpty()){
+							partName = partItemName;
+							passedPart = true;
+						}else if(partName.equals(partItemName)){
+							passedPart = true;
+						}else if(!passedPart){
+							//Set the prevColorName if the part is the same color (JSON) as the current part.
+							//Set the prevPartName only if the part is a different color (JSON) than the current part.
+							if(PackParserSystem.getVehicleJSONName(partName).equals(PackParserSystem.getVehicleJSONName(partItemName))){
+								prevColorName = partItemName;
+							}else{
+								//For prevPartName, we want only the first part that is different.
+								//Once we have this, we don't set it again unless the JSON differs.
+								//This ensures that when we hit the prevPart button, the color is always
+								//the first color in the set and the right button is lit for subsequent colors.
+								if(prevPartName.isEmpty() || !PackParserSystem.getVehicleJSONName(prevPartName).equals(PackParserSystem.getVehicleJSONName(partItemName))){
+									prevPartName = partItemName;
+								}
+							}
+						}else if(nextPartName.isEmpty()){
+							//Set the nextColorName if the part is the same color (JSON) as the current part.
+							//Set the nextPartName only if the part is a different color (JSON) than the current part.
+							if(PackParserSystem.getVehicleJSONName(partName).equals(PackParserSystem.getVehicleJSONName(partItemName))){
+								//Need this here to prevent the color from being overwritten by further colors.
+								if(nextColorName.isEmpty()){
+									nextColorName = partItemName;
+								}
+							}else{
+								nextPartName = partItemName;
+							}
+						}
+					}else{
+						if(partName.isEmpty()){
+							partName = partItemName;
+							passedPart = true;
+						}else if(partName.equals(partItemName)){
+							passedPart = true;
+						}else if(!passedPart){
+							prevPartName = partItemName;
+						}else if(nextPartName.isEmpty()){
+							nextPartName = partItemName;
+						}
 					}
 				}else if(nextPackName.isEmpty() && passedPack){
+					//Since we've passed our pack, and this item isn't the same as our pack, it must be an item from the next pack.
+					//Set the variable and then return, as we don't need to iterate any more as everything is set.
 					nextPackName = partItemName.substring(0, partItemName.indexOf(':'));
+					return;
 				}
 			}
 		}
