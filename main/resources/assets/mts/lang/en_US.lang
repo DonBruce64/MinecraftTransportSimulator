@@ -362,3 +362,7 @@ manual.17.2=While flying you may have to keep holding inputs to make your plane 
 manual.18.title=Landing
 manual.18.1=There is a fine line between successfully landing a plane and a controlled crash.  To avoid that second category it is important to remember the saying, "To go down you need to slow down."  Speed is what keeps your plane aloft, so a reduction in speed is needed to land.  This can be as simple as lowering the throttle and applying the flaps.
 manual.18.2=Some times, however, you end up in that second category.  Running out of fuel is the most common way to get down quickly, but is not necessarily deadly.  Planes can glide without engines, giving you a short amount of time to pick a flat spot to become an impromptu runway.  Should one not be available a body of water is also a good choice as it will prevent explosions on a hard crash or will allow you to bail while in mid-air.  Anything hilly should be avoided at all costs.
+
+manual.19.title=Crafting
+manual.19.1=The following section includes the recipes for all the benches used to create components for the mod.
+manual.19.2=Note that the crafting of the vehicle components themselves is restricted to the benches, so see those for the materials required.  This is done to prevent an overload of crafting recipes on the vanilla crafting bench system. 
