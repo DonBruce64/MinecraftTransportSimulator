@@ -14,6 +14,7 @@ public class PackPartObject{
     public PartSkidConfig skid;
     public PartTreadConfig tread;
     public PartPropellerConfig propeller;
+    public PartCrateConfig crate;
     public PartBarrelConfig barrel;
     public PartGunConfig gun;
     public PartBulletConfig bullet;
@@ -71,6 +72,10 @@ public class PackPartObject{
     	public short pitch;
     	public int diameter;
     	public int startingHealth;
+    }
+    
+    public class PartCrateConfig{
+    	public byte rows;
     }
     
     public class PartBarrelConfig{

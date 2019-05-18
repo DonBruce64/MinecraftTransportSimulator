@@ -16,7 +16,7 @@ public final class PartCrate extends APart{
 	
 	public PartCrate(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
-		this.crateInventory = new InventoryBasic("", false, 27);
+		this.crateInventory = new InventoryBasic("", false, Math.min(pack.crate.rows, 6)*9);
 		NBTTagList stackTagList = dataTag.getTagList("Items", 10);
         for (byte i = 0; i < stackTagList.tagCount(); ++i){
             NBTTagCompound stackTag = stackTagList.getCompoundTagAt(i);
