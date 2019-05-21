@@ -51,7 +51,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 			//Set contact for wheel skid.
 			if(prevAngularVelocity/(vehicle.velocity/(this.getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
 				BlockPos blockBelow = new BlockPos(partPos).down();
-				if(vehicle.worldObj.getBlockState(blockBelow).getBlockHardness(vehicle.worldObj, blockBelow) >= 1.5){
+				if(vehicle.worldObj.getBlockState(blockBelow).getBlockHardness(vehicle.worldObj, blockBelow) >= 1.25){
 					contactThisTick = true;
 				}
 			}
