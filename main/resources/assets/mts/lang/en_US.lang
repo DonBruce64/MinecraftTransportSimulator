@@ -273,6 +273,7 @@ item.propellerbench.name=Propeller Bench
 item.enginebench.name=Engine Hoist
 item.wheelbench.name=Wheel Workbench
 item.seatbench.name=Table Saw
+item.gunbench.name=Rifling Machine
 item.custombench.name=Tool Bench
 item.instrumentbench.name=Instrument Bench
 

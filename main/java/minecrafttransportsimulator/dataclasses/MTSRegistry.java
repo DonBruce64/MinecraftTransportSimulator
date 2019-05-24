@@ -483,6 +483,15 @@ public final class MTSRegistry{
 				"A A",
 				'A', Items.IRON_INGOT,
 				'B', Items.IRON_AXE);
+		//Gun bench
+		registerRecipe(new ItemStack(gunBench),
+				"   ",
+				"ABC",
+				"DAD",
+				'A', Blocks.IRON_BLOCK,
+				'B', Items.DIAMOND,
+				'C', new ItemStack(Items.DYE, 1, 14),
+				'D', new ItemStack(Items.DYE, 1, 2));
 		//Custom bench
 		registerRecipe(new ItemStack(customBench),
 				"AAA",
