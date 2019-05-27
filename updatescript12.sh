@@ -40,6 +40,14 @@ if echo $FILE | grep -q "GUIPartBench"; then
 	sed -i '3iimport net.minecraft.client.util.ITooltipFlag;' $FILE
 fi
 
+#Crafting now uses Ingredients that only have one ItemStack.  Cause why the heck do we need things simple eh Mojang?
+if echo $FILE | grep -q "GUIManual"; then 
+	sed -i 's/Iterator<IRecipe> iterator = CraftingManager.getInstance().getRecipeList().iterator()/Iterator<IRecipe> iterator = CraftingManager.REGISTRY.iterator()/' $FILE
+	sed -i 's/for(ItemStack stack : ((ShapedRecipes) recipe).recipeItems)/for(Ingredient ingredient : ((ShapedRecipes) recipe).recipeItems)/' $FILE
+	sed -i 's/\/\/ItemStack stack = ingredient.getMatchingStacks().length/ItemStack stack = ingredient.getMatchingStacks().length/' $FILE
+	sed -i '3iimport net.minecraft.item.crafting.Ingredient;' $FILE
+fi
+
 #Rendering brightness was changed to remove partialTicks parameter.  About time seeing as it hasn't been used since 1.7.10.
 if echo $FILE | grep -q "RenderVehicle"; then
 	sed -i 's/getBrightnessForRender(partialTicks)/getBrightnessForRender()/' $FILE

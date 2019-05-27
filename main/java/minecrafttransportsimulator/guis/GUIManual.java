@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -304,9 +305,11 @@ public class GUIManual extends GuiScreen{
 			GL11.glPopMatrix();
 		}
 		
-		//Render the items themselves..
+		//Render the items themselves.
 		ItemStack hoveredStack = null;
-		for(IRecipe recipe : CraftingManager.getInstance().getRecipeList()){
+		Iterator<IRecipe> iterator = CraftingManager.getInstance().getRecipeList().iterator();
+		while(iterator.hasNext()){
+			IRecipe recipe = iterator.next();
 			if(recipe.getRecipeOutput() != null){
 				int xOffset = 0;
 				if(recipe.getRecipeOutput().getItem().equals(benchItemLeft)){
@@ -318,6 +321,7 @@ public class GUIManual extends GuiScreen{
 					int i = guiLeft + xOffset;
 					int j = guiTop + 100;
 					for(ItemStack stack : ((ShapedRecipes) recipe).recipeItems){
+						//ItemStack stack = ingredient.getMatchingStacks().length > 0 ? ingredient.getMatchingStacks()[0] : null;//1.12 Code
 						if(stack != null){
 							//Need the ItemStack call here as the stack contains blocks sometimes that don't render.
 							this.itemRender.renderItemAndEffectIntoGUI(new ItemStack(stack.getItem()), i, j);
