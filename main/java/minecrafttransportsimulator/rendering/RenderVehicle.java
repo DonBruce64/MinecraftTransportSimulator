@@ -776,9 +776,22 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			GL11.glPushMatrix();
 			GL11.glTranslatef(text.pos[0], text.pos[1], text.pos[2]);
 			GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
-			GL11.glRotatef(text.rot[0], 1, 0, 0);
-			GL11.glRotatef(text.rot[1] + 180, 0, 1, 0);
-			GL11.glRotatef(text.rot[2] + 180, 0, 0, 1);
+			//First rotate 180 along the X-axis to get us rendering right-side up.
+			GL11.glRotatef(180F, 1, 0, 0);
+			
+			//Next, apply rotations.  Only doing so if they exist.
+			//Apply the Y-rotation first as it will always be used and allows for correct X-rotations.
+			if(text.rot[1] != 0){
+				GL11.glRotatef(-text.rot[1], 0, 1, 0);
+			}
+			if(text.rot[0] != 0){
+				GL11.glRotatef(text.rot[0], 1, 0, 0);
+			}
+			if(text.rot[2] != 0){
+				GL11.glRotatef(text.rot[2], 0, 0, 1);
+			}
+			
+			//Finally, scale and render the text.
 			GL11.glScalef(text.scale, text.scale, text.scale);
 			RenderHelper.disableStandardItemLighting();
 			minecraft.fontRendererObj.drawString(vehicle.displayText, -minecraft.fontRendererObj.getStringWidth(vehicle.displayText)/2, 0, Color.decode(text.color).getRGB());
