@@ -55,7 +55,7 @@ public abstract class APartGroundDevice extends APart{
 			}
 			
 			//Check for colliding entities and damage them.
-			if(!vehicle.worldObj.isRemote && vehicle.velocity > 0.2F){
+			if(!vehicle.worldObj.isRemote && vehicle.velocity > 0.1F){
 				List<EntityLivingBase> collidedEntites = vehicle.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(Vec3d.ZERO).expand(0.25F, 0, 0.25F));
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
@@ -68,7 +68,7 @@ public abstract class APartGroundDevice extends APart{
 					}
 					for(int i=0; i < collidedEntites.size(); ++i){
 						if(!this.vehicle.isPassenger(collidedEntites.get(i))){
-							collidedEntites.get(i).attackEntityFrom(new DamageSourceWheel(attacker), (float) (ConfigSystem.getDoubleConfig("WheelDamageFactor")*vehicle.velocity*vehicle.currentMass/1000F));
+							collidedEntites.get(i).attackEntityFrom(new DamageSourceWheel(attacker), (float) (ConfigSystem.getDoubleConfig("WheelDamageFactor")*vehicle.currentMass/1000F));
 						}
 					}
 				}
