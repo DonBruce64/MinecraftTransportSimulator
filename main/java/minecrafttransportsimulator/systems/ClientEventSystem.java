@@ -110,10 +110,10 @@ public final class ClientEventSystem{
 		    					VehicleAxisAlignedBB partBox;
 								if(packPartEntry.getValue().types.contains("custom") && heldItemPack.general.type.equals("custom")){
 									Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
-									partBox = new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset), packPartEntry.getKey(), heldItemPack.custom.width, heldItemPack.custom.height, false);		
+									partBox = new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset), packPartEntry.getKey(), heldItemPack.custom.width, heldItemPack.custom.height, false, false);		
 								}else{
 									Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey().addVector(0, 0.25F, 0), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
-									partBox = new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0.5F, 0), 0.75F, 1.75F, false);
+									partBox = new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0.5F, 0), 0.75F, 1.75F, false, false);
 								}
 		    					
 		    					if(partBox.isVecInside(clickedVec)){
