@@ -12,9 +12,7 @@ import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBBCollective;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackCollisionBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
-import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -69,14 +67,6 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			groundDeviceCollisionBoxMap.clear();
 			currentCollisionBoxes.addAll(this.getUpdatedCollisionBoxes());
 			hardnessHitThisTick = 0;
-			for(APart part : this.getVehicleParts()){
-				if(part instanceof APartGroundDevice){
-					currentCollisionBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));
-					groundDeviceCollisionBoxMap.put(currentCollisionBoxes.get(currentCollisionBoxes.size() -1 ), (APartGroundDevice) part);
-				}else{
-					currentInteractionBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));
-				}
-			}
 		}
 	}
 	
@@ -124,7 +114,7 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			for(PackCollisionBox box : pack.collision){
 				Vec3d partOffset = new Vec3d(box.pos[0], box.pos[1], box.pos[2]);
 				Vec3d offset = RotationSystem.getRotatedPoint(partOffset, rotationPitch, rotationYaw, rotationRoll);
-				VehicleAxisAlignedBB newBox = new VehicleAxisAlignedBB(this.getPositionVector().add(offset), partOffset, box.width, box.height, box.isInterior);
+				VehicleAxisAlignedBB newBox = new VehicleAxisAlignedBB(this.getPositionVector().add(offset), partOffset, box.width, box.height, box.isInterior, box.collidesWithLiquids);
 				boxList.add(newBox);
 				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.xCoord) + box.width/2F);
 				furthestHeight = (float) Math.max(furthestHeight, Math.abs(newBox.rel.yCoord) + box.height/2F);
@@ -165,23 +155,23 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	
 	/**
 	 * Checks collisions and returns the collision depth for a box.
-	 * Returns -1 and breaks the ground device if it was a ground device that collided.
-	 * Returns -2 destroys the vehicle if it hit a core collision box at too high a speed.
-	 * Returns -3 if the collision is a ground device and could be moved upwards to not collide (only for X and Z axis).
+	 * Returns -1 if collision was hard enough to destroy the vehicle.
+	 * Otherwise, we return the collision depth in the specified axis.
 	 */
-	protected float getCollisionForAxis(VehicleAxisAlignedBB box, boolean xAxis, boolean yAxis, boolean zAxis, APartGroundDevice optionalGroundDevice){
+	protected float getCollisionForAxis(VehicleAxisAlignedBB box, boolean xAxis, boolean yAxis, boolean zAxis){
 		Vec3d motion = new Vec3d(this.motionX*speedFactor, this.motionY*speedFactor, this.motionZ*speedFactor);
 		box = box.offset(xAxis ? motion.xCoord : 0, yAxis ? motion.yCoord : 0, zAxis ? motion.zCoord : 0);
 		
 		//Add a slight vertical offset to collisions in the X or Z axis to prevent them from catching the ground.
-		//Sometimes ground devices and the like end up with a lower level of 3.9999 due to floating-point errors
+		//Sometimes collision boxes end up with a lower level of 3.9999 due to floating-point errors
 		//and as such and don't collide correctly with blocks above 4.0.  Can happen at other Y values too, but that
 		//one shows up extensively in superflat world testing.
-		if(xAxis || zAxis){
-			box = box.offset(0, 0.05F, 0);
-		}
+		//TODO see if this is needed if we don't collide wheels this way any more.
+		//if(xAxis || zAxis){
+//			box = box.offset(0, 0.05F, 0);
+	//	}
 		List<BlockPos> collidedBlockPos = new ArrayList<BlockPos>();
-		List<AxisAlignedBB> collidingAABBList = this.getAABBCollisions(box, optionalGroundDevice, collidedBlockPos);
+		List<AxisAlignedBB> collidingAABBList = this.getAABBCollisions(box, collidedBlockPos);
 		
 		float collisionDepth = 0;
 		for(AxisAlignedBB box2 : collidingAABBList){
@@ -195,78 +185,55 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 				collisionDepth = (float) Math.max(collisionDepth, motion.zCoord > 0 ? box.maxZ - box2.minZ : box2.maxZ - box.minZ);
 			}
 			if(collisionDepth > 0.3){
-				//This could be a collision, but it could also be that it's a ground device and moved
-				//into a block and another axis needs to collide here.  Check the motion and bail if we
-				//aren't a ground device and shouldn't be colliding here.
+				//This could be a collision, but it could also be that we are really colliding in another axis.
+				//Check the motion and bail if the collision depth is less than our movement.
 				if((xAxis && (Math.abs(motion.xCoord) < collisionDepth)) || (yAxis && (Math.abs(motion.yCoord) < collisionDepth)) || (zAxis && (Math.abs(motion.zCoord) < collisionDepth))){
-					if(optionalGroundDevice == null){
-						return 0;
-					}
+					return 0;
 				}
 			}
 		}
 		
 		if(collisionDepth > 0){
-			if(optionalGroundDevice != null && !yAxis){
-				//Ground device has collided.
-				//Check to see if this collision can be avoided if the device is moved upwards.
-				//Expand this box slightly to ensure we see the collision even with floating-point errors.
-				collidingAABBList = getAABBCollisions(box.offset(xAxis ? motion.xCoord : 0, optionalGroundDevice.getHeight()*1.5F, zAxis ? motion.zCoord : 0).expandXyz(0.05F), optionalGroundDevice, null);
-				if(collidingAABBList.isEmpty()){
-					//Ground device can be moved upward out of the way.
-					//Return -3 and deal with this later.
-					return -3;
-				}else if(collisionDepth > 0.3){
-					//Ground device couldn't be moved out of the way and hit too fast;
-					//Break it off the vehicle and return.
-					if(!worldObj.isRemote){
-						this.removePart(optionalGroundDevice, true);
-					}
-					return -1;
-				}
-			}else if(optionalGroundDevice == null){
-				//Not a ground device, therefore we are a core collision box and
-				//need to check to see if we can break some blocks or if we need to explode.
-				//Don't bother with this logic if it's impossible for us to break anything.
-				double velocity = Math.hypot(motion.xCoord, motion.zCoord);
-				if(velocity > 0 && !yAxis){
-					byte blockPosIndex = 0;
-					while(blockPosIndex < collidedBlockPos.size()){
-						BlockPos pos = collidedBlockPos.get(blockPosIndex);
-						float hardness = worldObj.getBlockState(pos).getBlockHardness(worldObj, pos);
-						if(hardness <= velocity*currentMass/250F && hardness >= 0){
-							hardnessHitThisTick += hardness;
-							if(ConfigSystem.getBooleanConfig("BlockBreakage")){
-								collidedBlockPos.remove(blockPosIndex);
-								motionX *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
-								motionY *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
-								motionZ *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
-								if(!worldObj.isRemote){
-									worldObj.destroyBlock(pos, true);
-								}
-							}else{
-								++blockPosIndex;
+			//We collided, so check to see if we can break some blocks or if we need to explode.
+			//Don't bother with this logic if it's impossible for us to break anything.
+			double velocity = Math.hypot(motion.xCoord, motion.zCoord);
+			if(velocity > 0 && !yAxis){
+				byte blockPosIndex = 0;
+				while(blockPosIndex < collidedBlockPos.size()){
+					BlockPos pos = collidedBlockPos.get(blockPosIndex);
+					float hardness = worldObj.getBlockState(pos).getBlockHardness(worldObj, pos);
+					if(hardness <= velocity*currentMass/250F && hardness >= 0){
+						hardnessHitThisTick += hardness;
+						if(ConfigSystem.getBooleanConfig("BlockBreakage")){
+							collidedBlockPos.remove(blockPosIndex);
+							motionX *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
+							motionY *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
+							motionZ *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
+							if(!worldObj.isRemote){
+								worldObj.destroyBlock(pos, true);
 							}
 						}else{
 							++blockPosIndex;
 						}
-					}
-	
-					if(hardnessHitThisTick > currentMass/(0.75+velocity)/250F){
-						if(!worldObj.isRemote){
-							this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
-						}
-						return -2;
-					}else if(collidedBlockPos.isEmpty()){
-						return 0;
+					}else{
+						++blockPosIndex;
 					}
 				}
-				if(collisionDepth > 0.3){
+
+				if(hardnessHitThisTick > currentMass/(0.75+velocity)/250F){
 					if(!worldObj.isRemote){
 						this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
 					}
-					return -2;	
+					return -1;
+				}else if(collidedBlockPos.isEmpty()){
+					return 0;
 				}
+			}
+			if(collisionDepth > 0.3){
+				if(!worldObj.isRemote){
+					this.destroyAtPosition(box.pos.xCoord, box.pos.yCoord, box.pos.zCoord);
+				}
+				return -1;	
 			}
 		}
 		return collisionDepth;
@@ -276,7 +243,7 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	/**
 	 * Checks if an AABB is colliding with blocks, and returns the AABB of those blocks.
 	 */
-	protected List<AxisAlignedBB> getAABBCollisions(AxisAlignedBB box, APartGroundDevice optionalGroundDevice, List<BlockPos> collidedBlockPos){
+	protected List<AxisAlignedBB> getAABBCollisions(VehicleAxisAlignedBB box, List<BlockPos> collidedBlockPos){
 		int minX = (int) Math.floor(box.minX);
     	int maxX = (int) Math.floor(box.maxX + 1.0D);
     	int minY = (int) Math.floor(box.minY);
@@ -296,7 +263,7 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
         					collidedBlockPos.add(pos);
         				}
     				}
-					if(optionalGroundDevice instanceof PartGroundDevicePontoon && state.getMaterial().isLiquid()){
+					if(box.collidesWithLiquids && state.getMaterial().isLiquid()){
 						collidingAABBList.add(state.getBoundingBox(worldObj, pos).offset(pos));
 					}
     			}

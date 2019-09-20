@@ -400,8 +400,8 @@ public final class MTSRegistry{
 				'D', Items.PAPER);
 		//Wrench
 		registerRecipe(new ItemStack(wrench),
-				"  A",
 				" A ",
+				" AA",
 				"A  ",
 				'A', Items.IRON_INGOT);
 		//Key

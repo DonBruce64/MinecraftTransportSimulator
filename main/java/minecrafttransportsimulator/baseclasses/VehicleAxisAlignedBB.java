@@ -14,22 +14,24 @@ import net.minecraft.util.math.Vec3d;
  */
 public class VehicleAxisAlignedBB extends AxisAlignedBB{
 	public final boolean isInterior;
+	public final boolean collidesWithLiquids;
 	public final Vec3d pos;
 	public final Vec3d rel;
 	public final float width;
 	public final float height;
 	
-	public VehicleAxisAlignedBB(Vec3d pos, Vec3d rel, float width, float height, boolean isInterior){
+	public VehicleAxisAlignedBB(Vec3d pos, Vec3d rel, float width, float height, boolean isInterior, boolean collidesWithLiquids){
 		super(pos.xCoord - width/2F, pos.yCoord - height/2F, pos.zCoord - width/2F, pos.xCoord + width/2F, pos.yCoord + height/2F, pos.zCoord + width/2F);
 		this.pos = pos;
 		this.rel = rel;
 		this.width = width;
 		this.height = height;
 		this.isInterior = isInterior;
+		this.collidesWithLiquids = collidesWithLiquids;
 	}
 	
 	public VehicleAxisAlignedBB getBoxWithOrigin(Vec3d pos){
-		return new VehicleAxisAlignedBB(pos, this.rel, this.width, this.height, this.isInterior);
+		return new VehicleAxisAlignedBB(pos, this.rel, this.width, this.height, this.isInterior, this.collidesWithLiquids);
 	}
 	
 	@Override
@@ -39,6 +41,6 @@ public class VehicleAxisAlignedBB extends AxisAlignedBB{
 	
 	@Override
 	public VehicleAxisAlignedBB expandXyz(double value){
-		return new VehicleAxisAlignedBB(this.pos, this.rel, (float) (this.width + value*2F), (float) (this.height + value*2F), this.isInterior);
+		return new VehicleAxisAlignedBB(this.pos, this.rel, (float) (this.width + value*2F), (float) (this.height + value*2F), this.isInterior, this.collidesWithLiquids);
     }
 }

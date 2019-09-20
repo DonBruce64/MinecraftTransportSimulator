@@ -70,6 +70,7 @@ public class PackVehicleObject{
         public float width;
         public float height;
         public boolean isInterior;
+        public boolean collidesWithLiquids;
     }
     
     public class PackInstrument{

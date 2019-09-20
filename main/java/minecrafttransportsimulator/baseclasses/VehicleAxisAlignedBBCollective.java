@@ -17,7 +17,7 @@ public class VehicleAxisAlignedBBCollective extends VehicleAxisAlignedBB{
 	private final EntityVehicleC_Colliding vehicle;
 	
 	public VehicleAxisAlignedBBCollective(EntityVehicleC_Colliding vehicle, float width, float height){
-		super(vehicle.getPositionVector(), Vec3d.ZERO, width, height, false);
+		super(vehicle.getPositionVector(), Vec3d.ZERO, width, height, false, false);
 		this.vehicle = vehicle;
 	}
 	
