@@ -396,12 +396,11 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	protected float getCurrentMass(){
 		int currentMass = pack.general.emptyMass;
 		for(APart part : this.getVehicleParts()){
+			currentMass += 50;
 			if(part instanceof PartCrate){
 				currentMass += calculateInventoryWeight(((PartCrate) part).crateInventory);
 			}else if(part instanceof PartBarrel){
 				currentMass += ((PartBarrel) part).getFluidAmount()/50;
-			}else{
-				currentMass += 50;
 			}
 		}
 		
@@ -423,7 +422,17 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		for(int i=0; i<inventory.getSizeInventory(); ++i){
 			ItemStack stack = inventory.getStackInSlot(i);
 			if(stack != null){
-				weight += 1.2F*stack.stackSize/stack.getMaxStackSize()*(ConfigSystem.getStringConfig("HeavyItems").contains(stack.getItem().getUnlocalizedName().substring(5)) ? 2 : 1);
+				float toadd = 1;
+				for(String entry : ConfigSystem.getStringConfig("ItemWeights").split(";")) {
+					String[] splitted = entry.split(":"); //TODO pattern check
+					String match = splitted[0]; //TODO pattern check
+					int weight = Integer.parseInt(splitted[1]); //TODO integer check
+					if(stack.getItem().getUnlocalizedName().substring(5).contains(match)) {
+						toadd = weight;
+						break; //Remove to invert the "first = higher priority" rule
+					}
+				}
+				weight += 1.2F*toadd*stack.stackSize;
 			}
 		}
 		return weight;
