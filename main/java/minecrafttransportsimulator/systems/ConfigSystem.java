@@ -37,11 +37,12 @@ public final class ConfigSystem{
 		doubleConfigMap.put("SpeedFactor", config.get(COMMON_CONFIG, "SpeedFactor", 0.35D, "Factor to apply to vehicle movement.  \n1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.").getDouble());
 		doubleConfigMap.put("FuelUsageFactor", config.get(COMMON_CONFIG, "FuelUsageFactor", 1.0D, "Factor times which engines use fuel.  \nChange this if you think engines use fuel too fast or slow.").getDouble());
 		doubleConfigMap.put("ClingSpeed", config.get(COMMON_CONFIG, "ClingSpeed", 0.25D, "Speed (in BLK/S) at which players start to slide off vehicles due to wind.  \nDoes not affect collision boxes set as interior in the vehicle JSON.").getDouble());
-		stringConfigMap.put("HeavyItems", config.get(COMMON_CONFIG, "HeavyItems", "diamond, iron, gold, coal, ore, stone", "Any item that contains these words will be counted as heavy (double mass) when considering plane mass.  \nChange and tweak to your liking.").getString());
+		stringConfigMap.put("ItemWeights", config.get(COMMON_CONFIG, "ItemWeights", "iron:90;gold:215;coal:72;stone:64;cobblestone:64;ore:10;diamond_block:10;iron_block:780;gold_block:1930;coal_block:640;diamond_ore:8;iron_ore:77;gold_ore:140;coal_ore:68", "Custom item weights written in pattern \"material:weight\" and separated by semicolon (;). material is the word that item id must contain, weight is weight defined in kilos. The later the pattern is written, the more priority it has").getString());
 		
 		//DAMAGE_CONFIG
 		booleanConfigMap.put("Explosions", config.get(DAMAGE_CONFIG, "Explosions", true, "Whether or not vehicles explode when crashed or shot down.").getBoolean());
 		booleanConfigMap.put("BlockBreakage", config.get(DAMAGE_CONFIG, "BlockBreakage", true, "Whether or not vehicles can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks.").getBoolean());
+		booleanConfigMap.put("WheelDamageIgnoreSpeed", config.get(DAMAGE_CONFIG, "WheelDamageIgnoreSpeed", false, "Exclude vehicle speed from damage amount caused by wheels calculation").getBoolean());
 		doubleConfigMap.put("PropellerDamageFactor", config.get(DAMAGE_CONFIG, "PropellerDamageFactor", 1.0D, "Factor for damage caused by a propeller.").getDouble());
 		doubleConfigMap.put("JetDamageFactor", config.get(DAMAGE_CONFIG, "JetDamageFactor", 1.0D, "Factor for damage caused by a jet engine.").getDouble());
 		doubleConfigMap.put("WheelDamageFactor", config.get(DAMAGE_CONFIG, "WheelDamageFactor", 1.0D, "Factor for damage caused by wheels on vehicles.").getDouble());
