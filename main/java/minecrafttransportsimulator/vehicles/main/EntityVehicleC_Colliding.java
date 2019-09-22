@@ -1,9 +1,7 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -12,7 +10,6 @@ import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBBCollective;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackCollisionBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
-import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -37,8 +34,6 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	private final List<VehicleAxisAlignedBB> currentCollisionBoxes = new ArrayList<VehicleAxisAlignedBB>();
 	/**List of interaction boxes.  These are AABBs that can be clicked but do NOT affect vehicle collision.*/
 	private final List<VehicleAxisAlignedBB> currentInteractionBoxes = new ArrayList<VehicleAxisAlignedBB>();
-	/**Map that keys collision boxes of ground devices to the devices themselves.  Used for ground device collision operations.*/
-	protected final Map<VehicleAxisAlignedBB, APartGroundDevice> groundDeviceCollisionBoxMap = new HashMap<VehicleAxisAlignedBB, APartGroundDevice>();
 	
 	public final double speedFactor = ConfigSystem.getDoubleConfig("SpeedFactor");
 	
@@ -64,7 +59,6 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			//Populate the box lists.
 			currentCollisionBoxes.clear();
 			currentInteractionBoxes.clear();
-			groundDeviceCollisionBoxMap.clear();
 			currentCollisionBoxes.addAll(this.getUpdatedCollisionBoxes());
 			hardnessHitThisTick = 0;
 		}
@@ -161,15 +155,6 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	protected float getCollisionForAxis(VehicleAxisAlignedBB box, boolean xAxis, boolean yAxis, boolean zAxis){
 		Vec3d motion = new Vec3d(this.motionX*speedFactor, this.motionY*speedFactor, this.motionZ*speedFactor);
 		box = box.offset(xAxis ? motion.xCoord : 0, yAxis ? motion.yCoord : 0, zAxis ? motion.zCoord : 0);
-		
-		//Add a slight vertical offset to collisions in the X or Z axis to prevent them from catching the ground.
-		//Sometimes collision boxes end up with a lower level of 3.9999 due to floating-point errors
-		//and as such and don't collide correctly with blocks above 4.0.  Can happen at other Y values too, but that
-		//one shows up extensively in superflat world testing.
-		//TODO see if this is needed if we don't collide wheels this way any more.
-		//if(xAxis || zAxis){
-//			box = box.offset(0, 0.05F, 0);
-	//	}
 		List<BlockPos> collidedBlockPos = new ArrayList<BlockPos>();
 		List<AxisAlignedBB> collidingAABBList = this.getAABBCollisions(box, collidedBlockPos);
 		
