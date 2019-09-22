@@ -55,7 +55,6 @@ public final class EntityVehicleF_Plane extends EntityVehicleE_Powered{
 	private double aileronTorque;//kg*m^2/ticks^2
 	private double elevatorTorque;//kg*m^2/ticks^2
 	private double rudderTorque;//kg*m^2/ticks^2
-	private double gravitationalTorque;//kg*m^2/ticks^2
 			
 	public EntityVehicleF_Plane(World world){
 		super(world);
@@ -94,7 +93,7 @@ public final class EntityVehicleF_Plane extends EntityVehicleE_Powered{
 		dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
 		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapCurrentAngle/350F);
 		aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
-		elevatorLiftCoeff = getLiftCoeff(pack.plane.defaultElevatorAngle - trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
+		elevatorLiftCoeff = getLiftCoeff(-5 - trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
 		rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.atan2(velocityVec.dotProduct(sideVec), velocityVec.dotProduct(headingVec))), 2);
 	}
 	
@@ -120,7 +119,6 @@ public final class EntityVehicleF_Plane extends EntityVehicleE_Powered{
 		aileronTorque = aileronForce*pack.plane.wingSpan*0.5F*0.75F;
 		elevatorTorque = elevatorForce*pack.plane.tailDistance;
 		rudderTorque = rudderForce*pack.plane.tailDistance;
-		gravitationalTorque = gravitationalForce*1;
 		
 		//As a special case, if the plane is pointed upwards and stalling, add a forwards pitch to allow the plane to right itself.
 		//This is needed to prevent the plane from getting stuck in a vertical position and crashing.
@@ -135,7 +133,7 @@ public final class EntityVehicleF_Plane extends EntityVehicleE_Powered{
 		motionY += (headingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + verticalVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
 		
 		motionRoll = (float) (180/Math.PI*((1-headingVec.yCoord)*aileronTorque)/momentRoll);
-		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque) + (1-Math.abs(headingVec.yCoord))*gravitationalTorque)/momentPitch);
+		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque))/momentPitch);
 		motionYaw = (float) (180/Math.PI*(headingVec.yCoord*aileronTorque - verticalVec.yCoord*(-thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
 	}
 
