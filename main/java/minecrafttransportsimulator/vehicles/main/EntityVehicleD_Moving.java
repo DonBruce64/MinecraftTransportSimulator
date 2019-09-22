@@ -186,15 +186,15 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	
 	/**
 	 * Helper function to update the ground device AABBs, AABB collision lists, collision flags, and collision depths.
+	 * Only update the collisions if we have any ground devices.
+	 * If we are missing any, just set everything to not colliding.
+	 * Collision updates follow this format:
+	 * 1 Get the current AABBs for the ground devices based on the expected movement.
+	 * 2 Get the collision boxes that collide with those AABBs.
+	 * 3 Set the collision flags.
+	 * 4 Set the collision depths.
 	 */
 	private void updateGroundDeviceCollisions(){
-		//Only update the collisions if we have any ground devices.
-		//If we are missing any, just set everything to not colliding.
-		//Collision updates follow this format:
-		//1 Get the current AABBs for the ground devices based on the expected movement.
-		//2 Get the collision boxes that collide with those AABBs.
-		//3 Set the collision flags.
-		//4 Set the collision depths.
 		if(!frontLeftGroundDevices.isEmpty()){
 			frontLeftGroundDeviceBox = getAABBForGroundDeviceSet(frontLeftGroundDevices);
 			frontLeftCollidingBoxes = getAABBCollisions(frontLeftGroundDeviceBox, null);
@@ -205,6 +205,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			frontLeftGroundDeviceBox = null;
 			frontLeftGroundDeviceCollided = false;
 			frontLeftGroundDeviceGrounded = false;
+			frontLeftCollisionDepth = 0;
 		}
 		
 		if(!frontRightGroundDevices.isEmpty()){
@@ -217,6 +218,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			frontRightGroundDeviceBox = null;
 			frontRightGroundDeviceCollided = false;
 			frontRightGroundDeviceGrounded = false;
+			frontRightCollisionDepth = 0;
 		}
 		
 		if(!rearLeftGroundDevices.isEmpty()){
@@ -229,6 +231,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			rearLeftGroundDeviceBox = null;
 			rearLeftGroundDeviceCollided = false;
 			rearLeftGroundDeviceGrounded = false;
+			rearLeftCollisionDepth = 0;
 		}
 		
 		if(!rearRightGroundDevices.isEmpty()){
@@ -241,6 +244,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			rearRightGroundDeviceBox = null;
 			rearRightGroundDeviceCollided = false;
 			rearRightGroundDeviceGrounded = false;
+			rearRightCollisionDepth = 0;
 		}
 	}
 	
@@ -262,6 +266,67 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		}else{
 			return collisionDepth;
 		}
+	}
+	
+	/**
+	 *  This needs to be called before checking pitch and roll of ground devices.  It is responsible for ensuring that
+	 *  the Y position of the vehicle is in such a place that the checks can run.  If motionY is negative, and opposite
+	 *  ground devices are collided it will add motionY to a level that the least-collided ground device will no longer collide.
+	 *  If motionY is positive, then it will add motionY to prevent either the front or rear ground devices from colliding, but only
+	 *  if motionPitch is non-zero.  This is for vehicles that rotate when flying and need to pivot on their ground devices.
+	 *  Finally, if motionY is negative, and only the rear ground devices are collided, but motionPitch is also negative, it will
+	 *  add motionY to get those out of the ground.  This is also for flying vehicles, in that they normally pitch down (positive)
+	 *  due to gravity, but if they are trying to pitch up we need to allow them to do so.
+	 *  
+	 *  In all cases, this function will return the amount of motionY boost that was applied.  This value should be removed
+	 *  from motionY after the vehicle is moved, as it's not a force and will cause the physics system to behave badly if
+	 *  it is left in.  The only exception is if we had motionY that we shouldn't have applied in the first place, such as
+	 *  if motionY was moving us into the ground.  In this case, we need to keep this as a force as it's force the ground is
+	 *  applying to the vehicle to keep it from moving into the ground (normal force).
+	 */
+	private double correctMotionYMovement(){
+		if(motionY < 0){
+			if(motionPitch >= -0.1){
+				if((frontLeftGroundDeviceCollided && rearRightGroundDeviceCollided) || (frontRightGroundDeviceCollided && rearLeftGroundDeviceCollided)){
+					double collisionDepth = Math.max(Math.min(frontLeftCollisionDepth, rearRightCollisionDepth), Math.min(frontRightCollisionDepth, rearLeftCollisionDepth));
+					double motionToNotCollide = collisionDepth/speedFactor;
+					if(!worldObj.isRemote)System.out.println("Y ADJUST  MotionY was " + motionY + " is now " + (motionY+motionToNotCollide));
+					motionY += motionToNotCollide;
+					//Check if motionY is close to 0.  If so, we should make it 0 as we are
+					//just sitting on the ground and shouldn't have any motionY to begin with.
+					if(Math.abs(motionY) < 0.0001){
+						motionY = 0;
+					}
+					updateGroundDeviceCollisions();
+					return motionY > 0 ? motionY : 0;
+				}
+			}else{
+				if(rearLeftGroundDeviceCollided || rearRightGroundDeviceCollided){
+					double collisionDepth = Math.max(rearLeftCollisionDepth, rearRightCollisionDepth);
+					double motionToNotCollide = collisionDepth/speedFactor;
+					if(!worldObj.isRemote)System.out.println("POS RDY ADJUST  MotionY was " + motionY + " is now " + (motionY+motionToNotCollide));
+					motionY += motionToNotCollide;
+					updateGroundDeviceCollisions();
+					return motionY;
+				}
+			}
+		}else if(motionY > 0){
+			if(motionPitch > 0 && (frontLeftGroundDeviceCollided || frontRightGroundDeviceCollided)){
+				double collisionDepth = Math.max(frontLeftCollisionDepth, frontRightCollisionDepth);
+				double motionToNotCollide = collisionDepth/speedFactor;
+				if(!worldObj.isRemote)System.out.println("POS FUY ADJUST  MotionY was " + motionY + " is now " + (motionY+motionToNotCollide));
+				motionY += motionToNotCollide;
+				updateGroundDeviceCollisions();
+				return motionY;
+			}else if(motionPitch < 0 && (rearLeftGroundDeviceCollided || rearRightGroundDeviceCollided)){
+				double collisionDepth = Math.max(rearLeftCollisionDepth, rearRightCollisionDepth);
+				double motionToNotCollide = collisionDepth/speedFactor;
+				motionY += motionToNotCollide;
+				updateGroundDeviceCollisions();
+				return motionY;
+			}
+		}
+		return 0;
 	}
 	
 	/**
@@ -391,12 +456,6 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(motionX < 0){
 			motionX += 0.002F;
 		}
-		if(motionY > 0){
-			motionY -= 0.002F;
-		}
-		if(motionY < 0){
-			motionY += 0.002F;
-		}
 		if(motionZ > 0){
 			motionZ -= 0.002F;
 		}
@@ -405,6 +464,9 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		}
 	}
 
+	
+
+	
 	/**
 	 * Call this when moving vehicle to ensure they move correctly.
 	 * Failure to do this will result in things going badly!
@@ -413,29 +475,9 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//First populate the variables for ground and collided states for the groundDevices.
 		updateGroundDeviceCollisions();
 		
-		//If we have motionY in the - direction, and we have opposite ground devices collided, remove it.
-		//This is done because we should never be in the ground due to gravity.
-		//To correct this, we want to first take off all negative motionY to get use out of the ground.
-		//If this doesn't work, and we need positive movement, apply it, but don't keep the value in motionY at the end of this tick.
-		//Instead, once all ground device operations are done, strip it and add a boost.  Then set motionY to 0
-		//This prevents vehicles from shooting into the air if they do a deep collision, while still allowing them to get out of the ground.
-		//If we get a small value, then just make motionY 0.  This prevents some calcs down the road and saves CPU.
-		//No matter what we do, we will need to re-calculate the ground device positions after changing motionY.
-		double groundCollisionBoost = 0;
-		if(!worldObj.isRemote)System.out.println("STARTING CALCS WITH POSX:" + posX + " POSY:" + posY + " POSZ:" + posZ + " PITCH:" + rotationPitch);
-		if(motionY < 0 && ((frontLeftGroundDeviceCollided && rearRightGroundDeviceCollided) || (frontRightGroundDeviceCollided && rearLeftGroundDeviceCollided))){
-			double collisionDepth = Math.max(Math.min(frontLeftCollisionDepth, rearRightCollisionDepth), Math.min(frontRightCollisionDepth, rearLeftCollisionDepth));
-			double motionToNotCollide = collisionDepth/speedFactor;
-			if(!worldObj.isRemote)System.out.println("Y ADJUST  MotionY was " + motionY + " is now " + (motionY+motionToNotCollide));
-			motionY += motionToNotCollide;
-			if(Math.abs(motionY) < 0.0001){
-				motionY = 0;
-			}else if(motionY > 0){
-				groundCollisionBoost = motionY;
-			}
-			updateGroundDeviceCollisions();
-		}
-		
+		if(!worldObj.isRemote)System.out.println("STARTING CALCS WITH POSX:" + posX + " POSY:" + posY + " POSZ:" + posZ + " PITCH:" + rotationPitch + " MOY: " + motionY + " MOP: " + motionPitch);
+		//Now check to make sure our ground devices are in the right spot relative to the ground.
+		double groundCollisionBoost = correctMotionYMovement();
 		
 		//After checking the ground devices to ensure we aren't shoving ourselves into the ground, we try to move the vehicle.
 		//If the vehicle can move without a collision box colliding with something, then we can move to the re-positioning of the vehicle.
@@ -455,9 +497,11 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//This is done after the ground device logic, as that removes any excess motionY caused by gravity.
 		//The gravity could cause more collisions here that really don't need to happen, and we don't want
 		//to check those as the checks for collision box collision are far more intensive than the ones for ground devices.
+		boolean haveAllGroundDevices = true;
 		if(collisionBoxCollided){
 			correctCollidingMovement();
 			updateGroundDeviceCollisions();
+			//haveAllGroundDevices = false;
 		}
 		
 		//Now that we are sure we won't collide with any collision boxes, perform rotation of the vehicle.
@@ -469,7 +513,8 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//TODO do logic here!
 		double maxAngleInRad = 0.0174533D*2D;
 		double groundRotationBoost = 0;
-		boolean haveAllGroundDevices = frontLeftGroundDeviceBox != null && frontRightGroundDeviceBox != null && rearLeftGroundDeviceBox != null && frontLeftGroundDeviceBox != null;
+		//boolean haveAllGroundDevices = frontLeftGroundDeviceBox != null && frontRightGroundDeviceBox != null && rearLeftGroundDeviceBox != null && frontLeftGroundDeviceBox != null;
+		
 		if(haveAllGroundDevices){
 			//If we only have front ground devices collided, we need to pitch up.
 			//If we only have rear ground devices collided, we need to pitch down.
@@ -597,9 +642,9 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 
 			//If we did pitch, adjust the motionY that we calculated.
 			if(groundRotationBoost != 0){
-				if(!worldObj.isRemote)System.out.println("Boost is: " + groundRotationBoost + " motionY is: " + motionY);
 				motionY += groundRotationBoost/speedFactor;
 			}
+			if(!worldObj.isRemote)System.out.println("Boost is: " + groundRotationBoost + " motionY is: " + motionY);
 		}
 
 		//Now that that the movement has been checked, move the vehicle.
