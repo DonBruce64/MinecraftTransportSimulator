@@ -87,7 +87,6 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	
 	public final double clingSpeed = ConfigSystem.getDoubleConfig("ClingSpeed");
 	public static final double maxRotationInRadPerTick = 0.0174533D*2D;
-	private static boolean doDebug = false;
 	
 	public EntityVehicleD_Moving(World world){
 		super(world);
@@ -292,7 +291,6 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				if((frontLeftGroundDeviceCollided && rearRightGroundDeviceCollided) || (frontRightGroundDeviceCollided && rearLeftGroundDeviceCollided)){
 					double collisionDepth = Math.max(Math.min(frontLeftCollisionDepth, rearRightCollisionDepth), Math.min(frontRightCollisionDepth, rearLeftCollisionDepth));
 					double motionToNotCollide = collisionDepth/speedFactor;
-					if(!worldObj.isRemote && doDebug)System.out.println("Y ADJUST  MotionY was " + motionY + " is now " + (motionY+motionToNotCollide));
 					motionY += motionToNotCollide;
 					//Check if motionY is close to 0.  If so, we should make it 0 as we are
 					//just sitting on the ground and shouldn't have any motionY to begin with.
@@ -306,7 +304,6 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				if(rearLeftGroundDeviceCollided || rearRightGroundDeviceCollided){
 					double collisionDepth = Math.max(rearLeftCollisionDepth, rearRightCollisionDepth);
 					double motionToNotCollide = collisionDepth/speedFactor;
-					if(!worldObj.isRemote && doDebug)System.out.println("POS RDY ADJUST  MotionY was " + motionY + " is now " + (motionY+motionToNotCollide));
 					motionY += motionToNotCollide;
 					updateGroundDeviceCollisions();
 					return motionY;
@@ -316,7 +313,6 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			if(motionPitch > 0 && (frontLeftGroundDeviceCollided || frontRightGroundDeviceCollided)){
 				double collisionDepth = Math.max(frontLeftCollisionDepth, frontRightCollisionDepth);
 				double motionToNotCollide = collisionDepth/speedFactor;
-				if(!worldObj.isRemote && doDebug)System.out.println("POS FUY ADJUST  MotionY was " + motionY + " is now " + (motionY+motionToNotCollide));
 				motionY += motionToNotCollide;
 				updateGroundDeviceCollisions();
 				return motionY;
@@ -451,7 +447,6 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//As a final precaution, take a bit of extra movement off of the motions.
 		//This is done to prevent vehicles from moving into blocks when they shouldn't
 		//due to floating-point errors.
-		//TODO we may not need this, but I suspect we do.
 		if(motionX > 0){
 			motionX -= 0.002F;
 		}
@@ -466,7 +461,281 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		}
 	}
 
-	
+	/**
+	 *  Called to adjust the pitch of the vehicle to handle collided ground devices.
+	 *  This adds to motionPitch to the vehicle, as well as returns a value to compensate for the motionPitch added.
+	 *  This value should be added to motionY when applying vehicle motion, but should not be left in as it's
+	 *  not a force and will cause the physics system to mis-behave.
+	 *  
+	 *  This system works by checking which ground devices are collided (if any) and rotating the vehicle accordingly.
+	 *  Note that the yCoord for the boxes is their center, so we need to take half the height to get the
+	 *  collision point at the ground for all ground devices.  We limit rotation in all cases to
+	 *  2 degrees per tick, which is 40 degrees a second.  Plenty fast, and prevents vehicles from
+	 *  instantly pitching up on steep slopes.  This isn't Big Rigs-Over the Road Racing...
+	 */
+	private double correctPitchMovement(){
+		//If we only have front ground devices collided, we need to pitch up.
+		//If we only have rear ground devices collided, we need to pitch down.
+		//In either case, we will have to rotate the vehicle and move it in the Y-direction.
+		//This is to ensure it follows the ground after pitching rather than pitching in the air.
+		double ptichRotationBoost = 0;
+		if((frontLeftCollisionDepth > 0 || frontRightCollisionDepth > 0) && rearLeftCollisionDepth == 0 && rearRightCollisionDepth == 0){				
+			//First, we get the front point that has collided.
+			//This is needed no matter if the rears are grounded or not.
+			double frontY;
+			double frontZ;
+			double collisionDepth;
+			if(frontLeftCollisionDepth > frontRightCollisionDepth){
+				frontY = frontLeftGroundDeviceBox.rel.yCoord - frontLeftGroundDeviceBox.height/2D;
+				frontZ = frontLeftGroundDeviceBox.rel.zCoord;
+				collisionDepth = frontLeftCollisionDepth;
+			}else{
+				frontY = frontRightGroundDeviceBox.rel.yCoord - frontRightGroundDeviceBox.height/2D;
+				frontZ = frontRightGroundDeviceBox.rel.zCoord;
+				collisionDepth = frontRightCollisionDepth;
+			}
+			
+			if(rearLeftGroundDeviceGrounded || rearRightGroundDeviceGrounded){
+				//Get the farthest-back grounded rear point for the greatest angle.
+				double rearY;
+				double rearZ;
+				if(rearLeftGroundDeviceGrounded && rearRightGroundDeviceGrounded){
+					if(rearLeftGroundDeviceBox.rel.zCoord < rearRightGroundDeviceBox.rel.zCoord){
+						rearY = rearLeftGroundDeviceBox.rel.yCoord - rearLeftGroundDeviceBox.height/2D;
+						rearZ = rearLeftGroundDeviceBox.rel.zCoord;
+					}else{
+						rearY = rearRightGroundDeviceBox.rel.yCoord - rearRightGroundDeviceBox.height/2D;
+						rearZ = rearRightGroundDeviceBox.rel.zCoord;
+					}
+				}else if(rearLeftGroundDeviceGrounded){
+					rearY = rearLeftGroundDeviceBox.rel.yCoord - rearLeftGroundDeviceBox.height/2D;
+					rearZ = rearLeftGroundDeviceBox.rel.zCoord;
+				}else{
+					rearY = rearRightGroundDeviceBox.rel.yCoord - rearRightGroundDeviceBox.height/2D;
+					rearZ = rearRightGroundDeviceBox.rel.zCoord;
+				}
+
+				//Finally, get the distance between the two points and the angle needed to get out of the collision.
+				//After that, calculate how much we will need to offset the vehicle to keep the rear in the same place.
+				double distance = Math.hypot(frontY - rearY, frontZ - rearZ);
+				double angle = -Math.min(Math.asin(collisionDepth/distance), maxRotationInRadPerTick);
+				motionPitch += Math.toDegrees(angle);
+				ptichRotationBoost = -Math.sin(angle)*Math.hypot(rearY, rearZ);
+			}else{
+				//In this case, we are just trying to get to a point where we have a grounded ground device.
+				//This will allow us to rotate about it and level the vehicle.
+				//We just rotate as much as we can here, and if we have negative motionY we need to set it to 0
+				//after this cycle.  This is because we don't want to go down any further than we are until we can
+				//do calcs using the grounded ground device.  Use the collision variable we use for the motionY
+				//as it won't be used at this point as one of the sets of ground devices are free.  If it was used
+				//because we were in the ground then one set would have to be grounded.
+				double angle = -maxRotationInRadPerTick;
+				motionPitch += Math.toDegrees(angle);
+				if(motionY < 0){
+					ptichRotationBoost = Math.sin(angle)*Math.hypot(frontY, frontZ) + motionY*speedFactor;
+					motionY = 0;
+				}else{
+					ptichRotationBoost = Math.sin(angle)*Math.hypot(frontY, frontZ);
+				}
+			}
+		}else if((rearLeftCollisionDepth > 0 || rearRightCollisionDepth > 0) && frontLeftCollisionDepth == 0 && frontRightCollisionDepth == 0){				
+			//First, we get the rear point that has collided.
+			//This is needed no matter if the fronts are grounded or not.
+			double rearY;
+			double rearZ;
+			double collisionDepth;
+			if(rearLeftCollisionDepth > rearRightCollisionDepth){
+				rearY = rearLeftGroundDeviceBox.rel.yCoord - rearLeftGroundDeviceBox.height/2D;
+				rearZ = rearLeftGroundDeviceBox.rel.zCoord;
+				collisionDepth = rearLeftCollisionDepth;
+			}else{
+				rearY = rearRightGroundDeviceBox.rel.yCoord - rearRightGroundDeviceBox.height/2D;
+				rearZ = rearRightGroundDeviceBox.rel.zCoord;
+				collisionDepth = rearRightCollisionDepth;
+			}
+			
+			if(frontLeftGroundDeviceGrounded || frontRightGroundDeviceGrounded){
+				//Get the farthest-forward grounded front point for the greatest angle.
+				double frontY;
+				double frontZ;
+				if(frontLeftGroundDeviceGrounded && frontRightGroundDeviceGrounded){
+					if(frontLeftGroundDeviceBox.rel.zCoord > frontRightGroundDeviceBox.rel.zCoord){
+						frontY = frontLeftGroundDeviceBox.rel.yCoord - frontLeftGroundDeviceBox.height/2D;
+						frontZ = frontLeftGroundDeviceBox.rel.zCoord;
+					}else{
+						frontY = frontRightGroundDeviceBox.rel.yCoord - frontRightGroundDeviceBox.height/2D;
+						frontZ = frontRightGroundDeviceBox.rel.zCoord;
+					}
+				}else if(frontLeftGroundDeviceGrounded){
+					frontY = frontLeftGroundDeviceBox.rel.yCoord - frontLeftGroundDeviceBox.height/2D;
+					frontZ = frontLeftGroundDeviceBox.rel.zCoord;
+				}else{
+					frontY = frontRightGroundDeviceBox.rel.yCoord - frontRightGroundDeviceBox.height/2D;
+					frontZ = frontRightGroundDeviceBox.rel.zCoord;
+				}
+
+				//Finally, get the distance between the two points and the angle needed to get out of the collision.
+				//After that, calculate how much we will need to offset the vehicle to keep the front in the same place.
+				double distance = Math.hypot(frontY - rearY, frontZ - rearZ);
+				double angle = Math.min(Math.asin(collisionDepth/distance), maxRotationInRadPerTick);
+				motionPitch += Math.toDegrees(angle);
+				ptichRotationBoost = Math.sin(angle)*Math.hypot(frontY, frontZ);
+			}else{
+				//In this case, we are just trying to get to a point where we have a grounded ground device.
+				//This will allow us to rotate about it and level the vehicle.
+				//We just rotate as much as we can here, and if we have negative motionY we need to set it to 0
+				//after this cycle.  This is because we don't want to go down any further than we are until we can
+				//do calcs using the grounded ground device.  Use the collision variable we use for the motionY
+				//as it won't be used at this point as one of the sets of ground devices are free.  If it was used
+				//because we were in the ground then one set would have to be grounded.
+				double angle = maxRotationInRadPerTick;
+				motionPitch += Math.toDegrees(angle);
+				if(motionY < 0){
+					ptichRotationBoost = -Math.sin(angle)*Math.hypot(rearY, rearZ) + motionY*speedFactor;
+					motionY = 0;
+				}else{
+					ptichRotationBoost = -Math.sin(angle)*Math.hypot(rearY, rearZ);
+				}
+			}
+		}
+		return ptichRotationBoost;
+	}
+
+	/**
+	 *  Called to adjust the roll of the vehicle to handle collided ground devices.
+	 *  Same as correctPitchMovment, just for roll using the X axis rather than Z.
+	 */
+	private double correctRollMovement(){
+		//Negative rolls left, postive rolls right.
+		//If we only have left ground devices collided, we need to roll left.
+		//If we only have right ground devices collided, we need to roll right.
+		//In either case, we will have to rotate the vehicle and move it in the Y-direction.
+		//This is to ensure it follows the ground after rolling rather than rolling in the air.
+		double rollRotationBoost = 0;
+		if((frontRightCollisionDepth > 0 || rearRightCollisionDepth > 0) && frontLeftCollisionDepth == 0 && rearLeftCollisionDepth == 0){				
+			//Negative "pitch" added here, so we need to have an operation that adds roll to the left.
+			//This is if we have the right side collided.
+			//Swap front with right and rear with left.
+			//First, we get the right point that has collided.
+			//This is needed no matter if the lefts are grounded or not.
+			double rightY;
+			double rightX;
+			double collisionDepth;
+			if(frontRightCollisionDepth > rearRightCollisionDepth){
+				rightY = frontRightGroundDeviceBox.rel.yCoord - frontRightGroundDeviceBox.height/2D;
+				rightX = frontRightGroundDeviceBox.rel.xCoord;
+				collisionDepth = frontRightCollisionDepth;
+			}else{
+				rightY = rearRightGroundDeviceBox.rel.yCoord - rearRightGroundDeviceBox.height/2D;
+				rightX = rearRightGroundDeviceBox.rel.xCoord;
+				collisionDepth = rearRightCollisionDepth;
+			}
+			
+			if(frontLeftGroundDeviceGrounded || rearLeftGroundDeviceGrounded){
+				//Get the farthest-left grounded left point for the greatest angle.
+				double leftY;
+				double leftX;
+				if(frontLeftGroundDeviceGrounded && rearLeftGroundDeviceGrounded){
+					if(frontLeftGroundDeviceBox.rel.xCoord < rearLeftGroundDeviceBox.rel.xCoord){
+						leftY = frontLeftGroundDeviceBox.rel.yCoord - frontLeftGroundDeviceBox.height/2D;
+						leftX = frontLeftGroundDeviceBox.rel.xCoord;
+					}else{
+						leftY = rearLeftGroundDeviceBox.rel.yCoord - rearLeftGroundDeviceBox.height/2D;
+						leftX = rearLeftGroundDeviceBox.rel.xCoord;
+					}
+				}else if(frontLeftGroundDeviceGrounded){
+					leftY = frontLeftGroundDeviceBox.rel.yCoord - frontLeftGroundDeviceBox.height/2D;
+					leftX = frontLeftGroundDeviceBox.rel.xCoord;
+				}else{
+					leftY = rearLeftGroundDeviceBox.rel.yCoord - rearLeftGroundDeviceBox.height/2D;
+					leftX = rearLeftGroundDeviceBox.rel.xCoord;
+				}
+
+				//Finally, get the distance between the two points and the angle needed to get out of the collision.
+				//After that, calculate how much we will need to offset the vehicle to keep the rear in the same place.
+				double distance = Math.hypot(rightY - leftY, rightX - leftX);
+				double angle = -Math.min(Math.asin(collisionDepth/distance), maxRotationInRadPerTick);
+				motionRoll += Math.toDegrees(angle);
+				rollRotationBoost = -Math.sin(angle)*Math.hypot(leftY, leftX);
+			}else{
+				//In this case, we are just trying to get to a point where we have a grounded ground device.
+				//This will allow us to rotate about it and level the vehicle.
+				//We just rotate as much as we can here, and if we have negative motionY we need to set it to 0
+				//after this cycle.  This is because we don't want to go down any further than we are until we can
+				//do calcs using the grounded ground device.  Use the collision variable we use for the motionY
+				//as it won't be used at this point as one of the sets of ground devices are free.  If it was used
+				//because we were in the ground then one set would have to be grounded.
+				double angle = -maxRotationInRadPerTick;
+				motionRoll+= Math.toDegrees(angle);
+				if(motionY < 0){
+					rollRotationBoost = Math.sin(angle)*Math.hypot(rightY, rightX) + motionY*speedFactor;
+					motionY = 0;
+				}else{
+					rollRotationBoost = Math.sin(angle)*Math.hypot(rightY, rightX);
+				}
+			}
+		}else if((frontLeftCollisionDepth > 0 || rearLeftCollisionDepth > 0) && frontRightCollisionDepth == 0 && rearRightCollisionDepth == 0){				
+			//First, we get the left point that has collided.
+			//This is needed no matter if the rights are grounded or not.
+			double leftY;
+			double leftX;
+			double collisionDepth;
+			if(frontLeftCollisionDepth > rearLeftCollisionDepth){
+				leftY = frontLeftGroundDeviceBox.rel.yCoord - frontLeftGroundDeviceBox.height/2D;
+				leftX = frontLeftGroundDeviceBox.rel.xCoord;
+				collisionDepth = frontLeftCollisionDepth;
+			}else{
+				leftY = rearLeftGroundDeviceBox.rel.yCoord - rearLeftGroundDeviceBox.height/2D;
+				leftX = rearLeftGroundDeviceBox.rel.xCoord;
+				collisionDepth = rearLeftCollisionDepth;
+			}
+			
+			if(frontRightGroundDeviceGrounded || rearRightGroundDeviceGrounded){
+				//Get the farthest-right grounded front point for the greatest angle.
+				double rightY;
+				double rightX;
+				if(frontRightGroundDeviceGrounded && rearRightGroundDeviceGrounded){
+					if(frontRightGroundDeviceBox.rel.xCoord > rearRightGroundDeviceBox.rel.xCoord){
+						rightY = frontRightGroundDeviceBox.rel.yCoord - frontRightGroundDeviceBox.height/2D;
+						rightX = frontRightGroundDeviceBox.rel.xCoord;
+					}else{
+						rightY = rearRightGroundDeviceBox.rel.yCoord - rearRightGroundDeviceBox.height/2D;
+						rightX = rearRightGroundDeviceBox.rel.xCoord;
+					}
+				}else if(frontRightGroundDeviceGrounded){
+					rightY = frontRightGroundDeviceBox.rel.yCoord - frontRightGroundDeviceBox.height/2D;
+					rightX = frontRightGroundDeviceBox.rel.xCoord;
+				}else{
+					rightY = rearRightGroundDeviceBox.rel.yCoord - rearRightGroundDeviceBox.height/2D;
+					rightX = rearRightGroundDeviceBox.rel.xCoord;
+				}
+
+				//Finally, get the distance between the two points and the angle needed to get out of the collision.
+				//After that, calculate how much we will need to offset the vehicle to keep the right in the same place.
+				double distance = Math.hypot(rightY - leftY, rightX - leftX);
+				double angle = Math.min(Math.asin(collisionDepth/distance), maxRotationInRadPerTick);
+				motionRoll += Math.toDegrees(angle);
+				rollRotationBoost = Math.sin(angle)*Math.hypot(rightY, rightX);
+			}else{
+				//In this case, we are just trying to get to a point where we have a grounded ground device.
+				//This will allow us to rotate about it and level the vehicle.
+				//We just rotate as much as we can here, and if we have negative motionY we need to set it to 0
+				//after this cycle.  This is because we don't want to go down any further than we are until we can
+				//do calcs using the grounded ground device.  Use the collision variable we use for the motionY
+				//as it won't be used at this point as one of the sets of ground devices are free.  If it was used
+				//because we were in the ground then one set would have to be grounded.
+				double angle = maxRotationInRadPerTick;
+				motionRoll += Math.toDegrees(angle);
+				if(motionY < 0){
+					rollRotationBoost = -Math.sin(angle)*Math.hypot(leftY, leftX) + motionY*speedFactor;
+					motionY = 0;
+				}else{
+					rollRotationBoost = -Math.sin(angle)*Math.hypot(leftY, leftX);
+				}
+			}
+		}
+		return rollRotationBoost;
+	}
 
 	
 	/**
@@ -477,7 +746,6 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//First populate the variables for ground and collided states for the groundDevices.
 		updateGroundDeviceCollisions();
 		
-		if(!worldObj.isRemote && doDebug)System.out.println("STARTING CALCS WITH POSX:" + posX + " POSY:" + posY + " POSZ:" + posZ + " PITCH:" + rotationPitch + " MOY: " + motionY + " MOP: " + motionPitch);
 		//Now check to make sure our ground devices are in the right spot relative to the ground.
 		double groundCollisionBoost = correctMotionYMovement();
 		
@@ -499,153 +767,21 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//This is done after the ground device logic, as that removes any excess motionY caused by gravity.
 		//The gravity could cause more collisions here that really don't need to happen, and we don't want
 		//to check those as the checks for collision box collision are far more intensive than the ones for ground devices.
-		boolean haveAllGroundDevices = true;
+		//If we have collisions, handle those rather than do ground device operations, otherwise do ground device operations as normal.
+		double groundRotationBoost = 0;
 		if(collisionBoxCollided){
 			correctCollidingMovement();
-			updateGroundDeviceCollisions();
-			//haveAllGroundDevices = false;
-		}
-		
-		//Now that we are sure we won't collide with any collision boxes, perform rotation of the vehicle.
-		//We do this by checking which ground devices are collided (if any) and rotate the vehicle accordingly.
-		//Note that the yCoord for the boxes is their center, so we need to take half the height to get the
-		//collision point at the ground for all ground devices.  We limit rotation in all cases to 
-		//2 degrees per tick, which is 40 degrees a second.  Plenty fast, and prevents vehicles from
-		//instantly pitching up on steep slopes.  This isn't Big Rigs-Over the Road Racing here...
-		//TODO do logic here!
-		double groundRotationBoost = 0;
-		//boolean haveAllGroundDevices = frontLeftGroundDeviceBox != null && frontRightGroundDeviceBox != null && rearLeftGroundDeviceBox != null && frontLeftGroundDeviceBox != null;
-		
-		if(haveAllGroundDevices){
-			//If we only have front ground devices collided, we need to pitch up.
-			//If we only have rear ground devices collided, we need to pitch down.
-			//In either case, we will have to rotate the vehicle and move it in the Y-direction.
-			//This is to ensure it follows the ground after pitching rather than pitching in the air.
-			if((frontLeftCollisionDepth > 0 || frontRightCollisionDepth > 0) && rearLeftCollisionDepth == 0 && rearRightCollisionDepth == 0){				
-				//First, we get the front point that has collided.
-				//This is needed no matter if the rears are grounded or not.
-				double frontY;
-				double frontZ;
-				double collisionDepth;
-				if(frontLeftCollisionDepth > frontRightCollisionDepth){
-					frontY = frontLeftGroundDeviceBox.rel.yCoord - frontLeftGroundDeviceBox.height/2D;
-					frontZ = frontLeftGroundDeviceBox.rel.zCoord;
-					collisionDepth = frontLeftCollisionDepth;
-				}else{
-					frontY = frontRightGroundDeviceBox.rel.yCoord - frontRightGroundDeviceBox.height/2D;
-					frontZ = frontRightGroundDeviceBox.rel.zCoord;
-					collisionDepth = frontRightCollisionDepth;
-				}
-				
-				if(rearLeftGroundDeviceGrounded || rearRightGroundDeviceGrounded){
-					if(!worldObj.isRemote && doDebug)System.out.println("FRONT COL, REAR GROUNDED");
-					//Get the farthest-back grounded rear point for the greatest angle.
-					double rearY;
-					double rearZ;
-					if(rearLeftGroundDeviceGrounded && rearRightGroundDeviceGrounded){
-						if(rearLeftGroundDeviceBox.rel.zCoord < rearRightGroundDeviceBox.rel.zCoord){
-							rearY = rearLeftGroundDeviceBox.rel.yCoord - rearLeftGroundDeviceBox.height/2D;
-							rearZ = rearLeftGroundDeviceBox.rel.zCoord;
-						}else{
-							rearY = rearRightGroundDeviceBox.rel.yCoord - rearRightGroundDeviceBox.height/2D;
-							rearZ = rearRightGroundDeviceBox.rel.zCoord;
-						}
-					}else if(rearLeftGroundDeviceGrounded){
-						rearY = rearLeftGroundDeviceBox.rel.yCoord - rearLeftGroundDeviceBox.height/2D;
-						rearZ = rearLeftGroundDeviceBox.rel.zCoord;
-					}else{
-						rearY = rearRightGroundDeviceBox.rel.yCoord - rearRightGroundDeviceBox.height/2D;
-						rearZ = rearRightGroundDeviceBox.rel.zCoord;
-					}
-
-					//Finally, get the distance between the two points and the angle needed to get out of the collision.
-					//After that, calculate how much we will need to offset the vehicle to keep the rear in the same place.
-					double distance = Math.hypot(frontY - rearY, frontZ - rearZ);
-					double angle = -Math.min(Math.asin(collisionDepth/distance), maxRotationInRadPerTick);
-					motionPitch += Math.toDegrees(angle);
-					groundRotationBoost = -Math.sin(angle)*Math.hypot(rearY, rearZ);
-				}else{
-					if(!worldObj.isRemote && doDebug)System.out.println("FRONT COL, REAR FREE");
-					//In this case, we are just trying to get to a point where we have a grounded ground device.
-					//This will allow us to rotate about it and level the vehicle.
-					//We just rotate as much as we can here, and if we have negative motionY we need to set it to 0
-					//after this cycle.  This is because we don't want to go down any further than we are until we can
-					//do calcs using the grounded ground device.  Use the collision variable we use for the motionY
-					//as it won't be used at this point as one of the sets of ground devices are free.  If it was used
-					//because we were in the ground then one set would have to be grounded.
-					double angle = -maxRotationInRadPerTick;
-					motionPitch += Math.toDegrees(angle);
-					groundRotationBoost = Math.sin(angle)*Math.hypot(frontY, frontZ);
-					if(motionY < 0){
-						groundCollisionBoost = motionY;
-					}
-				}
-			}else if((rearLeftCollisionDepth > 0 || rearRightCollisionDepth > 0) && frontLeftCollisionDepth == 0 && frontRightCollisionDepth == 0){				
-				//First, we get the rear point that has collided.
-				//This is needed no matter if the fronts are grounded or not.
-				double rearY;
-				double rearZ;
-				double collisionDepth;
-				if(rearLeftCollisionDepth > rearRightCollisionDepth){
-					rearY = rearLeftGroundDeviceBox.rel.yCoord - rearLeftGroundDeviceBox.height/2D;
-					rearZ = rearLeftGroundDeviceBox.rel.zCoord;
-					collisionDepth = rearLeftCollisionDepth;
-				}else{
-					rearY = rearRightGroundDeviceBox.rel.yCoord - rearRightGroundDeviceBox.height/2D;
-					rearZ = rearRightGroundDeviceBox.rel.zCoord;
-					collisionDepth = rearRightCollisionDepth;
-				}
-				
-				if(frontLeftGroundDeviceGrounded || frontRightGroundDeviceGrounded){
-					if(!worldObj.isRemote && doDebug)System.out.println("REAR COL, FRONT GROUNDED");
-					//Get the farthest-forward grounded front point for the greatest angle.
-					double frontY;
-					double frontZ;
-					if(frontLeftGroundDeviceGrounded && frontRightGroundDeviceGrounded){
-						if(frontLeftGroundDeviceBox.rel.zCoord > frontRightGroundDeviceBox.rel.zCoord){
-							frontY = frontLeftGroundDeviceBox.rel.yCoord - frontLeftGroundDeviceBox.height/2D;
-							frontZ = frontLeftGroundDeviceBox.rel.zCoord;
-						}else{
-							frontY = frontRightGroundDeviceBox.rel.yCoord - frontRightGroundDeviceBox.height/2D;
-							frontZ = frontRightGroundDeviceBox.rel.zCoord;
-						}
-					}else if(frontLeftGroundDeviceGrounded){
-						frontY = frontLeftGroundDeviceBox.rel.yCoord - frontLeftGroundDeviceBox.height/2D;
-						frontZ = frontLeftGroundDeviceBox.rel.zCoord;
-					}else{
-						frontY = frontRightGroundDeviceBox.rel.yCoord - frontRightGroundDeviceBox.height/2D;
-						frontZ = frontRightGroundDeviceBox.rel.zCoord;
-					}
-
-					//Finally, get the distance between the two points and the angle needed to get out of the collision.
-					//After that, calculate how much we will need to offset the vehicle to keep the front in the same place.
-					double distance = Math.hypot(frontY - rearY, frontZ - rearZ);
-					double angle = Math.min(Math.asin(collisionDepth/distance), maxRotationInRadPerTick);
-					motionPitch += Math.toDegrees(angle);
-					groundRotationBoost = Math.sin(angle)*Math.hypot(frontY, frontZ);
-				}else{
-					if(!worldObj.isRemote && doDebug)System.out.println("REAR COL, FRONT FREE");
-					//In this case, we are just trying to get to a point where we have a grounded ground device.
-					//This will allow us to rotate about it and level the vehicle.
-					//We just rotate as much as we can here, and if we have negative motionY we need to set it to 0
-					//after this cycle.  This is because we don't want to go down any further than we are until we can
-					//do calcs using the grounded ground device.  Use the collision variable we use for the motionY
-					//as it won't be used at this point as one of the sets of ground devices are free.  If it was used
-					//because we were in the ground then one set would have to be grounded.
-					double angle = maxRotationInRadPerTick;
-					motionPitch += Math.toDegrees(angle);
-					groundRotationBoost = -Math.sin(angle)*Math.hypot(rearY, rearZ);
-					if(motionY < 0){
-						groundCollisionBoost = motionY;
-					}
-				}
-			}
-
-			//If we did pitch, adjust the motionY that we calculated.
-			if(groundRotationBoost != 0){
+		}else{
+			//If we have pitch corrections boost on those.  Otherwise boost on roll corrections.
+			//We don't want to do both pitch and roll the same tick as they could conflict with each other.
+			double pitchRotationBoost = correctPitchMovement();
+			if(pitchRotationBoost != 0){
+				groundRotationBoost = pitchRotationBoost;
+				motionY += groundRotationBoost/speedFactor;
+			}else{
+				groundRotationBoost = correctRollMovement();
 				motionY += groundRotationBoost/speedFactor;
 			}
-			if(!worldObj.isRemote && doDebug)System.out.println("Boost is: " + groundRotationBoost + " motionY is: " + motionY);
 		}
 
 		//Now that that the movement has been checked, move the vehicle.
