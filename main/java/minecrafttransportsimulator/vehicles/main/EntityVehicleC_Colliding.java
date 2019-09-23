@@ -10,6 +10,7 @@ import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBBCollective;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackCollisionBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
+import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -56,10 +57,8 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 				World.MAX_ENTITY_RADIUS = 32;
 			}
 			
-			//Populate the box lists.
-			currentCollisionBoxes.clear();
-			currentInteractionBoxes.clear();
-			currentCollisionBoxes.addAll(this.getUpdatedCollisionBoxes());
+			//Update the box lists.
+			updateCollisionBoxes();
 			hardnessHitThisTick = 0;
 		}
 	}
@@ -96,28 +95,32 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	}
     
 	/**
-	 * Called to get a set of updated collision lists for this entity.
+	 * Called to populate the collision lists for this entity.
 	 * Do NOT call more than once a tick as this operation is complex and
 	 * CPU and RAM intensive!
 	 */
-	private List<VehicleAxisAlignedBB> getUpdatedCollisionBoxes(){
+	private void updateCollisionBoxes(){
 		if(this.pack != null){
+			//Get all collision boxes and set the bounding Collective to encompass all of them.
+			currentCollisionBoxes.clear();
 			double furthestWidth = 0;
 			double furthestHeight = 0;
-			List<VehicleAxisAlignedBB> boxList = new ArrayList<VehicleAxisAlignedBB>();
 			for(PackCollisionBox box : pack.collision){
 				Vec3d partOffset = new Vec3d(box.pos[0], box.pos[1], box.pos[2]);
 				Vec3d offset = RotationSystem.getRotatedPoint(partOffset, rotationPitch, rotationYaw, rotationRoll);
 				VehicleAxisAlignedBB newBox = new VehicleAxisAlignedBB(this.getPositionVector().add(offset), partOffset, box.width, box.height, box.isInterior, box.collidesWithLiquids);
-				boxList.add(newBox);
+				currentCollisionBoxes.add(newBox);
 				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.xCoord) + box.width/2F);
 				furthestHeight = (float) Math.max(furthestHeight, Math.abs(newBox.rel.yCoord) + box.height/2F);
 				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.zCoord) + box.width/2F);
 			}
 			this.collisionFrame = new VehicleAxisAlignedBBCollective(this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F);
-			return boxList;
-		}else{
-			return new ArrayList<VehicleAxisAlignedBB>(0);
+			
+			//Add all part boxes to the interaction list.
+			currentInteractionBoxes.clear();
+			for(APart part : this.getVehicleParts()){
+				currentInteractionBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));
+			}
 		}
 	}
 	
