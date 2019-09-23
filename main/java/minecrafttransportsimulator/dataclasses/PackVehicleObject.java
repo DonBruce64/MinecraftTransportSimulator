@@ -40,7 +40,6 @@ public class PackVehicleObject{
         public float tailDistance;
         public float rudderArea;
         public float elevatorArea;
-        public float defaultElevatorAngle;
     }
     
     public class PackCar{

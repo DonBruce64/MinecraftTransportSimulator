@@ -119,13 +119,12 @@ public class ItemVehicle extends Item{
 					if(!player.capabilities.isCreativeMode){
 						player.inventory.clearMatchingItems(heldStack.getItem(), heldStack.getItemDamage(), 1, heldStack.getTagCompound());
 					}
-					return EnumActionResult.SUCCESS;
 				}catch(Exception e){
 					MTS.MTSLog.error("ERROR SPAWING VEHICLE ENTITY!");
 					e.printStackTrace();
 				}
 			}
 		}
-		return EnumActionResult.FAIL;
+		return EnumActionResult.SUCCESS;
 	}
 }

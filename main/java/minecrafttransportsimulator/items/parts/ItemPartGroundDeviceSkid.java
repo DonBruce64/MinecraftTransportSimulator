@@ -27,7 +27,7 @@ public class ItemPartGroundDeviceSkid extends AItemPart{
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
 		PackPartObject pack = PackParserSystem.getPartPack(((ItemPartGroundDeviceSkid) stack.getItem()).partName); 
-		tooltipLines.add(I18n.format("info.item.ground_device.diameter") + pack.skid.width*1.5F);
+		tooltipLines.add(I18n.format("info.item.ground_device.diameter") + pack.skid.width);
 		tooltipLines.add(I18n.format("info.item.ground_device.motivefriction") + 0);
 		tooltipLines.add(I18n.format("info.item.ground_device.lateralfriction") + pack.skid.lateralFriction);
 		tooltipLines.add(I18n.format("info.item.ground_device.rotatesonshaft_false"));
