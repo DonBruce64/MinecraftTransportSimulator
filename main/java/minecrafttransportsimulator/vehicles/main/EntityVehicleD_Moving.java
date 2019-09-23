@@ -865,7 +865,6 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					if(box.offset(this.posX - this.prevPosX, this.posY - this.prevPosY + 0.1F, this.posZ - this.prevPosZ).intersectsWith(player.getEntityBoundingBox())){
 						//Player has collided with this vehicle.  Adjust movement to allow them to ride on it.
 						//If we are going too fast, the player should slip off the collision box if it's not an interior box.
-						System.out.println(Math.abs(this.velocity) );
 						if(Math.abs(this.velocity) <= clingSpeed || box.isInterior){
 							player.setPosition(player.posX + (this.posX - this.prevPosX), player.posY + (this.posY - this.prevPosY), player.posZ + (this.posZ - this.prevPosZ));
 						}else if(Math.abs(this.velocity) < 2F*clingSpeed){
