@@ -86,6 +86,8 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	
 	
 	public final double clingSpeed = ConfigSystem.getDoubleConfig("ClingSpeed");
+	public static final double maxRotationInRadPerTick = 0.0174533D*2D;
+	private static boolean doDebug = false;
 	
 	public EntityVehicleD_Moving(World world){
 		super(world);
@@ -290,7 +292,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				if((frontLeftGroundDeviceCollided && rearRightGroundDeviceCollided) || (frontRightGroundDeviceCollided && rearLeftGroundDeviceCollided)){
 					double collisionDepth = Math.max(Math.min(frontLeftCollisionDepth, rearRightCollisionDepth), Math.min(frontRightCollisionDepth, rearLeftCollisionDepth));
 					double motionToNotCollide = collisionDepth/speedFactor;
-					if(!worldObj.isRemote)System.out.println("Y ADJUST  MotionY was " + motionY + " is now " + (motionY+motionToNotCollide));
+					if(!worldObj.isRemote && doDebug)System.out.println("Y ADJUST  MotionY was " + motionY + " is now " + (motionY+motionToNotCollide));
 					motionY += motionToNotCollide;
 					//Check if motionY is close to 0.  If so, we should make it 0 as we are
 					//just sitting on the ground and shouldn't have any motionY to begin with.
@@ -304,7 +306,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				if(rearLeftGroundDeviceCollided || rearRightGroundDeviceCollided){
 					double collisionDepth = Math.max(rearLeftCollisionDepth, rearRightCollisionDepth);
 					double motionToNotCollide = collisionDepth/speedFactor;
-					if(!worldObj.isRemote)System.out.println("POS RDY ADJUST  MotionY was " + motionY + " is now " + (motionY+motionToNotCollide));
+					if(!worldObj.isRemote && doDebug)System.out.println("POS RDY ADJUST  MotionY was " + motionY + " is now " + (motionY+motionToNotCollide));
 					motionY += motionToNotCollide;
 					updateGroundDeviceCollisions();
 					return motionY;
@@ -314,7 +316,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			if(motionPitch > 0 && (frontLeftGroundDeviceCollided || frontRightGroundDeviceCollided)){
 				double collisionDepth = Math.max(frontLeftCollisionDepth, frontRightCollisionDepth);
 				double motionToNotCollide = collisionDepth/speedFactor;
-				if(!worldObj.isRemote)System.out.println("POS FUY ADJUST  MotionY was " + motionY + " is now " + (motionY+motionToNotCollide));
+				if(!worldObj.isRemote && doDebug)System.out.println("POS FUY ADJUST  MotionY was " + motionY + " is now " + (motionY+motionToNotCollide));
 				motionY += motionToNotCollide;
 				updateGroundDeviceCollisions();
 				return motionY;
@@ -475,7 +477,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//First populate the variables for ground and collided states for the groundDevices.
 		updateGroundDeviceCollisions();
 		
-		if(!worldObj.isRemote)System.out.println("STARTING CALCS WITH POSX:" + posX + " POSY:" + posY + " POSZ:" + posZ + " PITCH:" + rotationPitch + " MOY: " + motionY + " MOP: " + motionPitch);
+		if(!worldObj.isRemote && doDebug)System.out.println("STARTING CALCS WITH POSX:" + posX + " POSY:" + posY + " POSZ:" + posZ + " PITCH:" + rotationPitch + " MOY: " + motionY + " MOP: " + motionPitch);
 		//Now check to make sure our ground devices are in the right spot relative to the ground.
 		double groundCollisionBoost = correctMotionYMovement();
 		
@@ -511,7 +513,6 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//2 degrees per tick, which is 40 degrees a second.  Plenty fast, and prevents vehicles from
 		//instantly pitching up on steep slopes.  This isn't Big Rigs-Over the Road Racing here...
 		//TODO do logic here!
-		double maxAngleInRad = 0.0174533D*2D;
 		double groundRotationBoost = 0;
 		//boolean haveAllGroundDevices = frontLeftGroundDeviceBox != null && frontRightGroundDeviceBox != null && rearLeftGroundDeviceBox != null && frontLeftGroundDeviceBox != null;
 		
@@ -537,7 +538,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				}
 				
 				if(rearLeftGroundDeviceGrounded || rearRightGroundDeviceGrounded){
-					if(!worldObj.isRemote)System.out.println("FRONT COL, REAR GROUNDED");
+					if(!worldObj.isRemote && doDebug)System.out.println("FRONT COL, REAR GROUNDED");
 					//Get the farthest-back grounded rear point for the greatest angle.
 					double rearY;
 					double rearZ;
@@ -560,11 +561,11 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					//Finally, get the distance between the two points and the angle needed to get out of the collision.
 					//After that, calculate how much we will need to offset the vehicle to keep the rear in the same place.
 					double distance = Math.hypot(frontY - rearY, frontZ - rearZ);
-					double angle = -Math.min(Math.asin(collisionDepth/distance), maxAngleInRad);
+					double angle = -Math.min(Math.asin(collisionDepth/distance), maxRotationInRadPerTick);
 					motionPitch += Math.toDegrees(angle);
 					groundRotationBoost = -Math.sin(angle)*Math.hypot(rearY, rearZ);
 				}else{
-					if(!worldObj.isRemote)System.out.println("FRONT COL, REAR FREE");
+					if(!worldObj.isRemote && doDebug)System.out.println("FRONT COL, REAR FREE");
 					//In this case, we are just trying to get to a point where we have a grounded ground device.
 					//This will allow us to rotate about it and level the vehicle.
 					//We just rotate as much as we can here, and if we have negative motionY we need to set it to 0
@@ -572,7 +573,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					//do calcs using the grounded ground device.  Use the collision variable we use for the motionY
 					//as it won't be used at this point as one of the sets of ground devices are free.  If it was used
 					//because we were in the ground then one set would have to be grounded.
-					double angle = -maxAngleInRad;
+					double angle = -maxRotationInRadPerTick;
 					motionPitch += Math.toDegrees(angle);
 					groundRotationBoost = Math.sin(angle)*Math.hypot(frontY, frontZ);
 					if(motionY < 0){
@@ -596,7 +597,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				}
 				
 				if(frontLeftGroundDeviceGrounded || frontRightGroundDeviceGrounded){
-					if(!worldObj.isRemote)System.out.println("REAR COL, FRONT GROUNDED");
+					if(!worldObj.isRemote && doDebug)System.out.println("REAR COL, FRONT GROUNDED");
 					//Get the farthest-forward grounded front point for the greatest angle.
 					double frontY;
 					double frontZ;
@@ -619,11 +620,11 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					//Finally, get the distance between the two points and the angle needed to get out of the collision.
 					//After that, calculate how much we will need to offset the vehicle to keep the front in the same place.
 					double distance = Math.hypot(frontY - rearY, frontZ - rearZ);
-					double angle = Math.min(Math.asin(collisionDepth/distance), maxAngleInRad);
+					double angle = Math.min(Math.asin(collisionDepth/distance), maxRotationInRadPerTick);
 					motionPitch += Math.toDegrees(angle);
 					groundRotationBoost = Math.sin(angle)*Math.hypot(frontY, frontZ);
 				}else{
-					if(!worldObj.isRemote)System.out.println("REAR COL, FRONT FREE");
+					if(!worldObj.isRemote && doDebug)System.out.println("REAR COL, FRONT FREE");
 					//In this case, we are just trying to get to a point where we have a grounded ground device.
 					//This will allow us to rotate about it and level the vehicle.
 					//We just rotate as much as we can here, and if we have negative motionY we need to set it to 0
@@ -631,7 +632,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					//do calcs using the grounded ground device.  Use the collision variable we use for the motionY
 					//as it won't be used at this point as one of the sets of ground devices are free.  If it was used
 					//because we were in the ground then one set would have to be grounded.
-					double angle = maxAngleInRad;
+					double angle = maxRotationInRadPerTick;
 					motionPitch += Math.toDegrees(angle);
 					groundRotationBoost = -Math.sin(angle)*Math.hypot(rearY, rearZ);
 					if(motionY < 0){
@@ -644,7 +645,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			if(groundRotationBoost != 0){
 				motionY += groundRotationBoost/speedFactor;
 			}
-			if(!worldObj.isRemote)System.out.println("Boost is: " + groundRotationBoost + " motionY is: " + motionY);
+			if(!worldObj.isRemote && doDebug)System.out.println("Boost is: " + groundRotationBoost + " motionY is: " + motionY);
 		}
 
 		//Now that that the movement has been checked, move the vehicle.

@@ -223,7 +223,7 @@ public final class SFXSystem{
 						ResourceLocation soundFileLocation = new ResourceLocation(sound.getSoundName());
 						soundFileLocation = new ResourceLocation(soundFileLocation.getResourceDomain(), "sounds/" + soundFileLocation.getResourcePath() + ".ogg");
 						URL soundURL = (URL) getURLMethod.invoke(null, soundFileLocation);
-						mcSoundSystem.newSource(false, soundID, soundURL, soundFileLocation.toString(), true, sound.getPosX(), sound.getPosY(), sound.getPosZ(), SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
+						mcSoundSystem.newSource(false, soundID, soundURL, soundFileLocation.toString(), true, (float) sound.getPosX(), (float) sound.getPosY(), (float) sound.getPosZ(), SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
 						mcSoundSystem.play(soundID);
 						playingSounds.add(soundID);
 					}catch(Exception e){
@@ -236,7 +236,10 @@ public final class SFXSystem{
 				if(playingSounds.contains(soundID)){
 					mcSoundSystem.setVolume(soundID, sound.getVolume());
 					mcSoundSystem.setPitch(soundID, sound.getPitch());
-					mcSoundSystem.setPosition(soundID, sound.getPosX() + sound.getMotX()*partialTicks, sound.getPosY() + sound.getMotY()*partialTicks, sound.getPosZ() + sound.getMotZ()*partialTicks);
+					//Set the position to 5 blocks from the player in the direction of the sound.
+					//Don't worry about motion as that's used in the sound itself for the pitch.
+					Vec3d soundNormalizedPosition = new Vec3d(sound.getPosX() - player.posX, sound.getPosY() - player.posY, sound.getPosZ() - player.posZ).normalize().scale(5).add(player.getPositionVector());
+					mcSoundSystem.setPosition(soundID, (float) soundNormalizedPosition.xCoord, (float) soundNormalizedPosition.yCoord, (float) soundNormalizedPosition.zCoord);
 					if(Minecraft.getMinecraft().isGamePaused()){
 						mcSoundSystem.pause(soundID);
 					}else{

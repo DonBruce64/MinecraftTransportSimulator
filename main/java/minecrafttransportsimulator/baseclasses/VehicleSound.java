@@ -27,28 +27,16 @@ public final class VehicleSound{
 		this.sourcePos = optionalPart != null ? optionalPart.partPos : vehicle.getPositionVector();
 	}
 	
-	public float getPosX(){
-		return (float) (optionalPart != null ? optionalPart.partPos.xCoord : vehicle.posX);
+	public double getPosX(){
+		return optionalPart != null ? optionalPart.partPos.xCoord : vehicle.posX;
 	}
 	
-	public float getPosY(){
-		return (float) (optionalPart != null ? optionalPart.partPos.yCoord : vehicle.posY);
+	public double getPosY(){
+		return optionalPart != null ? optionalPart.partPos.yCoord : vehicle.posY;
 	}
 	
-	public float getPosZ(){
-		return (float) (optionalPart != null ? optionalPart.partPos.zCoord : vehicle.posZ);
-	}
-	
-	public float getMotX(){
-		return (float) (vehicle.motionX*vehicle.speedFactor);
-	}
-	
-	public float getMotY(){
-		return (float) (vehicle.motionY*vehicle.speedFactor);
-	}
-	
-	public float getMotZ(){
-		return (float) (vehicle.motionZ*vehicle.speedFactor);
+	public double getPosZ(){
+		return optionalPart != null ? optionalPart.partPos.zCoord : vehicle.posZ;
 	}
 	
 	public float getVolume(){
@@ -108,7 +96,7 @@ public final class VehicleSound{
 	
 	private float getCurrentVolume(){
 		switch(soundType){
-			case ENGINE: return (float) (30F*((APartEngine) optionalPart).RPM/2000F);
+			case ENGINE: return (float) (30F*((APartEngine) optionalPart).RPM/((APartEngine) optionalPart).pack.engine.maxRPM);
 			case HORN: return 5.0F;
 			case SIREN: return 10.0F;
 			default: return 1.0F;
