@@ -49,7 +49,7 @@ public class GUISign extends GuiScreen{
 	private PackSignObject pack;
 		
 	public GUISign(BlockPoleSign block, EntityPlayer player){
-		this.decor = (TileEntityPoleSign) player.worldObj.getTileEntity(block.lastClickedPos);
+		this.decor = (TileEntityPoleSign) player.world.getTileEntity(block.lastClickedPos);
 		this.decorTemp = new TileEntityPoleSign();		
 		this.player = player;
 		if(!decor.definition.isEmpty()){
@@ -73,7 +73,7 @@ public class GUISign extends GuiScreen{
 		buttonList.add(textButton = new GuiButton(0, guiLeft + 8, guiTop + 55, 126, 108, ""));
 		
 		for(byte i=0; i<10; ++i){
-			signTextBoxes.add(new GuiTextField(0, fontRendererObj, guiLeft + 9, guiTop + 54 + i*10, 125, 10));
+			signTextBoxes.add(new GuiTextField(0, fontRenderer, guiLeft + 9, guiTop + 54 + i*10, 125, 10));
 			signTextBoxes.get(i).setEnabled(false);
 		}
 	}
@@ -104,7 +104,7 @@ public class GUISign extends GuiScreen{
 		textButton.enabled = !signName.isEmpty() && pack.general.textLines != null;
 		for(GuiButton button : buttonList){
 			if(!button.equals(textButton)){
-				button.drawButton(mc, mouseX, mouseY);
+				button.drawButton(mc, mouseX, mouseY, 0);
 			}
 		}
 		this.drawRect(guiLeft + 190, guiTop + 188, guiLeft + 206, guiTop + 172, startButton.enabled ? Color.GREEN.getRGB() : Color.RED.getRGB());
@@ -129,7 +129,7 @@ public class GUISign extends GuiScreen{
 			GL11.glRotatef(180, 0, 1, 0);
 			float scale = -90F;
 			GL11.glScalef(scale, scale, scale);
-			TileEntityRendererDispatcher.instance.renderTileEntityAt(decorTemp, -0.5F, -0.5F, -0.5F, renderPartialTicks);
+			TileEntityRendererDispatcher.instance.render(decorTemp, -0.5F, -0.5F, -0.5F, renderPartialTicks, 0);
 			GL11.glPopMatrix();
 			
 			//If we have text on the sign, render it in the text boxes.
@@ -150,7 +150,7 @@ public class GUISign extends GuiScreen{
 		super.actionPerformed(buttonClicked);
 		if(buttonClicked.equals(startButton)){
 			MTS.MTSNet.sendToServer(new PacketSignChange(decor, signName, decorTemp.text));
-			mc.thePlayer.closeScreen();
+			mc.player.closeScreen();
 			return;
 		}else{
 			if(buttonClicked.equals(leftPackButton)){
@@ -202,7 +202,7 @@ public class GUISign extends GuiScreen{
 	}
 	
 	private void drawCenteredString(String stringToDraw, int x, int y){
-		fontRendererObj.drawString(stringToDraw, x - fontRendererObj.getStringWidth(stringToDraw)/2, y, 4210752);
+		fontRenderer.drawString(stringToDraw, x - fontRenderer.getStringWidth(stringToDraw)/2, y, 4210752);
 	}
 	
 	private void updateSignNames(){

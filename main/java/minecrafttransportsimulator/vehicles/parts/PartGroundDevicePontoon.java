@@ -44,8 +44,8 @@ public final class PartGroundDevicePontoon extends APartGroundDevice{
 	    		for(int j = minY; j < maxY; ++j){
 	    			for(int k = minZ; k < maxZ; ++k){
 	    				BlockPos checkPos = new BlockPos(i, j, k);
-	    				if(vehicle.worldObj.isBlockLoaded(checkPos)){
-		    				if(vehicle.worldObj.getBlockState(checkPos).getMaterial().isLiquid()){
+	    				if(vehicle.world.isBlockLoaded(checkPos)){
+		    				if(vehicle.world.getBlockState(checkPos).getMaterial().isLiquid()){
 		    					return true;
 		    				}
 	    				}

@@ -149,7 +149,7 @@ public final class SFXSystem{
 		while(soundIterator.hasNext()){
 			String soundID = soundIterator.next();
 			int entityID = Integer.valueOf(soundID.substring(0, soundID.indexOf('_')));
-			if(Minecraft.getMinecraft().theWorld.getEntityByID(entityID) == null){
+			if(Minecraft.getMinecraft().world.getEntityByID(entityID) == null){
 				mcSoundSystem.stop(soundID);
 				soundIterator.remove();
 			}
@@ -161,8 +161,8 @@ public final class SFXSystem{
 	 * This is used to determine the volume of MTS sounds.
 	 */
 	public static boolean isPlayerInsideEnclosedVehicle(){
-		if(Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().thePlayer.getRidingEntity() instanceof EntityVehicleD_Moving){
-			return !((EntityVehicleD_Moving) Minecraft.getMinecraft().thePlayer.getRidingEntity()).pack.general.openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
+		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.getRidingEntity() instanceof EntityVehicleD_Moving){
+			return !((EntityVehicleD_Moving) Minecraft.getMinecraft().player.getRidingEntity()).pack.general.openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
 		}else{
 			return false;
 		}
@@ -172,20 +172,20 @@ public final class SFXSystem{
 	 * Plays a single sound.
 	 */
 	public static void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){
-		if(Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().theWorld.isRemote){
+		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().world.isRemote){
 			//If we don't have the running instance of the SoundSystem, get it now.
 			if(mcSoundSystem == null){
 				initSoundSystemHooks();
 			}
 			
 			volume = isPlayerInsideEnclosedVehicle() ? volume*0.5F : volume;
-			double soundDistance = Minecraft.getMinecraft().thePlayer.getPositionVector().distanceTo(soundPosition);
+			double soundDistance = Minecraft.getMinecraft().player.getPositionVector().distanceTo(soundPosition);
 			
 			try{
 				ResourceLocation soundFileLocation = new ResourceLocation(soundName);
 				soundFileLocation = new ResourceLocation(soundFileLocation.getResourceDomain(), "sounds/" + soundFileLocation.getResourcePath() + ".ogg");
 				URL soundURL = (URL) getURLMethod.invoke(null, soundFileLocation);
-				String soundTempName = mcSoundSystem.quickPlay(false, soundURL, soundFileLocation.toString(), false, (float) soundPosition.xCoord, (float) soundPosition.yCoord, (float) soundPosition.zCoord, SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
+				String soundTempName = mcSoundSystem.quickPlay(false, soundURL, soundFileLocation.toString(), false, (float) soundPosition.x, (float) soundPosition.y, (float) soundPosition.z, SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
 				mcSoundSystem.setVolume(soundTempName, volume);
 				mcSoundSystem.setPitch(soundTempName, pitch);
 			}catch(Exception e){
@@ -211,7 +211,7 @@ public final class SFXSystem{
 			vehicle.soundsNeedInit = false;
 		}
 		
-		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+		EntityPlayer player = Minecraft.getMinecraft().player;
 		for(VehicleSound sound : vehicle.getSounds()){
 			String soundID = sound.getSoundUniqueName();
 			
@@ -239,7 +239,7 @@ public final class SFXSystem{
 					//Set the position to 5 blocks from the player in the direction of the sound.
 					//Don't worry about motion as that's used in the sound itself for the pitch.
 					Vec3d soundNormalizedPosition = new Vec3d(sound.getPosX() - player.posX, sound.getPosY() - player.posY, sound.getPosZ() - player.posZ).normalize().scale(5).add(player.getPositionVector());
-					mcSoundSystem.setPosition(soundID, (float) soundNormalizedPosition.xCoord, (float) soundNormalizedPosition.yCoord, (float) soundNormalizedPosition.zCoord);
+					mcSoundSystem.setPosition(soundID, (float) soundNormalizedPosition.x, (float) soundNormalizedPosition.y, (float) soundNormalizedPosition.z);
 					if(Minecraft.getMinecraft().isGamePaused()){
 						mcSoundSystem.pause(soundID);
 					}else{
@@ -273,7 +273,7 @@ public final class SFXSystem{
 	}
 	
 	public static void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine engine){
-		if(vehicle.worldObj.isRemote){
+		if(vehicle.world.isRemote){
 			vehicle.addSound(SoundTypes.ENGINE, engine);
 		}
 	}

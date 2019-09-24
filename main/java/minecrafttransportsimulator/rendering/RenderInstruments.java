@@ -125,7 +125,7 @@ public abstract class RenderInstruments{
 			case("yaw"): return -vehicle.rotationYaw;
 			case("pitch"): return Math.max(Math.min(vehicle.rotationPitch, 25), -25);
 			case("roll"): return vehicle.rotationRoll;
-			case("altitude"): return vehicle.posY - (ConfigSystem.getBooleanConfig("SeaLevelOffset") ? vehicle.worldObj.provider.getAverageGroundLevel() : 0);
+			case("altitude"): return vehicle.posY - (ConfigSystem.getBooleanConfig("SeaLevelOffset") ? vehicle.world.provider.getAverageGroundLevel() : 0);
 			case("speed"): return Math.abs(vehicle.velocity*vehicle.speedFactor*20);
 			case("turn_coordinator"): return Math.max(Math.min(((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F, 50), -50);
 			case("turn_indicator"): return Math.max(Math.min((vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F, 50), -50);
@@ -182,7 +182,7 @@ public abstract class RenderInstruments{
 	protected static void drawScaledString(String string, int x, int y, float scale){
     	GL11.glPushMatrix();
     	GL11.glScalef(scale, scale, scale);
-    	Minecraft.getMinecraft().fontRendererObj.drawString(string, x, y, Color.WHITE.getRGB());
+    	Minecraft.getMinecraft().fontRenderer.drawString(string, x, y, Color.WHITE.getRGB());
     	GL11.glPopMatrix();
     }
 }

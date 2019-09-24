@@ -18,8 +18,8 @@ public class RenderFuelPump extends TileEntitySpecialRenderer<TileEntityFuelPump
 	public RenderFuelPump(){}
 	
 	@Override
-	public void renderTileEntityAt(TileEntityFuelPump pump, double x, double y, double z, float partialTicks, int destroyStage){
-		super.renderTileEntityAt(pump, x, y, z, partialTicks, destroyStage);
+	public void render(TileEntityFuelPump pump, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
+		super.render(pump, x, y, z, partialTicks, destroyStage, alpha);
 		Block block = pump.getWorld().getBlockState(pump.getPos()).getBlock();
 		if(!(block instanceof BlockFuelPump)){
 			return;

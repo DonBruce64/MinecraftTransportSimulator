@@ -34,9 +34,9 @@ public class PartPropeller extends APart{
 	
 	@Override
 	public void attackPart(DamageSource source, float damage){
-		if(source.getEntity() instanceof EntityPlayer){
-			EntityPlayer player = (EntityPlayer) source.getEntity();
-			if(player.getHeldItemMainhand() == null){
+		if(source.getTrueSource() instanceof EntityPlayer){
+			EntityPlayer player = (EntityPlayer) source.getTrueSource();
+			if(player.getHeldItemMainhand().isEmpty()){
 				if(!vehicle.equals(player.getRidingEntity())){
 					connectedEngine.handStartEngine();
 					MTS.MTSNet.sendToAll(new PacketPartEngineSignal(connectedEngine, PacketEngineTypes.HS_ON));
@@ -62,12 +62,12 @@ public class PartPropeller extends APart{
 				++currentPitch;
 			}
 		}
-		if(vehicle.worldObj.isRemote){
+		if(vehicle.world.isRemote){
 			angularVelocity = (float) (360*connectedEngine.RPM*connectedEngine.pack.engine.gearRatios[0]/60F/20F);
 			angularPosition += angularVelocity;
 		}else{
 			if(connectedEngine.RPM >= 100){
-				List<EntityLivingBase> collidedEntites = vehicle.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(Vec3d.ZERO).expand(0.2F, 0.2F, 0.2F));
+				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(Vec3d.ZERO).expand(0.2F, 0.2F, 0.2F));
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
 					for(Entity passenger : vehicle.getPassengers()){
@@ -117,7 +117,7 @@ public class PartPropeller extends APart{
 	
 	private void damagePropeller(float damage){
 		this.damage += damage;
-		if(this.damage > pack.propeller.startingHealth && !vehicle.worldObj.isRemote){
+		if(this.damage > pack.propeller.startingHealth && !vehicle.world.isRemote){
 			vehicle.removePart(this, true);
 		}
 	}

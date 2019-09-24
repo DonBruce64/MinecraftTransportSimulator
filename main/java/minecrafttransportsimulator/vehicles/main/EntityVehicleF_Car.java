@@ -71,9 +71,9 @@ public final class EntityVehicleF_Car extends EntityVehicleE_Powered{
 		dragForce = 0.5F*airDensity*velocity*velocity*5.0F*pack.car.dragCoefficient;
 		gravitationalForce = currentMass*(9.8/400);
 				
-		motionX += (headingVec.xCoord*wheelForce - velocityVec.xCoord*dragForce)/currentMass;
-		motionZ += (headingVec.zCoord*wheelForce - velocityVec.zCoord*dragForce)/currentMass;
-		motionY += (headingVec.yCoord*wheelForce - velocityVec.yCoord*dragForce - gravitationalForce)/currentMass;
+		motionX += (headingVec.x*wheelForce - velocityVec.x*dragForce)/currentMass;
+		motionZ += (headingVec.z*wheelForce - velocityVec.z*dragForce)/currentMass;
+		motionY += (headingVec.y*wheelForce - velocityVec.y*dragForce - gravitationalForce)/currentMass;
 		
 		motionYaw = 0;
 		motionPitch = 0;

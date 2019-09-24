@@ -53,9 +53,9 @@ public class PacketVehicleServerPartAddition extends APacketVehiclePart{
 					EntityVehicleA_Base vehicle = (EntityVehicleA_Base) getVehicle(message, ctx);
 					EntityPlayer player;
 					if(ctx.side.isServer()){
-						player = (EntityPlayer) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.player);
+						player = (EntityPlayer) ctx.getServerHandler().player.world.getEntityByID(message.player);
 					}else{
-						player = (EntityPlayer) Minecraft.getMinecraft().theWorld.getEntityByID(message.player);
+						player = (EntityPlayer) Minecraft.getMinecraft().world.getEntityByID(message.player);
 					}
 					
 					ItemStack heldStack = player.getHeldItemMainhand();

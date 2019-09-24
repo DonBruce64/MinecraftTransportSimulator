@@ -47,7 +47,7 @@ public class PacketFuelPumpConnection extends APacketTileEntity{
 					TileEntityFuelPump pump = (TileEntityFuelPump) getTileEntity(message, ctx);
 					if(pump != null){
 						if(message.connectedVehicleID != -1){
-							pump.setConnectedVehicle((EntityVehicleE_Powered) Minecraft.getMinecraft().theWorld.getEntityByID(message.connectedVehicleID));
+							pump.setConnectedVehicle((EntityVehicleE_Powered) Minecraft.getMinecraft().world.getEntityByID(message.connectedVehicleID));
 						}else{
 							pump.setConnectedVehicle(null);
 						}

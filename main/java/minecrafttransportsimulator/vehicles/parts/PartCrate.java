@@ -21,13 +21,13 @@ public final class PartCrate extends APart{
         for (byte i = 0; i < stackTagList.tagCount(); ++i){
             NBTTagCompound stackTag = stackTagList.getCompoundTagAt(i);
             byte slot = (byte) (stackTag.getByte("Slot") & 255);
-            crateInventory.setInventorySlotContents(slot, ItemStack.loadItemStackFromNBT(stackTag));
+            crateInventory.setInventorySlotContents(slot, new ItemStack(stackTag));
         }
 	}
 	
 	@Override
 	public boolean interactPart(EntityPlayer player){
-		if(!player.worldObj.isRemote){
+		if(!player.world.isRemote){
 			if(!vehicle.locked){
 				player.displayGUIChest(this.crateInventory);
 			}else{

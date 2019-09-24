@@ -151,7 +151,7 @@ public final class ControlSystem{
 		//If this control is used in a momentary fashion make sure to only
 		//fire the event on the tick that the button was last pressed on!
 		if(pressed){
-			Long time = Minecraft.getMinecraft().theWorld.getTotalWorldTime();
+			Long time = Minecraft.getMinecraft().world.getTotalWorldTime();
 			if(!buttonMap.containsKey(button)){
 				buttonMap.put(button, time);
 			}
@@ -231,31 +231,31 @@ public final class ControlSystem{
 	
 	private static void rotateCamera(ControlsJoystick lookR, ControlsJoystick lookL, ControlsJoystick lookU, ControlsJoystick lookD, ControlsJoystick lookA){
 		if(lookR.isPressed()){
-			Minecraft.getMinecraft().thePlayer.rotationYaw+=3;
+			Minecraft.getMinecraft().player.rotationYaw+=3;
 		}
 		if(lookL.isPressed()){
-			Minecraft.getMinecraft().thePlayer.rotationYaw-=3;
+			Minecraft.getMinecraft().player.rotationYaw-=3;
 		}
 		if(lookU.isPressed()){
-			Minecraft.getMinecraft().thePlayer.rotationPitch-=3;
+			Minecraft.getMinecraft().player.rotationPitch-=3;
 		}
 		if(lookD.isPressed()){
-			Minecraft.getMinecraft().thePlayer.rotationPitch+=3;
+			Minecraft.getMinecraft().player.rotationPitch+=3;
 		}
 		
 		float pollData = getJoystickMultistateValue(lookA);
 		if(pollData != 0){
 			if(pollData >= 0.125F && pollData <= 0.375F){
-				Minecraft.getMinecraft().thePlayer.rotationPitch+=3;
+				Minecraft.getMinecraft().player.rotationPitch+=3;
 			}
 			if(pollData >= 0.375F && pollData <= 0.625F){
-				Minecraft.getMinecraft().thePlayer.rotationYaw+=3;
+				Minecraft.getMinecraft().player.rotationYaw+=3;
 			}
 			if(pollData >= 0.625F && pollData <= 0.875F){
-				Minecraft.getMinecraft().thePlayer.rotationPitch-=3;
+				Minecraft.getMinecraft().player.rotationPitch-=3;
 			}
 			if(pollData >= 0.875F || pollData <= 0.125F){
-				Minecraft.getMinecraft().thePlayer.rotationYaw-=3;
+				Minecraft.getMinecraft().player.rotationYaw-=3;
 			}
 		}
 	}
@@ -281,18 +281,18 @@ public final class ControlSystem{
 	}
 	
 	private static void controlGun(EntityVehicleE_Powered vehicle, ControlsKeyboard gun){
-		PartSeat seat = vehicle.getSeatForRider(Minecraft.getMinecraft().thePlayer);
+		PartSeat seat = vehicle.getSeatForRider(Minecraft.getMinecraft().player);
 		if(seat != null){
 			if(seat.isController){
 				for(APart part : vehicle.getVehicleParts()){
 					if(part instanceof APartGun && part.parentPart == null){
-						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().thePlayer.getEntityId() : -1));
+						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().player.getEntityId() : -1));
 					}
 				}
 			}else{
 				for(APart part : seat.childParts){
 					if(part instanceof APartGun){
-						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().thePlayer.getEntityId() : -1));
+						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().player.getEntityId() : -1));
 					}
 				}
 			}

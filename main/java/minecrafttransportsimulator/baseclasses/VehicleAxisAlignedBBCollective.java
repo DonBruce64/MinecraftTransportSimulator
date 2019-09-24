@@ -22,7 +22,7 @@ public class VehicleAxisAlignedBBCollective extends VehicleAxisAlignedBB{
 	}
 	
 	@Override
-	public VehicleAxisAlignedBBCollective expandXyz(double value){
+	public VehicleAxisAlignedBBCollective grow(double value){
 		return this;
     }
 	
@@ -60,14 +60,14 @@ public class VehicleAxisAlignedBBCollective extends VehicleAxisAlignedBB{
     }
 	
 	@Override
-    public boolean intersectsWith(AxisAlignedBB other){
+    public boolean intersects(AxisAlignedBB other){
 		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
-			if(box.intersectsWith(other)){
+			if(box.intersects(other)){
 				return true;
 			}
 		}
 		for(VehicleAxisAlignedBB box : vehicle.getCurrentInteractionBoxes()){
-			if(box.intersectsWith(other)){
+			if(box.intersects(other)){
 				return true;
 			}
 		}
@@ -90,14 +90,14 @@ public class VehicleAxisAlignedBBCollective extends VehicleAxisAlignedBB{
     }
 	
 	@Override
-	public boolean isVecInside(Vec3d vec){
+	public boolean contains(Vec3d vec){
 		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
-			if(box.isVecInside(vec)){
+			if(box.contains(vec)){
 				return true;
 			}
 		}
 		for(VehicleAxisAlignedBB box : vehicle.getCurrentInteractionBoxes()){
-			if(box.isVecInside(vec)){
+			if(box.contains(vec)){
 				return true;
 			}
 		}

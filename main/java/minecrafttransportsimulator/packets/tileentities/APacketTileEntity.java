@@ -30,9 +30,9 @@ public abstract class APacketTileEntity implements IMessage{
 
 	protected static TileEntity getTileEntity(APacketTileEntity message, MessageContext ctx){
 		if(ctx.side.isServer()){
-			return ctx.getServerHandler().playerEntity.worldObj.getTileEntity(message.tileEntityPos);
+			return ctx.getServerHandler().player.world.getTileEntity(message.tileEntityPos);
 		}else{
-			return Minecraft.getMinecraft().theWorld.getTileEntity(message.tileEntityPos);
+			return Minecraft.getMinecraft().world.getTileEntity(message.tileEntityPos);
 		}
 	}
 }

@@ -21,7 +21,7 @@ public class VehicleAxisAlignedBB extends AxisAlignedBB{
 	public final float height;
 	
 	public VehicleAxisAlignedBB(Vec3d pos, Vec3d rel, float width, float height, boolean isInterior, boolean collidesWithLiquids){
-		super(pos.xCoord - width/2F, pos.yCoord - height/2F, pos.zCoord - width/2F, pos.xCoord + width/2F, pos.yCoord + height/2F, pos.zCoord + width/2F);
+		super(pos.x - width/2F, pos.y - height/2F, pos.z - width/2F, pos.x + width/2F, pos.y + height/2F, pos.z + width/2F);
 		this.pos = pos;
 		this.rel = rel;
 		this.width = width;
@@ -40,7 +40,7 @@ public class VehicleAxisAlignedBB extends AxisAlignedBB{
 	}
 	
 	@Override
-	public VehicleAxisAlignedBB expandXyz(double value){
+	public VehicleAxisAlignedBB grow(double value){
 		return new VehicleAxisAlignedBB(this.pos, this.rel, (float) (this.width + value*2F), (float) (this.height + value*2F), this.isInterior, this.collidesWithLiquids);
     }
 }

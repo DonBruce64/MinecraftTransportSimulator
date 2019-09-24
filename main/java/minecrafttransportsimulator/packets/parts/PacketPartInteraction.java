@@ -37,7 +37,7 @@ public class PacketPartInteraction extends APacketPart{
 				@Override
 				public void run(){
 					APart part = getVehiclePartFromMessage(message, ctx);
-					EntityPlayer player = (EntityPlayer) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.player);
+					EntityPlayer player = (EntityPlayer) ctx.getServerHandler().player.world.getEntityByID(message.player);
 					if(part != null && player != null){
 						part.interactPart(player);
 					}

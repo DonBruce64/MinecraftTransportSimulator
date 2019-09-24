@@ -33,10 +33,10 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	public void attackPart(DamageSource source, float damage){
 		if(!this.isFlat){
 			if(source.isExplosion() || Math.random() < 0.1){
-				if(!vehicle.worldObj.isRemote){
+				if(!vehicle.world.isRemote){
 					this.setFlat();
 					Vec3d explosionPosition = partPos;
-					vehicle.worldObj.newExplosion(vehicle, explosionPosition.xCoord, explosionPosition.yCoord, explosionPosition.zCoord, 0.25F, false, false);
+					vehicle.world.newExplosion(vehicle, explosionPosition.x, explosionPosition.y, explosionPosition.z, 0.25F, false, false);
 					MTS.MTSNet.sendToAll(new PacketPartGroundDeviceWheelFlat(this));
 				}
 			}
@@ -51,7 +51,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 			//Set contact for wheel skid.
 			if(prevAngularVelocity/(vehicle.velocity/(this.getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
 				BlockPos blockBelow = new BlockPos(partPos).down();
-				if(vehicle.worldObj.getBlockState(blockBelow).getBlockHardness(vehicle.worldObj, blockBelow) >= 1.25){
+				if(vehicle.world.getBlockState(blockBelow).getBlockHardness(vehicle.world, blockBelow) >= 1.25){
 					contactThisTick = true;
 				}
 			}
@@ -64,10 +64,10 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 			}else if(!isFlat){
 				++ticksCalcsSkipped;
 				if(Math.random()*50000 < ticksCalcsSkipped){
-					if(!vehicle.worldObj.isRemote){
+					if(!vehicle.world.isRemote){
 						this.setFlat();
 						Vec3d explosionPosition = partPos;
-						vehicle.worldObj.newExplosion(vehicle, explosionPosition.xCoord, explosionPosition.yCoord, explosionPosition.zCoord, 0.25F, false, false);
+						vehicle.world.newExplosion(vehicle, explosionPosition.x, explosionPosition.y, explosionPosition.z, 0.25F, false, false);
 						MTS.MTSNet.sendToAll(new PacketPartGroundDeviceWheelFlat(this));
 					}
 				}
@@ -147,14 +147,14 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	public void spawnParticles(){
 		if(contactThisTick){
 			for(byte i=0; i<4; ++i){
-				Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.WhiteSmokeFX(vehicle.worldObj, partPos.xCoord, partPos.yCoord, partPos.zCoord, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05));
+				Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.WhiteSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05));
 			}
 			MTS.proxy.playSound(this.partPos, MTS.MODID + ":" + "wheel_striking", 1, 1);
 			contactThisTick = false;
 		}
 		if(skipAngularCalcs && this.isOnGround()){
 			for(byte i=0; i<4; ++i){
-				Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.WhiteSmokeFX(vehicle.worldObj, partPos.xCoord, partPos.yCoord, partPos.zCoord, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05));
+				Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.WhiteSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05));
 			}
 		}
 	}

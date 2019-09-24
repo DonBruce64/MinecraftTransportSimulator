@@ -105,7 +105,7 @@ public final class EntityVehicleF_Plane extends EntityVehicleE_Powered{
 			if(engine != null){
 				thrust = engine.getForceOutput();
 				thrustForce += thrust;
-				thrustTorque += thrust*engine.offset.xCoord;
+				thrustTorque += thrust*engine.offset.x;
 			}
 		}
 		
@@ -128,13 +128,13 @@ public final class EntityVehicleF_Plane extends EntityVehicleE_Powered{
 			}
 		}
 				
-		motionX += (headingVec.xCoord*thrustForce - velocityVec.xCoord*dragForce + verticalVec.xCoord*(wingForce + elevatorForce))/currentMass;
-		motionZ += (headingVec.zCoord*thrustForce - velocityVec.zCoord*dragForce + verticalVec.zCoord*(wingForce + elevatorForce))/currentMass;
-		motionY += (headingVec.yCoord*thrustForce - velocityVec.yCoord*dragForce + verticalVec.yCoord*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
+		motionX += (headingVec.x*thrustForce - velocityVec.x*dragForce + verticalVec.x*(wingForce + elevatorForce))/currentMass;
+		motionZ += (headingVec.z*thrustForce - velocityVec.z*dragForce + verticalVec.z*(wingForce + elevatorForce))/currentMass;
+		motionY += (headingVec.y*thrustForce - velocityVec.y*dragForce + verticalVec.y*(wingForce + elevatorForce) - gravitationalForce)/currentMass;
 		
-		motionRoll = (float) (180/Math.PI*((1-headingVec.yCoord)*aileronTorque)/momentRoll);
-		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.yCoord))*elevatorTorque - sideVec.yCoord*(thrustTorque + rudderTorque))/momentPitch);
-		motionYaw = (float) (180/Math.PI*(headingVec.yCoord*aileronTorque - verticalVec.yCoord*(-thrustTorque - rudderTorque) + sideVec.yCoord*elevatorTorque)/momentYaw);
+		motionRoll = (float) (180/Math.PI*((1-headingVec.y)*aileronTorque)/momentRoll);
+		motionPitch = (float) (180/Math.PI*((1-Math.abs(sideVec.y))*elevatorTorque - sideVec.y*(thrustTorque + rudderTorque))/momentPitch);
+		motionYaw = (float) (180/Math.PI*(headingVec.y*aileronTorque - verticalVec.y*(-thrustTorque - rudderTorque) + sideVec.y*elevatorTorque)/momentYaw);
 	}
 
 	@Override

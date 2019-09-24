@@ -17,7 +17,7 @@ public final class PartSeat extends APart{
 	
 	@Override
 	public boolean interactPart(EntityPlayer player){
-		if(!vehicle.worldObj.isRemote){
+		if(!vehicle.world.isRemote){
 			//See if we can enter this vehicle.
 			//Alternately, we can switch seats if we're already in the vehicle.
 			if(!vehicle.locked || vehicle.equals(player.getRidingEntity())){

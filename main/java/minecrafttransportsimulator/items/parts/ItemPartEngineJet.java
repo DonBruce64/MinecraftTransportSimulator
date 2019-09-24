@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.items.parts;
 
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.world.World;
+import javax.annotation.Nullable;
 import java.util.List;
 
 import minecrafttransportsimulator.dataclasses.PackPartObject;
@@ -21,7 +24,7 @@ public final class ItemPartEngineJet extends AItemPartEngine{
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
+	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
 		NBTTagCompound stackTag = stack.getTagCompound();
 		PackPartObject pack = PackParserSystem.getPartPack(((ItemPartEngineJet) stack.getItem()).partName); 
 		

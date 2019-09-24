@@ -32,10 +32,10 @@ public class PartEngineJet extends APartEngine{
 			RPM = Math.max(RPM + (plane.velocity - 0.0254*250*RPM/60/20)*15 - 10, 0);
 		}
 		
-		if(!vehicle.worldObj.isRemote){
+		if(!vehicle.world.isRemote){
 			if(RPM >= 5000){
 				//Check for entities in front of the jet, and damage them if they are.
-				List<EntityLivingBase> collidedEntites = vehicle.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(vehicle.headingVec).expand(-0.25F, -0.25F, -0.25F));
+				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(vehicle.headingVec).expand(-0.25F, -0.25F, -0.25F));
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
 					for(Entity passenger : vehicle.getPassengers()){
@@ -52,7 +52,7 @@ public class PartEngineJet extends APartEngine{
 				}
 				
 				//Check for entities behind the jet, and damage them with fire if they are.
-				collidedEntites = vehicle.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(vehicle.headingVec.scale(-1.0D)).expand(0.25F, 0.25F, 0.25F));
+				collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(vehicle.headingVec.scale(-1.0D)).expand(0.25F, 0.25F, 0.25F));
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
 					for(Entity passenger : vehicle.getPassengers()){

@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.dataclasses;
 
+import net.minecraft.util.ResourceLocation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -328,8 +329,8 @@ public final class MTSRegistry{
 	 * the pack data stored in NBT is what makes for different vehicles.
 	 */
 	private static void initEntities(){
-		EntityRegistry.registerModEntity(EntityVehicleF_Car.class, "vehiclecar", entityNumber++, MTS.MODID, 80, 5, false);
-		EntityRegistry.registerModEntity(EntityVehicleF_Plane.class, "vehicleplane", entityNumber++, MTS.MODID, 80, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleF_Car.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleF_Car.class, "vehiclecar", entityNumber++, MTS.MODID, 80, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleF_Plane.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleF_Plane.class, "vehicleplane", entityNumber++, MTS.MODID, 80, 5, false);
 	}
 	
 	private static void initPackets(){
@@ -555,7 +556,7 @@ public final class MTSRegistry{
 	
 	/**Registers a crafting recipe.  This is segmented out here as the method changes in 1.12 and the single location makes it easy for the script to update it.**/
 	private static void registerRecipe(ItemStack output, Object...params){
-		GameRegistry.addShapedRecipe(output, params);
+		GameRegistry.addShapedRecipe(new ResourceLocation(MTS.MODID, output.getItem().getUnlocalizedName() + craftingNumber), null, output, params);
 		++craftingNumber;
 	}
 	

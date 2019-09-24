@@ -26,7 +26,7 @@ public class PacketVehicleClientInit extends APacketVehicle{
 					if(vehicle!=null){
 						NBTTagCompound tagCompound = new NBTTagCompound();
 						vehicle.writeToNBT(tagCompound);
-						MTS.MTSNet.sendTo(new PacketVehicleClientInitResponse(vehicle, tagCompound), ctx.getServerHandler().playerEntity);
+						MTS.MTSNet.sendTo(new PacketVehicleClientInitResponse(vehicle, tagCompound), ctx.getServerHandler().player);
 					}
 				}
 			});

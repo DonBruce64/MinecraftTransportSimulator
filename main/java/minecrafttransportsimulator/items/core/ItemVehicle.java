@@ -33,7 +33,7 @@ public class ItemVehicle extends Item{
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
+	public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
 		if(!world.isRemote && player.getHeldItem(hand) != null){
 			ItemStack heldStack = player.getHeldItem(hand);
 			if(heldStack.getItem() != null){
@@ -101,7 +101,7 @@ public class ItemVehicle extends Item{
 					
 					//Next, boost based on parts.
 					for(APart part : newVehicle.getVehicleParts()){
-						minHeight = Math.min(part.offset.xCoord - part.getHeight()/2F, minHeight);
+						minHeight = Math.min(part.offset.x - part.getHeight()/2F, minHeight);
 					}
 					
 					//Apply the boost, and check collisions.
@@ -115,7 +115,7 @@ public class ItemVehicle extends Item{
 					}
 					
 					//If we didn't collide with anything, let the vehicle remain in the world.
-					world.spawnEntityInWorld(newVehicle);
+					world.spawnEntity(newVehicle);
 					if(!player.capabilities.isCreativeMode){
 						player.inventory.clearMatchingItems(heldStack.getItem(), heldStack.getItemDamage(), 1, heldStack.getTagCompound());
 					}

@@ -39,9 +39,9 @@ public class TrimPacket implements IMessage{
 				public void run(){
 					EntityVehicleF_Plane thisEntity;
 					if(ctx.side.isServer()){
-						thisEntity = (EntityVehicleF_Plane) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						thisEntity = (EntityVehicleF_Plane) ctx.getServerHandler().player.world.getEntityByID(message.id);
 					}else{
-						thisEntity = (EntityVehicleF_Plane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						thisEntity = (EntityVehicleF_Plane) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
 						if((message.trimCode & 3) == 0){

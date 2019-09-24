@@ -17,9 +17,9 @@ public abstract class APacketPart implements IMessage{
 	
 	public APacketPart(APart part){
 		this.id = part.vehicle.getEntityId();
-		this.x = part.offset.xCoord;
-		this.y = part.offset.yCoord;
-		this.z = part.offset.zCoord;
+		this.x = part.offset.x;
+		this.y = part.offset.y;
+		this.z = part.offset.z;
 	}
 	
 	@Override
@@ -41,13 +41,13 @@ public abstract class APacketPart implements IMessage{
 	protected static APart getVehiclePartFromMessage(APacketPart message, MessageContext ctx){
 		EntityVehicleA_Base vehicle;
 		if(ctx.side.isServer()){
-			vehicle = (EntityVehicleA_Base) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+			vehicle = (EntityVehicleA_Base) ctx.getServerHandler().player.world.getEntityByID(message.id);
 		}else{
-			vehicle = (EntityVehicleA_Base) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+			vehicle = (EntityVehicleA_Base) Minecraft.getMinecraft().world.getEntityByID(message.id);
 		}
 		if(vehicle != null){
 			for(APart part : vehicle.getVehicleParts()){
-				if(part.offset.xCoord == message.x && part.offset.yCoord == message.y && part.offset.zCoord == message.z){
+				if(part.offset.x == message.x && part.offset.y == message.y && part.offset.z == message.z){
 					return part;
 				}
 			}

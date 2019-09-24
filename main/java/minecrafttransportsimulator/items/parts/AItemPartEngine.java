@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.items.parts;
 
+import net.minecraft.util.NonNullList;
 import java.util.List;
 
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
@@ -26,7 +27,7 @@ public abstract class AItemPartEngine extends AItemPart{
 	
 	@Override
     @SideOnly(Side.CLIENT)
-    public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> subItems){
+    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems){
 		if(this.getCreativeTab().equals(tab)){
 			subItems.add(new ItemStack(this));
 			

@@ -13,7 +13,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -72,7 +72,7 @@ public final class PartBullet extends Particle{
         this.motionY = motionY;
         this.motionZ = motionZ;
         this.setSize(bulletPackData.diameter/1000F, bulletPackData.diameter/1000F);
-        this.setEntityBoundingBox(new AxisAlignedBB(posX - width/2F, posY - height/2F, posZ - width/2F, posX + width/2F, posY + height/2F, posZ + width/2F));
+        this.setBoundingBox(new AxisAlignedBB(posX - width/2F, posY - height/2F, posZ - width/2F, posX + width/2F, posY + height/2F, posZ + width/2F));
         this.playerID = playerID;
         this.vehicle = vehicle;
     }
@@ -96,7 +96,7 @@ public final class PartBullet extends Particle{
 			Entity collidedEntity = null;
 			BlockPos collidedBlockPos = null;
 			for(double d=0; d<increments; d+=0.25D){
-				for(Entity entity : this.worldObj.getEntitiesWithinAABBExcludingEntity(vehicle, this.getEntityBoundingBox().offset(motionX*d/increments, motionY*d/increments, motionZ*d/increments))){
+				for(Entity entity : this.world.getEntitiesWithinAABBExcludingEntity(vehicle, this.getBoundingBox().offset(motionX*d/increments, motionY*d/increments, motionZ*d/increments))){
 					//We might have hit more than one entity.  Pick the closest one if so.
 					//Only do this if the entities in question are NOT vehicles.
 					//If they are just use whatever came first in the queue.
@@ -111,11 +111,11 @@ public final class PartBullet extends Particle{
 				//Entities get priority as they are always on or in front of blocks.
 				if(collidedEntity == null){
 					BlockPos pos = new BlockPos(this.posX + motionX*d/increments, this.posY + motionY*d/increments, this.posZ + motionZ*d/increments);
-					IBlockState state = this.worldObj.getBlockState(pos);
+					IBlockState state = this.world.getBlockState(pos);
 					if(state.getBlock().canCollideCheck(state, true)){
 						List<AxisAlignedBB> collidingAABBList = new ArrayList<AxisAlignedBB>();
-						AxisAlignedBB box = this.getEntityBoundingBox().offset(motionX*d/increments, motionY*d/increments, motionZ*d/increments);
-						state.addCollisionBoxToList(worldObj, pos, box, collidingAABBList, null);
+						AxisAlignedBB box = this.getBoundingBox().offset(motionX*d/increments, motionY*d/increments, motionZ*d/increments);
+						state.addCollisionBoxToList(world, pos, box, collidingAABBList, null, false);
 						if(!collidingAABBList.isEmpty()){
 							collidedBlockPos = pos;
 						}
@@ -128,13 +128,13 @@ public final class PartBullet extends Particle{
 				//as they themselves were spawned based on controller packet logic.
 				//Doing this prevents all clients from sending collision packets to the server.
 				if(collidedEntity != null){
-					if(this.playerID == Minecraft.getMinecraft().thePlayer.getEntityId()){
+					if(this.playerID == Minecraft.getMinecraft().player.getEntityId()){
 						MTS.MTSNet.sendToServer(new PacketBulletHit(this.posX + motionX*d/increments, this.posY + motionY*d/increments, this.posZ + motionZ*d/increments, velocity, this.bulletName, this.playerID, collidedEntity.getEntityId()));
 					}
 					this.setExpired();
 					return;
 				}else if(collidedBlockPos != null){
-					if(this.playerID == Minecraft.getMinecraft().thePlayer.getEntityId()){
+					if(this.playerID == Minecraft.getMinecraft().player.getEntityId()){
 						MTS.MTSNet.sendToServer(new PacketBulletHit(collidedBlockPos.getX(), collidedBlockPos.getY(), collidedBlockPos.getZ(), velocity, this.bulletName, this.playerID, -1));
 					}
 					this.setExpired();
@@ -153,12 +153,12 @@ public final class PartBullet extends Particle{
 			this.posX += motionX;
 			this.posY += motionY;
 			this.posZ += motionZ;
-			this.setEntityBoundingBox(this.getEntityBoundingBox().offset(motionX, motionY, motionZ));
+			this.setBoundingBox(this.getBoundingBox().offset(motionX, motionY, motionZ));
 		}
 	}
 	
 	@Override
-	public void renderParticle(VertexBuffer worldRendererIn, Entity entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ){
+	public void renderParticle(BufferBuilder worldRendererIn, Entity entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ){
         //Get the current rendering position based on the particles current position and velocity.
         float renderPosX = (float)(this.prevPosX + (this.posX - this.prevPosX) * (double)partialTicks - interpPosX);
         float renderPosY = (float)(this.prevPosY + (this.posY - this.prevPosY) * (double)partialTicks - interpPosY);
@@ -193,14 +193,14 @@ public final class PartBullet extends Particle{
         }
 
         //Add the points to the vertexBuffer.
-        worldRendererIn.pos(renderPosX + texturePointCoords[0].xCoord, renderPosY + texturePointCoords[0].yCoord, renderPosZ + texturePointCoords[0].zCoord).tex((double)maxU, (double)maxV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[1].xCoord, renderPosY + texturePointCoords[1].yCoord, renderPosZ + texturePointCoords[1].zCoord).tex((double)maxU, (double)minV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[2].xCoord, renderPosY + texturePointCoords[2].yCoord, renderPosZ + texturePointCoords[2].zCoord).tex((double)minU, (double)minV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[3].xCoord, renderPosY + texturePointCoords[3].yCoord, renderPosZ + texturePointCoords[3].zCoord).tex((double)minU, (double)maxV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[4].xCoord, renderPosY + texturePointCoords[4].yCoord, renderPosZ + texturePointCoords[4].zCoord).tex((double)maxU, (double)maxV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[5].xCoord, renderPosY + texturePointCoords[5].yCoord, renderPosZ + texturePointCoords[5].zCoord).tex((double)maxU, (double)minV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[6].xCoord, renderPosY + texturePointCoords[6].yCoord, renderPosZ + texturePointCoords[6].zCoord).tex((double)minU, (double)minV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[7].xCoord, renderPosY + texturePointCoords[7].yCoord, renderPosZ + texturePointCoords[7].zCoord).tex((double)minU, (double)maxV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
+        worldRendererIn.pos(renderPosX + texturePointCoords[0].x, renderPosY + texturePointCoords[0].y, renderPosZ + texturePointCoords[0].z).tex((double)maxU, (double)maxV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
+        worldRendererIn.pos(renderPosX + texturePointCoords[1].x, renderPosY + texturePointCoords[1].y, renderPosZ + texturePointCoords[1].z).tex((double)maxU, (double)minV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
+        worldRendererIn.pos(renderPosX + texturePointCoords[2].x, renderPosY + texturePointCoords[2].y, renderPosZ + texturePointCoords[2].z).tex((double)minU, (double)minV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
+        worldRendererIn.pos(renderPosX + texturePointCoords[3].x, renderPosY + texturePointCoords[3].y, renderPosZ + texturePointCoords[3].z).tex((double)minU, (double)maxV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
+        worldRendererIn.pos(renderPosX + texturePointCoords[4].x, renderPosY + texturePointCoords[4].y, renderPosZ + texturePointCoords[4].z).tex((double)maxU, (double)maxV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
+        worldRendererIn.pos(renderPosX + texturePointCoords[5].x, renderPosY + texturePointCoords[5].y, renderPosZ + texturePointCoords[5].z).tex((double)maxU, (double)minV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
+        worldRendererIn.pos(renderPosX + texturePointCoords[6].x, renderPosY + texturePointCoords[6].y, renderPosZ + texturePointCoords[6].z).tex((double)minU, (double)minV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
+        worldRendererIn.pos(renderPosX + texturePointCoords[7].x, renderPosY + texturePointCoords[7].y, renderPosZ + texturePointCoords[7].z).tex((double)minU, (double)maxV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
     }
 	
 	@Override

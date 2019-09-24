@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.dataclasses;
 
+import net.minecraft.util.ResourceLocation;
 import java.lang.reflect.Field;
 
 import minecrafttransportsimulator.MTS;

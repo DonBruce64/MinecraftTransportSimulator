@@ -83,7 +83,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 
 	@Override
 	public void setDead(){
-		if(!worldObj.isRemote){
+		if(!world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketVehicleClientRemoval(this));
 		}
 		super.setDead();
@@ -95,7 +95,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		//Spawn instruments in the world.
 		for(VehicleInstrument instrument : this.instruments.values()){
 			ItemStack stack = new ItemStack(MTSRegistry.instrumentItemMap.get(instrument.name));
-			worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, stack));
+			world.spawnEntity(new EntityItem(world, posX, posY, posZ, stack));
 		}
 		
 		//Now find the controller to see who to display as the killer in the death message.
@@ -132,7 +132,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 					}
 				}
 			}
-			worldObj.newExplosion(this, x, y, z, (float) (fuelPresent/1000F + 1F), true, true);
+			world.newExplosion(this, x, y, z, (float) (fuelPresent/1000F + 1F), true, true);
 		}
 	}
 	
@@ -151,7 +151,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 			for(PackPart packPart : pack.parts){
 				for(String type : packPart.types){
 					if(type.startsWith("engine")){
-						if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
+						if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
 							engineByNumber.put(engineNumber, (APartEngine) part);
 							
 						}
@@ -169,7 +169,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		for(PackPart packPart : pack.parts){
 			for(String type : packPart.types){
 				if(type.startsWith("engine")){
-					if(part.offset.xCoord == packPart.pos[0] && part.offset.yCoord == packPart.pos[1] && part.offset.zCoord == packPart.pos[2]){
+					if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
 						engineByNumber.remove(engineNumber);
 						return;
 					}
@@ -196,7 +196,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		float skiddingFactor = getSkiddingFactor();
 		if(skiddingFactor != 0){
 			Vec3d groundVelocityVec = new Vec3d(motionX, 0, motionZ).normalize();
-			Vec3d groundHeadingVec = new Vec3d(headingVec.xCoord, 0, headingVec.zCoord).normalize();
+			Vec3d groundHeadingVec = new Vec3d(headingVec.x, 0, headingVec.z).normalize();
 			float vectorDelta = (float) groundVelocityVec.distanceTo(groundHeadingVec);
 			byte velocitySign = (byte) (vectorDelta < 1 ? 1 : -1);
 			if(vectorDelta > 0.001){
@@ -302,7 +302,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 			
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
-    	this.soundsNeedInit = worldObj.isRemote && pack == null; 
+    	this.soundsNeedInit = world.isRemote && pack == null; 
     	super.readFromNBT(tagCompound);
 		this.throttle=tagCompound.getByte("throttle");
 		this.fuel=tagCompound.getDouble("fuel");

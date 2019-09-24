@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.guis;
 
+import net.minecraft.item.crafting.Ingredient;
 import java.awt.Color;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -125,18 +126,18 @@ public class GUIManual extends GuiScreen{
 		if(pageNumber != 0){
 			this.mc.getTextureManager().bindTexture(background);
 			this.drawModalRectWithCustomSizedTexture(guiLeft, guiTop, 0, 0, 280, 180, 512, 256);
-			fontRendererObj.drawString(String.valueOf(pageNumber) + "/" + String.valueOf(totalPages), guiLeft + 15, guiTop + 10, Color.BLACK.getRGB());
-			fontRendererObj.drawString(String.valueOf(pageNumber + 1) + "/" + String.valueOf(totalPages), guiLeft + 240, guiTop + 10, Color.BLACK.getRGB());
+			fontRenderer.drawString(String.valueOf(pageNumber) + "/" + String.valueOf(totalPages), guiLeft + 15, guiTop + 10, Color.BLACK.getRGB());
+			fontRenderer.drawString(String.valueOf(pageNumber + 1) + "/" + String.valueOf(totalPages), guiLeft + 240, guiTop + 10, Color.BLACK.getRGB());
 			
 			leftButton.visible = true;
 			leftButton.enabled = true;
-			leftButton.drawButton(mc, mouseX, mouseY);
+			leftButton.drawButton(mc, mouseX, mouseY, 0);
 
 			
 			if(pageNumber < totalPages){
 				rightButton.visible = true;
 				rightButton.enabled = true;
-				rightButton.drawButton(mc, mouseX, mouseY);
+				rightButton.drawButton(mc, mouseX, mouseY, 0);
 			}else{
 				rightButton.visible = false;
 				rightButton.enabled = false;
@@ -148,7 +149,7 @@ public class GUIManual extends GuiScreen{
 			leftButton.enabled = false;
 			rightButton.visible = true;
 			rightButton.enabled = true;
-			rightButton.drawButton(mc, mouseX, mouseY);
+			rightButton.drawButton(mc, mouseX, mouseY, 0);
 		}
 		
 		if(pageNumber == 0){
@@ -168,7 +169,7 @@ public class GUIManual extends GuiScreen{
 		//We cheat and render an item here in devMode for making item icon pictures.
 		//If no devMode, then do things as normal.
 		if(ConfigSystem.getBooleanConfig("DevMode") && mc.isSingleplayer()){
-			ItemStack stack = mc.thePlayer.getHeldItemOffhand();
+			ItemStack stack = mc.player.getHeldItemOffhand();
 			if(stack != null && stack.getItem() != null){
 				final ResourceLocation modelLocation;
 				final ResourceLocation textureLocation;
@@ -221,15 +222,15 @@ public class GUIManual extends GuiScreen{
 		
 		GL11.glTranslatef(guiLeft + 170, guiTop + 25, 0);
 		GL11.glScalef(1.5F, 1.5F, 1.5F);
-		fontRendererObj.drawString("MINECRAFT", 0, 10, Color.WHITE.getRGB());
-		fontRendererObj.drawString("TRANSPORT", 0, 20, Color.WHITE.getRGB());
-		fontRendererObj.drawString("SIMULATOR", 0, 30, Color.WHITE.getRGB());
-		fontRendererObj.drawString("HANDBOOK", 0, 40, Color.WHITE.getRGB());
+		fontRenderer.drawString("MINECRAFT", 0, 10, Color.WHITE.getRGB());
+		fontRenderer.drawString("TRANSPORT", 0, 20, Color.WHITE.getRGB());
+		fontRenderer.drawString("SIMULATOR", 0, 30, Color.WHITE.getRGB());
+		fontRenderer.drawString("HANDBOOK", 0, 40, Color.WHITE.getRGB());
 		GL11.glScalef(1F/1.5F, 1F/1.5F, 1F/1.5F);
 		GL11.glPopMatrix();
 		
-		fontRendererObj.drawString("Formerly Minecraft", guiLeft + 160, guiTop + 140, Color.WHITE.getRGB());
-		fontRendererObj.drawString("  Flight Simulator", guiLeft + 160, guiTop + 150, Color.WHITE.getRGB());
+		fontRenderer.drawString("Formerly Minecraft", guiLeft + 160, guiTop + 140, Color.WHITE.getRGB());
+		fontRenderer.drawString("  Flight Simulator", guiLeft + 160, guiTop + 150, Color.WHITE.getRGB());
 	}
 	
 	private void drawContentsPage(){
@@ -237,10 +238,10 @@ public class GUIManual extends GuiScreen{
 		byte contentsCount = 0;
 		short pageCount = 3;
 		
-		fontRendererObj.drawString("CONTENTS", guiLeft + 50, guiTop + 25, Color.BLACK.getRGB());
+		fontRenderer.drawString("CONTENTS", guiLeft + 50, guiTop + 25, Color.BLACK.getRGB());
 		for(byte i=1; i<=totalInfoPages/2; ++i){
 			String title = I18n.format("manual." + String.valueOf(i) + ".title");
-			fontRendererObj.drawString(String.valueOf(i*2 + 1) + ": " + title, contentsCount < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*contentsLine, Color.BLACK.getRGB());
+			fontRenderer.drawString(String.valueOf(i*2 + 1) + ": " + title, contentsCount < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*contentsLine, Color.BLACK.getRGB());
 			++contentsCount;
 			++contentsLine;
 			if(contentsLine == 10){
@@ -255,13 +256,13 @@ public class GUIManual extends GuiScreen{
 		byte sectionNumber = (byte) ((pageNumber - 1)/2);
 		
 		String title = I18n.format("manual." + sectionNumber  + ".title");
-		fontRendererObj.drawString(title, (guiLeft + 75 - fontRendererObj.getStringWidth(title) / 2), topOffset, Color.BLACK.getRGB());
+		fontRenderer.drawString(title, (guiLeft + 75 - fontRenderer.getStringWidth(title) / 2), topOffset, Color.BLACK.getRGB());
 		GL11.glPushMatrix();
 		GL11.glTranslatef(leftSideOffset, topOffset + headerOffset, 0);
 		GL11.glScalef(0.75F, 0.75F, 0.75F);
-		fontRendererObj.drawSplitString(I18n.format("manual." + sectionNumber + "." + "1"), 0, 0, 150, Color.BLACK.getRGB());	
+		fontRenderer.drawSplitString(I18n.format("manual." + sectionNumber + "." + "1"), 0, 0, 150, Color.BLACK.getRGB());	
 		GL11.glTranslatef((rightSideOffset - leftSideOffset)/0.75F, -headerOffset/0.75F, 0);
-		fontRendererObj.drawSplitString(I18n.format("manual." + sectionNumber + "." + "2"), 0, 0, 150, Color.BLACK.getRGB());
+		fontRenderer.drawSplitString(I18n.format("manual." + sectionNumber + "." + "2"), 0, 0, 150, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
 	}
 	
@@ -274,10 +275,10 @@ public class GUIManual extends GuiScreen{
 		
 		//Render the header.
 		String title = I18n.format(benchItemLeft.getUnlocalizedName() + ".name");
-		fontRendererObj.drawString(title, (guiLeft + 75 - fontRendererObj.getStringWidth(title) / 2), guiTop + 25, Color.BLACK.getRGB());
+		fontRenderer.drawString(title, (guiLeft + 75 - fontRenderer.getStringWidth(title) / 2), guiTop + 25, Color.BLACK.getRGB());
 		if(benchItemRight != null){
 			title = I18n.format(benchItemRight.getUnlocalizedName() + ".name");
-			fontRendererObj.drawString(title, (guiLeft + 75 + 140 - fontRendererObj.getStringWidth(title) / 2), guiTop + 25, Color.BLACK.getRGB());	
+			fontRenderer.drawString(title, (guiLeft + 75 + 140 - fontRenderer.getStringWidth(title) / 2), guiTop + 25, Color.BLACK.getRGB());	
 		}
 		
 		//Render the crafting grid.
@@ -307,7 +308,7 @@ public class GUIManual extends GuiScreen{
 		
 		//Render the items themselves.
 		ItemStack hoveredStack = null;
-		Iterator<IRecipe> iterator = CraftingManager.getInstance().getRecipeList().iterator();
+		Iterator<IRecipe> iterator = CraftingManager.REGISTRY.iterator();
 		while(iterator.hasNext()){
 			IRecipe recipe = iterator.next();
 			if(recipe.getRecipeOutput() != null){
@@ -320,8 +321,8 @@ public class GUIManual extends GuiScreen{
 				if(xOffset != 0){
 					int i = guiLeft + xOffset;
 					int j = guiTop + 100;
-					for(ItemStack stack : ((ShapedRecipes) recipe).recipeItems){
-						//ItemStack stack = ingredient.getMatchingStacks().length > 0 ? ingredient.getMatchingStacks()[0] : null;//1.12 Code
+					for(Ingredient ingredient : ((ShapedRecipes) recipe).recipeItems){
+						ItemStack stack = ingredient.getMatchingStacks().length > 0 ? ingredient.getMatchingStacks()[0] : null;//1.12 Code
 						if(stack != null){
 							//Need the ItemStack call here as the stack contains blocks sometimes that don't render.
 							this.itemRender.renderItemAndEffectIntoGUI(new ItemStack(stack.getItem()), i, j);

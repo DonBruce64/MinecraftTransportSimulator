@@ -33,7 +33,7 @@ public class BlockPoleSign extends BlockPoleAttachment{
     }
 	
 	@Override
-	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ){
+	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ){
 		if(Math.sqrt(player.getDistanceSq(pos)) < 5){
 			if(world.isRemote){
 				lastClickedPos = pos;

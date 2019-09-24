@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.items.core;
 
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.world.World;
+import javax.annotation.Nullable;
 import java.util.List;
 
 import net.minecraft.client.resources.I18n;
@@ -20,7 +23,7 @@ public class ItemKey extends Item{
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
+	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
 		for(byte i=1; i<=5; ++i){
 			tooltipLines.add(I18n.format("info.item.key.line" + String.valueOf(i)));
 		}

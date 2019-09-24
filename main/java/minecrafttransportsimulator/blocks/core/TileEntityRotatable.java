@@ -11,7 +11,7 @@ public class TileEntityRotatable extends TileEntity{
 	@Override
     public void validate(){
 		super.validate();
-        if(worldObj.isRemote){
+        if(world.isRemote){
         	MTS.MTSNet.sendToServer(new PacketTileEntityClientServerHandshake(this, null));
         }
     }

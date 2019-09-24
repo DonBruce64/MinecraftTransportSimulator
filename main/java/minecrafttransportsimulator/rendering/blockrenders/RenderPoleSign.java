@@ -26,8 +26,8 @@ public class RenderPoleSign extends TileEntitySpecialRenderer<TileEntityPoleSign
 	public RenderPoleSign(){}
 	
 	@Override
-	public void renderTileEntityAt(TileEntityPoleSign sign, double x, double y, double z, float partialTicks, int destroyStage){
-		super.renderTileEntityAt(sign, x, y, z, partialTicks, destroyStage);
+	public void render(TileEntityPoleSign sign, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
+		super.render(sign, x, y, z, partialTicks, destroyStage, alpha);
 		final Vec3i facingVec = EnumFacing.VALUES[sign.rotation].getDirectionVec();		
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
@@ -98,7 +98,7 @@ public class RenderPoleSign extends TileEntitySpecialRenderer<TileEntityPoleSign
 			if(pack.general.textLines != null){
 				if(!fontMap.containsKey(pack.general.font)){
 					if(pack.general.font.equals("default")){
-						fontMap.put(pack.general.font, Minecraft.getMinecraft().fontRendererObj);
+						fontMap.put(pack.general.font, Minecraft.getMinecraft().fontRenderer);
 					}else{
 						String fontName = pack.general.font;
 						ResourceLocation fontLocation = new ResourceLocation(fontName.substring(0, fontName.indexOf(':')), "textures/fonts/" + fontName.substring(fontName.indexOf(':') + 1) + ".png");;

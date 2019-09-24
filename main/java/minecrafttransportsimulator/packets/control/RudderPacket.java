@@ -49,12 +49,12 @@ public class RudderPacket implements IMessage{
 				public void run(){
 					EntityVehicleF_Plane thisEntity;
 					if(ctx.side.isServer()){
-						thisEntity = (EntityVehicleF_Plane) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						thisEntity = (EntityVehicleF_Plane) ctx.getServerHandler().player.world.getEntityByID(message.id);
 					}else{
-						if(Minecraft.getMinecraft().theWorld == null){
+						if(Minecraft.getMinecraft().world == null){
 							return;
 						}
-						thisEntity = (EntityVehicleF_Plane) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						thisEntity = (EntityVehicleF_Plane) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
 						if(message.packetType == 1){

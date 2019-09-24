@@ -49,12 +49,12 @@ public class SteeringPacket implements IMessage{
 				public void run(){
 					EntityVehicleF_Car vehicle;
 					if(ctx.side.isServer()){
-						vehicle = (EntityVehicleF_Car) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						vehicle = (EntityVehicleF_Car) ctx.getServerHandler().player.world.getEntityByID(message.id);
 					}else{
-						if(Minecraft.getMinecraft().theWorld == null){
+						if(Minecraft.getMinecraft().world == null){
 							return;
 						}
-						vehicle = (EntityVehicleF_Car) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						vehicle = (EntityVehicleF_Car) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
 					if(vehicle!=null){
 						if(message.packetType == 1){

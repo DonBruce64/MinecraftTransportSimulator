@@ -72,7 +72,7 @@ public final class ClientEventSystem{
     @SubscribeEvent
     public static void on(PlayerInteractEvent.RightClickItem event){
     	if(event.getWorld().isRemote){
-	    	for(Entity entity : minecraft.theWorld.loadedEntityList){
+	    	for(Entity entity : minecraft.world.loadedEntityList){
 				if(entity instanceof EntityVehicleC_Colliding){
 					EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) entity;
 					EntityPlayer player = event.getEntityPlayer();
@@ -116,20 +116,20 @@ public final class ClientEventSystem{
 									partBox = new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0.5F, 0), 0.75F, 1.75F, false, false);
 								}
 		    					
-		    					if(partBox.isVecInside(clickedVec)){
+		    					if(partBox.contains(clickedVec)){
 		    						//Check to make sure this spot is valid (server gets final say).
 		    						if(packPartEntry.getValue().types.contains(heldItemPack.general.type)){
 		    							//If we clicked an occupied spot with the same part type, don't do anything.
-		        						if(vehicle.getPartAtLocation(packPartEntry.getKey().xCoord, packPartEntry.getKey().yCoord, packPartEntry.getKey().zCoord) != null){
+		        						if(vehicle.getPartAtLocation(packPartEntry.getKey().x, packPartEntry.getKey().y, packPartEntry.getKey().z) != null){
 		        							return;
 										}
 		        						//Spot is not occupied, send packet to server to spawn part if able.
-			        					MTS.MTSNet.sendToServer(new PacketVehicleServerPartAddition(vehicle, packPartEntry.getKey().xCoord, packPartEntry.getKey().yCoord, packPartEntry.getKey().zCoord, player));
+			        					MTS.MTSNet.sendToServer(new PacketVehicleServerPartAddition(vehicle, packPartEntry.getKey().x, packPartEntry.getKey().y, packPartEntry.getKey().z, player));
 			        					return;
         							}
 	        					}
 		    				}
-        					clickedVec = clickedVec.addVector(lookVec.xCoord*0.1F, lookVec.yCoord*0.1F, lookVec.zCoord*0.1F);
+        					clickedVec = clickedVec.addVector(lookVec.x*0.1F, lookVec.y*0.1F, lookVec.z*0.1F);
         				}
 	    			}else{
 	    				//If we are not holding a part, see if we at least clicked the vehicle.
@@ -163,7 +163,7 @@ public final class ClientEventSystem{
     public static void on(AttackEntityEvent event){
     	//You might think this only gets called on clients, you'd be wrong.
     	//Forge will gladly call this on the client and server threads on SP.
-    	if(event.getEntityPlayer().worldObj.isRemote){
+    	if(event.getEntityPlayer().world.isRemote){
 	    	if(event.getTarget() instanceof EntityVehicleC_Colliding){
 	    		MTS.MTSNet.sendToServer(new PacketVehicleAttacked((EntityVehicleB_Existing) event.getTarget(), event.getEntityPlayer()));
 	    		event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
@@ -179,8 +179,8 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(TickEvent.RenderTickEvent event){
-    	if(event.phase.equals(event.phase.START) && minecraft.thePlayer != null){
-    		if(minecraft.thePlayer.getRidingEntity() instanceof EntityVehicleC_Colliding){
+    	if(event.phase.equals(event.phase.START) && minecraft.player != null){
+    		if(minecraft.player.getRidingEntity() instanceof EntityVehicleC_Colliding){
     			if(minecraft.gameSettings.thirdPersonView != 0){
     				CameraSystem.runCustomCamera(event.renderTickTime);
     			}
@@ -193,19 +193,19 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(TickEvent.ClientTickEvent event){
-        if(minecraft.theWorld != null){
+        if(minecraft.world != null){
             if(event.phase.equals(Phase.END)){            	
-                if(minecraft.thePlayer.getRidingEntity() instanceof EntityVehicleC_Colliding){
+                if(minecraft.player.getRidingEntity() instanceof EntityVehicleC_Colliding){
                     if(!Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen()){
-                    	if(minecraft.thePlayer.getRidingEntity() instanceof EntityVehicleE_Powered){
-                    		EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.thePlayer.getRidingEntity();
-                    		if(vehicle.getSeatForRider(minecraft.thePlayer) != null){
-                    			ControlSystem.controlVehicle(vehicle, vehicle.getSeatForRider(minecraft.thePlayer).isController);
+                    	if(minecraft.player.getRidingEntity() instanceof EntityVehicleE_Powered){
+                    		EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.player.getRidingEntity();
+                    		if(vehicle.getSeatForRider(minecraft.player) != null){
+                    			ControlSystem.controlVehicle(vehicle, vehicle.getSeatForRider(minecraft.player).isController);
                     		}
                         }
                     }
                     if(!minecraft.isGamePaused()){
-        				CameraSystem.updatePlayerYawAndPitch(minecraft.thePlayer, (EntityVehicleB_Existing) minecraft.thePlayer.getRidingEntity());
+        				CameraSystem.updatePlayerYawAndPitch(minecraft.player, (EntityVehicleB_Existing) minecraft.player.getRidingEntity());
                      }
                 }
             }
@@ -225,19 +225,19 @@ public final class ClientEventSystem{
     public static void on(TickEvent.PlayerTickEvent event){
     	if(event.side.isServer() && event.phase.equals(event.phase.END)){
     		EntityPlayerMP serverPlayer = (EntityPlayerMP) event.player;
-    		if(((WorldServer) serverPlayer.worldObj).getMinecraftServer().isSinglePlayer()){
+    		if(((WorldServer) serverPlayer.world).getMinecraftServer().isSinglePlayer()){
 	    		if(defaultRenderDistance == 0){
-	    			defaultRenderDistance = ((WorldServer) serverPlayer.worldObj).getMinecraftServer().getPlayerList().getViewDistance();
+	    			defaultRenderDistance = ((WorldServer) serverPlayer.world).getMinecraftServer().getPlayerList().getViewDistance();
 	    			currentRenderDistance = defaultRenderDistance;
 	    			renderReductionHeight = ConfigSystem.getIntegerConfig("RenderReductionHeight");
 				}
 	    		
 	    		if(serverPlayer.posY > renderReductionHeight && currentRenderDistance != 1){
 	    			currentRenderDistance = 1;
-	    			((WorldServer) serverPlayer.worldObj).getPlayerChunkMap().setPlayerViewRadius(1);
+	    			((WorldServer) serverPlayer.world).getPlayerChunkMap().setPlayerViewRadius(1);
 	    		}else if(serverPlayer.posY < renderReductionHeight - 10 && currentRenderDistance == 1){
 	    			currentRenderDistance = defaultRenderDistance;
-	    			((WorldServer) serverPlayer.worldObj).getPlayerChunkMap().setPlayerViewRadius(defaultRenderDistance);
+	    			((WorldServer) serverPlayer.world).getPlayerChunkMap().setPlayerViewRadius(defaultRenderDistance);
 	    		}
 	    	}
     	}
@@ -265,7 +265,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(RenderWorldLastEvent event){
-        for(Entity entity : minecraft.theWorld.loadedEntityList){
+        for(Entity entity : minecraft.world.loadedEntityList){
             if(entity instanceof EntityVehicleE_Powered){
             	minecraft.getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
             }
@@ -285,7 +285,7 @@ public final class ClientEventSystem{
 	        	if(seat != null){
 		            //First restrict the player's yaw to prevent them from being able to rotate their body in a seat.
 		            Vec3d placementRotation = seat.partRotation;
-		            event.getEntityPlayer().renderYawOffset = (float) (vehicle.rotationYaw + placementRotation.yCoord);
+		            event.getEntityPlayer().renderYawOffset = (float) (vehicle.rotationYaw + placementRotation.y);
 		            if(vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90){
 		            	event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw*-1F;
 		            }else{
@@ -293,22 +293,22 @@ public final class ClientEventSystem{
 		            }
 		            
 		            //Now add the pitch rotation.
-		            if(!event.getEntityPlayer().equals(minecraft.thePlayer)){
-		                EntityPlayer masterPlayer = Minecraft.getMinecraft().thePlayer;
+		            if(!event.getEntityPlayer().equals(minecraft.player)){
+		                EntityPlayer masterPlayer = Minecraft.getMinecraft().player;
 		                EntityPlayer renderedPlayer = event.getEntityPlayer();
 		                float playerDistanceX = (float) (renderedPlayer.posX - masterPlayer.posX);
 		                float playerDistanceY = (float) (renderedPlayer.posY - masterPlayer.posY);
 		                float playerDistanceZ = (float) (renderedPlayer.posZ - masterPlayer.posZ);
 		                GL11.glTranslatef(playerDistanceX, playerDistanceY, playerDistanceZ);
 		                GL11.glTranslated(0, masterPlayer.getEyeHeight(), 0);
-		                GL11.glRotated(vehicle.rotationPitch + placementRotation.xCoord, Math.cos(vehicle.rotationYaw  * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
-		                GL11.glRotated(vehicle.rotationRoll + placementRotation.zCoord, -Math.sin(vehicle.rotationYaw  * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
+		                GL11.glRotated(vehicle.rotationPitch + placementRotation.x, Math.cos(vehicle.rotationYaw  * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
+		                GL11.glRotated(vehicle.rotationRoll + placementRotation.z, -Math.sin(vehicle.rotationYaw  * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
 		                GL11.glTranslated(0, -masterPlayer.getEyeHeight(), 0);
 		                GL11.glTranslatef(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
 		            }else{
 		                GL11.glTranslated(0, event.getEntityPlayer().getEyeHeight(), 0);
-		                GL11.glRotated(vehicle.rotationPitch + placementRotation.xCoord, Math.cos(vehicle.rotationYaw  * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
-		                GL11.glRotated(vehicle.rotationRoll + placementRotation.zCoord, -Math.sin(vehicle.rotationYaw  * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
+		                GL11.glRotated(vehicle.rotationPitch + placementRotation.x, Math.cos(vehicle.rotationYaw  * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
+		                GL11.glRotated(vehicle.rotationRoll + placementRotation.z, -Math.sin(vehicle.rotationYaw  * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
 		                GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
 		            }
 	        	}
@@ -328,14 +328,14 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(RenderGameOverlayEvent.Pre event){    	
-        if(minecraft.thePlayer.getRidingEntity() instanceof EntityVehicleC_Colliding){
+        if(minecraft.player.getRidingEntity() instanceof EntityVehicleC_Colliding){
             if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
                 event.setCanceled(true);
             }else if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
-                if(minecraft.thePlayer.getRidingEntity() instanceof EntityVehicleE_Powered){
-                	EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.thePlayer.getRidingEntity();
-                	if(vehicle.getSeatForRider(minecraft.thePlayer) != null){
-	                	if(vehicle.getSeatForRider(minecraft.thePlayer).isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
+                if(minecraft.player.getRidingEntity() instanceof EntityVehicleE_Powered){
+                	EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.player.getRidingEntity();
+                	if(vehicle.getSeatForRider(minecraft.player) != null){
+	                	if(vehicle.getSeatForRider(minecraft.player).isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
 	                		GL11.glPushMatrix();
 	                		GL11.glScalef(1.0F*event.getResolution().getScaledWidth()/RenderHUD.screenDefaultX, 1.0F*event.getResolution().getScaledHeight()/RenderHUD.screenDefaultY, 0);
 	                		RenderHUD.drawMainHUD(vehicle, false);
@@ -372,7 +372,7 @@ public final class ClientEventSystem{
         		PackParserSystem.reloadPackData();
         		RenderVehicle.clearCaches();
         		minecraft.refreshResources();
-        		for(Entity entity : minecraft.getMinecraft().theWorld.loadedEntityList){
+        		for(Entity entity : minecraft.getMinecraft().world.loadedEntityList){
 					if(entity instanceof EntityVehicleA_Base){
 						EntityVehicleA_Base vehicle = (EntityVehicleA_Base) entity;
 						vehicle.pack = PackParserSystem.getVehiclePack(vehicle.vehicleName);

@@ -52,20 +52,20 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 					if(this.tankInfo.fluid.amount == 0){
 						setConnectedVehicle(null);
 						this.tankInfo = emptyTankInfo;
-						if(!worldObj.isRemote){
-							MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.empty"), new TargetPoint(worldObj.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
+						if(!world.isRemote){
+							MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.empty"), new TargetPoint(world.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
 						}
 					}
 				}else{
 					setConnectedVehicle(null);
-					if(!worldObj.isRemote){
-						MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.empty"), new TargetPoint(worldObj.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
+					if(!world.isRemote){
+						MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.empty"), new TargetPoint(world.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
 					}
 				}
 			}else{
 				setConnectedVehicle(null);
-				if(!worldObj.isRemote){
-					MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.complete"), new TargetPoint(worldObj.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
+				if(!world.isRemote){
+					MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.complete"), new TargetPoint(world.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
 				}
 			}
 		}
@@ -86,7 +86,7 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 			this.connectedVehicle = vehicle;
 			this.totalTransfered = 0;
 		}
-		if(!worldObj.isRemote){
+		if(!world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketFuelPumpConnection(this, connectedVehicle != null ? connectedVehicle.getEntityId() : -1, this.tankInfo.fluid != null ? this.tankInfo.fluid.amount : 0, this.totalTransfered));
 		}
 	}
@@ -127,7 +127,7 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 					this.setFluid(stack.getFluid());
 				}
 				tankInfo.fluid.amount += amountToFill;
-				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(tankInfo.fluid, worldObj, getPos(), this, amountToFill));
+				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(tankInfo.fluid, world, getPos(), this, amountToFill));
 				MTS.MTSNet.sendToAll(new PacketFuelPumpFillDrain(this, new FluidStack(tankInfo.fluid, amountToFill)));
 			}
 			return amountToFill;

@@ -27,9 +27,9 @@ public abstract class APacketVehicle implements IMessage{
 	
 	protected static EntityVehicleA_Base getVehicle(APacketVehicle message, MessageContext ctx){
 		if(ctx.side.isServer()){
-			return (EntityVehicleA_Base) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+			return (EntityVehicleA_Base) ctx.getServerHandler().player.world.getEntityByID(message.id);
 		}else{
-			return (EntityVehicleA_Base) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+			return (EntityVehicleA_Base) Minecraft.getMinecraft().world.getEntityByID(message.id);
 		}
 	}
 }

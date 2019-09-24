@@ -17,7 +17,7 @@ public abstract class DamageSources extends DamageSource{
 	
 	@Override
 	public ITextComponent getDeathMessage(EntityLivingBase player){
-		EntityLivingBase recentEntity = player.getLastAttacker();
+		EntityLivingBase recentEntity = player.getAttackingEntity();
 		if(recentEntity != null){//Player engaged with another player...
 			if(playerResponsible != null){//and then was killed by another player.
 				return new TextComponentTranslation("death.attack." + this.damageType + ".player.player", 

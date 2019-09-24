@@ -48,7 +48,7 @@ public abstract class APartGun extends APart implements FXPart{
 	@Override
 	public boolean interactPart(EntityPlayer player){
 		//Only reload bullets from players on the server, and only if we aren't currently reloading.
-		if(!vehicle.worldObj.isRemote && !reloading){
+		if(!vehicle.world.isRemote && !reloading){
 			//Check to see if we have any bullets in our hands.
 			//If so, and they go to this gun, reload the gun and send a packet to update other guns.
 			ItemStack heldStack = player.getHeldItemMainhand();
@@ -96,7 +96,7 @@ public abstract class APartGun extends APart implements FXPart{
 		//It it quite possible they could dismount with their hands on the trigger, so we need to be sure we check.
 		//Otherwise, guns could be set to fire and the player could just run away...
 		if(playerControllerID != -1){
-			PartSeat seat = vehicle.getSeatForRider(vehicle.worldObj.getEntityByID(playerControllerID));
+			PartSeat seat = vehicle.getSeatForRider(vehicle.world.getEntityByID(playerControllerID));
 			if(seat != null && (this.parentPart == null ? seat.isController : this.parentPart.equals(seat))){
 				//If we are out of bullets, and we can automatically reload, and are not doing so, start the reload sequence.
 				if(bulletsLeft == 0 && pack.gun.autoReload && !reloading){
@@ -152,7 +152,7 @@ public abstract class APartGun extends APart implements FXPart{
 					if(cooldownTimeRemaining == 0){
 						//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.
 						cooldownTimeRemaining = pack.gun.fireDelay;
-						lastTickToFire = vehicle.worldObj.getTotalWorldTime();
+						lastTickToFire = vehicle.world.getTotalWorldTime();
 						--bulletsLeft;
 					}
 					if(cooldownTimeRemaining > 0){
@@ -209,8 +209,8 @@ public abstract class APartGun extends APart implements FXPart{
 			//Angle is based on rotation of the vehicle, gun, and gun mount.
 			//Set the trajectory of the bullet.
 			//Add a slight fudge-factor to the bullet's trajectory depending on the barrel length and shell size.
-			float bulletYaw = (float) (vehicle.rotationYaw - partRotation.yCoord + currentYaw + (Math.random() - 0.5F)*(pack.gun.diameter/pack.gun.length));
-			float bulletPitch = (float) (vehicle.rotationPitch + partRotation.xCoord + currentPitch + (Math.random() - 0.5F)*(pack.gun.diameter/pack.gun.length));
+			float bulletYaw = (float) (vehicle.rotationYaw - partRotation.y + currentYaw + (Math.random() - 0.5F)*(pack.gun.diameter/pack.gun.length));
+			float bulletPitch = (float) (vehicle.rotationPitch + partRotation.x + currentPitch + (Math.random() - 0.5F)*(pack.gun.diameter/pack.gun.length));
 			
 			//Set initial velocity to the gun muzzle velocity times the speedFactor.
 			//We bring in the code for vectors here to make the velocity calculations easier.
@@ -221,12 +221,12 @@ public abstract class APartGun extends APart implements FXPart{
 	        float f3 = MathHelper.sin(-bulletPitch * 0.017453292F);
 	        Vec3d bulletOrientation = new Vec3d((double)(f1 * f2), (double)f3, (double)(f * f2));
 			
-			double bulletMotionX = bulletOrientation.xCoord*pack.gun.muzzleVelocity/20D/10D;
-			double bulletMotionY = bulletOrientation.yCoord*pack.gun.muzzleVelocity/20D/10D;
-			double bulletMotionZ = bulletOrientation.zCoord*pack.gun.muzzleVelocity/20D/10D;
+			double bulletMotionX = bulletOrientation.x*pack.gun.muzzleVelocity/20D/10D;
+			double bulletMotionY = bulletOrientation.y*pack.gun.muzzleVelocity/20D/10D;
+			double bulletMotionZ = bulletOrientation.z*pack.gun.muzzleVelocity/20D/10D;
 			
 			//Now add the bullet as a particle.
-			Minecraft.getMinecraft().effectRenderer.addEffect(new PartBullet(vehicle.worldObj, partPos.xCoord, partPos.yCoord, partPos.zCoord, bulletMotionX, bulletMotionY, bulletMotionZ, loadedBullet, playerControllerID, this.vehicle));
+			Minecraft.getMinecraft().effectRenderer.addEffect(new PartBullet(vehicle.world, partPos.x, partPos.y, partPos.z, bulletMotionX, bulletMotionY, bulletMotionZ, loadedBullet, playerControllerID, this.vehicle));
 			MTS.proxy.playSound(partPos, partName + "_firing", 1, 1);
 			lastTickFired = lastTickToFire;
 		}

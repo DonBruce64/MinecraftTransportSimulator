@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import net.minecraft.util.EnumHand;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.packets.general.PacketChat;
@@ -34,12 +36,12 @@ public final class PartBarrel extends APart implements IFluidTank, IFluidHandler
 	
 	@Override
 	public boolean interactPart(EntityPlayer player){
-		if(!player.worldObj.isRemote){
+		if(!player.world.isRemote){
 			if(!vehicle.locked){
 				ItemStack stack = player.getHeldItemMainhand();
 				if(stack != null){
-					if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)){
-						IFluidHandler handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
+					if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
+						IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
 						//If player is sneaking, drain barrel.  Otherwise, fill barrel.
 						if(player.isSneaking()){
 							if(this.getFluid() != null){
@@ -52,7 +54,7 @@ public final class PartBarrel extends APart implements IFluidTank, IFluidHandler
 								this.fill(handler.drain(this.getCapacity() - this.getFluidAmount(), true), true);
 							}
 						}
-						//player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer()); //For 1.11+
+						player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer()); //For 1.11+
 						return true;
 					}
 				}
@@ -117,7 +119,7 @@ public final class PartBarrel extends APart implements IFluidTank, IFluidHandler
 					tankInfo = new FluidTankInfo(new FluidStack(stack.getFluid(), 0), emptyTankInfo.capacity);
 				}
 				tankInfo.fluid.amount += amountToFill;
-				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(tankInfo.fluid, vehicle.worldObj, vehicle.getPosition(), this, amountToFill));
+				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(tankInfo.fluid, vehicle.world, vehicle.getPosition(), this, amountToFill));
 			}
 			return amountToFill;
 		}else{
@@ -141,7 +143,7 @@ public final class PartBarrel extends APart implements IFluidTank, IFluidHandler
 				}
 			}
 			FluidStack returnStack = new FluidStack(stack.getFluid(), amountToDrain);
-			FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(returnStack, vehicle.worldObj, vehicle.getPosition(), this, amountToDrain));
+			FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(returnStack, vehicle.world, vehicle.getPosition(), this, amountToDrain));
 			return returnStack;
 		}
 		return null;
