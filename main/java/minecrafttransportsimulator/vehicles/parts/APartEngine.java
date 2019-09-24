@@ -84,37 +84,37 @@ public abstract class APartEngine extends APart implements FXPart{
 	
 	@Override
 	public boolean interactPart(EntityPlayer player){
-		if(!vehicle.world.isRemote){
-			//Check to see if the player is holding jumper cables.
-			//If so, and we aren't linked, do engine linking logic.
-			ItemStack heldStack = player.getHeldItemMainhand();
-			if(heldStack != null && heldStack.getItem() instanceof ItemJumperCable){
-				ItemJumperCable jumperCableItem = (ItemJumperCable) heldStack.getItem();
-				if(linkedEngine == null){
-					if(jumperCableItem.lastEngineClicked == null){
-						jumperCableItem.lastEngineClicked = this;
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.firstlink"), (EntityPlayerMP) player);
-					}else if(!jumperCableItem.lastEngineClicked.equals(this)){
-						if(jumperCableItem.lastEngineClicked.vehicle.equals(this.vehicle)){
-							MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.samevehicle"), (EntityPlayerMP) player);
-							jumperCableItem.lastEngineClicked = null;
-						}else if(this.partPos.distanceTo(jumperCableItem.lastEngineClicked.partPos) < 15){
-							linkedEngine = jumperCableItem.lastEngineClicked;
-							jumperCableItem.lastEngineClicked.linkedEngine = this;
-							jumperCableItem.lastEngineClicked = null;
-							MTS.MTSNet.sendToAll(new PacketPartEngineLinked(this, linkedEngine));
-							MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.secondlink"), (EntityPlayerMP) player);	
-						}else{
-							MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.toofar"), (EntityPlayerMP) player);
-							jumperCableItem.lastEngineClicked = null;
-						}
+		//Only allow interaction if the player is holding jumper cables.
+		//If so, and we aren't linked, do engine linking logic.
+		ItemStack heldStack = player.getHeldItemMainhand();
+		if(heldStack.getItem() instanceof ItemJumperCable){
+			ItemJumperCable jumperCableItem = (ItemJumperCable) heldStack.getItem();
+			if(linkedEngine == null){
+				if(jumperCableItem.lastEngineClicked == null){
+					jumperCableItem.lastEngineClicked = this;
+					MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.firstlink"), (EntityPlayerMP) player);
+				}else if(!jumperCableItem.lastEngineClicked.equals(this)){
+					if(jumperCableItem.lastEngineClicked.vehicle.equals(this.vehicle)){
+						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.samevehicle"), (EntityPlayerMP) player);
+						jumperCableItem.lastEngineClicked = null;
+					}else if(this.partPos.distanceTo(jumperCableItem.lastEngineClicked.partPos) < 15){
+						linkedEngine = jumperCableItem.lastEngineClicked;
+						jumperCableItem.lastEngineClicked.linkedEngine = this;
+						jumperCableItem.lastEngineClicked = null;
+						MTS.MTSNet.sendToAll(new PacketPartEngineLinked(this, linkedEngine));
+						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.secondlink"), (EntityPlayerMP) player);	
+					}else{
+						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.toofar"), (EntityPlayerMP) player);
+						jumperCableItem.lastEngineClicked = null;
 					}
-				}else{
-					MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.alreadylinked"), (EntityPlayerMP) player);
 				}
+			}else{
+				MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.alreadylinked"), (EntityPlayerMP) player);
 			}
+			return true;
+		}else{
+			return false;
 		}
-		return true;
     }
 	
 	@Override

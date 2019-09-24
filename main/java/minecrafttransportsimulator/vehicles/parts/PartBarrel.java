@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import net.minecraft.util.EnumHand;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.packets.general.PacketChat;
@@ -10,6 +8,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumHand;
 import net.minecraftforge.fluids.FluidEvent;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
@@ -17,6 +16,7 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
 public final class PartBarrel extends APart implements IFluidTank, IFluidHandler{
@@ -36,31 +36,28 @@ public final class PartBarrel extends APart implements IFluidTank, IFluidHandler
 	
 	@Override
 	public boolean interactPart(EntityPlayer player){
-		if(!player.world.isRemote){
-			if(!vehicle.locked){
-				ItemStack stack = player.getHeldItemMainhand();
-				if(stack != null){
-					if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
-						IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
-						//If player is sneaking, drain barrel.  Otherwise, fill barrel.
-						if(player.isSneaking()){
-							if(this.getFluid() != null){
-								this.drain(handler.fill(this.getFluid(), true), true);
-							}							
+		if(!vehicle.locked){
+			ItemStack stack = player.getHeldItemMainhand();
+			if(stack != null){
+				if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
+					IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+					//If player is sneaking, drain barrel.  Otherwise, fill barrel.
+					if(player.isSneaking()){
+						if(this.getFluid() != null){
+							this.drain(handler.fill(this.getFluid(), true), true);
+						}							
+					}else{
+						if(this.getFluid() != null){
+							this.fill(handler.drain(new FluidStack(this.getFluid().getFluid(), this.getCapacity() - this.getFluidAmount()), true), true);
 						}else{
-							if(this.getFluid() != null){
-								this.fill(handler.drain(new FluidStack(this.getFluid().getFluid(), this.getCapacity() - this.getFluidAmount()), true), true);
-							}else{
-								this.fill(handler.drain(this.getCapacity() - this.getFluidAmount(), true), true);
-							}
+							this.fill(handler.drain(this.getCapacity() - this.getFluidAmount(), true), true);
 						}
-						player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer()); //For 1.11+
-						return true;
 					}
+					player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer()); //For 1.11+
 				}
-			}else{
-				MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
 			}
+		}else{
+			MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
 		}
 		return true;
     }

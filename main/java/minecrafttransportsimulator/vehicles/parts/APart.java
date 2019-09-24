@@ -101,6 +101,8 @@ public abstract class APart{
 
 	/**Called when checking if this part can be interacted with.
 	 * If a part does interactions it should do so and then return true.
+	 * Call this ONLY from the server-side!  The server will handle the
+	 * interaction by notifying the client via packet if appropriate.
 	 */
 	public boolean interactPart(EntityPlayer player){
 		return false;

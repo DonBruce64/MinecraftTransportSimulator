@@ -17,23 +17,21 @@ public final class PartSeat extends APart{
 	
 	@Override
 	public boolean interactPart(EntityPlayer player){
-		if(!vehicle.world.isRemote){
-			//See if we can enter this vehicle.
-			//Alternately, we can switch seats if we're already in the vehicle.
-			if(!vehicle.locked || vehicle.equals(player.getRidingEntity())){
-				Entity seatRider = vehicle.getRiderForSeat(this);
-				if(seatRider != null){
-					if(!player.equals(seatRider)){
-						MTS.MTSNet.sendTo(new PacketChat("interact.failure.seattaken"), (EntityPlayerMP) player);
-					}
-					return true;
+		//See if we can enter this vehicle.
+		//Alternately, we can switch seats if we're already in the vehicle.
+		if(!vehicle.locked || vehicle.equals(player.getRidingEntity())){
+			Entity seatRider = vehicle.getRiderForSeat(this);
+			if(seatRider != null){
+				if(!player.equals(seatRider)){
+					MTS.MTSNet.sendTo(new PacketChat("interact.failure.seattaken"), (EntityPlayerMP) player);
 				}
-				//If we got here we must have the seat number and it must be free.
-				//Let the player start riding at this point.
-				vehicle.setRiderInSeat(player, this);
-			}else{
-				MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
+				return true;
 			}
+			//If we got here we must have the seat number and it must be free.
+			//Let the player start riding at this point.
+			vehicle.setRiderInSeat(player, this);
+		}else{
+			MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
 		}
 		return true;
     }

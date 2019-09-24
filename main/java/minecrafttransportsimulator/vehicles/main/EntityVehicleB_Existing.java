@@ -3,16 +3,19 @@ package minecrafttransportsimulator.vehicles.main;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
+import minecrafttransportsimulator.items.core.ItemKey;
+import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowFix;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -24,8 +27,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -136,14 +143,75 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	
 	@Override
     public boolean processInitialInteract(EntityPlayer player, EnumHand hand){
-		//In all cases, interaction will be handled on the client and forwarded to the server.
-		//However, there is one case where we can't forward an event, and that is if a player
-		//right-clicks this with an empty hand.
-		if(world.isRemote && hand.equals(hand.MAIN_HAND) && player.getHeldItemMainhand().isEmpty()){
-			APart hitPart = getHitPart(player);
-			if(hitPart != null){
-				if(hitPart.interactPart(player)){
-					MTS.MTSNet.sendToServer(new PacketPartInteraction(hitPart, player.getEntityId()));
+		//If we clicked a part, try to interact with it.
+		//If we didn't interact with a part, check other interactions.
+		//All interactions are done on the server, except GUI openings.
+		if(hand.equals(EnumHand.MAIN_HAND)){
+			if(!world.isRemote){
+				APart hitPart = getHitPart(player);
+				ItemStack heldStack = player.getHeldItem(hand);
+				if(hitPart != null && hitPart.interactPart(player)){
+					return true;
+				}else if(heldStack.getItem().equals(MTSRegistry.key)){
+					ItemKey key = (ItemKey) heldStack.getItem();
+					//Sneaking changes ownership, regular use changes the lock state.
+					if(player.isSneaking()){
+						if(ownerName.isEmpty()){
+							ownerName = player.getUUID(player.getGameProfile()).toString();
+							MTS.MTSNet.sendTo(new PacketChat("interact.key.info.own"), (EntityPlayerMP) player);
+						}else{
+							boolean isPlayerOP = player.getServer() == null || player.getServer().isSinglePlayer() || player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null;
+							if(player.getUUID(player.getGameProfile()).toString().equals(ownerName) || isPlayerOP){
+								ownerName = "";
+								MTS.MTSNet.sendTo(new PacketChat("interact.key.info.unown"), (EntityPlayerMP) player);
+							}else{
+								MTS.MTSNet.sendTo(new PacketChat("interact.key.failure.alreadyowned"), (EntityPlayerMP) player);
+							}
+						}
+					}else{
+						String vehicleUUID = heldStack.hasTagCompound() ? heldStack.getTagCompound().getString("vehicle") : "";
+						if(vehicleUUID.isEmpty()){
+							if(!ownerName.isEmpty()){
+								if(!player.getUUID(player.getGameProfile()).toString().equals(ownerName)){
+									MTS.MTSNet.sendTo(new PacketChat("interact.key.failure.notowner"), (EntityPlayerMP) player);
+								}
+							}
+							NBTTagCompound tag = new NBTTagCompound();
+							tag.setString("vehicle", getUniqueID().toString());
+							heldStack.setTagCompound(tag);
+							locked = true;
+							MTS.MTSNet.sendTo(new PacketChat("interact.key.info.lock"), (EntityPlayerMP) player);
+						}else if(!vehicleUUID.equals(getUniqueID().toString())){
+							MTS.MTSNet.sendTo(new PacketChat("interact.key.failure.wrongkey"), (EntityPlayerMP) player);
+						}else{
+							if(locked){
+								locked = false;
+								MTS.MTSNet.sendTo(new PacketChat("interact.key.info.unlock"), (EntityPlayerMP) player);
+							}else{
+								locked = true;
+								MTS.MTSNet.sendTo(new PacketChat("interact.key.info.lock"), (EntityPlayerMP) player);
+							}
+						}
+					}
+					MTS.MTSNet.sendToAll(new PacketVehicleKey(this));
+					return true;
+				}else if(Items.NAME_TAG.equals(player.getHeldItem(hand).getItem())){
+					displayText = heldStack.getDisplayName().length() > pack.rendering.displayTextMaxLength ? heldStack.getDisplayName().substring(0, pack.rendering.displayTextMaxLength - 1) : heldStack.getDisplayName();
+					MTS.MTSNet.sendToAll(new PacketVehicleNameTag(this));
+					return true;
+				}else if(Item.getItemFromBlock(Blocks.GLASS_PANE).equals(player.getHeldItem(hand).getItem())){
+					if(brokenWindows > 0){
+						if(!player.capabilities.isCreativeMode){
+							player.inventory.clearMatchingItems(Item.getItemFromBlock(Blocks.GLASS_PANE), 0, 1, null);
+						}
+						--brokenWindows;
+						MTS.MTSNet.sendToAll(new PacketVehicleWindowFix(this));
+						return true;
+					}
+				}
+			}else{
+				if(player.getHeldItem(hand).getItem().equals(MTSRegistry.wrench) && getHitPart(player) == null){
+					MTS.proxy.openGUI(this, player);
 				}
 			}
 		}
@@ -392,6 +460,8 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			MTS.MTSNet.sendToAll(new PacketVehicleWindowBreak(this));
 		}
 	}
+	
+	
 	
 	protected float getCurrentMass(){
 		int currentMass = pack.general.emptyMass;

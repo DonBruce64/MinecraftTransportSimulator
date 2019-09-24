@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.dataclasses;
 
-import net.minecraft.util.ResourceLocation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -52,7 +51,6 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
 import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
-import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpConnection;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
@@ -69,7 +67,6 @@ import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleServerPartAddition;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowFix;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -83,6 +80,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -373,11 +371,10 @@ public final class MTSRegistry{
 		registerPacket(PacketVehicleClientRemoval.class, PacketVehicleClientRemoval.Handler.class, true, false);
 		registerPacket(PacketVehicleDeltas.class, PacketVehicleDeltas.Handler.class, true, false);
 		registerPacket(PacketVehicleInstruments.class, PacketVehicleInstruments.Handler.class, true, true);
-		registerPacket(PacketVehicleKey.class, PacketVehicleKey.Handler.class, true, true);
-		registerPacket(PacketVehicleNameTag.class, PacketVehicleNameTag.Handler.class, true, true);
-		registerPacket(PacketVehicleServerPartAddition.class, PacketVehicleServerPartAddition.Handler.class, false, true);
+		registerPacket(PacketVehicleKey.class, PacketVehicleKey.Handler.class, true, false);
+		registerPacket(PacketVehicleNameTag.class, PacketVehicleNameTag.Handler.class, true, false);
 		registerPacket(PacketVehicleWindowBreak.class, PacketVehicleWindowBreak.Handler.class, true, false);
-		registerPacket(PacketVehicleWindowFix.class, PacketVehicleWindowFix.Handler.class, true, true);
+		registerPacket(PacketVehicleWindowFix.class, PacketVehicleWindowFix.Handler.class, true, false);
 		
 		//Packets in packets.parts
 		registerPacket(PacketPartEngineDamage.class, PacketPartEngineDamage.Handler.class, true, false);
@@ -385,7 +382,6 @@ public final class MTSRegistry{
 		registerPacket(PacketPartEngineSignal.class, PacketPartEngineSignal.Handler.class, true, true);
 		registerPacket(PacketPartGroundDeviceWheelFlat.class, PacketPartGroundDeviceWheelFlat.Handler.class, true, false);
 		registerPacket(PacketPartGunSignal.class, PacketPartGunSignal.Handler.class, true, true);
-		registerPacket(PacketPartInteraction.class, PacketPartInteraction.Handler.class, false, true);
 		registerPacket(PacketPartSeatRiderChange.class, PacketPartSeatRiderChange.Handler.class, true, false);
 	}
 	

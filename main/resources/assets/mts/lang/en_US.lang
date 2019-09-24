@@ -315,7 +315,7 @@ manual.5.2=What exactly MTS considers a fuel is determined by the settings in th
 
 manual.6.title=Theft Prevention
 manual.6.1=The only thing worse than getting your nice car blown up by a creeper is having it (or parts of it) stolen by other players.  Normally vehicles can be messed with by anyone, but by using a key you can mark them as owned allowing only you to change their parts.  This also extends to entering the vehicle or accessing the contents of inventories inside of it.
-manual.6.2=You can even lock yourself in vehicles while moving to prevent stowaways.  Keys can be given to other players, allowing them to enter, but not modify, your vehicles.  It is HIGHLY recommended to make more than one key, as locked vehicles cannot be unlocked without their keys, nor can owned vehicles be relinquished.  Note that OPs bypass these restrictions to allow server admins to move/remove abandoned vehicles.
+manual.6.2=Keys can be given to other players, allowing them to enter, but not modify, your vehicles.  It is HIGHLY recommended to make more than one key, as locked vehicles cannot be unlocked without their keys, nor can owned vehicles be relinquished.  Note that OPs bypass these restrictions to allow server admins to move/remove abandoned vehicles.
 
 manual.7.title=Keyboard Controls
 manual.7.1=MTS offers multiple control schemes.  The standard scheme is the keyboard control.  Unlike other mods, MTS is equipped with a no-bind system.  This prevents it from clogging up keybindings and from intercepting and taking other mod's keystrokes.  Configuration for this mode, and the other control modes, can be activated by pressing the config key (P by default).

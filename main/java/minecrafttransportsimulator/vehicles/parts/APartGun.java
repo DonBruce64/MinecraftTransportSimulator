@@ -47,8 +47,8 @@ public abstract class APartGun extends APart implements FXPart{
 	
 	@Override
 	public boolean interactPart(EntityPlayer player){
-		//Only reload bullets from players on the server, and only if we aren't currently reloading.
-		if(!vehicle.world.isRemote && !reloading){
+		//Only reload bullets if we aren't currently reloading.
+		if(!reloading){
 			//Check to see if we have any bullets in our hands.
 			//If so, and they go to this gun, reload the gun and send a packet to update other guns.
 			ItemStack heldStack = player.getHeldItemMainhand();

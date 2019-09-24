@@ -27,12 +27,10 @@ public final class PartCrate extends APart{
 	
 	@Override
 	public boolean interactPart(EntityPlayer player){
-		if(!player.world.isRemote){
-			if(!vehicle.locked){
-				player.displayGUIChest(this.crateInventory);
-			}else{
-				MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
-			}
+		if(!vehicle.locked){
+			player.displayGUIChest(this.crateInventory);
+		}else{
+			MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
 		}
 		return true;
     }
