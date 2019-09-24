@@ -226,7 +226,7 @@ public final class MTSRegistry{
 					if(block instanceof ITileEntityProvider){
 						Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
 						if(!registeredTileEntityClasses.contains(tileEntityClass)){
-							GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
+							GameRegistry.registerTileEntity(tileEntityClass, new ResourceLocation(MTS.MODID, tileEntityClass.getSimpleName()));
 							registeredTileEntityClasses.add(tileEntityClass);
 						}
 					}
@@ -245,7 +245,7 @@ public final class MTSRegistry{
 							if(block instanceof ITileEntityProvider){
 								Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
 								if(!registeredTileEntityClasses.contains(tileEntityClass)){
-									GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
+									GameRegistry.registerTileEntity(tileEntityClass, new ResourceLocation(MTS.MODID, tileEntityClass.getSimpleName()));
 									registeredTileEntityClasses.add(tileEntityClass);
 								}
 							}
