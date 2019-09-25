@@ -33,6 +33,7 @@ public final class ConfigSystem{
 		config.load();
 		
 		//COMMON_CONFIG
+		booleanConfigMap.put("OPSignEditingOnly", config.get(COMMON_CONFIG, "OPSignEditingOnly", false, "If true, only OPs will be able to edit signs on servers.  Does not affect client worlds.").getBoolean());
 		integerConfigMap.put("RenderReductionHeight", config.get(COMMON_CONFIG, "RenderReductionHeight", 250, "When riding in a vehicle above this height MTS will reduce the render distance to 1.  \nThis provides a significant speedup for worldgen and render lag.  \nNote that this is only active on Singleplayer.").getInt());
 		doubleConfigMap.put("SpeedFactor", config.get(COMMON_CONFIG, "SpeedFactor", 0.35D, "Factor to apply to vehicle movement.  \n1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.").getDouble());
 		doubleConfigMap.put("FuelUsageFactor", config.get(COMMON_CONFIG, "FuelUsageFactor", 1.0D, "Factor times which engines use fuel.  \nChange this if you think engines use fuel too fast or slow.").getDouble());

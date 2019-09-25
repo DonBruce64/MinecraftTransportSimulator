@@ -149,7 +149,7 @@ public class GUISign extends GuiScreen{
     protected void actionPerformed(GuiButton buttonClicked) throws IOException{
 		super.actionPerformed(buttonClicked);
 		if(buttonClicked.equals(startButton)){
-			MTS.MTSNet.sendToServer(new PacketSignChange(decor, signName, decorTemp.text));
+			MTS.MTSNet.sendToServer(new PacketSignChange(decor, signName, decorTemp.text, player.getEntityId()));
 			mc.player.closeScreen();
 			return;
 		}else{
