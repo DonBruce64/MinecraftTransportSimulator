@@ -21,8 +21,8 @@ public class RenderDecor extends TileEntitySpecialRenderer<TileEntityDecor>{
 	public RenderDecor(){}
 	
 	@Override
-	public void renderTileEntityAt(TileEntityDecor decor, double x, double y, double z, float partialTicks, int destroyStage){
-		super.renderTileEntityAt(decor, x, y, z, partialTicks, destroyStage);
+	public void render(TileEntityDecor decor, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
+		super.render(decor, x, y, z, partialTicks, destroyStage, alpha);
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glTranslatef(0.5F, 0.0F, 0.5F);

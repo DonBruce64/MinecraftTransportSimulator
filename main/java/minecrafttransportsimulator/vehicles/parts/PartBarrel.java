@@ -8,6 +8,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumHand;
 import net.minecraftforge.fluids.FluidEvent;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
@@ -15,6 +16,7 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
 public final class PartBarrel extends APart implements IFluidTank, IFluidHandler{
@@ -34,31 +36,28 @@ public final class PartBarrel extends APart implements IFluidTank, IFluidHandler
 	
 	@Override
 	public boolean interactPart(EntityPlayer player){
-		if(!player.worldObj.isRemote){
-			if(!vehicle.locked){
-				ItemStack stack = player.getHeldItemMainhand();
-				if(stack != null){
-					if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)){
-						IFluidHandler handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
-						//If player is sneaking, drain barrel.  Otherwise, fill barrel.
-						if(player.isSneaking()){
-							if(this.getFluid() != null){
-								this.drain(handler.fill(this.getFluid(), true), true);
-							}							
-						}else{
-							if(this.getFluid() != null){
-								this.fill(handler.drain(new FluidStack(this.getFluid().getFluid(), this.getCapacity() - this.getFluidAmount()), true), true);
-							}else{
-								this.fill(handler.drain(this.getCapacity() - this.getFluidAmount(), true), true);
-							}
-						}
-						//player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer()); //For 1.11+
-						return true;
+		if(!vehicle.locked){
+			ItemStack stack = player.getHeldItemMainhand();
+			if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
+				IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+				//If we are empty or sneaking, drain the barrel, otherwise fill.
+				//We use 1000 here for the test as buckets will only drain that amount.
+				FluidStack drainedTestStack = handler.drain(1000, false);
+				if(player.isSneaking() || drainedTestStack == null || drainedTestStack.amount == 0){
+					if(this.getFluid() != null){
+						this.drain(handler.fill(this.getFluid(), true), true);
+					}							
+				}else{
+					if(this.getFluid() != null){
+						this.fill(handler.drain(new FluidStack(this.getFluid().getFluid(), this.getCapacity() - this.getFluidAmount()), true), true);
+					}else{
+						this.fill(handler.drain(this.getCapacity() - this.getFluidAmount(), true), true);
 					}
 				}
-			}else{
-				MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
+				player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer());
 			}
+		}else{
+			MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
 		}
 		return true;
     }
@@ -117,7 +116,7 @@ public final class PartBarrel extends APart implements IFluidTank, IFluidHandler
 					tankInfo = new FluidTankInfo(new FluidStack(stack.getFluid(), 0), emptyTankInfo.capacity);
 				}
 				tankInfo.fluid.amount += amountToFill;
-				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(tankInfo.fluid, vehicle.worldObj, vehicle.getPosition(), this, amountToFill));
+				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(tankInfo.fluid, vehicle.world, vehicle.getPosition(), this, amountToFill));
 			}
 			return amountToFill;
 		}else{
@@ -141,7 +140,7 @@ public final class PartBarrel extends APart implements IFluidTank, IFluidHandler
 				}
 			}
 			FluidStack returnStack = new FluidStack(stack.getFluid(), amountToDrain);
-			FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(returnStack, vehicle.worldObj, vehicle.getPosition(), this, amountToDrain));
+			FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(returnStack, vehicle.world, vehicle.getPosition(), this, amountToDrain));
 			return returnStack;
 		}
 		return null;

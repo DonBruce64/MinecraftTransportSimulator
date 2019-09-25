@@ -6,7 +6,9 @@ import java.util.List;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -16,13 +18,15 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 public class PacketSignChange extends APacketTileEntity{
 	private String definition;
 	private List<String> text = new ArrayList<String>();
+	private int playerID;
 
 	public PacketSignChange(){}
 	
-	public PacketSignChange(TileEntityPoleSign tile, String definition, List<String> text){
+	public PacketSignChange(TileEntityPoleSign tile, String definition, List<String> text, int playerID){
 		super(tile);
 		this.definition = definition;
 		this.text = text;
+		this.playerID = playerID;
 	}
 	
 	@Override
@@ -34,6 +38,7 @@ public class PacketSignChange extends APacketTileEntity{
 				this.text.add(ByteBufUtils.readUTF8String(buf));
 			}
 		}
+		this.playerID = buf.readInt();
 	}
 
 	@Override
@@ -45,6 +50,7 @@ public class PacketSignChange extends APacketTileEntity{
 				ByteBufUtils.writeUTF8String(buf, text.get(i));
 			}
 		}
+		buf.writeInt(this.playerID);
 	}
 
 	public static class Handler implements IMessageHandler<PacketSignChange, IMessage>{
@@ -53,6 +59,16 @@ public class PacketSignChange extends APacketTileEntity{
 				@Override
 				public void run(){
 					TileEntityPoleSign decor = (TileEntityPoleSign) getTileEntity(message, ctx);
+					if(ConfigSystem.getBooleanConfig("OPSignEditingOnly")){
+						boolean isPlayerOP = false;
+						EntityPlayer player = (EntityPlayer) ctx.getServerHandler().player.world.getEntityByID(message.playerID);
+						if(player != null){
+							isPlayerOP = player.getServer() == null || player.getServer().isSinglePlayer() || player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null;
+						}
+						if(!isPlayerOP){
+							return;
+						}
+					}
 					if(decor != null){
 						decor.definition = message.definition;
 						decor.text = message.text;

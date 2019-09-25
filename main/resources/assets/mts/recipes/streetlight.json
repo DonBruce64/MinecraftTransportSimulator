@@ -1,0 +1,16 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern":[
+        " ab",
+        " c ",
+        "   "
+    ],
+    "key":{
+		"a":{"item": "minecraft:stone_slab", "data" : 0},
+		"b":{"item": "mts:pole"},
+		"c":{"item": "minecraft:glowstone_dust"}
+    },
+    "result":{
+        "item": "mts:streetlight"
+    }
+}

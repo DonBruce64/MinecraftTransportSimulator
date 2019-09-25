@@ -1,0 +1,32 @@
+{
+	"parent": "mts:rtfm",
+	"display": {
+		"icon": {
+            "item": "mts:enginebench"
+        },
+        "title": {
+            "translate": "advancements.mts.enginebench.title"
+        },
+        "description": {
+            "translate": "advancements.mts.enginebench.description"
+        }
+	},
+	"criteria": {
+		"has_enginebench": {
+			"trigger": "minecraft:inventory_changed",
+			"conditions": {
+				"items": [
+					{
+						"item": "mts:enginebench"
+					}
+				]
+			}
+		}
+	},
+	"rewards": {
+		"recipes": [
+			"mts:fuelpump",
+			"mts:jumpercable"
+		]
+	}
+}

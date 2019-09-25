@@ -33,7 +33,7 @@ public class PacketManualPageUpdate implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					ItemStack stack = ctx.getServerHandler().playerEntity.inventory.getCurrentItem();
+					ItemStack stack = ctx.getServerHandler().player.inventory.getCurrentItem();
 					if(!stack.hasTagCompound()){
 						stack.setTagCompound(new NBTTagCompound());
 					}

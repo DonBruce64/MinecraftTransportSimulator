@@ -1,0 +1,26 @@
+{
+	"parent": "mts:rtfm",
+	"display": {
+		"icon": {
+            "item": "mts:propellerbench"
+        },
+        "title": {
+            "translate": "advancements.mts.propellerbench.title"
+        },
+        "description": {
+            "translate": "advancements.mts.propellerbench.description"
+        }
+	},
+	"criteria": {
+		"has_propellerbench": {
+			"trigger": "minecraft:inventory_changed",
+			"conditions": {
+				"items": [
+					{
+						"item": "mts:propellerbench"
+					}
+				]
+			}
+		}
+	}
+}

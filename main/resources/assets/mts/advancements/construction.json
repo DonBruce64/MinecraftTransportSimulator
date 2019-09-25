@@ -1,0 +1,31 @@
+{
+	"parent": "mts:root",
+	"display": {
+		"icon": {
+            "item": "minecraft:stone"
+        },
+        "title": {
+            "translate": "advancements.mts.construction.title"
+        },
+        "description": {
+            "translate": "advancements.mts.construction.description"
+        }
+	},
+	"criteria": {
+		"has_stone": {
+			"trigger": "minecraft:inventory_changed",
+			"conditions": {
+				"items": [
+					{
+						"item": "minecraft:stone"
+					}
+				]
+			}
+		}
+	},
+	"rewards": {
+		"recipes": [
+			"mts:pole"
+		]
+	}
+}

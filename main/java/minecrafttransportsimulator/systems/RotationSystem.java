@@ -33,9 +33,9 @@ public final class RotationSystem{
 		d4 = Math.sin(yaw * 0.017453292F);//D
 		d5 = Math.cos(roll * 0.017453292F);//E
 		d6 = Math.sin(roll * 0.017453292F);//F
-		d7 = pos.xCoord*(d3*d5-d2*d4*d6) + pos.yCoord*(-d2*d4*d5-d3*d6) + pos.zCoord*(-d1*d4);
-		d8 = pos.xCoord*(d1*d6)          + pos.yCoord*(d1*d5)           + pos.zCoord*(-d2);
-		d9 = pos.xCoord*(d4*d5+d2*d3*d6) + pos.yCoord*(d2*d3*d5-d4*d6)  + pos.zCoord*(d1*d3);
+		d7 = pos.x*(d3*d5-d2*d4*d6) + pos.y*(-d2*d4*d5-d3*d6) + pos.z*(-d1*d4);
+		d8 = pos.x*(d1*d6)          + pos.y*(d1*d5)           + pos.z*(-d2);
+		d9 = pos.x*(d4*d5+d2*d3*d6) + pos.y*(d2*d3*d5-d4*d6)  + pos.z*(d1*d3);
 		return new Vec3d(d7, d8, d9);
 	}
 	

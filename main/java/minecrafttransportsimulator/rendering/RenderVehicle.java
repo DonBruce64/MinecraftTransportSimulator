@@ -33,6 +33,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleI
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
 import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
@@ -127,19 +128,19 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		if(vehicle.pack != null){ 
 			if(lastRenderPass.containsKey(vehicle)){
 				//Did we render this tick?
-				if(lastRenderTick.get(vehicle) == vehicle.worldObj.getTotalWorldTime() && lastRenderPartial.get(vehicle) == partialTicks){
+				if(lastRenderTick.get(vehicle) == vehicle.world.getTotalWorldTime() && lastRenderPartial.get(vehicle) == partialTicks){
 					//If we rendered last on a pass of 0 or 1 this tick, don't re-render some things.
 					if(lastRenderPass.get(vehicle) != -1 && MinecraftForgeClient.getRenderPass() == -1){
-						render(vehicle, Minecraft.getMinecraft().thePlayer, partialTicks, true);
+						render(vehicle, Minecraft.getMinecraft().player, partialTicks, true);
 						didRender = true;
 					}
 				}
 			}
 			if(!didRender){
-				render(vehicle, Minecraft.getMinecraft().thePlayer, partialTicks, false);
+				render(vehicle, Minecraft.getMinecraft().player, partialTicks, false);
 			}
 			lastRenderPass.put(vehicle, (byte) MinecraftForgeClient.getRenderPass());
-			lastRenderTick.put(vehicle, vehicle.worldObj.getTotalWorldTime());
+			lastRenderTick.put(vehicle, vehicle.world.getTotalWorldTime());
 			lastRenderPartial.put(vehicle, partialTicks);
 		}
 	}
@@ -171,7 +172,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
         //Set up position and lighting.
         GL11.glPushMatrix();
         GL11.glTranslated(thisX - playerX, thisY - playerY, thisZ - playerZ);
-        int lightVar = vehicle.getBrightnessForRender(partialTicks);
+        int lightVar = vehicle.getBrightnessForRender();
         minecraft.entityRenderer.enableLightmap();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
         RenderHelper.enableStandardItemLighting();
@@ -209,7 +210,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
  		//Better than not rendering at all I suppose.
 		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
 			for(Entity passenger : vehicle.getPassengers()){
-				if(!(minecraft.thePlayer.equals(passenger) && minecraft.gameSettings.thirdPersonView == 0) && passenger.posY > passenger.worldObj.getHeight()){
+				if(!(minecraft.player.equals(passenger) && minecraft.gameSettings.thirdPersonView == 0) && passenger.posY > passenger.world.getHeight()){
 		        	 GL11.glPushMatrix();
 		        	 GL11.glTranslated(passenger.posX - vehicle.posX, passenger.posY - vehicle.posY, passenger.posZ - vehicle.posZ);
 		        	 Minecraft.getMinecraft().getRenderManager().renderEntityStatic(passenger, partialTicks, false);
@@ -222,8 +223,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//The first renders the cases and bulbs, the second renders the beams and effects.
 		//Make sure the light list is populated here before we try to render this, as loading de-syncs can leave it null.
 		if(vehicleLightLists.get(vehicle.vehicleJSONName) != null){
-			float sunLight = vehicle.worldObj.getSunBrightness(0)*vehicle.worldObj.getLightBrightness(vehicle.getPosition());
-			float blockLight = vehicle.worldObj.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, vehicle.getPosition())/15F;
+			float sunLight = vehicle.world.getSunBrightness(0)*vehicle.world.getLightBrightness(vehicle.getPosition());
+			float blockLight = vehicle.world.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, vehicle.getPosition())/15F;
 			float electricFactor = (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1);
 			float lightBrightness = (float) Math.min((1 - Math.max(sunLight, blockLight))*electricFactor, 1);
 
@@ -264,7 +265,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			SFXSystem.updateVehicleSounds(vehicle, partialTicks);
 			for(APart part : vehicle.getVehicleParts()){
 				if(part instanceof FXPart){
-					SFXSystem.doFX((FXPart) part, vehicle.worldObj);
+					SFXSystem.doFX((FXPart) part, vehicle.world);
 				}
 			}
 		}
@@ -369,16 +370,16 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		for(byte i=0; i<rotatable.rotationVariables.length; ++i){
 			float rotation = getRotationAngleForModelVariable(vehicle, rotatable.rotationVariables[i], partialTicks);
 			if(rotation != 0){
-				GL11.glTranslated(rotatable.rotationPoints[i].xCoord, rotatable.rotationPoints[i].yCoord, rotatable.rotationPoints[i].zCoord);
-				GL11.glRotated(rotation*rotatable.rotationMagnitudes[i], rotatable.rotationAxis[i].xCoord, rotatable.rotationAxis[i].yCoord, rotatable.rotationAxis[i].zCoord);
-				GL11.glTranslated(-rotatable.rotationPoints[i].xCoord, -rotatable.rotationPoints[i].yCoord, -rotatable.rotationPoints[i].zCoord);
+				GL11.glTranslated(rotatable.rotationPoints[i].x, rotatable.rotationPoints[i].y, rotatable.rotationPoints[i].z);
+				GL11.glRotated(rotation*rotatable.rotationMagnitudes[i], rotatable.rotationAxis[i].x, rotatable.rotationAxis[i].y, rotatable.rotationAxis[i].z);
+				GL11.glTranslated(-rotatable.rotationPoints[i].x, -rotatable.rotationPoints[i].y, -rotatable.rotationPoints[i].z);
 			}
 		}
 	}
 	
 	private static float getRotationAngleForModelVariable(EntityVehicleE_Powered vehicle, String variable, float partialTicks){
 		switch(variable){
-			case("cycle"): return vehicle.worldObj.getTotalWorldTime()%20;
+			case("cycle"): return vehicle.world.getTotalWorldTime()%20;
 			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity == 0 && !vehicle.locked ? 60 : 0;
 			case("hood"): return vehicle.getEngineByNumber((byte) 0) == null ? 60 : 0;
 			case("throttle"): return vehicle.throttle/4F;
@@ -408,6 +409,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		switch(variable.substring(0, variable.lastIndexOf('_'))){
 			case("magneto"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.magnetoOn ? 30 : 0) : 0;
 			case("starter"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.esOn ? 30 : 0) : 0;
+			case("pitch"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).childParts.get(0) instanceof PartEngineAircraft ? ((PartEngineAircraft) vehicle.getEngineByNumber(index).childParts.get(0)).propeller.currentPitch : 0) : 0;
 			default: return 0;
 		}
 	}
@@ -417,7 +419,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			float translation = getTranslationLengthForModelVariable(vehicle, translatable.translationVariables[i], partialTicks);
 			if(translation != 0){
 				float translationMagnitude = translation*translatable.translationMagnitudes[i];
-				GL11.glTranslated(translationMagnitude*translatable.translationAxis[i].xCoord, translationMagnitude*translatable.translationAxis[i].yCoord, translationMagnitude*translatable.translationAxis[i].zCoord);
+				GL11.glTranslated(translationMagnitude*translatable.translationAxis[i].x, translationMagnitude*translatable.translationAxis[i].y, translationMagnitude*translatable.translationAxis[i].z);
 			}
 		}
 	}
@@ -504,7 +506,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     			
     			Vec3d actionRotation = part.getActionRotation(partialTicks);
     			GL11.glPushMatrix();
-    			GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
+    			GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
     			rotatePart(part, actionRotation, true);
         		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
         		
@@ -540,9 +542,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		for(byte i=0; i<rotatable.rotationVariables.length; ++i){
 			float rotation = getRotationAngleForPartVariable(part, rotatable.rotationVariables[i], partialTicks);
 			if(rotation != 0){
-				GL11.glTranslated(rotatable.rotationPoints[i].xCoord, rotatable.rotationPoints[i].yCoord, rotatable.rotationPoints[i].zCoord);
-				GL11.glRotated(rotation*rotatable.rotationMagnitudes[i], rotatable.rotationAxis[i].xCoord, rotatable.rotationAxis[i].yCoord, rotatable.rotationAxis[i].zCoord);
-				GL11.glTranslated(-rotatable.rotationPoints[i].xCoord, -rotatable.rotationPoints[i].yCoord, -rotatable.rotationPoints[i].zCoord);
+				GL11.glTranslated(rotatable.rotationPoints[i].x, rotatable.rotationPoints[i].y, rotatable.rotationPoints[i].z);
+				GL11.glRotated(rotation*rotatable.rotationMagnitudes[i], rotatable.rotationAxis[i].x, rotatable.rotationAxis[i].y, rotatable.rotationAxis[i].z);
+				GL11.glTranslated(-rotatable.rotationPoints[i].x, -rotatable.rotationPoints[i].y, -rotatable.rotationPoints[i].z);
 			}
 		}
 	}
@@ -577,27 +579,27 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	
 	private static void rotatePart(APart part, Vec3d actionRotation, boolean cullface){
 		if(part.turnsWithSteer){
-			if(part.offset.zCoord >= 0){
+			if(part.offset.z >= 0){
 				GL11.glRotatef(part.vehicle.getSteerAngle(), 0, 1, 0);
 			}else{
 				GL11.glRotatef(-part.vehicle.getSteerAngle(), 0, 1, 0);
 			}
 		}
 		
-		if((part.offset.xCoord < 0 && !part.overrideMirror) || (part.offset.xCoord > 0 && part.overrideMirror)){
+		if((part.offset.x < 0 && !part.overrideMirror) || (part.offset.x > 0 && part.overrideMirror)){
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);
 			if(cullface){
 				GL11.glCullFace(GL11.GL_FRONT);
 			}
 		}
 		
-		GL11.glRotated(part.partRotation.xCoord, 1, 0, 0);
-		GL11.glRotated(part.partRotation.yCoord, 0, 1, 0);
-		GL11.glRotated(part.partRotation.zCoord, 0, 0, 1);
+		GL11.glRotated(part.partRotation.x, 1, 0, 0);
+		GL11.glRotated(part.partRotation.y, 0, 1, 0);
+		GL11.glRotated(part.partRotation.z, 0, 0, 1);
 		
-		GL11.glRotated(actionRotation.xCoord, 1, 0, 0);
-		GL11.glRotated(actionRotation.yCoord, 0, 1, 0);
-		GL11.glRotated(actionRotation.zCoord, 0, 0, 1);
+		GL11.glRotated(actionRotation.x, 1, 0, 0);
+		GL11.glRotated(actionRotation.y, 0, 1, 0);
+		GL11.glRotated(actionRotation.z, 0, 0, 1);
 	}
 	
 	private static void doTreadRender(PartGroundDeviceTread treadPart, float partialTicks, int displayListIndex){
@@ -794,7 +796,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			//Finally, scale and render the text.
 			GL11.glScalef(text.scale, text.scale, text.scale);
 			RenderHelper.disableStandardItemLighting();
-			minecraft.fontRendererObj.drawString(vehicle.displayText, -minecraft.fontRendererObj.getStringWidth(vehicle.displayText)/2, 0, Color.decode(text.color).getRGB());
+			minecraft.fontRenderer.drawString(vehicle.displayText, -minecraft.fontRenderer.getStringWidth(vehicle.displayText)/2, 0, Color.decode(text.color).getRGB());
 			GL11.glPopMatrix();
 		}
 		GL11.glColor3f(1.0F, 1.0F, 1.0F);
@@ -838,7 +840,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				}
 			}else{
 				APart part = lightIndexToParts.get(lightIndex);
-				GL11.glTranslated(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
+				GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
 				rotatePart(part, part.getActionRotation(partialTicks), false);
 				for(RotatablePart rotatable : partRotatableLists.get(part.getModelLocation())){
 					if(rotatable.name.equals(light.name)){
@@ -908,9 +910,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 						//Then apply scaling factor to make the flare larger than the light.
 						GL11.glTexCoord2f(vertex[3], vertex[4]);
 						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-						GL11.glVertex3d(vertex[0]+vertex[5]*0.0002F + (vertex[0] - light.centerPoints[i].xCoord)*(2 + light.size[i]*0.25F), 
-								vertex[1]+vertex[6]*0.0002F + (vertex[1] - light.centerPoints[i].yCoord)*(2 + light.size[i]*0.25F), 
-								vertex[2]+vertex[7]*0.0002F + (vertex[2] - light.centerPoints[i].zCoord)*(2 + light.size[i]*0.25F));	
+						GL11.glVertex3d(vertex[0]+vertex[5]*0.0002F + (vertex[0] - light.centerPoints[i].x)*(2 + light.size[i]*0.25F), 
+								vertex[1]+vertex[6]*0.0002F + (vertex[1] - light.centerPoints[i].y)*(2 + light.size[i]*0.25F), 
+								vertex[2]+vertex[7]*0.0002F + (vertex[2] - light.centerPoints[i].z)*(2 + light.size[i]*0.25F));	
 					}
 					GL11.glEnd();
 					GL11.glPopMatrix();
@@ -934,7 +936,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				for(byte i=0; i<light.centerPoints.length; ++i){
 					GL11.glPushMatrix();
 					//Translate light to the center of the cone beam.
-					GL11.glTranslated(light.centerPoints[i].xCoord - light.vertices[i*6][5]*0.15F, light.centerPoints[i].yCoord - light.vertices[i*6][6]*0.15F, light.centerPoints[i].zCoord - light.vertices[i*6][7]*0.15F);
+					GL11.glTranslated(light.centerPoints[i].x - light.vertices[i*6][5]*0.15F, light.centerPoints[i].y - light.vertices[i*6][6]*0.15F, light.centerPoints[i].z - light.vertices[i*6][7]*0.15F);
 					//Rotate beam to the normal face.
 					GL11.glRotatef((float) Math.toDegrees(Math.atan2(light.vertices[i*6][6], light.vertices[i*6][5])), 0, 0, 1);
 					GL11.glRotatef((float) Math.toDegrees(Math.acos(light.vertices[i*6][7])), 0, 1, 0);
@@ -1013,32 +1015,32 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		GL11.glLineWidth(3.0F);
 		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
 			GL11.glBegin(GL11.GL_LINES);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y - box.height/2F, box.rel.z - box.width/2F);
+			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y - box.height/2F, box.rel.z - box.width/2F);
+			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y - box.height/2F, box.rel.z + box.width/2F);
+			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y - box.height/2F, box.rel.z + box.width/2F);
+			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y + box.height/2F, box.rel.z - box.width/2F);
+			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y + box.height/2F, box.rel.z - box.width/2F);
+			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y + box.height/2F, box.rel.z + box.width/2F);
+			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y + box.height/2F, box.rel.z + box.width/2F);
 			
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y - box.height/2F, box.rel.z - box.width/2F);
+			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y - box.height/2F, box.rel.z + box.width/2F);
+			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y - box.height/2F, box.rel.z - box.width/2F);
+			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y - box.height/2F, box.rel.z + box.width/2F);
+			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y + box.height/2F, box.rel.z - box.width/2F);
+			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y + box.height/2F, box.rel.z + box.width/2F);
+			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y + box.height/2F, box.rel.z - box.width/2F);
+			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y + box.height/2F, box.rel.z + box.width/2F);
 			
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord - box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord - box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord - box.height/2F, box.rel.zCoord + box.width/2F);
-			GL11.glVertex3d(box.rel.xCoord + box.width/2F, box.rel.yCoord + box.height/2F, box.rel.zCoord + box.width/2F);
+			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y - box.height/2F, box.rel.z - box.width/2F);
+			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y + box.height/2F, box.rel.z - box.width/2F);
+			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y - box.height/2F, box.rel.z - box.width/2F);
+			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y + box.height/2F, box.rel.z - box.width/2F);
+			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y - box.height/2F, box.rel.z + box.width/2F);
+			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y + box.height/2F, box.rel.z + box.width/2F);
+			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y - box.height/2F, box.rel.z + box.width/2F);
+			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y + box.height/2F, box.rel.z + box.width/2F);
 			GL11.glEnd();
 		}
 		GL11.glLineWidth(1.0F);
@@ -1049,7 +1051,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	}
 	
 	private static void renderPartBoxes(EntityVehicleE_Powered vehicle){
-		EntityPlayer player = minecraft.thePlayer;
+		EntityPlayer player = minecraft.player;
 		ItemStack heldStack = player.getHeldItemMainhand();
 		if(heldStack != null){
 			if(heldStack.getItem() instanceof AItemPart){
@@ -1059,7 +1061,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 					boolean isHoldingPart = false;
 					boolean isPartValid = false;
 					
-					if(vehicle.getPartAtLocation(packPartEntry.getKey().xCoord, packPartEntry.getKey().yCoord, packPartEntry.getKey().zCoord) != null){
+					if(vehicle.getPartAtLocation(packPartEntry.getKey().x, packPartEntry.getKey().y, packPartEntry.getKey().z) != null){
 						isPresent = true;
 					}
 					
@@ -1076,9 +1078,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 						//If we are a custom part, use the custom hitbox.  Otherwise use the regular one.
 						AxisAlignedBB box;
 						if(packPartEntry.getValue().types.contains("custom") && heldItemPack.general.type.equals("custom")){
-							box = new AxisAlignedBB((float) (offset.xCoord) - heldItemPack.custom.width/2F, (float) (offset.yCoord) - heldItemPack.custom.height/2F, (float) (offset.zCoord) - heldItemPack.custom.width/2F, (float) (offset.xCoord) + heldItemPack.custom.width/2F, (float) (offset.yCoord) + heldItemPack.custom.height/2F, (float) (offset.zCoord) + heldItemPack.custom.width/2F);		
+							box = new AxisAlignedBB((float) (offset.x) - heldItemPack.custom.width/2F, (float) (offset.y) - heldItemPack.custom.height/2F, (float) (offset.z) - heldItemPack.custom.width/2F, (float) (offset.x) + heldItemPack.custom.width/2F, (float) (offset.y) + heldItemPack.custom.height/2F, (float) (offset.z) + heldItemPack.custom.width/2F);		
 						}else{
-							box = new AxisAlignedBB((float) (offset.xCoord) - 0.375F, (float) (offset.yCoord) - 0.5F, (float) (offset.zCoord) - 0.375F, (float) (offset.xCoord) + 0.375F, (float) (offset.yCoord) + 1.25F, (float) (offset.zCoord) + 0.375F);
+							box = new AxisAlignedBB((float) (offset.x) - 0.375F, (float) (offset.y) - 0.5F, (float) (offset.z) - 0.375F, (float) (offset.x) + 0.375F, (float) (offset.y) + 1.25F, (float) (offset.z) + 0.375F);
 						}
 						
 						GL11.glPushMatrix();

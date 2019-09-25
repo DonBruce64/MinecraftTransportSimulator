@@ -33,8 +33,8 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleW
 	public RenderPoleLighted(){}
 	
 	@Override
-	public void renderTileEntityAt(TileEntityPoleWallConnector polePart, double x, double y, double z, float partialTicks, int destroyStage){
-		super.renderTileEntityAt(polePart, x, y, z, partialTicks, destroyStage);
+	public void render(TileEntityPoleWallConnector polePart, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
+		super.render(polePart, x, y, z, partialTicks, destroyStage, alpha);
 		final Vec3i facingVec = EnumFacing.VALUES[polePart.rotation].getDirectionVec();
 		final Block block = polePart.getWorld().getBlockState(polePart.getPos()).getBlock();
 		//Check to make sure we have the right block before continuing.
@@ -310,12 +310,12 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleW
 		if(reverse){
 			for(float theta=0; theta < 2*Math.PI + 0.1; theta += 2F*Math.PI/40F){
 				GL11.glTexCoord2f(theta, 1);
-				GL11.glVertex3d(endPoint.xCoord + 3.0F*Math.cos(theta), endPoint.yCoord + 3.0F*Math.sin(theta), endPoint.zCoord);
+				GL11.glVertex3d(endPoint.x + 3.0F*Math.cos(theta), endPoint.y + 3.0F*Math.sin(theta), endPoint.z);
 			}
 		}else{
 			for(float theta=(float) (2*Math.PI); theta>=0 - 0.1; theta -= 2F*Math.PI/40F){
 				GL11.glTexCoord2f(theta, 1);
-				GL11.glVertex3d(endPoint.xCoord + 3.0F*Math.cos(theta), endPoint.yCoord + 3.0F*Math.sin(theta), endPoint.zCoord);
+				GL11.glVertex3d(endPoint.x + 3.0F*Math.cos(theta), endPoint.y + 3.0F*Math.sin(theta), endPoint.z);
 			}
 		}
 		GL11.glEnd();

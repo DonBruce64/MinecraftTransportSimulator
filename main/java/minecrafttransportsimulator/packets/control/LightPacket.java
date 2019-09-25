@@ -40,9 +40,9 @@ public class LightPacket implements IMessage{
 				public void run(){
 					EntityVehicleE_Powered thisEntity;
 					if(ctx.side.isServer()){
-						thisEntity = (EntityVehicleE_Powered) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						thisEntity = (EntityVehicleE_Powered) ctx.getServerHandler().player.world.getEntityByID(message.id);
 					}else{
-						thisEntity = (EntityVehicleE_Powered) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						thisEntity = (EntityVehicleE_Powered) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
 						thisEntity.changeLightStatus(LightTypes.values()[message.lightOrdinal], !thisEntity.isLightOn(LightTypes.values()[message.lightOrdinal]));

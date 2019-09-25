@@ -71,13 +71,13 @@ public class PacketBulletHit implements IMessage{
 						//If we are an explosive bullet, just blow up at our current position.
 						//Otherwise do attack logic.
 						PartBulletConfig bulletPackData = PackParserSystem.getPartPack(message.bulletName).bullet;
-						Entity entityAttacking = ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.playerID);
+						Entity entityAttacking = ctx.getServerHandler().player.world.getEntityByID(message.playerID);
 						if(bulletPackData.type.equals("explosive")){
-							ctx.getServerHandler().playerEntity.worldObj.newExplosion(entityAttacking, message.x, message.y, message.z, 12, false, true);
+							ctx.getServerHandler().player.world.newExplosion(entityAttacking, message.x, message.y, message.z, 12, false, true);
 						}else{
 							//If we hit an entity, apply damage to them.
 							if(message.entitiyHitID != -1){
-								Entity entityHit = ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.entitiyHitID);
+								Entity entityHit = ctx.getServerHandler().player.world.getEntityByID(message.entitiyHitID);
 								if(entityHit != null && entityAttacking != null){
 									//If we are attacking a vehicle, call the custom attack code to relay our position.
 									//Otherwise call the regular attack code.
@@ -96,9 +96,9 @@ public class PacketBulletHit implements IMessage{
 								//If the bullet is big, and the block is soft, then break the block.
 								//Otherwise send this packet back to the client to spawn SFX.
 								BlockPos hitPos = new BlockPos(message.x, message.y, message.z);
-								float hardness = ctx.getServerHandler().playerEntity.worldObj.getBlockState(hitPos).getBlockHardness(ctx.getServerHandler().playerEntity.worldObj, hitPos);
+								float hardness = ctx.getServerHandler().player.world.getBlockState(hitPos).getBlockHardness(ctx.getServerHandler().player.world, hitPos);
 								if(hardness <= 0.3 && hardness <= (Math.random()*0.3 + 0.3*bulletPackData.diameter/20F)){
-									ctx.getServerHandler().playerEntity.worldObj.destroyBlock(hitPos, true);
+									ctx.getServerHandler().player.world.destroyBlock(hitPos, true);
 								}else{
 									MTS.MTSNet.sendToAll(message);
 								}
@@ -109,8 +109,8 @@ public class PacketBulletHit implements IMessage{
 						//We only get a packet back if we hit a block and didn't break it.
 						//If this is the case, play the block break sound and spawn some particles.
 						BlockPos hitPos = new BlockPos(message.x, message.y, message.z);
-						SoundType soundType = Minecraft.getMinecraft().theWorld.getBlockState(hitPos).getBlock().getSoundType(Minecraft.getMinecraft().theWorld.getBlockState(hitPos), Minecraft.getMinecraft().theWorld, hitPos, null);
-						Minecraft.getMinecraft().theWorld.playSound(null, message.x, message.y, message.z, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
+						SoundType soundType = Minecraft.getMinecraft().world.getBlockState(hitPos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(hitPos), Minecraft.getMinecraft().world, hitPos, null);
+						Minecraft.getMinecraft().world.playSound(null, message.x, message.y, message.z, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
 						//MTS.proxy.playSound(new Vec3d(this.posX, this.posY, this.posZ), MTS.MODID + ":" + "wheel_striking", 1, 1);
 					}
 				}

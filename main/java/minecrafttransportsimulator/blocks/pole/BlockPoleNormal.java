@@ -57,7 +57,7 @@ public class BlockPoleNormal extends Block{
 	
 	@Override
 	@SuppressWarnings("deprecation")
-    public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entity){
+    public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entity, boolean p_185477_7_){
         state = state.getActualState(world, pos);
         addCollisionBoxToList(pos, entityBox, collidingBoxes, CENTER_AABB);
         if(state.getValue(UP).booleanValue()){

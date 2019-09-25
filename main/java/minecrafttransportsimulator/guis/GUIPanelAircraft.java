@@ -98,7 +98,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		//The true span of this GUI is from height-112 to height.
 		//This is because it's on the bottom of the screen, or the highest height value.
 		if(aircraft.isDead){
-			mc.thePlayer.closeScreen();
+			mc.player.closeScreen();
 			return;
 		}
 		
@@ -139,7 +139,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		GL11.glPushMatrix();
 		GL11.glScalef(32F/20F, 32F/20F, 0);
 		for(GuiButton button : buttonList){
-			button.drawButton(mc, mouseX, mouseY);
+			button.drawButton(mc, mouseX, mouseY, 0);
 		}
 		GL11.glPopMatrix();
 		
@@ -153,7 +153,7 @@ public class GUIPanelAircraft extends GuiScreen{
 			if(hasLight[i]){
 				int textX = lightButtonCoords[i][0] + (lightButtonCoords[i][1] - lightButtonCoords[i][0])/2;
 				int textY = lightButtonCoords[i][2] + 2; 
-				fontRendererObj.drawString(lightText[i], textX - fontRendererObj.getStringWidth(lightText[i])/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+				fontRenderer.drawString(lightText[i], textX - fontRenderer.getStringWidth(lightText[i])/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 			}
 		}
 		
@@ -161,19 +161,19 @@ public class GUIPanelAircraft extends GuiScreen{
 		for(byte i=0; i<magnetoButtonCoords.length; ++i){
 			int textX = magnetoButtonCoords[i][0] + (magnetoButtonCoords[i][1] - magnetoButtonCoords[i][0])/2;
 			int textY = magnetoButtonCoords[i][2] + 2;
-			fontRendererObj.drawString(I18n.format("gui.panel.magneto"), textX - fontRendererObj.getStringWidth(I18n.format("gui.panel.magneto"))/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
-			fontRendererObj.drawString(I18n.format("gui.panel.starter"), textX - fontRendererObj.getStringWidth(I18n.format("gui.panel.starter"))/2 + 32, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+			fontRenderer.drawString(I18n.format("gui.panel.magneto"), textX - fontRenderer.getStringWidth(I18n.format("gui.panel.magneto"))/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+			fontRenderer.drawString(I18n.format("gui.panel.starter"), textX - fontRenderer.getStringWidth(I18n.format("gui.panel.starter"))/2 + 32, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		}
 		
 		//Render trim button text.
 		int xOffset = engines.length < 4 ? 176 : 256;
-		fontRendererObj.drawString(I18n.format("gui.panel.trim_roll"), xOffset - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_roll"))/2, 312 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
-		fontRendererObj.drawString(I18n.format("gui.panel.trim_pitch"), xOffset - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_pitch"))/2, 362 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
-		fontRendererObj.drawString(I18n.format("gui.panel.trim_yaw"), xOffset - fontRendererObj.getStringWidth(I18n.format("gui.panel.trim_yaw"))/2, 412 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		fontRenderer.drawString(I18n.format("gui.panel.trim_roll"), xOffset - fontRenderer.getStringWidth(I18n.format("gui.panel.trim_roll"))/2, 312 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		fontRenderer.drawString(I18n.format("gui.panel.trim_pitch"), xOffset - fontRenderer.getStringWidth(I18n.format("gui.panel.trim_pitch"))/2, 362 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		fontRenderer.drawString(I18n.format("gui.panel.trim_yaw"), xOffset - fontRenderer.getStringWidth(I18n.format("gui.panel.trim_yaw"))/2, 412 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		
 		//Render the reverse button text if we have such a feature.
 		if(aircraft instanceof EntityVehicleF_Plane){
-			fontRendererObj.drawString(I18n.format("gui.panel.reverse"), xOffset - fontRendererObj.getStringWidth(I18n.format("gui.panel.reverse"))/2, 462 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+			fontRenderer.drawString(I18n.format("gui.panel.reverse"), xOffset - fontRenderer.getStringWidth(I18n.format("gui.panel.reverse"))/2, 462 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		}
 		
 		GL11.glPopMatrix();
@@ -200,7 +200,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		mouseY = (int) (1.0F*mouseY/height*RenderHUD.screenDefaultY);
 		lastEngineStarted = -1;
 		if(mouseY < RenderHUD.screenDefaultY/2){
-			mc.thePlayer.closeScreen();
+			mc.player.closeScreen();
 		}else{
 			//Check if a light button has been pressed.
 			for(byte i=0; i<lightButtonCoords.length; ++i){

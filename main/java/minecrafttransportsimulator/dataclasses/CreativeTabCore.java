@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.dataclasses;
 
+import net.minecraft.util.NonNullList;
 import java.util.List;
 
 import net.minecraft.creativetab.CreativeTabs;
@@ -20,18 +21,18 @@ public final class CreativeTabCore extends CreativeTabs{
 	}
 	
 	@Override
-	public Item getTabIconItem(){
-		return MTSRegistry.wrench;
+	public ItemStack getTabIconItem(){
+		return new ItemStack(MTSRegistry.wrench);
 	}
 
 	@Override
     @SideOnly(Side.CLIENT)
-    public void displayAllRelevantItems(List<ItemStack> givenList){
+    public void displayAllRelevantItems(NonNullList<ItemStack> givenList){
 		givenList.clear();
 		for(Item item : MTSRegistry.itemList){
 			for(CreativeTabs tab : item.getCreativeTabs()){
 				if(tab.equals(this)){
-					item.getSubItems(item, tab, givenList);
+					item.getSubItems(tab, givenList);
 				}
 			}
 		}

@@ -39,12 +39,12 @@ public class ThrottlePacket implements IMessage{
 				public void run(){
 					EntityVehicleE_Powered vehicle;
 					if(ctx.side.isServer()){
-						vehicle = (EntityVehicleE_Powered) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						vehicle = (EntityVehicleE_Powered) ctx.getServerHandler().player.world.getEntityByID(message.id);
 					}else{
-						if(Minecraft.getMinecraft().theWorld == null){
+						if(Minecraft.getMinecraft().world == null){
 							return;
 						}
-						vehicle = (EntityVehicleE_Powered) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						vehicle = (EntityVehicleE_Powered) Minecraft.getMinecraft().world.getEntityByID(message.id);
 						
 					}
 					if(vehicle!=null){

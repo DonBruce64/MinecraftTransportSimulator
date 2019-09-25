@@ -41,7 +41,7 @@ public class PacketTileEntityClientServerHandshake extends APacketTileEntity{
 					TileEntity tile = getTileEntity(message, ctx);
 					if(tile != null){
 						if(ctx.side.isServer()){
-							MTS.MTSNet.sendTo(new PacketTileEntityClientServerHandshake(tile, tile.writeToNBT(new NBTTagCompound())), ctx.getServerHandler().playerEntity);
+							MTS.MTSNet.sendTo(new PacketTileEntityClientServerHandshake(tile, tile.writeToNBT(new NBTTagCompound())), ctx.getServerHandler().player);
 						}else{
 							tile.readFromNBT(message.tag);
 							BlockPos pos = tile.getPos();

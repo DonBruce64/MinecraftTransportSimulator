@@ -151,7 +151,7 @@ public final class ControlSystem{
 		//If this control is used in a momentary fashion make sure to only
 		//fire the event on the tick that the button was last pressed on!
 		if(pressed){
-			Long time = Minecraft.getMinecraft().theWorld.getTotalWorldTime();
+			Long time = Minecraft.getMinecraft().world.getTotalWorldTime();
 			if(!buttonMap.containsKey(button)){
 				buttonMap.put(button, time);
 			}
@@ -231,31 +231,31 @@ public final class ControlSystem{
 	
 	private static void rotateCamera(ControlsJoystick lookR, ControlsJoystick lookL, ControlsJoystick lookU, ControlsJoystick lookD, ControlsJoystick lookA){
 		if(lookR.isPressed()){
-			Minecraft.getMinecraft().thePlayer.rotationYaw+=3;
+			Minecraft.getMinecraft().player.rotationYaw+=3;
 		}
 		if(lookL.isPressed()){
-			Minecraft.getMinecraft().thePlayer.rotationYaw-=3;
+			Minecraft.getMinecraft().player.rotationYaw-=3;
 		}
 		if(lookU.isPressed()){
-			Minecraft.getMinecraft().thePlayer.rotationPitch-=3;
+			Minecraft.getMinecraft().player.rotationPitch-=3;
 		}
 		if(lookD.isPressed()){
-			Minecraft.getMinecraft().thePlayer.rotationPitch+=3;
+			Minecraft.getMinecraft().player.rotationPitch+=3;
 		}
 		
 		float pollData = getJoystickMultistateValue(lookA);
 		if(pollData != 0){
 			if(pollData >= 0.125F && pollData <= 0.375F){
-				Minecraft.getMinecraft().thePlayer.rotationPitch+=3;
+				Minecraft.getMinecraft().player.rotationPitch+=3;
 			}
 			if(pollData >= 0.375F && pollData <= 0.625F){
-				Minecraft.getMinecraft().thePlayer.rotationYaw+=3;
+				Minecraft.getMinecraft().player.rotationYaw+=3;
 			}
 			if(pollData >= 0.625F && pollData <= 0.875F){
-				Minecraft.getMinecraft().thePlayer.rotationPitch-=3;
+				Minecraft.getMinecraft().player.rotationPitch-=3;
 			}
 			if(pollData >= 0.875F || pollData <= 0.125F){
-				Minecraft.getMinecraft().thePlayer.rotationYaw-=3;
+				Minecraft.getMinecraft().player.rotationYaw-=3;
 			}
 		}
 	}
@@ -281,18 +281,18 @@ public final class ControlSystem{
 	}
 	
 	private static void controlGun(EntityVehicleE_Powered vehicle, ControlsKeyboard gun){
-		PartSeat seat = vehicle.getSeatForRider(Minecraft.getMinecraft().thePlayer);
+		PartSeat seat = vehicle.getSeatForRider(Minecraft.getMinecraft().player);
 		if(seat != null){
 			if(seat.isController){
 				for(APart part : vehicle.getVehicleParts()){
 					if(part instanceof APartGun && part.parentPart == null){
-						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().thePlayer.getEntityId() : -1));
+						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().player.getEntityId() : -1));
 					}
 				}
 			}else{
 				for(APart part : seat.childParts){
 					if(part instanceof APartGun){
-						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().thePlayer.getEntityId() : -1));
+						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().player.getEntityId() : -1));
 					}
 				}
 			}
@@ -430,7 +430,9 @@ public final class ControlSystem{
 		if(joystickMap.containsKey(ControlsJoystick.CAR_GAS.joystickAssigned) && ControlsJoystick.CAR_GAS.joystickButton != NULL_COMPONENT){
 			MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_GAS, (short) 0)));
 		}else{
-			if(ControlsKeyboard.CAR_GAS.isPressed()){
+			if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
+				MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) 50));
+			}else if(ControlsKeyboard.CAR_GAS.isPressed()){
 				MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) 100));
 			}else{
 				MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) 0));
@@ -673,6 +675,7 @@ public final class ControlSystem{
 		CAR_CHANGEHUD(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_MOD),
 		CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD),
 		CAR_STOP(ControlsKeyboard.CAR_START, ControlsKeyboard.CAR_MOD),
+		CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD),
 		CAR_SIREN(ControlsKeyboard.CAR_LIGHTS_SPECIAL, ControlsKeyboard.CAR_MOD),
 		CAR_TURNSIGNAL_R(ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_LIGHTS),
 		CAR_TURNSIGNAL_L(ControlsKeyboard.CAR_TURN_L, ControlsKeyboard.CAR_LIGHTS);

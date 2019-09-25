@@ -42,7 +42,7 @@ public class PacketPartSeatRiderChange extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					Entity rider = Minecraft.getMinecraft().theWorld.getEntityByID(message.rider);
+					Entity rider = Minecraft.getMinecraft().world.getEntityByID(message.rider);
 					PartSeat seat = (PartSeat) getVehiclePartFromMessage(message, ctx);
 					if(rider != null && seat != null){
 						if(message.mount){

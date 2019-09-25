@@ -30,42 +30,42 @@ public class GUIPackMissing extends GuiScreen{
 		mc.getTextureManager().bindTexture(background);
 		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 192);
 		
-		if(mc.theWorld.getTotalWorldTime()%40 > 20){
+		if(mc.world.getTotalWorldTime()%40 > 20){
 			GL11.glPushMatrix();
-			GL11.glTranslatef(guiLeft + 90 - fontRendererObj.getStringWidth(I18n.format("gui.packmissing.title"))/2F, guiTop + 10, 0);
+			GL11.glTranslatef(guiLeft + 90 - fontRenderer.getStringWidth(I18n.format("gui.packmissing.title"))/2F, guiTop + 10, 0);
 			GL11.glScalef(3, 3, 3);
-			fontRendererObj.drawString(I18n.format("gui.packmissing.title"), 0, 0, Color.RED.getRGB());
+			fontRenderer.drawString(I18n.format("gui.packmissing.title"), 0, 0, Color.RED.getRGB());
 			GL11.glPopMatrix();
 		}
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(guiLeft + 10, guiTop + 40, 0);
 		GL11.glScalef(0.75F, 0.75F, 0.75F);
-		fontRendererObj.drawSplitString(I18n.format("gui.packmissing.reason"),0, 0, 320, Color.BLACK.getRGB());
+		fontRenderer.drawSplitString(I18n.format("gui.packmissing.reason"),0, 0, 320, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(guiLeft + 10, guiTop + 65, 0);
 		GL11.glScalef(0.75F, 0.75F, 0.75F);
-		fontRendererObj.drawSplitString(I18n.format("gui.packmissing.nomod"),0, 0, 320, Color.BLACK.getRGB());
+		fontRenderer.drawSplitString(I18n.format("gui.packmissing.nomod"),0, 0, 320, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(guiLeft + 10, guiTop + 90, 0);
 		GL11.glScalef(0.75F, 0.75F, 0.75F);
-		fontRendererObj.drawSplitString(I18n.format("gui.packmissing.modlink"),0, 0, 320, Color.BLACK.getRGB());
+		fontRenderer.drawSplitString(I18n.format("gui.packmissing.modlink"),0, 0, 320, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(guiLeft + 10, guiTop + 115, 0);
 		GL11.glScalef(0.75F, 0.75F, 0.75F);
-		fontRendererObj.drawSplitString(I18n.format("gui.packmissing.misplaced"),0, 0, 320, Color.BLACK.getRGB());
+		fontRenderer.drawSplitString(I18n.format("gui.packmissing.misplaced"),0, 0, 320, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(guiLeft + 10, guiTop + 150, 0);
 		GL11.glScalef(0.75F, 0.75F, 0.75F);
-		fontRendererObj.drawSplitString(I18n.format("gui.packmissing.versionerror"),0, 0, 320, Color.BLACK.getRGB());
+		fontRenderer.drawSplitString(I18n.format("gui.packmissing.versionerror"),0, 0, 320, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
 	}
 	

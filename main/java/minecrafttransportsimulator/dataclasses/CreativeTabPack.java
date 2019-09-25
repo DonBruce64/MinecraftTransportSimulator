@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.dataclasses;
 
+import net.minecraft.util.NonNullList;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,41 +26,41 @@ public final class CreativeTabPack extends CreativeTabs{
 	}
 	
 	@Override
-	public Item getTabIconItem(){
-		return MTSRegistry.wrench;
+	public ItemStack getTabIconItem(){
+		return new ItemStack(MTSRegistry.wrench);
 	}
 
 	@Override
     @SideOnly(Side.CLIENT)
-    public void displayAllRelevantItems(List<ItemStack> givenList){
+    public void displayAllRelevantItems(NonNullList<ItemStack> givenList){
 		//This is needed to re-sort the items here to get them in the correct order.
 		//MC will re-order these by ID if we let it.
 		givenList.clear();
 		for(Item item : MTSRegistry.vehicleItemMap.values()){
 			for(CreativeTabs tab : item.getCreativeTabs()){
 				if(tab.equals(this)){
-					item.getSubItems(item, tab, givenList);
+					item.getSubItems(tab, givenList);
 				}
 			}
 		}
 		for(Item item : MTSRegistry.partItemMap.values()){
 			for(CreativeTabs tab : item.getCreativeTabs()){
 				if(tab.equals(this)){
-					item.getSubItems(item, tab, givenList);
+					item.getSubItems(tab, givenList);
 				}
 			}
 		}
 		for(Item item : MTSRegistry.instrumentItemMap.values()){
 			for(CreativeTabs tab : item.getCreativeTabs()){
 				if(tab.equals(this)){
-					item.getSubItems(item, tab, givenList);
+					item.getSubItems(tab, givenList);
 				}
 			}
 		}
 		for(Item item : MTSRegistry.decorItemMap.values()){
 			for(CreativeTabs tab : item.getCreativeTabs()){
 				if(tab.equals(this)){
-					item.getSubItems(item, tab, givenList);
+					item.getSubItems(tab, givenList);
 				}
 			}
 		}
@@ -81,6 +82,6 @@ public final class CreativeTabPack extends CreativeTabs{
 				}
 			}
 		}
-		return tabStacks.get((int) (Minecraft.getMinecraft().theWorld.getTotalWorldTime()/20%tabStacks.size()));
+		return tabStacks.get((int) (Minecraft.getMinecraft().world.getTotalWorldTime()/20%tabStacks.size()));
     }
 }

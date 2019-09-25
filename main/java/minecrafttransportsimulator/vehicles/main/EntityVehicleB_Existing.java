@@ -3,16 +3,19 @@ package minecrafttransportsimulator.vehicles.main;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
+import minecrafttransportsimulator.items.core.ItemKey;
+import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowFix;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -24,8 +27,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -97,12 +104,12 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		super.onEntityUpdate();
 		if(pack != null){
 			currentMass = getCurrentMass();
-			airDensity = 1.225*Math.pow(2, -posY/(500D*worldObj.getHeight()/256D));
+			airDensity = 1.225*Math.pow(2, -posY/(500D*world.getHeight()/256D));
 			getBasicProperties();
 		}
 		
 		if(riderIDToDismountThisTick != -1){
-			Entity riderToDismount = worldObj.getEntityByID(riderIDToDismountThisTick);
+			Entity riderToDismount = world.getEntityByID(riderIDToDismountThisTick);
 			if(riderToDismount != null){
 				PartSeat seat = this.getSeatForRider(riderToDismount);
 				if(seat != null){
@@ -135,15 +142,76 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	@Override
-    public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand){
-		//In all cases, interaction will be handled on the client and forwarded to the server.
-		//However, there is one case where we can't forward an event, and that is if a player
-		//right-clicks this with an empty hand.
-		if(worldObj.isRemote && hand.equals(hand.MAIN_HAND) && player.getHeldItemMainhand() == null){
-			APart hitPart = getHitPart(player);
-			if(hitPart != null){
-				if(hitPart.interactPart(player)){
-					MTS.MTSNet.sendToServer(new PacketPartInteraction(hitPart, player.getEntityId()));
+    public boolean processInitialInteract(EntityPlayer player, EnumHand hand){
+		//If we clicked a part, try to interact with it.
+		//If we didn't interact with a part, check other interactions.
+		//All interactions are done on the server, except GUI openings.
+		if(hand.equals(EnumHand.MAIN_HAND)){
+			if(!world.isRemote){
+				APart hitPart = getHitPart(player);
+				ItemStack heldStack = player.getHeldItem(hand);
+				if(hitPart != null && hitPart.interactPart(player)){
+					return true;
+				}else if(heldStack.getItem().equals(MTSRegistry.key)){
+					ItemKey key = (ItemKey) heldStack.getItem();
+					//Sneaking changes ownership, regular use changes the lock state.
+					if(player.isSneaking()){
+						if(ownerName.isEmpty()){
+							ownerName = player.getUUID(player.getGameProfile()).toString();
+							MTS.MTSNet.sendTo(new PacketChat("interact.key.info.own"), (EntityPlayerMP) player);
+						}else{
+							boolean isPlayerOP = player.getServer() == null || player.getServer().isSinglePlayer() || player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null;
+							if(player.getUUID(player.getGameProfile()).toString().equals(ownerName) || isPlayerOP){
+								ownerName = "";
+								MTS.MTSNet.sendTo(new PacketChat("interact.key.info.unown"), (EntityPlayerMP) player);
+							}else{
+								MTS.MTSNet.sendTo(new PacketChat("interact.key.failure.alreadyowned"), (EntityPlayerMP) player);
+							}
+						}
+					}else{
+						String vehicleUUID = heldStack.hasTagCompound() ? heldStack.getTagCompound().getString("vehicle") : "";
+						if(vehicleUUID.isEmpty()){
+							if(!ownerName.isEmpty()){
+								if(!player.getUUID(player.getGameProfile()).toString().equals(ownerName)){
+									MTS.MTSNet.sendTo(new PacketChat("interact.key.failure.notowner"), (EntityPlayerMP) player);
+								}
+							}
+							NBTTagCompound tag = new NBTTagCompound();
+							tag.setString("vehicle", getUniqueID().toString());
+							heldStack.setTagCompound(tag);
+							locked = true;
+							MTS.MTSNet.sendTo(new PacketChat("interact.key.info.lock"), (EntityPlayerMP) player);
+						}else if(!vehicleUUID.equals(getUniqueID().toString())){
+							MTS.MTSNet.sendTo(new PacketChat("interact.key.failure.wrongkey"), (EntityPlayerMP) player);
+						}else{
+							if(locked){
+								locked = false;
+								MTS.MTSNet.sendTo(new PacketChat("interact.key.info.unlock"), (EntityPlayerMP) player);
+							}else{
+								locked = true;
+								MTS.MTSNet.sendTo(new PacketChat("interact.key.info.lock"), (EntityPlayerMP) player);
+							}
+						}
+					}
+					MTS.MTSNet.sendToAll(new PacketVehicleKey(this));
+					return true;
+				}else if(Items.NAME_TAG.equals(player.getHeldItem(hand).getItem())){
+					displayText = heldStack.getDisplayName().length() > pack.rendering.displayTextMaxLength ? heldStack.getDisplayName().substring(0, pack.rendering.displayTextMaxLength - 1) : heldStack.getDisplayName();
+					MTS.MTSNet.sendToAll(new PacketVehicleNameTag(this));
+					return true;
+				}else if(Item.getItemFromBlock(Blocks.GLASS_PANE).equals(player.getHeldItem(hand).getItem())){
+					if(brokenWindows > 0){
+						if(!player.capabilities.isCreativeMode){
+							player.inventory.clearMatchingItems(Item.getItemFromBlock(Blocks.GLASS_PANE), 0, 1, null);
+						}
+						--brokenWindows;
+						MTS.MTSNet.sendToAll(new PacketVehicleWindowFix(this));
+						return true;
+					}
+				}
+			}else{
+				if(player.getHeldItem(hand).getItem().equals(MTSRegistry.wrench) && getHitPart(player) == null){
+					MTS.proxy.openGUI(this, player);
 				}
 			}
 		}
@@ -152,15 +220,15 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	
 	@Override
 	public boolean attackEntityFrom(DamageSource source, float damage){
-		if(!worldObj.isRemote){
-			if(source.getSourceOfDamage() != null && !source.getSourceOfDamage().equals(source.getEntity())){
+		if(!world.isRemote){
+			if(source.getImmediateSource() != null && !source.getImmediateSource().equals(source.getTrueSource())){
 				//This is a projectile of some sort.  If this projectile is inside a part
 				//make it hit the part rather than hit the vehicle.
-				Entity projectile = source.getSourceOfDamage();
+				Entity projectile = source.getImmediateSource();
 				for(APart part : this.getVehicleParts()){
 					//Expand this box by the speed of the projectile just in case the projectile is custom and
 					//calls its attack code before it actually gets inside the collision box.
-					if(part.getAABBWithOffset(Vec3d.ZERO).expand(Math.abs(projectile.motionX), Math.abs(projectile.motionY), Math.abs(projectile.motionZ)).isVecInside(projectile.getPositionVector())){
+					if(part.getAABBWithOffset(Vec3d.ZERO).expand(Math.abs(projectile.motionX), Math.abs(projectile.motionY), Math.abs(projectile.motionZ)).contains(projectile.getPositionVector())){
 						part.attackPart(source, damage);
 						return true;
 					}
@@ -169,7 +237,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 				//This is not a projectile, and therefore must be some sort of entity.
 				//Check to see where this entity is looking and if it has hit a
 				//part attack that part.
-				Entity attacker = source.getEntity();
+				Entity attacker = source.getTrueSource();
 				if(attacker != null){
 					APart hitPart = this.getHitPart(attacker);
 					if(hitPart != null){
@@ -181,7 +249,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			
 			//Since we didn't forward any attacks or do special events, we must have attacked this vehicle directly.
 			//Send a packet to break a window if we need to.
-			Entity damageSource = source.getEntity() != null && !source.getEntity().equals(source.getSourceOfDamage()) ? source.getSourceOfDamage() : source.getEntity();
+			Entity damageSource = source.getTrueSource() != null && !source.getTrueSource().equals(source.getImmediateSource()) ? source.getImmediateSource() : source.getTrueSource();
 			if(damageSource != null && this.brokenWindows < pack.rendering.numberWindows){
 				++brokenWindows;
 				this.playSound(SoundEvents.BLOCK_GLASS_BREAK, 2.0F, 1.0F);
@@ -220,7 +288,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		PartSeat seat = this.getSeatForRider(passenger);
 		if(seat != null){
 			Vec3d posVec = RotationSystem.getRotatedPoint(seat.offset.addVector(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll);
-			passenger.setPosition(this.posX + posVec.xCoord, this.posY + posVec.yCoord - passenger.height, this.posZ + posVec.zCoord);
+			passenger.setPosition(this.posX + posVec.x, this.posY + posVec.y - passenger.height, this.posZ + posVec.z);
 			passenger.motionX = this.motionX;
 			passenger.motionY = this.motionY;
 			passenger.motionZ = this.motionZ;
@@ -231,7 +299,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 				riderSeats.put(passenger.getEntityId(), (PartSeat) part);
 			}else{
 				MTS.MTSLog.error("ERROR: NO SEAT FOUND WHEN LINKING RIDER TO SEAT IN VEHICLE!");
-				if(!worldObj.isRemote){
+				if(!world.isRemote){
 					passenger.dismountRidingEntity();
 				}
 				return;
@@ -273,11 +341,11 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		Vec3d hitVec = entity.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
 		for(float f=1.0F; f<4.0F; f += 0.1F){
 			for(APart part : this.getVehicleParts()){
-				if(part.getAABBWithOffset(Vec3d.ZERO).isVecInside(hitVec)){
+				if(part.getAABBWithOffset(Vec3d.ZERO).contains(hitVec)){
 					return part;
 				}
 			}
-			hitVec = hitVec.addVector(lookVec.xCoord*0.1F, lookVec.yCoord*0.1F, lookVec.zCoord*0.1F);
+			hitVec = hitVec.addVector(lookVec.x*0.1F, lookVec.y*0.1F, lookVec.z*0.1F);
 		}
 		return null;
 	}
@@ -291,8 +359,8 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		riderSeats.put(rider.getEntityId(), seat);
 		rider.startRiding(this, true);
 		//Set the player's yaw to the same yaw as the vehicle to ensure we don't have 360+ rotations to deal with.
-		rider.rotationYaw =  (float) (this.rotationYaw + seat.partRotation.yCoord);
-		if(!worldObj.isRemote){
+		rider.rotationYaw =  (float) (this.rotationYaw + seat.partRotation.y);
+		if(!world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, true));
 		}
 	}
@@ -311,17 +379,17 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		riderSeats.remove(rider.getEntityId());
 		this.removePassenger(rider);
 		rider.setSneaking(false);
-		if(!worldObj.isRemote){
+		if(!world.isRemote){
 			Vec3d placePosition;
-			PackPart packPart = this.getPackDefForLocation(seat.offset.xCoord, seat.offset.yCoord, seat.offset.zCoord);
+			PackPart packPart = this.getPackDefForLocation(seat.offset.x, seat.offset.y, seat.offset.z);
 			if(packPart.dismountPos != null){
 				placePosition = RotationSystem.getRotatedPoint(new Vec3d(packPart.dismountPos[0], packPart.dismountPos[1], packPart.dismountPos[2]), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());
 			}else{
-				placePosition = RotationSystem.getRotatedPoint(seat.offset.addVector(seat.offset.xCoord > 0 ? 2 : -2, 0, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());	
+				placePosition = RotationSystem.getRotatedPoint(seat.offset.addVector(seat.offset.x > 0 ? 2 : -2, 0, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());	
 			}
 			AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(placePosition));
-			if(!worldObj.collidesWithAnyBlock(collisionDetectionBox)){
-				rider.setPositionAndRotation(placePosition.xCoord, collisionDetectionBox.minY, placePosition.zCoord, rider.rotationYaw, rider.rotationPitch);
+			if(!world.collidesWithAnyBlock(collisionDetectionBox)){
+				rider.setPositionAndRotation(placePosition.x, collisionDetectionBox.minY, placePosition.z, rider.rotationYaw, rider.rotationPitch);
 			}else if(rider instanceof EntityLivingBase){
 				((EntityLivingBase) rider).dismountEntity(this);
 			}
@@ -330,7 +398,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	public Entity getRiderForSeat(PartSeat seat){
-		return riderSeats.inverse().containsKey(seat) ? worldObj.getEntityByID(riderSeats.inverse().get(seat)) : null;
+		return riderSeats.inverse().containsKey(seat) ? world.getEntityByID(riderSeats.inverse().get(seat)) : null;
 	}
 	
 	public PartSeat getSeatForRider(Entity rider){
@@ -353,16 +421,16 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 				if(stackTag != null){
 					partStack.setTagCompound(stackTag);
 				}
-				worldObj.spawnEntityInWorld(new EntityItem(worldObj, part.partPos.xCoord, part.partPos.yCoord, part.partPos.zCoord, partStack));
+				world.spawnEntity(new EntityItem(world, part.partPos.x, part.partPos.y, part.partPos.z, partStack));
 			}
 		}
 		
 		//Also drop some crafting ingredients as items.
 		double crashItemDropPercentage = ConfigSystem.getDoubleConfig("CrashItemDropPercentage");
 		for(ItemStack craftingStack : PackParserSystem.getMaterials(this.vehicleName)){
-			for(byte i=0; i<craftingStack.stackSize; ++i){
+			for(byte i=0; i<craftingStack.getCount(); ++i){
 				if(this.rand.nextDouble() < crashItemDropPercentage){
-					worldObj.spawnEntityInWorld(new EntityItem(worldObj, this.posX, this.posY, this.posZ, new ItemStack(craftingStack.getItem(), 1, craftingStack.getMetadata())));
+					world.spawnEntity(new EntityItem(world, this.posX, this.posY, this.posZ, new ItemStack(craftingStack.getItem(), 1, craftingStack.getMetadata())));
 				}
 			}
 		}
@@ -379,7 +447,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void attackManuallyAtPosition(double x, double y, double z, DamageSource source, float damage){
 		//First check to see if we hit a part.
 		for(APart part : this.getVehicleParts()){
-			if(part.getAABBWithOffset(Vec3d.ZERO).isVecInside(new Vec3d(x, y, z))){
+			if(part.getAABBWithOffset(Vec3d.ZERO).contains(new Vec3d(x, y, z))){
 				part.attackPart(source, damage);
 				return;
 			}
@@ -393,10 +461,11 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		}
 	}
 	
+	
+	
 	protected float getCurrentMass(){
 		int currentMass = pack.general.emptyMass;
 		for(APart part : this.getVehicleParts()){
-			currentMass += 50;
 			if(part instanceof PartCrate){
 				currentMass += calculateInventoryWeight(((PartCrate) part).crateInventory);
 			}else if(part instanceof PartBarrel){
@@ -493,9 +562,9 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			Entity rider = this.getPassengers().get(i);
 			PartSeat seat = this.getSeatForRider(rider);
 			if(seat != null){
-				tagCompound.setDouble("Seat" + String.valueOf(i) + "0", seat.offset.xCoord);
-				tagCompound.setDouble("Seat" + String.valueOf(i) + "1", seat.offset.yCoord);
-				tagCompound.setDouble("Seat" + String.valueOf(i) + "2", seat.offset.zCoord);
+				tagCompound.setDouble("Seat" + String.valueOf(i) + "0", seat.offset.x);
+				tagCompound.setDouble("Seat" + String.valueOf(i) + "1", seat.offset.y);
+				tagCompound.setDouble("Seat" + String.valueOf(i) + "2", seat.offset.z);
 			}
 		}
 		return tagCompound;

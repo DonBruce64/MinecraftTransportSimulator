@@ -1,0 +1,17 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern":[
+        "aaa",
+        "bcb",
+        "dbd"
+    ],
+    "key":{
+        "a":{"item": "minecraft:stone_slab", "data" : 0},
+		"b":{"type": "forge:ore_dict", "ore": "ingotIron"},
+		"c":{"item": "minecraft:comparator"},
+		"d":{"item": "minecraft:redstone"}
+    },
+    "result":{
+        "item": "mts:trafficsignalcontroller"
+    }
+}

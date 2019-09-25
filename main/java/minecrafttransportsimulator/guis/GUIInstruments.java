@@ -37,7 +37,7 @@ public class GUIInstruments extends GuiScreen{
 	@Override
     public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
 		if(vehicle.isDead || player.getDistance(vehicle.posX, vehicle.posY, vehicle.posZ) > 20){
-			mc.thePlayer.closeScreen();
+			mc.player.closeScreen();
 			return;
 		}
 		
@@ -157,14 +157,14 @@ public class GUIInstruments extends GuiScreen{
 		GL11.glPushMatrix();
 		GL11.glTranslatef(3*RenderHUD.screenDefaultX/4, 2.5F*RenderHUD.screenDefaultY/16, 0);
 		GL11.glScalef(2.5F, 2.5F, 2.5F);
-		fontRendererObj.drawString(I18n.format("gui.instruments.main"), (int) (-fontRendererObj.getStringWidth(I18n.format("gui.instruments.main"))/2), 0, Color.WHITE.getRGB());
+		fontRenderer.drawString(I18n.format("gui.instruments.main"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.main"))/2), 0, Color.WHITE.getRGB());
 		GL11.glPopMatrix();
 		
 		if(vehicle.pack.general.type.equals("plane")){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(3*RenderHUD.screenDefaultX/4, 9*RenderHUD.screenDefaultY/16, 0);
 			GL11.glScalef(2.5F, 2.5F, 2.5F);
-			fontRendererObj.drawString(I18n.format("gui.instruments.control"), (int) (-fontRendererObj.getStringWidth(I18n.format("gui.instruments.control"))/2), 0, Color.WHITE.getRGB());
+			fontRenderer.drawString(I18n.format("gui.instruments.control"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.control"))/2), 0, Color.WHITE.getRGB());
 			GL11.glPopMatrix();
 		}
 				
@@ -173,21 +173,21 @@ public class GUIInstruments extends GuiScreen{
 				GL11.glPushMatrix();
 				GL11.glTranslatef(3*RenderHUD.screenDefaultX/4, RenderHUD.screenDefaultY/16, 0);
 				GL11.glScalef(2.5F, 2.5F, 2.5F);
-				fontRendererObj.drawString(I18n.format("gui.instruments.idle"), (int) (-fontRendererObj.getStringWidth(I18n.format("gui.instruments.idle"))/2), 0, Color.WHITE.getRGB());
+				fontRenderer.drawString(I18n.format("gui.instruments.idle"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.idle"))/2), 0, Color.WHITE.getRGB());
 				GL11.glPopMatrix();
 			}
 		}else{
 			GL11.glPushMatrix();
 			GL11.glTranslatef(RenderHUD.screenDefaultX/2, RenderHUD.screenDefaultY/16, 0);
 			GL11.glScalef(2.5F, 2.5F, 2.5F);
-			fontRendererObj.drawString(I18n.format("gui.instruments.decide"), (int) (-fontRendererObj.getStringWidth(I18n.format("gui.instruments.decide"))/2), 0, Color.WHITE.getRGB());
+			fontRenderer.drawString(I18n.format("gui.instruments.decide"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.decide"))/2), 0, Color.WHITE.getRGB());
 			GL11.glPopMatrix();
 		}
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(RenderHUD.screenDefaultX/4, 11*RenderHUD.screenDefaultY/16, 0);
 		GL11.glScalef(2.5F, 2.5F, 2.5F);
-		fontRendererObj.drawString(I18n.format("gui.instruments.clear"), (int) (-fontRendererObj.getStringWidth(I18n.format("gui.instruments.clear"))/2), 0, Color.WHITE.getRGB());
+		fontRenderer.drawString(I18n.format("gui.instruments.clear"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.clear"))/2), 0, Color.WHITE.getRGB());
 		GL11.glPopMatrix();
 		
 		//Need to do mouseover after main rendering or you get rendering issues.

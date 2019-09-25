@@ -25,7 +25,7 @@ public class PartEngineCar extends APartEngine{
 		float vehicleDesiredSpeed = -999F;
 		if(currentGear != 0){
 			for(APartGroundDevice wheel : car.wheels){
-				if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
+				if((wheel.offset.z > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && car.pack.car.isRearWheelDrive)){
 					//If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
 					//If we don't have any grounded wheels, use them all to calculate the speeds.
 					if(wheel.isOnGround() || (car.groundedWheels.size() == 0)){
@@ -59,26 +59,26 @@ public class PartEngineCar extends APartEngine{
 		//Get friction of wheels.
 		float wheelFriction = 0;
 		for(APartGroundDevice wheel : car.groundedWheels){
-			if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
+			if((wheel.offset.z > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && car.pack.car.isRearWheelDrive)){
 				wheelFriction += wheel.getMotiveFriction() - wheel.getFrictionLoss();
 			}
 		}
 		
 		//If running, in reverse, and we are a big truck, fire the backup beepers.
-		if(state.running && this.currentGear == -1 && car.pack != null && car.pack.car.isBigTruck && car.electricPower > 4 && car.worldObj.getTotalWorldTime()%20==1 && vehicle.worldObj.isRemote){
+		if(state.running && this.currentGear == -1 && car.pack != null && car.pack.car.isBigTruck && car.electricPower > 4 && car.world.getTotalWorldTime()%20==1 && vehicle.world.isRemote){
 			MTS.proxy.playSound(vehicle.getPositionVector(), MTS.MODID + ":backup_beeper", 1.0F, 1);
 		}
 		
 		//If running, use the friction of the wheels to determine the new speed.
 		if(state.running || state.esOn){
-			double engineTargetRPM = car.throttle/100F*(pack.engine.maxRPM - engineStartRPM/1.25 - hours) + engineStartRPM/1.25;
+			double engineTargetRPM = !state.esOn ? car.throttle/100F*(pack.engine.maxRPM - engineStartRPM/1.25 - hours) + engineStartRPM/1.25 : engineStartRPM*1.2;
 			if(getRatioForCurrentGear() != 0 && car.wheels.size() > 0){
 				engineForce = (engineTargetRPM - RPM)/pack.engine.maxRPM*getRatioForCurrentGear()*car.pack.car.axleRatio*pack.engine.fuelConsumption*0.6F;
 				//Check to see if the wheels have enough friction to affect the engine.
 				if(Math.abs(engineForce/10F) > wheelFriction || (Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) > 0.1 && Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) < Math.abs(engineForce/10F))){
 					engineForce *= car.currentMass/100000F*wheelFriction/Math.abs(engineForce/10F);					
 					for(APartGroundDevice wheel : car.wheels){
-						if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
+						if((wheel.offset.z > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && car.pack.car.isRearWheelDrive)){
 							if(getRatioForCurrentGear() > 0){
 								if(engineForce >= 0){
 									wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/getRatioForCurrentGear()/car.pack.car.axleRatio, wheel.angularVelocity + 0.01);
@@ -100,7 +100,7 @@ public class PartEngineCar extends APartEngine{
 					//If we have wheels not on the ground and we drive them, adjust their velocity now.
 					for(APartGroundDevice wheel : car.wheels){
 						wheel.skipAngularCalcs = false;
-						if(!wheel.isOnGround() && ((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive))){
+						if(!wheel.isOnGround() && ((wheel.offset.z > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && car.pack.car.isRearWheelDrive))){
 							wheel.angularVelocity = lowestSpeed;
 						}
 					}
@@ -129,6 +129,7 @@ public class PartEngineCar extends APartEngine{
 				RPM = Math.max(RPM - 10, 0);
 			}
 		}
+		System.out.println(engineForce);
 		
 		//Set engine and driveshaft rotations for rendering of parts of models.
 		engineRotationLast = engineRotation;
@@ -136,7 +137,7 @@ public class PartEngineCar extends APartEngine{
 		
 		float driveShaftDesiredSpeed = -999F;
 		for(APartGroundDevice wheel : car.wheels){
-			if((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive)){
+			if((wheel.offset.z > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && car.pack.car.isRearWheelDrive)){
 				driveShaftDesiredSpeed = (float) Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
 			}
 		}
@@ -149,7 +150,7 @@ public class PartEngineCar extends APartEngine{
 	public void removePart(){
 		super.removePart();
 		for(APartGroundDevice wheel : car.wheels){
-			if(!wheel.isOnGround() && ((wheel.offset.zCoord > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.zCoord <= 0 && car.pack.car.isRearWheelDrive))){
+			if(!wheel.isOnGround() && ((wheel.offset.z > 0 && car.pack.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && car.pack.car.isRearWheelDrive))){
 				wheel.skipAngularCalcs = false;
 			}
 		}
@@ -180,7 +181,7 @@ public class PartEngineCar extends APartEngine{
 		}else if(currentGear == 0){
 			if(car.velocity > -0.1){
 				currentGear = 1;
-			}else if(vehicle.worldObj.isRemote){
+			}else if(vehicle.world.isRemote){
 				MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
 			}
 		}else if(currentGear < pack.engine.gearRatios.length - 2){
@@ -202,7 +203,7 @@ public class PartEngineCar extends APartEngine{
 		}else if(currentGear == 0){
 			if(car.velocity < 0.1){
 				currentGear = -1;
-			}else if(vehicle.worldObj.isRemote){
+			}else if(vehicle.world.isRemote){
 				MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
 			}
 		}

@@ -84,37 +84,37 @@ public abstract class APartEngine extends APart implements FXPart{
 	
 	@Override
 	public boolean interactPart(EntityPlayer player){
-		if(!vehicle.worldObj.isRemote){
-			//Check to see if the player is holding jumper cables.
-			//If so, and we aren't linked, do engine linking logic.
-			ItemStack heldStack = player.getHeldItemMainhand();
-			if(heldStack != null && heldStack.getItem() instanceof ItemJumperCable){
-				ItemJumperCable jumperCableItem = (ItemJumperCable) heldStack.getItem();
-				if(linkedEngine == null){
-					if(jumperCableItem.lastEngineClicked == null){
-						jumperCableItem.lastEngineClicked = this;
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.firstlink"), (EntityPlayerMP) player);
-					}else if(!jumperCableItem.lastEngineClicked.equals(this)){
-						if(jumperCableItem.lastEngineClicked.vehicle.equals(this.vehicle)){
-							MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.samevehicle"), (EntityPlayerMP) player);
-							jumperCableItem.lastEngineClicked = null;
-						}else if(this.partPos.distanceTo(jumperCableItem.lastEngineClicked.partPos) < 15){
-							linkedEngine = jumperCableItem.lastEngineClicked;
-							jumperCableItem.lastEngineClicked.linkedEngine = this;
-							jumperCableItem.lastEngineClicked = null;
-							MTS.MTSNet.sendToAll(new PacketPartEngineLinked(this, linkedEngine));
-							MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.secondlink"), (EntityPlayerMP) player);	
-						}else{
-							MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.toofar"), (EntityPlayerMP) player);
-							jumperCableItem.lastEngineClicked = null;
-						}
+		//Only allow interaction if the player is holding jumper cables.
+		//If so, and we aren't linked, do engine linking logic.
+		ItemStack heldStack = player.getHeldItemMainhand();
+		if(heldStack.getItem() instanceof ItemJumperCable){
+			ItemJumperCable jumperCableItem = (ItemJumperCable) heldStack.getItem();
+			if(linkedEngine == null){
+				if(jumperCableItem.lastEngineClicked == null){
+					jumperCableItem.lastEngineClicked = this;
+					MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.firstlink"), (EntityPlayerMP) player);
+				}else if(!jumperCableItem.lastEngineClicked.equals(this)){
+					if(jumperCableItem.lastEngineClicked.vehicle.equals(this.vehicle)){
+						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.samevehicle"), (EntityPlayerMP) player);
+						jumperCableItem.lastEngineClicked = null;
+					}else if(this.partPos.distanceTo(jumperCableItem.lastEngineClicked.partPos) < 15){
+						linkedEngine = jumperCableItem.lastEngineClicked;
+						jumperCableItem.lastEngineClicked.linkedEngine = this;
+						jumperCableItem.lastEngineClicked = null;
+						MTS.MTSNet.sendToAll(new PacketPartEngineLinked(this, linkedEngine));
+						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.secondlink"), (EntityPlayerMP) player);	
+					}else{
+						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.toofar"), (EntityPlayerMP) player);
+						jumperCableItem.lastEngineClicked = null;
 					}
-				}else{
-					MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.alreadylinked"), (EntityPlayerMP) player);
 				}
+			}else{
+				MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.alreadylinked"), (EntityPlayerMP) player);
 			}
+			return true;
+		}else{
+			return false;
 		}
-		return true;
     }
 	
 	@Override
@@ -145,8 +145,8 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(linkedEngine.partPos.distanceTo(this.partPos) > 16){
 				linkedEngine.linkedEngine = null;
 				linkedEngine = null;
-				if(vehicle.worldObj.isRemote){
-					MTS.MTSNet.sendToAllAround(new PacketChat("interact.jumpercable.linkdropped"), new TargetPoint(vehicle.worldObj.provider.getDimension(), partPos.xCoord, partPos.yCoord, partPos.zCoord, 16));
+				if(vehicle.world.isRemote){
+					MTS.MTSNet.sendToAllAround(new PacketChat("interact.jumpercable.linkdropped"), new TargetPoint(vehicle.world.provider.getDimension(), partPos.x, partPos.y, partPos.z, 16));
 				}
 			}else if(vehicle.electricPower + 0.5 < linkedEngine.vehicle.electricPower){
 				linkedEngine.vehicle.electricPower -= 0.005F;
@@ -157,8 +157,8 @@ public abstract class APartEngine extends APart implements FXPart{
 			}else{
 				linkedEngine.linkedEngine = null;
 				linkedEngine = null;
-				if(vehicle.worldObj.isRemote){
-					MTS.MTSNet.sendToAllAround(new PacketChat("interact.jumpercable.powerequal"), new TargetPoint(vehicle.worldObj.provider.getDimension(), partPos.xCoord, partPos.yCoord, partPos.zCoord, 16));
+				if(vehicle.world.isRemote){
+					MTS.MTSNet.sendToAllAround(new PacketChat("interact.jumpercable.powerequal"), new TargetPoint(vehicle.world.provider.getDimension(), partPos.x, partPos.y, partPos.z, 16));
 				}
 			}
 		}
@@ -168,7 +168,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(starterLevel == 0){
 				if(vehicle.electricPower > 2){
 					starterLevel += pack.engine.starterDuration;
-					if(vehicle.worldObj.isRemote){
+					if(vehicle.world.isRemote){
 						MTS.proxy.playSound(partPos, partName + "_cranking", 1, (float) (RPM/engineStartRPM));
 					}
 				}
@@ -195,7 +195,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			}
 		}
 		
-		ambientTemp = 25*vehicle.worldObj.getBiome(vehicle.getPosition()).getTemperature() - 5*(Math.pow(2, vehicle.posY/400) - 1);
+		ambientTemp = 25*vehicle.world.getBiome(vehicle.getPosition()).getTemperature(vehicle.getPosition()) - 5*(Math.pow(2, vehicle.posY/400) - 1);
 		coolingFactor = 0.001 + vehicle.velocity/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		vehicle.electricUsage -= 0.05*RPM/pack.engine.maxRPM;
@@ -218,12 +218,12 @@ public abstract class APartEngine extends APart implements FXPart{
 			}
 			if(temp > engineOverheatTemp1){//Too hot
 				hours += 0.001*(temp - engineOverheatTemp1);
-				if(temp > engineFailureTemp && !vehicle.worldObj.isRemote){
+				if(temp > engineFailureTemp && !vehicle.world.isRemote && !isCreative){
 					explodeEngine();
 				}
 			}
 			
-			if(hours > 200 && !vehicle.worldObj.isRemote){
+			if(hours > 200 && !vehicle.world.isRemote){
 				if(Math.random() < hours/10000*(getSafeRPMFromMax(this.pack.engine.maxRPM)/(RPM+getSafeRPMFromMax(this.pack.engine.maxRPM)/2))){
 					backfireEngine();
 				}
@@ -233,7 +233,7 @@ public abstract class APartEngine extends APart implements FXPart{
 				fuelFlow = Math.min(pack.engine.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor")*RPM*(fuelLeak ? 1.5F : 1.0F)/pack.engine.maxRPM, vehicle.fuel);
 				vehicle.fuel -= fuelFlow;
 			}
-			if(!vehicle.worldObj.isRemote){
+			if(!vehicle.world.isRemote){
 				if(vehicle.fuel == 0 && pack.engine.fuelConsumption != 0 && !isCreative){
 					stallEngine(PacketEngineTypes.FUEL_OUT);
 				}else if(RPM < engineStallRPM){
@@ -247,7 +247,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(RPM > engineStartRPM){
 				if(vehicle.fuel > 0 || isCreative){
 					if(!isInLiquid()){
-						if(state.magnetoOn && !vehicle.worldObj.isRemote){
+						if(state.magnetoOn && !vehicle.world.isRemote){
 							startEngine();
 						}
 					}
@@ -261,6 +261,10 @@ public abstract class APartEngine extends APart implements FXPart{
 					internalFuel = 0;
 				}
 			}
+		}
+		//If we are creative, set all our hours to 0 as they don't apply.
+		if(isCreative){
+			hours = 0;
 		}
 	}
 	
@@ -350,14 +354,14 @@ public abstract class APartEngine extends APart implements FXPart{
 			return;
 		}
 		starterLevel += pack.engine.starterDuration;
-		if(vehicle.worldObj.isRemote){
+		if(vehicle.world.isRemote){
 			MTS.proxy.playSound(partPos, partName + "_cranking", 1, (float) (RPM/engineStartRPM));
 		}
 	}
 	
 	public void backfireEngine(){
 		RPM -= pack.engine.maxRPM < 15000 ? 100 : 500;
-		if(!vehicle.worldObj.isRemote){
+		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.BACKFIRE));
 		}else{
 			MTS.proxy.playSound(partPos, partName + "_sputter", 0.5F, 1);
@@ -375,7 +379,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		}
 		starterLevel = 0;
 		oilPressure = 60;
-		if(!vehicle.worldObj.isRemote){
+		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.START));
 		}else{
 			MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
@@ -390,7 +394,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		}else if(state.equals(EngineStates.RUNNING_HS_ON)){
 			state = EngineStates.MAGNETO_ON_HS_ON;
 		}
-		if(!vehicle.worldObj.isRemote){
+		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, packetType));
 		}else{
 			if(!packetType.equals(PacketEngineTypes.DROWN)){
@@ -405,9 +409,9 @@ public abstract class APartEngine extends APart implements FXPart{
 	
 	protected void explodeEngine(){
 		if(ConfigSystem.getBooleanConfig("Explosions")){
-			vehicle.worldObj.newExplosion(vehicle, partPos.xCoord, partPos.yCoord, partPos.zCoord, 1F, true, true);
+			vehicle.world.newExplosion(vehicle, partPos.x, partPos.y, partPos.z, 1F, true, true);
 		}else{
-			vehicle.worldObj.newExplosion(vehicle, partPos.xCoord, partPos.yCoord, partPos.zCoord, 0F, true, true);
+			vehicle.world.newExplosion(vehicle, partPos.x, partPos.y, partPos.z, 0F, true, true);
 		}
 		vehicle.removePart(this, true);
 	}
@@ -417,7 +421,7 @@ public abstract class APartEngine extends APart implements FXPart{
 	}
 	
 	protected boolean isInLiquid(){
-		return vehicle.worldObj.getBlockState(new BlockPos(partPos)).getMaterial().isLiquid();
+		return vehicle.world.getBlockState(new BlockPos(partPos)).getMaterial().isLiquid();
 	}
 	
 	public double getEngineRotation(float partialTicks){
@@ -435,25 +439,25 @@ public abstract class APartEngine extends APart implements FXPart{
 	public void spawnParticles(){
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			if(temp > engineOverheatTemp1){
-				Minecraft.getMinecraft().theWorld.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, partPos.xCoord, partPos.yCoord + 0.5, partPos.zCoord, 0, 0.15, 0);
+				Minecraft.getMinecraft().world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, partPos.x, partPos.y + 0.5, partPos.z, 0, 0.15, 0);
 				if(temp > engineOverheatTemp2){
-					Minecraft.getMinecraft().theWorld.spawnParticle(EnumParticleTypes.SMOKE_LARGE, partPos.xCoord, partPos.yCoord + 0.5, partPos.zCoord, 0, 0.15, 0);
+					Minecraft.getMinecraft().world.spawnParticle(EnumParticleTypes.SMOKE_LARGE, partPos.x, partPos.y + 0.5, partPos.z, 0, 0.15, 0);
 				}
 			}
 			if(oilLeak){
 				if(vehicle.ticksExisted%20 == 0){
-					Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.OilDropParticleFX(vehicle.worldObj, partPos.xCoord - 0.25*Math.sin(Math.toRadians(vehicle.rotationYaw)), partPos.yCoord, partPos.zCoord + 0.25*Math.cos(Math.toRadians(vehicle.rotationYaw))));
+					Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.OilDropParticleFX(vehicle.world, partPos.x - 0.25*Math.sin(Math.toRadians(vehicle.rotationYaw)), partPos.y, partPos.z + 0.25*Math.cos(Math.toRadians(vehicle.rotationYaw))));
 				}
 			}
 			if(fuelLeak){
 				if((vehicle.ticksExisted + 5)%20 == 0){
-					Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.FuelDropParticleFX(vehicle.worldObj, partPos.yCoord, partPos.yCoord, partPos.zCoord));
+					Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.FuelDropParticleFX(vehicle.world, partPos.y, partPos.y, partPos.z));
 				}
 			}
 			if(backfired){
 				backfired = false;
 				for(byte i=0; i<5; ++i){
-					Minecraft.getMinecraft().theWorld.spawnParticle(EnumParticleTypes.SMOKE_LARGE, partPos.xCoord, partPos.yCoord + 0.5, partPos.zCoord, Math.random()*0.15, 0.15, Math.random()*0.15);
+					Minecraft.getMinecraft().world.spawnParticle(EnumParticleTypes.SMOKE_LARGE, partPos.x, partPos.y + 0.5, partPos.z, Math.random()*0.15, 0.15, Math.random()*0.15);
 				}
 			}
 		}

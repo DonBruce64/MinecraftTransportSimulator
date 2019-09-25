@@ -18,7 +18,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 public class BlockFuelPump extends BlockRotatable implements ITileEntityProvider{
 
@@ -27,19 +27,20 @@ public class BlockFuelPump extends BlockRotatable implements ITileEntityProvider
 	}
 	
 	@Override
-	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ){
+	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ){
 		if(!world.isRemote){
 			ItemStack stack = player.getHeldItem(hand);
 			TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(pos);
 			if(stack != null){
-				if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)){
-					IFluidHandler handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
+				if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
+					IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
 					FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, false);
 					if(drainedStack != null){
 						int amountToDrain = pump.fill(drainedStack, false);
 						drainedStack = handler.drain(amountToDrain, !player.capabilities.isCreativeMode);
 						if(drainedStack != null){
 							pump.fill(drainedStack, true);
+							player.setHeldItem(hand, handler.getContainer());
 						}
 					}
 					return true;

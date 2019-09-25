@@ -20,7 +20,7 @@ public final class VehicleSound{
 	public VehicleSound(EntityVehicleE_Powered vehicle, APart optionalPart, SoundTypes soundType){
 		this.vehicle = vehicle;
 		this.optionalPart = optionalPart;
-		this.player = Minecraft.getMinecraft().thePlayer;
+		this.player = Minecraft.getMinecraft().player;
 		this.soundType = soundType;
 		
 		this.playerPos = new Vec3d(player.posX, player.posY, player.posZ);
@@ -28,15 +28,15 @@ public final class VehicleSound{
 	}
 	
 	public double getPosX(){
-		return optionalPart != null ? optionalPart.partPos.xCoord : vehicle.posX;
+		return optionalPart != null ? optionalPart.partPos.x : vehicle.posX;
 	}
 	
 	public double getPosY(){
-		return optionalPart != null ? optionalPart.partPos.yCoord : vehicle.posY;
+		return optionalPart != null ? optionalPart.partPos.y : vehicle.posY;
 	}
 	
 	public double getPosZ(){
-		return optionalPart != null ? optionalPart.partPos.zCoord : vehicle.posZ;
+		return optionalPart != null ? optionalPart.partPos.z : vehicle.posZ;
 	}
 	
 	public float getVolume(){
@@ -78,7 +78,7 @@ public final class VehicleSound{
 	}
 	
 	public String getSoundUniqueName(){
-		return vehicle.getEntityId() + "_" + (optionalPart != null ? getSoundName() + String.valueOf(optionalPart.offset.xCoord) + String.valueOf(optionalPart.offset.yCoord) + String.valueOf(optionalPart.offset.zCoord) : getSoundName());
+		return vehicle.getEntityId() + "_" + (optionalPart != null ? getSoundName() + String.valueOf(optionalPart.offset.x) + String.valueOf(optionalPart.offset.y) + String.valueOf(optionalPart.offset.z) : getSoundName());
 	}
 	
 	public boolean isSoundSourceActive(){

@@ -78,7 +78,7 @@ public abstract class APart{
 			for(APart part : vehicle.getVehicleParts()){
 				if(part.pack.subParts != null){
 					for(PackPart partSubPartPack : part.pack.subParts){
-						if((float) part.offset.xCoord + partSubPartPack.pos[0] == (float) this.offset.xCoord && (float) part.offset.yCoord + partSubPartPack.pos[1] == (float) this.offset.yCoord && (float) part.offset.zCoord + partSubPartPack.pos[2] == (float) this.offset.zCoord){
+						if((float) part.offset.x + partSubPartPack.pos[0] == (float) this.offset.x && (float) part.offset.y + partSubPartPack.pos[1] == (float) this.offset.y && (float) part.offset.z + partSubPartPack.pos[2] == (float) this.offset.z){
 							parentPart = part;
 							parentPart.childParts.add(this);
 							return;
@@ -101,6 +101,8 @@ public abstract class APart{
 
 	/**Called when checking if this part can be interacted with.
 	 * If a part does interactions it should do so and then return true.
+	 * Call this ONLY from the server-side!  The server will handle the
+	 * interaction by notifying the client via packet if appropriate.
 	 */
 	public boolean interactPart(EntityPlayer player){
 		return false;
@@ -131,12 +133,12 @@ public abstract class APart{
 			APart childPart = childParts.get(0);
 			childPart.removePart();
 			vehicle.removePart(childPart, false);
-			if(!vehicle.worldObj.isRemote){
+			if(!vehicle.world.isRemote){
 				Item droppedItem = childPart.getItemForPart();
 				if(droppedItem != null){
 					ItemStack droppedStack = new ItemStack(droppedItem);
 					droppedStack.setTagCompound(childPart.getPartNBTTag());
-					vehicle.worldObj.spawnEntityInWorld(new EntityItem(vehicle.worldObj, childPart.partPos.xCoord, childPart.partPos.yCoord, childPart.partPos.zCoord, droppedStack));
+					vehicle.world.spawnEntity(new EntityItem(vehicle.world, childPart.partPos.x, childPart.partPos.y, childPart.partPos.z, droppedStack));
 				}
 			}
 		}
@@ -206,6 +208,6 @@ public abstract class APart{
 	 * Can be given an offset vector to check for potential collisions. 
 	 */
 	public boolean isPartCollidingWithBlocks(Vec3d collisionOffset){
-		return !vehicle.worldObj.getCollisionBoxes(this.getAABBWithOffset(collisionOffset)).isEmpty();
+		return !vehicle.world.getCollisionBoxes(null, this.getAABBWithOffset(collisionOffset)).isEmpty();
     }
 }

@@ -55,8 +55,8 @@ public abstract class APartGroundDevice extends APart{
 			}
 			
 			//Check for colliding entities and damage them.
-			if(!vehicle.worldObj.isRemote && vehicle.velocity > 0.1F){
-				List<EntityLivingBase> collidedEntites = vehicle.worldObj.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(Vec3d.ZERO).expand(0.25F, 0, 0.25F));
+			if(!vehicle.world.isRemote && vehicle.velocity > 0.1F){
+				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(Vec3d.ZERO).expand(0.25F, 0, 0.25F));
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
 					for(Entity passenger : vehicle.getPassengers()){
@@ -68,7 +68,7 @@ public abstract class APartGroundDevice extends APart{
 					}
 					for(int i=0; i < collidedEntites.size(); ++i){
 						if(!this.vehicle.isPassenger(collidedEntites.get(i))){
-							collidedEntites.get(i).attackEntityFrom(new DamageSourceWheel(attacker), (float) ((ConfigSystem.getDoubleConfig("WheelDamageFactor")*vehicle.currentMass/1000F) * (!ConfigSystem.getBooleanConfig("WheelDamageIgnoreSpeed") ? vehicle.velocity : 1)));
+							collidedEntites.get(i).attackEntityFrom(new DamageSourceWheel(attacker), (float) (ConfigSystem.getDoubleConfig("WheelDamageFactor")*(!ConfigSystem.getBooleanConfig("WheelDamageIgnoreSpeed") ? vehicle.velocity : 1)*vehicle.currentMass/1000F));
 						}
 					}
 				}
@@ -94,7 +94,7 @@ public abstract class APartGroundDevice extends APart{
 	public float getFrictionLoss(){
 		//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
 		BlockPos pos = new BlockPos(partPos.addVector(0, -1, 0));
-		return 0.6F - vehicle.worldObj.getBlockState(pos).getBlock().slipperiness;
+		return 0.6F - vehicle.world.getBlockState(pos).getBlock().getSlipperiness(vehicle.world.getBlockState(pos), vehicle.world, pos, null);
 	}
 	
 	public boolean isOnGround(){

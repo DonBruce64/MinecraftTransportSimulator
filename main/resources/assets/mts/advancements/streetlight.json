@@ -1,0 +1,24 @@
+{
+	"parent": "mts:pole",
+	"display": {
+		"icon": {
+            "item": "mts:streetlight"
+        },
+        "title": {
+            "translate": "advancements.mts.streetlight.title"
+        },
+        "description": {
+            "translate": "advancements.mts.streetlight.description"
+        }
+	},
+	"criteria": {
+		"placed_streetlight": {
+			"trigger": "minecraft:placed_block",
+			"conditions": {
+				"item": {
+					"item" : "mts:streetlight"
+				}
+			}
+		}
+	}
+}

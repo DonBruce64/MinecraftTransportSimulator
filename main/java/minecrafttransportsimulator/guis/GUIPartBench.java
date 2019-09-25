@@ -23,6 +23,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -140,7 +141,7 @@ public class GUIPartBench extends GuiScreen{
 			rightPartButton.enabled = !nextPartName.isEmpty();
 		}
 		for(Object obj : buttonList){
-			((GuiButton) obj).drawButton(mc, mouseX, mouseY);
+			((GuiButton) obj).drawButton(mc, mouseX, mouseY, 0);
 		}
 		this.drawRect(guiLeft + 190, guiTop + 188, guiLeft + 206, guiTop + 172, startButton.enabled ? Color.GREEN.getRGB() : Color.RED.getRGB());
 		
@@ -163,9 +164,9 @@ public class GUIPartBench extends GuiScreen{
         RenderHelper.enableGUIStandardItemLighting();
 		int stackOffset = 9;
 		for(ItemStack craftingStack : PackParserSystem.getMaterials(partName)){
-			ItemStack renderedStack = new ItemStack(craftingStack.getItem(), craftingStack.stackSize, craftingStack.getMetadata() == Integer.MAX_VALUE ? 0 : craftingStack.getMetadata());
+			ItemStack renderedStack = new ItemStack(craftingStack.getItem(), craftingStack.getCount(), craftingStack.getMetadata());
 			this.itemRender.renderItemAndEffectIntoGUI(renderedStack, guiLeft + stackOffset, guiTop + 172);
-			this.itemRender.renderItemOverlays(fontRendererObj, renderedStack, guiLeft + stackOffset, guiTop + 172);
+			this.itemRender.renderItemOverlays(fontRenderer, renderedStack, guiLeft + stackOffset, guiTop + 172);
 			stackOffset += 18;
 		}
 		
@@ -174,7 +175,7 @@ public class GUIPartBench extends GuiScreen{
 		int itemTooltipBounds = 16;
 		for(ItemStack craftingStack : PackParserSystem.getMaterials(partName)){
 			if(mouseX > guiLeft + stackOffset && mouseX < guiLeft + stackOffset + itemTooltipBounds && mouseY > guiTop + 172 && mouseY < guiTop + 172 + itemTooltipBounds){
-				ItemStack renderedStack = new ItemStack(craftingStack.getItem(), craftingStack.stackSize, craftingStack.getMetadata() == Integer.MAX_VALUE ? 0 : craftingStack.getMetadata());
+				ItemStack renderedStack = new ItemStack(craftingStack.getItem(), craftingStack.getCount(), craftingStack.getMetadata());
 				renderToolTip(renderedStack, guiLeft + stackOffset,  guiTop + 172);
 			}
 			stackOffset += 18;
@@ -236,7 +237,7 @@ public class GUIPartBench extends GuiScreen{
 		GL11.glRotatef(180, 0, 0, 1);
 		GL11.glRotatef(45, 0, 1, 0);
 		GL11.glRotatef(35.264F, 1, 0, 1);
-		GL11.glRotatef(-player.worldObj.getTotalWorldTime()*2, 0, 1, 0);
+		GL11.glRotatef(-player.world.getTotalWorldTime()*2, 0, 1, 0);
 		float scale = 30F*partScalingFactors.get(partName);
 		GL11.glScalef(scale, scale, scale);
 		GL11.glCallList(partDisplayLists.get(partName));
@@ -314,7 +315,7 @@ public class GUIPartBench extends GuiScreen{
 		
 		int lineOffset = 55;
 		for(String line : headerLines){
-			mc.fontRendererObj.drawStringWithShadow(line, guiLeft + 10, guiTop + lineOffset, Color.WHITE.getRGB());
+			mc.fontRenderer.drawStringWithShadow(line, guiLeft + 10, guiTop + lineOffset, Color.WHITE.getRGB());
 			lineOffset += 10;
 		}
 		
@@ -330,14 +331,14 @@ public class GUIPartBench extends GuiScreen{
 		descriptiveLines.add(String.valueOf(minWheelSize) + "-" + String.valueOf(maxWheelSize));
 		lineOffset = 55;
 		for(String line : descriptiveLines){
-			mc.fontRendererObj.drawStringWithShadow(line, guiLeft + 90, guiTop + lineOffset, Color.WHITE.getRGB());
+			mc.fontRenderer.drawStringWithShadow(line, guiLeft + 90, guiTop + lineOffset, Color.WHITE.getRGB());
 			lineOffset += 10;
 		}
 
 		GL11.glPushMatrix();
 		GL11.glTranslatef(guiLeft + 255, guiTop + 55, 0);
 		GL11.glScalef(0.8F, 0.8F, 0.8F);
-		fontRendererObj.drawSplitString(I18n.format("description." + partName.substring(0, partName.indexOf(':')) + "." + PackParserSystem.getVehicleJSONName(partName)), 0, 0, 120, Color.WHITE.getRGB());
+		fontRenderer.drawSplitString(I18n.format("description." + partName.substring(0, partName.indexOf(':')) + "." + PackParserSystem.getVehicleJSONName(partName)), 0, 0, 120, Color.WHITE.getRGB());
 		GL11.glPopMatrix();
 	}
 	
@@ -345,16 +346,16 @@ public class GUIPartBench extends GuiScreen{
 		ItemStack tempStack = new ItemStack(itemMap.get(partName));
 		tempStack.setTagCompound(new NBTTagCompound());
 		List<String> descriptiveLines = new ArrayList<String>();
-		tempStack.getItem().addInformation(tempStack, player, descriptiveLines, false);
+		tempStack.getItem().addInformation(tempStack, player.world, descriptiveLines, ITooltipFlag.TooltipFlags.NORMAL);
 		int lineOffset = 55;
 		for(String line : descriptiveLines){
-			mc.fontRendererObj.drawStringWithShadow(line, guiLeft + 10, guiTop + lineOffset, Color.WHITE.getRGB());
+			mc.fontRenderer.drawStringWithShadow(line, guiLeft + 10, guiTop + lineOffset, Color.WHITE.getRGB());
 			lineOffset += 10;
 		}
 	}
 	
 	private void renderInstrumentInfoText(){
-		fontRendererObj.drawSplitString(I18n.format(itemMap.get(partName).getUnlocalizedName() + ".description"), guiLeft + 10, guiTop + 55, 120, Color.WHITE.getRGB());
+		fontRenderer.drawSplitString(I18n.format(itemMap.get(partName).getUnlocalizedName() + ".description"), guiLeft + 10, guiTop + 55, 120, Color.WHITE.getRGB());
 	}
     
 	private void parseModel(String partPack, String partModelLocation){
@@ -394,7 +395,7 @@ public class GUIPartBench extends GuiScreen{
 		if(buttonClicked.equals(startButton)){
 			MTS.proxy.playSound(player.getPositionVector(), MTS.MODID + ":bench_running", 1, 1);
 			MTS.MTSNet.sendToServer(new PacketPlayerCrafting(player, partName));
-			mc.thePlayer.closeScreen();
+			mc.player.closeScreen();
 			return;
 		}else{
 			if(buttonClicked.equals(leftPackButton)){
@@ -455,7 +456,7 @@ public class GUIPartBench extends GuiScreen{
 	}
 	
 	private void drawCenteredString(String stringToDraw, int x, int y){
-		mc.fontRendererObj.drawString(stringToDraw, x - mc.fontRendererObj.getStringWidth(stringToDraw)/2, y, 4210752);
+		mc.fontRenderer.drawString(stringToDraw, x - mc.fontRenderer.getStringWidth(stringToDraw)/2, y, 4210752);
 	}
 	
 	/**

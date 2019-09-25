@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.items.parts;
 
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.world.World;
+import javax.annotation.Nullable;
 import java.util.List;
 
 import minecrafttransportsimulator.dataclasses.PackPartObject;
@@ -25,7 +28,7 @@ public class ItemPartCrate extends AItemPart{
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack stack, EntityPlayer player, List<String> tooltipLines, boolean p_77624_4_){
+	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
 		PackPartObject pack = PackParserSystem.getPartPack(((ItemPartCrate) stack.getItem()).partName); 
 		tooltipLines.add(I18n.format("info.item.crate.capacity") + pack.crate.rows*9);
 	}

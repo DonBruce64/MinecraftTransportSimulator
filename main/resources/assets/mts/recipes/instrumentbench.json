@@ -1,0 +1,17 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern":[
+        "aba",
+        "cdc",
+        "c c"
+    ],
+    "key":{
+        "a":{"type": "forge:ore_dict", "ore": "ingotIron"},
+		"b":{"item": "minecraft:glowstone"},
+		"c":{"item": "minecraft:planks", "data" : 32767},
+		"d":{"item": "minecraft:redstone_block"}
+    },
+    "result":{
+        "item": "mts:instrumentbench"
+    }
+}

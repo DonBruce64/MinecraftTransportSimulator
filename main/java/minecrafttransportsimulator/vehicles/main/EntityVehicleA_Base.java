@@ -76,7 +76,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 		///Although we could call this in the constructor, Minecraft changes the
 		//entity IDs after spawning and that fouls things up.
 		if(pack == null){
-			if(worldObj.isRemote){
+			if(world.isRemote){
 				if(clientPackPacketCooldown == 0){
 					clientPackPacketCooldown = 40;
 					MTS.MTSNet.sendToServer(new PacketVehicleClientInit(this));
@@ -101,11 +101,11 @@ public abstract class EntityVehicleA_Base extends Entity{
 		if(!ignoreCollision){
 			//Check for collision, and boost if needed.
 			if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
-				this.setPositionAndRotation(posX, posY +  Math.max(0, -part.offset.yCoord) + part.getHeight(), posZ, rotationYaw, rotationPitch);
+				this.setPositionAndRotation(posX, posY +  Math.max(0, -part.offset.y) + part.getHeight(), posZ, rotationYaw, rotationPitch);
 			}
 			
 			//Sometimes we need to do this for parts that are deeper into the ground.
-			if(part.isPartCollidingWithBlocks(new Vec3d(0, Math.max(0, -part.offset.yCoord) + part.getHeight(), 0))){
+			if(part.isPartCollidingWithBlocks(new Vec3d(0, Math.max(0, -part.offset.y) + part.getHeight(), 0))){
 				this.setPositionAndRotation(posX, posY +  part.getHeight(), posZ, rotationYaw, rotationPitch);
 			}
 		}
@@ -116,11 +116,11 @@ public abstract class EntityVehicleA_Base extends Entity{
 			parts.remove(part);
 			if(part.isValid()){
 				part.removePart();
-				if(!worldObj.isRemote){
-					MTS.MTSNet.sendToAll(new PacketVehicleClientPartRemoval(this, part.offset.xCoord, part.offset.yCoord, part.offset.zCoord));
+				if(!world.isRemote){
+					MTS.MTSNet.sendToAll(new PacketVehicleClientPartRemoval(this, part.offset.x, part.offset.y, part.offset.z));
 				}
 			}
-			if(!worldObj.isRemote){
+			if(!world.isRemote){
 				if(playBreakSound){
 					this.playSound(SoundEvents.ITEM_SHIELD_BREAK, 2.0F, 1.0F);
 				}
@@ -141,7 +141,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 	 */
 	public APart getPartAtLocation(double offsetX, double offsetY, double offsetZ){
 		for(APart part : this.parts){
-			if(part.offset.xCoord == offsetX && part.offset.yCoord == offsetY && part.offset.zCoord == offsetZ){
+			if(part.offset.x == offsetX && part.offset.y == offsetY && part.offset.z == offsetZ){
 				return part;
 			}
 		}
@@ -176,7 +176,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 		//Next get any sub parts on parts that are present.
 		for(APart part : this.parts){
 			if(part.pack.subParts != null){
-				PackPart parentPack = getPackDefForLocation(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
+				PackPart parentPack = getPackDefForLocation(part.offset.x, part.offset.y, part.offset.z);
 				for(PackPart extraPackPart : part.pack.subParts){
 					PackPart correctedPack = getPackForSubPart(parentPack, extraPackPart);
 					packParts.put(new Vec3d(correctedPack.pos[0], correctedPack.pos[1], correctedPack.pos[2]), correctedPack);
@@ -208,7 +208,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 		//If this is not a main part or an additional part, check the sub-parts.
 		for(APart part : this.parts){
 			if(part.pack.subParts.size() > 0){
-				PackPart parentPack = getPackDefForLocation(part.offset.xCoord, part.offset.yCoord, part.offset.zCoord);
+				PackPart parentPack = getPackDefForLocation(part.offset.x, part.offset.y, part.offset.z);
 				for(PackPart extraPackPart : part.pack.subParts){
 					PackPart correctedPack = getPackForSubPart(parentPack, extraPackPart);
 					if(correctedPack.pos[0] == offsetX && correctedPack.pos[1] == offsetY && correctedPack.pos[2] == offsetZ){
@@ -294,9 +294,9 @@ public abstract class EntityVehicleA_Base extends Entity{
 				//We need to set some extra data here for the part to allow this vehicle to know where it went.
 				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
 				partTag.setString("partName", part.partName);
-				partTag.setDouble("offsetX", part.offset.xCoord);
-				partTag.setDouble("offsetY", part.offset.yCoord);
-				partTag.setDouble("offsetZ", part.offset.zCoord);
+				partTag.setDouble("offsetX", part.offset.x);
+				partTag.setDouble("offsetY", part.offset.y);
+				partTag.setDouble("offsetZ", part.offset.z);
 				partTagList.appendTag(partTag);
 			}
 		}

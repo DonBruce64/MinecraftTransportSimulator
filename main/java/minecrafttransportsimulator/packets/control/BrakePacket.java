@@ -40,9 +40,9 @@ public class BrakePacket implements IMessage{
 				public void run(){
 					EntityVehicleD_Moving vehicle;
 					if(ctx.side.isServer()){
-						vehicle = (EntityVehicleD_Moving) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						vehicle = (EntityVehicleD_Moving) ctx.getServerHandler().player.world.getEntityByID(message.id);
 					}else{
-						vehicle = (EntityVehicleD_Moving) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						vehicle = (EntityVehicleD_Moving) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
 					if(vehicle!=null){
 						if((message.brakeCode & 2) == 2){
@@ -51,7 +51,7 @@ public class BrakePacket implements IMessage{
 						if((message.brakeCode & 8) == 8){
 							boolean wasParkingBrakeOn = vehicle.parkingBrakeOn;
 							vehicle.parkingBrakeOn = (message.brakeCode & 4) == 4 ? true : false;
-							if(vehicle.parkingBrakeOn && !wasParkingBrakeOn && vehicle instanceof EntityVehicleF_Car && vehicle.pack != null && vehicle.pack.car.isBigTruck && vehicle.worldObj.isRemote){
+							if(vehicle.parkingBrakeOn && !wasParkingBrakeOn && vehicle instanceof EntityVehicleF_Car && vehicle.pack != null && vehicle.pack.car.isBigTruck && vehicle.world.isRemote){
 								MTS.proxy.playSound(vehicle.getPositionVector(), MTS.MODID + ":air_brake_activating", 1.0F, 1);
 							}
 						}

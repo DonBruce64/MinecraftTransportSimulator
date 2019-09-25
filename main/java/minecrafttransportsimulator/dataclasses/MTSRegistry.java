@@ -51,7 +51,6 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
 import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
-import minecrafttransportsimulator.packets.parts.PacketPartInteraction;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpConnection;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
@@ -68,7 +67,6 @@ import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleServerPartAddition;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowFix;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -76,12 +74,10 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -169,16 +165,12 @@ public final class MTSRegistry{
 	//Counters for registry systems.
 	private static int entityNumber = 0;
 	private static int packetNumber = 0;
-	private static int craftingNumber = 0;
 	
 	
 	/**All run-time things go here.**/
 	public static void init(){
 		initEntities();
 		initPackets();
-		initCoreItemRecipes();
-		initCraftingBenchItemRecipes();
-		initDecorItemRecipes();
 	}
 	
 	/**
@@ -227,7 +219,7 @@ public final class MTSRegistry{
 					if(block instanceof ITileEntityProvider){
 						Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
 						if(!registeredTileEntityClasses.contains(tileEntityClass)){
-							GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
+							GameRegistry.registerTileEntity(tileEntityClass, new ResourceLocation(MTS.MODID, tileEntityClass.getSimpleName()));
 							registeredTileEntityClasses.add(tileEntityClass);
 						}
 					}
@@ -246,7 +238,7 @@ public final class MTSRegistry{
 							if(block instanceof ITileEntityProvider){
 								Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
 								if(!registeredTileEntityClasses.contains(tileEntityClass)){
-									GameRegistry.registerTileEntity(tileEntityClass, tileEntityClass.getSimpleName());
+									GameRegistry.registerTileEntity(tileEntityClass, new ResourceLocation(MTS.MODID, tileEntityClass.getSimpleName()));
 									registeredTileEntityClasses.add(tileEntityClass);
 								}
 							}
@@ -328,8 +320,8 @@ public final class MTSRegistry{
 	 * the pack data stored in NBT is what makes for different vehicles.
 	 */
 	private static void initEntities(){
-		EntityRegistry.registerModEntity(EntityVehicleF_Car.class, "vehiclecar", entityNumber++, MTS.MODID, 80, 5, false);
-		EntityRegistry.registerModEntity(EntityVehicleF_Plane.class, "vehicleplane", entityNumber++, MTS.MODID, 80, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleF_Car.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleF_Car.class, "vehiclecar", entityNumber++, MTS.MODID, 80, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleF_Plane.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleF_Plane.class, "vehicleplane", entityNumber++, MTS.MODID, 80, 5, false);
 	}
 	
 	private static void initPackets(){
@@ -372,11 +364,10 @@ public final class MTSRegistry{
 		registerPacket(PacketVehicleClientRemoval.class, PacketVehicleClientRemoval.Handler.class, true, false);
 		registerPacket(PacketVehicleDeltas.class, PacketVehicleDeltas.Handler.class, true, false);
 		registerPacket(PacketVehicleInstruments.class, PacketVehicleInstruments.Handler.class, true, true);
-		registerPacket(PacketVehicleKey.class, PacketVehicleKey.Handler.class, true, true);
-		registerPacket(PacketVehicleNameTag.class, PacketVehicleNameTag.Handler.class, true, true);
-		registerPacket(PacketVehicleServerPartAddition.class, PacketVehicleServerPartAddition.Handler.class, false, true);
+		registerPacket(PacketVehicleKey.class, PacketVehicleKey.Handler.class, true, false);
+		registerPacket(PacketVehicleNameTag.class, PacketVehicleNameTag.Handler.class, true, false);
 		registerPacket(PacketVehicleWindowBreak.class, PacketVehicleWindowBreak.Handler.class, true, false);
-		registerPacket(PacketVehicleWindowFix.class, PacketVehicleWindowFix.Handler.class, true, true);
+		registerPacket(PacketVehicleWindowFix.class, PacketVehicleWindowFix.Handler.class, true, false);
 		
 		//Packets in packets.parts
 		registerPacket(PacketPartEngineDamage.class, PacketPartEngineDamage.Handler.class, true, false);
@@ -384,181 +375,9 @@ public final class MTSRegistry{
 		registerPacket(PacketPartEngineSignal.class, PacketPartEngineSignal.Handler.class, true, true);
 		registerPacket(PacketPartGroundDeviceWheelFlat.class, PacketPartGroundDeviceWheelFlat.Handler.class, true, false);
 		registerPacket(PacketPartGunSignal.class, PacketPartGunSignal.Handler.class, true, true);
-		registerPacket(PacketPartInteraction.class, PacketPartInteraction.Handler.class, false, true);
 		registerPacket(PacketPartSeatRiderChange.class, PacketPartSeatRiderChange.Handler.class, true, false);
 	}
-	
-	private static void initCoreItemRecipes(){
-		//Manual
-		registerRecipe(new ItemStack(manual),
-				" A ",
-				"CBC",
-				" D ",
-				'A', Items.FEATHER,
-				'B', Items.BOOK,
-				'C', new ItemStack(Items.DYE, 1, 0),
-				'D', Items.PAPER);
-		//Wrench
-		registerRecipe(new ItemStack(wrench),
-				" A ",
-				" AA",
-				"A  ",
-				'A', Items.IRON_INGOT);
-		//Key
-		registerRecipe(new ItemStack(key),
-				" A ",
-				" A ",
-				" S ",
-				'A', Items.IRON_INGOT,
-				'S', Items.STRING);
-		//Jumper cables
-		registerRecipe(new ItemStack(jumperCable),
-				"I I",
-				"SRS",
-				"SSS",
-				'S', Items.STRING,
-				'R', Items.REDSTONE,
-				'I', Items.SHEARS);
-		//Fuel pump
-		registerRecipe(new ItemStack(fuelPump),
-				"DED",
-				"CBC",
-				"AAA",
-				'A', new ItemStack(Blocks.STONE_SLAB, 1, 0),
-				'B', Items.IRON_INGOT,
-				'C', new ItemStack(Items.DYE, 1, 0),
-				'D', new ItemStack(Items.DYE, 1, 1),
-				'E', Blocks.GLASS_PANE);
-		//Traffic Signal Controller
-		registerRecipe(new ItemStack(trafficSignalController),
-				"AAA",
-				"BCB",
-				"DBD",
-				'A', new ItemStack(Blocks.STONE_SLAB, 1, 0),
-				'B', Items.IRON_INGOT,
-				'C', Items.COMPARATOR,
-				'D', Items.REDSTONE);
-	}
-	
-	private static void initCraftingBenchItemRecipes(){
-		//Vehicle benches.  Need to iterate through all fence types.
-		for(Block fenceBlock : new Block[]{Blocks.OAK_FENCE, Blocks.SPRUCE_FENCE, Blocks.BIRCH_FENCE, Blocks.JUNGLE_FENCE, Blocks.ACACIA_FENCE, Blocks.DARK_OAK_FENCE}){
-			registerRecipe(new ItemStack(vehicleBench),
-					"AAA",
-					"ACA",
-					"B B",
-					'A', Blocks.PLANKS,
-					'B', fenceBlock,
-					'C', Blocks.GLASS_PANE);
-		}
-		//Propeller bench
-		registerRecipe(new ItemStack(propellerBench),
-				"AAA",
-				" BA",
-				"ACA",
-				'A', Items.IRON_INGOT,
-				'B', Items.DIAMOND,
-				'C', Blocks.ANVIL);
-		//Engine bench
-		registerRecipe(new ItemStack(engineBench),
-				"AAA",
-				"BDA",
-				" CC",
-				'A', Items.IRON_INGOT,
-				'B', Blocks.IRON_BARS,
-				'C', Blocks.IRON_BLOCK,
-				'D', new ItemStack(Items.DYE, 1, 1));
-		//Wheel bench
-		registerRecipe(new ItemStack(wheelBench),
-				"A  ",
-				"ACC",
-				"BCC",
-				'A', Items.IRON_INGOT,
-				'B', Blocks.ANVIL,
-				'C', Blocks.PLANKS);
-		//Seat bench
-		registerRecipe(new ItemStack(seatBench),
-				"   ",
-				"ABA",
-				"A A",
-				'A', Items.IRON_INGOT,
-				'B', Items.IRON_AXE);
-		//Gun bench
-		registerRecipe(new ItemStack(gunBench),
-				"   ",
-				"ABC",
-				"DAD",
-				'A', Blocks.IRON_BLOCK,
-				'B', Items.DIAMOND,
-				'C', new ItemStack(Items.DYE, 1, 14),
-				'D', new ItemStack(Items.DYE, 1, 2));
-		//Custom bench
-		registerRecipe(new ItemStack(customBench),
-				"AAA",
-				"ABA",
-				"AAA",
-				'A', Items.IRON_INGOT,
-				'B', Blocks.CRAFTING_TABLE);
-		//Instrument bench
-		registerRecipe(new ItemStack(instrumentBench),
-				"AGA",
-				"PRP",
-				"P P",
-				'A', Items.IRON_INGOT,
-				'G', Blocks.GLOWSTONE,
-				'R', Blocks.REDSTONE_BLOCK,
-				'P', Blocks.PLANKS);
-	}
-	
-	private static void initDecorItemRecipes(){
-		//Regular pole
-		registerRecipe(new ItemStack(itemBlockPole, 4),
-				" S ",
-				" S ",
-				" S ",
-				'S', Blocks.COBBLESTONE_WALL);
-		//Base pole
-		registerRecipe(new ItemStack(itemBlockPoleBase),
-				"   ",
-				" P ",
-				" S ",
-				'S', Blocks.STONE_SLAB,
-				'P', itemBlockPole);
-		//Street light
-		registerRecipe(new ItemStack(itemBlockStreetLight),
-				" SP",
-				" G ",
-				"   ",
-				'S', Blocks.STONE_SLAB,
-				'P', itemBlockPole,
-				'G', Items.GLOWSTONE_DUST);
-		//Traffic signal
-		registerRecipe(new ItemStack(itemBlockTrafficSignal),
-				"RLS",
-				"YLP",
-				"GLA",
-				'R', new ItemStack(Items.DYE, 1, 1),
-				'Y', new ItemStack(Items.DYE, 1, 11),
-				'G', new ItemStack(Items.DYE, 1, 10),
-				'L', Items.GLOWSTONE_DUST,
-				'A', Items.REDSTONE,
-				'S', Blocks.STONE_SLAB,
-				'P', itemBlockPole);
-		//Traffic sign
-		registerRecipe(new ItemStack(itemBlockTrafficSign),
-				"   ",
-				" I ",
-				" P ",
-				'I', Items.IRON_INGOT,
-				'P', itemBlockPole);
-	}
-	
-	/**Registers a crafting recipe.  This is segmented out here as the method changes in 1.12 and the single location makes it easy for the script to update it.**/
-	private static void registerRecipe(ItemStack output, Object...params){
-		GameRegistry.addShapedRecipe(output, params);
-		++craftingNumber;
-	}
-	
+
 	/**
 	 * Registers a packet and its handler on the client and/or the server.
 	 * @param packetClass

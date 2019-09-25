@@ -27,7 +27,7 @@ public class ItemBlockRotatable extends Item{
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
+	public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
 		if(!world.isRemote && player.getHeldItem(hand) != null){
 			ItemStack heldStack = player.getHeldItem(hand);
 			

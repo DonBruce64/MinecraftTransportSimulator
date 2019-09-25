@@ -1,0 +1,26 @@
+{
+	"parent": "mts:vehiclebench",
+	"display": {
+		"icon": {
+            "item": "mts:key"
+        },
+        "title": {
+            "translate": "advancements.mts.key.title"
+        },
+        "description": {
+            "translate": "advancements.mts.key.description"
+        }
+	},
+	"criteria": {
+		"has_key": {
+			"trigger": "minecraft:inventory_changed",
+			"conditions": {
+				"items": [
+					{
+						"item": "mts:key"
+					}
+				]
+			}
+		}
+	}
+}

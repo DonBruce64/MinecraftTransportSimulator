@@ -40,9 +40,9 @@ public class ShiftPacket implements IMessage{
 				public void run(){
 					EntityVehicleF_Car thisEntity;
 					if(ctx.side.isServer()){
-						thisEntity = (EntityVehicleF_Car) ctx.getServerHandler().playerEntity.worldObj.getEntityByID(message.id);
+						thisEntity = (EntityVehicleF_Car) ctx.getServerHandler().player.world.getEntityByID(message.id);
 					}else{
-						thisEntity = (EntityVehicleF_Car) Minecraft.getMinecraft().theWorld.getEntityByID(message.id);
+						thisEntity = (EntityVehicleF_Car) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
 						PartEngineCar carEngine = (PartEngineCar) thisEntity.getEngineByNumber((byte) 0);

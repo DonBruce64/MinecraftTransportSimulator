@@ -47,16 +47,18 @@ public class PacketVehicleClientPartAddition extends APacketVehiclePart{
 				@Override
 				public void run(){
 					EntityVehicleA_Base vehicle = (EntityVehicleA_Base) getVehicle(message, ctx);
-					PackPart packPart = vehicle.getPackDefForLocation(message.offsetX, message.offsetY, message.offsetZ);
-					String partName = ((AItemPart) message.partStack.getItem()).partName;
-					try{
-						Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partName);
-						Constructor<? extends APart> construct = partClass.getConstructor(EntityVehicleE_Powered.class, PackPart.class, String.class, NBTTagCompound.class);
-						APart newPart = construct.newInstance((EntityVehicleE_Powered) vehicle, packPart, partName, message.partStack.hasTagCompound() ? message.partStack.getTagCompound() : new NBTTagCompound());
-						vehicle.addPart(newPart, false);
-					}catch(Exception e){
-						MTS.MTSLog.error("ERROR SPAWING PART ON CLIENT!");
-						MTS.MTSLog.error(e.getMessage());
+					if(vehicle != null){
+						PackPart packPart = vehicle.getPackDefForLocation(message.offsetX, message.offsetY, message.offsetZ);
+						String partName = ((AItemPart) message.partStack.getItem()).partName;
+						try{
+							Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partName);
+							Constructor<? extends APart> construct = partClass.getConstructor(EntityVehicleE_Powered.class, PackPart.class, String.class, NBTTagCompound.class);
+							APart newPart = construct.newInstance((EntityVehicleE_Powered) vehicle, packPart, partName, message.partStack.hasTagCompound() ? message.partStack.getTagCompound() : new NBTTagCompound());
+							vehicle.addPart(newPart, false);
+						}catch(Exception e){
+							MTS.MTSLog.error("ERROR SPAWING PART ON CLIENT!");
+							MTS.MTSLog.error(e.getMessage());
+						}
 					}
 				}
 			});

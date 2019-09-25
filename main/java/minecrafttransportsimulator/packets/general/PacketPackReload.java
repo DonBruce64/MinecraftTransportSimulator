@@ -25,7 +25,7 @@ public class PacketPackReload implements IMessage{
 				@Override
 				public void run(){
 					PackParserSystem.reloadPackData();
-					for(Entity entity : ctx.getServerHandler().playerEntity.worldObj.loadedEntityList){
+					for(Entity entity : ctx.getServerHandler().player.world.loadedEntityList){
 						if(entity instanceof EntityVehicleA_Base){
 							EntityVehicleA_Base vehicle = (EntityVehicleA_Base) entity;
 							vehicle.pack = PackParserSystem.getVehiclePack(vehicle.vehicleName);
