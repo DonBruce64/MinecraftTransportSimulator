@@ -1,0 +1,15 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern":[
+        " a ",
+        " a ",
+        " b "
+    ],
+    "key":{
+        "a":{"type": "forge:ore_dict", "ore": "ingotIron"},
+		"b":{"item": "minecraft:string"}
+    },
+    "result":{
+        "item": "mts:key"
+    }
+}

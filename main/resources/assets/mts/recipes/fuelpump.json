@@ -1,0 +1,18 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern":[
+        "aba",
+        "cdc",
+        "eee"
+    ],
+    "key":{
+        "a":{"item": "minecraft:dye", "data": 1},
+		"b":{"item": "minecraft:glass_pane"},
+		"c":{"item": "minecraft:dye", "data": 0},
+		"d":{"type": "forge:ore_dict", "ore": "ingotIron"},
+		"e":{"item": "minecraft:stone_slab", "data" : 0}
+    },
+    "result":{
+        "item": "mts:fuelpump"
+    }
+}

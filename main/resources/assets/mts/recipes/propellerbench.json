@@ -1,0 +1,16 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern":[
+        "aaa",
+        " ba",
+        "aca"
+    ],
+    "key":{
+        "a":{"type": "forge:ore_dict", "ore": "ingotIron"},
+		"b":{"item": "minecraft:diamond"},
+		"c":{"item": "minecraft:anvil", "data" : 0}
+    },
+    "result":{
+        "item": "mts:propellerbench"
+    }
+}

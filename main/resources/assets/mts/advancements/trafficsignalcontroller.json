@@ -1,0 +1,26 @@
+{
+	"parent": "mts:trafficsignal",
+	"display": {
+		"icon": {
+            "item": "mts:trafficsignalcontroller"
+        },
+        "title": {
+            "translate": "advancements.mts.trafficsignalcontroller.title"
+        },
+        "description": {
+            "translate": "advancements.mts.trafficsignalcontroller.description"
+        }
+	},
+	"criteria": {
+		"has_trafficsignalcontroller": {
+			"trigger": "minecraft:inventory_changed",
+			"conditions": {
+				"items": [
+					{
+						"item": "mts:trafficsignalcontroller"
+					}
+				]
+			}
+		}
+	}
+}

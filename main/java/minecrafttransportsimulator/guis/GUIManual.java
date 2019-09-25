@@ -1,12 +1,7 @@
 package minecrafttransportsimulator.guis;
 
-import net.minecraft.item.crafting.Ingredient;
 import java.awt.Color;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map.Entry;
 
 import org.lwjgl.input.Keyboard;
@@ -14,10 +9,8 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackDecorObject;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
-import minecrafttransportsimulator.items.blocks.ItemBlockBench;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.parts.AItemPart;
@@ -27,13 +20,8 @@ import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.CraftingManager;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.ShapedRecipes;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
@@ -48,10 +36,7 @@ public class GUIManual extends GuiScreen{
 	private int rightSideOffset;
 	private final ItemStack stack;
 	private final NBTTagCompound stackTag;
-	private final byte totalInfoPages;
 	private final byte totalPages;
-	private final List<ItemBlockBench> craftingBenches = new ArrayList<ItemBlockBench>();
-    private static final ResourceLocation craftingTableTexture = new ResourceLocation("textures/gui/container/crafting_table.png");
 	
 	private GuiButton leftButton;
 	private GuiButton rightButton;
@@ -70,32 +55,17 @@ public class GUIManual extends GuiScreen{
 			this.stackTag = stack.getTagCompound();
 		}
 		this.pageNumber = stackTag.getShort("page");
-		
-		byte benches = 0;
-		for(Field field : MTSRegistry.class.getFields()){
-			if(field.getType().equals(Item.class)){
-				try{
-					Item item = (Item) field.get(null);
-					if(item instanceof ItemBlockBench){
-						craftingBenches.add((ItemBlockBench) item);
-					}
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-		}
 				
 		for(byte i=1; i<50; ++i){
 			if(I18n.format("manual." + String.valueOf(i) + ".title").equals("manual." + String.valueOf(i) + ".title")){
-				this.totalInfoPages = (byte) ((i - 1)*2);
-				this.totalPages = (byte) (totalInfoPages + (craftingBenches.size() - 1) + 2);
+				this.totalPages = (byte) ((i - 1)*2 + 2);
 				if(pageNumber > totalPages){
 					pageNumber = 0;
 				}
 				return;
 			}
 		}
-		this.totalInfoPages = this.totalPages = 0;
+		this.totalPages = 0;
 	}
 	
 	@Override 
@@ -133,8 +103,7 @@ public class GUIManual extends GuiScreen{
 			leftButton.enabled = true;
 			leftButton.drawButton(mc, mouseX, mouseY, 0);
 
-			
-			if(pageNumber < totalPages){
+			if(pageNumber + 1 < totalPages){
 				rightButton.visible = true;
 				rightButton.enabled = true;
 				rightButton.drawButton(mc, mouseX, mouseY, 0);
@@ -156,10 +125,8 @@ public class GUIManual extends GuiScreen{
 			 drawCover();
 		}else if(pageNumber == 1){
 			drawContentsPage();
-		}else if(pageNumber < totalInfoPages + 3){
-			drawInfoPage();
 		}else{
-			drawCraftingPage(mouseX, mouseY);
+			drawInfoPage();
 		}
 	}
 	
@@ -239,7 +206,7 @@ public class GUIManual extends GuiScreen{
 		short pageCount = 3;
 		
 		fontRenderer.drawString("CONTENTS", guiLeft + 50, guiTop + 25, Color.BLACK.getRGB());
-		for(byte i=1; i<=totalInfoPages/2; ++i){
+		for(byte i=1; i<=(totalPages-2)/2; ++i){
 			String title = I18n.format("manual." + String.valueOf(i) + ".title");
 			fontRenderer.drawString(String.valueOf(i*2 + 1) + ": " + title, contentsCount < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*contentsLine, Color.BLACK.getRGB());
 			++contentsCount;
@@ -264,88 +231,6 @@ public class GUIManual extends GuiScreen{
 		GL11.glTranslatef((rightSideOffset - leftSideOffset)/0.75F, -headerOffset/0.75F, 0);
 		fontRenderer.drawSplitString(I18n.format("manual." + sectionNumber + "." + "2"), 0, 0, 150, Color.BLACK.getRGB());
 		GL11.glPopMatrix();
-	}
-	
-	private void drawCraftingPage(int mouseX, int mouseY){
-		//This is done for both sides of the book.
-		//One bench for each page.
-		byte benchNumber = (byte) (pageNumber - totalInfoPages - 2);
-		ItemBlockBench benchItemLeft = craftingBenches.get(benchNumber);
-		ItemBlockBench benchItemRight = benchNumber + 1 < craftingBenches.size() ? craftingBenches.get(benchNumber + 1) : null;
-		
-		//Render the header.
-		String title = I18n.format(benchItemLeft.getUnlocalizedName() + ".name");
-		fontRenderer.drawString(title, (guiLeft + 75 - fontRenderer.getStringWidth(title) / 2), guiTop + 25, Color.BLACK.getRGB());
-		if(benchItemRight != null){
-			title = I18n.format(benchItemRight.getUnlocalizedName() + ".name");
-			fontRenderer.drawString(title, (guiLeft + 75 + 140 - fontRenderer.getStringWidth(title) / 2), guiTop + 25, Color.BLACK.getRGB());	
-		}
-		
-		//Render the crafting grid.
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-		this.mc.getTextureManager().bindTexture(craftingTableTexture);
-        this.drawTexturedModalRect(guiLeft + 50, guiTop + 100, 29, 16, 54, 54);
-        if(benchItemRight != null){
-        	this.drawTexturedModalRect(guiLeft + 50 + 140, guiTop + 100, 29, 16, 54, 54);
-        }
-		
-        
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderHelper.enableGUIStandardItemLighting();
-		//Render the bench as an item.
-        GL11.glPushMatrix();
-		GL11.glTranslatef(guiLeft + 50F, guiTop + 40F, 0);
-		GL11.glScalef(3, 3, 3);
-		this.itemRender.renderItemAndEffectIntoGUI(new ItemStack(benchItemLeft), 0, 0);
-		GL11.glPopMatrix();
-		if(benchItemRight != null){
-			GL11.glPushMatrix();
-			GL11.glTranslatef(guiLeft + 50F + 140F, guiTop + 40F, 0);
-			GL11.glScalef(3, 3, 3);
-			this.itemRender.renderItemAndEffectIntoGUI(new ItemStack(benchItemRight), 0, 0);
-			GL11.glPopMatrix();
-		}
-		
-		//Render the items themselves.
-		ItemStack hoveredStack = null;
-		Iterator<IRecipe> iterator = CraftingManager.REGISTRY.iterator();
-		while(iterator.hasNext()){
-			IRecipe recipe = iterator.next();
-			if(recipe.getRecipeOutput() != null){
-				int xOffset = 0;
-				if(recipe.getRecipeOutput().getItem().equals(benchItemLeft)){
-					xOffset = 51;
-				}else if(recipe.getRecipeOutput().getItem().equals(benchItemRight)){
-					xOffset = 51 + 140;
-				}
-				if(xOffset != 0){
-					int i = guiLeft + xOffset;
-					int j = guiTop + 100;
-					for(Ingredient ingredient : ((ShapedRecipes) recipe).recipeItems){
-						ItemStack stack = ingredient.getMatchingStacks().length > 0 ? ingredient.getMatchingStacks()[0] : null;//1.12 Code
-						if(stack != null){
-							//Need the ItemStack call here as the stack contains blocks sometimes that don't render.
-							this.itemRender.renderItemAndEffectIntoGUI(new ItemStack(stack.getItem()), i, j);
-							if(mouseX > i && mouseX < i + 16 && mouseY > j && mouseY < j + 16){
-								hoveredStack = stack;
-							}
-						}
-						i += 18;
-						if(i == guiLeft + xOffset + 18*3){
-							i = guiLeft + xOffset;
-							j += 18;
-						}
-					}
-				}
-			}
-		}
-		
-		
-		//We render the text for the crafting item mouseover last to ensure it doesn't render behind the items.
-		if(hoveredStack != null){
-			renderToolTip(hoveredStack, mouseX, mouseY);
-			GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-		}
 	}
 	
 	@Override

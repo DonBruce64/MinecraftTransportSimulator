@@ -1,0 +1,26 @@
+{
+	"parent": "mts:rtfm",
+	"display": {
+		"icon": {
+            "item": "mts:seatbench"
+        },
+        "title": {
+            "translate": "advancements.mts.seatbench.title"
+        },
+        "description": {
+            "translate": "advancements.mts.seatbench.description"
+        }
+	},
+	"criteria": {
+		"has_seatbench": {
+			"trigger": "minecraft:inventory_changed",
+			"conditions": {
+				"items": [
+					{
+						"item": "mts:seatbench"
+					}
+				]
+			}
+		}
+	}
+}

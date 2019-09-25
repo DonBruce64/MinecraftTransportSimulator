@@ -1,0 +1,15 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern":[
+        "   ",
+        " a ",
+        " b "
+    ],
+    "key":{
+		"a":{"item": "mts:pole"},
+        "b":{"item": "minecraft:cobblestone_wall", "data" : 0}
+    },
+    "result":{
+        "item": "mts:polebase"
+    }
+}

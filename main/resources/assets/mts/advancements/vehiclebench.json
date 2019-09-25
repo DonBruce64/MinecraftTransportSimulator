@@ -1,0 +1,32 @@
+{
+	"parent": "mts:rtfm",
+	"display": {
+		"icon": {
+            "item": "mts:vehiclebench"
+        },
+        "title": {
+            "translate": "advancements.mts.vehiclebench.title"
+        },
+        "description": {
+            "translate": "advancements.mts.vehiclebench.description"
+        }
+	},
+	"criteria": {
+		"has_vehiclebench": {
+			"trigger": "minecraft:inventory_changed",
+			"conditions": {
+				"items": [
+					{
+						"item": "mts:vehiclebench"
+					}
+				]
+			}
+		}
+	},
+	"rewards": {
+		"recipes": [
+			"mts:key",
+			"mts:wrench"
+		]
+	}
+}
