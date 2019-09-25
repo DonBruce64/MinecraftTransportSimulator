@@ -218,7 +218,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			}
 			if(temp > engineOverheatTemp1){//Too hot
 				hours += 0.001*(temp - engineOverheatTemp1);
-				if(temp > engineFailureTemp && !vehicle.world.isRemote){
+				if(temp > engineFailureTemp && !vehicle.world.isRemote && !isCreative){
 					explodeEngine();
 				}
 			}
@@ -261,6 +261,10 @@ public abstract class APartEngine extends APart implements FXPart{
 					internalFuel = 0;
 				}
 			}
+		}
+		//If we are creative, set all our hours to 0 as they don't apply.
+		if(isCreative){
+			hours = 0;
 		}
 	}
 	
