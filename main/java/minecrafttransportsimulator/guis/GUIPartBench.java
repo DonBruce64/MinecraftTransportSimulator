@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.guis;
 
-import net.minecraft.client.util.ITooltipFlag;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,6 +23,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -164,7 +164,7 @@ public class GUIPartBench extends GuiScreen{
         RenderHelper.enableGUIStandardItemLighting();
 		int stackOffset = 9;
 		for(ItemStack craftingStack : PackParserSystem.getMaterials(partName)){
-			ItemStack renderedStack = new ItemStack(craftingStack.getItem(), craftingStack.getCount(), craftingStack.getMetadata() == Integer.MAX_VALUE ? 0 : craftingStack.getMetadata());
+			ItemStack renderedStack = new ItemStack(craftingStack.getItem(), craftingStack.getCount(), craftingStack.getMetadata());
 			this.itemRender.renderItemAndEffectIntoGUI(renderedStack, guiLeft + stackOffset, guiTop + 172);
 			this.itemRender.renderItemOverlays(fontRenderer, renderedStack, guiLeft + stackOffset, guiTop + 172);
 			stackOffset += 18;
@@ -175,7 +175,7 @@ public class GUIPartBench extends GuiScreen{
 		int itemTooltipBounds = 16;
 		for(ItemStack craftingStack : PackParserSystem.getMaterials(partName)){
 			if(mouseX > guiLeft + stackOffset && mouseX < guiLeft + stackOffset + itemTooltipBounds && mouseY > guiTop + 172 && mouseY < guiTop + 172 + itemTooltipBounds){
-				ItemStack renderedStack = new ItemStack(craftingStack.getItem(), craftingStack.getCount(), craftingStack.getMetadata() == Integer.MAX_VALUE ? 0 : craftingStack.getMetadata());
+				ItemStack renderedStack = new ItemStack(craftingStack.getItem(), craftingStack.getCount(), craftingStack.getMetadata());
 				renderToolTip(renderedStack, guiLeft + stackOffset,  guiTop + 172);
 			}
 			stackOffset += 18;
