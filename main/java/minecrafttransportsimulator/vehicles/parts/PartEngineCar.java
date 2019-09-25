@@ -71,7 +71,7 @@ public class PartEngineCar extends APartEngine{
 		
 		//If running, use the friction of the wheels to determine the new speed.
 		if(state.running || state.esOn){
-			double engineTargetRPM = car.throttle/100F*(pack.engine.maxRPM - engineStartRPM/1.25 - hours) + engineStartRPM/1.25;
+			double engineTargetRPM = !state.esOn ? car.throttle/100F*(pack.engine.maxRPM - engineStartRPM/1.25 - hours) + engineStartRPM/1.25 : engineStartRPM*1.2;
 			if(getRatioForCurrentGear() != 0 && car.wheels.size() > 0){
 				engineForce = (engineTargetRPM - RPM)/pack.engine.maxRPM*getRatioForCurrentGear()*car.pack.car.axleRatio*pack.engine.fuelConsumption*0.6F;
 				//Check to see if the wheels have enough friction to affect the engine.
@@ -129,6 +129,7 @@ public class PartEngineCar extends APartEngine{
 				RPM = Math.max(RPM - 10, 0);
 			}
 		}
+		System.out.println(engineForce);
 		
 		//Set engine and driveshaft rotations for rendering of parts of models.
 		engineRotationLast = engineRotation;
