@@ -430,7 +430,9 @@ public final class ControlSystem{
 		if(joystickMap.containsKey(ControlsJoystick.CAR_GAS.joystickAssigned) && ControlsJoystick.CAR_GAS.joystickButton != NULL_COMPONENT){
 			MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_GAS, (short) 0)));
 		}else{
-			if(ControlsKeyboard.CAR_GAS.isPressed()){
+			if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
+				MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) 50));
+			}else if(ControlsKeyboard.CAR_GAS.isPressed()){
 				MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) 100));
 			}else{
 				MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) 0));
@@ -673,6 +675,7 @@ public final class ControlSystem{
 		CAR_CHANGEHUD(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_MOD),
 		CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD),
 		CAR_STOP(ControlsKeyboard.CAR_START, ControlsKeyboard.CAR_MOD),
+		CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD),
 		CAR_SIREN(ControlsKeyboard.CAR_LIGHTS_SPECIAL, ControlsKeyboard.CAR_MOD),
 		CAR_TURNSIGNAL_R(ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_LIGHTS),
 		CAR_TURNSIGNAL_L(ControlsKeyboard.CAR_TURN_L, ControlsKeyboard.CAR_LIGHTS);
