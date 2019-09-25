@@ -38,23 +38,23 @@ public final class PartBarrel extends APart implements IFluidTank, IFluidHandler
 	public boolean interactPart(EntityPlayer player){
 		if(!vehicle.locked){
 			ItemStack stack = player.getHeldItemMainhand();
-			if(stack != null){
-				if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
-					IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
-					//If player is sneaking, drain barrel.  Otherwise, fill barrel.
-					if(player.isSneaking()){
-						if(this.getFluid() != null){
-							this.drain(handler.fill(this.getFluid(), true), true);
-						}							
+			if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
+				IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+				//If we are empty or sneaking, drain the barrel, otherwise fill.
+				//We use 1000 here for the test as buckets will only drain that amount.
+				FluidStack drainedTestStack = handler.drain(1000, false);
+				if(player.isSneaking() || drainedTestStack == null || drainedTestStack.amount == 0){
+					if(this.getFluid() != null){
+						this.drain(handler.fill(this.getFluid(), true), true);
+					}							
+				}else{
+					if(this.getFluid() != null){
+						this.fill(handler.drain(new FluidStack(this.getFluid().getFluid(), this.getCapacity() - this.getFluidAmount()), true), true);
 					}else{
-						if(this.getFluid() != null){
-							this.fill(handler.drain(new FluidStack(this.getFluid().getFluid(), this.getCapacity() - this.getFluidAmount()), true), true);
-						}else{
-							this.fill(handler.drain(this.getCapacity() - this.getFluidAmount(), true), true);
-						}
+						this.fill(handler.drain(this.getCapacity() - this.getFluidAmount(), true), true);
 					}
-					player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer()); //For 1.11+
 				}
+				player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer());
 			}
 		}else{
 			MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
