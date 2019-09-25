@@ -470,8 +470,6 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 				currentMass += calculateInventoryWeight(((PartCrate) part).crateInventory);
 			}else if(part instanceof PartBarrel){
 				currentMass += ((PartBarrel) part).getFluidAmount()/50;
-			}else{
-				currentMass += 50;
 			}
 		}
 		
