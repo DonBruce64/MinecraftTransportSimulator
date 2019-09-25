@@ -22,8 +22,10 @@ public class PacketVehicleClientPartRemoval extends APacketVehiclePart{
 				@Override
 				public void run(){
 					EntityVehicleA_Base vehicle = getVehicle(message, ctx);
-					APart partToRemove = vehicle.getPartAtLocation(message.offsetX, message.offsetY, message.offsetZ);
-					vehicle.removePart(partToRemove, false);
+					if(vehicle != null){
+						APart partToRemove = vehicle.getPartAtLocation(message.offsetX, message.offsetY, message.offsetZ);
+						vehicle.removePart(partToRemove, false);
+					}
 				}
 			});
 			return null;
