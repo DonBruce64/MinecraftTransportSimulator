@@ -33,6 +33,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleI
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
 import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
@@ -408,6 +409,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		switch(variable.substring(0, variable.lastIndexOf('_'))){
 			case("magneto"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.magnetoOn ? 30 : 0) : 0;
 			case("starter"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.esOn ? 30 : 0) : 0;
+			case("pitch"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).childParts.get(0) instanceof PartEngineAircraft ? ((PartEngineAircraft) vehicle.getEngineByNumber(index).childParts.get(0)).propeller.currentPitch : 0) : 0;
 			default: return 0;
 		}
 	}
