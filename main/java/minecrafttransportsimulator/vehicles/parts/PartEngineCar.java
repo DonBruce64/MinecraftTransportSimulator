@@ -129,7 +129,6 @@ public class PartEngineCar extends APartEngine{
 				RPM = Math.max(RPM - 10, 0);
 			}
 		}
-		System.out.println(engineForce);
 		
 		//Set engine and driveshaft rotations for rendering of parts of models.
 		engineRotationLast = engineRotation;

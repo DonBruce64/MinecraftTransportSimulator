@@ -53,6 +53,9 @@ public class PacketFuelPumpConnection extends APacketTileEntity{
 						}
 						if(pump.getInfo().fluid != null){
 							pump.getInfo().fluid.amount = message.amountPresent;
+							if(message.amountPresent == 0){
+								pump.clearFluid();
+							}
 						}
 						pump.totalTransfered = message.amountTransferred;
 					}

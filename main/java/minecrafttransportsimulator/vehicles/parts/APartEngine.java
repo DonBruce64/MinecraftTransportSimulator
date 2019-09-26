@@ -229,12 +229,13 @@ public abstract class APartEngine extends APart implements FXPart{
 				}
 			}
 
-			if(!isCreative){
-				fuelFlow = Math.min(pack.engine.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor")*RPM*(fuelLeak ? 1.5F : 1.0F)/pack.engine.maxRPM, vehicle.fuel);
+			if(!isCreative && !vehicle.fluidName.isEmpty()){
+				fuelFlow = pack.engine.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor")/ConfigSystem.getFuelValue(pack.engine.fuelType, vehicle.fluidName)*RPM*(fuelLeak ? 1.5F : 1.0F)/pack.engine.maxRPM;
 				vehicle.fuel -= fuelFlow;
 			}
+			
 			if(!vehicle.world.isRemote){
-				if(vehicle.fuel == 0 && pack.engine.fuelConsumption != 0 && !isCreative){
+				if(vehicle.fuel == 0 && !isCreative){
 					stallEngine(PacketEngineTypes.FUEL_OUT);
 				}else if(RPM < engineStallRPM){
 					stallEngine(PacketEngineTypes.TOO_SLOW);
@@ -399,9 +400,6 @@ public abstract class APartEngine extends APart implements FXPart{
 		}else{
 			if(!packetType.equals(PacketEngineTypes.DROWN)){
 				internalFuel = 100;
-				if(packetType.equals(PacketEngineTypes.FUEL_OUT)){
-					vehicle.fuel = 0;
-				}
 			}
 			MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
 		}

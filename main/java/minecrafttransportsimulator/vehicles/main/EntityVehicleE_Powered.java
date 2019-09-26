@@ -44,6 +44,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	public double electricPower = 12;
 	public double electricUsage;
 	public double electricFlow;
+	public String fluidName = "";
 	public Vec3d velocityVec = Vec3d.ZERO;
 	
 	private byte numberEngineBays = 0;
@@ -65,7 +66,10 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		super.onEntityUpdate();
 		if(pack != null){
 			updateHeadingVec();
-			if(fuel < 0){fuel = 0;}
+			if(fuel <= 0){
+				fuel = 0;
+				fluidName = "";
+			}
 			if(electricPower > 2){
 				for(LightTypes light : lightsOn){
 					if(light.hasBeam){
@@ -125,9 +129,11 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 				if(part instanceof PartBarrel){
 					PartBarrel barrel = (PartBarrel) part;
 					if(barrel.getFluid() != null){
-						double fuelFactor = ConfigSystem.getFuelValue(FluidRegistry.getFluidName(barrel.getFluid().getFluid()));
-						if(fuelFactor > 0){
-							fuelPresent += barrel.getFluidAmount()*fuelFactor;
+						for(String fuelName : ConfigSystem.getAllFuels()){
+							double fuelFactor = ConfigSystem.getFuelValue(fuelName, FluidRegistry.getFluidName(barrel.getFluid().getFluid()));
+							if(fuelFactor > 0){
+								fuelPresent += barrel.getFluidAmount()*fuelFactor;
+							}
 						}
 					}
 				}
@@ -307,6 +313,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		this.throttle=tagCompound.getByte("throttle");
 		this.fuel=tagCompound.getDouble("fuel");
 		this.electricPower=tagCompound.getDouble("electricPower");
+		this.fluidName=tagCompound.getString("fluidName");
 		
 		lightsOn.clear();
 		String lightsOnString = tagCompound.getString("lightsOn");
@@ -339,6 +346,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		tagCompound.setByte("throttle", this.throttle);
 		tagCompound.setDouble("fuel", this.fuel);
 		tagCompound.setDouble("electricPower", this.electricPower);
+		tagCompound.setString("fluidName", this.fluidName);
 		
 		String lightsOnString = "";
 		for(LightTypes light : this.lightsOn){
