@@ -188,8 +188,7 @@ public abstract class APart{
 	}
 	
 	public final VehicleAxisAlignedBB getAABBWithOffset(Vec3d boxOffset){
-		Vec3d totalOffset = partPos.add(boxOffset);
-		return new VehicleAxisAlignedBB(totalOffset, this.offset, this.getWidth(), this.getHeight(), false, false);
+		return new VehicleAxisAlignedBB(Vec3d.ZERO.equals(boxOffset) ? partPos : partPos.add(boxOffset), this.offset, this.getWidth(), this.getHeight(), false, false);
 	}
 	
 	/**Gets the rotation vector for rendering.
