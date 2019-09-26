@@ -32,7 +32,7 @@ public final class CameraSystem{
 	}
 	
 	public static void changeCameraZoom(boolean zoomOut){
-		if(zoomLevel < 40 && zoomOut){
+		if(zoomLevel < 120 && zoomOut){
 			zoomLevel +=2;
 		}else if(zoomLevel > 4 && !zoomOut){
 			zoomLevel -=2;
