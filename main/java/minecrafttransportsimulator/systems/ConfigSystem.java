@@ -8,22 +8,8 @@ import java.util.Map;
 import java.util.Set;
 
 import minecrafttransportsimulator.dataclasses.PackPartObject;
-import minecrafttransportsimulator.vehicles.parts.PartBarrel;
-import minecrafttransportsimulator.vehicles.parts.PartCrate;
-import minecrafttransportsimulator.vehicles.parts.PartCustom;
-import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
-import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
-import minecrafttransportsimulator.vehicles.parts.PartEngineJet;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceSkid;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceWheel;
-import minecrafttransportsimulator.vehicles.parts.PartGunFixed;
-import minecrafttransportsimulator.vehicles.parts.PartPropeller;
-import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.fluids.FluidRegistry;
 
 /**Class that handles all configuration settings.
  * Methods are separated into client and server configs
@@ -92,8 +78,9 @@ public final class ConfigSystem{
 				case "avgas": defaultValues = new String[]{"lava:1.0", "gasoline:1.0"}; break;
 				default: defaultValues = new String[]{"lava:1.0"}; break;
 			}
+
 			Map<String, Double> fluidPotencies = new HashMap<String, Double>();
-			for(String configEntry : config.get(FUEL_CONFIG, fuelName, new String[]{"lava:1.0", }).getStringList()){
+			for(String configEntry : config.get(FUEL_CONFIG, fuelName, defaultValues).getStringList()){
 				String fluidName = configEntry.substring(0, configEntry.indexOf(':'));
 				double fluidPotency = Double.valueOf(configEntry.substring(configEntry.indexOf(':') + 1));
 				fluidPotencies.put(fluidName, fluidPotency);
