@@ -1,0 +1,124 @@
+﻿{
+	"credit": "Made with Blockbench",
+	"textures": {
+		"0": "mts:blocks/propellerbench",
+		"particle": "mts:blocks/propellerbench"
+	},
+	"display": {
+        "gui": {
+            "rotation": [ 30, 315, 0 ],
+            "translation": [ 1, -2, 0],
+            "scale":[0.4, 0.4, 0.4]
+        }
+    },
+	"elements": [
+		{
+			"name": "Plate",
+			"from": [-7.75, 13, 5.25],
+			"to": [24.25, 16, 19.25],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+			"faces": {
+				"north": {"uv": [11.5, 6.25, 7.5, 6.625], "texture": "#0"},
+				"east": {"uv": [7.5, 6.25, 5.75, 6.625], "texture": "#0"},
+				"south": {"uv": [5.75, 6.25, 1.75, 6.625], "texture": "#0"},
+				"west": {"uv": [1.75, 6.25, 0, 6.625], "texture": "#0"},
+				"up": {"uv": [1.75, 4.5, 5.75, 6.25], "texture": "#0", "rotation": 180},
+				"down": {"uv": [5.75, 6.25, 9.75, 4.5], "texture": "#0", "rotation": 180}
+			}
+		},
+		{
+			"name": "UpperBase",
+			"from": [4.25, 7, -6.75],
+			"to": [12.25, 13, 22.25],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+			"faces": {
+				"north": {"uv": [9.25, 13.5, 8.25, 14.25], "texture": "#0"},
+				"east": {"uv": [3.625, 13.5, 0, 14.25], "texture": "#0"},
+				"south": {"uv": [4.625, 13.5, 3.625, 14.25], "texture": "#0"},
+				"west": {"uv": [8.25, 13.5, 4.625, 14.25], "texture": "#0"},
+				"up": {"uv": [4.625, 9.875, 3.625, 13.5], "texture": "#0", "rotation": 180}
+			}
+		},
+		{
+			"name": "Base",
+			"from": [0.25, 0, -6.75],
+			"to": [16.25, 7, 22.25],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+			"faces": {
+				"north": {"uv": [11.25, 3.625, 9.25, 4.5], "texture": "#0"},
+				"east": {"uv": [3.625, 3.625, 0, 4.5], "texture": "#0"},
+				"south": {"uv": [5.625, 3.625, 3.625, 4.5], "texture": "#0"},
+				"west": {"uv": [9.25, 3.625, 5.625, 4.5], "texture": "#0"},
+				"up": {"uv": [5.625, 0, 3.625, 3.625], "texture": "#0", "rotation": 180},
+				"down": {"uv": [0, 16, 16, 0], "texture": "#0", "rotation": 180}
+			}
+		},
+		{
+			"name": "TopBase",
+			"from": [1.25, 13, -6.75],
+			"to": [15.25, 24, 1.25],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+			"faces": {
+				"north": {"uv": [5.5, 7.75, 3.75, 9], "texture": "#0"},
+				"east": {"uv": [1, 7.625, 0, 9], "texture": "#0"},
+				"south": {"uv": [2.75, 7.75, 1, 9], "texture": "#0"},
+				"west": {"uv": [3.75, 7.625, 2.75, 9], "texture": "#0"},
+				"up": {"uv": [1, 7.625, 2.75, 6.625], "texture": "#0", "rotation": 180},
+				"down": {"uv": [1, 10, 2.75, 9], "texture": "#0", "rotation": 180}
+			}
+		},
+		{
+			"name": "Top",
+			"from": [4.75, 24, -3.75],
+			"to": [11.75, 29, 17.25],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+			"faces": {
+				"north": {"uv": [10, 9.25, 9, 9.875], "texture": "#0"},
+				"east": {"uv": [5.625, 9.25, 3.25, 9.875], "texture": "#0"},
+				"south": {"uv": [6.625, 9.25, 5.625, 9.875], "texture": "#0"},
+				"west": {"uv": [9, 9.25, 6.625, 9.875], "texture": "#0"},
+				"up": {"uv": [5.625, 9.25, 6.625, 7], "texture": "#0", "rotation": 180},
+				"down": {"uv": [6.625, 9.25, 7.625, 7], "texture": "#0", "rotation": 180}
+			}
+		},
+		{
+			"name": "NorthBit",
+			"from": [7.75, 19, 15.25],
+			"to": [8.75, 24, 16.25],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+			"faces": {
+				"north": {"uv": [3.5, 3.125, 3.375, 3.625], "texture": "#0"},
+				"east": {"uv": [3.25, 3.125, 3.125, 3.625], "texture": "#0"},
+				"south": {"uv": [3.625, 3.125, 3.5, 3.625], "texture": "#0"},
+				"west": {"uv": [3.375, 3.125, 3.25, 3.625], "texture": "#0"},
+				"down": {"uv": [3.25, 3, 3.375, 3.125], "texture": "#0", "rotation": 180}
+			}
+		},
+		{
+			"name": "LowerSouthBit",
+			"from": [7.75, 19, 7.75],
+			"to": [8.75, 21, 8.75],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+			"faces": {
+				"north": {"uv": [3.5, 0.125, 3.375, 0.375], "texture": "#0"},
+				"east": {"uv": [3.125, 0.125, 3, 0.375], "texture": "#0"},
+				"south": {"uv": [3.25, 0.125, 3.125, 0.375], "texture": "#0"},
+				"west": {"uv": [3.375, 0.125, 3.25, 0.375], "texture": "#0"},
+				"down": {"uv": [3.125, 0.125, 3.25, 0], "texture": "#0", "rotation": 180}
+			}
+		},
+		{
+			"name": "UpperSouthBit",
+			"from": [7.25, 21, 7.25],
+			"to": [9.25, 24, 9.25],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+			"faces": {
+				"north": {"uv": [3.375, 2.875, 3.625, 2.5], "texture": "#0"},
+				"east": {"uv": [2.625, 2.875, 2.875, 2.5], "texture": "#0"},
+				"south": {"uv": [2.875, 2.875, 3.125, 2.5], "texture": "#0"},
+				"west": {"uv": [3.125, 2.875, 3.375, 2.5], "texture": "#0"},
+				"down": {"uv": [2.875, 2.5, 3.125, 2.25], "texture": "#0", "rotation": 180}
+			}
+		}
+	]
+}
