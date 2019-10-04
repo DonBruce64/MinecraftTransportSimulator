@@ -94,7 +94,7 @@ public abstract class APartGroundDevice extends APart{
 	public float getFrictionLoss(){
 		//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
 		BlockPos pos = new BlockPos(partPos.addVector(0, -1, 0));
-		return 0.6F - vehicle.world.getBlockState(pos).getBlock().getSlipperiness(vehicle.world.getBlockState(pos), vehicle.world, pos, null);
+		return 0.6F - vehicle.world.getBlockState(pos).getBlock().getSlipperiness(vehicle.world.getBlockState(pos), vehicle.world, pos, null) + (vehicle.world.isRainingAt(pos.up()) ? 0.25F : 0);
 	}
 	
 	public boolean isOnGround(){

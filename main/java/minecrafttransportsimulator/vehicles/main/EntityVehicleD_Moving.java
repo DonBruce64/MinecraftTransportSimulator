@@ -908,7 +908,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			if(!world.getCollisionBoxes(null, box.offset(0, -0.05F, 0)).isEmpty()){
 				//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
 				BlockPos pos = new BlockPos(box.pos.addVector(0, -1, 0));
-				float frictionLoss = 0.6F - world.getBlockState(pos).getBlock().getSlipperiness(world.getBlockState(pos), world, pos, null);
+				float frictionLoss = 0.6F - world.getBlockState(pos).getBlock().getSlipperiness(world.getBlockState(pos), world, pos, null) + (world.isRainingAt(pos.up()) ? 0.25F : 0);
 				brakingFactor += Math.max(2.0 - frictionLoss, 0);
 			}
 		}
