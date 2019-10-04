@@ -31,8 +31,13 @@ public class PartEngineAircraft extends APartEngine{
 			double engineRPMDifference = engineTargetRPM - RPM;
 			if(propeller != null){
 				double propellerForcePenalty = (propeller.pack.propeller.diameter - 75)/(50*this.pack.engine.fuelConsumption - 15);
-				double propellerFeedback = -(plane.velocity - 0.0254*Math.abs(propeller.currentPitch)*RPM*pack.engine.gearRatios[0]/60/20 - propellerForcePenalty)*25;
-				RPM += engineRPMDifference/10 - propellerFeedback;
+				double propellerFeedback = (0.0254*Math.abs(propeller.currentPitch)*RPM*pack.engine.gearRatios[0]/60/20 - plane.velocity + propellerForcePenalty)*50;
+				//PropellerFeedback can't make an engine stall, but hours can.
+				if(RPM + engineRPMDifference/10 > engineStallRPM && RPM + engineRPMDifference/10 - propellerFeedback < engineStallRPM){
+					RPM = engineStallRPM;
+				}else{
+					RPM += engineRPMDifference/10 - propellerFeedback;	
+				}				
 			}else{
 				RPM += engineRPMDifference/10;
 			}
