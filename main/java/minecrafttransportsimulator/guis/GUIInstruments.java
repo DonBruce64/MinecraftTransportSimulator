@@ -36,7 +36,7 @@ public class GUIInstruments extends GuiScreen{
 
 	@Override
     public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
-		if(vehicle.isDead || player.getDistance(vehicle.posX, vehicle.posY, vehicle.posZ) > 20){
+		if(vehicle.isDead){
 			mc.player.closeScreen();
 			return;
 		}
