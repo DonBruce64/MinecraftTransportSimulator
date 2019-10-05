@@ -54,7 +54,7 @@ public class PartEngineAircraft extends APartEngine{
 	
 	@Override
 	public double getForceOutput(){
-		if(propeller != null && propeller.currentPitch != 0 && state.running){
+		if(propeller != null && Math.abs(propeller.currentPitch) > 20 && state.running){
 			//Get what the pitch velocity of the propeller would be at the current velocity.
 			double currentPitchVelocity = vehicle.velocity*20D;
 			//Get the effective pitch velocity of the propeller at the current RPM.
