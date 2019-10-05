@@ -71,9 +71,9 @@ import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowFix;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.item.Item;
@@ -324,7 +324,7 @@ public final class MTSRegistry{
 	private static void initEntities(){
 		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Car.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Car.class, "vehiclecar", entityNumber++, MTS.MODID, 80, 5, false);
 		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Boat.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Boat.class, "vehicleboat", entityNumber++, MTS.MODID, 80, 5, false);
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleF_Plane.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleF_Plane.class, "vehicleplane", entityNumber++, MTS.MODID, 80, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Plane.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Plane.class, "vehicleplane", entityNumber++, MTS.MODID, 80, 5, false);
 	}
 	
 	private static void initPackets(){

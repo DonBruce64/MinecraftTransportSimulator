@@ -9,7 +9,7 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -52,9 +52,9 @@ public class PartPropeller extends APart{
 		super.updatePart();
 		//If we are a dynamic-pitch propeller, adjust ourselves to the speed of the engine.
 		if(pack.propeller.isDynamicPitch){
-			if(((EntityVehicleF_Plane) vehicle).reverseThrust && currentPitch > -45){
+			if(((EntityVehicleF_Air) vehicle).reverseThrust && currentPitch > -45){
 				--currentPitch;
-			}else if(!((EntityVehicleF_Plane) vehicle).reverseThrust && currentPitch < 45){
+			}else if(!((EntityVehicleF_Air) vehicle).reverseThrust && currentPitch < 45){
 				++currentPitch;
 			}else if(connectedEngine.RPM < connectedEngine.pack.engine.maxRPM*0.80 && currentPitch > 45){
 				--currentPitch;

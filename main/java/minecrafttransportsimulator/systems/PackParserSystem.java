@@ -37,9 +37,9 @@ import minecrafttransportsimulator.items.parts.ItemPartGun;
 import minecrafttransportsimulator.items.parts.ItemPartPropeller;
 import minecrafttransportsimulator.items.parts.ItemPartSeat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.vehicles.parts.PartCrate;
@@ -283,7 +283,7 @@ public final class PackParserSystem{
     	switch(getVehiclePack(vehicleName).general.type){
 			case "car": return EntityVehicleG_Car.class;
 			case "boat": return EntityVehicleG_Boat.class;
-			case "plane": return EntityVehicleF_Plane.class;
+			case "plane": return EntityVehicleG_Plane.class;
 			default: return null;
 		}
     }

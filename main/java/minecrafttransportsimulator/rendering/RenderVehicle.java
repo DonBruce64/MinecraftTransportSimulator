@@ -30,7 +30,8 @@ import minecrafttransportsimulator.systems.SFXSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
@@ -393,14 +394,14 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue(vehicle, partialTicks) + 180F));
 			case("steeringwheel"): return vehicle.getSteerAngle();
 			
-			case("aileron"): return ((EntityVehicleF_Plane) vehicle).aileronAngle/10F;
-			case("elevator"): return ((EntityVehicleF_Plane) vehicle).elevatorAngle/10F;
-			case("rudder"): return ((EntityVehicleF_Plane) vehicle).rudderAngle/10F;
-			case("flap"): return ((EntityVehicleF_Plane) vehicle).flapCurrentAngle/10F;
-			case("trim_aileron"): return ((EntityVehicleF_Plane) vehicle).aileronTrim/10F;
-			case("trim_elevator"): return ((EntityVehicleF_Plane) vehicle).elevatorTrim/10F;
-			case("trim_rudder"): return ((EntityVehicleF_Plane) vehicle).rudderTrim/10F;
-			case("reverser"): return ((EntityVehicleF_Plane) vehicle).reversePercent/1F;
+			case("aileron"): return ((EntityVehicleF_Air) vehicle).aileronAngle/10F;
+			case("elevator"): return ((EntityVehicleF_Air) vehicle).elevatorAngle/10F;
+			case("rudder"): return ((EntityVehicleF_Air) vehicle).rudderAngle/10F;
+			case("flap"): return ((EntityVehicleG_Plane) vehicle).flapCurrentAngle/10F;
+			case("trim_aileron"): return ((EntityVehicleF_Air) vehicle).aileronTrim/10F;
+			case("trim_elevator"): return ((EntityVehicleF_Air) vehicle).elevatorTrim/10F;
+			case("trim_rudder"): return ((EntityVehicleF_Air) vehicle).rudderTrim/10F;
+			case("reverser"): return ((EntityVehicleF_Air) vehicle).reversePercent/1F;
 		}
 		
 		//If we aren't a static variable, we are a part-specific variable.
@@ -437,14 +438,14 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue(vehicle, partialTicks)));
 			case("steeringwheel"): return vehicle.getSteerAngle()/35F;
 			
-			case("aileron"): return ((EntityVehicleF_Plane) vehicle).aileronAngle/350F;
-			case("elevator"): return ((EntityVehicleF_Plane) vehicle).elevatorAngle/350F;
-			case("rudder"): return ((EntityVehicleF_Plane) vehicle).rudderAngle/350F;
-			case("flap"): return ((EntityVehicleF_Plane) vehicle).flapCurrentAngle/350F;
-			case("trim_aileron"): return ((EntityVehicleF_Plane) vehicle).aileronTrim/350F;
-			case("trim_elevator"): return ((EntityVehicleF_Plane) vehicle).elevatorTrim/350F;
-			case("trim_rudder"): return ((EntityVehicleF_Plane) vehicle).rudderTrim/350F;
-			case("reverser"): return ((EntityVehicleF_Plane) vehicle).reversePercent/100F;
+			case("aileron"): return ((EntityVehicleF_Air) vehicle).aileronAngle/350F;
+			case("elevator"): return ((EntityVehicleF_Air) vehicle).elevatorAngle/350F;
+			case("rudder"): return ((EntityVehicleF_Air) vehicle).rudderAngle/350F;
+			case("flap"): return ((EntityVehicleG_Plane) vehicle).flapCurrentAngle/350F;
+			case("trim_aileron"): return ((EntityVehicleF_Air) vehicle).aileronTrim/350F;
+			case("trim_elevator"): return ((EntityVehicleF_Air) vehicle).elevatorTrim/350F;
+			case("trim_rudder"): return ((EntityVehicleF_Air) vehicle).rudderTrim/350F;
+			case("reverser"): return ((EntityVehicleF_Air) vehicle).reversePercent/100F;
 		}
 		
 		//If we aren't a static variable, we are a part-specific variable.

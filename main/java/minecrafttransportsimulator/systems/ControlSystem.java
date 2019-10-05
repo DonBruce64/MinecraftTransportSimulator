@@ -27,8 +27,8 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEn
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartGun;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
@@ -140,8 +140,8 @@ public final class ControlSystem{
 	}
 	
 	public static void controlVehicle(EntityVehicleE_Powered vehicle, boolean isPlayerController){
-		if(vehicle instanceof EntityVehicleF_Plane){
-			controlAircraft((EntityVehicleF_Plane) vehicle, isPlayerController);
+		if(vehicle instanceof EntityVehicleF_Air){
+			controlAircraft((EntityVehicleF_Air) vehicle, isPlayerController);
 		}else if(vehicle instanceof EntityVehicleF_Ground){
 			controlGroundVehicle((EntityVehicleF_Ground) vehicle, isPlayerController);
 		}
@@ -299,7 +299,7 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlAircraft(EntityVehicleF_Plane aircraft, boolean isPlayerController){
+	private static void controlAircraft(EntityVehicleF_Air aircraft, boolean isPlayerController){
 		controlCamera(ControlsKeyboardDynamic.AIRCRAFT_CHANGEHUD, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEHUD, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
 		if(!isPlayerController){
@@ -337,7 +337,7 @@ public final class ControlSystem{
 		}		
 		
 		//Check flaps.
-		if(aircraft.pack.general.type.equals("plane") && aircraft.pack.plane.hasFlaps){
+		if(aircraft.pack.plane != null && aircraft.pack.plane.hasFlaps){
 			if(ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed()){
 				MTS.MTSNet.sendToServer(new FlapPacket(aircraft.getEntityId(), (byte) -50));
 			}
