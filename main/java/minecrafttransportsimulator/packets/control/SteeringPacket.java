@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -47,14 +47,14 @@ public class SteeringPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityVehicleF_Car vehicle;
+					EntityVehicleF_Ground vehicle;
 					if(ctx.side.isServer()){
-						vehicle = (EntityVehicleF_Car) ctx.getServerHandler().player.world.getEntityByID(message.id);
+						vehicle = (EntityVehicleF_Ground) ctx.getServerHandler().player.world.getEntityByID(message.id);
 					}else{
 						if(Minecraft.getMinecraft().world == null){
 							return;
 						}
-						vehicle = (EntityVehicleF_Car) Minecraft.getMinecraft().world.getEntityByID(message.id);
+						vehicle = (EntityVehicleF_Ground) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
 					if(vehicle!=null){
 						if(message.packetType == 1){

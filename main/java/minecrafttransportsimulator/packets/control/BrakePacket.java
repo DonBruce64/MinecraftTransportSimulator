@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.control;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleD_Moving;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -51,7 +51,7 @@ public class BrakePacket implements IMessage{
 						if((message.brakeCode & 8) == 8){
 							boolean wasParkingBrakeOn = vehicle.parkingBrakeOn;
 							vehicle.parkingBrakeOn = (message.brakeCode & 4) == 4 ? true : false;
-							if(vehicle.parkingBrakeOn && !wasParkingBrakeOn && vehicle instanceof EntityVehicleF_Car && vehicle.pack != null && vehicle.pack.car.isBigTruck && vehicle.world.isRemote){
+							if(vehicle.parkingBrakeOn && !wasParkingBrakeOn && vehicle instanceof EntityVehicleG_Car && vehicle.pack != null && vehicle.pack.car.isBigTruck && vehicle.world.isRemote){
 								MTS.proxy.playSound(vehicle.getPositionVector(), MTS.MODID + ":air_brake_activating", 1.0F, 1);
 							}
 						}

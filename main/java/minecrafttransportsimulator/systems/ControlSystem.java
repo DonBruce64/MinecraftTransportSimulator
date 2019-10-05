@@ -27,7 +27,7 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEn
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartGun;
@@ -142,8 +142,8 @@ public final class ControlSystem{
 	public static void controlVehicle(EntityVehicleE_Powered vehicle, boolean isPlayerController){
 		if(vehicle instanceof EntityVehicleF_Plane){
 			controlAircraft((EntityVehicleF_Plane) vehicle, isPlayerController);
-		}else if(vehicle instanceof EntityVehicleF_Car){
-			controlCar((EntityVehicleF_Car) vehicle, isPlayerController);
+		}else if(vehicle instanceof EntityVehicleF_Ground){
+			controlGroundVehicle((EntityVehicleF_Ground) vehicle, isPlayerController);
 		}
 	}
 	
@@ -417,44 +417,44 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlCar(EntityVehicleF_Car car, boolean isPlayerController){
+	private static void controlGroundVehicle(EntityVehicleF_Ground powered, boolean isPlayerController){
 		controlCamera(ControlsKeyboardDynamic.CAR_CHANGEHUD, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEHUD, ControlsJoystick.CAR_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
 		if(!isPlayerController){
 			return;
 		}
-		controlBrake(ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE_ANALOG, ControlsJoystick.CAR_PARK, car.getEntityId());
-		controlGun(car, ControlsKeyboard.CAR_GUN);
+		controlBrake(ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE_ANALOG, ControlsJoystick.CAR_PARK, powered.getEntityId());
+		controlGun(powered, ControlsKeyboard.CAR_GUN);
 		
 		//Change gas to on or off.
 		if(joystickMap.containsKey(ControlsJoystick.CAR_GAS.joystickAssigned) && ControlsJoystick.CAR_GAS.joystickButton != NULL_COMPONENT){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_GAS, (short) 0)));
+			MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_GAS, (short) 0)));
 		}else{
 			if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
-				MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) 50));
+				MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) 50));
 			}else if(ControlsKeyboard.CAR_GAS.isPressed()){
-				MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) 100));
+				MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) 100));
 			}else{
-				MTS.MTSNet.sendToServer(new ThrottlePacket(car.getEntityId(), (byte) 0));
+				MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) 0));
 			}
 		}
 		
 		//Check steering, turn signals, and lights.
 		if(ControlsKeyboardDynamic.CAR_SIREN.isPressed()){
-			MTS.MTSNet.sendToServer(new SirenPacket(car.getEntityId()));
+			MTS.MTSNet.sendToServer(new SirenPacket(powered.getEntityId()));
 		}else if(ControlsKeyboard.CAR_LIGHTS_SPECIAL.isPressed()){
-			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.EMERGENCYLIGHT));
+			MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.EMERGENCYLIGHT));
 		}
 			
 			
 		if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_R.isPressed()){
-			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.RIGHTTURNLIGHT));
+			MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.RIGHTTURNLIGHT));
 		}else if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_L.isPressed()){
-			MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.LEFTTURNLIGHT));
+			MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.LEFTTURNLIGHT));
 		}else{
 			if(ControlsKeyboard.CAR_LIGHTS.isPressed()){
-				MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.HEADLIGHT));
-				MTS.MTSNet.sendToServer(new LightPacket(car.getEntityId(), LightTypes.RUNNINGLIGHT));
+				MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.HEADLIGHT));
+				MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.RUNNINGLIGHT));
 			}
 			//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 			if(ConfigSystem.getBooleanConfig("MouseYoke")){
@@ -463,49 +463,49 @@ public final class ControlSystem{
 					if(Math.abs(dx) < 100){
 						mousePosX = (short) Math.max(Math.min(mousePosX + dx*10, 450), -450);
 					}
-					MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), mousePosX));
+					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), mousePosX));
 				}
 			}else{
 				if(joystickMap.containsKey(ControlsJoystick.CAR_TURN.joystickAssigned) && ControlsJoystick.CAR_TURN.joystickButton != NULL_COMPONENT){
-					MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), getJoystickAxisState(ControlsJoystick.CAR_TURN, (short) 450)));
+					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), getJoystickAxisState(ControlsJoystick.CAR_TURN, (short) 450)));
 				}else{
 					boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
 					boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();
 					if(turningRight && !turningLeft){
-						MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+						MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
 					}else if(turningLeft && !turningRight){
-						MTS.MTSNet.sendToServer(new SteeringPacket(car.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+						MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
 					}
 				}
 			}
 		}
 		
 		//Check starter.
-		if(car.getEngineByNumber((byte) 0) != null){
+		if(powered.getEngineByNumber((byte) 0) != null){
 			if(ControlsKeyboardDynamic.CAR_STOP.isPressed() || ControlsJoystick.CAR_STOP.isPressed()){
-				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_OFF));
+				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_OFF));
 			}else if(ControlsKeyboard.CAR_START.isPressed()){
-				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_ON));
-				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 0), PacketEngineTypes.ES_ON));
+				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_ON));
+				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.ES_ON));
 			}else{
-				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(car.getEngineByNumber((byte) 0), PacketEngineTypes.ES_OFF));
+				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.ES_OFF));
 			}
 		}
 		
 		
 		//Check if we are shifting.
 		if(ControlsKeyboard.CAR_SHIFT_U.isPressed()){
-			MTS.MTSNet.sendToServer(new ShiftPacket(car.getEntityId(), true));
+			MTS.MTSNet.sendToServer(new ShiftPacket(powered.getEntityId(), true));
 		}
 		if(ControlsKeyboard.CAR_SHIFT_D.isPressed()){
-			MTS.MTSNet.sendToServer(new ShiftPacket(car.getEntityId(), false));
+			MTS.MTSNet.sendToServer(new ShiftPacket(powered.getEntityId(), false));
 		}
 		
 		//Check if horn button is pressed.
 		if(ControlsKeyboard.CAR_HORN.isPressed()){
-			MTS.MTSNet.sendToServer(new HornPacket(car.getEntityId(), true));
+			MTS.MTSNet.sendToServer(new HornPacket(powered.getEntityId(), true));
 		}else{
-			MTS.MTSNet.sendToServer(new HornPacket(car.getEntityId(), false));
+			MTS.MTSNet.sendToServer(new HornPacket(powered.getEntityId(), false));
 		}
 	}
 		

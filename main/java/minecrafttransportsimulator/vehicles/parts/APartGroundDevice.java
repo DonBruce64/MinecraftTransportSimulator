@@ -6,7 +6,7 @@ import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceWheel;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -73,7 +73,7 @@ public abstract class APartGroundDevice extends APart{
 					}
 				}
 			}
-		}else if(!(vehicle instanceof EntityVehicleF_Car)){
+		}else if(!(vehicle instanceof EntityVehicleG_Car)){
 			if(vehicle.brakeOn || vehicle.parkingBrakeOn){
 				angularVelocity = 0;
 			}else if(angularVelocity>0){

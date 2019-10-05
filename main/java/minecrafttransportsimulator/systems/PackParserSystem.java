@@ -26,6 +26,7 @@ import minecrafttransportsimulator.items.parts.ItemPartBullet;
 import minecrafttransportsimulator.items.parts.ItemPartCrate;
 import minecrafttransportsimulator.items.parts.ItemPartCustom;
 import minecrafttransportsimulator.items.parts.ItemPartEngineAircraft;
+import minecrafttransportsimulator.items.parts.ItemPartEngineBoat;
 import minecrafttransportsimulator.items.parts.ItemPartEngineCar;
 import minecrafttransportsimulator.items.parts.ItemPartEngineJet;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDevicePontoon;
@@ -36,13 +37,15 @@ import minecrafttransportsimulator.items.parts.ItemPartGun;
 import minecrafttransportsimulator.items.parts.ItemPartPropeller;
 import minecrafttransportsimulator.items.parts.ItemPartSeat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.vehicles.parts.PartCrate;
 import minecrafttransportsimulator.vehicles.parts.PartCustom;
 import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
+import minecrafttransportsimulator.vehicles.parts.PartEngineBoat;
 import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import minecrafttransportsimulator.vehicles.parts.PartEngineJet;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
@@ -278,7 +281,8 @@ public final class PackParserSystem{
     
     public static Class<? extends EntityVehicleE_Powered> getVehicleClass(String vehicleName){
     	switch(getVehiclePack(vehicleName).general.type){
-			case "car": return EntityVehicleF_Car.class;
+			case "car": return EntityVehicleG_Car.class;
+			case "boat": return EntityVehicleG_Boat.class;
 			case "plane": return EntityVehicleF_Plane.class;
 			default: return null;
 		}
@@ -333,6 +337,7 @@ public final class PackParserSystem{
 			case "engine_aircraft": return PartEngineAircraft.class;
 			case "engine_jet": return PartEngineJet.class;
 			case "engine_car": return PartEngineCar.class;
+			case "engine_boat": return PartEngineBoat.class;
 			case "wheel": return PartGroundDeviceWheel.class;
 			case "skid": return PartGroundDeviceSkid.class;
 			case "pontoon": return PartGroundDevicePontoon.class;
@@ -355,6 +360,7 @@ public final class PackParserSystem{
 			case "engine_aircraft": return ItemPartEngineAircraft.class;
 			case "engine_jet": return ItemPartEngineJet.class;
 			case "engine_car": return ItemPartEngineCar.class;
+			case "engine_boat": return ItemPartEngineBoat.class;
 			case "wheel": return ItemPartGroundDeviceWheel.class;
 			case "skid": return ItemPartGroundDeviceSkid.class;
 			case "pontoon": return ItemPartGroundDevicePontoon.class;
