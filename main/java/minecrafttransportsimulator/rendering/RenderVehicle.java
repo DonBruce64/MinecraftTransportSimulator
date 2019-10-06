@@ -31,6 +31,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
@@ -156,23 +157,32 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	}
 	
 	private static void render(EntityVehicleE_Powered vehicle, EntityPlayer playerRendering, float partialTicks, boolean wasRenderedPrior){
-		//Calculate various things.
+		//If player is riding this vehicle, then we need to change how we render.
 		Entity renderViewEntity = minecraft.getRenderViewEntity();
-		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * (double)partialTicks;
-		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
-		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
-        
-        
-        double thisX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * (double)partialTicks;
-        double thisY = vehicle.lastTickPosY + (vehicle.posY - vehicle.lastTickPosY) * (double)partialTicks;
-        double thisZ = vehicle.lastTickPosZ + (vehicle.posZ - vehicle.lastTickPosZ) * (double)partialTicks;
-        double rotateYaw = -vehicle.rotationYaw + (vehicle.rotationYaw - vehicle.prevRotationYaw)*(double)(1 - partialTicks);
-        double rotatePitch = vehicle.rotationPitch - (vehicle.rotationPitch - vehicle.prevRotationPitch)*(double)(1 - partialTicks);
-        double rotateRoll = vehicle.rotationRoll - (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)(1 - partialTicks);
+		boolean isPlayerPassenger = vehicle.isPassenger(renderViewEntity);
 
-        //Set up position and lighting.
-        GL11.glPushMatrix();
-        GL11.glTranslated(thisX - playerX, thisY - playerY, thisZ - playerZ);
+		//Set up position.
+		GL11.glPushMatrix();
+		if(isPlayerPassenger){
+			GL11.glTranslated(vehicle.posX - renderViewEntity.posX, vehicle.posY - renderViewEntity.posY, vehicle.posZ - renderViewEntity.posZ);
+		}else{
+			double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * (double)partialTicks;
+			double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
+			double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
+	        double thisX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * (double)partialTicks;
+	        double thisY = vehicle.lastTickPosY + (vehicle.posY - vehicle.lastTickPosY) * (double)partialTicks;
+	        double thisZ = vehicle.lastTickPosZ + (vehicle.posZ - vehicle.lastTickPosZ) * (double)partialTicks;
+	        GL11.glTranslated(thisX - playerX, thisY - playerY, thisZ - playerZ);
+		}
+		
+       
+       
+       
+        if(vehicle instanceof EntityVehicleF_Ground && !Minecraft.getMinecraft().isGamePaused()){
+        	System.out.format("PlayerDX:%f PlayerX:%f PlayerLastX:%f TruckDX:%f TruckMotionX:%f\n", (vehicle.rotationYaw - vehicle.prevRotationYaw), vehicle.motionYaw, renderViewEntity.lastTickPosX, vehicle.motionX, vehicle.motionY);
+        }
+       
+        //Set up lighting.
         int lightVar = vehicle.getBrightnessForRender();
         minecraft.entityRenderer.enableLightmap();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
@@ -188,9 +198,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
 			GL11.glPushMatrix();
 			GL11.glShadeModel(GL11.GL_SMOOTH);
-			GL11.glRotated(rotateYaw, 0, 1, 0);
-	        GL11.glRotated(rotatePitch, 1, 0, 0);
-	        GL11.glRotated(rotateRoll, 0, 0, 1);
+			GL11.glRotated(-vehicle.rotationYaw, 0, 1, 0);
+	        GL11.glRotated(vehicle.rotationPitch, 1, 0, 0);
+	        GL11.glRotated(vehicle.rotationRoll, 0, 0, 1);
 			renderMainModel(vehicle, partialTicks);
 			renderParts(vehicle, partialTicks);
 			GL11.glEnable(GL11.GL_NORMALIZE);
@@ -231,9 +241,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 
 			GL11.glPushMatrix();
 			GL11.glEnable(GL11.GL_NORMALIZE);
-			GL11.glRotated(rotateYaw, 0, 1, 0);
-	        GL11.glRotated(rotatePitch, 1, 0, 0);
-	        GL11.glRotated(rotateRoll, 0, 0, 1);
+	        GL11.glRotated(-vehicle.rotationYaw, 0, 1, 0);
+	        GL11.glRotated(vehicle.rotationPitch, 1, 0, 0);
+	        GL11.glRotated(vehicle.rotationRoll, 0, 0, 1);
 	        renderLights(vehicle, sunLight, blockLight, lightBrightness, electricFactor, wasRenderedPrior, partialTicks);
 			GL11.glDisable(GL11.GL_NORMALIZE);
 			GL11.glPopMatrix();
