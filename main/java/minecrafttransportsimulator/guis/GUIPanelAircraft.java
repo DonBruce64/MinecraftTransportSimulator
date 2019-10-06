@@ -17,6 +17,7 @@ import minecrafttransportsimulator.rendering.RenderVehicle;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
@@ -108,13 +109,15 @@ public class GUIPanelAircraft extends GuiScreen{
 		//This is done in numerous places.
 		final boolean lightsOn = RenderInstruments.lightsOn(aircraft);
 		
-		//If we have propellers with reverse thrust capabilities, render the reverse thrust button.
-		haveReverseThrustOption = false;
-		for(APart part : aircraft.getVehicleParts()){
-			if(part instanceof PartPropeller){
-				if(part.pack.propeller.isDynamicPitch){
-					haveReverseThrustOption = true;
-					break;
+		//If we have propellers with reverse thrust capabilities, or are a blimp, render the reverse thrust button.
+		haveReverseThrustOption = aircraft instanceof EntityVehicleG_Blimp;
+		if(!haveReverseThrustOption){
+			for(APart part : aircraft.getVehicleParts()){
+				if(part instanceof PartPropeller){
+					if(part.pack.propeller.isDynamicPitch){
+						haveReverseThrustOption = true;
+						break;
+					}
 				}
 			}
 		}

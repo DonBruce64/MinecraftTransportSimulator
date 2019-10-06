@@ -2,6 +2,8 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class PartEngineAircraft extends APartEngine{
@@ -64,11 +66,20 @@ public class PartEngineAircraft extends APartEngine{
 			if(effectivePitchVelocity != 0){
 				//Get the angle of attack of the propeller.
 				double angleOfAttack = Math.abs(effectivePitchVelocity - currentPitchVelocity);
-				//Now return the thrust equation.  If the angle of attack is greater than 35, sap power off the propeller for stalling.
-				return vehicle.airDensity*Math.PI*Math.pow(0.0254*propeller.pack.propeller.diameter/2D, 2)*
+				double thrust = vehicle.airDensity*Math.PI*Math.pow(0.0254*propeller.pack.propeller.diameter/2D, 2)*
 						(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
-						Math.pow(propeller.pack.propeller.diameter/2D/Math.abs(propeller.currentPitch) + propeller.pack.propeller.numberBlades/1000D, 1.5)/400D
-						*(angleOfAttack > 35 ? 35/angleOfAttack : 1.0D)*Math.signum(effectivePitchVelocity);
+						Math.pow(propeller.pack.propeller.diameter/2D/Math.abs(propeller.currentPitch) + propeller.pack.propeller.numberBlades/1000D, 1.5)/400D;
+				//If the angle of attack is greater than 35, sap power off the propeller for stalling.
+				if(angleOfAttack > 35){
+					thrust *= 35/angleOfAttack;
+				}
+				//Get the correct sign of the force, taking engine systems into account.
+				if(vehicle instanceof EntityVehicleG_Blimp && ((EntityVehicleF_Air) vehicle).reverseThrust){
+					thrust *= -Math.signum(effectivePitchVelocity);
+				}else{
+					thrust *= Math.signum(effectivePitchVelocity);
+				}
+				return thrust;
 			}
 		}
 		return 0;

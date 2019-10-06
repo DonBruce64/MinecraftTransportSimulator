@@ -37,6 +37,7 @@ import minecrafttransportsimulator.items.parts.ItemPartGun;
 import minecrafttransportsimulator.items.parts.ItemPartPropeller;
 import minecrafttransportsimulator.items.parts.ItemPartSeat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
@@ -284,6 +285,7 @@ public final class PackParserSystem{
 			case "car": return EntityVehicleG_Car.class;
 			case "boat": return EntityVehicleG_Boat.class;
 			case "plane": return EntityVehicleG_Plane.class;
+			case "blimp": return EntityVehicleG_Blimp.class;
 			default: return null;
 		}
     }

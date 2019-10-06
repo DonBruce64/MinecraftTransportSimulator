@@ -8,6 +8,7 @@ public class PackVehicleObject{
 	public List<PackFileDefinitions> definitions = new ArrayList<PackFileDefinitions>();
     public PackMotorizedConfig motorized;
     public PackPlane plane;
+    public PackBlimp blimp;
     public PackCar car;
     public List<PackPart> parts = new ArrayList<PackPart>();
     public List<PackCollisionBox> collision = new ArrayList<PackCollisionBox>();
@@ -40,6 +41,13 @@ public class PackVehicleObject{
         public float tailDistance;
         public float rudderArea;
         public float elevatorArea;
+    }
+    
+    public class PackBlimp{
+        public float crossSectionalArea;
+        public float tailDistance;
+        public float rudderArea;
+        public float ballastVolume;
     }
     
     public class PackCar{
