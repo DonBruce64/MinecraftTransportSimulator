@@ -51,7 +51,7 @@ public class BlockFuelPump extends BlockRotatable implements ITileEntityProvider
         	
     		if(pump.getConnectedVehicle() == null){
     			Entity nearestEntity = null;
-    			float lowestDistance = 99;
+    			float lowestDistance = 16;
     			for(Entity entity : world.loadedEntityList){
     				if(entity instanceof EntityVehicleE_Powered){
     					float distance = (float) Math.sqrt(entity.getPosition().distanceSq(pump.getPos()));

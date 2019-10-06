@@ -42,6 +42,14 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 				setConnectedVehicle(null);
 				return;
 			}
+			//Check distance to make sure the vehicle hasn't moved away.
+			if(Math.sqrt(connectedVehicle.getPosition().distanceSq(getPos())) > 20){
+				setConnectedVehicle(null);
+				if(!world.isRemote){
+					MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.toofar"), new TargetPoint(world.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 25));
+				}
+				return;
+			}
 			if(connectedVehicle.pack.motorized.fuelCapacity - connectedVehicle.fuel >= 10){
 				if(tankInfo.fluid != null){
 					int fuelToFill = Math.min(this.tankInfo.fluid.amount, 10);
