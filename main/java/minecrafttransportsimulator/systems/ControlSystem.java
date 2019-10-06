@@ -286,13 +286,13 @@ public final class ControlSystem{
 			if(seat.isController){
 				for(APart part : vehicle.getVehicleParts()){
 					if(part instanceof APartGun && part.parentPart == null){
-						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().player.getEntityId() : -1));
+						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 					}
 				}
 			}else{
 				for(APart part : seat.childParts){
 					if(part instanceof APartGun){
-						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().player.getEntityId() : -1));
+						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 					}
 				}
 			}
@@ -302,11 +302,12 @@ public final class ControlSystem{
 	private static void controlAircraft(EntityVehicleF_Air aircraft, boolean isPlayerController){
 		controlCamera(ControlsKeyboardDynamic.AIRCRAFT_CHANGEHUD, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEHUD, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
+		controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN);
 		if(!isPlayerController){
 			return;
 		}
 		controlBrake(ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_BRAKE_ANALOG, ControlsJoystick.AIRCRAFT_PARK, aircraft.getEntityId());
-		controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN);
+		
 		
 		//Open or close the panel.
 		if(ControlsKeyboard.AIRCRAFT_PANEL.isPressed()){

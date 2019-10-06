@@ -9,6 +9,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.SFXSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
@@ -28,6 +29,7 @@ public abstract class APartGun extends APart implements FXPart{
 	public String loadedBullet;
 	
 	//These variables are used during firing and will be reset on entity loading.
+	public boolean firing;
 	public boolean reloading;
 	public int playerControllerID = -1;
 	public int temp;
@@ -35,6 +37,8 @@ public abstract class APartGun extends APart implements FXPart{
 	public int reloadTimeRemaining;
 	private long lastTickFired;
 	private long lastTickToFire;
+	
+	private final double anglePerTickSpeed;
 		
 	public APartGun(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
@@ -43,6 +47,7 @@ public abstract class APartGun extends APart implements FXPart{
 		this.currentPitch = dataTag.getFloat("currentPitch");
 		this.currentYaw = dataTag.getFloat("currentYaw");
 		this.loadedBullet = dataTag.getString("loadedBullet");
+		this.anglePerTickSpeed = (50/pack.gun.diameter + 1/pack.gun.length);
 	}
 	
 	@Override
@@ -96,7 +101,8 @@ public abstract class APartGun extends APart implements FXPart{
 		//It it quite possible they could dismount with their hands on the trigger, so we need to be sure we check.
 		//Otherwise, guns could be set to fire and the player could just run away...
 		if(playerControllerID != -1){
-			PartSeat seat = vehicle.getSeatForRider(vehicle.world.getEntityByID(playerControllerID));
+			Entity playerController = vehicle.world.getEntityByID(playerControllerID);
+			PartSeat seat = vehicle.getSeatForRider(playerController);
 			if(seat != null && (this.parentPart == null ? seat.isController : this.parentPart.equals(seat))){
 				//If we are out of bullets, and we can automatically reload, and are not doing so, start the reload sequence.
 				if(bulletsLeft == 0 && pack.gun.autoReload && !reloading){
@@ -147,7 +153,7 @@ public abstract class APartGun extends APart implements FXPart{
 				//This is backwards from what usually happens, and can possibly be hacked, but it's FAR
 				//easier on MC to leave clients to handle lots of bullets than the server and network systems.
 				//We still need to run the gun code on the server, however, as we need to mess with inventory.
-				if(playerControllerID != -1 && bulletsLeft > 0 && !reloading){
+				if(firing && bulletsLeft > 0 && !reloading){
 					//If we aren't in a cooldown time, we can fire.
 					if(cooldownTimeRemaining == 0){
 						//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.
@@ -158,6 +164,24 @@ public abstract class APartGun extends APart implements FXPart{
 					if(cooldownTimeRemaining > 0){
 						--cooldownTimeRemaining;
 					}
+				}
+				
+				//Adjust aim to face direction controller is facing.
+				//Aim speed depends on gun size, with smaller and shorter guns moving quicker.
+				//Pitch and yaw are relative to the vehicle, so use those.
+				//When we do yaw, make sure we do calculations with positive values.
+				//Both the vehicle and the player can have yaw greater than 360.
+				double deltaPitch = playerController.rotationPitch - vehicle.rotationPitch;
+				double deltaYaw = (vehicle.rotationYaw%360 - partRotation.y + 360)%360 - (playerController.rotationYaw%360 + 360)%360;
+				if(deltaPitch < currentPitch && currentPitch > getMinPitch()){
+					currentPitch -= Math.min(anglePerTickSpeed, currentPitch - deltaPitch);
+				}else if(deltaPitch > currentPitch && currentPitch < getMaxPitch()){
+					currentPitch += Math.min(anglePerTickSpeed, deltaPitch - currentPitch);
+				}
+				if(deltaYaw < currentYaw && currentYaw > getMinYaw()){
+					currentYaw -= Math.min(anglePerTickSpeed, currentYaw - deltaYaw);
+				}else if(deltaYaw > currentYaw && currentYaw < getMaxYaw()){
+					currentYaw += Math.min(anglePerTickSpeed, deltaYaw - currentYaw);
 				}
 			}else{
 				playerControllerID = -1;
@@ -198,9 +222,7 @@ public abstract class APartGun extends APart implements FXPart{
 	public abstract float getMinPitch();
 	
 	public abstract float getMaxPitch();
-	
-	public abstract boolean canUseLargeAmmo();
-	
+		
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void spawnParticles(){
@@ -209,8 +231,8 @@ public abstract class APartGun extends APart implements FXPart{
 			//Angle is based on rotation of the vehicle, gun, and gun mount.
 			//Set the trajectory of the bullet.
 			//Add a slight fudge-factor to the bullet's trajectory depending on the barrel length and shell size.
-			float bulletYaw = (float) (vehicle.rotationYaw - partRotation.y + currentYaw + (Math.random() - 0.5F)*(pack.gun.diameter/pack.gun.length));
-			float bulletPitch = (float) (vehicle.rotationPitch + partRotation.x + currentPitch + (Math.random() - 0.5F)*(pack.gun.diameter/pack.gun.length));
+			float bulletYaw = (float) (vehicle.rotationYaw - partRotation.y - currentYaw + (Math.random() - 0.5F)*(10*pack.gun.diameter/(pack.gun.length*1000)));
+			float bulletPitch = (float) (vehicle.rotationPitch + partRotation.x + currentPitch + (Math.random() - 0.5F)*(10*pack.gun.diameter/(pack.gun.length*1000)));
 			
 			//Set initial velocity to the gun muzzle velocity times the speedFactor.
 			//We bring in the code for vectors here to make the velocity calculations easier.

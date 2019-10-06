@@ -54,6 +54,7 @@ import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceSkid;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceWheel;
 import minecrafttransportsimulator.vehicles.parts.PartGunFixed;
+import minecrafttransportsimulator.vehicles.parts.PartGunTripod;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
@@ -348,6 +349,7 @@ public final class PackParserSystem{
 			case "propeller": return PartPropeller.class;
 			case "seat": return PartSeat.class;
 			case "gun_fixed": return PartGunFixed.class;
+			case "gun_tripod": return PartGunTripod.class;
 			//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
 			//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
 			//case "bullet": return PartBullet.class;
@@ -371,6 +373,7 @@ public final class PackParserSystem{
 			case "propeller": return ItemPartPropeller.class;
 			case "seat": return ItemPartSeat.class;
 			case "gun_fixed": return ItemPartGun.class;
+			case "gun_tripod": return ItemPartGun.class;
 			case "bullet": return ItemPartBullet.class;
 			case "custom": return ItemPartCustom.class;
 			default: return null;
