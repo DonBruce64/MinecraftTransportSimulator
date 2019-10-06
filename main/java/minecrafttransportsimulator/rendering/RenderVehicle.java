@@ -389,9 +389,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("horn"): return vehicle.hornOn ? 30 : 0;
 			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((PartEngineCar) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation() : 0;
 			case("engine"): return (float) (vehicle.getEngineByNumber((byte) 0) != null ? ((APartEngine) vehicle.getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) : 0);
-			case("driveshaft"): return getDriveshaftValue(vehicle, partialTicks);
-			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue(vehicle, partialTicks) + 180F)))/2F;
-			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue(vehicle, partialTicks) + 180F));
+			case("driveshaft"): return getDriveshaftValue(vehicle, partialTicks, (byte) 0);
+			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0) + 180F)))/2F;
+			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0) + 180F));
 			case("steeringwheel"): return vehicle.getSteerAngle();
 			
 			case("aileron"): return ((EntityVehicleF_Air) vehicle).aileronAngle/10F;
@@ -411,6 +411,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("magneto"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.magnetoOn ? 30 : 0) : 0;
 			case("starter"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.esOn ? 30 : 0) : 0;
 			case("pitch"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).childParts.get(0) instanceof PartEngineAircraft ? ((PartEngineAircraft) vehicle.getEngineByNumber(index).childParts.get(0)).propeller.currentPitch : 0) : 0;
+			case("engine"): return (float) (vehicle.getEngineByNumber(index) != null ? vehicle.getEngineByNumber(index).getEngineRotation(partialTicks) : 0);
+			case("driveshaft"): return getDriveshaftValue(vehicle, partialTicks, index);
 			default: return 0;
 		}
 	}
@@ -434,8 +436,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("horn"): return vehicle.hornOn ? 1 : 0;
 			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((PartEngineCar) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation()/5F : 0;
 			case("engine_sin"): return (float) (vehicle.getEngineByNumber((byte) 0) != null ? (1 + Math.cos(Math.toRadians(((APartEngine) vehicle.getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) + 180F)))/2F : 0);
-			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue(vehicle, partialTicks) + 180F)))/2F;
-			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue(vehicle, partialTicks)));
+			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0) + 180F)))/2F;
+			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0)));
 			case("steeringwheel"): return vehicle.getSteerAngle()/35F;
 			
 			case("aileron"): return ((EntityVehicleF_Air) vehicle).aileronAngle/350F;
@@ -458,9 +460,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 	}
 	
-	private static float getDriveshaftValue(EntityVehicleE_Powered vehicle, float partialTicks){
-		if(vehicle.getEngineByNumber((byte) 0) != null){
-			return (float) (vehicle.getEngineByNumber((byte) 0).getDriveshaftRotation(partialTicks)%360);
+	private static float getDriveshaftValue(EntityVehicleE_Powered vehicle, float partialTicks, byte engineNumber){
+		if(vehicle.getEngineByNumber(engineNumber) != null){
+			return (float) (vehicle.getEngineByNumber(engineNumber).getDriveshaftRotation(partialTicks)%360);
 		}else{
 			return 0;
 		}		

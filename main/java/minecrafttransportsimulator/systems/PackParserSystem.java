@@ -131,6 +131,7 @@ public final class PackParserSystem{
     	}catch(Exception e){
     		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
     		logList.add(e.getMessage());
+    		e.printStackTrace();
     	}
     }
     
