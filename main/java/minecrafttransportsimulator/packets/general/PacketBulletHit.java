@@ -81,7 +81,7 @@ public class PacketBulletHit implements IMessage{
 								if(entityHit != null && entityAttacking != null){
 									//If we are attacking a vehicle, call the custom attack code to relay our position.
 									//Otherwise call the regular attack code.
-									float damage = (float) (Math.pow(message.velocity/1000F, 2)*bulletPackData.diameter/10F*ConfigSystem.getDoubleConfig("BulletDamageFactor"));
+									float damage = (float) (Math.pow(20*message.velocity/100F, 2)*bulletPackData.diameter/10F*ConfigSystem.getDoubleConfig("BulletDamageFactor"));
 									if(entityHit instanceof EntityVehicleB_Existing){
 										((EntityVehicleB_Existing) entityHit).attackManuallyAtPosition(message.x, message.y, message.z, new DamageSourceBullet(entityAttacking, bulletPackData.type), damage);
 									}else{
