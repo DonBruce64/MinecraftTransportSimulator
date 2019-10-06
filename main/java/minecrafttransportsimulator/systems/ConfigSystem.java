@@ -62,6 +62,11 @@ public final class ConfigSystem{
 		for(String packPartName : PackParserSystem.getAllPartPackNames()){
 			PackPartObject packPart = PackParserSystem.getPartPack(packPartName);
 			if(packPart.general.type.startsWith("engine")){
+				//For old packs, if we don't have a fuelType set it to diesel.
+				//This is because it's the most versatile fuel, and all the old packs have heavy equipment.
+				if(packPart.engine.fuelType == null){
+					packPart.engine.fuelType = "diesel";
+				}
 				if(!fuelNames.contains(packPart.engine.fuelType)){
 					fuelNames.add(packPart.engine.fuelType);
 				}
