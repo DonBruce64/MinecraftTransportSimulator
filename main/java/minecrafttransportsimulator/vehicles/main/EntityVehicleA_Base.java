@@ -163,13 +163,21 @@ public abstract class EntityVehicleA_Base extends Entity{
 			packParts.put(partPos, packPart);
 			
 			//Check to see if we can put an additional part in this location.
-			if(packPart.additionalPart != null){
+			//If a part is present at a location that can have an additional part, we allow it to be placed.
+			while(packPart.additionalPart != null){
+				boolean foundPart = false;
 				for(APart part : this.parts){
 					if(part.offset.equals(partPos)){
-						packParts.put(new Vec3d(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]), packPart.additionalPart);
+						partPos = new Vec3d(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]);
+						packPart = packPart.additionalPart;
+						packParts.put(partPos, packPart);
+						foundPart = true;
 						break;
 					}
-				}				
+				}
+				if(!foundPart){
+					break;
+				}
 			}
 		}
 		
@@ -198,9 +206,11 @@ public abstract class EntityVehicleA_Base extends Entity{
 			}
 			
 			//Not a main part.  Check if this is an additional part.
-			if(packPart.additionalPart != null){
+			while(packPart.additionalPart != null){
 				if(packPart.additionalPart.pos[0] == offsetX && packPart.additionalPart.pos[1] == offsetY && packPart.additionalPart.pos[2] == offsetZ){
 					return packPart.additionalPart;
+				}else{
+					packPart = packPart.additionalPart;
 				}
 			}
 		}
