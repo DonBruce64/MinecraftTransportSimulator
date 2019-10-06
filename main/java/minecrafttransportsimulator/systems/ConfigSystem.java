@@ -108,7 +108,7 @@ public final class ConfigSystem{
 	}
 	
 	public static double getFuelValue(String fuelName, String fluidName){
-		return fuelConfigMaps.get(fuelName).get(fluidName);
+		return fuelConfigMaps.get(fuelName).containsKey(fluidName) ? fuelConfigMaps.get(fuelName).get(fluidName) : 0;
 	}
 	
 	public static Set<String> getAllFuels(){
