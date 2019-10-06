@@ -1,12 +1,15 @@
 package minecrafttransportsimulator.systems;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import minecrafttransportsimulator.dataclasses.PackPartObject;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.fluids.FluidRegistry;
 
 /**Class that handles all configuration settings.
  * Methods are separated into client and server configs
@@ -17,16 +20,16 @@ import net.minecraftforge.fluids.FluidRegistry;
 public final class ConfigSystem{
 	public static Configuration config;	
 	 
-	protected static Map<String, Boolean> booleanConfigMap = new HashMap<String, Boolean>();
-	protected static Map<String, Integer> integerConfigMap = new HashMap<String, Integer>();
-	protected static Map<String, Double> doubleConfigMap = new HashMap<String, Double>();
-	protected static Map<String, String> stringConfigMap = new HashMap<String, String>();
-
-	private static Map<String, Double> fluidValues = new HashMap<String, Double>();
+	private static Map<String, Boolean> booleanConfigMap = new HashMap<String, Boolean>();
+	private static Map<String, Integer> integerConfigMap = new HashMap<String, Integer>();
+	private static Map<String, Double> doubleConfigMap = new HashMap<String, Double>();
+	private static Map<String, String> stringConfigMap = new HashMap<String, String>();
+	private static Map<String, Map<String, Double>> fuelConfigMaps = new HashMap<String, Map<String, Double>>();
+	
 	private static final String COMMON_CONFIG = "general";
 	private static final String DAMAGE_CONFIG = "damage";
 	private static final String CLIENT_CONFIG = "clientconfig";
-	private static final String FUEL_CONFIG = "fuels";
+	private static final String FUEL_CONFIG = "fuel";
 	
 	public static void initCommon(File configFile){
 		config = new Configuration(configFile);
@@ -55,8 +58,35 @@ public final class ConfigSystem{
 	}
 	
 	public static void initFuels(){
-		for(String fluidName : FluidRegistry.getRegisteredFluids().keySet()){
-			fluidValues.put(fluidName, config.get(FUEL_CONFIG, fluidName, fluidName.equals(FluidRegistry.LAVA.getName()) ? 1.0F : 0.0F).getDouble());
+		//First get all valid fuel names from engines.
+		List<String> fuelNames = new ArrayList<String>();
+		for(String packPartName : PackParserSystem.getAllPartPackNames()){
+			PackPartObject packPart = PackParserSystem.getPartPack(packPartName);
+			if(packPart.general.type.startsWith("engine")){
+				if(!fuelNames.contains(packPart.engine.fuelType)){
+					fuelNames.add(packPart.engine.fuelType);
+				}
+			}
+		}
+		
+		//Now load the config with the fuel->fluid linkings and their values.
+		//We have some pre-configured defaults here for some fuel types.
+		for(String fuelName : fuelNames){
+			String[] defaultValues;
+			switch(fuelName){
+				case "gasoline": defaultValues = new String[]{"lava:1.0", "gasoline:1.0", "ethanol:0.85"}; break;
+				case "diesel": defaultValues = new String[]{"lava:1.0", "diesel:1.0", "biodiesel:0.8", "oil:0.5"}; break;
+				case "avgas": defaultValues = new String[]{"lava:1.0", "gasoline:1.0"}; break;
+				default: defaultValues = new String[]{"lava:1.0"}; break;
+			}
+
+			Map<String, Double> fluidPotencies = new HashMap<String, Double>();
+			for(String configEntry : config.get(FUEL_CONFIG, fuelName, defaultValues).getStringList()){
+				String fluidName = configEntry.substring(0, configEntry.indexOf(':'));
+				double fluidPotency = Double.valueOf(configEntry.substring(configEntry.indexOf(':') + 1));
+				fluidPotencies.put(fluidName, fluidPotency);
+			}
+			fuelConfigMaps.put(fuelName, fluidPotencies);
 		}
 		config.save();
 	}
@@ -73,8 +103,12 @@ public final class ConfigSystem{
 		config.save();
 	}
 	
-	public static double getFuelValue(String liquidName){
-		return fluidValues.get(liquidName);
+	public static double getFuelValue(String fuelName, String fluidName){
+		return fuelConfigMaps.get(fuelName).get(fluidName);
+	}
+	
+	public static Set<String> getAllFuels(){
+		return fuelConfigMaps.keySet();
 	}
 	
 	public static boolean getBooleanConfig(String configName){

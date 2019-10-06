@@ -15,10 +15,12 @@ import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderInstruments;
 import minecrafttransportsimulator.rendering.RenderVehicle;
 import minecrafttransportsimulator.systems.CameraSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
+import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
@@ -35,7 +37,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	private static final LightTypes[] lights = new LightTypes[]{LightTypes.NAVIGATIONLIGHT, LightTypes.STROBELIGHT, LightTypes.TAXILIGHT, LightTypes.LANDINGLIGHT};
 	private static final String[] lightText = new String[]{I18n.format("gui.panel.navigationlights"), I18n.format("gui.panel.strobelights"), I18n.format("gui.panel.taxilights"), I18n.format("gui.panel.landinglights")};
 	
-	private final EntityVehicleE_Powered aircraft;
+	private final EntityVehicleF_Air aircraft;
 	private final APartEngine[] engines;
 	private final boolean[] hasLight;
 	private final int[][] lightButtonCoords;
@@ -50,10 +52,11 @@ public class GUIPanelAircraft extends GuiScreen{
 	private GuiButton rudderTrimUpButton;
 	private GuiButton rudderTrimDownButton;
 	
+	private boolean haveReverseThrustOption;
 	private byte lastEngineStarted;
 	private GuiButton lastButtonPressed;
 	
-	public GUIPanelAircraft(EntityVehicleE_Powered aircraft){
+	public GUIPanelAircraft(EntityVehicleF_Air aircraft){
 		super();
 		this.aircraft = aircraft;
 		engines = new APartEngine[aircraft.getNumberEngineBays()];
@@ -106,6 +109,19 @@ public class GUIPanelAircraft extends GuiScreen{
 		//This is done in numerous places.
 		final boolean lightsOn = RenderInstruments.lightsOn(aircraft);
 		
+		//If we have propellers with reverse thrust capabilities, or are a blimp, render the reverse thrust button.
+		haveReverseThrustOption = aircraft instanceof EntityVehicleG_Blimp;
+		if(!haveReverseThrustOption){
+			for(APart part : aircraft.getVehicleParts()){
+				if(part instanceof PartPropeller){
+					if(part.pack.propeller.isDynamicPitch){
+						haveReverseThrustOption = true;
+						break;
+					}
+				}
+			}
+		}
+		
 		//Disable the main HUD overlay if it's active.
 		CameraSystem.disableHUD = true;
 		
@@ -144,8 +160,8 @@ public class GUIPanelAircraft extends GuiScreen{
 		GL11.glPopMatrix();
 		
 		//Render the reverse button if we have such a feature.
-		if(aircraft instanceof EntityVehicleF_Plane){
-			drawRedstoneButton(reverseButtonCoords, ((EntityVehicleF_Plane) aircraft).reverseThrust);
+		if(haveReverseThrustOption){
+			drawRedstoneButton(reverseButtonCoords, aircraft.reverseThrust);
 		}
 
 		//Render light button text.
@@ -172,7 +188,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		fontRenderer.drawString(I18n.format("gui.panel.trim_yaw"), xOffset - fontRenderer.getStringWidth(I18n.format("gui.panel.trim_yaw"))/2, 412 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		
 		//Render the reverse button text if we have such a feature.
-		if(aircraft instanceof EntityVehicleF_Plane){
+		if(haveReverseThrustOption){
 			fontRenderer.drawString(I18n.format("gui.panel.reverse"), xOffset - fontRenderer.getStringWidth(I18n.format("gui.panel.reverse"))/2, 462 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		}
 		
@@ -233,9 +249,9 @@ public class GUIPanelAircraft extends GuiScreen{
 			}
 			
 			//Check if the reverse button was pressed.
-			if(aircraft instanceof EntityVehicleF_Plane){
+			if(haveReverseThrustOption){
 				if(mouseX > reverseButtonCoords[0] && mouseX < reverseButtonCoords[1] && mouseY < reverseButtonCoords[2] && mouseY > reverseButtonCoords[3]){
-					MTS.MTSNet.sendToServer(new ReverseThrustPacket(aircraft.getEntityId(), !((EntityVehicleF_Plane) aircraft).reverseThrust));
+					MTS.MTSNet.sendToServer(new ReverseThrustPacket(aircraft.getEntityId(), !((EntityVehicleF_Air) aircraft).reverseThrust));
 					MTS.proxy.playSound(aircraft.getPositionVector(), MTS.MODID + ":panel_buzzer", 1.0F, 1.0F);
 				}
 			}

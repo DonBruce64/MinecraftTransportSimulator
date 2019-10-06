@@ -2,8 +2,8 @@ package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Car;
-import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
+import minecrafttransportsimulator.vehicles.parts.APartEngineGeared;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -38,19 +38,19 @@ public class ShiftPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityVehicleF_Car thisEntity;
+					EntityVehicleF_Ground thisEntity;
 					if(ctx.side.isServer()){
-						thisEntity = (EntityVehicleF_Car) ctx.getServerHandler().player.world.getEntityByID(message.id);
+						thisEntity = (EntityVehicleF_Ground) ctx.getServerHandler().player.world.getEntityByID(message.id);
 					}else{
-						thisEntity = (EntityVehicleF_Car) Minecraft.getMinecraft().world.getEntityByID(message.id);
+						thisEntity = (EntityVehicleF_Ground) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
-						PartEngineCar carEngine = (PartEngineCar) thisEntity.getEngineByNumber((byte) 0);
-						if(carEngine != null){
+						APartEngineGeared engine = (APartEngineGeared) thisEntity.getEngineByNumber((byte) 0);
+						if(engine != null){
 							if(message.shiftUp){
-								carEngine.shiftUp(true);
+								engine.shiftUp(true);
 							}else{
-								carEngine.shiftDown(true);
+								engine.shiftDown(true);
 							}
 							if(ctx.side.isServer()){
 								MTS.MTSNet.sendToAll(message);

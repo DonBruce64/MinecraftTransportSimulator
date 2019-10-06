@@ -38,20 +38,18 @@ interact.key.failure.notowner=Only the owner of this vehicle may make new keys!
 interact.key.failure.wrongkey=This key does not go to this vehicle!
 interact.key.failure.alreadyowned=You are not the owner of this vehicle, you cannot change ownership!
 
+interact.fuelpump.toofar=The fuel pump is too far away from the vehicle.  The pump should be no less than 16 blocks away.
+interact.fuelpump.nofuel=The fuel pump does not have any fuel in it.  You need fuel in the fuel pump to use it.
+interact.fuelpump.wrongtype=This pump does not contain the same liquid as what is in the vehicle.
+interact.fuelpump.wrongengines=The fuel in this pump is not a valid fuel for the engines in the vehicle.  Check the manual for details.
 interact.fuelpump.connect=Fuel pump connected and pumping.
 interact.fuelpump.complete=Vehicle is full, disconnecting.
 interact.fuelpump.empty=Fuel pump is empty, disconnecting.
 interact.fuelpump.disconnect=Disconnecting and stopping pumping.
-interact.fuelpump.toofar=The fuel pump is too far away from the vehicle.  The pump should be no less than 16 blocks away.
  
 interact.failure.seattaken=This seat is taken!
 interact.failure.vehiclelocked=This vehicle is locked!
 interact.failure.vehicleowned=You are not the owner of this vehicle and therefore cannot remove it or its parts!
-
-interact.fuelpump.connect=Fuel pump connected and pumping.
-interact.fuelpump.complete=Vehicle is full, disconnecting.
-interact.fuelpump.empty=Fuel pump is empty, disconnecting.
-interact.fuelpump.disconnect=Disconnecting and stopping pumping.
 
 interact.jumpercable.firstlink=Linking first engine to jumper cable.
 interact.jumpercable.secondlink=Engines linked.  Transmitting power.
@@ -176,8 +174,8 @@ gui.config.header.controls=CONTROLS
 gui.config.controls.title=Chose a configuration to change:
 gui.config.controls.aircraft.keyboard=AIRCRAFT KEYBOARD
 gui.config.controls.aircraft.joystick=AIRCRAFT JOYSTICK
-gui.config.controls.car.keyboard=CAR KEYBOARD
-gui.config.controls.car.joystick=CAR JOYSTICK
+gui.config.controls.car.keyboard=CAR/BOAT KEYBOARD
+gui.config.controls.car.joystick=CAR/BOAT JOYSTICK
 gui.config.controls.confirm=Confirm
 gui.config.joystick.error=ERROR: MTS could not initialize the control system!  This is likely due to a device mis-representing itself as a joystick to Java.  Mice have been known to have this issue, especially Corsair mice, so try a different mouse.  If the issue persists please contact the mod author.
 gui.config.joystick.select=Choose a joystick:
@@ -214,6 +212,7 @@ info.item.engine.bypassratio=Bypass Ratio:
 info.item.engine.maxrpm=Max Possible RPM: 
 info.item.engine.maxsaferpm=Max safe RPM: 
 info.item.engine.fuelconsumption=Fuel use (mb/t): 
+info.item.engine.fueltype=Fuel type: 
 info.item.engine.hours=Runtime hours: 
 info.item.engine.oilleak=Has an oil leak!
 info.item.engine.fuelleak=Has a fuel leak!
@@ -357,61 +356,65 @@ manual.4.1=There may come a time when you find yourself needing to repair a part
 manual.4.2=On the flip side, hitting blocks at speed may break them, with heavier vehicles breaking more and harder blocks.  Hitting blocks too fast may result in your vehicle blowing up due to the impact, with more fuel equaling a bigger explosion.  While parts will be spawned when a vehicle crashes, a big enough explosion is likely to destroy them.  Explosions and block-breakage may be disabled in the config if you don't feel like getting into the road-repair business.
 
 manual.5.title=Fueling
-manual.5.1=Vehicles are fueled from the fuel pump block.  Just click the fuel pump and it will automatically connect to the nearest vehicle.  The pump will then transfer fuel at a rate of 10 mb/t.  The pump itself has a 15000mb reservoir and can be filled directly from liquid-holding containers, or by connecting a pipe to the bottom from pipe systems compatible with Forge liquids.
-manual.5.2=What exactly MTS considers a fuel is determined by the settings in the config file.  Lava is set as fuel by default, but other liquids can be added to the config by running MTS once with them installed.  Fuel is determined by a number that represents how much the fuel fills the tanks of vehicles (all new liquids are set to 0.0 by default).  Again, that value is NOT potency of the fuel, but the conversion factor; adjust fuel potency using the FuelUsageFactor in the config file.
+manual.5.1=Vehicles are fueled from the fuel pump block.  Just click the fuel pump and it will automatically connect to the nearest vehicle.  The pump will then transfer fuel at a rate of 10 mb/t.  The pump itself has a 15000mb reservoir and can be filled directly from liquid-holding containers, or by connecting a pipe to the bottom from pipe systems compatible with Forge fluids.
+manual.5.2=Each engine has a fuel type that is associated with it.  This type is not the name of the fluid it takes a fuel.  Rather, it is a general name for the fuel that the engine uses.  Fuel types can be served by multiple fluids, but lava is by default always supported.  Some of the more common fuel types allow for usage of other mod's fluids out of the box.  For example, gasoline engines support Immersive Petroleum gasoline and Immersive Engineering ethanol.
 
-manual.6.title=Theft Prevention
-manual.6.1=The only thing worse than getting your nice car blown up by a creeper is having it (or parts of it) stolen by other players.  Normally vehicles can be messed with by anyone, but by using a key you can mark them as owned, allowing only you to change their parts.  This also extends to entering the vehicle or accessing the contents of inventories inside of it.
-manual.6.2=Keys can be given to other players, allowing them to enter, but not modify, your vehicles.  It is HIGHLY recommended to make more than one key, as locked vehicles cannot be unlocked without their keys, nor can owned vehicles be relinquished.  Note that OPs bypass these restrictions to allow server admins to move/remove abandoned vehicles.
+manual.6.title=Fuel Potency
+manual.6.1=All fluids are not created equal.  While an engine may take multiple fluids as a fuel, each fluid's potency will likely differ.  Potency is how much energy that fluid has, with higher-potency fluids lasting longer in vehicles.  For example, diesel engines take diesel at 1.0, biodiesel at 0.8, oil at 0.5, and lava at 1.0.  These values, and the modification of which fluids go to which types of engines, are configurable.
+manual.6.2=In addition to the configuration of each individual fuel, there exists a config option called fuelUsageFactor that globally sets the fuel consumption for all engines.  If you find engines to be thirstier than you'd like, you can adjust that rather than adjusting each fuel individually.
 
-manual.7.title=Keyboard Controls
-manual.7.1=MTS offers multiple control schemes.  The standard scheme is the keyboard control.  Unlike other mods, MTS is equipped with a no-bind system.  This prevents it from clogging up keybindings and from intercepting and taking other mod's keystrokes.  Configuration for this mode, and the other control modes, can be activated by pressing the config key (P by default).
-manual.7.2=This key is the only one that's bound in the standard way in the controls menu, and may be double-bound by default in some modpacks, so if you can't bring up the config menu check your keybindings.  Do note that while MTS will not block other mod's key signals, it may still be affected by the signals of other mods who do not use context-sensitive triggers.  Keep this in mind when controlling vehicles.
+manual.7.title=Theft Prevention
+manual.7.1=The only thing worse than getting your nice car blown up by a creeper is having it (or parts of it) stolen by other players.  Normally vehicles can be messed with by anyone, but by using a key you can mark them as owned, allowing only you to change their parts.  This also extends to entering the vehicle or accessing the contents of inventories inside of it.
+manual.7.2=Keys can be given to other players, allowing them to enter, but not modify, your vehicles.  It is HIGHLY recommended to make more than one key, as locked vehicles cannot be unlocked without their keys, nor can owned vehicles be relinquished.  Note that OPs bypass these restrictions to allow server admins to move/remove abandoned vehicles.
 
-manual.8.title=Joystick Controls
-manual.8.1=The second control scheme is a Joystick-Keyboard hybrid.  This controller MUST be connected at the time you start Minecraft.  Configuration is done though the JOYSTICK section of the P-key menu.  When an axis such as yaw or pitch is being controlled by a joystick it will be unavailable on the keyboard.  Button inputs will also be disabled, but can be re-enabled though a CONFIG setting.
-manual.8.2=The final method of control available is a mouse-yoke system similar to both Flan's and MCHeli.  This system is currently in Beta and is not perfect, but should be functional enough for general use.  For all of these controls, there are a few extra settings in the P-key CONFIG menu.  These can be used to control joystick dead-zone, sensitivity, keyboard cooldown, as well as other general control settings.
+manual.8.title=Keyboard Controls
+manual.8.1=MTS offers multiple control schemes.  The standard scheme is the keyboard control.  Unlike other mods, MTS is equipped with a no-bind system.  This prevents it from clogging up keybindings and from intercepting and taking other mod's keystrokes.  Configuration for this mode, and the other control modes, can be activated by pressing the config key (P by default).
+manual.8.2=This key is the only one that's bound in the standard way in the controls menu, and may be double-bound by default in some modpacks, so if you can't bring up the config menu check your keybindings.  Do note that while MTS will not block other mod's key signals, it may still be affected by the signals of other mods who do not use context-sensitive triggers.  Keep this in mind when controlling vehicles.
 
-manual.9.title=Engines
-manual.9.1=No matter if they are in cars or planes, engines form the heart of your vehicle.  Not having one is like having a base without a furnace.  Engines come in a variety of fuel consumptions and max RPMs, so chose carefully based on your application.  There is even a fuel-less engine in the creative inventory if you don't want to mess with fuel.  Engines are crafted on the engine hoist.
-manual.9.2=Beware: engines will gradually accumulate hours and lose their power, going so far as to start backfiring when really worn out.  Over-revving, over-heating, and running the engine too fast before it has warmed up will quickly add hours to an otherwise new engine.  Engines may also accumulate hours from damage, going so far as to spring leaks or lose their electric starters.
+manual.9.title=Joystick Controls
+manual.9.1=The second control scheme is a Joystick-Keyboard hybrid.  This controller MUST be connected at the time you start Minecraft.  Configuration is done though the JOYSTICK section of the P-key menu.  When an axis such as yaw or pitch is being controlled by a joystick it will be unavailable on the keyboard.  Button inputs will also be disabled, but can be re-enabled though a CONFIG setting.
+manual.9.2=The final method of control available is a mouse-yoke system similar to both Flan's and MCHeli.  This system is currently in Beta and is not perfect, but should be functional enough for general use.  For all of these controls, there are a few extra settings in the P-key CONFIG menu.  These can be used to control joystick dead-zone, sensitivity, keyboard cooldown, as well as other general control settings.
 
-manual.10.title=Ground Devices
-manual.10.1=If it touches the ground, it's a ground device.  Ground devices come in all sorts of configurations and types.  The most common ground device you will encounter are wheels.  These may be powered or un-powered depending on how the vehicle is set up.  Floating ground devices like pontoons are also available, so check the stats of the device before you decide to make it.
-manual.10.2=Wheels also have a few rules that do not apply to other ground devices.  The first is that for cars, wheels MUST be used on the axles if they are to provide power.  While you can equip a vehicle with half pontoons and half wheels, only the wheels will provide power.  Wheels may also blow out if spun too much, so that white smoke you see when doing burnouts is there for more that just show.  All ground devices are created on the Wheel Workbench.
+manual.10.title=Engines
+manual.10.1=No matter if they are in cars or planes, engines form the heart of your vehicle.  Not having one is like having a base without a furnace.  Engines come in a variety of fuel consumptions and max RPMs, so chose carefully based on your application.  There is even a fuel-less engine in the creative inventory if you don't want to mess with fuel.  Engines are crafted on the engine hoist.
+manual.10.2=Beware: engines will gradually accumulate hours and lose their power, going so far as to start backfiring when really worn out.  Over-revving, over-heating, and running the engine too fast before it has warmed up will quickly add hours to an otherwise new engine.  Engines may also accumulate hours from damage, going so far as to spring leaks or lose their electric starters.
 
-manual.11.title=Propellers
-manual.11.1=If you're going to fly an aircraft, it will likely need one of these (well, unless it's a jet).  Larger diameter propellers provide more thrust than smaller ones; however, larger-diameter propellers also need larger engines to turn, so it may be that a weak engine can produce more thrust with a smaller propeller than a larger one.  Propellers are created on the Propeller Bench.
-manual.11.2=Propeller pitch is also important, perhaps moreso than diameter, as it determines the optimal speed at any RPM.  Anything below this speed will speed the aircraft up, anything below will slow it down.  Note that propellers that have dynamic pitch will adjust their pitch in flight to maintain optimum thrust, and may also be reversed by pressing the REVERSE THRUST button in the plane panel.  Reversed propellers are not very effective, so make sure to use plenty of throttle and watch your temps!
+manual.11.title=Ground Devices
+manual.11.1=If it touches the ground, it's a ground device.  Ground devices come in all sorts of configurations and types.  The most common ground device you will encounter are wheels.  These may be powered or un-powered depending on how the vehicle is set up.  Floating ground devices like pontoons are also available, so check the stats of the device before you decide to make it.
+manual.11.2=Wheels also have a few rules that do not apply to other ground devices.  The first is that for cars, wheels MUST be used on the axles if they are to provide power.  While you can equip a vehicle with half pontoons and half wheels, only the wheels will provide power.  Wheels may also blow out if spun too much, so that white smoke you see when doing burnouts is there for more that just show.  All ground devices are created on the Wheel Workbench.
 
-manual.12.title=Seats/Cargo
-manual.12.1=Seats and cargo may all be placed in vehicles, however exactly where they may be placed depends on the vehicle itself.  The number of these items a vehicle can contain is shown in the Drafting Table, so use this to determine if the vehicle meets your needs or not.  Some vehicles allow for either seats or cargo in some spots, which means you can add or remove them as you see fit.
-manual.12.2=Note that crates and barrels hold their inventory when in item form and will still have that inventory if placed in another vehicle or if the vehicle they are in is destroyed.  This allows for quick transfer of items from one vehicle to another.  Both seats and cargo are created on the Table Saw.
+manual.12.title=Propellers
+manual.12.1=If you're going to fly an aircraft, it will likely need one of these (well, unless it's a jet).  Larger diameter propellers provide more thrust than smaller ones; however, larger-diameter propellers also need larger engines to turn, so it may be that a weak engine can produce more thrust with a smaller propeller than a larger one.  Propellers are created on the Propeller Bench.
+manual.12.2=Propeller pitch is also important, perhaps moreso than diameter, as it determines the optimal speed at any RPM.  Anything below this speed will speed the aircraft up, anything below will slow it down.  Note that propellers that have dynamic pitch will adjust their pitch in flight to maintain optimum thrust, and may also be reversed by pressing the REVERSE THRUST button in the plane panel.  Reversed propellers are not very effective, so make sure to use plenty of throttle and watch your temps!
 
-manual.13.title=Instruments
-manual.13.1=Instruments make piloting a plane and driving a car much more immersive.  They are also useful for monitoring key properties like fuel levels, RPM, and engine temps, and make flying in the dark much less hazardous.
-manual.13.2=Instruments are added to vehicles by using the wrench on them.  The resulting GUI shows a view of the HUD and all instruments in your possession that work on that vehicle.  Simply click the slot you want to put the instrument in, and click that instrument.  Instruments are created on the Instrument Workbench.
+manual.13.title=Seats/Cargo
+manual.13.1=Seats and cargo may all be placed in vehicles, however exactly where they may be placed depends on the vehicle itself.  The number of these items a vehicle can contain is shown in the Drafting Table, so use this to determine if the vehicle meets your needs or not.  Some vehicles allow for either seats or cargo in some spots, which means you can add or remove them as you see fit.
+manual.13.2=Note that crates and barrels hold their inventory when in item form and will still have that inventory if placed in another vehicle or if the vehicle they are in is destroyed.  This allows for quick transfer of items from one vehicle to another.  Both seats and cargo are created on the Table Saw.
 
-manual.14.title=Driver's Ed
-manual.14.1=Driving a car is so simple, even a villager could do it.  Simply hop in a car and press the Z key to engage the starter.  Once the engine is running press the R key to shift into forwards gear and press the W key to give it some gas and you're off!  The A and D keys can be used to steer the car, while S key activates the brake.  Some vehicles are also equipped with lights, horns, sirens, or even turn signals.
-manual.14.2=Do note that all cars start in neutral, and you pressing R puts them into forwards.  Pressing F will shift back into neutral, and F again will shift into reverse.  Shifting should be done while stopped to avoid scary transmission noises.  The only exception are engines with manual transmissions.  These must be shifted up and down manually, which means they have multiple "forwards" gears for you to shift though.  If you hear the engine getting noisy, it means it's time to shift!
+manual.14.title=Instruments
+manual.14.1=Instruments make piloting a plane and driving a car much more immersive.  They are also useful for monitoring key properties like fuel levels, RPM, and engine temps, and make flying in the dark much less hazardous.
+manual.14.2=Instruments are added to vehicles by using the wrench on them.  The resulting GUI shows a view of the HUD and all instruments in your possession that work on that vehicle.  Simply click the slot you want to put the instrument in, and click that instrument.  Instruments are created on the Instrument Workbench.
 
-manual.15.title=Time to Fly!
-manual.15.1=Before your first flight you should be aware of a few key facts.  First, planes do not go up when you pull up.  We repeat: PLANES DO NOT GO UP WHEN YOU PULL UP!  This is the #1 cause of crashes for new pilots.  In MTS, and in real-life, planes gain lift through moving air over the wings.  Therefore, the proper way to lift off the ground is to go fast so lots of air moves over the wings and makes lots of lift.
-manual.15.2=This means that you will need a decent runway for takeoff, and it is highly recommended you avoid taking off towards high things like trees and mountains.  If you are piloting a plane equipped with flaps you can set a few notches to increase the lifting power of the plane.  Note that this will cause a loss in fuel efficiency and slow you down, so only use flaps when performing takeoffs and landings.  Also note that weight (items in inventory and cargo) is a factor in plane handling, so make sure not to overload your plane.
+manual.15.title=Driver's Ed
+manual.15.1=Driving a car is so simple, even a villager could do it.  Simply hop in a car and press the Z key to engage the starter.  Once the engine is running press the R key to shift into forwards gear and press the W key to give it some gas and you're off!  The A and D keys can be used to steer the car, while S key activates the brake.  Some vehicles are also equipped with lights, horns, sirens, or even turn signals.
+manual.15.2=Do note that all cars start in neutral, and you pressing R puts them into forwards.  Pressing F will shift back into neutral, and F again will shift into reverse.  Shifting should be done while stopped to avoid scary transmission noises.  The only exception are engines with manual transmissions.  These must be shifted up and down manually, which means they have multiple "forwards" gears for you to shift though.  If you hear the engine getting noisy, it means it's time to shift!
 
-manual.16.title=Plane Engine Panel
-manual.16.1=Unlike cars, plane starting is a bit more involved.  The first thing you need to do is open the plane panel by getting in the pilot's seat and pressing U.  From there, you need to turn the magnetos (MAG) on.  These are essentially the on/off switches for the engines.  Once these are on, hold the stater button next to them and wait for the engines to catch.
-manual.16.2=Numerous other things are located on this panel besides the starters.  The switches for the different lights are on the left side, and trim controls for the aircraft are towards the middle-left.  These don't give any indication as to the trim status, so installation of a trim indicator is a wise investment if you plan on using these.  You can also find the thrust reverse button, which will cause the plane to move backward if equipped with dynamic-pitch propellers.
+manual.16.title=Time to Fly!
+manual.16.1=Before your first flight you should be aware of a few key facts.  First, planes do not go up when you pull up.  We repeat: PLANES DO NOT GO UP WHEN YOU PULL UP!  This is the #1 cause of crashes for new pilots.  In MTS, and in real-life, planes gain lift through moving air over the wings.  Therefore, the proper way to lift off the ground is to go fast so lots of air moves over the wings and makes lots of lift.
+manual.16.2=This means that you will need a decent runway for takeoff, and it is highly recommended you avoid taking off towards high things like trees and mountains.  If you are piloting a plane equipped with flaps you can set a few notches to increase the lifting power of the plane.  Note that this will cause a loss in fuel efficiency and slow you down, so only use flaps when performing takeoffs and landings.  Also note that weight (items in inventory and cargo) is a factor in plane handling, so make sure not to overload your plane.
 
-manual.17.title=In-Flight
-manual.17.1=Once your plane is up in the air flying just becomes a matter of two things: not crashing into wild mountains, and not crashing into the ground.  The former can simply be dodged by banking the plane into a turn by rolling the airplane (A and D) or simply flying above build height.  Turns will slowly decrease your altitude, so watch that if you're close to terrain.
-manual.17.2=While flying you may have to keep holding inputs to make your plane behave the way you want.  If you keep climbing, it's because you have too much thrust and should let off the throttle.  You can also add some trim and keep the throttle up to get a bit more speed at the cost of fuel economy.  You may also move to other seats while flying by right-clicking them, and some planes even allow for multiple pilots.  Check the Vehicle Bench for specifics on seat and pilot counts.
+manual.17.title=Plane Engine Panel
+manual.17.1=Unlike cars, plane starting is a bit more involved.  The first thing you need to do is open the plane panel by getting in the pilot's seat and pressing U.  From there, you need to turn the magnetos (MAG) on.  These are essentially the on/off switches for the engines.  Once these are on, hold the stater button next to them and wait for the engines to catch.
+manual.17.2=Numerous other things are located on this panel besides the starters.  The switches for the different lights are on the left side, and trim controls for the aircraft are towards the middle-left.  These don't give any indication as to the trim status, so installation of a trim indicator is a wise investment if you plan on using these.  You can also find the thrust reverse button, which will cause the plane to move backward if equipped with dynamic-pitch propellers.
 
-manual.18.title=Landing
-manual.18.1=There is a fine line between successfully landing a plane and a controlled crash.  To avoid that second category it is important to remember the saying, "To go down you need to slow down."  Speed is what keeps your plane aloft, so a reduction in speed is needed to land.  This can be as simple as lowering the throttle and applying the flaps.
-manual.18.2=Some times, however, you end up in that second category.  Running out of fuel is the most common way to get down quickly, but it is not necessarily deadly.  Planes can glide without engines, giving you a short amount of time to pick a flat spot to become an impromptu runway.  Should one not be available a body of water is also a good choice as it will prevent explosions on a hard crash or will allow you to bail while in mid-air.  Anything hilly should be avoided at all costs.
+manual.18.title=In-Flight
+manual.18.1=Once your plane is up in the air flying just becomes a matter of two things: not crashing into wild mountains, and not crashing into the ground.  The former can simply be dodged by banking the plane into a turn by rolling the airplane (A and D) or simply flying above build height.  Turns will slowly decrease your altitude, so watch that if you're close to terrain.
+manual.18.2=While flying you may have to keep holding inputs to make your plane behave the way you want.  If you keep climbing, it's because you have too much thrust and should let off the throttle.  You can also add some trim and keep the throttle up to get a bit more speed at the cost of fuel economy.  You may also move to other seats while flying by right-clicking them, and some planes even allow for multiple pilots.  Check the Vehicle Bench for specifics on seat and pilot counts.
 
-manual.19.title=Crafting
-manual.19.1=Crafting of components, as mentioned before, is done on the various vehicle benches.  The vanilla in-game recipe book can be used to find the recipes for each bench, and this manual and the Advancement system both reference which components are made on which bench.
-manual.19.2=Should you wish to modify the recipes for the benches, or any other items in the core mod, you may do so by editing the recipe JSONs located inside the mod .jars.  You may also use an external mod should it make server management easier.
+manual.19.title=Landing
+manual.19.1=There is a fine line between successfully landing a plane and a controlled crash.  To avoid that second category it is important to remember the saying, "To go down you need to slow down."  Speed is what keeps your plane aloft, so a reduction in speed is needed to land.  This can be as simple as lowering the throttle and applying the flaps.
+manual.19.2=Some times, however, you end up in that second category.  Running out of fuel is the most common way to get down quickly, but it is not necessarily deadly.  Planes can glide without engines, giving you a short amount of time to pick a flat spot to become an impromptu runway.  Should one not be available a body of water is also a good choice as it will prevent explosions on a hard crash or will allow you to bail while in mid-air.  Anything hilly should be avoided at all costs.
+
+manual.20.title=Crafting
+manual.20.1=Crafting of components, as mentioned before, is done on the various vehicle benches.  The vanilla in-game recipe book can be used to find the recipes for each bench, and this manual and the Advancement system both reference which components are made on which bench.
+manual.20.2=Should you wish to modify the recipes for the benches, or any other items in the core mod, you may do so by editing the recipe JSONs located inside the mod .jars.  You may also use an external mod should it make server management easier.

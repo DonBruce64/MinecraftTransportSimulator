@@ -9,7 +9,8 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -24,12 +25,14 @@ public class PartPropeller extends APart{
 	public short currentPitch;
 	
 	private final PartEngineAircraft connectedEngine;
+	private final EntityVehicleF_Air aircraft;
 	
 	public PartPropeller(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
 		this.damage = dataTag.getFloat("damage");
 		this.currentPitch = pack.propeller.pitch;
 		this.connectedEngine = (PartEngineAircraft) parentPart;
+		this.aircraft = (EntityVehicleF_Air) vehicle;
 	}
 	
 	@Override
@@ -51,10 +54,11 @@ public class PartPropeller extends APart{
 	public void updatePart(){
 		super.updatePart();
 		//If we are a dynamic-pitch propeller, adjust ourselves to the speed of the engine.
-		if(pack.propeller.isDynamicPitch){
-			if(((EntityVehicleF_Plane) vehicle).reverseThrust && currentPitch > -45){
+		//But don't do this for blimps, as they reverse their engines rather than adjust their propellers.
+		if(pack.propeller.isDynamicPitch && !(aircraft instanceof EntityVehicleG_Blimp)){
+			if(aircraft.reverseThrust && currentPitch > -45){
 				--currentPitch;
-			}else if(!((EntityVehicleF_Plane) vehicle).reverseThrust && currentPitch < 45){
+			}else if(!aircraft.reverseThrust && currentPitch < 45){
 				++currentPitch;
 			}else if(connectedEngine.RPM < connectedEngine.pack.engine.maxRPM*0.80 && currentPitch > 45){
 				--currentPitch;
@@ -112,7 +116,13 @@ public class PartPropeller extends APart{
 
 	@Override
 	public Vec3d getActionRotation(float partialTicks){
-		return new Vec3d(0, 0, this.angularPosition + this.angularVelocity*partialTicks);
+		//If we are on an engine that can reverse, adjust our direction.
+		//Getting smooth changes here is a PITA, and I ain't gonna do it myself.
+		if(aircraft instanceof EntityVehicleG_Blimp && aircraft.reversePercent != 0){
+			return aircraft.reversePercent != 100 ? Vec3d.ZERO : new Vec3d(0, 0, -(this.angularPosition + this.angularVelocity*partialTicks));
+		}else{
+			return new Vec3d(0, 0, this.angularPosition + this.angularVelocity*partialTicks);
+		}
 	}
 	
 	private void damagePropeller(float damage){

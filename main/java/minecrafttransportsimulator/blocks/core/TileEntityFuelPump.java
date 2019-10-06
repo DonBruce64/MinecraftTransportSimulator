@@ -6,7 +6,6 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpConnection;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -33,7 +32,7 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 	    
 	public TileEntityFuelPump(){
 		super();
-		this.tankInfo = emptyTankInfo;
+		clearFluid();
 	}
 	
 	@Override
@@ -43,11 +42,20 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 				setConnectedVehicle(null);
 				return;
 			}
+			//Check distance to make sure the vehicle hasn't moved away.
+			if(Math.sqrt(connectedVehicle.getPosition().distanceSq(getPos())) > 20){
+				setConnectedVehicle(null);
+				if(!world.isRemote){
+					MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.toofar"), new TargetPoint(world.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 25));
+				}
+				return;
+			}
 			if(connectedVehicle.pack.motorized.fuelCapacity - connectedVehicle.fuel >= 10){
-				if(this.tankInfo.fluid != null){
+				if(tankInfo.fluid != null){
 					int fuelToFill = Math.min(this.tankInfo.fluid.amount, 10);
 					this.tankInfo.fluid.amount -= fuelToFill;
 					connectedVehicle.fuel += fuelToFill;
+					connectedVehicle.fluidName = FluidRegistry.getFluidName(getFluid().getFluid());
 					totalTransfered += fuelToFill;
 					if(this.tankInfo.fluid.amount == 0){
 						setConnectedVehicle(null);
@@ -73,6 +81,10 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 	
 	public void setFluid(Fluid fluid){
 		tankInfo = new FluidTankInfo(new FluidStack(fluid, 0), emptyTankInfo.capacity);
+	}
+	
+	public void clearFluid(){
+		tankInfo = emptyTankInfo;
 	}
 	
 	public EntityVehicleE_Powered getConnectedVehicle(){
@@ -119,9 +131,8 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 	@Override
 	public int fill(FluidStack stack, boolean doFill){
 		if(tankInfo.fluid == null || stack.isFluidEqual(tankInfo.fluid)){
-			double fuelFactor = ConfigSystem.getFuelValue(FluidRegistry.getFluidName(stack.getFluid()));
 			int amountAbleToFill = tankInfo.capacity - (tankInfo.fluid != null ? tankInfo.fluid.amount : 0);
-			int amountToFill = (int) Math.min(amountAbleToFill, stack.amount*fuelFactor);
+			int amountToFill = (int) Math.min(amountAbleToFill, stack.amount);
 			if(doFill){
 				if(tankInfo.fluid == null){
 					this.setFluid(stack.getFluid());

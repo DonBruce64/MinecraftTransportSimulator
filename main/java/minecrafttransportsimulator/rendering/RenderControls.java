@@ -4,22 +4,21 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.dataclasses.MTSControls.Controls;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 
 public final class RenderControls extends RenderInstruments{	
 	public static void drawControl(EntityVehicleE_Powered vehicle, Controls control, boolean hud){
 		textureManager.bindTexture(controlsTexture);
 		GL11.glScalef(2.0F, 2.0F, 2.0F);
 		switch(control){
-			case PARKING_BRAKE: drawParkingBrake((EntityVehicleF_Plane) vehicle, hud); break;	
-			case AIRCRAFT_THROTTLE: drawAircraftThrottle((EntityVehicleF_Plane) vehicle, hud); break;
-			case AIRCRAFT_FLAPS: drawFlapIndicator((EntityVehicleF_Plane) vehicle, hud); break;
+			case PARKING_BRAKE: drawParkingBrake((EntityVehicleE_Powered) vehicle, hud); break;	
+			case AIRCRAFT_THROTTLE: drawAircraftThrottle((EntityVehicleF_Air) vehicle, hud); break;
 		}
 	}
 	
-	private static void drawParkingBrake(EntityVehicleF_Plane plane, boolean hud){
-    	byte offset = (byte) (plane.parkingBrakeOn || plane.brakeOn ? -10 : 6);
-		byte rotation = (byte) (plane.parkingBrakeOn || plane.brakeOn ? -90 : 0);
+	private static void drawParkingBrake(EntityVehicleE_Powered vehicle, boolean hud){
+    	byte offset = (byte) (vehicle.parkingBrakeOn || vehicle.brakeOn ? -10 : 6);
+		byte rotation = (byte) (vehicle.parkingBrakeOn || vehicle.brakeOn ? -90 : 0);
     	if(!hud){
     		renderSquareUV(10.5F, 10.5F, 0.0F, 0.75F, 0.875F, 0.875F, 1.0F);
         	
@@ -46,7 +45,7 @@ public final class RenderControls extends RenderInstruments{
 	    	drawScaledString("BRAKE", -15, -4, 0.5F);
     	}else{
     		renderSquareUV(10.5F, 10.5F, 0.0F, 0.75F, 0.875F, 0.875F, 1F);
-        	if(plane.parkingBrakeOn || plane.brakeOn){
+        	if(vehicle.parkingBrakeOn || vehicle.brakeOn){
         		GL11.glTranslatef(0, 10F, 0);
         		renderSquareUV(3.5F, 20F, 0.0F, 0.640625F, 0.734375F, 0.890625F, 0.984375F);
         		GL11.glRotatef(-rotation, 0, 0, 1);
@@ -64,9 +63,9 @@ public final class RenderControls extends RenderInstruments{
     	}
     }
 	
-	private static void drawAircraftThrottle(EntityVehicleF_Plane plane, boolean hud){
+	private static void drawAircraftThrottle(EntityVehicleF_Air aircraft, boolean hud){
 		renderSquareUV(10.5F, 10.5F, 0.0F, 0.75F, 0.875F, 0.875F, 1);
-		float offset = 3-(10 - plane.throttle/10F);
+		float offset = 3-(10 - aircraft.throttle/10F);
 		if(!hud){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(0, 1.75F, offset);
@@ -91,44 +90,6 @@ public final class RenderControls extends RenderInstruments{
     		renderSquareUV(3.5F, 10-offset, 0, 0.640625F, 0.734375F, 0.890625F, 0.984375F);
     		GL11.glTranslated(0, -offset/2, 0);
     		renderSquareUV(14F, 14F, 0, 0.75F, 0.875F, 0.875F, 1);
-    	}
-    }
-    
-	private static void drawFlapIndicator(EntityVehicleF_Plane plane, boolean hud){
-		if(!hud){
-			renderSquareUV(23F, 30F, 0, 0.515625F, 0.609375F, 0.875F, 1);
-			GL11.glTranslatef(0, 0, -0.01F);
-		}else{
-			GL11.glRotatef(180, 0, 0, 1);
-			renderSquareUV(23F, 30F, 0, 0.515625F, 0.609375F, 0.875F, 1);
-		}
-		GL11.glRotatef(90, 0, 0, 1);
-		drawScaledString("FLAPS", -15, -15, 0.5F);
-		GL11.glRotatef(90, 0, 0, 1);
-		drawScaledString("0", 8, -15, 0.5F);
-    	drawScaledString("35", 8, 10, 0.5F);
-    	GL11.glRotatef(-180, 0, 0, 1);
-		
-    	GL11.glTranslatef(0, 7-plane.flapDesiredAngle/25, 0);
-    	textureManager.bindTexture(controlsTexture);
-    	if(!hud){
-    		GL11.glTranslatef(1.875F, 0.5F, -3.75F);
-    		renderSquareUV(7.5F, 0, 7F, 0.421875F, 0.453125F, 0.921875F, 0.953125F);
-    		GL11.glTranslatef(3.75F, -0.5F, 0);
-    		GL11.glRotatef(-90, 0, 0, 1);
-    		renderSquareUV(1F, 0, 7F, 0.421875F, 0.453125F, 0.921875F, 0.953125F);
-    		GL11.glRotatef(-90, 0, 0, 1);
-    		GL11.glTranslatef(3.75F, 0.5F, 0);
-    		renderSquareUV(7.5F, 0, 7F, 0.421875F, 0.453125F, 0.921875F, 0.953125F);
-    		GL11.glTranslatef(3.75F, -0.5F, 0);
-    		GL11.glRotatef(-90, 0, 0, 1);
-    		renderSquareUV(1F, 0, 7F, 0.421875F, 0.453125F, 0.921875F, 0.953125F);
-    		GL11.glRotatef(-90, 0, 0, 1);
-    		GL11.glTranslatef(3.75F, 0, -3.5F);
-    		renderSquareUV(7F, 1F, 0, 0.421875F, 0.453125F, 0.921875F, 0.953125F);
-    	}else{
-    		GL11.glTranslatef(1.875F, -1.875F, 0);
-    		renderSquareUV(7.5F, 7F, 0, 0.421875F, 0.453125F, 0.921875F, 0.953125F);
     	}
     }
 }

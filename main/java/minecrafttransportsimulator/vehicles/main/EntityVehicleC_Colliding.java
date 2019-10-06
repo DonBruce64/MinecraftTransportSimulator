@@ -11,7 +11,6 @@ import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackCollisionBo
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -159,7 +158,7 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 		Vec3d motion = new Vec3d(this.motionX*speedFactor, this.motionY*speedFactor, this.motionZ*speedFactor);
 		box = box.offset(xAxis ? motion.x : 0, yAxis ? motion.y : 0, zAxis ? motion.z : 0);
 		List<BlockPos> collidedBlockPos = new ArrayList<BlockPos>();
-		List<AxisAlignedBB> collidingAABBList = this.getAABBCollisions(box, collidedBlockPos);
+		List<AxisAlignedBB> collidingAABBList = box.getAABBCollisions(world, collidedBlockPos);
 		
 		float collisionDepth = 0;
 		for(AxisAlignedBB box2 : collidingAABBList){
@@ -225,38 +224,5 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			}
 		}
 		return collisionDepth;
-	}
-
-	
-	/**
-	 * Checks if an AABB is colliding with blocks, and returns the AABB of those blocks.
-	 */
-	protected List<AxisAlignedBB> getAABBCollisions(VehicleAxisAlignedBB box, List<BlockPos> collidedBlockPos){
-		int minX = (int) Math.floor(box.minX);
-    	int maxX = (int) Math.floor(box.maxX + 1.0D);
-    	int minY = (int) Math.floor(box.minY);
-    	int maxY = (int) Math.floor(box.maxY + 1.0D);
-    	int minZ = (int) Math.floor(box.minZ);
-    	int maxZ = (int) Math.floor(box.maxZ + 1.0D);
-    	List<AxisAlignedBB> collidingAABBList = new ArrayList<AxisAlignedBB>();
-    	
-    	for(int i = minX; i < maxX; ++i){
-    		for(int j = minY; j < maxY; ++j){
-    			for(int k = minZ; k < maxZ; ++k){
-    				BlockPos pos = new BlockPos(i, j, k);
-    				IBlockState state = world.getBlockState(pos);
-    				if(state.getBlock().canCollideCheck(state, false)){
-    					state.addCollisionBoxToList(world, pos, box, collidingAABBList, null, false);
-        				if(collidedBlockPos != null){
-        					collidedBlockPos.add(pos);
-        				}
-    				}
-					if(box.collidesWithLiquids && state.getMaterial().isLiquid()){
-						collidingAABBList.add(state.getBoundingBox(world, pos).offset(pos));
-					}
-    			}
-    		}
-    	}
-		return collidingAABBList;
 	}
 }

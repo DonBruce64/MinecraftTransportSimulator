@@ -1,7 +1,13 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 
 /**This class is an upgraded AABB class that allows for AABBs to put into a collective for
  * vehicle collision operations.  They contain rel and pos vectors to allow for collision
@@ -43,4 +49,31 @@ public class VehicleAxisAlignedBB extends AxisAlignedBB{
 	public VehicleAxisAlignedBB grow(double value){
 		return new VehicleAxisAlignedBB(this.pos, this.rel, (float) (this.width + value*2F), (float) (this.height + value*2F), this.isInterior, this.collidesWithLiquids);
     }
+	
+	/**Handy collision check with extra features the default one doesn't have.*/
+	public List<AxisAlignedBB> getAABBCollisions(World world, List<BlockPos> collidedBlockPos){
+		int minTestX = (int) Math.floor(minX);
+    	int maxTestX = (int) Math.floor(maxX + 1.0D);
+    	int minTestY = (int) Math.floor(minY);
+    	int maxTestY = (int) Math.floor(maxY + 1.0D);
+    	int minTestZ = (int) Math.floor(minZ);
+    	int maxTestZ = (int) Math.floor(maxZ + 1.0D);
+    	List<AxisAlignedBB> collidingAABBList = new ArrayList<AxisAlignedBB>();
+    	
+    	for(int i = minTestX; i < maxTestX; ++i){
+    		for(int j = minTestY; j < maxTestY; ++j){
+    			for(int k = minTestZ; k < maxTestZ; ++k){
+    				BlockPos pos = new BlockPos(i, j, k);
+    				IBlockState state = world.getBlockState(pos);
+    				if(state.getBlock().canCollideCheck(state, false)){
+    					state.addCollisionBoxToList(world, pos, this, collidingAABBList, null, false);
+        				if(collidedBlockPos != null){
+        					collidedBlockPos.add(pos);
+        				}
+    				}
+    			}
+    		}
+    	}
+		return collidingAABBList;
+	}
 }

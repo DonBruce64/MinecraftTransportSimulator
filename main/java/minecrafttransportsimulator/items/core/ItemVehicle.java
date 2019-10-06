@@ -50,7 +50,6 @@ public class ItemVehicle extends Item{
 					if(heldStack.hasTagCompound()){
 						NBTTagCompound tagCompound = heldStack.getTagCompound();
 						//A-level
-						newVehicle.setUniqueId(tagCompound.getUniqueId("UUID"));
 						NBTTagList partTagList = tagCompound.getTagList("Parts", 10);
 						for(byte i=0; i<partTagList.tagCount(); ++i){
 							try{

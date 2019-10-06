@@ -2,16 +2,15 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Plane;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class PartEngineAircraft extends APartEngine{
 	public PartPropeller propeller;
-	private final EntityVehicleF_Plane plane;
 
 	public PartEngineAircraft(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
-		this.plane = (EntityVehicleF_Plane) vehicle;
 	}
 	
 	@Override
@@ -27,18 +26,23 @@ public class PartEngineAircraft extends APartEngine{
 			}
 		}
 		if(state.running){
-			double engineTargetRPM = plane.throttle/100F*(pack.engine.maxRPM - engineStartRPM*1.25 - hours) + engineStartRPM*1.25;
+			double engineTargetRPM = vehicle.throttle/100F*(pack.engine.maxRPM - engineStartRPM*1.25 - hours) + engineStartRPM*1.25;
 			double engineRPMDifference = engineTargetRPM - RPM;
 			if(propeller != null){
 				double propellerForcePenalty = (propeller.pack.propeller.diameter - 75)/(50*this.pack.engine.fuelConsumption - 15);
-				double propellerFeedback = -(plane.velocity - 0.0254*Math.abs(propeller.currentPitch)*RPM*pack.engine.gearRatios[0]/60/20 - propellerForcePenalty)*25;
-				RPM += engineRPMDifference/10 - propellerFeedback;
+				double propellerFeedback = (0.0254*Math.abs(propeller.currentPitch)*RPM*pack.engine.gearRatios[0]/60/20 - vehicle.velocity + propellerForcePenalty)*50;
+				//PropellerFeedback can't make an engine stall, but hours can.
+				if(RPM + engineRPMDifference/10 > engineStallRPM && RPM + engineRPMDifference/10 - propellerFeedback < engineStallRPM){
+					RPM = engineStallRPM;
+				}else{
+					RPM += engineRPMDifference/10 - propellerFeedback;	
+				}				
 			}else{
 				RPM += engineRPMDifference/10;
 			}
 		}else{
 			if(propeller != null){
-				RPM = Math.max(RPM + (plane.velocity - 0.0254*Math.abs(propeller.currentPitch)*RPM*pack.engine.gearRatios[0]/60/20)*15 - 10, 0);
+				RPM = Math.max(RPM + (vehicle.velocity - 0.0254*Math.abs(propeller.currentPitch)*RPM*pack.engine.gearRatios[0]/60/20)*15 - 10, 0);
 			}else{
 				RPM = Math.max(RPM - 10, 0);
 			}
@@ -52,7 +56,7 @@ public class PartEngineAircraft extends APartEngine{
 	
 	@Override
 	public double getForceOutput(){
-		if(propeller != null && propeller.currentPitch != 0 && state.running){
+		if(propeller != null && Math.abs(propeller.currentPitch) > 20 && state.running){
 			//Get what the pitch velocity of the propeller would be at the current velocity.
 			double currentPitchVelocity = vehicle.velocity*20D;
 			//Get the effective pitch velocity of the propeller at the current RPM.
@@ -62,22 +66,22 @@ public class PartEngineAircraft extends APartEngine{
 			if(effectivePitchVelocity != 0){
 				//Get the angle of attack of the propeller.
 				double angleOfAttack = Math.abs(effectivePitchVelocity - currentPitchVelocity);
-				//Now return the thrust equation.  If the angle of attack is greater than 35, sap power off the propeller for stalling.
-				return vehicle.airDensity*Math.PI*Math.pow(0.0254*propeller.pack.propeller.diameter/2D, 2)*
+				double thrust = vehicle.airDensity*Math.PI*Math.pow(0.0254*propeller.pack.propeller.diameter/2D, 2)*
 						(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
-						Math.pow(propeller.pack.propeller.diameter/2D/Math.abs(propeller.currentPitch) + propeller.pack.propeller.numberBlades/1000D, 1.5)/400D
-						*(angleOfAttack > 35 ? 35/angleOfAttack : 1.0D)*Math.signum(effectivePitchVelocity);
+						Math.pow(propeller.pack.propeller.diameter/2D/Math.abs(propeller.currentPitch) + propeller.pack.propeller.numberBlades/1000D, 1.5)/400D;
+				//If the angle of attack is greater than 35, sap power off the propeller for stalling.
+				if(angleOfAttack > 35){
+					thrust *= 35/angleOfAttack;
+				}
+				//Get the correct sign of the force, taking engine systems into account.
+				if(vehicle instanceof EntityVehicleG_Blimp && ((EntityVehicleF_Air) vehicle).reverseThrust){
+					thrust *= -Math.signum(effectivePitchVelocity);
+				}else{
+					thrust *= Math.signum(effectivePitchVelocity);
+				}
+				return thrust;
 			}
 		}
 		return 0;
-	}
-	
-	@Override
-	public void setElectricStarterStatus(boolean engaged){
-		super.setElectricStarterStatus(engaged);
-		//Set throttle to 10 to prevent stalling during electric starting operations.
-		if(engaged && vehicle.throttle < 10){
-			vehicle.throttle = 10;
-		}
 	}
 }
