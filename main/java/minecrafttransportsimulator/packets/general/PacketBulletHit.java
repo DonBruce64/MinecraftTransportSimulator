@@ -73,7 +73,7 @@ public class PacketBulletHit implements IMessage{
 						PartBulletConfig bulletPackData = PackParserSystem.getPartPack(message.bulletName).bullet;
 						Entity entityAttacking = ctx.getServerHandler().player.world.getEntityByID(message.playerID);
 						if(bulletPackData.type.equals("explosive")){
-							ctx.getServerHandler().player.world.newExplosion(entityAttacking, message.x, message.y, message.z, 12, false, true);
+							ctx.getServerHandler().player.world.newExplosion(entityAttacking, message.x, message.y, message.z, bulletPackData.diameter/10F, false, true);
 						}else{
 							//If we hit an entity, apply damage to them.
 							if(message.entitiyHitID != -1){
