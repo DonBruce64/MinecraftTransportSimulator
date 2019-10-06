@@ -31,7 +31,6 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
@@ -174,13 +173,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	        double thisZ = vehicle.lastTickPosZ + (vehicle.posZ - vehicle.lastTickPosZ) * (double)partialTicks;
 	        GL11.glTranslated(thisX - playerX, thisY - playerY, thisZ - playerZ);
 		}
-		
-       
-       
-       
-        if(vehicle instanceof EntityVehicleF_Ground && !Minecraft.getMinecraft().isGamePaused()){
-        	System.out.format("PlayerDX:%f PlayerX:%f PlayerLastX:%f TruckDX:%f TruckMotionX:%f\n", (vehicle.rotationYaw - vehicle.prevRotationYaw), vehicle.motionYaw, renderViewEntity.lastTickPosX, vehicle.motionX, vehicle.motionY);
-        }
        
         //Set up lighting.
         int lightVar = vehicle.getBrightnessForRender();
