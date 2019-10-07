@@ -39,6 +39,7 @@ import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SirenPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
+import minecrafttransportsimulator.packets.control.TrailerPacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.packets.general.PacketChat;
@@ -343,6 +344,7 @@ public final class MTSRegistry{
 		registerPacket(ShiftPacket.class, ShiftPacket.Handler.class, true, true);
 		registerPacket(SteeringPacket.class, SteeringPacket.Handler.class, true, true);
 		registerPacket(ThrottlePacket.class, ThrottlePacket.Handler.class, true, true);
+		registerPacket(TrailerPacket.class, TrailerPacket.Handler.class, true, true);
 		registerPacket(TrimPacket.class, TrimPacket.Handler.class, true, true);
 		
 		//Packets in packets.general

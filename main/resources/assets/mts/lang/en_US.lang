@@ -113,6 +113,7 @@ input.car.siren=Siren
 input.car.lights=Lights
 input.car.lights_special=SpecialLights
 input.car.park=ParkingBrake
+input.car.trailer=TrailerLink
 input.car.gun=Gun
 input.car.zoom_i=ZoomIn
 input.car.zoom_o=ZoomOut

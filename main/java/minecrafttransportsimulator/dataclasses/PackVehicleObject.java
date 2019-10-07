@@ -30,6 +30,8 @@ public class PackVehicleObject{
     	public int fuelCapacity;
     	public String hornSound;
     	public String sirenSound;
+        public float[] hitchPos;
+        public float[] hookupPos;
         public List<PackInstrument> instruments = new ArrayList<PackInstrument>();
         public List<PackControl> controls = new ArrayList<PackControl>();
     }

@@ -21,6 +21,7 @@ import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SirenPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
+import minecrafttransportsimulator.packets.control.TrailerPacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
@@ -508,6 +509,11 @@ public final class ControlSystem{
 		}else{
 			MTS.MTSNet.sendToServer(new HornPacket(powered.getEntityId(), false));
 		}
+		
+		//Check if we pressed the trailer button.
+		if(ControlsKeyboard.CAR_TRAILER.isPressed()){
+			MTS.MTSNet.sendToServer(new TrailerPacket(powered.getEntityId()));
+		}
 	}
 		
 	public enum ControlsKeyboard{
@@ -541,6 +547,7 @@ public final class ControlSystem{
 		CAR_START(Keyboard.KEY_Z, ControlsJoystick.CAR_START, false),
 		CAR_LIGHTS(Keyboard.KEY_X, ControlsJoystick.CAR_LIGHTS, true),
 		CAR_LIGHTS_SPECIAL(Keyboard.KEY_V, ControlsJoystick.CAR_LIGHTS_SPECIAL, true),
+		CAR_TRAILER(Keyboard.KEY_G, ControlsJoystick.CAR_TRAILER, true),
 		CAR_GUN(Keyboard.KEY_SPACE, ControlsJoystick.CAR_GUN, false),
 		CAR_ZOOM_I(Keyboard.KEY_PRIOR, ControlsJoystick.CAR_ZOOM_I, true),
 		CAR_ZOOM_O(Keyboard.KEY_NEXT, ControlsJoystick.CAR_ZOOM_O, true);
@@ -629,6 +636,7 @@ public final class ControlSystem{
 		CAR_LIGHTS(false, true),
 		CAR_LIGHTS_SPECIAL(false, true),
 		CAR_PARK(false, true),
+		CAR_TRAILER(false, true),
 		CAR_GUN(false, false),
 		CAR_ZOOM_I(false, true),
 		CAR_ZOOM_O(false, true),
