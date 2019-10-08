@@ -43,6 +43,32 @@ public abstract class APartEngineGeared extends APartEngine{
 		return pack.engine.isAutomatic ? Math.min(1, currentGear)*15F : currentGear*5;
 	}
 	
+	public float getGearshiftPosition_Vertical(){
+		if(currentGear == -1){
+			return pack.engine.gearRatios.length%2 == 0 ? 15 : -15; 
+		}else if(currentGear == 0){
+			return 0;
+		}else{
+			return currentGear%2 == 0 ? -15 : 15;
+		}
+	}
+	
+	public float getGearshiftPosition_Horizontal(){
+		int columns = (pack.engine.gearRatios.length)/2;
+		int firstColumnAngle = columns/2*-5;
+		float columnAngleDelta = columns != 1 ? -firstColumnAngle*2/(columns - 1) : 0; 
+		if(currentGear == -1){
+			return -firstColumnAngle;
+		}else if(currentGear == 0){
+			return 0;
+		}else{
+			//Divide the currentGear-1 by two to get our column (0 for column 1, 1 for 2).
+			//Then add multiply that by columnAngleDelta to get our delta for this column.
+			//Return that value, plus the initial angle.
+			return firstColumnAngle + (int)((currentGear - 1)/2)*columnAngleDelta;
+		}
+	}
+	
 	public void shiftUp(boolean packet){
 		if(currentGear == -1){
 			currentGear = 0;
