@@ -54,25 +54,27 @@ public class TrailerPacket implements IMessage{
 								if(entity instanceof EntityVehicleF_Ground){
 									EntityVehicleF_Ground testVehicle = (EntityVehicleF_Ground) entity;
 									if(testVehicle.pack.motorized.hookupPos != null){
-										Vec3d hitchOffset = new Vec3d(vehicle.pack.motorized.hitchPos[0], vehicle.pack.motorized.hitchPos[1], vehicle.pack.motorized.hitchPos[2]);
-										Vec3d hitchPos = RotationSystem.getRotatedPoint(hitchOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
-										Vec3d hookupOffset = new Vec3d(testVehicle.pack.motorized.hookupPos[0], testVehicle.pack.motorized.hookupPos[1], testVehicle.pack.motorized.hookupPos[2]);
-										Vec3d hookupPos = RotationSystem.getRotatedPoint(hookupOffset, testVehicle.rotationPitch, testVehicle.rotationYaw, testVehicle.rotationRoll).add(testVehicle.getPositionVector());
-										
-										//Make sure clients hitch vehicles that the server sees.  Little more lenient here.
-										if(hitchPos.distanceTo(hookupPos) < (ctx.side.isServer() ? 2 : 3)){
-											testVehicle.towedByVehicle = vehicle;
-											vehicle.towedVehicle = testVehicle;
-											if(ctx.side.isServer()){
-												MTS.MTSNet.sendToAll(message);
+										for(String hitchType : vehicle.pack.motorized.hitchTypes){
+											if(hitchType.equals(testVehicle.pack.motorized.hookupType)){
+												//Make sure clients hitch vehicles that the server sees.  Little more lenient here.
+												Vec3d hitchOffset = new Vec3d(vehicle.pack.motorized.hitchPos[0], vehicle.pack.motorized.hitchPos[1], vehicle.pack.motorized.hitchPos[2]);
+												Vec3d hitchPos = RotationSystem.getRotatedPoint(hitchOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+												Vec3d hookupOffset = new Vec3d(testVehicle.pack.motorized.hookupPos[0], testVehicle.pack.motorized.hookupPos[1], testVehicle.pack.motorized.hookupPos[2]);
+												Vec3d hookupPos = RotationSystem.getRotatedPoint(hookupOffset, testVehicle.rotationPitch, testVehicle.rotationYaw, testVehicle.rotationRoll).add(testVehicle.getPositionVector());
+												if(hitchPos.distanceTo(hookupPos) < (ctx.side.isServer() ? 2 : 3)){
+													testVehicle.towedByVehicle = vehicle;
+													vehicle.towedVehicle = testVehicle;
+													if(ctx.side.isServer()){
+														MTS.MTSNet.sendToAll(message);
+													}
+													return;
+												}
 											}
 										}
 									}
 								}
 							}
 						}
-						
-						
 					}
 				}
 			});
