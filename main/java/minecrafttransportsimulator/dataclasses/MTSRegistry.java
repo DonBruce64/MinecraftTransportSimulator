@@ -21,6 +21,7 @@ import minecrafttransportsimulator.items.blocks.ItemBlockRotatable;
 import minecrafttransportsimulator.items.blocks.ItemBlockTrafficSignalController;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemInstrument;
+import minecrafttransportsimulator.items.core.ItemJerrycan;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.items.core.ItemKey;
 import minecrafttransportsimulator.items.core.ItemManual;
@@ -67,6 +68,7 @@ import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientRemoval;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleJerrycan;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
@@ -131,6 +133,7 @@ public final class MTSRegistry{
 	public static final Item wrench = new ItemWrench().setCreativeTab(coreTab);
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
 	public static final Item jumperCable = new ItemJumperCable().setCreativeTab(coreTab);
+	public static final Item jerrycan = new ItemJerrycan().setCreativeTab(coreTab);
 	
 	//Crafting benches.
 	public static final Item vehicleBench = new ItemBlockBench("plane", "car").createBlocks();
@@ -143,7 +146,7 @@ public final class MTSRegistry{
 	public static final Item instrumentBench = new ItemBlockBench("instrument").createBlocks();
 	
 	//Fuel pump.
-	public static final Item fuelPump = new ItemBlockFuelPump().createBlocks();		
+	public static final Item fuelPump = new ItemBlockFuelPump().createBlocks();
 	
 	//Traffic Controller
 	public static final Item trafficSignalController = new ItemBlockTrafficSignalController().createBlocks();
@@ -372,6 +375,7 @@ public final class MTSRegistry{
 		registerPacket(PacketVehicleDeltas.class, PacketVehicleDeltas.Handler.class, true, false);
 		registerPacket(PacketVehicleInstruments.class, PacketVehicleInstruments.Handler.class, true, true);
 		registerPacket(PacketVehicleInteracted.class, PacketVehicleInteracted.Handler.class, false, true);
+		registerPacket(PacketVehicleJerrycan.class, PacketVehicleJerrycan.Handler.class, true, false);
 		registerPacket(PacketVehicleKey.class, PacketVehicleKey.Handler.class, true, false);
 		registerPacket(PacketVehicleNameTag.class, PacketVehicleNameTag.Handler.class, true, false);
 		registerPacket(PacketVehicleWindowBreak.class, PacketVehicleWindowBreak.Handler.class, true, false);

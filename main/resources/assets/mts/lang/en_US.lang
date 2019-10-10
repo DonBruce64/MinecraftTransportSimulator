@@ -46,6 +46,11 @@ interact.fuelpump.connect=Fuel pump connected and pumping.
 interact.fuelpump.complete=Vehicle is full, disconnecting.
 interact.fuelpump.empty=Fuel pump is empty, disconnecting.
 interact.fuelpump.disconnect=Disconnecting and stopping pumping.
+
+interact.jerrycan.empty=This jerrycan is empty and cannot fuel this vehicle.
+interact.jerrycan.wrongtype=This jerrycan does not contain the same liquid as what is in the vehicle.
+interact.jerrycan.toofull=This vehicle is already full of fuel.  You cannot add any more.
+interact.jerrycan.success=Added 1000mb of fluid to this vehicle.
  
 interact.failure.seattaken=This seat is taken!
 interact.failure.vehiclelocked=This vehicle is locked!
@@ -264,11 +269,16 @@ info.item.jumpercable.line2=Use on second engine to link.
 info.item.jumpercable.line3=Linked engines will exchange power.
 info.item.jumpercable.line4=Engines will un-link when power is even, 
 info.item.jumpercable.line5=or if they get too far away.
+info.item.jerrycan.fill=Fill can by right-clicking a fuel pump.
+info.item.jerrycan.drain=Fill vehicle by right-clicking with full can.
+info.item.jerrycan.empty=Can is currently is empy.
+info.item.jerrycan.contains=Can contains: 
 
 item.wrench.name=Wrench
 item.key.name=Key
 item.manual.name=MTS Manual (READ ME!)
 item.jumpercable.name=Jumper Cables
+item.jerrycan.name=Jerrycan
 
 item.vehiclebench.name=Drafting Table
 item.propellerbench.name=Propeller Bench

@@ -139,7 +139,7 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 				}
 				tankInfo.fluid.amount += amountToFill;
 				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(tankInfo.fluid, world, getPos(), this, amountToFill));
-				MTS.MTSNet.sendToAll(new PacketFuelPumpFillDrain(this, new FluidStack(tankInfo.fluid, amountToFill)));
+				MTS.MTSNet.sendToAll(new PacketFuelPumpFillDrain(this, new FluidStack(tankInfo.fluid, amountToFill), false));
 			}
 			return amountToFill;
 		}else{
@@ -149,7 +149,20 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 
 	@Override
 	public FluidStack drain(int maxDrain, boolean doDrain){
-		return null;
+		if(tankInfo.fluid != null){
+			FluidStack fluidToDrain = new FluidStack(tankInfo.fluid, Math.min(maxDrain, tankInfo.fluid.amount));
+			if(doDrain){
+				tankInfo.fluid.amount -= fluidToDrain.amount;
+				FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(tankInfo.fluid, world, getPos(), this, fluidToDrain.amount));
+				MTS.MTSNet.sendToAll(new PacketFuelPumpFillDrain(this, new FluidStack(tankInfo.fluid, fluidToDrain.amount), true));
+				if(tankInfo.fluid.amount == 0){
+					this.clearFluid();
+				}
+			}
+			return fluidToDrain;
+		}else{
+			return null;
+		}
 	}
 	
 	@Override

@@ -11,25 +11,29 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketFuelPumpFillDrain extends APacketTileEntity{
+	private boolean drain;
 	private FluidStack stack;
 
 	public PacketFuelPumpFillDrain() {}
 	
-	public PacketFuelPumpFillDrain(TileEntityFuelPump tile, FluidStack stack){
+	public PacketFuelPumpFillDrain(TileEntityFuelPump tile, FluidStack stack, boolean drain){
 		super(tile);
 		this.stack=stack;
+		this.drain=drain;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		super.fromBytes(buf);
 		this.stack=FluidStack.loadFluidStackFromNBT(ByteBufUtils.readTag(buf));
+		this.drain=buf.readBoolean();
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		super.toBytes(buf);
 		ByteBufUtils.writeTag(buf, this.stack.writeToNBT(new NBTTagCompound()));
+		buf.writeBoolean(this.drain);
 	}
 
 	public static class Handler implements IMessageHandler<PacketFuelPumpFillDrain, IMessage>{
@@ -42,7 +46,11 @@ public class PacketFuelPumpFillDrain extends APacketTileEntity{
 						if(pump.getFluid() == null){
 							pump.setFluid(message.stack.getFluid());
 						}
-						pump.getFluid().amount += message.stack.amount;
+						if(message.drain){
+							pump.getFluid().amount -= message.stack.amount;
+						}else{
+							pump.getFluid().amount += message.stack.amount;
+						}
 					}
 				}
 			});
