@@ -3,8 +3,8 @@ package minecrafttransportsimulator.packets.vehicles;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.mcinterface.MTSPlayer;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -18,7 +18,7 @@ public class PacketVehicleInstruments extends APacketVehiclePlayer{
 
 	public PacketVehicleInstruments(){}
 	
-	public PacketVehicleInstruments(EntityVehicleE_Powered vehicle, EntityPlayer player, byte slotToChange, String instrumentToChangeTo){
+	public PacketVehicleInstruments(EntityVehicleE_Powered vehicle, MTSPlayer player, byte slotToChange, String instrumentToChangeTo){
 		super(vehicle, player);
 		this.slotToChange = slotToChange;
 		this.instrumentToChangeTo = instrumentToChangeTo;
@@ -44,20 +44,20 @@ public class PacketVehicleInstruments extends APacketVehiclePlayer{
 				@Override
 				public void run(){
 					EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) getVehicle(message, ctx);
-					EntityPlayer player = getPlayer(message, ctx);
+					MTSPlayer player = getPlayer(message, ctx);
 					
 					if(vehicle != null && player != null){
 						//Check to make sure the instrument can fit in survival player's inventories.
-						if(!player.capabilities.isCreativeMode && ctx.side.isServer() && vehicle.getInstrumentInfoInSlot(message.slotToChange) != null){
-							if(!player.inventory.addItemStackToInventory(new ItemStack(MTSRegistry.instrumentItemMap.get(vehicle.getInstrumentInfoInSlot(message.slotToChange).name)))){
+						if(!player.creative() && ctx.side.isServer() && vehicle.getInstrumentInfoInSlot(message.slotToChange) != null){
+							if(!player.addStack(new ItemStack(MTSRegistry.instrumentItemMap.get(vehicle.getInstrumentInfoInSlot(message.slotToChange).name)))){
 								return;
 							}
 						}
 						
 						//Check to make sure player has the instrument they are trying to put in.
-						if(!player.capabilities.isCreativeMode && ctx.side.isServer() && !message.instrumentToChangeTo.isEmpty()){
-							if(player.inventory.hasItemStack(new ItemStack(MTSRegistry.instrumentItemMap.get(message.instrumentToChangeTo)))){
-								player.inventory.clearMatchingItems(MTSRegistry.instrumentItemMap.get(message.instrumentToChangeTo), -1, 1, null);
+						if(!player.creative() && ctx.side.isServer() && !message.instrumentToChangeTo.isEmpty()){
+							if(player.hasItems(MTSRegistry.instrumentItemMap.get(message.instrumentToChangeTo), 0, 0)){
+								player.removeItems(MTSRegistry.instrumentItemMap.get(message.instrumentToChangeTo), 1, -1);
 							}else{
 								return;
 							}

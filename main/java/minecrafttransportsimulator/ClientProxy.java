@@ -11,6 +11,7 @@ import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.guis.GUISign;
 import minecrafttransportsimulator.guis.GUITrafficSignalController;
 import minecrafttransportsimulator.items.core.ItemManual;
+import minecrafttransportsimulator.mcinterface.MTSPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
@@ -42,7 +43,7 @@ public class ClientProxy extends CommonProxy{
 		ControlSystem.init();
 	}
 	@Override
-	public void openGUI(Object clicked, EntityPlayer clicker){
+	public void openGUI(Object clicked, MTSPlayer clicker){
 		if(clicked instanceof EntityVehicleE_Powered){
 			FMLCommonHandler.instance().showGuiScreen(new GUIInstruments((EntityVehicleE_Powered) clicked, clicker));
 		}else if(clicked instanceof BlockBench){
