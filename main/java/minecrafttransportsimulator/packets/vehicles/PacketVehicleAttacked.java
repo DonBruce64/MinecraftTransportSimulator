@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packets.vehicles;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.mcinterface.MTSPlayerInterface;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -21,8 +22,8 @@ public class PacketVehicleAttacked extends APacketVehiclePlayer{
 
 	public PacketVehicleAttacked(){}
 	
-	public PacketVehicleAttacked(EntityVehicleB_Existing vehicle, EntityPlayer player){
-		super(vehicle, player);
+	public PacketVehicleAttacked(EntityVehicleB_Existing vehicle, int playerID){
+		super(vehicle, playerID);
 	}
 
 	public static class Handler implements IMessageHandler<PacketVehicleAttacked, IMessage>{

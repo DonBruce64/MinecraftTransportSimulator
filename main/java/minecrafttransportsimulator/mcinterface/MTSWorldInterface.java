@@ -1,10 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
-import java.util.List;
-
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 
 /**Class used for getting world information, such as a specific entity,
  * block, or player.  Also gets state information about players, such
@@ -14,13 +11,24 @@ import net.minecraft.item.ItemStack;
  * 
  * @author don_bruce
  */
-public class MTSWorld {
+public class MTSWorldInterface{
+	private final World world;
+	
+	public MTSWorldInterface(World world){
+		this.world = world;
+	}
+	
 	
 	
 	//---------------START OF ENTITY METHODS---------------//
 	/**Gets the entity ID of an Entity.*/
 	public static int getID(Entity entity){
 		return entity.getEntityId();
+	}
+	
+	/**Gets the entity from the world with the specific ID.*/
+	public Entity getEntity(int id){
+		return world.getEntityByID(id);
 	}
 
 }

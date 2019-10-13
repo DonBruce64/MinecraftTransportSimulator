@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.vehicles;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.mcinterface.MTSPlayer;
+import minecrafttransportsimulator.mcinterface.MTSPlayerInterface;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -18,7 +18,7 @@ public class PacketVehicleInstruments extends APacketVehiclePlayer{
 
 	public PacketVehicleInstruments(){}
 	
-	public PacketVehicleInstruments(EntityVehicleE_Powered vehicle, MTSPlayer player, byte slotToChange, String instrumentToChangeTo){
+	public PacketVehicleInstruments(EntityVehicleE_Powered vehicle, MTSPlayerInterface player, byte slotToChange, String instrumentToChangeTo){
 		super(vehicle, player);
 		this.slotToChange = slotToChange;
 		this.instrumentToChangeTo = instrumentToChangeTo;
@@ -44,7 +44,7 @@ public class PacketVehicleInstruments extends APacketVehiclePlayer{
 				@Override
 				public void run(){
 					EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) getVehicle(message, ctx);
-					MTSPlayer player = getPlayer(message, ctx);
+					MTSPlayerInterface player = getPlayer(message, ctx);
 					
 					if(vehicle != null && player != null){
 						//Check to make sure the instrument can fit in survival player's inventories.

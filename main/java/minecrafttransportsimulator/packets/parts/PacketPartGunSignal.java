@@ -39,7 +39,7 @@ public class PacketPartGunSignal extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					APartGun gun = (APartGun) getVehiclePartFromMessage(message, ctx);
+					APartGun gun = (APartGun) getPartFromMessage(message, ctx);
 					if(gun != null){
 						gun.playerControllerID = message.playerControllerID;
 						gun.firing = message.firing;

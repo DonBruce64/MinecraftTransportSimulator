@@ -46,7 +46,7 @@ public class PacketPartEngineDamage extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					APartEngine engine = (APartEngine) getVehiclePartFromMessage(message, ctx);
+					APartEngine engine = (APartEngine) getPartFromMessage(message, ctx);
 					if(engine != null){
 						engine.hours += message.hours;
 						if(!engine.fuelLeak){

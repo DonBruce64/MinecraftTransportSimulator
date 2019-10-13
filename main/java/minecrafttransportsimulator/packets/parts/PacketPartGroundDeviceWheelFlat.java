@@ -19,7 +19,7 @@ public final class PacketPartGroundDeviceWheelFlat extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					PartGroundDeviceWheel wheel = (PartGroundDeviceWheel) getVehiclePartFromMessage(message, ctx);
+					PartGroundDeviceWheel wheel = (PartGroundDeviceWheel) getPartFromMessage(message, ctx);
 					if(wheel != null){
 						wheel.setFlat();
 					}

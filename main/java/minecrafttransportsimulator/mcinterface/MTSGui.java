@@ -100,8 +100,8 @@ public abstract class MTSGui extends GuiScreen{
 	}
 	
 	
-	//---------------START OF CUSTOM CLASSES---------------//
 	
+	//---------------START OF CUSTOM CLASSES---------------//
 	/**A simple button.  Mimics the MC behavior of buttons by highlighting itself when
 	 * the mouse is over it.  Does not use the standard MC button code, so don't expect
 	 * it to behave the same.
