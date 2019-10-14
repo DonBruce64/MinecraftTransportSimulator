@@ -1,18 +1,12 @@
 package minecrafttransportsimulator.packets.vehicles;
 
-import minecrafttransportsimulator.mcinterface.MTSPlayerInterface;
-import minecrafttransportsimulator.mcinterface.MTSWorldInterface;
 import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-
-/**This packet is sent to clients when a vehicle is removed on a server.
- * We won't need to remove the vehicle as MC takes care of removed
- * entities for us.  What we send this for is to tell the SFXSystem
- * to stop playing all sounds for this Entity.
- * 
- * @author don_bruce
- */
 public class PacketVehicleClientRemoval extends APacketVehicle{
 
 	public PacketVehicleClientRemoval(){}
@@ -20,9 +14,20 @@ public class PacketVehicleClientRemoval extends APacketVehicle{
 	public PacketVehicleClientRemoval(EntityVehicleE_Powered vehicle){
 		super(vehicle);
 	}
-	
-	@Override
-	public void handlePacket(MTSWorldInterface world, MTSPlayerInterface player, boolean onServer){
-		SFXSystem.stopVehicleSounds((EntityVehicleE_Powered) getVehicle(world));
+
+	public static class Handler implements IMessageHandler<PacketVehicleClientRemoval, IMessage>{
+		@Override
+		public IMessage onMessage(final PacketVehicleClientRemoval message, final MessageContext ctx){
+			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
+				@Override
+				public void run(){
+					EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) getVehicle(message, ctx);
+					if(vehicle != null){
+						SFXSystem.stopVehicleSounds(vehicle);
+					}
+				}
+			});
+			return null;
+		}
 	}
 }
