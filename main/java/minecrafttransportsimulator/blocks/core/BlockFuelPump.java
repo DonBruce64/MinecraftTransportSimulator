@@ -3,7 +3,7 @@ package minecrafttransportsimulator.blocks.core;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.blocks.ItemBlockRotatable;
-import minecrafttransportsimulator.packets.general.PacketClientChat;
+import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -77,12 +77,12 @@ public class BlockFuelPump extends BlockRotatable implements ITileEntityProvider
     			if(nearestEntity != null){
     				EntityVehicleE_Powered nearestVehicle = (EntityVehicleE_Powered) nearestEntity;
     				if(pump.getFluid() == null){
-    					MTS.MTSNet.sendTo(new PacketClientChat("interact.fuelpump.nofuel"), (EntityPlayerMP) player);
+    					MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.nofuel"), (EntityPlayerMP) player);
     				}else{
         				String fluidName = FluidRegistry.getFluidName(pump.getFluid().getFluid());
     					if(!nearestVehicle.fluidName.isEmpty()){
     						if(!fluidName.equals(nearestVehicle.fluidName)){
-    							MTS.MTSNet.sendTo(new PacketClientChat("interact.fuelpump.wrongtype"), (EntityPlayerMP) player);
+    							MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.wrongtype"), (EntityPlayerMP) player);
     							return true;
     						}
     					}
@@ -93,19 +93,19 @@ public class BlockFuelPump extends BlockRotatable implements ITileEntityProvider
     							if(ConfigSystem.getFuelValue(part.pack.engine.fuelType, fluidName) > 0){
     								isFluidValidFuelForEngines = true;
     								pump.setConnectedVehicle((EntityVehicleE_Powered) nearestEntity);
-    	    						MTS.MTSNet.sendTo(new PacketClientChat("interact.fuelpump.connect"), (EntityPlayerMP) player);
+    	    						MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.connect"), (EntityPlayerMP) player);
     	    						return true;
     							}
     						}
     					}
-    					MTS.MTSNet.sendTo(new PacketClientChat("interact.fuelpump.wrongengines"), (EntityPlayerMP) player);
+    					MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.wrongengines"), (EntityPlayerMP) player);
     				}
     			}else{
-    				MTS.MTSNet.sendTo(new PacketClientChat("interact.fuelpump.toofar"), (EntityPlayerMP) player);
+    				MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.toofar"), (EntityPlayerMP) player);
     			}
     		}else{
     			pump.setConnectedVehicle(null);
-    			MTS.MTSNet.sendTo(new PacketClientChat("interact.fuelpump.disconnect"), (EntityPlayerMP) player);
+    			MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.disconnect"), (EntityPlayerMP) player);
     		}
 		}
 		return true;

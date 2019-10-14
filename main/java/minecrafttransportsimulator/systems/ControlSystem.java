@@ -23,9 +23,9 @@ import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrailerPacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
-import minecrafttransportsimulator.packets.parts.PacketPartCommonEngineSignal;
-import minecrafttransportsimulator.packets.parts.PacketPartCommonEngineSignal.PacketEngineTypes;
-import minecrafttransportsimulator.packets.parts.PacketPartCommonGunSignal;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
+import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
+import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
@@ -287,13 +287,13 @@ public final class ControlSystem{
 			if(seat.isController){
 				for(APart part : vehicle.getVehicleParts()){
 					if(part instanceof APartGun && part.parentPart == null){
-						MTS.MTSNet.sendToServer(new PacketPartCommonGunSignal((APartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 					}
 				}
 			}else{
 				for(APart part : seat.childParts){
 					if(part instanceof APartGun){
-						MTS.MTSNet.sendToServer(new PacketPartCommonGunSignal((APartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 					}
 				}
 			}
@@ -485,12 +485,12 @@ public final class ControlSystem{
 		//Check starter.
 		if(powered.getEngineByNumber((byte) 0) != null){
 			if(ControlsKeyboardDynamic.CAR_STOP.isPressed() || ControlsJoystick.CAR_STOP.isPressed()){
-				MTS.MTSNet.sendToServer(new PacketPartCommonEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_OFF));
+				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_OFF));
 			}else if(ControlsKeyboard.CAR_START.isPressed()){
-				MTS.MTSNet.sendToServer(new PacketPartCommonEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_ON));
-				MTS.MTSNet.sendToServer(new PacketPartCommonEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.ES_ON));
+				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_ON));
+				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.ES_ON));
 			}else{
-				MTS.MTSNet.sendToServer(new PacketPartCommonEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.ES_OFF));
+				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.ES_OFF));
 			}
 		}
 		

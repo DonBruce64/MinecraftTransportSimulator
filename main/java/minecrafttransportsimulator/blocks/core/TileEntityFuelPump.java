@@ -3,7 +3,7 @@ package minecrafttransportsimulator.blocks.core;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.packets.general.PacketClientChat;
+import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpConnection;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -46,7 +46,7 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 			if(Math.sqrt(connectedVehicle.getPosition().distanceSq(getPos())) > 20){
 				setConnectedVehicle(null);
 				if(!world.isRemote){
-					MTS.MTSNet.sendToAllAround(new PacketClientChat("interact.fuelpump.toofar"), new TargetPoint(world.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 25));
+					MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.toofar"), new TargetPoint(world.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 25));
 				}
 				return;
 			}
@@ -61,19 +61,19 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 						setConnectedVehicle(null);
 						this.tankInfo = emptyTankInfo;
 						if(!world.isRemote){
-							MTS.MTSNet.sendToAllAround(new PacketClientChat("interact.fuelpump.empty"), new TargetPoint(world.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
+							MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.empty"), new TargetPoint(world.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
 						}
 					}
 				}else{
 					setConnectedVehicle(null);
 					if(!world.isRemote){
-						MTS.MTSNet.sendToAllAround(new PacketClientChat("interact.fuelpump.empty"), new TargetPoint(world.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
+						MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.empty"), new TargetPoint(world.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
 					}
 				}
 			}else{
 				setConnectedVehicle(null);
 				if(!world.isRemote){
-					MTS.MTSNet.sendToAllAround(new PacketClientChat("interact.fuelpump.complete"), new TargetPoint(world.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
+					MTS.MTSNet.sendToAllAround(new PacketChat("interact.fuelpump.complete"), new TargetPoint(world.provider.getDimension(), this.pos.getX(), this.pos.getY(), this.pos.getZ(), 16));
 				}
 			}
 		}

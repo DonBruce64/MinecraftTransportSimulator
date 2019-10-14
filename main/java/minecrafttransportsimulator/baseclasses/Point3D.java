@@ -12,12 +12,12 @@ package minecrafttransportsimulator.baseclasses;
  * 
  * @author don_bruce
  */
-public class Point{
+public class Point3D{
 	public double x;
 	public double y;
 	public double z;
 	
-	public Point(double x, double y, double z){
+	public Point3D(double x, double y, double z){
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -29,7 +29,7 @@ public class Point{
 		this.z += xOffset;
 	}
 	
-	public double distanceTo(Point otherPoint){
+	public double distanceTo(Point3D otherPoint){
 		return Math.sqrt((this.x - otherPoint.x)*(this.x - otherPoint.x) + (this.y - otherPoint.y)*(this.y - otherPoint.y) + (this.z - otherPoint.z)*(this.z - otherPoint.z));
 	}
 }

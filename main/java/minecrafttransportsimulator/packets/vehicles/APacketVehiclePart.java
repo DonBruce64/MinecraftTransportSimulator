@@ -1,10 +1,9 @@
 package minecrafttransportsimulator.packets.vehicles;
 
-import minecrafttransportsimulator.baseclasses.Point;
 import minecrafttransportsimulator.mcinterface.MTSWorldInterface;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
 
 
 /**Base packet used for vehicle part code.  This packet gets sent with
@@ -39,35 +38,31 @@ public abstract class APacketVehiclePart extends APacketVehicle{
 	}
 	
 	@Override
-	public void parseFromNBT(NBTTagCompound tag){
-		super.parseFromNBT(tag);
-		x = tag.getDouble("x");
-		y = tag.getDouble("y");
-		z = tag.getDouble("z");
+	public void populateFromBytes(PacketBuffer buf){
+		super.fromBytes(buf);
+		this.x = buf.readDouble();
+		this.y = buf.readDouble();
+		this.z = buf.readDouble();
 	}
 
 	@Override
-	public void convertToNBT(NBTTagCompound tag){
-		super.convertToNBT(tag);
-		tag.setDouble("x", x);
-		tag.setDouble("y", y);
-		tag.setDouble("z", z);
+	public void convertToBytes(PacketBuffer buf){
+		super.toBytes(buf);
+		buf.writeDouble(this.x);
+		buf.writeDouble(this.y);
+		buf.writeDouble(this.z);
 	}
 	
-	protected APart getPart(MTSWorldInterface world){
-		EntityVehicleA_Base vehicle = getVehicle(world);
+	protected static APart getPart(APacketVehiclePart message, MTSWorldInterface world){
+		EntityVehicleA_Base vehicle = getVehicle(message, world);
 		//We may be null if this packet was delayed and we lost this vehicle on a client.
 		if(vehicle != null){
 			for(APart part : vehicle.getVehicleParts()){
-				if(part.offset.x == x && part.offset.y == y && part.offset.z == z){
+				if(part.offset.x == message.x && part.offset.y == message.y && part.offset.z == message.z){
 					return part;
 				}
 			}
 		}
 		return null;
-	}
-	
-	protected static Point getPartPoint(APacketVehiclePart message){
-		return new Point(message.z, message.y, message.z);
 	}
 }

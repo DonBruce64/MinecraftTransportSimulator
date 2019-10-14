@@ -24,8 +24,8 @@ public class PacketVehicleClientInit extends APacketVehicle{
 	}
 
 	@Override
-	public void handlePacket(MTSWorldInterface world, boolean onServer){
-		EntityVehicleA_Base vehicle = getVehicle(world);
-		MTSNetwork.sendPacketToClient(new PacketVehicleSeverInitResponse(vehicle, vehicle.handleSave(new NBTTagCompound())), player);
+	public void handlePacket(MTSWorldInterface world, MTSPlayerInterface player, boolean onServer){
+		EntityVehicleA_Base vehicle = getVehicle(this, world);
+		MTSNetwork.sendPacketToClient(new PacketVehicleClientInitResponse(vehicle, vehicle.handleSave(new NBTTagCompound())), player);
 	}
 }

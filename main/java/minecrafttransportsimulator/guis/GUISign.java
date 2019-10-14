@@ -11,7 +11,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
 import minecrafttransportsimulator.dataclasses.PackSignObject;
-import minecrafttransportsimulator.packets.tileentities.PacketTileEntityAllSignChange;
+import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -149,7 +149,7 @@ public class GUISign extends GuiScreen{
     protected void actionPerformed(GuiButton buttonClicked) throws IOException{
 		super.actionPerformed(buttonClicked);
 		if(buttonClicked.equals(startButton)){
-			MTS.MTSNet.sendToServer(new PacketTileEntityAllSignChange(decor, signName, decorTemp.text, player.getEntityId()));
+			MTS.MTSNet.sendToServer(new PacketSignChange(decor, signName, decorTemp.text, player.getEntityId()));
 			mc.player.closeScreen();
 			return;
 		}else{

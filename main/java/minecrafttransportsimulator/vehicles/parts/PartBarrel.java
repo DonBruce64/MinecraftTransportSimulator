@@ -2,7 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.packets.general.PacketClientChat;
+import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -57,7 +57,7 @@ public final class PartBarrel extends APart implements IFluidTank, IFluidHandler
 				player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer());
 			}
 		}else{
-			MTS.MTSNet.sendTo(new PacketClientChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
+			MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
 		}
 		return true;
     }

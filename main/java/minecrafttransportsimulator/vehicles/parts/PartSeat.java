@@ -2,7 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.packets.general.PacketClientChat;
+import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -23,7 +23,7 @@ public final class PartSeat extends APart{
 			Entity seatRider = vehicle.getRiderForSeat(this);
 			if(seatRider != null){
 				if(!player.equals(seatRider)){
-					MTS.MTSNet.sendTo(new PacketClientChat("interact.failure.seattaken"), (EntityPlayerMP) player);
+					MTS.MTSNet.sendTo(new PacketChat("interact.failure.seattaken"), (EntityPlayerMP) player);
 				}
 				return true;
 			}
@@ -31,7 +31,7 @@ public final class PartSeat extends APart{
 			//Let the player start riding at this point.
 			vehicle.setRiderInSeat(player, this);
 		}else{
-			MTS.MTSNet.sendTo(new PacketClientChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
+			MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
 		}
 		return true;
     }

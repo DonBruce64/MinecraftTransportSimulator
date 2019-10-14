@@ -2,8 +2,6 @@ package minecrafttransportsimulator.mcinterface;
 
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.Point;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
@@ -21,8 +19,8 @@ import net.minecraft.item.ItemStack;
 public class MTSPlayerInterface{
 	private final EntityPlayer player;
 	
-	public MTSPlayerInterface(Entity player){
-		this.player = (EntityPlayer) player;
+	public MTSPlayerInterface(EntityPlayer player){
+		this.player = player;
 	}
 
 	/**Gets the Entity ID of a player.*/
@@ -35,19 +33,9 @@ public class MTSPlayerInterface{
 		return player.getUniqueID().toString();
 	}
 	
-	/**Gets the position of a player.*/
-	public Point getPosition(){
-		return new Point(player.posX, player.posY, player.posZ);
-	}
-	
 	/**Gets the inventory of a player.*/
 	public List<ItemStack> getInventory(){
 		return player.inventory.mainInventory;
-	}
-	
-	/**Gets the held stack of a player.*/
-	public ItemStack geHeldStack(){
-		return player.getHeldItemMainhand();
 	}
 	
 	/**Returns true if the player has the passed-in item and quantity.
@@ -75,11 +63,6 @@ public class MTSPlayerInterface{
 	/**Gets the sneaking status of a player.*/
 	public boolean sneaking(){
 		return player.isSneaking();
-	}
-	
-	/**Gets the op status of a player.*/
-	public boolean isOP(){
-		return player.getServer() == null || player.getServer().isSinglePlayer() || player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null;
 	}
 	
 	/**Gets the multiplayer instance of the player.  Used on servers for determining who to send a packet to.*/

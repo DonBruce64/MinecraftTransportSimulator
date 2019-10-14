@@ -1,9 +1,7 @@
 package minecrafttransportsimulator.packets.vehicles;
 
-import minecrafttransportsimulator.mcinterface.MTSPlayerInterface;
-import minecrafttransportsimulator.mcinterface.MTSWorldInterface;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
 
 /**Base packet used for vehicle-player interaction.  This packet
  * gets sent with the vehicle packet as a super to contain the vehicle
@@ -22,18 +20,14 @@ public abstract class APacketVehiclePlayer extends APacketVehicle{
 	}
 	
 	@Override
-	public void parseFromNBT(NBTTagCompound tag){
-		super.parseFromNBT(tag);
-		playerID = tag.getInteger("playerID");
+	public void populateFromBytes(PacketBuffer buf){
+		super.populateFromBytes(buf);
+		this.playerID = buf.readInt();
 	}
 
 	@Override
-	public void convertToNBT(NBTTagCompound tag){
-		super.convertToNBT(tag);
-		tag.setInteger("playerID", playerID);
-	}
-	
-	protected MTSPlayerInterface getPlayer(MTSWorldInterface world){
-		return new MTSPlayerInterface(world.getEntity(playerID));
+	public void convertToBytes(PacketBuffer buf){
+		super.convertToBytes(buf);
+		buf.writeInt(this.playerID);
 	}
 }

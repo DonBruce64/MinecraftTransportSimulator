@@ -19,7 +19,7 @@ import net.minecraft.util.ResourceLocation;
  * 
  * @author don_bruce
  */
-public class MTSRendererInterface{
+public class MTSRenderer{
 	private static TextureManager mcTextureManager;
 	private static FontRenderer mcFontRenderer;
 	private static RenderItem mcItemRenderer;

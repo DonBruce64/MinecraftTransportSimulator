@@ -1,8 +1,6 @@
 package minecrafttransportsimulator.mcinterface;
 
-import minecrafttransportsimulator.baseclasses.Location;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 /**Class used for getting world information, such as a specific entity,
@@ -33,11 +31,4 @@ public class MTSWorldInterface{
 		return world.getEntityByID(id);
 	}
 
-	
-	
-	//---------------START OF TILE ENTITY METHODS---------------//
-	/**Gets the tile entity from the world at the specific point.*/
-	public MTSTileEntity getTileEntity(Location location){
-		return (MTSTileEntity) world.getTileEntity(new BlockPos(location.x, location.y, location.z));
-	}
 }

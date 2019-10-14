@@ -4,7 +4,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.items.parts.ItemPartBullet;
-import minecrafttransportsimulator.packets.parts.PacketPartClientGunReload;
+import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.SFXSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -70,7 +70,7 @@ public abstract class APartGun extends APart implements FXPart{
 						this.bulletsLeft += bulletItem.bulletPackData.quantity;
 						reloadTimeRemaining = pack.gun.reloadTime;
 						reloading = true;
-						MTS.MTSNet.sendToAll(new PacketPartClientGunReload(this, bulletItem.partName));
+						MTS.MTSNet.sendToAll(new PacketPartGunReload(this, bulletItem.partName));
 					}
 				}
 			}
@@ -126,7 +126,7 @@ public abstract class APartGun extends APart implements FXPart{
 											crateInventory.decrStackSize(i, 1);
 											this.loadedBullet = bullet.partName;
 											this.bulletsLeft = bulletPack.bullet.quantity;
-											MTS.MTSNet.sendToAll(new PacketPartClientGunReload(this, bullet.partName));
+											MTS.MTSNet.sendToAll(new PacketPartGunReload(this, bullet.partName));
 											return;
 										}
 									}

@@ -1,26 +1,35 @@
 package minecrafttransportsimulator.packets.vehicles;
 
-import minecrafttransportsimulator.mcinterface.MTSPlayerInterface;
-import minecrafttransportsimulator.mcinterface.MTSWorldInterface;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-/**This packet is sent to clients when a part is removed from a vehicle.
- * This is only sent to clients tracking this vehicle, so we don't need
- * to do any null checks because we know they will have the vehicle and
- * thus must have the part as well.
- * 
- * @author don_bruce
- */
 public class PacketVehicleClientPartRemoval extends APacketVehiclePart{
 
 	public PacketVehicleClientPartRemoval(){}
 	
-	public PacketVehicleClientPartRemoval(APart part){
-		super(part);
+	public PacketVehicleClientPartRemoval(EntityVehicleA_Base vehicle, double offsetX, double offsetY, double offsetZ){
+		super(vehicle, offsetX, offsetY, offsetZ);
 	}
 
-	@Override
-	public void handlePacket(MTSWorldInterface world, boolean onServer){
-		getVehicle( world).removePart(getPart(world), false);
+	public static class Handler implements IMessageHandler<PacketVehicleClientPartRemoval, IMessage>{
+		@Override
+		public IMessage onMessage(final PacketVehicleClientPartRemoval message, final MessageContext ctx){
+			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
+				@Override
+				public void run(){
+					EntityVehicleA_Base vehicle = getVehicle(message, ctx);
+					if(vehicle != null){
+						APart partToRemove = vehicle.getPartAtLocation(message.x, message.y, message.z);
+						vehicle.removePart(partToRemove, false);
+					}
+				}
+			});
+			return null;
+		}
 	}
+
 }

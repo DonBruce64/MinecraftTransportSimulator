@@ -6,7 +6,7 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceBox;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientDeltas;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -653,7 +653,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				rotationRoll += motionRoll;
 				setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
 				addToServerDeltas(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll);
-				MTS.MTSNet.sendToAll(new PacketVehicleClientDeltas(this, motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll));
+				MTS.MTSNet.sendToAll(new PacketVehicleDeltas(this, motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll));
 			}
 		}else{
 			//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.

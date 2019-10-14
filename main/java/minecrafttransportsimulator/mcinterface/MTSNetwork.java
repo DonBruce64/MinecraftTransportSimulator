@@ -3,9 +3,8 @@ package minecrafttransportsimulator.mcinterface;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -21,7 +20,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
  */
 public class MTSNetwork{
 	private static final SimpleNetworkWrapper channel = NetworkRegistry.INSTANCE.newSimpleChannel("MTSNet");
-	public static final int MAX_PACKET_STRING_LENGTH = 100;
 	
 	/**Sends a packet to the server for processing.*/
 	public static void sendPacketToServer(MTSPacket packet){
@@ -55,20 +53,18 @@ public class MTSNetwork{
 		//---------------START OF FORWARDED METHODS---------------//
 		@Override
 		public void fromBytes(ByteBuf buf){
-			parseFromNBT(ByteBufUtils.readTag(buf));
+			populateFromBytes(new PacketBuffer(buf));
 		}
-		/**Parses out variables from NBT.*/
-		public abstract void parseFromNBT(NBTTagCompound tag);
+		/**Parses out the variables from the ByteBuf.*/
+		public abstract void populateFromBytes(PacketBuffer buf);
 		
 
 		@Override
 		public void toBytes(ByteBuf buf){
-			NBTTagCompound tag = new NBTTagCompound();
-			convertToNBT(tag);
-			ByteBufUtils.writeTag(buf, tag);
+			convertToBytes(new PacketBuffer(buf));
 		}
-		/**Writes the variables in this class to the supplied tag.*/
-		public abstract void convertToNBT(NBTTagCompound tag);
+		/**Writes the variables in this class to the ByteBuf.*/
+		public abstract void convertToBytes(PacketBuffer buf);
 		
 		public static class MTSPacketHandler implements IMessageHandler<MTSPacket, IMessage>{
 			@Override
@@ -77,9 +73,9 @@ public class MTSNetwork{
 					@Override
 					public void run(){
 						if(ctx.side.isServer()){
-							message.handlePacket(new MTSWorldInterface(ctx.getServerHandler().player.world), true);
+							message.handlePacket(new MTSWorldInterface(ctx.getServerHandler().player.world), new MTSPlayerInterface(ctx.getServerHandler().player), true);
 						}else{
-							message.handlePacket(new MTSWorldInterface(Minecraft.getMinecraft().world), false);
+							message.handlePacket(new MTSWorldInterface(Minecraft.getMinecraft().world), new MTSPlayerInterface(Minecraft.getMinecraft().player), false);
 						}
 					}
 				});
@@ -87,6 +83,6 @@ public class MTSNetwork{
 			}
 		}
 		/**Handles the logic once the packet has been received.*/
-		public abstract void handlePacket(MTSWorldInterface world, boolean onServer);
+		public abstract void handlePacket(MTSWorldInterface world, MTSPlayerInterface sendingPlayer, boolean onServer);
 	}
 }

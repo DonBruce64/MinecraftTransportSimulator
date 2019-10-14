@@ -14,8 +14,7 @@ import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.parts.AItemPart;
-import minecrafttransportsimulator.mcinterface.MTSNetwork;
-import minecrafttransportsimulator.packets.general.PacketServerManualPageUpdate;
+import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -30,7 +29,7 @@ public class GUIManual extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/manual_pages.png");
 	private static final ResourceLocation cover = new ResourceLocation(MTS.MODID, "textures/guis/manual_cover.png");
 	
-	private byte pageNumber;
+	private short pageNumber;
 	private int guiLeft;
 	private int guiTop;
 	private int leftSideOffset;
@@ -55,7 +54,7 @@ public class GUIManual extends GuiScreen{
 		}else{
 			this.stackTag = stack.getTagCompound();
 		}
-		this.pageNumber = stackTag.getByte("pageNumber");
+		this.pageNumber = stackTag.getShort("page");
 				
 		for(byte i=1; i<50; ++i){
 			if(I18n.format("manual." + String.valueOf(i) + ".title").equals("manual." + String.valueOf(i) + ".title")){
@@ -246,7 +245,7 @@ public class GUIManual extends GuiScreen{
 	
 	@Override
 	public void onGuiClosed(){
-		MTSNetwork.sendPacketToServer(new PacketServerManualPageUpdate(pageNumber));
+		MTS.MTSNet.sendToServer(new PacketManualPageUpdate(pageNumber));
 		stackTag.setShort("page", pageNumber);
 		stack.setTagCompound(stackTag);
 	}

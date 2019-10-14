@@ -1,39 +1,38 @@
 package minecrafttransportsimulator.packets.tileentities;
 
-import minecrafttransportsimulator.baseclasses.Location;
-import minecrafttransportsimulator.mcinterface.MTSNetwork.MTSPacket;
-import minecrafttransportsimulator.mcinterface.MTSTileEntity;
-import minecrafttransportsimulator.mcinterface.MTSWorldInterface;
-import net.minecraft.nbt.NBTTagCompound;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-
-/**Base packet for tile entity interaction.  Contains the location of the
- * tile entity, as well as a helper method for getting it from the world.
- * 
- * @author don_bruce
- */
-public abstract class APacketTileEntity extends MTSPacket{
-	private Location location;
+public abstract class APacketTileEntity implements IMessage{
+	private BlockPos tileEntityPos;
 
 	public APacketTileEntity(){}
 	
-	public APacketTileEntity(MTSTileEntity tile){
-		this.location = tile.getLocation();
+	public APacketTileEntity(TileEntity tile){
+		this.tileEntityPos = tile.getPos();
 	}
 	
 	@Override
-	public void parseFromNBT(NBTTagCompound tag){
-		location = new Location(tag.getInteger("x"), tag.getInteger("y"), tag.getInteger("z"));
+	public void fromBytes(ByteBuf buf){
+		this.tileEntityPos = new BlockPos(buf.readInt(), buf.readInt(), buf.readInt());
 	}
 
 	@Override
-	public void convertToNBT(NBTTagCompound tag){
-		tag.setInteger("x", location.x);
-		tag.setInteger("y", location.y);
-		tag.setInteger("z", location.z);
+	public void toBytes(ByteBuf buf){
+		buf.writeInt(this.tileEntityPos.getX());
+		buf.writeInt(this.tileEntityPos.getY());
+		buf.writeInt(this.tileEntityPos.getZ());
 	}
-	
-	protected MTSTileEntity getTileEntity(MTSWorldInterface world){
-		return world.getTileEntity(location);
+
+	protected static TileEntity getTileEntity(APacketTileEntity message, MessageContext ctx){
+		if(ctx.side.isServer()){
+			return ctx.getServerHandler().player.world.getTileEntity(message.tileEntityPos);
+		}else{
+			return Minecraft.getMinecraft().world.getTileEntity(message.tileEntityPos);
+		}
 	}
 }
