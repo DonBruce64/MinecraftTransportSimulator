@@ -1,17 +1,12 @@
 package minecrafttransportsimulator.packets.vehicles;
 
-import minecrafttransportsimulator.mcinterface.MTSNetwork.MTSPacket;
-import minecrafttransportsimulator.mcinterface.MTSWorldInterface;
+import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-
-/**Base packet for vehicle interaction.  Contains the entity ID of the vehicle,
- * and a helper method for getting it from the world.
- * 
- * @author don_bruce
- */
-public abstract class APacketVehicle extends MTSPacket{
+public abstract class APacketVehicle implements IMessage{
 	private int id;
 
 	public APacketVehicle(){}
@@ -21,16 +16,20 @@ public abstract class APacketVehicle extends MTSPacket{
 	}
 	
 	@Override
-	public void populateFromBytes(PacketBuffer buf){
+	public void fromBytes(ByteBuf buf){
 		this.id = buf.readInt();
 	}
 
 	@Override
-	public void convertToBytes(PacketBuffer buf){
+	public void toBytes(ByteBuf buf){
 		buf.writeInt(this.id);
 	}
 	
-	protected static EntityVehicleA_Base getVehicle(APacketVehicle packet, MTSWorldInterface world){
-		return (EntityVehicleA_Base) world.getEntity(packet.id);
+	protected static EntityVehicleA_Base getVehicle(APacketVehicle message, MessageContext ctx){
+		if(ctx.side.isServer()){
+			return (EntityVehicleA_Base) ctx.getServerHandler().player.world.getEntityByID(message.id);
+		}else{
+			return (EntityVehicleA_Base) Minecraft.getMinecraft().world.getEntityByID(message.id);
+		}
 	}
 }

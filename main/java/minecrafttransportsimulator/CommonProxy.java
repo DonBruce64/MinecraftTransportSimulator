@@ -3,7 +3,7 @@ package minecrafttransportsimulator;
 import java.io.File;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.mcinterface.MTSPlayerInterface;
+import minecrafttransportsimulator.mcinterface.MTSPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
@@ -20,7 +20,7 @@ public class CommonProxy{
 	}
 	
 	public void initControls(){}
-	public void openGUI(Object clicked, MTSPlayerInterface clicker){}
+	public void openGUI(Object clicked, MTSPlayer clicker){}
 	public void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){}
 	public void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine engine){}
 }

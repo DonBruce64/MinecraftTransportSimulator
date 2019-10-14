@@ -1,33 +1,39 @@
 package minecrafttransportsimulator.packets.vehicles;
 
+import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.mcinterface.MTSPlayer;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-/**Base packet used for vehicle-player interaction.  This packet
- * gets sent with the vehicle packet as a super to contain the vehicle
- * id.  If part interaction is needed, use APackerVehiclePartPlayer.
- * 
- * @author don_bruce
- */
 public abstract class APacketVehiclePlayer extends APacketVehicle{
 	private int playerID;
 
 	public APacketVehiclePlayer(){}
 	
-	public APacketVehiclePlayer(EntityVehicleA_Base vehicle, int playerID){
+	public APacketVehiclePlayer(EntityVehicleA_Base vehicle, MTSPlayer player){
 		super(vehicle);
-		this.playerID = playerID;
+		this.playerID = player.getID();
 	}
 	
 	@Override
-	public void populateFromBytes(PacketBuffer buf){
-		super.populateFromBytes(buf);
+	public void fromBytes(ByteBuf buf){
+		super.fromBytes(buf);
 		this.playerID = buf.readInt();
 	}
 
 	@Override
-	public void convertToBytes(PacketBuffer buf){
-		super.convertToBytes(buf);
+	public void toBytes(ByteBuf buf){
+		super.toBytes(buf);
 		buf.writeInt(this.playerID);
+	}
+	
+	protected static MTSPlayer getPlayer(APacketVehiclePlayer message, MessageContext ctx){
+		if(ctx.side.isServer()){
+			return new MTSPlayer((EntityPlayer) ctx.getServerHandler().player.world.getEntityByID(message.playerID));
+		}else{
+			return new MTSPlayer((EntityPlayer) Minecraft.getMinecraft().world.getEntityByID(message.playerID));
+		}
 	}
 }

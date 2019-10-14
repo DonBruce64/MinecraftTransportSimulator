@@ -39,7 +39,7 @@ public class PacketPartGunReload extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					APartGun gun = (APartGun) getPartFromMessage(message, ctx);
+					APartGun gun = (APartGun) getVehiclePartFromMessage(message, ctx);
 					if(gun != null){
 						PartBulletConfig bulletPack = PackParserSystem.getPartPack(message.bulletReloaded).bullet;
 						gun.loadedBullet = message.bulletReloaded;

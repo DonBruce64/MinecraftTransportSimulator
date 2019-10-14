@@ -48,7 +48,7 @@ public class PacketVehicleClientPartAddition extends APacketVehiclePart{
 				public void run(){
 					EntityVehicleA_Base vehicle = (EntityVehicleA_Base) getVehicle(message, ctx);
 					if(vehicle != null){
-						PackPart packPart = vehicle.getPackDefForLocation(message.x, message.y, message.z);
+						PackPart packPart = vehicle.getPackDefForLocation(message.offsetX, message.offsetY, message.offsetZ);
 						String partName = ((AItemPart) message.partStack.getItem()).partName;
 						try{
 							Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partName);

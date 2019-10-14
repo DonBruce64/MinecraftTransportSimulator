@@ -3,7 +3,6 @@ package minecrafttransportsimulator.mcinterface;
 import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
@@ -16,10 +15,10 @@ import net.minecraft.item.ItemStack;
  * 
  * @author don_bruce
  */
-public class MTSPlayerInterface{
+public class MTSPlayer{
 	private final EntityPlayer player;
 	
-	public MTSPlayerInterface(EntityPlayer player){
+	public MTSPlayer(EntityPlayer player){
 		this.player = player;
 	}
 
@@ -63,10 +62,5 @@ public class MTSPlayerInterface{
 	/**Gets the sneaking status of a player.*/
 	public boolean sneaking(){
 		return player.isSneaking();
-	}
-	
-	/**Gets the multiplayer instance of the player.  Used on servers for determining who to send a packet to.*/
-	public EntityPlayerMP getMultiplayer(){
-		return (EntityPlayerMP) player;
 	}
 }

@@ -49,7 +49,7 @@ public class PacketPartEngineLinked extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					APartEngine engine = (APartEngine) getPartFromMessage(message, ctx);
+					APartEngine engine = (APartEngine) getVehiclePartFromMessage(message, ctx);
 					
 					EntityVehicleA_Base linkedVehicle = (EntityVehicleA_Base) Minecraft.getMinecraft().world.getEntityByID(message.linkedId);
 					APartEngine linkedEngine = null;

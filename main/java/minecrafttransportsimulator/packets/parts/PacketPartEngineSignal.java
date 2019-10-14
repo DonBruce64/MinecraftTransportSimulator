@@ -35,7 +35,7 @@ public class PacketPartEngineSignal extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					APartEngine engine = (APartEngine) getPartFromMessage(message, ctx);
+					APartEngine engine = (APartEngine) getVehiclePartFromMessage(message, ctx);
 					if(engine != null){
 						PacketEngineTypes packetType = PacketEngineTypes.values()[message.packetType];
 						switch(packetType){

@@ -43,7 +43,7 @@ public class PacketPartSeatRiderChange extends APacketPart{
 				@Override
 				public void run(){
 					Entity rider = Minecraft.getMinecraft().world.getEntityByID(message.rider);
-					PartSeat seat = (PartSeat) getPartFromMessage(message, ctx);
+					PartSeat seat = (PartSeat) getVehiclePartFromMessage(message, ctx);
 					if(rider != null && seat != null){
 						if(message.mount){
 							seat.vehicle.setRiderInSeat(rider, seat);

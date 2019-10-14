@@ -12,7 +12,7 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackInstrument;
 import minecrafttransportsimulator.items.core.ItemInstrument;
 import minecrafttransportsimulator.mcinterface.MTSGui;
-import minecrafttransportsimulator.mcinterface.MTSPlayerInterface;
+import minecrafttransportsimulator.mcinterface.MTSPlayer;
 import minecrafttransportsimulator.mcinterface.MTSRenderer;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
 import minecrafttransportsimulator.rendering.RenderHUD;
@@ -23,13 +23,13 @@ import net.minecraft.item.ItemStack;
 
 public class GUIInstruments extends MTSGui{
 	private final EntityVehicleE_Powered vehicle;
-	private final MTSPlayerInterface player;
+	private final MTSPlayer player;
 	
 	private PackInstrument lastInstrumentClicked = null;
 	private final Map<String, ItemStack> playerInstruments = new HashMap<String, ItemStack>();
 	private final Map<String, Integer[]> renderedPlayerInstrumentsBounds = new HashMap<String, Integer[]>();
 	
-	public GUIInstruments(EntityVehicleE_Powered vehicle, MTSPlayerInterface player){
+	public GUIInstruments(EntityVehicleE_Powered vehicle, MTSPlayer player){
 		this.vehicle = vehicle;
 		this.player = player;
 	}

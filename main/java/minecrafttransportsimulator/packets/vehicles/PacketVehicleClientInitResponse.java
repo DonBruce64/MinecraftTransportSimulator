@@ -1,52 +1,49 @@
 package minecrafttransportsimulator.packets.vehicles;
 
-import java.io.IOException;
-
-import minecrafttransportsimulator.mcinterface.MTSPlayerInterface;
-import minecrafttransportsimulator.mcinterface.MTSWorldInterface;
+import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-/**This packet is sent to clients when the server gets a request to
- * send pack data to them.  We send over the NBT data to the
- * client, which will allow them to look-up the pack data on
- * their side.  It also allows the client to get extra saved
- * data like fuel level and parts that are present on the vehicle.
- * 
- * @author don_bruce
- */
 public class PacketVehicleClientInitResponse extends APacketVehicle{
-	private NBTTagCompound tag;
+	private NBTTagCompound tagCompound;
 
 	public PacketVehicleClientInitResponse(){}
 	
-	public PacketVehicleClientInitResponse(EntityVehicleA_Base vehicle, NBTTagCompound tag){
+	public PacketVehicleClientInitResponse(EntityVehicleA_Base vehicle, NBTTagCompound tagCompound){
 		super(vehicle);
-		this.tag=tag;
+		this.tagCompound=tagCompound;
 	}
 	
 	@Override
-	public void populateFromBytes(PacketBuffer buf){
-		super.populateFromBytes(buf);
-		try{
-			this.tag = buf.readCompoundTag();
-		}catch (IOException e){
-			e.printStackTrace();
-		}
+	public void fromBytes(ByteBuf buf){
+		super.fromBytes(buf);
+		this.tagCompound=ByteBufUtils.readTag(buf);
 	}
 
 	@Override
-	public void convertToBytes(PacketBuffer buf){
-		super.convertToBytes(buf);
-		buf.writeCompoundTag(tag);
+	public void toBytes(ByteBuf buf){
+		super.toBytes(buf);
+		ByteBufUtils.writeTag(buf, this.tagCompound);
 	}
-	
-	@Override
-	public void handlePacket(MTSWorldInterface world, MTSPlayerInterface player, boolean onServer){
-		EntityVehicleA_Base vehicle = getVehicle(this, world);
-		if(vehicle != null){
-			vehicle.handleLoad(tag);
+
+	public static class Handler implements IMessageHandler<PacketVehicleClientInitResponse, IMessage>{
+		@Override
+		public IMessage onMessage(final PacketVehicleClientInitResponse message, final MessageContext ctx){
+			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
+				@Override
+				public void run(){
+					EntityVehicleA_Base vehicle = getVehicle(message, ctx);
+					if(vehicle != null){
+						vehicle.readFromNBT(message.tagCompound);
+					}
+				}
+			});
+			return null;
 		}
 	}
 }
