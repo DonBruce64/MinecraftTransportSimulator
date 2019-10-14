@@ -7,7 +7,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.MTS;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 /**Class that is used by MTS for all GUI operations.  This provides a standard set of
@@ -27,23 +26,25 @@ import net.minecraft.util.ResourceLocation;
 public abstract class MTSGui extends GuiScreen{
 	protected static final ResourceLocation GUI_STANDARD_TEXTURE = new ResourceLocation(MTS.MODID, "textures/guis/standard.png");	
 	protected final List<MTSButton> buttons = new ArrayList<MTSButton>();
+	private final boolean bool3 = true;
 	
 	
 	
 	//---------------START OF FORWARDED METHODS---------------//
+	
 	@Override 
 	public void initGui(){
 		handleInit(this.width, this.height);
 	}
 	/**Called during init.  Width and height of the screen are known here.*/
-	protected abstract void handleInit(int width, int height);
+	public void handleInit(int width, int height){};
 	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks){
 		handleDraw(mouseX, mouseY);
 	}
 	/**Called when the main draw function is.  This is where drawing of components should happen.*/
-	protected abstract void handleDraw(int mouseX, int mouseY);
+	public void handleDraw(int mouseX, int mouseY){};
 	
 	
     @Override
@@ -57,9 +58,9 @@ public abstract class MTSGui extends GuiScreen{
     	handleMouseClick(mouseX, mouseY);
     }
 	/**Called when the mouse is clicked.  Only for a left-click.*/
-    protected abstract void handleMouseClick(int mouseX, int mouseY);
+	public void handleMouseClick(int mouseX, int mouseY){};
 	/**Called when a button is clicked.  This will be called instead of handleMouseClick().*/
-    protected abstract void handleButtonClick(MTSButton buttonClicked);
+	public void handleButtonClick(MTSButton buttonClicked){};
 	
 
 	@Override
@@ -67,31 +68,26 @@ public abstract class MTSGui extends GuiScreen{
     	handleKeyTyped(key, code);
     }
     /**Called when a key is pressed.  Does not get called if the ESC key is pressed as that closes the GUI.*/
-	protected abstract void handleKeyTyped(char key, int code);
+	protected void handleKeyTyped(char key, int code){};
 	
 	@Override
 	public boolean doesGuiPauseGame(){
 		return pauses();
 	}
 	/**Return true if this GUI pauses the game..*/
-	public abstract boolean pauses();
+	public boolean pauses(){return false;};
 	
 	
 	
 	//---------------START OF CUSTOM METHODS---------------//
-	/**Closes this GUI.*/
-	public void close(){
-		mc.player.closeScreen();
+	/**Binds the passed-in texture.*/
+	public void bindTexture(ResourceLocation texture){
+		mc.getTextureManager().bindTexture(texture);
 	}
 	
-	/**Renders the shaded background common to screens like the pause menu.*/
+	/**Draws the shaded background common to screens like the pause menu.*/
 	public void renderBackground(){
 		drawDefaultBackground();
-	}
-	
-	/**Renders the tooltip of an item.  Does NOT check to make sure the mouse is over the item.*/
-	public void renderItemTooltip(ItemStack stack, int x, int y){
-		renderToolTip(stack, x, y);
 	}
 	
 	/**Renders a square from the currently bound texture.  Note that all measurements are in pixels.*/
@@ -108,7 +104,7 @@ public abstract class MTSGui extends GuiScreen{
 	 * 
 	 * @author don_bruce
 	 */
-	protected class MTSButton{
+	public class MTSButton{
 		public final int x;
 		public final int y;
 		public final int width;
@@ -149,7 +145,7 @@ public abstract class MTSGui extends GuiScreen{
 				}else{
 					renderTexturedQuad(x, y, 0, BUTTON_TEXTURE_U_OFFSET, width, height, BUTTON_TEXTURE_WIDTH, BUTTON_TEXTURE_HEIGHT);
 				}
-				MTSRenderer.drawText(text, width + width/2, height + height/2, Color.GRAY, true, true);
+				MTSFontRenderer.drawText(text, width + width/2, height + height/2, Color.GRAY, true, true);
 			}
 		}
 	}

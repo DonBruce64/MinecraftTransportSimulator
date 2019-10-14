@@ -11,16 +11,18 @@ import com.google.common.collect.ImmutableList;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.mcinterface.MTSEntity;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartRemoval;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import net.minecraft.entity.Entity;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**Base vehicle class.  All vehicle entities should extend this class.
  * It is primarily responsible for the adding and removal of parts,
@@ -30,7 +32,7 @@ import net.minecraft.world.World;
  * 
  * @author don_bruce
  */
-public abstract class EntityVehicleA_Base extends MTSEntity{
+public abstract class EntityVehicleA_Base extends Entity{
 	/**This name is identical to the unique name found in the {@link PackVehicleObject}
 	 * It is present here to allow the pack system to properly identify this vehicle
 	 * during save/load operations, as well as determine some properties dynamically.
@@ -68,7 +70,8 @@ public abstract class EntityVehicleA_Base extends MTSEntity{
 	}
 	
 	@Override
-	public void handleUpdate(){
+	public void onEntityUpdate(){
+		super.onEntityUpdate();
 		//We need to get pack data manually if we are on the client-side.
 		///Although we could call this in the constructor, Minecraft changes the
 		//entity IDs after spawning and that fouls things up.
@@ -83,6 +86,15 @@ public abstract class EntityVehicleA_Base extends MTSEntity{
 			}
 		}
 	}
+	
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void setPositionAndRotationDirect(double posX, double posY, double posZ, float yaw, float pitch, int posRotationIncrements, boolean teleport){
+    	//Overridden due to stupid tracker behavior.
+    	//Client-side render changes calls put in its place.
+    	this.setRenderDistanceWeight(100);
+    	this.ignoreFrustumCheck = true;
+    }
 	
 	public void addPart(APart part, boolean ignoreCollision){
 		parts.add(part);
@@ -255,7 +267,7 @@ public abstract class EntityVehicleA_Base extends MTSEntity{
 	}
 			
     @Override
-	public void handleLoad(NBTTagCompound tagCompound){
+	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
 		this.vehicleName = tagCompound.getString("vehicleName");
 		this.vehicleJSONName = PackParserSystem.getVehicleJSONName(vehicleName);
@@ -280,7 +292,7 @@ public abstract class EntityVehicleA_Base extends MTSEntity{
 	}
     
 	@Override
-	public NBTTagCompound handleSave(NBTTagCompound tagCompound){
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setString("vehicleName", this.vehicleName);
 		
@@ -301,4 +313,9 @@ public abstract class EntityVehicleA_Base extends MTSEntity{
 		tagCompound.setTag("Parts", partTagList);
 		return tagCompound;
 	}
+	
+	//Junk methods, forced to pull in.
+	protected void entityInit(){}
+	protected void readEntityFromNBT(NBTTagCompound p_70037_1_){}
+	protected void writeEntityToNBT(NBTTagCompound p_70014_1_){}
 }

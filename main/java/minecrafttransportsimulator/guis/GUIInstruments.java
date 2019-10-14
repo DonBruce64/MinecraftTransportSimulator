@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.guis;
 
 import java.awt.Color;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -11,44 +12,40 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackInstrument;
 import minecrafttransportsimulator.items.core.ItemInstrument;
-import minecrafttransportsimulator.mcinterface.MTSGui;
-import minecrafttransportsimulator.mcinterface.MTSPlayer;
-import minecrafttransportsimulator.mcinterface.MTSRenderer;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
-public class GUIInstruments extends MTSGui{
+public class GUIInstruments extends GuiScreen{
 	private final EntityVehicleE_Powered vehicle;
-	private final MTSPlayer player;
+	private final EntityPlayer player;
 	
 	private PackInstrument lastInstrumentClicked = null;
 	private final Map<String, ItemStack> playerInstruments = new HashMap<String, ItemStack>();
 	private final Map<String, Integer[]> renderedPlayerInstrumentsBounds = new HashMap<String, Integer[]>();
 	
-	public GUIInstruments(EntityVehicleE_Powered vehicle, MTSPlayer player){
+	public GUIInstruments(EntityVehicleE_Powered vehicle, EntityPlayer player){
 		this.vehicle = vehicle;
 		this.player = player;
 	}
-	
-	@Override
-	protected void handleInit(int width, int height){};
 
 	@Override
-	protected void handleDraw(int mouseX, int mouseY){
+    public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
 		if(vehicle.isDead){
-			close();
+			mc.player.closeScreen();
 			return;
 		}
 		
-		renderBackground();
+		this.drawDefaultBackground();
 		
 		//First scale the GUI to match the HUD scaling.
 		GL11.glPushMatrix();
-		GL11.glScalef(1.0F*width/RenderHUD.screenDefaultX, 1.0F*height/RenderHUD.screenDefaultY, 0);
+		GL11.glScalef(1.0F*this.width/RenderHUD.screenDefaultX, 1.0F*this.height/RenderHUD.screenDefaultY, 0);
 		
 		//Draw the main HUD.
 		GL11.glPushMatrix();
@@ -61,7 +58,7 @@ public class GUIInstruments extends MTSGui{
 			RenderHUD.drawAuxiliaryHUD(vehicle, width, height, true);
 		}
 		GL11.glDisable(GL11.GL_LIGHTING);
-		MTSRenderer.enableLightmap();
+		mc.entityRenderer.disableLightmap();
 		GL11.glPopMatrix();
 		
 		//Draw a blank square for any instruments that aren't present to let the player know they can be clicked.
@@ -120,8 +117,8 @@ public class GUIInstruments extends MTSGui{
 		//Get all the instruments that fit this vehicle that the player currently has.
 		playerInstruments.clear();
 		renderedPlayerInstrumentsBounds.clear();
-		if(!player.creative()){
-			for(ItemStack stack : player.getInventory()){
+		if(!player.capabilities.isCreativeMode){
+			for(ItemStack stack : player.inventory.mainInventory){
 				if(stack != null){
 					if(stack.getItem() instanceof ItemInstrument){
 						ItemInstrument instrumentItem = (ItemInstrument) stack.getItem();
@@ -152,7 +149,7 @@ public class GUIInstruments extends MTSGui{
 			GL11.glPushMatrix();
 			GL11.glTranslatef(renderedInstrumentsEntry.getValue()[0], renderedInstrumentsEntry.getValue()[2], 0);
 			GL11.glScalef(3.5F, 3.5F, 0);
-			MTSRenderer.renderItem(playerInstruments.get(renderedInstrumentsEntry.getKey()), 0, 0);
+			mc.getRenderItem().renderItemIntoGUI(playerInstruments.get(renderedInstrumentsEntry.getKey()), 0, 0);
 			GL11.glPopMatrix();
 		}
 		
@@ -160,14 +157,14 @@ public class GUIInstruments extends MTSGui{
 		GL11.glPushMatrix();
 		GL11.glTranslatef(3*RenderHUD.screenDefaultX/4, 2.5F*RenderHUD.screenDefaultY/16, 0);
 		GL11.glScalef(2.5F, 2.5F, 2.5F);
-		MTSRenderer.drawText(I18n.format("gui.instruments.main"), (int) (-MTSRenderer.getTextWidth(I18n.format("gui.instruments.main"))/2), 0, Color.WHITE, false, false);
+		fontRenderer.drawString(I18n.format("gui.instruments.main"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.main"))/2), 0, Color.WHITE.getRGB());
 		GL11.glPopMatrix();
 		
 		if(vehicle.pack.general.type.equals("plane")){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(3*RenderHUD.screenDefaultX/4, 9*RenderHUD.screenDefaultY/16, 0);
 			GL11.glScalef(2.5F, 2.5F, 2.5F);
-			MTSRenderer.drawText(I18n.format("gui.instruments.control"), (int) (-MTSRenderer.getTextWidth(I18n.format("gui.instruments.control"))/2), 0, Color.WHITE, false, false);
+			fontRenderer.drawString(I18n.format("gui.instruments.control"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.control"))/2), 0, Color.WHITE.getRGB());
 			GL11.glPopMatrix();
 		}
 				
@@ -176,21 +173,21 @@ public class GUIInstruments extends MTSGui{
 				GL11.glPushMatrix();
 				GL11.glTranslatef(3*RenderHUD.screenDefaultX/4, RenderHUD.screenDefaultY/16, 0);
 				GL11.glScalef(2.5F, 2.5F, 2.5F);
-				MTSRenderer.drawText(I18n.format("gui.instruments.idle"), (int) (-MTSRenderer.getTextWidth(I18n.format("gui.instruments.idle"))/2), 0, Color.WHITE, false, false);
+				fontRenderer.drawString(I18n.format("gui.instruments.idle"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.idle"))/2), 0, Color.WHITE.getRGB());
 				GL11.glPopMatrix();
 			}
 		}else{
 			GL11.glPushMatrix();
 			GL11.glTranslatef(RenderHUD.screenDefaultX/2, RenderHUD.screenDefaultY/16, 0);
 			GL11.glScalef(2.5F, 2.5F, 2.5F);
-			MTSRenderer.drawText(I18n.format("gui.instruments.decide"), (int) (-MTSRenderer.getTextWidth(I18n.format("gui.instruments.decide"))/2), 0, Color.WHITE, false, false);
+			fontRenderer.drawString(I18n.format("gui.instruments.decide"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.decide"))/2), 0, Color.WHITE.getRGB());
 			GL11.glPopMatrix();
 		}
 		
 		GL11.glPushMatrix();
 		GL11.glTranslatef(RenderHUD.screenDefaultX/4, 11*RenderHUD.screenDefaultY/16, 0);
 		GL11.glScalef(2.5F, 2.5F, 2.5F);
-		MTSRenderer.drawText(I18n.format("gui.instruments.clear"), (int) (-MTSRenderer.getTextWidth(I18n.format("gui.instruments.clear"))/2), 0, Color.WHITE, false, false);
+		fontRenderer.drawString(I18n.format("gui.instruments.clear"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.clear"))/2), 0, Color.WHITE.getRGB());
 		GL11.glPopMatrix();
 		
 		//Need to do mouseover after main rendering or you get rendering issues.
@@ -211,7 +208,7 @@ public class GUIInstruments extends MTSGui{
 	}
 	
 	@Override
-	protected void handleMouseClick(int mouseX, int mouseY){
+    protected void mouseClicked(int mouseX, int mouseY, int button){
 		//Check to see if we clicked an instrument on the HUD.
 		//Scale mouse position to the scaled GUI;
 		mouseX = (int) (1.0F*mouseX/width*RenderHUD.screenDefaultX);
@@ -247,17 +244,6 @@ public class GUIInstruments extends MTSGui{
 		}
 	}
 	
-	@Override
-	protected void handleButtonClick(MTSButton buttonClicked){}
-	
-	@Override
-	protected void handleKeyTyped(char key, int code){}
-	
-	@Override
-	public boolean pauses(){
-		return false;
-	}
-	
 	private byte getIndexOfLastInstrumentClicked(){
 		for(byte i=0; i<vehicle.pack.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.pack.motorized.instruments.get(i);
@@ -266,5 +252,17 @@ public class GUIInstruments extends MTSGui{
 			}
 		}
 		return -1;
+	}
+	
+	@Override
+	public boolean doesGuiPauseGame(){
+		return false;
+	}
+	
+	@Override
+	protected void keyTyped(char typedChar, int keyCode) throws IOException{
+		if(keyCode == 1 || mc.gameSettings.keyBindInventory.isActiveAndMatches(keyCode)){
+			super.keyTyped('0', 1);
+        }
 	}
 }

@@ -89,8 +89,8 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	@Override
-	public void handleUpdate(){
-		super.handleUpdate();
+	public void onEntityUpdate(){
+		super.onEntityUpdate();
 		if(pack != null){
 			currentMass = getCurrentMass();
 			airDensity = 1.225*Math.pow(2, -posY/(500D*world.getHeight()/256D));
@@ -131,7 +131,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	@Override
-	public boolean handleAttack(DamageSource source, float damage){
+	public boolean attackEntityFrom(DamageSource source, float damage){
 		if(!world.isRemote){
 			if(source.getImmediateSource() != null && !source.getImmediateSource().equals(source.getTrueSource())){
 				//This is a projectile of some sort.  If this projectile is inside a part
@@ -431,8 +431,8 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public abstract float getSteerAngle();
 	
     @Override
-	public void handleLoad(NBTTagCompound tagCompound){
-		super.handleLoad(tagCompound);
+	public void readFromNBT(NBTTagCompound tagCompound){
+		super.readFromNBT(tagCompound);
 		this.locked=tagCompound.getBoolean("locked");
 		this.brokenWindows=tagCompound.getByte("brokenWindows");
 		this.rotationRoll=tagCompound.getFloat("rotationRoll");
@@ -450,8 +450,8 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
     
 	@Override
-	public NBTTagCompound handleSave(NBTTagCompound tagCompound){
-		super.handleSave(tagCompound);
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
+		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("locked", this.locked);
 		tagCompound.setByte("brokenWindows", this.brokenWindows);
 		tagCompound.setFloat("rotationRoll", this.rotationRoll);
