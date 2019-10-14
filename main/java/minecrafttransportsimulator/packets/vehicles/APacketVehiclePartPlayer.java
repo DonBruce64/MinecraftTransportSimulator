@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.vehicles;
 
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.NBTTagCompound;
 
 /**Base packet used for part-player interaction.  Use when a
  * player needs to do something to a part, or vice-versa.
@@ -25,14 +25,14 @@ public abstract class APacketVehiclePartPlayer extends APacketVehiclePart{
 	}
 	
 	@Override
-	public void populateFromBytes(PacketBuffer buf){
-		super.populateFromBytes(buf);
-		this.playerID = buf.readInt();
+	public void parseFromNBT(NBTTagCompound tag){
+		super.parseFromNBT(tag);
+		playerID = tag.getInteger("playerID");
 	}
 
 	@Override
-	public void convertToBytes(PacketBuffer buf){
-		super.convertToBytes(buf);
-		buf.writeInt(this.playerID);
+	public void convertToNBT(NBTTagCompound tag){
+		super.convertToNBT(tag);
+		tag.setInteger("playerID", playerID);
 	}
 }

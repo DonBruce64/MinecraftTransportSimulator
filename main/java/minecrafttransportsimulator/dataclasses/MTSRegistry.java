@@ -43,36 +43,36 @@ import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrailerPacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
-import minecrafttransportsimulator.packets.general.PacketChat;
-import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
+import minecrafttransportsimulator.packets.general.PacketClientChat;
+import minecrafttransportsimulator.packets.general.PacketServerManualPageUpdate;
 import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
-import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
-import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
-import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
-import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
+import minecrafttransportsimulator.packets.parts.PacketPartClientEngineDamage;
+import minecrafttransportsimulator.packets.parts.PacketPartClientEngineLinked;
+import minecrafttransportsimulator.packets.parts.PacketPartCommonEngineSignal;
+import minecrafttransportsimulator.packets.parts.PacketPartClientWheelFlat;
+import minecrafttransportsimulator.packets.parts.PacketPartClientGunReload;
+import minecrafttransportsimulator.packets.parts.PacketPartCommonGunSignal;
+import minecrafttransportsimulator.packets.parts.PacketPartClientSeatRiderChange;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpConnection;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
-import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
+import minecrafttransportsimulator.packets.tileentities.PacketTileEntityAllSignChange;
 import minecrafttransportsimulator.packets.tileentities.PacketTileEntityClientServerHandshake;
 import minecrafttransportsimulator.packets.tileentities.PacketTrafficSignalControllerChange;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInitResponse;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleSeverInitResponse;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartAddition;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartRemoval;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientRemoval;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientDeltas;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleCommonInstruments;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleJerrycan;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowFix;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientJerrycan;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientKey;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientNameTag;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientWindowBreak;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientWindowFix;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
@@ -352,42 +352,42 @@ public final class MTSRegistry{
 		
 		//Packets in packets.general
 		registerPacket(PacketBulletHit.class, PacketBulletHit.Handler.class, true, true);
-		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);
-		registerPacket(PacketPartGunReload.class, PacketPartGunReload.Handler.class, true, false);
-		registerPacket(PacketManualPageUpdate.class, PacketManualPageUpdate.Handler.class, false, true);
+		registerPacket(PacketClientChat.class, PacketClientChat.Handler.class, true, false);
+		registerPacket(PacketPartClientGunReload.class, PacketPartClientGunReload.Handler.class, true, false);
+		registerPacket(PacketServerManualPageUpdate.class, PacketServerManualPageUpdate.Handler.class, false, true);
 		registerPacket(PacketPackReload.class, PacketPackReload.Handler.class, false, true);
 		registerPacket(PacketPlayerCrafting.class, PacketPlayerCrafting.Handler.class, false, true);
 		
 		//Packets in packets.tileentity
 		registerPacket(PacketFuelPumpConnection.class, PacketFuelPumpConnection.Handler.class, true, false);
 		registerPacket(PacketFuelPumpFillDrain.class, PacketFuelPumpFillDrain.Handler.class, true, false);
-		registerPacket(PacketSignChange.class, PacketSignChange.Handler.class, true, true);
+		registerPacket(PacketTileEntityAllSignChange.class, PacketTileEntityAllSignChange.Handler.class, true, true);
 		registerPacket(PacketTileEntityClientServerHandshake.class, PacketTileEntityClientServerHandshake.Handler.class, true, true);
 		registerPacket(PacketTrafficSignalControllerChange.class, PacketTrafficSignalControllerChange.Handler.class, true, true);
 		
 		//Packets in packets.vehicles.
 		registerPacket(PacketVehicleAttacked.class, PacketVehicleAttacked.Handler.class, false, true);
 		registerPacket(PacketVehicleClientInit.class, PacketVehicleClientInit.Handler.class, false, true);
-		registerPacket(PacketVehicleClientInitResponse.class, PacketVehicleClientInitResponse.Handler.class, true, false);
+		registerPacket(PacketVehicleSeverInitResponse.class, PacketVehicleSeverInitResponse.Handler.class, true, false);
 		registerPacket(PacketVehicleClientPartAddition.class, PacketVehicleClientPartAddition.Handler.class, true, false);
 		registerPacket(PacketVehicleClientPartRemoval.class, PacketVehicleClientPartRemoval.Handler.class, true, false);
 		registerPacket(PacketVehicleClientRemoval.class, PacketVehicleClientRemoval.Handler.class, true, false);
-		registerPacket(PacketVehicleDeltas.class, PacketVehicleDeltas.Handler.class, true, false);
-		registerPacket(PacketVehicleInstruments.class, PacketVehicleInstruments.Handler.class, true, true);
+		registerPacket(PacketVehicleClientDeltas.class, PacketVehicleClientDeltas.Handler.class, true, false);
+		registerPacket(PacketVehicleCommonInstruments.class, PacketVehicleCommonInstruments.Handler.class, true, true);
 		registerPacket(PacketVehicleInteracted.class, PacketVehicleInteracted.Handler.class, false, true);
-		registerPacket(PacketVehicleJerrycan.class, PacketVehicleJerrycan.Handler.class, true, false);
-		registerPacket(PacketVehicleKey.class, PacketVehicleKey.Handler.class, true, false);
-		registerPacket(PacketVehicleNameTag.class, PacketVehicleNameTag.Handler.class, true, false);
-		registerPacket(PacketVehicleWindowBreak.class, PacketVehicleWindowBreak.Handler.class, true, false);
-		registerPacket(PacketVehicleWindowFix.class, PacketVehicleWindowFix.Handler.class, true, false);
+		registerPacket(PacketVehicleClientJerrycan.class, PacketVehicleClientJerrycan.Handler.class, true, false);
+		registerPacket(PacketVehicleClientKey.class, PacketVehicleClientKey.Handler.class, true, false);
+		registerPacket(PacketVehicleClientNameTag.class, PacketVehicleClientNameTag.Handler.class, true, false);
+		registerPacket(PacketVehicleClientWindowBreak.class, PacketVehicleClientWindowBreak.Handler.class, true, false);
+		registerPacket(PacketVehicleClientWindowFix.class, PacketVehicleClientWindowFix.Handler.class, true, false);
 		
 		//Packets in packets.parts
-		registerPacket(PacketPartEngineDamage.class, PacketPartEngineDamage.Handler.class, true, false);
-		registerPacket(PacketPartEngineLinked.class, PacketPartEngineLinked.Handler.class, true, false);
-		registerPacket(PacketPartEngineSignal.class, PacketPartEngineSignal.Handler.class, true, true);
-		registerPacket(PacketPartGroundDeviceWheelFlat.class, PacketPartGroundDeviceWheelFlat.Handler.class, true, false);
-		registerPacket(PacketPartGunSignal.class, PacketPartGunSignal.Handler.class, true, true);
-		registerPacket(PacketPartSeatRiderChange.class, PacketPartSeatRiderChange.Handler.class, true, false);
+		registerPacket(PacketPartClientEngineDamage.class, PacketPartClientEngineDamage.Handler.class, true, false);
+		registerPacket(PacketPartClientEngineLinked.class, PacketPartClientEngineLinked.Handler.class, true, false);
+		registerPacket(PacketPartCommonEngineSignal.class, PacketPartCommonEngineSignal.Handler.class, true, true);
+		registerPacket(PacketPartClientWheelFlat.class, PacketPartClientWheelFlat.Handler.class, true, false);
+		registerPacket(PacketPartCommonGunSignal.class, PacketPartCommonGunSignal.Handler.class, true, true);
+		registerPacket(PacketPartClientSeatRiderChange.class, PacketPartClientSeatRiderChange.Handler.class, true, false);
 	}
 
 	/**

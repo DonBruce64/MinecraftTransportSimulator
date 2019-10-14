@@ -8,8 +8,8 @@ import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
+import minecrafttransportsimulator.packets.parts.PacketPartClientSeatRiderChange;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientWindowBreak;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -165,7 +165,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			if(damageSource != null && this.brokenWindows < pack.rendering.numberWindows){
 				++brokenWindows;
 				this.playSound(SoundEvents.BLOCK_GLASS_BREAK, 2.0F, 1.0F);
-				MTS.MTSNet.sendToAll(new PacketVehicleWindowBreak(this));
+				MTS.MTSNet.sendToAll(new PacketVehicleClientWindowBreak(this));
 			}
 		}
 		return true;
@@ -273,7 +273,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		//Set the player's yaw to the same yaw as the vehicle to ensure we don't have 360+ rotations to deal with.
 		rider.rotationYaw =  (float) (this.rotationYaw + seat.partRotation.y);
 		if(!world.isRemote){
-			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, true));
+			MTS.MTSNet.sendToAll(new PacketPartClientSeatRiderChange(seat, rider, true));
 		}
 	}
 	
@@ -305,7 +305,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			}else if(rider instanceof EntityLivingBase){
 				((EntityLivingBase) rider).dismountEntity(this);
 			}
-			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, false));
+			MTS.MTSNet.sendToAll(new PacketPartClientSeatRiderChange(seat, rider, false));
 		}
 	}
 	
@@ -369,7 +369,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		if(this.brokenWindows < pack.rendering.numberWindows){
 			++brokenWindows;
 			this.playSound(SoundEvents.BLOCK_GLASS_BREAK, 2.0F, 1.0F);
-			MTS.MTSNet.sendToAll(new PacketVehicleWindowBreak(this));
+			MTS.MTSNet.sendToAll(new PacketVehicleClientWindowBreak(this));
 		}
 	}
 	

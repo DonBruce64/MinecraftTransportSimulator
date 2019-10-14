@@ -2,7 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.packets.general.PacketChat;
+import minecrafttransportsimulator.packets.general.PacketClientChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -29,7 +29,7 @@ public final class PartBrewingStand extends APart{
 		if(!vehicle.locked){
 			player.displayGUIChest(fakeBrewingStand);
 		}else{
-			MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
+			MTS.MTSNet.sendTo(new PacketClientChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
 		}
 		return true;
     }

@@ -3,11 +3,11 @@ package minecrafttransportsimulator.vehicles.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
-import minecrafttransportsimulator.packets.general.PacketChat;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
+import minecrafttransportsimulator.packets.general.PacketClientChat;
+import minecrafttransportsimulator.packets.parts.PacketPartClientEngineDamage;
+import minecrafttransportsimulator.packets.parts.PacketPartClientEngineLinked;
+import minecrafttransportsimulator.packets.parts.PacketPartCommonEngineSignal;
+import minecrafttransportsimulator.packets.parts.PacketPartCommonEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.systems.SFXSystem.FXPart;
@@ -92,24 +92,24 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(linkedEngine == null){
 				if(jumperCableItem.lastEngineClicked == null){
 					jumperCableItem.lastEngineClicked = this;
-					MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.firstlink"), (EntityPlayerMP) player);
+					MTS.MTSNet.sendTo(new PacketClientChat("interact.jumpercable.firstlink"), (EntityPlayerMP) player);
 				}else if(!jumperCableItem.lastEngineClicked.equals(this)){
 					if(jumperCableItem.lastEngineClicked.vehicle.equals(this.vehicle)){
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.samevehicle"), (EntityPlayerMP) player);
+						MTS.MTSNet.sendTo(new PacketClientChat("interact.jumpercable.samevehicle"), (EntityPlayerMP) player);
 						jumperCableItem.lastEngineClicked = null;
 					}else if(this.partPos.distanceTo(jumperCableItem.lastEngineClicked.partPos) < 15){
 						linkedEngine = jumperCableItem.lastEngineClicked;
 						jumperCableItem.lastEngineClicked.linkedEngine = this;
 						jumperCableItem.lastEngineClicked = null;
-						MTS.MTSNet.sendToAll(new PacketPartEngineLinked(this, linkedEngine));
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.secondlink"), (EntityPlayerMP) player);	
+						MTS.MTSNet.sendToAll(new PacketPartClientEngineLinked(this, linkedEngine));
+						MTS.MTSNet.sendTo(new PacketClientChat("interact.jumpercable.secondlink"), (EntityPlayerMP) player);	
 					}else{
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.toofar"), (EntityPlayerMP) player);
+						MTS.MTSNet.sendTo(new PacketClientChat("interact.jumpercable.toofar"), (EntityPlayerMP) player);
 						jumperCableItem.lastEngineClicked = null;
 					}
 				}
 			}else{
-				MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.alreadylinked"), (EntityPlayerMP) player);
+				MTS.MTSNet.sendTo(new PacketClientChat("interact.jumpercable.alreadylinked"), (EntityPlayerMP) player);
 			}
 			return true;
 		}else{
@@ -124,14 +124,14 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
 			if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
 			if(!brokenStarter)brokenStarter = Math.random() < 0.05;
-			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, damage*10));
+			MTS.MTSNet.sendToAll(new PacketPartClientEngineDamage(this, damage*10));
 		}else{
 			hours += damage;
 			if(source.isProjectile()){
 				if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
 				if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
 			}
-			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, damage));
+			MTS.MTSNet.sendToAll(new PacketPartClientEngineDamage(this, damage));
 		}
 	}
 	
@@ -146,7 +146,7 @@ public abstract class APartEngine extends APart implements FXPart{
 				linkedEngine.linkedEngine = null;
 				linkedEngine = null;
 				if(vehicle.world.isRemote){
-					MTS.MTSNet.sendToAllAround(new PacketChat("interact.jumpercable.linkdropped"), new TargetPoint(vehicle.world.provider.getDimension(), partPos.x, partPos.y, partPos.z, 16));
+					MTS.MTSNet.sendToAllAround(new PacketClientChat("interact.jumpercable.linkdropped"), new TargetPoint(vehicle.world.provider.getDimension(), partPos.x, partPos.y, partPos.z, 16));
 				}
 			}else if(vehicle.electricPower + 0.5 < linkedEngine.vehicle.electricPower){
 				linkedEngine.vehicle.electricPower -= 0.005F;
@@ -158,7 +158,7 @@ public abstract class APartEngine extends APart implements FXPart{
 				linkedEngine.linkedEngine = null;
 				linkedEngine = null;
 				if(vehicle.world.isRemote){
-					MTS.MTSNet.sendToAllAround(new PacketChat("interact.jumpercable.powerequal"), new TargetPoint(vehicle.world.provider.getDimension(), partPos.x, partPos.y, partPos.z, 16));
+					MTS.MTSNet.sendToAllAround(new PacketClientChat("interact.jumpercable.powerequal"), new TargetPoint(vehicle.world.provider.getDimension(), partPos.x, partPos.y, partPos.z, 16));
 				}
 			}
 		}
@@ -363,7 +363,7 @@ public abstract class APartEngine extends APart implements FXPart{
 	public void backfireEngine(){
 		RPM -= pack.engine.maxRPM < 15000 ? 100 : 500;
 		if(!vehicle.world.isRemote){
-			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.BACKFIRE));
+			MTS.MTSNet.sendToAll(new PacketPartCommonEngineSignal(this, PacketEngineTypes.BACKFIRE));
 		}else{
 			MTS.proxy.playSound(partPos, partName + "_sputter", 0.5F, 1);
 			backfired = true;
@@ -381,7 +381,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		starterLevel = 0;
 		oilPressure = 60;
 		if(!vehicle.world.isRemote){
-			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.START));
+			MTS.MTSNet.sendToAll(new PacketPartCommonEngineSignal(this, PacketEngineTypes.START));
 		}else{
 			MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
 		}
@@ -396,7 +396,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			state = EngineStates.MAGNETO_ON_HS_ON;
 		}
 		if(!vehicle.world.isRemote){
-			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, packetType));
+			MTS.MTSNet.sendToAll(new PacketPartCommonEngineSignal(this, packetType));
 		}else{
 			if(!packetType.equals(PacketEngineTypes.DROWN)){
 				internalFuel = 100;

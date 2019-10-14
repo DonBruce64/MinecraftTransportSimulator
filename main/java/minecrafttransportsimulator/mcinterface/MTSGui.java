@@ -149,7 +149,7 @@ public abstract class MTSGui extends GuiScreen{
 				}else{
 					renderTexturedQuad(x, y, 0, BUTTON_TEXTURE_U_OFFSET, width, height, BUTTON_TEXTURE_WIDTH, BUTTON_TEXTURE_HEIGHT);
 				}
-				MTSRenderer.drawText(text, width + width/2, height + height/2, Color.GRAY, true, true);
+				MTSRendererInterface.drawText(text, width + width/2, height + height/2, Color.GRAY, true, true);
 			}
 		}
 	}

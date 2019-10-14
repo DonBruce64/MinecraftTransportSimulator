@@ -2,7 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.packets.general.PacketChat;
+import minecrafttransportsimulator.packets.general.PacketClientChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.BlockWorkbench;
 import net.minecraft.entity.player.EntityPlayer;
@@ -25,7 +25,7 @@ public final class PartCraftingTable extends APart{
 		if(!vehicle.locked){
 			player.displayGui(new CraftingTableInterfaceVehicle(vehicle.world, vehicle.getPosition()));
 		}else{
-			MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
+			MTS.MTSNet.sendTo(new PacketClientChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
 		}
 		return true;
     }

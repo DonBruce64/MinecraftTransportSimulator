@@ -2,7 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
+import minecrafttransportsimulator.packets.parts.PacketPartClientWheelFlat;
 import minecrafttransportsimulator.systems.SFXSystem;
 import minecrafttransportsimulator.systems.SFXSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -37,7 +37,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 					this.setFlat();
 					Vec3d explosionPosition = partPos;
 					vehicle.world.newExplosion(vehicle, explosionPosition.x, explosionPosition.y, explosionPosition.z, 0.25F, false, false);
-					MTS.MTSNet.sendToAll(new PacketPartGroundDeviceWheelFlat(this));
+					MTS.MTSNet.sendToAll(new PacketPartClientWheelFlat(this));
 				}
 			}
 		}
@@ -68,7 +68,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 						this.setFlat();
 						Vec3d explosionPosition = partPos;
 						vehicle.world.newExplosion(vehicle, explosionPosition.x, explosionPosition.y, explosionPosition.z, 0.25F, false, false);
-						MTS.MTSNet.sendToAll(new PacketPartGroundDeviceWheelFlat(this));
+						MTS.MTSNet.sendToAll(new PacketPartClientWheelFlat(this));
 					}
 				}
 			}

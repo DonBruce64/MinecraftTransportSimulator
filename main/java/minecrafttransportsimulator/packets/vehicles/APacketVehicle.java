@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.vehicles;
 import minecrafttransportsimulator.mcinterface.MTSNetwork.MTSPacket;
 import minecrafttransportsimulator.mcinterface.MTSWorldInterface;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.NBTTagCompound;
 
 
 /**Base packet for vehicle interaction.  Contains the entity ID of the vehicle,
@@ -21,16 +21,16 @@ public abstract class APacketVehicle extends MTSPacket{
 	}
 	
 	@Override
-	public void populateFromBytes(PacketBuffer buf){
-		this.id = buf.readInt();
+	public void parseFromNBT(NBTTagCompound tag){
+		id = tag.getInteger("id");
 	}
 
 	@Override
-	public void convertToBytes(PacketBuffer buf){
-		buf.writeInt(this.id);
+	public void convertToNBT(NBTTagCompound tag){
+		tag.setInteger("id", id);
 	}
 	
-	protected static EntityVehicleA_Base getVehicle(APacketVehicle packet, MTSWorldInterface world){
-		return (EntityVehicleA_Base) world.getEntity(packet.id);
+	protected EntityVehicleA_Base getVehicle(MTSWorldInterface world){
+		return (EntityVehicleA_Base) world.getEntity(id);
 	}
 }

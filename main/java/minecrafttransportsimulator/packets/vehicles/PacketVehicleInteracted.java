@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.vehicles;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.core.ItemKey;
-import minecrafttransportsimulator.packets.general.PacketChat;
+import minecrafttransportsimulator.packets.general.PacketClientChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -50,14 +50,14 @@ public class PacketVehicleInteracted extends APacketVehiclePlayer{
 							if(player.isSneaking()){
 								if(vehicle.ownerName.isEmpty()){
 									vehicle.ownerName = player.getUUID(player.getGameProfile()).toString();
-									MTS.MTSNet.sendTo(new PacketChat("interact.key.info.own"), (EntityPlayerMP) player);
+									MTS.MTSNet.sendTo(new PacketClientChat("interact.key.info.own"), (EntityPlayerMP) player);
 								}else{
 									boolean isPlayerOP = player.getServer() == null || player.getServer().isSinglePlayer() || player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null;
 									if(player.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName) || isPlayerOP){
 										vehicle.ownerName = "";
-										MTS.MTSNet.sendTo(new PacketChat("interact.key.info.unown"), (EntityPlayerMP) player);
+										MTS.MTSNet.sendTo(new PacketClientChat("interact.key.info.unown"), (EntityPlayerMP) player);
 									}else{
-										MTS.MTSNet.sendTo(new PacketChat("interact.key.failure.alreadyowned"), (EntityPlayerMP) player);
+										MTS.MTSNet.sendTo(new PacketClientChat("interact.key.failure.alreadyowned"), (EntityPlayerMP) player);
 									}
 								}
 							}else{
@@ -65,56 +65,56 @@ public class PacketVehicleInteracted extends APacketVehiclePlayer{
 								if(vehicleUUID.isEmpty()){
 									if(!vehicle.ownerName.isEmpty()){
 										if(!player.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName)){
-											MTS.MTSNet.sendTo(new PacketChat("interact.key.failure.notowner"), (EntityPlayerMP) player);
+											MTS.MTSNet.sendTo(new PacketClientChat("interact.key.failure.notowner"), (EntityPlayerMP) player);
 										}
 									}
 									NBTTagCompound tag = new NBTTagCompound();
 									tag.setString("vehicle", vehicle.getUniqueID().toString());
 									heldStack.setTagCompound(tag);
 									vehicle.locked = true;
-									MTS.MTSNet.sendTo(new PacketChat("interact.key.info.lock"), (EntityPlayerMP) player);
+									MTS.MTSNet.sendTo(new PacketClientChat("interact.key.info.lock"), (EntityPlayerMP) player);
 								}else if(!vehicleUUID.equals(vehicle.getUniqueID().toString())){
-									MTS.MTSNet.sendTo(new PacketChat("interact.key.failure.wrongkey"), (EntityPlayerMP) player);
+									MTS.MTSNet.sendTo(new PacketClientChat("interact.key.failure.wrongkey"), (EntityPlayerMP) player);
 								}else{
 									if(vehicle.locked){
 										vehicle.locked = false;
-										MTS.MTSNet.sendTo(new PacketChat("interact.key.info.unlock"), (EntityPlayerMP) player);
+										MTS.MTSNet.sendTo(new PacketClientChat("interact.key.info.unlock"), (EntityPlayerMP) player);
 									}else{
 										vehicle.locked = true;
-										MTS.MTSNet.sendTo(new PacketChat("interact.key.info.lock"), (EntityPlayerMP) player);
+										MTS.MTSNet.sendTo(new PacketClientChat("interact.key.info.lock"), (EntityPlayerMP) player);
 									}
 								}
 							}
-							MTS.MTSNet.sendToAll(new PacketVehicleKey(vehicle));
+							MTS.MTSNet.sendToAll(new PacketVehicleClientKey(vehicle));
 						}else if(Items.NAME_TAG.equals(player.getHeldItemMainhand().getItem())){
 							vehicle.displayText = heldStack.getDisplayName().length() > vehicle.pack.rendering.displayTextMaxLength ? heldStack.getDisplayName().substring(0, vehicle.pack.rendering.displayTextMaxLength - 1) : heldStack.getDisplayName();
-							MTS.MTSNet.sendToAll(new PacketVehicleNameTag(vehicle));
+							MTS.MTSNet.sendToAll(new PacketVehicleClientNameTag(vehicle));
 						}else if(Item.getItemFromBlock(Blocks.GLASS_PANE).equals(player.getHeldItemMainhand().getItem())){
 							if(vehicle.brokenWindows > 0){
 								if(!player.capabilities.isCreativeMode){
 									player.inventory.clearMatchingItems(Item.getItemFromBlock(Blocks.GLASS_PANE), 0, 1, null);
 								}
 								--vehicle.brokenWindows;
-								MTS.MTSNet.sendToAll(new PacketVehicleWindowFix(vehicle));
+								MTS.MTSNet.sendToAll(new PacketVehicleClientWindowFix(vehicle));
 							}
 						}else if(MTSRegistry.jerrycan.equals(player.getHeldItemMainhand().getItem())){
 							if(heldStack.hasTagCompound() && heldStack.getTagCompound().getBoolean("isFull")){
 								EntityVehicleE_Powered poweredVehicle = (EntityVehicleE_Powered) vehicle;
 								if(poweredVehicle.fluidName.isEmpty() || poweredVehicle.fluidName.equals(heldStack.getTagCompound().getString("fluidName"))){
 									if(poweredVehicle.fuel + 1000 > poweredVehicle.pack.motorized.fuelCapacity){
-										MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.toofull"), (EntityPlayerMP) player);
+										MTS.MTSNet.sendTo(new PacketClientChat("interact.jerrycan.toofull"), (EntityPlayerMP) player);
 									}else{
 										poweredVehicle.fluidName = heldStack.getTagCompound().getString("fluidName");
 										poweredVehicle.fuel += 1000;
 										heldStack.setTagCompound(null);
-										MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.success"), (EntityPlayerMP) player);
-										MTS.MTSNet.sendToAll(new PacketVehicleJerrycan(vehicle, poweredVehicle.fluidName));
+										MTS.MTSNet.sendTo(new PacketClientChat("interact.jerrycan.success"), (EntityPlayerMP) player);
+										MTS.MTSNet.sendToAll(new PacketVehicleClientJerrycan(vehicle, poweredVehicle.fluidName));
 									}
 								}else{
-									MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.wrongtype"), (EntityPlayerMP) player);
+									MTS.MTSNet.sendTo(new PacketClientChat("interact.jerrycan.wrongtype"), (EntityPlayerMP) player);
 								}
 							}else{
-								MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.empty"), (EntityPlayerMP) player);
+								MTS.MTSNet.sendTo(new PacketClientChat("interact.jerrycan.empty"), (EntityPlayerMP) player);
 							}
 						}
 						//TODO add jerrycan here.

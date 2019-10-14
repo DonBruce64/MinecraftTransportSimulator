@@ -5,8 +5,8 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourcePropellor;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
+import minecrafttransportsimulator.packets.parts.PacketPartCommonEngineSignal;
+import minecrafttransportsimulator.packets.parts.PacketPartCommonEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
@@ -42,7 +42,7 @@ public class PartPropeller extends APart{
 			if(player.getHeldItemMainhand().isEmpty()){
 				if(!vehicle.equals(player.getRidingEntity())){
 					connectedEngine.handStartEngine();
-					MTS.MTSNet.sendToAll(new PacketPartEngineSignal(connectedEngine, PacketEngineTypes.HS_ON));
+					MTS.MTSNet.sendToAll(new PacketPartCommonEngineSignal(connectedEngine, PacketEngineTypes.HS_ON));
 				}
 				return;
 			}

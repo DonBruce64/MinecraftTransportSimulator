@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.vehicles;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.mcinterface.MTSPlayerInterface;
-import minecrafttransportsimulator.packets.general.PacketChat;
+import minecrafttransportsimulator.packets.general.PacketClientChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.entity.item.EntityItem;
@@ -48,7 +48,7 @@ public class PacketVehicleAttacked extends APacketVehiclePlayer{
 									vehicle.world.spawnEntity(new EntityItem(vehicle.world, vehicle.posX, vehicle.posY, vehicle.posZ, stack));
 									vehicle.setDead();
 								}else{
-									MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehicleowned"), (EntityPlayerMP) player);
+									MTS.MTSNet.sendTo(new PacketClientChat("interact.failure.vehicleowned"), (EntityPlayerMP) player);
 								}
 								return;
 							}else{
@@ -69,7 +69,7 @@ public class PacketVehicleAttacked extends APacketVehiclePlayer{
 											vehicle.world.spawnEntity(new EntityItem(vehicle.world, hitPart.partPos.x, hitPart.partPos.y, hitPart.partPos.z, droppedStack));
 										}
 									}else{
-										MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehicleowned"), (EntityPlayerMP) player);
+										MTS.MTSNet.sendTo(new PacketClientChat("interact.failure.vehicleowned"), (EntityPlayerMP) player);
 									}
 								}
 							}
