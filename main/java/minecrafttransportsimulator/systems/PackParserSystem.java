@@ -304,10 +304,10 @@ public final class PackParserSystem{
     
     public static Class<? extends EntityVehicleE_Powered> getVehicleClass(String vehicleName){
     	switch(getVehiclePack(vehicleName).general.type){
-			case "car": return EntityVehicleG_Car.class;
-			case "boat": return EntityVehicleG_Boat.class;
 			case "plane": return EntityVehicleG_Plane.class;
+			case "car": return EntityVehicleG_Car.class;
 			case "blimp": return EntityVehicleG_Blimp.class;
+			case "boat": return EntityVehicleG_Boat.class;
 			default: return null;
 		}
     }

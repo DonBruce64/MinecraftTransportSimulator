@@ -140,12 +140,12 @@ public final class MTSRegistry{
 	public static final Item jerrycan = new ItemJerrycan().setCreativeTab(coreTab);
 	
 	//Crafting benches.
-	public static final Item vehicleBench = new ItemBlockBench("plane", "car").createBlocks();
+	public static final Item vehicleBench = new ItemBlockBench("plane", "car", "blimp", "boat").createBlocks();
 	public static final Item propellerBench = new ItemBlockBench("propeller").createBlocks();
-	public static final Item engineBench = new ItemBlockBench("engine_aircraft", "engine_jet", "engine_car").createBlocks();
-	public static final Item wheelBench = new ItemBlockBench("pontoon", "skid", "tread", "wheel").createBlocks();
-	public static final Item seatBench = new ItemBlockBench("seat", "crate", "barrel").createBlocks();
-	public static final Item gunBench = new ItemBlockBench("gun_fixed", "gun_").createBlocks();
+	public static final Item engineBench = new ItemBlockBench("engine_aircraft", "engine_jet", "engine_car", "engine_boat").createBlocks();
+	public static final Item wheelBench = new ItemBlockBench("wheel", "skid", "pontoon", "tread").createBlocks();
+	public static final Item seatBench = new ItemBlockBench("seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand").createBlocks();
+	public static final Item gunBench = new ItemBlockBench("gun_fixed", "gun_tripod").createBlocks();
 	public static final Item customBench = new ItemBlockBench("custom").createBlocks();
 	public static final Item instrumentBench = new ItemBlockBench("instrument").createBlocks();
 	public static final Item componentBench = new ItemBlockBench("item").createBlocks();
