@@ -65,7 +65,7 @@ public final class ControlSystem{
 	
 	
 	public static void init(){
-		configKey = new KeyBinding("key.config", Keyboard.KEY_P, "key.categories." + MTS.MODID);
+		configKey = new KeyBinding("key.mts.config", Keyboard.KEY_P, "key.categories." + MTS.MODID);
 		ClientRegistry.registerKeyBinding(configKey);
 		
 		//Populate the joystick device map.
