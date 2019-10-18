@@ -16,6 +16,7 @@ import minecrafttransportsimulator.dataclasses.CreativeTabPack;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackDecorObject;
 import minecrafttransportsimulator.dataclasses.PackInstrumentObject;
+import minecrafttransportsimulator.dataclasses.PackItemObject;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.dataclasses.PackSignObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject;
@@ -90,7 +91,10 @@ public final class PackParserSystem{
     /**Map that keys the unique name of a decor block to its pack.*/
     private static final Map<String, PackDecorObject> decorPackMap = new LinkedHashMap<String, PackDecorObject>();
     
-	/**Maps vehicle, part, instrument, and decor names to their crafting ingredients.*/
+    /**Map that keys the unique name of an item to its pack.*/
+    private static final Map<String, PackItemObject> itemPackMap = new LinkedHashMap<String, PackItemObject>();
+    
+	/**Maps all things craftable on benches to their crafting ingredients.*/
 	private static final Map<String, String[]> craftingItemMap = new HashMap<String, String[]>();
   
     /**Listing of log messages.  Stored here on bootstrap and outputted once the logging system comes online.**/
@@ -106,7 +110,7 @@ public final class PackParserSystem{
      * This is done to allow server owners to modify pack JSONs to their liking (say for crafting recipes)
      * and distribute them in their modpacks without having to modify the actual pack JSON.**/
     public static String[] getValidPackContentNames(){
-    	return new String[]{"vehicle", "part", "instrument", "sign", "decor"};
+    	return new String[]{"vehicle", "part", "instrument", "sign", "decor", "item"};
     }
     
     /**Packs should call this upon load to add their vehicles to the mod.**/
@@ -187,6 +191,19 @@ public final class PackParserSystem{
 	    	String decorName = modID + ":" + jsonFileName;
     		decorPackMap.put(decorName, pack);
     		craftingItemMap.put(decorName, pack.general.materials);
+    	}catch(Exception e){
+    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
+    		logList.add(e.getMessage());
+    	}
+    }
+    
+    /**Packs should call this upon load to add their crafting items to the mod.**/
+    public static void addItemDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
+    	try{
+    		PackItemObject pack =  new Gson().fromJson(jsonReader, PackItemObject.class);
+	    	String itemName = modID + ":" + jsonFileName;
+	    	itemPackMap.put(itemName, pack);
+	    	craftingItemMap.put(itemName, pack.general.materials);
     	}catch(Exception e){
     		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
     		logList.add(e.getMessage());
@@ -333,6 +350,16 @@ public final class PackParserSystem{
     
     public static Set<String> getAllDecor(){
         return decorPackMap.keySet();
+    }
+    
+    
+    //-----START OF ITEM LOOKUP LOGIC-----
+    public static PackItemObject getItem(String name){
+        return itemPackMap.get(name);
+    }
+    
+    public static Set<String> getAllItems(){
+        return itemPackMap.keySet();
     }
     
     

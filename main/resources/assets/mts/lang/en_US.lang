@@ -288,6 +288,7 @@ item.seatbench.name=Table Saw
 item.gunbench.name=Rifling Machine
 item.custombench.name=Tool Bench
 item.instrumentbench.name=Instrument Bench
+item.componentbench.name=Component Bench
 
 item.fuelpump.name=Fuel Pump
 item.fuelpump.level=LVL:
@@ -357,7 +358,7 @@ manual.1.2=If there's something that is not included in this manual please see t
 
 manual.2.title=Basic Crafting
 manual.2.1=Like most mods that have packs and lots of content, MTS uses crafting benches for crafting.  The Drafting Table is used to craft vehicles, while the other benches craft their own parts.  You'll likely want to start filling your garage early with these benches as most vehicles use at least one type of every part.
-manual.2.2=If you're looking to edit the recipes for crafting for use on servers you will need to do so in the JSON files included in the packs you have downloaded.  Look for the materials[] section and edit those values to your liking.
+manual.2.2=One of the most critical benches is the Component Bench.  The bench is used by a lot of packs to add custom items that are used to craft vehicle parts, and even vehicles themselves.  If you find yourself needing an item that's not picked up by JEI or other crafting systems, it's likely in there!
 
 manual.3.title=Vehicle Assembly
 manual.3.1=Assembling vehicles is a simple as clicking them with the required parts.  When holding a valid part a green hologram will appear in locations where you can place it.  Simply right-click with that part and it will attach to the vehicle.  Note that some parts may require other parts to be installed before they may be placed, such as propellers that connect to aircraft engines.
@@ -427,6 +428,6 @@ manual.19.title=Landing
 manual.19.1=There is a fine line between successfully landing a plane and a controlled crash.  To avoid that second category it is important to remember the saying, "To go down you need to slow down."  Speed is what keeps your plane aloft, so a reduction in speed is needed to land.  This can be as simple as lowering the throttle and applying the flaps.
 manual.19.2=Some times, however, you end up in that second category.  Running out of fuel is the most common way to get down quickly, but it is not necessarily deadly.  Planes can glide without engines, giving you a short amount of time to pick a flat spot to become an impromptu runway.  Should one not be available a body of water is also a good choice as it will prevent explosions on a hard crash or will allow you to bail while in mid-air.  Anything hilly should be avoided at all costs.
 
-manual.20.title=Crafting
-manual.20.1=Crafting of components, as mentioned before, is done on the various vehicle benches.  The vanilla in-game recipe book can be used to find the recipes for each bench, and this manual and the Advancement system both reference which components are made on which bench.
-manual.20.2=Should you wish to modify the recipes for the benches, or any other items in the core mod, you may do so by editing the recipe JSONs located inside the mod .jars.  You may also use an external mod should it make server management easier.
+manual.20.title=Tweaks
+manual.20.1=MTS has many config options, some of which aren't available in the in-game config menu.  See the mts.cfg file in your config directory for a full listing and description of configs.  Commonly-modified configs include block breagage, fuel consumption, and fuel values.
+manual.20.2=Should you wish to modify the recipes for the benches, or any other items in the core mod, you may do so by editing the recipe JSONs located inside the mod .jars.  You may also use an external mod should it make server management easier.  Look for the materials[] section and edit those values to your liking.

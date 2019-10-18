@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.dataclasses;
 
-import net.minecraft.util.NonNullList;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -58,6 +58,13 @@ public final class CreativeTabPack extends CreativeTabs{
 			}
 		}
 		for(Item item : MTSRegistry.decorItemMap.values()){
+			for(CreativeTabs tab : item.getCreativeTabs()){
+				if(tab.equals(this)){
+					item.getSubItems(tab, givenList);
+				}
+			}
+		}
+		for(Item item : MTSRegistry.itemItemMap.values()){
 			for(CreativeTabs tab : item.getCreativeTabs()){
 				if(tab.equals(this)){
 					item.getSubItems(tab, givenList);

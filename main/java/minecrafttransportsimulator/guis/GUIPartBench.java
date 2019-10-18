@@ -38,6 +38,7 @@ public class GUIPartBench extends GuiScreen{
 	private final EntityPlayer player;
 	private final boolean isForVehicles;
 	private final boolean isForInstruments;
+	private final boolean isForItems;
 	private final Map<String, ? extends Item> itemMap;
 	
 	private GuiButton leftPackButton;
@@ -75,7 +76,8 @@ public class GUIPartBench extends GuiScreen{
 		this.player = player;
 		this.isForVehicles = this.partTypes.contains("plane") || this.partTypes.contains("car");
 		this.isForInstruments = this.partTypes.contains("instrument");
-		this.itemMap = isForVehicles ? MTSRegistry.vehicleItemMap : (isForInstruments ? MTSRegistry.instrumentItemMap : MTSRegistry.partItemMap);
+		this.isForItems = this.partTypes.contains("item");
+		this.itemMap = isForVehicles ? MTSRegistry.vehicleItemMap : (isForInstruments ? MTSRegistry.instrumentItemMap : (isForItems ? MTSRegistry.itemItemMap :MTSRegistry.partItemMap));
 		if(lastOpenedItem.containsKey(bench.partTypes.get(0))){
 			packName = lastOpenedItem.get(bench.partTypes.get(0))[0];
 			partName = lastOpenedItem.get(bench.partTypes.get(0))[1];
@@ -182,8 +184,8 @@ public class GUIPartBench extends GuiScreen{
 		}
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 		
-		//If we are for instruments, render the 2D item and be done.
-		if(this.isForInstruments){
+		//If we are for instruments or items, render the 2D item and be done.
+		if(this.isForInstruments || this.isForItems){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(guiLeft + 172.5F, guiTop + 82.5F, 0);
 			GL11.glScalef(3, 3, 3);
@@ -209,7 +211,7 @@ public class GUIPartBench extends GuiScreen{
 				if(!partDisplayLists.containsKey(partName)){
 					parseModel(partName.substring(0, partName.indexOf(':')), "objmodels/vehicles/" + jsonName + ".obj");
 				}
-			}else{
+			}else if(!this.isForItems){
 				if(PackParserSystem.getPartPack(partName).general.modelName != null){
 					parseModel(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + PackParserSystem.getPartPack(partName).general.modelName + ".obj");
 				}else{
@@ -483,7 +485,7 @@ public class GUIPartBench extends GuiScreen{
 			final boolean isValid;
 			if(this.isForVehicles){
 				isValid = partTypes.contains(PackParserSystem.getVehiclePack(partItemName).general.type);
-			}else if(!this.isForInstruments){
+			}else if(!this.isForInstruments && !this.isForItems){
 				isValid = partTypes.contains(PackParserSystem.getPartPack(partItemName).general.type);
 			}else{
 				isValid = true;

@@ -21,6 +21,7 @@ import minecrafttransportsimulator.items.blocks.ItemBlockRotatable;
 import minecrafttransportsimulator.items.blocks.ItemBlockTrafficSignalController;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemInstrument;
+import minecrafttransportsimulator.items.core.ItemItem;
 import minecrafttransportsimulator.items.core.ItemJerrycan;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.items.core.ItemKey;
@@ -119,6 +120,9 @@ public final class MTSRegistry{
 	/**Maps decor item names to items.  All decor items for all packs will be populated here.*/
 	public static Map<String, ItemDecor> decorItemMap = new LinkedHashMap<String, ItemDecor>();
 	
+	/**Maps item item names to items.  All item items for all packs will be populated here.*/
+	public static Map<String, ItemItem> itemItemMap = new LinkedHashMap<String, ItemItem>();
+	
 	/**Maps rotatable blocks to their items.  Used to return the correct item when they are broken.*/
 	public static Map<BlockRotatable, ItemBlockRotatable> rotatableItemMap = new LinkedHashMap<BlockRotatable, ItemBlockRotatable>();
 	
@@ -144,6 +148,7 @@ public final class MTSRegistry{
 	public static final Item gunBench = new ItemBlockBench("gun_fixed", "gun_").createBlocks();
 	public static final Item customBench = new ItemBlockBench("custom").createBlocks();
 	public static final Item instrumentBench = new ItemBlockBench("instrument").createBlocks();
+	public static final Item componentBench = new ItemBlockBench("item").createBlocks();
 	
 	//Fuel pump.
 	public static final Item fuelPump = new ItemBlockFuelPump().createBlocks();
@@ -203,6 +208,11 @@ public final class MTSRegistry{
 		}
 		for(ItemDecor item : decorItemMap.values()){
 			if(item.decorName.startsWith(modID)){
+				packItems.add(item);
+			}
+		}
+		for(ItemItem item : itemItemMap.values()){
+			if(item.itemName.startsWith(modID)){
 				packItems.add(item);
 			}
 		}
@@ -318,6 +328,12 @@ public final class MTSRegistry{
 		for(String decorName : PackParserSystem.getAllDecor()){
 			ItemDecor itemDecor = new ItemDecor(decorName);
 			decorItemMap.put(decorName, itemDecor);
+		}
+		
+		//Now add item items to the lists.
+		for(String itemName : PackParserSystem.getAllItems()){
+			ItemItem itemItem = new ItemItem(itemName);
+			itemItemMap.put(itemName, itemItem);
 		}
 	}
 

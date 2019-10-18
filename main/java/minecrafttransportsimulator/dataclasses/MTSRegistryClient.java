@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.dataclasses;
 
-import net.minecraft.util.ResourceLocation;
 import java.lang.reflect.Field;
 
 import minecrafttransportsimulator.MTS;
@@ -10,6 +9,7 @@ import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleWallConnector;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemInstrument;
+import minecrafttransportsimulator.items.core.ItemItem;
 import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.rendering.RenderVehicle;
@@ -74,6 +74,9 @@ public final class MTSRegistryClient{
 		}
 		for(ItemDecor decorItem : MTSRegistry.decorItemMap.values()){
 			registerPackItemRender(decorItem, decorItem.decorName, "decors");
+		}
+		for(ItemItem itemItem : MTSRegistry.itemItemMap.values()){
+			registerPackItemRender(itemItem, itemItem.itemName, "items");
 		}
 	}
 	
