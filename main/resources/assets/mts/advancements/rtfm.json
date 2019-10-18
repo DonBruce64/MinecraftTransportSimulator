@@ -25,6 +25,7 @@
 	},
 	"rewards": {
 		"recipes": [
+			"mts:componentbench",
 			"mts:custombench",
 			"mts:enginebench",
 			"mts:gunbench",
