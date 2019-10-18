@@ -60,7 +60,7 @@ public abstract class APart{
 		this.partRotation = packPart.rot != null ? new Vec3d(packPart.rot[0], packPart.rot[1], packPart.rot[2]) : Vec3d.ZERO;
 		this.isController = packPart.isController;
 		this.turnsWithSteer = packPart.turnsWithSteer;
-		this.overrideMirror = packPart.overrideMirror;
+		this.overrideMirror = packPart.overrideMirror || pack.general.overrideMirror;
 		this.isValid = true;
 		
 		//Check to see if we are an additional part to a part on our parent.
