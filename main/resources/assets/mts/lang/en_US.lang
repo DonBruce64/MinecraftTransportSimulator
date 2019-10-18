@@ -280,15 +280,15 @@ item.manual.name=MTS Manual (READ ME!)
 item.jumpercable.name=Jumper Cables
 item.jerrycan.name=Jerrycan
 
-item.vehiclebench.name=Drafting Table
+item.vehiclebench.name=Drafting Table (Vehicles)
 item.propellerbench.name=Propeller Bench
 item.enginebench.name=Engine Hoist
 item.wheelbench.name=Wheel Workbench
-item.seatbench.name=Table Saw
-item.gunbench.name=Rifling Machine
-item.custombench.name=Tool Bench
+item.seatbench.name=Table Saw (Seats & Cargo)
+item.gunbench.name=Rifling Machine (Guns & Ammo)
+item.custombench.name=Tool Bench (Custom Parts)
 item.instrumentbench.name=Instrument Bench
-item.componentbench.name=Component Bench
+item.componentbench.name=Component Bench (Custom Items)
 
 item.fuelpump.name=Fuel Pump
 item.fuelpump.level=LVL:
