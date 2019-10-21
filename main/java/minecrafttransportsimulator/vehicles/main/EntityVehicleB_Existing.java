@@ -407,6 +407,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 				String[] itemWeights = ConfigSystem.getStringConfig("ItemWeights").split(";");
 				if(itemWeights.length > 0) {
 					for(String entry : itemWeights.split(";")) {
+						if(entry.length() <= 0) continue;
 						String[] splitted = entry.split(":");
 						if(splitted.length == 2) {
 							String match = splitted[0];
