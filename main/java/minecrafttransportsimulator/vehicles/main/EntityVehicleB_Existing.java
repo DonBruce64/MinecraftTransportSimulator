@@ -404,15 +404,27 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			ItemStack stack = inventory.getStackInSlot(i);
 			if(stack != null){
 				float toadd = 1;
-				for(String entry : ConfigSystem.getStringConfig("ItemWeights").split(";")) {
-					String[] splitted = entry.split(":"); //TODO pattern check
-					String match = splitted[0]; //TODO pattern check
-					int weight = Integer.parseInt(splitted[1]); //TODO integer check
-					if(stack.getItem().getUnlocalizedName().substring(5).contains(match)) {
-						toadd = weight;
-						break; //Remove to invert the "first = higher priority" rule
+				String[] itemWeights = ConfigSystem.getStringConfig("ItemWeights").split(";");
+				if(itemWeights.length > 0) {
+					for(String entry : itemWeights.split(";")) {
+						String[] splitted = entry.split(":");
+						if(splitted.length == 2) {
+							String match = splitted[0];
+							int weight;
+							try {
+								weight = Integer.parseInt(splitted[1]);
+								if(stack.getItem().getUnlocalizedName().substring(5).contains(match)) {
+									toadd = weight;
+									break;
+								}
+							} catch(Exception e) {
+								MTS.MTSLog.error("Cannot parse an item weight value: \"" + ConfigSystem.getStringConfig("ItemWeights") + "\". Weight must be an integer");
+							}
+						}
+						else MTS.MTSLog.error("Cannot parse an item weight entry: \"" + ConfigSystem.getStringConfig("ItemWeights") + "\". Entries must be written in pattern \"name:weight;\"");
 					}
 				}
+				else MTS.MTSLog.error("Cannot parse item weights: \"" + ConfigSystem.getStringConfig("ItemWeights") + "\". Every entry must end with a semicolon (;)");
 				weight += 1.2F*toadd*stack.stackSize;
 			}
 		}
