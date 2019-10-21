@@ -1,0 +1,18 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern":[
+        "aaa",
+        "aba",
+        "cdc"
+    ],
+    "key":{
+        "a":{"type": "forge:ore_dict", "ore": "ingotIron"},
+		"b":{"item": "minecraft:glass_pane"},
+		"c":{"item": "minecraft:comparator"},
+		"d":{"item": "minecraft:quartz"}
+		
+    },
+    "result":{
+        "item": "mts:componentbench"
+    }
+}

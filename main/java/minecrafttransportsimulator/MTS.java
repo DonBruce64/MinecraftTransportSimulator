@@ -1,5 +1,7 @@
 package minecrafttransportsimulator;
 
+import java.io.File;
+
 import org.apache.logging.log4j.Logger;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -19,11 +21,12 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="15.0.0";
+	public static final String MODVER="15.4.0";
 	
 	@Instance(value = MTS.MODID)
 	public static MTS instance;
 	public static Logger MTSLog;
+	public static File MTSDevDir;
 	public static final SimpleNetworkWrapper MTSNet = NetworkRegistry.INSTANCE.newSimpleChannel("MTSNet");
 	@SidedProxy(clientSide="minecrafttransportsimulator.ClientProxy", serverSide="minecrafttransportsimulator.CommonProxy")
 	public static CommonProxy proxy;
@@ -38,6 +41,7 @@ public class MTS {
 		PackParserSystem.outputLog();
 		proxy.initConfig(event.getSuggestedConfigurationFile());
 		proxy.initControls();
+		MTSDevDir = new File(event.getModConfigurationDirectory().getParent() + File.separator + "mts");
 	}
 	
 	@EventHandler

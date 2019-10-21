@@ -21,6 +21,8 @@ import minecrafttransportsimulator.items.blocks.ItemBlockRotatable;
 import minecrafttransportsimulator.items.blocks.ItemBlockTrafficSignalController;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemInstrument;
+import minecrafttransportsimulator.items.core.ItemItem;
+import minecrafttransportsimulator.items.core.ItemJerrycan;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.items.core.ItemKey;
 import minecrafttransportsimulator.items.core.ItemManual;
@@ -39,6 +41,7 @@ import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SirenPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
+import minecrafttransportsimulator.packets.control.TrailerPacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.packets.general.PacketChat;
@@ -66,6 +69,7 @@ import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientRemoval;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleJerrycan;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
@@ -116,6 +120,9 @@ public final class MTSRegistry{
 	/**Maps decor item names to items.  All decor items for all packs will be populated here.*/
 	public static Map<String, ItemDecor> decorItemMap = new LinkedHashMap<String, ItemDecor>();
 	
+	/**Maps item item names to items.  All item items for all packs will be populated here.*/
+	public static Map<String, ItemItem> itemItemMap = new LinkedHashMap<String, ItemItem>();
+	
 	/**Maps rotatable blocks to their items.  Used to return the correct item when they are broken.*/
 	public static Map<BlockRotatable, ItemBlockRotatable> rotatableItemMap = new LinkedHashMap<BlockRotatable, ItemBlockRotatable>();
 	
@@ -130,19 +137,21 @@ public final class MTSRegistry{
 	public static final Item wrench = new ItemWrench().setCreativeTab(coreTab);
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
 	public static final Item jumperCable = new ItemJumperCable().setCreativeTab(coreTab);
+	public static final Item jerrycan = new ItemJerrycan().setCreativeTab(coreTab);
 	
 	//Crafting benches.
-	public static final Item vehicleBench = new ItemBlockBench("plane", "car").createBlocks();
+	public static final Item vehicleBench = new ItemBlockBench("plane", "car", "blimp", "boat").createBlocks();
 	public static final Item propellerBench = new ItemBlockBench("propeller").createBlocks();
-	public static final Item engineBench = new ItemBlockBench("engine_aircraft", "engine_jet", "engine_car").createBlocks();
-	public static final Item wheelBench = new ItemBlockBench("pontoon", "skid", "tread", "wheel").createBlocks();
-	public static final Item seatBench = new ItemBlockBench("seat", "crate", "barrel").createBlocks();
-	public static final Item gunBench = new ItemBlockBench("gun_fixed", "gun_").createBlocks();
+	public static final Item engineBench = new ItemBlockBench("engine_aircraft", "engine_jet", "engine_car", "engine_boat").createBlocks();
+	public static final Item wheelBench = new ItemBlockBench("wheel", "skid", "pontoon", "tread").createBlocks();
+	public static final Item seatBench = new ItemBlockBench("seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand").createBlocks();
+	public static final Item gunBench = new ItemBlockBench("gun_fixed", "gun_tripod").createBlocks();
 	public static final Item customBench = new ItemBlockBench("custom").createBlocks();
 	public static final Item instrumentBench = new ItemBlockBench("instrument").createBlocks();
+	public static final Item componentBench = new ItemBlockBench("item").createBlocks();
 	
 	//Fuel pump.
-	public static final Item fuelPump = new ItemBlockFuelPump().createBlocks();		
+	public static final Item fuelPump = new ItemBlockFuelPump().createBlocks();
 	
 	//Traffic Controller
 	public static final Item trafficSignalController = new ItemBlockTrafficSignalController().createBlocks();
@@ -199,6 +208,11 @@ public final class MTSRegistry{
 		}
 		for(ItemDecor item : decorItemMap.values()){
 			if(item.decorName.startsWith(modID)){
+				packItems.add(item);
+			}
+		}
+		for(ItemItem item : itemItemMap.values()){
+			if(item.itemName.startsWith(modID)){
 				packItems.add(item);
 			}
 		}
@@ -315,6 +329,12 @@ public final class MTSRegistry{
 			ItemDecor itemDecor = new ItemDecor(decorName);
 			decorItemMap.put(decorName, itemDecor);
 		}
+		
+		//Now add item items to the lists.
+		for(String itemName : PackParserSystem.getAllItems()){
+			ItemItem itemItem = new ItemItem(itemName);
+			itemItemMap.put(itemName, itemItem);
+		}
 	}
 
 	/**
@@ -343,6 +363,7 @@ public final class MTSRegistry{
 		registerPacket(ShiftPacket.class, ShiftPacket.Handler.class, true, true);
 		registerPacket(SteeringPacket.class, SteeringPacket.Handler.class, true, true);
 		registerPacket(ThrottlePacket.class, ThrottlePacket.Handler.class, true, true);
+		registerPacket(TrailerPacket.class, TrailerPacket.Handler.class, true, true);
 		registerPacket(TrimPacket.class, TrimPacket.Handler.class, true, true);
 		
 		//Packets in packets.general
@@ -370,6 +391,7 @@ public final class MTSRegistry{
 		registerPacket(PacketVehicleDeltas.class, PacketVehicleDeltas.Handler.class, true, false);
 		registerPacket(PacketVehicleInstruments.class, PacketVehicleInstruments.Handler.class, true, true);
 		registerPacket(PacketVehicleInteracted.class, PacketVehicleInteracted.Handler.class, false, true);
+		registerPacket(PacketVehicleJerrycan.class, PacketVehicleJerrycan.Handler.class, true, false);
 		registerPacket(PacketVehicleKey.class, PacketVehicleKey.Handler.class, true, false);
 		registerPacket(PacketVehicleNameTag.class, PacketVehicleNameTag.Handler.class, true, false);
 		registerPacket(PacketVehicleWindowBreak.class, PacketVehicleWindowBreak.Handler.class, true, false);

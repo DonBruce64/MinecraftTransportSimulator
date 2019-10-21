@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.blocks.core;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.blocks.ItemBlockRotatable;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -13,6 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
@@ -43,6 +45,17 @@ public class BlockFuelPump extends BlockRotatable implements ITileEntityProvider
 						if(drainedStack != null){
 							pump.fill(drainedStack, true);
 							player.setHeldItem(hand, handler.getContainer());
+						}
+					}
+					return true;
+				}else if(stack.getItem().equals(MTSRegistry.jerrycan)){
+					if(!stack.hasTagCompound() || !stack.getTagCompound().getBoolean("isFull")){
+						if(pump.getFluid() != null && pump.getFluidAmount() >= 1000){
+							NBTTagCompound stackTag = new NBTTagCompound();
+							stackTag.setBoolean("isFull", true);
+							stackTag.setString("fluidName", FluidRegistry.getFluidName(pump.getFluid().getFluid()));
+							stack.setTagCompound(stackTag);
+							pump.drain(1000, true);
 						}
 					}
 					return true;

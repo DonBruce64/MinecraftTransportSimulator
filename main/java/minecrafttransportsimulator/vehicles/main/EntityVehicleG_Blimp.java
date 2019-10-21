@@ -53,11 +53,12 @@ public final class EntityVehicleG_Blimp extends EntityVehicleF_Air{
 			ballastForce /= Math.pow(1 + Math.abs(motionY), 2);
 		}
 		
-		//If we don't have any thrustForce, start slowing down.
+		//If we don't have any force, or the throttle is idle, start slowing down.
 		//We can't use brakes because those don't exist on blimps!
-		if(thrustForce == 0){
+		if(thrustForce == 0 || throttle == 0){
 			motionX *= 0.95;
 			motionZ *= 0.95;
+			thrustTorque = 0;
 		}
 				
 		//Note that only the ballast, thrust, and drag affect movement.  Gravity and control surfaces do not.

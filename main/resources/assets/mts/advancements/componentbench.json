@@ -1,0 +1,26 @@
+{
+	"parent": "mts:rtfm",
+	"display": {
+		"icon": {
+            "item": "mts:componentbench"
+        },
+        "title": {
+            "translate": "advancements.mts.componentbench.title"
+        },
+        "description": {
+            "translate": "advancements.mts.componentbench.description"
+        }
+	},
+	"criteria": {
+		"has_componentbench": {
+			"trigger": "minecraft:inventory_changed",
+			"conditions": {
+				"items": [
+					{
+						"item": "mts:componentbench"
+					}
+				]
+			}
+		}
+	}
+}

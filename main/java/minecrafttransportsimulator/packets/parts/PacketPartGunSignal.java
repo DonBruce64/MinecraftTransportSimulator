@@ -10,24 +10,28 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketPartGunSignal extends APacketPart{
 	private int playerControllerID;
+	private boolean firing;
 
 	public PacketPartGunSignal(){}
 	
-	public PacketPartGunSignal(APartGun gun, int playerControllerID){
+	public PacketPartGunSignal(APartGun gun, int playerControllerID, boolean firing){
 		super(gun);
 		this.playerControllerID = playerControllerID;
+		this.firing = firing;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		super.fromBytes(buf);
 		this.playerControllerID = buf.readInt();
+		this.firing = buf.readBoolean();
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		super.toBytes(buf);
 		buf.writeInt(this.playerControllerID);
+		buf.writeBoolean(this.firing);
 	}
 
 	public static class Handler implements IMessageHandler<PacketPartGunSignal, IMessage>{
@@ -38,6 +42,7 @@ public class PacketPartGunSignal extends APacketPart{
 					APartGun gun = (APartGun) getVehiclePartFromMessage(message, ctx);
 					if(gun != null){
 						gun.playerControllerID = message.playerControllerID;
+						gun.firing = message.firing;
 						if(ctx.side.isServer()){
 							MTS.MTSNet.sendToAll(message);
 						}

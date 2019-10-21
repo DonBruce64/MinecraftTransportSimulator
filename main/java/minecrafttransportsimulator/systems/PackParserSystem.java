@@ -16,6 +16,7 @@ import minecrafttransportsimulator.dataclasses.CreativeTabPack;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackDecorObject;
 import minecrafttransportsimulator.dataclasses.PackInstrumentObject;
+import minecrafttransportsimulator.dataclasses.PackItemObject;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.dataclasses.PackSignObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject;
@@ -29,13 +30,13 @@ import minecrafttransportsimulator.items.parts.ItemPartEngineAircraft;
 import minecrafttransportsimulator.items.parts.ItemPartEngineBoat;
 import minecrafttransportsimulator.items.parts.ItemPartEngineCar;
 import minecrafttransportsimulator.items.parts.ItemPartEngineJet;
+import minecrafttransportsimulator.items.parts.ItemPartGeneric;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDevicePontoon;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceSkid;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceTread;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceWheel;
 import minecrafttransportsimulator.items.parts.ItemPartGun;
 import minecrafttransportsimulator.items.parts.ItemPartPropeller;
-import minecrafttransportsimulator.items.parts.ItemPartSeat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
@@ -43,17 +44,21 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
+import minecrafttransportsimulator.vehicles.parts.PartBrewingStand;
+import minecrafttransportsimulator.vehicles.parts.PartCraftingTable;
 import minecrafttransportsimulator.vehicles.parts.PartCrate;
 import minecrafttransportsimulator.vehicles.parts.PartCustom;
 import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
 import minecrafttransportsimulator.vehicles.parts.PartEngineBoat;
 import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import minecrafttransportsimulator.vehicles.parts.PartEngineJet;
+import minecrafttransportsimulator.vehicles.parts.PartFurnace;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceSkid;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceWheel;
 import minecrafttransportsimulator.vehicles.parts.PartGunFixed;
+import minecrafttransportsimulator.vehicles.parts.PartGunTripod;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
@@ -86,7 +91,10 @@ public final class PackParserSystem{
     /**Map that keys the unique name of a decor block to its pack.*/
     private static final Map<String, PackDecorObject> decorPackMap = new LinkedHashMap<String, PackDecorObject>();
     
-	/**Maps vehicle, part, instrument, and decor names to their crafting ingredients.*/
+    /**Map that keys the unique name of an item to its pack.*/
+    private static final Map<String, PackItemObject> itemPackMap = new LinkedHashMap<String, PackItemObject>();
+    
+	/**Maps all things craftable on benches to their crafting ingredients.*/
 	private static final Map<String, String[]> craftingItemMap = new HashMap<String, String[]>();
   
     /**Listing of log messages.  Stored here on bootstrap and outputted once the logging system comes online.**/
@@ -102,7 +110,7 @@ public final class PackParserSystem{
      * This is done to allow server owners to modify pack JSONs to their liking (say for crafting recipes)
      * and distribute them in their modpacks without having to modify the actual pack JSON.**/
     public static String[] getValidPackContentNames(){
-    	return new String[]{"vehicle", "part", "instrument", "sign", "decor"};
+    	return new String[]{"vehicle", "part", "instrument", "sign", "decor", "item"};
     }
     
     /**Packs should call this upon load to add their vehicles to the mod.**/
@@ -183,6 +191,19 @@ public final class PackParserSystem{
 	    	String decorName = modID + ":" + jsonFileName;
     		decorPackMap.put(decorName, pack);
     		craftingItemMap.put(decorName, pack.general.materials);
+    	}catch(Exception e){
+    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
+    		logList.add(e.getMessage());
+    	}
+    }
+    
+    /**Packs should call this upon load to add their crafting items to the mod.**/
+    public static void addItemDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
+    	try{
+    		PackItemObject pack =  new Gson().fromJson(jsonReader, PackItemObject.class);
+	    	String itemName = modID + ":" + jsonFileName;
+	    	itemPackMap.put(itemName, pack);
+	    	craftingItemMap.put(itemName, pack.general.materials);
     	}catch(Exception e){
     		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
     		logList.add(e.getMessage());
@@ -283,10 +304,10 @@ public final class PackParserSystem{
     
     public static Class<? extends EntityVehicleE_Powered> getVehicleClass(String vehicleName){
     	switch(getVehiclePack(vehicleName).general.type){
-			case "car": return EntityVehicleG_Car.class;
-			case "boat": return EntityVehicleG_Boat.class;
 			case "plane": return EntityVehicleG_Plane.class;
+			case "car": return EntityVehicleG_Car.class;
 			case "blimp": return EntityVehicleG_Blimp.class;
+			case "boat": return EntityVehicleG_Boat.class;
 			default: return null;
 		}
     }
@@ -332,11 +353,24 @@ public final class PackParserSystem{
     }
     
     
+    //-----START OF ITEM LOOKUP LOGIC-----
+    public static PackItemObject getItem(String name){
+        return itemPackMap.get(name);
+    }
+    
+    public static Set<String> getAllItems(){
+        return itemPackMap.keySet();
+    }
+    
+    
     //-----START OF CONSTANTS AND SWITCHES-----
     public static Class<? extends APart> getPartPartClass(String partName){
     	switch(getPartPack(partName).general.type){
 			case "crate": return PartCrate.class;
 			case "barrel": return PartBarrel.class;
+			case "crafting_table": return PartCraftingTable.class;
+			case "furnace": return PartFurnace.class;
+			case "brewing_stand": return PartBrewingStand.class;
 			case "engine_aircraft": return PartEngineAircraft.class;
 			case "engine_jet": return PartEngineJet.class;
 			case "engine_car": return PartEngineCar.class;
@@ -348,6 +382,7 @@ public final class PackParserSystem{
 			case "propeller": return PartPropeller.class;
 			case "seat": return PartSeat.class;
 			case "gun_fixed": return PartGunFixed.class;
+			case "gun_tripod": return PartGunTripod.class;
 			//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
 			//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
 			//case "bullet": return PartBullet.class;
@@ -360,6 +395,9 @@ public final class PackParserSystem{
     	switch(getPartPack(partName).general.type){
 			case "crate": return ItemPartCrate.class;
 			case "barrel": return ItemPartBarrel.class;
+			case "crafting_table": return ItemPartGeneric.class;
+			case "furnace": return ItemPartGeneric.class;
+			case "brewing_stand": return ItemPartGeneric.class;
 			case "engine_aircraft": return ItemPartEngineAircraft.class;
 			case "engine_jet": return ItemPartEngineJet.class;
 			case "engine_car": return ItemPartEngineCar.class;
@@ -369,8 +407,9 @@ public final class PackParserSystem{
 			case "pontoon": return ItemPartGroundDevicePontoon.class;
 			case "tread": return ItemPartGroundDeviceTread.class;
 			case "propeller": return ItemPartPropeller.class;
-			case "seat": return ItemPartSeat.class;
+			case "seat": return ItemPartGeneric.class;
 			case "gun_fixed": return ItemPartGun.class;
+			case "gun_tripod": return ItemPartGun.class;
 			case "bullet": return ItemPartBullet.class;
 			case "custom": return ItemPartCustom.class;
 			default: return null;

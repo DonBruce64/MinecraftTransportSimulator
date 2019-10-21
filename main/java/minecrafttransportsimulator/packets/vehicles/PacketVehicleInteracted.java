@@ -5,6 +5,7 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.core.ItemKey;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -96,7 +97,27 @@ public class PacketVehicleInteracted extends APacketVehiclePlayer{
 								--vehicle.brokenWindows;
 								MTS.MTSNet.sendToAll(new PacketVehicleWindowFix(vehicle));
 							}
+						}else if(MTSRegistry.jerrycan.equals(player.getHeldItemMainhand().getItem())){
+							if(heldStack.hasTagCompound() && heldStack.getTagCompound().getBoolean("isFull")){
+								EntityVehicleE_Powered poweredVehicle = (EntityVehicleE_Powered) vehicle;
+								if(poweredVehicle.fluidName.isEmpty() || poweredVehicle.fluidName.equals(heldStack.getTagCompound().getString("fluidName"))){
+									if(poweredVehicle.fuel + 1000 > poweredVehicle.pack.motorized.fuelCapacity){
+										MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.toofull"), (EntityPlayerMP) player);
+									}else{
+										poweredVehicle.fluidName = heldStack.getTagCompound().getString("fluidName");
+										poweredVehicle.fuel += 1000;
+										heldStack.setTagCompound(null);
+										MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.success"), (EntityPlayerMP) player);
+										MTS.MTSNet.sendToAll(new PacketVehicleJerrycan(vehicle, poweredVehicle.fluidName));
+									}
+								}else{
+									MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.wrongtype"), (EntityPlayerMP) player);
+								}
+							}else{
+								MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.empty"), (EntityPlayerMP) player);
+							}
 						}
+						//TODO add jerrycan here.
 					}
 				}
 			});

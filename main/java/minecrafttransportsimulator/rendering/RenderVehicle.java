@@ -34,8 +34,8 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.APartEngineGeared;
 import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
-import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import net.minecraft.client.Minecraft;
@@ -156,23 +156,25 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	}
 	
 	private static void render(EntityVehicleE_Powered vehicle, EntityPlayer playerRendering, float partialTicks, boolean wasRenderedPrior){
-		//Calculate various things.
+		//If player is riding this vehicle, then we need to change how we render.
 		Entity renderViewEntity = minecraft.getRenderViewEntity();
-		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * (double)partialTicks;
-		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
-		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
-        
-        
-        double thisX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * (double)partialTicks;
-        double thisY = vehicle.lastTickPosY + (vehicle.posY - vehicle.lastTickPosY) * (double)partialTicks;
-        double thisZ = vehicle.lastTickPosZ + (vehicle.posZ - vehicle.lastTickPosZ) * (double)partialTicks;
-        double rotateYaw = -vehicle.rotationYaw + (vehicle.rotationYaw - vehicle.prevRotationYaw)*(double)(1 - partialTicks);
-        double rotatePitch = vehicle.rotationPitch - (vehicle.rotationPitch - vehicle.prevRotationPitch)*(double)(1 - partialTicks);
-        double rotateRoll = vehicle.rotationRoll - (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)(1 - partialTicks);
+		boolean isPlayerPassenger = vehicle.isPassenger(renderViewEntity);
 
-        //Set up position and lighting.
-        GL11.glPushMatrix();
-        GL11.glTranslated(thisX - playerX, thisY - playerY, thisZ - playerZ);
+		//Set up position.
+		GL11.glPushMatrix();
+		if(isPlayerPassenger){
+			GL11.glTranslated(vehicle.posX - renderViewEntity.posX, vehicle.posY - renderViewEntity.posY, vehicle.posZ - renderViewEntity.posZ);
+		}else{
+			double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * (double)partialTicks;
+			double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
+			double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
+	        double thisX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * (double)partialTicks;
+	        double thisY = vehicle.lastTickPosY + (vehicle.posY - vehicle.lastTickPosY) * (double)partialTicks;
+	        double thisZ = vehicle.lastTickPosZ + (vehicle.posZ - vehicle.lastTickPosZ) * (double)partialTicks;
+	        GL11.glTranslated(thisX - playerX, thisY - playerY, thisZ - playerZ);
+		}
+       
+        //Set up lighting.
         int lightVar = vehicle.getBrightnessForRender();
         minecraft.entityRenderer.enableLightmap();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
@@ -188,9 +190,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
 			GL11.glPushMatrix();
 			GL11.glShadeModel(GL11.GL_SMOOTH);
-			GL11.glRotated(rotateYaw, 0, 1, 0);
-	        GL11.glRotated(rotatePitch, 1, 0, 0);
-	        GL11.glRotated(rotateRoll, 0, 0, 1);
+			GL11.glRotated(-vehicle.rotationYaw, 0, 1, 0);
+	        GL11.glRotated(vehicle.rotationPitch, 1, 0, 0);
+	        GL11.glRotated(vehicle.rotationRoll, 0, 0, 1);
 			renderMainModel(vehicle, partialTicks);
 			renderParts(vehicle, partialTicks);
 			GL11.glEnable(GL11.GL_NORMALIZE);
@@ -231,9 +233,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 
 			GL11.glPushMatrix();
 			GL11.glEnable(GL11.GL_NORMALIZE);
-			GL11.glRotated(rotateYaw, 0, 1, 0);
-	        GL11.glRotated(rotatePitch, 1, 0, 0);
-	        GL11.glRotated(rotateRoll, 0, 0, 1);
+	        GL11.glRotated(-vehicle.rotationYaw, 0, 1, 0);
+	        GL11.glRotated(vehicle.rotationPitch, 1, 0, 0);
+	        GL11.glRotated(vehicle.rotationRoll, 0, 0, 1);
 	        renderLights(vehicle, sunLight, blockLight, lightBrightness, electricFactor, wasRenderedPrior, partialTicks);
 			GL11.glDisable(GL11.GL_NORMALIZE);
 			GL11.glPopMatrix();
@@ -387,7 +389,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("brake"): return vehicle.brakeOn ? 25 : 0;
 			case("p_brake"): return vehicle.parkingBrakeOn ? 30 : 0;
 			case("horn"): return vehicle.hornOn ? 30 : 0;
-			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((PartEngineCar) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation() : 0;
+			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation() : 0;
+			case("gearshift_hvertical"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared) vehicle.getEngineByNumber((byte) 0))).getGearshiftPosition_Vertical() : 0;
+			case("gearshift_hhorizontal"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared) vehicle.getEngineByNumber((byte) 0))).getGearshiftPosition_Horizontal() : 0;
 			case("engine"): return (float) (vehicle.getEngineByNumber((byte) 0) != null ? ((APartEngine) vehicle.getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) : 0);
 			case("driveshaft"): return getDriveshaftValue(vehicle, partialTicks, (byte) 0);
 			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0) + 180F)))/2F;
@@ -434,7 +438,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("brake"): return vehicle.brakeOn ? 1 : 0;
 			case("p_brake"): return vehicle.parkingBrakeOn ? 1 : 0;
 			case("horn"): return vehicle.hornOn ? 1 : 0;
-			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((PartEngineCar) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation()/5F : 0;
+			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation()/5F : 0;
 			case("engine_sin"): return (float) (vehicle.getEngineByNumber((byte) 0) != null ? (1 + Math.cos(Math.toRadians(((APartEngine) vehicle.getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) + 180F)))/2F : 0);
 			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0) + 180F)))/2F;
 			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0)));
@@ -589,7 +593,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}
 		
-		if((part.offset.x < 0 && !part.overrideMirror) || (part.offset.x > 0 && part.overrideMirror)){
+		if(part.offset.x < 0 && !part.overrideMirror){
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);
 			if(cullface){
 				GL11.glCullFace(GL11.GL_FRONT);

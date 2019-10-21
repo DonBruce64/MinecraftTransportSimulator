@@ -15,7 +15,6 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.audio.SoundManager;
 import net.minecraft.client.particle.ParticleDrip;
 import net.minecraft.client.particle.ParticleSmokeNormal;
@@ -25,6 +24,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.sound.SoundLoadEvent;
+import net.minecraftforge.client.event.sound.SoundSetupEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -44,14 +44,23 @@ import paulscode.sound.SoundSystemConfig;
 @Mod.EventBusSubscriber(Side.CLIENT)
 @SideOnly(Side.CLIENT)
 public final class SFXSystem{	
-	private static final String[] soundManagerNames = { "sndManager", "field_147694_f" };
 	private static final String[] soundSystemNames = { "sndSystem", "field_148620_e" };
 	private static final String[] soundSystemURLNames = { "getURLForSoundResource", "func_148612_a" };
 	
 	private static final List<String> playingSounds = new ArrayList<String>();
+	private static SoundManager mcSoundManager;
 	private static SoundSystem mcSoundSystem;
 	private static Method getURLMethod;
 
+	
+	/**
+	 * This runs right when the MC SoundSystem starts up.  We use this to get a reference to the system
+	 * and add any custom codecs to it for playing other file formats.
+	 */
+	@SubscribeEvent
+	public static void on(SoundSetupEvent event){
+		mcSoundManager = event.getManager();
+	}
 	
 	/**
 	 * Populates the static soundsystem fields when called.  Used when either the regular or
@@ -60,25 +69,7 @@ public final class SFXSystem{
 	private static void initSoundSystemHooks(){
 		Exception lastException = null;
 		
-		//First get the SoundManager from the SoundHandler.
-		SoundHandler soundHandler = Minecraft.getMinecraft().getSoundHandler();
-		SoundManager mcSoundManager = null;
-		for(String soundManagerName : soundManagerNames){
-			try{
-				Field soundManagerField = SoundHandler.class.getDeclaredField(soundManagerName);
-				soundManagerField.setAccessible(true);
-				mcSoundManager = (SoundManager) soundManagerField.get(soundHandler);
-			}catch (Exception e){
-				lastException = e;
-				continue;
-			}
-		}
-		if(mcSoundManager == null){
-			MTS.MTSLog.fatal("ERROR IN SOUND SYSTEM REFLECTION!  COULD NOT FIND SOUNDMANAGER!");
-			throw new RuntimeException(lastException);
-		}
-		
-		//Now get the SoundSystem from the SoundManager.
+		//Get the SoundSystem from the SoundManager.
 		for(String soundSystemName : soundSystemNames){
 			try{
 				Field soundSystemField = SoundManager.class.getDeclaredField(soundSystemName);

@@ -20,6 +20,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartEngineJet;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -118,6 +119,8 @@ public class GUIPanelAircraft extends GuiScreen{
 						haveReverseThrustOption = true;
 						break;
 					}
+				}else if(part instanceof PartEngineJet){
+					haveReverseThrustOption = true;
 				}
 			}
 		}

@@ -21,6 +21,7 @@ import minecrafttransportsimulator.packets.control.ShiftPacket;
 import minecrafttransportsimulator.packets.control.SirenPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
+import minecrafttransportsimulator.packets.control.TrailerPacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
@@ -64,7 +65,7 @@ public final class ControlSystem{
 	
 	
 	public static void init(){
-		configKey = new KeyBinding("key.config", Keyboard.KEY_P, "key.categories." + MTS.MODID);
+		configKey = new KeyBinding("key.mts.config", Keyboard.KEY_P, "key.categories." + MTS.MODID);
 		ClientRegistry.registerKeyBinding(configKey);
 		
 		//Populate the joystick device map.
@@ -286,13 +287,13 @@ public final class ControlSystem{
 			if(seat.isController){
 				for(APart part : vehicle.getVehicleParts()){
 					if(part instanceof APartGun && part.parentPart == null){
-						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().player.getEntityId() : -1));
+						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 					}
 				}
 			}else{
 				for(APart part : seat.childParts){
 					if(part instanceof APartGun){
-						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, gun.isPressed() ? Minecraft.getMinecraft().player.getEntityId() : -1));
+						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 					}
 				}
 			}
@@ -302,11 +303,12 @@ public final class ControlSystem{
 	private static void controlAircraft(EntityVehicleF_Air aircraft, boolean isPlayerController){
 		controlCamera(ControlsKeyboardDynamic.AIRCRAFT_CHANGEHUD, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEHUD, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
+		controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN);
 		if(!isPlayerController){
 			return;
 		}
 		controlBrake(ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_BRAKE_ANALOG, ControlsJoystick.AIRCRAFT_PARK, aircraft.getEntityId());
-		controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN);
+		
 		
 		//Open or close the panel.
 		if(ControlsKeyboard.AIRCRAFT_PANEL.isPressed()){
@@ -507,6 +509,11 @@ public final class ControlSystem{
 		}else{
 			MTS.MTSNet.sendToServer(new HornPacket(powered.getEntityId(), false));
 		}
+		
+		//Check if we pressed the trailer button.
+		if(ControlsKeyboard.CAR_TRAILER.isPressed()){
+			MTS.MTSNet.sendToServer(new TrailerPacket(powered.getEntityId()));
+		}
 	}
 		
 	public enum ControlsKeyboard{
@@ -540,6 +547,7 @@ public final class ControlSystem{
 		CAR_START(Keyboard.KEY_Z, ControlsJoystick.CAR_START, false),
 		CAR_LIGHTS(Keyboard.KEY_X, ControlsJoystick.CAR_LIGHTS, true),
 		CAR_LIGHTS_SPECIAL(Keyboard.KEY_V, ControlsJoystick.CAR_LIGHTS_SPECIAL, true),
+		CAR_TRAILER(Keyboard.KEY_G, ControlsJoystick.CAR_TRAILER, true),
 		CAR_GUN(Keyboard.KEY_SPACE, ControlsJoystick.CAR_GUN, false),
 		CAR_ZOOM_I(Keyboard.KEY_PRIOR, ControlsJoystick.CAR_ZOOM_I, true),
 		CAR_ZOOM_O(Keyboard.KEY_NEXT, ControlsJoystick.CAR_ZOOM_O, true);
@@ -628,6 +636,7 @@ public final class ControlSystem{
 		CAR_LIGHTS(false, true),
 		CAR_LIGHTS_SPECIAL(false, true),
 		CAR_PARK(false, true),
+		CAR_TRAILER(false, true),
 		CAR_GUN(false, false),
 		CAR_ZOOM_I(false, true),
 		CAR_ZOOM_O(false, true),
