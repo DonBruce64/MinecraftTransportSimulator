@@ -414,7 +414,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 							int weight;
 							try {
 								weight = Integer.parseInt(splitted[1]);
-								if(stack.getItem().getUnlocalizedName().substring(5).contains(match)) {
+								if(stack.getItem().getUnlocalizedName().substring(5).toLowerCase().contains(match.toLowerCase())) {
 									toadd = weight;
 									break;
 								}
