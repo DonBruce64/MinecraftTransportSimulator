@@ -749,11 +749,16 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			if(i >= vehicle.brokenWindows){
 				GL11.glPushMatrix();
 				//This is a window or set of windows.  Like the model, it will be triangle-based.
-				//However, windows may be rotatable.  Check this before continuing.
+				//However, windows may be rotatable or translatable.  Check this before continuing.
 				WindowPart window = vehicleWindowLists.get(vehicle.vehicleJSONName).get(i);
 				for(RotatablePart rotatable : vehicleRotatableLists.get(vehicle.vehicleJSONName)){
 					if(rotatable.name.equals(window.name)){
 						rotateModelObject(vehicle, rotatable, partialTicks);
+					}
+				}
+				for(TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.vehicleJSONName)){
+					if(translatable.name.equals(window.name)){
+						translateModelObject(vehicle, translatable, partialTicks);
 					}
 				}
 				GL11.glBegin(GL11.GL_TRIANGLES);
