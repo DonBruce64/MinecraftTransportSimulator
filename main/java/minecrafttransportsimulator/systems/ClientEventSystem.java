@@ -104,20 +104,6 @@ public final class ClientEventSystem{
     		event.setCanceled(true);
     	}
     }
-    /**
-     * Adjusts camera zoom if player is seated and in third-person.
-     * Also adjusts the player's rotation,
-     */
-    @SubscribeEvent
-    public static void on(TickEvent.RenderTickEvent event){
-    	if(event.phase.equals(event.phase.START) && minecraft.player != null){
-    		if(minecraft.player.getRidingEntity() instanceof EntityVehicleC_Colliding){
-    			if(minecraft.gameSettings.thirdPersonView != 0){
-    				CameraSystem.runCustomCamera(event.renderTickTime);
-    			}
-    		}
-    	}
-    }
     
     /**
      * Rotates player in the seat for proper rendering and forwards camera control options to the ControlSystem.
@@ -180,11 +166,13 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(CameraSetup event){
-        if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
-            if(event.getEntity().getRidingEntity() instanceof EntityVehicleC_Colliding){
+    	if(event.getEntity().getRidingEntity() instanceof EntityVehicleC_Colliding){
+    		if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){            	
             	EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) event.getEntity().getRidingEntity();
-                event.setRoll((float) (vehicle.rotationRoll  + (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)event.getRenderPartialTicks()));
-            }
+            	event.setRoll((float) (vehicle.rotationRoll  + (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)event.getRenderPartialTicks()));
+        	}else{
+        		CameraSystem.performZoomAction();
+        	}
         }
     }
 

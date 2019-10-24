@@ -1,13 +1,12 @@
 package minecrafttransportsimulator.systems;
 
-import minecrafttransportsimulator.MTS;
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 /**Contains numerous camera functions for view edits.
  * 
@@ -17,25 +16,23 @@ public final class CameraSystem{
 	public static boolean lockedView = true;
 	public static boolean disableHUD = false;
 	public static int hudMode = 2;
-	private static int zoomLevel = 4;
-	
-	private static final String[] zoomNames = { "thirdPersonDistancePrev", "field_78491_C" };
-	
-	public static void runCustomCamera(float partialTicks){
-		try{
-			float rectifiedZoomLevel = (zoomLevel - 4*partialTicks)/(1 - partialTicks);
-			ObfuscationReflectionHelper.setPrivateValue(EntityRenderer.class, Minecraft.getMinecraft().entityRenderer, Float.valueOf(rectifiedZoomLevel), zoomNames);
-		}catch (Exception e){
-			MTS.MTSLog.fatal("ERROR IN AIRCRAFT ZOOM REFLECTION!");
-			throw new RuntimeException(e);
-   	    }
+	private static int zoomLevel = 0;
+		
+	public static void performZoomAction(){
+		if (Minecraft.getMinecraft().gameSettings.thirdPersonView == 1){
+			GL11.glTranslatef(0, 0F, -zoomLevel);
+        }else if (Minecraft.getMinecraft().gameSettings.thirdPersonView == 2){
+        	GL11.glTranslatef(0, 0F, zoomLevel);
+        }
 	}
 	
 	public static void changeCameraZoom(boolean zoomOut){
 		if(zoomOut){
 			zoomLevel +=2;
-		}else if(zoomLevel > 4 && !zoomOut){
-			zoomLevel -=2;
+		}else{
+			if(zoomLevel > 0){
+				zoomLevel -=2;
+			}
 		}
 	}
 	
