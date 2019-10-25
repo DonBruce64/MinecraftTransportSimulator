@@ -156,23 +156,17 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	}
 	
 	private static void render(EntityVehicleE_Powered vehicle, EntityPlayer playerRendering, float partialTicks, boolean wasRenderedPrior){
-		//If player is riding this vehicle, then we need to change how we render.
+		//Get position and rotation.
 		Entity renderViewEntity = minecraft.getRenderViewEntity();
-		boolean isPlayerPassenger = vehicle.isPassenger(renderViewEntity);
-
-		//Set up position.
-		GL11.glPushMatrix();
-		if(isPlayerPassenger){
-			GL11.glTranslated(vehicle.posX - renderViewEntity.posX, vehicle.posY - renderViewEntity.posY, vehicle.posZ - renderViewEntity.posZ);
-		}else{
-			double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * (double)partialTicks;
-			double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
-			double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
-	        double thisX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * (double)partialTicks;
-	        double thisY = vehicle.lastTickPosY + (vehicle.posY - vehicle.lastTickPosY) * (double)partialTicks;
-	        double thisZ = vehicle.lastTickPosZ + (vehicle.posZ - vehicle.lastTickPosZ) * (double)partialTicks;
-	        GL11.glTranslated(thisX - playerX, thisY - playerY, thisZ - playerZ);
-		}
+		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * (double)partialTicks;
+		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
+		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
+        double thisX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * (double)partialTicks;
+        double thisY = vehicle.lastTickPosY + (vehicle.posY - vehicle.lastTickPosY) * (double)partialTicks;
+        double thisZ = vehicle.lastTickPosZ + (vehicle.posZ - vehicle.lastTickPosZ) * (double)partialTicks;
+		double rotateYaw = -vehicle.rotationYaw + (vehicle.rotationYaw - vehicle.prevRotationYaw)*(double)(1 - partialTicks);
+        double rotatePitch = vehicle.rotationPitch - (vehicle.rotationPitch - vehicle.prevRotationPitch)*(double)(1 - partialTicks);
+        double rotateRoll = vehicle.rotationRoll - (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)(1 - partialTicks);
        
         //Set up lighting.
         int lightVar = vehicle.getBrightnessForRender();
@@ -185,14 +179,17 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			textureMap.put(vehicle.vehicleName, new ResourceLocation(vehicle.vehicleName.substring(0, vehicle.vehicleName.indexOf(':')), "textures/vehicles/" + vehicle.vehicleName.substring(vehicle.vehicleName.indexOf(':') + 1) + ".png"));
 		}
 		minecraft.getTextureManager().bindTexture(textureMap.get(vehicle.vehicleName));
+
 		//Render all the model parts except windows.
 		//Those need to be rendered after the player if the player is rendered manually.
+        GL11.glPushMatrix();
+        GL11.glTranslated(thisX - playerX, thisY - playerY, thisZ - playerZ);
 		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
 			GL11.glPushMatrix();
 			GL11.glShadeModel(GL11.GL_SMOOTH);
-			GL11.glRotated(-vehicle.rotationYaw, 0, 1, 0);
-	        GL11.glRotated(vehicle.rotationPitch, 1, 0, 0);
-	        GL11.glRotated(vehicle.rotationRoll, 0, 0, 1);
+	        GL11.glRotated(rotateYaw, 0, 1, 0);
+	        GL11.glRotated(rotatePitch, 1, 0, 0);
+	        GL11.glRotated(rotateRoll, 0, 0, 1);
 			renderMainModel(vehicle, partialTicks);
 			renderParts(vehicle, partialTicks);
 			GL11.glEnable(GL11.GL_NORMALIZE);
@@ -233,9 +230,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 
 			GL11.glPushMatrix();
 			GL11.glEnable(GL11.GL_NORMALIZE);
-	        GL11.glRotated(-vehicle.rotationYaw, 0, 1, 0);
-	        GL11.glRotated(vehicle.rotationPitch, 1, 0, 0);
-	        GL11.glRotated(vehicle.rotationRoll, 0, 0, 1);
+	        GL11.glRotated(rotateYaw, 0, 1, 0);
+	        GL11.glRotated(rotatePitch, 1, 0, 0);
+	        GL11.glRotated(rotateRoll, 0, 0, 1);
 	        renderLights(vehicle, sunLight, blockLight, lightBrightness, electricFactor, wasRenderedPrior, partialTicks);
 			GL11.glDisable(GL11.GL_NORMALIZE);
 			GL11.glPopMatrix();
