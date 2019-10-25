@@ -30,6 +30,9 @@ import net.minecraft.world.World;
 public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	/**Collective wrapper that allows for the calling of multiple collision boxes in this vehicle.  May be null on the first scan.*/
 	private VehicleAxisAlignedBBCollective collisionFrame;
+	/**Collective wrapper that allows for the calling of multiple collision boxes in this vehicle.  May be null on the first scan.
+	 * This wrapper is used for interactions, so it will "collide" with both collision and interaction boxes.*/
+	private VehicleAxisAlignedBBCollective interactionFrame;
 	/**List of current collision boxes in this vehicle.  Contains both vehicle collision boxes and ground device collision boxes.*/
 	private final List<VehicleAxisAlignedBB> currentCollisionBoxes = new ArrayList<VehicleAxisAlignedBB>();
 	/**List of interaction boxes.  These are AABBs that can be clicked but do NOT affect vehicle collision.*/
@@ -63,16 +66,16 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	}
 	
 	@Override
-	public AxisAlignedBB getEntityBoundingBox(){
-		//Override this to make collision checks work with the multiple collision points.
-		return this.getCollisionBoundingBox();
+	public VehicleAxisAlignedBBCollective getEntityBoundingBox(){
+		//Override this to make interaction checks work with the multiple collision points.
+		return this.interactionFrame != null ? this.interactionFrame : new VehicleAxisAlignedBBCollective(this, 1, 1, true);
 	}
 	
 	@Override
     @Nullable
     public VehicleAxisAlignedBBCollective getCollisionBoundingBox(){
-		//Return custom AABB for multi-collision.
-		return this.collisionFrame != null ? this.collisionFrame : new VehicleAxisAlignedBBCollective(this, 1, 1);
+		//Override this to make collision checks work with the multiple collision points.
+		return this.collisionFrame != null ? this.collisionFrame : new VehicleAxisAlignedBBCollective(this, 1, 1, false);
     }
 	
 	/**
@@ -113,7 +116,8 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 				furthestHeight = (float) Math.max(furthestHeight, Math.abs(newBox.rel.y) + box.height/2F);
 				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.z) + box.width/2F);
 			}
-			this.collisionFrame = new VehicleAxisAlignedBBCollective(this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F);
+			this.collisionFrame = new VehicleAxisAlignedBBCollective(this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, false);
+			this.interactionFrame = new VehicleAxisAlignedBBCollective(this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, true);
 			
 			//Add all part boxes to the interaction list.
 			currentInteractionBoxes.clear();
