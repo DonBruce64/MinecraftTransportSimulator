@@ -27,7 +27,7 @@ public class PackPartObject{
     	public String modelName;
     	public String[] materials;
     	public String customType;
-    	public boolean overrideMirror;
+    	public boolean disableMirroring;
     }
     
     public class PartEngineConfig{

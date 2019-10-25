@@ -593,7 +593,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}
 		
-		if(part.offset.x < 0 && !part.overrideMirror){
+		if(((part.offset.x < 0 && !part.inverseMirroring) || (part.offset.x > 0 && part.inverseMirroring)) && !part.disableMirroring){
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);
 			if(cullface){
 				GL11.glCullFace(GL11.GL_FRONT);

@@ -238,7 +238,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 	private PackPart getPackForSubPart(PackPart parentPack, PackPart subPack){
 		PackPart correctPack = this.pack.new PackPart();
 		correctPack.pos = new float[3];
-		correctPack.pos[0] = parentPack.pos[0] >= 0 || parentPack.overrideMirror ? parentPack.pos[0] + subPack.pos[0] : parentPack.pos[0] - subPack.pos[0];
+		correctPack.pos[0] = parentPack.pos[0] + subPack.pos[0];
 		correctPack.pos[1] = parentPack.pos[1] + subPack.pos[1];
 		correctPack.pos[2] = parentPack.pos[2] + subPack.pos[2];
 		
@@ -258,7 +258,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 		
 		correctPack.turnsWithSteer = parentPack.turnsWithSteer;
 		correctPack.isController = subPack.isController;
-		correctPack.overrideMirror = subPack.overrideMirror;
+		correctPack.inverseMirroring = subPack.inverseMirroring;
 		correctPack.types = subPack.types;
 		correctPack.customTypes = subPack.customTypes;
 		correctPack.minValue = subPack.minValue;

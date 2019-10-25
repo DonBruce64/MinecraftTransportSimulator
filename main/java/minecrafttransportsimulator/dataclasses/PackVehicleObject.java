@@ -67,7 +67,7 @@ public class PackVehicleObject{
         public float[] rot;
         public boolean turnsWithSteer;
         public boolean isController;
-        public boolean overrideMirror;
+        public boolean inverseMirroring;
         public List<String> types;
         public List<String> customTypes;
         public float minValue;

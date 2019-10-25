@@ -40,7 +40,9 @@ public abstract class APart{
 	public final String partName;
 	public final PackPartObject pack;
 	public final Vec3d partRotation;
-	public final boolean overrideMirror;
+	public final boolean inverseMirroring;
+	public final boolean disableMirroring;
+	
 	/**The parent of this part, if this part is a sub-part of a part or an additional part for a vehicle.*/
 	public final APart parentPart;
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
@@ -60,8 +62,9 @@ public abstract class APart{
 		this.partRotation = packPart.rot != null ? new Vec3d(packPart.rot[0], packPart.rot[1], packPart.rot[2]) : Vec3d.ZERO;
 		this.isController = packPart.isController;
 		this.turnsWithSteer = packPart.turnsWithSteer;
-		this.overrideMirror = packPart.overrideMirror || pack.general.overrideMirror;
 		this.isValid = true;
+		this.inverseMirroring = packPart.inverseMirroring;
+		this.disableMirroring = pack.general.disableMirroring;
 		
 		//Check to see if we are an additional part to a part on our parent.
 		//If we are not valid due to us being fake, don't add ourselves.
