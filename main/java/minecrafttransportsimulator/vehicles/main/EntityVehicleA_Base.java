@@ -101,7 +101,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 		if(!ignoreCollision){
 			//Check for collision, and boost if needed.
 			if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
-				this.setPositionAndRotation(posX, posY +  Math.max(0, -part.offset.y) + part.getHeight(), posZ, rotationYaw, rotationPitch);
+				this.setPositionAndRotation(posX, posY + part.getHeight(), posZ, rotationYaw, rotationPitch);
 			}
 			
 			//Sometimes we need to do this for parts that are deeper into the ground.
