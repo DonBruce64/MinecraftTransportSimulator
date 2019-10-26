@@ -31,15 +31,17 @@ public abstract class APartGroundDevice extends APart{
 	public APartGroundDevice(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
 		
-		//This constructor is the super for fake parts.  Intercept these calls and bypass fake part creation.
 		//If we are a long ground device, add a fake ground device at the offset to make us
 		//have a better contact area.  If we are a fake part calling this as a super constructor,
-		//we will be invalid.  Check that to prevent loops.
+		//we will be invalid.  Check that to prevent loops.  Also set some parameters manually
+		//as fake parts have a few special properties.
 		if(this.isValid() && this.getLongPartOffset() != 0){
 			packPart.pos[2] += this.getLongPartOffset();
+			packPart.turnsWithSteer = packPart.pos[2] > 0;
 			fakePart = new PartGroundDeviceFake(this, packPart, partName, dataTag);
 			vehicle.addPart(fakePart, false);
 			packPart.pos[2] -= this.getLongPartOffset();
+			packPart.turnsWithSteer = false;
 		}else{
 			fakePart = null;
 		}
