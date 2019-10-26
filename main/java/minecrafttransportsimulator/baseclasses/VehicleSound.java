@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.baseclasses;
 
-import minecrafttransportsimulator.systems.SFXSystem;
+import minecrafttransportsimulator.systems.VehicleSoundSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
@@ -43,13 +43,13 @@ public final class VehicleSound{
 		if(isSoundActive()){
 			//If the player is riding the source, volume will either be 1.0 or 0.5.
 			if(vehicle.equals(player.getRidingEntity())){
-				return SFXSystem.isPlayerInsideEnclosedVehicle() ? 0.5F : 1.0F;
+				return VehicleSoundSystem.isPlayerInsideEnclosedVehicle() ? 0.5F : 1.0F;
 			}
 			
 			//Sound is not internal and player is not riding the source.  Volume is player distance.
 			this.playerPos = new Vec3d(player.posX, player.posY, player.posZ);
 			this.sourcePos = optionalPart != null ? optionalPart.partPos : vehicle.getPositionVector();
-			return (float) (getCurrentVolume()/playerPos.distanceTo(sourcePos)*(SFXSystem.isPlayerInsideEnclosedVehicle() ? 0.5F : 1.0F));
+			return (float) (getCurrentVolume()/playerPos.distanceTo(sourcePos)*(VehicleSoundSystem.isPlayerInsideEnclosedVehicle() ? 0.5F : 1.0F));
 		}else{
 			return 0;
 		}

@@ -9,8 +9,8 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.SFXSystem;
-import minecrafttransportsimulator.systems.SFXSystem.FXPart;
+import minecrafttransportsimulator.systems.VehicleEffectsSystem;
+import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -444,12 +444,12 @@ public abstract class APartEngine extends APart implements FXPart{
 			}
 			if(oilLeak){
 				if(vehicle.ticksExisted%20 == 0){
-					Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.OilDropParticleFX(vehicle.world, partPos.x - 0.25*Math.sin(Math.toRadians(vehicle.rotationYaw)), partPos.y, partPos.z + 0.25*Math.cos(Math.toRadians(vehicle.rotationYaw))));
+					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.OilDropParticleFX(vehicle.world, partPos.x - 0.25*Math.sin(Math.toRadians(vehicle.rotationYaw)), partPos.y, partPos.z + 0.25*Math.cos(Math.toRadians(vehicle.rotationYaw))));
 				}
 			}
 			if(fuelLeak){
 				if((vehicle.ticksExisted + 5)%20 == 0){
-					Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.FuelDropParticleFX(vehicle.world, partPos.y, partPos.y, partPos.z));
+					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.FuelDropParticleFX(vehicle.world, partPos.y, partPos.y, partPos.z));
 				}
 			}
 			if(backfired){

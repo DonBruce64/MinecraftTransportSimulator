@@ -3,8 +3,8 @@ package minecrafttransportsimulator.vehicles.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
-import minecrafttransportsimulator.systems.SFXSystem;
-import minecrafttransportsimulator.systems.SFXSystem.FXPart;
+import minecrafttransportsimulator.systems.VehicleEffectsSystem;
+import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.Item;
@@ -147,14 +147,14 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	public void spawnParticles(){
 		if(contactThisTick){
 			for(byte i=0; i<4; ++i){
-				Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.WhiteSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05));
+				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.WhiteSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05));
 			}
 			MTS.proxy.playSound(this.partPos, MTS.MODID + ":" + "wheel_striking", 1, 1);
 			contactThisTick = false;
 		}
 		if(skipAngularCalcs && this.isOnGround()){
 			for(byte i=0; i<4; ++i){
-				Minecraft.getMinecraft().effectRenderer.addEffect(new SFXSystem.WhiteSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05));
+				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.WhiteSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05));
 			}
 		}
 	}

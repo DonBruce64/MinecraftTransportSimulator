@@ -5,14 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleSound;
 import minecrafttransportsimulator.baseclasses.VehicleSound.SoundTypes;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackInstrumentObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientRemoval;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -83,14 +81,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 			electricFlow = electricUsage;
 			electricUsage = 0;
 		}
-	}
-
-	@Override
-	public void setDead(){
-		if(!world.isRemote){
-			MTS.MTSNet.sendToAll(new PacketVehicleClientRemoval(this));
-		}
-		super.setDead();
 	}
 	
 	@Override

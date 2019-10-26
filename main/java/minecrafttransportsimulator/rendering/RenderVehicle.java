@@ -22,11 +22,11 @@ import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackTranslatabl
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
-import minecrafttransportsimulator.systems.SFXSystem;
-import minecrafttransportsimulator.systems.SFXSystem.FXPart;
+import minecrafttransportsimulator.systems.VehicleSoundSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
@@ -262,10 +262,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		
 		//Update SFX.
 		if(!wasRenderedPrior){
-			SFXSystem.updateVehicleSounds(vehicle, partialTicks);
+			VehicleSoundSystem.updateVehicleSounds(vehicle, partialTicks);
 			for(APart part : vehicle.getVehicleParts()){
 				if(part instanceof FXPart){
-					SFXSystem.doFX((FXPart) part, vehicle.world);
+					((FXPart) part).spawnParticles();
 				}
 			}
 		}

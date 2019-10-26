@@ -13,7 +13,7 @@ import minecrafttransportsimulator.guis.GUITrafficSignalController;
 import minecrafttransportsimulator.items.core.ItemManual;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
-import minecrafttransportsimulator.systems.SFXSystem;
+import minecrafttransportsimulator.systems.VehicleSoundSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.entity.player.EntityPlayer;
@@ -58,11 +58,11 @@ public class ClientProxy extends CommonProxy{
 	
 	@Override
 	public void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){
-		SFXSystem.playSound(soundPosition, soundName, volume, pitch);
+		VehicleSoundSystem.playSound(soundPosition, soundName, volume, pitch);
 	}
 	
 	@Override
 	public void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine engine){
-		SFXSystem.addVehicleEngineSound(vehicle, engine);
+		VehicleSoundSystem.addVehicleEngineSound(vehicle, engine);
 	}
 }

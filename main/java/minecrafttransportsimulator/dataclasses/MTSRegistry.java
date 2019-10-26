@@ -65,7 +65,6 @@ import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInitResponse;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartAddition;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartRemoval;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientRemoval;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
@@ -387,7 +386,6 @@ public final class MTSRegistry{
 		registerPacket(PacketVehicleClientInitResponse.class, PacketVehicleClientInitResponse.Handler.class, true, false);
 		registerPacket(PacketVehicleClientPartAddition.class, PacketVehicleClientPartAddition.Handler.class, true, false);
 		registerPacket(PacketVehicleClientPartRemoval.class, PacketVehicleClientPartRemoval.Handler.class, true, false);
-		registerPacket(PacketVehicleClientRemoval.class, PacketVehicleClientRemoval.Handler.class, true, false);
 		registerPacket(PacketVehicleDeltas.class, PacketVehicleDeltas.Handler.class, true, false);
 		registerPacket(PacketVehicleInstruments.class, PacketVehicleInstruments.Handler.class, true, true);
 		registerPacket(PacketVehicleInteracted.class, PacketVehicleInteracted.Handler.class, false, true);
