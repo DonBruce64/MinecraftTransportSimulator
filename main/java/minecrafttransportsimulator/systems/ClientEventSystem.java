@@ -107,6 +107,7 @@ public final class ClientEventSystem{
     
     /**
      * Rotates player in the seat for proper rendering and forwards camera control options to the ControlSystem.
+     * Also tells the RadioSystem to update, so it can adjust volume and playing status.
      */
     @SubscribeEvent
     public static void on(TickEvent.ClientTickEvent event){
@@ -125,6 +126,7 @@ public final class ClientEventSystem{
         				CameraSystem.updatePlayerYawAndPitch(minecraft.player, (EntityVehicleB_Existing) minecraft.player.getRidingEntity());
                      }
                 }
+                RadioSystem.update();
             }
         }
     }

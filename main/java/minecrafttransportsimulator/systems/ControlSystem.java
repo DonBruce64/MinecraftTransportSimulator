@@ -9,6 +9,7 @@ import org.lwjgl.input.Mouse;
 import minecrafttransportsimulator.ClientProxy;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.GUIPanelAircraft;
+import minecrafttransportsimulator.guis.GUIRadio;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.BrakePacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
@@ -300,9 +301,18 @@ public final class ControlSystem{
 		}
 	}
 	
+	private static void controlRadio(EntityVehicleE_Powered vehicle, ControlsKeyboard radio){
+		if(radio.isPressed()){
+			if(Minecraft.getMinecraft().currentScreen == null){
+				FMLCommonHandler.instance().showGuiScreen(new GUIRadio(vehicle));
+			}
+		}
+	}
+	
 	private static void controlAircraft(EntityVehicleF_Air aircraft, boolean isPlayerController){
 		controlCamera(ControlsKeyboardDynamic.AIRCRAFT_CHANGEHUD, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEHUD, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
+		controlRadio(aircraft, ControlsKeyboard.AIRCRAFT_RADIO);
 		controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN);
 		if(!isPlayerController){
 			return;
@@ -426,7 +436,11 @@ public final class ControlSystem{
 			return;
 		}
 		controlBrake(ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE_ANALOG, ControlsJoystick.CAR_PARK, powered.getEntityId());
+		controlRadio(powered, ControlsKeyboard.CAR_RADIO);
 		controlGun(powered, ControlsKeyboard.CAR_GUN);
+		if(ControlsKeyboard.CAR_RADIO.isPressed()){
+			
+		}
 		
 		//Change gas to on or off.
 		if(joystickMap.containsKey(ControlsJoystick.CAR_GAS.joystickAssigned) && ControlsJoystick.CAR_GAS.joystickButton != NULL_COMPONENT){
@@ -530,6 +544,7 @@ public final class ControlSystem{
 		AIRCRAFT_FLAPS_D(Keyboard.KEY_H, ControlsJoystick.AIRCRAFT_FLAPS_D, true),
 		AIRCRAFT_BRAKE(Keyboard.KEY_B, ControlsJoystick.AIRCRAFT_BRAKE, false),
 		AIRCRAFT_PANEL(Keyboard.KEY_U, ControlsJoystick.AIRCRAFT_PANEL, true),
+		AIRCRAFT_RADIO(Keyboard.KEY_MINUS, ControlsJoystick.AIRCRAFT_RADIO, false),
 		AIRCRAFT_GUN(Keyboard.KEY_SPACE, ControlsJoystick.AIRCRAFT_GUN, false),
 		AIRCRAFT_ZOOM_I(Keyboard.KEY_PRIOR, ControlsJoystick.AIRCRAFT_ZOOM_I, true),
 		AIRCRAFT_ZOOM_O(Keyboard.KEY_NEXT, ControlsJoystick.AIRCRAFT_ZOOM_O, true),
@@ -548,6 +563,7 @@ public final class ControlSystem{
 		CAR_LIGHTS(Keyboard.KEY_X, ControlsJoystick.CAR_LIGHTS, true),
 		CAR_LIGHTS_SPECIAL(Keyboard.KEY_V, ControlsJoystick.CAR_LIGHTS_SPECIAL, true),
 		CAR_TRAILER(Keyboard.KEY_G, ControlsJoystick.CAR_TRAILER, true),
+		CAR_RADIO(Keyboard.KEY_MINUS, ControlsJoystick.CAR_RADIO, true),
 		CAR_GUN(Keyboard.KEY_SPACE, ControlsJoystick.CAR_GUN, false),
 		CAR_ZOOM_I(Keyboard.KEY_PRIOR, ControlsJoystick.CAR_ZOOM_I, true),
 		CAR_ZOOM_O(Keyboard.KEY_NEXT, ControlsJoystick.CAR_ZOOM_O, true);
@@ -603,6 +619,7 @@ public final class ControlSystem{
 		AIRCRAFT_BRAKE_ANALOG(true, false),
 		AIRCRAFT_PANEL(false, true),
 		AIRCRAFT_PARK(false, true),
+		AIRCRAFT_RADIO(false, true),
 		AIRCRAFT_GUN(false, false),
 		AIRCRAFT_ZOOM_I(false, true),
 		AIRCRAFT_ZOOM_O(false, true),
@@ -637,6 +654,7 @@ public final class ControlSystem{
 		CAR_LIGHTS_SPECIAL(false, true),
 		CAR_PARK(false, true),
 		CAR_TRAILER(false, true),
+		CAR_RADIO(false, false),
 		CAR_GUN(false, false),
 		CAR_ZOOM_I(false, true),
 		CAR_ZOOM_O(false, true),
