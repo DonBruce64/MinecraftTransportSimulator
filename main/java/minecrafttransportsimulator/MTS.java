@@ -21,7 +21,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="15.4.0";
+	public static final String MODVER="15.5.0";
 	
 	@Instance(value = MTS.MODID)
 	public static MTS instance;
@@ -30,6 +30,17 @@ public class MTS {
 	public static final SimpleNetworkWrapper MTSNet = NetworkRegistry.INSTANCE.newSimpleChannel("MTSNet");
 	@SidedProxy(clientSide="minecrafttransportsimulator.ClientProxy", serverSide="minecrafttransportsimulator.CommonProxy")
 	public static CommonProxy proxy;
+	
+	//This will be here until I can figure out how to pack jars into the mod.
+	public static boolean enableRadio = enableRadio();
+	public static boolean enableRadio(){
+		try {
+	        Class.forName("javazoom.jlgui.basicplayer.BasicPlayer");
+	        return true;
+	    } catch (ClassNotFoundException e){
+	        return false;
+	    }
+	};
 	
 	public MTS(){
 		FluidRegistry.enableUniversalBucket();

@@ -126,7 +126,9 @@ public final class ClientEventSystem{
         				CameraSystem.updatePlayerYawAndPitch(minecraft.player, (EntityVehicleB_Existing) minecraft.player.getRidingEntity());
                      }
                 }
-                RadioSystem.update();
+                if(MTS.enableRadio){
+                	RadioSystem.update();
+                }
             }
         }
     }
