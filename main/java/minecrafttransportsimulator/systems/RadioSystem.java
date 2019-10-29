@@ -49,6 +49,7 @@ public class RadioSystem{
 				}catch(IOException e){
 					MTS.MTSLog.error("ERROR: UNABLE TO CREATE RADIO STATION SAVE FILE.  THINGS MAY GO BADLY!");
 					MTS.MTSLog.error(e.getMessage());
+					e.printStackTrace();
 				}
 			}
 			ready = true;
@@ -88,6 +89,7 @@ public class RadioSystem{
 		}catch(Exception e){
 			MTS.MTSLog.error("ERROR: BASICPLAYER INTERNAL UPDATED CODE HAS FAULTED.");
 			MTS.MTSLog.error(e.getMessage());
+			e.printStackTrace();
 			if(!musicFilesToPlay.isEmpty()){
 				musicFilesToPlay.clear();
 			}
@@ -107,6 +109,7 @@ public class RadioSystem{
 		}catch(BasicPlayerException e){
 			MTS.MTSLog.error("ERROR: BASICPLAYER INTERNAL PLAY CODE HAS FAULTED.");
 			MTS.MTSLog.error(e.getMessage());
+			e.printStackTrace();
 			return false;
 		}
 		
@@ -141,6 +144,7 @@ public class RadioSystem{
 		}catch(Exception e){
 			MTS.MTSLog.error("ERROR: BASICPLAYER URL PLAY CODE HAS FAULTED.");
 			MTS.MTSLog.error(e.getMessage());
+			e.printStackTrace();
 			return false;
 		}
 	}
@@ -153,6 +157,7 @@ public class RadioSystem{
 		}catch(Exception e){
 			MTS.MTSLog.error("ERROR: BASICPLAYER STOP CODE HAS FAULTED.");
 			MTS.MTSLog.error(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 	
@@ -168,6 +173,7 @@ public class RadioSystem{
 		}catch(BasicPlayerException e){
 			MTS.MTSLog.error("ERROR: BASICPLAYER VOLUME CODE HAS FAULTED.");
 			MTS.MTSLog.error(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 	
@@ -223,6 +229,7 @@ public class RadioSystem{
 		}catch(IOException e){
 			MTS.MTSLog.error("ERROR: UNABLE TO PARSE RADIO STATION FILE.");
 			MTS.MTSLog.error(e.getMessage());
+			e.printStackTrace();
 		}
 		//Don't sort the stations, as we want the order the user put them in.
 		return stations;
@@ -240,6 +247,7 @@ public class RadioSystem{
 		}catch(IOException e){
 			MTS.MTSLog.error("ERROR: UNABLE TO SAVE RADIO STATION FILE.");
 			MTS.MTSLog.error(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 }
