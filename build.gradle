@@ -1,0 +1,68 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven { url = "http://files.minecraftforge.net/maven" }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+		classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
+    }
+}
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+version = "1.12.2-15.5.0"
+group= "com.don_bruce.mts" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "Immersive Vehicles"
+
+sourceCompatibility = targetCompatibility = '1.8'
+compileJava {
+    sourceCompatibility = targetCompatibility = '1.8'
+	options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+}
+
+minecraft {
+    version = "1.12.2-14.23.5.2768"
+    runDir = "run"
+    mappings = "snapshot_20171003"
+    makeObfSourceJar = false
+}
+
+//Shadow plugin code for radio.
+reobf {
+    shadowJar {}
+}
+
+shadowJar {
+   relocate 'kj', 'shadow.kj'
+   relocate 'org.xiph', 'shadow.org.xiph'
+   relocate 'org.tritonus', 'shadow.org.tritonus'
+   relocate 'org.kc7bfi', 'shadow.org.kc7bfi'
+   relocate 'javazoom', 'shadow.javazoom'
+   relocate 'davaguine', 'shadow.davaguine'
+   relocate 'com.jcraft', 'shadow.com.jcraft'
+}
+
+dependencies {
+	//compile fileTree(dir: "libs", include: "*.jar")
+	// shade 'javazoom.spi:spi:*'
+	//shade fileTree(dir: "libs", include: "*.jar")
+
+    
+    // for more info...
+    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
+    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+}
+
+//Do file stuffs.  I think this just updates mcmod.info?
+processResources {
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
