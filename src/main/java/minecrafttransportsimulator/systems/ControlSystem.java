@@ -302,11 +302,9 @@ public final class ControlSystem{
 	}
 	
 	private static void controlRadio(EntityVehicleE_Powered vehicle, ControlsKeyboard radio){
-		if(MTS.enableRadio){
-			if(radio.isPressed()){
-				if(Minecraft.getMinecraft().currentScreen == null){
-					FMLCommonHandler.instance().showGuiScreen(new GUIRadio(vehicle));
-				}
+		if(radio.isPressed()){
+			if(Minecraft.getMinecraft().currentScreen == null){
+				FMLCommonHandler.instance().showGuiScreen(new GUIRadio(vehicle));
 			}
 		}
 	}

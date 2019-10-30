@@ -12,7 +12,7 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 version = "1.12.2-15.5.0"
-group= "com.don_bruce.mts" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group= "minecrafttransportsimulator" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "Immersive Vehicles"
 
 sourceCompatibility = targetCompatibility = '1.8'
@@ -34,25 +34,28 @@ reobf {
 }
 
 shadowJar {
-   relocate 'kj', 'shadow.kj'
-   relocate 'org.xiph', 'shadow.org.xiph'
-   relocate 'org.tritonus', 'shadow.org.tritonus'
-   relocate 'org.kc7bfi', 'shadow.org.kc7bfi'
-   relocate 'javazoom', 'shadow.javazoom'
-   relocate 'davaguine', 'shadow.davaguine'
-   relocate 'com.jcraft', 'shadow.com.jcraft'
+	classifier ''
+ 
+	dependencies {
+        //exclude dependency(':org.slf4j')
+		exclude dependency('junit:junit')
+    }
+	
+	relocate 'com.jcraft', 'minecrafttransportsimulator.shadowed.jcraft'
+    relocate 'javazoom', 'minecrafttransportsimulator.shadowed.javazoom'
+    relocate 'org.tritonus', 'minecrafttransportsimulator.shadowed.tritonus'
+	relocate 'org.slf4j', 'minecrafttransportsimulator.shadowed.slf4j'
+
+    exclude 'dummyThing'
 }
 
 dependencies {
-	//compile fileTree(dir: "libs", include: "*.jar")
-	// shade 'javazoom.spi:spi:*'
-	//shade fileTree(dir: "libs", include: "*.jar")
 
-    
-    // for more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+	compile group: 'com.googlecode.soundlibs', name: 'vorbisspi', version: '1.0.3.3'
+	compile group: 'com.googlecode.soundlibs', name: 'mp3spi', version: '1.9.5.4'
+    compile group: 'com.googlecode.soundlibs', name: 'basicplayer', version: '3.0.0.0'
 }
+
 
 //Do file stuffs.  I think this just updates mcmod.info?
 processResources {

@@ -31,17 +31,6 @@ public class MTS {
 	@SidedProxy(clientSide="minecrafttransportsimulator.ClientProxy", serverSide="minecrafttransportsimulator.CommonProxy")
 	public static CommonProxy proxy;
 	
-	//This will be here until I can figure out how to pack jars into the mod.
-	public static boolean enableRadio = enableRadio();
-	public static boolean enableRadio(){
-		try {
-	        Class.forName("javazoom.jlgui.basicplayer.BasicPlayer");
-	        return true;
-	    } catch (ClassNotFoundException e){
-	        return false;
-	    }
-	};
-	
 	public MTS(){
 		FluidRegistry.enableUniversalBucket();
 	}

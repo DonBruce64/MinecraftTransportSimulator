@@ -18,6 +18,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
+import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -126,9 +127,8 @@ public final class ClientEventSystem{
         				CameraSystem.updatePlayerYawAndPitch(minecraft.player, (EntityVehicleB_Existing) minecraft.player.getRidingEntity());
                      }
                 }
-                if(MTS.enableRadio){
-                	RadioSystem.update();
-                }
+                //Update the radio at the end of the client tick.
+                RadioSystem.update();
             }
         }
     }
@@ -201,9 +201,9 @@ public final class ClientEventSystem{
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Pre event){
         if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleC_Colliding){
-        	GL11.glPushMatrix();
         	EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) event.getEntityPlayer().getRidingEntity();
-	        if(vehicle.pack != null){
+        	GL11.glPushMatrix();
+        	if(vehicle.pack != null){
 	        	PartSeat seat = vehicle.getSeatForRider(event.getEntityPlayer());
 	        	if(seat != null){
 		            //First restrict the player's yaw to prevent them from being able to rotate their body in a seat.
@@ -233,6 +233,14 @@ public final class ClientEventSystem{
 		                GL11.glRotated(vehicle.rotationPitch + placementRotation.x, Math.cos(vehicle.rotationYaw  * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
 		                GL11.glRotated(vehicle.rotationRoll + placementRotation.z, -Math.sin(vehicle.rotationYaw  * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
 		                GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
+		            }
+		            
+		            //Make the player dance if the radio is playing.
+		            RenderPlayer render = event.getRenderer();
+		            if(RadioSystem.isPlaying()){
+		            	render.getMainModel().bipedHead.offsetZ = 0.075F - 0.15F*(Minecraft.getMinecraft().world.getTotalWorldTime()%6)/6F;
+		            }else{
+		            	render.getMainModel().bipedHead.offsetZ = 0.0F;
 		            }
 	        	}
         	}

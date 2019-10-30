@@ -96,6 +96,11 @@ public class RadioSystem{
 		}
 	}
 	
+	/**Get the current play state of the radio.  Wrapped for ease of coding.**/
+	public static boolean isPlaying(){
+		return player.getStatus() == BasicPlayer.PLAYING;
+	}
+	
 	/**Plays a sound file from the Java classpath.  May be MC sounds or music disks.**/
 	public static boolean play(ResourceLocation location, EntityVehicleE_Powered vehicle){
 		try{
@@ -153,6 +158,7 @@ public class RadioSystem{
 	public static void stop(){
 		try{
 			player.stop();
+			musicFilesToPlay.clear();
 			vehicleWithRadio = null;
 		}catch(Exception e){
 			MTS.MTSLog.error("ERROR: BASICPLAYER STOP CODE HAS FAULTED.");
