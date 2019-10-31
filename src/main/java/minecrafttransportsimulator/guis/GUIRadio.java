@@ -7,8 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.systems.RadioSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.radio.Radio;
+import minecrafttransportsimulator.radio.RadioContainer;
+import minecrafttransportsimulator.radio.RadioManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -36,20 +37,18 @@ public class GUIRadio extends GuiScreen{
 	//Input boxes
 	private GuiTextField stationDisplay;
 	
-	//Vehicle this radio is a part of.  Used to tell the radio which vehicle to link to when we press play.
-	private final EntityVehicleE_Powered vehicle;
-	
-	//Static runtime information.
-	private static List<String> presets = new ArrayList<String>();
+	//Runtime information.
+	//[private final List<String> localPresets;
+	//private final List<String> internetPresets;
+	private final Radio radio;
 	private static boolean localMode = true;
-	private static boolean serverMode = false;
 	private static boolean randomMode = false;
-	private static int stationSelected = -1;
+	private static boolean teachMode = false;
 	
-	public GUIRadio(EntityVehicleE_Powered vehicle){
-		RadioSystem.init();
+	public GUIRadio(RadioContainer container){
+		RadioManager.init();
+		radio = RadioManager.getRadio(container);
 		this.allowUserInput=true;
-		this.vehicle = vehicle;
 	}
 	
 	@Override 
@@ -76,38 +75,25 @@ public class GUIRadio extends GuiScreen{
 		
 		stationDisplay = new GuiTextField(0, fontRenderer, guiLeft + 20, guiTop + 120, 220, 20);
 		stationDisplay.setMaxStringLength(100);
-		
-		//Get presets based on state.
-		if(localMode){
-			presets = RadioSystem.getMusicDirectories();
-			stationDisplay.setEnabled(false);
-		}else{
-			presets = RadioSystem.getRadioStations();
-		}
-		
-		//Set station display based on last button pressed.
-		if(stationSelected != -1){
-			presetButtons.get(stationSelected).enabled = false;
-			stationDisplay.setText(presets.get(stationSelected));
-		}else{
-			stationDisplay.setText("");
-		}
 	}
 	
 	@Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks){
+    public void drawScreen(int mouseX, int mouseY, float partialTicks){		
 		//Draw Background.
 		this.mc.getTextureManager().bindTexture(background);
 		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 192);
+				
+		//Enable station entry if wa are in teach mode.
+		stationDisplay.setEnabled(teachMode);
 		
-		//Set toggle button enable states.
-		offButton.enabled = stationSelected != -1;
+		//Set button states.
+		offButton.enabled = radio.getPlayState() != -1;
 		localButton.enabled = !localMode;
 		remoteButton.enabled = localMode;
 		serverButton.enabled = false;
 		randomButton.enabled = !randomMode && localMode;
 		orderedButton.enabled = randomMode && localMode;
-		setButton.enabled = !localMode && stationSelected != -1;
+		setButton.enabled = !localMode;
 		
 		//Draw buttons.
 		for(GuiButton button : buttonList){
@@ -122,23 +108,19 @@ public class GUIRadio extends GuiScreen{
     protected void actionPerformed(GuiButton buttonClicked) throws IOException{
 		super.actionPerformed(buttonClicked);
 		if(buttonClicked.equals(offButton)){
-			//Stop the radio and re-enable the preset button to be pushed again to start the radio.
-			RadioSystem.stop();
-			presetButtons.get(stationSelected).enabled = true;
-			stationSelected = -1;
+			presetButtons.get(radio.getPresetSelected()).enabled = true;
+			radio.stopPlaying();
 			stationDisplay.setText("");
+			teachMode = false;
 		}else if(buttonClicked.equals(localButton)){
 			localMode = true;
-			presets = RadioSystem.getMusicDirectories();
-			stationDisplay.setEnabled(false);
-			if(stationSelected != -1){
+			teachMode = false;
+			if(radio.getPresetSelected() != -1){
 				actionPerformed(offButton);
 			}
 		}else if(buttonClicked.equals(remoteButton)){
 			localMode = false;
-			presets = RadioSystem.getRadioStations();
-			stationDisplay.setEnabled(true);
-			if(stationSelected != -1){
+			if(radio.getPresetSelected() != -1){
 				actionPerformed(offButton);
 			}
 		}else if(buttonClicked.equals(randomButton)){
@@ -146,38 +128,45 @@ public class GUIRadio extends GuiScreen{
 		}else if(buttonClicked.equals(orderedButton)){
 			randomMode = false;
 		}else if(buttonClicked.equals(setButton)){
-			//Set the station in the currently-selected preset button slot to the station in the display.
-			//Un-set the preset after this to allow the user to press it and play the station.
-			presets.set(stationSelected, stationDisplay.getText());
-			RadioSystem.setRadioStations(presets);
-		}else if(presetButtons.contains(buttonClicked)){
-			//Set the selection index to the button pressed and disable the button.
-			//Enable the last-selected button if needed.
-			if(stationSelected != -1){
-				presetButtons.get(stationSelected).enabled = true;
+			if(teachMode){
+				teachMode = false;
+				stationDisplay.setText("");
+			}else{
+				teachMode = true;
+				stationDisplay.setText("Enter a URL and press a preset button.");
 			}
-			stationSelected = presetButtons.indexOf(buttonClicked);
-			buttonClicked.enabled = false;
+		}else if(presetButtons.contains(buttonClicked)){
+			int presetClicked = presetButtons.indexOf(buttonClicked);
+			//Enable the last-selected button if needed.
+			if(radio.getPresetSelected() != -1){
+				presetButtons.get(radio.getPresetSelected()).enabled = true;
+			}
 			
-			//Attempt to play the station selected.
-			if(localMode){
-				String directory = RadioSystem.getMusicDirectories().get(stationSelected);
+			if(teachMode){
+				RadioManager.setRadioStation(stationDisplay.getText(), presetClicked);
+				stationDisplay.setText("Station set to preset " + (presetClicked + 1));
+				teachMode = false;
+			}else if(localMode){
+				String directory = RadioManager.getMusicDirectories().get(presetClicked);
 				if(!directory.isEmpty()){
 					stationDisplay.setText(directory);
-					RadioSystem.stop();
-					RadioSystem.play(directory, vehicle, !randomMode);
+					radio.playLocal(directory, presetClicked, !randomMode);
+					buttonClicked.enabled = false;
 				}else{
-					stationDisplay.setText("Folder " + stationSelected + " not found in mts_music.");
+					stationDisplay.setText("Fewer than " + (presetClicked + 1) + " folders in mts_music.");
 				}
 			}else{
-				String station = presets.get(stationSelected);
+				String station = RadioManager.getRadioStations().get(presetClicked);
 				if(station.isEmpty()){
-					stationDisplay.setText("Enter a streaming URL and press SET.");
+					stationDisplay.setText("Press SET to teach a station.");
 				}else{
-					if(!RadioSystem.play(new URL(station), vehicle)){
+					URL url = null;
+					try{
+						url = new URL(station);
+					}catch(Exception e){}
+					if(url == null || !radio.playInternet(url, presetClicked)){
 						stationDisplay.setText("INVALID URL!");
-						presets.set(presetButtons.indexOf(buttonClicked), "");
-						RadioSystem.setRadioStations(presets);
+						RadioManager.setRadioStation("", presetClicked);
 					}else{
 						stationDisplay.setText(station);
 						buttonClicked.enabled = false;

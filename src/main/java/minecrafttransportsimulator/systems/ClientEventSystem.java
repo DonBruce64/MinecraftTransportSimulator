@@ -9,6 +9,7 @@ import minecrafttransportsimulator.guis.GUIPackMissing;
 import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
+import minecrafttransportsimulator.radio.RadioManager;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
@@ -127,8 +128,8 @@ public final class ClientEventSystem{
         				CameraSystem.updatePlayerYawAndPitch(minecraft.player, (EntityVehicleB_Existing) minecraft.player.getRidingEntity());
                      }
                 }
-                //Update the radio at the end of the client tick.
-                RadioSystem.update();
+                //Update the radios at the end of the client tick.
+                RadioManager.updateRadios();
             }
         }
     }
@@ -237,7 +238,7 @@ public final class ClientEventSystem{
 		            
 		            //Make the player dance if the radio is playing.
 		            RenderPlayer render = event.getRenderer();
-		            if(RadioSystem.isPlaying()){
+		            if(RadioManager.getRadio((EntityVehicleE_Powered) vehicle).getPlayState() != -1){
 		            	render.getMainModel().bipedHead.offsetZ = 0.075F - 0.15F*(Minecraft.getMinecraft().world.getTotalWorldTime()%6)/6F;
 		            }else{
 		            	render.getMainModel().bipedHead.offsetZ = 0.0F;

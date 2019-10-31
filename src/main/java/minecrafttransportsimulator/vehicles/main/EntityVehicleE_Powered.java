@@ -11,11 +11,14 @@ import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackInstrumentObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.radio.RadioContainer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.systems.VehicleSoundSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
@@ -33,7 +36,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * 
  * @author don_bruce
  */
-public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
+public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements RadioContainer{
 	public boolean soundsNeedInit;
 	public boolean hornOn;
 	public boolean sirenOn;
@@ -294,6 +297,20 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 			}
 		}
 		sounds.add(newSound);
+	}
+	
+	//-----START OF RADIO CODE-----
+	public double getDistanceToPlayer(){
+		return this.equals(Minecraft.getMinecraft().player.getRidingEntity()) ? 0.0 : Minecraft.getMinecraft().player.getDistance(this);
+	}
+	
+	public double getAngleToPlayer(){
+		//TODO calculate angle.
+		return 0;
+	}
+	
+	public boolean isValid(){
+		return !this.isDead;
 	}
 			
     @Override
