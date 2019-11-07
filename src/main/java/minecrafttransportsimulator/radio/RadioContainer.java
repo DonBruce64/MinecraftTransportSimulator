@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.radio;
 
+import net.minecraft.entity.player.EntityPlayer;
+
 /**This interface should be implemented on anything that will have a radio.
  * It lets the {@link Radio} class obtain information about position
  * data it knows how to set its volume and pan levels.  This is put in its own
@@ -11,7 +13,7 @@ package minecrafttransportsimulator.radio;
  */
 public interface RadioContainer{
 	/**Gets the distance between this object and the player.**/
-	public abstract double getDistanceToPlayer();
+	public abstract double getDistanceToPlayer(EntityPlayer player);
 	
 	/**Gets the angle between this Container and the player.  Used for stereo panning.**/
 	public abstract double getAngleToPlayer();

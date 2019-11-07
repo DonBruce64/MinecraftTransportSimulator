@@ -9,6 +9,7 @@ import java.util.List;
 import javazoom.jlgui.basicplayer.BasicPlayer;
 import javazoom.jlgui.basicplayer.BasicPlayerException;
 import minecrafttransportsimulator.MTS;
+import net.minecraft.client.Minecraft;
 
 /**Base class for radios.  Used to provide a common set of tools for all radio implementations.
 *
@@ -124,7 +125,7 @@ public class Radio{
 					if(gamePaused){
 						player.pause();
 					}else{
-						setVolume((float) (2F*1F/container.getDistanceToPlayer()));
+						setVolume((float) (2F*1F/container.getDistanceToPlayer(Minecraft.getMinecraft().player)));
 					}
 				}else if(player.getStatus() == BasicPlayer.PAUSED){
 					//If we are paused, but the game isn't, un-pause us.

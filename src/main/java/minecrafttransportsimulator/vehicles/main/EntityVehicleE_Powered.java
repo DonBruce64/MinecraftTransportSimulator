@@ -17,9 +17,9 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
@@ -299,8 +299,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	//-----START OF RADIO CODE-----
-	public double getDistanceToPlayer(){
-		return this.equals(Minecraft.getMinecraft().player.getRidingEntity()) ? 0.0 : Minecraft.getMinecraft().player.getDistance(this);
+	public double getDistanceToPlayer(EntityPlayer player){
+		return this.equals(player.getRidingEntity()) ? 0.0 : player.getDistance(this);
 	}
 	
 	public double getAngleToPlayer(){
