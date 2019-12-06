@@ -16,6 +16,7 @@ public class ItemJerrycan extends Item{
 	public ItemJerrycan(){
 		super();
 		setFull3D();
+		setMaxStackSize(1);
 	}
 	
 	@Override
