@@ -84,6 +84,7 @@ public abstract class AItemPart extends Item{
 		    										MTS.MTSLog.error(e.getMessage());
 		    										e.printStackTrace();
 		    									}
+		    									return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, player.getHeldItem(hand));
 		        							}
 		    							}
 		    						}
