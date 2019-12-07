@@ -117,7 +117,6 @@ public class PacketVehicleInteracted extends APacketVehiclePlayer{
 								MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.empty"), (EntityPlayerMP) player);
 							}
 						}
-						//TODO add jerrycan here.
 					}
 				}
 			});
