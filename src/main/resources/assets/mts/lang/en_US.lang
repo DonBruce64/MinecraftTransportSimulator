@@ -64,6 +64,12 @@ interact.jumpercable.alreadylinked=This engine is already linked to another engi
 interact.jumpercable.toofar=The two engines are too far away.  They should be no further than 16 blocks apart.
 interact.jumpercable.samevehicle=The two engines are on the same vehicle.  That's not going to work well...
 
+interact.trailer.connect=Trailer connected!
+interact.trailer.disconnect=Trailer disconnected.
+interact.trailer.nohitch=This vehicle does not have a hitch and therefore cannot tow anything.
+interact.trailer.wronghitch=This vehicle does not have the correct hitch for this trailer.
+interact.trailer.notfound=No trailers were found within 2 blocks of the hitch on this vehicle.
+
 input.aircraft.mod=Mod
 input.aircraft.camlock=CamLock
 input.aircraft.yaw=Yaw
