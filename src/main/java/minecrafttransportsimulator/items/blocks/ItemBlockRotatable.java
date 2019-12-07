@@ -32,8 +32,10 @@ public class ItemBlockRotatable extends Item{
 			ItemStack heldStack = player.getHeldItem(hand);
 			
 			if(heldStack.getItem() != null){
-				//We want to spawn above this block.
-				pos = pos.up();
+				//Get the spawning position depending on where we clicked the block.
+				if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
+		            pos = pos.offset(facing);
+		        }
 				
 				//Based on the rotation of the player, pick from the block array.
 				switch(player.getHorizontalFacing()){
