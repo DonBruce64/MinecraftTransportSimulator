@@ -41,7 +41,7 @@ public final class PartCrate extends APart{
 		NBTTagList stackTagList = new NBTTagList();
 		for(byte i = 0; i < crateInventory.getSizeInventory(); ++i){
 			ItemStack stack = crateInventory.getStackInSlot(i);
-			if(stack != null){
+			if(!stack.isEmpty()){
 				NBTTagCompound stackTag = new NBTTagCompound();
 				stackTag.setByte("Slot", (byte)i);
                 stack.writeToNBT(stackTag);
