@@ -25,6 +25,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.WorldServer;
@@ -79,8 +80,59 @@ public final class ClientEventSystem{
 				}else{
 					MTS.MTSNet.sendToServer(new PacketVehicleInteracted(vehicle, event.getEntityPlayer()));
 				}
+    			event.setCanceled(true);
+    			event.setCancellationResult(EnumActionResult.SUCCESS);
 	    	}
     	}
+    }
+    
+    /**
+     * While the above event method will catch most interactions, it won't
+     * handle interactions when we are seated in the vehicle we are trying
+     * to interact with.  This prevents players from locking doors and
+     * changing seats in planes.  We add this event here to catch these
+     * edge-cases.
+     */
+    @SubscribeEvent
+    public static void on(PlayerInteractEvent.RightClickItem event){
+    	if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND)){
+    		if(doClickEvent(event.getEntityPlayer())){
+	    		event.setCanceled(true);
+				event.setCancellationResult(EnumActionResult.SUCCESS);
+    		}
+    	}
+    }
+    
+    /**
+     * There is one more edge-case we need to account for.  And that's being
+     * seated in a vehicle, but not having anything in our hands.  This, for
+     * some dumb reason, results in a different event call.  We catch it here
+     * to ensure even if the player isn't holding anything, they can still
+     * change seats while in a vehicle.
+     */
+    @SubscribeEvent
+    public static void on(PlayerInteractEvent.RightClickEmpty event){
+    	if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND)){
+    		doClickEvent(event.getEntityPlayer());
+    	}
+    }
+    
+    private static boolean doClickEvent(EntityPlayer player){
+    	Vec3d lookVec = player.getLook(1.0F);
+		for(Entity entity : minecraft.world.loadedEntityList){
+			if(entity instanceof EntityVehicleC_Colliding){
+				EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) entity;
+				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
+	    		for(float f=1.0F; f<4.0F; f += 0.1F){
+	    			if(vehicle.getEntityBoundingBox().contains(clickedVec)){
+	    				MTS.MTSNet.sendToServer(new PacketVehicleInteracted(vehicle, player));
+	    				return true;
+	    			}
+	    			clickedVec = clickedVec.addVector(lookVec.x*0.1F, lookVec.y*0.1F, lookVec.z*0.1F);
+	    		}
+			}
+		}
+		return false;
     }
     
     
