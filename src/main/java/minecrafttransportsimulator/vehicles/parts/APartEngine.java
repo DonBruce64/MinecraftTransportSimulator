@@ -198,7 +198,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		ambientTemp = 25*vehicle.world.getBiome(vehicle.getPosition()).getTemperature(vehicle.getPosition()) - 5*(Math.pow(2, vehicle.posY/400) - 1);
 		coolingFactor = 0.001 + vehicle.velocity/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
-		vehicle.electricUsage -= 0.05*RPM/pack.engine.maxRPM;
+		vehicle.electricUsage -= state.running ? 0.05*RPM/pack.engine.maxRPM : 0;
 		
 		if(state.running){
 			//First part is temp affect on oil, second is engine oil pump.
