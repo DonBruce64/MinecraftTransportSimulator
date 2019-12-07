@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=south": { "model": "mts:gunbench" },
+        "facing=north": { "model": "mts:gunbench", "y": 180 },
+        "facing=east":  { "model": "mts:gunbench", "y": 270 },
+        "facing=west":  { "model": "mts:gunbench", "y": 90 }
+    }
+}

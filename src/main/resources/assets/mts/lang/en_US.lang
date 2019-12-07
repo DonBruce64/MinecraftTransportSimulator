@@ -288,21 +288,21 @@ item.manual.name=MTS Manual (READ ME!)
 item.jumpercable.name=Jumper Cables
 item.jerrycan.name=Jerrycan
 
-item.vehiclebench.name=Drafting Table (Vehicles)
-item.propellerbench.name=Propeller Bench
-item.enginebench.name=Engine Hoist
-item.wheelbench.name=Wheel Workbench
-item.seatbench.name=Table Saw (Seats & Cargo)
-item.gunbench.name=Rifling Machine (Guns & Ammo)
-item.custombench.name=Tool Bench (Custom Parts)
-item.instrumentbench.name=Instrument Bench
-item.componentbench.name=Component Bench (Custom Items)
+tile.vehiclebench.name=Drafting Table (Vehicles)
+tile.propellerbench.name=Propeller Bench
+tile.enginebench.name=Engine Hoist
+tile.wheelbench.name=Wheel Workbench
+tile.seatbench.name=Table Saw (Seats & Cargo)
+tile.gunbench.name=Rifling Machine (Guns & Ammo)
+tile.custombench.name=Tool Bench (Custom Parts)
+tile.instrumentbench.name=Instrument Bench
+tile.componentbench.name=Component Bench (Custom Items)
 
-item.fuelpump.name=Fuel Pump
-item.fuelpump.level=LVL:
-item.fuelpump.dispensed=DISP:
+tile.fuelpump.name=Fuel Pump
+tile.fuelpump.level=LVL:
+tile.fuelpump.dispensed=DISP:
 
-item.trafficsignalcontroller.name=Traffic Signal Controller
+tile.trafficsignalcontroller.name=Traffic Signal Controller
 
 tile.pole.name=Pole
 tile.polebase.name=Pole Base

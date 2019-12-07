@@ -3,23 +3,21 @@ package minecrafttransportsimulator.blocks.core;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.items.blocks.ItemBlockRotatable;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public class BlockBench extends BlockRotatable{
+public class BlockBench extends ABlockRotatable{
 	public final List<String> partTypes;
 	
-	public BlockBench(EnumFacing orientation, ItemBlockRotatable item, String... partTypes){
-		super(orientation, item);
+	public BlockBench(String... partTypes){
+		super();
+		this.setCreativeTab(MTSRegistry.coreTab);
 		this.partTypes = Arrays.asList(partTypes);
 	}
 	

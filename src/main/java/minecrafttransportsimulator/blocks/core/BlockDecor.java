@@ -4,38 +4,47 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackDecorObject;
+import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
-import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BlockDecor extends Block implements ITileEntityProvider{
+public class BlockDecor extends ABlockRotatable implements ITileEntityProvider{
 	private final boolean isOriented;
 	
 	private AxisAlignedBB regularAABB;
 	private AxisAlignedBB rotatedAABB;
 	
     public BlockDecor(boolean isOriented, boolean lighted){
-		super(Material.ROCK);
+		super();
 		this.isOriented = isOriented;
 		this.fullBlock = false;
 		this.setLightLevel(lighted ? 1.0F : 0);
-		this.setHardness(5.0F);
-		this.setResistance(10.0F);
 	}
     
     @Override
     public void breakBlock(World world, BlockPos pos, IBlockState state){
         super.breakBlock(world, pos, state);
         world.removeTileEntity(pos);
+    }
+    
+    @Override
+    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack){
+    	TileEntityDecor decorTile = ((TileEntityDecor) world.getTileEntity(pos));
+    	decorTile.decorName = ((ItemDecor) stack.getItem()).decorName;
     }
     
     @Override
@@ -64,14 +73,7 @@ public class BlockDecor extends Block implements ITileEntityProvider{
     				}
     			}
     		}else{
-    			TileEntityDecor tile = ((TileEntityDecor) access.getTileEntity(pos));
-    			if(tile != null){
-	    			if(tile.rotation%2 == 0){
-	    				return regularAABB;
-	    	        }else{
-	    	        	return rotatedAABB;
-	    	        }
-    			}
+    			return state.getValue(FACING).getAxis().equals(EnumFacing.Axis.Z) ? regularAABB : rotatedAABB;
     		}
     	}
         return super.getBoundingBox(state, access, pos);
@@ -94,16 +96,14 @@ public class BlockDecor extends Block implements ITileEntityProvider{
     			}
     			addCollisionBoxToList(pos, entityBox, collidingBoxes, FULL_BLOCK_AABB);
     		}else{
-    			TileEntityDecor tile = ((TileEntityDecor) world.getTileEntity(pos));
-    			if(tile != null){
-	    			if(tile.rotation%2 == 0){
-	    				addCollisionBoxToList(pos, entityBox, collidingBoxes, regularAABB);
-	    	        }else{
-	    	        	addCollisionBoxToList(pos, entityBox, collidingBoxes, rotatedAABB);
-	    	        }
-    			}
+    			addCollisionBoxToList(pos, entityBox, collidingBoxes, state.getValue(FACING).getAxis().equals(EnumFacing.Axis.Z) ? regularAABB : rotatedAABB);
     		}
 		}
+    }
+	
+	@Override
+	public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player){
+		return new ItemStack(MTSRegistry.decorItemMap.get(((TileEntityDecor) world.getTileEntity(pos)).decorName));
     }
     
     @Override

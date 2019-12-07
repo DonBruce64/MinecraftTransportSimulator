@@ -2,7 +2,7 @@ package minecrafttransportsimulator.blocks.core;
 
 import net.minecraft.nbt.NBTTagCompound;
 
-public class TileEntityDecor extends TileEntityRotatable{
+public class TileEntityDecor extends TileEntityBase{
 	public String decorName;
 	
 	@Override

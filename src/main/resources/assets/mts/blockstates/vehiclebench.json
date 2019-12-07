@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=south": { "model": "mts:vehiclebench" },
+        "facing=north": { "model": "mts:vehiclebench", "y": 180 },
+        "facing=east":  { "model": "mts:vehiclebench", "y": 270 },
+        "facing=west":  { "model": "mts:vehiclebench", "y": 90 }
+    }
+}

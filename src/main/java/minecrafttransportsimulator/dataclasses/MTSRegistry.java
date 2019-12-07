@@ -9,16 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.blocks.core.BlockBench;
 import minecrafttransportsimulator.blocks.core.BlockDecor;
-import minecrafttransportsimulator.blocks.core.BlockRotatable;
+import minecrafttransportsimulator.blocks.core.BlockFuelPump;
+import minecrafttransportsimulator.blocks.core.BlockTrafficSignalController;
 import minecrafttransportsimulator.blocks.pole.BlockPoleAttachment;
 import minecrafttransportsimulator.blocks.pole.BlockPoleNormal;
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
 import minecrafttransportsimulator.blocks.pole.BlockPoleWallConnector;
-import minecrafttransportsimulator.items.blocks.ItemBlockBench;
-import minecrafttransportsimulator.items.blocks.ItemBlockFuelPump;
-import minecrafttransportsimulator.items.blocks.ItemBlockRotatable;
-import minecrafttransportsimulator.items.blocks.ItemBlockTrafficSignalController;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemInstrument;
 import minecrafttransportsimulator.items.core.ItemItem;
@@ -121,10 +119,7 @@ public final class MTSRegistry{
 	
 	/**Maps item item names to items.  All item items for all packs will be populated here.*/
 	public static Map<String, ItemItem> itemItemMap = new LinkedHashMap<String, ItemItem>();
-	
-	/**Maps rotatable blocks to their items.  Used to return the correct item when they are broken.*/
-	public static Map<BlockRotatable, ItemBlockRotatable> rotatableItemMap = new LinkedHashMap<BlockRotatable, ItemBlockRotatable>();
-	
+		
 	/**Core creative tab for base MTS items**/
 	public static final CreativeTabCore coreTab = new CreativeTabCore();
 	
@@ -139,35 +134,31 @@ public final class MTSRegistry{
 	public static final Item jerrycan = new ItemJerrycan().setCreativeTab(coreTab);
 	
 	//Crafting benches.
-	public static final Item vehicleBench = new ItemBlockBench("plane", "car", "blimp", "boat").createBlocks();
-	public static final Item propellerBench = new ItemBlockBench("propeller").createBlocks();
-	public static final Item engineBench = new ItemBlockBench("engine_aircraft", "engine_jet", "engine_car", "engine_boat").createBlocks();
-	public static final Item wheelBench = new ItemBlockBench("wheel", "skid", "pontoon", "tread").createBlocks();
-	public static final Item seatBench = new ItemBlockBench("seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand").createBlocks();
-	public static final Item gunBench = new ItemBlockBench("gun_fixed", "gun_tripod").createBlocks();
-	public static final Item customBench = new ItemBlockBench("custom").createBlocks();
-	public static final Item instrumentBench = new ItemBlockBench("instrument").createBlocks();
-	public static final Item componentBench = new ItemBlockBench("item").createBlocks();
+	public static final Block vehicleBench = new BlockBench("plane", "car", "blimp", "boat");
+	public static final Block propellerBench = new BlockBench("propeller");
+	public static final Block engineBench = new BlockBench("engine_aircraft", "engine_jet", "engine_car", "engine_boat");
+	public static final Block wheelBench = new BlockBench("wheel", "skid", "pontoon", "tread");
+	public static final Block seatBench = new BlockBench("seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand");
+	public static final Block gunBench = new BlockBench("gun_fixed", "gun_tripod");
+	public static final Block customBench = new BlockBench("custom");
+	public static final Block instrumentBench = new BlockBench("instrument");
+	public static final Block componentBench = new BlockBench("item");
 	
 	//Fuel pump.
-	public static final Item fuelPump = new ItemBlockFuelPump().createBlocks();
+	public static final Block fuelPump = new BlockFuelPump();
 	
 	//Traffic Controller
-	public static final Item trafficSignalController = new ItemBlockTrafficSignalController().createBlocks();
+	public static final Block trafficSignalController = new BlockTrafficSignalController();
 	
 	//Pole-based blocks.
 	public static final Block pole = new BlockPoleNormal(0.125F);
-	public static final Item itemBlockPole = new ItemBlock(pole);
 	public static final Block poleBase = new BlockPoleWallConnector(0.125F);
-	public static final Item itemBlockPoleBase = new ItemBlock(poleBase);
 	public static final Block trafficSignal = new BlockPoleAttachment(0.125F);
-	public static final Item itemBlockTrafficSignal = new ItemBlock(trafficSignal);
 	public static final Block streetLight = new BlockPoleAttachment(0.125F);
-	public static final Item itemBlockStreetLight = new ItemBlock(streetLight);
 	public static final Block trafficSign = new BlockPoleSign(0.125F);
-	public static final Item itemBlockTrafficSign = new ItemBlock(trafficSign);
 		
 	//Decor blocks.
+	//TODO make a creative tab exception for these.
 	public static final Block decorBasicDark = new BlockDecor(false, false);
 	public static final Block decorOrientedDark = new BlockDecor(true, false);
 	public static final Block decorBasicLight = new BlockDecor(false, true);
@@ -219,7 +210,7 @@ public final class MTSRegistry{
 	}
 	
 	/**
-	 * Registers all blocks present in this class, as well as blocks for rotatable items.
+	 * Registers all blocks present in this class.
 	 * Also adds the respective TileEntity if the block has one.
 	 */
 	@SubscribeEvent
@@ -237,27 +228,6 @@ public final class MTSRegistry{
 						if(!registeredTileEntityClasses.contains(tileEntityClass)){
 							GameRegistry.registerTileEntity(tileEntityClass, new ResourceLocation(MTS.MODID, tileEntityClass.getSimpleName()));
 							registeredTileEntityClasses.add(tileEntityClass);
-						}
-					}
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}else if(field.getType().equals(Item.class)){
-				try{
-					if(field.get(null) instanceof ItemBlockRotatable){
-						ItemBlockRotatable item = (ItemBlockRotatable) field.get(null);
-						for(byte i=0; i<item.blocks.length; ++i){
-							BlockRotatable block = item.blocks[i];
-							String name = field.getName().toLowerCase() + "_" + i;
-							event.getRegistry().register(block.setRegistryName(name).setUnlocalizedName(name));
-							rotatableItemMap.put(block, item);
-							if(block instanceof ITileEntityProvider){
-								Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
-								if(!registeredTileEntityClasses.contains(tileEntityClass)){
-									GameRegistry.registerTileEntity(tileEntityClass, new ResourceLocation(MTS.MODID, tileEntityClass.getSimpleName()));
-									registeredTileEntityClasses.add(tileEntityClass);
-								}
-							}
 						}
 					}
 				}catch(Exception e){
@@ -284,13 +254,20 @@ public final class MTSRegistry{
 				try{
 					Item item = (Item) field.get(null);
 					String name = field.getName().toLowerCase();
-					if(!name.startsWith("itemblock")){
-						event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
-						MTSRegistry.itemList.add(item);
-					}else{
-						name = name.substring("itemblock".length());
-						event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
-						MTSRegistry.itemList.add(item);
+					event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
+					MTSRegistry.itemList.add(item);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}else if(field.getType().equals(Block.class)){
+				try{
+					Block block = (Block) field.get(null);
+					if(!(block instanceof BlockDecor)){
+						ItemBlock itemBlock = new ItemBlock(block);
+						itemBlock.setCreativeTab(block.getCreativeTabToDisplayOn());
+						String name = field.getName().toLowerCase();
+						event.getRegistry().register(itemBlock.setRegistryName(name).setUnlocalizedName(name));
+						MTSRegistry.itemList.add(itemBlock);
 					}
 				}catch(Exception e){
 					e.printStackTrace();

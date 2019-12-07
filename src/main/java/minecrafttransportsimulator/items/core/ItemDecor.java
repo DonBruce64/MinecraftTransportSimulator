@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.items.core;
 
+import minecrafttransportsimulator.blocks.core.BlockDecor;
 import minecrafttransportsimulator.blocks.core.TileEntityDecor;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.dataclasses.PackDecorObject;
@@ -27,36 +28,32 @@ public class ItemDecor extends Item{
 	public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
 		if(!world.isRemote && player.getHeldItem(hand) != null){
 			ItemStack heldStack = player.getHeldItem(hand);
-			if(heldStack.getItem() != null){
-				//We want to spawn above this block.
-				pos = pos.up();
-				
-				//Based on the block type and light, pick a registered block template.
-				String blockName = ((ItemDecor) heldStack.getItem()).decorName;
-				PackDecorObject pack = PackParserSystem.getDecor(blockName);
-				if(!pack.general.oriented && !pack.general.lighted){
-					world.setBlockState(pos, MTSRegistry.decorBasicDark.getDefaultState());
-				}else if(pack.general.oriented && !pack.general.lighted){
-					world.setBlockState(pos, MTSRegistry.decorOrientedDark.getDefaultState());
-				}else if(!pack.general.oriented && pack.general.lighted){
-					world.setBlockState(pos, MTSRegistry.decorBasicLight.getDefaultState());
-				}else if(pack.general.oriented && pack.general.lighted){
-					world.setBlockState(pos, MTSRegistry.decorOrientedLight.getDefaultState());
-				}
-				
-				//Get the TE and set states for it.
-				TileEntityDecor decorTile = ((TileEntityDecor) world.getTileEntity(pos));
-				decorTile.decorName = blockName;
-				if(pack.general.oriented){
-					decorTile.rotation = (byte) Math.floor(((player.rotationYawHead + 45)%360/90F));
-				}
-		        
-				//Use up the item we used to spawn this block if we are not in creative.
-				if(!player.capabilities.isCreativeMode){
-					player.inventory.clearMatchingItems(heldStack.getItem(), heldStack.getItemDamage(), 1, heldStack.getTagCompound());
-				}
-				return EnumActionResult.SUCCESS;
+			//Set position to correct spawning position.
+			if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
+	            pos = pos.offset(facing);
+	        }
+			
+			//Based on the block type and light, pick a registered block template.
+			String blockName = ((ItemDecor) heldStack.getItem()).decorName;
+			PackDecorObject pack = PackParserSystem.getDecor(blockName);
+			if(!pack.general.oriented && !pack.general.lighted){
+				world.setBlockState(pos, MTSRegistry.decorBasicDark.getDefaultState().withProperty(BlockDecor.FACING, player.getHorizontalFacing().getOpposite()));
+			}else if(pack.general.oriented && !pack.general.lighted){
+				world.setBlockState(pos, MTSRegistry.decorOrientedDark.getDefaultState().withProperty(BlockDecor.FACING, player.getHorizontalFacing().getOpposite()));
+			}else if(!pack.general.oriented && pack.general.lighted){
+				world.setBlockState(pos, MTSRegistry.decorBasicLight.getDefaultState().withProperty(BlockDecor.FACING, player.getHorizontalFacing().getOpposite()));
+			}else if(pack.general.oriented && pack.general.lighted){
+				world.setBlockState(pos, MTSRegistry.decorOrientedLight.getDefaultState().withProperty(BlockDecor.FACING, player.getHorizontalFacing().getOpposite()));
 			}
+			
+			//Set the decor name for rendering.
+			((TileEntityDecor) world.getTileEntity(pos)).decorName = blockName;
+	        
+			//Use up the item we used to spawn this block if we are not in creative.
+			if(!player.capabilities.isCreativeMode){
+				player.inventory.clearMatchingItems(heldStack.getItem(), heldStack.getItemDamage(), 1, heldStack.getTagCompound());
+			}
+			return EnumActionResult.SUCCESS;
 		}
 		return EnumActionResult.FAIL;
 	}

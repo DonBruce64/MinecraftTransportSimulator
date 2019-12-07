@@ -1,10 +1,6 @@
 package minecrafttransportsimulator.blocks.pole;
 
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.core.TileEntityRotatable;
-import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,7 +11,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class BlockPoleSign extends BlockPoleAttachment{
-	public static final PropertyDirection ROTATION = PropertyDirection.create("rotation");
     
 	public BlockPos lastClickedPos;
 	
@@ -44,7 +39,7 @@ public class BlockPoleSign extends BlockPoleAttachment{
 	}
 	
 	@Override
-	public TileEntityRotatable createNewTileEntity(World worldIn, int meta){
+	public TileEntityPoleSign createNewTileEntity(World worldIn, int meta){
 		return new TileEntityPoleSign();
 	}
 }

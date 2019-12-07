@@ -25,8 +25,8 @@ import net.minecraft.util.ResourceLocation;
 public class GUISign extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting.png");	
 	private final EntityPlayer player;
-	private final TileEntityPoleSign decor;
-	private final TileEntityPoleSign decorTemp;
+	private final TileEntityPoleSign sign;
+	private final TileEntityPoleSign signTemp;
 	private final List<GuiTextField> signTextBoxes = new ArrayList<GuiTextField>();
 	
 	private GuiButton leftPackButton;
@@ -50,12 +50,12 @@ public class GUISign extends GuiScreen{
 	private PackSignObject pack;
 		
 	public GUISign(BlockPoleSign block, EntityPlayer player){
-		this.decor = (TileEntityPoleSign) player.world.getTileEntity(block.lastClickedPos);
-		this.decorTemp = new TileEntityPoleSign();		
+		this.sign = (TileEntityPoleSign) player.world.getTileEntity(block.lastClickedPos);
+		this.signTemp = new TileEntityPoleSign();
 		this.player = player;
-		if(!decor.definition.isEmpty()){
-			packName = decor.definition.substring(0, decor.definition.indexOf(':'));
-			signName = decor.definition;
+		if(!sign.definition.isEmpty()){
+			packName = sign.definition.substring(0, sign.definition.indexOf(':'));
+			signName = sign.definition;
 		}
 		updateSignNames();
 	}
@@ -113,13 +113,13 @@ public class GUISign extends GuiScreen{
 		//Now make the selected sign render in the GUI using the TE code.
 		if(!signName.isEmpty()){
 			//Set the definition and text of the sign.
-			decorTemp.definition = signName;
+			signTemp.definition = signName;
 			if(pack.general.textLines != null){
-				for(byte i=0; i<PackParserSystem.getSign(decorTemp.definition).general.textLines.length; ++i){
-					if(decor.definition.equals(decorTemp.definition) && decor.text.size() > i){
-						decorTemp.text.add(decor.text.get(i));
+				for(byte i=0; i<PackParserSystem.getSign(signTemp.definition).general.textLines.length; ++i){
+					if(sign.definition.equals(signTemp.definition) && sign.text.size() > i){
+						signTemp.text.add(sign.text.get(i));
 					}else{
-						decorTemp.text.add("");
+						signTemp.text.add("");
 					}
 				}
 			}
@@ -130,14 +130,14 @@ public class GUISign extends GuiScreen{
 			GL11.glRotatef(180, 0, 1, 0);
 			float scale = -90F;
 			GL11.glScalef(scale, scale, scale);
-			TileEntityRendererDispatcher.instance.render(decorTemp, -0.5F, -0.5F, -0.5F, renderPartialTicks, 0);
+			TileEntityRendererDispatcher.instance.render(signTemp, -0.5F, -0.5F, -0.5F, renderPartialTicks, 0);
 			GL11.glPopMatrix();
 			
 			//If we have text on the sign, render it in the text boxes.
 			if(pack.general.textLines != null){
 				for(byte i=0; i<pack.general.textLines.length; ++i){
 					GuiTextField textBox = signTextBoxes.get(i);
-					textBox.setText(decorTemp.text.get(i));
+					textBox.setText(signTemp.text.get(i));
 					textBox.setMaxStringLength(pack.general.textLines[i].characters);
 					textBox.drawTextBox();
 					textBox.setEnabled(true);
@@ -150,7 +150,7 @@ public class GUISign extends GuiScreen{
     protected void actionPerformed(GuiButton buttonClicked) throws IOException{
 		super.actionPerformed(buttonClicked);
 		if(buttonClicked.equals(startButton)){
-			MTS.MTSNet.sendToServer(new PacketSignChange(decor, signName, decorTemp.text, player.getEntityId()));
+			MTS.MTSNet.sendToServer(new PacketSignChange(sign, signName, signTemp.text, player.getEntityId()));
 			mc.player.closeScreen();
 			return;
 		}else{
@@ -202,10 +202,10 @@ public class GUISign extends GuiScreen{
         	for(byte i=0; i<signTextBoxes.size(); ++i){
         		//This check *shouldn't* be needed, but some users crash without it.
         		//Likely other mods not playing nice with GUIs....
-        		if(decorTemp.text.size() > i){
+        		if(signTemp.text.size() > i){
 	        		GuiTextField box = signTextBoxes.get(i);
 	        		if(box.textboxKeyTyped(typedChar, keyCode)){
-	        			decorTemp.text.set(i, box.getText());
+	        			signTemp.text.set(i, box.getText());
 	        		}
         		}
         	}
@@ -257,7 +257,7 @@ public class GUISign extends GuiScreen{
 				textBox.setText("");
 				textBox.setEnabled(false);
 			}
-			decorTemp.text.clear();
+			signTemp.text.clear();
 		}
 	}
 }

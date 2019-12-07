@@ -1,28 +1,28 @@
 {
     "multipart": [
-        {   "when": { "rotation": "north" },
+        {   "when": { "facing": "north" },
             "apply": { "model": "mts:streetlight", "y" : 180 }
         },
-        {   "when": { "rotation": "east" },
+        {   "when": { "facing": "east" },
             "apply": { "model": "mts:streetlight", "y" : 270}
         },
-        {   "when": { "rotation": "south" },
+        {   "when": { "facing": "south" },
             "apply": { "model": "mts:streetlight"}
         },
-        {   "when": { "rotation": "west" },
+        {   "when": { "facing": "west" },
             "apply": { "model": "mts:streetlight", "y" : 90}
         },
         {   "apply": { "model": "mts:polecenter" }},
-        {   "when": { "north": "true", "rotation": "south" },
+        {   "when": { "north": "true", "facing": "south" },
             "apply": { "model": "mts:polepart", "x": 270}
         },
-        {   "when": { "east": "true", "rotation": "west" },
+        {   "when": { "east": "true", "facing": "west" },
             "apply": { "model": "mts:polepart", "x": 90, "y": 270}
         },
-        {   "when": { "south": "true", "rotation": "north" },
+        {   "when": { "south": "true", "facing": "north" },
             "apply": { "model": "mts:polepart", "x": 90}
         },
-        {   "when": { "west": "true", "rotation": "east" },
+        {   "when": { "west": "true", "facing": "east" },
             "apply": { "model": "mts:polepart", "x": 90, "y": 90}
         }
     ]

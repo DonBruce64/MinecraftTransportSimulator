@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=south": { "model": "mts:componentbench" },
+        "facing=north": { "model": "mts:componentbench", "y": 180 },
+        "facing=east":  { "model": "mts:componentbench", "y": 270 },
+        "facing=west":  { "model": "mts:componentbench", "y": 90 }
+    }
+}

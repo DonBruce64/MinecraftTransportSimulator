@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.blocks.core.BlockDecor;
 import minecrafttransportsimulator.blocks.core.TileEntityDecor;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -26,9 +27,7 @@ public class RenderDecor extends TileEntitySpecialRenderer<TileEntityDecor>{
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glTranslatef(0.5F, 0.0F, 0.5F);
-		if(decor.rotation != 0){
-			GL11.glRotatef(-90F*decor.rotation, 0, 1, 0);
-		}
+		GL11.glRotatef(decor.getWorld().getBlockState(decor.getPos()).getValue(BlockDecor.FACING).getHorizontalAngle(), 0, 1, 0);
 		
 		//If we don't have the displaylist and texture cached, do it now.
 		if(!displayListMap.containsKey(decor.decorName)){

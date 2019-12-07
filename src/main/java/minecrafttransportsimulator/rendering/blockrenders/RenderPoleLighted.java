@@ -9,7 +9,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController;
 import minecrafttransportsimulator.blocks.pole.BlockPoleAttachment;
-import minecrafttransportsimulator.blocks.pole.TileEntityPoleWallConnector;
+import minecrafttransportsimulator.blocks.pole.TileEntityPoleAttachment;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import net.minecraft.block.Block;
@@ -17,14 +17,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.EnumSkyBlock;
 
-public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleWallConnector>{
+public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleAttachment>{
 	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lensflare.png");
 	private static final ResourceLocation lightTexture = new ResourceLocation(MTS.MODID, "textures/rendering/light.png");
@@ -33,9 +32,9 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleW
 	public RenderPoleLighted(){}
 	
 	@Override
-	public void render(TileEntityPoleWallConnector polePart, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
+	public void render(TileEntityPoleAttachment polePart, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
 		super.render(polePart, x, y, z, partialTicks, destroyStage, alpha);
-		final Vec3i facingVec = EnumFacing.VALUES[polePart.rotation].getDirectionVec();
+		final Vec3i facingVec = polePart.getWorld().getBlockState(polePart.getPos()).getValue(BlockPoleAttachment.FACING).getDirectionVec();
 		final Block block = polePart.getWorld().getBlockState(polePart.getPos()).getBlock();
 		//Check to make sure we have the right block before continuing.
 		//We may not have the right one due to the TE being orphaned for some reason.
@@ -108,7 +107,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleW
 	private static final Map<BlockPos, BlockPos> trafficSignalControllers = new HashMap<BlockPos, BlockPos>();
 	private static final Map<BlockPos, Integer> checkIndexList = new HashMap<BlockPos, Integer>();
 	
-	private void renderTrafficSignal(TileEntityPoleWallConnector signal, Vec3i facingVec, float lightBrightness){
+	private void renderTrafficSignal(TileEntityPoleAttachment signal, Vec3i facingVec, float lightBrightness){
 		//Render the lights for the traffic signal.  What lights we render depends on the controller state.
 		final boolean shouldFlash;
 		final Color lightColor;
@@ -271,7 +270,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleW
 		}
 	}
 
-	private void renderStreetLight(TileEntityPoleWallConnector light, Vec3i facingVec, float lightBrightness){
+	private void renderStreetLight(TileEntityPoleAttachment light, Vec3i facingVec, float lightBrightness){
 		//Render light square
 		GL11.glTranslatef(0, 6.45F/16F, 6F/16F);
 		GL11.glRotatef(90, 1, 0, 0);

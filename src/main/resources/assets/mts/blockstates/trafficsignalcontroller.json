@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=south": { "model": "mts:trafficsignalcontroller" },
+        "facing=north": { "model": "mts:trafficsignalcontroller", "y": 180 },
+        "facing=east":  { "model": "mts:trafficsignalcontroller", "y": 270 },
+        "facing=west":  { "model": "mts:trafficsignalcontroller", "y": 90 }
+    }
+}

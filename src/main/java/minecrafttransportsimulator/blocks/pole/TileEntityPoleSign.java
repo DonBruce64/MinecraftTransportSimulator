@@ -7,7 +7,7 @@ import minecrafttransportsimulator.dataclasses.PackSignObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.nbt.NBTTagCompound;
 
-public class TileEntityPoleSign extends TileEntityPoleWallConnector{
+public class TileEntityPoleSign extends TileEntityPoleAttachment{
 	public String definition = "";
 	public List<String> text = new ArrayList<String>();
 	

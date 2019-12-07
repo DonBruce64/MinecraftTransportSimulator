@@ -1,22 +1,19 @@
 package minecrafttransportsimulator.blocks.core;
 
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.items.blocks.ItemBlockRotatable;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public class BlockTrafficSignalController extends BlockRotatable implements ITileEntityProvider{
-		
-	public BlockTrafficSignalController(EnumFacing orientation, ItemBlockRotatable item){
-		super(orientation, item);
+public class BlockTrafficSignalController extends ABlockRotatable implements ITileEntityProvider{
+	
+	public BlockTrafficSignalController(){
+		this.setCreativeTab(MTSRegistry.coreTab);
 	}
 	
 	@Override

@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=south": { "model": "mts:fuelpump" },
+        "facing=north": { "model": "mts:fuelpump", "y": 180 },
+        "facing=east":  { "model": "mts:fuelpump", "y": 270 },
+        "facing=west":  { "model": "mts:fuelpump", "y": 90 }
+    }
+}

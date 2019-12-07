@@ -7,15 +7,14 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
 import minecrafttransportsimulator.dataclasses.PackSignObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.Vec3i;
 
 public class RenderPoleSign extends TileEntitySpecialRenderer<TileEntityPoleSign>{
 	private static final ResourceLocation defaultSignTexture = new ResourceLocation(MTS.MODID, "textures/blocks/trafficsign.png");
@@ -28,19 +27,12 @@ public class RenderPoleSign extends TileEntitySpecialRenderer<TileEntityPoleSign
 	@Override
 	public void render(TileEntityPoleSign sign, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
 		super.render(sign, x, y, z, partialTicks, destroyStage, alpha);
-		final Vec3i facingVec = EnumFacing.VALUES[sign.rotation].getDirectionVec();		
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);
 		GL11.glTranslatef(0.5F, 0.5F, 0.5F);
-	
-		if(facingVec.getX() == 1){
-			GL11.glRotatef(90, 0, 1, 0);
-		}else if(facingVec.getX() == -1){
-			GL11.glRotatef(270, 0, 1, 0);
-		}else if(facingVec.getZ() == -1){
-			GL11.glRotatef(180, 0, 1, 0);
+		if(sign.getWorld() != null){
+			GL11.glRotatef(-sign.getWorld().getBlockState(sign.getPos()).getValue(BlockPoleSign.FACING).getHorizontalAngle(), 0, 1, 0);
 		}
-		
 		GL11.glTranslatef(0F, 0F, 0.0635F);
 		//Bind the sign texture.
 		if(sign.definition.isEmpty()){

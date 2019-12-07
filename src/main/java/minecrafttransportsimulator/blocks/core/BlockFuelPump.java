@@ -2,7 +2,6 @@ package minecrafttransportsimulator.blocks.core;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.blocks.ItemBlockRotatable;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -24,10 +23,10 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
-public class BlockFuelPump extends BlockRotatable implements ITileEntityProvider{
+public class BlockFuelPump extends ABlockRotatable implements ITileEntityProvider{
 
-	public BlockFuelPump(EnumFacing orientation, ItemBlockRotatable item){
-		super(orientation, item);
+	public BlockFuelPump(){
+		this.setCreativeTab(MTSRegistry.coreTab);
 	}
 	
 	@Override

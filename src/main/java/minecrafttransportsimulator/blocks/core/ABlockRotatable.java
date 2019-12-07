@@ -1,8 +1,12 @@
-package minecrafttransportsimulator.blocks.pole;
+package minecrafttransportsimulator.blocks.core;
 
-import net.minecraft.block.ITileEntityProvider;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockHorizontal;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -11,19 +15,17 @@ import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-
-public class BlockPoleAttachment extends BlockPoleNormal implements ITileEntityProvider{
-	public static final PropertyDirection FACING = PropertyDirection.create("facing", EnumFacing.Plane.HORIZONTAL);
-    
-	public BlockPoleAttachment(float poleRadius){
-		super(poleRadius);
-		this.setDefaultState(this.getDefaultState().withProperty(FACING, EnumFacing.SOUTH));
-	}
 	
-	@Override
-    public boolean canConnectOnSide(IBlockAccess access, BlockPos pos, EnumFacing side){
-		return !access.getBlockState(pos).getValue(FACING).equals(side);
-    }
+public abstract class ABlockRotatable extends Block{
+	public static final PropertyDirection FACING = BlockHorizontal.FACING;
+	
+    public ABlockRotatable(){
+		super(Material.ROCK);
+		this.setHardness(5.0F);
+		this.setResistance(10.0F);
+		this.fullBlock = false;
+		this.setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.SOUTH));
+	}
 	
 	@Override
 	@SuppressWarnings("deprecation")
@@ -31,13 +33,7 @@ public class BlockPoleAttachment extends BlockPoleNormal implements ITileEntityP
         return super.getStateForPlacement(worldIn, pos, facing, hitX, hitY, hitZ, meta, placer).withProperty(FACING, placer.getHorizontalFacing().getOpposite());
     }
 	
-	@Override
-    public void breakBlock(World world, BlockPos pos, IBlockState state){
-        super.breakBlock(world, pos, state);
-        world.removeTileEntity(pos);
-    }
-	
-	public IBlockState getStateFromMeta(int meta){
+    public IBlockState getStateFromMeta(int meta){
         return this.getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta));
     }
 
@@ -53,11 +49,24 @@ public class BlockPoleAttachment extends BlockPoleNormal implements ITileEntityP
 
     @Override
     protected BlockStateContainer createBlockState(){
-    	return new BlockStateContainer(this, new IProperty[] {UP, DOWN, NORTH, EAST, SOUTH, WEST, FACING});
+        return new BlockStateContainer(this, new IProperty[] {FACING});
     }
 	
-	@Override
-	public TileEntityPoleAttachment createNewTileEntity(World worldIn, int meta){
-		return new TileEntityPoleAttachment();
-	}
+    @Override
+    @SuppressWarnings("deprecation")
+    public boolean isOpaqueCube(IBlockState state){
+        return false;
+    }
+    
+    @Override
+    @SuppressWarnings("deprecation")
+    public boolean isFullCube(IBlockState state){
+        return false;
+    }
+    
+    @Override
+    @SuppressWarnings("deprecation")
+    public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, IBlockState state, BlockPos pos, EnumFacing face){
+        return BlockFaceShape.UNDEFINED;
+    }
 }

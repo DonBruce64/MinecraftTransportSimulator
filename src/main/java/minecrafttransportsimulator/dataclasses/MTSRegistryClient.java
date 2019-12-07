@@ -3,10 +3,11 @@ package minecrafttransportsimulator.dataclasses;
 import java.lang.reflect.Field;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.blocks.core.BlockDecor;
 import minecrafttransportsimulator.blocks.core.TileEntityDecor;
 import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
+import minecrafttransportsimulator.blocks.pole.TileEntityPoleAttachment;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
-import minecrafttransportsimulator.blocks.pole.TileEntityPoleWallConnector;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemInstrument;
 import minecrafttransportsimulator.items.core.ItemItem;
@@ -18,6 +19,7 @@ import minecrafttransportsimulator.rendering.blockrenders.RenderFuelPump;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPoleLighted;
 import minecrafttransportsimulator.rendering.blockrenders.RenderPoleSign;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -43,7 +45,7 @@ public final class MTSRegistryClient{
 	public static void registerModels(ModelRegistryEvent event){
 		//Register the TESRs for blocks.
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityFuelPump.class, new RenderFuelPump());
-		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPoleWallConnector.class, new RenderPoleLighted());
+		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPoleAttachment.class, new RenderPoleLighted());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPoleSign.class, new RenderPoleSign());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDecor.class, new RenderDecor());
 		
@@ -59,6 +61,15 @@ public final class MTSRegistryClient{
 				}catch(Exception e){
 					e.printStackTrace();
 				}
+			}else if(field.getType().equals(Block.class)){
+				try{
+					Block block = (Block) field.get(null);
+					if(!(block instanceof BlockDecor)){
+						registerCoreItemRender(Item.getItemFromBlock(block));
+					}
+				}catch(Exception e){
+					e.printStackTrace();
+				}	
 			}
 		}
 		
