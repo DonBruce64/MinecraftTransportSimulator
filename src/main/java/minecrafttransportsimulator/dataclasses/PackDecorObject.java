@@ -10,5 +10,6 @@ public class PackDecorObject{
     	public boolean oriented;
     	public boolean lighted;
     	public String[] materials;
+    	public String modelName;
     }
 }

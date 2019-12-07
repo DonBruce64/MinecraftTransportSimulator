@@ -55,7 +55,8 @@ public class RenderDecor extends TileEntitySpecialRenderer<TileEntityDecor>{
 				GL11.glPopMatrix();
 				return;
 			}else{
-				Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(decor.decorName.substring(0, decor.decorName.indexOf(':')), "objmodels/decors/" + decor.decorName.substring(decor.decorName.indexOf(':') + 1) + ".obj");
+				String optionalModelName = PackParserSystem.getDecor(decor.decorName).general.modelName;
+				Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(decor.decorName.substring(0, decor.decorName.indexOf(':')), "objmodels/decors/" + (optionalModelName != null ? optionalModelName : decor.decorName.substring(decor.decorName.indexOf(':') + 1)) + ".obj");
 				int displayListIndex = GL11.glGenLists(1);
 				
 				GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
