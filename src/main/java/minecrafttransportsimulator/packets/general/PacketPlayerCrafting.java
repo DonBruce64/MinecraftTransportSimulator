@@ -87,8 +87,12 @@ public class PacketPlayerCrafting implements IMessage{
 								stack = new ItemStack(MTSRegistry.vehicleItemMap.get(message.selectedItem));
 							}else if(MTSRegistry.partItemMap.containsKey(message.selectedItem)){
 								stack = new ItemStack(MTSRegistry.partItemMap.get(message.selectedItem));
-							}else{
+							}else if(MTSRegistry.instrumentItemMap.containsKey(message.selectedItem)){
 								stack = new ItemStack(MTSRegistry.instrumentItemMap.get(message.selectedItem));
+							}else if(MTSRegistry.itemItemMap.containsKey(message.selectedItem)){
+								stack = new ItemStack(MTSRegistry.itemItemMap.get(message.selectedItem));
+							}else{
+								return;
 							}
 							player.getEntityWorld().spawnEntity(new EntityItem(player.getEntityWorld(), player.posX, player.posY, player.posZ, stack));
 						}

@@ -397,8 +397,6 @@ public class GUIPartBench extends GuiScreen{
 		if(buttonClicked.equals(startButton)){
 			MTS.proxy.playSound(player.getPositionVector(), MTS.MODID + ":bench_running", 1, 1);
 			MTS.MTSNet.sendToServer(new PacketPlayerCrafting(player, partName));
-			mc.player.closeScreen();
-			return;
 		}else{
 			if(buttonClicked.equals(leftPackButton)){
 				packName = prevPackName;
