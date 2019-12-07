@@ -6,6 +6,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.GUIConfig;
 import minecrafttransportsimulator.guis.GUIPackMissing;
+import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
@@ -77,11 +78,11 @@ public final class ClientEventSystem{
     			EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) event.getTarget();
     			if(player.getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
     				MTS.proxy.openGUI(vehicle, player);
-				}else{
+				}else if(!(player.getHeldItemMainhand().getItem() instanceof AItemPart)){
 					MTS.MTSNet.sendToServer(new PacketVehicleInteracted(vehicle, event.getEntityPlayer()));
+					event.setCanceled(true);
+	    			event.setCancellationResult(EnumActionResult.SUCCESS);
 				}
-    			event.setCanceled(true);
-    			event.setCancellationResult(EnumActionResult.SUCCESS);
 	    	}
     	}
     }
