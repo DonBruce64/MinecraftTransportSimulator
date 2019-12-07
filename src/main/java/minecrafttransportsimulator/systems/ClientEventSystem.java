@@ -166,7 +166,7 @@ public final class ClientEventSystem{
     }
 
     /**
-     * Adjusts roll for camera.
+     * Adjusts roll and pitch for camera.
      * Only works when camera is inside vehicles.
      */
     @SubscribeEvent
@@ -174,7 +174,17 @@ public final class ClientEventSystem{
     	if(event.getEntity().getRidingEntity() instanceof EntityVehicleC_Colliding){
     		if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){            	
             	EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) event.getEntity().getRidingEntity();
-            	event.setRoll((float) (vehicle.rotationRoll  + (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)event.getRenderPartialTicks()));
+            	//Get yaw delta from vehicle and player.  -180 to 180.
+            	float playerYawAngle = (360 + (event.getEntity().rotationYaw - vehicle.rotationYaw))%360;
+            	if(playerYawAngle > 180){
+            		playerYawAngle = -360 + playerYawAngle;
+            	}
+            	float rollRollComponent = (float) (Math.cos(Math.toRadians(playerYawAngle))*(vehicle.rotationRoll + (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)event.getRenderPartialTicks()));
+            	float pitchRollComponent = (float) (Math.sin(Math.toRadians(playerYawAngle))*(vehicle.rotationPitch + (vehicle.rotationPitch - vehicle.prevRotationPitch)*(double)event.getRenderPartialTicks()));
+            	float rollPitchComponent = (float) (Math.sin(Math.toRadians(playerYawAngle))*(vehicle.rotationRoll + (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)event.getRenderPartialTicks()));
+            	float pitchPitchComponent = (float) (Math.cos(Math.toRadians(playerYawAngle))*(vehicle.rotationPitch + (vehicle.rotationPitch - vehicle.prevRotationPitch)*(double)event.getRenderPartialTicks()));
+            	GL11.glRotated(pitchPitchComponent + rollPitchComponent, 1, 0, 0);
+        		GL11.glRotated(rollRollComponent - pitchRollComponent, 0, 0, 1);
         	}else{
         		CameraSystem.performZoomAction();
         	}

@@ -19,11 +19,12 @@ public final class CameraSystem{
 	private static int zoomLevel = 0;
 		
 	public static void performZoomAction(){
-		if (Minecraft.getMinecraft().gameSettings.thirdPersonView == 1){
+		if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 1){
 			GL11.glTranslatef(0, 0F, -zoomLevel);
-        }else if (Minecraft.getMinecraft().gameSettings.thirdPersonView == 2){
+        }else if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 2){
         	GL11.glTranslatef(0, 0F, zoomLevel);
         }
+		//GL11.glRotatef(0, 0, 1, 0);
 	}
 	
 	public static void changeCameraZoom(boolean zoomOut){
@@ -45,11 +46,6 @@ public final class CameraSystem{
 		boolean mouseYoke = ConfigSystem.getBooleanConfig("MouseYoke");
 		if((!mouseYoke && lockedView) || (mouseYoke && !lockedView)){
 			player.rotationYaw += vehicle.rotationYaw - vehicle.prevRotationYaw;
-			if(vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90){
-				player.rotationPitch -= vehicle.rotationPitch - vehicle.prevRotationPitch;
-			}else{
-				player.rotationPitch += vehicle.rotationPitch - vehicle.prevRotationPitch;
-			}
 			if((vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90) ^ (vehicle.prevRotationPitch > 90 || vehicle.prevRotationPitch < -90)){
 				player.rotationYaw+=180;
 			}
