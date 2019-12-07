@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
@@ -166,6 +167,21 @@ public class GUISign extends GuiScreen{
 			}
 			updateSignNames();
 		}
+	}
+	
+	/**
+	 * We also use the mouse wheel for selections as well as buttons.
+	 * Forward the call to the button input system for processing.
+	 */
+	@Override
+    public void handleMouseInput() throws IOException{
+        super.handleMouseInput();
+        int i = Mouse.getEventDWheel();
+        if(i > 0 && rightSignButton.enabled){
+        	this.actionPerformed(rightSignButton);
+        }else if(i < 0 && leftSignButton.enabled){
+        	this.actionPerformed(leftSignButton);
+        }
 	}
 	
 	@Override
