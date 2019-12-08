@@ -54,6 +54,7 @@ public final class VehicleSoundSystem{
 	private static final List<String> playingSounds = new ArrayList<String>();
 	private static SoundManager mcSoundManager;
 	private static SoundSystem mcSoundSystem;
+	private static byte soundSystemStartupDelay = 0;
 
 	
 	//--------------------START OF EVENT HOOKS--------------------//
@@ -72,10 +73,13 @@ public final class VehicleSoundSystem{
 	 * can't get it through reflection here.  We will have to discard our instance of
 	 * it if we have one, as it will be invalid.  We also need to clear out the
 	 * playing sounds list, as all those sounds will have been stopped.
+	 * To ensure we don't get the wrong instance of the SoundSystem, we use
+	 * a small delay to allow the system to come online before we grab it.
 	 */
 	@SubscribeEvent
 	public static void on(SoundLoadEvent event){
 		mcSoundSystem = null;
+		soundSystemStartupDelay = 50;
 		playingSounds.clear();
 	}
 	
@@ -124,6 +128,10 @@ public final class VehicleSoundSystem{
 		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().world.isRemote){
 			//If we don't have the running instance of the SoundSystem, get it now.
 			if(mcSoundSystem == null){
+				if(soundSystemStartupDelay > 0){
+					--soundSystemStartupDelay;
+					return;
+				}
 				initSoundSystemHooks();
 			}
 			try{
@@ -149,6 +157,10 @@ public final class VehicleSoundSystem{
 	public static void updateVehicleSounds(EntityVehicleE_Powered vehicle, float partialTicks){
 		//If we don't have the running instance of the SoundSystem, get it now.
 		if(mcSoundSystem == null){
+			if(soundSystemStartupDelay > 0){
+				--soundSystemStartupDelay;
+				return;
+			}
 			initSoundSystemHooks();
 		}
 		
