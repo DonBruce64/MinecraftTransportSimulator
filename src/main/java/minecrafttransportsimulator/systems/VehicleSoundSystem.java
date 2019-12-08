@@ -128,8 +128,12 @@ public final class VehicleSoundSystem{
 			}
 			try{
 				//Need to add the mtssounds: prefix as the URL will trim off the first section, leading to a bad parse.
+				//Also set the position to 5 blocks from the player in the direction of the sound.
+				//Don't worry about motion as that's used in the sound itself for the pitch.
 				URL soundURL = new URL(null, "mtssounds:" + soundName + ".ogg", resourceStreamHandler);
-				String soundTempName = mcSoundSystem.quickPlay(false, soundURL, soundURL.getFile(), false, (float) soundPosition.x, (float) soundPosition.y, (float) soundPosition.z, SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
+				EntityPlayer player = Minecraft.getMinecraft().player;
+				Vec3d soundNormalizedPosition = new Vec3d(soundPosition.x - player.posX, soundPosition.y - player.posY, soundPosition.z - player.posZ).normalize().scale(5).add(player.getPositionVector());
+				String soundTempName = mcSoundSystem.quickPlay(false, soundURL, soundURL.getFile(), false, (float) soundNormalizedPosition.x, (float) soundNormalizedPosition.y, (float) soundNormalizedPosition.z, SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
 				mcSoundSystem.setVolume(soundTempName, isPlayerInsideEnclosedVehicle() ? volume*0.5F : volume);
 				mcSoundSystem.setPitch(soundTempName, pitch);
 			}catch(Exception e){
