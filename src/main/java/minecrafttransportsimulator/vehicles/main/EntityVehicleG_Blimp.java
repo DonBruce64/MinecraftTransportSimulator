@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.vehicles.main;
 
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public final class EntityVehicleG_Blimp extends EntityVehicleF_Air{
@@ -83,6 +84,16 @@ public final class EntityVehicleG_Blimp extends EntityVehicleF_Air{
 		}else{
 			motionPitch = 0;
 		}
-		motionYaw = (float) (180/Math.PI*(-verticalVec.y*(-thrustTorque - rudderTorque))/momentYaw);
+		
+		//Force the rudder to be effective.  Cause blimps don't follow the normal aircraft physics well.
+		//Simolar code to how yaw is changed from skidding factors.
+		motionYaw = (float) (180/Math.PI*(-verticalVec.y*(-thrustTorque - rudderTorque))/momentYaw/50F);
+		if(motionYaw != 0){
+			Vec3d groundVelocityVec = new Vec3d(motionX, 0, motionZ).normalize();
+			Vec3d groundHeadingVec = new Vec3d(headingVec.x, 0, headingVec.z).normalize();
+			float vectorDelta = (float) groundVelocityVec.distanceTo(groundHeadingVec);
+			byte velocitySign = (byte) (vectorDelta < 1 ? 1 : -1);
+			reAdjustGroundSpeed(Math.hypot(motionX, motionZ)*velocitySign);
+		}
 	}
 }
