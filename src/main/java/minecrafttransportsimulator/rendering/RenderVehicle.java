@@ -22,10 +22,10 @@ import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackTranslatabl
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
+import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.systems.VehicleSoundSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
@@ -84,6 +84,11 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	private static final Map<EntityVehicleE_Powered, Long> lastRenderTick = new HashMap<EntityVehicleE_Powered, Long>();
 	private static final Map<EntityVehicleE_Powered, Float> lastRenderPartial = new HashMap<EntityVehicleE_Powered, Float>();
 	
+	//Additional maps to handle shaders compatibility.
+	private static boolean shadersDetected = false;
+	private static final Map<EntityVehicleE_Powered, Boolean> renderedShaderShadow = new HashMap<EntityVehicleE_Powered, Boolean>();
+	private static final Map<EntityVehicleE_Powered, Boolean> renderedShaderModel = new HashMap<EntityVehicleE_Powered, Boolean>();
+	
 	//Constants for built-in textures.
 	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lensflare.png");
@@ -131,18 +136,52 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				//Did we render this tick?
 				if(lastRenderTick.get(vehicle) == vehicle.world.getTotalWorldTime() && lastRenderPartial.get(vehicle) == partialTicks){
 					//If we rendered last on a pass of 0 or 1 this tick, don't re-render some things.
+					//This prevents double-rendering in pass 0 and pass -1 from the event system.
 					if(lastRenderPass.get(vehicle) != -1 && MinecraftForgeClient.getRenderPass() == -1){
-						render(vehicle, Minecraft.getMinecraft().player, partialTicks, true);
-						didRender = true;
+						//If we have shaders, make sure we don't call this if we really haven't rendered the model.
+						if(!shadersDetected || renderedShaderModel.get(vehicle)){
+							render(vehicle, Minecraft.getMinecraft().player, partialTicks, true);
+							didRender = true;
+						}
 					}
 				}
 			}
+			
+			//If we didn't render the vehicle previously in any ticks do so now.
+			//This normally gets called when we get two consecutive renders from events in pass -1,
+			//but it also can happen if shaders are present and we only render the vehicle shadow.
 			if(!didRender){
 				render(vehicle, Minecraft.getMinecraft().player, partialTicks, false);
 			}
+
+			//If we previously rendered on pass 0 without rendering on pass -1, it means shaders are present.
+			//Set bit to detect these buggers and keep vehicles from disappearing.
+			//Allso init map entries to prevent nulls from hitting logic checks.
+			if(!shadersDetected && lastRenderPass.containsKey(vehicle) && lastRenderPass.get(vehicle) == 1 && MinecraftForgeClient.getRenderPass() == 0){
+				shadersDetected = true;
+				renderedShaderShadow.put(vehicle, false);
+				renderedShaderModel.put(vehicle, false);
+			}
+			
+			//Update maps.
 			lastRenderPass.put(vehicle, (byte) MinecraftForgeClient.getRenderPass());
 			lastRenderTick.put(vehicle, vehicle.world.getTotalWorldTime());
 			lastRenderPartial.put(vehicle, partialTicks);
+			
+			//If we are in pass 1, and shaders are detected, let the system know one render has been completed.
+			//This will first be the shadow, and second be the model.
+			if(shadersDetected){
+				if(MinecraftForgeClient.getRenderPass() == 1){
+					if(!renderedShaderShadow.containsKey(vehicle) || renderedShaderShadow.get(vehicle)){
+						renderedShaderModel.put(vehicle, true);
+					}else{
+						renderedShaderShadow.put(vehicle, true);
+					}
+				}else if(MinecraftForgeClient.getRenderPass() == -1){
+					renderedShaderShadow.put(vehicle, false);
+					renderedShaderModel.put(vehicle, false);
+				}
+			}
 		}
 	}
 	
@@ -260,8 +299,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 		GL11.glPopMatrix();
 		
-		//Update SFX.
-		if(!wasRenderedPrior){
+		//Update SFX, but only once per render cycle.
+		if(MinecraftForgeClient.getRenderPass() == -1){
 			VehicleSoundSystem.updateVehicleSounds(vehicle, partialTicks);
 			for(APart part : vehicle.getVehicleParts()){
 				if(part instanceof FXPart){
