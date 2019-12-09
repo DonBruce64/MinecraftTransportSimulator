@@ -238,7 +238,8 @@ public abstract class EntityVehicleA_Base extends Entity{
 	private PackPart getPackForSubPart(PackPart parentPack, PackPart subPack){
 		PackPart correctPack = this.pack.new PackPart();
 		correctPack.pos = new float[3];
-		correctPack.pos[0] = parentPack.pos[0] + subPack.pos[0];
+		//If we will be mirrored, make sure to invert the x-coords of any sub-parts.
+		correctPack.pos[0] = parentPack.pos[0] < 0 ^ parentPack.inverseMirroring ? parentPack.pos[0] - subPack.pos[0] : parentPack.pos[0] + subPack.pos[0];
 		correctPack.pos[1] = parentPack.pos[1] + subPack.pos[1];
 		correctPack.pos[2] = parentPack.pos[2] + subPack.pos[2];
 		
