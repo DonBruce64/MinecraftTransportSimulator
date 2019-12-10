@@ -81,6 +81,7 @@ public final class ConfigSystem{
 				case "gasoline": defaultValues = new String[]{"lava:1.0", "gasoline:1.0", "ethanol:0.85"}; break;
 				case "diesel": defaultValues = new String[]{"lava:1.0", "diesel:1.0", "biodiesel:0.8", "oil:0.5"}; break;
 				case "avgas": defaultValues = new String[]{"lava:1.0", "gasoline:1.0"}; break;
+				case "redstone": defaultValues = new String[]{"lava:1.0", "redstone:1.0", "moltenredstone:1.0", "molten_redstone:1.0", "redstonemolten:1.0", "redstone_fluid:1.0", "fluidredstone:1.0", "fluid_redstone:1.0", "destabilized_redstone:1.0"}; break;
 				default: defaultValues = new String[]{"lava:1.0"}; break;
 			}
 
