@@ -34,6 +34,7 @@ public final class EntityVehicleG_Boat extends EntityVehicleF_Ground{
 	
 	@Override
 	protected float getTurningFactor(){
+		//Copied from the D-class, but made to work with boats using collision boxes rather than ground devices.
 		float turningForce = 0;
 		float steeringAngle = this.getSteerAngle();
 		if(steeringAngle != 0){

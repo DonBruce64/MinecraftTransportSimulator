@@ -38,7 +38,6 @@ public class PartEngineBoat extends APartEngineGeared	{
 	
 	@Override
 	public double getForceOutput(){
-		System.out.println(Math.abs(vehicle.velocity*vehicle.speedFactor*20));
 		return state.running ? RPM/pack.engine.maxRPM*50*pack.engine.fuelConsumption*currentGear : 0;
 	}
 	
