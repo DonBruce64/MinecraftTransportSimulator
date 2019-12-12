@@ -18,6 +18,7 @@ public class PackPartObject{
     public PartBarrelConfig barrel;
     public PartGunConfig gun;
     public PartBulletConfig bullet;
+    public PartEffectorConfig effector;
     public PartCustomConfig custom;
     public List<PackPart> subParts = new ArrayList<PackPart>();
     public PartRenderingConfig rendering;
@@ -103,6 +104,10 @@ public class PackPartObject{
     	public int quantity;
     	public float diameter;
     	public float texturePercentage;
+    }
+    
+    public class PartEffectorConfig{
+    	public int blocksWide;
     }
     
     public class PartCustomConfig{
