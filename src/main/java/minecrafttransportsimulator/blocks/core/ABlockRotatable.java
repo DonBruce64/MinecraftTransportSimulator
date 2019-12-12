@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.blocks.core;
 
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.material.Material;
@@ -33,6 +32,8 @@ public abstract class ABlockRotatable extends Block{
         return super.getStateForPlacement(worldIn, pos, facing, hitX, hitY, hitZ, meta, placer).withProperty(FACING, placer.getHorizontalFacing().getOpposite());
     }
 	
+	@Override
+	@SuppressWarnings("deprecation")
     public IBlockState getStateFromMeta(int meta){
         return this.getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta));
     }
@@ -43,6 +44,7 @@ public abstract class ABlockRotatable extends Block{
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public IBlockState withRotation(IBlockState state, Rotation rot){
         return state.getBlock() != this ? state : state.withProperty(FACING, rot.rotate((EnumFacing)state.getValue(FACING)));
     }

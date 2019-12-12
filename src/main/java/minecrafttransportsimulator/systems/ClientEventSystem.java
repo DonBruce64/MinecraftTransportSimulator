@@ -35,8 +35,10 @@ import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.client.resource.VanillaResourceType;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -366,7 +368,8 @@ public final class ClientEventSystem{
         	if(ConfigSystem.getBooleanConfig("DevMode") && minecraft.isSingleplayer()){
         		PackParserSystem.reloadPackData();
         		RenderVehicle.clearCaches();
-        		minecraft.refreshResources();
+        		FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
+        		FMLClientHandler.instance().refreshResources(VanillaResourceType.TEXTURES);
         		for(Entity entity : minecraft.getMinecraft().world.loadedEntityList){
 					if(entity instanceof EntityVehicleA_Base){
 						EntityVehicleA_Base vehicle = (EntityVehicleA_Base) entity;

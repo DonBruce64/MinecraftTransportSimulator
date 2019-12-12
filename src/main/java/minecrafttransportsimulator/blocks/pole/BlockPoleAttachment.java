@@ -37,6 +37,8 @@ public class BlockPoleAttachment extends BlockPoleNormal implements ITileEntityP
         world.removeTileEntity(pos);
     }
 	
+	@Override
+	@SuppressWarnings("deprecation")
 	public IBlockState getStateFromMeta(int meta){
         return this.getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta));
     }
@@ -47,6 +49,7 @@ public class BlockPoleAttachment extends BlockPoleNormal implements ITileEntityP
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public IBlockState withRotation(IBlockState state, Rotation rot){
         return state.getBlock() != this ? state : state.withProperty(FACING, rot.rotate((EnumFacing)state.getValue(FACING)));
     }
