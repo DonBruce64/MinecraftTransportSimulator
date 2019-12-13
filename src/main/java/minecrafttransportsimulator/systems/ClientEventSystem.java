@@ -183,8 +183,10 @@ public final class ClientEventSystem{
         				CameraSystem.updatePlayerYawAndPitch(minecraft.player, (EntityVehicleB_Existing) minecraft.player.getRidingEntity());
                      }
                 }
-                //Update the radios at the end of the client tick.
-                RadioManager.updateRadios();
+                //Update the radios at the end of the client tick.  Do this only once every second to reduce calls.
+                if(minecraft.world.getTotalWorldTime()%20 == 0){
+                	RadioManager.updateRadios();
+                }
             }
         }
     }
