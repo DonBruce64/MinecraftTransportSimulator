@@ -216,7 +216,7 @@ public class GUIInstruments extends GuiScreen{
 		for(PackInstrument instrument : vehicle.pack.motorized.instruments){
 			final float xCenter = RenderHUD.screenDefaultX/2 + RenderHUD.screenDefaultX*instrument.hudpos[0]/200;
 			final float yCenter = instrument.optionalEngineNumber == 0 ? RenderHUD.screenDefaultY*instrument.hudpos[1]/200 : 3*RenderHUD.screenDefaultY/8 + RenderHUD.screenDefaultY*instrument.hudpos[1]/200;
-			if(mouseX > xCenter - 32 && mouseX < xCenter + 32 && mouseY > yCenter - 32 && mouseY < yCenter + 32){
+			if(mouseX > xCenter - 32*instrument.hudScale && mouseX < xCenter + 32*instrument.hudScale && mouseY > yCenter - 32*instrument.hudScale && mouseY < yCenter + 32*instrument.hudScale){
 				lastInstrumentClicked = instrument;
 				return;
 			}
