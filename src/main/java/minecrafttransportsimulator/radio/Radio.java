@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javazoom.jlgui.basicplayer.BasicPlayer;
-import javazoom.jlgui.basicplayer.BasicPlayerException;
 import minecrafttransportsimulator.MTS;
 import net.minecraft.client.Minecraft;
 
@@ -16,16 +15,18 @@ import net.minecraft.client.Minecraft;
 * @author don_bruce
 */
 public class Radio{
-	//Reference to the RadioContainer that this player is for.
+	/**Reference to the RadioContainer that this player is for.**/
 	private final RadioContainer container;
-	//Instance of the player associated with this container.
+	/**Instance of the player associated with this container.**/
 	private final BasicPlayer player;
-	//Songs this player will play.
+	/**Songs this player will play.**/
 	private List<File> songsToPlay = new ArrayList<File>();
-	//Directory or URL this player is playing from.
+	/**Directory or URL this player is playing from.**/
 	private String selectedSource = "";
-	//Selected preset of this player.
+	/**Selected preset of this player.**/
 	private int selectedPreset = -1;
+	/**Current radio volume.**/
+	private byte volume = 10;
 	
 	public Radio(RadioContainer container){
 		this.container = container;
@@ -125,7 +126,12 @@ public class Radio{
 					if(gamePaused){
 						player.pause();
 					}else{
-						setVolume((float) (2F*1F/container.getDistanceToPlayer(Minecraft.getMinecraft().player)));
+						double dist = container.getDistanceToPlayer(Minecraft.getMinecraft().player);
+						if(dist > 0){
+							player.setGain(Math.min(2F*(volume/10F), 1.0F)/dist);
+						}else{
+							player.setGain(volume/10F);
+						}
 					}
 				}else if(player.getStatus() == BasicPlayer.PAUSED){
 					//If we are paused, but the game isn't, un-pause us.
@@ -160,20 +166,13 @@ public class Radio{
 		return true;
 	}
 	
-	/**Sets the player volume.  Parameter should be from 0.0-1.0, but can be greater and will be clamped.**/
-	public void setVolume(float volume){
-		try{
-			player.setGain(volume > 1 ? 1 : volume);
-		}catch(BasicPlayerException e){
-			MTS.MTSLog.error("ERROR: BASICPLAYER VOLUME CODE HAS FAULTED.");
-			MTS.MTSLog.error(e.getMessage());
-			e.printStackTrace();
-			stopPlaying();
-		}
+	/**Sets the player volume.  Parameter should be from 0-10, but can be greater and will be clamped.**/
+	public void setVolume(byte newVolume){
+		volume = newVolume > 10 ? 10 : newVolume;
 	}
 	
 	/**Gets the current volume as a normalized value.**/
-	public float getVolume(){
-		return (player.getMaximumGain() - player.getMinimumGain())/player.getGainValue();
+	public byte getVolume(){
+		return volume;
 	}
 }

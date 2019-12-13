@@ -32,14 +32,15 @@ public class GUIRadio extends GuiScreen{
 	private GuiRadioButton randomButton;
 	private GuiRadioButton orderedButton;
 	private GuiRadioButton setButton;
+	private GuiRadioButton volUpButton;
+	private GuiRadioButton volDnButton;
 	private List<GuiRadioButton> presetButtons = new ArrayList<GuiRadioButton>();
 	
 	//Input boxes
 	private GuiTextField stationDisplay;
+	private GuiTextField volumeDisplay;
 	
 	//Runtime information.
-	//[private final List<String> localPresets;
-	//private final List<String> internetPresets;
 	private final Radio radio;
 	private static boolean localMode = true;
 	private static boolean randomMode = false;
@@ -64,6 +65,8 @@ public class GUIRadio extends GuiScreen{
 		buttonList.add(randomButton = new GuiRadioButton(guiLeft + 80, guiTop + 30, 45, "RANDOM"));
 		buttonList.add(orderedButton = new GuiRadioButton(guiLeft + 80, guiTop + 50, 45, "SORTED"));
 		buttonList.add(setButton = new GuiRadioButton(guiLeft + 190, guiTop + 90, 45, "SET"));
+		buttonList.add(volUpButton = new GuiRadioButton(guiLeft + 205, guiTop + 20, 30, "UP"));
+		buttonList.add(volDnButton = new GuiRadioButton(guiLeft + 205, guiTop + 40, 30, "DN"));
 		
 		int x = 25;
 		for(byte i=1; i<7; ++i){
@@ -75,6 +78,8 @@ public class GUIRadio extends GuiScreen{
 		
 		stationDisplay = new GuiTextField(0, fontRenderer, guiLeft + 20, guiTop + 120, 220, 20);
 		stationDisplay.setMaxStringLength(100);
+		volumeDisplay = new GuiTextField(0, fontRenderer, guiLeft + 160, guiTop + 20, 45, 40);
+		volumeDisplay.setEnabled(false);
 	}
 	
 	@Override
@@ -86,6 +91,9 @@ public class GUIRadio extends GuiScreen{
 		//Enable station entry if wa are in teach mode.
 		stationDisplay.setEnabled(teachMode);
 		
+		//Set volume display text box.
+		volumeDisplay.setText("VOL: " + String.valueOf(radio.getVolume()));
+		
 		//Set button states.
 		offButton.enabled = radio.getPlayState() != -1;
 		localButton.enabled = !localMode;
@@ -94,6 +102,8 @@ public class GUIRadio extends GuiScreen{
 		randomButton.enabled = !randomMode && localMode;
 		orderedButton.enabled = randomMode && localMode;
 		setButton.enabled = !localMode;
+		volUpButton.enabled = radio.getVolume() < 10;
+		volDnButton.enabled = radio.getVolume() > 0;
 		
 		//Draw buttons.
 		for(GuiButton button : buttonList){
@@ -102,6 +112,7 @@ public class GUIRadio extends GuiScreen{
 		
 		//Draw text boxes.
 		stationDisplay.drawTextBox();
+		volumeDisplay.drawTextBox();
 	}
 	
 	@Override
@@ -135,6 +146,10 @@ public class GUIRadio extends GuiScreen{
 				teachMode = true;
 				stationDisplay.setText("Enter a URL and press a preset button.");
 			}
+		}else if(buttonClicked.equals(volUpButton)){
+			radio.setVolume((byte) (radio.getVolume() + 1));
+		}else if(buttonClicked.equals(volDnButton)){
+			radio.setVolume((byte) (radio.getVolume() - 1));
 		}else if(presetButtons.contains(buttonClicked)){
 			int presetClicked = presetButtons.indexOf(buttonClicked);
 			//Enable the last-selected button if needed.
