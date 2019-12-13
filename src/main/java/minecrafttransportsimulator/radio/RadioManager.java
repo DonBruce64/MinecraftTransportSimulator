@@ -13,9 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.MTS;
-import net.minecraft.client.Minecraft;
-
 /**Manager class for all radio operations.  This class is responsible for
  * handling all requests from the radio GUI for file operations, and holds
  * references to all {@link RadioContainer} objects to allow them to be
@@ -31,17 +28,17 @@ public class RadioManager{
 	private static Map<RadioContainer, Radio> radios = new HashMap<RadioContainer, Radio>();
 	
 	/**Called to init the manager.  Should be called before any GUI operations are performed.**/
-	public static void init(){
+	public static void init(File minecraftDir){
 		if(!ready){
-			musicDir = new File(MTS.minecraftDir.getAbsolutePath() + File.separator + "mts_music");
+			musicDir = new File(minecraftDir, "mts_music");
 			musicDir.mkdir();
 			radioStationsFile = new File(musicDir.getAbsolutePath() + File.separator + "radio_stations.txt");
 			if(!radioStationsFile.exists()){
 				try{
 					radioStationsFile.createNewFile();
 				}catch(IOException e){
-					MTS.MTSLog.error("ERROR: UNABLE TO CREATE RADIO STATION SAVE FILE.  THINGS MAY GO BADLY!");
-					MTS.MTSLog.error(e.getMessage());
+					System.err.println("ERROR: UNABLE TO CREATE RADIO STATION SAVE FILE.  THINGS MAY GO BADLY!");
+					System.err.println(e.getMessage());
 					e.printStackTrace();
 				}
 			}
@@ -49,12 +46,13 @@ public class RadioManager{
 		}
 	}
 	
-	/**Called to update all radios.  Should be called at the end of the tick on the client-side.**/
-	public static void updateRadios(){
+	/**Called to update all radios.  Should be called at the end of the tick on the client-side.
+	 * Passed-in coords are the location of the listener.**/
+	public static void updateRadios(double x, double y, double z){
 		Iterator<Radio> radioIterator = radios.values().iterator();
 		while(radioIterator.hasNext()){
 			Radio radio = radioIterator.next();
-			if(!radio.update(Minecraft.getMinecraft().isGamePaused())){
+			if(!radio.update(x, y, z)){
 				radioIterator.remove();
 			}
 		}
@@ -112,8 +110,8 @@ public class RadioManager{
 				}
 			}
 		}catch(IOException e){
-			MTS.MTSLog.error("ERROR: UNABLE TO PARSE RADIO STATION FILE.");
-			MTS.MTSLog.error(e.getMessage());
+			System.err.println("ERROR: UNABLE TO PARSE RADIO STATION FILE.");
+			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
 		//Don't sort the stations, as we want the order the user put them in.
@@ -131,8 +129,8 @@ public class RadioManager{
 			}
 			radioStationFileWriter.close();
 		}catch(IOException e){
-			MTS.MTSLog.error("ERROR: UNABLE TO SAVE RADIO STATION FILE.");
-			MTS.MTSLog.error(e.getMessage());
+			System.err.println("ERROR: UNABLE TO SAVE RADIO STATION FILE.");
+			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
 	}

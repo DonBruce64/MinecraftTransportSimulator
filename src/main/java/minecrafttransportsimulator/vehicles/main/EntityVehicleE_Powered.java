@@ -19,7 +19,6 @@ import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
@@ -299,15 +298,19 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	//-----START OF RADIO CODE-----
-	public double getDistanceToPlayer(EntityPlayer player){
-		return this.equals(player.getRidingEntity()) ? 0.0 : player.getDistance(this);
+	@Override
+	public double getDistanceTo(double x, double y, double z){
+		//Check to see if the listener is a passenger of this vehicle.
+		//If so, we should return a distance of 0.
+		for(Entity entity : getPassengers()){
+			if(entity.posX == x && entity.posY == y && entity.posZ == z){
+				return 0;
+			}
+		}
+		return Math.sqrt(Math.pow(this.posX - x, 2) + Math.pow(this.posY - y, 2) + Math.pow(this.posZ - z, 2));
 	}
 	
-	public double getAngleToPlayer(){
-		//TODO calculate angle.
-		return 0;
-	}
-	
+	@Override
 	public boolean isValid(){
 		return !this.isDead;
 	}

@@ -185,7 +185,7 @@ public final class ClientEventSystem{
                 }
                 //Update the radios at the end of the client tick.  Do this only once every second to reduce calls.
                 if(minecraft.world.getTotalWorldTime()%20 == 0){
-                	RadioManager.updateRadios();
+                	RadioManager.updateRadios(minecraft.player.posX, minecraft.player.posY, minecraft.player.posZ);
                 }
             }
         }

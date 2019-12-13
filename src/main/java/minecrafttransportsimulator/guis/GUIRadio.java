@@ -47,7 +47,7 @@ public class GUIRadio extends GuiScreen{
 	private static boolean teachMode = false;
 	
 	public GUIRadio(RadioContainer container){
-		RadioManager.init();
+		RadioManager.init(MTS.minecraftDir);
 		radio = RadioManager.getRadio(container);
 		this.allowUserInput=true;
 	}

@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javazoom.jlgui.basicplayer.BasicPlayer;
-import minecrafttransportsimulator.MTS;
-import net.minecraft.client.Minecraft;
 
 /**Base class for radios.  Used to provide a common set of tools for all radio implementations.
 *
@@ -55,8 +53,8 @@ public class Radio{
 			selectedSource = url.toString();
 			return true;
 		}catch(Exception e){
-			MTS.MTSLog.error("ERROR: BASICPLAYER URL PLAY CODE HAS FAULTED.");
-			MTS.MTSLog.error(e.getMessage());
+			System.err.println("ERROR: BASICPLAYER URL PLAY CODE HAS FAULTED.");
+			System.err.println(e.getMessage());
 			e.printStackTrace();
 			return false;
 		}
@@ -71,8 +69,8 @@ public class Radio{
 			selectedSource = "Streaming";
 			return true;
 		}catch(Exception e){
-			MTS.MTSLog.error("ERROR: BASICPLAYER INTERNAL PLAY CODE HAS FAULTED.");
-			MTS.MTSLog.error(e.getMessage());
+			System.err.println("ERROR: BASICPLAYER INTERNAL PLAY CODE HAS FAULTED.");
+			System.err.println(e.getMessage());
 			e.printStackTrace();
 			return false;
 		}
@@ -109,34 +107,25 @@ public class Radio{
 		try{
 			player.stop();
 		}catch(Exception e){
-			MTS.MTSLog.error("ERROR: BASICPLAYER STOP CODE HAS FAULTED.");
-			MTS.MTSLog.error(e.getMessage());
+			System.err.println("ERROR: BASICPLAYER STOP CODE HAS FAULTED.");
+			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
 	}
 	
 	/**Should be called every tick to update the volume and play/pause status.
-	 * Return false if we need to remove this radio because it's invalid.**/
-	public boolean update(boolean gamePaused){
+	 * Return false if we need to remove this radio because it's invalid.
+	 * Passed-in coords are where the listener is located.**/
+	public boolean update(double x, double y, double z){
 		try{
 			if(container.isValid()){
 				if(player.getStatus() == BasicPlayer.PLAYING){
-					//If we are playing, and the game is paused, pause the radio.
-					//Otherwise, set the volume to the player distance.
-					if(gamePaused){
-						player.pause();
+					//Set the volume to the player distance.
+					double dist = container.getDistanceTo(x, y, z);
+					if(dist > 0){
+						player.setGain(Math.min(2F*(volume/10F), 1.0F)/dist);
 					}else{
-						double dist = container.getDistanceToPlayer(Minecraft.getMinecraft().player);
-						if(dist > 0){
-							player.setGain(Math.min(2F*(volume/10F), 1.0F)/dist);
-						}else{
-							player.setGain(volume/10F);
-						}
-					}
-				}else if(player.getStatus() == BasicPlayer.PAUSED){
-					//If we are paused, but the game isn't, un-pause us.
-					if(!gamePaused){
-						player.resume();
+						player.setGain(volume/10F);
 					}
 				}else if(player.getStatus() == BasicPlayer.STOPPED || player.getStatus() == BasicPlayer.UNKNOWN){
 					//If we are stopped, and we are have music files to play, go to the next song.
@@ -158,8 +147,8 @@ public class Radio{
 				return false;
 			}
 		}catch(Exception e){
-			MTS.MTSLog.error("ERROR: BASICPLAYER INTERNAL UPDATED CODE HAS FAULTED.");
-			MTS.MTSLog.error(e.getMessage());
+			System.err.println("ERROR: BASICPLAYER INTERNAL UPDATED CODE HAS FAULTED.");
+			System.err.println(e.getMessage());
 			e.printStackTrace();
 			stopPlaying();
 		}
