@@ -50,6 +50,11 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	}
 	
 	@Override
+	public boolean isLightOn(LightTypes light){
+		return pack.motorized.isTrailer && towedByVehicle != null ? towedByVehicle.isLightOn(light) : super.isLightOn(light);
+	}
+	
+	@Override
 	protected void getBasicProperties(){
 		velocityVec = new Vec3d(motionX, motionY, motionZ);
 		velocity = velocityVec.dotProduct(headingVec);
