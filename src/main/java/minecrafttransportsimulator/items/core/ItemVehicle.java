@@ -78,6 +78,7 @@ public class ItemVehicle extends Item{
 						
 						//E-level
 						newVehicle.fuel=tagCompound.getDouble("fuel");
+						newVehicle.fluidName=tagCompound.getString("fluidName");
 						newVehicle.electricPower=tagCompound.getDouble("electricPower");
 						for(byte i = 0; i<newVehicle.pack.motorized.instruments.size(); ++i){
 							if(tagCompound.hasKey("instrumentInSlot" + i)){
