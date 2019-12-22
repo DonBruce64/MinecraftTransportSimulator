@@ -103,7 +103,6 @@ public class PackPartObject{
     	public String type;
     	public int quantity;
     	public float diameter;
-    	public float texturePercentage;
     }
     
     public class PartEffectorConfig{
