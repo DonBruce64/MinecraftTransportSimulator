@@ -25,6 +25,8 @@ public class Radio{
 	private int selectedPreset = -1;
 	/**Current radio volume.**/
 	private byte volume = 10;
+	/**Last time this radio was called for update.**/
+	private long lastUpdateTime = 0;
 	
 	public Radio(RadioContainer container){
 		this.container = container;
@@ -116,16 +118,20 @@ public class Radio{
 	/**Should be called every tick to update the volume and play/pause status.
 	 * Return false if we need to remove this radio because it's invalid.
 	 * Passed-in coords are where the listener is located.**/
-	public boolean update(double x, double y, double z){
+	public boolean update(double x, double y, double z, boolean enablePlayback){
 		try{
 			if(container.isValid()){
 				if(player.getStatus() == BasicPlayer.PLAYING){
-					//Set the volume to the player distance.
-					double dist = container.getDistanceTo(x, y, z);
-					if(dist > 0){
-						player.setGain(Math.min(2F*(volume/10F), 1.0F)/dist);
+					if(enablePlayback){
+						//Set the volume to the player distance.
+						double dist = container.getDistanceTo(x, y, z);
+						if(dist > 0){
+							player.setGain(Math.min(2F*(volume/10F), 1.0F)/dist);
+						}else{
+							player.setGain(volume/10F);
+						}
 					}else{
-						player.setGain(volume/10F);
+						player.pause();
 					}
 				}else if(player.getStatus() == BasicPlayer.STOPPED || player.getStatus() == BasicPlayer.UNKNOWN){
 					//If we are stopped, and we are have music files to play, go to the next song.
@@ -141,6 +147,8 @@ public class Radio{
 							selectedSource = "";
 						}
 					}
+				}else if(enablePlayback && player.getStatus() == BasicPlayer.PAUSED){
+					player.resume();
 				}
 			}else{
 				stopPlaying();

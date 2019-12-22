@@ -48,11 +48,11 @@ public class RadioManager{
 	
 	/**Called to update all radios.  Should be called at the end of the tick on the client-side.
 	 * Passed-in coords are the location of the listener.**/
-	public static void updateRadios(double x, double y, double z){
+	public static void updateRadios(double x, double y, double z, boolean enablePlayback){
 		Iterator<Radio> radioIterator = radios.values().iterator();
 		while(radioIterator.hasNext()){
 			Radio radio = radioIterator.next();
-			if(!radio.update(x, y, z)){
+			if(!radio.update(x, y, z, enablePlayback)){
 				radioIterator.remove();
 			}
 		}

@@ -11,6 +11,7 @@ import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
 import minecrafttransportsimulator.radio.RadioManager;
+import minecrafttransportsimulator.radio.RadioThread;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
@@ -57,6 +58,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public final class ClientEventSystem{
     private static final Minecraft minecraft = Minecraft.getMinecraft();
+    private static final RadioThread radioThread = new RadioThread();
     
     /**
      * Checks if a player has right-clicked a vehicle.
@@ -183,10 +185,13 @@ public final class ClientEventSystem{
         				CameraSystem.updatePlayerYawAndPitch(minecraft.player, (EntityVehicleB_Existing) minecraft.player.getRidingEntity());
                      }
                 }
-                //Update the radios at the end of the client tick.  Do this only once every second to reduce calls.
-                if(minecraft.world.getTotalWorldTime()%20 == 0){
-                	RadioManager.updateRadios(minecraft.player.posX, minecraft.player.posY, minecraft.player.posZ);
+                //Update the player position located in the Radio thread.
+                if(!radioThread.isAlive()){
+                	radioThread.start();
+                }else{
+                	radioThread.setListenerPosition(minecraft.player.posX, minecraft.player.posY, minecraft.player.posZ, !minecraft.isGamePaused());	
                 }
+                
             }
         }
     }
