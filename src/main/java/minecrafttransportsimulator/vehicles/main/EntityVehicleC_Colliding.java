@@ -194,7 +194,7 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 					BlockPos pos = collidedBlockPos.get(blockPosIndex);
 					float hardness = world.getBlockState(pos).getBlockHardness(world, pos);
 					if(hardness <= velocity*currentMass/250F && hardness >= 0){
-						if(!ConfigSystem.getBooleanConfig("BlockBreakage")){
+						if(ConfigSystem.getBooleanConfig("BlockBreakage")){
 							hardnessHitThisTick += hardness;
 							collidedBlockPos.remove(blockPosIndex);
 							motionX *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);
