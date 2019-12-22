@@ -22,5 +22,10 @@
 				]
 			}
 		}
+	},
+	"rewards": {
+		"recipes": [
+			"mts:jerrycan"
+		]
 	}
 }
