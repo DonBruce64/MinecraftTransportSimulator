@@ -40,8 +40,7 @@ public class GUIPanelGround extends GuiScreen{
 	private final int[] magnetoButtonCoords;
 	private final int[] starterButtonCoords;
 	private final int[] sirenButtonCoords;
-	private final int[] trailerButtonCoords;
-	private final int[] trailer2ButtonCoords;
+	private final int[][] trailerButtonCoords;
 	
 	private byte lastEngineStarted;
 	
@@ -57,8 +56,11 @@ public class GUIPanelGround extends GuiScreen{
 		magnetoButtonCoords = new int[]{96, 96 + 32, 280+32, 280};
 		starterButtonCoords = new int[]{128, 128 + 32, 280+32, 280};
 		sirenButtonCoords = new int[]{112, 112 + 32, 280+32+50, 280+50};
-		trailerButtonCoords = new int[]{112, 112 + 32, 280+32+100, 280+100};
-		trailer2ButtonCoords = new int[]{112, 112 + 32, 280+32+150, 280+150};
+		trailerButtonCoords = new int[8][4];
+		for(byte i=0; i<trailerButtonCoords.length; ++i){
+			int xOffset = i < 4 ? 192 : 272;
+			trailerButtonCoords[i] = new int[]{xOffset, xOffset + 32, 280+50*(i%4)+32, 280+50*(i%4)};
+		}
 	}
 	
 	@Override
@@ -110,15 +112,17 @@ public class GUIPanelGround extends GuiScreen{
 			drawRedstoneButton(sirenButtonCoords, vehicle.sirenOn);
 		}
 		
-		//Render trailer button if we have a hitch.
-		//Render second trailer button if trailer has hitch.
-		if(vehicle.pack.motorized.hitchPos != null){
-			drawRedstoneButton(trailerButtonCoords, vehicle.towedVehicle != null);
-			if(vehicle.towedVehicle != null && vehicle.towedVehicle.pack.motorized.hitchPos != null){
-				drawRedstoneButton(trailer2ButtonCoords, vehicle.towedVehicle.towedVehicle != null);
-			}	
+		//Render trailer buttons for hitches.
+		EntityVehicleF_Ground currentVehicle = vehicle;
+		for(byte i=0; i<trailerButtonCoords.length; ++i){
+			if(currentVehicle != null && currentVehicle.pack.motorized.hitchPos != null){
+				drawRedstoneButton(trailerButtonCoords[i], currentVehicle.towedVehicle != null);
+				currentVehicle = currentVehicle.towedVehicle;
+			}else{
+				break;
+			}
 		}
-
+		
 		//Render light button text.
 		for(byte i=0; i<lightButtonCoords.length; ++i){
 			if(hasLight[i]){
@@ -141,18 +145,18 @@ public class GUIPanelGround extends GuiScreen{
 			fontRenderer.drawString(I18n.format("gui.panel.siren"), textX - fontRenderer.getStringWidth(I18n.format("gui.panel.siren"))/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		}
 		
-		//Render trailer text depending on hitch status.
-		if(vehicle.pack.motorized.hitchPos != null){
-			textX = trailerButtonCoords[0] + (trailerButtonCoords[1] - trailerButtonCoords[0])/2;
-			textY = trailerButtonCoords[2] + 2;
-			fontRenderer.drawString(I18n.format("gui.panel.trailer"), textX - fontRenderer.getStringWidth(I18n.format("gui.panel.trailer"))/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
-			if(vehicle.towedVehicle != null && vehicle.towedVehicle.pack.motorized.hitchPos != null){
-				textX = trailer2ButtonCoords[0] + (trailer2ButtonCoords[1] - trailer2ButtonCoords[0])/2;
-				textY = trailer2ButtonCoords[2] + 2;
-				fontRenderer.drawString(I18n.format("gui.panel.secondtrailer"), textX - fontRenderer.getStringWidth(I18n.format("gui.panel.secondtrailer"))/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
-			}	
+		//Render trailer text depending on hitch status.EntityVehicleF_Ground currentVehicle = vehicle;
+		currentVehicle = vehicle;
+		for(byte i=0; i<trailerButtonCoords.length; ++i){
+			if(currentVehicle != null && currentVehicle.pack.motorized.hitchPos != null){
+				textX = trailerButtonCoords[i][0] + (trailerButtonCoords[i][1] - trailerButtonCoords[i][0])/2;
+				textY = trailerButtonCoords[i][2] + 2;
+				fontRenderer.drawString(I18n.format("gui.panel.trailer") + "#" + (i + 1), textX - fontRenderer.getStringWidth(I18n.format("gui.panel.trailer") + "#" + (i + 1))/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+				currentVehicle = currentVehicle.towedVehicle;
+			}else{
+				break;
+			}
 		}
-		
 		GL11.glPopMatrix();
 	}
 	
@@ -210,14 +214,16 @@ public class GUIPanelGround extends GuiScreen{
 				MTS.MTSNet.sendToServer(new SirenPacket(vehicle.getEntityId()));
 			}
 			
-			//Check if the trailer buttons has been pressed.
-			if(vehicle.pack.motorized.hitchPos != null){
-				if(mouseX > trailerButtonCoords[0] && mouseX < trailerButtonCoords[1] && mouseY < trailerButtonCoords[2] && mouseY > trailerButtonCoords[3]){
-					MTS.MTSNet.sendToServer(new TrailerPacket(vehicle.getEntityId()));
-				}else if(vehicle.towedVehicle != null && vehicle.towedVehicle.pack.motorized.hitchPos != null){
-					if(mouseX > trailer2ButtonCoords[0] && mouseX < trailer2ButtonCoords[1] && mouseY < trailer2ButtonCoords[2] && mouseY > trailer2ButtonCoords[3]){
-						MTS.MTSNet.sendToServer(new TrailerPacket(vehicle.towedVehicle.getEntityId()));
+			//Check if any trailer buttons have been pressed.
+			EntityVehicleF_Ground currentVehicle = vehicle;
+			for(byte i=0; i<trailerButtonCoords.length; ++i){
+				if(currentVehicle != null && currentVehicle.pack.motorized.hitchPos != null){
+					if(mouseX > trailerButtonCoords[i][0] && mouseX < trailerButtonCoords[i][1] && mouseY < trailerButtonCoords[i][2] && mouseY > trailerButtonCoords[i][3]){
+						MTS.MTSNet.sendToServer(new TrailerPacket(currentVehicle.getEntityId()));
 					}
+					currentVehicle = currentVehicle.towedVehicle;
+				}else{
+					break;
 				}
 			}
 		}

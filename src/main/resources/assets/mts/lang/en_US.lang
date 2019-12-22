@@ -176,7 +176,6 @@ gui.panel.headlights=HEADLTS
 gui.panel.emergencylights=EMERGENCYLTS
 gui.panel.siren=SIREN
 gui.panel.trailer=TRAILER
-gui.panel.secondtrailer=TRAILER #2
 
 gui.instruments.main=Main Instruments
 gui.instruments.control=Control Panel
