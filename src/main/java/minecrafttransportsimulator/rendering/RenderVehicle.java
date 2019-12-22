@@ -873,7 +873,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			LightPart light = allLights.get(lightIndex);
 			boolean lightSwitchOn = vehicle.isLightOn(light.type);
 			//Fun with bit shifting!  20 bits make up the light on index here, so align to a 20 tick cycle.
-			boolean lightActuallyOn = lightSwitchOn && ((light.flashBits >> vehicle.ticksExisted%20) & 1) > 0;
+			boolean lightActuallyOn = lightSwitchOn && ((light.flashBits >> vehicle.world.getTotalWorldTime()%20) & 1) > 0;
 			//Used to make the cases of the lights full brightness.  Used when lights are brighter than the surroundings.
 			boolean overrideCaseBrightness = lightBrightness > Math.max(sunLight, blockLight) && lightActuallyOn;
 			
