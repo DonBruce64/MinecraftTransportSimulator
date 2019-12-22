@@ -1,12 +1,16 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.dataclasses.PackPartObject.PartBulletConfig;
+import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
+import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -15,6 +19,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -37,41 +42,25 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public final class PartBullet extends Particle{
 	private final String bulletName;
-	private final PartBulletConfig bulletPackData;
+	private final PackPartObject pack;
 	private final int playerID;
 	private final EntityVehicleE_Powered vehicle;
 	
-	private final float minU;
-    private final float maxU;
-    private final float minV;
-    private final float maxV;
+	private final Map<String, Map<String, Float[][]>> parsedBulletModels = new HashMap<String, Map<String, Float[][]>>();
 	
     public PartBullet(World world, double x, double y, double z, double motionX, double motionY, double motionZ, String bulletName, int playerID, EntityVehicleE_Powered vehicle){
     	super(world, x, y, z);
         //Set basic properties.
     	this.particleMaxAge = 60;
         this.bulletName = bulletName;
-        this.bulletPackData = PackParserSystem.getPartPack(this.bulletName).bullet;
-        
-        //Set rendering properties.
-        if(bulletPackData.type.equals("tracer")){
-        	this.setRBGColorF(1.0F, 0.0F, 0.0F);
-        }else{
-        	this.setRBGColorF(1.0F, 1.0F, 1.0F);
-        }
+        this.pack = PackParserSystem.getPartPack(this.bulletName);
         this.setParticleTexture(Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getParticleIcon(MTSRegistry.partItemMap.get(bulletName), 0));
-        float vSpan = this.particleTexture.getMaxV() - this.particleTexture.getMinV();
-		float vMid = this.particleTexture.getMinV() + vSpan/2F;
-		minU = this.particleTexture.getMinU();
-        maxU = this.particleTexture.getMaxU();
-        minV = vMid - vSpan*bulletPackData.texturePercentage/2F;
-        maxV = vMid + vSpan*bulletPackData.texturePercentage/2F;
         
         //Set physical state and runtime properties.
         this.motionX = motionX;
         this.motionY = motionY;
         this.motionZ = motionZ;
-        this.setSize(bulletPackData.diameter/1000F, bulletPackData.diameter/1000F);
+        this.setSize(pack.bullet.diameter/1000F, pack.bullet.diameter/1000F);
         this.setBoundingBox(new AxisAlignedBB(posX - width/2F, posY - height/2F, posZ - width/2F, posX + width/2F, posY + height/2F, posZ + width/2F));
         this.playerID = playerID;
         this.vehicle = vehicle;
@@ -165,43 +154,38 @@ public final class PartBullet extends Particle{
         float renderPosZ = (float)(this.prevPosZ + (this.posZ - this.prevPosZ) * (double)partialTicks - interpPosZ);
         
         //Get brightness information.
-        int brightness = this.bulletPackData.type.equals("tracer") ? (15 << 20 | 15 << 4) : getBrightnessForRender(partialTicks); 
+        int brightness = pack.bullet.type.equals("tracer") ? (15 << 20 | 15 << 4) : getBrightnessForRender(partialTicks); 
         int skyLight = brightness >> 16 & 65535;
         int blockLight = brightness & 65535;
         
-        //Get the texture points as if we only have velocity in the +Z direction.
-        //We need two sets of 4.  One for the side view, and one for the top cross-view.
-        //Ensure we have a radius of a minimum of 2 pixels for proper rendering.
-        float realRadius = Math.max(bulletPackData.diameter/1000F/2F, 0.0625F);
-        Vec3d[] texturePointCoords = new Vec3d[]{
-        	new Vec3d(0, -realRadius, -realRadius),
-        	new Vec3d(0, realRadius, -realRadius),
-        	new Vec3d(0, realRadius, realRadius),
-        	new Vec3d(0, -realRadius, realRadius),
-        	new Vec3d(-realRadius, 0, -realRadius),
-        	new Vec3d(realRadius, 0, -realRadius),
-        	new Vec3d(realRadius, 0, realRadius),
-        	new Vec3d(-realRadius, 0, realRadius)
-        };
+        //Parse the model if we haven't already.
+        if(!parsedBulletModels.containsKey(bulletName)){
+        	ResourceLocation modelLocation;
+        	if(pack.general.modelName != null){
+				modelLocation = new ResourceLocation(bulletName.substring(0, bulletName.indexOf(':')), "objmodels/parts/" + pack.general.modelName + ".obj");
+			}else{
+				modelLocation = new ResourceLocation(bulletName.substring(0, bulletName.indexOf(':')), "objmodels/parts/" + bulletName.substring(bulletName.indexOf(':') + 1) + ".obj");
+			}
+        	parsedBulletModels.put(bulletName, OBJParserSystem.parseOBJModel(modelLocation.getResourceDomain(), modelLocation.getResourcePath()));
+        }
         
-        //Rotate the texture to align with the velocity.
-        Vec3d velocityVec = new Vec3d(motionX, motionY, motionZ).normalize();
+        //Render the parsed model.
+        //Rotate the model point to align with the velocity.
+        //The parse parses tris, but we want quads here instead.
+        //Skip every 4th and 6th point to render a quad.
+        byte index = 1;
         double yaw = -Math.toDegrees(Math.atan2(motionX, motionZ));
         double pitch = -Math.toDegrees(Math.asin(motionY/Math.sqrt(motionX*motionX+motionY*motionY+motionZ*motionZ)));
-        for(byte i=0; i<8; ++i){
-        	texturePointCoords[i] = RotationSystem.getRotatedPoint(texturePointCoords[i], (float) pitch, (float) yaw, 0);
+        for(Entry<String, Float[][]> modelObjects : parsedBulletModels.get(bulletName).entrySet()){
+        	for(Float[] modelPoints : modelObjects.getValue()){
+        		if(index != 4 && index != 6){
+	        		Vec3d rotatedCoords = RotationSystem.getRotatedPoint(new Vec3d(modelPoints[0], modelPoints[1], modelPoints[2]), (float) pitch, (float) yaw, 0);
+	        		worldRendererIn.pos(renderPosX + rotatedCoords.x, renderPosY + rotatedCoords.y, renderPosZ + rotatedCoords.z).tex(particleTexture.getMinU() + (particleTexture.getMaxU() - particleTexture.getMinU())*modelPoints[3], particleTexture.getMinV() + (particleTexture.getMaxV() - particleTexture.getMinV())*modelPoints[4]).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
+        		}
+        		index = (byte) (index == 6 ? 1 : index + 1);
+        	}
         }
-
-        //Add the points to the vertexBuffer.
-        worldRendererIn.pos(renderPosX + texturePointCoords[0].x, renderPosY + texturePointCoords[0].y, renderPosZ + texturePointCoords[0].z).tex((double)maxU, (double)maxV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[1].x, renderPosY + texturePointCoords[1].y, renderPosZ + texturePointCoords[1].z).tex((double)maxU, (double)minV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[2].x, renderPosY + texturePointCoords[2].y, renderPosZ + texturePointCoords[2].z).tex((double)minU, (double)minV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[3].x, renderPosY + texturePointCoords[3].y, renderPosZ + texturePointCoords[3].z).tex((double)minU, (double)maxV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[4].x, renderPosY + texturePointCoords[4].y, renderPosZ + texturePointCoords[4].z).tex((double)maxU, (double)maxV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[5].x, renderPosY + texturePointCoords[5].y, renderPosZ + texturePointCoords[5].z).tex((double)maxU, (double)minV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[6].x, renderPosY + texturePointCoords[6].y, renderPosZ + texturePointCoords[6].z).tex((double)minU, (double)minV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-        worldRendererIn.pos(renderPosX + texturePointCoords[7].x, renderPosY + texturePointCoords[7].y, renderPosZ + texturePointCoords[7].z).tex((double)minU, (double)maxV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
-    }
+	}
 	
 	@Override
     public int getFXLayer(){

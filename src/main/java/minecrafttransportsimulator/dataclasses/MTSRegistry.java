@@ -139,7 +139,7 @@ public final class MTSRegistry{
 	public static final Block engineBench = new BlockBench("engine_aircraft", "engine_jet", "engine_car", "engine_boat");
 	public static final Block wheelBench = new BlockBench("wheel", "skid", "pontoon", "tread");
 	public static final Block seatBench = new BlockBench("seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand");
-	public static final Block gunBench = new BlockBench("gun_fixed", "gun_tripod");
+	public static final Block gunBench = new BlockBench("gun_fixed", "gun_tripod", "bullet");
 	public static final Block customBench = new BlockBench("custom");
 	public static final Block instrumentBench = new BlockBench("instrument");
 	public static final Block componentBench = new BlockBench("item");
