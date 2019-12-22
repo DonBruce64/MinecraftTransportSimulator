@@ -279,7 +279,7 @@ info.item.jumpercable.line4=Engines will un-link when power is even,
 info.item.jumpercable.line5=or if they get too far away.
 info.item.jerrycan.fill=Fill can by right-clicking a fuel pump.
 info.item.jerrycan.drain=Fill vehicle by right-clicking with full can.
-info.item.jerrycan.empty=Can is currently is empy.
+info.item.jerrycan.empty=Can is currently empty.
 info.item.jerrycan.contains=Can contains: 
 
 item.wrench.name=Wrench
