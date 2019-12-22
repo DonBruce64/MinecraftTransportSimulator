@@ -188,6 +188,18 @@ public final class PartBullet extends Particle{
 	}
 	
 	@Override
+	public int getBrightnessForRender(float partialTicks){
+        if(!pack.bullet.type.equals("tracer")){
+			int i = super.getBrightnessForRender(partialTicks);
+		    int j = 240;
+		    int k = i >> 16 & 255;
+		    return 240 | k << 16;
+        }else{
+        	return super.getBrightnessForRender(partialTicks);
+        }
+    }
+	
+	@Override
     public int getFXLayer(){
         return 1;
     }
