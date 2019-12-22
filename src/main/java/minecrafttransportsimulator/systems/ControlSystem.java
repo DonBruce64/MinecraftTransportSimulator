@@ -9,6 +9,7 @@ import org.lwjgl.input.Mouse;
 import minecrafttransportsimulator.ClientProxy;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.GUIPanelAircraft;
+import minecrafttransportsimulator.guis.GUIPanelGround;
 import minecrafttransportsimulator.guis.GUIRadio;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.BrakePacket;
@@ -19,13 +20,9 @@ import minecrafttransportsimulator.packets.control.LightPacket;
 import minecrafttransportsimulator.packets.control.ReverseThrustPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.packets.control.ShiftPacket;
-import minecrafttransportsimulator.packets.control.SirenPacket;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
-import minecrafttransportsimulator.packets.control.TrailerPacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
@@ -429,6 +426,8 @@ public final class ControlSystem{
 		}
 	}
 	
+	private static long lastTickTurnLeftPressed = 0;
+	private static long lastTickTurnRightPressed = 0;
 	private static void controlGroundVehicle(EntityVehicleF_Ground powered, boolean isPlayerController){
 		controlCamera(ControlsKeyboardDynamic.CAR_CHANGEHUD, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEHUD, ControlsJoystick.CAR_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
@@ -438,8 +437,15 @@ public final class ControlSystem{
 		controlBrake(ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE_ANALOG, ControlsJoystick.CAR_PARK, powered.getEntityId());
 		controlRadio(powered, ControlsKeyboard.CAR_RADIO);
 		controlGun(powered, ControlsKeyboard.CAR_GUN);
-		if(ControlsKeyboard.CAR_RADIO.isPressed()){
-			
+		
+		//Open or close the panel.
+		if(ControlsKeyboard.CAR_PANEL.isPressed()){
+			if(Minecraft.getMinecraft().currentScreen == null){
+				FMLCommonHandler.instance().showGuiScreen(new GUIPanelGround(powered));
+			}else if(Minecraft.getMinecraft().currentScreen instanceof GUIPanelGround){
+				Minecraft.getMinecraft().displayGuiScreen((GuiScreen)null);
+				Minecraft.getMinecraft().setIngameFocus();
+			}
 		}
 		
 		//Change gas to on or off.
@@ -456,58 +462,37 @@ public final class ControlSystem{
 		}
 		
 		//Check steering, turn signals, and lights.
-		if(ControlsKeyboardDynamic.CAR_SIREN.isPressed()){
-			MTS.MTSNet.sendToServer(new SirenPacket(powered.getEntityId()));
-		}else if(ControlsKeyboard.CAR_LIGHTS_SPECIAL.isPressed()){
-			MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.EMERGENCYLIGHT));
-		}
-			
-			
-		if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_R.isPressed()){
-			MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.RIGHTTURNLIGHT));
-		}else if(ControlsKeyboardDynamic.CAR_TURNSIGNAL_L.isPressed()){
-			MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.LEFTTURNLIGHT));
+		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
+		if(ConfigSystem.getBooleanConfig("MouseYoke")){
+			if(CameraSystem.lockedView && Minecraft.getMinecraft().currentScreen == null){
+				int dx = Mouse.getDX();
+				if(Math.abs(dx) < 100){
+					mousePosX = (short) Math.max(Math.min(mousePosX + dx*10, 450), -450);
+				}
+				MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), mousePosX));
+			}
 		}else{
-			if(ControlsKeyboard.CAR_LIGHTS.isPressed()){
-				MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.HEADLIGHT));
-				MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.RUNNINGLIGHT));
-			}
-			//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
-			if(ConfigSystem.getBooleanConfig("MouseYoke")){
-				if(CameraSystem.lockedView && Minecraft.getMinecraft().currentScreen == null){
-					int dx = Mouse.getDX();
-					if(Math.abs(dx) < 100){
-						mousePosX = (short) Math.max(Math.min(mousePosX + dx*10, 450), -450);
-					}
-					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), mousePosX));
-				}
+			if(joystickMap.containsKey(ControlsJoystick.CAR_TURN.joystickAssigned) && ControlsJoystick.CAR_TURN.joystickButton != NULL_COMPONENT){
+				MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), getJoystickAxisState(ControlsJoystick.CAR_TURN, (short) 450)));
 			}else{
-				if(joystickMap.containsKey(ControlsJoystick.CAR_TURN.joystickAssigned) && ControlsJoystick.CAR_TURN.joystickButton != NULL_COMPONENT){
-					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), getJoystickAxisState(ControlsJoystick.CAR_TURN, (short) 450)));
-				}else{
-					boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
-					boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();
-					if(turningRight && !turningLeft){
-						MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-					}else if(turningLeft && !turningRight){
-						MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+				boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
+				boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();
+				long currentTime = powered.world.getTotalWorldTime();
+				if(turningRight && !turningLeft){
+					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+					if(lastTickTurnRightPressed < currentTime - 2 && lastTickTurnRightPressed > currentTime - 10){
+						MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.RIGHTTURNLIGHT));
 					}
+					lastTickTurnRightPressed = currentTime;
+				}else if(turningLeft && !turningRight){
+					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
+					if(lastTickTurnLeftPressed < currentTime - 2 && lastTickTurnLeftPressed > currentTime - 10){
+						MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.LEFTTURNLIGHT));
+					}
+					lastTickTurnLeftPressed = currentTime;
 				}
 			}
 		}
-		
-		//Check starter.
-		if(powered.getEngineByNumber((byte) 0) != null){
-			if(ControlsKeyboardDynamic.CAR_STOP.isPressed() || ControlsJoystick.CAR_STOP.isPressed()){
-				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_OFF));
-			}else if(ControlsKeyboard.CAR_START.isPressed()){
-				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.MAGNETO_ON));
-				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.ES_ON));
-			}else{
-				MTS.MTSNet.sendToServer(new PacketPartEngineSignal(powered.getEngineByNumber((byte) 0), PacketEngineTypes.ES_OFF));
-			}
-		}
-		
 		
 		//Check if we are shifting.
 		if(ControlsKeyboard.CAR_SHIFT_U.isPressed()){
@@ -522,11 +507,6 @@ public final class ControlSystem{
 			MTS.MTSNet.sendToServer(new HornPacket(powered.getEntityId(), true));
 		}else{
 			MTS.MTSNet.sendToServer(new HornPacket(powered.getEntityId(), false));
-		}
-		
-		//Check if we pressed the trailer button.
-		if(ControlsKeyboard.CAR_TRAILER.isPressed()){
-			MTS.MTSNet.sendToServer(new TrailerPacket(powered.getEntityId()));
 		}
 	}
 		
@@ -556,13 +536,10 @@ public final class ControlSystem{
 		CAR_TURN_L(Keyboard.KEY_A, ControlsJoystick.CAR_TURN, false),
 		CAR_GAS(Keyboard.KEY_W, ControlsJoystick.CAR_GAS, false),
 		CAR_BRAKE(Keyboard.KEY_S, ControlsJoystick.CAR_BRAKE, false),
+		CAR_PANEL(Keyboard.KEY_U, ControlsJoystick.CAR_PANEL, true),
 		CAR_SHIFT_U(Keyboard.KEY_R, ControlsJoystick.CAR_SHIFT_U, true),
 		CAR_SHIFT_D(Keyboard.KEY_F, ControlsJoystick.CAR_SHIFT_D, true),
 		CAR_HORN(Keyboard.KEY_C, ControlsJoystick.CAR_HORN, false),
-		CAR_START(Keyboard.KEY_Z, ControlsJoystick.CAR_START, false),
-		CAR_LIGHTS(Keyboard.KEY_X, ControlsJoystick.CAR_LIGHTS, true),
-		CAR_LIGHTS_SPECIAL(Keyboard.KEY_V, ControlsJoystick.CAR_LIGHTS_SPECIAL, true),
-		CAR_TRAILER(Keyboard.KEY_G, ControlsJoystick.CAR_TRAILER, true),
 		CAR_RADIO(Keyboard.KEY_MINUS, ControlsJoystick.CAR_RADIO, true),
 		CAR_GUN(Keyboard.KEY_SPACE, ControlsJoystick.CAR_GUN, false),
 		CAR_ZOOM_I(Keyboard.KEY_PRIOR, ControlsJoystick.CAR_ZOOM_I, true),
@@ -645,15 +622,11 @@ public final class ControlSystem{
 		CAR_GAS(true, false),
 		CAR_BRAKE(false, false),
 		CAR_BRAKE_ANALOG(true, false),
+		CAR_PANEL(false, true),
 		CAR_SHIFT_U(false, true),
 		CAR_SHIFT_D(false, true),
 		CAR_HORN(false, false),
-		CAR_START(false, false),
-		CAR_STOP(false, false),
-		CAR_LIGHTS(false, true),
-		CAR_LIGHTS_SPECIAL(false, true),
 		CAR_PARK(false, true),
-		CAR_TRAILER(false, true),
 		CAR_RADIO(false, false),
 		CAR_GUN(false, false),
 		CAR_ZOOM_I(false, true),
@@ -701,12 +674,7 @@ public final class ControlSystem{
 		
 		CAR_CHANGEHUD(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_MOD),
 		CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD),
-		CAR_STOP(ControlsKeyboard.CAR_START, ControlsKeyboard.CAR_MOD),
-		CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD),
-		CAR_SIREN(ControlsKeyboard.CAR_LIGHTS_SPECIAL, ControlsKeyboard.CAR_MOD),
-		CAR_TURNSIGNAL_R(ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_LIGHTS),
-		CAR_TURNSIGNAL_L(ControlsKeyboard.CAR_TURN_L, ControlsKeyboard.CAR_LIGHTS);
-		
+		CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD);		
 		
 		public final String buttonName;
 		public final ControlsKeyboard mainControl;

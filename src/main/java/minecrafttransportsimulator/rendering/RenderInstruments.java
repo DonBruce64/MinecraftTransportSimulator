@@ -152,7 +152,7 @@ public abstract class RenderInstruments{
      * Checks if lights are on for this vehicle and instruments need to be lit up.
      */
 	public static boolean lightsOn(EntityVehicleE_Powered vehicle){
-		return (vehicle.isLightOn(LightTypes.NAVIGATIONLIGHT) || vehicle.isLightOn(LightTypes.HEADLIGHT)) && vehicle.electricPower > 3;
+		return (vehicle.isLightOn(LightTypes.NAVIGATIONLIGHT) || vehicle.isLightOn(LightTypes.RUNNINGLIGHT)) && vehicle.electricPower > 3;
 	}
 	
     /**
