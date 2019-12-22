@@ -75,17 +75,15 @@ public final class PartBullet extends Particle{
 		
 		//If not expired, do logic.
 		if(!this.isExpired){
-			//Check if we collided with anything.  Go in 1-block steps from our current position to the final position based on our motion.
-			//Arrows move so slow that this isn't a problem.  Not so for bullets.
-			double velocity = Math.sqrt(motionX*motionX + motionY*motionY + motionZ*motionZ);
-			double increments = Math.floor(velocity);
-
 			//We check for entities and blocks in 0.25 block movements.
 			//These are done in the same loop to prevent us checking further along if we hit something.
+			//Arrows move so slow that this isn't a problem.  Not so for bullets.
 			Entity collidedEntity = null;
 			BlockPos collidedBlockPos = null;
-			for(double d=0; d<increments; d+=0.25D){
-				for(Entity entity : this.world.getEntitiesWithinAABBExcludingEntity(vehicle, this.getBoundingBox().offset(motionX*d/increments, motionY*d/increments, motionZ*d/increments))){
+			double velocity = Math.sqrt(motionX*motionX + motionY*motionY + motionZ*motionZ);
+			Vec3d normalizedVelocity = new Vec3d(motionX, motionY, motionZ).normalize();
+			for(double velocityOffset=0; velocityOffset<=velocity; velocityOffset+=0.25D){
+				for(Entity entity : this.world.getEntitiesWithinAABBExcludingEntity(vehicle, this.getBoundingBox().offset(velocityOffset*normalizedVelocity.x, velocityOffset*normalizedVelocity.y, velocityOffset*normalizedVelocity.z))){
 					//We might have hit more than one entity.  Pick the closest one if so.
 					//Only do this if the entities in question are NOT vehicles.
 					//If they are just use whatever came first in the queue.
@@ -99,11 +97,11 @@ public final class PartBullet extends Particle{
 				//Don't check for blocks if we hit an entity.
 				//Entities get priority as they are always on or in front of blocks.
 				if(collidedEntity == null){
-					BlockPos pos = new BlockPos(this.posX + motionX*d/increments, this.posY + motionY*d/increments, this.posZ + motionZ*d/increments);
+					BlockPos pos = new BlockPos(this.posX + velocityOffset*normalizedVelocity.x, this.posY + velocityOffset*normalizedVelocity.y, this.posZ + velocityOffset*normalizedVelocity.z);
 					IBlockState state = this.world.getBlockState(pos);
 					if(state.getBlock().canCollideCheck(state, true)){
 						List<AxisAlignedBB> collidingAABBList = new ArrayList<AxisAlignedBB>();
-						AxisAlignedBB box = this.getBoundingBox().offset(motionX*d/increments, motionY*d/increments, motionZ*d/increments);
+						AxisAlignedBB box = this.getBoundingBox().offset(velocityOffset*normalizedVelocity.x, velocityOffset*normalizedVelocity.y, velocityOffset*normalizedVelocity.z);
 						state.addCollisionBoxToList(world, pos, box, collidingAABBList, null, false);
 						if(!collidingAABBList.isEmpty()){
 							collidedBlockPos = pos;
@@ -118,7 +116,7 @@ public final class PartBullet extends Particle{
 				//Doing this prevents all clients from sending collision packets to the server.
 				if(collidedEntity != null){
 					if(this.playerID == Minecraft.getMinecraft().player.getEntityId()){
-						MTS.MTSNet.sendToServer(new PacketBulletHit(this.posX + motionX*d/increments, this.posY + motionY*d/increments, this.posZ + motionZ*d/increments, velocity, this.bulletName, this.playerID, collidedEntity.getEntityId()));
+						MTS.MTSNet.sendToServer(new PacketBulletHit(this.posX + velocityOffset*normalizedVelocity.x, this.posY + velocityOffset*normalizedVelocity.y, this.posZ + velocityOffset*normalizedVelocity.z, velocity, this.bulletName, this.playerID, collidedEntity.getEntityId()));
 					}
 					this.setExpired();
 					return;
