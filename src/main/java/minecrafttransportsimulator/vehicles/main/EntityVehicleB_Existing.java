@@ -199,8 +199,8 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void updatePassenger(Entity passenger){
 		PartSeat seat = this.getSeatForRider(passenger);
 		if(seat != null){
-			Vec3d posVec = RotationSystem.getRotatedPoint(seat.offset.addVector(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll);
-			passenger.setPosition(this.posX + posVec.x, this.posY + posVec.y - passenger.height, this.posZ + posVec.z);
+			Vec3d playerOffsetVec = seat.partPos.add(RotationSystem.getRotatedPoint(new Vec3d(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll));
+			passenger.setPosition(playerOffsetVec.x, playerOffsetVec.y - passenger.height, playerOffsetVec.z);
 			passenger.motionX = this.motionX;
 			passenger.motionY = this.motionY;
 			passenger.motionZ = this.motionZ;

@@ -29,6 +29,7 @@ public class PackPartObject{
     	public String[] materials;
     	public String customType;
     	public boolean disableMirroring;
+    	public boolean useVehicleTexture;
     }
     
     public class PartEngineConfig{

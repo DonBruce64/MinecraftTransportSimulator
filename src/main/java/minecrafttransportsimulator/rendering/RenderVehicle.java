@@ -35,6 +35,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.APartEngineGeared;
+import minecrafttransportsimulator.vehicles.parts.APartGun;
 import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
@@ -547,10 +548,23 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     				textureMap.put(part.partName, part.getTextureLocation());
     			}
     			
+    			//Rotate and translate the part prior to rendering the displayList.
+    			//Note that if the part's parent has a rotation, use that to transform
+    			//the translation to match that rotation.  Needed for things like
+    			//tank turrets with seats or guns.
     			Vec3d actionRotation = part.getActionRotation(partialTicks);
     			GL11.glPushMatrix();
-    			GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
-    			rotatePart(part, actionRotation, true);
+    			if(part.parentPart != null && !part.parentPart.getActionRotation(partialTicks).equals(Vec3d.ZERO)){
+    				Vec3d parentActionRotation = part.parentPart.getActionRotation(partialTicks);
+    				Vec3d partRelativeOffset = part.offset.subtract(part.parentPart.offset);
+    				Vec3d partTranslationOffset = part.parentPart.offset.add(RotationSystem.getRotatedPoint(partRelativeOffset, (float) parentActionRotation.x, (float) parentActionRotation.y, (float) parentActionRotation.z));
+    				GL11.glTranslated(partTranslationOffset.x, partTranslationOffset.y, partTranslationOffset.z);
+    				rotatePart(part, parentActionRotation.add(actionRotation), true);
+    			}else{
+    				GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
+    				rotatePart(part, actionRotation, true);
+    			}
+    			
         		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
         		
         		//If we are a tread, do the tread-specific render.
@@ -603,6 +617,11 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			if(variable.equals("propellerpitch")){
 				return (float) Math.toDegrees(Math.atan(((PartPropeller) part).currentPitch / (((PartPropeller) part).pack.propeller.diameter*0.75D*Math.PI)));
 			}
+		}else if(part instanceof APartGun){
+			switch(variable){
+				case("gun_pitch"): return ((APartGun) part).currentPitch;
+				case("gun_yaw"): return ((APartGun) part).currentYaw;
+			}
 		}
 		switch(variable){
 			case("door"): return part.vehicle.parkingBrakeOn && part.vehicle.velocity == 0 && !part.vehicle.locked ? 60 : 0;
@@ -639,9 +658,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		GL11.glRotated(part.partRotation.x, 1, 0, 0);
 		GL11.glRotated(part.partRotation.y, 0, 1, 0);
 		GL11.glRotated(part.partRotation.z, 0, 0, 1);
-		
+
 		GL11.glRotated(actionRotation.x, 1, 0, 0);
-		GL11.glRotated(actionRotation.y, 0, 1, 0);
+		GL11.glRotated(-actionRotation.y, 0, 1, 0);
 		GL11.glRotated(actionRotation.z, 0, 0, 1);
 	}
 	

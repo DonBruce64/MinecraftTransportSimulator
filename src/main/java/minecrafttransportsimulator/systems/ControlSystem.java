@@ -282,16 +282,33 @@ public final class ControlSystem{
 	private static void controlGun(EntityVehicleE_Powered vehicle, ControlsKeyboard gun){
 		PartSeat seat = vehicle.getSeatForRider(Minecraft.getMinecraft().player);
 		if(seat != null){
+			//If we are seated, attempt to control guns.
+			//Only control guns our seat is a part of, or guns with no seats part of them.
+			//First check our parent part.
+			if(seat.parentPart instanceof APartGun){
+				MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) seat.parentPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+			}
+			//Now check subParts of our seat.
+			for(APart subPart : seat.childParts){
+				if(subPart instanceof APartGun){
+					MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) subPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+				}
+			}
+			//If we are the vehicle controller, check for guns that don't have seats. 
 			if(seat.isController){
 				for(APart part : vehicle.getVehicleParts()){
-					if(part instanceof APartGun && part.parentPart == null){
-						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
-					}
-				}
-			}else{
-				for(APart part : seat.childParts){
 					if(part instanceof APartGun){
-						MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+						if(!(part.parentPart instanceof PartSeat)){
+							boolean hasControllingSeats = false;
+							for(APart subPart : part.childParts){
+								if(subPart instanceof PartSeat){
+									hasControllingSeats = true;
+								}
+							}
+							if(!hasControllingSeats){
+								MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+							}
+						}
 					}
 				}
 			}
@@ -315,7 +332,6 @@ public final class ControlSystem{
 			return;
 		}
 		controlBrake(ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_BRAKE_ANALOG, ControlsJoystick.AIRCRAFT_PARK, aircraft.getEntityId());
-		
 		
 		//Open or close the panel.
 		if(ControlsKeyboard.AIRCRAFT_PANEL.isPressed()){
@@ -431,12 +447,12 @@ public final class ControlSystem{
 	private static void controlGroundVehicle(EntityVehicleF_Ground powered, boolean isPlayerController){
 		controlCamera(ControlsKeyboardDynamic.CAR_CHANGEHUD, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEHUD, ControlsJoystick.CAR_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
+		controlRadio(powered, ControlsKeyboard.CAR_RADIO);
+		controlGun(powered, ControlsKeyboard.CAR_GUN);
 		if(!isPlayerController){
 			return;
 		}
 		controlBrake(ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE_ANALOG, ControlsJoystick.CAR_PARK, powered.getEntityId());
-		controlRadio(powered, ControlsKeyboard.CAR_RADIO);
-		controlGun(powered, ControlsKeyboard.CAR_GUN);
 		
 		//Open or close the panel.
 		if(ControlsKeyboard.CAR_PANEL.isPressed()){

@@ -64,7 +64,6 @@ public abstract class APart{
 		this.turnsWithSteer = packPart.turnsWithSteer;
 		this.isValid = true;
 		this.inverseMirroring = packPart.inverseMirroring;
-		this.disableMirroring = pack.general.disableMirroring;
 		
 		//Check to see if we are an additional part to a part on our parent.
 		//If we are not valid due to us being fake, don't add ourselves.
@@ -73,6 +72,7 @@ public abstract class APart{
 				if(packPart.equals(parentPackPart.additionalPart)){
 					parentPart = vehicle.getPartAtLocation(parentPackPart.pos[0], parentPackPart.pos[1], parentPackPart.pos[2]);
 					parentPart.childParts.add(this);
+					this.disableMirroring = pack.general.disableMirroring;
 					return;
 				}
 			}
@@ -84,12 +84,14 @@ public abstract class APart{
 						if((float) part.offset.x + partSubPartPack.pos[0] == (float) this.offset.x && (float) part.offset.y + partSubPartPack.pos[1] == (float) this.offset.y && (float) part.offset.z + partSubPartPack.pos[2] == (float) this.offset.z){
 							parentPart = part;
 							parentPart.childParts.add(this);
+							this.disableMirroring = parentPart.disableMirroring || pack.general.disableMirroring;
 							return;
 						}
 					}
 				}
 			}
 		}
+		this.disableMirroring = pack.general.disableMirroring;
 		parentPart = null;
 	}
 	
@@ -119,7 +121,16 @@ public abstract class APart{
 	 * Use this for reactions that this part can take based on its surroundings if need be.
 	 */
 	public void updatePart(){
-		this.partPos = RotationSystem.getRotatedPoint(this.offset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+		if(parentPart != null){
+			Vec3d parentActionRotation = parentPart.getActionRotation(0);
+			if(!parentActionRotation.equals(Vec3d.ZERO)){
+				Vec3d partRelativeOffset = offset.subtract(parentPart.offset);
+				Vec3d partTranslationOffset = parentPart.offset.add(RotationSystem.getRotatedPoint(partRelativeOffset, (float) parentActionRotation.x, (float) parentActionRotation.y, (float) parentActionRotation.z));
+				partPos = RotationSystem.getRotatedPoint(partTranslationOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+				return;
+			}
+		}
+		partPos = RotationSystem.getRotatedPoint(this.offset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
 	}
 	
 	/**Called when the vehicle removes this part.
@@ -194,12 +205,13 @@ public abstract class APart{
 		return new VehicleAxisAlignedBB(Vec3d.ZERO.equals(boxOffset) ? partPos : partPos.add(boxOffset), this.offset, this.getWidth(), this.getHeight(), false, false);
 	}
 	
-	/**Gets the rotation vector for rendering.
-	 * This comes from the part itself and is only
-	 * changed on the client for animation purposes.
-	 * Both this and partRotation are used
-	 * to determine the final rotation of a part
-	 * during rendering.
+	/**Gets the rotation vector for the part.
+	 * This comes from the part itself and is used
+	 * to determine the angle of the part for rendering
+	 * and for rotation of sub-parts.  This rotation is
+	 * variable and depends on what the part is doing, unlike
+	 * partRotation, which is a fixed rotation component that
+	 * comes from the vehicle JSONs.
 	 */
 	public Vec3d getActionRotation(float partialTicks){
 		return Vec3d.ZERO;

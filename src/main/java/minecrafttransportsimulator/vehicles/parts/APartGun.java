@@ -5,8 +5,8 @@ import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.items.parts.ItemPartBullet;
 import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
-import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -26,6 +26,8 @@ public abstract class APartGun extends APart implements FXPart{
 	public int bulletsLeft;
 	public float currentPitch;
 	public float currentYaw;
+	public float prevPitch;
+	public float prevYaw;
 	public String loadedBullet;
 	
 	//These variables are used during firing and will be reset on entity loading.
@@ -103,7 +105,7 @@ public abstract class APartGun extends APart implements FXPart{
 		if(playerControllerID != -1){
 			Entity playerController = vehicle.world.getEntityByID(playerControllerID);
 			PartSeat seat = vehicle.getSeatForRider(playerController);
-			if(seat != null && (this.parentPart == null ? seat.isController : this.parentPart.equals(seat))){
+			if(seat != null){
 				//If we are out of bullets, and we can automatically reload, and are not doing so, start the reload sequence.
 				if(bulletsLeft == 0 && pack.gun.autoReload && !reloading){
 					//Iterate through all the inventory slots in crates to try to find matching ammo.
@@ -172,7 +174,7 @@ public abstract class APartGun extends APart implements FXPart{
 				//When we do yaw, make sure we do calculations with positive values.
 				//Both the vehicle and the player can have yaw greater than 360.
 				double deltaPitch = playerController.rotationPitch - vehicle.rotationPitch;
-				double deltaYaw = (vehicle.rotationYaw%360 - partRotation.y + 360)%360 - (playerController.rotationYaw%360 + 360)%360;
+				double deltaYaw = (playerController.rotationYaw%360 + 360)%360 - (vehicle.rotationYaw%360 - partRotation.y + 360)%360;
 				if(deltaPitch < currentPitch && currentPitch > getMinPitch()){
 					currentPitch -= Math.min(anglePerTickSpeed, currentPitch - deltaPitch);
 				}else if(deltaPitch > currentPitch && currentPitch < getMaxPitch()){
@@ -186,7 +188,9 @@ public abstract class APartGun extends APart implements FXPart{
 			}else{
 				playerControllerID = -1;
 			}
-		}	
+		}
+		prevPitch = currentPitch;
+		prevYaw = currentYaw;
 	}
 	
 	@Override
@@ -231,7 +235,7 @@ public abstract class APartGun extends APart implements FXPart{
 			//Angle is based on rotation of the vehicle, gun, and gun mount.
 			//Set the trajectory of the bullet.
 			//Add a slight fudge-factor to the bullet's trajectory depending on the barrel length and shell size.
-			float bulletYaw = (float) (vehicle.rotationYaw - partRotation.y - currentYaw + (Math.random() - 0.5F)*(10*pack.gun.diameter/(pack.gun.length*1000)));
+			float bulletYaw = (float) (vehicle.rotationYaw - partRotation.y + currentYaw + (Math.random() - 0.5F)*(10*pack.gun.diameter/(pack.gun.length*1000)));
 			float bulletPitch = (float) (vehicle.rotationPitch + partRotation.x + currentPitch + (Math.random() - 0.5F)*(10*pack.gun.diameter/(pack.gun.length*1000)));
 			
 			//Set initial velocity to the gun muzzle velocity times the speedFactor.
