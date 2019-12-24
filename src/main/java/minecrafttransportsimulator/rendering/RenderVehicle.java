@@ -565,7 +565,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     				rotatePart(part, actionRotation, true);
     			}
     			
-        		minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
+    			if(!part.pack.general.useVehicleTexture){
+    				minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
+    			}
         		
         		//If we are a tread, do the tread-specific render.
         		//Otherwise render like all other parts.
