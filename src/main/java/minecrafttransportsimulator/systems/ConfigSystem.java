@@ -1,11 +1,15 @@
 package minecrafttransportsimulator.systems;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.gson.Gson;
 
 import minecrafttransportsimulator.dataclasses.PackPartObject;
 import net.minecraftforge.common.config.ConfigCategory;
@@ -18,6 +22,98 @@ import net.minecraftforge.common.config.Configuration;
  * @author don_bruce
  */
 public final class ConfigSystem{
+	
+	//-----------------NEW CODE---------------------
+	private static File configFile;
+	public static ConfigObject configObject;
+	
+	
+	/**Custom Config class.  This contains all fields used in config operation,
+	 * and should be assigned to config when {@link ConfigSystem#load(File)}
+	 * is called.  Default values are assigned in the field declaration, while
+	 * comments are simply fields of their own.  This class may (and probably should)
+	 * be moved to the dataclasses package with other XXXXObject classes.
+	 * Note that sub-classes MUST be static to use their default values!
+	 */
+	public static class ConfigObject{
+		public DamageConfig general;
+		public DamageConfig damage;
+		
+		public static class GeneralConfig{
+			//TODO add general config.
+		}
+		
+		public static class DamageConfig{
+			public boolean explosions = true;
+			public String explosionsComment = "Whether or not vehicles explode when crashed or shot down.";
+			public boolean blockBreakage = true;
+			public String blockBreakageComment = "Whether or not vehicles can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks.";
+			public double propellerDamageFactor = 1.0;
+			public String propellerDamageFactorComment = "Factor for damage caused by a propeller.";
+			//TODO add rest of damage configs.
+		}
+		
+		//TODO add other config sections.
+	}
+	
+	/**Called to load this class from the passed-in config file.
+	 * File should be a valid path where the config file resides,
+	 * or should reside if no file is present.  If no file is present,
+	 * one will be created at the end of the loading phase.
+	 */
+	public static void load(File file){
+		//Set the current config file location to the passed-in file.
+		configFile = file;
+				
+	    //If we have a config file already, parse it into Java.
+		if(configFile.exists()){
+			try{
+				configObject = new Gson().fromJson(new FileReader(configFile), ConfigObject.class);
+			}catch(Exception e){
+				System.err.println("ERROR: ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
+				e.printStackTrace();
+			}
+		}
+		
+		//Check to see if our config object is valid.  If not, we must not have a file to parse, or we failed
+		//to parse the file due to an error.  Create a new object and use that instead.
+		if(configObject == null){
+			configObject = new ConfigObject();
+			//TODO add sub-config constructors here.  Perhaps we can do this in a loop?
+			
+			//If we don't have a file on disk, make one now for editing by the user.
+			if(!configFile.exists()){
+				try{
+					new Gson().toJson(configObject, new FileWriter(configFile));
+				}catch(Exception e){
+					System.err.println("ERROR: ConfigSystem failed to save inital config file.  Report to the mod author!");
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	/**Called to save this class as a config File.  File
+	 * the class is saved to is the same one passed in
+	 * during {@link #load(File)}.  Call this whenever
+	 * configs are edited to ensure they are saved, as
+	 * the system does not do this automatically.
+	 */
+	public static void save(){
+		try{
+			new Gson().toJson(configObject, new FileWriter(configFile));
+		}catch(Exception e){
+			System.err.println("ERROR: ConfigSystem failed to save modified config file.  Report to the mod author!");
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
+	
+	
+	
+	//---------------OLD METHODS ARE BELOW THIS LINE--------------------
 	public static Configuration config;	
 	 
 	private static Map<String, Boolean> booleanConfigMap = new HashMap<String, Boolean>();
