@@ -95,7 +95,8 @@ public class Radio{
 	}
 	
 	/**Gets the current source for this radio.  If we are playing from the internet, it will
-	 * be the URL.  If we are playing from a directory, it will be the directory name.**/
+	 * be the URL.  If we are playing from a directory, it will be the directory name with
+	 * the file name of the current song after a newline.**/
 	public String getSource(){
 		return selectedSource;
 	}
@@ -139,6 +140,7 @@ public class Radio{
 					if(!songsToPlay.isEmpty()){
 						player.open(songsToPlay.get(0));
 						player.play();
+						selectedSource = "Station:  " + songsToPlay.get(0).getParentFile().getName() + "\nPlaying:  " + songsToPlay.get(0).getName() + "\nUp Next: " + (songsToPlay.size() > 1 ? songsToPlay.get(1).getName() : ""); 
 						songsToPlay.remove(0);
 					}else{
 						if(selectedPreset != -1){

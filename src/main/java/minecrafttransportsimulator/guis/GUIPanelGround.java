@@ -18,6 +18,7 @@ import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
 
@@ -26,7 +27,7 @@ import net.minecraft.util.ResourceLocation;
  * 
  * @author don_bruce
  */
-public class GUIPanelGround extends GUIBase{
+public class GUIPanelGround extends GuiScreen{
 	private static final ResourceLocation toggleOn = new ResourceLocation("textures/blocks/redstone_lamp_on.png");
 	private static final ResourceLocation toggleOff = new ResourceLocation("textures/blocks/redstone_lamp_off.png");
 	private static final LightTypes[] lights = new LightTypes[]{LightTypes.RUNNINGLIGHT, LightTypes.HEADLIGHT, LightTypes.EMERGENCYLIGHT};

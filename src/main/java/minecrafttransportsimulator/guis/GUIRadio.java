@@ -1,37 +1,33 @@
 package minecrafttransportsimulator.guis;
 
-import java.io.IOException;
+import java.awt.Color;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.radio.Radio;
 import minecrafttransportsimulator.radio.RadioContainer;
 import minecrafttransportsimulator.radio.RadioManager;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiTextField;
 
 public class GUIRadio extends GUIBase{	
-	//Global variables for rendering.
-	private int guiLeft;
-	private int guiTop;
-	
 	//Buttons.
-	private GUIButton offButton;
-	private GUIButton localButton;
-	private GUIButton remoteButton;
-	private GUIButton serverButton;
-	private GUIButton randomButton;
-	private GUIButton orderedButton;
-	private GUIButton setButton;
-	private GUIButton volUpButton;
-	private GUIButton volDnButton;
-	private List<GUIButton> presetButtons = new ArrayList<GUIButton>();
+	private GUIComponentButton offButton;
+	private GUIComponentButton localButton;
+	private GUIComponentButton remoteButton;
+	private GUIComponentButton serverButton;
+	private GUIComponentButton randomButton;
+	private GUIComponentButton orderedButton;
+	private GUIComponentButton setButton;
+	private GUIComponentButton volUpButton;
+	private GUIComponentButton volDnButton;
+	private List<GUIComponentButton> presetButtons = new ArrayList<GUIComponentButton>();
 	
 	//Input boxes
-	private GuiTextField stationDisplay;
-	private GuiTextField volumeDisplay;
+	private GUIComponentTextBox stationDisplay;
+	private GUIComponentTextBox volumeDisplay;
 	
 	//Runtime information.
 	private final Radio radio;
@@ -45,161 +41,130 @@ public class GUIRadio extends GUIBase{
 		this.allowUserInput=true;
 	}
 	
-	@Override 
-	public void initGui(){
-		super.initGui();
-		guiLeft = (this.width - 256)/2;
-		guiTop = (this.height - 192)/2;
+	@Override
+	public void setupComponents(int guiLeft, int guiTop){
+		addButton(offButton = new GUIComponentButton(guiLeft + 15, guiTop + 20, 45, "OFF"){
+			public void onClicked(){
+				presetButtons.get(radio.getPresetSelected()).enabled = true;
+				radio.stopPlaying();
+				stationDisplay.setText("");
+				teachMode = false;
+			}
+		});
+		addButton(localButton = new GUIComponentButton(guiLeft + 15, guiTop + 40, 45, "FOLDER"){
+			public void onClicked(){
+				localMode = true;
+				teachMode = false;
+				if(radio.getPresetSelected() != -1){
+					offButton.onClicked();
+				}
+			}
+		});
+		addButton(remoteButton = new GUIComponentButton(guiLeft + 15, guiTop + 60, 45, "RADIO"){
+			public void onClicked(){
+				localMode = false;
+				if(radio.getPresetSelected() != -1){
+					offButton.onClicked();
+				}
+			}
+		});
+		addButton(serverButton = new GUIComponentButton(guiLeft + 15, guiTop + 80, 45, "SERVER"){public void onClicked(){}});
+		addButton(randomButton = new GUIComponentButton(guiLeft + 80, guiTop + 30, 45, "RANDOM"){public void onClicked(){randomMode = true;}});
+		addButton(orderedButton = new GUIComponentButton(guiLeft + 80, guiTop + 50, 45, "SORTED"){public void onClicked(){randomMode = false;}});
+		addButton(setButton = new GUIComponentButton(guiLeft + 190, guiTop + 80, 45, "SET"){
+			public void onClicked(){
+				if(teachMode){
+					teachMode = false;
+					stationDisplay.setText("");
+				}else{
+					teachMode = true;
+					stationDisplay.setText("Type or paste a URL (CTRL+V).\nThen press press a preset button.");
+					stationDisplay.focused = true;
+				}
+			}
+		});
+		addButton(volUpButton = new GUIComponentButton(guiLeft + 205, guiTop + 20, 30, "UP"){public void onClicked(){radio.setVolume((byte) (radio.getVolume() + 1));}});
+		addButton(volDnButton = new GUIComponentButton(guiLeft + 205, guiTop + 40, 30, "DN"){public void onClicked(){radio.setVolume((byte) (radio.getVolume() - 1));}});
 		
-		buttonList.add(offButton = new GUIButton(guiLeft + 15, guiTop + 20, 45, "OFF"));
-		buttonList.add(localButton = new GUIButton(guiLeft + 15, guiTop + 40, 45, "FOLDER"));
-		buttonList.add(remoteButton = new GUIButton(guiLeft + 15, guiTop + 60, 45, "RADIO"));
-		buttonList.add(serverButton = new GUIButton(guiLeft + 15, guiTop + 80, 45, "SERVER"));
-		buttonList.add(randomButton = new GUIButton(guiLeft + 80, guiTop + 30, 45, "RANDOM"));
-		buttonList.add(orderedButton = new GUIButton(guiLeft + 80, guiTop + 50, 45, "SORTED"));
-		buttonList.add(setButton = new GUIButton(guiLeft + 190, guiTop + 90, 45, "SET"));
-		buttonList.add(volUpButton = new GUIButton(guiLeft + 205, guiTop + 20, 30, "UP"));
-		buttonList.add(volDnButton = new GUIButton(guiLeft + 205, guiTop + 40, 30, "DN"));
-		
+		presetButtons.clear();
 		int x = 25;
 		for(byte i=1; i<7; ++i){
-			presetButtons.add(new GUIButton(guiLeft + x, guiTop + 150, 35, String.valueOf(i)));
+			presetButtons.add(new GUIComponentButton(guiLeft + x, guiTop + 155, 35, String.valueOf(i)){public void onClicked(){presetButtonClicked(this);}});
+			addButton(presetButtons.get(i-1));
 			x += 35;
 		}
-		buttonList.addAll(presetButtons);
 		
-		stationDisplay = new GuiTextField(0, fontRenderer, guiLeft + 20, guiTop + 120, 220, 20);
-		stationDisplay.setMaxStringLength(100);
-		volumeDisplay = new GuiTextField(0, fontRenderer, guiLeft + 160, guiTop + 20, 45, 40);
-		volumeDisplay.setEnabled(false);
+		addTextBox(stationDisplay = new GUIComponentTextBox(guiLeft + 20, guiTop + 105, 220, radio.getSource(), 45, Color.WHITE, Color.BLACK, 100));
+		addTextBox(volumeDisplay = new GUIComponentTextBox(guiLeft + 180, guiTop + 20, 25, "", 40, Color.WHITE, Color.BLACK, 32));
 	}
 	
 	@Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks){		
-		//Draw Background.
-		this.mc.getTextureManager().bindTexture(standardTexture);
-		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 192);
-				
-		//Enable station entry if wa are in teach mode.
-		stationDisplay.setEnabled(teachMode);
-		
-		//Set volume display text box.
-		volumeDisplay.setText("VOL: " + String.valueOf(radio.getVolume()));
-		
-		//Set button states.
+	public void setStates(){
+		//Off button is enabled when radio is playing.
 		offButton.enabled = radio.getPlayState() != -1;
+		
+		//Local-remote are toggles.  Server is for future use and permanently disabled.
 		localButton.enabled = !localMode;
 		remoteButton.enabled = localMode;
 		serverButton.enabled = false;
+		
+		//Random/ordered buttons are toggles, but only active when playing locally from folder.
 		randomButton.enabled = !randomMode && localMode;
 		orderedButton.enabled = randomMode && localMode;
+		
+		//Set button only works if not in local mode (playing from radio URL).
+		//Once button is pressed, teach mode activates and stationDisplay becomes a station entry box.
+		//Otherwise, it's just a box that displays what's playing.
 		setButton.enabled = !localMode;
+		stationDisplay.enabled = teachMode;
+		if(!teachMode){
+			stationDisplay.setText(radio.getSource());
+		}
+		
+		//Set volume system states to current volume settings.
+		volumeDisplay.enabled = false;
+		volumeDisplay.setText("VOL        " + String.valueOf(radio.getVolume()));
 		volUpButton.enabled = radio.getVolume() < 10;
 		volDnButton.enabled = radio.getVolume() > 0;
-		
-		//Draw buttons.
-		for(GuiButton button : buttonList){
-			button.drawButton(mc, mouseX, mouseY, partialTicks);
-		}
-		
-		//Draw text boxes.
-		stationDisplay.drawTextBox();
-		volumeDisplay.drawTextBox();
 	}
 	
-	@Override
-    protected void actionPerformed(GuiButton buttonClicked) throws IOException{
-		super.actionPerformed(buttonClicked);
-		if(buttonClicked.equals(offButton)){
+	private void presetButtonClicked(GUIComponentButton buttonClicked){
+		int presetClicked = presetButtons.indexOf(buttonClicked);
+		//Enable the last-selected button if needed.
+		if(radio.getPresetSelected() != -1){
 			presetButtons.get(radio.getPresetSelected()).enabled = true;
-			radio.stopPlaying();
-			stationDisplay.setText("");
+		}
+		
+		if(teachMode){
+			RadioManager.setRadioStation(stationDisplay.getText(), presetClicked);
+			stationDisplay.setText("Station set to preset " + (presetClicked + 1));
 			teachMode = false;
-		}else if(buttonClicked.equals(localButton)){
-			localMode = true;
-			teachMode = false;
-			if(radio.getPresetSelected() != -1){
-				actionPerformed(offButton);
-			}
-		}else if(buttonClicked.equals(remoteButton)){
-			localMode = false;
-			if(radio.getPresetSelected() != -1){
-				actionPerformed(offButton);
-			}
-		}else if(buttonClicked.equals(randomButton)){
-			randomMode = true;
-		}else if(buttonClicked.equals(orderedButton)){
-			randomMode = false;
-		}else if(buttonClicked.equals(setButton)){
-			if(teachMode){
-				teachMode = false;
-				stationDisplay.setText("");
+		}else if(localMode){
+			String directory = RadioManager.getMusicDirectories().get(presetClicked);
+			if(!directory.isEmpty()){
+				stationDisplay.setText(directory);
+				radio.playLocal(directory, presetClicked, !randomMode);
+				buttonClicked.enabled = false;
 			}else{
-				teachMode = true;
-				stationDisplay.setText("Enter a URL and press a preset button.");
+				stationDisplay.setText("Fewer than " + (presetClicked + 1) + " folders in mts_music.");
 			}
-		}else if(buttonClicked.equals(volUpButton)){
-			radio.setVolume((byte) (radio.getVolume() + 1));
-		}else if(buttonClicked.equals(volDnButton)){
-			radio.setVolume((byte) (radio.getVolume() - 1));
-		}else if(presetButtons.contains(buttonClicked)){
-			int presetClicked = presetButtons.indexOf(buttonClicked);
-			//Enable the last-selected button if needed.
-			if(radio.getPresetSelected() != -1){
-				presetButtons.get(radio.getPresetSelected()).enabled = true;
-			}
-			
-			if(teachMode){
-				RadioManager.setRadioStation(stationDisplay.getText(), presetClicked);
-				stationDisplay.setText("Station set to preset " + (presetClicked + 1));
-				teachMode = false;
-			}else if(localMode){
-				String directory = RadioManager.getMusicDirectories().get(presetClicked);
-				if(!directory.isEmpty()){
-					stationDisplay.setText(directory);
-					radio.playLocal(directory, presetClicked, !randomMode);
+		}else{
+			String station = RadioManager.getRadioStations().get(presetClicked);
+			if(station.isEmpty()){
+				stationDisplay.setText("Press SET to teach a station.");
+			}else{
+				URL url = null;
+				try{
+					url = new URL(station);
+				}catch(Exception e){}
+				if(url == null || !radio.playInternet(url, presetClicked)){
+					stationDisplay.setText("INVALID URL!");
+					RadioManager.setRadioStation("", presetClicked);
+				}else{
+					stationDisplay.setText(station);
 					buttonClicked.enabled = false;
-				}else{
-					stationDisplay.setText("Fewer than " + (presetClicked + 1) + " folders in mts_music.");
-				}
-			}else{
-				String station = RadioManager.getRadioStations().get(presetClicked);
-				if(station.isEmpty()){
-					stationDisplay.setText("Press SET to teach a station.");
-				}else{
-					URL url = null;
-					try{
-						url = new URL(station);
-					}catch(Exception e){}
-					if(url == null || !radio.playInternet(url, presetClicked)){
-						stationDisplay.setText("INVALID URL!");
-						RadioManager.setRadioStation("", presetClicked);
-					}else{
-						stationDisplay.setText(station);
-						buttonClicked.enabled = false;
-					}
 				}
 			}
 		}
-	}
-	
-	
-    @Override
-    protected void mouseClicked(int x, int y, int button) throws IOException{
-    	super.mouseClicked(x, y, button);
-    	stationDisplay.mouseClicked(x, y, button);
-    }
-	
-    @Override
-    protected void keyTyped(char key, int bytecode) throws IOException {
-    	super.keyTyped(key, bytecode);
-    	if(stationDisplay.isFocused()){
-    		stationDisplay.textboxKeyTyped(key, bytecode);
-    	}
-    }
-	
-	@Override
-	public boolean doesGuiPauseGame(){
-		return false;
 	}
 }

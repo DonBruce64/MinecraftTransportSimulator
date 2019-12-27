@@ -8,6 +8,7 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.packets.tileentities.PacketTrafficSignalControllerChange;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiButton;
@@ -27,10 +28,10 @@ public class GUITrafficSignalController extends GUIBase{
 	private final List<GuiTextField> textList = new ArrayList<GuiTextField>();
 	
 	//Buttons.
-	private GUIButton scanButton;
-	private GUIButton orientationButton;
-	private GUIButton modeButton;
-	private GUIButton confirmButton;
+	private GUIComponentButton scanButton;
+	private GUIComponentButton orientationButton;
+	private GUIComponentButton modeButton;
+	private GUIComponentButton confirmButton;
 	
 	//Input boxes
 	private GuiTextField scanDistanceText;
@@ -52,10 +53,10 @@ public class GUITrafficSignalController extends GUIBase{
 		guiLeft = (this.width - 256)/2;
 		guiTop = (this.height - 192)/2;
 		
-		buttonList.add(scanButton = new GUIButton(guiLeft + 25, guiTop + 30, 200, I18n.format("gui.trafficsignalcontroller.scan")));
-		buttonList.add(orientationButton = new GUIButton(guiLeft + 125, guiTop + 70, 100, ""));
-		buttonList.add(modeButton = new GUIButton(guiLeft + 125, guiTop + 90, 100, ""));
-		buttonList.add(confirmButton = new GUIButton(guiLeft + 25, guiTop + 160, 80, I18n.format("gui.trafficsignalcontroller.confirm")));
+		buttonList.add(scanButton = new GUIComponentButton(guiLeft + 25, guiTop + 30, 200, I18n.format("gui.trafficsignalcontroller.scan")));
+		buttonList.add(orientationButton = new GUIComponentButton(guiLeft + 125, guiTop + 70, 100, ""));
+		buttonList.add(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 90, 100, ""));
+		buttonList.add(confirmButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 80, I18n.format("gui.trafficsignalcontroller.confirm")));
 		
 		textList.add(scanDistanceText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 15, 40, 10));
 		scanDistanceText.setText("25");

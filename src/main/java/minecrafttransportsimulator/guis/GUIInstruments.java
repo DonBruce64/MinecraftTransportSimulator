@@ -16,11 +16,12 @@ import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
 import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
-public class GUIInstruments extends GUIBase{
+public class GUIInstruments extends GuiScreen{
 	private final EntityVehicleE_Powered vehicle;
 	private final EntityPlayer player;
 	

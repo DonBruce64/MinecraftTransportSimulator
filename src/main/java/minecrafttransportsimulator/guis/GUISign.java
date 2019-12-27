@@ -15,13 +15,14 @@ import minecrafttransportsimulator.dataclasses.PackSignObject;
 import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 
-public class GUISign extends GUIBase{
+public class GUISign extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting.png");	
 	private final EntityPlayer player;
 	private final TileEntityPoleSign sign;
