@@ -19,13 +19,12 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
-public class GUIManual extends GuiScreen{
+public class GUIManual extends GUIBase{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/manual_pages.png");
 	private static final ResourceLocation cover = new ResourceLocation(MTS.MODID, "textures/guis/manual_cover.png");
 	
@@ -38,8 +37,8 @@ public class GUIManual extends GuiScreen{
 	private final NBTTagCompound stackTag;
 	private final byte totalPages;
 	
-	private GuiButton leftButton;
-	private GuiButton rightButton;
+	private GUIButton leftButton;
+	private GUIButton rightButton;
 	
 	//These are only used in devMode for making fake item icons from models for item icon images.
 	int xOffset = 160;
@@ -75,8 +74,8 @@ public class GUIManual extends GuiScreen{
 		guiTop = (this.height - 180)/2;
 		leftSideOffset = guiLeft + 20;
 		rightSideOffset = guiLeft + 155;
-		buttonList.add(leftButton = new GuiButton(0, guiLeft + 10, guiTop + 150, 20, 20, "<"));
-		buttonList.add(rightButton = new GuiButton(0, guiLeft + 250, guiTop + 150, 20, 20, ">"));
+		buttonList.add(leftButton = new GUIButton(guiLeft + 15, guiTop + 150, 20, "<"));
+		buttonList.add(rightButton = new GUIButton(guiLeft + 245, guiTop + 150, 20, ">"));
 	}
 	
 	@Override

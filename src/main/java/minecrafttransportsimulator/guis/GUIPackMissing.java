@@ -4,14 +4,9 @@ import java.awt.Color;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.MTS;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.util.ResourceLocation;
 
-public class GUIPackMissing extends GuiScreen{
-	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/wide_blank.png");
-	
+public class GUIPackMissing extends GUIBase{	
 	private int guiLeft;
 	private int guiTop;
 	
@@ -27,7 +22,7 @@ public class GUIPackMissing extends GuiScreen{
 		super.drawScreen(mouseX, mouseY, renderPartialTicks);
 		GL11.glColor3f(1, 1, 1);
 		this.drawDefaultBackground();
-		mc.getTextureManager().bindTexture(background);
+		mc.getTextureManager().bindTexture(standardTexture);
 		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 192);
 		
 		if(mc.world.getTotalWorldTime()%40 > 20){

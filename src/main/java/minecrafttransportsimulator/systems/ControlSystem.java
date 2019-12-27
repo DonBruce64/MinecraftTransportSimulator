@@ -201,8 +201,8 @@ public final class ControlSystem{
 		return 0;
 	}
 	
-	private static void controlCamera(ControlsKeyboardDynamic dynamic, ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsJoystick hudMode, ControlsJoystick changeView){
-		if(dynamic.isPressed() || hudMode.isPressed()){
+	private static void controlCamera(ControlsKeyboardDynamic dynamic, ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsJoystick changeView){
+		if(dynamic.isPressed()){
 			if(CameraSystem.hudMode == 3){
 				CameraSystem.hudMode = 0;
 			}else{
@@ -324,7 +324,7 @@ public final class ControlSystem{
 	}
 	
 	private static void controlAircraft(EntityVehicleF_Air aircraft, boolean isPlayerController){
-		controlCamera(ControlsKeyboardDynamic.AIRCRAFT_CHANGEHUD, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEHUD, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
+		controlCamera(ControlsKeyboardDynamic.AIRCRAFT_CHANGEHUD, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
 		controlRadio(aircraft, ControlsKeyboard.AIRCRAFT_RADIO);
 		controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN);
@@ -445,7 +445,7 @@ public final class ControlSystem{
 	private static long lastTickTurnLeftPressed = 0;
 	private static long lastTickTurnRightPressed = 0;
 	private static void controlGroundVehicle(EntityVehicleF_Ground powered, boolean isPlayerController){
-		controlCamera(ControlsKeyboardDynamic.CAR_CHANGEHUD, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEHUD, ControlsJoystick.CAR_CHANGEVIEW);
+		controlCamera(ControlsKeyboardDynamic.CAR_CHANGEHUD, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
 		controlRadio(powered, ControlsKeyboard.CAR_RADIO);
 		controlGun(powered, ControlsKeyboard.CAR_GUN);
@@ -617,7 +617,6 @@ public final class ControlSystem{
 		AIRCRAFT_ZOOM_I(false, true),
 		AIRCRAFT_ZOOM_O(false, true),
 		AIRCRAFT_CHANGEVIEW(false, true),
-		AIRCRAFT_CHANGEHUD(false, true),
 		AIRCRAFT_LOOK_L(false, false),
 		AIRCRAFT_LOOK_R(false, false),
 		AIRCRAFT_LOOK_U(false, false),
@@ -648,7 +647,6 @@ public final class ControlSystem{
 		CAR_ZOOM_I(false, true),
 		CAR_ZOOM_O(false, true),
 		CAR_CHANGEVIEW(false, true),
-		CAR_CHANGEHUD(false, true),
 		CAR_LOOK_L(false, false),
 		CAR_LOOK_R(false, false),
 		CAR_LOOK_U(false, false),

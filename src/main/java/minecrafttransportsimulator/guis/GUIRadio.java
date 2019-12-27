@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.guis;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -10,31 +9,25 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.radio.Radio;
 import minecrafttransportsimulator.radio.RadioContainer;
 import minecrafttransportsimulator.radio.RadioManager;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.ResourceLocation;
 
-public class GUIRadio extends GuiScreen{
-	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/standard.png");	
-	
+public class GUIRadio extends GUIBase{	
 	//Global variables for rendering.
 	private int guiLeft;
 	private int guiTop;
 	
 	//Buttons.
-	private GuiRadioButton offButton;
-	private GuiRadioButton localButton;
-	private GuiRadioButton remoteButton;
-	private GuiRadioButton serverButton;
-	private GuiRadioButton randomButton;
-	private GuiRadioButton orderedButton;
-	private GuiRadioButton setButton;
-	private GuiRadioButton volUpButton;
-	private GuiRadioButton volDnButton;
-	private List<GuiRadioButton> presetButtons = new ArrayList<GuiRadioButton>();
+	private GUIButton offButton;
+	private GUIButton localButton;
+	private GUIButton remoteButton;
+	private GUIButton serverButton;
+	private GUIButton randomButton;
+	private GUIButton orderedButton;
+	private GUIButton setButton;
+	private GUIButton volUpButton;
+	private GUIButton volDnButton;
+	private List<GUIButton> presetButtons = new ArrayList<GUIButton>();
 	
 	//Input boxes
 	private GuiTextField stationDisplay;
@@ -58,20 +51,19 @@ public class GUIRadio extends GuiScreen{
 		guiLeft = (this.width - 256)/2;
 		guiTop = (this.height - 192)/2;
 		
-		buttonList.add(offButton = new GuiRadioButton(guiLeft + 15, guiTop + 20, 45, "OFF"));
-		buttonList.add(localButton = new GuiRadioButton(guiLeft + 15, guiTop + 40, 45, "FOLDER"));
-		buttonList.add(remoteButton = new GuiRadioButton(guiLeft + 15, guiTop + 60, 45, "RADIO"));
-		buttonList.add(serverButton = new GuiRadioButton(guiLeft + 15, guiTop + 80, 45, "SERVER"));
-		buttonList.add(randomButton = new GuiRadioButton(guiLeft + 80, guiTop + 30, 45, "RANDOM"));
-		buttonList.add(orderedButton = new GuiRadioButton(guiLeft + 80, guiTop + 50, 45, "SORTED"));
-		buttonList.add(setButton = new GuiRadioButton(guiLeft + 190, guiTop + 90, 45, "SET"));
-		buttonList.add(volUpButton = new GuiRadioButton(guiLeft + 205, guiTop + 20, 30, "UP"));
-		buttonList.add(volDnButton = new GuiRadioButton(guiLeft + 205, guiTop + 40, 30, "DN"));
+		buttonList.add(offButton = new GUIButton(guiLeft + 15, guiTop + 20, 45, "OFF"));
+		buttonList.add(localButton = new GUIButton(guiLeft + 15, guiTop + 40, 45, "FOLDER"));
+		buttonList.add(remoteButton = new GUIButton(guiLeft + 15, guiTop + 60, 45, "RADIO"));
+		buttonList.add(serverButton = new GUIButton(guiLeft + 15, guiTop + 80, 45, "SERVER"));
+		buttonList.add(randomButton = new GUIButton(guiLeft + 80, guiTop + 30, 45, "RANDOM"));
+		buttonList.add(orderedButton = new GUIButton(guiLeft + 80, guiTop + 50, 45, "SORTED"));
+		buttonList.add(setButton = new GUIButton(guiLeft + 190, guiTop + 90, 45, "SET"));
+		buttonList.add(volUpButton = new GUIButton(guiLeft + 205, guiTop + 20, 30, "UP"));
+		buttonList.add(volDnButton = new GUIButton(guiLeft + 205, guiTop + 40, 30, "DN"));
 		
 		int x = 25;
 		for(byte i=1; i<7; ++i){
-			GuiRadioButton presetButton = new GuiRadioButton(guiLeft + x, guiTop + 150, 35, String.valueOf(i));
-			presetButtons.add(presetButton);
+			presetButtons.add(new GUIButton(guiLeft + x, guiTop + 150, 35, String.valueOf(i)));
 			x += 35;
 		}
 		buttonList.addAll(presetButtons);
@@ -85,7 +77,7 @@ public class GUIRadio extends GuiScreen{
 	@Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks){		
 		//Draw Background.
-		this.mc.getTextureManager().bindTexture(background);
+		this.mc.getTextureManager().bindTexture(standardTexture);
 		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 192);
 				
 		//Enable station entry if wa are in teach mode.
@@ -210,39 +202,4 @@ public class GUIRadio extends GuiScreen{
 	public boolean doesGuiPauseGame(){
 		return false;
 	}
-    
-    /**Custom button class.  This allows ups to use a custom texture.**/
-    private class GuiRadioButton extends GuiButton{
-		private static final int BUTTON_TEXTURE_U_OFFSET = 196;
-		private static final int BUTTON_TEXTURE_WIDTH = 200;
-		private static final int BUTTON_TEXTURE_HEIGHT = 20;
-		    	
-    	public GuiRadioButton(int x, int y, int width, String text){
-    		super(0, x, y, width, 20, text);
-    	}
-
-    	@Override
-        public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks){
-    		//super.drawButton(mc, mouseX, mouseY, partialTicks);
-            if(this.visible){
-            	if(visible){
-            		GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            		mc.getTextureManager().bindTexture(background);
-    				if(enabled){
-    					if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
-    			            drawTexturedModalRect(x, y, 0, BUTTON_TEXTURE_U_OFFSET + 2*BUTTON_TEXTURE_HEIGHT, width / 2, height);
-    			            drawTexturedModalRect(x + width / 2, y, BUTTON_TEXTURE_WIDTH - width / 2, BUTTON_TEXTURE_U_OFFSET + 2*BUTTON_TEXTURE_HEIGHT, width / 2, height);
-    					}else{
-    						drawTexturedModalRect(x, y, 0, BUTTON_TEXTURE_U_OFFSET + BUTTON_TEXTURE_HEIGHT, width / 2, height);
-    						drawTexturedModalRect(x + width / 2, y, BUTTON_TEXTURE_WIDTH - width / 2, BUTTON_TEXTURE_U_OFFSET + BUTTON_TEXTURE_HEIGHT, width / 2, height);
-    					}
-    				}else{
-    					drawTexturedModalRect(x, y, 0, BUTTON_TEXTURE_U_OFFSET, width / 2, height);
-						drawTexturedModalRect(x + width / 2, y, BUTTON_TEXTURE_WIDTH - width / 2, BUTTON_TEXTURE_U_OFFSET, width / 2, height);
-    				}
-    				this.drawCenteredString(mc.fontRenderer, displayString, x + width / 2, y + (height - 8) / 2, Color.GRAY.getRGB());
-    			}
-            }
-        }
-    }
 }

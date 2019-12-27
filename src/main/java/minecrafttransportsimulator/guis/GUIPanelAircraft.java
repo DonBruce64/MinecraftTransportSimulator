@@ -23,7 +23,6 @@ import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartEngineJet;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
 
@@ -32,7 +31,7 @@ import net.minecraft.util.ResourceLocation;
  * 
  * @author don_bruce
  */
-public class GUIPanelAircraft extends GuiScreen{
+public class GUIPanelAircraft extends GUIBase{
 	private static final ResourceLocation toggleOn = new ResourceLocation("textures/blocks/redstone_lamp_on.png");
 	private static final ResourceLocation toggleOff = new ResourceLocation("textures/blocks/redstone_lamp_off.png");
 	private static final LightTypes[] lights = new LightTypes[]{LightTypes.NAVIGATIONLIGHT, LightTypes.STROBELIGHT, LightTypes.TAXILIGHT, LightTypes.LANDINGLIGHT};
