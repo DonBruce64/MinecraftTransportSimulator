@@ -317,7 +317,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			}else if(state.equals(EngineStates.RUNNING)){
 				state = EngineStates.ENGINE_OFF;
 				internalFuel = 100;
-				MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
+				MTS.proxy.playSound(partPos, partName + "_stopping", 1, 1);
 			}
 		}
 	}
@@ -401,7 +401,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(!packetType.equals(PacketEngineTypes.DROWN)){
 				internalFuel = 100;
 			}
-			MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
+			MTS.proxy.playSound(partPos, partName + "_stopping", 1, 1);
 		}
 	}
 	
