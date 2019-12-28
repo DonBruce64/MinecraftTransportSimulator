@@ -19,21 +19,23 @@ public abstract class GUIComponentButton{
 	public final int y;
 	public final int width;
 	public final int height;
+	public final boolean centeredText;
 	
 	public boolean visible = true;
 	public boolean enabled = true;
 	public String text;
 	    	
 	public GUIComponentButton(int x, int y, int width, String text){
-		this(x, y, width, text, 20);
+		this(x, y, width, text, 20, true);
 	}
 	
-	public GUIComponentButton(int x, int y, int width, String text, int height){
+	public GUIComponentButton(int x, int y, int width, String text, int height, boolean centeredText){
 		this.x = x;
 		this.y = y;
 		this.width = width;
 		this.height = height;
 		this.text = text;
+		this.centeredText = centeredText;
 	}
 	
 	/**
@@ -91,7 +93,7 @@ public abstract class GUIComponentButton{
 	 */
     public void renderText(GUIBase currentGUI){
     	if(visible){
-    		currentGUI.drawText(text, x + width/2, y + (height-8)/2, Color.DARK_GRAY, true, false, -1);
+    		currentGUI.drawText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText, false, -1);
     	}
     }
 }

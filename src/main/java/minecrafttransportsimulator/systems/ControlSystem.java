@@ -35,6 +35,7 @@ import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -105,6 +106,10 @@ public final class ControlSystem{
 	
 	public static String getNameForKeyCode(int keyCode){
 		return Keyboard.getKeyName(keyCode);
+	}
+	
+	public static String getTranslatedNameForButtonName(String buttonName){
+		return I18n.format(buttonName);
 	}
 	
 	public static void setKeyboardKey(ControlsKeyboard control, int keyNumber){
