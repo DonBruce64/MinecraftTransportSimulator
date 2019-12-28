@@ -229,11 +229,6 @@ public class GUIManual extends GUIBase{
 		stack.setTagCompound(stackTag);
 	}
 	
-	@Override
-	public boolean doesGuiPauseGame(){
-		return false;
-	}
-	
 	/**
 	 * We also use the mouse wheel for selections as well as buttons.
 	 * Forward the call to the button input system for processing.

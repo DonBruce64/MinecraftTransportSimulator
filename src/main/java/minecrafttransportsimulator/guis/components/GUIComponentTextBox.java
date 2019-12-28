@@ -57,52 +57,49 @@ public class GUIComponentTextBox{
 	/**
 	 *  Handles the current key input.  Depending on the key, this will either add 
 	 *  the typed character to the text, delete a character, or change the current
-	 *  cursor position.  This method  checks if the box is focused, so it may safely be called 
-	 *  with all other  boxes in a loop.  Note that keyCode is one of the pre-defined {@link TextBoxControlKey}s.
+	 *  cursor position.  Note that keyCode is one of the pre-defined {@link TextBoxControlKey}s.
 	 *  This allows for consistent handling of inputs locally, and makes it up to the caller of
 	 *  this function to decide what inputs constitute the control keys.  The main reason
 	 *  for this is that it prevents the need to call in any specific LWJGL libraries that may
 	 *  or may not change for the heck of it.
 	 */
-	public void handleKeyTyped(char typedChar, TextBoxControlKey control){
-		if(focused){
-			//Handle control operation, or basic key typed.
-			if(control != null){
-				if(control.equals(TextBoxControlKey.BACKSPACE)){
-					if(position != 0){
-						//Remove the char before the current position.
-						text = text.substring(0, position - 1) + text.substring(position, text.length());
-						--position;
-					}
-				}else if(control.equals(TextBoxControlKey.DELETE)){
-					if(position != text.length()){
-						//Remove the char at the current position.
-						text = text.substring(0, position) + text.substring(position + 1, text.length());
-					}
-				}else if(control.equals(TextBoxControlKey.LEFT)){
-					if(position > 0){
-						--position;
-					}
-				}else if(control.equals(TextBoxControlKey.RIGHT)){
-					if(position < text.length()){
-						++position;
-					}
+	public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control){
+		//Handle control operation, or basic key typed.
+		if(control != null){
+			if(control.equals(TextBoxControlKey.BACKSPACE)){
+				if(position != 0){
+					//Remove the char before the current position.
+					text = text.substring(0, position - 1) + text.substring(position, text.length());
+					--position;
 				}
-			}else if(Character.isLetterOrDigit(typedChar) || VALID_SPECIAL_CHARS.contains(Character.toString(typedChar))){
-				if(text.length() < maxTextLength){
-					text = text.substring(0, position) + typedChar + text.substring(position, text.length());
+			}else if(control.equals(TextBoxControlKey.DELETE)){
+				if(position != text.length()){
+					//Remove the char at the current position.
+					text = text.substring(0, position) + text.substring(position + 1, text.length());
+				}
+			}else if(control.equals(TextBoxControlKey.LEFT)){
+				if(position > 0){
+					--position;
+				}
+			}else if(control.equals(TextBoxControlKey.RIGHT)){
+				if(position < text.length()){
 					++position;
 				}
 			}
-			
-			//Update flashText;
-			if(text.isEmpty()){
-				flashText = "_";
-			}else if(position == text.length()){
-				flashText = text + "_";
-			}else{
-				flashText = text.substring(0, position) + "_" + text.substring(position + 1, text.length());
+		}else if(Character.isLetterOrDigit(typedChar) || VALID_SPECIAL_CHARS.contains(Character.toString(typedChar))){
+			if(text.length() < maxTextLength){
+				text = text.substring(0, position) + typedChar + text.substring(position, text.length());
+				++position;
 			}
+		}
+		
+		//Update flashText;
+		if(text.isEmpty()){
+			flashText = "_";
+		}else if(position == text.length()){
+			flashText = text + "_";
+		}else{
+			flashText = text.substring(0, position) + "_" + text.substring(position + 1, text.length());
 		}
 	}
 	
@@ -151,14 +148,16 @@ public class GUIComponentTextBox{
     		if(backgroundColor != null){
     			GUIBase.renderRectangle(x, y, width, height, backgroundColor);
     		}
+    		//If this box is less than 20px high, center the text.
+    		//Otherwise, render it at the top aligned.
     		if(enabled){
     			if(focused && currentGUI.inClockPeriod(20, 10)){
-    				currentGUI.drawText(String.format(flashText), x + 4, y + 5, fontColor, false, false, width);
+    				currentGUI.drawText(String.format(flashText), x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, false, false, width);
     			}else{
-    				currentGUI.drawText(String.format(text), x + 4, y + 5, fontColor, false, false, width);
+    				currentGUI.drawText(String.format(text), x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, false, false, width);
     			}
     		}else{
-    			currentGUI.drawText(String.format(text), x + 4, y + 5, Color.GRAY, false, false, width);
+    			currentGUI.drawText(String.format(text), x + 4, y + (height >= 20 ? 5 : 1 + height/10), Color.GRAY, false, false, width);
     		}
     	}
     }

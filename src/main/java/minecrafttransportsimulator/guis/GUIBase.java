@@ -139,11 +139,11 @@ public abstract class GUIBase extends GuiScreen{
 					textBox.setText(getClipboardString());
 				}else{
 					switch(keyCode){
-						case Keyboard.KEY_BACK: textBox.handleKeyTyped(key, TextBoxControlKey.BACKSPACE); continue;
-						case Keyboard.KEY_DELETE: textBox.handleKeyTyped(key, TextBoxControlKey.DELETE); continue;
-						case Keyboard.KEY_LEFT: textBox.handleKeyTyped(key, TextBoxControlKey.LEFT); continue;
-						case Keyboard.KEY_RIGHT: textBox.handleKeyTyped(key, TextBoxControlKey.RIGHT); continue;
-						default: textBox.handleKeyTyped(key, null); continue;
+						case Keyboard.KEY_BACK: textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.BACKSPACE); continue;
+						case Keyboard.KEY_DELETE: textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.DELETE); continue;
+						case Keyboard.KEY_LEFT: textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.LEFT); continue;
+						case Keyboard.KEY_RIGHT: textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.RIGHT); continue;
+						default: textBox.handleKeyTyped(key, keyCode, null); continue;
 					}
 				}
 			}

@@ -103,6 +103,10 @@ public final class ControlSystem{
 		return joystickEnabled;
 	}
 	
+	public static String getNameForKeyCode(int keyCode){
+		return Keyboard.getKeyName(keyCode);
+	}
+	
 	public static void setKeyboardKey(ControlsKeyboard control, int keyNumber){
 		control.button = keyNumber;
 		ConfigSystem.config.getCategory(KEYBOARD_CONFIG).put(control.buttonName, new Property(control.buttonName, String.valueOf(keyNumber), Property.Type.INTEGER));

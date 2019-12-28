@@ -3,14 +3,13 @@ package minecrafttransportsimulator.guis;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.lwjgl.input.Keyboard;
-
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
@@ -25,23 +24,25 @@ import net.minecraft.client.resources.I18n;
 public class GUIConfig extends GUIBase{
 	//Global variables.
 	private boolean changedThisTick;
-	private int guiLeft;
-	private int guiTop;	
 	private GUIComponentButton configScreenButton;
 	private GUIComponentButton controlScreenButton;
 	
 	//Config variables.
 	private boolean configuringControls = true;
-	private Map<GUIComponentButton, ConfigButtons> configButtons = new HashMap<GUIComponentButton, ConfigButtons>();
+	private Map<GUIComponentButton, String> configButtons = new HashMap<GUIComponentButton, String>();
 	
 	//Keybind selection variables.
 	private String vehicleConfiguring = "";
+	private String[] vehicleTypes = new String[]{"car", "aircraft"};
 	private Map<GUIComponentButton, String> vehicleSelectionButtons = new HashMap<GUIComponentButton, String>();
+	private GUIComponentLabel vehicleSelectionLabel;
+	private GUIComponentLabel vehicleSelectionFaultLabel;
 	private GUIComponentButton finishKeyboardBindingsButton;
 	
 	//Keyboard assignment variables.
 	private boolean configuringKeyboard;
-	private Map<ControlsKeyboard, GuiTextField> keyboardBoxes = new HashMap<ControlsKeyboard, GuiTextField>();
+	private Map<String, Map<GUIComponentTextBox, ControlsKeyboard>> keyboardBoxes = new HashMap<String, Map<GUIComponentTextBox, ControlsKeyboard>>();
+	private Map<String, Map<GUIComponentLabel, ControlsKeyboardDynamic>> keyboardLabels = new HashMap<String, Map<GUIComponentLabel, ControlsKeyboardDynamic>>();
 	
 	//Joystick selection variables.
 	private Map<GUIComponentButton, Controller> joystickSelectionButtons = new HashMap<GUIComponentButton, Controller>();
@@ -79,92 +80,192 @@ public class GUIConfig extends GUIBase{
 		this.allowUserInput=true;
 	}
 	
-	@Override 
-	public void initGui(){
-		super.initGui();
-		guiLeft = (this.width - 256)/2;
-		guiTop = (this.height - 192)/2;
+	@Override
+	public void setupComponents(int guiLeft, int guiTop){
+		//Global header buttons.
+		addButton(configScreenButton = new GUIComponentButton(guiLeft + 0, guiTop - 20, 128, translate("config.header.config")){public void onClicked(){configuringControls = false; vehicleConfiguring = "";}});
+		addButton(controlScreenButton = new GUIComponentButton(guiLeft + 128, guiTop - 20, 128, translate("config.header.controls")){public void onClicked(){configuringControls = true;}});
 		
-		//Create ALL the buttons & boxes.
-		initHeaderButtons();
-		initConfigButtons();
-		initVehicleSelectionButtons();
-		initJoystickSelecionButtons();
-		initJoystickComponentSelecionButtons();
-		initAssignmentButtons();
+		//Config buttons and text.
+		configButtons.clear();
+		for(String configName : new String[]{"Sea Level Offset", "Mouse Yoke", "Inner Windows", "Keyboard Override"}){
+			String formattedConfigName = configName.replace(" ", "");
+			GUIComponentButton button = new GUIComponentButton(guiLeft+140, guiTop+20+configButtons.size()*20, 60, String.valueOf(ConfigSystem.getBooleanConfig(formattedConfigName))){
+				public void onClicked(){
+					System.out.println(configButtons.get(this));
+					ConfigSystem.setClientConfig(configButtons.get(this), !Boolean.valueOf(text));
+					text = String.valueOf(ConfigSystem.getBooleanConfig(configButtons.get(this)));
+				}
+			};
+			addButton(button);
+			configButtons.put(button, configName.replace(" ", ""));
+			addLabel(new GUIComponentLabel(guiLeft+15, button.y + 5, Color.WHITE, configName).setButton(button));
+		}
+		
+		//Vehicle selection buttons and text.
+		//We only have two types.  Car and aircraft.
+		vehicleSelectionButtons.clear();
+		addLabel(vehicleSelectionLabel = new GUIComponentLabel(guiLeft+20, guiTop+10, Color.BLACK, translate("config.controls.title")));
+		addLabel(vehicleSelectionFaultLabel = new GUIComponentLabel(guiLeft+10, guiTop+110, Color.BLACK, translate("config.joystick.error"), 1.0F, false, false, 240));
+		for(String vehicleType : vehicleTypes){
+			GUIComponentButton buttonKeyboard = new GUIComponentButton(guiLeft + 68, guiTop + 30 + 20*(vehicleSelectionButtons.size()/(ControlSystem.isJoystickSupportEnabled() ? 2 : 1)), 120, translate("config.controls." + vehicleType + ".keyboard")){
+				public void onClicked(){
+					String lookupString = vehicleSelectionButtons.get(this);
+					vehicleConfiguring = lookupString.substring(0, lookupString.indexOf('.'));
+					configuringKeyboard = true;
+				}
+			};
+			vehicleSelectionButtons.put(buttonKeyboard, vehicleType + ".keyboard");
+			addButton(buttonKeyboard);
+			if(ControlSystem.isJoystickSupportEnabled()){
+				GUIComponentButton buttonJoystick = new GUIComponentButton(guiLeft + 68, guiTop + 90 + 20*(vehicleSelectionButtons.size()/2), 120, translate("config.controls." + vehicleType + ".joystick")){
+					public void onClicked(){
+						String lookupString = vehicleSelectionButtons.get(this);
+						vehicleConfiguring = lookupString.substring(0, lookupString.indexOf('.'));
+						configuringKeyboard = false;
+					}
+				};
+				vehicleSelectionButtons.put(buttonJoystick,  vehicleType + ".joystick");
+				addButton(buttonJoystick);
+			}
+		}
+		
+		//Keyboard buttons and text.
+		keyboardBoxes.clear();
+		for(String vehicleType : vehicleTypes){
+			//First add the editable controls.
+			int verticalOffset = 20;
+			int horizontalOffset = 80;
+			Map<GUIComponentTextBox, ControlsKeyboard> boxesForVehicle = new HashMap<GUIComponentTextBox, ControlsKeyboard>();
+			for(ControlsKeyboard keyboardControl : ControlSystem.ControlsKeyboard.values()){
+				if(keyboardControl.name().toLowerCase().contains(vehicleType)){
+					//First create the text box for input.
+					GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + horizontalOffset, guiTop + verticalOffset, 40, "", 10, Color.WHITE, Color.BLACK, 5){
+						public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control){
+							setText(ControlSystem.getNameForKeyCode(typedCode));
+		        			ControlSystem.setKeyboardKey(keyboardBoxes.get(vehicleConfiguring).get(this), typedCode);
+		        			focused = false;
+						};
+					};
+					boxesForVehicle.put(box, keyboardControl);
+					addTextBox(box);
+					
+					//Now create the label.
+					addLabel(new GUIComponentLabel(box.x - 70, box.y + 2, Color.BLACK, I18n.format(keyboardControl.buttonName) + ":").setBox(box));
+					
+					verticalOffset += 11;
+					if(verticalOffset > 20 + 11*8){
+						verticalOffset = 20;
+						horizontalOffset += 120;
+					}
+				}
+			}
+			keyboardBoxes.put(vehicleType, boxesForVehicle);
+			
+			//Now add the dynamic controls.
+			byte offset = 0;
+			Map<GUIComponentLabel, ControlsKeyboardDynamic> dynamicLabels = new HashMap<GUIComponentLabel, ControlsKeyboardDynamic>();
+			for(ControlsKeyboardDynamic dynamicControl : ControlsKeyboardDynamic.values()){
+				if(dynamicControl.name().toLowerCase().contains(vehicleType)){
+					GUIComponentLabel label = new GUIComponentLabel(guiLeft + 10, guiTop + 125 + offset, Color.BLACK, ""); 
+					dynamicLabels.put(label, dynamicControl);
+					addLabel(label);
+					offset+=11;
+				}
+			}
+			keyboardLabels.put(vehicleType, dynamicLabels);
+		}
+		addButton(finishKeyboardBindingsButton = new GUIComponentButton(guiLeft + 180, guiTop + 150, 50, translate("config.controls.confirm")){public void onClicked(){vehicleConfiguring = "";}});
+		
+		//Joystick selection buttons and text.
+		
+		
+		//initJoystickSelecionButtons(guiLeft, guiTop);
+		//initJoystickComponentSelecionButtons(guiLeft, guiTop);
+		//initAssignmentButtons(guiLeft, guiTop);
+	}
+	
+	@Override
+	public void setStates(){
+		//Global headers are just toggles depending on operation.
+		configScreenButton.enabled = configuringControls;
+		controlScreenButton.enabled = !configScreenButton.enabled;
+		
+		//If we are not configuring controls, render the config buttons and labels.
+		for(GUIComponentButton button : configButtons.keySet()){
+			button.visible = !configuringControls;
+		}
+		
+		//If we are configuring controls, and haven't selected a vehicle, render the vehicle selection components.
+		vehicleSelectionLabel.visible = configuringControls && vehicleConfiguring.isEmpty();
+		vehicleSelectionFaultLabel.visible = !ControlSystem.isJoystickSupportEnabled();
+		for(GUIComponentButton button : vehicleSelectionButtons.keySet()){
+			button.visible = configuringControls && vehicleConfiguring.isEmpty();
+		}
+		
+		//If we have selected a vehicle, and are configuring a keyboard, render the keyboard controls.
+		//Only enable the boxes and labels for the vehicle we are configuring, however.
+		//If a box is focused, we should set the text to a blank value.
+		finishKeyboardBindingsButton.visible = configuringControls && !vehicleConfiguring.isEmpty() && configuringKeyboard;
+		for(String vehicleType : keyboardBoxes.keySet()){
+			for(GUIComponentTextBox textBox : keyboardBoxes.get(vehicleType).keySet()){
+				textBox.visible = finishKeyboardBindingsButton.visible && vehicleType.equals(vehicleConfiguring);
+				if(textBox.focused){
+					textBox.setText("");
+				}else{
+					textBox.setText(keyboardBoxes.get(vehicleType).get(textBox).getCurrentButton());
+				}
+			}
+			for(GUIComponentLabel label : keyboardLabels.get(vehicleType).keySet()){
+				label.visible = finishKeyboardBindingsButton.visible && vehicleType.equals(vehicleConfiguring);
+				ControlsKeyboardDynamic dynamicControl = keyboardLabels.get(vehicleType).get(label);
+				label.text = I18n.format(dynamicControl.buttonName) + ": " + dynamicControl.modControl.getCurrentButton() + " + " + dynamicControl.mainControl.getCurrentButton();
+			}
+		}
 	}
 	
 	@Override
     public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
+		super.drawScreen(mouseX, mouseY, renderPartialTicks);
 		changedThisTick = false;
-		for(GuiTextField box : keyboardBoxes.values()){
-			box.setEnabled(false);
-		}
-		for(GuiButton button : buttonList){
-			button.enabled = false;
-		}
-		
-		this.mc.getTextureManager().bindTexture(standardTexture);
-		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 192);
-		
-		configScreenButton.enabled = configuringControls;
-		controlScreenButton.enabled = !configScreenButton.enabled;
-		configScreenButton.drawButton(mc, mouseX, mouseY, 0);
-		controlScreenButton.drawButton(mc, mouseX, mouseY, 0);
 		
 		if(configuringControls){
 			if(vehicleConfiguring.isEmpty()){
-				drawVehicleSelectionScreen(mouseX, mouseY, renderPartialTicks);
+				
 			}else{
 				if(configuringKeyboard){
-					drawKeyboardScreen(mouseX, mouseY, renderPartialTicks);
+					
 				}else{
 					if(joystick == null){
-						drawJoystickSelectionScreen(mouseX, mouseY, renderPartialTicks);
+//						drawJoystickSelectionScreen(mouseX, mouseY, renderPartialTicks);
 					}else{
 						if(joystickComponentId == -1){
-							drawJoystickComponentSelectionScreen(mouseX, mouseY, renderPartialTicks);
+	//						drawJoystickComponentSelectionScreen(mouseX, mouseY, renderPartialTicks);
 						}else{
 							if(isDigital){
-								drawDigitalAssignmentScreen(mouseX, mouseY, renderPartialTicks);
+		//						drawDigitalAssignmentScreen(mouseX, mouseY, renderPartialTicks);
 							}else{
 								if(!calibrating){
-									drawAnalogAssignmentScreen(mouseX, mouseY, renderPartialTicks);
+			//						drawAnalogAssignmentScreen(mouseX, mouseY, renderPartialTicks);
 								}else{
-									drawAnalogCalibrationScreen(mouseX, mouseY, renderPartialTicks);
+				//					drawAnalogCalibrationScreen(mouseX, mouseY, renderPartialTicks);
 								}
 							}
 						}
 					}
 				}
 			}
-		}else{
-			drawConfigScreen(mouseX, mouseY, renderPartialTicks);
 		}
 	}
 	
 	@Override
     protected void actionPerformed(GuiButton buttonClicked){
+		if(buttonClicked != null)return;
 		try{
 			super.actionPerformed(buttonClicked);
 			if(!changedThisTick){
 				changedThisTick = true;
-				if(buttonClicked.equals(configScreenButton)){
-					configuringControls = false;
-					vehicleConfiguring = "";
-				}else if(buttonClicked.equals(controlScreenButton)){
-					configuringControls = true;
-				}else if(configButtons.containsKey(buttonClicked)){
-					ConfigSystem.setClientConfig(configButtons.get(buttonClicked).configName, !Boolean.valueOf(buttonClicked.displayString));
-					buttonClicked.displayString = String.valueOf(ConfigSystem.getBooleanConfig(configButtons.get(buttonClicked).configName));
-				}else if(vehicleSelectionButtons.containsKey(buttonClicked)){
-					String lookupString = vehicleSelectionButtons.get(buttonClicked);
-					vehicleConfiguring = lookupString.substring(0, lookupString.indexOf('.'));
-					configuringKeyboard = lookupString.contains("keyboard");
-					initKeyboardBoxes();
-				}else if(buttonClicked.equals(finishKeyboardBindingsButton)){
-					vehicleConfiguring = "";
-				}else if(joystickSelectionButtons.containsKey(buttonClicked)){
+				if(joystickSelectionButtons.containsKey(buttonClicked)){
 					joystick = joystickSelectionButtons.get(buttonClicked);
 					scrollSpot = 0;
 				}else if(buttonClicked.equals(componentListUpButton)){
@@ -216,89 +317,6 @@ public class GUIConfig extends GUIBase{
 		}catch (IOException e){
 			e.printStackTrace();
 		}
-	}
-	
-    @Override
-    protected void mouseClicked(int x, int y, int button) throws IOException {
-    	super.mouseClicked(x, y, button);
-    	if(!changedThisTick){
-	    	for(GuiTextField box : keyboardBoxes.values()){
-	    		if(box.getVisible()){
-	    			box.mouseClicked(x, y, button);
-	    		}
-	    	}
-    	}
-    }
-	
-    @Override
-    protected void keyTyped(char key, int bytecode) throws IOException {
-    	super.keyTyped(key, bytecode);
-    	if(bytecode!=1){
-    		for(ControlsKeyboard keyboardControl : keyboardBoxes.keySet()){
-    			GuiTextField box = keyboardBoxes.get(keyboardControl);
-        		if(box.isFocused()){
-        			box.setText(Keyboard.getKeyName(bytecode));
-        			ControlSystem.setKeyboardKey(keyboardControl, bytecode);
-        			box.setFocused(false);
-        		}
-        	}
-        }
-    }
-	
-	private void drawConfigScreen(int mouseX, int mouseY, float renderPartialTicks){
-		for(GUIComponentButton button : configButtons.keySet()){
-			button.enabled = true;
-			button.drawButton(mc, mouseX, mouseY, 0);
-			fontRenderer.drawStringWithShadow(configButtons.get(button).formattedName, guiLeft+15, button.y + 5, Color.WHITE.getRGB());
-		}
-		//Need to do mouseover after main rendering or you get rendering issues.
-		for(GUIComponentButton button : configButtons.keySet()){
-			if(button.isMouseOver()){
-				drawHoveringText(Arrays.asList(configButtons.get(button).mouseoverText), mouseX, mouseY, fontRenderer);
-			}
-		}
-	}
-	
-	private void drawVehicleSelectionScreen(int mouseX, int mouseY, float renderPartialTicks){
-		fontRenderer.drawString(I18n.format("gui.config.controls.title"), guiLeft+20, guiTop+10, Color.BLACK.getRGB());
-		for(GUIComponentButton button : vehicleSelectionButtons.keySet()){
-			button.enabled = true;
-			button.drawButton(mc, mouseX, mouseY, 0);
-		}
-		if(!ControlSystem.isJoystickSupportEnabled()){
-			fontRenderer.drawSplitString(I18n.format("gui.config.joystick.error"), guiLeft+10, guiTop+120, 240, Color.BLACK.getRGB());
-		}
-	}
-	
-	private void drawKeyboardScreen(int mouseX, int mouseY, float renderPartialTicks){
-		for(ControlsKeyboard keyboardControl : keyboardBoxes.keySet()){
-			GuiTextField box = keyboardBoxes.get(keyboardControl);
-			if(box.isFocused()){
-				box.setText("");
-			}else{
-				if(keyboardControl.getCurrentButton().length() < 5){
-					box.setText(keyboardControl.getCurrentButton());
-				}else{
-					box.setText(keyboardControl.getCurrentButton().substring(0, 5));
-				}
-			}
-			if(keyboardControl.name().contains(vehicleConfiguring.toUpperCase())){
-				box.setEnabled(true);
-				box.drawTextBox();
-				fontRenderer.drawString(I18n.format(keyboardControl.buttonName) + ":", box.x - 70, box.y + 2, Color.BLACK.getRGB());
-			}
-		}
-		
-		//Draw dynamic text boxes.
-		byte offset = 0;
-		for(ControlsKeyboardDynamic dynamicControl : ControlsKeyboardDynamic.values()){
-			if(dynamicControl.name().contains(vehicleConfiguring.toUpperCase())){
-				fontRenderer.drawString(I18n.format(dynamicControl.buttonName) + ": " + dynamicControl.modControl.getCurrentButton() + " + " + dynamicControl.mainControl.getCurrentButton(), guiLeft + 10, guiTop + 125 + offset, Color.BLACK.getRGB());
-				offset+=11;
-			}
-		}
-		finishKeyboardBindingsButton.enabled = true;
-		finishKeyboardBindingsButton.drawButton(mc, mouseX, mouseY, 0);
 	}
 	
 	private void drawJoystickSelectionScreen(int mouseX, int mouseY, float renderPartialTicks){
@@ -436,70 +454,7 @@ public class GUIConfig extends GUIBase{
 		invertAxisButton.drawButton(mc, mouseX, mouseY, 0);
 	}
 	
-	private void initHeaderButtons(){
-		configScreenButton = new GUIComponentButton(guiLeft + 0, guiTop - 20, 128, I18n.format("gui.config.header.config"));
-		controlScreenButton = new GUIComponentButton(guiLeft + 128, guiTop - 20, 128, I18n.format("gui.config.header.controls"));
-		configScreenButton.enabled = true;
-		controlScreenButton.enabled = false;
-		buttonList.add(configScreenButton);
-		buttonList.add(controlScreenButton);
-	}
-	
-	private void initConfigButtons(){
-		int line = 0;
-		int xOffset = 140;
-		for(ConfigButtons buttonEnum : ConfigButtons.values()){
-			GUIComponentButton button = new GUIComponentButton(guiLeft+xOffset, guiTop+20+(line++)*20, 60, String.valueOf(ConfigSystem.getBooleanConfig(buttonEnum.configName)));
-			button.enabled = false;
-			configButtons.put(button, buttonEnum);
-			buttonList.add(button);
-		}
-	}
-	
-	private void initVehicleSelectionButtons(){
-		byte numTypes = 0;
-		List<String> vehicleTypes = new ArrayList<String>();
-		for(ControlsKeyboard keyboardControl : ControlSystem.ControlsKeyboard.values()){
-			String vehicleType = keyboardControl.name().substring(0, keyboardControl.name().indexOf('_')).toLowerCase();
-			if(vehicleTypes.contains(vehicleType)){
-				continue;
-			}else{
-				vehicleTypes.add(vehicleType);
-				GUIComponentButton buttonKeyboard = new GUIComponentButton(guiLeft + 10, guiTop + 30 + 20*numTypes, 118, I18n.format("gui.config.controls." + vehicleType + ".keyboard"));
-				buttonKeyboard.enabled = false;
-				vehicleSelectionButtons.put(buttonKeyboard, vehicleType + ".keyboard");
-				buttonList.add(buttonKeyboard);
-				if(ControlSystem.isJoystickSupportEnabled()){
-					GUIComponentButton buttonJoystick = new GUIComponentButton(guiLeft + 128, guiTop + 30 + 20*numTypes, 118, I18n.format("gui.config.controls." + vehicleType + ".joystick"));
-					buttonJoystick.enabled = false;
-					vehicleSelectionButtons.put(buttonJoystick,  vehicleType + ".joystick");
-					buttonList.add(buttonJoystick);
-				}
-				++numTypes;
-			}
-		}
-	}
-	
-	private void initKeyboardBoxes(){
-		keyboardBoxes.clear();
-		
-		int verticalOffset = 20;
-		int horizontalOffset = 80;
-		for(ControlsKeyboard keyboardControl : ControlSystem.ControlsKeyboard.values()){
-			if(keyboardControl.name().toLowerCase().contains(vehicleConfiguring)){
-				GuiTextField box = new GuiTextField(0, fontRenderer, guiLeft + horizontalOffset, guiTop + verticalOffset, 40, 10);
-				keyboardBoxes.put(keyboardControl, box);
-				verticalOffset += 11;
-				if(verticalOffset > 20 + 11*8){
-					verticalOffset = 20;
-					horizontalOffset += 120;
-				}
-			}
-		}
-		buttonList.add(finishKeyboardBindingsButton = new GUIComponentButton(guiLeft + 180, guiTop + 150, 50, I18n.format("gui.config.controls.confirm")));
-	}
-	
-	private void initJoystickSelecionButtons(){
+	private void initJoystickSelecionButtons(int guiLeft, int guiTop){
 		for(Controller joystick : ControllerEnvironment.getDefaultEnvironment().getControllers()){
 			if(joystick.getType() != null && joystick.getName() != null){
 				if(!joystick.getType().equals(Controller.Type.MOUSE) && !joystick.getType().equals(Controller.Type.KEYBOARD)){
@@ -513,7 +468,7 @@ public class GUIConfig extends GUIBase{
 		}
 	}
 	
-	private void initJoystickComponentSelecionButtons(){
+	private void initJoystickComponentSelecionButtons(int guiLeft, int guiTop){
 		for(int i=0; i<9; ++i){
 			GUIComponentButton button = new GUIComponentButton(guiLeft+10, guiTop+45+15*i, 215, "", 15);
 			joystickComponentSelectionButtons.add(button);
@@ -525,12 +480,12 @@ public class GUIConfig extends GUIBase{
 		buttonList.add(deadzone_moreButton = new GUIComponentButton(guiLeft + 220, guiTop + 10, 20, ">"));
 	}
 	
-	private void initAssignmentButtons(){
+	private void initAssignmentButtons(int guiLeft, int guiTop){
 		buttonList.add(cancelAssignmentButton = new GUIComponentButton(guiLeft + 125, guiTop + 160, 100, I18n.format("gui.config.joystick.cancel")));
 		buttonList.add(clearAssignmentButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 100, I18n.format("gui.config.joystick.clear")));
 	}
 	
-	private void initDigitalAssignmentButtons(){
+	private void initDigitalAssignmentButtons(int guiLeft, int guiTop){
 		buttonList.removeAll(digitalAssignButtons.keySet());
 		digitalAssignButtons.clear();
 		
@@ -552,7 +507,7 @@ public class GUIConfig extends GUIBase{
 		}
 	}
 	
-	private void initAnalogAssignmentButtons(){
+	private void initAnalogAssignmentButtons(int guiLeft, int guiTop){
 		buttonList.removeAll(analogAssignButtons.keySet());
 		analogAssignButtons.clear();
 		calibrating = false;
@@ -570,7 +525,7 @@ public class GUIConfig extends GUIBase{
 		}
 	}
 	
-	private void initAnalogCalibrationScreen(){
+	private void initAnalogCalibrationScreen(int guiLeft, int guiTop){
 		calibrating = true;
 		buttonList.add(confirmBoundsButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 100, I18n.format("gui.config.joystick.confirm")));
 		buttonList.add(invertAxisButton = new GUIComponentButton(guiLeft + 50, guiTop + 120, 150, I18n.format("gui.config.joystick.axismode") + I18n.format("gui.config.joystick.normal")));
@@ -581,22 +536,5 @@ public class GUIConfig extends GUIBase{
 		axisMaxBoundsTextBox.setEnabled(false);
 		axisMinBoundsTextBox.setText("0.0");
 		axisMaxBoundsTextBox.setText("0.0");
-	}
-    	
-	private enum ConfigButtons{
-		SEA_LEVEL_OFFSET("SeaLevelOffset", "Sea Level Offset", new String[]{"Does altimeter display 0", "at average sea level", "instead of Y=0?"}),
-		MOUSE_YOKE("MouseYoke", "Mouse Yoke", new String[]{"Enable Mouse Yoke?", "Prevents looking around unless unlocked.", "Think MCHeli controls."}),
-		INNER_WINDOWS("InnerWindows", "Inner Windows", new String[]{"Render the insides of windows on vehicles?"}),
-		KEYBOARD_OVERRIDE("KeyboardOverride", "Keyboard Override", new String[]{"Should keyboard controls be overriden", "when a joystick control is mapped?", "Leave true to free up the keyboard", "while using a joysick."});
-		
-		
-		private final String configName;
-		private final String formattedName;
-		private final String[] mouseoverText;
-		private ConfigButtons(String configName, String formattedName, String[] mouseoverText){
-			this.configName = configName;
-			this.formattedName = formattedName;
-			this.mouseoverText = mouseoverText;
-		}
 	}
 }
