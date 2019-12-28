@@ -8,17 +8,20 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.packets.tileentities.PacketTrafficSignalControllerChange;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
-public class GUITrafficSignalController extends GUIBase{
+public class GUITrafficSignalController extends GuiScreen{
+	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/standard.png");	
+	
 	//Global variables.
 	private int guiLeft;
 	private int guiTop;
@@ -28,10 +31,10 @@ public class GUITrafficSignalController extends GUIBase{
 	private final List<GuiTextField> textList = new ArrayList<GuiTextField>();
 	
 	//Buttons.
-	private GUIComponentButton scanButton;
-	private GUIComponentButton orientationButton;
-	private GUIComponentButton modeButton;
-	private GUIComponentButton confirmButton;
+	private GuiButton scanButton;
+	private GuiButton orientationButton;
+	private GuiButton modeButton;
+	private GuiButton confirmButton;
 	
 	//Input boxes
 	private GuiTextField scanDistanceText;
@@ -53,28 +56,28 @@ public class GUITrafficSignalController extends GUIBase{
 		guiLeft = (this.width - 256)/2;
 		guiTop = (this.height - 192)/2;
 		
-		buttonList.add(scanButton = new GUIComponentButton(guiLeft + 25, guiTop + 30, 200, I18n.format("gui.trafficsignalcontroller.scan")));
-		buttonList.add(orientationButton = new GUIComponentButton(guiLeft + 125, guiTop + 70, 100, ""));
-		buttonList.add(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 90, 100, ""));
-		buttonList.add(confirmButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 80, I18n.format("gui.trafficsignalcontroller.confirm")));
+		buttonList.add(scanButton = new GuiButton(0, guiLeft + 25, guiTop + 30, 200, 20, I18n.format("gui.trafficsignalcontroller.scan")));
+		buttonList.add(orientationButton = new GuiButton(0, guiLeft + 125, guiTop + 75, 100, 20, ""));
+		buttonList.add(modeButton = new GuiButton(0, guiLeft + 125, guiTop + 95, 100, 20, ""));
+		buttonList.add(confirmButton = new GuiButton(0, guiLeft + 25, guiTop + 165, 80, 20, I18n.format("gui.trafficsignalcontroller.confirm")));
 		
 		textList.add(scanDistanceText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 15, 40, 10));
 		scanDistanceText.setText("25");
 		scanDistanceText.setMaxStringLength(2);
 		
-		textList.add(greenMainTimeText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 115, 40, 10));
+		textList.add(greenMainTimeText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 120, 40, 10));
 		greenMainTimeText.setText("20");
 		greenMainTimeText.setMaxStringLength(3);
 		
-		textList.add(greenCrossTimeText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 125, 40, 10));
+		textList.add(greenCrossTimeText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 130, 40, 10));
 		greenCrossTimeText.setText("10");
 		greenCrossTimeText.setMaxStringLength(3);
 		
-		textList.add(yellowTimeText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 135, 40, 10));
+		textList.add(yellowTimeText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 140, 40, 10));
 		yellowTimeText.setText("2");
 		yellowTimeText.setMaxStringLength(1);
 		
-		textList.add(allRedTimeText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 145, 40, 10));
+		textList.add(allRedTimeText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 150, 40, 10));
 		allRedTimeText.setText("1");
 		allRedTimeText.setMaxStringLength(1);
 	}
@@ -82,7 +85,7 @@ public class GUITrafficSignalController extends GUIBase{
 	@Override
     public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
 		//Background.
-		this.mc.getTextureManager().bindTexture(standardTexture);
+		this.mc.getTextureManager().bindTexture(background);
 		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 192);
 		
 		//Scan system.
@@ -94,44 +97,44 @@ public class GUITrafficSignalController extends GUIBase{
 		
 		
 		//Scan results 
-		fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.scanfound"), guiLeft + 30, guiTop + 55, Color.WHITE.getRGB());
+		fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.scanfound"), guiLeft + 30, guiTop + 60, Color.WHITE.getRGB());
 		RenderHelper.enableGUIStandardItemLighting();
-		itemRender.renderItemAndEffectIntoGUI(new ItemStack(MTSRegistry.trafficSignal), guiLeft + 120, guiTop + 50);
-		fontRenderer.drawString(" X " + trafficSignalLocations.size(), guiLeft + 135, guiTop + 55, trafficSignalLocations.isEmpty() ? Color.RED.getRGB() : Color.WHITE.getRGB());
+		itemRender.renderItemAndEffectIntoGUI(new ItemStack(MTSRegistry.trafficSignal), guiLeft + 120, guiTop + 55);
+		fontRenderer.drawString(" X " + trafficSignalLocations.size(), guiLeft + 135, guiTop + 60, trafficSignalLocations.isEmpty() ? Color.RED.getRGB() : Color.WHITE.getRGB());
 		
 		//Controls
 		if(!trafficSignalLocations.isEmpty()){
 			//Orientation
-			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.primary"), guiLeft + 30, guiTop + 75, Color.WHITE.getRGB());
+			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.primary"), guiLeft + 30, guiTop + 80, Color.WHITE.getRGB());
 			orientationButton.enabled = true;
 			orientationButton.displayString = orientedOnX ? "X" : "Z";
 			orientationButton.drawButton(mc, mouseX, mouseY, 0);
 			
 			//Mode
-			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.signalmode"), guiLeft + 30, guiTop + 95, Color.WHITE.getRGB());
+			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.signalmode"), guiLeft + 30, guiTop + 100, Color.WHITE.getRGB());
 			modeButton.enabled = true;
 			modeButton.displayString = I18n.format("gui.trafficsignalcontroller." + (triggerMode ? "modetrigger" : "modetime"));
 			modeButton.drawButton(mc, mouseX, mouseY, 0);
 			
 			//Green time
 			if(!triggerMode){
-				fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.greenmaintime"), guiLeft + 30, guiTop + 115, Color.WHITE.getRGB());
+				fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.greenmaintime"), guiLeft + 30, guiTop + 120, Color.WHITE.getRGB());
 				greenMainTimeText.setVisible(true);
 				greenMainTimeText.drawTextBox();
 			}else{
 				greenMainTimeText.setVisible(false);
 			}
-			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.greencrosstime"), guiLeft + 30, guiTop + 125, Color.WHITE.getRGB());
+			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.greencrosstime"), guiLeft + 30, guiTop + 130, Color.WHITE.getRGB());
 			greenCrossTimeText.setVisible(true);
 			greenCrossTimeText.drawTextBox();
 			
 			//Yellow time
-			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.yellowtime"), guiLeft + 30, guiTop + 135, Color.WHITE.getRGB());
+			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.yellowtime"), guiLeft + 30, guiTop + 140, Color.WHITE.getRGB());
 			yellowTimeText.setVisible(true);
 			yellowTimeText.drawTextBox();
 			
 			//Red time
-			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.allredtime"), guiLeft + 30, guiTop + 145, Color.WHITE.getRGB());
+			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.allredtime"), guiLeft + 30, guiTop + 150, Color.WHITE.getRGB());
 			allRedTimeText.setVisible(true);
 			allRedTimeText.drawTextBox();
 			

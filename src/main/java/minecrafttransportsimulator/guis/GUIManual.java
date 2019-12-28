@@ -11,7 +11,6 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackDecorObject;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.parts.AItemPart;
@@ -19,12 +18,14 @@ import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
-public class GUIManual extends GUIBase{
+public class GUIManual extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/manual_pages.png");
 	private static final ResourceLocation cover = new ResourceLocation(MTS.MODID, "textures/guis/manual_cover.png");
 	
@@ -37,8 +38,8 @@ public class GUIManual extends GUIBase{
 	private final NBTTagCompound stackTag;
 	private final byte totalPages;
 	
-	private GUIComponentButton leftButton;
-	private GUIComponentButton rightButton;
+	private GuiButton leftButton;
+	private GuiButton rightButton;
 	
 	//These are only used in devMode for making fake item icons from models for item icon images.
 	int xOffset = 160;
@@ -74,13 +75,23 @@ public class GUIManual extends GUIBase{
 		guiTop = (this.height - 180)/2;
 		leftSideOffset = guiLeft + 20;
 		rightSideOffset = guiLeft + 155;
-		addButton(leftButton = new GUIComponentButton(guiLeft + 15, guiTop + 150, 20, "<"){public void onClicked(){pageNumber -= pageNumber == 1 ? 1 : 2;}});
-		addButton(rightButton = new GUIComponentButton(guiLeft + 245, guiTop + 150, 20, ">"){public void onClicked(){pageNumber += pageNumber == 0 ? 1 : 2;}});
+		buttonList.add(leftButton = new GuiButton(0, guiLeft + 10, guiTop + 150, 20, 20, "<"));
+		buttonList.add(rightButton = new GuiButton(0, guiLeft + 250, guiTop + 150, 20, 20, ">"));
 	}
 	
 	@Override
     public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
 		super.drawScreen(mouseX, mouseY, renderPartialTicks);
+		
+		if(Mouse.isCreated() && Mouse.hasWheel()){
+			int wheelMovement = Mouse.getDWheel();
+			if(wheelMovement > 0 && pageNumber + 1 < totalPages){
+				pageNumber += pageNumber == 0 ? 1 : 2;
+			}else if(wheelMovement < 0 && pageNumber > 0){
+				pageNumber -= pageNumber == 1 ? 1 : 2;
+			}
+		}
+		
 		GL11.glColor3f(1, 1, 1);
 		if(pageNumber != 0){
 			this.mc.getTextureManager().bindTexture(background);
@@ -90,7 +101,7 @@ public class GUIManual extends GUIBase{
 			
 			leftButton.visible = true;
 			leftButton.enabled = true;
-			leftButton.renderButton(mouseX, mouseY);
+			leftButton.drawButton(mc, mouseX, mouseY, 0);
 
 			if(pageNumber + 1 < totalPages){
 				rightButton.visible = true;
@@ -223,25 +234,25 @@ public class GUIManual extends GUIBase{
 	}
 	
 	@Override
+    protected void actionPerformed(GuiButton buttonClicked) throws IOException{
+		super.actionPerformed(buttonClicked);
+		if(buttonClicked.equals(leftButton)){
+			pageNumber -= pageNumber == 1 ? 1 : 2;
+		}else if(buttonClicked.equals(rightButton)){
+			pageNumber += pageNumber == 0 ? 1 : 2;
+		}
+	}
+	
+	@Override
 	public void onGuiClosed(){
 		MTS.MTSNet.sendToServer(new PacketManualPageUpdate(pageNumber));
 		stackTag.setShort("page", pageNumber);
 		stack.setTagCompound(stackTag);
 	}
 	
-	/**
-	 * We also use the mouse wheel for selections as well as buttons.
-	 * Forward the call to the button input system for processing.
-	 */
 	@Override
-    public void handleMouseInput() throws IOException{
-        super.handleMouseInput();
-		int wheelMovement = Mouse.getDWheel();
-		if(wheelMovement > 0 && pageNumber + 1 < totalPages){
-			pageNumber += pageNumber == 0 ? 1 : 2;
-		}else if(wheelMovement < 0 && pageNumber > 0){
-			pageNumber -= pageNumber == 1 ? 1 : 2;
-		}
+	public boolean doesGuiPauseGame(){
+		return false;
 	}
 	
 	@Override
