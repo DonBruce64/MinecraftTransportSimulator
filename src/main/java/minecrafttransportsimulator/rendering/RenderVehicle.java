@@ -71,12 +71,12 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	private static final Map<String, List<TranslatablePart>> vehicleTranslatableLists = new HashMap<String, List<TranslatablePart>>();
 	private static final Map<String, List<LightPart>> vehicleLightLists = new HashMap<String, List<LightPart>>();
 	private static final Map<String, List<WindowPart>> vehicleWindowLists = new HashMap<String, List<WindowPart>>();
+	private static final Map<String, List<Float[]>> treadDeltas = new HashMap<String, List<Float[]>>();
 	
 	//PART MAPS.  Maps are keyed by the part model location.
 	private static final Map<ResourceLocation, Integer> partDisplayLists = new HashMap<ResourceLocation, Integer>();
 	private static final Map<ResourceLocation, List<RotatablePart>> partRotatableLists = new HashMap<ResourceLocation, List<RotatablePart>>();
 	private static final Map<ResourceLocation, List<LightPart>> partLightLists = new HashMap<ResourceLocation, List<LightPart>>();
-	private static final Map<ResourceLocation, List<Float[]>> treadDeltas = new HashMap<ResourceLocation, List<Float[]>>();
 	
 	//COMMON MAPS.  Keyed by either vehicle name or part name.
 	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
@@ -671,7 +671,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	}
 	
 	private static void doTreadRender(PartGroundDeviceTread treadPart, PackPart partDef, float partialTicks, int displayListIndex){
-		List<Float[]> deltas = treadDeltas.get(treadPart.getModelLocation());
+		List<Float[]> deltas = treadDeltas.get(treadPart.vehicle.vehicleJSONName);
 		if(deltas == null){
 			//If we don't have the deltas, calculate them based on the points in the JSON.
 			//First calculate the total distance the treads need to be rendered.
@@ -777,7 +777,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				}
 			}
 			//Add the finalized delta list to the map.
-			treadDeltas.put(treadPart.getModelLocation(), deltas);
+			treadDeltas.put(treadPart.vehicle.vehicleJSONName, deltas);
 		}
 		
 		float treadMovementPercentage = (float) ((treadPart.angularPosition + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.pack.tread.spacing/treadPart.pack.tread.spacing);
