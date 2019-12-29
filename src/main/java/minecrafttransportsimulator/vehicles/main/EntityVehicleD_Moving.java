@@ -29,6 +29,7 @@ import net.minecraft.world.World;
 public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
+	public float parkingBrakeAngle;
 	public float motionRoll;
 	public float motionPitch;
 	public float motionYaw;
@@ -104,6 +105,15 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			moveVehicle();
 			if(!world.isRemote){
 				dampenControlSurfaces();
+			}
+			if(parkingBrakeOn && velocity == 0 && !locked){
+				if(parkingBrakeAngle < 30){
+					++parkingBrakeAngle;
+				}
+			}else{
+				if(parkingBrakeAngle > 0){
+					--parkingBrakeAngle;
+				}
 			}
 			
 			//Finally, update parts.

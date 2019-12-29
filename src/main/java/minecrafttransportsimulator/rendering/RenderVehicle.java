@@ -19,7 +19,6 @@ import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackRotatableModelObject;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackTranslatableModelObject;
-import minecrafttransportsimulator.guis.GUIBase;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -421,11 +420,11 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	private static float getRotationAngleForModelVariable(EntityVehicleE_Powered vehicle, String variable, float partialTicks){
 		switch(variable){
 			case("cycle"): return vehicle.world.getTotalWorldTime()%20;
-			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity == 0 && !vehicle.locked ? 60 : 0;
+			case("door"): return vehicle.parkingBrakeAngle*2;
 			case("hood"): return vehicle.getEngineByNumber((byte) 0) == null ? 60 : 0;
 			case("throttle"): return vehicle.throttle/4F;
 			case("brake"): return vehicle.brakeOn ? 25 : 0;
-			case("p_brake"): return vehicle.parkingBrakeOn ? 30 : 0;
+			case("p_brake"): return vehicle.parkingBrakeAngle;
 			case("horn"): return vehicle.hornOn ? 30 : 0;
 			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation() : 0;
 			case("gearshift_hvertical"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared) vehicle.getEngineByNumber((byte) 0))).getGearshiftPosition_Vertical() : 0;
@@ -471,10 +470,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	
 	private static float getTranslationLengthForModelVariable(EntityVehicleE_Powered vehicle, String variable, float partialTicks){
 		switch(variable){
-			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity == 0 && !vehicle.locked ? 1 : 0;
+			case("door"): return vehicle.parkingBrakeAngle/30;
 			case("throttle"): return vehicle.throttle/100F;
 			case("brake"): return vehicle.brakeOn ? 1 : 0;
-			case("p_brake"): return vehicle.parkingBrakeOn ? 1 : 0;
+			case("p_brake"): return vehicle.parkingBrakeAngle/30;
 			case("horn"): return vehicle.hornOn ? 1 : 0;
 			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation()/5F : 0;
 			case("engine_sin"): return (float) (vehicle.getEngineByNumber((byte) 0) != null ? (1 + Math.cos(Math.toRadians(((APartEngine) vehicle.getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) + 180F)))/2F : 0);
@@ -626,7 +625,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}
 		switch(variable){
-			case("door"): return part.vehicle.parkingBrakeOn && part.vehicle.velocity == 0 && !part.vehicle.locked ? 60 : 0;
+			case("door"): return part.vehicle.parkingBrakeAngle*2;
 			case("steeringwheel"): return part.vehicle.getSteerAngle();
 		}
 		
