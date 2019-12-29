@@ -29,7 +29,7 @@ import net.minecraft.world.World;
 public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
-	public float parkingBrakeAngle;
+	public byte parkingBrakeAngle;
 	public float motionRoll;
 	public float motionPitch;
 	public float motionYaw;

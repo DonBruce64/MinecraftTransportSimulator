@@ -31,6 +31,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
@@ -426,6 +427,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("brake"): return vehicle.brakeOn ? 25 : 0;
 			case("p_brake"): return vehicle.parkingBrakeAngle;
 			case("horn"): return vehicle.hornOn ? 30 : 0;
+			case("trailer"): return ((EntityVehicleF_Ground) vehicle).towingAngle;
+			case("hookup"): return ((EntityVehicleF_Ground) vehicle).towedByVehicle != null ? ((EntityVehicleF_Ground) vehicle).towedByVehicle.towingAngle : 0;
 			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation() : 0;
 			case("gearshift_hvertical"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared) vehicle.getEngineByNumber((byte) 0))).getGearshiftPosition_Vertical() : 0;
 			case("gearshift_hhorizontal"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared) vehicle.getEngineByNumber((byte) 0))).getGearshiftPosition_Horizontal() : 0;
@@ -475,6 +478,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("brake"): return vehicle.brakeOn ? 1 : 0;
 			case("p_brake"): return vehicle.parkingBrakeAngle/30;
 			case("horn"): return vehicle.hornOn ? 1 : 0;
+			case("trailer"): return ((EntityVehicleF_Ground) vehicle).towingAngle/30F;
+			case("hookup"): return ((EntityVehicleF_Ground) vehicle).towedByVehicle != null ? ((EntityVehicleF_Ground) vehicle).towedByVehicle.towingAngle/30F : 0;
 			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation()/5F : 0;
 			case("engine_sin"): return (float) (vehicle.getEngineByNumber((byte) 0) != null ? (1 + Math.cos(Math.toRadians(((APartEngine) vehicle.getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) + 180F)))/2F : 0);
 			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0) + 180F)))/2F;

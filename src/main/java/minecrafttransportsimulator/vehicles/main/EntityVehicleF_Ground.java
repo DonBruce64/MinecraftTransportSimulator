@@ -11,7 +11,7 @@ import net.minecraft.world.World;
 public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{	
 	//Note that angle variable should be divided by 10 to get actual angle.
 	public short steeringAngle;
-	public short steeringCooldown;
+	public short steeringCooldown; 
 	
 	//Internal variables
 	private double forwardForce;//kg*m/ticks^2
@@ -31,6 +31,7 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	
 	public EntityVehicleF_Ground towedVehicle;
 	public EntityVehicleF_Ground towedByVehicle;
+	public byte towingAngle;
 	
 	public EntityVehicleF_Ground(World world){
 		super(world);
@@ -59,6 +60,16 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 		velocityVec = new Vec3d(motionX, motionY, motionZ);
 		velocity = velocityVec.dotProduct(headingVec);
 		velocityVec = velocityVec.normalize();
+		
+		if(towedByVehicle != null){
+			if(towingAngle < 30){
+				++towingAngle;
+			}
+		}else{
+			if(towingAngle > 0){
+				--towingAngle;
+			}
+		}
 	}
 	
 	@Override
