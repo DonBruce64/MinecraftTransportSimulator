@@ -28,6 +28,7 @@ public class PackVehicleObject{
     
     public class PackMotorizedConfig{
     	public int fuelCapacity;
+    	public int defaultFuelQty;
     	public String hornSound;
     	public String sirenSound;
         public float[] hitchPos;
@@ -78,6 +79,7 @@ public class PackVehicleObject{
         public float[] treadYPoints;
         public float[] treadZPoints;
         public float[] treadAngles;
+        public String defaultPart;
     }
     
     public class PackCollisionBox{

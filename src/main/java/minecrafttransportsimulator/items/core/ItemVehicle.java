@@ -11,6 +11,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -87,6 +88,37 @@ public class ItemVehicle extends Item{
 								//Check to prevent loading of faulty instruments for the wrong vehicle due to updates or stupid people.
 								if(instrument != null && instrument.pack.general.validVehicles.contains(newVehicle.pack.general.type)){
 									newVehicle.setInstrumentInSlot(i, instrumentInSlot);
+								}
+							}
+						}
+					}else{
+						//Since we don't have NBT data, we must be a new vehicle.
+						//If we have any default parts, we should add them now.
+						for(PackPart packDef : newVehicle.pack.parts){
+							while(packDef != null){
+								if(packDef.defaultPart != null){
+									try{
+										Class<? extends APart> partClass = PackParserSystem.getPartPartClass(packDef.defaultPart);
+										Constructor<? extends APart> partConstruct = partClass.getConstructor(EntityVehicleE_Powered.class, PackPart.class, String.class, NBTTagCompound.class);
+										APart newPart = partConstruct.newInstance((EntityVehicleE_Powered) newVehicle, packDef, packDef.defaultPart, new NBTTagCompound());
+										newVehicle.addPart(newPart, true);
+									}catch(Exception e){
+										MTS.MTSLog.error("ERROR IN LOADING PART FROM NBT!");
+										e.printStackTrace();
+									}
+								}
+								packDef = packDef.additionalPart != null ? packDef.additionalPart : null;
+							}
+						}
+						
+						//If we have a default fuel, add it now as we SHOULD have an engine to tell
+						//us what fuel type we will need to add.
+						if(newVehicle.pack.motorized.defaultFuelQty > 0){
+							for(APart part : newVehicle.getVehicleParts()){
+								if(part instanceof APartEngine){
+									newVehicle.fluidName = part.pack.engine.fuelType;
+									newVehicle.fuel = newVehicle.pack.motorized.defaultFuelQty;
+									break;
 								}
 							}
 						}

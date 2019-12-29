@@ -149,8 +149,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				for(String type : packPart.types){
 					if(type.startsWith("engine")){
 						if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
-							engineByNumber.put(engineNumber, (APartEngine) part);
-							
+							engineByNumber.put(engineNumber, (APartEngine) part);							
 						}
 						++engineNumber;
 					}
