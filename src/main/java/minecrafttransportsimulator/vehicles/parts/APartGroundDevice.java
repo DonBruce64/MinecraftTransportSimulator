@@ -39,7 +39,12 @@ public abstract class APartGroundDevice extends APart{
 			packPart.pos[2] += this.getLongPartOffset();
 			packPart.turnsWithSteer = packPart.pos[2] > 0;
 			fakePart = new PartGroundDeviceFake(this, packPart, partName, dataTag);
-			vehicle.addPart(fakePart, false);
+			//Only check collision if we are not adding this part from saved NBT data.
+			//If we check all the time, clients get wonky.
+			//To do this, we only check if the vehicle has existed for over 40 ticks.
+			//At this point we shouldn't be loading an NBT, so this part will have been
+			//added by the player and should do collision checks.
+			vehicle.addPart(fakePart, vehicle.ticksExisted < 40);
 			packPart.pos[2] -= this.getLongPartOffset();
 			packPart.turnsWithSteer = false;
 		}else{
