@@ -35,8 +35,6 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 			if(source.isExplosion() || Math.random() < 0.1){
 				if(!vehicle.world.isRemote){
 					this.setFlat();
-					Vec3d explosionPosition = partPos;
-					vehicle.world.newExplosion(vehicle, explosionPosition.x, explosionPosition.y, explosionPosition.z, 0.25F, false, false);
 					MTS.MTSNet.sendToAll(new PacketPartGroundDeviceWheelFlat(this));
 				}
 			}
@@ -66,8 +64,6 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 				if(Math.random()*50000 < ticksCalcsSkipped){
 					if(!vehicle.world.isRemote){
 						this.setFlat();
-						Vec3d explosionPosition = partPos;
-						vehicle.world.newExplosion(vehicle, explosionPosition.x, explosionPosition.y, explosionPosition.z, 0.25F, false, false);
 						MTS.MTSNet.sendToAll(new PacketPartGroundDeviceWheelFlat(this));
 					}
 				}
