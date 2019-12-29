@@ -75,6 +75,9 @@ public class PackVehicleObject{
         public float maxValue;
         public float[] dismountPos;
         public PackPart additionalPart;
+        public float[] treadYPoints;
+        public float[] treadZPoints;
+        public float[] treadAngles;
     }
     
     public class PackCollisionBox{

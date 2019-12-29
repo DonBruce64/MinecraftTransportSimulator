@@ -65,9 +65,6 @@ public class PackPartObject{
         public float lateralFriction;
         public float extraCollisionBoxOffset;
         public float spacing;
-        public float[] yPoints;
-        public float[] zPoints;
-        public float[] angles;
     }
     
     public class PartPropellerConfig{
