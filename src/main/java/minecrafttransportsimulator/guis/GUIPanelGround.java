@@ -37,7 +37,6 @@ public class GUIPanelGround extends GuiScreen{
 	private final APartEngine engine;
 	private final boolean[] hasLight;
 	private final int[][] lightButtonCoords;
-	private final int[] magnetoButtonCoords;
 	private final int[] starterButtonCoords;
 	private final int[] sirenButtonCoords;
 	private final int[][] trailerButtonCoords;
@@ -53,8 +52,7 @@ public class GUIPanelGround extends GuiScreen{
 		for(byte i=0; i<lightButtonCoords.length; ++i){
 			lightButtonCoords[i] = new int[]{32, 64, 280+50*i+32, 280+50*i};
 		}
-		magnetoButtonCoords = new int[]{96, 96 + 32, 280+32, 280};
-		starterButtonCoords = new int[]{128, 128 + 32, 280+32, 280};
+		starterButtonCoords = new int[]{112, 112 + 32, 280+32, 280};
 		sirenButtonCoords = new int[]{112, 112 + 32, 280+32+50, 280+50};
 		trailerButtonCoords = new int[8][4];
 		for(byte i=0; i<trailerButtonCoords.length; ++i){
@@ -101,11 +99,10 @@ public class GUIPanelGround extends GuiScreen{
 			}
 		}
 		
-		//Render the engine buttons.
+		//Render the engine button.
 		//Check if an engine is present and render the status if so.
-		//Otherwise just leave the lights off.
-		drawRedstoneButton(magnetoButtonCoords, engine != null ? engine.state.magnetoOn : false);
-		drawRedstoneButton(starterButtonCoords, engine != null ? engine.state.esOn : false);
+		//Otherwise just leave the light off.
+		drawRedstoneButton(starterButtonCoords, engine != null ? engine.state.running || engine.state.esOn : false);
 		
 		//Render the siren button if the vehicle has a siren sound.
 		if(vehicle.pack.motorized.sirenSound != null){
@@ -133,10 +130,9 @@ public class GUIPanelGround extends GuiScreen{
 		}
 		
 		//Render engine button text.
-		int textX = magnetoButtonCoords[0] + (magnetoButtonCoords[1] - magnetoButtonCoords[0])/2;
-		int textY = magnetoButtonCoords[2] + 2;
-		fontRenderer.drawString(I18n.format("gui.panel.powerswitch"), textX - fontRenderer.getStringWidth(I18n.format("gui.panel.powerswitch"))/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
-		fontRenderer.drawString(I18n.format("gui.panel.starter"), textX - fontRenderer.getStringWidth(I18n.format("gui.panel.starter"))/2 + 32, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
+		int textX = starterButtonCoords[0] + (starterButtonCoords[1] - starterButtonCoords[0])/2;
+		int textY = starterButtonCoords[2] + 2;
+		fontRenderer.drawString(I18n.format("gui.panel.starter"), textX - fontRenderer.getStringWidth(I18n.format("gui.panel.starter"))/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		
 		//Render the siren button text if the vehicle has a siren sound.
 		if(vehicle.pack.motorized.sirenSound != null){
@@ -192,9 +188,11 @@ public class GUIPanelGround extends GuiScreen{
 				}
 			}
 			
-			//Check if the magneto button has been pressed.
+			//Check if the starter button has been pressed.
+			//If the engine is running, turn it off.
+			//Otherwise, turn the electric starter on.
 			if(engine != null){
-				if(mouseX > magnetoButtonCoords[0] && mouseX < magnetoButtonCoords[1] && mouseY < magnetoButtonCoords[2] && mouseY > magnetoButtonCoords[3]){
+				if(mouseX > starterButtonCoords[0] && mouseX < starterButtonCoords[1] && mouseY < starterButtonCoords[2] && mouseY > starterButtonCoords[3]){
 					MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engine, engine.state.magnetoOn ? PacketEngineTypes.MAGNETO_OFF : PacketEngineTypes.MAGNETO_ON));
 				}
 			}
@@ -202,10 +200,13 @@ public class GUIPanelGround extends GuiScreen{
 			//Check if the starter button has been pressed.
 			if(engine != null){
 				if(mouseX > starterButtonCoords[0] && mouseX < starterButtonCoords[1] && mouseY < starterButtonCoords[2] && mouseY > starterButtonCoords[3]){
-					if(!engine.state.esOn){
+					if(engine.state.running){
+						MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engine, PacketEngineTypes.MAGNETO_OFF));
+					}else if(!engine.state.esOn){
+						MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engine, PacketEngineTypes.MAGNETO_ON));
 						MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engine, PacketEngineTypes.ES_ON));
+						lastEngineStarted = 0;
 					}
-					lastEngineStarted = 0;
 				}
 			}
 			

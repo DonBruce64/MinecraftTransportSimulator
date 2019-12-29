@@ -168,7 +168,6 @@ gui.panel.trim_roll=ROLL TRIM
 gui.panel.trim_pitch=PITCH TRIM
 gui.panel.trim_yaw=YAW TRIM
 gui.panel.reverse=REVERSE THRUST
-gui.panel.powerswitch=POWER
 gui.panel.runninglights=RUNNINGLTS
 gui.panel.headlights=HEADLTS
 gui.panel.emergencylights=EMERGENCYLTS
