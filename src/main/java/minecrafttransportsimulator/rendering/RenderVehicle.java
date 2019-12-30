@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
@@ -72,6 +73,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	private static final Map<String, List<LightPart>> vehicleLightLists = new HashMap<String, List<LightPart>>();
 	private static final Map<String, List<WindowPart>> vehicleWindowLists = new HashMap<String, List<WindowPart>>();
 	private static final Map<String, List<Float[]>> treadDeltas = new HashMap<String, List<Float[]>>();
+	private static final Map<String, List<Double[]>> treadAltDeltas = new HashMap<String, List<Double[]>>();
 	
 	//PART MAPS.  Maps are keyed by the part model location.
 	private static final Map<ResourceLocation, Integer> partDisplayLists = new HashMap<ResourceLocation, Integer>();
@@ -672,8 +674,152 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	
 	private static void doTreadRender(PartGroundDeviceTread treadPart, PackPart partDef, float partialTicks, int displayListIndex){
 		List<Float[]> deltas = treadDeltas.get(treadPart.vehicle.vehicleJSONName);
+		if(Keyboard.isKeyDown(Keyboard.KEY_HOME)){
+			treadDeltas.remove(treadPart.vehicle.vehicleJSONName);
+			return;
+		}
 		if(deltas == null){
-			//If we don't have the deltas, calculate them based on the points in the JSON.
+			//If we don't have the deltas, calculate them based on the points of the rollers on the vehicle.
+			//We use a helper class here to make life easy, as we have a LOT of points to calculate.
+			//In all cases, an angle of 0 implies the tread is facing down to the ground.
+			class RollerHelper{
+				final double yPos;
+				final double zPos;
+				final double radius;
+				final double circumference;
+				
+				double startY;
+				double startZ;
+				double startAngle;
+				double endY;
+				double endZ;
+				double endAngle;
+				
+				public RollerHelper(RotatablePart roller){
+					//Get the radius and center of the roller.
+					//To do this we get the min and max Y and Z points.
+					double minY = 999;
+					double maxY = -999;
+					double minZ = 999;
+					double maxZ = -999;
+					for(Float[] point : roller.vertices){
+						minY = Math.min(minY, point[1]);
+						maxY = Math.max(maxY, point[1]);
+						minZ = Math.min(minZ, point[2]);
+						maxZ = Math.max(maxZ, point[2]);
+					}
+					radius = (maxZ - minZ)/2D;
+					circumference = 2*Math.PI*radius;
+					yPos = minY + (maxY - minY)/2D;
+					zPos = minZ + (maxZ - minZ)/2D;
+				}
+				
+				public void calculateEndpoints(RollerHelper nextRoller){
+					//Calculates the end point of this roller and the
+					//start point of the passed-in roller using trigonometry.
+					double gamma = -Math.atan((zPos - nextRoller.zPos)/(yPos - nextRoller.yPos));
+					double beta = Math.asin((radius - nextRoller.radius)/Math.hypot(nextRoller.yPos - yPos, nextRoller.zPos - zPos));
+					double alpha = gamma - beta;
+					endY = yPos + radius*Math.cos(Math.PI/2D - alpha);
+					endZ = zPos + radius*Math.sin(Math.PI/2D - alpha);
+					endAngle = Math.toDegrees(Math.atan2(endY - yPos, endZ - zPos));
+					//System.out.format("C1:%f C2:%f R:%f\n", endY - yPos, endZ - zPos, Math.atan2(endY - yPos, endZ - zPos)); 
+					nextRoller.startY = nextRoller.yPos + nextRoller.radius*Math.cos(Math.PI/2D - alpha);
+					nextRoller.startZ = nextRoller.zPos + nextRoller.radius*Math.sin(Math.PI/2D - alpha);
+					nextRoller.startAngle = Math.toDegrees(Math.atan2(nextRoller.startY - nextRoller.yPos, nextRoller.startZ - nextRoller.zPos));
+					System.out.format("Y1:%f Z1:%f Y2:%f Z2:%f A1:%f A2:%f\n", endY, endZ, nextRoller.startY, nextRoller.startZ, endAngle, nextRoller.startAngle);
+				}
+			}
+			
+
+			//Search through rotatable parts on the vehicle and grab the rollers.
+			Map<Integer, RollerHelper> parsedRollers = new HashMap<Integer, RollerHelper>();
+			for(RotatablePart rotatable : vehicleRotatableLists.get(treadPart.vehicle.vehicleJSONName)){
+				if(rotatable.name.contains("roller")){
+					parsedRollers.put(Integer.valueOf(rotatable.name.substring(rotatable.name.lastIndexOf('_') + 1)), new RollerHelper(rotatable));
+				}
+			}
+			
+			//Now that we have all the rollers, we can start calculating points.
+			//First calculate the endpoints on the rollers by calling the calculation method.
+			//We also transfer the rollers to an ordered array for convenience later.
+			RollerHelper[] rollers = new RollerHelper[parsedRollers.size()];
+			for(int i=0; i<parsedRollers.size(); ++ i){
+				if(i < parsedRollers.size() - 1){
+					parsedRollers.get(i).calculateEndpoints(parsedRollers.get(i + 1));
+				}else{
+					parsedRollers.get(i).calculateEndpoints(parsedRollers.get(0));
+				}
+				rollers[i] = parsedRollers.get(i);
+				//System.out.format("I:%d Y:%f Z:%f A1:%f A2:%f\n", i, rollers[i].yPos, rollers[i].zPos, rollers[i].startAngle, rollers[i].endAngle);
+			}
+			
+			//Now that the endpoints are set, we can calculate the path.
+			//Do this by following the start and end points at small increments.
+			List<Double[]> points = new ArrayList<Double[]>();
+			double deltaDist = treadPart.pack.tread.spacing;
+			double straightPathLength = 0;
+			for(int i=0; i<rollers.length; ++i){
+				RollerHelper roller = rollers[i];
+				//Follow the curve of the roller from the start and end point.
+				double rollerPathLength = 2*Math.PI*roller.radius*Math.abs(roller.endAngle - roller.startAngle)/360D;
+				double currentAngle = roller.startAngle;
+				while(rollerPathLength > deltaDist){
+					//If we have any remaining linear path from a prior operation, we
+					//need to offset our first point on the roller path to account for it.
+					//If we don't we'll have bad spacing at the rollers.
+					if(straightPathLength > 0){
+						double pathLength = deltaDist - straightPathLength;
+						double anglePercent = pathLength/roller.circumference;
+						currentAngle += 360D*anglePercent;
+						rollerPathLength -= pathLength;
+						straightPathLength = 0;
+					}
+					
+					//Set the point based on the current angle on this path.
+					double yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
+					double zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
+					//points.add(new Double[]{yPoint, zPoint, currentAngle});
+					
+					//Decrement the path length and increment the rotation angle.
+					rollerPathLength -= deltaDist;
+					currentAngle += 360D*deltaDist/roller.circumference;
+				}
+				
+				//Done following roller.  Now go from the end of the roller to the start of the next roller.
+				//If we are on the last roller, we need to get the first roller to complete the loop.
+				RollerHelper nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
+				straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
+				double deltaY = (nextRoller.startY - roller.endY)/straightPathLength;
+				double deltaZ = (nextRoller.startZ - roller.endZ)/straightPathLength;
+				
+				//If we have any leftover roller path, account for it here to keep spacing consistent.
+				//Need to do this after delta normalization or we'll get slight errors.
+				double currentY = roller.endY + deltaY*rollerPathLength/deltaDist;
+				double currentZ = roller.endZ + deltaZ*rollerPathLength/deltaDist;
+				while(straightPathLength > deltaDist){
+					//Set the point to the current YZ coord on this path.
+					points.add(new Double[]{currentY, currentZ, roller.endAngle});
+					
+					//Decrement the path length and add to the YZ points.
+					straightPathLength -= deltaDist;
+					currentY += deltaY*deltaDist;
+					currentZ += deltaZ*deltaDist;
+				}
+			}
+			
+			//Add the start point as the final end point and deltas to their map.
+			points.add(points.get(0));
+			treadAltDeltas.put(treadPart.vehicle.vehicleJSONName, points);
+			
+
+			
+			
+			
+			
+
+			
+			
 			//First calculate the total distance the treads need to be rendered.
 			float totalDistance = 0;
 			float lastY = partDef.treadYPoints[0];
@@ -780,25 +926,81 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			treadDeltas.put(treadPart.vehicle.vehicleJSONName, deltas);
 		}
 		
+		
 		float treadMovementPercentage = (float) ((treadPart.angularPosition + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.pack.tread.spacing/treadPart.pack.tread.spacing);
+		if(Keyboard.isKeyDown(Keyboard.KEY_END)){
+			GL11.glPushMatrix();
+			//First translate to the initial point.
+			GL11.glTranslated(treadPart.offset.x, treadPart.offset.y + partDef.treadYPoints[0], treadPart.offset.z + partDef.treadZPoints[0]);
+			//Next use the deltas to get the amount needed to translate and rotate each link.
+			for(Float[] point : deltas){
+				if(point[2] != 0){
+					GL11.glRotatef(point[2], 1, 0, 0);
+					GL11.glTranslatef(0, point[0]*treadMovementPercentage, point[1]*treadMovementPercentage);
+					GL11.glRotatef(-point[2]*(1 - treadMovementPercentage), 1, 0, 0);
+					GL11.glCallList(displayListIndex);
+					GL11.glRotatef(point[2]*(1 - treadMovementPercentage), 1, 0, 0);
+					GL11.glTranslatef(0, point[0]*(1 - treadMovementPercentage), point[1]*( 1 - treadMovementPercentage));
+				}else{
+					GL11.glTranslatef(0, point[0]*treadMovementPercentage, point[1]*treadMovementPercentage);
+					GL11.glCallList(displayListIndex);
+					GL11.glTranslatef(0, point[0]*(1 - treadMovementPercentage), point[1]*( 1 - treadMovementPercentage));
+				}
+				
+			}
+			GL11.glPopMatrix();
+		}
+		
+		//Render the treads along their points.
 		GL11.glPushMatrix();
-		//First translate to the initial point.
-		GL11.glTranslated(treadPart.offset.x, treadPart.offset.y + partDef.treadYPoints[0], treadPart.offset.z + partDef.treadZPoints[0]);
-		//Next use the deltas to get the amount needed to translate and rotate each link.
-		for(Float[] point : deltas){
-			if(point[2] != 0){
-				GL11.glRotatef(point[2], 1, 0, 0);
-				GL11.glTranslatef(0, point[0]*treadMovementPercentage, point[1]*treadMovementPercentage);
-				GL11.glRotatef(-point[2]*(1 - treadMovementPercentage), 1, 0, 0);
-				GL11.glCallList(displayListIndex);
-				GL11.glRotatef(point[2]*(1 - treadMovementPercentage), 1, 0, 0);
-				GL11.glTranslatef(0, point[0]*(1 - treadMovementPercentage), point[1]*( 1 - treadMovementPercentage));
+		GL11.glTranslated(treadPart.offset.x, 0, 0);
+		//For the first point, we translate to the point itself.
+		//For each remaining point, we only translate the delta of the point.
+		List<Double[]> altPoints = treadAltDeltas.get(treadPart.vehicle.vehicleJSONName);
+		Double[] point = altPoints.get(0);
+		Double[] nextPoint;
+		double yDelta = point[0];
+		double zDelta = point[1];
+		for(int i=0; i<altPoints.size(); ++i){
+			//Get current points.
+			point = altPoints.get(i);
+			nextPoint = i == altPoints.size() - 1 ? altPoints.get(0) : altPoints.get(i + 1);
+			if(i == treadPart.vehicle.ticksExisted%altPoints.size()){
+				GL11.glColor3f(1.0F, 0.0F, 0.0F);
+				GL11.glDisable(GL11.GL_TEXTURE_2D);
+				GL11.glDisable(GL11.GL_LIGHTING);
 			}else{
-				GL11.glTranslatef(0, point[0]*treadMovementPercentage, point[1]*treadMovementPercentage);
+				GL11.glEnable(GL11.GL_TEXTURE_2D);
+				GL11.glEnable(GL11.GL_LIGHTING);
+				GL11.glColor3f(1.0F, 1.0F, 1.0F);
+			}
+			//If there's no rotation to the point, don't do rotation.
+			//That's an expensive operation due to sin and cos operations.
+			if(point[2] == 0.000001){
+			//if(point[2] != 0){
+				//We can't use a running rotation here as we'll end up translating in the rotated
+				//coordinate system.  To combat this, we translate like normal, but then push a
+				//stack and rotate prior to rendering.  This keeps us from having to do another
+				//rotation to get the old coordinate system back.
+				GL11.glPushMatrix();
+				GL11.glTranslated(0, yDelta*treadMovementPercentage, zDelta*treadMovementPercentage);
+				GL11.glRotated(point[2]*treadMovementPercentage, 1, 0, 0);
 				GL11.glCallList(displayListIndex);
-				GL11.glTranslatef(0, point[0]*(1 - treadMovementPercentage), point[1]*( 1 - treadMovementPercentage));
+				GL11.glPopMatrix();
+				GL11.glTranslated(0, yDelta, zDelta);
+			}else{
+				//Translate to the current position of the tread based on the percent it has moved.
+				//This is determined by partial ticks and actual tread position.
+				//Once there, render the tread.  Then translate the remainder of the way to prepare
+				//to render the next tread.
+				GL11.glTranslated(0, yDelta*treadMovementPercentage, zDelta*treadMovementPercentage);
+				GL11.glCallList(displayListIndex);
+				GL11.glTranslated(0, yDelta*(1 - treadMovementPercentage), zDelta*( 1 - treadMovementPercentage));
 			}
 			
+			//Increment deltas.
+			yDelta = nextPoint[0] - point[0];
+			zDelta = nextPoint[1] - point[1];
 		}
 		GL11.glPopMatrix();
 	}
