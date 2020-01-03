@@ -80,6 +80,18 @@ public class GUITrafficSignalController extends GuiScreen{
 		textList.add(allRedTimeText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 150, 40, 10));
 		allRedTimeText.setText("1");
 		allRedTimeText.setMaxStringLength(1);
+		
+		//Convert from seconds to ticks for the render system.
+		if(!signalController.trafficSignalLocations.isEmpty()){
+			this.orientedOnX = signalController.orientedOnX;
+			this.triggerMode = signalController.triggerMode;
+			this.greenMainTimeText.setText(String.valueOf(signalController.greenMainTime/20));
+			this.greenCrossTimeText.setText(String.valueOf(signalController.greenCrossTime/20));
+			this.greenMainTimeText.setText(String.valueOf(signalController.greenMainTime/20));
+			this.yellowTimeText.setText(String.valueOf(signalController.yellowTime/20));
+			this.allRedTimeText.setText(String.valueOf(signalController.allRedTime/20));
+			this.trafficSignalLocations.addAll(signalController.trafficSignalLocations);
+		}
 	}
 	
 	@Override
