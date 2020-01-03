@@ -61,7 +61,7 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	
 	@Override
 	protected void getBasicProperties(){
-		if(reverseThrust && reversePercent < 100){
+		if(reverseThrust && reversePercent < 20){
 			++reversePercent;
 		}else if(!reverseThrust && reversePercent > 0){
 			--reversePercent;

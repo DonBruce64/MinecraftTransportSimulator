@@ -119,7 +119,7 @@ public class PartPropeller extends APart{
 		//If we are on an engine that can reverse, adjust our direction.
 		//Getting smooth changes here is a PITA, and I ain't gonna do it myself.
 		if(aircraft instanceof EntityVehicleG_Blimp && aircraft.reversePercent != 0){
-			return aircraft.reversePercent != 100 ? Vec3d.ZERO : new Vec3d(0, 0, -(this.angularPosition + this.angularVelocity*partialTicks));
+			return aircraft.reversePercent != 20 ? Vec3d.ZERO : new Vec3d(0, 0, -(this.angularPosition + this.angularVelocity*partialTicks));
 		}else{
 			return new Vec3d(0, 0, this.angularPosition + this.angularVelocity*partialTicks);
 		}

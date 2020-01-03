@@ -446,7 +446,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("trim_aileron"): return ((EntityVehicleF_Air) vehicle).aileronTrim/10F;
 			case("trim_elevator"): return ((EntityVehicleF_Air) vehicle).elevatorTrim/10F;
 			case("trim_rudder"): return ((EntityVehicleF_Air) vehicle).rudderTrim/10F;
-			case("reverser"): return ((EntityVehicleF_Air) vehicle).reversePercent/1F;
+			case("reverser"): return ((EntityVehicleF_Air) vehicle).reversePercent/20F;
 		}
 		
 		//If we aren't a static variable, we are a part-specific variable.
