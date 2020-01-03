@@ -39,6 +39,7 @@ public abstract class APart{
 	public final EntityVehicleE_Powered vehicle;
 	public final String partName;
 	public final PackPartObject pack;
+	public final PackPart packVehicleDef;
 	public final Vec3d partRotation;
 	public final boolean inverseMirroring;
 	public final boolean disableMirroring;
@@ -58,6 +59,7 @@ public abstract class APart{
 		this.offset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
 		this.partName = partName;
 		this.pack = PackParserSystem.getPartPack(partName);
+		this.packVehicleDef = packPart;
 		this.partPos = RotationSystem.getRotatedPoint(this.offset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(this.vehicle.getPositionVector());
 		this.partRotation = packPart.rot != null ? new Vec3d(packPart.rot[0], packPart.rot[1], packPart.rot[2]) : Vec3d.ZERO;
 		this.isController = packPart.isController;

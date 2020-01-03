@@ -561,14 +561,11 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     			//If we are a tread, do the tread-specific render.
         		//Otherwise render like all other parts.
         		if(part instanceof PartGroundDeviceTread){
-        			PackPart treadPackDef = vehicle.getPackDefForLocation(part.offset.x, part.offset.y, part.offset.z);
-        			if(treadPackDef.treadZPoints != null){
-        				doManualTreadRender((PartGroundDeviceTread) part, treadPackDef, partialTicks, partDisplayLists.get(partModelLocation));	
+        			if(part.packVehicleDef.treadZPoints != null){
+        				doManualTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));	
         			}else{
         				doAutomaticTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));
         			}
-        		
-        			
         		}else{
 	    			//Rotate and translate the part prior to rendering the displayList.
 	    			//Note that if the part's parent has a rotation, use that to transform
@@ -655,10 +652,22 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	
 	private static void rotatePart(APart part, Vec3d actionRotation, boolean cullface){
 		if(part.turnsWithSteer){
-			if(part.offset.z >= 0){
-				GL11.glRotatef(part.vehicle.getSteerAngle(), 0, 1, 0);
+			//Use custom steering rotation point if it's set in the JSON.
+			if(part.packVehicleDef.steerRotationOffset == null){
+				if(part.offset.z >= 0){
+					GL11.glRotatef(part.vehicle.getSteerAngle(), 0, 1, 0);
+				}else{
+					GL11.glRotatef(-part.vehicle.getSteerAngle(), 0, 1, 0);
+				}
 			}else{
-				GL11.glRotatef(-part.vehicle.getSteerAngle(), 0, 1, 0);
+				Vec3d offset = new Vec3d(-part.packVehicleDef.steerRotationOffset[0], -part.packVehicleDef.steerRotationOffset[1], -part.packVehicleDef.steerRotationOffset[2]);
+				Vec3d rotatedPoint = RotationSystem.getRotatedPoint(offset, 0, part.offset.z >= 0 ? -part.vehicle.getSteerAngle() : part.vehicle.getSteerAngle(), 0);
+				GL11.glTranslated(part.packVehicleDef.steerRotationOffset[0] + rotatedPoint.x, part.packVehicleDef.steerRotationOffset[1] + rotatedPoint.y, part.packVehicleDef.steerRotationOffset[2] + rotatedPoint.z);
+				if(part.offset.z >= 0){
+					GL11.glRotatef(part.vehicle.getSteerAngle(), 0, 1, 0);
+				}else{
+					GL11.glRotatef(-part.vehicle.getSteerAngle(), 0, 1, 0);
+				}
 			}
 		}
 		
@@ -678,17 +687,17 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		GL11.glRotated(actionRotation.z, 0, 0, 1);
 	}
 	
-	private static void doManualTreadRender(PartGroundDeviceTread treadPart, PackPart partDef, float partialTicks, int displayListIndex){
+	private static void doManualTreadRender(PartGroundDeviceTread treadPart, float partialTicks, int displayListIndex){
 		List<Float[]> deltas = treadDeltas.get(treadPart.vehicle.vehicleJSONName);
 		if(deltas == null){
 			//First calculate the total distance the treads need to be rendered.
 			float totalDistance = 0;
-			float lastY = partDef.treadYPoints[0];
-			float lastZ = partDef.treadZPoints[0];
-			for(byte i=1; i<partDef.treadYPoints.length; ++i){
-				totalDistance += Math.hypot((partDef.treadYPoints[i] - lastY), (partDef.treadYPoints[i] - lastZ));
-				lastY = partDef.treadYPoints[i];
-				lastZ = partDef.treadZPoints[i];
+			float lastY = treadPart.packVehicleDef.treadYPoints[0];
+			float lastZ = treadPart.packVehicleDef.treadZPoints[0];
+			for(byte i=1; i<treadPart.packVehicleDef.treadYPoints.length; ++i){
+				totalDistance += Math.hypot((treadPart.packVehicleDef.treadYPoints[i] - lastY), (treadPart.packVehicleDef.treadYPoints[i] - lastZ));
+				lastY = treadPart.packVehicleDef.treadYPoints[i];
+				lastZ = treadPart.packVehicleDef.treadZPoints[i];
 			}
 			
 			//Now that we have the total distance, generate a set of points for the path.
@@ -696,17 +705,17 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			deltas = new ArrayList<Float[]>();
 			final float spacing = treadPart.pack.tread.spacing;
 			byte pointIndex = 0;
-			float currentY = partDef.treadYPoints[pointIndex];
-			float currentZ = partDef.treadZPoints[pointIndex];
-			float nextY = partDef.treadYPoints[pointIndex + 1];
-			float nextZ = partDef.treadZPoints[pointIndex + 1];
+			float currentY = treadPart.packVehicleDef.treadYPoints[pointIndex];
+			float currentZ = treadPart.packVehicleDef.treadZPoints[pointIndex];
+			float nextY = treadPart.packVehicleDef.treadYPoints[pointIndex + 1];
+			float nextZ = treadPart.packVehicleDef.treadZPoints[pointIndex + 1];
 			float deltaYBeforeSegment = 0;
 			float deltaZBeforeSegment = 0;
 			float deltaBeforeSegment = 0;
 			float segmentDeltaY = (nextY - currentY);
 			float segmentDeltaZ = (nextZ - currentZ);
 			float segmentDeltaTotal = (float) Math.hypot(segmentDeltaY, segmentDeltaZ);
-			float angle = partDef.treadAngles[pointIndex];
+			float angle = treadPart.packVehicleDef.treadAngles[pointIndex];
 			float currentAngle = 0;
 			
 			//Keep moving along the sets of points, making another set of evenly-spaced points.
@@ -718,27 +727,27 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 					++pointIndex;
 					//If we run out of points go back to the start of the point set.
 					//If we are out again, exit the loop.
-					if(pointIndex + 1 == partDef.treadYPoints.length){
-						currentY = partDef.treadYPoints[pointIndex];
-						currentZ = partDef.treadZPoints[pointIndex];
-						nextY = partDef.treadYPoints[0];
-						nextZ = partDef.treadZPoints[0];
+					if(pointIndex + 1 == treadPart.packVehicleDef.treadYPoints.length){
+						currentY = treadPart.packVehicleDef.treadYPoints[pointIndex];
+						currentZ = treadPart.packVehicleDef.treadZPoints[pointIndex];
+						nextY = treadPart.packVehicleDef.treadYPoints[0];
+						nextZ = treadPart.packVehicleDef.treadZPoints[0];
 						//Ensure we rotate the angle by the correct amount for the joint.
 						//It's possible that we will add a negative angle here due to going from something like 270 to 0.
 						//This will cause a -270 rotation rather than the +30 we want.
-						float angleToAdd = partDef.treadAngles[0] - partDef.treadAngles[pointIndex];
+						float angleToAdd = treadPart.packVehicleDef.treadAngles[0] - treadPart.packVehicleDef.treadAngles[pointIndex];
 						while(angleToAdd < 0){
 							angleToAdd += 360; 
 						}
 						angle += angleToAdd;
-					}else if(pointIndex + 1 > partDef.treadYPoints.length){
+					}else if(pointIndex + 1 > treadPart.packVehicleDef.treadYPoints.length){
 						break;
 					}else{
-						currentY = partDef.treadYPoints[pointIndex];
-						currentZ = partDef.treadZPoints[pointIndex];
-						nextY = partDef.treadYPoints[pointIndex + 1];
-						nextZ = partDef.treadZPoints[pointIndex + 1];
-						angle += partDef.treadAngles[pointIndex] - partDef.treadAngles[pointIndex - 1];
+						currentY = treadPart.packVehicleDef.treadYPoints[pointIndex];
+						currentZ = treadPart.packVehicleDef.treadZPoints[pointIndex];
+						nextY = treadPart.packVehicleDef.treadYPoints[pointIndex + 1];
+						nextZ = treadPart.packVehicleDef.treadZPoints[pointIndex + 1];
+						angle += treadPart.packVehicleDef.treadAngles[pointIndex] - treadPart.packVehicleDef.treadAngles[pointIndex - 1];
 					}
 					
 					//Update deltas.
@@ -791,7 +800,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		float treadMovementPercentage = (float) ((treadPart.angularPosition + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.pack.tread.spacing/treadPart.pack.tread.spacing);
 		GL11.glPushMatrix();
 		//First translate to the initial point.
-		GL11.glTranslated(treadPart.offset.x, treadPart.offset.y + partDef.treadYPoints[0], treadPart.offset.z + partDef.treadZPoints[0]);
+		GL11.glTranslated(treadPart.offset.x, treadPart.offset.y + treadPart.packVehicleDef.treadYPoints[0], treadPart.offset.z + treadPart.packVehicleDef.treadZPoints[0]);
 		//Next use the deltas to get the amount needed to translate and rotate each link.
 		for(Float[] point : deltas){
 			if(point[2] != 0){

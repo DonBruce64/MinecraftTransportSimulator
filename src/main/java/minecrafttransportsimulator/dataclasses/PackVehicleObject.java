@@ -68,6 +68,7 @@ public class PackVehicleObject{
         public float[] pos;
         public float[] rot;
         public boolean turnsWithSteer;
+        public float[] steerRotationOffset;
         public boolean isController;
         public boolean inverseMirroring;
         public List<String> types;
