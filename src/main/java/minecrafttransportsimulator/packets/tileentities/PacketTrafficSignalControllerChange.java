@@ -5,7 +5,6 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -42,9 +41,8 @@ public class PacketTrafficSignalControllerChange extends APacketTileEntity{
 					TileEntity tile = getTileEntity(message, ctx);
 					if(tile != null){
 						tile.readFromNBT(message.tag);
-						BlockPos pos = tile.getPos();
-						tile.getWorld().notifyBlockUpdate(pos, tile.getWorld().getBlockState(pos), tile.getWorld().getBlockState(pos).getActualState(tile.getWorld(), pos), 3);
 						if(ctx.side.isServer()){
+							tile.markDirty();
 							MTS.MTSNet.sendToAll(message);
 						}
 					}
