@@ -385,7 +385,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//Finally, get the distance between the two points and the angle needed to get out of the collision.
 				//After that, calculate how much we will need to offset the vehicle to keep the rear in the same place.
 				double distance = Math.hypot(frontY - rearY, frontZ - rearZ);
-				double angle = -Math.min(Math.asin(collisionDepth/distance), maxRotationInRadPerTick);
+				double angle = -Math.min(Math.asin(Math.min(collisionDepth/distance, 1)), maxRotationInRadPerTick);
 				motionPitch += Math.toDegrees(angle);
 				ptichRotationBoost = -Math.sin(angle)*Math.hypot(rearY, rearZ);
 			}else{
@@ -444,7 +444,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//Finally, get the distance between the two points and the angle needed to get out of the collision.
 				//After that, calculate how much we will need to offset the vehicle to keep the front in the same place.
 				double distance = Math.hypot(frontY - rearY, frontZ - rearZ);
-				double angle = Math.min(Math.asin(collisionDepth/distance), maxRotationInRadPerTick);
+				double angle = Math.min(Math.asin(Math.min(collisionDepth/distance, 1)), maxRotationInRadPerTick);
 				motionPitch += Math.toDegrees(angle);
 				ptichRotationBoost = Math.sin(angle)*Math.hypot(frontY, frontZ);
 			}else{
@@ -521,7 +521,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//Finally, get the distance between the two points and the angle needed to get out of the collision.
 				//After that, calculate how much we will need to offset the vehicle to keep the rear in the same place.
 				double distance = Math.hypot(rightY - leftY, rightX - leftX);
-				double angle = -Math.min(Math.asin(collisionDepth/distance), maxRotationInRadPerTick);
+				double angle = -Math.min(Math.asin(Math.min(collisionDepth/distance, 1)), maxRotationInRadPerTick);
 				motionRoll += Math.toDegrees(angle);
 				rollRotationBoost = -Math.sin(angle)*Math.hypot(leftY, leftX);
 			}else{
@@ -580,7 +580,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//Finally, get the distance between the two points and the angle needed to get out of the collision.
 				//After that, calculate how much we will need to offset the vehicle to keep the right in the same place.
 				double distance = Math.hypot(rightY - leftY, rightX - leftX);
-				double angle = Math.min(Math.asin(collisionDepth/distance), maxRotationInRadPerTick);
+				double angle = Math.min(Math.asin(Math.min(collisionDepth/distance, 1)), maxRotationInRadPerTick);
 				motionRoll += Math.toDegrees(angle);
 				rollRotationBoost = Math.sin(angle)*Math.hypot(rightY, rightX);
 			}else{
