@@ -213,101 +213,101 @@ gui.packmissing.modlink=https://minecraft.curseforge.com/projects/minecraft-tran
 gui.packmissing.misplaced=If you DID download a pack ensure that it is the same place as all your other mods.  It should NOT be in the mts folder, in fact that folder can be deleted as it's no longer used for packs.
 gui.packmissing.versionerror=If the pack is in that location, and you are still seeing this message, ensure you are running the correct pack version.  Older packs don't have a version-checker built in and will just fail to load with current versions of MTS.
 
-info.item.engine.automatic=Transmission: Automatic
-info.item.engine.manual=Transmission: Manual
-info.item.engine.numbergears=Number gears: 
-info.item.engine.gearratios=Gear Ratios: 
-info.item.engine.bypassratio=Bypass Ratio: 
-info.item.engine.maxrpm=Max Possible RPM: 
-info.item.engine.maxsaferpm=Max safe RPM: 
-info.item.engine.fuelconsumption=Fuel use (mb/t): 
-info.item.engine.fueltype=Fuel type: 
-info.item.engine.hours=Runtime hours: 
-info.item.engine.oilleak=Has an oil leak!
-info.item.engine.fuelleak=Has a fuel leak!
-info.item.engine.brokenstarter=Electric starter is broken!
-info.item.engine.creative=Creative: Needs no fuel, accumulates no hours, cannot blow up.
-info.item.ground_device.diameter=Diameter: 
-info.item.ground_device.motivefriction=Power friction: 
-info.item.ground_device.lateralfriction=Turning friction: 
-info.item.ground_device.rotatesonshaft_true=Is a wheel 
-info.item.ground_device.rotatesonshaft_false=Is NOT a wheel
-info.item.ground_device.canfloat_true=Floats
-info.item.ground_device.canfloat_false=Does not float
-info.item.propeller.staticPitch=Static Pitch
-info.item.propeller.dynamicPitch=Dynamic Pitch
-info.item.propeller.numberBlades=Blades: 
-info.item.propeller.pitch=Pitch: 
-info.item.propeller.diameter=Diameter: 
-info.item.propeller.maxrpm=Max RPM: 
-info.item.propeller.health=Health: 
-info.item.gun.type.fixed=Type: Fixed-Mount Gun
-info.item.gun.type.tripod=Type: Tripod-Mount Gun
-info.item.gun.diameter=Diameter (mm): 
-info.item.gun.length=Length (m): 
-info.item.gun.fireDelay=Fire Delay (ticks): 
-info.item.gun.muzzleVelocity=Velocity (blk/s): 
-info.item.gun.capacity=Bullet Capacity: 
-info.item.gun.yawRange=Yaw Range: 
-info.item.gun.pitchRange=Pitch Range: 
-info.item.bullet.type.normal=Normal Bullet
-info.item.bullet.type.explosive=Explosive Bullet
-info.item.bullet.type.incendiary=Incendiary Bullet
-info.item.bullet.type.armor_piercing=Armor Piercing Bullet
-info.item.bullet.diameter=Diameter (mm): 
-info.item.bullet.quantity=Quantity: 
-info.item.barrel.capacity=Capacity: 
-info.item.crate.capacity=Capacity: 
+info.item.engine.automatic=变速器: 自动
+info.item.engine.manual=变速器: 手动
+info.item.engine.numbergears=齿轮数: 
+info.item.engine.gearratios=传动比: 
+info.item.engine.bypassratio=涵道比：
+info.item.engine.maxrpm=最大转速: 
+info.item.engine.maxsaferpm=最大安全转速：
+info.item.engine.fuelconsumption=油耗 (mb/t)：
+info.item.engine.fueltype=燃料类型：
+info.item.engine.hours=运行时长：
+info.item.engine.oilleak=燃油泄露!
+info.item.engine.fuelleak=燃料泄露!
+info.item.engine.brokenstarter=火花塞损坏!
+info.item.engine.creative=创造: 无需燃料，不计运行时长，不会爆炸
+info.item.ground_device.diameter=直径：
+info.item.ground_device.motivefriction=直行摩擦力：
+info.item.ground_device.lateralfriction=弯道摩擦力：
+info.item.ground_device.rotatesonshaft_true=是轮胎
+info.item.ground_device.rotatesonshaft_false=不是轮胎
+info.item.ground_device.canfloat_true=漂浮
+info.item.ground_device.canfloat_false=不能漂浮
+info.item.propeller.staticPitch=静态升降
+info.item.propeller.dynamicPitch=动态升降
+info.item.propeller.numberBlades=桨叶数：
+info.item.propeller.pitch=升降：
+info.item.propeller.diameter=直径：
+info.item.propeller.maxrpm=最大转速：
+info.item.propeller.health=生命值：
+info.item.gun.type.fixed=类型：固定架机枪
+info.item.gun.type.tripod=类型：三脚架机枪
+info.item.gun.diameter=口径 (mm)：
+info.item.gun.length=长度 (m)：
+info.item.gun.fireDelay=火力延迟 (ticks)：
+info.item.gun.muzzleVelocity=速度 (blk/s)：
+info.item.gun.capacity=子弹容量：
+info.item.gun.yawRange=偏航范围：
+info.item.gun.pitchRange=升降范围：
+info.item.bullet.type.normal=普通子弹
+info.item.bullet.type.explosive=爆炸子弹
+info.item.bullet.type.incendiary=燃烧子弹
+info.item.bullet.type.armor_piercing=穿甲子弹
+info.item.bullet.diameter=直径 (mm)：
+info.item.bullet.quantity=数量：
+info.item.barrel.capacity=容量：
+info.item.crate.capacity=容量：
 
-info.item.wrench.use=Use on vehicle to change instruments.
-info.item.wrench.attack=Attack a part to remove.
-info.item.wrench.sneakattack=Sneak-attack to remove vehicle.
-info.item.key.line1=Use on a vehicle to lock.
-info.item.key.line2=Vehicle may only be opened with key.
-info.item.key.line3=Sneak-use to take ownership.
-info.item.key.line4=Sneak-use again to relinquish.
-info.item.key.line5=Owned vehicles may only be destroyed by you and OPs.
-info.item.jumpercable.line1=Use on an engine to select.
-info.item.jumpercable.line2=Use on second engine to link.
-info.item.jumpercable.line3=Linked engines will exchange power.
-info.item.jumpercable.line4=Engines will un-link when power is even, 
-info.item.jumpercable.line5=or if they get too far away.
-info.item.jerrycan.fill=Fill can by right-clicking a fuel pump.
-info.item.jerrycan.drain=Fill vehicle by right-clicking with full can.
-info.item.jerrycan.empty=Can is currently empty.
-info.item.jerrycan.contains=Can contains: 
+info.item.wrench.use=右击载具以安装仪表
+info.item.wrench.attack=左击部件以拆除
+info.item.wrench.sneakattack=潜行+左击以拆除载具
+info.item.key.line1=使用锁定载具
+info.item.key.line2=载具只能通过钥匙解锁
+info.item.key.line3=潜行+使用来获得拥有权
+info.item.key.line4=再次潜行+使用来清除所有权
+info.item.key.line5=具有所有权的载具只能被所有者和 OP 拆除
+info.item.jumpercable.line1=右击第一个引擎引擎
+info.item.jumpercable.line2=右击第二个引擎以创建连接
+info.item.jumpercable.line3=被连接的引擎会交换电能
+info.item.jumpercable.line4=若两引擎电量相平，
+info.item.jumpercable.line5=或是相距太远时会断开连接
+info.item.jerrycan.fill=右击燃油泵以填充油桶
+info.item.jerrycan.drain=用装满的油桶右击载具以加油
+info.item.jerrycan.empty=油桶现在是空的
+info.item.jerrycan.contains=油桶装有：
 
-item.wrench.name=Wrench
-item.key.name=Key
-item.manual.name=MTS Manual (READ ME!)
-item.jumpercable.name=Jumper Cables
-item.jerrycan.name=Jerrycan
+item.wrench.name=扳手
+item.key.name=钥匙
+item.manual.name=MTS 使用手册
+item.jumpercable.name=跨接电缆
+item.jerrycan.name=油桶
 
-tile.vehiclebench.name=Drafting Table (Vehicles)
-tile.propellerbench.name=Propeller Bench
-tile.enginebench.name=Engine Hoist
-tile.wheelbench.name=Wheel Workbench
-tile.seatbench.name=Table Saw (Seats & Cargo)
-tile.gunbench.name=Rifling Machine (Guns & Ammo)
-tile.custombench.name=Tool Bench (Custom Parts)
-tile.instrumentbench.name=Instrument Bench
-tile.componentbench.name=Component Bench (Custom Items)
+tile.vehiclebench.name=图纸设计台 (载具)
+tile.propellerbench.name=推进器制造台
+tile.enginebench.name=引擎制造台
+tile.wheelbench.name=轮胎制造台
+tile.seatbench.name=座位与箱子制造台
+tile.gunbench.name=枪械制造台
+tile.custombench.name=工具制造台 (自定义部件)
+tile.instrumentbench.name=仪表制造台
+tile.componentbench.name=组件制造台 (自定义物品)
 
-tile.fuelpump.name=Fuel Pump
-tile.fuelpump.level=LVL:
-tile.fuelpump.dispensed=DISP:
+tile.fuelpump.name=燃油泵
+tile.fuelpump.level=油量：
+tile.fuelpump.dispensed=已注入：
 
-tile.trafficsignalcontroller.name=Traffic Signal Controller
+tile.trafficsignalcontroller.name=交通信号控制器
 
-tile.pole.name=Pole
-tile.polebase.name=Pole Base
-tile.trafficsignal.name=Traffic Signal
-tile.streetlight.name=Street Light
-tile.trafficsign.name=Traffic Sign
+tile.pole.name=柱子
+tile.polebase.name=柱子底座
+tile.trafficsignal.name=交通信号灯
+tile.streetlight.name=街灯
+tile.trafficsign.name=交通标志
 
-itemGroup.tabMTSCore=MTS Core Components
+itemGroup.tabMTSCore=MTS 核心组件
 key.categories.mts=Minecraft Transport Simulator
-key.mts.config=Open configuration screen
+key.mts.config=打开设置界面
 
 advancements.mts.root.title=Immersive Vehicles (MTS)
 advancements.mts.root.description=Start your journey into powered transport!
@@ -359,82 +359,82 @@ advancements.mts.trafficsignal.description=Place a traffic signal onto a pole
 advancements.mts.trafficsignalcontroller.title=Haaaax!
 advancements.mts.trafficsignalcontroller.description=Craft a traffic signal controller
 
-manual.1.title=Introduction
+manual.1.title=介绍
 manual.1.1=Thank you for downloading Minecraft Transport Simulator, the new and improved version of Minecraft Flight Simulator!  This manual contains lots of important information, so please read closely.  It's STRONGLY recommended you read the portions on flight if you plan on piloting MTS planes, especially if you haven't had experience with planes outside of video games or simulators.
 manual.1.2=If there's something that is not included in this manual please see the MTS team on Discord.  We'll be happy to answer your question and add it to the manual in a later update.  One final note: every manual keeps their place when closed individually, so you can have multiple copies turned to specific sections that you reference frequently.  You can also scroll through this manual with your mouse wheel, if your mouse is equipped with one.
 
-manual.2.title=Basic Crafting
+manual.2.title=基础合成
 manual.2.1=Like most mods that have packs and lots of content, MTS uses crafting benches for crafting.  The Drafting Table is used to craft vehicles, while the other benches craft their own parts.  You'll likely want to start filling your garage early with these benches as most vehicles use at least one type of every part.
 manual.2.2=One of the most critical benches is the Component Bench.  The bench is used by a lot of packs to add custom items that are used to craft vehicle parts, and even vehicles themselves.  If you find yourself needing an item that's not picked up by JEI or other crafting systems, it's likely in there!
 
-manual.3.title=Vehicle Assembly
+manual.3.title=载具组装
 manual.3.1=Assembling vehicles is a simple as clicking them with the required parts.  When holding a valid part a green hologram will appear in locations where you can place it.  Simply right-click with that part and it will attach to the vehicle.  Note that some parts may require other parts to be installed before they may be placed, such as propellers that connect to aircraft engines.
 manual.3.2=Also note that you must not be inside the vehicle in order to work on it, so no mid-air repairs of failing plane engines!  If you are holding a part and the hologram is red, it means the part is the correct type, but the wrong size.  One common example is a wheel that is too big or too small for the vehicle.  Another is if a pack creator wants to restrict that location to specific parts, such as a specific engine, so try parts from the pack first.
 
-manual.4.title=Vehicle Destruction
+manual.4.title=载具拆除
 manual.4.1=There may come a time when you find yourself needing to repair a part on your vehicle, or just want to change the color of your seats.  To remove a part simply left-click it with a wrench.  You can also remove the whole vehicle with a shift-left-click.  This will drop it as an item that can be placed down later with all parts still attached, or dispensed in a store on servers.
 manual.4.2=On the flip side, hitting blocks at speed may break them, with heavier vehicles breaking more and harder blocks.  Hitting blocks too fast may result in your vehicle blowing up due to the impact, with more fuel equaling a bigger explosion.  While parts will be spawned when a vehicle crashes, a big enough explosion is likely to destroy them.  Explosions and block-breakage may be disabled in the config if you don't feel like getting into the road-repair business.
 
-manual.5.title=Fueling
+manual.5.title=加油
 manual.5.1=Vehicles are fueled from the fuel pump block.  Just click the fuel pump and it will automatically connect to the nearest vehicle.  The pump will then transfer fuel at a rate of 10 mb/t.  The pump itself has a 15000mb reservoir and can be filled directly from liquid-holding containers, or by connecting a pipe to the bottom from pipe systems compatible with Forge fluids.
 manual.5.2=Each engine has a fuel type that is associated with it.  This type is not the name of the fluid it takes a fuel.  Rather, it is a general name for the fuel that the engine uses.  Fuel types can be served by multiple fluids, but lava is by default always supported.  Some of the more common fuel types allow for usage of other mod's fluids out of the box.  For example, gasoline engines support Immersive Petroleum gasoline and Immersive Engineering ethanol.
 
-manual.6.title=Fuel Potency
+manual.6.title=燃料机能
 manual.6.1=All fluids are not created equal.  While an engine may take multiple fluids as a fuel, each fluid's potency will likely differ.  Potency is how much energy that fluid has, with higher-potency fluids lasting longer in vehicles.  For example, diesel engines take diesel at 1.0, biodiesel at 0.8, oil at 0.5, and lava at 1.0.  These values, and the modification of which fluids go to which types of engines, are configurable.
 manual.6.2=In addition to the configuration of each individual fuel, there exists a config option called fuelUsageFactor that globally sets the fuel consumption for all engines.  If you find engines to be thirstier than you'd like, you can adjust that rather than adjusting each fuel individually.
 
-manual.7.title=Theft Prevention
+manual.7.title=防盗
 manual.7.1=The only thing worse than getting your nice car blown up by a creeper is having it (or parts of it) stolen by other players.  Normally vehicles can be messed with by anyone, but by using a key you can mark them as owned, allowing only you to change their parts.  This also extends to entering the vehicle or accessing the contents of inventories inside of it.
 manual.7.2=Keys can be given to other players, allowing them to enter, but not modify, your vehicles.  It is HIGHLY recommended to make more than one key, as locked vehicles cannot be unlocked without their keys, nor can owned vehicles be relinquished.  Note that OPs bypass these restrictions to allow server admins to move/remove abandoned vehicles.
 
-manual.8.title=Keyboard Controls
+manual.8.title=键盘控制
 manual.8.1=MTS offers multiple control schemes.  The standard scheme is the keyboard control.  Unlike other mods, MTS is equipped with a no-bind system.  This prevents it from clogging up keybindings and from intercepting and taking other mod's keystrokes.  Configuration for this mode, and the other control modes, can be activated by pressing the config key (P by default).
 manual.8.2=This key is the only one that's bound in the standard way in the controls menu, and may be double-bound by default in some modpacks, so if you can't bring up the config menu check your keybindings.  Do note that while MTS will not block other mod's key signals, it may still be affected by the signals of other mods who do not use context-sensitive triggers.  Keep this in mind when controlling vehicles.
 
-manual.9.title=Joystick Controls
+manual.9.title=摇杆控制
 manual.9.1=The second control scheme is a Joystick-Keyboard hybrid.  This controller MUST be connected at the time you start Minecraft.  Configuration is done though the JOYSTICK section of the P-key menu.  When an axis such as yaw or pitch is being controlled by a joystick it will be unavailable on the keyboard.  Button inputs will also be disabled, but can be re-enabled though a CONFIG setting.
 manual.9.2=The final method of control available is a mouse-yoke system similar to both Flan's and MCHeli.  This system is currently in Beta and is not perfect, but should be functional enough for general use.  For all of these controls, there are a few extra settings in the P-key CONFIG menu.  These can be used to control joystick dead-zone, sensitivity, keyboard cooldown, as well as other general control settings.
 
-manual.10.title=Engines
+manual.10.title=引擎
 manual.10.1=No matter if they are in cars or planes, engines form the heart of your vehicle.  Not having one is like having a base without a furnace.  Engines come in a variety of fuel consumptions and max RPMs, so chose carefully based on your application.  There is even a fuel-less engine in the creative inventory if you don't want to mess with fuel.  Engines are crafted on the engine hoist.
 manual.10.2=Beware: engines will gradually accumulate hours and lose their power, going so far as to start backfiring when really worn out.  Over-revving, over-heating, and running the engine too fast before it has warmed up will quickly add hours to an otherwise new engine.  Engines may also accumulate hours from damage, going so far as to spring leaks or lose their electric starters.
 
-manual.11.title=Ground Devices
+manual.11.title=地面设施
 manual.11.1=If it touches the ground, it's a ground device.  Ground devices come in all sorts of configurations and types.  The most common ground device you will encounter are wheels.  These may be powered or un-powered depending on how the vehicle is set up.  Floating ground devices like pontoons are also available, so check the stats of the device before you decide to make it.
 manual.11.2=Wheels also have a few rules that do not apply to other ground devices.  The first is that for cars, wheels MUST be used on the axles if they are to provide power.  While you can equip a vehicle with half pontoons and half wheels, only the wheels will provide power.  Wheels may also blow out if spun too much, so that white smoke you see when doing burnouts is there for more that just show.  All ground devices are created on the Wheel Workbench.
 
-manual.12.title=Propellers
+manual.12.title=推进器
 manual.12.1=If you're going to fly an aircraft, it will likely need one of these (well, unless it's a jet).  Larger diameter propellers provide more thrust than smaller ones; however, larger-diameter propellers also need larger engines to turn, so it may be that a weak engine can produce more thrust with a smaller propeller than a larger one.  Propellers are created on the Propeller Bench.
 manual.12.2=Propeller pitch is also important, perhaps moreso than diameter, as it determines the optimal speed at any RPM.  Anything below this speed will speed the aircraft up, anything below will slow it down.  Note that propellers that have dynamic pitch will adjust their pitch in flight to maintain optimum thrust, and may also be reversed by pressing the REVERSE THRUST button in the plane panel.  Reversed propellers are not very effective, so make sure to use plenty of throttle and watch your temps!
 
-manual.13.title=Seats/Cargo
+manual.13.title=座位与箱子
 manual.13.1=Seats and cargo may all be placed in vehicles, however exactly where they may be placed depends on the vehicle itself.  The number of these items a vehicle can contain is shown in the Drafting Table, so use this to determine if the vehicle meets your needs or not.  Some vehicles allow for either seats or cargo in some spots, which means you can add or remove them as you see fit.
 manual.13.2=Note that crates and barrels hold their inventory when in item form and will still have that inventory if placed in another vehicle or if the vehicle they are in is destroyed.  This allows for quick transfer of items from one vehicle to another.  Both seats and cargo are created on the Table Saw.
 
-manual.14.title=Instruments
+manual.14.title=仪表
 manual.14.1=Instruments make piloting a plane and driving a car much more immersive.  They are also useful for monitoring key properties like fuel levels, RPM, and engine temps, and make flying in the dark much less hazardous.
 manual.14.2=Instruments are added to vehicles by using the wrench on them.  The resulting GUI shows a view of the HUD and all instruments in your possession that work on that vehicle.  Simply click the slot you want to put the instrument in, and click that instrument.  Instruments are created on the Instrument Workbench.
 
-manual.15.title=Vehicle Panels
+manual.15.title=载具面板
 manual.15.1=While most things on vehicles can be controled from your keyboard or joystick, a few functions are in the vehicle panel.  To open this panel, press the U key when in a vehicle.  This brings up the MAG/POWER switch for vehicles, and the START button to engage the starter.  You will need to turn the engine power on and THEN press the starter key to start an engine.  Please do remember this.
 manual.15.2=Numerous other things are located on this panel besides the engine controls.  The switches for the different lights are on the left side, and trim controls for aircraft are towards the middle-left.  You can also find the thrust reverse button, which will cause planes to move backward if equipped with dynamic-pitch propellers, as well as trailer buttons for hitching traliers in ground-based vehicles.
 
-manual.16.title=Driver's Ed
+manual.16.title=驾驶员手册
 manual.16.1=Driving a car is so simple, even a villager could do it.  Once the engine is running press the R key to shift into forwards gear and press the W key to give it some gas and you're off!  The A and D keys can be used to steer the car, while S key activates the brake.  Some vehicles are equipped with lights, horns, sirens, or even turn signals.
 manual.16.2=Do note that all cars start in neutral, and you pressing R puts them into forwards.  Pressing F will shift back into neutral, and F again will shift into reverse.  Shifting should be done while stopped to avoid scary transmission noises.  The only exception are engines with manual transmissions.  These must be shifted up and down manually, which means they have multiple "forwards" gears for you to shift though.  If you hear the engine getting noisy, it means it's time to shift!
 
-manual.17.title=Time to Fly!
+manual.17.title=飞行时间到!
 manual.17.1=Before your first flight you should be aware of a few key facts.  First, planes do not go up when you pull up.  We repeat: PLANES DO NOT GO UP WHEN YOU PULL UP!  This is the #1 cause of crashes for new pilots.  In MTS, and in real-life, planes gain lift through moving air over the wings.  Therefore, the proper way to lift off the ground is to go fast so lots of air moves over the wings and makes lots of lift.
 manual.17.2=This means that you will need a decent runway for takeoff, and it is highly recommended you avoid taking off towards high things like trees and mountains.  If you are piloting a plane equipped with flaps you can set a few notches to increase the lifting power of the plane.  Note that this will cause a loss in fuel efficiency and slow you down, so only use flaps when performing takeoffs and landings.  Also note that weight (items in inventory and cargo) is a factor in plane handling, so make sure not to overload your plane.
 
-manual.18.title=In-Flight
+manual.18.title=飞行途中
 manual.18.1=Once your plane is up in the air flying just becomes a matter of two things: not crashing into wild mountains, and not crashing into the ground.  The former can simply be dodged by banking the plane into a turn by rolling the airplane (A and D) or simply flying above build height.  Turns will slowly decrease your altitude, so watch that if you're close to terrain.
 manual.18.2=While flying you may have to keep holding inputs to make your plane behave the way you want.  If you keep climbing, it's because you have too much thrust and should let off the throttle.  You can also add some trim and keep the throttle up to get a bit more speed at the cost of fuel economy.  You may also move to other seats while flying by right-clicking them, and some planes even allow for multiple pilots.  Check the Vehicle Bench for specifics on seat and pilot counts.
 
-manual.19.title=Landing
+manual.19.title=降落
 manual.19.1=There is a fine line between successfully landing a plane and a controlled crash.  To avoid that second category it is important to remember the saying, "To go down you need to slow down."  Speed is what keeps your plane aloft, so a reduction in speed is needed to land.  This can be as simple as lowering the throttle and applying the flaps.
 manual.19.2=Some times, however, you end up in that second category.  Running out of fuel is the most common way to get down quickly, but it is not necessarily deadly.  Planes can glide without engines, giving you a short amount of time to pick a flat spot to become an impromptu runway.  Should one not be available a body of water is also a good choice as it will prevent explosions on a hard crash or will allow you to bail while in mid-air.  Anything hilly should be avoided at all costs.
 
-manual.20.title=Tweaks
+manual.20.title=设置
 manual.20.1=MTS has many config options, some of which aren't available in the in-game config menu.  See the mts.cfg file in your config directory for a full listing and description of configs.  Commonly-modified configs include block breagage, fuel consumption, and fuel values.
 manual.20.2=Should you wish to modify the recipes for the benches, or any other items in the core mod, you may do so by editing the recipe JSONs located inside the mod .jars.  You may also use an external mod should it make server management easier.  Look for the materials[] section and edit those values to your liking.
