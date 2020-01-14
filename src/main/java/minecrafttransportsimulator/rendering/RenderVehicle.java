@@ -561,9 +561,16 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     				minecraft.getTextureManager().bindTexture(textureMap.get(vehicle.vehicleName));
     			}
     			
+    			//Get basic rotation properties and start the matrix.
+    			Vec3d actionRotation = part.getActionRotation(partialTicks);
+    			GL11.glPushMatrix();
+    			
     			//If we are a tread, do the tread-specific render.
         		//Otherwise render like all other parts.
         		if(part instanceof PartGroundDeviceTread){
+        			//We need to manually do x translation here before rotating to prevent incorrect translation.
+        			GL11.glTranslated(part.offset.x, 0, 0);
+        			rotatePart(part, actionRotation, true);
         			if(part.packVehicleDef.treadZPoints != null){
         				doManualTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));	
         			}else{
@@ -574,8 +581,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	    			//Note that if the part's parent has a rotation, use that to transform
 	    			//the translation to match that rotation.  Needed for things like
 	    			//tank turrets with seats or guns.
-	    			Vec3d actionRotation = part.getActionRotation(partialTicks);
-	    			GL11.glPushMatrix();
+	    			
 	    			if(part.parentPart != null && !part.parentPart.getActionRotation(partialTicks).equals(Vec3d.ZERO)){
 	    				//TODO play around with this to see if we need the math or we can use partPos.
 	    				Vec3d parentActionRotation = part.parentPart.getActionRotation(partialTicks);
@@ -602,10 +608,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	    				GL11.glEnd();
 	    				GL11.glPopMatrix();
 	    			}
-	    			
-	    			GL11.glCullFace(GL11.GL_BACK);
-	    			GL11.glPopMatrix();
     			}
+        		GL11.glCullFace(GL11.GL_BACK);
+        		GL11.glPopMatrix();
     		}
         }
 	}
@@ -682,13 +687,17 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}
 		
-		GL11.glRotated(part.partRotation.x, 1, 0, 0);
-		GL11.glRotated(part.partRotation.y, 0, 1, 0);
-		GL11.glRotated(part.partRotation.z, 0, 0, 1);
+		if(!part.partRotation.equals(Vec3d.ZERO)){
+			GL11.glRotated(part.partRotation.x, 1, 0, 0);
+			GL11.glRotated(part.partRotation.y, 0, 1, 0);
+			GL11.glRotated(part.partRotation.z, 0, 0, 1);
+		}
 
-		GL11.glRotated(actionRotation.x, 1, 0, 0);
-		GL11.glRotated(-actionRotation.y, 0, 1, 0);
-		GL11.glRotated(actionRotation.z, 0, 0, 1);
+		if(!actionRotation.equals(Vec3d.ZERO)){
+			GL11.glRotated(actionRotation.x, 1, 0, 0);
+			GL11.glRotated(-actionRotation.y, 0, 1, 0);
+			GL11.glRotated(actionRotation.z, 0, 0, 1);
+		}
 	}
 	
 	private static void doManualTreadRender(PartGroundDeviceTread treadPart, float partialTicks, int displayListIndex){
@@ -804,7 +813,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		float treadMovementPercentage = (float) ((treadPart.angularPosition + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.pack.tread.spacing/treadPart.pack.tread.spacing);
 		GL11.glPushMatrix();
 		//First translate to the initial point.
-		GL11.glTranslated(treadPart.offset.x, treadPart.offset.y + treadPart.packVehicleDef.treadYPoints[0], treadPart.offset.z + treadPart.packVehicleDef.treadZPoints[0]);
+		GL11.glTranslated(0, treadPart.offset.y + treadPart.packVehicleDef.treadYPoints[0], treadPart.offset.z + treadPart.packVehicleDef.treadZPoints[0]);
 		//Next use the deltas to get the amount needed to translate and rotate each link.
 		for(Float[] point : deltas){
 			if(point[2] != 0){
@@ -1055,7 +1064,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		double angleDelta = point[2] - priorPoint[2];
 		
 		GL11.glPushMatrix();
-		GL11.glTranslated(treadPart.offset.x, 0, 0);
 		GL11.glTranslated(0, point[0] - yDelta, point[1] - zDelta);
 		for(int i=0; i<points.size() - 1; ++i){
 			//Update variables, except for point 0 as we've already calculated it.
