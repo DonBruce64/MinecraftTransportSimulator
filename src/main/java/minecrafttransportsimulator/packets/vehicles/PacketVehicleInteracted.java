@@ -36,7 +36,7 @@ public class PacketVehicleInteracted extends APacketVehiclePlayer{
 					EntityVehicleB_Existing vehicle = (EntityVehicleB_Existing) getVehicle(message, ctx);
 					EntityPlayer player = getPlayer(message, ctx);
 					
-					if(vehicle != null && player != null){
+					if(vehicle != null && player != null && !vehicle.isDead){
 						//If we clicked a part, try to interact with it.
 						//If we didn't interact with a part, check other interactions.
 						//All interactions are done on the server, except GUI openings.
