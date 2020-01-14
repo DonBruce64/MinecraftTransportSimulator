@@ -303,6 +303,9 @@ public class GUIPanelAircraft extends GuiScreen{
 	@Override
 	public void onGuiClosed(){
 		CameraSystem.disableHUD = false;
+		if(lastEngineStarted != -1){
+			MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines[lastEngineStarted], PacketEngineTypes.ES_OFF));
+    	}
 	}
 	
 	@Override
