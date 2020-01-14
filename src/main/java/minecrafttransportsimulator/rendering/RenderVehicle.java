@@ -551,11 +551,14 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     			partLightLists.put(partModelLocation, lightParts);
     		}else{
     			//If we aren't using the vehicle texture, bind the texture for this part.
+    			//Otherwise, bind the vehicle texture as it may have been un-bound prior to this.
     			if(!part.pack.general.useVehicleTexture){
     				if(!textureMap.containsKey(part.partName)){
         				textureMap.put(part.partName, part.getTextureLocation());
         			}
     				minecraft.getTextureManager().bindTexture(textureMap.get(part.partName));
+    			}else{
+    				minecraft.getTextureManager().bindTexture(textureMap.get(vehicle.vehicleName));
     			}
     			
     			//If we are a tread, do the tread-specific render.
@@ -574,6 +577,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	    			Vec3d actionRotation = part.getActionRotation(partialTicks);
 	    			GL11.glPushMatrix();
 	    			if(part.parentPart != null && !part.parentPart.getActionRotation(partialTicks).equals(Vec3d.ZERO)){
+	    				//TODO play around with this to see if we need the math or we can use partPos.
 	    				Vec3d parentActionRotation = part.parentPart.getActionRotation(partialTicks);
 	    				Vec3d partRelativeOffset = part.offset.subtract(part.parentPart.offset);
 	    				Vec3d partTranslationOffset = part.parentPart.offset.add(RotationSystem.getRotatedPoint(partRelativeOffset, (float) parentActionRotation.x, (float) parentActionRotation.y, (float) parentActionRotation.z));
