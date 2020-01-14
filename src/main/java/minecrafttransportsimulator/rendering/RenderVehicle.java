@@ -474,10 +474,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	
 	private static float getTranslationLengthForModelVariable(EntityVehicleE_Powered vehicle, String variable, float partialTicks){
 		switch(variable){
-			case("door"): return vehicle.parkingBrakeAngle/30;
+			case("door"): return vehicle.parkingBrakeAngle/30F;
 			case("throttle"): return vehicle.throttle/100F;
 			case("brake"): return vehicle.brakeOn ? 1 : 0;
-			case("p_brake"): return vehicle.parkingBrakeAngle/30;
+			case("p_brake"): return vehicle.parkingBrakeAngle/30F;
 			case("horn"): return vehicle.hornOn ? 1 : 0;
 			case("trailer"): return ((EntityVehicleF_Ground) vehicle).towingAngle/30F;
 			case("hookup"): return ((EntityVehicleF_Ground) vehicle).towedByVehicle != null ? ((EntityVehicleF_Ground) vehicle).towedByVehicle.towingAngle/30F : 0;
