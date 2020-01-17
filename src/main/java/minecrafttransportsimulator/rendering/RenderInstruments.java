@@ -13,6 +13,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import net.minecraft.client.Minecraft;
@@ -135,6 +136,8 @@ public abstract class RenderInstruments{
 			case("trim_rudder"): return ((EntityVehicleF_Air) vehicle).rudderTrim/10F;
 			case("trim_elevator"): return ((EntityVehicleF_Air) vehicle).elevatorTrim/10F;
 			case("trim_aileron"): return ((EntityVehicleF_Air) vehicle).aileronTrim/10F;
+			case("flaps_setpoint"): return ((EntityVehicleG_Plane) vehicle).flapDesiredAngle/10F;
+			case("flaps_actual"): return ((EntityVehicleG_Plane) vehicle).flapCurrentAngle/10F;
 			case("electric_power"): return vehicle.electricPower;
 			case("electric_usage"): return Math.min(vehicle.electricFlow*20, 1);
 			case("fuel"): return vehicle.fuel/vehicle.pack.motorized.fuelCapacity*100F;
