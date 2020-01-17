@@ -97,7 +97,7 @@ public class PacketBulletHit implements IMessage{
 								//Otherwise send this packet back to the client to spawn SFX.
 								BlockPos hitPos = new BlockPos(message.x, message.y, message.z);
 								float hardness = ctx.getServerHandler().player.world.getBlockState(hitPos).getBlockHardness(ctx.getServerHandler().player.world, hitPos);
-								if(hardness <= (Math.random()*0.3F + 0.3F*bulletPackData.diameter/20F)){
+								if(hardness > 0 && hardness <= (Math.random()*0.3F + 0.3F*bulletPackData.diameter/20F)){
 									ctx.getServerHandler().player.world.destroyBlock(hitPos, true);
 								}else{
 									MTS.MTSNet.sendToAll(message);
