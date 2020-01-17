@@ -694,9 +694,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 
 		if(!actionRotation.equals(Vec3d.ZERO)){
-			GL11.glRotated(actionRotation.x, 1, 0, 0);
-			GL11.glRotated(-actionRotation.y, 0, 1, 0);
+			//Need to rotate in reverse order, otherwise guns are off.
 			GL11.glRotated(actionRotation.z, 0, 0, 1);
+			GL11.glRotated(-actionRotation.y, 0, 1, 0);
+			GL11.glRotated(actionRotation.x, 1, 0, 0);
 		}
 	}
 	
