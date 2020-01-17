@@ -963,6 +963,38 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				rollers[i] = parsedRollers.get(i);
 			}
 			
+			//We need to ensure the endpoints are all angle-aligned.
+			//It's possible to have a start angle of -181 and end angle of
+			//181, which is really just 2 degress of angle (179-181).
+			//To do this, we set the end angle of roller 0 and start
+			//angle of roller 1 to be around 180, or downward-facing.
+			//From there, we add angles to align things.
+			//At the end, we should have an end angle of 540, or 180 + 360.
+			rollers[0].endAngle = 180;
+			for(int i=1; i<rollers.length; ++i){
+				TreadRoller roller = rollers[i];
+				roller.startAngle = rollers[i - 1].endAngle;
+				//End angle should be 0-360 greater than start angle, or within
+				//10 degrees less, as is the case for concave rollers. 
+				while(roller.endAngle < roller.startAngle - 10){
+					roller.endAngle += 360;
+				}
+				while(roller.endAngle > roller.startAngle + 360){
+					roller.endAngle += 360;
+				}
+			}
+			//Set the end angle of the last roller, or start angle of the first roller, manually.
+			//Need to get it between the value of 360 + 0-180 as that's where we will connect.
+			while(rollers[0].startAngle < 0){
+				rollers[0].startAngle += 360;
+			}
+			if(rollers[0].startAngle > 180){
+				rollers[0].startAngle -= 360;
+			}
+			rollers[0].startAngle += 360;
+			rollers[rollers.length - 1].endAngle = rollers[0].startAngle;
+			
+			
 			//Now that the endpoints are set, we can calculate the path.
 			//Do this by following the start and end points at small increments.
 			points = new ArrayList<Double[]>();
