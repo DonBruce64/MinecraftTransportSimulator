@@ -104,7 +104,7 @@ public abstract class AItemPart extends Item{
 		if(packPart.customTypes == null){
 			return itemPack.general.customType == null;
 		}else if(itemPack.general.customType == null){
-			return packPart.customTypes == null;
+			return packPart.customTypes == null || packPart.customTypes.contains("");
 		}else{
 			return packPart.customTypes.contains(itemPack.general.customType);
 		}
