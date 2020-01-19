@@ -13,10 +13,13 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxCo
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 /**Base GUI class, and interface to MC's GUI systems.  All MTS GUIs should extend this class
@@ -32,6 +35,7 @@ public abstract class GUIBase extends GuiScreen{
 	private final List<GUIComponentLabel> labels = new ArrayList<GUIComponentLabel>();
 	private final List<GUIComponentButton> buttons = new ArrayList<GUIComponentButton>();
 	private final List<GUIComponentTextBox> textBoxes = new ArrayList<GUIComponentTextBox>();
+	private final List<GUIComponentItem> items = new ArrayList<GUIComponentItem>();
 	
 	private int guiLeft;
 	private int guiTop;
@@ -98,6 +102,15 @@ public abstract class GUIBase extends GuiScreen{
 		for(GUIComponentTextBox textBox : textBoxes){
         	textBox.renderBox(this);
         }
+		
+		//Items go last, as they need item-specific rendering changes to lighting which can mess things up.
+		RenderHelper.enableGUIStandardItemLighting();
+		for(GUIComponentItem item : items){
+			item.renderItem(this);
+		}
+		for(GUIComponentItem item : items){
+			item.renderTooltip(this, mouseX, mouseY);
+		}
 	}
 	
 	/**
@@ -209,6 +222,14 @@ public abstract class GUIBase extends GuiScreen{
 		textBoxes.add(textBox);
 	}
 	
+	/**
+	 *  Adds an {@link GUIComponentItem} to this GUIs component set.  These are rendered
+	 *  automatically given their current state.  Said state should be set in {@link #setStates()}.
+	 */
+	public void addItem(GUIComponentItem item){
+		items.add(item);
+	}
+	
 	
 	//--------------------START OF NORMAL HELPER METHODS--------------------	
 	/**
@@ -250,6 +271,40 @@ public abstract class GUIBase extends GuiScreen{
 		GL11.glPopMatrix();
 	}
 	
+	/**
+	 *  Draws the specified item on the GUI at the specified scale.  Note that MC
+	 *  renders all items from their top-left corner, so take this into account when
+	 *  choosing where to put this component in your GUI.
+	 */
+	public void drawItem(String itemName, int qty, int metadata, int x, int y, float scale){
+		ItemStack stack = new ItemStack(Item.getByNameOrId(itemName), qty, metadata);
+		if(scale != 1.0F){
+			GL11.glPushMatrix();
+			GL11.glTranslatef(x, y, 0);
+			GL11.glScalef(scale, scale, scale);
+			itemRender.renderItemAndEffectIntoGUI(stack, 0, 0);
+			if(qty > 1){
+				itemRender.renderItemOverlays(mc.fontRenderer, stack, 0, 0);
+			}
+			GL11.glPopMatrix();
+		}else{
+			itemRender.renderItemAndEffectIntoGUI(stack, x, y);
+			if(qty > 1){
+				itemRender.renderItemOverlays(mc.fontRenderer, stack, x, y);
+			}
+		}
+	}
+	
+	/**
+	 *  Draws the specified tooltip on the GUI.  This should be
+	 *  the last thing that gets rendered, as otherwise it may render
+	 *  behind other components.
+	 */
+	public void drawItemTooltip(String itemName, int qty, int metadata, int mouseX, int mouseY){
+		ItemStack stack = new ItemStack(Item.getByNameOrId(itemName), qty, metadata);
+		renderToolTip(stack, mouseX, mouseY);
+	}
+
 	
 	//--------------------START OF STATIC HELPER METHODS--------------------
 	

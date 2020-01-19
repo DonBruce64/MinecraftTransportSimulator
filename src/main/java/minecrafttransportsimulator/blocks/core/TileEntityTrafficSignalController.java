@@ -10,13 +10,14 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 
 public class TileEntityTrafficSignalController extends TileEntityBase implements ITickable{
-	public boolean orientedOnX;
-	public boolean triggerMode;
-	public int greenMainTime;
-	public int greenCrossTime;
-	public int yellowTime;
-	public int allRedTime;
+	public boolean orientedOnX = false;
+	public boolean triggerMode = false;
+	public int greenMainTime = 20;
+	public int greenCrossTime = 10;
+	public int yellowTime = 2;
+	public int allRedTime = 1;
 	public final List<BlockPos> trafficSignalLocations = new ArrayList<BlockPos>();
+	public final List<BlockPos> crossingSignalLocations = new ArrayList<BlockPos>();
 	
 	public byte operationIndex;
 	public long timeOperationStarted;	
@@ -81,31 +82,31 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
 			}
 		}else if(operationIndex == 1){
 			//Second step, main light turns yellow, cross light stays red.
-			if(timeOperationStarted + yellowTime <= worldTime){
+			if(timeOperationStarted + yellowTime*20 <= worldTime){
 				timeOperationStarted = worldTime;
 				operationIndex = 2;
 			}
 		}else if(operationIndex == 2){
 			//Third step, main light turns red, cross light stays red.
-			if(timeOperationStarted + allRedTime <= worldTime){
+			if(timeOperationStarted + allRedTime*20 <= worldTime){
 				timeOperationStarted = worldTime;
 				operationIndex = 3;
 			}
 		}else if(operationIndex == 3){
 			//Fourth step, main light stays red, cross light turns green.
-			if(timeOperationStarted + greenCrossTime <= worldTime){
+			if(timeOperationStarted + greenCrossTime*20 <= worldTime){
 				timeOperationStarted = worldTime;
 				operationIndex = 4;
 			}
 		}else if(operationIndex == 4){
 			//Fifth step, main light stays red, cross light turns yellow.
-			if(timeOperationStarted + yellowTime <= worldTime){
+			if(timeOperationStarted + yellowTime*20 <= worldTime){
 				timeOperationStarted = worldTime;
 				operationIndex = 5;
 			}
 		}else if(operationIndex == 5){
 			//Sixth step, main light stays red, cross light turns red.
-			if(timeOperationStarted + allRedTime <= worldTime){
+			if(timeOperationStarted + allRedTime*20 <= worldTime){
 				timeOperationStarted = worldTime;
 				//If we are a triggered light, we go back to 0.
 				//Otherwise, we perform another cycle and go back to 1.
@@ -118,7 +119,7 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
 			}
 		}else{
 			//Seventh step, main light turns green, cross light stays red.
-			if(timeOperationStarted + greenMainTime <= worldTime){
+			if(timeOperationStarted + greenMainTime*20 <= worldTime){
 				timeOperationStarted = worldTime;
 				operationIndex = 0;
 			}

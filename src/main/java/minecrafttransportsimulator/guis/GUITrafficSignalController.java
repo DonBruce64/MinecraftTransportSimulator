@@ -1,241 +1,154 @@
 package minecrafttransportsimulator.guis;
 
 import java.awt.Color;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.guis.components.GUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentItem;
+import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.packets.tileentities.PacketTrafficSignalControllerChange;
 import net.minecraft.block.Block;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
-public class GUITrafficSignalController extends GuiScreen{
-	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/standard.png");	
-	
-	//Global variables.
-	private int guiLeft;
-	private int guiTop;
-	private boolean orientedOnX = false;
-	private boolean triggerMode = false;
-	private byte crossingSignals = 0;
-	private final List<BlockPos> trafficSignalLocations = new ArrayList<BlockPos>();
-	private final List<GuiTextField> textList = new ArrayList<GuiTextField>();
+public class GUITrafficSignalController extends GUIBase{
 	
 	//Buttons.
-	private GuiButton scanButton;
-	private GuiButton orientationButton;
-	private GuiButton modeButton;
-	private GuiButton confirmButton;
+	private GUIComponentButton orientationButton;
+	private GUIComponentButton modeButton;
+	private GUIComponentButton confirmButton;
 	
 	//Input boxes
-	private GuiTextField scanDistanceText;
-	private GuiTextField greenMainTimeText;
-	private GuiTextField greenCrossTimeText;
-	private GuiTextField yellowTimeText;
-	private GuiTextField allRedTimeText;
+	private GUIComponentTextBox scanDistanceText;
+	private GUIComponentTextBox greenMainTimeText;
+	private GUIComponentTextBox greenCrossTimeText;
+	private GUIComponentTextBox yellowTimeText;
+	private GUIComponentTextBox allRedTimeText;
+	
+	//Labels
+	private GUIComponentLabel trafficSignalCount;
+	private GUIComponentLabel crossingSignalCount;
 	
 	private final TileEntityTrafficSignalController signalController;
 	
 	public GUITrafficSignalController(TileEntityTrafficSignalController clicked){
 		this.signalController = clicked;
-		this.allowUserInput=true;
 	}
 	
 	@Override 
-	public void initGui(){
-		super.initGui();
-		guiLeft = (this.width - 256)/2;
-		guiTop = (this.height - 192)/2;
-		
-		buttonList.add(scanButton = new GuiButton(0, guiLeft + 25, guiTop + 30, 200, 20, I18n.format("gui.trafficsignalcontroller.scan")));
-		buttonList.add(orientationButton = new GuiButton(0, guiLeft + 125, guiTop + 75, 100, 20, ""));
-		buttonList.add(modeButton = new GuiButton(0, guiLeft + 125, guiTop + 95, 100, 20, ""));
-		buttonList.add(confirmButton = new GuiButton(0, guiLeft + 25, guiTop + 165, 80, 20, I18n.format("gui.trafficsignalcontroller.confirm")));
-		
-		textList.add(scanDistanceText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 15, 40, 10));
-		scanDistanceText.setText("25");
-		scanDistanceText.setMaxStringLength(2);
-		
-		textList.add(greenMainTimeText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 120, 40, 10));
-		greenMainTimeText.setText("20");
-		greenMainTimeText.setMaxStringLength(3);
-		
-		textList.add(greenCrossTimeText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 130, 40, 10));
-		greenCrossTimeText.setText("10");
-		greenCrossTimeText.setMaxStringLength(3);
-		
-		textList.add(yellowTimeText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 140, 40, 10));
-		yellowTimeText.setText("2");
-		yellowTimeText.setMaxStringLength(1);
-		
-		textList.add(allRedTimeText = new GuiTextField(0, fontRenderer, guiLeft + 180, guiTop + 150, 40, 10));
-		allRedTimeText.setText("1");
-		allRedTimeText.setMaxStringLength(1);
-		
-		//Convert from seconds to ticks for the render system.
-		if(!signalController.trafficSignalLocations.isEmpty()){
-			this.orientedOnX = signalController.orientedOnX;
-			this.triggerMode = signalController.triggerMode;
-			this.greenMainTimeText.setText(String.valueOf(signalController.greenMainTime/20));
-			this.greenCrossTimeText.setText(String.valueOf(signalController.greenCrossTime/20));
-			this.greenMainTimeText.setText(String.valueOf(signalController.greenMainTime/20));
-			this.yellowTimeText.setText(String.valueOf(signalController.yellowTime/20));
-			this.allRedTimeText.setText(String.valueOf(signalController.allRedTime/20));
-			this.trafficSignalLocations.addAll(signalController.trafficSignalLocations);
-			for(BlockPos pos : trafficSignalLocations){
-				if(signalController.getWorld().getBlockState(pos).getBlock().equals(MTSRegistry.crossingSignal)){
-					++crossingSignals;
-				}
-			}
-		}
-	}
-	
-	@Override
-    public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
-		//Background.
-		this.mc.getTextureManager().bindTexture(background);
-		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 192);
-		
-		//Scan system.
-		scanButton.enabled = true;
-		scanButton.drawButton(mc, mouseX, mouseY, 0);
-		fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.scandistance"), guiLeft + 30, guiTop + 15, Color.WHITE.getRGB());
-		scanDistanceText.setVisible(true);
-		scanDistanceText.drawTextBox();
-		
-		
-		//Scan results 
-		fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.scanfound"), guiLeft + 30, guiTop + 60, Color.WHITE.getRGB());
-		RenderHelper.enableGUIStandardItemLighting();
-		itemRender.renderItemAndEffectIntoGUI(new ItemStack(MTSRegistry.trafficSignal), guiLeft + 120, guiTop + 55);
-		fontRenderer.drawString(" X " + (trafficSignalLocations.size() - crossingSignals), guiLeft + 135, guiTop + 60, trafficSignalLocations.isEmpty() ? Color.RED.getRGB() : Color.WHITE.getRGB());
-		itemRender.renderItemAndEffectIntoGUI(new ItemStack(MTSRegistry.crossingSignal), guiLeft + 160, guiTop + 55);
-		fontRenderer.drawString(" X " + crossingSignals, guiLeft + 175, guiTop + 60, trafficSignalLocations.isEmpty() ? Color.RED.getRGB() : Color.WHITE.getRGB());
-		
-		//Controls
-		if(!trafficSignalLocations.isEmpty()){
-			//Orientation
-			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.primary"), guiLeft + 30, guiTop + 80, Color.WHITE.getRGB());
-			orientationButton.enabled = true;
-			orientationButton.displayString = orientedOnX ? "X" : "Z";
-			orientationButton.drawButton(mc, mouseX, mouseY, 0);
-			
-			//Mode
-			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.signalmode"), guiLeft + 30, guiTop + 100, Color.WHITE.getRGB());
-			modeButton.enabled = true;
-			modeButton.displayString = I18n.format("gui.trafficsignalcontroller." + (triggerMode ? "modetrigger" : "modetime"));
-			modeButton.drawButton(mc, mouseX, mouseY, 0);
-			
-			//Green time
-			if(!triggerMode){
-				fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.greenmaintime"), guiLeft + 30, guiTop + 120, Color.WHITE.getRGB());
-				greenMainTimeText.setVisible(true);
-				greenMainTimeText.drawTextBox();
-			}else{
-				greenMainTimeText.setVisible(false);
-			}
-			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.greencrosstime"), guiLeft + 30, guiTop + 130, Color.WHITE.getRGB());
-			greenCrossTimeText.setVisible(true);
-			greenCrossTimeText.drawTextBox();
-			
-			//Yellow time
-			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.yellowtime"), guiLeft + 30, guiTop + 140, Color.WHITE.getRGB());
-			yellowTimeText.setVisible(true);
-			yellowTimeText.drawTextBox();
-			
-			//Red time
-			fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.allredtime"), guiLeft + 30, guiTop + 150, Color.WHITE.getRGB());
-			allRedTimeText.setVisible(true);
-			allRedTimeText.drawTextBox();
-			
-			//Confirm
-			confirmButton.enabled = true;
-			confirmButton.drawButton(mc, mouseX, mouseY, 0);
-		}else{
-			orientationButton.enabled = false;
-			modeButton.enabled = false;
-			greenMainTimeText.setVisible(false);
-			greenCrossTimeText.setVisible(false);
-			yellowTimeText.setVisible(false);
-			allRedTimeText.setVisible(false);
-			confirmButton.enabled = false;
-		}
-	}
-	
-	@Override
-    protected void actionPerformed(GuiButton buttonClicked) throws IOException{
-		super.actionPerformed(buttonClicked);
-		if(buttonClicked.equals(scanButton)){
-			trafficSignalLocations.clear();
-			int scanDistance = Integer.valueOf(scanDistanceText.getText());
-			for(int i=signalController.getPos().getX()-scanDistance; i<=signalController.getPos().getX()+scanDistance; ++i){
-				for(int j=signalController.getPos().getY()-scanDistance; j<=signalController.getPos().getY()+scanDistance; ++j){
-					for(int k=signalController.getPos().getZ()-scanDistance; k<=signalController.getPos().getZ()+scanDistance; ++k){
-						BlockPos pos = new BlockPos(i, j, k);
-						Block block = signalController.getWorld().getBlockState(pos).getBlock();
-						if(block.equals(MTSRegistry.trafficSignal)){
-							trafficSignalLocations.add(pos);
-						}else if(block.equals(MTSRegistry.crossingSignal)){
-							trafficSignalLocations.add(pos);
-							++crossingSignals;
+	public void setupComponents(int guiLeft, int guiTop){
+		addButton(new GUIComponentButton(guiLeft + 25, guiTop + 15, 200, translate("trafficsignalcontroller.scan")){
+			public void onClicked(){
+				signalController.trafficSignalLocations.clear();
+				int scanDistance = Integer.valueOf(scanDistanceText.getText());
+				for(int i=signalController.getPos().getX()-scanDistance; i<=signalController.getPos().getX()+scanDistance; ++i){
+					for(int j=signalController.getPos().getY()-scanDistance; j<=signalController.getPos().getY()+scanDistance; ++j){
+						for(int k=signalController.getPos().getZ()-scanDistance; k<=signalController.getPos().getZ()+scanDistance; ++k){
+							BlockPos pos = new BlockPos(i, j, k);
+							Block block = signalController.getWorld().getBlockState(pos).getBlock();
+							if(block.equals(MTSRegistry.trafficSignal)){
+								signalController.trafficSignalLocations.add(pos);
+							}else if(block.equals(MTSRegistry.crossingSignal)){
+								signalController.trafficSignalLocations.add(pos);
+								signalController.crossingSignalLocations.add(pos);
+							}
 						}
 					}
 				}
 			}
-		}else if(buttonClicked.equals(orientationButton)){
-			orientedOnX = !orientedOnX;
-		}else if(buttonClicked.equals(modeButton)){
-			triggerMode = !triggerMode;
-		}else if(buttonClicked.equals(confirmButton)){
-			signalController.orientedOnX = this.orientedOnX;
-			signalController.triggerMode = this.triggerMode;
-			//Convert from seconds to ticks for the render system.
-			signalController.greenMainTime = Integer.valueOf(this.greenMainTimeText.getText())*20;
-			signalController.greenCrossTime = Integer.valueOf(this.greenCrossTimeText.getText())*20;
-			signalController.yellowTime = Integer.valueOf(this.yellowTimeText.getText())*20;
-			signalController.allRedTime = Integer.valueOf(this.allRedTimeText.getText())*20;
-			signalController.trafficSignalLocations.clear();
-			signalController.trafficSignalLocations.addAll(this.trafficSignalLocations);
-			MTS.MTSNet.sendToServer(new PacketTrafficSignalControllerChange(signalController));
-			mc.player.closeScreen();
-		}
+		});
+		addTextBox(scanDistanceText = new GUIComponentTextBox(guiLeft + 120, guiTop + 40, 40, "25", 10, Color.WHITE, Color.BLACK, 2));
+		addLabel(new GUIComponentLabel(guiLeft + 30, scanDistanceText.y, Color.WHITE, translate("trafficsignalcontroller.scandistance")).setBox(scanDistanceText));
+		
+		addLabel(new GUIComponentLabel(guiLeft + 30, guiTop + 55, Color.WHITE, translate("trafficsignalcontroller.scanfound")));
+		addItem(new GUIComponentItem(guiLeft + 120, guiTop + 50, 1.0F, "mts:trafficsignal", 1, -1));
+		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 55, Color.WHITE, " X " + String.valueOf(signalController.trafficSignalLocations.size() - signalController.crossingSignalLocations.size())));
+		addItem(new GUIComponentItem(guiLeft + 170, guiTop + 50, 1.0F, "mts:crossingsignal", 1, -1));
+		addLabel(crossingSignalCount = new GUIComponentLabel(guiLeft + 185, guiTop + 55, Color.WHITE, " X " + String.valueOf(signalController.crossingSignalLocations.size())));
+		
+		addButton(orientationButton = new GUIComponentButton(guiLeft + 125, guiTop + 70, 100, signalController.orientedOnX ? "X" : "Z"){
+			@Override
+			public void onClicked(){
+				if(signalController.orientedOnX){
+					signalController.orientedOnX = false;
+					this.text = "Z";
+				}else{
+					signalController.orientedOnX = true;
+					this.text = "X";
+				}
+			}
+		});
+		addLabel(new GUIComponentLabel(guiLeft + 30, orientationButton.y + 5, Color.WHITE, translate("trafficsignalcontroller.primary")).setButton(orientationButton));
+		
+		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 90, 100, translate("trafficsignalcontroller." + (signalController.triggerMode ? "modetrigger" : "modetime"))){
+			@Override
+			public void onClicked(){
+				if(signalController.triggerMode){
+					signalController.triggerMode = false;
+					this.text = translate("trafficsignalcontroller.modetime");
+				}else{
+					signalController.triggerMode = true;
+					this.text = translate("trafficsignalcontroller.modetrigger");
+				}
+			}
+		});
+		addLabel(new GUIComponentLabel(guiLeft + 30, modeButton.y + 5, Color.WHITE, translate("trafficsignalcontroller.signalmode")).setButton(modeButton));
+		
+		addTextBox(greenMainTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 115, 40, String.valueOf(signalController.greenMainTime), 10, Color.WHITE, Color.BLACK, 3));
+		addLabel(new GUIComponentLabel(guiLeft + 30, greenMainTimeText.y, Color.WHITE, translate("trafficsignalcontroller.greenmaintime")).setBox(greenMainTimeText));
+		
+		addTextBox(greenCrossTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 125, 40, String.valueOf(signalController.greenCrossTime), 10, Color.WHITE, Color.BLACK, 3));
+		addLabel(new GUIComponentLabel(guiLeft + 30, greenCrossTimeText.y, Color.WHITE, translate("trafficsignalcontroller.greencrosstime")).setBox(greenCrossTimeText));
+		
+		addTextBox(yellowTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 135, 40, String.valueOf(signalController.yellowTime), 10, Color.WHITE, Color.BLACK, 1));
+		addLabel(new GUIComponentLabel(guiLeft + 30, yellowTimeText.y, Color.WHITE, translate("trafficsignalcontroller.yellowtime")).setBox(yellowTimeText));
+		
+		addTextBox(allRedTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 145, 40, String.valueOf(signalController.allRedTime), 10, Color.WHITE, Color.BLACK, 1));
+		addLabel(new GUIComponentLabel(guiLeft + 30, allRedTimeText.y, Color.WHITE, translate("trafficsignalcontroller.allredtime")).setBox(allRedTimeText));
+		
+		addButton(confirmButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 80, translate("trafficsignalcontroller.confirm")){
+			@Override
+			public void onClicked(){
+				//Convert strings to ints and send update packet to server.
+				//Catch bad text if we have any as we don't want that to crash the server.
+				try{
+					signalController.greenMainTime = Integer.valueOf(greenMainTimeText.getText());
+					signalController.greenCrossTime = Integer.valueOf(greenCrossTimeText.getText());
+					signalController.yellowTime = Integer.valueOf(yellowTimeText.getText());
+					signalController.allRedTime = Integer.valueOf(allRedTimeText.getText());
+				}catch(Exception e){
+					return;
+				}
+				MTS.MTSNet.sendToServer(new PacketTrafficSignalControllerChange(signalController));
+				mc.player.closeScreen();
+			}
+		});
 	}
 	
-	
-    @Override
-    protected void mouseClicked(int x, int y, int button) throws IOException{
-    	super.mouseClicked(x, y, button);
-    	for(GuiTextField box : textList){
-    		if(box.getVisible()){
-    			box.mouseClicked(x, y, button);
-    		}
-    	}
-    }
-	
-    @Override
-    protected void keyTyped(char key, int bytecode) throws IOException {
-    	super.keyTyped(key, bytecode);
-    	//Keys 2-11 are numbers per LWJGL.
-    	//Key 14 is backspace, 211 is delete
-    	if(bytecode!=1 && (bytecode >=2 && bytecode <= 11) || bytecode == 14 || bytecode == 211){
-    		for(GuiTextField box : textList){
-        		if(box.isFocused()){
-        			box.textboxKeyTyped(key, bytecode);
-        		}
-        	}
-    	}else if(bytecode == 18){
-    		//Pressed e, exit GUI.
-    		super.keyTyped(key, 1);
-    	}
-    }
+	@Override
+	public void setStates(){
+		trafficSignalCount.text = " X " + String.valueOf(signalController.trafficSignalLocations.size() - signalController.crossingSignalLocations.size());
+		crossingSignalCount.text = " X " + String.valueOf(signalController.crossingSignalLocations.size());
+		if(!signalController.trafficSignalLocations.isEmpty()){
+			orientationButton.enabled = true;
+			modeButton.enabled = true;
+			greenMainTimeText.enabled = true;
+			greenCrossTimeText.enabled = true;
+			yellowTimeText.enabled = true;
+			allRedTimeText.enabled = true;
+			confirmButton.enabled = true;
+		}else{
+			orientationButton.enabled = false;
+			modeButton.enabled = false;
+			greenMainTimeText.enabled = false;
+			greenCrossTimeText.enabled = false;
+			yellowTimeText.enabled = false;
+			allRedTimeText.enabled = false;
+			confirmButton.enabled = false;
+		}
+		greenMainTimeText.visible = !signalController.triggerMode;
+	}
 }
