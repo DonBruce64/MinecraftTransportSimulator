@@ -59,9 +59,10 @@ public abstract class APartEngine extends APart implements FXPart{
 	public static final float engineOverheatTemp2 = 121.111F;
 	public static final float engineFailureTemp = 132.222F;
 	public static final float engineOilDanger = 40F;
+	public static final double hoursFactor = ConfigSystem.getDoubleConfig("EngineHoursFactor");
 	public final float engineStallRPM;
 	public final float engineStartRPM;
-	
+
 	
 	public APartEngine(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
@@ -120,18 +121,18 @@ public abstract class APartEngine extends APart implements FXPart{
 	@Override
 	public void attackPart(DamageSource source, float damage){
 		if(source.isExplosion()){
-			hours += damage*10;
+			hours += damage*10*hoursFactor;
 			if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
 			if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
 			if(!brokenStarter)brokenStarter = Math.random() < 0.05;
-			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, damage*10));
+			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, (float) (damage*10*hoursFactor)));
 		}else{
-			hours += damage;
+			hours += damage*hoursFactor;
 			if(source.isProjectile()){
 				if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
 				if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
 			}
-			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, damage));
+			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, (float) (damage*hoursFactor)));
 		}
 	}
 	
@@ -205,19 +206,19 @@ public abstract class APartEngine extends APart implements FXPart{
 			oilPressure = Math.min(90 - temp/10, oilPressure + RPM/engineStartRPM - 0.5*(oilLeak ? 5F : 1F)*(oilPressure/engineOilDanger));
 			if(oilPressure < engineOilDanger){
 				temp += Math.max(0, (20*RPM/pack.engine.maxRPM)/20);
-				hours += 0.01;
+				hours += 0.01*hoursFactor;
 			}else{
 				temp += Math.max(0, (7*RPM/pack.engine.maxRPM - temp/(engineColdTemp*2))/20);
-				hours += 0.001;	
+				hours += 0.001*hoursFactor;	
 			}
 			if(RPM > engineStartRPM*1.5 && temp < engineColdTemp){//Not warmed up
-				hours += 0.001*(RPM/engineStartRPM - 1);
+				hours += 0.001*(RPM/engineStartRPM - 1)*hoursFactor;
 			}
 			if(RPM > getSafeRPMFromMax(this.pack.engine.maxRPM)){//Too fast
-				hours += 0.001*(RPM - getSafeRPMFromMax(this.pack.engine.maxRPM))/10F;
+				hours += 0.001*(RPM - getSafeRPMFromMax(this.pack.engine.maxRPM))/10F*hoursFactor;
 			}
 			if(temp > engineOverheatTemp1){//Too hot
-				hours += 0.001*(temp - engineOverheatTemp1);
+				hours += 0.001*(temp - engineOverheatTemp1)*hoursFactor;
 				if(temp > engineFailureTemp && !vehicle.world.isRemote && !isCreative){
 					explodeEngine();
 				}
