@@ -172,6 +172,8 @@ public abstract class APartEngine extends APart implements FXPart{
 					if(vehicle.world.isRemote){
 						MTS.proxy.playSound(partPos, partName + "_cranking", 1, (float) (RPM/engineStartRPM));
 					}
+				}else{
+					setElectricStarterStatus(false);
 				}
 			}
 			if(starterLevel > 0){
