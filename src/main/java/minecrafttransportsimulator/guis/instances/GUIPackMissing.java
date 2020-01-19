@@ -1,7 +1,8 @@
-package minecrafttransportsimulator.guis;
+package minecrafttransportsimulator.guis.instances;
 
 import java.awt.Color;
 
+import minecrafttransportsimulator.guis.components.GUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 
 public class GUIPackMissing extends GUIBase{

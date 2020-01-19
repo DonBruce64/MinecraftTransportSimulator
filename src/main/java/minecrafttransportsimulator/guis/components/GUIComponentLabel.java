@@ -2,8 +2,6 @@ package minecrafttransportsimulator.guis.components;
 
 import java.awt.Color;
 
-import minecrafttransportsimulator.guis.GUIBase;
-
 /**Custom label class.  Allows for batch rendering of text, and easier rendering of labels using
  * state variables rather than actual text boxes.  Also allows for linking with either a
  * {@link GUIComponentButton} or {@link GUIComponentTextBox} to avoid having to set visibility

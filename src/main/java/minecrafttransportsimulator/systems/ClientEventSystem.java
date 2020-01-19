@@ -4,8 +4,8 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.guis.GUIConfig;
-import minecrafttransportsimulator.guis.GUIPackMissing;
+import minecrafttransportsimulator.guis.instances.GUIConfig;
+import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;

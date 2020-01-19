@@ -10,7 +10,7 @@ import minecrafttransportsimulator.ClientProxy;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.GUIPanelGround;
-import minecrafttransportsimulator.guis.GUIRadio;
+import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.BrakePacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;

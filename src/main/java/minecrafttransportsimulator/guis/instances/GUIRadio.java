@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.guis;
+package minecrafttransportsimulator.guis.instances;
 
 import java.awt.Color;
 import java.net.URL;
@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.guis.components.GUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.radio.Radio;
