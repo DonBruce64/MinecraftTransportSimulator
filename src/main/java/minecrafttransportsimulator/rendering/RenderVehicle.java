@@ -21,7 +21,6 @@ import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackRotatableMo
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackTranslatableModelObject;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.systems.ClientEventSystem;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -1169,14 +1168,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				GL11.glTexCoord2f(vertex[3], vertex[4]);
 				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
 				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-			}
-			if(ConfigSystem.getBooleanConfig("InnerWindows")){
-				for(int j=window.vertices.length-1; j >= 0; --j){
-					Float[] vertex = window.vertices[j];
-					GL11.glTexCoord2f(vertex[3], vertex[4]);
-					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);	
-				}
 			}
 			GL11.glEnd();
 			GL11.glPopMatrix();

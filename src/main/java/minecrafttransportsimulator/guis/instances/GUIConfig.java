@@ -95,7 +95,7 @@ public class GUIConfig extends GUIBase{
 		
 		//Config buttons and text.
 		configButtons.clear();
-		for(String configName : new String[]{"Sea Level Offset", "Mouse Yoke", "Inner Windows", "Keyboard Override"}){
+		for(String configName : new String[]{"Sea Level Offset", "Mouse Yoke", "Keyboard Override"}){
 			String formattedConfigName = configName.replace(" ", "");
 			GUIComponentButton button = new GUIComponentButton(guiLeft+140, guiTop+20+configButtons.size()*20, 60, String.valueOf(ConfigSystem.getBooleanConfig(formattedConfigName))){
 				public void onClicked(){
