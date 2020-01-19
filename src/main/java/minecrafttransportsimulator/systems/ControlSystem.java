@@ -29,6 +29,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartGun;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
@@ -325,7 +326,7 @@ public final class ControlSystem{
 	private static void controlRadio(EntityVehicleE_Powered vehicle, ControlsKeyboard radio){
 		if(radio.isPressed()){
 			if(Minecraft.getMinecraft().currentScreen == null){
-				FMLCommonHandler.instance().showGuiScreen(new GUIRadio(vehicle));
+				FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(new GUIRadio(vehicle)));
 			}
 		}
 	}

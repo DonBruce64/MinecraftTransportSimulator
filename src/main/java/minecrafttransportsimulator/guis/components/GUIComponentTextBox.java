@@ -2,6 +2,8 @@ package minecrafttransportsimulator.guis.components;
 
 import java.awt.Color;
 
+import minecrafttransportsimulator.wrappers.WrapperGUI;
+
 /**Custom text box class.  This class is designed to remove the need to check for clicking of
  * text boxes and to manually set their text, as well as the odd getter/setter methods
  * that MC's text boxes have that aren't in other components.  Provides a more streamlined
@@ -141,21 +143,21 @@ public class GUIComponentTextBox{
 	 *  recommended to render all text boxes with {@link GUIComponentLabel}s and other font-based
 	 *  GUI components so textures don't need to be switched out.
 	 */
-    public void renderBox(GUIBase currentGUI){
+    public void renderBox(){
     	if(visible){
     		if(backgroundColor != null){
-    			GUIBase.renderRectangle(x, y, width, height, backgroundColor);
+    			WrapperGUI.renderRectangle(x, y, width, height, backgroundColor);
     		}
     		//If this box is less than 20px high, center the text.
     		//Otherwise, render it at the top aligned.
     		if(enabled){
-    			if(focused && currentGUI.inClockPeriod(20, 10)){
-    				currentGUI.drawText(String.format(flashText), x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, false, false, width);
+    			if(focused && WrapperGUI.inClockPeriod(20, 10)){
+    				WrapperGUI.drawText(String.format(flashText), x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, false, false, width);
     			}else{
-    				currentGUI.drawText(String.format(text), x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, false, false, width);
+    				WrapperGUI.drawText(String.format(text), x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, false, false, width);
     			}
     		}else{
-    			currentGUI.drawText(String.format(text), x + 4, y + (height >= 20 ? 5 : 1 + height/10), Color.GRAY, false, false, width);
+    			WrapperGUI.drawText(String.format(text), x + 4, y + (height >= 20 ? 5 : 1 + height/10), Color.GRAY, false, false, width);
     		}
     	}
     }

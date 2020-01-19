@@ -39,7 +39,6 @@ public class GUIRadio extends GUIBase{
 	public GUIRadio(RadioContainer container){
 		RadioManager.init(MTS.minecraftDir);
 		radio = RadioManager.getRadio(container);
-		this.allowUserInput=true;
 	}
 	
 	@Override

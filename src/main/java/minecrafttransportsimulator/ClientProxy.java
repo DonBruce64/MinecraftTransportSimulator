@@ -9,13 +9,14 @@ import minecrafttransportsimulator.guis.GUIInstruments;
 import minecrafttransportsimulator.guis.GUIManual;
 import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.guis.GUISign;
-import minecrafttransportsimulator.guis.GUITrafficSignalController;
+import minecrafttransportsimulator.guis.instances.GUITrafficSignalController;
 import minecrafttransportsimulator.items.core.ItemManual;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.VehicleSoundSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3d;
@@ -52,7 +53,7 @@ public class ClientProxy extends CommonProxy{
 		}else if(clicked instanceof BlockPoleSign){
 			FMLCommonHandler.instance().showGuiScreen(new GUISign((BlockPoleSign) clicked, clicker));
 		}else if(clicked instanceof TileEntityTrafficSignalController){
-			FMLCommonHandler.instance().showGuiScreen(new GUITrafficSignalController((TileEntityTrafficSignalController) clicked));
+			FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(new GUITrafficSignalController((TileEntityTrafficSignalController) clicked)));
 		}
 	}
 	

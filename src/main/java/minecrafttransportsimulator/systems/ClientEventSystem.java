@@ -19,6 +19,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleC_Colliding;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.client.renderer.entity.RenderPlayer;
@@ -360,7 +361,7 @@ public final class ClientEventSystem{
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
 	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()].equals(MTSRegistry.coreTab)){
-	    			FMLCommonHandler.instance().showGuiScreen(new GUIPackMissing());
+	    			FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(new GUIPackMissing()));
 	    		}
 	    	}
     	}
@@ -386,7 +387,7 @@ public final class ClientEventSystem{
         		MTS.MTSNet.sendToServer(new PacketPackReload());
         	}
             if(minecraft.currentScreen == null){
-            	FMLCommonHandler.instance().showGuiScreen(new GUIConfig());
+            	FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(new GUIConfig()));
             }
         }
     }

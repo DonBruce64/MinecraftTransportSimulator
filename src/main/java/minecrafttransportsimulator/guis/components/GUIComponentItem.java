@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.guis.components;
 
+import minecrafttransportsimulator.wrappers.WrapperGUI;
+
 /**Custom item render class.  This class is designed to render an item into the GUI without
  * actually having an instance of said item, or calling any MC methods.  This allows us to
  * use a simple string name for the render to prevent version changes from causing issues.
@@ -31,21 +33,23 @@ public class GUIComponentItem{
 	 *  Renders the item by calling the appropriate method in the bas GUI.
 	 *  This is done to keep all nasty MC-specific methods out of this component.
 	 */
-    public void renderItem(GUIBase currentGUI){
+    public void renderItem(){
     	if(visible){
-    		currentGUI.drawItem(itemName, itemQty, itemMetadata, x, y, scale);
+    		WrapperGUI.drawItem(itemName, itemQty, itemMetadata, x, y, scale);
     	}
     }
     
 	/**
 	 *  Renders the tooltip for this item.  This needs to be done after the main item
-	 *  render as otherwise it will render behind other items.
+	 *  render as otherwise it will render behind other items.  This method needs an
+	 *  instance of {@link WrapperGUI} due to the MC GUI system hard-linking the
+	 *  tooltip rendering sequence to the GUI instance.
 	 */
-    public void renderTooltip(GUIBase currentGUI, int mouseX, int mouseY){
+    public void renderTooltip(WrapperGUI wrapper, int mouseX, int mouseY){
     	if(visible){
     		float itemTooltipBounds = 16*scale;
     		if(mouseX > x && mouseX < x + itemTooltipBounds && mouseY > y && mouseY < y + itemTooltipBounds){
-    			currentGUI.drawItemTooltip(itemName, itemQty, itemMetadata, mouseX, mouseY);
+    			wrapper.drawItemTooltip(itemName, itemQty, itemMetadata, mouseX, mouseY);
     		}
     	}
     }
