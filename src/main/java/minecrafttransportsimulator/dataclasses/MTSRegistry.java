@@ -69,8 +69,6 @@ import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleJerrycan;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowFix;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
@@ -369,8 +367,6 @@ public final class MTSRegistry{
 		registerPacket(PacketVehicleJerrycan.class, PacketVehicleJerrycan.Handler.class, true, false);
 		registerPacket(PacketVehicleKey.class, PacketVehicleKey.Handler.class, true, false);
 		registerPacket(PacketVehicleNameTag.class, PacketVehicleNameTag.Handler.class, true, false);
-		registerPacket(PacketVehicleWindowBreak.class, PacketVehicleWindowBreak.Handler.class, true, false);
-		registerPacket(PacketVehicleWindowFix.class, PacketVehicleWindowFix.Handler.class, true, false);
 		
 		//Packets in packets.parts
 		registerPacket(PacketPartEngineDamage.class, PacketPartEngineDamage.Handler.class, true, false);

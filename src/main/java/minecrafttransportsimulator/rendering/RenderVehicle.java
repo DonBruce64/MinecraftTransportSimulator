@@ -1150,38 +1150,36 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
 		//Iterate through all windows.
 		for(byte i=0; i<vehicleWindowLists.get(vehicle.vehicleJSONName).size(); ++i){
-			if(i >= vehicle.brokenWindows){
-				GL11.glPushMatrix();
-				//This is a window or set of windows.  Like the model, it will be triangle-based.
-				//However, windows may be rotatable or translatable.  Check this before continuing.
-				WindowPart window = vehicleWindowLists.get(vehicle.vehicleJSONName).get(i);
-				for(RotatablePart rotatable : vehicleRotatableLists.get(vehicle.vehicleJSONName)){
-					if(rotatable.name.equals(window.name)){
-						rotateModelObject(vehicle, rotatable, partialTicks);
-					}
+			GL11.glPushMatrix();
+			//This is a window or set of windows.  Like the model, it will be triangle-based.
+			//However, windows may be rotatable or translatable.  Check this before continuing.
+			WindowPart window = vehicleWindowLists.get(vehicle.vehicleJSONName).get(i);
+			for(RotatablePart rotatable : vehicleRotatableLists.get(vehicle.vehicleJSONName)){
+				if(rotatable.name.equals(window.name)){
+					rotateModelObject(vehicle, rotatable, partialTicks);
 				}
-				for(TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.vehicleJSONName)){
-					if(translatable.name.equals(window.name)){
-						translateModelObject(vehicle, translatable, partialTicks);
-					}
+			}
+			for(TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.vehicleJSONName)){
+				if(translatable.name.equals(window.name)){
+					translateModelObject(vehicle, translatable, partialTicks);
 				}
-				GL11.glBegin(GL11.GL_TRIANGLES);
-				for(Float[] vertex : window.vertices){
+			}
+			GL11.glBegin(GL11.GL_TRIANGLES);
+			for(Float[] vertex : window.vertices){
+				GL11.glTexCoord2f(vertex[3], vertex[4]);
+				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+			}
+			if(ConfigSystem.getBooleanConfig("InnerWindows")){
+				for(int j=window.vertices.length-1; j >= 0; --j){
+					Float[] vertex = window.vertices[j];
 					GL11.glTexCoord2f(vertex[3], vertex[4]);
 					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);	
 				}
-				if(ConfigSystem.getBooleanConfig("InnerWindows")){
-					for(int j=window.vertices.length-1; j >= 0; --j){
-						Float[] vertex = window.vertices[j];
-						GL11.glTexCoord2f(vertex[3], vertex[4]);
-						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);	
-					}
-				}
-				GL11.glEnd();
-				GL11.glPopMatrix();
 			}
+			GL11.glEnd();
+			GL11.glPopMatrix();
 		}
 	}
 	

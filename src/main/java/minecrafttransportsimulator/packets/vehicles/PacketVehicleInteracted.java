@@ -9,9 +9,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -89,14 +87,6 @@ public class PacketVehicleInteracted extends APacketVehiclePlayer{
 						}else if(Items.NAME_TAG.equals(player.getHeldItemMainhand().getItem())){
 							vehicle.displayText = heldStack.getDisplayName().length() > vehicle.pack.rendering.displayTextMaxLength ? heldStack.getDisplayName().substring(0, vehicle.pack.rendering.displayTextMaxLength - 1) : heldStack.getDisplayName();
 							MTS.MTSNet.sendToAll(new PacketVehicleNameTag(vehicle));
-						}else if(Item.getItemFromBlock(Blocks.GLASS_PANE).equals(player.getHeldItemMainhand().getItem())){
-							if(vehicle.brokenWindows > 0){
-								if(!player.capabilities.isCreativeMode){
-									player.inventory.clearMatchingItems(Item.getItemFromBlock(Blocks.GLASS_PANE), 0, 1, null);
-								}
-								--vehicle.brokenWindows;
-								MTS.MTSNet.sendToAll(new PacketVehicleWindowFix(vehicle));
-							}
 						}else if(MTSRegistry.jerrycan.equals(player.getHeldItemMainhand().getItem())){
 							if(heldStack.hasTagCompound() && heldStack.getTagCompound().getBoolean("isFull")){
 								EntityVehicleE_Powered poweredVehicle = (EntityVehicleE_Powered) vehicle;

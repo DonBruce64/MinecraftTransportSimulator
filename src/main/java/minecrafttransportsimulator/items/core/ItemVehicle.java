@@ -68,7 +68,6 @@ public class ItemVehicle extends Item{
 						
 						//B-level
 						newVehicle.locked=tagCompound.getBoolean("locked");
-						newVehicle.brokenWindows=tagCompound.getByte("brokenWindows");
 						newVehicle.ownerName=tagCompound.getString("ownerName");
 						newVehicle.displayText=tagCompound.getString("displayText");
 						

@@ -9,7 +9,6 @@ import com.google.common.collect.HashBiMap;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleWindowBreak;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -21,7 +20,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -49,7 +47,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Mod.EventBusSubscriber
 public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public boolean locked;
-	public byte brokenWindows;
 	public float rotationRoll;
 	public float prevRotationRoll;
 	public double airDensity;
@@ -157,15 +154,6 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 						return true;
 					}
 				}
-			}
-			
-			//Since we didn't forward any attacks or do special events, we must have attacked this vehicle directly.
-			//Send a packet to break a window if we need to.
-			Entity damageSource = source.getTrueSource() != null && !source.getTrueSource().equals(source.getImmediateSource()) ? source.getImmediateSource() : source.getTrueSource();
-			if(damageSource != null && this.brokenWindows < pack.rendering.numberWindows){
-				++brokenWindows;
-				this.playSound(SoundEvents.BLOCK_GLASS_BREAK, 2.0F, 1.0F);
-				MTS.MTSNet.sendToAll(new PacketVehicleWindowBreak(this));
 			}
 		}
 		return true;
@@ -357,19 +345,11 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	 * what was attacked on the vehicle.
 	 */
 	public void attackManuallyAtPosition(double x, double y, double z, DamageSource source, float damage){
-		//First check to see if we hit a part.
 		for(APart part : this.getVehicleParts()){
 			if(part.getAABBWithOffset(Vec3d.ZERO).contains(new Vec3d(x, y, z))){
 				part.attackPart(source, damage);
 				return;
 			}
-		}
-		
-		//We didn't hit a part, so we must have hit a collision box.  Damage the main vehicle instead.
-		if(this.brokenWindows < pack.rendering.numberWindows){
-			++brokenWindows;
-			this.playSound(SoundEvents.BLOCK_GLASS_BREAK, 2.0F, 1.0F);
-			MTS.MTSNet.sendToAll(new PacketVehicleWindowBreak(this));
 		}
 	}
 	
@@ -434,7 +414,6 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
 		this.locked=tagCompound.getBoolean("locked");
-		this.brokenWindows=tagCompound.getByte("brokenWindows");
 		this.rotationRoll=tagCompound.getFloat("rotationRoll");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
@@ -453,7 +432,6 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("locked", this.locked);
-		tagCompound.setByte("brokenWindows", this.brokenWindows);
 		tagCompound.setFloat("rotationRoll", this.rotationRoll);
 		tagCompound.setString("ownerName", this.ownerName);
 		tagCompound.setString("displayText", this.displayText);
