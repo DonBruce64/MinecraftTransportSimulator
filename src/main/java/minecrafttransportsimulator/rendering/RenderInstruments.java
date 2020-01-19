@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.PackInstrumentObject.PackInstrumentComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -22,7 +21,6 @@ import net.minecraft.util.ResourceLocation;
 
 public abstract class RenderInstruments{
 	protected static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
-	protected static final ResourceLocation controlsTexture = new ResourceLocation(MTS.MODID, "textures/controls_aircraft.png");
 	
 	/**Map for texture sheets.  First keyed by vehicle, then keyed by the gauge itself.**/
 	private static Map<String, Map<String, ResourceLocation>> instrumentTextureSheets = new HashMap<String, Map<String, ResourceLocation>>();

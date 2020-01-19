@@ -11,9 +11,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
-import minecrafttransportsimulator.dataclasses.MTSControls.Controls;
 import minecrafttransportsimulator.dataclasses.PackPartObject;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackControl;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackDisplayText;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackInstrument;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
@@ -236,7 +234,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			GL11.glEnable(GL11.GL_NORMALIZE);
 			renderWindows(vehicle, partialTicks);
 			renderTextMarkings(vehicle);
-			renderInstrumentsAndControls(vehicle);
+			renderInstruments(vehicle);
 			GL11.glDisable(GL11.GL_NORMALIZE);
 			if(Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()){
 				renderBoundingBoxes(vehicle);
@@ -1381,8 +1379,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     	GL11.glEnd();
     }
 	
-	private static void renderInstrumentsAndControls(EntityVehicleE_Powered vehicle){
-		GL11.glPushMatrix();
+	private static void renderInstruments(EntityVehicleE_Powered vehicle){
 		for(byte i=0; i<vehicle.pack.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.pack.motorized.instruments.get(i);
 			GL11.glPushMatrix();
@@ -1397,19 +1394,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 			GL11.glPopMatrix();
 		}
-		for(byte i=0; i<vehicle.pack.motorized.controls.size(); ++i){
-			PackControl packControl = vehicle.pack.motorized.controls.get(i);
-			GL11.glPushMatrix();
-			GL11.glTranslatef(packControl.pos[0], packControl.pos[1], packControl.pos[2]);
-			GL11.glScalef(1F/16F/16F, 1F/16F/16F, 1F/16F/16F);
-			for(Controls control : Controls.values()){
-				if(control.name().toLowerCase().equals(packControl.controlName)){
-					RenderControls.drawControl(vehicle, control, false);
-				}
-			}
-			GL11.glPopMatrix();
-		}
-		GL11.glPopMatrix();
 	}
 	
 	private static void renderBoundingBoxes(EntityVehicleE_Powered vehicle){

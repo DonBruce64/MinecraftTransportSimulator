@@ -2,8 +2,6 @@ package minecrafttransportsimulator.rendering;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.dataclasses.MTSControls.Controls;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackControl;
 import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackInstrument;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -45,9 +43,6 @@ public final class RenderHUD{
 					CameraSystem.hudMode != 3 && !inGUI ? 75 : 100,
 					true);
 		}
-		if(CameraSystem.hudMode > 1 && !inGUI){
-			drawControls(vehicle, inGUI);
-		}
 
 		if(!inGUI){
 			Minecraft.getMinecraft().entityRenderer.disableLightmap();
@@ -86,20 +81,6 @@ public final class RenderHUD{
 						}
 						GL11.glPopMatrix();
 					}
-				}
-			}
-		}
-	}
-	
-	private static void drawControls(EntityVehicleE_Powered vehicle, boolean inGUI){
-		for(byte i=0; i<vehicle.pack.motorized.controls.size(); ++i){
-			PackControl packControl = vehicle.pack.motorized.controls.get(i);
-			for(Controls control : Controls.values()){
-				if(control.name().toLowerCase().equals(packControl.controlName)){
-					GL11.glPushMatrix();
-					GL11.glTranslated(packControl.hudpos[0]*screenDefaultX/100, packControl.hudpos[1]*screenDefaultY/100, 0);
-					RenderControls.drawControl(vehicle, control, !inGUI);
-					GL11.glPopMatrix();
 				}
 			}
 		}

@@ -37,7 +37,6 @@ public class PackVehicleObject{
         public String hookupType;
         public boolean isTrailer;
         public List<PackInstrument> instruments = new ArrayList<PackInstrument>();
-        public List<PackControl> controls = new ArrayList<PackControl>();
     }
     
     public class PackPlane{
@@ -98,12 +97,6 @@ public class PackVehicleObject{
         public float scale;
         public float hudScale;
         public byte optionalEngineNumber;
-    }
-    
-    public class PackControl{
-        public float[] pos;
-        public int[] hudpos;
-        public String controlName;
     }
     
     public class PackRenderingConfig{
