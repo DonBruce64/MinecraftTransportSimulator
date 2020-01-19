@@ -27,6 +27,7 @@ public class GUITrafficSignalController extends GuiScreen{
 	private int guiTop;
 	private boolean orientedOnX = false;
 	private boolean triggerMode = false;
+	private byte crossingSignals = 0;
 	private final List<BlockPos> trafficSignalLocations = new ArrayList<BlockPos>();
 	private final List<GuiTextField> textList = new ArrayList<GuiTextField>();
 	
@@ -91,6 +92,11 @@ public class GUITrafficSignalController extends GuiScreen{
 			this.yellowTimeText.setText(String.valueOf(signalController.yellowTime/20));
 			this.allRedTimeText.setText(String.valueOf(signalController.allRedTime/20));
 			this.trafficSignalLocations.addAll(signalController.trafficSignalLocations);
+			for(BlockPos pos : trafficSignalLocations){
+				if(signalController.getWorld().getBlockState(pos).getBlock().equals(MTSRegistry.crossingSignal)){
+					++crossingSignals;
+				}
+			}
 		}
 	}
 	
@@ -112,7 +118,9 @@ public class GUITrafficSignalController extends GuiScreen{
 		fontRenderer.drawStringWithShadow(I18n.format("gui.trafficsignalcontroller.scanfound"), guiLeft + 30, guiTop + 60, Color.WHITE.getRGB());
 		RenderHelper.enableGUIStandardItemLighting();
 		itemRender.renderItemAndEffectIntoGUI(new ItemStack(MTSRegistry.trafficSignal), guiLeft + 120, guiTop + 55);
-		fontRenderer.drawString(" X " + trafficSignalLocations.size(), guiLeft + 135, guiTop + 60, trafficSignalLocations.isEmpty() ? Color.RED.getRGB() : Color.WHITE.getRGB());
+		fontRenderer.drawString(" X " + (trafficSignalLocations.size() - crossingSignals), guiLeft + 135, guiTop + 60, trafficSignalLocations.isEmpty() ? Color.RED.getRGB() : Color.WHITE.getRGB());
+		itemRender.renderItemAndEffectIntoGUI(new ItemStack(MTSRegistry.crossingSignal), guiLeft + 160, guiTop + 55);
+		fontRenderer.drawString(" X " + crossingSignals, guiLeft + 175, guiTop + 60, trafficSignalLocations.isEmpty() ? Color.RED.getRGB() : Color.WHITE.getRGB());
 		
 		//Controls
 		if(!trafficSignalLocations.isEmpty()){
@@ -177,6 +185,9 @@ public class GUITrafficSignalController extends GuiScreen{
 						Block block = signalController.getWorld().getBlockState(pos).getBlock();
 						if(block.equals(MTSRegistry.trafficSignal)){
 							trafficSignalLocations.add(pos);
+						}else if(block.equals(MTSRegistry.crossingSignal)){
+							trafficSignalLocations.add(pos);
+							++crossingSignals;
 						}
 					}
 				}

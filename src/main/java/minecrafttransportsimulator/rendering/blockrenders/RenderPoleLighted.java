@@ -11,11 +11,9 @@ import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController
 import minecrafttransportsimulator.blocks.pole.BlockPoleAttachment;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleAttachment;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -28,6 +26,8 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lensflare.png");
 	private static final ResourceLocation lightTexture = new ResourceLocation(MTS.MODID, "textures/rendering/light.png");
 	private static final ResourceLocation lightBeamTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lightbeam.png");
+	private static final ResourceLocation walkTexture = new ResourceLocation(MTS.MODID, "textures/rendering/walk.png");
+	private static final ResourceLocation dontwalkTexture = new ResourceLocation(MTS.MODID, "textures/rendering/dontwalk.png");
 		
 	public RenderPoleLighted(){}
 	
@@ -62,6 +62,8 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 		GL11.glDisable(GL11.GL_LIGHTING);
 		if(decorBlock.equals(MTSRegistry.trafficSignal)){
 			renderTrafficSignal(polePart, facingVec, lightBrightness);
+		}else if(decorBlock.equals(MTSRegistry.crossingSignal)){
+			renderCrossingSignal(polePart, facingVec, lightBrightness);
 		}else if(decorBlock.equals(MTSRegistry.streetLight)){
 			renderStreetLight(polePart, facingVec, lightBrightness);
 		}
@@ -71,21 +73,24 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 		GL11.glPopMatrix();
 	}
 	
-	private void renderLightedSquare(float lightSize, float lightBrightness, Color lightColor){
+	private void renderLightedSquare(float lightSize, float lightBrightness, Color lightColor, ResourceLocation texture){
 		final float flareSize = lightSize*4F;
-		bindTexture(lightTexture);
+		bindTexture(texture);
 		GL11.glColor3f(lightColor.getRed()/255F, lightColor.getGreen()/255F, lightColor.getBlue()/255F);
 		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(1, 0);
+		GL11.glTexCoord2f(0, 0);
+		GL11.glVertex3f(-lightSize/2F, lightSize/2F, 0);
+		GL11.glTexCoord2f(0, 1);
 		GL11.glVertex3f(-lightSize/2F, -lightSize/2F, 0);
 		GL11.glTexCoord2f(1, 1);
 		GL11.glVertex3f(lightSize/2F, -lightSize/2F, 0);
-		GL11.glTexCoord2f(0, 1);
+		GL11.glTexCoord2f(1, 0);
 		GL11.glVertex3f(lightSize/2F, lightSize/2F, 0);
-		GL11.glTexCoord2f(0, 0);
-		GL11.glVertex3f(-lightSize/2F, lightSize/2F, 0);
+		
+		
 		GL11.glEnd();
 		
+		GL11.glTranslatef(0, 0, -0.001F);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		bindTexture(lensFlareTexture);
@@ -139,115 +144,31 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 				TileEntityTrafficSignalController controller = (TileEntityTrafficSignalController) tile;
 				//We are valid, now check to see if we are still part of the controller.
 				if(controller.trafficSignalLocations.contains(signalPos)){
-					//Valid controller detected, do logic.
+					//Valid controller detected, do render.
 					shouldFlash = false;
 					final boolean isOnMainAxis = !(controller.orientedOnX ^ (facingVec.getX() != 0));
 
 					if(controller.operationIndex == 0){
 						//First step, main light turns green, cross light stays red.
-						//If we are a signal-controlled light, we stay here until we get a signal.
-						//If we are a timed light, we immediately move to state 1 as our
-						//green time is an extra state to enable looping.
 						lightColor = isOnMainAxis ? Color.GREEN : Color.RED;
-						if(controller.triggerMode){
-							//Only check every two seconds to prevent lag.
-							if(worldTime%40 == 0){
-								//Get a bounding box for all lights in the controller system.
-								int minX = Integer.MAX_VALUE;
-								int maxX = Integer.MIN_VALUE;
-								int minZ = Integer.MAX_VALUE;
-								int maxZ = Integer.MIN_VALUE;
-								for(BlockPos controllerSignalPos : controller.trafficSignalLocations){
-									minX = Math.min(minX, controllerSignalPos.getX());
-									maxX = Math.max(maxX, controllerSignalPos.getX());
-									minZ = Math.min(minX, controllerSignalPos.getZ());
-									maxZ = Math.max(maxX, controllerSignalPos.getZ());
-								}
-								
-								//Take 10 off to expand the detection boxes for the axis.
-								if(controller.orientedOnX){
-									minZ -= 10;
-									maxZ += 10;
-								}else{
-									minX -= 10;
-									maxX += 10;
-								}
-								
-								//Now we have min-max, check for any vehicles in the area.
-								//We need to check along the non-primary axis.
-								for(Entity entity : controller.getWorld().loadedEntityList){
-									if(entity instanceof EntityVehicleG_Car){
-										if(controller.orientedOnX){
-											if((entity.posZ > minZ && entity.posZ < minZ + (maxZ - minZ)/2F) || (entity.posZ < maxZ && entity.posZ > maxZ - (maxZ - minZ)/2F)){
-												if(entity.posX > minX && entity.posX < maxX){
-													controller.timeOperationStarted = worldTime;
-													controller.operationIndex = 1;
-												}
-											}
-										}else{
-											if((entity.posX > minX && entity.posX < minX + (maxX - minX)/2F) || (entity.posX < maxX && entity.posX > maxX - (maxX - minX)/2F)){
-												if(entity.posZ > minZ && entity.posZ < maxZ){
-													controller.timeOperationStarted = worldTime;
-													controller.operationIndex = 1;
-												}
-											}
-										}
-									}
-								}
-							}
-						}else{
-							controller.timeOperationStarted = worldTime;
-							controller.operationIndex = 1;
-						}
 					}else if(controller.operationIndex == 1){
 						//Second step, main light turns yellow, cross light stays red.
 						lightColor = isOnMainAxis ? Color.YELLOW : Color.RED;
-						if(controller.timeOperationStarted + controller.yellowTime <= worldTime){
-							controller.timeOperationStarted = worldTime;
-							controller.operationIndex = 2;
-						}
 					}else if(controller.operationIndex == 2){
 						//Third step, main light turns red, cross light stays red.
 						lightColor = Color.RED;
-						if(controller.timeOperationStarted + controller.allRedTime <= worldTime){
-							controller.timeOperationStarted = worldTime;
-							controller.operationIndex = 3;
-						}
 					}else if(controller.operationIndex == 3){
 						//Fourth step, main light stays red, cross light turns green.
 						lightColor = isOnMainAxis ? Color.RED : Color.GREEN;
-						if(controller.timeOperationStarted + controller.greenCrossTime <= worldTime){
-							controller.timeOperationStarted = worldTime;
-							controller.operationIndex = 4;
-						}
 					}else if(controller.operationIndex == 4){
 						//Fifth step, main light stays red, cross light turns yellow.
 						lightColor = isOnMainAxis ? Color.RED : Color.YELLOW;
-						if(controller.timeOperationStarted + controller.yellowTime <= worldTime){
-							controller.timeOperationStarted = worldTime;
-							controller.operationIndex = 5;
-						}
 					}else if(controller.operationIndex == 5){
 						//Sixth step, main light stays red, cross light turns red.
 						lightColor = Color.RED;
-						if(controller.timeOperationStarted + controller.allRedTime <= worldTime){
-							controller.timeOperationStarted = worldTime;
-							//If we are a triggered light, we go back to 0.
-							//Otherwise, we perform another cycle and go back to 1.
-							if(controller.triggerMode){
-								controller.operationIndex = 0;
-							}else{
-								controller.timeOperationStarted = worldTime;
-								controller.operationIndex = 6;
-							}
-						}
 					}else{
-						//Sixth step, main light turns green, cross light stays red.
+						//Seventh step, main light turns green, cross light stays red.
 						lightColor = isOnMainAxis ? Color.GREEN : Color.RED;
-						if(controller.timeOperationStarted + controller.greenMainTime <= worldTime){
-							controller.timeOperationStarted = worldTime;
-							controller.operationIndex = 0;
-						}
 					}
 				}else{
 					trafficSignalControllers.remove(signalPos);
@@ -266,7 +187,96 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 
 		if(!shouldFlash || (shouldFlash && (worldTime%20 < 10))){
 			GL11.glTranslatef(0, lightColor.equals(Color.RED) ? 13F/16F : (lightColor.equals(Color.YELLOW) ? 8F/16F : 3F/16F), 0.225F);
-			renderLightedSquare(4F/16F, lightBrightness, lightColor);
+			renderLightedSquare(4F/16F, lightBrightness, lightColor, lightTexture);
+		}
+	}
+	
+	private void renderCrossingSignal(TileEntityPoleAttachment signal, Vec3i facingVec, float lightBrightness){
+		//Render the lights for the crossing signal.  What lights we render depends on the controller state.
+		final boolean shouldFlash;
+		final boolean showWalk;
+		final long worldTime = signal.getWorld().getTotalWorldTime();
+		BlockPos signalPos = signal.getPos();
+		
+		//First get the controller for this signal if we don't have it.
+		if(!trafficSignalControllers.containsKey(signalPos)){
+			//Only check 1 TE at a time from the TE list to reduce overhead.
+			int checkIndex = checkIndexList.containsKey(signalPos) ? checkIndexList.get(signalPos) : 0;
+			if(signal.getWorld().loadedTileEntityList.size() <= checkIndex){
+				checkIndex = 0;
+			}
+			TileEntity testTile = signal.getWorld().loadedTileEntityList.get(checkIndex);
+			if(testTile instanceof TileEntityTrafficSignalController){
+				if(((TileEntityTrafficSignalController) testTile).trafficSignalLocations.contains(signalPos)){
+					//Found our signal.
+					trafficSignalControllers.put(signalPos, testTile.getPos());
+				}
+			}
+			checkIndexList.put(signalPos, checkIndex + 1);
+		}
+		
+		//Now render this signal.
+		if(trafficSignalControllers.containsKey(signalPos)){
+			//Check to make sure this controller is still valid.
+			TileEntity tile = signal.getWorld().getTileEntity(trafficSignalControllers.get(signalPos));
+			if(tile instanceof TileEntityTrafficSignalController){
+				TileEntityTrafficSignalController controller = (TileEntityTrafficSignalController) tile;
+				//We are valid, now check to see if we are still part of the controller.
+				if(controller.trafficSignalLocations.contains(signalPos)){
+					//Valid controller detected, do render.
+					final boolean isOnMainAxis = !(controller.orientedOnX ^ (facingVec.getX() != 0));
+					if(controller.operationIndex == 0){
+						//First step, main signal shows walk, cross signal shows don't walk.
+						showWalk = isOnMainAxis;
+						shouldFlash = false;
+					}else if(controller.operationIndex == 1){
+						//Second step, main signal shows flashing don't walk, cross signal shows don't walk.
+						showWalk = false;
+						shouldFlash = isOnMainAxis;
+					}else if(controller.operationIndex == 2){
+						//Third step, both signals show don't walk.
+						showWalk = false;
+						shouldFlash = false;
+					}else if(controller.operationIndex == 3){
+						//Fourth step, main signal shows down't walk, cross signal shows walk.
+						showWalk = !isOnMainAxis;
+						shouldFlash = false;
+					}else if(controller.operationIndex == 4){
+						//Fifth step, main signal shows don't walk, cross signal shows flashing don't walk.
+						showWalk = false;
+						shouldFlash = !isOnMainAxis;
+					}else if(controller.operationIndex == 5){
+						//Sixth step, both signals show don't walk.
+						showWalk = false;
+						shouldFlash = false;
+					}else{
+						//Seventh step, main signal shows walk, cross signal shows don't walk.
+						showWalk = isOnMainAxis;
+						shouldFlash = false;
+					}
+				}else{
+					trafficSignalControllers.remove(signalPos);
+					showWalk = false;
+					shouldFlash = true;
+				}
+			}else{
+				trafficSignalControllers.remove(signalPos);
+				showWalk = false;
+				shouldFlash = true;
+			}
+		}else{
+			showWalk = false;
+			shouldFlash = true;
+		}
+
+		if(!shouldFlash || (shouldFlash && (worldTime%20 < 10))){
+			if(showWalk){
+				GL11.glTranslatef(0, 2F/16F, 0.145F);
+				renderLightedSquare(3F/16F, lightBrightness*0.5F, Color.GREEN, walkTexture);
+			}else{
+				GL11.glTranslatef(0, 6F/16F, 0.145F);
+				renderLightedSquare(3F/16F, lightBrightness*0.5F, Color.RED, dontwalkTexture);
+			}
 		}
 	}
 
@@ -274,7 +284,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 		//Render light square
 		GL11.glTranslatef(0, 6.45F/16F, 6F/16F);
 		GL11.glRotatef(90, 1, 0, 0);
-		renderLightedSquare(4F/16F, lightBrightness,  Color.WHITE);
+		renderLightedSquare(4F/16F, lightBrightness,  Color.WHITE, lightTexture);
 		
 		//Render light beam
 		GL11.glPushMatrix();

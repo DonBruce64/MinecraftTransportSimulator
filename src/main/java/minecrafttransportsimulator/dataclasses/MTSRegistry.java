@@ -152,6 +152,7 @@ public final class MTSRegistry{
 	public static final Block pole = new BlockPoleNormal(0.125F);
 	public static final Block poleBase = new BlockPoleWallConnector(0.125F);
 	public static final Block trafficSignal = new BlockPoleAttachment(0.125F);
+	public static final Block crossingSignal = new BlockPoleAttachment(0.125F);
 	public static final Block streetLight = new BlockPoleAttachment(0.125F);
 	public static final Block trafficSign = new BlockPoleSign(0.125F);
 		

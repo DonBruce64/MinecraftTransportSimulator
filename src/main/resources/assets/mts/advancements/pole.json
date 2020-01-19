@@ -25,6 +25,7 @@
 		"recipes": [
 			"mts:poleBase",
 			"mts:trafficSignal",
+			"mts:crossingSignal",
 			"mts:streetLight",
 			"mts:trafficSign"
 		]
