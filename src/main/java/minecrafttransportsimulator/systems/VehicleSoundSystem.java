@@ -144,7 +144,7 @@ public final class VehicleSoundSystem{
 					EntityPlayer player = Minecraft.getMinecraft().player;
 					Vec3d soundNormalizedPosition = new Vec3d(soundPosition.x - player.posX, soundPosition.y - player.posY, soundPosition.z - player.posZ).normalize().scale(5).add(player.getPositionVector());
 					String soundTempName = mcSoundSystem.quickPlay(false, soundURL, soundURL.getFile(), false, (float) soundNormalizedPosition.x, (float) soundNormalizedPosition.y, (float) soundNormalizedPosition.z, SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
-					mcSoundSystem.setVolume(soundTempName, isPlayerInsideEnclosedVehicle() ? volume*0.5F : volume);
+					mcSoundSystem.setVolume(soundTempName, (float) (volume/player.getPositionVector().distanceTo(soundPosition)*(VehicleSoundSystem.isPlayerInsideEnclosedVehicle() ? 0.5F : 1.0F)));
 					mcSoundSystem.setPitch(soundTempName, pitch);
 				}
 			}catch(Exception e){
