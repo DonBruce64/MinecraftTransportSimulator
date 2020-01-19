@@ -34,7 +34,7 @@ public class PacketVehicleAttacked extends APacketVehiclePlayer{
 					EntityVehicleB_Existing vehicle = (EntityVehicleB_Existing) getVehicle(message, ctx);
 					EntityPlayer player = getPlayer(message, ctx);
 					
-					if(vehicle != null && player != null){
+					if(vehicle != null && player != null && !vehicle.isDead){
 						if(player.getHeldItemMainhand() != null && MTSRegistry.wrench.equals(player.getHeldItemMainhand().getItem())){
 							if(player.isSneaking()){
 								//Attacker is a sneaking player with a wrench.
