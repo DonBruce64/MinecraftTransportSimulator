@@ -16,7 +16,6 @@ import minecrafttransportsimulator.packets.control.BrakePacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
 import minecrafttransportsimulator.packets.control.FlapPacket;
 import minecrafttransportsimulator.packets.control.HornPacket;
-import minecrafttransportsimulator.packets.control.LightPacket;
 import minecrafttransportsimulator.packets.control.ReverseThrustPacket;
 import minecrafttransportsimulator.packets.control.RudderPacket;
 import minecrafttransportsimulator.packets.control.ShiftPacket;
@@ -25,7 +24,6 @@ import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -451,8 +449,6 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static long lastTickTurnLeftPressed = 0;
-	private static long lastTickTurnRightPressed = 0;
 	private static void controlGroundVehicle(EntityVehicleF_Ground powered, boolean isPlayerController){
 		controlCamera(ControlsKeyboardDynamic.CAR_CHANGEHUD, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
@@ -505,16 +501,8 @@ public final class ControlSystem{
 				long currentTime = powered.world.getTotalWorldTime();
 				if(turningRight && !turningLeft){
 					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), true, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-					if(lastTickTurnRightPressed < currentTime - 2 && lastTickTurnRightPressed > currentTime - 10){
-						MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.RIGHTTURNLIGHT));
-					}
-					lastTickTurnRightPressed = currentTime;
 				}else if(turningLeft && !turningRight){
 					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), false, (short) ConfigSystem.getIntegerConfig("ControlSurfaceCooldown")));
-					if(lastTickTurnLeftPressed < currentTime - 2 && lastTickTurnLeftPressed > currentTime - 10){
-						MTS.MTSNet.sendToServer(new LightPacket(powered.getEntityId(), LightTypes.LEFTTURNLIGHT));
-					}
-					lastTickTurnLeftPressed = currentTime;
 				}
 			}
 		}
