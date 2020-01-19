@@ -3,7 +3,7 @@ package minecrafttransportsimulator.blocks.pole;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.dataclasses.PackSignObject;
+import minecrafttransportsimulator.jsondefs.PackSignObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.nbt.NBTTagCompound;
 

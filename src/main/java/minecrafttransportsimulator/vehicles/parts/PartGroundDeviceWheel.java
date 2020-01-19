@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;

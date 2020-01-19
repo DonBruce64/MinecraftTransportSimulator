@@ -8,7 +8,7 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.dataclasses.PackPartObject;
+import minecrafttransportsimulator.jsondefs.PackPartObject;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;

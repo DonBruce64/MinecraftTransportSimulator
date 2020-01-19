@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;

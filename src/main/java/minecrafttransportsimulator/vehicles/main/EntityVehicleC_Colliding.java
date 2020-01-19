@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBBCollective;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackCollisionBox;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackCollisionBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;

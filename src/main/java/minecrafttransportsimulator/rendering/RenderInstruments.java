@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.dataclasses.PackInstrumentObject.PackInstrumentComponent;
+import minecrafttransportsimulator.jsondefs.PackInstrumentObject.PackInstrumentComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;

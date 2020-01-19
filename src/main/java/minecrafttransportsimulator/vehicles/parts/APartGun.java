@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.PackPartObject;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.items.parts.ItemPartBullet;
+import minecrafttransportsimulator.jsondefs.PackPartObject;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;

@@ -2,7 +2,7 @@ package minecrafttransportsimulator.items.parts;
 
 import java.util.List;
 
-import minecrafttransportsimulator.dataclasses.PackPartObject;
+import minecrafttransportsimulator.jsondefs.PackPartObject;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;

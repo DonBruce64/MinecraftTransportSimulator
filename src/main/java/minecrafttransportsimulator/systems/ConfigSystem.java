@@ -11,7 +11,7 @@ import java.util.Set;
 
 import com.google.gson.Gson;
 
-import minecrafttransportsimulator.dataclasses.PackPartObject;
+import minecrafttransportsimulator.jsondefs.PackPartObject;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 

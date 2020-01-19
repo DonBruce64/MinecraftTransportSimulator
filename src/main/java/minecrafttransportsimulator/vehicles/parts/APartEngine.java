@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;

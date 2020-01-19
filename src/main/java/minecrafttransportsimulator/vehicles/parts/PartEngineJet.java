@@ -3,7 +3,7 @@ package minecrafttransportsimulator.vehicles.parts;
 import java.util.List;
 
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceJet;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;

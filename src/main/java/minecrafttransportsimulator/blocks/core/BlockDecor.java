@@ -5,8 +5,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.dataclasses.PackDecorObject;
 import minecrafttransportsimulator.items.core.ItemDecor;
+import minecrafttransportsimulator.jsondefs.PackDecorObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;

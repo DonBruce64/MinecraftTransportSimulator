@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.PackPartObject.PartBulletConfig;
+import minecrafttransportsimulator.jsondefs.PackPartObject.PartBulletConfig;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APartGun;
 import net.minecraft.client.Minecraft;

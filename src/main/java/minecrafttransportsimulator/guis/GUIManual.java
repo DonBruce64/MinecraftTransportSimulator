@@ -9,11 +9,11 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.PackDecorObject;
-import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.parts.AItemPart;
+import minecrafttransportsimulator.jsondefs.PackDecorObject;
+import minecrafttransportsimulator.jsondefs.PackPartObject;
 import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;

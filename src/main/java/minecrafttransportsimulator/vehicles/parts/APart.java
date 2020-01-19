@@ -5,8 +5,8 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.dataclasses.PackPartObject;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.PackPartObject;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;

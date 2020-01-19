@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.dataclasses;
+package minecrafttransportsimulator.jsondefs;
 
 import java.util.ArrayList;
 import java.util.List;

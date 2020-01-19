@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;

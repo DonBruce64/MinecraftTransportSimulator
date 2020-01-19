@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.general;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceBullet;
-import minecrafttransportsimulator.dataclasses.PackPartObject.PartBulletConfig;
+import minecrafttransportsimulator.jsondefs.PackPartObject.PartBulletConfig;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
