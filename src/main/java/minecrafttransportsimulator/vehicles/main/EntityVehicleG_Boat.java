@@ -2,7 +2,9 @@ package minecrafttransportsimulator.vehicles.main;
 
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartEngineBoat;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 
@@ -19,6 +21,12 @@ public final class EntityVehicleG_Boat extends EntityVehicleF_Ground{
 	@Override
 	protected float getDragCoefficient(){
 		return 2.0F;
+	}
+	
+	@Override
+	protected float getBrakingForceFactor(){
+		//Need to manually add breaking factor here for anchors, even though we don't collide with anything.
+		return brakeOn || parkingBrakeOn ? super.getBrakingForceFactor() + 2.0F : super.getBrakingForceFactor();
 	}
 	
 	@Override
