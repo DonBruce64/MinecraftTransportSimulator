@@ -19,7 +19,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 
-public abstract class RenderInstruments{
+public final class RenderInstruments{
 	protected static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	
 	/**Map for texture sheets.  First keyed by vehicle, then keyed by the gauge itself.**/
