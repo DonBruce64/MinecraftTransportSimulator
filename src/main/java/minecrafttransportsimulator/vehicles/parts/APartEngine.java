@@ -197,7 +197,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		}
 		
 		ambientTemp = 25*vehicle.world.getBiome(vehicle.getPosition()).getTemperature(vehicle.getPosition()) - 5*(Math.pow(2, vehicle.posY/400) - 1);
-		coolingFactor = 0.001 + vehicle.velocity/500F;
+		coolingFactor = 0.001 + Math.abs(vehicle.velocity)/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		vehicle.electricUsage -= state.running ? 0.05*RPM/pack.engine.maxRPM : 0;
 		
