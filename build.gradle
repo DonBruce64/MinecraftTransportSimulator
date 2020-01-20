@@ -8,6 +8,7 @@ buildscript {
 		classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
     }
 }
+apply plugin: 'idea'
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'com.github.johnrengelman.shadow'
 
@@ -49,15 +50,23 @@ shadowJar {
     exclude 'dummyThing'
 }
 
+repositories {
+    maven {
+        name = "OpenComputers repo"
+        url = "http://maven.cil.li/"
+    }
+}
+
 dependencies {
 
 	compile group: 'com.googlecode.soundlibs', name: 'vorbisspi', version: '1.0.3.3'
 	compile group: 'com.googlecode.soundlibs', name: 'mp3spi', version: '1.9.5.4'
     compile group: 'com.googlecode.soundlibs', name: 'basicplayer', version: '3.0.0.0'
+    deobfProvided "li.cil.oc:OpenComputers:MC1.12.2-1.7.+" // Helped with by Mimiru from OC Discord (Mimiru#6147)
 }
 
 
-//Do file stuffs.  I think this just updates mcmod.info?
+//Do file stuffs. I think this just updates mcmod.info?
 processResources {
     inputs.property "version", project.version
     inputs.property "mcversion", project.minecraft.version
@@ -67,5 +76,12 @@ processResources {
     }
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
+    }
+}
+
+// this is needed for IntelliJ so we don't have to copy over the assets manually every time
+idea {
+    module {
+        inheritOutputDirs = true
     }
 }

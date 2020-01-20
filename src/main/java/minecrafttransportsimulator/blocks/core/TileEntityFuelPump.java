@@ -2,6 +2,10 @@ package minecrafttransportsimulator.blocks.core;
 
 import javax.annotation.Nullable;
 
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.SimpleComponent;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpConnection;
@@ -21,9 +25,11 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 
-public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IFluidHandler, ITickable{
+@Optional.Method().Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "opencomputers")
+public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IFluidHandler, ITickable, SimpleComponent {
     private EntityVehicleE_Powered connectedVehicle;
     public int totalTransfered;
     
@@ -213,4 +219,40 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
         }
 		return tagCompound;
     }
+
+	@Override
+	public String getComponentName() {
+		return "iv_fuelpump"; // INFO: Max length is 14 chars
+	}
+
+	/* Getter */
+	@Callback(doc = "function():boolean; Returns true if there's fluid in the tank", direct = true)
+	@Optional.Method(modid = "opencomputers")
+	public Object[] isFluidInTank(Context context, Arguments args) {
+		return new Object[] { tankInfo.fluid != null };
+	}
+
+	@Callback(doc = "function():string; Returns the localized name of the fluid in the tank. Returns false if there is not fluid in the tank", direct = true)
+	@Optional.Method(modid = "opencomputers")
+	public Object[] getFluidLocalizedName(Context context, Arguments args) {
+		return new Object[] { tankInfo.fluid != null ? tankInfo.fluid.getLocalizedName() : false };
+	}
+
+	@Callback(doc = "function():int; Returns the actual fluid amount in the tank.", direct = true)
+	@Optional.Method(modid = "opencomputers")
+	public Object[] getFluidAmount(Context context, Arguments args) {
+		return new Object[] { tankInfo.fluid != null ? tankInfo.fluid.amount : 0 };
+	}
+
+	@Callback(doc = "function():boolean; Returns the total transferred fluid amount", direct = true)
+	@Optional.Method(modid = "opencomputers")
+	public Object[] getTotalTransfered(Context context, Arguments args) {
+		return new Object[] { totalTransfered };
+	}
+
+	@Callback(doc = "function():boolean; Returns if a vehicle is connected", direct = true)
+	@Optional.Method(modid = "opencomputers")
+	public Object[] isVehicleConnected(Context context, Arguments args) {
+		return new Object[] { connectedVehicle != null };
+	}
 }
