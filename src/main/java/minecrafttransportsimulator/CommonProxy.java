@@ -1,9 +1,6 @@
 package minecrafttransportsimulator;
 
-import java.io.File;
-
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.entity.player.EntityPlayer;
@@ -14,11 +11,7 @@ import net.minecraft.util.math.Vec3d;
  * 
  * @author don_bruce
  */
-public class CommonProxy{
-	public void initConfig(File configFile){
-		ConfigSystem.initCommon(configFile);
-	}
-	
+public class CommonProxy{	
 	public void initControls(){}
 	public void openGUI(Object clicked, EntityPlayer clicker){}
 	public void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){}

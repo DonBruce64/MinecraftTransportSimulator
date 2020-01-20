@@ -1,7 +1,5 @@
 package minecrafttransportsimulator;
 
-import java.io.File;
-
 import minecrafttransportsimulator.blocks.core.BlockBench;
 import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController;
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
@@ -11,7 +9,6 @@ import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.guis.GUISign;
 import minecrafttransportsimulator.guis.instances.GUITrafficSignalController;
 import minecrafttransportsimulator.items.core.ItemManual;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.VehicleSoundSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -32,11 +29,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  */
 @SideOnly(Side.CLIENT)
 public class ClientProxy extends CommonProxy{
-	
-	@Override
-	public void initConfig(File configFile){
-		ConfigSystem.initClient(configFile);
-	}
 
 	@Override
 	public void initControls(){

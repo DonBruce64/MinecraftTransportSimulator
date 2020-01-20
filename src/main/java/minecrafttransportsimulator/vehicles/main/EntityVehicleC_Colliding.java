@@ -37,8 +37,8 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	private final List<VehicleAxisAlignedBB> currentCollisionBoxes = new ArrayList<VehicleAxisAlignedBB>();
 	/**List of interaction boxes.  These are AABBs that can be clicked but do NOT affect vehicle collision.*/
 	private final List<VehicleAxisAlignedBB> currentInteractionBoxes = new ArrayList<VehicleAxisAlignedBB>();
-	
-	public final double speedFactor = ConfigSystem.getDoubleConfig("SpeedFactor");
+	/**Cached config value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
+	public final double speedFactor = ConfigSystem.configObject.general.speedFactor.value;
 	
 	private float hardnessHitThisTick = 0;
 			
@@ -194,7 +194,7 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 					BlockPos pos = collidedBlockPos.get(blockPosIndex);
 					float hardness = world.getBlockState(pos).getBlockHardness(world, pos);
 					if(hardness <= velocity*currentMass/250F && hardness >= 0){
-						if(ConfigSystem.getBooleanConfig("BlockBreakage")){
+						if(ConfigSystem.configObject.damage.blockBreakage.value){
 							hardnessHitThisTick += hardness;
 							collidedBlockPos.remove(blockPosIndex);
 							motionX *= Math.max(1.0F - hardness*0.5F/((1000F + currentMass)/1000F), 0.0F);

@@ -326,10 +326,9 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		}
 		
 		//Also drop some crafting ingredients as items.
-		double crashItemDropPercentage = ConfigSystem.getDoubleConfig("CrashItemDropPercentage");
 		for(ItemStack craftingStack : PackParserSystem.getMaterials(this.vehicleName)){
 			for(byte i=0; i<craftingStack.getCount(); ++i){
-				if(this.rand.nextDouble() < crashItemDropPercentage){
+				if(this.rand.nextDouble() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
 					world.spawnEntity(new EntityItem(world, this.posX, this.posY, this.posZ, new ItemStack(craftingStack.getItem(), 1, craftingStack.getMetadata())));
 				}
 			}
@@ -383,7 +382,15 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		for(int i=0; i<inventory.getSizeInventory(); ++i){
 			ItemStack stack = inventory.getStackInSlot(i);
 			if(stack != null){
-				weight += 1.2F*stack.getCount()/stack.getMaxStackSize()*(ConfigSystem.getStringConfig("HeavyItems").contains(stack.getItem().getUnlocalizedName().substring(5)) ? 2 : 1);
+				boolean isHeavy = false;
+				for(String heavyItemName : ConfigSystem.configObject.general.heavyItems.value){
+					if(stack.getItem().getUnlocalizedName().substring(5).contains(heavyItemName)){
+						isHeavy = true;
+						break;
+					}
+					
+				}
+				weight += 1.2F*stack.getCount()/stack.getMaxStackSize()*(isHeavy ? 2 : 1);
 			}
 		}
 		return weight;

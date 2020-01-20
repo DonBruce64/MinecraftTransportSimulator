@@ -75,7 +75,7 @@ public abstract class APartGroundDevice extends APart{
 					}
 					for(int i=0; i < collidedEntites.size(); ++i){
 						if(!this.vehicle.isPassenger(collidedEntites.get(i))){
-							collidedEntites.get(i).attackEntityFrom(new DamageSourceWheel(attacker), (float) (ConfigSystem.getDoubleConfig("WheelDamageFactor")*vehicle.velocity*vehicle.currentMass/1000F));
+							collidedEntites.get(i).attackEntityFrom(new DamageSourceWheel(attacker), (float) (ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicle.velocity*vehicle.currentMass/1000F));
 						}
 					}
 				}

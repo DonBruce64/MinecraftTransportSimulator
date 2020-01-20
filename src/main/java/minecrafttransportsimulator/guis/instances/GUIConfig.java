@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.guis.instances;
 
 import java.awt.Color;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +11,7 @@ import minecrafttransportsimulator.guis.components.GUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
+import minecrafttransportsimulator.jsondefs.CoreConfigObject.BooleanConfig;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
@@ -26,7 +28,7 @@ public class GUIConfig extends GUIBase{
 	
 	//Config variables.
 	private boolean configuringControls = true;
-	private Map<GUIComponentButton, String> configButtons = new HashMap<GUIComponentButton, String>();
+	private Map<GUIComponentButton, BooleanConfig> configButtons = new HashMap<GUIComponentButton, BooleanConfig>();
 	
 	//Keybind selection variables.
 	private String vehicleConfiguring = "";
@@ -95,20 +97,25 @@ public class GUIConfig extends GUIBase{
 		
 		//Config buttons and text.
 		configButtons.clear();
-		for(String configName : new String[]{"Sea Level Offset", "Mouse Yoke", "Keyboard Override"}){
-			String formattedConfigName = configName.replace(" ", "");
-			GUIComponentButton button = new GUIComponentButton(guiLeft+140, guiTop+20+configButtons.size()*20, 60, String.valueOf(ConfigSystem.getBooleanConfig(formattedConfigName))){
-				public void onClicked(){
-					ConfigSystem.setClientConfig(configButtons.get(this), !Boolean.valueOf(text));
-					text = String.valueOf(ConfigSystem.getBooleanConfig(configButtons.get(this)));
+		for(Field field : ConfigSystem.configObject.client.getClass().getFields()){
+			if(field.getType().equals(BooleanConfig.class)){
+				try{
+					BooleanConfig config = (BooleanConfig) field.get(null);
+					GUIComponentButton button = new GUIComponentButton(guiLeft+140, guiTop+20+configButtons.size()*20, 60, String.valueOf(config.value)){
+						public void onClicked(){
+							configButtons.get(this).value = !Boolean.valueOf(text);
+							ConfigSystem.saveToDisk();
+							text = String.valueOf(configButtons.get(this).value);
+						}
+					};
+					addButton(button);
+					configButtons.put(button, config);
+					addLabel(new GUIComponentLabel(guiLeft+15, button.y + 5, Color.WHITE, field.getName()).setButton(button));
+				}catch(Exception e){
+					//How the heck does this even happen?
 				}
-			};
-			addButton(button);
-			configButtons.put(button, configName.replace(" ", ""));
-			addLabel(new GUIComponentLabel(guiLeft+15, button.y + 5, Color.WHITE, configName).setButton(button));
+			}
 		}
-		
-		
 		
 		//Vehicle selection buttons and text.
 		//We only have two types.  Car and aircraft.
@@ -223,8 +230,8 @@ public class GUIConfig extends GUIBase{
 		}
 		addButton(componentListUpButton = new GUIComponentButton(guiLeft + 225, guiTop + 45, 20, "/\\"){public void onClicked(){scrollSpot -= 9;}});
 		addButton(componentListDownButton = new GUIComponentButton(guiLeft + 225, guiTop + 155, 20, "\\/"){public void onClicked(){scrollSpot += 9;}});
-		addButton(deadzone_lessButton = new GUIComponentButton(guiLeft + 100, guiTop + 10, 20, "<"){public void onClicked(){ConfigSystem.setClientConfig("JoystickDeadZone", ((int) (ConfigSystem.getDoubleConfig("JoystickDeadZone")*100) - 1)/100F);}});
-		addButton(deadzone_moreButton = new GUIComponentButton(guiLeft + 220, guiTop + 10, 20, ">"){public void onClicked(){ConfigSystem.setClientConfig("JoystickDeadZone", ((int) (ConfigSystem.getDoubleConfig("JoystickDeadZone")*100) + 1)/100F);}});
+		addButton(deadzone_lessButton = new GUIComponentButton(guiLeft + 100, guiTop + 10, 20, "<"){public void onClicked(){ConfigSystem.configObject.client.joystickDeadZone.value = ((ConfigSystem.configObject.client.joystickDeadZone.value*100 - 1)/100F);}});
+		addButton(deadzone_moreButton = new GUIComponentButton(guiLeft + 220, guiTop + 10, 20, ">"){public void onClicked(){ConfigSystem.configObject.client.joystickDeadZone.value = ((ConfigSystem.configObject.client.joystickDeadZone.value*100 + 1)/100F);}});
 		addTextBox(deadzone_text = new GUIComponentTextBox(guiLeft + 120, guiTop + 10, 100, ""));
 		
 		addLabel(new GUIComponentLabel(guiLeft+15, guiTop+20, Color.BLACK, WrapperGUI.translate("config.joystick.mapping")).setButton(componentListUpButton));
@@ -404,10 +411,10 @@ public class GUIConfig extends GUIBase{
 		if(onComponentSelectScreen){
 			componentListUpButton.enabled = scrollSpot - 9 >= 0;
 			componentListDownButton.enabled = scrollSpot + 9 < selectedJoystick.getComponents().length;
-			deadzone_lessButton.enabled = ConfigSystem.getDoubleConfig("JoystickDeadZone") > 0;
-			deadzone_moreButton.enabled = ConfigSystem.getDoubleConfig("JoystickDeadZone") < 1;
+			deadzone_lessButton.enabled = ConfigSystem.configObject.client.joystickDeadZone.value > 0;
+			deadzone_moreButton.enabled = ConfigSystem.configObject.client.joystickDeadZone.value < 1;
 			deadzone_text.enabled = false;
-			deadzone_text.setText(WrapperGUI.translate("config.joystick.deadzone") + " " + String.valueOf(ConfigSystem.getDoubleConfig("JoystickDeadZone")));
+			deadzone_text.setText(WrapperGUI.translate("config.joystick.deadzone") + " " + String.valueOf(ConfigSystem.configObject.client.joystickDeadZone.value));
 		}
 		
 		
@@ -482,7 +489,7 @@ public class GUIConfig extends GUIBase{
 				float pollData = selectedJoystick.getComponents()[buttonIndex+scrollSpot].getPollData();
 				if(selectedJoystick.getComponents()[buttonIndex+scrollSpot].isAnalog()){
 					WrapperGUI.renderRectangle(x + 85, y + 2, 40, height - 4, Color.BLACK);
-					if(Math.abs(pollData) > ConfigSystem.getDoubleConfig("JoystickDeadZone")){
+					if(Math.abs(pollData) > ConfigSystem.configObject.client.joystickDeadZone.value){
 						WrapperGUI.renderRectangle(x + 85 + 20, y + 2, (int) (pollData*20), height - 4, Color.RED);
 					}
 				}else{

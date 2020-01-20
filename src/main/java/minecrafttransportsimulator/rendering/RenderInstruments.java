@@ -124,7 +124,7 @@ public final class RenderInstruments{
 			case("yaw"): return -vehicle.rotationYaw;
 			case("pitch"): return Math.max(Math.min(vehicle.rotationPitch, 25), -25);
 			case("roll"): return vehicle.rotationRoll;
-			case("altitude"): return vehicle.posY - (ConfigSystem.getBooleanConfig("SeaLevelOffset") ? vehicle.world.provider.getAverageGroundLevel() : 0);
+			case("altitude"): return vehicle.posY - (ConfigSystem.configObject.client.seaLevelOffset.value ? vehicle.world.provider.getAverageGroundLevel() : 0);
 			case("speed"): return Math.abs(vehicle.velocity*vehicle.speedFactor*20);
 			case("turn_coordinator"): return Math.max(Math.min(((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F, 50), -50);
 			case("turn_indicator"): return Math.max(Math.min((vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F, 50), -50);

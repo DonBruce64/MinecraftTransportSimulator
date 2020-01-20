@@ -200,7 +200,6 @@ public final class ClientEventSystem{
     
     private static int defaultRenderDistance;
 	private static int currentRenderDistance;
-	private static int renderReductionHeight;
     /**
      * Automatically lowers render distance when flying above the world to reduce worldgen.
      * Results in significant TPS improvements at high speeds.
@@ -214,13 +213,12 @@ public final class ClientEventSystem{
 	    		if(defaultRenderDistance == 0){
 	    			defaultRenderDistance = ((WorldServer) serverPlayer.world).getMinecraftServer().getPlayerList().getViewDistance();
 	    			currentRenderDistance = defaultRenderDistance;
-	    			renderReductionHeight = ConfigSystem.getIntegerConfig("RenderReductionHeight");
 				}
 	    		
-	    		if(serverPlayer.posY > renderReductionHeight && currentRenderDistance != 1){
+	    		if(serverPlayer.posY > ConfigSystem.configObject.client.renderReductionHeight.value && currentRenderDistance != 1){
 	    			currentRenderDistance = 1;
 	    			((WorldServer) serverPlayer.world).getPlayerChunkMap().setPlayerViewRadius(1);
-	    		}else if(serverPlayer.posY < renderReductionHeight - 10 && currentRenderDistance == 1){
+	    		}else if(serverPlayer.posY < ConfigSystem.configObject.client.renderReductionHeight.value - 10 && currentRenderDistance == 1){
 	    			currentRenderDistance = defaultRenderDistance;
 	    			((WorldServer) serverPlayer.world).getPlayerChunkMap().setPlayerViewRadius(defaultRenderDistance);
 	    		}
@@ -373,7 +371,7 @@ public final class ClientEventSystem{
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent event){
         if(ControlSystem.isMasterControlButttonPressed()){
-        	if(ConfigSystem.getBooleanConfig("DevMode") && minecraft.isSingleplayer()){
+        	if(ConfigSystem.configObject.client.devMode.value && minecraft.isSingleplayer()){
         		PackParserSystem.reloadPackData();
         		RenderVehicle.clearCaches();
         		FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
