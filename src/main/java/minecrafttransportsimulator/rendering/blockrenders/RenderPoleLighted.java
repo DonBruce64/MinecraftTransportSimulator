@@ -28,8 +28,14 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 	private static final ResourceLocation lightBeamTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lightbeam.png");
 	private static final ResourceLocation walkTexture = new ResourceLocation(MTS.MODID, "textures/rendering/walk.png");
 	private static final ResourceLocation dontwalkTexture = new ResourceLocation(MTS.MODID, "textures/rendering/dontwalk.png");
+
+	private boolean shouldFlash;
+	private Color lightColor;
 		
-	public RenderPoleLighted(){}
+	public RenderPoleLighted(){
+		shouldFlash = false;
+		lightColor = Color.RED;
+	}
 	
 	@Override
 	public void render(TileEntityPoleAttachment polePart, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
@@ -111,11 +117,9 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 
 	private static final Map<BlockPos, BlockPos> trafficSignalControllers = new HashMap<BlockPos, BlockPos>();
 	private static final Map<BlockPos, Integer> checkIndexList = new HashMap<BlockPos, Integer>();
-	
+
 	private void renderTrafficSignal(TileEntityPoleAttachment signal, Vec3i facingVec, float lightBrightness){
 		//Render the lights for the traffic signal.  What lights we render depends on the controller state.
-		final boolean shouldFlash;
-		final Color lightColor;
 		final long worldTime = signal.getWorld().getTotalWorldTime();
 		BlockPos signalPos = signal.getPos();
 		
@@ -144,31 +148,51 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 				TileEntityTrafficSignalController controller = (TileEntityTrafficSignalController) tile;
 				//We are valid, now check to see if we are still part of the controller.
 				if(controller.trafficSignalLocations.contains(signalPos)){
-					//Valid controller detected, do render.
-					shouldFlash = false;
-					final boolean isOnMainAxis = !(controller.orientedOnX ^ (facingVec.getX() != 0));
+					if (controller.mode > 1) {
+						//Valid controller detected, do render.
+						shouldFlash = false;
+						final boolean isOnMainAxis = !(controller.orientedOnX ^ (facingVec.getX() != 0));
 
-					if(controller.operationIndex == 0){
-						//First step, main light turns green, cross light stays red.
-						lightColor = isOnMainAxis ? Color.GREEN : Color.RED;
-					}else if(controller.operationIndex == 1){
-						//Second step, main light turns yellow, cross light stays red.
-						lightColor = isOnMainAxis ? Color.YELLOW : Color.RED;
-					}else if(controller.operationIndex == 2){
-						//Third step, main light turns red, cross light stays red.
-						lightColor = Color.RED;
-					}else if(controller.operationIndex == 3){
-						//Fourth step, main light stays red, cross light turns green.
-						lightColor = isOnMainAxis ? Color.RED : Color.GREEN;
-					}else if(controller.operationIndex == 4){
-						//Fifth step, main light stays red, cross light turns yellow.
-						lightColor = isOnMainAxis ? Color.RED : Color.YELLOW;
-					}else if(controller.operationIndex == 5){
-						//Sixth step, main light stays red, cross light turns red.
-						lightColor = Color.RED;
-					}else{
-						//Seventh step, main light turns green, cross light stays red.
-						lightColor = isOnMainAxis ? Color.GREEN : Color.RED;
+						switch (controller.operationIndex) {
+							case 0: {
+								//First step, main light turns green, cross light stays red.
+								lightColor = isOnMainAxis ? Color.GREEN : Color.RED;
+								break;
+							}
+							case 1: {
+								//Second step, main light turns yellow, cross light stays red.
+								lightColor = isOnMainAxis ? Color.YELLOW : Color.RED;
+								break;
+							}
+							case 2: {
+								//Third step, main light turns red, cross light stays red.
+								lightColor = Color.RED;
+								break;
+							}
+							case 3: {
+								//Fourth step, main light stays red, cross light turns green.
+								lightColor = isOnMainAxis ? Color.RED : Color.GREEN;
+								break;
+							}
+							case 4: {
+								//Fifth step, main light stays red, cross light turns yellow.
+								lightColor = isOnMainAxis ? Color.RED : Color.YELLOW;
+								break;
+							}
+							case 5: {
+								//Sixth step, main light stays red, cross light turns red.
+								lightColor = Color.RED;
+								break;
+							}
+							default: {
+								//Seventh step, main light turns green, cross light stays red.
+								lightColor = isOnMainAxis ? Color.GREEN : Color.RED;
+								break;
+							}
+						}
+					} else if (controller.mode == 0) {
+						shouldFlash = true;
+						lightColor = Color.YELLOW;
 					}
 				}else{
 					trafficSignalControllers.remove(signalPos);
@@ -214,7 +238,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 			}
 			checkIndexList.put(signalPos, checkIndex + 1);
 		}
-		
+
 		//Now render this signal.
 		if(trafficSignalControllers.containsKey(signalPos)){
 			//Check to make sure this controller is still valid.
@@ -222,42 +246,48 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 			if(tile instanceof TileEntityTrafficSignalController){
 				TileEntityTrafficSignalController controller = (TileEntityTrafficSignalController) tile;
 				//We are valid, now check to see if we are still part of the controller.
-				if(controller.trafficSignalLocations.contains(signalPos)){
-					//Valid controller detected, do render.
-					final boolean isOnMainAxis = !(controller.orientedOnX ^ (facingVec.getX() != 0));
-					if(controller.operationIndex == 0){
-						//First step, main signal shows walk, cross signal shows don't walk.
-						showWalk = isOnMainAxis;
-						shouldFlash = false;
-					}else if(controller.operationIndex == 1){
-						//Second step, main signal shows flashing don't walk, cross signal shows don't walk.
-						showWalk = false;
-						shouldFlash = isOnMainAxis;
-					}else if(controller.operationIndex == 2){
-						//Third step, both signals show don't walk.
-						showWalk = false;
-						shouldFlash = false;
-					}else if(controller.operationIndex == 3){
-						//Fourth step, main signal shows down't walk, cross signal shows walk.
-						showWalk = !isOnMainAxis;
-						shouldFlash = false;
-					}else if(controller.operationIndex == 4){
-						//Fifth step, main signal shows don't walk, cross signal shows flashing don't walk.
-						showWalk = false;
-						shouldFlash = !isOnMainAxis;
-					}else if(controller.operationIndex == 5){
-						//Sixth step, both signals show don't walk.
-						showWalk = false;
-						shouldFlash = false;
+				if (controller.mode > 1) {
+					if(controller.trafficSignalLocations.contains(signalPos)){
+						//Valid controller detected, do render.
+						final boolean isOnMainAxis = !(controller.orientedOnX ^ (facingVec.getX() != 0));
+						if(controller.operationIndex == 0){
+							//First step, main signal shows walk, cross signal shows don't walk.
+							showWalk = isOnMainAxis;
+							shouldFlash = false;
+						}else if(controller.operationIndex == 1){
+							//Second step, main signal shows flashing don't walk, cross signal shows don't walk.
+							showWalk = false;
+							shouldFlash = isOnMainAxis;
+						}else if(controller.operationIndex == 2){
+							//Third step, both signals show don't walk.
+							showWalk = false;
+							shouldFlash = false;
+						}else if(controller.operationIndex == 3){
+							//Fourth step, main signal shows down't walk, cross signal shows walk.
+							showWalk = !isOnMainAxis;
+							shouldFlash = false;
+						}else if(controller.operationIndex == 4){
+							//Fifth step, main signal shows don't walk, cross signal shows flashing don't walk.
+							showWalk = false;
+							shouldFlash = !isOnMainAxis;
+						}else if(controller.operationIndex == 5){
+							//Sixth step, both signals show don't walk.
+							showWalk = false;
+							shouldFlash = false;
+						}else{
+							//Seventh step, main signal shows walk, cross signal shows don't walk.
+							showWalk = isOnMainAxis;
+							shouldFlash = false;
+						}
 					}else{
-						//Seventh step, main signal shows walk, cross signal shows don't walk.
-						showWalk = isOnMainAxis;
-						shouldFlash = false;
+						trafficSignalControllers.remove(signalPos);
+						showWalk = false;
+						shouldFlash = true;
 					}
-				}else{
-					trafficSignalControllers.remove(signalPos);
+				} else {
 					showWalk = false;
-					shouldFlash = true;
+					shouldFlash = false;
+					return;
 				}
 			}else{
 				trafficSignalControllers.remove(signalPos);
@@ -328,5 +358,21 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 			}
 		}
 		GL11.glEnd();
+	}
+
+	public boolean isShouldFlash() {
+		return shouldFlash;
+	}
+
+	public void setShouldFlash(boolean shouldFlash) {
+		this.shouldFlash = shouldFlash;
+	}
+
+	public Color getLightColor() {
+		return lightColor;
+	}
+
+	public void setLightColor(Color lightColor) {
+		this.lightColor = lightColor;
 	}
 }

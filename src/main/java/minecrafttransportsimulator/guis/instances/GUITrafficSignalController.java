@@ -15,7 +15,7 @@ import minecrafttransportsimulator.wrappers.WrapperGUI;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
 
-public class GUITrafficSignalController extends GUIBase{
+public class GUITrafficSignalController extends GUIBase {
 	
 	//Buttons.
 	private GUIComponentButton orientationButton;
@@ -84,16 +84,12 @@ public class GUITrafficSignalController extends GUIBase{
 		});
 		addLabel(new GUIComponentLabel(guiLeft + 30, orientationButton.y + 5, Color.WHITE, WrapperGUI.translate("trafficsignalcontroller.primary")).setButton(orientationButton));
 		
-		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 90, 100, WrapperGUI.translate("trafficsignalcontroller." + (signalController.triggerMode ? "modetrigger" : "modetime"))){
+		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 90, 100, WrapperGUI.translate("trafficsignalcontroller." + getModeName(signalController.mode))){
 			@Override
 			public void onClicked(){
-				if(signalController.triggerMode){
-					signalController.triggerMode = false;
-					this.text = WrapperGUI.translate("trafficsignalcontroller.modetime");
-				}else{
-					signalController.triggerMode = true;
-					this.text = WrapperGUI.translate("trafficsignalcontroller.modetrigger");
-				}
+				byte newMode = (byte) (signalController.mode == 3 ? 0 : signalController.mode+1);
+				signalController.mode = newMode;
+				this.text = WrapperGUI.translate("trafficsignalcontroller." + getModeName(newMode));
 			}
 		});
 		addLabel(new GUIComponentLabel(guiLeft + 30, modeButton.y + 5, Color.WHITE, WrapperGUI.translate("trafficsignalcontroller.signalmode")).setButton(modeButton));
@@ -128,12 +124,21 @@ public class GUITrafficSignalController extends GUIBase{
 			}
 		});
 	}
+
+	private String getModeName(int mode) {
+		switch (mode) {
+			case 1: return "modemanual";
+			case 2: return "modetime";
+			case 3: return "modetrigger";
+			default: return "disabled";
+		}
+	}
 	
 	@Override
 	public void setStates(){
 		trafficSignalCount.text = " X " + String.valueOf(signalController.trafficSignalLocations.size() - signalController.crossingSignalLocations.size());
 		crossingSignalCount.text = " X " + String.valueOf(signalController.crossingSignalLocations.size());
-		if(!signalController.trafficSignalLocations.isEmpty()){
+		if (!signalController.trafficSignalLocations.isEmpty()) {
 			orientationButton.enabled = true;
 			modeButton.enabled = true;
 			greenMainTimeText.enabled = true;
@@ -141,7 +146,7 @@ public class GUITrafficSignalController extends GUIBase{
 			yellowTimeText.enabled = true;
 			allRedTimeText.enabled = true;
 			confirmButton.enabled = true;
-		}else{
+		} else {
 			orientationButton.enabled = false;
 			modeButton.enabled = false;
 			greenMainTimeText.enabled = false;
@@ -150,6 +155,17 @@ public class GUITrafficSignalController extends GUIBase{
 			allRedTimeText.enabled = false;
 			confirmButton.enabled = false;
 		}
-		greenMainTimeText.visible = !signalController.triggerMode;
+
+		if (signalController.mode <= 1) {
+			greenMainTimeText.visible = false;
+			greenCrossTimeText.visible = false;
+			yellowTimeText.visible = false;
+			allRedTimeText.visible = false;
+		} else {
+			greenMainTimeText.visible = signalController.mode != 3;
+			greenCrossTimeText.visible = true;
+			yellowTimeText.visible = true;
+			allRedTimeText.visible = true;
+		}
 	}
 }

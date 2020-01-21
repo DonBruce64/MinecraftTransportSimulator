@@ -28,7 +28,7 @@ import net.minecraftforge.fluids.capability.IFluidTankProperties;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 
-@Optional.Method().Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "opencomputers")
+@Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "opencomputers")
 public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IFluidHandler, ITickable, SimpleComponent {
     private EntityVehicleE_Powered connectedVehicle;
     public int totalTransfered;
