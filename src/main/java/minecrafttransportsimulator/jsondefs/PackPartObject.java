@@ -1,10 +1,10 @@
-package minecrafttransportsimulator.dataclasses;
+package minecrafttransportsimulator.jsondefs;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackRotatableModelObject;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackRotatableModelObject;
 
 public class PackPartObject{
 	public PartGeneralConfig general;

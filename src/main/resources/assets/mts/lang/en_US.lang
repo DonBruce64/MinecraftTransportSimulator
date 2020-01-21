@@ -302,6 +302,7 @@ tile.trafficsignalcontroller.name=Traffic Signal Controller
 tile.pole.name=Pole
 tile.polebase.name=Pole Base
 tile.trafficsignal.name=Traffic Signal
+tile.crossingsignal.name=Crossing Signal
 tile.streetlight.name=Street Light
 tile.trafficsign.name=Traffic Sign
 

@@ -9,8 +9,8 @@ import minecrafttransportsimulator.baseclasses.VehicleSound;
 import minecrafttransportsimulator.baseclasses.VehicleSound.SoundTypes;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.dataclasses.PackInstrumentObject;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.PackInstrumentObject;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.radio.RadioContainer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -23,7 +23,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -105,25 +104,26 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		//Now damage all passengers, including the controller.
 		for(Entity passenger : this.getPassengers()){
 			if(passenger.equals(controller)){
-				passenger.attackEntityFrom(new DamageSourceCrash(null, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
+				passenger.attackEntityFrom(new DamageSourceCrash(null, this.pack.general.type), (float) (ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20));
 			}else{
-				passenger.attackEntityFrom(new DamageSourceCrash(controller, this.pack.general.type), (float) (ConfigSystem.getDoubleConfig("CrashDamageFactor")*velocity*20));
+				passenger.attackEntityFrom(new DamageSourceCrash(controller, this.pack.general.type), (float) (ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20));
 			}
 		}
 		
 		//Oh, and add explosions.  Because those are always fun.
 		//Note that this is done after spawning all parts here and in the super call,
 		//so although all parts are DROPPED, not all parts may actually survive the explosion.
-		if(ConfigSystem.getBooleanConfig("Explosions")){
+		if(ConfigSystem.configObject.damage.explosions.value){
 			double fuelPresent = this.fuel;
 			for(APart part : getVehicleParts()){
 				if(part instanceof PartBarrel){
 					PartBarrel barrel = (PartBarrel) part;
 					if(barrel.getFluid() != null){
-						for(String fuelName : ConfigSystem.getAllFuels()){
-							double fuelFactor = ConfigSystem.getFuelValue(fuelName, FluidRegistry.getFluidName(barrel.getFluid().getFluid()));
-							if(fuelFactor > 0){
-								fuelPresent += barrel.getFluidAmount()*fuelFactor;
+						boolean validFuelFound = false;
+						for(Map<String, Double> fuelEntry : ConfigSystem.configObject.fuel.fuels.values()){
+							if(fuelEntry.containsKey(barrel.getFluid().getFluid())){
+								fuelPresent += barrel.getFluidAmount()*fuelEntry.get(barrel.getFluid().getFluid());
+								break;
 							}
 						}
 					}

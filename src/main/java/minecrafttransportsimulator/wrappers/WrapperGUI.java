@@ -1,44 +1,55 @@
-package minecrafttransportsimulator.guis;
+package minecrafttransportsimulator.wrappers;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.guis.components.GUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
-/**Base GUI class, and interface to MC's GUI systems.  All MTS GUIs should extend this class
- * rather than user their own.  This prevents the need to use MC classes and makes updating easier.
+/**Wrapper for MC GUI classes.  Constructor takes a type of {@link GUIBase}.
+ * This is where all MC-specific code should be located.  Preferably
+ * in static methods that can be accessed by anything that needs GUI
+ * functionality, even if it doesn't extend the {@link GUIBase} class.
  *
  * @author don_bruce
  */
-public abstract class GUIBase extends GuiScreen{
+public class WrapperGUI extends GuiScreen{
 	protected static final ResourceLocation standardTexture = new ResourceLocation(MTS.MODID, "textures/guis/standard.png");
 	private static final int STANDARD_TEXTURE_WIDTH = 256;
 	private static final int STANDARD_TEXTURE_HEIGHT = 192;
-	
-	private final List<GUIComponentLabel> labels = new ArrayList<GUIComponentLabel>();
-	private final List<GUIComponentButton> buttons = new ArrayList<GUIComponentButton>();
-	private final List<GUIComponentTextBox> textBoxes = new ArrayList<GUIComponentTextBox>();
+	private static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+	private static final RenderItem itemRenderer = Minecraft.getMinecraft().getRenderItem();
 	
 	private int guiLeft;
 	private int guiTop;
 	
+	private final GUIBase gui;
+	
+	public WrapperGUI(GUIBase gui){
+		this.gui = gui;
+	}
 	
 	/**
 	 *  This is called by the main MC system when this GUI is first initialized, or when it
@@ -54,9 +65,8 @@ public abstract class GUIBase extends GuiScreen{
 		
 		//Clear out the component lists before populating them again.
 		//If we don't, we get duplicates when re-sizing.
-		labels.clear();
-		buttons.clear();
-		setupComponents(guiLeft, guiTop);
+		gui.clearComponents();
+		gui.setupComponents(guiLeft, guiTop);
 	}
 	
 	/**
@@ -71,13 +81,13 @@ public abstract class GUIBase extends GuiScreen{
     public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
 		super.drawScreen(mouseX, mouseY, renderPartialTicks);
 		//First set the states for things in thie GUI.
-		setStates();
+		gui.setStates();
 		
 		//Set color to default in case some other rendering was being done prior and didn't clean up.
 		GL11.glColor3f(1, 1, 1);
 		
 		//Draw gradient if required.
-		if(renderDarkBackground()){
+		if(gui.renderDarkBackground()){
 			drawDefaultBackground();
 		}
 		
@@ -86,21 +96,30 @@ public abstract class GUIBase extends GuiScreen{
 		renderSheetTexture(guiLeft, guiTop, STANDARD_TEXTURE_WIDTH, STANDARD_TEXTURE_HEIGHT, 0, 0, STANDARD_TEXTURE_WIDTH, STANDARD_TEXTURE_HEIGHT);
 		
 		//Render buttons.  Buttons choose if they render or not depending on visibility.
-		for(GUIComponentButton button : buttons){
+		for(GUIComponentButton button : gui.buttons){
 			button.renderButton(mouseX, mouseY);
 		}
 		
 		//Now that all main rendering is done, render text.
 		//This includes labels, button text, and text boxes.
-		for(GUIComponentLabel label : labels){
-			label.renderText(this);
+		for(GUIComponentLabel label : gui.labels){
+			label.renderText();
 		}
-		for(GUIComponentButton button : buttons){
-			button.renderText(this);
+		for(GUIComponentButton button : gui.buttons){
+			button.renderText();
 		}
-		for(GUIComponentTextBox textBox : textBoxes){
-        	textBox.renderBox(this);
+		for(GUIComponentTextBox textBox : gui.textBoxes){
+        	textBox.renderBox();
         }
+		
+		//Items go last, as they need item-specific rendering changes to lighting which can mess things up.
+		RenderHelper.enableGUIStandardItemLighting();
+		for(GUIComponentItem item : gui.items){
+			item.renderItem();
+		}
+		for(GUIComponentItem item : gui.items){
+			item.renderTooltip(this, mouseX, mouseY);
+		}
 	}
 	
 	/**
@@ -112,14 +131,14 @@ public abstract class GUIBase extends GuiScreen{
 	 */
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException{
-        for(GUIComponentButton button : buttons){
+        for(GUIComponentButton button : gui.buttons){
         	if(button.clicked(mouseX, mouseY)){
     			mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
     			button.onClicked();
     			return;
         	}
         }
-        for(GUIComponentTextBox textBox : textBoxes){
+        for(GUIComponentTextBox textBox : gui.textBoxes){
         	textBox.updateFocus(mouseX, mouseY);
         }
     }
@@ -131,7 +150,7 @@ public abstract class GUIBase extends GuiScreen{
 	@Override
 	protected void keyTyped(char key, int keyCode) throws IOException{
 		super.keyTyped(key, keyCode);
-		for(GUIComponentTextBox textBox : textBoxes){
+		for(GUIComponentTextBox textBox : gui.textBoxes){
 			if(textBox.focused){
 				//If we did a paste from the clipboard, we need to replace everything in the box.
 				//Otherwise, just send the char for further processing.
@@ -152,68 +171,23 @@ public abstract class GUIBase extends GuiScreen{
 	
 	@Override
 	public boolean doesGuiPauseGame(){
-		return pauseOnOpen();
+		return gui.pauseOnOpen();
 	}
 	
 	
-	//--------------------START OF NEW CUSTOM METHODS FOR MAKING GUIS--------------------
+	//--------------------START OF INSTANCE HELPER METHODS--------------------	
 	/**
-	 *  Called during init to allow for the creation of GUI components.  All components
-	 *  should be created in this method, and should be added via the appropriate calls.
-	 *  The passed-in guiLeft and guiTop parameters are the top-left of the TEXTURE of
-	 *  this GUI, not the screen.  This allows for all objects to be created using offsets
-	 *  that won't change, rather than screen pixels that will. 
+	 *  Draws the specified tooltip on the GUI.  This should be
+	 *  the last thing that gets rendered, as otherwise it may render
+	 *  behind other components.
 	 */
-	public abstract void setupComponents(int guiLeft, int guiTop);
-	
-	/**
-	 *  Called right before rendering to allow GUIs to set the states of their objects. 
-	 */
-	public abstract void setStates();
-	
-	/**
-	 *  If this is true, then the dark background gradient will be rendered behind the GUI.
-	 */
-	public boolean renderDarkBackground(){
-		return false;
+	public void drawItemTooltip(String itemName, int qty, int metadata, int mouseX, int mouseY){
+		ItemStack stack = new ItemStack(Item.getByNameOrId(itemName), qty, metadata);
+		this.renderToolTip(stack, mouseX, mouseY);
 	}
+
 	
-	/**
-	 *  If this is true, then the GUI will pause the game when open.
-	 */
-	public boolean pauseOnOpen(){
-		return false;
-	}
-	
-	/**
-	 *  Adds an {@link GUIComponentLabel} to this GUIs component set.  These are rendered
-	 *  automatically given their current state.  Said state should be set in {@link #setStates()}.
-	 */
-	public void addLabel(GUIComponentLabel label){
-		labels.add(label);
-	}
-	
-	/**
-	 *  Adds an {@link GUIComponentButton} to this GUIs component set.  When a mouse click is
-	 *  sensed, this GUI will attempt to click all buttons in this set via {@link GUIComponentButton#clicked()}.
-	 *  If any of those buttons say they were clicked, their {@link GUIComponentButton#onClicked()} method 
-	 *  is fired to allow the button to handle clicking actions.
-	 */
-	public void addButton(GUIComponentButton button){
-		buttons.add(button);
-	}
-	
-	/**
-	 *  Adds an {@link GUIComponentTextBox} to this GUIs component set.  When a mouse click is
-	 *  sensed, this GUI will attempt to focus all text boxes.  When a key is typed, any focused
-	 *  text boxes will get that input set to them via {@link GUIComponentTextBox#handleKeyTyped(char, TextBoxControlKey)}.
-	 */
-	public void addTextBox(GUIComponentTextBox textBox){
-		textBoxes.add(textBox);
-	}
-	
-	
-	//--------------------START OF NORMAL HELPER METHODS--------------------	
+	//--------------------START OF STATIC HELPER METHODS--------------------
 	/**
 	 *  Draws the specified text using the MC fontRenderer.  This method can render the text in multiple ways depending
 	 *  on the parameters passed-in.  If a centered string is specified, then the point passed-in should be the center
@@ -221,17 +195,17 @@ public abstract class GUIBase extends GuiScreen{
 	 *  method will be called to render multi-line text.  Note that after this operation the font texture will be bound, 
 	 *  so take care when calling this method in the middle of rendering operations.
 	 */
-	public void drawText(String text, int x, int y, Color color, boolean centered, boolean shadow, int wrapWidth){
+	public static void drawText(String text, int x, int y, Color color, boolean centered, boolean shadow, int wrapWidth){
 		if(centered){
-			x -= mc.fontRenderer.getStringWidth(text)/2;
+			x -= fontRenderer.getStringWidth(text)/2;
 		}
 		if(shadow){
-			mc.fontRenderer.drawStringWithShadow(text, x, y, color.getRGB());
+			fontRenderer.drawStringWithShadow(text, x, y, color.getRGB());
 		}else{
 			if(wrapWidth == -1){
-				mc.fontRenderer.drawString(text, x, y, color.getRGB());
+				fontRenderer.drawString(text, x, y, color.getRGB());
 			}else{
-				mc.fontRenderer.drawSplitString(text, x, y, wrapWidth, color.getRGB());
+				fontRenderer.drawSplitString(text, x, y, wrapWidth, color.getRGB());
 			}
 		}
 	}
@@ -241,10 +215,10 @@ public abstract class GUIBase extends GuiScreen{
 	 *  does OpenGL scaling to render the text bigger or smaller than normal.  Requires a few different bits
 	 *  to get this to work, so it's in it's own method for code simplicity.
 	 */
-	public void drawScaledText(String text, int x, int y, Color color, boolean centered, boolean shadow, int wrapWidth, float scale){
+	public static void drawScaledText(String text, int x, int y, Color color, boolean centered, boolean shadow, int wrapWidth, float scale){
 		GL11.glPushMatrix();
 		if(centered){
-			GL11.glTranslatef(x - mc.fontRenderer.getStringWidth(text)/2, y, 0);
+			GL11.glTranslatef(x - fontRenderer.getStringWidth(text)/2, y, 0);
 		}else{
 			GL11.glTranslatef(x, y, 0);
 		}
@@ -253,8 +227,29 @@ public abstract class GUIBase extends GuiScreen{
 		GL11.glPopMatrix();
 	}
 	
-	
-	//--------------------START OF STATIC HELPER METHODS--------------------
+	/**
+	 *  Draws the specified item on the GUI at the specified scale.  Note that MC
+	 *  renders all items from their top-left corner, so take this into account when
+	 *  choosing where to put this component in your GUI.
+	 */
+	public static void drawItem(String itemName, int qty, int metadata, int x, int y, float scale){
+		ItemStack stack = new ItemStack(Item.getByNameOrId(itemName), qty, metadata);
+		if(scale != 1.0F){
+			GL11.glPushMatrix();
+			GL11.glTranslatef(x, y, 0);
+			GL11.glScalef(scale, scale, scale);
+			itemRenderer.renderItemAndEffectIntoGUI(stack, 0, 0);
+			if(qty > 1){
+				itemRenderer.renderItemOverlays(fontRenderer, stack, 0, 0);
+			}
+			GL11.glPopMatrix();
+		}else{
+			itemRenderer.renderItemAndEffectIntoGUI(stack, x, y);
+			if(qty > 1){
+				itemRenderer.renderItemOverlays(fontRenderer, stack, x, y);
+			}
+		}
+	}
 	
 	/**
 	 *  Draws the specified portion of the currently-bound texture.  Normally, this will be the standardTexture,
@@ -284,6 +279,15 @@ public abstract class GUIBase extends GuiScreen{
 	}
 	
 	/**
+	 *  Returns the translation of the passed-in text from the lang file.
+	 *  Put here to prevent the need for referencing the MC class directly, which
+	 *  may change during updates.  Prefixed by "gui." for convenience.
+	 */
+	public static String translate(String text){
+		return I18n.format("gui." + text);
+	}
+	
+	/**
 	 *  Clock method used to make flashing text and icons on screen.  Put here
 	 *  for all GUIs to use.  Returns true if the period is active.  Both
 	 *  parameters are in ticks, or 1/20 a second.
@@ -293,11 +297,9 @@ public abstract class GUIBase extends GuiScreen{
 	}
 	
 	/**
-	 *  Returns the translation of the passed-in text from the lang file.
-	 *  Put here to prevent the need for referencing the MC class directly, which
-	 *  may change during updates.  Prefixed by "gui." for convenience.
+	 *  Closes this screen, returning back to the main game.
 	 */
-	public static String translate(String text){
-		return I18n.format("gui." + text);
+	public static void closeScreen(){
+		Minecraft.getMinecraft().player.closeScreen();
 	}
 }

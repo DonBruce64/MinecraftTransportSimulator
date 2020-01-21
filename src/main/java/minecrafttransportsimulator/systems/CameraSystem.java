@@ -43,7 +43,7 @@ public final class CameraSystem{
 	}
 	
 	public static void updatePlayerYawAndPitch(EntityPlayer player, EntityVehicleB_Existing vehicle){
-		boolean mouseYoke = ConfigSystem.getBooleanConfig("MouseYoke");
+		boolean mouseYoke = ConfigSystem.configObject.client.mouseYoke.value;
 		if((!mouseYoke && lockedView) || (mouseYoke && !lockedView)){
 			player.rotationYaw += vehicle.rotationYaw - vehicle.prevRotationYaw;
 			if((vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90) ^ (vehicle.prevRotationPitch > 90 || vehicle.prevRotationPitch < -90)){

@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.general;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceBullet;
-import minecrafttransportsimulator.dataclasses.PackPartObject.PartBulletConfig;
+import minecrafttransportsimulator.jsondefs.PackPartObject.PartBulletConfig;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
@@ -81,7 +81,7 @@ public class PacketBulletHit implements IMessage{
 								if(entityHit != null && entityAttacking != null){
 									//If we are attacking a vehicle, call the custom attack code to relay our position.
 									//Otherwise call the regular attack code.
-									float damage = (float) (Math.pow(20*message.velocity/100F, 2)*bulletPackData.diameter/10F*ConfigSystem.getDoubleConfig("BulletDamageFactor"));
+									float damage = (float) (Math.pow(20*message.velocity/100F, 2)*bulletPackData.diameter/10F*ConfigSystem.configObject.damage.bulletDamageFactor.value);
 									if(entityHit instanceof EntityVehicleB_Existing){
 										((EntityVehicleB_Existing) entityHit).attackManuallyAtPosition(message.x, message.y, message.z, new DamageSourceBullet(entityAttacking, bulletPackData.type), damage);
 									}else{
@@ -97,7 +97,7 @@ public class PacketBulletHit implements IMessage{
 								//Otherwise send this packet back to the client to spawn SFX.
 								BlockPos hitPos = new BlockPos(message.x, message.y, message.z);
 								float hardness = ctx.getServerHandler().player.world.getBlockState(hitPos).getBlockHardness(ctx.getServerHandler().player.world, hitPos);
-								if(hardness <= (Math.random()*0.3F + 0.3F*bulletPackData.diameter/20F)){
+								if(hardness > 0 && hardness <= (Math.random()*0.3F + 0.3F*bulletPackData.diameter/20F)){
 									ctx.getServerHandler().player.world.destroyBlock(hitPos, true);
 								}else{
 									MTS.MTSNet.sendToAll(message);
@@ -105,13 +105,11 @@ public class PacketBulletHit implements IMessage{
 							}
 						}
 					}else{
-						//TODO add SFX here for non-explosive bullets.
 						//We only get a packet back if we hit a block and didn't break it.
 						//If this is the case, play the block break sound and spawn some particles.
 						BlockPos hitPos = new BlockPos(message.x, message.y, message.z);
 						SoundType soundType = Minecraft.getMinecraft().world.getBlockState(hitPos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(hitPos), Minecraft.getMinecraft().world, hitPos, null);
 						Minecraft.getMinecraft().world.playSound(null, message.x, message.y, message.z, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
-						//MTS.proxy.playSound(new Vec3d(this.posX, this.posY, this.posZ), MTS.MODID + ":" + "wheel_striking", 1, 1);
 					}
 				}
 			});

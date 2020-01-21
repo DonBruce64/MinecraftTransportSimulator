@@ -3,7 +3,7 @@ package minecrafttransportsimulator.items.core;
 import minecrafttransportsimulator.blocks.core.BlockDecor;
 import minecrafttransportsimulator.blocks.core.TileEntityDecor;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.dataclasses.PackDecorObject;
+import minecrafttransportsimulator.jsondefs.PackDecorObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;

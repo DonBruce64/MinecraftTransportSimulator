@@ -1,0 +1,35 @@
+{
+    "multipart": [
+        {   "when": { "facing": "north" },
+            "apply": { "model": "mts:crossingsignal", "y" : 180 }
+        },
+        {   "when": { "facing": "east" },
+            "apply": { "model": "mts:crossingsignal", "y" : 270}
+        },
+        {   "when": { "facing": "south" },
+            "apply": { "model": "mts:crossingsignal"}
+        },
+        {   "when": { "facing": "west" },
+            "apply": { "model": "mts:crossingsignal", "y" : 90}
+        },
+        {   "apply": { "model": "mts:polecenter" }},
+        {   "when": { "up": "true" },
+            "apply": { "model": "mts:polepart", "x": 180}
+        },
+        {   "when": { "down": "true" },
+            "apply": { "model": "mts:polepart"}
+        },
+        {   "when": { "north": "true" },
+            "apply": { "model": "mts:polepart", "x": 270}
+        },
+        {   "when": { "east": "true" },
+            "apply": { "model": "mts:polepart", "x": 90, "y": 270}
+        },
+        {   "when": { "south": "true" },
+            "apply": { "model": "mts:polepart", "x": 90}
+        },
+        {   "when": { "west": "true" },
+            "apply": { "model": "mts:polepart", "x": 90, "y": 90}
+        }
+    ]
+}

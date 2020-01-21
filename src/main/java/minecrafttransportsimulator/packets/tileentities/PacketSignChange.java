@@ -59,7 +59,7 @@ public class PacketSignChange extends APacketTileEntity{
 				@Override
 				public void run(){
 					TileEntityPoleSign decor = (TileEntityPoleSign) getTileEntity(message, ctx);
-					if(ConfigSystem.getBooleanConfig("OPSignEditingOnly")){
+					if(ConfigSystem.configObject.general.opSignEditingOnly.value){
 						boolean isPlayerOP = false;
 						EntityPlayer player = (EntityPlayer) ctx.getServerHandler().player.world.getEntityByID(message.playerID);
 						if(player != null){

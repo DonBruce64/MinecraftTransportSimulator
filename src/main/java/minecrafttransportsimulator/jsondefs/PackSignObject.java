@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.dataclasses;
+package minecrafttransportsimulator.jsondefs;
 
 public class PackSignObject{
 	public SignGeneralConfig general;

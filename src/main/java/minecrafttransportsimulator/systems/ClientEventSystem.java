@@ -4,8 +4,8 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.guis.GUIConfig;
-import minecrafttransportsimulator.guis.GUIPackMissing;
+import minecrafttransportsimulator.guis.instances.GUIConfig;
+import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;
@@ -19,6 +19,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleC_Colliding;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.client.renderer.entity.RenderPlayer;
@@ -199,7 +200,6 @@ public final class ClientEventSystem{
     
     private static int defaultRenderDistance;
 	private static int currentRenderDistance;
-	private static int renderReductionHeight;
     /**
      * Automatically lowers render distance when flying above the world to reduce worldgen.
      * Results in significant TPS improvements at high speeds.
@@ -213,13 +213,12 @@ public final class ClientEventSystem{
 	    		if(defaultRenderDistance == 0){
 	    			defaultRenderDistance = ((WorldServer) serverPlayer.world).getMinecraftServer().getPlayerList().getViewDistance();
 	    			currentRenderDistance = defaultRenderDistance;
-	    			renderReductionHeight = ConfigSystem.getIntegerConfig("RenderReductionHeight");
 				}
 	    		
-	    		if(serverPlayer.posY > renderReductionHeight && currentRenderDistance != 1){
+	    		if(serverPlayer.posY > ConfigSystem.configObject.client.renderReductionHeight.value && currentRenderDistance != 1){
 	    			currentRenderDistance = 1;
 	    			((WorldServer) serverPlayer.world).getPlayerChunkMap().setPlayerViewRadius(1);
-	    		}else if(serverPlayer.posY < renderReductionHeight - 10 && currentRenderDistance == 1){
+	    		}else if(serverPlayer.posY < ConfigSystem.configObject.client.renderReductionHeight.value - 10 && currentRenderDistance == 1){
 	    			currentRenderDistance = defaultRenderDistance;
 	    			((WorldServer) serverPlayer.world).getPlayerChunkMap().setPlayerViewRadius(defaultRenderDistance);
 	    		}
@@ -360,7 +359,7 @@ public final class ClientEventSystem{
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
 	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()].equals(MTSRegistry.coreTab)){
-	    			FMLCommonHandler.instance().showGuiScreen(new GUIPackMissing());
+	    			FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(new GUIPackMissing()));
 	    		}
 	    	}
     	}
@@ -372,7 +371,7 @@ public final class ClientEventSystem{
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent event){
         if(ControlSystem.isMasterControlButttonPressed()){
-        	if(ConfigSystem.getBooleanConfig("DevMode") && minecraft.isSingleplayer()){
+        	if(ConfigSystem.configObject.client.devMode.value && minecraft.isSingleplayer()){
         		PackParserSystem.reloadPackData();
         		RenderVehicle.clearCaches();
         		FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
@@ -386,7 +385,7 @@ public final class ClientEventSystem{
         		MTS.MTSNet.sendToServer(new PacketPackReload());
         	}
             if(minecraft.currentScreen == null){
-            	FMLCommonHandler.instance().showGuiScreen(new GUIConfig());
+            	FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(new GUIConfig()));
             }
         }
     }

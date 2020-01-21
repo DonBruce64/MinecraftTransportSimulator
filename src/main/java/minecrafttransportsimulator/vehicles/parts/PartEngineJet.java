@@ -3,7 +3,7 @@ package minecrafttransportsimulator.vehicles.parts;
 import java.util.List;
 
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceJet;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
@@ -46,7 +46,7 @@ public class PartEngineJet extends APartEngine{
 					}
 					for(int i=0; i < collidedEntites.size(); ++i){
 						if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
-							collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, true), (float) (ConfigSystem.getDoubleConfig("JetDamageFactor")*RPM/1000F));
+							collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, true), (float) (ConfigSystem.configObject.damage.jetDamageFactor.value*RPM/1000F));
 						}
 					}
 				}
@@ -63,7 +63,7 @@ public class PartEngineJet extends APartEngine{
 					}
 					for(int i=0; i < collidedEntites.size(); ++i){
 						if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
-							collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, false), (float) (ConfigSystem.getDoubleConfig("JetDamageFactor")*RPM/2000F));
+							collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, false), (float) (ConfigSystem.configObject.damage.jetDamageFactor.value*RPM/2000F));
 							collidedEntites.get(i).setFire(5);
 						}
 					}

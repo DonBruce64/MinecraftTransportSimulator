@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.items.parts;
 
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.dataclasses.PackPartObject;
+import minecrafttransportsimulator.jsondefs.PackPartObject;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 public class ItemPartCustom extends AItemPart{

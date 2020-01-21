@@ -7,8 +7,8 @@ import net.minecraft.util.EnumHand;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import java.util.List;
 
-import minecrafttransportsimulator.dataclasses.PackPartObject;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.PackPartObject;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;

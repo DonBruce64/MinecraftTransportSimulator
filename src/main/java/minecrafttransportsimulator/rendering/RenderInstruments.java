@@ -6,22 +6,21 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.PackInstrumentObject.PackInstrumentComponent;
+import minecrafttransportsimulator.jsondefs.PackInstrumentObject.PackInstrumentComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 
-public abstract class RenderInstruments{
+public final class RenderInstruments{
 	protected static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
-	protected static final ResourceLocation controlsTexture = new ResourceLocation(MTS.MODID, "textures/controls_aircraft.png");
 	
 	/**Map for texture sheets.  First keyed by vehicle, then keyed by the gauge itself.**/
 	private static Map<String, Map<String, ResourceLocation>> instrumentTextureSheets = new HashMap<String, Map<String, ResourceLocation>>();
@@ -125,7 +124,7 @@ public abstract class RenderInstruments{
 			case("yaw"): return -vehicle.rotationYaw;
 			case("pitch"): return Math.max(Math.min(vehicle.rotationPitch, 25), -25);
 			case("roll"): return vehicle.rotationRoll;
-			case("altitude"): return vehicle.posY - (ConfigSystem.getBooleanConfig("SeaLevelOffset") ? vehicle.world.provider.getAverageGroundLevel() : 0);
+			case("altitude"): return vehicle.posY - (ConfigSystem.configObject.client.seaLevelOffset.value ? vehicle.world.provider.getAverageGroundLevel() : 0);
 			case("speed"): return Math.abs(vehicle.velocity*vehicle.speedFactor*20);
 			case("turn_coordinator"): return Math.max(Math.min(((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F, 50), -50);
 			case("turn_indicator"): return Math.max(Math.min((vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F, 50), -50);
@@ -135,6 +134,8 @@ public abstract class RenderInstruments{
 			case("trim_rudder"): return ((EntityVehicleF_Air) vehicle).rudderTrim/10F;
 			case("trim_elevator"): return ((EntityVehicleF_Air) vehicle).elevatorTrim/10F;
 			case("trim_aileron"): return ((EntityVehicleF_Air) vehicle).aileronTrim/10F;
+			case("flaps_setpoint"): return ((EntityVehicleG_Plane) vehicle).flapDesiredAngle/10F;
+			case("flaps_actual"): return ((EntityVehicleG_Plane) vehicle).flapCurrentAngle/10F;
 			case("electric_power"): return vehicle.electricPower;
 			case("electric_usage"): return Math.min(vehicle.electricFlow*20, 1);
 			case("fuel"): return vehicle.fuel/vehicle.pack.motorized.fuelCapacity*100F;

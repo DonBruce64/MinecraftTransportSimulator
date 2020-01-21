@@ -2,7 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import java.util.Iterator;
 
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;

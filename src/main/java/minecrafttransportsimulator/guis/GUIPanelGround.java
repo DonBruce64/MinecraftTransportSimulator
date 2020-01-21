@@ -242,6 +242,9 @@ public class GUIPanelGround extends GuiScreen{
 	@Override
 	public void onGuiClosed(){
 		CameraSystem.disableHUD = false;
+		if(lastEngineStarted != -1){
+    		MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engine, PacketEngineTypes.ES_OFF));
+    	}
 	}
 	
 	@Override

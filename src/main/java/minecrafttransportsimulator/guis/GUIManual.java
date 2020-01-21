@@ -9,11 +9,11 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.PackDecorObject;
-import minecrafttransportsimulator.dataclasses.PackPartObject;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.parts.AItemPart;
+import minecrafttransportsimulator.jsondefs.PackDecorObject;
+import minecrafttransportsimulator.jsondefs.PackPartObject;
 import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
@@ -135,7 +135,7 @@ public class GUIManual extends GuiScreen{
 		
 		//We cheat and render an item here in devMode for making item icon pictures.
 		//If no devMode, then do things as normal.
-		if(ConfigSystem.getBooleanConfig("DevMode") && mc.isSingleplayer()){
+		if(ConfigSystem.configObject.client.devMode.value && mc.isSingleplayer()){
 			ItemStack stack = mc.player.getHeldItemOffhand();
 			if(stack != null && stack.getItem() != null){
 				final ResourceLocation modelLocation;
@@ -259,7 +259,7 @@ public class GUIManual extends GuiScreen{
 	protected void keyTyped(char typedChar, int keyCode) throws IOException{
 		if(keyCode == 1 || mc.gameSettings.keyBindInventory.isActiveAndMatches(keyCode)){
 			super.keyTyped('0', 1);
-        }else if(ConfigSystem.getBooleanConfig("DevMode") && mc.isSingleplayer()){
+        }else if(ConfigSystem.configObject.client.devMode.value && mc.isSingleplayer()){
         	//Do devMode manipulation here.
         	if(keyCode == Keyboard.KEY_UP){
         		--yOffset;

@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
@@ -61,7 +61,7 @@ public abstract class APartEngine extends APart implements FXPart{
 	public static final float engineOilDanger = 40F;
 	public final float engineStallRPM;
 	public final float engineStartRPM;
-	
+
 	
 	public APartEngine(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
@@ -120,18 +120,18 @@ public abstract class APartEngine extends APart implements FXPart{
 	@Override
 	public void attackPart(DamageSource source, float damage){
 		if(source.isExplosion()){
-			hours += damage*10;
-			if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
-			if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability")*10;
+			hours += damage*10*ConfigSystem.configObject.general.engineHoursFactor.value;
+			if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
+			if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
 			if(!brokenStarter)brokenStarter = Math.random() < 0.05;
-			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, damage*10));
+			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, (float) (damage*10*ConfigSystem.configObject.general.engineHoursFactor.value)));
 		}else{
-			hours += damage;
+			hours += damage*ConfigSystem.configObject.general.engineHoursFactor.value;
 			if(source.isProjectile()){
-				if(!oilLeak)oilLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
-				if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.getDoubleConfig("EngineLeakProbability");
+				if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
+				if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
 			}
-			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, damage));
+			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, (float) (damage*ConfigSystem.configObject.general.engineHoursFactor.value)));
 		}
 	}
 	
@@ -171,13 +171,15 @@ public abstract class APartEngine extends APart implements FXPart{
 					if(vehicle.world.isRemote){
 						MTS.proxy.playSound(partPos, partName + "_cranking", 1, (float) (RPM/engineStartRPM));
 					}
+				}else{
+					setElectricStarterStatus(false);
 				}
 			}
 			if(starterLevel > 0){
 				vehicle.electricUsage += 0.05F;
-				if(vehicle.fuel > pack.engine.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor") && !isCreative){
-					vehicle.fuel -= pack.engine.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor");
-					fuelFlow += pack.engine.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor");
+				if(vehicle.fuel > pack.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value && !isCreative){
+					vehicle.fuel -= pack.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
+					fuelFlow += pack.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
 				}
 			}
 		}else if(state.hsOn){
@@ -196,7 +198,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		}
 		
 		ambientTemp = 25*vehicle.world.getBiome(vehicle.getPosition()).getTemperature(vehicle.getPosition()) - 5*(Math.pow(2, vehicle.posY/400) - 1);
-		coolingFactor = 0.001 + vehicle.velocity/500F;
+		coolingFactor = 0.001 + Math.abs(vehicle.velocity)/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		vehicle.electricUsage -= state.running ? 0.05*RPM/pack.engine.maxRPM : 0;
 		
@@ -205,19 +207,19 @@ public abstract class APartEngine extends APart implements FXPart{
 			oilPressure = Math.min(90 - temp/10, oilPressure + RPM/engineStartRPM - 0.5*(oilLeak ? 5F : 1F)*(oilPressure/engineOilDanger));
 			if(oilPressure < engineOilDanger){
 				temp += Math.max(0, (20*RPM/pack.engine.maxRPM)/20);
-				hours += 0.01;
+				hours += 0.01*ConfigSystem.configObject.general.engineHoursFactor.value;
 			}else{
 				temp += Math.max(0, (7*RPM/pack.engine.maxRPM - temp/(engineColdTemp*2))/20);
-				hours += 0.001;	
+				hours += 0.001*ConfigSystem.configObject.general.engineHoursFactor.value;	
 			}
 			if(RPM > engineStartRPM*1.5 && temp < engineColdTemp){//Not warmed up
-				hours += 0.001*(RPM/engineStartRPM - 1);
+				hours += 0.001*(RPM/engineStartRPM - 1)*ConfigSystem.configObject.general.engineHoursFactor.value;
 			}
 			if(RPM > getSafeRPMFromMax(this.pack.engine.maxRPM)){//Too fast
-				hours += 0.001*(RPM - getSafeRPMFromMax(this.pack.engine.maxRPM))/10F;
+				hours += 0.001*(RPM - getSafeRPMFromMax(this.pack.engine.maxRPM))/10F*ConfigSystem.configObject.general.engineHoursFactor.value;
 			}
 			if(temp > engineOverheatTemp1){//Too hot
-				hours += 0.001*(temp - engineOverheatTemp1);
+				hours += 0.001*(temp - engineOverheatTemp1)*ConfigSystem.configObject.general.engineHoursFactor.value;
 				if(temp > engineFailureTemp && !vehicle.world.isRemote && !isCreative){
 					explodeEngine();
 				}
@@ -230,7 +232,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			}
 
 			if(!isCreative && !vehicle.fluidName.isEmpty()){
-				fuelFlow = pack.engine.fuelConsumption*ConfigSystem.getDoubleConfig("FuelUsageFactor")/ConfigSystem.getFuelValue(pack.engine.fuelType, vehicle.fluidName)*RPM*(fuelLeak ? 1.5F : 1.0F)/pack.engine.maxRPM;
+				fuelFlow = pack.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(pack.engine.fuelType).get(vehicle.fluidName)*RPM*(fuelLeak ? 1.5F : 1.0F)/pack.engine.maxRPM;
 				vehicle.fuel -= fuelFlow;
 			}
 			
@@ -406,7 +408,7 @@ public abstract class APartEngine extends APart implements FXPart{
 	}
 	
 	protected void explodeEngine(){
-		if(ConfigSystem.getBooleanConfig("Explosions")){
+		if(ConfigSystem.configObject.damage.explosions.value){
 			vehicle.world.newExplosion(vehicle, partPos.x, partPos.y, partPos.z, 1F, true, true);
 		}else{
 			vehicle.world.newExplosion(vehicle, partPos.x, partPos.y, partPos.z, 0F, true, true);

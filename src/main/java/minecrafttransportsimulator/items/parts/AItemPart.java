@@ -6,8 +6,8 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.dataclasses.PackPartObject;
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.PackPartObject;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartAddition;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -104,7 +104,7 @@ public abstract class AItemPart extends Item{
 		if(packPart.customTypes == null){
 			return itemPack.general.customType == null;
 		}else if(itemPack.general.customType == null){
-			return packPart.customTypes == null;
+			return packPart.customTypes == null || packPart.customTypes.contains("");
 		}else{
 			return packPart.customTypes.contains(itemPack.general.customType);
 		}

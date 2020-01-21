@@ -2,7 +2,7 @@ package minecrafttransportsimulator.guis.components;
 
 import java.awt.Color;
 
-import minecrafttransportsimulator.guis.GUIBase;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
 
 /**Custom button class.  This allows for a custom button texture, as well as a cleaner constructor.
  * It also allows us to cut out a few MC methods from their own button class and use our own.
@@ -80,20 +80,19 @@ public abstract class GUIComponentButton{
 			}else{
 				textureUStart = BUTTON_TEXTURE_U_OFFSET;//Disabled
 			}
-    		GUIBase.renderSheetTexture(x, y, width/2, height, 0, textureUStart, width/2, textureUStart + BUTTON_TEXTURE_HEIGHT);
-			GUIBase.renderSheetTexture(x + width/2, y, width/2, height, BUTTON_TEXTURE_WIDTH - width/2, textureUStart, BUTTON_TEXTURE_WIDTH, textureUStart + BUTTON_TEXTURE_HEIGHT);
+    		WrapperGUI.renderSheetTexture(x, y, width/2, height, 0, textureUStart, width/2, textureUStart + BUTTON_TEXTURE_HEIGHT);
+    		WrapperGUI.renderSheetTexture(x + width/2, y, width/2, height, BUTTON_TEXTURE_WIDTH - width/2, textureUStart, BUTTON_TEXTURE_WIDTH, textureUStart + BUTTON_TEXTURE_HEIGHT);
 		}
     }
     
     /**
 	 *  Renders the button's text.  This is done separately from the button to allow all buttons to render in one pass
 	 *  before binding the font texture for rendering text.  It also prevents oddities that occur from font
-	 *  rendering with respect to OpenGL states.  {@link GUIBase} is passed-in here as a parameter to allow
-	 *  the button to call the {@link GUIBase#drawText(int, int)} method of the current screen instance.
+	 *  rendering with respect to OpenGL states.
 	 */
-    public void renderText(GUIBase currentGUI){
+    public void renderText(){
     	if(visible){
-    		currentGUI.drawText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText, false, -1);
+    		WrapperGUI.drawText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText, false, -1);
     	}
     }
 }

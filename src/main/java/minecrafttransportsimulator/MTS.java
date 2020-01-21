@@ -21,7 +21,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="15.9.0";
+	public static final String MODVER="15.9.2";
 	
 	@Instance(value = MTS.MODID)
 	public static MTS instance;
@@ -39,7 +39,7 @@ public class MTS {
 	public void preInit(FMLPreInitializationEvent event){
 		MTSLog = event.getModLog();
 		PackParserSystem.outputLog();
-		proxy.initConfig(event.getSuggestedConfigurationFile());
+		ConfigSystem.loadFromDisk(new File(event.getSuggestedConfigurationFile().getParent(), "mtsconfig.json"));
 		proxy.initControls();
 		minecraftDir = new File(event.getModConfigurationDirectory().getParent());
 	}
@@ -47,6 +47,5 @@ public class MTS {
 	@EventHandler
 	public void init(FMLInitializationEvent event){
 		MTSRegistry.init();
-		ConfigSystem.initFuels();
 	}
 }

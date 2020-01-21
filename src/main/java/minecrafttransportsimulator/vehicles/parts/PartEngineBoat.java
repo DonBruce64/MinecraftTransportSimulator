@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import minecrafttransportsimulator.dataclasses.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
@@ -20,7 +20,7 @@ public class PartEngineBoat extends APartEngineGeared	{
 		//Check 1 block down for liquid.  If we are in liquid, then we should provide power.
 		boolean inLiquid = vehicle.world.getBlockState(new BlockPos(partPos).down()).getMaterial().isLiquid();
 		if(state.running){
-			double engineTargetRPM = (vehicle.throttle/100F*(pack.engine.maxRPM - engineStartRPM*1.25 - hours) + engineStartRPM*1.25)*(inLiquid ? 0.90D : 1.0D);
+			double engineTargetRPM = (vehicle.throttle/100F*((inLiquid ? getSafeRPMFromMax(pack.engine.maxRPM) : pack.engine.maxRPM) - engineStartRPM*1.25 - hours) + engineStartRPM*1.25);
 			if(inLiquid){
 				RPM += (engineTargetRPM - RPM - engineStartRPM*0.15F)/10;
 			}else{

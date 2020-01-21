@@ -2,7 +2,7 @@ package minecrafttransportsimulator.guis.components;
 
 import java.awt.Color;
 
-import minecrafttransportsimulator.guis.GUIBase;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
 
 /**Custom label class.  Allows for batch rendering of text, and easier rendering of labels using
  * state variables rather than actual text boxes.  Also allows for linking with either a
@@ -69,12 +69,12 @@ public class GUIComponentLabel{
 	 *  Renders the text that makes up this component.
 	 *  Uses the button or box visibility if those components are set.
 	 */
-    public void renderText(GUIBase currentGUI){
+    public void renderText(){
 		if(button == null ? (box == null ? visible : box.visible) : button.visible){
 	    	if(scale == 1.0){
-				currentGUI.drawText(text, x, y, color, centered, shadow, wrapWidth);
+	    		WrapperGUI.drawText(text, x, y, color, centered, shadow, wrapWidth);
 			}else{
-				currentGUI.drawScaledText(text, x, y, color, centered, shadow, wrapWidth, scale);
+				WrapperGUI.drawScaledText(text, x, y, color, centered, shadow, wrapWidth, scale);
 			}
 		}
     }
