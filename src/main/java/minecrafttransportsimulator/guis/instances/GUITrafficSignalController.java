@@ -41,7 +41,7 @@ public class GUITrafficSignalController extends GUIBase{
 	
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
-		addButton(new GUIComponentButton(guiLeft + 25, guiTop + 15, 200, WrapperGUI.translate("trafficsignalcontroller.scan")){
+		addButton(new GUIComponentButton(guiLeft + 25, guiTop + 15, 200, WrapperGUI.translate("gui.trafficsignalcontroller.scan")){
 			public void onClicked(){
 				signalController.trafficSignalLocations.clear();
 				int scanDistance = Integer.valueOf(scanDistanceText.getText());
@@ -62,9 +62,9 @@ public class GUITrafficSignalController extends GUIBase{
 			}
 		});
 		addTextBox(scanDistanceText = new GUIComponentTextBox(guiLeft + 120, guiTop + 40, 40, "25", 10, Color.WHITE, Color.BLACK, 2));
-		addLabel(new GUIComponentLabel(guiLeft + 30, scanDistanceText.y, Color.WHITE, WrapperGUI.translate("trafficsignalcontroller.scandistance")).setBox(scanDistanceText));
+		addLabel(new GUIComponentLabel(guiLeft + 30, scanDistanceText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.scandistance")).setBox(scanDistanceText));
 		
-		addLabel(new GUIComponentLabel(guiLeft + 30, guiTop + 55, Color.WHITE, WrapperGUI.translate("trafficsignalcontroller.scanfound")));
+		addLabel(new GUIComponentLabel(guiLeft + 30, guiTop + 55, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.scanfound")));
 		addItem(new GUIComponentItem(guiLeft + 120, guiTop + 50, 1.0F, "mts:trafficsignal", 1, -1));
 		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 55, Color.WHITE, " X " + String.valueOf(signalController.trafficSignalLocations.size() - signalController.crossingSignalLocations.size())));
 		addItem(new GUIComponentItem(guiLeft + 170, guiTop + 50, 1.0F, "mts:crossingsignal", 1, -1));
@@ -82,35 +82,35 @@ public class GUITrafficSignalController extends GUIBase{
 				}
 			}
 		});
-		addLabel(new GUIComponentLabel(guiLeft + 30, orientationButton.y + 5, Color.WHITE, WrapperGUI.translate("trafficsignalcontroller.primary")).setButton(orientationButton));
+		addLabel(new GUIComponentLabel(guiLeft + 30, orientationButton.y + 5, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.primary")).setButton(orientationButton));
 		
-		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 90, 100, WrapperGUI.translate("trafficsignalcontroller." + (signalController.triggerMode ? "modetrigger" : "modetime"))){
+		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 90, 100, WrapperGUI.translate("gui.trafficsignalcontroller." + (signalController.triggerMode ? "modetrigger" : "modetime"))){
 			@Override
 			public void onClicked(){
 				if(signalController.triggerMode){
 					signalController.triggerMode = false;
-					this.text = WrapperGUI.translate("trafficsignalcontroller.modetime");
+					this.text = WrapperGUI.translate("gui.trafficsignalcontroller.modetime");
 				}else{
 					signalController.triggerMode = true;
-					this.text = WrapperGUI.translate("trafficsignalcontroller.modetrigger");
+					this.text = WrapperGUI.translate("gui.trafficsignalcontroller.modetrigger");
 				}
 			}
 		});
-		addLabel(new GUIComponentLabel(guiLeft + 30, modeButton.y + 5, Color.WHITE, WrapperGUI.translate("trafficsignalcontroller.signalmode")).setButton(modeButton));
+		addLabel(new GUIComponentLabel(guiLeft + 30, modeButton.y + 5, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.signalmode")).setButton(modeButton));
 		
 		addTextBox(greenMainTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 115, 40, String.valueOf(signalController.greenMainTime), 10, Color.WHITE, Color.BLACK, 3));
-		addLabel(new GUIComponentLabel(guiLeft + 30, greenMainTimeText.y, Color.WHITE, WrapperGUI.translate("trafficsignalcontroller.greenmaintime")).setBox(greenMainTimeText));
+		addLabel(new GUIComponentLabel(guiLeft + 30, greenMainTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.greenmaintime")).setBox(greenMainTimeText));
 		
 		addTextBox(greenCrossTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 125, 40, String.valueOf(signalController.greenCrossTime), 10, Color.WHITE, Color.BLACK, 3));
-		addLabel(new GUIComponentLabel(guiLeft + 30, greenCrossTimeText.y, Color.WHITE, WrapperGUI.translate("trafficsignalcontroller.greencrosstime")).setBox(greenCrossTimeText));
+		addLabel(new GUIComponentLabel(guiLeft + 30, greenCrossTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.greencrosstime")).setBox(greenCrossTimeText));
 		
 		addTextBox(yellowTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 135, 40, String.valueOf(signalController.yellowTime), 10, Color.WHITE, Color.BLACK, 1));
-		addLabel(new GUIComponentLabel(guiLeft + 30, yellowTimeText.y, Color.WHITE, WrapperGUI.translate("trafficsignalcontroller.yellowtime")).setBox(yellowTimeText));
+		addLabel(new GUIComponentLabel(guiLeft + 30, yellowTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.yellowtime")).setBox(yellowTimeText));
 		
 		addTextBox(allRedTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 145, 40, String.valueOf(signalController.allRedTime), 10, Color.WHITE, Color.BLACK, 1));
-		addLabel(new GUIComponentLabel(guiLeft + 30, allRedTimeText.y, Color.WHITE, WrapperGUI.translate("trafficsignalcontroller.allredtime")).setBox(allRedTimeText));
+		addLabel(new GUIComponentLabel(guiLeft + 30, allRedTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.allredtime")).setBox(allRedTimeText));
 		
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 80, WrapperGUI.translate("trafficsignalcontroller.confirm")){
+		addButton(confirmButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 80, WrapperGUI.translate("gui.trafficsignalcontroller.confirm")){
 			@Override
 			public void onClicked(){
 				//Convert strings to ints and send update packet to server.

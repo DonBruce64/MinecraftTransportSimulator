@@ -281,10 +281,10 @@ public class WrapperGUI extends GuiScreen{
 	/**
 	 *  Returns the translation of the passed-in text from the lang file.
 	 *  Put here to prevent the need for referencing the MC class directly, which
-	 *  may change during updates.  Prefixed by "gui." for convenience.
+	 *  may change during updates.
 	 */
 	public static String translate(String text){
-		return I18n.format("gui." + text);
+		return I18n.format(text);
 	}
 	
 	/**
