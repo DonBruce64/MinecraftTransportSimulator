@@ -2,28 +2,21 @@ package minecrafttransportsimulator.blocks.core;
 
 import java.awt.*;
 import java.util.*;
-import java.util.List;
 
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.SimpleComponent;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.pole.TileEntityPoleAttachment;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.packets.tileentities.PacketTrafficSignalControllerChange;
-import minecrafttransportsimulator.rendering.blockrenders.RenderPoleLighted;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
-import net.minecraft.block.Block;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import minecrafttransportsimulator.wrappers.CrossingSignalData;
+import minecrafttransportsimulator.wrappers.TrafficSignalData;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ITickable;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.Optional;
-
-import javax.swing.plaf.synth.SynthOptionPaneUI;
 
 @Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "opencomputers")
 public class TileEntityTrafficSignalController extends TileEntityBase implements ITickable, SimpleComponent {
@@ -36,8 +29,8 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
 	public int allRedTime = 1;
 	//public final List<BlockPos> trafficSignalLocations = new ArrayList<BlockPos>();
 	//public final List<BlockPos> crossingSignalLocations = new ArrayList<BlockPos>();
-	public final Map<BlockPos, Map<Color, Boolean>> trafficSignals = new HashMap<>();
-	public final Map<BlockPos, Map<Color, Boolean>> crossingSignals = new HashMap<>();
+	public final Map<BlockPos, TrafficSignalData> trafficSignals = new HashMap<>();
+	public final Map<BlockPos, CrossingSignalData> crossingSignals = new HashMap<>();
 
 	public byte operationIndex;
 	public long timeOperationStarted;
@@ -171,7 +164,7 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
         trafficSignals.clear();
         for(byte i=0; i<tagCompound.getInteger("trafficSignalCount"); ++i){
         	int[] posArray = tagCompound.getIntArray("trafficSignalLocation" + i);
-        	trafficSignals.put(new BlockPos(posArray[0], posArray[1], posArray[2]), Collections.singletonMap(Color.RED, false));
+        	trafficSignals.put(new BlockPos(posArray[0], posArray[1], posArray[2]), new TrafficSignalData());
         }
     }
 
@@ -294,10 +287,37 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
 
 	// Manual mode
 
-	@Callback(doc = "function(int):boolean; Set the time all signals are Red. Returns true on success", direct = true)
+	@Callback(doc = "function():int; ", direct = true)
+	@Optional.Method(modid = "opencomputers")
+	public Object[] getTrafficSignalAmount(Context context, Arguments args) {
+		return new Object[] { trafficSignals.size() };
+	}
+
+	@Callback(doc = "function():int; ", direct = true)
+	@Optional.Method(modid = "opencomputers")
+	public Object[] getCrossingSignalAmount(Context context, Arguments args) {
+		return new Object[] { crossingSignals.size() };
+	}
+
+	@Callback(doc = "function(int, string):boolean; ", direct = true)
 	@Optional.Method(modid = "opencomputers")
 	public Object[] setTrafficSignalColor(Context context, Arguments args) {
-		return new Object[] { args.isInteger(0) ? allRedTime = args.checkInteger(0) : false };
+		if (
+				args.isInteger(0) &&
+				args.isString(1) &&
+				(
+					args.checkString(1).equalsIgnoreCase("red") ||
+					args.checkString(1).equalsIgnoreCase("yellow") ||
+					args.checkString(1).equalsIgnoreCase("green")
+				)
+		) {
+			if (trafficSignals.containsKey(args.checkInteger(0))) {
+				trafficSignals.get(args.checkInteger(0)).color = Color.getColor(args.checkString(1));
+				return new Object[] { true };
+			} else
+				return new Object[] { false };
+		} else
+			return new Object[] { false };
 	}
 	//endregion
 }

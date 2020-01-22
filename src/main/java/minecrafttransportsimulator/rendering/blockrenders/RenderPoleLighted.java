@@ -29,13 +29,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 	private static final ResourceLocation walkTexture = new ResourceLocation(MTS.MODID, "textures/rendering/walk.png");
 	private static final ResourceLocation dontwalkTexture = new ResourceLocation(MTS.MODID, "textures/rendering/dontwalk.png");
 
-	private boolean shouldFlash;
-	private Color lightColor;
-		
-	public RenderPoleLighted(){
-		shouldFlash = false;
-		lightColor = Color.RED;
-	}
+	public RenderPoleLighted(){}
 	
 	@Override
 	public void render(TileEntityPoleAttachment polePart, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
@@ -120,6 +114,8 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 
 	private void renderTrafficSignal(TileEntityPoleAttachment signal, Vec3i facingVec, float lightBrightness){
 		//Render the lights for the traffic signal.  What lights we render depends on the controller state.
+		final boolean shouldFlash;
+		final Color lightColor;
 		final long worldTime = signal.getWorld().getTotalWorldTime();
 		BlockPos signalPos = signal.getPos();
 		
@@ -132,7 +128,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 			}
 			TileEntity testTile = signal.getWorld().loadedTileEntityList.get(checkIndex);
 			if(testTile instanceof TileEntityTrafficSignalController){
-				if(((TileEntityTrafficSignalController) testTile).trafficSignalLocations.contains(signalPos)){
+				if(((TileEntityTrafficSignalController) testTile).trafficSignals.containsKey(signalPos)){
 					//Found our signal.
 					trafficSignalControllers.put(signalPos, testTile.getPos());
 				}
@@ -147,8 +143,15 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 			if(tile instanceof TileEntityTrafficSignalController){
 				TileEntityTrafficSignalController controller = (TileEntityTrafficSignalController) tile;
 				//We are valid, now check to see if we are still part of the controller.
-				if(controller.trafficSignalLocations.contains(signalPos)){
-					if (controller.mode > 1) {
+				if(controller.trafficSignals.containsKey(signalPos)){
+					if (controller.mode == 0) {
+						lightColor = Color.YELLOW;
+						shouldFlash = true;
+					} else
+					if (controller.mode == 1) {
+						lightColor = controller.trafficSignals.get(signalPos) != null ? controller.trafficSignals.get(signalPos).color : null;
+						shouldFlash = controller.trafficSignals.get(signalPos) != null ? controller.trafficSignals.get(signalPos).shouldFlash : false;
+					} else {
 						//Valid controller detected, do render.
 						shouldFlash = false;
 						final boolean isOnMainAxis = !(controller.orientedOnX ^ (facingVec.getX() != 0));
@@ -190,9 +193,6 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 								break;
 							}
 						}
-					} else if (controller.mode == 0) {
-						shouldFlash = true;
-						lightColor = Color.YELLOW;
 					}
 				}else{
 					trafficSignalControllers.remove(signalPos);
@@ -209,7 +209,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 			lightColor = Color.RED;
 		}
 
-		if(!shouldFlash || (shouldFlash && (worldTime%20 < 10))){
+		if(!shouldFlash || (shouldFlash && (worldTime%20 < 10)) && ( lightColor != null && ( lightColor == Color.RED || lightColor == Color.YELLOW || lightColor == Color.GREEN))){
 			GL11.glTranslatef(0, lightColor.equals(Color.RED) ? 13F/16F : (lightColor.equals(Color.YELLOW) ? 8F/16F : 3F/16F), 0.225F);
 			renderLightedSquare(4F/16F, lightBrightness, lightColor, lightTexture);
 		}
@@ -217,6 +217,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 	
 	private void renderCrossingSignal(TileEntityPoleAttachment signal, Vec3i facingVec, float lightBrightness){
 		//Render the lights for the crossing signal.  What lights we render depends on the controller state.
+		final boolean isEnabled;
 		final boolean shouldFlash;
 		final boolean showWalk;
 		final long worldTime = signal.getWorld().getTotalWorldTime();
@@ -231,7 +232,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 			}
 			TileEntity testTile = signal.getWorld().loadedTileEntityList.get(checkIndex);
 			if(testTile instanceof TileEntityTrafficSignalController){
-				if(((TileEntityTrafficSignalController) testTile).trafficSignalLocations.contains(signalPos)){
+				if(((TileEntityTrafficSignalController) testTile).trafficSignals.containsKey(signalPos)){
 					//Found our signal.
 					trafficSignalControllers.put(signalPos, testTile.getPos());
 				}
@@ -246,9 +247,19 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 			if(tile instanceof TileEntityTrafficSignalController){
 				TileEntityTrafficSignalController controller = (TileEntityTrafficSignalController) tile;
 				//We are valid, now check to see if we are still part of the controller.
-				if (controller.mode > 1) {
-					if(controller.trafficSignalLocations.contains(signalPos)){
+				if (controller.mode == 0) {
+					isEnabled = false;
+					showWalk = false;
+					shouldFlash = false;
+				} else
+				if (controller.mode == 1) {
+					isEnabled = controller.crossingSignals.get(signalPos) != null ? controller.crossingSignals.get(signalPos).isEnabled : false;
+					showWalk = controller.crossingSignals.get(signalPos) != null ? controller.crossingSignals.get(signalPos).showWalk : false;
+					shouldFlash = controller.crossingSignals.get(signalPos) != null ? controller.crossingSignals.get(signalPos).shouldFlash : true;
+				} else {
+					if(controller.trafficSignals.containsKey(signalPos)){
 						//Valid controller detected, do render.
+						isEnabled = true;
 						final boolean isOnMainAxis = !(controller.orientedOnX ^ (facingVec.getX() != 0));
 						if(controller.operationIndex == 0){
 							//First step, main signal shows walk, cross signal shows don't walk.
@@ -279,27 +290,26 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 							showWalk = isOnMainAxis;
 							shouldFlash = false;
 						}
-					}else{
+					} else {
 						trafficSignalControllers.remove(signalPos);
+						isEnabled = true;
 						showWalk = false;
 						shouldFlash = true;
 					}
-				} else {
-					showWalk = false;
-					shouldFlash = false;
-					return;
 				}
 			}else{
 				trafficSignalControllers.remove(signalPos);
+				isEnabled = true;
 				showWalk = false;
 				shouldFlash = true;
 			}
 		}else{
+			isEnabled = true;
 			showWalk = false;
 			shouldFlash = true;
 		}
 
-		if(!shouldFlash || (shouldFlash && (worldTime%20 < 10))){
+		if(!shouldFlash || (shouldFlash && (worldTime%20 < 10)) && isEnabled ){
 			if(showWalk){
 				GL11.glTranslatef(0, 2F/16F, 0.145F);
 				renderLightedSquare(3F/16F, lightBrightness*0.5F, Color.GREEN, walkTexture);
@@ -358,21 +368,5 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 			}
 		}
 		GL11.glEnd();
-	}
-
-	public boolean isShouldFlash() {
-		return shouldFlash;
-	}
-
-	public void setShouldFlash(boolean shouldFlash) {
-		this.shouldFlash = shouldFlash;
-	}
-
-	public Color getLightColor() {
-		return lightColor;
-	}
-
-	public void setLightColor(Color lightColor) {
-		this.lightColor = lightColor;
 	}
 }

@@ -11,6 +11,8 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.packets.tileentities.PacketTrafficSignalControllerChange;
+import minecrafttransportsimulator.wrappers.CrossingSignalData;
+import minecrafttransportsimulator.wrappers.TrafficSignalData;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
@@ -43,7 +45,7 @@ public class GUITrafficSignalController extends GUIBase {
 	public void setupComponents(int guiLeft, int guiTop){
 		addButton(new GUIComponentButton(guiLeft + 25, guiTop + 15, 200, WrapperGUI.translate("trafficsignalcontroller.scan")){
 			public void onClicked(){
-				signalController.trafficSignalLocations.clear();
+				signalController.trafficSignals.clear();
 				int scanDistance = Integer.valueOf(scanDistanceText.getText());
 				for(int i=signalController.getPos().getX()-scanDistance; i<=signalController.getPos().getX()+scanDistance; ++i){
 					for(int j=signalController.getPos().getY()-scanDistance; j<=signalController.getPos().getY()+scanDistance; ++j){
@@ -51,10 +53,10 @@ public class GUITrafficSignalController extends GUIBase {
 							BlockPos pos = new BlockPos(i, j, k);
 							Block block = signalController.getWorld().getBlockState(pos).getBlock();
 							if(block.equals(MTSRegistry.trafficSignal)){
-								signalController.trafficSignalLocations.add(pos);
+								signalController.trafficSignals.put(pos, new TrafficSignalData());
 							}else if(block.equals(MTSRegistry.crossingSignal)){
-								signalController.trafficSignalLocations.add(pos);
-								signalController.crossingSignalLocations.add(pos);
+								signalController.trafficSignals.put(pos, new TrafficSignalData());
+								signalController.crossingSignals.put(pos, new CrossingSignalData());
 							}
 						}
 					}
@@ -66,9 +68,9 @@ public class GUITrafficSignalController extends GUIBase {
 		
 		addLabel(new GUIComponentLabel(guiLeft + 30, guiTop + 55, Color.WHITE, WrapperGUI.translate("trafficsignalcontroller.scanfound")));
 		addItem(new GUIComponentItem(guiLeft + 120, guiTop + 50, 1.0F, "mts:trafficsignal", 1, -1));
-		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 55, Color.WHITE, " X " + String.valueOf(signalController.trafficSignalLocations.size() - signalController.crossingSignalLocations.size())));
+		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 55, Color.WHITE, " X " + String.valueOf(signalController.trafficSignals.size() - signalController.crossingSignals.size())));
 		addItem(new GUIComponentItem(guiLeft + 170, guiTop + 50, 1.0F, "mts:crossingsignal", 1, -1));
-		addLabel(crossingSignalCount = new GUIComponentLabel(guiLeft + 185, guiTop + 55, Color.WHITE, " X " + String.valueOf(signalController.crossingSignalLocations.size())));
+		addLabel(crossingSignalCount = new GUIComponentLabel(guiLeft + 185, guiTop + 55, Color.WHITE, " X " + String.valueOf(signalController.crossingSignals.size())));
 		
 		addButton(orientationButton = new GUIComponentButton(guiLeft + 125, guiTop + 70, 100, signalController.orientedOnX ? "X" : "Z"){
 			@Override
@@ -136,9 +138,9 @@ public class GUITrafficSignalController extends GUIBase {
 	
 	@Override
 	public void setStates(){
-		trafficSignalCount.text = " X " + String.valueOf(signalController.trafficSignalLocations.size() - signalController.crossingSignalLocations.size());
-		crossingSignalCount.text = " X " + String.valueOf(signalController.crossingSignalLocations.size());
-		if (!signalController.trafficSignalLocations.isEmpty()) {
+		trafficSignalCount.text = " X " + String.valueOf(signalController.trafficSignals.size() - signalController.crossingSignals.size());
+		crossingSignalCount.text = " X " + String.valueOf(signalController.crossingSignals.size());
+		if (!signalController.trafficSignals.isEmpty()) {
 			orientationButton.enabled = true;
 			modeButton.enabled = true;
 			greenMainTimeText.enabled = true;
