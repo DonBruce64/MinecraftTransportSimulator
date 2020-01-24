@@ -139,7 +139,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 					//This prevents double-rendering in pass 0 and pass -1 from the event system.
 					if(lastRenderPass.get(vehicle) != -1 && MinecraftForgeClient.getRenderPass() == -1){
 						//If we have shaders, make sure we don't call this if we really haven't rendered the model.
-						if(!shadersDetected || renderedShaderModel.get(vehicle)){
+						if(!shadersDetected || (renderedShaderModel.containsKey(vehicle) && renderedShaderModel.get(vehicle))){
 							render(vehicle, Minecraft.getMinecraft().player, partialTicks, true);
 							didRender = true;
 						}
@@ -156,7 +156,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 
 			//If we previously rendered on pass 0 without rendering on pass -1, it means shaders are present.
 			//Set bit to detect these buggers and keep vehicles from disappearing.
-			//Allso init map entries to prevent nulls from hitting logic checks.
+			//Also init map entries to prevent nulls from hitting logic checks.
 			if(!shadersDetected && lastRenderPass.containsKey(vehicle) && lastRenderPass.get(vehicle) == 1 && MinecraftForgeClient.getRenderPass() == 0){
 				shadersDetected = true;
 				renderedShaderShadow.put(vehicle, false);
