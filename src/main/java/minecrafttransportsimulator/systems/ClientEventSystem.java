@@ -42,7 +42,6 @@ import net.minecraftforge.client.resource.VanillaResourceType;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
@@ -360,7 +359,7 @@ public final class ClientEventSystem{
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
 	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()].equals(MTSRegistry.coreTab)){
-	    			FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(new GUIPackMissing()));
+	    			WrapperGUI.openGUI(new GUIPackMissing());
 	    		}
 	    	}
     	}
@@ -386,7 +385,7 @@ public final class ClientEventSystem{
         		MTS.MTSNet.sendToServer(new PacketPackReload());
         	}
             if(minecraft.currentScreen == null){
-            	FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(new GUIConfig()));
+            	WrapperGUI.openGUI(new GUIConfig());
             }
         }
     }

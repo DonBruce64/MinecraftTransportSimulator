@@ -2,6 +2,7 @@ package minecrafttransportsimulator.wrappers;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -29,8 +30,8 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 public class WrapperInput{
 	private static KeyBinding configKey;
 	private static boolean joystickEnabled = false;
-	private static short mousePosX = 0;
-	private static short mousePosY = 0;
+	private static int mousePosX = 0;
+	private static int mousePosY = 0;
 	private static final Map<String, Controller> joystickMap = new HashMap<String, Controller>();
 	
 	/**
@@ -88,6 +89,34 @@ public class WrapperInput{
 	}
 	
 	/**
+	 *  Returns a list of all joysticks currently present on the system.
+	 */
+	public static Set<String> getAllJoysticks(){
+		return joystickMap.keySet();
+	}
+	
+	/**
+	 *  Returns the number of inputs the passed-in joystick has.
+	 */
+	public static int getJoystickInputCount(String joystickName){
+		return joystickMap.get(joystickName).getComponents().length;
+	}
+	
+	/**
+	 *  Returns the name of the passed-in input.
+	 */
+	public static String getJoystickInputName(String joystickName, int buttonIndex){
+		return joystickMap.get(joystickName).getComponents()[buttonIndex].getName();
+	}
+	
+	/**
+	 *  Returns true if the passed-in input is analog.
+	 */
+	public static boolean isJoystickInputAnalog(String joystickName, int buttonIndex){
+		return joystickMap.get(joystickName).getComponents()[buttonIndex].isAnalog();
+	}
+	
+	/**
 	 *  Returns true if the given joystick button is currently pressed.
 	 */
 	public static boolean isJoystickButtonPressed(String joystickName, int buttonIndex){
@@ -99,7 +128,7 @@ public class WrapperInput{
 	 *  Returns the current value of the joystick axis.  Note that this is used
 	 *  for both analog axis, and fake-digital buttons like Xbox D-pads.
 	 */
-	public static float getJoystickValue(String joystickName, int axisIndex){
+	public static float getJoystickInputValue(String joystickName, int axisIndex){
 		//Check to make sure this control is operational before testing.  It could have been removed from a prior game.
 		if(joystickMap.containsKey(joystickName)){
 			joystickMap.get(joystickName).poll();
@@ -122,17 +151,17 @@ public class WrapperInput{
 		int dx = Mouse.getDX();
 		int dy = Mouse.getDY();
 		if(Math.abs(dx) < 100){
-			mousePosX = (short) Math.max(Math.min(mousePosX + dx/5F, 250), -250);
+			mousePosX = (int) Math.max(Math.min(mousePosX + dx/5F, 250), -250);
 		}
 		if(Math.abs(dy) < 100){
-			mousePosY = (short) Math.max(Math.min(mousePosY - dy, 250), -250);
+			mousePosY = (int) Math.max(Math.min(mousePosY - dy, 250), -250);
 		}
-		return mousePosX << 32 + mousePosY;
+		return mousePosX << Integer.SIZE + mousePosY;
 	}
 	
 	/**
 	 *  Returns the default keyCode for the passed-in key.
-	 *  Should onl be used on first launch when no keyCode has yet been assigned.
+	 *  Should only be used on first launch when no keyCode has yet been assigned.
 	 */
 	public static int getDefaultKeyCode(ControlsKeyboard kbEnum){
 		switch(kbEnum){

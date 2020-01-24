@@ -117,8 +117,8 @@ public class CoreConfigObject{
 	}
 	
 	public static class ControlsConfig{
-		public Map<String, KeyboardConfig> keyboard;
-		public Map<String, JoystickConfig> joystick;
+		public Map<String, KeyboardConfig> keyboard = new HashMap<String, KeyboardConfig>();
+		public Map<String, JoystickConfig>  joystick = new HashMap<String, JoystickConfig>();
 	}
 	
 	

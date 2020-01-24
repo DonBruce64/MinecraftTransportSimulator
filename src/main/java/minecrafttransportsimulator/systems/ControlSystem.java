@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.systems;
 
-import org.lwjgl.input.Mouse;
-
 import minecrafttransportsimulator.ClientProxy;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.GUIPanelAircraft;
@@ -30,7 +28,6 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 /**Class that handles all control operations.
@@ -41,25 +38,28 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 public final class ControlSystem{	
 	private static final int NULL_COMPONENT = 999;	
 	
+	/**
+	 * Init the wrapper system for inputs, then iterate through the enums to initialize them.
+	 * Joystick enums need to come first, as the Keyboard enums take them as constructor args.
+	 * After we initialize the keboard enums, we set their default values.  If we don't initialize
+	 * them first, we hit a switch error in {@link WrapperInput#getDefaultKeyCode(ControlsKeyboard)}.
+	 * Once all this is done, save the results back to the disk to ensure the systems are synced.
+	 */
 	public static void init(){
-		//Get config and init controls if they don't exist, or load them if they do.
+		WrapperInput.init();
 		
-		/*
-		//Recall keybindings from config file.
-		for(ControlsKeyboard control : ControlsKeyboard.values()){
-			//control.button = ConfigSystem.config.get(KEYBOARD_CONFIG, control.buttonName, control.defaultButton).getInt();
-		}
 		for(ControlsJoystick control : ControlsJoystick.values()){
-			control.joystickAssigned = ConfigSystem.config.get(JOYSTICK_CONFIG, control.buttonName + "_joystick", "").getString();
-			control.joystickButton = ConfigSystem.config.get(JOYSTICK_CONFIG, control.buttonName + "_button", NULL_COMPONENT).getInt();
-			if(control.isAxis){
-				control.joystickMinTravel = ConfigSystem.config.get(JOYSTICK_CONFIG, control.buttonName + "_mintravel", -1D).getDouble();
-				control.joystickMaxTravel = ConfigSystem.config.get(JOYSTICK_CONFIG, control.buttonName + "_maxtravel", 1D).getDouble();
-				control.joystickInverted = ConfigSystem.config.get(JOYSTICK_CONFIG, control.buttonName + "_inverted", false).getBoolean();
+			ConfigSystem.configObject.controls.joystick.put(control.systemName, control.config);
+		}
+		for(ControlsKeyboard control : ControlsKeyboard.values()){
+			ConfigSystem.configObject.controls.keyboard.put(control.systemName, control.config);
+		}
+		for(ControlsKeyboard control : ControlsKeyboard.values()){
+			if(control.config.keyCode == 0){
+				control.config.keyCode = WrapperInput.getDefaultKeyCode(control);
 			}
 		}
-		ConfigSystem.config.save();*/
-		
+		ConfigSystem.saveToDisk();
 	}
 
 	
@@ -130,10 +130,10 @@ public final class ControlSystem{
 	}
 	
 	private static void controlBrake(ControlsKeyboardDynamic dynamic, ControlsJoystick analogBrake, ControlsJoystick pBrake, int entityID){
-		if(joystickMap.containsKey(analogBrake.joystickAssigned) && analogBrake.joystickButton != NULL_COMPONENT){
+		if(analogBrake.config.joystickName != null){
 			if(pBrake.isPressed()){
 				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 12));
-			}else if(getJoystickAxisState(analogBrake, (short) 0) > 25){
+			}else if(analogBrake.getAxisState((short) 0) > 25){
 				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 11));
 			}else{
 				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 2));
@@ -187,8 +187,8 @@ public final class ControlSystem{
 	
 	private static void controlRadio(EntityVehicleE_Powered vehicle, ControlsKeyboard radio){
 		if(radio.isPressed()){
-			if(Minecraft.getMinecraft().currentScreen == null){
-				FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(new GUIRadio(vehicle)));
+			if(WrapperGUI.isGUIActive(null)){
+				WrapperGUI.openGUI(new GUIRadio(vehicle));
 			}
 		}
 	}
@@ -205,11 +205,10 @@ public final class ControlSystem{
 		
 		//Open or close the panel.
 		if(ControlsKeyboard.AIRCRAFT_PANEL.isPressed()){
-			if(Minecraft.getMinecraft().currentScreen == null){
+			if(WrapperGUI.isGUIActive(null)){
 				FMLCommonHandler.instance().showGuiScreen(new GUIPanelAircraft(aircraft));
-			}else if(Minecraft.getMinecraft().currentScreen instanceof GUIPanelAircraft){
-				Minecraft.getMinecraft().displayGuiScreen((GuiScreen)null);
-				Minecraft.getMinecraft().setIngameFocus();
+			}else if(WrapperGUI.isGUIActive(GUIPanelAircraft.class)){
+				WrapperGUI.closeGUI();
 			}
 		}
 		
@@ -220,8 +219,8 @@ public final class ControlSystem{
 		}
 		
 		//Increment or decrement throttle.
-		if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_THROTTLE.joystickAssigned) && ControlsJoystick.AIRCRAFT_THROTTLE.joystickButton != NULL_COMPONENT){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.AIRCRAFT_THROTTLE, (short) 0)));
+		if(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName != null){
+			MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), (byte) ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState((short) 0)));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()){
 				MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MAX_VALUE));
@@ -242,8 +241,8 @@ public final class ControlSystem{
 		}
 		
 		//Check yaw.
-		if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_YAW.joystickAssigned) && ControlsJoystick.AIRCRAFT_YAW.joystickButton != NULL_COMPONENT){
-			MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), getJoystickAxisState(ControlsJoystick.AIRCRAFT_YAW, (short) 250)));
+		if(ControlsJoystick.AIRCRAFT_YAW.config.joystickName != null){
+			MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), ControlsJoystick.AIRCRAFT_YAW.getAxisState((short) 250)));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_YAW_R.isPressed()){
 				MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), true, ConfigSystem.configObject.client.controlSurfaceCooldown.value.shortValue()));
@@ -261,15 +260,15 @@ public final class ControlSystem{
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.client.mouseYoke.value){
-			if(CameraSystem.lockedView && Minecraft.getMinecraft().currentScreen == null){
-				//TODO add in mouse-yoke controls.  Perhaps make them better?
-				//MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), mousePosX));
-				//MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), mousePosY));
+			if(CameraSystem.lockedView && WrapperGUI.isGUIActive(null)){
+				long mousePosition = WrapperInput.getTrackedMousePosition();
+				MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), (short) (mousePosition >> Integer.SIZE)));
+				MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), (short) (mousePosition & Integer.MAX_VALUE)));
 			}
 		}else{
 			//Check pitch.
-			if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_PITCH.joystickAssigned) && ControlsJoystick.AIRCRAFT_PITCH.joystickButton != NULL_COMPONENT){
-				MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), getJoystickAxisState(ControlsJoystick.AIRCRAFT_PITCH, (short) 250)));
+			if(ControlsJoystick.AIRCRAFT_PITCH.config.joystickName != null){
+				MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), ControlsJoystick.AIRCRAFT_PITCH.getAxisState((short) 250)));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_PITCH_U.isPressed()){
 					MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), true, ConfigSystem.configObject.client.controlSurfaceCooldown.value.shortValue()));
@@ -286,8 +285,8 @@ public final class ControlSystem{
 			}
 			
 			//Check roll.
-			if(joystickMap.containsKey(ControlsJoystick.AIRCRAFT_ROLL.joystickAssigned) && ControlsJoystick.AIRCRAFT_ROLL.joystickButton != NULL_COMPONENT){
-				MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), getJoystickAxisState(ControlsJoystick.AIRCRAFT_ROLL, (short) 250)));
+			if(ControlsJoystick.AIRCRAFT_ROLL.config.joystickName != null){
+				MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), ControlsJoystick.AIRCRAFT_ROLL.getAxisState((short) 250)));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_ROLL_R.isPressed()){
 					MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), true, ConfigSystem.configObject.client.controlSurfaceCooldown.value.shortValue()));
@@ -317,17 +316,16 @@ public final class ControlSystem{
 		
 		//Open or close the panel.
 		if(ControlsKeyboard.CAR_PANEL.isPressed()){
-			if(Minecraft.getMinecraft().currentScreen == null){
+			if(WrapperGUI.isGUIActive(null)){
 				FMLCommonHandler.instance().showGuiScreen(new GUIPanelGround(powered));
-			}else if(Minecraft.getMinecraft().currentScreen instanceof GUIPanelGround){
-				Minecraft.getMinecraft().displayGuiScreen((GuiScreen)null);
-				Minecraft.getMinecraft().setIngameFocus();
+			}else if(WrapperGUI.isGUIActive(GUIPanelGround.class)){
+				WrapperGUI.closeGUI();
 			}
 		}
 		
 		//Change gas to on or off.
-		if(joystickMap.containsKey(ControlsJoystick.CAR_GAS.joystickAssigned) && ControlsJoystick.CAR_GAS.joystickButton != NULL_COMPONENT){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) getJoystickAxisState(ControlsJoystick.CAR_GAS, (short) 0)));
+		if(ControlsJoystick.CAR_GAS.config.joystickName != null){
+			MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) ControlsJoystick.CAR_GAS.getAxisState((short) 0)));
 		}else{
 			if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
 				MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) 50));
@@ -341,16 +339,13 @@ public final class ControlSystem{
 		//Check steering, turn signals, and lights.
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.client.mouseYoke.value){
-			if(CameraSystem.lockedView && Minecraft.getMinecraft().currentScreen == null){
-				int dx = Mouse.getDX();
-				if(Math.abs(dx) < 100){
-					mousePosX = (short) Math.max(Math.min(mousePosX + dx*10, 450), -450);
-				}
-				MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), mousePosX));
+			if(CameraSystem.lockedView && WrapperGUI.isGUIActive(null)){
+				long mousePosition = WrapperInput.getTrackedMousePosition();
+				MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), (short) (mousePosition >> Integer.SIZE)));
 			}
 		}else{
-			if(joystickMap.containsKey(ControlsJoystick.CAR_TURN.joystickAssigned) && ControlsJoystick.CAR_TURN.joystickButton != NULL_COMPONENT){
-				MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), getJoystickAxisState(ControlsJoystick.CAR_TURN, (short) 450)));
+			if(ControlsJoystick.CAR_TURN.config.joystickName != null){
+				MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), ControlsJoystick.CAR_TURN.getAxisState((short) 450)));
 			}else{
 				boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
 				boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();
@@ -385,7 +380,7 @@ public final class ControlSystem{
 	 *
 	 * @author don_bruce
 	 */
-	public enum ControlsKeyboard{
+	public static enum ControlsKeyboard{
 		AIRCRAFT_MOD(ControlsJoystick.AIRCRAFT_MOD, false),
 		AIRCRAFT_CAMLOCK(ControlsJoystick.AIRCRAFT_CAMLOCK, true),
 		AIRCRAFT_YAW_R(ControlsJoystick.AIRCRAFT_YAW, false),
@@ -438,18 +433,19 @@ public final class ControlSystem{
 				this.config = ConfigSystem.configObject.controls.keyboard.get(systemName);
 			}else{
 				this.config = new KeyboardConfig();
-				this.config.keyCode = WrapperInput.getDefaultKeyCode(this);
 			}
 		}
 		
 		/**
-		 *  Returns true if the given key is currently pressed.  If we
-		 *  have a joystick in-use, and keyboard override is enabled, 
-		 *  and the corresponding joystick input is bound, we
-		 *  need to return false here no matter our actual state.
+		 *  Returns true if the given key is currently pressed.  If our linked
+		 *  joystick is pressed, return true.  If the joystick is not, but it
+		 *  is bound, and we are using keyboard overrides, return false.
+		 *  Otherwise return the actual key state.
 		 */
 		public boolean isPressed(){
-			if(ConfigSystem.configObject.client.keyboardOverride.value && linkedJoystick.config.joystickName != null){
+			if(linkedJoystick.isPressed()){
+				return true;
+			}else if(linkedJoystick.config.joystickName != null && ConfigSystem.configObject.client.keyboardOverride.value){
 				return false;
 			}else{
 				if(isMomentary){
@@ -465,29 +461,9 @@ public final class ControlSystem{
 				}
 			}
 		}
-		
-		/*
-		public boolean isPressed(){
-			//Check to see if there is a working joystick assigned to this control.
-			if(joystickMap.containsKey(this.linkedJoystickControl.joystickAssigned)){
-				//Need to check to see if this axis is currently bound.
-				if(this.linkedJoystickControl.joystickButton != NULL_COMPONENT){
-					//Joystick control is bound and presumably functional.  If we are overriding the keyboard we must return this value.
-					//Check to make sure this isn't mapped to an axis first.  If so, don't check for joystick values.
-					boolean pressed = false;
-					if(!this.linkedJoystickControl.isAxis){
-						pressed = this.linkedJoystickControl.isPressed();
-					}
-					if(pressed || ConfigSystem.configObject.client.keyboardOverride.value){
-						return pressed;
-					}
-				}
-			}
-			return this.isMomentary ? getTrueButtonState(pressedKeyboardButtons, this, Keyboard.isKeyDown(this.button)) : Keyboard.isKeyDown(this.button);
-		}*/
 	}
 	
-	public enum ControlsJoystick{
+	public static enum ControlsJoystick{
 		AIRCRAFT_MOD(false, false),
 		AIRCRAFT_CAMLOCK(false, true),
 		AIRCRAFT_YAW(true, false),
@@ -565,19 +541,19 @@ public final class ControlSystem{
 		public boolean isPressed(){
 			if(isMomentary){
 				if(wasPressedLastCall){
-					wasPressedLastCall = WrapperInput.getJoystickValue(config.joystickName, config.buttonIndex) > 0; 
+					wasPressedLastCall = WrapperInput.getJoystickInputValue(config.joystickName, config.buttonIndex) > 0; 
 					return false;
 				}else{
-					wasPressedLastCall = WrapperInput.getJoystickValue(config.joystickName, config.buttonIndex) > 0;
+					wasPressedLastCall = WrapperInput.getJoystickInputValue(config.joystickName, config.buttonIndex) > 0;
 					return wasPressedLastCall;
 				}
 			}else{
-				return WrapperInput.getJoystickValue(config.joystickName, config.buttonIndex) > 0;
+				return WrapperInput.getJoystickInputValue(config.joystickName, config.buttonIndex) > 0;
 			}
 		}
 		
 		private float getMultistateValue(){
-			return WrapperInput.getJoystickValue(config.joystickName, config.buttonIndex);
+			return WrapperInput.getJoystickInputValue(config.joystickName, config.buttonIndex);
 		}
 		
 		//Return type is short to allow for easier packet transmission.
@@ -615,19 +591,18 @@ public final class ControlSystem{
 		}
 		
 		public void setAxisControl(String joystickName, int buttonIndex, double axisMinTravel, double axisMaxTravel, boolean invertedAxis){
-			setControl(joystickName, buttonIndex);
 			config.axisMinTravel = axisMinTravel;
 			config.axisMaxTravel = axisMaxTravel;
 			config.invertedAxis = invertedAxis;
-			ConfigSystem.saveToDisk();
+			setControl(joystickName, buttonIndex);
 		}
 		
 		public void clearControl(){
-			setControl("", NULL_COMPONENT);
+			setControl(null, NULL_COMPONENT);
 		}
 	}
 	
-	public enum ControlsKeyboardDynamic{
+	public static enum ControlsKeyboardDynamic{
 		AIRCRAFT_CHANGEHUD(ControlsKeyboard.AIRCRAFT_CAMLOCK, ControlsKeyboard.AIRCRAFT_MOD),
 		AIRCRAFT_PARK(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD),
 		

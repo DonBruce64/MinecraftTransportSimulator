@@ -45,7 +45,7 @@ public class ClientProxy extends CommonProxy{
 		}else if(clicked instanceof BlockPoleSign){
 			FMLCommonHandler.instance().showGuiScreen(new GUISign((BlockPoleSign) clicked, clicker));
 		}else if(clicked instanceof TileEntityTrafficSignalController){
-			FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(new GUITrafficSignalController((TileEntityTrafficSignalController) clicked)));
+			WrapperGUI.openGUI(new GUITrafficSignalController((TileEntityTrafficSignalController) clicked));
 		}
 	}
 	

@@ -124,7 +124,7 @@ public class GUITrafficSignalController extends GUIBase{
 					return;
 				}
 				MTS.MTSNet.sendToServer(new PacketTrafficSignalControllerChange(signalController));
-				WrapperGUI.closeScreen();
+				WrapperGUI.closeGUI();
 			}
 		});
 	}

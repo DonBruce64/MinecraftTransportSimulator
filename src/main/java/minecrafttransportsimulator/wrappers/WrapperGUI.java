@@ -27,9 +27,12 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
-/**Wrapper for MC GUI classes.  Constructor takes a type of {@link GUIBase}.
- * This is where all MC-specific code should be located.  Preferably
+/**Wrapper for MC GUI classes.  Constructor takes a type of {@link GUIBase}, but
+ * is only visible when calling {@link #openGUI(GUIBase)}.  This will automatically
+ * construct the wrapper and open the GUI, all without exposing MC-specific code.
+ * On that note, this is where all MC-specific code should be located.  Preferably
  * in static methods that can be accessed by anything that needs GUI
  * functionality, even if it doesn't extend the {@link GUIBase} class.
  *
@@ -39,15 +42,15 @@ public class WrapperGUI extends GuiScreen{
 	protected static final ResourceLocation standardTexture = new ResourceLocation(MTS.MODID, "textures/guis/standard.png");
 	private static final int STANDARD_TEXTURE_WIDTH = 256;
 	private static final int STANDARD_TEXTURE_HEIGHT = 192;
-	private static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-	private static final RenderItem itemRenderer = Minecraft.getMinecraft().getRenderItem();
+	private static FontRenderer fontRenderer;
+	private static RenderItem itemRenderer;
 	
 	private int guiLeft;
 	private int guiTop;
 	
 	private final GUIBase gui;
 	
-	public WrapperGUI(GUIBase gui){
+	private WrapperGUI(GUIBase gui){
 		this.gui = gui;
 	}
 	
@@ -196,6 +199,9 @@ public class WrapperGUI extends GuiScreen{
 	 *  so take care when calling this method in the middle of rendering operations.
 	 */
 	public static void drawText(String text, int x, int y, Color color, boolean centered, boolean shadow, int wrapWidth){
+		if(fontRenderer == null){
+			fontRenderer = Minecraft.getMinecraft().fontRenderer;
+		}
 		if(centered){
 			x -= fontRenderer.getStringWidth(text)/2;
 		}
@@ -216,6 +222,9 @@ public class WrapperGUI extends GuiScreen{
 	 *  to get this to work, so it's in it's own method for code simplicity.
 	 */
 	public static void drawScaledText(String text, int x, int y, Color color, boolean centered, boolean shadow, int wrapWidth, float scale){
+		if(fontRenderer == null){
+			fontRenderer = Minecraft.getMinecraft().fontRenderer;
+		}
 		GL11.glPushMatrix();
 		if(centered){
 			GL11.glTranslatef(x - fontRenderer.getStringWidth(text)/2, y, 0);
@@ -233,6 +242,9 @@ public class WrapperGUI extends GuiScreen{
 	 *  choosing where to put this component in your GUI.
 	 */
 	public static void drawItem(String itemName, int qty, int metadata, int x, int y, float scale){
+		if(itemRenderer == null){
+			itemRenderer = Minecraft.getMinecraft().getRenderItem();
+		}
 		ItemStack stack = new ItemStack(Item.getByNameOrId(itemName), qty, metadata);
 		if(scale != 1.0F){
 			GL11.glPushMatrix();
@@ -297,9 +309,29 @@ public class WrapperGUI extends GuiScreen{
 	}
 	
 	/**
-	 *  Closes this screen, returning back to the main game.
+	 *  Returns true if the passed=in GUI is currently active.
+	 *  If null is passed-in, then this method returns true if no GUI is active.
 	 */
-	public static void closeScreen(){
-		Minecraft.getMinecraft().player.closeScreen();
+	public static boolean isGUIActive(Class guiClass){
+		if(guiClass == null){
+			return Minecraft.getMinecraft().currentScreen == null;
+		}else{
+			return Minecraft.getMinecraft().currentScreen == null ? false : Minecraft.getMinecraft().currentScreen.getClass().equals(guiClass);
+		}
+	}
+	
+	/**
+	 *  Closes the currently-opened GUI, returning back to the main game.
+	 */
+	public static void closeGUI(){
+		Minecraft.getMinecraft().displayGuiScreen(null);
+	}
+	
+	/**
+	 *  Opens the passed-in GUI, wrapping it in an instance of this class in the process.
+	 *  This makes it compatible with all MC-specific systems.
+	 */
+	public static void openGUI(GUIBase gui){
+		FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(gui));
 	}
 }
