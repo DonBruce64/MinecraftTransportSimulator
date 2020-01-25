@@ -219,8 +219,8 @@ public final class PackParserSystem{
     	}
     }
     
-    /**Packs should call this upon load to add their manuals to the mod.**/
-    public static void addManualDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
+    /**Packs should call this upon load to add their booklets to the mod.**/
+    public static void addBookletDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
     		PackBookletObject pack =  new Gson().fromJson(jsonReader, PackBookletObject.class);
 	    	String manualName = modID + ":" + jsonFileName;

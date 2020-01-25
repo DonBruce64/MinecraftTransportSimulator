@@ -327,7 +327,7 @@ public final class MTSRegistry{
 		
 		//We also add the core game manual item here.  This one is special, as it doesn't come
 		//with any pack as it's for the main game.  Same code applies as pack manuals for consistency.
-		PackParserSystem.addManualDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json")), "handbook_en", MTS.MODID);
+		PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json")), "handbook_en", MTS.MODID);
 		ItemBooklet handbook = new ItemBooklet("mts:handbook_en");
 		bookletItemMap.put("mts:handbook_en", handbook);
 		event.getRegistry().register(handbook.setRegistryName("handbook_en").setUnlocalizedName("handbook_en"));
