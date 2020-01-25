@@ -1,4 +1,4 @@
-#Translated by don_bruce
+#Translated by HydrogenC
 
 death.attack.propellor.null.null=%1$s 被螺旋桨绞碎了
 death.attack.propellor.null.player=%1$s 在和 %2$s 战斗时被螺旋桨绞碎了
@@ -189,22 +189,22 @@ gui.config.controls.car.keyboard=车船键盘
 gui.config.controls.car.joystick=车船摇杆
 gui.config.controls.confirm=确认
 gui.config.joystick.error=ERROR: MTS could not initialize the control system!  This is likely due to a device mis-representing itself as a joystick to Java.  Mice have been known to have this issue, especially Corsair mice, so try a different mouse.  If the issue persists please contact the mod author.
-gui.config.joystick.select=Choose a joystick:
-gui.config.joystick.name=Name:
-gui.config.joystick.type=Type:
-gui.config.joystick.mapping=Mapping
+gui.config.joystick.select=选择摇杆：
+gui.config.joystick.name=名称：
+gui.config.joystick.type=类型：
+gui.config.joystick.mapping=映射
 gui.config.joystick.deadzone=Dead-zone:
-gui.config.joystick.state=State:
+gui.config.joystick.state=状态：
 gui.config.joystick.assignment=Assigned to:
-gui.config.joystick.cancel=Cancel
+gui.config.joystick.cancel=取消
 gui.config.joystick.clear=Clear Assignment
 gui.config.joystick.choosemap=Choose what gets mapped to this button.
 gui.config.joystick.calibrate1=Move axis until numbers stop changing.
 gui.config.joystick.calibrate2=Then hit confirm to save settings.
-gui.config.joystick.axismode=Axis mode: 
-gui.config.joystick.normal=Normal
-gui.config.joystick.invert=Inverted
-gui.config.joystick.confirm=Confirm
+gui.config.joystick.axismode=轴模式：
+gui.config.joystick.normal=正常
+gui.config.joystick.invert=反转
+gui.config.joystick.confirm=确认
 
 gui.packmissing.title=!警告!
 gui.packmissing.reason=MTS has detected that it has been started without a content pack.  This will result in NO vehicles being present!
@@ -213,12 +213,12 @@ gui.packmissing.modlink=https://minecraft.curseforge.com/projects/minecraft-tran
 gui.packmissing.misplaced=If you DID download a pack ensure that it is the same place as all your other mods.  It should NOT be in the mts folder, in fact that folder can be deleted as it's no longer used for packs.
 gui.packmissing.versionerror=If the pack is in that location, and you are still seeing this message, ensure you are running the correct pack version.  Older packs don't have a version-checker built in and will just fail to load with current versions of MTS.
 
-info.item.engine.automatic=变速器: 自动
-info.item.engine.manual=变速器: 手动
-info.item.engine.numbergears=齿轮数: 
-info.item.engine.gearratios=传动比: 
+info.item.engine.automatic=变速器：自动
+info.item.engine.manual=变速器：手动
+info.item.engine.numbergears=齿轮数：
+info.item.engine.gearratios=传动比：
 info.item.engine.bypassratio=涵道比：
-info.item.engine.maxrpm=最大转速: 
+info.item.engine.maxrpm=最大转速：
 info.item.engine.maxsaferpm=最大安全转速：
 info.item.engine.fuelconsumption=油耗 (mb/t)：
 info.item.engine.fueltype=燃料类型：
