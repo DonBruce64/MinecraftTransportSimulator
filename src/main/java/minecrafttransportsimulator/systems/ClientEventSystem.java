@@ -20,6 +20,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleC_Colliding;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
+import minecrafttransportsimulator.wrappers.WrapperInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.client.renderer.entity.RenderPlayer;
@@ -370,7 +371,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent event){
-        if(ControlSystem.isMasterControlButttonPressed()){
+        if(WrapperInput.isMasterControlButttonPressed()){
         	if(ConfigSystem.configObject.client.devMode.value && minecraft.isSingleplayer()){
         		PackParserSystem.reloadPackData();
         		RenderVehicle.clearCaches();
