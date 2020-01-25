@@ -6,7 +6,6 @@ import java.io.IOException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.GUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -39,9 +38,6 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
  * @author don_bruce
  */
 public class WrapperGUI extends GuiScreen{
-	protected static final ResourceLocation standardTexture = new ResourceLocation(MTS.MODID, "textures/guis/standard.png");
-	private static final int STANDARD_TEXTURE_WIDTH = 256;
-	private static final int STANDARD_TEXTURE_HEIGHT = 192;
 	private static FontRenderer fontRenderer;
 	private static RenderItem itemRenderer;
 	
@@ -63,8 +59,8 @@ public class WrapperGUI extends GuiScreen{
 	@Override 
 	public void initGui(){
 		super.initGui();
-		guiLeft = (width - STANDARD_TEXTURE_WIDTH)/2;
-		guiTop = (height - STANDARD_TEXTURE_HEIGHT)/2;
+		guiLeft = (width - gui.getWidth())/2;
+		guiTop = (height - gui.getHeight())/2;
 		
 		//Clear out the component lists before populating them again.
 		//If we don't, we get duplicates when re-sizing.
@@ -95,8 +91,8 @@ public class WrapperGUI extends GuiScreen{
 		}
 		
 		//Bind the standard texture and render the background.
-		mc.getTextureManager().bindTexture(standardTexture);
-		renderSheetTexture(guiLeft, guiTop, STANDARD_TEXTURE_WIDTH, STANDARD_TEXTURE_HEIGHT, 0, 0, STANDARD_TEXTURE_WIDTH, STANDARD_TEXTURE_HEIGHT);
+		mc.getTextureManager().bindTexture(new ResourceLocation(gui.getTexture()));
+		renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight());
 		
 		//Render buttons.  Buttons choose if they render or not depending on visibility.
 		for(GUIComponentButton button : gui.buttons){
@@ -208,7 +204,7 @@ public class WrapperGUI extends GuiScreen{
 		if(shadow){
 			fontRenderer.drawStringWithShadow(text, x, y, color.getRGB());
 		}else{
-			if(wrapWidth == -1){
+			if(wrapWidth == 0){
 				fontRenderer.drawString(text, x, y, color.getRGB());
 			}else{
 				fontRenderer.drawSplitString(text, x, y, wrapWidth, color.getRGB());
@@ -227,7 +223,7 @@ public class WrapperGUI extends GuiScreen{
 		}
 		GL11.glPushMatrix();
 		if(centered){
-			GL11.glTranslatef(x - fontRenderer.getStringWidth(text)/2, y, 0);
+			GL11.glTranslatef(x - scale*fontRenderer.getStringWidth(text)/2, y, 0);
 		}else{
 			GL11.glTranslatef(x, y, 0);
 		}
@@ -265,13 +261,16 @@ public class WrapperGUI extends GuiScreen{
 	
 	/**
 	 *  Draws the specified portion of the currently-bound texture.  Normally, this will be the standardTexture,
-	 *  but other textures are possible if they are bound prior to calling this method.  A texture size
-	 *  of 256x256 is assumed here, so don't use anything but that!  Draw starts at the bottom-left
+	 *  but other textures are possible if they are bound prior to calling this method.  Texture is assumed to be
+	 *  a power of two, so depending on the width and height the render will automatically choose the smallest ratio
+	 *  that can fit such a texture (eg, 256x192 is set to 256x256)  Draw starts at the bottom-left
 	 *  point and goes counter-clockwise to the top-left point.
 	 */
 	public static void renderSheetTexture(int x, int y, int width, int height, int u, int v, int U, int V){
-	 	float widthPixelPercent = 1.0F/256F;
-        float heightPixelPercent = 1.0F/256F;
+		float widthBounds = width <= 256 ? 256F : (width <= 512 ? 512F : (width <= 1024 ? 1024F : 2048F));
+		float heightBounds = height <= 256 ? 256F : (height <= 512 ? 512F : (height <= 1024 ? 1024F : 2048F));
+	 	float widthPixelPercent = 1.0F/widthBounds;
+        float heightPixelPercent = 1.0F/heightBounds;
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuffer();
         bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);

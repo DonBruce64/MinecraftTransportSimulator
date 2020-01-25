@@ -3,19 +3,19 @@ package minecrafttransportsimulator;
 import minecrafttransportsimulator.blocks.core.BlockBench;
 import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController;
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
+import minecrafttransportsimulator.guis.GUIDevRender;
 import minecrafttransportsimulator.guis.GUIInstruments;
-import minecrafttransportsimulator.guis.GUIManual;
+import minecrafttransportsimulator.guis.GUIBooklet;
 import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.guis.GUISign;
 import minecrafttransportsimulator.guis.instances.GUITrafficSignalController;
-import minecrafttransportsimulator.items.core.ItemManual;
+import minecrafttransportsimulator.items.core.ItemBooklet;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.VehicleSoundSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
@@ -40,12 +40,14 @@ public class ClientProxy extends CommonProxy{
 			FMLCommonHandler.instance().showGuiScreen(new GUIInstruments((EntityVehicleE_Powered) clicked, clicker));
 		}else if(clicked instanceof BlockBench){
 			FMLCommonHandler.instance().showGuiScreen(new GUIPartBench((BlockBench) clicked, clicker));
-		}else if(clicked instanceof ItemStack && ((ItemStack) clicked).getItem() instanceof ItemManual){
-			FMLCommonHandler.instance().showGuiScreen(new GUIManual((ItemStack) clicked));
+		}else if(clicked instanceof ItemBooklet){
+			WrapperGUI.openGUI(new GUIBooklet((ItemBooklet) clicked));
 		}else if(clicked instanceof BlockPoleSign){
 			FMLCommonHandler.instance().showGuiScreen(new GUISign((BlockPoleSign) clicked, clicker));
 		}else if(clicked instanceof TileEntityTrafficSignalController){
 			WrapperGUI.openGUI(new GUITrafficSignalController((TileEntityTrafficSignalController) clicked));
+		}else if(clicked == null){
+			FMLCommonHandler.instance().showGuiScreen(new GUIDevRender());
 		}
 	}
 	

@@ -160,6 +160,15 @@ public class WrapperInput{
 	}
 	
 	/**
+	 *  Returns the current  mouse scroll wheel position, if one exists.
+	 *  Note that this method can only get the delta the mouse wheel, not the absolute
+	 *  change, so unless you call this every tick you will get bad data!
+	 */
+	public static int getTrackedMouseWheel(){
+		return Mouse.hasWheel() ? Mouse.getDWheel() : 0;
+	}
+	
+	/**
 	 *  Returns the default keyCode for the passed-in key.
 	 *  Should only be used on first launch when no keyCode has yet been assigned.
 	 */
