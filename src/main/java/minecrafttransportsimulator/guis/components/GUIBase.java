@@ -3,10 +3,8 @@ package minecrafttransportsimulator.guis.components;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
-import net.minecraft.util.ResourceLocation;
 
 /**Base GUI class.  This type is used in the constructor of {@link WrapperGUI} to allow us to use
  * completely custom GUI code that is not associated with MC's standard GUI code.  Allows us to only
@@ -16,11 +14,14 @@ import net.minecraft.util.ResourceLocation;
  * @author don_bruce
  */
 public abstract class GUIBase{
+	private static final int STANDARD_TEXTURE_WIDTH = 256;
+	private static final int STANDARD_TEXTURE_HEIGHT = 192;
+	private static final String STANDARD_TEXTURE_NAME = "mts:textures/guis/standard.png";
+	
 	public final List<GUIComponentLabel> labels = new ArrayList<GUIComponentLabel>();
 	public final List<GUIComponentButton> buttons = new ArrayList<GUIComponentButton>();
 	public final List<GUIComponentTextBox> textBoxes = new ArrayList<GUIComponentTextBox>();
 	public final List<GUIComponentItem> items = new ArrayList<GUIComponentItem>();
-	
 	
 	//--------------------START OF NEW CUSTOM METHODS FOR MAKING GUIS--------------------	
 	/**
@@ -49,6 +50,29 @@ public abstract class GUIBase{
 	 */
 	public boolean pauseOnOpen(){
 		return false;
+	}
+	
+	/**
+	 *  Returns the width of this GUI.  Used for centering.
+	 */
+	public int getWidth(){
+		return STANDARD_TEXTURE_WIDTH;
+	}
+	
+	/**
+	 *  Returns the heightof this GUI.  Used for centering.
+	 */
+	public int getHeight(){
+		return STANDARD_TEXTURE_HEIGHT;
+	}
+	
+	/**
+	 *  Returns the texture that goes with this GUI.  This will be used for
+	 *  all rendering operations on this cycle, but may be changed out
+	 *  on different cycles if needed.
+	 */
+	public String getTexture(){
+		return STANDARD_TEXTURE_NAME;
 	}
 	
 	/**

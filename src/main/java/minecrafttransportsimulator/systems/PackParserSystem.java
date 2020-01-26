@@ -33,6 +33,7 @@ import minecrafttransportsimulator.items.parts.ItemPartPropeller;
 import minecrafttransportsimulator.jsondefs.PackDecorObject;
 import minecrafttransportsimulator.jsondefs.PackInstrumentObject;
 import minecrafttransportsimulator.jsondefs.PackItemObject;
+import minecrafttransportsimulator.jsondefs.PackBookletObject;
 import minecrafttransportsimulator.jsondefs.PackPartObject;
 import minecrafttransportsimulator.jsondefs.PackSignObject;
 import minecrafttransportsimulator.jsondefs.PackVehicleObject;
@@ -99,6 +100,9 @@ public final class PackParserSystem{
     /**Map that keys the unique name of an item to its pack.*/
     private static final Map<String, PackItemObject> itemPackMap = new LinkedHashMap<String, PackItemObject>();
     
+    /**Map that keys the unique name of a booklet to its pack.*/
+    private static final Map<String, PackBookletObject> bookletPackMap = new LinkedHashMap<String, PackBookletObject>();
+    
 	/**Maps all things craftable on benches to their crafting ingredients.*/
 	private static final Map<String, String[]> craftingItemMap = new HashMap<String, String[]>();
   
@@ -115,7 +119,7 @@ public final class PackParserSystem{
      * This is done to allow server owners to modify pack JSONs to their liking (say for crafting recipes)
      * and distribute them in their modpacks without having to modify the actual pack JSON.**/
     public static String[] getValidPackContentNames(){
-    	return new String[]{"vehicle", "part", "instrument", "sign", "decor", "item"};
+    	return new String[]{"vehicle", "part", "instrument", "sign", "decor", "item", "booklet"};
     }
     
     /**Packs should call this upon load to add their vehicles to the mod.**/
@@ -212,6 +216,19 @@ public final class PackParserSystem{
     	}catch(Exception e){
     		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
     		logList.add(e.getMessage());
+    	}
+    }
+    
+    /**Packs should call this upon load to add their booklets to the mod.**/
+    public static void addBookletDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
+    	try{
+    		PackBookletObject pack =  new Gson().fromJson(jsonReader, PackBookletObject.class);
+	    	String manualName = modID + ":" + jsonFileName;
+	    	bookletPackMap.put(manualName, pack);
+	    	craftingItemMap.put(manualName, pack.general.materials);
+    	}catch(Exception e){
+    		System.err.println("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
+    		e.printStackTrace();
     	}
     }
 
@@ -365,6 +382,15 @@ public final class PackParserSystem{
     
     public static Set<String> getAllItems(){
         return itemPackMap.keySet();
+    }
+    
+    //-----START OF BOOKLET LOOKUP LOGIC-----
+    public static PackBookletObject getBooklet(String name){
+        return bookletPackMap.get(name);
+    }
+    
+    public static Set<String> getAllBooklets(){
+        return bookletPackMap.keySet();
     }
     
     

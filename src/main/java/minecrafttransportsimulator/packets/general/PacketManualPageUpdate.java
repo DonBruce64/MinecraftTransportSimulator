@@ -9,22 +9,22 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketManualPageUpdate implements IMessage{
-	private short pageNumber;
+	private byte pageNumber;
 
 	public PacketManualPageUpdate() {}
 	
-	public PacketManualPageUpdate(short pageNumber){
+	public PacketManualPageUpdate(byte pageNumber){
 		this.pageNumber = pageNumber;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
-		this.pageNumber=buf.readShort();
+		this.pageNumber=buf.readByte();
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
-		buf.writeShort(this.pageNumber);
+		buf.writeByte(this.pageNumber);
 	}
 
 	public static class Handler implements IMessageHandler<PacketManualPageUpdate, IMessage>{
@@ -37,7 +37,7 @@ public class PacketManualPageUpdate implements IMessage{
 					if(!stack.hasTagCompound()){
 						stack.setTagCompound(new NBTTagCompound());
 					}
-					stack.getTagCompound().setShort("page", message.pageNumber);
+					stack.getTagCompound().setByte("page", message.pageNumber);
 				}
 			});
 			return null;

@@ -8,7 +8,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Custom Config class.  This contains all fields used in config operation,
- * and should be assigned to config when {@link ConfigSystem#loadFromDisk(File)}
+ * and should be assigned to a saved object when {@link ConfigSystem#loadFromDisk(File)}
  * is called.  Default values are assigned in the field declaration, while
  * comments are simply fields of their own.  Note that sub-classes MUST 
  * be static to use their default values!
@@ -117,22 +117,8 @@ public class CoreConfigObject{
 	}
 	
 	public static class ControlsConfig{
-		public Map<String, KeyboardControl> keyboard;
-		public Map<String, JoystickControl> joystick;
-		
-		public static class KeyboardControl{
-			public String name;
-			public int keyCode;
-		}
-		
-		public static class JoystickControl{
-			public String name;
-			public String joystickName;
-			public int joystickButton;
-			public boolean invertedAxis;
-			public int axisMinTravel;
-			public int axisMaxTravel;
-		}
+		public Map<String, KeyboardConfig> keyboard = new HashMap<String, KeyboardConfig>();
+		public Map<String, JoystickConfig>  joystick = new HashMap<String, JoystickConfig>();
 	}
 	
 	
@@ -176,5 +162,17 @@ public class CoreConfigObject{
 		public StringArrayConfig(String[] defaultValue, String comment){
 			super(defaultValue, comment);
 		}
+	}
+	
+	public static class KeyboardConfig{
+		public int keyCode;
+	}
+	
+	public static class JoystickConfig{
+		public String joystickName;
+		public int buttonIndex;
+		public boolean invertedAxis;
+		public double axisMinTravel;
+		public double axisMaxTravel;
 	}
 }

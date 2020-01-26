@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.dataclasses;
 
+import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ import minecrafttransportsimulator.items.core.ItemItem;
 import minecrafttransportsimulator.items.core.ItemJerrycan;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.items.core.ItemKey;
-import minecrafttransportsimulator.items.core.ItemManual;
+import minecrafttransportsimulator.items.core.ItemBooklet;
 import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.parts.AItemPart;
@@ -117,6 +118,9 @@ public final class MTSRegistry{
 	
 	/**Maps item item names to items.  All item items for all packs will be populated here.*/
 	public static Map<String, ItemItem> itemItemMap = new LinkedHashMap<String, ItemItem>();
+	
+	/**Maps item item names to items.  All booklet items for all packs will be populated here.*/
+	public static Map<String, ItemBooklet> bookletItemMap = new LinkedHashMap<String, ItemBooklet>();
 		
 	/**Core creative tab for base MTS items**/
 	public static final CreativeTabCore coreTab = new CreativeTabCore();
@@ -125,7 +129,6 @@ public final class MTSRegistry{
 	public static final Map<String, CreativeTabPack> packTabs = new HashMap<String, CreativeTabPack>();
 
 	//Vehicle interaction items.
-	public static final Item manual = new ItemManual().setCreativeTab(coreTab);
 	public static final Item wrench = new ItemWrench().setCreativeTab(coreTab);
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
 	public static final Item jumperCable = new ItemJumperCable().setCreativeTab(coreTab);
@@ -202,6 +205,11 @@ public final class MTSRegistry{
 		}
 		for(ItemItem item : itemItemMap.values()){
 			if(item.itemName.startsWith(modID)){
+				packItems.add(item);
+			}
+		}
+		for(ItemBooklet item : bookletItemMap.values()){
+			if(item.bookletName.startsWith(modID)){
 				packItems.add(item);
 			}
 		}
@@ -310,6 +318,20 @@ public final class MTSRegistry{
 			ItemItem itemItem = new ItemItem(itemName);
 			itemItemMap.put(itemName, itemItem);
 		}
+		
+		//Now add booklet items to the lists.
+		for(String bookletName : PackParserSystem.getAllBooklets()){
+			ItemBooklet itemBooklet = new ItemBooklet(bookletName);
+			bookletItemMap.put(bookletName, itemBooklet);
+		}
+		
+		//We also add the core game manual item here.  This one is special, as it doesn't come
+		//with any pack as it's for the main game.  Same code applies as pack manuals for consistency.
+		PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json")), "handbook_en", MTS.MODID);
+		ItemBooklet handbook = new ItemBooklet("mts:handbook_en");
+		bookletItemMap.put("mts:handbook_en", handbook);
+		event.getRegistry().register(handbook.setRegistryName("handbook_en").setUnlocalizedName("handbook_en"));
+		MTSRegistry.itemList.add(handbook);
 	}
 
 	/**
@@ -345,7 +367,7 @@ public final class MTSRegistry{
 		registerPacket(PacketBulletHit.class, PacketBulletHit.Handler.class, true, true);
 		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);
 		registerPacket(PacketPartGunReload.class, PacketPartGunReload.Handler.class, true, false);
-		registerPacket(PacketManualPageUpdate.class, PacketManualPageUpdate.Handler.class, false, true);
+		registerPacket(PacketManualPageUpdate.class, PacketManualPageUpdate.Handler.class, true, true);
 		registerPacket(PacketPackReload.class, PacketPackReload.Handler.class, false, true);
 		registerPacket(PacketPlayerCrafting.class, PacketPlayerCrafting.Handler.class, false, true);
 		

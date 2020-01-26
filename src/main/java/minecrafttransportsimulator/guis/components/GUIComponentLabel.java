@@ -42,7 +42,7 @@ public class GUIComponentLabel{
 	
 	//Simpler constructor for simple labels.
 	public GUIComponentLabel(int x, int y, Color color, String text){
-		this(x, y, color, text, 1.0F, false, false, -1);
+		this(x, y, color, text, 1.0F, false, false, 0);
 	}
 	
 	/**

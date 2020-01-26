@@ -71,6 +71,13 @@ public final class CreativeTabPack extends CreativeTabs{
 				}
 			}
 		}
+		for(Item item : MTSRegistry.bookletItemMap.values()){
+			for(CreativeTabs tab : item.getCreativeTabs()){
+				if(tab.equals(this)){
+					item.getSubItems(tab, givenList);
+				}
+			}
+		}
     }
 	
 	@Override

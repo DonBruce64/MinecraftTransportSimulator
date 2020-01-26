@@ -20,6 +20,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleC_Colliding;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
+import minecrafttransportsimulator.wrappers.WrapperInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.client.renderer.entity.RenderPlayer;
@@ -41,7 +42,6 @@ import net.minecraftforge.client.resource.VanillaResourceType;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
@@ -359,7 +359,7 @@ public final class ClientEventSystem{
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
 	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()].equals(MTSRegistry.coreTab)){
-	    			FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(new GUIPackMissing()));
+	    			WrapperGUI.openGUI(new GUIPackMissing());
 	    		}
 	    	}
     	}
@@ -370,7 +370,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent event){
-        if(ControlSystem.isMasterControlButttonPressed()){
+        if(WrapperInput.isMasterControlButttonPressed()){
         	if(ConfigSystem.configObject.client.devMode.value && minecraft.isSingleplayer()){
         		PackParserSystem.reloadPackData();
         		RenderVehicle.clearCaches();
@@ -385,7 +385,7 @@ public final class ClientEventSystem{
         		MTS.MTSNet.sendToServer(new PacketPackReload());
         	}
             if(minecraft.currentScreen == null){
-            	FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(new GUIConfig()));
+            	WrapperGUI.openGUI(new GUIConfig());
             }
         }
     }

@@ -11,6 +11,7 @@ import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemInstrument;
 import minecrafttransportsimulator.items.core.ItemItem;
+import minecrafttransportsimulator.items.core.ItemBooklet;
 import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.parts.AItemPart;
 import minecrafttransportsimulator.rendering.RenderVehicle;
@@ -88,6 +89,9 @@ public final class MTSRegistryClient{
 		}
 		for(ItemItem itemItem : MTSRegistry.itemItemMap.values()){
 			registerPackItemRender(itemItem, itemItem.itemName, "items");
+		}
+		for(ItemBooklet bookletItem : MTSRegistry.bookletItemMap.values()){
+			registerPackItemRender(bookletItem, bookletItem.bookletName, "booklets");
 		}
 	}
 	
