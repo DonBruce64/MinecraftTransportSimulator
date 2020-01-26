@@ -53,9 +53,9 @@ public class GUITrafficSignalController extends GUIBase {
 							BlockPos pos = new BlockPos(i, j, k);
 							Block block = signalController.getWorld().getBlockState(pos).getBlock();
 							if(block.equals(MTSRegistry.trafficSignal)){
-								signalController.trafficSignals.put(pos, new TrafficSignalData());
+								signalController.trafficSignals.put(pos, new TrafficSignalData(pos));
 							}else if(block.equals(MTSRegistry.crossingSignal)){
-								signalController.trafficSignals.put(pos, new TrafficSignalData());
+								signalController.trafficSignals.put(pos, new TrafficSignalData(pos));
 								signalController.crossingSignals.put(pos, new CrossingSignalData());
 							}
 						}

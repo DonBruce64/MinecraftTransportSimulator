@@ -114,6 +114,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 
 	private void renderTrafficSignal(TileEntityPoleAttachment signal, Vec3i facingVec, float lightBrightness){
 		//Render the lights for the traffic signal.  What lights we render depends on the controller state.
+		final boolean isEnabled;
 		final boolean shouldFlash;
 		final Color lightColor;
 		final long worldTime = signal.getWorld().getTotalWorldTime();
@@ -145,14 +146,17 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 				//We are valid, now check to see if we are still part of the controller.
 				if(controller.trafficSignals.containsKey(signalPos)){
 					if (controller.mode == 0) {
+						isEnabled = true;
 						lightColor = Color.YELLOW;
 						shouldFlash = true;
 					} else
 					if (controller.mode == 1) {
-						lightColor = controller.trafficSignals.get(signalPos) != null ? controller.trafficSignals.get(signalPos).color : null;
-						shouldFlash = controller.trafficSignals.get(signalPos) != null ? controller.trafficSignals.get(signalPos).shouldFlash : false;
+						isEnabled = controller.trafficSignals.get(signalPos).isEnabled();
+						lightColor = controller.trafficSignals.get(signalPos).getColor();
+						shouldFlash = controller.trafficSignals.get(signalPos).isShouldFlash();
 					} else {
 						//Valid controller detected, do render.
+						isEnabled = true;
 						shouldFlash = false;
 						final boolean isOnMainAxis = !(controller.orientedOnX ^ (facingVec.getX() != 0));
 
@@ -196,20 +200,23 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 					}
 				}else{
 					trafficSignalControllers.remove(signalPos);
+					isEnabled = true;
 					shouldFlash = true;
 					lightColor = Color.RED;
 				}
 			}else{
 				trafficSignalControllers.remove(signalPos);
+				isEnabled = true;
 				shouldFlash = true;
 				lightColor = Color.RED;
 			}
 		}else{
+			isEnabled = true;
 			shouldFlash = true;
 			lightColor = Color.RED;
 		}
 
-		if(!shouldFlash || (shouldFlash && (worldTime%20 < 10)) && ( lightColor != null && ( lightColor == Color.RED || lightColor == Color.YELLOW || lightColor == Color.GREEN))){
+		if(isEnabled && (!shouldFlash || (shouldFlash && (worldTime%20 < 10)) && lightColor != null)){
 			GL11.glTranslatef(0, lightColor.equals(Color.RED) ? 13F/16F : (lightColor.equals(Color.YELLOW) ? 8F/16F : 3F/16F), 0.225F);
 			renderLightedSquare(4F/16F, lightBrightness, lightColor, lightTexture);
 		}

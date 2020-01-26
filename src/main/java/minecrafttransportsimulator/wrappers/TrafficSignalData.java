@@ -1,31 +1,67 @@
 package minecrafttransportsimulator.wrappers;
 
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.util.math.BlockPos;
+
 import java.awt.*;
 
 public class TrafficSignalData {
-    public Color color = Color.RED;
-    public boolean shouldFlash = true;
+    private BlockPos blockPos;
+    private boolean isEnabled = false;
+    private Color color = Color.RED;
+    private boolean shouldFlash = true;
 
-    public TrafficSignalData(Color color, boolean shouldFlash) {
+    public TrafficSignalData(BlockPos blockPos, boolean isEnabled, Color color, boolean shouldFlash) {
+        this.blockPos = blockPos;
+        this.isEnabled = isEnabled;
         this.color = color;
         this.shouldFlash = shouldFlash;
     }
 
-    public TrafficSignalData() {}
+    public TrafficSignalData(BlockPos blockPos) {
+        this.blockPos = blockPos;
+    }
+
+    public BlockPos getBlockPos() {
+        return blockPos;
+    }
+
+    public TrafficSignalData setBlockPos(BlockPos blockPos) {
+        this.blockPos = blockPos;
+        return this;
+    }
+
+    public boolean isEnabled() {
+        return isEnabled;
+    }
+
+    public TrafficSignalData setEnabled(boolean enabled) {
+        isEnabled = enabled;
+        return this;
+    }
 
     public Color getColor() {
+        if (color == null) color = Color.RED;
         return color;
     }
 
-    public void setColor(Color color) {
+    public TrafficSignalData setColor(Color color) {
         this.color = color;
+        return this;
+    }
+
+
+    public TrafficSignalData setColor(String colorName) {
+        this.color = colorName.equalsIgnoreCase("yellow") ? Color.YELLOW : colorName.equalsIgnoreCase("green") ? Color.GREEN : Color.RED;
+        return this;
     }
 
     public boolean isShouldFlash() {
         return shouldFlash;
     }
 
-    public void setShouldFlash(boolean shouldFlash) {
+    public TrafficSignalData setShouldFlash(boolean shouldFlash) {
         this.shouldFlash = shouldFlash;
+        return this;
     }
 }
