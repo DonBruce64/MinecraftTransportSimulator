@@ -5,8 +5,8 @@ import net.minecraft.world.World;
 import javax.annotation.Nullable;
 import java.util.List;
 
-import minecrafttransportsimulator.jsondefs.PackPartObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
@@ -21,7 +21,7 @@ public class ItemPartGun extends AItemPart{
 	}
 	
 	@Override
-	public boolean isPartValidForPackDef(PackPart packPart){
+	public boolean isPartValidForPackDef(VehiclePart packPart){
 		float gunDiameter = PackParserSystem.getPartPack(partName).gun.diameter;
 		return packPart.minValue <= gunDiameter && packPart.maxValue >= gunDiameter ? super.isPartValidForPackDef(packPart) : false;
 	}
@@ -29,7 +29,7 @@ public class ItemPartGun extends AItemPart{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
-		PackPartObject pack = PackParserSystem.getPartPack(((ItemPartGun) stack.getItem()).partName); 
+		JSONPart pack = PackParserSystem.getPartPack(((ItemPartGun) stack.getItem()).partName); 
 		tooltipLines.add(I18n.format("info.item.gun.type." + PackParserSystem.getPartPartClass(partName).getSimpleName().substring("PartGun".length()).toLowerCase()));
 		tooltipLines.add(I18n.format("info.item.gun.diameter") + pack.gun.diameter);
 		tooltipLines.add(I18n.format("info.item.gun.length") + pack.gun.length);

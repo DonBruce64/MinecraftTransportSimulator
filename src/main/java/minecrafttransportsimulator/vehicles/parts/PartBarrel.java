@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.entity.player.EntityPlayer;
@@ -24,7 +24,7 @@ public final class PartBarrel extends APart implements IFluidTank, IFluidHandler
 	private FluidTankInfo tankInfo;
 	private final FluidTankInfo emptyTankInfo;
 	
-	public PartBarrel(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
+	public PartBarrel(EntityVehicleE_Powered vehicle, VehiclePart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
 		this.emptyTankInfo =  new FluidTankInfo(null, pack.barrel.capacity);
 		if(dataTag.hasKey("FluidName")){

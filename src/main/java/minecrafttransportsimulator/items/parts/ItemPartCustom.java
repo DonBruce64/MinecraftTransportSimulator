@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.items.parts;
 
-import minecrafttransportsimulator.jsondefs.PackPartObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 public class ItemPartCustom extends AItemPart{
@@ -11,8 +11,8 @@ public class ItemPartCustom extends AItemPart{
 	}
 	
 	@Override
-	public boolean isPartValidForPackDef(PackPart packPart){
-		PackPartObject itemPack = PackParserSystem.getPartPack(partName);
+	public boolean isPartValidForPackDef(VehiclePart packPart){
+		JSONPart itemPack = PackParserSystem.getPartPack(partName);
 		return packPart.customTypes != null && packPart.customTypes.contains(itemPack.general.customType);
 	}
 }

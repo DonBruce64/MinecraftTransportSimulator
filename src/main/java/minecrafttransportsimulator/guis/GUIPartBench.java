@@ -14,8 +14,8 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.BlockBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -250,7 +250,7 @@ public class GUIPartBench extends GuiScreen{
 	}
 	
 	private void renderVehicleInfoText(){
-		PackVehicleObject pack = PackParserSystem.getVehiclePack(partName);
+		JSONVehicle pack = PackParserSystem.getVehiclePack(partName);
 		byte controllers = 0;
 		byte passengers = 0;
 		byte cargo = 0;
@@ -259,7 +259,7 @@ public class GUIPartBench extends GuiScreen{
 		float maxFuelConsumption = 0;
 		float minWheelSize = 99;
 		float maxWheelSize = 0;
-		for(PackPart part : pack.parts){
+		for(VehiclePart part : pack.parts){
 			if(part.isController){
 				++controllers;
 			}else{

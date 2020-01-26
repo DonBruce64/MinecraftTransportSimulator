@@ -2,7 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import java.util.Iterator;
 
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
@@ -18,7 +18,7 @@ import net.minecraft.util.math.BlockPos;
 
 public final class PartHarvester extends APartGroundEffector{
 	
-	public PartHarvester(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
+	public PartHarvester(EntityVehicleE_Powered vehicle, VehiclePart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
 	}
 	

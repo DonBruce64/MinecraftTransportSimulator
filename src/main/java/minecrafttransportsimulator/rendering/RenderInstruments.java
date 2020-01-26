@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.jsondefs.PackInstrumentObject.PackInstrumentComponent;
+import minecrafttransportsimulator.jsondefs.JSONInstrument.InstrumentComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
@@ -55,7 +55,7 @@ public final class RenderInstruments{
 		
 		//Finally, render the instrument based on the JSON definitions.
 		byte currentLayer = 0;
-		for(PackInstrumentComponent component : instrument.pack.components){
+		for(InstrumentComponent component : instrument.pack.components){
 			GL11.glPushMatrix();
 			//Translate slightly away from the instrument location to prevent clipping.
 			GL11.glTranslatef(0, 0, -currentLayer*0.1F);

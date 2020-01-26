@@ -5,8 +5,8 @@ import java.lang.reflect.Constructor;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackCollisionBox;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
@@ -55,9 +55,9 @@ public class ItemVehicle extends Item{
 						for(byte i=0; i<partTagList.tagCount(); ++i){
 							try{
 								NBTTagCompound partTag = partTagList.getCompoundTagAt(i);
-								PackPart packPart = newVehicle.getPackDefForLocation(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ"));
+								VehiclePart packPart = newVehicle.getPackDefForLocation(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ"));
 								Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partTag.getString("partName"));
-								Constructor<? extends APart> partConstruct = partClass.getConstructor(EntityVehicleE_Powered.class, PackPart.class, String.class, NBTTagCompound.class);
+								Constructor<? extends APart> partConstruct = partClass.getConstructor(EntityVehicleE_Powered.class, VehiclePart.class, String.class, NBTTagCompound.class);
 								APart savedPart = partConstruct.newInstance((EntityVehicleE_Powered) newVehicle, packPart, partTag.getString("partName"), partTag);
 								newVehicle.addPart(savedPart, true);
 							}catch(Exception e){
@@ -93,12 +93,12 @@ public class ItemVehicle extends Item{
 					}else{
 						//Since we don't have NBT data, we must be a new vehicle.
 						//If we have any default parts, we should add them now.
-						for(PackPart packDef : newVehicle.pack.parts){
+						for(VehiclePart packDef : newVehicle.pack.parts){
 							while(packDef != null){
 								if(packDef.defaultPart != null){
 									try{
 										Class<? extends APart> partClass = PackParserSystem.getPartPartClass(packDef.defaultPart);
-										Constructor<? extends APart> partConstruct = partClass.getConstructor(EntityVehicleE_Powered.class, PackPart.class, String.class, NBTTagCompound.class);
+										Constructor<? extends APart> partConstruct = partClass.getConstructor(EntityVehicleE_Powered.class, VehiclePart.class, String.class, NBTTagCompound.class);
 										APart newPart = partConstruct.newInstance((EntityVehicleE_Powered) newVehicle, packDef, packDef.defaultPart, new NBTTagCompound());
 										newVehicle.addPart(newPart, true);
 									}catch(Exception e){
@@ -126,7 +126,7 @@ public class ItemVehicle extends Item{
 					//Get how far above the ground the vehicle needs to be, and move it to that position.
 					//First boost Y based on collision boxes.
 					double minHeight = 0;
-					for(PackCollisionBox collisionBox : newVehicle.pack.collision){
+					for(VehicleCollisionBox collisionBox : newVehicle.pack.collision){
 						minHeight = Math.min(collisionBox.pos[1] - collisionBox.height/2F, minHeight);
 					}
 					

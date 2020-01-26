@@ -9,8 +9,8 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.items.core.ItemDecor;
 import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.parts.AItemPart;
-import minecrafttransportsimulator.jsondefs.PackDecorObject;
-import minecrafttransportsimulator.jsondefs.PackPartObject;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -49,7 +49,7 @@ public class GUIDevRender extends GuiScreen{
 					textureLocation = new ResourceLocation(packName, "textures/vehicles/" + item.vehicleName.substring(item.vehicleName.indexOf(':') + 1) + ".png");
 				}else if(stack.getItem() instanceof AItemPart){
 					AItemPart item = (AItemPart) stack.getItem();
-					PackPartObject pack = PackParserSystem.getPartPack(item.partName);
+					JSONPart pack = PackParserSystem.getPartPack(item.partName);
 					String packName = item.partName.substring(0, item.partName.indexOf(':'));
 					if(pack.general.modelName != null){
 						modelLocation = new ResourceLocation(packName, "objmodels/parts/" + pack.general.modelName + ".obj");
@@ -59,7 +59,7 @@ public class GUIDevRender extends GuiScreen{
 					textureLocation = new ResourceLocation(packName, "textures/parts/" + item.partName.substring(item.partName.indexOf(':') + 1) + ".png");
 				}else if(stack.getItem() instanceof ItemDecor){
 					ItemDecor item = (ItemDecor) stack.getItem();
-					PackDecorObject pack = PackParserSystem.getDecor(item.decorName);
+					JSONDecor pack = PackParserSystem.getDecor(item.decorName);
 					String packName = item.decorName.substring(0, item.decorName.indexOf(':'));
 					modelLocation = new ResourceLocation(packName, "objmodels/decors/" + item.decorName.substring(item.decorName.indexOf(':') + 1) + ".obj");
 					textureLocation = new ResourceLocation(packName, "textures/decors/" + item.decorName.substring(item.decorName.indexOf(':') + 1) + ".png");

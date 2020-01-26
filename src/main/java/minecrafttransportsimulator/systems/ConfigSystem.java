@@ -7,11 +7,11 @@ import java.io.FileWriter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import minecrafttransportsimulator.jsondefs.CoreConfigObject;
+import minecrafttransportsimulator.jsondefs.JSONConfig;
 
 
 /**Class that handles all configuration settings. This file is responsible for saving and loading
- * the config, and representing that config as an instance object of type {@link CoreConfigObject} for access in the code.
+ * the config, and representing that config as an instance object of type {@link JSONConfig} for access in the code.
  * This class is NOT responsible for detecting config changes.  It is up to the code that calls this class to ensure the 
  * changes made are valid and can be saved to the disk.  This also cuts down on saves in some instances where configs
  * cam be saved/modified in a batch rather than as single values.
@@ -22,7 +22,7 @@ public final class ConfigSystem{
 	
 	//-----------------NEW CODE---------------------
 	private static File configFile;
-	public static CoreConfigObject configObject;
+	public static JSONConfig configObject;
 	
 	/**Called to load this class from the passed-in config file.
 	 * File should be a valid path where the config file resides,
@@ -37,7 +37,7 @@ public final class ConfigSystem{
 		//Otherwise, make a new one.
 		if(configFile.exists()){
 			try{
-				configObject = new Gson().fromJson(new FileReader(configFile), CoreConfigObject.class);
+				configObject = new Gson().fromJson(new FileReader(configFile), JSONConfig.class);
 			}catch(Exception e){
 				System.err.println("ERROR: ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
 				e.printStackTrace();
@@ -47,7 +47,7 @@ public final class ConfigSystem{
 		//If we don't have a valid configObject, we must not have a file or have a corrupted file.
 		//In either case, make a fresh object now.
 		if(configObject == null){
-			configObject = new CoreConfigObject();
+			configObject = new JSONConfig();
 		}
 		
 		//After parsing the config save it.  This allows new entries to be populated.
@@ -63,7 +63,7 @@ public final class ConfigSystem{
 	public static void saveToDisk(){
 		try{
 			FileWriter writer = new FileWriter(configFile);
-			new GsonBuilder().setPrettyPrinting().create().toJson(configObject, CoreConfigObject.class, writer);
+			new GsonBuilder().setPrettyPrinting().create().toJson(configObject, JSONConfig.class, writer);
 			writer.flush();
 			writer.close();
 		}catch(Exception e){

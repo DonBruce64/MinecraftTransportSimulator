@@ -5,8 +5,8 @@ import net.minecraft.world.World;
 import javax.annotation.Nullable;
 import java.util.List;
 
-import minecrafttransportsimulator.jsondefs.PackPartObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
@@ -21,7 +21,7 @@ public class ItemPartPropeller extends AItemPart{
 	}
 	
 	@Override
-	public boolean isPartValidForPackDef(PackPart packPart){
+	public boolean isPartValidForPackDef(VehiclePart packPart){
 		float propellerDiameter = PackParserSystem.getPartPack(partName).propeller.diameter;
 		return packPart.minValue <= propellerDiameter && packPart.maxValue >= propellerDiameter ? super.isPartValidForPackDef(packPart) : false;
 	}
@@ -29,7 +29,7 @@ public class ItemPartPropeller extends AItemPart{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
-		PackPartObject pack = PackParserSystem.getPartPack(((ItemPartPropeller) stack.getItem()).partName); 
+		JSONPart pack = PackParserSystem.getPartPack(((ItemPartPropeller) stack.getItem()).partName); 
 		tooltipLines.add(I18n.format(pack.propeller.isDynamicPitch ? "info.item.propeller.dynamicPitch" : "info.item.propeller.staticPitch"));
 		tooltipLines.add(I18n.format("info.item.propeller.numberBlades") + pack.propeller.numberBlades);
 		tooltipLines.add(I18n.format("info.item.propeller.pitch") + pack.propeller.pitch);

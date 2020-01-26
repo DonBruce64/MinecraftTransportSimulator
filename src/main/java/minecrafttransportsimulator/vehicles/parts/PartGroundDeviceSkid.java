@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 
 public final class PartGroundDeviceSkid extends APartGroundDevice{
-	public PartGroundDeviceSkid(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
+	public PartGroundDeviceSkid(EntityVehicleE_Powered vehicle, VehiclePart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
 	}
 	

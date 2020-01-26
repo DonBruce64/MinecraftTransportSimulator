@@ -9,8 +9,8 @@ import java.util.Map;
 import com.google.common.collect.ImmutableList;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartRemoval;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -33,7 +33,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * @author don_bruce
  */
 public abstract class EntityVehicleA_Base extends Entity{
-	/**This name is identical to the unique name found in the {@link PackVehicleObject}
+	/**This name is identical to the unique name found in the {@link JSONVehicle}
 	 * It is present here to allow the pack system to properly identify this vehicle
 	 * during save/load operations, as well as determine some properties dynamically.
 	 */
@@ -49,7 +49,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 	 * to be present on the client.  Do NOT assume this will be valid simply because
 	 * the vehicle has been loaded!
 	 */
-	public PackVehicleObject pack;
+	public JSONVehicle pack;
 	
 	/**This list contains all parts this vehicle has.  Do NOT use it in loops or you will get CMEs all over!
 	 * Use the getVehicleParts() method instead to return a loop-safe array.*/
@@ -155,10 +155,10 @@ public abstract class EntityVehicleA_Base extends Entity{
 	 * Note that additional parts will not be added if no part is present
 	 * in the primary location.
 	 */
-	public Map<Vec3d, PackPart> getAllPossiblePackParts(){
-		Map<Vec3d, PackPart> packParts = new HashMap<Vec3d, PackPart>();
+	public Map<Vec3d, VehiclePart> getAllPossiblePackParts(){
+		Map<Vec3d, VehiclePart> packParts = new HashMap<Vec3d, VehiclePart>();
 		//First get all the regular part spots.
-		for(PackPart packPart : pack.parts){
+		for(VehiclePart packPart : pack.parts){
 			Vec3d partPos = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
 			packParts.put(partPos, packPart);
 			
@@ -184,9 +184,9 @@ public abstract class EntityVehicleA_Base extends Entity{
 		//Next get any sub parts on parts that are present.
 		for(APart part : this.parts){
 			if(part.pack.subParts != null){
-				PackPart parentPack = getPackDefForLocation(part.offset.x, part.offset.y, part.offset.z);
-				for(PackPart extraPackPart : part.pack.subParts){
-					PackPart correctedPack = getPackForSubPart(parentPack, extraPackPart);
+				VehiclePart parentPack = getPackDefForLocation(part.offset.x, part.offset.y, part.offset.z);
+				for(VehiclePart extraPackPart : part.pack.subParts){
+					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
 					packParts.put(new Vec3d(correctedPack.pos[0], correctedPack.pos[1], correctedPack.pos[2]), correctedPack);
 				}
 			}
@@ -198,9 +198,9 @@ public abstract class EntityVehicleA_Base extends Entity{
 	/**
 	 * Gets the pack definition at the specified location.
 	 */
-	public PackPart getPackDefForLocation(double offsetX, double offsetY, double offsetZ){
+	public VehiclePart getPackDefForLocation(double offsetX, double offsetY, double offsetZ){
 		//Check to see if this is a main part.
-		for(PackPart packPart : pack.parts){
+		for(VehiclePart packPart : pack.parts){
 			if(packPart.pos[0] == offsetX && packPart.pos[1] == offsetY && packPart.pos[2] == offsetZ){
 				return packPart;
 			}
@@ -218,9 +218,9 @@ public abstract class EntityVehicleA_Base extends Entity{
 		//If this is not a main part or an additional part, check the sub-parts.
 		for(APart part : this.parts){
 			if(part.pack.subParts.size() > 0){
-				PackPart parentPack = getPackDefForLocation(part.offset.x, part.offset.y, part.offset.z);
-				for(PackPart extraPackPart : part.pack.subParts){
-					PackPart correctedPack = getPackForSubPart(parentPack, extraPackPart);
+				VehiclePart parentPack = getPackDefForLocation(part.offset.x, part.offset.y, part.offset.z);
+				for(VehiclePart extraPackPart : part.pack.subParts){
+					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
 					if(correctedPack.pos[0] == offsetX && correctedPack.pos[1] == offsetY && correctedPack.pos[2] == offsetZ){
 						return correctedPack;
 					}
@@ -235,8 +235,8 @@ public abstract class EntityVehicleA_Base extends Entity{
 	 * Returns a PackPart with the correct properties for a SubPart.  This is because
 	 * subParts inherit some properties from their parent parts. 
 	 */
-	private PackPart getPackForSubPart(PackPart parentPack, PackPart subPack){
-		PackPart correctPack = this.pack.new PackPart();
+	private VehiclePart getPackForSubPart(VehiclePart parentPack, VehiclePart subPack){
+		VehiclePart correctPack = this.pack.new VehiclePart();
 		correctPack.pos = new float[3];
 		//If we will be mirrored, make sure to invert the x-coords of any sub-parts.
 		correctPack.pos[0] = parentPack.pos[0] < 0 ^ parentPack.inverseMirroring ? parentPack.pos[0] - subPack.pos[0] : parentPack.pos[0] + subPack.pos[0];
@@ -279,9 +279,9 @@ public abstract class EntityVehicleA_Base extends Entity{
 			for(byte i=0; i<partTagList.tagCount(); ++i){
 				try{
 					NBTTagCompound partTag = partTagList.getCompoundTagAt(i);
-					PackPart packPart = getPackDefForLocation(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ"));
+					VehiclePart packPart = getPackDefForLocation(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ"));
 					Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partTag.getString("partName"));
-					Constructor<? extends APart> construct = partClass.getConstructor(EntityVehicleE_Powered.class, PackPart.class, String.class, NBTTagCompound.class);
+					Constructor<? extends APart> construct = partClass.getConstructor(EntityVehicleE_Powered.class, VehiclePart.class, String.class, NBTTagCompound.class);
 					APart savedPart = construct.newInstance((EntityVehicleE_Powered) this, packPart, partTag.getString("partName"), partTag);
 					this.addPart(savedPart, true);
 				}catch(Exception e){

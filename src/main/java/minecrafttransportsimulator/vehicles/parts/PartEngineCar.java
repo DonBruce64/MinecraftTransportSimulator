@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import net.minecraft.nbt.NBTTagCompound;
@@ -10,7 +10,7 @@ public class PartEngineCar extends APartEngineGeared{
 	private double engineForce;
 	private final EntityVehicleG_Car car;
 
-	public PartEngineCar(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
+	public PartEngineCar(EntityVehicleE_Powered vehicle, VehiclePart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
 		this.car = (EntityVehicleG_Car) vehicle;
 	}

@@ -1,9 +1,8 @@
 package minecrafttransportsimulator.jsondefs;
 
-public class PackSignObject{
-	public SignGeneralConfig general;
+public class JSONSign extends AJSONItem<JSONSign.SignGeneral>{
 
-    public class SignGeneralConfig{
+    public class SignGeneral extends AJSONItem.General{
     	public String font;
     	public TextLines[] textLines;
     }

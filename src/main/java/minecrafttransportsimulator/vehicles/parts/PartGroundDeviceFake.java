@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
@@ -13,7 +13,7 @@ import net.minecraft.util.ResourceLocation;
 public final class PartGroundDeviceFake extends APartGroundDevice{
 	private final APartGroundDevice masterPart;
 	
-	public PartGroundDeviceFake(APartGroundDevice masterPart, PackPart packPart, String partName, NBTTagCompound dataTag){
+	public PartGroundDeviceFake(APartGroundDevice masterPart, VehiclePart packPart, String partName, NBTTagCompound dataTag){
 		super(masterPart.vehicle, packPart, partName, dataTag);
 		this.masterPart = masterPart;
 	}

@@ -7,8 +7,8 @@ import net.minecraft.util.EnumHand;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import java.util.List;
 
-import minecrafttransportsimulator.jsondefs.PackPartObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
@@ -23,7 +23,7 @@ public class ItemPartBarrel extends AItemPart{
 	}
 	
 	@Override
-	public boolean isPartValidForPackDef(PackPart packPart){
+	public boolean isPartValidForPackDef(VehiclePart packPart){
 		int capacity = PackParserSystem.getPartPack(partName).barrel.capacity/1000;
 		return packPart.minValue <= capacity && packPart.maxValue >= capacity ? super.isPartValidForPackDef(packPart) : false;
 	}
@@ -31,7 +31,7 @@ public class ItemPartBarrel extends AItemPart{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
-		PackPartObject pack = PackParserSystem.getPartPack(((ItemPartBarrel) stack.getItem()).partName); 
+		JSONPart pack = PackParserSystem.getPartPack(((ItemPartBarrel) stack.getItem()).partName); 
 		tooltipLines.add(I18n.format("info.item.barrel.capacity") + pack.barrel.capacity + "mb");
 	}
 }

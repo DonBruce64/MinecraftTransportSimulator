@@ -3,7 +3,7 @@ package minecrafttransportsimulator.blocks.pole;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.jsondefs.PackSignObject;
+import minecrafttransportsimulator.jsondefs.JSONSign;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.nbt.NBTTagCompound;
 
@@ -19,7 +19,7 @@ public class TileEntityPoleSign extends TileEntityPoleAttachment{
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
         this.definition = tagCompound.getString("definition");
-        PackSignObject pack = PackParserSystem.getSign(definition);
+        JSONSign pack = PackParserSystem.getSign(definition);
         if(pack != null){
 	        text.clear();
 	        if(PackParserSystem.getSign(definition).general.textLines != null){

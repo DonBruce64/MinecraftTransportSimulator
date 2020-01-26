@@ -1,11 +1,8 @@
 package minecrafttransportsimulator.jsondefs;
 
-public class PackBookletObject{
-	public BookletGeneralConfig general;
-
-    public class BookletGeneralConfig{
-    	public String name;
-    	public String[] materials;
+public class JSONBooklet extends AJSONCraftable<JSONBooklet.BookletGeneral>{
+	
+    public class BookletGeneral extends AJSONCraftable.General{
     	public int textureWidth;
     	public int textureHeight;
     	public boolean disableTOC;

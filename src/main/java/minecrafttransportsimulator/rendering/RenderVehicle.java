@@ -12,12 +12,12 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.items.parts.AItemPart;
-import minecrafttransportsimulator.jsondefs.PackPartObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackDisplayText;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackInstrument;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackRotatableModelObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackTranslatableModelObject;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -1177,7 +1177,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			GL11.glDisable(GL11.GL_LIGHTING);
 			minecraft.entityRenderer.disableLightmap();
 		}
-		for(PackDisplayText text : vehicle.pack.rendering.textMarkings){
+		for(VehicleDisplayText text : vehicle.pack.rendering.textMarkings){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(text.pos[0], text.pos[1], text.pos[2]);
 			GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
@@ -1445,7 +1445,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		if(heldStack != null){
 			if(heldStack.getItem() instanceof AItemPart){
 				AItemPart heldItem = (AItemPart) heldStack.getItem();
-				for(Entry<Vec3d, PackPart> packPartEntry : vehicle.getAllPossiblePackParts().entrySet()){
+				for(Entry<Vec3d, VehiclePart> packPartEntry : vehicle.getAllPossiblePackParts().entrySet()){
 					boolean isPresent = false;
 					boolean isHoldingPart = false;
 					boolean isPartValid = false;
@@ -1454,7 +1454,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 						isPresent = true;
 					}
 					
-					PackPartObject heldItemPack = PackParserSystem.getPartPack(heldItem.partName);
+					JSONPart heldItemPack = PackParserSystem.getPartPack(heldItem.partName);
 					if(packPartEntry.getValue().types.contains(PackParserSystem.getPartPack(heldItem.partName).general.type)){
 						isHoldingPart = true;
 						if(heldItem.isPartValidForPackDef(packPartEntry.getValue())){
@@ -1534,7 +1534,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		private final float[] rotationMagnitudes;
 		private final String[] rotationVariables;
 		
-		private RotatablePart(String name, Float[][] vertices, List<PackRotatableModelObject> rotatableModelObjects){
+		private RotatablePart(String name, Float[][] vertices, List<VehicleRotatableModelObject> rotatableModelObjects){
 			this.name = name.toLowerCase();
 			this.vertices = vertices;
 			this.rotationPoints = getRotationPoints(name, rotatableModelObjects);
@@ -1549,9 +1549,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			this.rotationVariables = getRotationVariables(name, rotatableModelObjects);
 		}
 		
-		private static Vec3d[] getRotationPoints(String name, List<PackRotatableModelObject> rotatableModelObjects){
+		private static Vec3d[] getRotationPoints(String name, List<VehicleRotatableModelObject> rotatableModelObjects){
 			List<Vec3d> rotationPoints = new ArrayList<Vec3d>();
-			for(PackRotatableModelObject rotatable : rotatableModelObjects){
+			for(VehicleRotatableModelObject rotatable : rotatableModelObjects){
 				if(rotatable.partName.equals(name)){
 					if(rotatable.rotationPoint != null){
 						rotationPoints.add(new Vec3d(rotatable.rotationPoint[0], rotatable.rotationPoint[1], rotatable.rotationPoint[2]));
@@ -1561,9 +1561,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			return rotationPoints.toArray(new Vec3d[rotationPoints.size()]);
 		}
 		
-		private static Vec3d[] getRotationAxis(String name, List<PackRotatableModelObject> rotatableModelObjects){
+		private static Vec3d[] getRotationAxis(String name, List<VehicleRotatableModelObject> rotatableModelObjects){
 			List<Vec3d> rotationAxis = new ArrayList<Vec3d>();
-			for(PackRotatableModelObject rotatable : rotatableModelObjects){
+			for(VehicleRotatableModelObject rotatable : rotatableModelObjects){
 				if(rotatable.partName.equals(name)){
 					if(rotatable.rotationAxis != null){
 						rotationAxis.add(new Vec3d(rotatable.rotationAxis[0], rotatable.rotationAxis[1], rotatable.rotationAxis[2]));
@@ -1573,9 +1573,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			return rotationAxis.toArray(new Vec3d[rotationAxis.size()]);
 		}
 		
-		private static String[] getRotationVariables(String name, List<PackRotatableModelObject> rotatableModelObjects){
+		private static String[] getRotationVariables(String name, List<VehicleRotatableModelObject> rotatableModelObjects){
 			List<String> rotationVariables = new ArrayList<String>();
-			for(PackRotatableModelObject rotatable : rotatableModelObjects){
+			for(VehicleRotatableModelObject rotatable : rotatableModelObjects){
 				if(rotatable.partName.equals(name)){
 					if(rotatable.partName != null){
 						rotationVariables.add(rotatable.rotationVariable.toLowerCase());
@@ -1594,7 +1594,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		private final float[] translationMagnitudes;
 		private final String[] translationVariables;
 		
-		private TranslatablePart(String name, Float[][] vertices, List<PackTranslatableModelObject> translatableModelObjects){
+		private TranslatablePart(String name, Float[][] vertices, List<VehicleTranslatableModelObject> translatableModelObjects){
 			this.name = name.toLowerCase();
 			this.vertices = vertices;
 			
@@ -1608,9 +1608,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			this.translationVariables = getRotationVariables(name, translatableModelObjects);
 		}
 		
-		private static Vec3d[] getRotationAxis(String name, List<PackTranslatableModelObject> translatableModelObjects){
+		private static Vec3d[] getRotationAxis(String name, List<VehicleTranslatableModelObject> translatableModelObjects){
 			List<Vec3d> translationAxis = new ArrayList<Vec3d>();
-			for(PackTranslatableModelObject translatable : translatableModelObjects){
+			for(VehicleTranslatableModelObject translatable : translatableModelObjects){
 				if(translatable.partName.equals(name)){
 					if(translatable.translationAxis != null){
 						translationAxis.add(new Vec3d(translatable.translationAxis[0], translatable.translationAxis[1], translatable.translationAxis[2]));
@@ -1620,9 +1620,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			return translationAxis.toArray(new Vec3d[translationAxis.size()]);
 		}
 		
-		private static String[] getRotationVariables(String name, List<PackTranslatableModelObject> translatableModelObjects){
+		private static String[] getRotationVariables(String name, List<VehicleTranslatableModelObject> translatableModelObjects){
 			List<String> translationVariables = new ArrayList<String>();
-			for(PackTranslatableModelObject translatable : translatableModelObjects){
+			for(VehicleTranslatableModelObject translatable : translatableModelObjects){
 				if(translatable.partName.equals(name)){
 					if(translatable.partName != null){
 						translationVariables.add(translatable.translationVariable.toLowerCase());

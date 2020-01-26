@@ -7,7 +7,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -281,7 +281,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		rider.setSneaking(false);
 		if(!world.isRemote){
 			Vec3d placePosition;
-			PackPart packPart = this.getPackDefForLocation(seat.offset.x, seat.offset.y, seat.offset.z);
+			VehiclePart packPart = this.getPackDefForLocation(seat.offset.x, seat.offset.y, seat.offset.z);
 			if(packPart.dismountPos != null){
 				placePosition = RotationSystem.getRotatedPoint(new Vec3d(packPart.dismountPos[0], packPart.dismountPos[1], packPart.dismountPos[2]), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());
 			}else{

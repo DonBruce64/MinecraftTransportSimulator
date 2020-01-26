@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.general;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceBullet;
-import minecrafttransportsimulator.jsondefs.PackPartObject.PartBulletConfig;
+import minecrafttransportsimulator.jsondefs.JSONPart.PartBullet;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
@@ -70,7 +70,7 @@ public class PacketBulletHit implements IMessage{
 					if(ctx.side.isServer()){
 						//If we are an explosive bullet, just blow up at our current position.
 						//Otherwise do attack logic.
-						PartBulletConfig bulletPackData = PackParserSystem.getPartPack(message.bulletName).bullet;
+						PartBullet bulletPackData = PackParserSystem.getPartPack(message.bulletName).bullet;
 						Entity entityAttacking = ctx.getServerHandler().player.world.getEntityByID(message.playerID);
 						if(bulletPackData.type.equals("explosive")){
 							ctx.getServerHandler().player.world.newExplosion(entityAttacking, message.x, message.y, message.z, bulletPackData.diameter/10F, false, true);

@@ -6,8 +6,8 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.jsondefs.PackPartObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartAddition;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -48,9 +48,9 @@ public abstract class AItemPart extends Item{
 						//If so, add the part and notify all clients.
 			    		Vec3d lookVec = player.getLook(1.0F);
         				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
-        				PackPartObject heldItemPack = PackParserSystem.getPartPack(partName);
+        				JSONPart heldItemPack = PackParserSystem.getPartPack(partName);
 			    		for(float f=1.0F; f<4.0F; f += 0.1F){
-			    			for(Entry<Vec3d, PackPart> packPartEntry : vehicle.getAllPossiblePackParts().entrySet()){
+			    			for(Entry<Vec3d, VehiclePart> packPartEntry : vehicle.getAllPossiblePackParts().entrySet()){
 		    					//If we are a custom part, use the custom hitbox.  Otherwise use the regular one.
 		    					VehicleAxisAlignedBB partBox;
 								if(packPartEntry.getValue().types.contains("custom") && heldItemPack.general.type.equals("custom")){
@@ -72,7 +72,7 @@ public abstract class AItemPart extends Item{
 		    									try{
 		    										ItemStack heldStack = player.getHeldItem(hand);
 		    										Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partName);
-		    										Constructor<? extends APart> construct = partClass.getConstructor(EntityVehicleE_Powered.class, PackPart.class, String.class, NBTTagCompound.class);
+		    										Constructor<? extends APart> construct = partClass.getConstructor(EntityVehicleE_Powered.class, VehiclePart.class, String.class, NBTTagCompound.class);
 		    										APart newPart = construct.newInstance((EntityVehicleE_Powered) vehicle, packPartEntry.getValue(), partName, heldStack.hasTagCompound() ? heldStack.getTagCompound() : new NBTTagCompound());
 		    										vehicle.addPart(newPart, false);
 		    										MTS.MTSNet.sendToAll(new PacketVehicleClientPartAddition(vehicle, packPartEntry.getKey().x, packPartEntry.getKey().y, packPartEntry.getKey().z, heldStack));
@@ -99,8 +99,8 @@ public abstract class AItemPart extends Item{
         return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, player.getHeldItem(hand));
     }
 	
-	public boolean isPartValidForPackDef(PackPart packPart){
-		PackPartObject itemPack = PackParserSystem.getPartPack(partName);
+	public boolean isPartValidForPackDef(VehiclePart packPart){
+		JSONPart itemPack = PackParserSystem.getPartPack(partName);
 		if(packPart.customTypes == null){
 			return itemPack.general.customType == null;
 		}else if(itemPack.general.customType == null){

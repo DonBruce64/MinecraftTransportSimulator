@@ -3,30 +3,28 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PackVehicleObject{
-	public PackGeneralConfig general;
-	public List<PackFileDefinitions> definitions = new ArrayList<PackFileDefinitions>();
-    public PackMotorizedConfig motorized;
-    public PackPlane plane;
-    public PackBlimp blimp;
-    public PackCar car;
-    public List<PackPart> parts = new ArrayList<PackPart>();
-    public List<PackCollisionBox> collision = new ArrayList<PackCollisionBox>();
-    public PackRenderingConfig rendering;
+public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
+	public List<VehicleDefinition> definitions = new ArrayList<VehicleDefinition>();
+    public VehicleMotorizedConfig motorized;
+    public VehiclePlane plane;
+    public VehicleBlimp blimp;
+    public VehicleCar car;
+    public List<VehiclePart> parts = new ArrayList<VehiclePart>();
+    public List<VehicleCollisionBox> collision = new ArrayList<VehicleCollisionBox>();
+    public VehicleRendering rendering;
     
-    public class PackGeneralConfig{
+    public class VehicleGeneral extends AJSONCraftable.General{
     	public boolean openTop;
     	public int emptyMass;
     	public String type;
-        public String[] materials;
     }
     
-    public class PackFileDefinitions{
+    public class VehicleDefinition{
     	public String subName;
     	public String[] extraMaterials;
     }
     
-    public class PackMotorizedConfig{
+    public class VehicleMotorizedConfig{
     	public int fuelCapacity;
     	public int defaultFuelQty;
     	public String hornSound;
@@ -39,7 +37,7 @@ public class PackVehicleObject{
         public List<PackInstrument> instruments = new ArrayList<PackInstrument>();
     }
     
-    public class PackPlane{
+    public class VehiclePlane{
         public boolean hasFlaps;
         public float wingSpan;
         public float wingArea;
@@ -48,14 +46,14 @@ public class PackVehicleObject{
         public float elevatorArea;
     }
     
-    public class PackBlimp{
+    public class VehicleBlimp{
         public float crossSectionalArea;
         public float tailDistance;
         public float rudderArea;
         public float ballastVolume;
     }
     
-    public class PackCar{
+    public class VehicleCar{
         public boolean isBigTruck;
         public boolean isFrontWheelDrive;
         public boolean isRearWheelDrive;
@@ -63,7 +61,7 @@ public class PackVehicleObject{
         public float dragCoefficient;
     }
     
-    public class PackPart{
+    public class VehiclePart{
         public float[] pos;
         public float[] rot;
         public boolean turnsWithSteer;
@@ -75,14 +73,14 @@ public class PackVehicleObject{
         public float minValue;
         public float maxValue;
         public float[] dismountPos;
-        public PackPart additionalPart;
+        public VehiclePart additionalPart;
         public float[] treadYPoints;
         public float[] treadZPoints;
         public float[] treadAngles;
         public String defaultPart;
     }
     
-    public class PackCollisionBox{
+    public class VehicleCollisionBox{
         public float[] pos;
         public float width;
         public float height;
@@ -99,33 +97,33 @@ public class PackVehicleObject{
         public byte optionalEngineNumber;
     }
     
-    public class PackRenderingConfig{
+    public class VehicleRendering{
     	public int displayTextMaxLength;
     	public byte numberWindows;
         public boolean textLighted;
         public String defaultDisplayText;
         public float[] hudBackplaneTexturePercentages;
         public float[] hudMouldingTexturePercentages;
-        public List<PackDisplayText> textMarkings = new ArrayList<PackDisplayText>();
-        public List<PackRotatableModelObject> rotatableModelObjects = new ArrayList<PackRotatableModelObject>();
-        public List<PackTranslatableModelObject> translatableModelObjects = new ArrayList<PackTranslatableModelObject>();
+        public List<VehicleDisplayText> textMarkings = new ArrayList<VehicleDisplayText>();
+        public List<VehicleRotatableModelObject> rotatableModelObjects = new ArrayList<VehicleRotatableModelObject>();
+        public List<VehicleTranslatableModelObject> translatableModelObjects = new ArrayList<VehicleTranslatableModelObject>();
     }
     
-    public class PackDisplayText{
+    public class VehicleDisplayText{
     	public float[] pos;
         public float[] rot;
         public float scale;
         public String color;
     }
     
-    public class PackRotatableModelObject{
+    public class VehicleRotatableModelObject{
     	public String partName;
     	public float[] rotationPoint;
     	public float[] rotationAxis;
     	public String rotationVariable;
     }
     
-    public class PackTranslatableModelObject{
+    public class VehicleTranslatableModelObject{
     	public String partName;
     	public float[] translationAxis;
     	public String translationVariable;

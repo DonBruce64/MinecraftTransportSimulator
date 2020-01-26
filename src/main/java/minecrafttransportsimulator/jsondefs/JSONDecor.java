@@ -1,15 +1,13 @@
 package minecrafttransportsimulator.jsondefs;
 
-public class PackDecorObject{
-	public DecorGeneralConfig general;
+public class JSONDecor extends AJSONCraftable<JSONDecor.DecorGeneral>{
 
-    public class DecorGeneralConfig{
+    public class DecorGeneral extends AJSONCraftable.General{
     	public float width;
     	public float height;
     	public float depth;
     	public boolean oriented;
     	public boolean lighted;
-    	public String[] materials;
     	public String modelName;
     }
 }

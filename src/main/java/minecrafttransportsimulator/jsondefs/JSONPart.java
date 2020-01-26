@@ -3,36 +3,34 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackRotatableModelObject;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
 
-public class PackPartObject{
-	public PartGeneralConfig general;
-    public PartEngineConfig engine;
-    public PartWheelConfig wheel;
+public class JSONPart extends AJSONCraftable<JSONPart.PartGeneral>{
+    public PartEngine engine;
+    public PartWheel wheel;
     public PartPontoonConfig pontoon;
-    public PartSkidConfig skid;
-    public PartTreadConfig tread;
-    public PartPropellerConfig propeller;
-    public PartCrateConfig crate;
-    public PartBarrelConfig barrel;
-    public PartGunConfig gun;
-    public PartBulletConfig bullet;
-    public PartEffectorConfig effector;
-    public PartCustomConfig custom;
-    public List<PackPart> subParts = new ArrayList<PackPart>();
-    public PartRenderingConfig rendering;
+    public PartSkid skid;
+    public PartTread tread;
+    public PartPropeller propeller;
+    public PartCrate crate;
+    public PartBarrel barrel;
+    public PartGun gun;
+    public PartBullet bullet;
+    public PartEffector effector;
+    public PartCustom custom;
+    public List<VehiclePart> subParts = new ArrayList<VehiclePart>();
+    public PartRendering rendering;
 
-    public class PartGeneralConfig{
+    public class PartGeneral extends AJSONCraftable.General{
     	public String type;
     	public String modelName;
-    	public String[] materials;
     	public String customType;
     	public boolean disableMirroring;
     	public boolean useVehicleTexture;
     }
     
-    public class PartEngineConfig{
+    public class PartEngine{
     	public boolean isAutomatic;
     	public byte starterPower;
     	public byte starterDuration;
@@ -42,13 +40,13 @@ public class PackPartObject{
     	public String fuelType;
     }
     
-    public class PartWheelConfig{
+    public class PartWheel{
     	public float diameter;
         public float motiveFriction;
         public float lateralFriction;
     }
     
-    public class PartSkidConfig{
+    public class PartSkid{
     	public float width;
     	public float lateralFriction;
     }
@@ -59,7 +57,7 @@ public class PackPartObject{
         public float extraCollisionBoxOffset;
     }
     
-    public class PartTreadConfig{
+    public class PartTread{
     	public float width;
     	public float motiveFriction;
         public float lateralFriction;
@@ -67,7 +65,7 @@ public class PackPartObject{
         public float spacing;
     }
     
-    public class PartPropellerConfig{
+    public class PartPropeller{
     	public boolean isDynamicPitch;
     	public byte numberBlades;
     	public short pitch;
@@ -75,15 +73,15 @@ public class PackPartObject{
     	public int startingHealth;
     }
     
-    public class PartCrateConfig{
+    public class PartCrate{
     	public byte rows;
     }
     
-    public class PartBarrelConfig{
+    public class PartBarrel{
     	public int capacity;
     }
     
-    public class PartGunConfig{
+    public class PartGun{
     	public boolean autoReload;
     	public int capacity;
     	public int fireDelay;
@@ -97,22 +95,22 @@ public class PackPartObject{
     	public float length;
     }
     
-    public class PartBulletConfig{
+    public class PartBullet{
     	public String type;
     	public int quantity;
     	public float diameter;
     }
     
-    public class PartEffectorConfig{
+    public class PartEffector{
     	public int blocksWide;
     }
     
-    public class PartCustomConfig{
+    public class PartCustom{
     	public float width;
     	public float height;
     }
     
-    public class PartRenderingConfig{
-        public List<PackRotatableModelObject> rotatableModelObjects = new ArrayList<PackRotatableModelObject>();
+    public class PartRendering{
+        public List<VehicleRotatableModelObject> rotatableModelObjects = new ArrayList<VehicleRotatableModelObject>();
     }
 }

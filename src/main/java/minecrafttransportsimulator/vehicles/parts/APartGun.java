@@ -2,8 +2,8 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.items.parts.ItemPartBullet;
-import minecrafttransportsimulator.jsondefs.PackPartObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
@@ -42,7 +42,7 @@ public abstract class APartGun extends APart implements FXPart{
 	
 	private final double anglePerTickSpeed;
 		
-	public APartGun(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
+	public APartGun(EntityVehicleE_Powered vehicle, VehiclePart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
 		this.shotsFired = dataTag.getInteger("shotsFired");
 		this.bulletsLeft = dataTag.getInteger("bulletsLeft");
@@ -118,7 +118,7 @@ public abstract class APartGun extends APart implements FXPart{
 									ItemPartBullet bullet = (ItemPartBullet) stack.getItem();
 									//Only reload the same bulletType to ensure we don't mis-match ammo.
 									if(loadedBullet == null || loadedBullet.equals(bullet.partName)){
-										PackPartObject bulletPack = PackParserSystem.getPartPack(bullet.partName);
+										JSONPart bulletPack = PackParserSystem.getPartPack(bullet.partName);
 										//Also check to see if we have enough space for this bullet.
 										if(bulletPack.bullet.quantity + bulletsLeft <= pack.gun.capacity){
 											//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.

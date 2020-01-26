@@ -30,14 +30,14 @@ import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceTread;
 import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceWheel;
 import minecrafttransportsimulator.items.parts.ItemPartGun;
 import minecrafttransportsimulator.items.parts.ItemPartPropeller;
-import minecrafttransportsimulator.jsondefs.PackDecorObject;
-import minecrafttransportsimulator.jsondefs.PackInstrumentObject;
-import minecrafttransportsimulator.jsondefs.PackItemObject;
-import minecrafttransportsimulator.jsondefs.PackBookletObject;
-import minecrafttransportsimulator.jsondefs.PackPartObject;
-import minecrafttransportsimulator.jsondefs.PackSignObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackFileDefinitions;
+import minecrafttransportsimulator.jsondefs.JSONBooklet;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONSign;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
@@ -80,28 +80,28 @@ import net.minecraft.util.ResourceLocation;
  */
 public final class PackParserSystem{
 	/**Map that keys the unique name of a vehicle to its pack.  Used for associating packs with saved vehicles.**/
-    private static final Map<String, PackVehicleObject> vehiclePackMap = new LinkedHashMap<String, PackVehicleObject>();
+    private static final Map<String, JSONVehicle> vehiclePackMap = new LinkedHashMap<String, JSONVehicle>();
    
     /**Map that keys the unique name of a vehicle to its JSON file name.**/
     private static final Map<String, String> vehicleJSONMap = new HashMap<String, String>();
    
     /**Same function as the vehicle map, just for parts.**/
-    private static final Map<String, PackPartObject> partPackMap = new LinkedHashMap<String, PackPartObject>();
+    private static final Map<String, JSONPart> partPackMap = new LinkedHashMap<String, JSONPart>();
     
     /**Same function as the vehicle map, just for instruments.**/
-    private static final Map<String, PackInstrumentObject> partInstrumentMap = new LinkedHashMap<String, PackInstrumentObject>();
+    private static final Map<String, JSONInstrument> partInstrumentMap = new LinkedHashMap<String, JSONInstrument>();
     
     /**Map that keys the unique name of a sign to its pack.*/
-    private static final Map<String, PackSignObject> signPackMap = new LinkedHashMap<String, PackSignObject>();
+    private static final Map<String, JSONSign> signPackMap = new LinkedHashMap<String, JSONSign>();
     
     /**Map that keys the unique name of a decor block to its pack.*/
-    private static final Map<String, PackDecorObject> decorPackMap = new LinkedHashMap<String, PackDecorObject>();
+    private static final Map<String, JSONDecor> decorPackMap = new LinkedHashMap<String, JSONDecor>();
     
     /**Map that keys the unique name of an item to its pack.*/
-    private static final Map<String, PackItemObject> itemPackMap = new LinkedHashMap<String, PackItemObject>();
+    private static final Map<String, JSONItem> itemPackMap = new LinkedHashMap<String, JSONItem>();
     
     /**Map that keys the unique name of a booklet to its pack.*/
-    private static final Map<String, PackBookletObject> bookletPackMap = new LinkedHashMap<String, PackBookletObject>();
+    private static final Map<String, JSONBooklet> bookletPackMap = new LinkedHashMap<String, JSONBooklet>();
     
 	/**Maps all things craftable on benches to their crafting ingredients.*/
 	private static final Map<String, String[]> craftingItemMap = new HashMap<String, String[]>();
@@ -125,8 +125,8 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their vehicles to the mod.**/
     public static void addVehicleDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
-    		PackVehicleObject pack = new Gson().fromJson(jsonReader, PackVehicleObject.class);
-    		for(PackFileDefinitions definition : pack.definitions){
+    		JSONVehicle pack = new Gson().fromJson(jsonReader, JSONVehicle.class);
+    		for(VehicleDefinition definition : pack.definitions){
     			if(definition != null){
     				String vehicleName = modID + ":" + jsonFileName + definition.subName;
     				vehiclePackMap.put(vehicleName, pack);
@@ -155,7 +155,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their parts to the mod.**/
     public static void addPartDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
-	    	PackPartObject pack =  new Gson().fromJson(jsonReader, PackPartObject.class);
+	    	JSONPart pack =  new Gson().fromJson(jsonReader, JSONPart.class);
 	    	String partName = modID + ":" + jsonFileName;
 	    	partPackMap.put(partName, pack);
 	    	if(!MTSRegistry.packTabs.containsKey(modID)){
@@ -171,7 +171,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their instrument set to the mod.**/
     public static void addInstrumentDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
-	    	PackInstrumentObject pack =  new Gson().fromJson(jsonReader, PackInstrumentObject.class);
+	    	JSONInstrument pack =  new Gson().fromJson(jsonReader, JSONInstrument.class);
 	    	String instrumentName = modID + ":" + jsonFileName;
     		partInstrumentMap.put(instrumentName, pack);
     		craftingItemMap.put(instrumentName, pack.general.materials);
@@ -184,7 +184,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their signs to the mod.**/
     public static void addSignDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
-	    	PackSignObject pack =  new Gson().fromJson(jsonReader, PackSignObject.class);
+	    	JSONSign pack =  new Gson().fromJson(jsonReader, JSONSign.class);
 	    	String signName = modID + ":" + jsonFileName;
     		signPackMap.put(signName, pack);
     	}catch(Exception e){
@@ -196,7 +196,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their decor blocks to the mod.**/
     public static void addDecorDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
-	    	PackDecorObject pack =  new Gson().fromJson(jsonReader, PackDecorObject.class);
+	    	JSONDecor pack =  new Gson().fromJson(jsonReader, JSONDecor.class);
 	    	String decorName = modID + ":" + jsonFileName;
     		decorPackMap.put(decorName, pack);
     		craftingItemMap.put(decorName, pack.general.materials);
@@ -209,7 +209,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their crafting items to the mod.**/
     public static void addItemDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
-    		PackItemObject pack =  new Gson().fromJson(jsonReader, PackItemObject.class);
+    		JSONItem pack =  new Gson().fromJson(jsonReader, JSONItem.class);
 	    	String itemName = modID + ":" + jsonFileName;
 	    	itemPackMap.put(itemName, pack);
 	    	craftingItemMap.put(itemName, pack.general.materials);
@@ -222,7 +222,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their booklets to the mod.**/
     public static void addBookletDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
     	try{
-    		PackBookletObject pack =  new Gson().fromJson(jsonReader, PackBookletObject.class);
+    		JSONBooklet pack =  new Gson().fromJson(jsonReader, JSONBooklet.class);
 	    	String manualName = modID + ":" + jsonFileName;
 	    	bookletPackMap.put(manualName, pack);
 	    	craftingItemMap.put(manualName, pack.general.materials);
@@ -312,7 +312,7 @@ public final class PackParserSystem{
     
     
     //-----START OF VEHICLE LOOKUP LOGIC-----
-    public static PackVehicleObject getVehiclePack(String name){
+    public static JSONVehicle getVehiclePack(String name){
         return vehiclePackMap.get(name);
     }
     
@@ -336,7 +336,7 @@ public final class PackParserSystem{
     
     
     //-----START OF PART LOOKUP LOGIC-----
-    public static PackPartObject getPartPack(String name){
+    public static JSONPart getPartPack(String name){
         return partPackMap.get(name);
     }
     
@@ -346,7 +346,7 @@ public final class PackParserSystem{
     
     
     //-----START OF INSTRUMENT LOOKUP LOGIC-----
-    public static PackInstrumentObject getInstrument(String name){
+    public static JSONInstrument getInstrument(String name){
         return partInstrumentMap.get(name);
     }
     
@@ -356,7 +356,7 @@ public final class PackParserSystem{
     
     
     //-----START OF SIGN LOOKUP LOGIC-----
-    public static PackSignObject getSign(String name){
+    public static JSONSign getSign(String name){
         return signPackMap.get(name);
     }
     
@@ -366,7 +366,7 @@ public final class PackParserSystem{
     
     
     //-----START OF DECOR LOOKUP LOGIC-----
-    public static PackDecorObject getDecor(String name){
+    public static JSONDecor getDecor(String name){
         return decorPackMap.get(name);
     }
     
@@ -376,7 +376,7 @@ public final class PackParserSystem{
     
     
     //-----START OF ITEM LOOKUP LOGIC-----
-    public static PackItemObject getItem(String name){
+    public static JSONItem getItem(String name){
         return itemPackMap.get(name);
     }
     
@@ -385,7 +385,7 @@ public final class PackParserSystem{
     }
     
     //-----START OF BOOKLET LOOKUP LOGIC-----
-    public static PackBookletObject getBooklet(String name){
+    public static JSONBooklet getBooklet(String name){
         return bookletPackMap.get(name);
     }
     

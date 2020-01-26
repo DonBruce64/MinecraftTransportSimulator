@@ -3,7 +3,7 @@ package minecrafttransportsimulator.items.core;
 import minecrafttransportsimulator.blocks.core.BlockDecor;
 import minecrafttransportsimulator.blocks.core.TileEntityDecor;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.jsondefs.PackDecorObject;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -35,7 +35,7 @@ public class ItemDecor extends Item{
 			
 			//Based on the block type and light, pick a registered block template.
 			String blockName = ((ItemDecor) heldStack.getItem()).decorName;
-			PackDecorObject pack = PackParserSystem.getDecor(blockName);
+			JSONDecor pack = PackParserSystem.getDecor(blockName);
 			if(!pack.general.oriented && !pack.general.lighted){
 				world.setBlockState(pos, MTSRegistry.decorBasicDark.getDefaultState().withProperty(BlockDecor.FACING, player.getHorizontalFacing().getOpposite()));
 			}else if(pack.general.oriented && !pack.general.lighted){

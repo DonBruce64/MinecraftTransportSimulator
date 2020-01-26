@@ -5,8 +5,8 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.jsondefs.PackPartObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
@@ -38,8 +38,8 @@ public abstract class APart{
 	public final Vec3d offset;
 	public final EntityVehicleE_Powered vehicle;
 	public final String partName;
-	public final PackPartObject pack;
-	public final PackPart packVehicleDef;
+	public final JSONPart pack;
+	public final VehiclePart packVehicleDef;
 	public final Vec3d partRotation;
 	public final boolean inverseMirroring;
 	public final boolean disableMirroring;
@@ -54,7 +54,7 @@ public abstract class APart{
 	private boolean isValid;
 	private ResourceLocation modelLocation;
 		
-	public APart(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
+	public APart(EntityVehicleE_Powered vehicle, VehiclePart packPart, String partName, NBTTagCompound dataTag){
 		this.vehicle = vehicle;
 		this.offset = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
 		this.partName = partName;
@@ -70,7 +70,7 @@ public abstract class APart{
 		//Check to see if we are an additional part to a part on our parent.
 		//If we are not valid due to us being fake, don't add ourselves.
 		if(this.isValid()){
-			for(PackPart parentPackPart : vehicle.pack.parts){
+			for(VehiclePart parentPackPart : vehicle.pack.parts){
 				if(packPart.equals(parentPackPart.additionalPart)){
 					parentPart = vehicle.getPartAtLocation(parentPackPart.pos[0], parentPackPart.pos[1], parentPackPart.pos[2]);
 					parentPart.childParts.add(this);
@@ -82,7 +82,7 @@ public abstract class APart{
 			//If we aren't an additional part, see if we are a sub-part.
 			for(APart part : vehicle.getVehicleParts()){
 				if(part.pack.subParts != null){
-					for(PackPart partSubPartPack : part.pack.subParts){
+					for(VehiclePart partSubPartPack : part.pack.subParts){
 						if((float) part.offset.x + partSubPartPack.pos[0] == (float) this.offset.x && (float) part.offset.y + partSubPartPack.pos[1] == (float) this.offset.y && (float) part.offset.z + partSubPartPack.pos[2] == (float) this.offset.z){
 							parentPart = part;
 							parentPart.childParts.add(this);

@@ -4,8 +4,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import minecrafttransportsimulator.jsondefs.PackPartObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.client.resources.I18n;
@@ -27,7 +27,7 @@ public abstract class AItemPartEngine extends AItemPart{
 	}
 	
 	@Override
-	public boolean isPartValidForPackDef(PackPart packPart){
+	public boolean isPartValidForPackDef(VehiclePart packPart){
 		float fuelConsumption = PackParserSystem.getPartPack(partName).engine.fuelConsumption;
 		return packPart.minValue <= fuelConsumption && packPart.maxValue >= fuelConsumption ? super.isPartValidForPackDef(packPart) : false;
 	}
@@ -50,7 +50,7 @@ public abstract class AItemPartEngine extends AItemPart{
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
 		NBTTagCompound stackTag = stack.getTagCompound();
-		PackPartObject pack = PackParserSystem.getPartPack(((AItemPartEngine) stack.getItem()).partName); 
+		JSONPart pack = PackParserSystem.getPartPack(((AItemPartEngine) stack.getItem()).partName); 
 		
 		if(stackTag != null && stackTag.getBoolean("isCreative")){
 			tooltipLines.add(TextFormatting.DARK_PURPLE + I18n.format("info.item.engine.creative"));
@@ -77,5 +77,5 @@ public abstract class AItemPartEngine extends AItemPart{
 	}
 	
 	@SideOnly(Side.CLIENT)
-	protected abstract void addExtraInformation(ItemStack stack, PackPartObject pack, List<String> tooltipLines);
+	protected abstract void addExtraInformation(ItemStack stack, JSONPart pack, List<String> tooltipLines);
 }

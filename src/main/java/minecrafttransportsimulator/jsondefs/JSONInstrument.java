@@ -3,18 +3,17 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PackInstrumentObject{
-    public PackInstrumentDefinition general = new PackInstrumentDefinition();
-    public List<PackInstrumentComponent> components = new ArrayList<PackInstrumentComponent>();
+public class JSONInstrument extends AJSONCraftable<JSONInstrument.InstrumentGeneral>{
+    public List<InstrumentComponent> components = new ArrayList<InstrumentComponent>();
 
-    public class PackInstrumentDefinition{
+    public class InstrumentGeneral extends AJSONCraftable.General{
+    	public String description;
     	public List<String> validVehicles;
-    	public String[] materials;
     	public int textureXSectorStart;
     	public int textureYSectorStart;
     }
     
-    public class PackInstrumentComponent{
+    public class InstrumentComponent{
     	public String rotationVariable;
     	public int xRotationPositionOffset;
     	public int yRotationPositionOffset;

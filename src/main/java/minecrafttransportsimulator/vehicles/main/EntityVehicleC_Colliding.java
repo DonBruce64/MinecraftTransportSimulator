@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBBCollective;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -107,7 +107,7 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			currentCollisionBoxes.clear();
 			double furthestWidth = 0;
 			double furthestHeight = 0;
-			for(PackCollisionBox box : pack.collision){
+			for(VehicleCollisionBox box : pack.collision){
 				Vec3d partOffset = new Vec3d(box.pos[0], box.pos[1], box.pos[2]);
 				Vec3d offset = RotationSystem.getRotatedPoint(partOffset, rotationPitch, rotationYaw, rotationRoll);
 				VehicleAxisAlignedBB newBox = new VehicleAxisAlignedBB(this.getPositionVector().add(offset), partOffset, box.width, box.height, box.isInterior, box.collidesWithLiquids);

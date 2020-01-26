@@ -8,9 +8,9 @@ import minecrafttransportsimulator.guis.components.GUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.core.ItemBooklet;
-import minecrafttransportsimulator.jsondefs.PackBookletObject;
-import minecrafttransportsimulator.jsondefs.PackBookletObject.BookletPage;
-import minecrafttransportsimulator.jsondefs.PackBookletObject.BookletText;
+import minecrafttransportsimulator.jsondefs.JSONBooklet;
+import minecrafttransportsimulator.jsondefs.JSONBooklet.BookletPage;
+import minecrafttransportsimulator.jsondefs.JSONBooklet.BookletText;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.wrappers.WrapperInput;
 
@@ -23,7 +23,7 @@ public class GUIBooklet extends GUIBase{
 	
 	//Manual item.
 	private final ItemBooklet booklet;
-	private final PackBookletObject pack;
+	private final JSONBooklet pack;
 	private final int totalPages;
 	
 	public GUIBooklet(ItemBooklet booklet){

@@ -5,8 +5,8 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
-import minecrafttransportsimulator.jsondefs.CoreConfigObject.JoystickConfig;
-import minecrafttransportsimulator.jsondefs.CoreConfigObject.KeyboardConfig;
+import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
+import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigKeyboard;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.BrakePacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
@@ -419,7 +419,7 @@ public final class ControlSystem{
 		public final boolean isMomentary;
 		public final String systemName;
 		public final String translatedName;
-		public final KeyboardConfig config;
+		public final ConfigKeyboard config;
 		private final ControlsJoystick linkedJoystick;
 		
 		private boolean wasPressedLastCall;
@@ -432,7 +432,7 @@ public final class ControlSystem{
 			if(ConfigSystem.configObject.controls.keyboard.containsKey(systemName)){
 				this.config = ConfigSystem.configObject.controls.keyboard.get(systemName);
 			}else{
-				this.config = new KeyboardConfig();
+				this.config = new ConfigKeyboard();
 			}
 		}
 		
@@ -522,7 +522,7 @@ public final class ControlSystem{
 		public final boolean isMomentary;
 		public final String systemName;
 		public final String translatedName;
-		public final JoystickConfig config;
+		public final ConfigJoystick config;
 		
 		private boolean wasPressedLastCall;
 		
@@ -534,7 +534,7 @@ public final class ControlSystem{
 			if(ConfigSystem.configObject.controls.joystick.containsKey(systemName)){
 				this.config = ConfigSystem.configObject.controls.joystick.get(systemName);
 			}else{
-				this.config = new JoystickConfig();
+				this.config = new ConfigJoystick();
 			}
 		}
 		

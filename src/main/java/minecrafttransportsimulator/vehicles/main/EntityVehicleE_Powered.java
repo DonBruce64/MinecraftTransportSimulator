@@ -9,8 +9,8 @@ import minecrafttransportsimulator.baseclasses.VehicleSound;
 import minecrafttransportsimulator.baseclasses.VehicleSound.SoundTypes;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.jsondefs.PackInstrumentObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.radio.RadioContainer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -145,7 +145,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			//Because parts is a list, the #1 engine will always come before the #2 engine.
 			//We can use this to determine where in the list this engine needs to go.
 			byte engineNumber = 0;
-			for(PackPart packPart : pack.parts){
+			for(VehiclePart packPart : pack.parts){
 				for(String type : packPart.types){
 					if(type.startsWith("engine")){
 						if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
@@ -162,7 +162,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public void removePart(APart part, boolean playBreakSound){
 		super.removePart(part, playBreakSound);
 		byte engineNumber = 0;
-		for(PackPart packPart : pack.parts){
+		for(VehiclePart packPart : pack.parts){
 			for(String type : packPart.types){
 				if(type.startsWith("engine")){
 					if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
@@ -216,7 +216,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	 */
 	public byte getNumberEngineBays(){
 		if(numberEngineBays == 0){
-			for(PackPart part : pack.parts){
+			for(VehiclePart part : pack.parts){
 				for(String type : part.types){
 					if(type.startsWith("engine")){
 						++numberEngineBays;
@@ -395,7 +395,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	
 	public static class VehicleInstrument{
 		public final String name;
-		public final PackInstrumentObject pack;
+		public final JSONInstrument pack;
 		
 		public VehicleInstrument(String name){
 			this.name = name;

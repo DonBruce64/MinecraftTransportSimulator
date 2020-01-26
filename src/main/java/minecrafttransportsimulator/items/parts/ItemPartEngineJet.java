@@ -2,7 +2,7 @@ package minecrafttransportsimulator.items.parts;
 
 import java.util.List;
 
-import minecrafttransportsimulator.jsondefs.PackPartObject;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
@@ -16,7 +16,7 @@ public final class ItemPartEngineJet extends AItemPartEngine{
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	protected void addExtraInformation(ItemStack stack, PackPartObject pack, List<String> tooltipLines){
+	protected void addExtraInformation(ItemStack stack, JSONPart pack, List<String> tooltipLines){
 		tooltipLines.add(I18n.format("info.item.engine.bypassratio") + pack.engine.gearRatios[0]);
 	}
 }

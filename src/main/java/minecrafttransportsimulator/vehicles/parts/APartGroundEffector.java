@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
@@ -11,7 +11,7 @@ public abstract class APartGroundEffector extends APart{
 	protected final BlockPos[] lastBlocksModified;
 	protected final BlockPos[] affectedBlocks;
 	
-	public APartGroundEffector(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
+	public APartGroundEffector(EntityVehicleE_Powered vehicle, VehiclePart packPart, String partName, NBTTagCompound dataTag){
 		super(vehicle, packPart, partName, dataTag);
 		lastBlocksModified = new BlockPos[pack.effector.blocksWide];
 		affectedBlocks = new BlockPos[pack.effector.blocksWide];

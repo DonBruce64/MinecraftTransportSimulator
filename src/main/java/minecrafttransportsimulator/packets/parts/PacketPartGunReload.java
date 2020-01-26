@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.jsondefs.PackPartObject.PartBulletConfig;
+import minecrafttransportsimulator.jsondefs.JSONPart.PartBullet;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APartGun;
 import net.minecraft.client.Minecraft;
@@ -41,7 +41,7 @@ public class PacketPartGunReload extends APacketPart{
 				public void run(){
 					APartGun gun = (APartGun) getVehiclePartFromMessage(message, ctx);
 					if(gun != null){
-						PartBulletConfig bulletPack = PackParserSystem.getPartPack(message.bulletReloaded).bullet;
+						PartBullet bulletPack = PackParserSystem.getPartPack(message.bulletReloaded).bullet;
 						gun.loadedBullet = message.bulletReloaded;
 						gun.bulletsLeft += bulletPack.quantity;
 						gun.reloadTimeRemaining = gun.pack.gun.reloadTime;
