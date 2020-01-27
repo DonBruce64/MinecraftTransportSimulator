@@ -239,7 +239,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 			}
 			TileEntity testTile = signal.getWorld().loadedTileEntityList.get(checkIndex);
 			if(testTile instanceof TileEntityTrafficSignalController){
-				if(((TileEntityTrafficSignalController) testTile).trafficSignals.containsKey(signalPos)){
+				if(((TileEntityTrafficSignalController) testTile).crossingSignals.containsKey(signalPos)){
 					//Found our signal.
 					trafficSignalControllers.put(signalPos, testTile.getPos());
 				}
@@ -260,11 +260,11 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 					shouldFlash = false;
 				} else
 				if (controller.mode == 1) {
-					isEnabled = controller.crossingSignals.get(signalPos) != null ? controller.crossingSignals.get(signalPos).isEnabled : false;
-					showWalk = controller.crossingSignals.get(signalPos) != null ? controller.crossingSignals.get(signalPos).showWalk : false;
-					shouldFlash = controller.crossingSignals.get(signalPos) != null ? controller.crossingSignals.get(signalPos).shouldFlash : true;
+					isEnabled = controller.crossingSignals.get(signalPos).isEnabled();
+					showWalk = controller.crossingSignals.get(signalPos).isShowWalk();
+					shouldFlash = controller.crossingSignals.get(signalPos).isShouldFlash();
 				} else {
-					if(controller.trafficSignals.containsKey(signalPos)){
+					if(controller.crossingSignals.containsKey(signalPos)){
 						//Valid controller detected, do render.
 						isEnabled = true;
 						final boolean isOnMainAxis = !(controller.orientedOnX ^ (facingVec.getX() != 0));
@@ -316,7 +316,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 			shouldFlash = true;
 		}
 
-		if(!shouldFlash || (shouldFlash && (worldTime%20 < 10)) && isEnabled ){
+		if(isEnabled && (!shouldFlash || (shouldFlash && (worldTime%20 < 10)))){
 			if(showWalk){
 				GL11.glTranslatef(0, 2F/16F, 0.145F);
 				renderLightedSquare(3F/16F, lightBrightness*0.5F, Color.GREEN, walkTexture);

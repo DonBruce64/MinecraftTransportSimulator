@@ -25,7 +25,7 @@ import net.minecraftforge.fml.common.Optional;
 public class TileEntityTrafficSignalController extends TileEntityBase implements ITickable, SimpleComponent {
 	public boolean orientedOnX = false;
 	/** 0 - Disabled, 1 - Manual, 2 - Time Delay, 3 - Vehicle Trigger **/
-	public byte mode = 1;
+	public byte mode = 0;
 	public int greenMainTime = 20;
 	public int greenCrossTime = 10;
 	public int yellowTime = 2;
@@ -163,13 +163,20 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
         this.allRedTime = tagCompound.getInteger("allRedTime");
 
         trafficSignals.clear();
+		crossingSignals.clear();
         for(byte i=0; i<tagCompound.getInteger("trafficSignalCount"); ++i){
         	NBTTagCompound trafficSignalData = (NBTTagCompound) tagCompound.getTag("trafficSignal" + i);
         	int[] posArray = trafficSignalData.getIntArray("location");
-        	BlockPos blockPos = new BlockPos(posArray[0], posArray[1], posArray[2]);
+			BlockPos blockPos = new BlockPos(posArray[0], posArray[1], posArray[2]);
         	Color color = Color.decode(trafficSignalData.getString("color"));
         	trafficSignals.put(blockPos, new TrafficSignalData(blockPos, trafficSignalData.getBoolean("isEnabled"), color, trafficSignalData.getBoolean("shouldFlash")));
         }
+		for(byte i=0; i<tagCompound.getInteger("crossingSignalCount"); ++i){
+			NBTTagCompound crossingSignalData = (NBTTagCompound) tagCompound.getTag("crossingSignal" + i);
+			int[] posArray = crossingSignalData.getIntArray("location");
+			BlockPos blockPos = new BlockPos(posArray[0], posArray[1], posArray[2]);
+			crossingSignals.put(blockPos, new CrossingSignalData(blockPos, crossingSignalData.getBoolean("isEnabled"), crossingSignalData.getBoolean("showWalk"), crossingSignalData.getBoolean("shouldFlash")));
+		}
     }
 
 	@Override
@@ -194,7 +201,18 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
 			tagCompound.setTag("trafficSignal" + i, trafficSignalData);
 	    	i++;
         }
-        tagCompound.setInteger("trafficSignalCount", trafficSignals.size());
+		tagCompound.setInteger("trafficSignalCount", trafficSignals.size());
+		i = 0;
+		for(CrossingSignalData crossingSignal : crossingSignals.values()) {
+			NBTTagCompound crossingSignalData = new NBTTagCompound();
+			crossingSignalData.setIntArray("location", new int[]{crossingSignal.getBlockPos().getX(), crossingSignal.getBlockPos().getY(), crossingSignal.getBlockPos().getZ()});
+			crossingSignalData.setBoolean("isEnabled", crossingSignal.isEnabled());
+			crossingSignalData.setBoolean("showWalk", crossingSignal.isShowWalk());
+			crossingSignalData.setBoolean("shouldFlash", crossingSignal.isShouldFlash());
+			tagCompound.setTag("crossingSignal" + i, crossingSignalData);
+			i++;
+		}
+		tagCompound.setInteger("crossingSignalCount", crossingSignals.size());
         return tagCompound;
     }
 
@@ -204,7 +222,7 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
 		return "iv_signalcntlr"; // INFO: Max length is 14 chars
 	}
 
-	/* Getter */
+	//region Getters
 
 	@Callback(doc = "function():boolean; Returns if the primary axis is X", direct = true)
 	@Optional.Method(modid = "opencomputers")
@@ -247,7 +265,8 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
 		return new Object[] { allRedTime };
 	}
 
-	/* Setters */
+	//endregion
+	//region Setters
 
 	@Callback(doc = "function(boolean):boolean; This will save all changes to the Traffic Signal Controller. You need to do this when you want to save all changes !", direct = true)
 	@Optional.Method(modid = "opencomputers")
@@ -293,7 +312,9 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
 		return new Object[] { args.isInteger(0) ? allRedTime = args.checkInteger(0) : false };
 	}
 
-	// Manual mode
+	//endregion
+	//region Manual mode
+
 	private boolean isValidTrafficSignalColor(String color) {
 		return color.equalsIgnoreCase("red") || color.equalsIgnoreCase("yellow") || color.equalsIgnoreCase("green");
 	}
@@ -311,19 +332,112 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
 		return isValidBlockPosition(table) ? new BlockPos((Double) table.get("x"),(Double) table.get("y"),(Double) table.get("z")) : null;
 	}
 
-	@Callback(doc = "function():int; ", direct = true)
+	//region Manual mode - Getters
+
+	@Callback
 	@Optional.Method(modid = "opencomputers")
 	public Object[] getTrafficSignalAmount(Context context, Arguments args) {
-		return new Object[] { trafficSignals.size() - trafficSignals.size() };
+		return new Object[] { trafficSignals.size() };
 	}
 
-	@Callback(doc = "function():int; ", direct = true)
+	@Callback
+	@Optional.Method(modid = "opencomputers")
+	public Object[] getTrafficSignals(Context context, Arguments args) {
+		Map<String, Map<String, Integer>> trafficSignalsMap = new HashMap<>();
+		int i = 0;
+		for (TrafficSignalData trafficSignalData : trafficSignals.values()) {
+			trafficSignalsMap.put("trafficSignal"+i, createBlockPosTable(trafficSignalData.getBlockPos()));
+			i++;
+		}
+		return new Object[] { trafficSignalsMap };
+	}
+
+	@Callback
 	@Optional.Method(modid = "opencomputers")
 	public Object[] getCrossingSignalAmount(Context context, Arguments args) {
 		return new Object[] { crossingSignals.size() };
 	}
 
-	@Callback(doc = "function(int, string):boolean; ", direct = true)
+	@Callback
+	@Optional.Method(modid = "opencomputers")
+	public Object[] getCrossingSignals(Context context, Arguments args) {
+		Map<String, Map<String, Integer>> crossingSignalMap = new HashMap<>();
+		int i = 0;
+		for (CrossingSignalData crossingSignalData : crossingSignals.values()) {
+			crossingSignalMap.put("crossingSignal"+i, createBlockPosTable(crossingSignalData.getBlockPos()));
+			i++;
+		}
+		return new Object[] { crossingSignalMap };
+	}
+
+	@Callback
+	@Optional.Method(modid = "opencomputers")
+	public Object[] getTrafficSignalColor(Context context, Arguments args) {
+		if (args.isTable(0) && isValidBlockPosition(args.checkTable(0))) {
+			if (trafficSignals.containsKey(createBlockPos(args.checkTable(0)))) {
+				return new Object[]{ trafficSignals.get(createBlockPos(args.checkTable(0))).getColorName() };
+			}
+		}
+		return new Object[] { null };
+	}
+
+	@Callback
+	@Optional.Method(modid = "opencomputers")
+	public Object[] getTrafficSignalFlashing(Context context, Arguments args) {
+		if (args.isTable(0) && isValidBlockPosition(args.checkTable(0))) {
+			if (trafficSignals.containsKey(createBlockPos(args.checkTable(0)))) {
+				return new Object[]{ trafficSignals.get(createBlockPos(args.checkTable(0))).isShouldFlash() };
+			}
+		}
+		return new Object[] { null };
+	}
+
+	@Callback
+	@Optional.Method(modid = "opencomputers")
+	public Object[] getTrafficSignalEnabled(Context context, Arguments args) {
+		if (args.isTable(0) && isValidBlockPosition(args.checkTable(0))) {
+			if (trafficSignals.containsKey(createBlockPos(args.checkTable(0)))) {
+				return new Object[]{ trafficSignals.get(createBlockPos(args.checkTable(0))).isEnabled() };
+			}
+		}
+		return new Object[] { null };
+	}
+
+	@Callback
+	@Optional.Method(modid = "opencomputers")
+	public Object[] getCrossingSignalWalk(Context context, Arguments args) {
+		if (args.isTable(0) && isValidBlockPosition(args.checkTable(0))) {
+				if (crossingSignals.containsKey(createBlockPos(args.checkTable(0)))) {
+					return new Object[]{ crossingSignals.get(createBlockPos(args.checkTable(0))).isShowWalk() };
+			}
+		}
+		return new Object[] { null };
+	}
+
+	@Callback
+	@Optional.Method(modid = "opencomputers")
+	public Object[] getCrossingSignalFlashing(Context context, Arguments args) {
+		if (args.isTable(0) && isValidBlockPosition(args.checkTable(0))) {
+			if (crossingSignals.containsKey(createBlockPos(args.checkTable(0)))) {
+				return new Object[]{ crossingSignals.get(createBlockPos(args.checkTable(0))).isShouldFlash() };
+			}
+		}
+		return new Object[] { null };
+	}
+
+	@Callback
+	@Optional.Method(modid = "opencomputers")
+	public Object[] getCrossingSignalEnabled(Context context, Arguments args) {
+		if (args.isTable(0) && isValidBlockPosition(args.checkTable(0))) {
+			if (crossingSignals.containsKey(createBlockPos(args.checkTable(0)))) {
+				return new Object[]{ crossingSignals.get(createBlockPos(args.checkTable(0))).isEnabled() };
+			}
+		}
+		return new Object[] { null };
+	}
+
+
+	@Callback
 	@Optional.Method(modid = "opencomputers")
 	public Object[] setTrafficSignalColor(Context context, Arguments args) {
 		if (args.isString(0) && isValidTrafficSignalColor(args.checkString(0)) && args.isTable(1) && isValidBlockPosition(args.checkTable(1))) {
@@ -332,10 +446,10 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
 				return new Object[]{ true };
 			}
 		}
-		return new Object[] { false };
+		return new Object[] { null };
 	}
 
-	@Callback(doc = "function(int, string):boolean; ", direct = true)
+	@Callback
 	@Optional.Method(modid = "opencomputers")
 	public Object[] setTrafficSignalFlashing(Context context, Arguments args) {
 		if (args.isBoolean(0) && args.isTable(1) && isValidBlockPosition(args.checkTable(1))) {
@@ -344,10 +458,10 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
 				return new Object[]{ true };
 			}
 		}
-		return new Object[] { false };
+		return new Object[] { null };
 	}
 
-	@Callback(doc = "function(int, string):boolean; ", direct = true)
+	@Callback
 	@Optional.Method(modid = "opencomputers")
 	public Object[] setTrafficSignalEnabled(Context context, Arguments args) {
 		if (args.isBoolean(0)&& args.isTable(1) && isValidBlockPosition(args.checkTable(1))) {
@@ -356,13 +470,44 @@ public class TileEntityTrafficSignalController extends TileEntityBase implements
 				return new Object[]{ true };
 			}
 		}
-		return new Object[] { false };
+		return new Object[] { null };
 	}
 
 	@Callback
 	@Optional.Method(modid = "opencomputers")
-	public Object[] devCmd(Context context, Arguments args) {
-		return new Object[] { createBlockPosTable(trafficSignals.entrySet().iterator().next().getKey()) };
+	public Object[] setCrossingSignalWalk(Context context, Arguments args) {
+		if (args.isBoolean(0) && args.isTable(1) && isValidBlockPosition(args.checkTable(1))) {
+			if (crossingSignals.containsKey(createBlockPos(args.checkTable(1)))) {
+				crossingSignals.replace(createBlockPos(args.checkTable(1)), crossingSignals.get(createBlockPos(args.checkTable(1))).setShowWalk(args.checkBoolean(0)));
+				return new Object[]{ true };
+			}
+		}
+		return new Object[] { null };
 	}
+
+	@Callback
+	@Optional.Method(modid = "opencomputers")
+	public Object[] setCrossingSignalFlashing(Context context, Arguments args) {
+		if (args.isBoolean(0) && args.isTable(1) && isValidBlockPosition(args.checkTable(1))) {
+			if (crossingSignals.containsKey(createBlockPos(args.checkTable(1)))) {
+				crossingSignals.replace(createBlockPos(args.checkTable(1)), crossingSignals.get(createBlockPos(args.checkTable(1))).setShouldFlash(args.checkBoolean(0)));
+				return new Object[]{ true };
+			}
+		}
+		return new Object[] { null };
+	}
+
+	@Callback
+	@Optional.Method(modid = "opencomputers")
+	public Object[] setCrossingSignalEnabled(Context context, Arguments args) {
+		if (args.isBoolean(0)&& args.isTable(1) && isValidBlockPosition(args.checkTable(1))) {
+			if (crossingSignals.containsKey(createBlockPos(args.checkTable(1)))) {
+				crossingSignals.replace(createBlockPos(args.checkTable(1)), crossingSignals.get(createBlockPos(args.checkTable(1))).setEnabled(args.checkBoolean(0)));
+				return new Object[]{ true };
+			}
+		}
+		return new Object[] { null };
+	}
+	//endregion
 	//endregion
 }

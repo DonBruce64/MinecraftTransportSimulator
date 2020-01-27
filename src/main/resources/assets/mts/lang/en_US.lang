@@ -29,7 +29,7 @@ death.attack.carcrash.null.null=%1$s died in a car crash
 death.attack.carcrash.null.player=%1$s got distracted while fighting %2$s and died in a car crash
 death.attack.carcrash.player.null=%2$s crashed their car and killed %1$s
 death.attack.carcrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash a car into them
- 
+
 interact.key.info.lock=Vehicle locked!
 interact.key.info.unlock=Vehicle unlocked!
 interact.key.info.own=You are now the owner of this vehicle!
@@ -51,7 +51,7 @@ interact.jerrycan.empty=This jerrycan is empty and cannot fuel this vehicle.
 interact.jerrycan.wrongtype=This jerrycan does not contain the same liquid as what is in the vehicle.
 interact.jerrycan.toofull=This vehicle is already full of fuel.  You cannot add any more.
 interact.jerrycan.success=Added 1000mb of fluid to this vehicle.
- 
+
 interact.failure.seattaken=This seat is taken!
 interact.failure.vehiclelocked=This vehicle is locked!
 interact.failure.vehicleowned=You are not the owner of this vehicle and therefore cannot remove it or its parts!
@@ -138,13 +138,16 @@ gui.trafficsignalcontroller.scan=Scan For Signals & Components
 gui.trafficsignalcontroller.scandistance=Scan Distance: 
 gui.trafficsignalcontroller.scanfound=Scan Found:
 gui.trafficsignalcontroller.primary=Primary axis: 
-gui.trafficsignalcontroller.signalmode=Mode: 
+gui.trafficsignalcontroller.signalmode=Mode:
+gui.trafficsignalcontroller.modedisabled=Disabled
+gui.trafficsignalcontroller.modemanual=Manual
 gui.trafficsignalcontroller.modetime=Time Delay
 gui.trafficsignalcontroller.modetrigger=Vehicle Trigger
 gui.trafficsignalcontroller.greenmaintime=Time main signal is Green:
 gui.trafficsignalcontroller.greencrosstime=Time cross signal is Green: 
 gui.trafficsignalcontroller.yellowtime=Time all signals are Yellow: 
 gui.trafficsignalcontroller.allredtime=Time all signals are Red:
+gui.trafficsignalcontroller.occontrollinfo=Currently only usable with OpenComputers
 gui.trafficsignalcontroller.confirm=CONFIRM 
 
 gui.vehicle_bench.type=Type
@@ -343,7 +346,7 @@ advancements.mts.key.title=Swiper no Swiping
 advancements.mts.key.description=Create a Key for locking vehicles
 advancements.mts.wrench.title=Better Than Duct Tape
 advancements.mts.wrench.description=Create a wrench for reparing vehicles
-			
+
 advancements.mts.construction.title=Construction
 advancements.mts.construction.description=Get some construction materials
 advancements.mts.pole.title=Pole Position

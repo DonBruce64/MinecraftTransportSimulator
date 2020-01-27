@@ -9,7 +9,7 @@ public class TrafficSignalData {
     private BlockPos blockPos;
     private boolean isEnabled = false;
     private Color color = Color.RED;
-    private boolean shouldFlash = true;
+    private boolean shouldFlash = false;
 
     public TrafficSignalData(BlockPos blockPos, boolean isEnabled, Color color, boolean shouldFlash) {
         this.blockPos = blockPos;
@@ -43,6 +43,10 @@ public class TrafficSignalData {
     public Color getColor() {
         if (color == null) color = Color.RED;
         return color;
+    }
+
+    public String getColorName() {
+        return getColor() == Color.YELLOW ? "YELLOW" : getColor() == Color.GREEN ? "GREEN" : "RED";
     }
 
     public TrafficSignalData setColor(Color color) {

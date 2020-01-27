@@ -30,10 +30,11 @@ public class GUITrafficSignalController extends GUIBase {
 	private GUIComponentTextBox greenCrossTimeText;
 	private GUIComponentTextBox yellowTimeText;
 	private GUIComponentTextBox allRedTimeText;
-	
+
 	//Labels
 	private GUIComponentLabel trafficSignalCount;
 	private GUIComponentLabel crossingSignalCount;
+	private GUIComponentLabel occontrolledinfo;
 	
 	private final TileEntityTrafficSignalController signalController;
 	
@@ -55,8 +56,8 @@ public class GUITrafficSignalController extends GUIBase {
 							if(block.equals(MTSRegistry.trafficSignal)){
 								signalController.trafficSignals.put(pos, new TrafficSignalData(pos));
 							}else if(block.equals(MTSRegistry.crossingSignal)){
-								signalController.trafficSignals.put(pos, new TrafficSignalData(pos));
-								signalController.crossingSignals.put(pos, new CrossingSignalData());
+								//signalController.trafficSignals.put(pos, new TrafficSignalData(pos));
+								signalController.crossingSignals.put(pos, new CrossingSignalData(pos));
 							}
 						}
 					}
@@ -68,7 +69,7 @@ public class GUITrafficSignalController extends GUIBase {
 		
 		addLabel(new GUIComponentLabel(guiLeft + 30, guiTop + 55, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.scanfound")));
 		addItem(new GUIComponentItem(guiLeft + 120, guiTop + 50, 1.0F, "mts:trafficsignal", 1, -1));
-		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 55, Color.WHITE, " X " + String.valueOf(signalController.trafficSignals.size() - signalController.crossingSignals.size())));
+		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 55, Color.WHITE, " X " + String.valueOf(signalController.trafficSignals.size())));
 		addItem(new GUIComponentItem(guiLeft + 170, guiTop + 50, 1.0F, "mts:crossingsignal", 1, -1));
 		addLabel(crossingSignalCount = new GUIComponentLabel(guiLeft + 185, guiTop + 55, Color.WHITE, " X " + String.valueOf(signalController.crossingSignals.size())));
 		
@@ -86,12 +87,12 @@ public class GUITrafficSignalController extends GUIBase {
 		});
 		addLabel(new GUIComponentLabel(guiLeft + 30, orientationButton.y + 5, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.primary")).setButton(orientationButton));
 		
-		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 90, 100, WrapperGUI.translate("trafficsignalcontroller." + getModeName(signalController.mode))){
+		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 90, 100, WrapperGUI.translate("gui.trafficsignalcontroller." + getModeName(signalController.mode))){
 			@Override
 			public void onClicked(){
 				byte newMode = (byte) (signalController.mode == 3 ? 0 : signalController.mode+1);
 				signalController.mode = newMode;
-				this.text = WrapperGUI.translate("trafficsignalcontroller." + getModeName(newMode));
+				this.text = WrapperGUI.translate("gui.trafficsignalcontroller." + getModeName(newMode));
 			}
 		});
 		addLabel(new GUIComponentLabel(guiLeft + 30, modeButton.y + 5, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.signalmode")).setButton(modeButton));
@@ -107,6 +108,8 @@ public class GUITrafficSignalController extends GUIBase {
 		
 		addTextBox(allRedTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 145, 40, String.valueOf(signalController.allRedTime), 10, Color.WHITE, Color.BLACK, 1));
 		addLabel(new GUIComponentLabel(guiLeft + 30, allRedTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.allredtime")).setBox(allRedTimeText));
+
+		addLabel(occontrolledinfo = new GUIComponentLabel(guiLeft + 23, guiTop + 115, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.occontrollinfo")));
 		
 		addButton(confirmButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 80, WrapperGUI.translate("gui.trafficsignalcontroller.confirm")){
 			@Override
@@ -132,13 +135,13 @@ public class GUITrafficSignalController extends GUIBase {
 			case 1: return "modemanual";
 			case 2: return "modetime";
 			case 3: return "modetrigger";
-			default: return "disabled";
+			default: return "modedisabled";
 		}
 	}
 	
 	@Override
 	public void setStates(){
-		trafficSignalCount.text = " X " + String.valueOf(signalController.trafficSignals.size() - signalController.crossingSignals.size());
+		trafficSignalCount.text = " X " + String.valueOf(signalController.trafficSignals.size());
 		crossingSignalCount.text = " X " + String.valueOf(signalController.crossingSignals.size());
 		if (!signalController.trafficSignals.isEmpty()) {
 			orientationButton.enabled = true;
@@ -163,11 +166,13 @@ public class GUITrafficSignalController extends GUIBase {
 			greenCrossTimeText.visible = false;
 			yellowTimeText.visible = false;
 			allRedTimeText.visible = false;
+			occontrolledinfo.visible = signalController.mode == 1;
 		} else {
 			greenMainTimeText.visible = signalController.mode != 3;
 			greenCrossTimeText.visible = true;
 			yellowTimeText.visible = true;
 			allRedTimeText.visible = true;
+			occontrolledinfo.visible = false;
 		}
 	}
 }
