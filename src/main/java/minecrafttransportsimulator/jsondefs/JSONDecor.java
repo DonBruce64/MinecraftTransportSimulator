@@ -1,13 +1,12 @@
 package minecrafttransportsimulator.jsondefs;
 
-public class JSONDecor extends AJSONCraftable<JSONDecor.DecorGeneral>{
+public class JSONDecor extends AJSONMultiModel<JSONDecor.DecorGeneral>{
 
-    public class DecorGeneral extends AJSONCraftable.General{
+    public class DecorGeneral extends AJSONMultiModel.General{
     	public float width;
     	public float height;
     	public float depth;
     	public boolean oriented;
     	public boolean lighted;
-    	public String modelName;
     }
 }

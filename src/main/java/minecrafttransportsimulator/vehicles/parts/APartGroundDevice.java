@@ -3,6 +3,7 @@ package minecrafttransportsimulator.vehicles.parts;
 import java.util.List;
 
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceWheel;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -19,7 +20,7 @@ import net.minecraft.util.math.Vec3d;
  * 
  * @author don_bruce
  */
-public abstract class APartGroundDevice extends APart{
+public abstract class APartGroundDevice extends APart<EntityVehicleE_Powered>{
 	public static final Vec3d groundDetectionOffset = new Vec3d(0, -0.05F, 0);
 	private static final Vec3d mirrorRotation = new Vec3d(0, 180, 0);
 	private final PartGroundDeviceFake fakePart;
@@ -28,25 +29,25 @@ public abstract class APartGroundDevice extends APart{
 	public float angularPosition;
 	public float angularVelocity;
 	
-	public APartGroundDevice(EntityVehicleE_Powered vehicle, VehiclePart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
+	public APartGroundDevice(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
 		
 		//If we are a long ground device, add a fake ground device at the offset to make us
 		//have a better contact area.  If we are a fake part calling this as a super constructor,
 		//we will be invalid.  Check that to prevent loops.  Also set some parameters manually
 		//as fake parts have a few special properties.
 		if(this.isValid() && this.getLongPartOffset() != 0){
-			packPart.pos[2] += this.getLongPartOffset();
-			packPart.turnsWithSteer = packPart.pos[2] > 0;
-			fakePart = new PartGroundDeviceFake(this, packPart, partName, dataTag);
+			packVehicleDef.pos[2] += this.getLongPartOffset();
+			packVehicleDef.turnsWithSteer = packVehicleDef.pos[2] > 0;
+			fakePart = new PartGroundDeviceFake(this, packVehicleDef, definition, dataTag);
 			//Only check collision if we are not adding this part from saved NBT data.
 			//If we check all the time, clients get wonky.
 			//To do this, we only check if the vehicle has existed for over 40 ticks.
 			//At this point we shouldn't be loading an NBT, so this part will have been
 			//added by the player and should do collision checks.
 			vehicle.addPart(fakePart, vehicle.ticksExisted < 40);
-			packPart.pos[2] -= this.getLongPartOffset();
-			packPart.turnsWithSteer = false;
+			packVehicleDef.pos[2] -= this.getLongPartOffset();
+			packVehicleDef.turnsWithSteer = false;
 		}else{
 			fakePart = null;
 		}

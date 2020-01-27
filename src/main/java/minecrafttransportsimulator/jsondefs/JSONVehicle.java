@@ -4,6 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
+	/**A generic name for this vehicle.  This is simply the {@link AJSONItem#systemName}, minus
+	 * the {@link VehicleDefinition#subName}.  Set after JSON is parsed into an object and
+	 * used when we want to treat this vehicle the same based on it's other definitions, 
+	 * usually for rendering of models as those are the same for multiple vehicles.
+	 */
+	public String genericName;
+	
 	public List<VehicleDefinition> definitions = new ArrayList<VehicleDefinition>();
     public VehicleMotorizedConfig motorized;
     public VehiclePlane plane;

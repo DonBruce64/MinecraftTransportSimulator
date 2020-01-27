@@ -9,7 +9,7 @@ import minecrafttransportsimulator.guis.GUIBooklet;
 import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.guis.GUISign;
 import minecrafttransportsimulator.guis.instances.GUITrafficSignalController;
-import minecrafttransportsimulator.items.core.ItemBooklet;
+import minecrafttransportsimulator.items.packs.ItemBooklet;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.VehicleSoundSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;

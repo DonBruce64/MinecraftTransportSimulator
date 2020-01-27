@@ -1,12 +1,10 @@
-package minecrafttransportsimulator.items.core;
+package minecrafttransportsimulator.items.packs;
 
 import minecrafttransportsimulator.blocks.core.BlockDecor;
 import minecrafttransportsimulator.blocks.core.TileEntityDecor;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
@@ -14,14 +12,10 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public class ItemDecor extends Item{
-	public final String decorName;
+public class ItemDecor extends AItemPack<JSONDecor>{
 	
-	public ItemDecor(String decorName){
-		super();
-		this.decorName = decorName;
-		this.setUnlocalizedName(decorName.replace(":", "."));
-		this.setCreativeTab(MTSRegistry.packTabs.get(decorName.substring(0, decorName.indexOf(':'))));
+	public ItemDecor(JSONDecor definition){
+		super(definition);
 	}
 	
 	@Override
@@ -34,20 +28,18 @@ public class ItemDecor extends Item{
 	        }
 			
 			//Based on the block type and light, pick a registered block template.
-			String blockName = ((ItemDecor) heldStack.getItem()).decorName;
-			JSONDecor pack = PackParserSystem.getDecor(blockName);
-			if(!pack.general.oriented && !pack.general.lighted){
+			if(!definition.general.oriented && !definition.general.lighted){
 				world.setBlockState(pos, MTSRegistry.decorBasicDark.getDefaultState().withProperty(BlockDecor.FACING, player.getHorizontalFacing().getOpposite()));
-			}else if(pack.general.oriented && !pack.general.lighted){
+			}else if(definition.general.oriented && !definition.general.lighted){
 				world.setBlockState(pos, MTSRegistry.decorOrientedDark.getDefaultState().withProperty(BlockDecor.FACING, player.getHorizontalFacing().getOpposite()));
-			}else if(!pack.general.oriented && pack.general.lighted){
+			}else if(!definition.general.oriented && definition.general.lighted){
 				world.setBlockState(pos, MTSRegistry.decorBasicLight.getDefaultState().withProperty(BlockDecor.FACING, player.getHorizontalFacing().getOpposite()));
-			}else if(pack.general.oriented && pack.general.lighted){
+			}else if(definition.general.oriented && definition.general.lighted){
 				world.setBlockState(pos, MTSRegistry.decorOrientedLight.getDefaultState().withProperty(BlockDecor.FACING, player.getHorizontalFacing().getOpposite()));
 			}
 			
-			//Set the decor name for rendering.
-			((TileEntityDecor) world.getTileEntity(pos)).decorName = blockName;
+			//Set the decor definition for rendering.
+			((TileEntityDecor) world.getTileEntity(pos)).definition = definition;
 	        
 			//Use up the item we used to spawn this block if we are not in creative.
 			if(!player.capabilities.isCreativeMode){

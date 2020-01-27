@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.items.parts;
+package minecrafttransportsimulator.items.packs.parts;
 
 import java.util.List;
 
@@ -10,8 +10,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public final class ItemPartEngineCar extends AItemPartEngine{
 	
-	public ItemPartEngineCar(String partName){
-		super(partName);
+	public ItemPartEngineCar(JSONPart definition){
+		super(definition);
 	}
 	
 	@Override

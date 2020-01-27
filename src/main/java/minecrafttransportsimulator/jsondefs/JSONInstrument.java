@@ -7,7 +7,6 @@ public class JSONInstrument extends AJSONCraftable<JSONInstrument.InstrumentGene
     public List<InstrumentComponent> components = new ArrayList<InstrumentComponent>();
 
     public class InstrumentGeneral extends AJSONCraftable.General{
-    	public String description;
     	public List<String> validVehicles;
     	public int textureXSectorStart;
     	public int textureYSectorStart;

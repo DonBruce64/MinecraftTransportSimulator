@@ -1,15 +1,11 @@
 package minecrafttransportsimulator.packets.vehicles;
 
-import java.lang.reflect.Constructor;
-
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.items.parts.AItemPart;
+import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -49,16 +45,7 @@ public class PacketVehicleClientPartAddition extends APacketVehiclePart{
 					EntityVehicleA_Base vehicle = (EntityVehicleA_Base) getVehicle(message, ctx);
 					if(vehicle != null){
 						VehiclePart packPart = vehicle.getPackDefForLocation(message.offsetX, message.offsetY, message.offsetZ);
-						String partName = ((AItemPart) message.partStack.getItem()).partName;
-						try{
-							Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partName);
-							Constructor<? extends APart> construct = partClass.getConstructor(EntityVehicleE_Powered.class, VehiclePart.class, String.class, NBTTagCompound.class);
-							APart newPart = construct.newInstance((EntityVehicleE_Powered) vehicle, packPart, partName, message.partStack.hasTagCompound() ? message.partStack.getTagCompound() : new NBTTagCompound());
-							vehicle.addPart(newPart, false);
-						}catch(Exception e){
-							MTS.MTSLog.error("ERROR SPAWING PART ON CLIENT!");
-							MTS.MTSLog.error(e.getMessage());
-						}
+						vehicle.addPart(PackParserSystem.createPart((EntityVehicleE_Powered) vehicle, packPart, ((AItemPart) message.partStack.getItem()).definition, message.partStack.hasTagCompound() ? message.partStack.getTagCompound() : new NBTTagCompound()), false);
 					}
 				}
 			});

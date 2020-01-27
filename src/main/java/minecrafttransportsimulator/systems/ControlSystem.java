@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.systems;
 
+import java.util.List;
+
 import minecrafttransportsimulator.ClientProxy;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.GUIPanelAircraft;
@@ -170,7 +172,11 @@ public final class ControlSystem{
 					if(part instanceof APartGun){
 						if(!(part.parentPart instanceof PartSeat)){
 							boolean hasControllingSeats = false;
-							for(APart subPart : part.childParts){
+							//TODO might need to check this code section...
+							//For some reason Eclipse didn't like me putting part.childParts directly in the for loop.
+							//Not sure what's up with that...
+							List<APart> parts = part.childParts;
+							for(APart subPart : parts){
 								if(subPart instanceof PartSeat){
 									hasControllingSeats = true;
 								}
@@ -231,7 +237,7 @@ public final class ControlSystem{
 		}		
 		
 		//Check flaps.
-		if(aircraft.pack.plane != null && aircraft.pack.plane.hasFlaps){
+		if(aircraft.definition.plane != null && aircraft.definition.plane.hasFlaps){
 			if(ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed()){
 				MTS.MTSNet.sendToServer(new FlapPacket(aircraft.getEntityId(), (byte) -50));
 			}

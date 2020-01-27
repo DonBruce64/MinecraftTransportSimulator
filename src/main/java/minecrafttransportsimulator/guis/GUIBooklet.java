@@ -7,11 +7,9 @@ import java.util.List;
 import minecrafttransportsimulator.guis.components.GUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.items.core.ItemBooklet;
-import minecrafttransportsimulator.jsondefs.JSONBooklet;
+import minecrafttransportsimulator.items.packs.ItemBooklet;
 import minecrafttransportsimulator.jsondefs.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONBooklet.BookletText;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.wrappers.WrapperInput;
 
 public class GUIBooklet extends GUIBase{
@@ -23,13 +21,11 @@ public class GUIBooklet extends GUIBase{
 	
 	//Manual item.
 	private final ItemBooklet booklet;
-	private final JSONBooklet pack;
 	private final int totalPages;
 	
 	public GUIBooklet(ItemBooklet booklet){
 		this.booklet = booklet;
-		pack = PackParserSystem.getBooklet(booklet.bookletName);
-		this.totalPages = pack.general.disableTOC ? 1 + pack.general.pages.length : 2 + pack.general.pages.length;
+		this.totalPages = booklet.definition.general.disableTOC ? 1 + booklet.definition.general.pages.length : 2 + booklet.definition.general.pages.length;
 	}
 	
 	@Override 
@@ -50,7 +46,7 @@ public class GUIBooklet extends GUIBase{
 		
 		//Title text labels.
 		List<GUIComponentLabel> titleLabels = new ArrayList<GUIComponentLabel>();
-		for(BookletText text : pack.general.titleText){
+		for(BookletText text : booklet.definition.general.titleText){
 			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + text.offsetX, guiTop + text.offsetY, Color.decode(text.color), text.text, text.scale, text.centered, false, text.wrapWidth);
 			titleLabels.add(titleLabel);
 			addLabel(titleLabel);
@@ -58,13 +54,13 @@ public class GUIBooklet extends GUIBase{
 		pageTextLabels.add(titleLabels);
 		
 		//Contents text labels.
-		if(!pack.general.disableTOC){
+		if(!booklet.definition.general.disableTOC){
 			addLabel(contentsLabel = new GUIComponentLabel(guiLeft + 50, guiTop + 25, Color.BLACK, "CONTENTS"));
 			int leftSideOffset = guiLeft + 20;
 			int rightSideOffset = guiLeft + 155;
 			List<GUIComponentLabel> contentsLabels = new ArrayList<GUIComponentLabel>();
-			for(int i=0; i<pack.general.pages.length; ++i){
-				GUIComponentLabel contentLabel = new GUIComponentLabel(i < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*(i%10), Color.decode(pack.general.pages[i].pageText[0].color), (i + 1) + ": " + pack.general.pages[i].title);
+			for(int i=0; i<booklet.definition.general.pages.length; ++i){
+				GUIComponentLabel contentLabel = new GUIComponentLabel(i < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*(i%10), Color.decode(booklet.definition.general.pages[i].pageText[0].color), (i + 1) + ": " + booklet.definition.general.pages[i].title);
 				contentsLabels.add(contentLabel);
 				addLabel(contentLabel);
 			}
@@ -72,7 +68,7 @@ public class GUIBooklet extends GUIBase{
 		}
 		
 		//Regular page labels.
-		for(BookletPage page : pack.general.pages){
+		for(BookletPage page : booklet.definition.general.pages){
 			List<GUIComponentLabel> pageLabels = new ArrayList<GUIComponentLabel>();
 			for(BookletText text : page.pageText){
 				GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + text.offsetX, guiTop + text.offsetY, Color.decode(text.color), text.text, text.scale, text.centered, false, text.wrapWidth);
@@ -98,7 +94,7 @@ public class GUIBooklet extends GUIBase{
 		}
 		
 		//Set the visible labels based on the current page.
-		contentsLabel.visible = booklet.pageNumber == 1 && !pack.general.disableTOC;
+		contentsLabel.visible = booklet.pageNumber == 1 && !booklet.definition.general.disableTOC;
 		for(int i=0; i<pageTextLabels.size(); ++ i){
 			for(GUIComponentLabel label : pageTextLabels.get(i)){
 				label.visible = booklet.pageNumber == i;
@@ -108,26 +104,26 @@ public class GUIBooklet extends GUIBase{
 	
 	@Override
 	public int getWidth(){
-		return pack.general.textureWidth;
+		return booklet.definition.general.textureWidth;
 	}
 	
 	@Override
 	public int getHeight(){
-		return pack.general.textureHeight;
+		return booklet.definition.general.textureHeight;
 	}
 	
 	@Override
 	public String getTexture(){
 		if(booklet.pageNumber == 0){
-			return pack.general.coverTexture;
-		}else if(!pack.general.disableTOC){
+			return booklet.definition.general.coverTexture;
+		}else if(!booklet.definition.general.disableTOC){
 			if(booklet.pageNumber == 1){
-				return pack.general.pages[0].pageTexture;
+				return booklet.definition.general.pages[0].pageTexture;
 			}else{
-				return pack.general.pages[booklet.pageNumber - 2].pageTexture;
+				return booklet.definition.general.pages[booklet.pageNumber - 2].pageTexture;
 			}
 		}else{
-			return pack.general.pages[booklet.pageNumber - 1].pageTexture;
+			return booklet.definition.general.pages[booklet.pageNumber - 1].pageTexture;
 		}
 	}
 }

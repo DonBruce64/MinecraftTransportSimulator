@@ -51,19 +51,19 @@ public class TrailerPacket implements IMessage{
 								MTS.MTSNet.sendToAll(message);
 								MTS.MTSNet.sendTo(new PacketChat("interact.trailer.disconnect"), ctx.getServerHandler().player);
 							}
-						}else if(vehicle.pack.motorized.hitchPos != null){
+						}else if(vehicle.definition.motorized.hitchPos != null){
 							for(Entity entity : vehicle.world.loadedEntityList){
 								if(entity instanceof EntityVehicleF_Ground){
 									EntityVehicleF_Ground testVehicle = (EntityVehicleF_Ground) entity;
-									if(testVehicle.pack.motorized.hookupPos != null){
+									if(testVehicle.definition.motorized.hookupPos != null){
 										//Make sure clients hitch vehicles that the server sees.  Little more lenient here.
-										Vec3d hitchOffset = new Vec3d(vehicle.pack.motorized.hitchPos[0], vehicle.pack.motorized.hitchPos[1], vehicle.pack.motorized.hitchPos[2]);
+										Vec3d hitchOffset = new Vec3d(vehicle.definition.motorized.hitchPos[0], vehicle.definition.motorized.hitchPos[1], vehicle.definition.motorized.hitchPos[2]);
 										Vec3d hitchPos = RotationSystem.getRotatedPoint(hitchOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
-										Vec3d hookupOffset = new Vec3d(testVehicle.pack.motorized.hookupPos[0], testVehicle.pack.motorized.hookupPos[1], testVehicle.pack.motorized.hookupPos[2]);
+										Vec3d hookupOffset = new Vec3d(testVehicle.definition.motorized.hookupPos[0], testVehicle.definition.motorized.hookupPos[1], testVehicle.definition.motorized.hookupPos[2]);
 										Vec3d hookupPos = RotationSystem.getRotatedPoint(hookupOffset, testVehicle.rotationPitch, testVehicle.rotationYaw, testVehicle.rotationRoll).add(testVehicle.getPositionVector());
 										if(hitchPos.distanceTo(hookupPos) < (ctx.side.isServer() ? 2 : 3)){
-											for(String hitchType : vehicle.pack.motorized.hitchTypes){
-												if(hitchType.equals(testVehicle.pack.motorized.hookupType)){
+											for(String hitchType : vehicle.definition.motorized.hitchTypes){
+												if(hitchType.equals(testVehicle.definition.motorized.hookupType)){
 													testVehicle.towedByVehicle = vehicle;
 													vehicle.towedVehicle = testVehicle;
 													if(ctx.side.isServer()){

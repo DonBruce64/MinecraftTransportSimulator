@@ -105,14 +105,14 @@ public class GUIPanelGround extends GuiScreen{
 		drawRedstoneButton(starterButtonCoords, engine != null ? engine.state.running || engine.state.esOn : false);
 		
 		//Render the siren button if the vehicle has a siren sound.
-		if(vehicle.pack.motorized.sirenSound != null){
+		if(vehicle.definition.motorized.sirenSound != null){
 			drawRedstoneButton(sirenButtonCoords, vehicle.sirenOn);
 		}
 		
 		//Render trailer buttons for hitches.
 		EntityVehicleF_Ground currentVehicle = vehicle;
 		for(byte i=0; i<trailerButtonCoords.length; ++i){
-			if(currentVehicle != null && currentVehicle.pack.motorized.hitchPos != null){
+			if(currentVehicle != null && currentVehicle.definition.motorized.hitchPos != null){
 				drawRedstoneButton(trailerButtonCoords[i], currentVehicle.towedVehicle != null);
 				currentVehicle = currentVehicle.towedVehicle;
 			}else{
@@ -135,7 +135,7 @@ public class GUIPanelGround extends GuiScreen{
 		fontRenderer.drawString(I18n.format("gui.panel.starter"), textX - fontRenderer.getStringWidth(I18n.format("gui.panel.starter"))/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		
 		//Render the siren button text if the vehicle has a siren sound.
-		if(vehicle.pack.motorized.sirenSound != null){
+		if(vehicle.definition.motorized.sirenSound != null){
 			textX = sirenButtonCoords[0] + (sirenButtonCoords[1] - sirenButtonCoords[0])/2;
 			textY = sirenButtonCoords[2] + 2;
 			fontRenderer.drawString(I18n.format("gui.panel.siren"), textX - fontRenderer.getStringWidth(I18n.format("gui.panel.siren"))/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
@@ -144,7 +144,7 @@ public class GUIPanelGround extends GuiScreen{
 		//Render trailer text depending on hitch status.EntityVehicleF_Ground currentVehicle = vehicle;
 		currentVehicle = vehicle;
 		for(byte i=0; i<trailerButtonCoords.length; ++i){
-			if(currentVehicle != null && currentVehicle.pack.motorized.hitchPos != null){
+			if(currentVehicle != null && currentVehicle.definition.motorized.hitchPos != null){
 				textX = trailerButtonCoords[i][0] + (trailerButtonCoords[i][1] - trailerButtonCoords[i][0])/2;
 				textY = trailerButtonCoords[i][2] + 2;
 				fontRenderer.drawString(I18n.format("gui.panel.trailer") + "#" + (i + 1), textX - fontRenderer.getStringWidth(I18n.format("gui.panel.trailer") + "#" + (i + 1))/2, textY, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
@@ -218,7 +218,7 @@ public class GUIPanelGround extends GuiScreen{
 			//Check if any trailer buttons have been pressed.
 			EntityVehicleF_Ground currentVehicle = vehicle;
 			for(byte i=0; i<trailerButtonCoords.length; ++i){
-				if(currentVehicle != null && currentVehicle.pack.motorized.hitchPos != null){
+				if(currentVehicle != null && currentVehicle.definition.motorized.hitchPos != null){
 					if(mouseX > trailerButtonCoords[i][0] && mouseX < trailerButtonCoords[i][1] && mouseY < trailerButtonCoords[i][2] && mouseY > trailerButtonCoords[i][3]){
 						MTS.MTSNet.sendToServer(new TrailerPacket(currentVehicle.getEntityId()));
 					}

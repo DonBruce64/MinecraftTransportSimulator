@@ -1,12 +1,14 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 
 public final class PartGroundDeviceSkid extends APartGroundDevice{
-	public PartGroundDeviceSkid(EntityVehicleE_Powered vehicle, VehiclePart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
+	
+	public PartGroundDeviceSkid(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
 	}
 	
 	@Override
@@ -16,7 +18,7 @@ public final class PartGroundDeviceSkid extends APartGroundDevice{
 	
 	@Override
 	public float getWidth(){
-		return this.pack.skid.width;
+		return this.definition.skid.width;
 	}
 	
 	@Override
@@ -31,7 +33,7 @@ public final class PartGroundDeviceSkid extends APartGroundDevice{
 	
 	@Override
 	public float getLateralFriction(){
-		return this.pack.skid.lateralFriction;
+		return this.definition.skid.lateralFriction;
 	}
 	
 	@Override

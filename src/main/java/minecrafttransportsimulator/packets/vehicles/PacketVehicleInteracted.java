@@ -85,13 +85,13 @@ public class PacketVehicleInteracted extends APacketVehiclePlayer{
 							}
 							MTS.MTSNet.sendToAll(new PacketVehicleKey(vehicle));
 						}else if(Items.NAME_TAG.equals(player.getHeldItemMainhand().getItem())){
-							vehicle.displayText = heldStack.getDisplayName().length() > vehicle.pack.rendering.displayTextMaxLength ? heldStack.getDisplayName().substring(0, vehicle.pack.rendering.displayTextMaxLength - 1) : heldStack.getDisplayName();
+							vehicle.displayText = heldStack.getDisplayName().length() > vehicle.definition.rendering.displayTextMaxLength ? heldStack.getDisplayName().substring(0, vehicle.definition.rendering.displayTextMaxLength - 1) : heldStack.getDisplayName();
 							MTS.MTSNet.sendToAll(new PacketVehicleNameTag(vehicle));
 						}else if(MTSRegistry.jerrycan.equals(player.getHeldItemMainhand().getItem())){
 							if(heldStack.hasTagCompound() && heldStack.getTagCompound().getBoolean("isFull")){
 								EntityVehicleE_Powered poweredVehicle = (EntityVehicleE_Powered) vehicle;
 								if(poweredVehicle.fluidName.isEmpty() || poweredVehicle.fluidName.equals(heldStack.getTagCompound().getString("fluidName"))){
-									if(poweredVehicle.fuel + 1000 > poweredVehicle.pack.motorized.fuelCapacity){
+									if(poweredVehicle.fuel + 1000 > poweredVehicle.definition.motorized.fuelCapacity){
 										MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.toofull"), (EntityPlayerMP) player);
 									}else{
 										poweredVehicle.fluidName = heldStack.getTagCompound().getString("fluidName");

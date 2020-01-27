@@ -1,12 +1,14 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 
 public final class PartGroundDeviceTread extends APartGroundDevice{
-	public PartGroundDeviceTread(EntityVehicleE_Powered vehicle, VehiclePart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
+	
+	public PartGroundDeviceTread(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
 	}	
 	
 	@Override
@@ -16,7 +18,7 @@ public final class PartGroundDeviceTread extends APartGroundDevice{
 	
 	@Override
 	public float getWidth(){
-		return this.pack.tread.width;
+		return this.definition.tread.width;
 	}
 	
 	@Override
@@ -26,17 +28,17 @@ public final class PartGroundDeviceTread extends APartGroundDevice{
 	
 	@Override
 	public float getMotiveFriction(){
-		return this.pack.tread.motiveFriction;
+		return this.definition.tread.motiveFriction;
 	}
 	
 	@Override
 	public float getLateralFriction(){
-		return this.pack.tread.lateralFriction;
+		return this.definition.tread.lateralFriction;
 	}
 	
 	@Override
 	public float getLongPartOffset(){
-		return pack.tread.extraCollisionBoxOffset;
+		return definition.tread.extraCollisionBoxOffset;
 	}
 	
 	@Override

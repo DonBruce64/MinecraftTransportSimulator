@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -14,10 +15,10 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public final class PartCraftingTable extends APart{
+public final class PartCraftingTable extends APart<EntityVehicleE_Powered>{
 	
-	public PartCraftingTable(EntityVehicleE_Powered vehicle, VehiclePart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
+	public PartCraftingTable(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
 	}
 	
 	@Override

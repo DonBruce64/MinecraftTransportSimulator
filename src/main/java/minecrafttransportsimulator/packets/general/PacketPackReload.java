@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -24,11 +25,10 @@ public class PacketPackReload implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					PackParserSystem.reloadPackData();
 					for(Entity entity : ctx.getServerHandler().player.world.loadedEntityList){
 						if(entity instanceof EntityVehicleA_Base){
 							EntityVehicleA_Base vehicle = (EntityVehicleA_Base) entity;
-							vehicle.pack = PackParserSystem.getVehiclePack(vehicle.vehicleName);
+							vehicle.definition = (JSONVehicle) MTSRegistry.packItemMap.get(vehicle.definition.packID).get(vehicle.definition.systemName).definition;
 						}
 					}
 				}

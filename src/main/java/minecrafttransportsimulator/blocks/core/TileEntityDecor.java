@@ -1,20 +1,23 @@
 package minecrafttransportsimulator.blocks.core;
 
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class TileEntityDecor extends TileEntityBase{
-	public String decorName;
+	public JSONDecor definition;
 	
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
-        this.decorName = tagCompound.getString("decorName");
+        this.definition = (JSONDecor) MTSRegistry.packItemMap.get(tagCompound.getString("packID")).get(tagCompound.getString("systemName")).definition;
     }
     
 	@Override
     public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
-        tagCompound.setString("decorName", this.decorName);
+        tagCompound.setString("packID", this.definition.packID);
+        tagCompound.setString("systemName", this.definition.systemName);
         return tagCompound;
     }
 }

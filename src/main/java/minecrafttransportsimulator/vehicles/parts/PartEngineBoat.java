@@ -1,14 +1,15 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 
-public class PartEngineBoat extends APartEngineGeared	{
+public class PartEngineBoat extends APartEngineGeared<EntityVehicleG_Boat>{
 
-	public PartEngineBoat(EntityVehicleE_Powered vehicle, VehiclePart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
+	public PartEngineBoat(EntityVehicleG_Boat vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
 	}
 	
 	@Override
@@ -20,7 +21,7 @@ public class PartEngineBoat extends APartEngineGeared	{
 		//Check 1 block down for liquid.  If we are in liquid, then we should provide power.
 		boolean inLiquid = vehicle.world.getBlockState(new BlockPos(partPos).down()).getMaterial().isLiquid();
 		if(state.running){
-			double engineTargetRPM = (vehicle.throttle/100F*((inLiquid ? getSafeRPMFromMax(pack.engine.maxRPM) : pack.engine.maxRPM) - engineStartRPM*1.25 - hours) + engineStartRPM*1.25);
+			double engineTargetRPM = (vehicle.throttle/100F*((inLiquid ? getSafeRPMFromMax(definition.engine.maxRPM) : definition.engine.maxRPM) - engineStartRPM*1.25 - hours) + engineStartRPM*1.25);
 			if(inLiquid){
 				RPM += (engineTargetRPM - RPM - engineStartRPM*0.15F)/10;
 			}else{
@@ -38,7 +39,7 @@ public class PartEngineBoat extends APartEngineGeared	{
 	
 	@Override
 	public double getForceOutput(){
-		return state.running ? RPM/pack.engine.maxRPM*50*pack.engine.fuelConsumption*currentGear : 0;
+		return state.running ? RPM/definition.engine.maxRPM*50*definition.engine.fuelConsumption*currentGear : 0;
 	}
 	
 	@Override

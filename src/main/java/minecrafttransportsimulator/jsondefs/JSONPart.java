@@ -6,7 +6,7 @@ import java.util.List;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
 
-public class JSONPart extends AJSONCraftable<JSONPart.PartGeneral>{
+public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     public PartEngine engine;
     public PartWheel wheel;
     public PartPontoonConfig pontoon;
@@ -22,9 +22,8 @@ public class JSONPart extends AJSONCraftable<JSONPart.PartGeneral>{
     public List<VehiclePart> subParts = new ArrayList<VehiclePart>();
     public PartRendering rendering;
 
-    public class PartGeneral extends AJSONCraftable.General{
+    public class PartGeneral extends AJSONMultiModel.General{
     	public String type;
-    	public String modelName;
     	public String customType;
     	public boolean disableMirroring;
     	public boolean useVehicleTexture;

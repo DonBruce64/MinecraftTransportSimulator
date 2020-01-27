@@ -115,7 +115,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		if(!haveReverseThrustOption){
 			for(APart part : aircraft.getVehicleParts()){
 				if(part instanceof PartPropeller){
-					if(part.pack.propeller.isDynamicPitch){
+					if(part.definition.propeller.isDynamicPitch){
 						haveReverseThrustOption = true;
 						break;
 					}

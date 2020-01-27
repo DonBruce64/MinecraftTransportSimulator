@@ -4,8 +4,10 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.items.packs.parts.AItemPartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Custom Config class.  This contains all fields used in config operation,
  * and should be assigned to a saved object when {@link ConfigSystem#loadFromDisk(File)}
@@ -52,53 +54,57 @@ public class JSONConfig{
 		
 		private static Map<String, Map<String, Double>> populateDefaultFuels(){
 			Map<String, Map<String, Double>> fuels = new HashMap<String, Map<String, Double>>();
-			for(String packPartName : PackParserSystem.getAllPartPackNames()){
-				JSONPart packPart = PackParserSystem.getPartPack(packPartName);
-				if(packPart.general.type.startsWith("engine")){
-					//For old packs, if we don't have a fuelType set it to diesel.
-					//This is because it's the most versatile fuel, and all the old packs have heavy equipment.
-					if(packPart.engine.fuelType == null){
-						packPart.engine.fuelType = "diesel";
-					}
-					
-					//If we don't have the fuel in the fuel map, add it.
-					//Default fuel list depends on the fuel name.
-					if(!fuels.containsKey(packPart.engine.fuelType)){
-						Map<String, Double> fluids = new HashMap<String, Double>();
-						switch(packPart.engine.fuelType){
-							case "gasoline" :{
-								fluids.put("lava", 1.0);
-								fluids.put("gasoline", 1.0);
-								fluids.put("ethanol", 0.85);
-								break;
+			for(String packID : MTSRegistry.packItemMap.keySet()){
+				for(AItemPack item : MTSRegistry.packItemMap.get(packID).values()){
+					if(item instanceof AItemPartEngine){
+						AItemPartEngine itemEngine = (AItemPartEngine) item;
+						if(itemEngine.definition.general.type.startsWith("engine")){
+							//For old packs, if we don't have a fuelType set it to diesel.
+							//This is because it's the most versatile fuel, and all the old packs have heavy equipment.
+							if(itemEngine.definition.engine.fuelType == null){
+								itemEngine.definition.engine.fuelType = "diesel";
 							}
-							case "diesel" :{
-								fluids.put("lava", 1.0);
-								fluids.put("diesel", 1.0);
-								fluids.put("biodiesel", 0.8);
-								fluids.put("oil", 0.5);
-								break;
+							
+							//If we don't have the fuel in the fuel map, add it.
+							//Default fuel list depends on the fuel name.
+							if(!fuels.containsKey(itemEngine.definition.engine.fuelType)){
+								Map<String, Double> fluids = new HashMap<String, Double>();
+								switch(itemEngine.definition.engine.fuelType){
+									case "gasoline" :{
+										fluids.put("lava", 1.0);
+										fluids.put("gasoline", 1.0);
+										fluids.put("ethanol", 0.85);
+										break;
+									}
+									case "diesel" :{
+										fluids.put("lava", 1.0);
+										fluids.put("diesel", 1.0);
+										fluids.put("biodiesel", 0.8);
+										fluids.put("oil", 0.5);
+										break;
+									}
+									case "avgas" :{
+										fluids.put("lava", 1.0);
+										fluids.put("gasoline", 1.0);
+										break;
+									}
+									case "redstone" :{
+										fluids.put("lava", 1.0);
+										fluids.put("redstone", 1.0);
+										fluids.put("moltenredstone", 1.0);
+										fluids.put("molten_redstone", 1.0);
+										fluids.put("redstonemolten", 1.0);
+										fluids.put("redstone_fluid", 1.0);
+										fluids.put("fluidredstone", 1.0);
+										fluids.put("fluid_redstone", 1.0);
+										fluids.put("destabilized_redstone", 1.0);
+										break;
+									}
+									default: fluids.put("lava", 1.0); break;
+								}
+								fuels.put(itemEngine.definition.engine.fuelType, fluids);
 							}
-							case "avgas" :{
-								fluids.put("lava", 1.0);
-								fluids.put("gasoline", 1.0);
-								break;
-							}
-							case "redstone" :{
-								fluids.put("lava", 1.0);
-								fluids.put("redstone", 1.0);
-								fluids.put("moltenredstone", 1.0);
-								fluids.put("molten_redstone", 1.0);
-								fluids.put("redstonemolten", 1.0);
-								fluids.put("redstone_fluid", 1.0);
-								fluids.put("fluidredstone", 1.0);
-								fluids.put("fluid_redstone", 1.0);
-								fluids.put("destabilized_redstone", 1.0);
-								break;
-							}
-							default: fluids.put("lava", 1.0); break;
 						}
-						fuels.put(packPart.engine.fuelType, fluids);
 					}
 				}
 			}

@@ -89,7 +89,7 @@ public class BlockFuelPump extends ABlockRotatable implements ITileEntityProvide
     					boolean isFluidValidFuelForEngines = false;
     					for(APart part : nearestVehicle.getVehicleParts()){
     						if(part instanceof APartEngine){
-    							if(ConfigSystem.configObject.fuel.fuels.get(part.pack.engine.fuelType).containsKey(fluidName)){
+    							if(ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).containsKey(fluidName)){
     								isFluidValidFuelForEngines = true;
     								pump.setConnectedVehicle((EntityVehicleE_Powered) nearestEntity);
     	    						MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.connect"), (EntityPlayerMP) player);
