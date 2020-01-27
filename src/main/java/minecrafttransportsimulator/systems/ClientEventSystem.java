@@ -6,7 +6,8 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
-import minecrafttransportsimulator.items.parts.AItemPart;
+import minecrafttransportsimulator.items.packs.parts.AItemPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
@@ -275,7 +276,7 @@ public final class ClientEventSystem{
         if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleC_Colliding){
         	EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) event.getEntityPlayer().getRidingEntity();
         	GL11.glPushMatrix();
-        	if(vehicle.pack != null){
+        	if(vehicle.definition != null){
 	        	PartSeat seat = vehicle.getSeatForRider(event.getEntityPlayer());
 	        	if(seat != null){
 		            //First restrict the player's yaw to prevent them from being able to rotate their body in a seat.
@@ -355,7 +356,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(DrawScreenEvent.Post event){
-    	if(PackParserSystem.getAllVehiclePackNames().isEmpty()){
+    	if(MTSRegistry.packItemMap.size() == 0){
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
 	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()].equals(MTSRegistry.coreTab)){
@@ -372,14 +373,13 @@ public final class ClientEventSystem{
     public static void onKeyInput(InputEvent.KeyInputEvent event){
         if(WrapperInput.isMasterControlButttonPressed()){
         	if(ConfigSystem.configObject.client.devMode.value && minecraft.isSingleplayer()){
-        		PackParserSystem.reloadPackData();
         		RenderVehicle.clearCaches();
         		FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
         		FMLClientHandler.instance().refreshResources(VanillaResourceType.TEXTURES);
         		for(Entity entity : minecraft.getMinecraft().world.loadedEntityList){
 					if(entity instanceof EntityVehicleA_Base){
 						EntityVehicleA_Base vehicle = (EntityVehicleA_Base) entity;
-						vehicle.pack = PackParserSystem.getVehiclePack(vehicle.vehicleName);
+						vehicle.definition = (JSONVehicle) MTSRegistry.packItemMap.get(vehicle.definition.packID).get(vehicle.definition.systemName).definition;
 					}
 				}
         		MTS.MTSNet.sendToServer(new PacketPackReload());

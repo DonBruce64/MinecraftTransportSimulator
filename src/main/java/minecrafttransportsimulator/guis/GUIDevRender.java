@@ -6,14 +6,11 @@ import java.util.Map.Entry;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.items.core.ItemDecor;
-import minecrafttransportsimulator.items.core.ItemVehicle;
-import minecrafttransportsimulator.items.parts.AItemPart;
-import minecrafttransportsimulator.jsondefs.PackDecorObject;
-import minecrafttransportsimulator.jsondefs.PackPartObject;
+import minecrafttransportsimulator.items.packs.ItemDecor;
+import minecrafttransportsimulator.items.packs.ItemVehicle;
+import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -44,25 +41,21 @@ public class GUIDevRender extends GuiScreen{
 				final ResourceLocation textureLocation;
 				if(stack.getItem() instanceof ItemVehicle){
 					ItemVehicle item = (ItemVehicle) stack.getItem();
-					String packName = item.vehicleName.substring(0, item.vehicleName.indexOf(':'));
-					modelLocation = new ResourceLocation(packName, "objmodels/vehicles/" + PackParserSystem.getVehicleJSONName(item.vehicleName) + ".obj");
-					textureLocation = new ResourceLocation(packName, "textures/vehicles/" + item.vehicleName.substring(item.vehicleName.indexOf(':') + 1) + ".png");
+					String vehicleGenericName = item.definition.systemName.substring(0, item.definition.systemName.length() - item.subName.length() - 1);
+					modelLocation = new ResourceLocation(item.definition.packID, "objmodels/vehicles/" + vehicleGenericName + ".obj");
+					textureLocation = new ResourceLocation(item.definition.packID, "textures/vehicles/" + item.definition.systemName + ".png");
 				}else if(stack.getItem() instanceof AItemPart){
 					AItemPart item = (AItemPart) stack.getItem();
-					PackPartObject pack = PackParserSystem.getPartPack(item.partName);
-					String packName = item.partName.substring(0, item.partName.indexOf(':'));
-					if(pack.general.modelName != null){
-						modelLocation = new ResourceLocation(packName, "objmodels/parts/" + pack.general.modelName + ".obj");
+					if(item.definition.general.modelName != null){
+						modelLocation = new ResourceLocation(item.definition.packID, "objmodels/parts/" + item.definition.general.modelName + ".obj");
 					}else{
-						modelLocation = new ResourceLocation(packName, "objmodels/parts/" + item.partName.substring(item.partName.indexOf(':') + 1) + ".obj");
+						modelLocation = new ResourceLocation(item.definition.packID, "objmodels/parts/" + item.definition.systemName + ".obj");
 					}
-					textureLocation = new ResourceLocation(packName, "textures/parts/" + item.partName.substring(item.partName.indexOf(':') + 1) + ".png");
+					textureLocation = new ResourceLocation(item.definition.packID, "textures/parts/" + item.definition.systemName + ".png");
 				}else if(stack.getItem() instanceof ItemDecor){
 					ItemDecor item = (ItemDecor) stack.getItem();
-					PackDecorObject pack = PackParserSystem.getDecor(item.decorName);
-					String packName = item.decorName.substring(0, item.decorName.indexOf(':'));
-					modelLocation = new ResourceLocation(packName, "objmodels/decors/" + item.decorName.substring(item.decorName.indexOf(':') + 1) + ".obj");
-					textureLocation = new ResourceLocation(packName, "textures/decors/" + item.decorName.substring(item.decorName.indexOf(':') + 1) + ".png");
+					modelLocation = new ResourceLocation(item.definition.packID, "objmodels/decors/" + item.definition.systemName + ".obj");
+					textureLocation = new ResourceLocation(item.definition.packID, "textures/decors/" + item.definition.systemName + ".png");
 				}else{
 					modelLocation = null;
 					textureLocation = null;

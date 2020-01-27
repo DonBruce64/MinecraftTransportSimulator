@@ -3,9 +3,10 @@ package minecrafttransportsimulator.packets.general;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceBullet;
-import minecrafttransportsimulator.jsondefs.PackPartObject.PartBulletConfig;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
@@ -23,18 +24,20 @@ public class PacketBulletHit implements IMessage{
 	private double y;
 	private double z;
 	private double velocity;
-	private String bulletName;
+	private String bulletPackID;
+	private String bulletSystemName;
 	private int playerID;
 	private int entitiyHitID;
 
 	public PacketBulletHit(){}
 	
-	public PacketBulletHit(double x, double y, double z, double velocity, String bulletName, int playerID, int entitiyHitID){
+	public PacketBulletHit(double x, double y, double z, double velocity, ItemPartBullet bullet, int playerID, int entitiyHitID){
 		this.x = x;
 		this.y = y;
 		this.z = z;
 		this.velocity = velocity;
-		this.bulletName = bulletName;
+		this.bulletPackID = bullet.definition.packID;
+		this.bulletSystemName = bullet.definition.systemName;
 		this.playerID = playerID;
 		this.entitiyHitID = entitiyHitID;
 	}
@@ -45,7 +48,8 @@ public class PacketBulletHit implements IMessage{
 		this.y = buf.readDouble();
 		this.z = buf.readDouble();
 		this.velocity = buf.readDouble();
-		this.bulletName = ByteBufUtils.readUTF8String(buf);
+		this.bulletPackID = ByteBufUtils.readUTF8String(buf);
+		this.bulletSystemName = ByteBufUtils.readUTF8String(buf);
 		this.playerID = buf.readInt();
 		this.entitiyHitID = buf.readInt();
 	}
@@ -56,7 +60,8 @@ public class PacketBulletHit implements IMessage{
 		buf.writeDouble(this.y);
 		buf.writeDouble(this.z);
 		buf.writeDouble(this.velocity);
-		ByteBufUtils.writeUTF8String(buf, this.bulletName);
+		ByteBufUtils.writeUTF8String(buf, this.bulletPackID);
+		ByteBufUtils.writeUTF8String(buf, this.bulletSystemName);
 		buf.writeInt(this.playerID);
 		buf.writeInt(this.entitiyHitID);
 	}
@@ -70,10 +75,10 @@ public class PacketBulletHit implements IMessage{
 					if(ctx.side.isServer()){
 						//If we are an explosive bullet, just blow up at our current position.
 						//Otherwise do attack logic.
-						PartBulletConfig bulletPackData = PackParserSystem.getPartPack(message.bulletName).bullet;
+						JSONPart bulletDefinition = (JSONPart) MTSRegistry.packItemMap.get(message.bulletPackID).get(message.bulletSystemName).definition;
 						Entity entityAttacking = ctx.getServerHandler().player.world.getEntityByID(message.playerID);
-						if(bulletPackData.type.equals("explosive")){
-							ctx.getServerHandler().player.world.newExplosion(entityAttacking, message.x, message.y, message.z, bulletPackData.diameter/10F, false, true);
+						if(bulletDefinition.bullet.type.equals("explosive")){
+							ctx.getServerHandler().player.world.newExplosion(entityAttacking, message.x, message.y, message.z, bulletDefinition.bullet.diameter/10F, false, true);
 						}else{
 							//If we hit an entity, apply damage to them.
 							if(message.entitiyHitID != -1){
@@ -81,12 +86,12 @@ public class PacketBulletHit implements IMessage{
 								if(entityHit != null && entityAttacking != null){
 									//If we are attacking a vehicle, call the custom attack code to relay our position.
 									//Otherwise call the regular attack code.
-									float damage = (float) (Math.pow(20*message.velocity/100F, 2)*bulletPackData.diameter/10F*ConfigSystem.configObject.damage.bulletDamageFactor.value);
+									float damage = (float) (Math.pow(20*message.velocity/100F, 2)*bulletDefinition.bullet.diameter/10F*ConfigSystem.configObject.damage.bulletDamageFactor.value);
 									if(entityHit instanceof EntityVehicleB_Existing){
-										((EntityVehicleB_Existing) entityHit).attackManuallyAtPosition(message.x, message.y, message.z, new DamageSourceBullet(entityAttacking, bulletPackData.type), damage);
+										((EntityVehicleB_Existing) entityHit).attackManuallyAtPosition(message.x, message.y, message.z, new DamageSourceBullet(entityAttacking, bulletDefinition.bullet.type), damage);
 									}else{
-										entityHit.attackEntityFrom(new DamageSourceBullet(entityAttacking,  bulletPackData.type), damage);
-										if(bulletPackData.type.equals("incendiary")){
+										entityHit.attackEntityFrom(new DamageSourceBullet(entityAttacking,  bulletDefinition.bullet.type), damage);
+										if(bulletDefinition.bullet.type.equals("incendiary")){
 											entityHit.setFire(5);
 										}
 									}
@@ -97,7 +102,7 @@ public class PacketBulletHit implements IMessage{
 								//Otherwise send this packet back to the client to spawn SFX.
 								BlockPos hitPos = new BlockPos(message.x, message.y, message.z);
 								float hardness = ctx.getServerHandler().player.world.getBlockState(hitPos).getBlockHardness(ctx.getServerHandler().player.world, hitPos);
-								if(hardness > 0 && hardness <= (Math.random()*0.3F + 0.3F*bulletPackData.diameter/20F)){
+								if(hardness > 0 && hardness <= (Math.random()*0.3F + 0.3F*bulletDefinition.bullet.diameter/20F)){
 									ctx.getServerHandler().player.world.destroyBlock(hitPos, true);
 								}else{
 									MTS.MTSNet.sendToAll(message);

@@ -3,12 +3,12 @@ package minecrafttransportsimulator.blocks.pole;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.jsondefs.PackSignObject;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.jsondefs.JSONSign;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class TileEntityPoleSign extends TileEntityPoleAttachment{
-	public String definition = "";
+	public JSONSign definition;
 	public List<String> text = new ArrayList<String>();
 	
 	public TileEntityPoleSign(){
@@ -18,12 +18,11 @@ public class TileEntityPoleSign extends TileEntityPoleAttachment{
 	@Override
     public void readFromNBT(NBTTagCompound tagCompound){
         super.readFromNBT(tagCompound);
-        this.definition = tagCompound.getString("definition");
-        PackSignObject pack = PackParserSystem.getSign(definition);
-        if(pack != null){
+        if(tagCompound.hasKey("packID")){
+	        this.definition = MTSRegistry.packSignMap.get(tagCompound.getString("packID")).get(tagCompound.getString("systemName"));
 	        text.clear();
-	        if(PackParserSystem.getSign(definition).general.textLines != null){
-		        for(byte i=0; i<PackParserSystem.getSign(definition).general.textLines.length; ++i){
+	        if(definition.general.textLines != null){
+		        for(byte i=0; i<definition.general.textLines.length; ++i){
 		        	if(tagCompound.hasKey("text" + String.valueOf(i))){
 		        		text.add(tagCompound.getString("text" + String.valueOf(i)));
 		        	}else{
@@ -37,7 +36,8 @@ public class TileEntityPoleSign extends TileEntityPoleAttachment{
 	@Override
     public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
-        tagCompound.setString("definition",  this.definition);
+        tagCompound.setString("packID",  this.definition.packID);
+        tagCompound.setString("systemName",  this.definition.systemName);
         for(byte i=0; i<text.size(); ++i){
         	tagCompound.setString("text" + String.valueOf(i), text.get(i));
         }

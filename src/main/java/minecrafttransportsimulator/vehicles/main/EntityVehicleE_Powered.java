@@ -9,11 +9,11 @@ import minecrafttransportsimulator.baseclasses.VehicleSound;
 import minecrafttransportsimulator.baseclasses.VehicleSound.SoundTypes;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.jsondefs.PackInstrumentObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.items.packs.ItemInstrument;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.radio.RadioContainer;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
@@ -44,10 +44,10 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public double electricFlow;
 	public String fluidName = "";
 	public Vec3d velocityVec = Vec3d.ZERO;
+	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
 	
 	private byte numberEngineBays = 0;
 	private final Map<Byte, APartEngine> engineByNumber = new HashMap<Byte, APartEngine>();
-	private final Map<Byte, VehicleInstrument> instruments = new HashMap<Byte, VehicleInstrument>();
 	private final List<LightTypes> lightsOn = new ArrayList<LightTypes>();
 	private final List<VehicleSound> sounds = new ArrayList<VehicleSound>();
 	
@@ -55,14 +55,14 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		super(world);
 	}
 	
-	public EntityVehicleE_Powered(World world, float posX, float posY, float posZ, float playerRotation, String vehicleName){
-		super(world, posX, posY, posZ, playerRotation, vehicleName);
+	public EntityVehicleE_Powered(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
+		super(world, posX, posY, posZ, playerRotation, definition);
 	}
 	
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		if(pack != null){
+		if(definition != null){
 			updateHeadingVec();
 			if(fuel <= 0){
 				fuel = 0;
@@ -87,8 +87,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public void destroyAtPosition(double x, double y, double z){
 		super.destroyAtPosition(x, y, z);
 		//Spawn instruments in the world.
-		for(VehicleInstrument instrument : this.instruments.values()){
-			ItemStack stack = new ItemStack(MTSRegistry.instrumentItemMap.get(instrument.name));
+		for(ItemInstrument instrument : this.instruments.values()){
+			ItemStack stack = new ItemStack(instrument);
 			world.spawnEntity(new EntityItem(world, posX, posY, posZ, stack));
 		}
 		
@@ -104,9 +104,9 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		//Now damage all passengers, including the controller.
 		for(Entity passenger : this.getPassengers()){
 			if(passenger.equals(controller)){
-				passenger.attackEntityFrom(new DamageSourceCrash(null, this.pack.general.type), (float) (ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20));
+				passenger.attackEntityFrom(new DamageSourceCrash(null, this.definition.general.type), (float) (ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20));
 			}else{
-				passenger.attackEntityFrom(new DamageSourceCrash(controller, this.pack.general.type), (float) (ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20));
+				passenger.attackEntityFrom(new DamageSourceCrash(controller, this.definition.general.type), (float) (ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20));
 			}
 		}
 		
@@ -145,7 +145,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			//Because parts is a list, the #1 engine will always come before the #2 engine.
 			//We can use this to determine where in the list this engine needs to go.
 			byte engineNumber = 0;
-			for(PackPart packPart : pack.parts){
+			for(VehiclePart packPart : definition.parts){
 				for(String type : packPart.types){
 					if(type.startsWith("engine")){
 						if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
@@ -162,7 +162,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public void removePart(APart part, boolean playBreakSound){
 		super.removePart(part, playBreakSound);
 		byte engineNumber = 0;
-		for(PackPart packPart : pack.parts){
+		for(VehiclePart packPart : definition.parts){
 			for(String type : packPart.types){
 				if(type.startsWith("engine")){
 					if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
@@ -216,7 +216,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	 */
 	public byte getNumberEngineBays(){
 		if(numberEngineBays == 0){
-			for(PackPart part : pack.parts){
+			for(VehiclePart part : definition.parts){
 				for(String type : part.types){
 					if(type.startsWith("engine")){
 						++numberEngineBays;
@@ -253,27 +253,13 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		return lightsOn.contains(light);
 	}
 	
-	
-	//-----START OF INSTRUMENT CODE-----
-	public VehicleInstrument getInstrumentInfoInSlot(byte slot){
-		return instruments.containsKey(slot) ? instruments.get(slot) : null;
-	}
-	
-	public void setInstrumentInSlot(byte slot, String instrument){
-		if(instrument.isEmpty()){
-			instruments.remove(slot);
-		}else{
-			instruments.put(slot, new VehicleInstrument(instrument));
-		}
-	}
-	
 	//-----START OF SOUND CODE-----
 	@SideOnly(Side.CLIENT)
 	public final void initSounds(){
-		if(pack.motorized.hornSound != null){
+		if(definition.motorized.hornSound != null){
 			addSound(SoundTypes.HORN, null);
 		}
-		if(pack.motorized.sirenSound != null){
+		if(definition.motorized.sirenSound != null){
 			addSound(SoundTypes.SIREN, null);
 		}
 	}
@@ -316,7 +302,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
-    	this.soundsNeedInit = world.isRemote && pack == null; 
+    	this.soundsNeedInit = world.isRemote && definition == null; 
     	super.readFromNBT(tagCompound);
 		this.throttle=tagCompound.getByte("throttle");
 		this.fuel=tagCompound.getDouble("fuel");
@@ -336,12 +322,13 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			lightsOnString = lightsOnString.substring(lightsOnString.indexOf(',') + 1);
 		}
 		
-		for(byte i = 0; i<pack.motorized.instruments.size(); ++i){
-			if(tagCompound.hasKey("instrumentInSlot" + i)){
-				String instrumentInSlot = tagCompound.getString("instrumentInSlot" + i);
-				VehicleInstrument instrument = new VehicleInstrument(instrumentInSlot);
+		for(byte i = 0; i<definition.motorized.instruments.size(); ++i){
+			String instrumentPackID = tagCompound.getString("instrument" + i + "_packID");
+			if(!instrumentPackID.isEmpty()){
+				String instrumentSystemName = tagCompound.getString("instrumentInSlot" + i);
+				ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName);
 				//Check to prevent loading of faulty instruments for the wrong vehicle due to updates or stupid people.
-				if(instrument != null && instrument.pack.general.validVehicles.contains(this.pack.general.type)){
+				if(instrument != null && instrument.definition.general.validVehicles.contains(this.definition.general.type)){
 					instruments.put(i, instrument);
 				}
 			}
@@ -362,10 +349,11 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		}
 		tagCompound.setString("lightsOn", lightsOnString);
 		
-		String[] instrumentsInSlots = new String[pack.motorized.instruments.size()];
+		String[] instrumentsInSlots = new String[definition.motorized.instruments.size()];
 		for(byte i=0; i<instrumentsInSlots.length; ++i){
 			if(instruments.containsKey(i)){
-				tagCompound.setString("instrumentInSlot" + i, instruments.get(i).name);
+				tagCompound.setString("instrument" + i + "_packID", instruments.get(i).definition.packID);
+				tagCompound.setString("instrument" + i + "_systemName", instruments.get(i).definition.systemName);
 			}
 		}
 		return tagCompound;
@@ -390,16 +378,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		
 		private LightTypes(boolean hasBeam){
 			this.hasBeam = hasBeam;
-		}
-	}
-	
-	public static class VehicleInstrument{
-		public final String name;
-		public final PackInstrumentObject pack;
-		
-		public VehicleInstrument(String name){
-			this.name = name;
-			this.pack = PackParserSystem.getInstrument(name);
 		}
 	}
 }

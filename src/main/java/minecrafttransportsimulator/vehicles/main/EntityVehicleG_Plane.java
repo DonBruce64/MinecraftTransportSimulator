@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.vehicles.main;
 
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
@@ -27,8 +28,8 @@ public final class EntityVehicleG_Plane extends EntityVehicleF_Air{
 		super(world);
 	}
 	
-	public EntityVehicleG_Plane(World world, float posX, float posY, float posZ, float rotation, String name){
-		super(world, posX, posY, posZ, rotation, name);
+	public EntityVehicleG_Plane(World world, float posX, float posY, float posZ, float rotation, JSONVehicle definition){
+		super(world, posX, posY, posZ, rotation, definition);
 	}
 	
 	@Override
@@ -40,7 +41,7 @@ public final class EntityVehicleG_Plane extends EntityVehicleF_Air{
 			--flapCurrentAngle;
 		}
 		
-		currentWingArea = pack.plane.wingArea + pack.plane.wingArea*flapCurrentAngle/250F;
+		currentWingArea = definition.plane.wingArea + definition.plane.wingArea*flapCurrentAngle/250F;
 		
 		dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
 		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapCurrentAngle/350F);
@@ -49,15 +50,15 @@ public final class EntityVehicleG_Plane extends EntityVehicleF_Air{
 	@Override
 	protected void getForcesAndMotions(){
 		super.getForcesAndMotions();
-		dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*pack.plane.wingSpan*pack.plane.wingSpan/currentWingArea*0.8));		
+		dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*definition.plane.wingSpan*definition.plane.wingSpan/currentWingArea*0.8));		
 		wingForce = 0.5F*airDensity*velocity*velocity*currentWingArea*wingLiftCoeff;
-		aileronForce = 0.5F*airDensity*velocity*velocity*pack.plane.wingArea/5F*aileronLiftCoeff;
-		elevatorForce = 0.5F*airDensity*velocity*velocity*pack.plane.elevatorArea*elevatorLiftCoeff;			
-		rudderForce = 0.5F*airDensity*velocity*velocity*pack.plane.rudderArea*rudderLiftCoeff;
+		aileronForce = 0.5F*airDensity*velocity*velocity*definition.plane.wingArea/5F*aileronLiftCoeff;
+		elevatorForce = 0.5F*airDensity*velocity*velocity*definition.plane.elevatorArea*elevatorLiftCoeff;			
+		rudderForce = 0.5F*airDensity*velocity*velocity*definition.plane.rudderArea*rudderLiftCoeff;
 					
-		aileronTorque = aileronForce*pack.plane.wingSpan*0.5F*0.75F;
-		elevatorTorque = elevatorForce*pack.plane.tailDistance;
-		rudderTorque = rudderForce*pack.plane.tailDistance;
+		aileronTorque = aileronForce*definition.plane.wingSpan*0.5F*0.75F;
+		elevatorTorque = elevatorForce*definition.plane.tailDistance;
+		rudderTorque = rudderForce*definition.plane.tailDistance;
 		
 		//As a special case, if the plane is pointed upwards and stalling, add a forwards pitch to allow the plane to right itself.
 		//This is needed to prevent the plane from getting stuck in a vertical position and crashing.

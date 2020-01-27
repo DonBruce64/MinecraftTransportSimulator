@@ -22,8 +22,8 @@ public class BlockPoleSign extends BlockPoleAttachment{
     public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase entity, ItemStack stack){
         super.onBlockPlacedBy(world, pos, state, entity, stack);
         if(world.isRemote && entity instanceof EntityPlayer){
-			lastClickedPos = pos;
-			MTS.proxy.openGUI(this, (EntityPlayer) entity);
+			//lastClickedPos = pos;
+			//MTS.proxy.openGUI(this, (EntityPlayer) entity);
 		}
     }
 	

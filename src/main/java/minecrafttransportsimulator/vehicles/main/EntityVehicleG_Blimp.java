@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.vehicles.main;
 
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -18,8 +19,8 @@ public final class EntityVehicleG_Blimp extends EntityVehicleF_Air{
 		super(world);
 	}
 	
-	public EntityVehicleG_Blimp(World world, float posX, float posY, float posZ, float rotation, String name){
-		super(world, posX, posY, posZ, rotation, name);
+	public EntityVehicleG_Blimp(World world, float posX, float posY, float posZ, float rotation, JSONVehicle definition){
+		super(world, posX, posY, posZ, rotation, definition);
 	}
 	
 	@Override
@@ -38,17 +39,17 @@ public final class EntityVehicleG_Blimp extends EntityVehicleF_Air{
 	@Override
 	protected void getForcesAndMotions(){
 		super.getForcesAndMotions();
-		dragForce = 0.5F*airDensity*velocity*velocity*pack.blimp.crossSectionalArea*dragCoeff;		
-		rudderForce = 0.5F*airDensity*velocity*velocity*pack.blimp.rudderArea*rudderLiftCoeff;
-		rudderTorque = rudderForce*pack.blimp.tailDistance;
+		dragForce = 0.5F*airDensity*velocity*velocity*definition.blimp.crossSectionalArea*dragCoeff;		
+		rudderForce = 0.5F*airDensity*velocity*velocity*definition.blimp.rudderArea*rudderLiftCoeff;
+		rudderTorque = rudderForce*definition.blimp.tailDistance;
 		
 		//Ballast gets less effective at applying positive lift at higher altitudes.
 		//This prevents blimps from ascending into space.
 		//Also take into account motionY, as we should provide less force if we are already going in the same direction.
 		if(elevatorAngle < 0){
-			ballastForce = 5*airDensity*pack.blimp.ballastVolume*-elevatorAngle;
+			ballastForce = 5*airDensity*definition.blimp.ballastVolume*-elevatorAngle;
 		}else{
-			ballastForce = 5*1.225*pack.blimp.ballastVolume*-elevatorAngle;
+			ballastForce = 5*1.225*definition.blimp.ballastVolume*-elevatorAngle;
 		}		
 		if(motionY*ballastForce > 0){
 			ballastForce /= Math.pow(1 + Math.abs(motionY), 2);

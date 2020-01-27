@@ -43,7 +43,7 @@ public class PacketVehicleAttacked extends APacketVehiclePlayer{
 								boolean isPlayerOP = player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
 								if(vehicle.ownerName.isEmpty() || player.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName) || isPlayerOP){
 									if(isPlayerOP || !ConfigSystem.configObject.general.opPickupVehiclesOnly.value){
-										ItemStack stack = new ItemStack(MTSRegistry.vehicleItemMap.get(vehicle.vehicleName));
+										ItemStack stack = new ItemStack(MTSRegistry.packItemMap.get(vehicle.definition.packID).get(vehicle.definition.systemName));
 										NBTTagCompound stackTag = vehicle.writeToNBT(new NBTTagCompound());
 										stack.setTagCompound(stackTag);
 										vehicle.world.spawnEntity(new EntityItem(vehicle.world, vehicle.posX, vehicle.posY, vehicle.posZ, stack));

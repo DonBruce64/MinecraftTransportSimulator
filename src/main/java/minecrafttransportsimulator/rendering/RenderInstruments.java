@@ -6,11 +6,11 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.jsondefs.PackInstrumentObject.PackInstrumentComponent;
+import minecrafttransportsimulator.items.packs.ItemInstrument;
+import minecrafttransportsimulator.jsondefs.JSONInstrument.InstrumentComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
@@ -25,20 +25,20 @@ public final class RenderInstruments{
 	/**Map for texture sheets.  First keyed by vehicle, then keyed by the gauge itself.**/
 	private static Map<String, Map<String, ResourceLocation>> instrumentTextureSheets = new HashMap<String, Map<String, ResourceLocation>>();
 	
-	public static void drawInstrument(EntityVehicleE_Powered vehicle, VehicleInstrument instrument, boolean hud, byte engineNumber){
+	public static void drawInstrument(EntityVehicleE_Powered vehicle, ItemInstrument instrument, boolean hud, byte engineNumber){
 		//First get the appropriate texture file for this vehicle/instrument combination.
-		if(!instrumentTextureSheets.containsKey(vehicle.pack.general.type)){
-			instrumentTextureSheets.put(vehicle.pack.general.type, new HashMap<String, ResourceLocation>());
+		if(!instrumentTextureSheets.containsKey(vehicle.definition.general.type)){
+			instrumentTextureSheets.put(vehicle.definition.general.type, new HashMap<String, ResourceLocation>());
 		}
-		if(!instrumentTextureSheets.get(vehicle.pack.general.type).containsKey(instrument.name)){			
-			instrumentTextureSheets.get(vehicle.pack.general.type).put(instrument.name, new ResourceLocation(instrument.name.substring(0, instrument.name.indexOf(':')), "textures/instruments/" + vehicle.pack.general.type + ".png"));
+		if(!instrumentTextureSheets.get(vehicle.definition.general.type).containsKey(instrument.definition.systemName)){			
+			instrumentTextureSheets.get(vehicle.definition.general.type).put(instrument.definition.systemName, new ResourceLocation(instrument.definition.packID, "textures/instruments/" + vehicle.definition.general.type + ".png"));
 		}
-		textureManager.bindTexture(instrumentTextureSheets.get(vehicle.pack.general.type).get(instrument.name));
+		textureManager.bindTexture(instrumentTextureSheets.get(vehicle.definition.general.type).get(instrument.definition.systemName));
 		
 		//Next get the appropriate starting sector for this instrument.
 		//This is based on a 1024x1024 texture sheet divided into 8 - 128x128 sectors.
-		float textureUStart = (instrument.pack.general.textureXSectorStart - 1)/8F;
-		float textureVStart = (instrument.pack.general.textureYSectorStart - 1)/8F;
+		float textureUStart = (instrument.definition.general.textureXSectorStart - 1)/8F;
+		float textureVStart = (instrument.definition.general.textureYSectorStart - 1)/8F;
 		
 		//If we are in the HUD, invert the rendering to get correct orientation.
 		if(hud){
@@ -55,7 +55,7 @@ public final class RenderInstruments{
 		
 		//Finally, render the instrument based on the JSON definitions.
 		byte currentLayer = 0;
-		for(PackInstrumentComponent component : instrument.pack.components){
+		for(InstrumentComponent component : instrument.definition.components){
 			GL11.glPushMatrix();
 			//Translate slightly away from the instrument location to prevent clipping.
 			GL11.glTranslatef(0, 0, -currentLayer*0.1F);
@@ -138,9 +138,9 @@ public final class RenderInstruments{
 			case("flaps_actual"): return ((EntityVehicleG_Plane) vehicle).flapCurrentAngle/10F;
 			case("electric_power"): return vehicle.electricPower;
 			case("electric_usage"): return Math.min(vehicle.electricFlow*20, 1);
-			case("fuel"): return vehicle.fuel/vehicle.pack.motorized.fuelCapacity*100F;
-			case("rpm"): return vehicle.getEngineByNumber(engineNumber) != null ? (vehicle.getEngineByNumber(engineNumber).pack.engine.maxRPM < 15000 ? vehicle.getEngineByNumber(engineNumber).RPM : vehicle.getEngineByNumber(engineNumber).RPM/10D) : 0;
-			case("rpm_max"): return vehicle.getEngineByNumber(engineNumber) != null ? (vehicle.getEngineByNumber(engineNumber).pack.engine.maxRPM < 15000 ? APartEngine.getSafeRPMFromMax(vehicle.getEngineByNumber(engineNumber).pack.engine.maxRPM) : APartEngine.getSafeRPMFromMax(vehicle.getEngineByNumber(engineNumber).pack.engine.maxRPM)/10D) : 0;
+			case("fuel"): return vehicle.fuel/vehicle.definition.motorized.fuelCapacity*100F;
+			case("rpm"): return vehicle.getEngineByNumber(engineNumber) != null ? (vehicle.getEngineByNumber(engineNumber).definition.engine.maxRPM < 15000 ? vehicle.getEngineByNumber(engineNumber).RPM : vehicle.getEngineByNumber(engineNumber).RPM/10D) : 0;
+			case("rpm_max"): return vehicle.getEngineByNumber(engineNumber) != null ? (vehicle.getEngineByNumber(engineNumber).definition.engine.maxRPM < 15000 ? APartEngine.getSafeRPMFromMax(vehicle.getEngineByNumber(engineNumber).definition.engine.maxRPM) : APartEngine.getSafeRPMFromMax(vehicle.getEngineByNumber(engineNumber).definition.engine.maxRPM)/10D) : 0;
 			case("fuel_flow"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).fuelFlow*20F*60F/1000F : 0;
 			case("temp"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).temp : 0;
 			case("oil"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).oilPressure : 0;

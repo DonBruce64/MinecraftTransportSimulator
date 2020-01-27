@@ -6,6 +6,7 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceBox;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -63,14 +64,14 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		super(world);
 	}
 	
-	public EntityVehicleD_Moving(World world, float posX, float posY, float posZ, float playerRotation, String vehicleName){
-		super(world, posX, posY, posZ, playerRotation, vehicleName);
+	public EntityVehicleD_Moving(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
+		super(world, posX, posY, posZ, playerRotation, definition);
 	}
 	
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		if(pack != null){
+		if(definition != null){
 			//Populate the ground device lists for use in the methods here.
 			//We need to get which ground devices are in which quadrant,
 			//as well as which ground devices are on the ground.

@@ -1,15 +1,16 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import net.minecraft.nbt.NBTTagCompound;
 
-public abstract class APartEngineGeared extends APartEngine{
+public abstract class APartEngineGeared<EntityVehicleX_Type extends EntityVehicleF_Ground> extends APartEngine<EntityVehicleX_Type>{
 	public byte currentGear;
 
-	public APartEngineGeared(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
+	public APartEngineGeared(EntityVehicleX_Type vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
 		this.currentGear = dataTag.getByte("gearNumber");
 	}
 	
@@ -17,11 +18,11 @@ public abstract class APartEngineGeared extends APartEngine{
 	public void updatePart(){
 		super.updatePart();
 		//Do automatic transmission functions if needed.
-		if(state.running && pack.engine.isAutomatic){
+		if(state.running && definition.engine.isAutomatic){
 			if(currentGear > 0){
-				if(RPM > getSafeRPMFromMax(this.pack.engine.maxRPM)*0.5F*(1.0F + vehicle.throttle/100F)){
+				if(RPM > getSafeRPMFromMax(this.definition.engine.maxRPM)*0.5F*(1.0F + vehicle.throttle/100F)){
 					shiftUp(false);
-				}else if(RPM < getSafeRPMFromMax(this.pack.engine.maxRPM)*0.25*(1.0F + vehicle.throttle/100F) && currentGear > 1){
+				}else if(RPM < getSafeRPMFromMax(this.definition.engine.maxRPM)*0.25*(1.0F + vehicle.throttle/100F) && currentGear > 1){
 					shiftDown(false);
 				}
 			}
@@ -36,16 +37,16 @@ public abstract class APartEngineGeared extends APartEngine{
 	}
 	
 	protected float getRatioForCurrentGear(){
-		return currentGear == -1 ? pack.engine.gearRatios[0] : currentGear > 0 ? pack.engine.gearRatios[currentGear + 1] : 0;
+		return currentGear == -1 ? definition.engine.gearRatios[0] : currentGear > 0 ? definition.engine.gearRatios[currentGear + 1] : 0;
 	}
 	
 	public float getGearshiftRotation(){
-		return pack.engine.isAutomatic ? Math.min(1, currentGear)*15F : currentGear*5;
+		return definition.engine.isAutomatic ? Math.min(1, currentGear)*15F : currentGear*5;
 	}
 	
 	public float getGearshiftPosition_Vertical(){
 		if(currentGear == -1){
-			return pack.engine.gearRatios.length%2 == 0 ? 15 : -15; 
+			return definition.engine.gearRatios.length%2 == 0 ? 15 : -15; 
 		}else if(currentGear == 0){
 			return 0;
 		}else{
@@ -54,7 +55,7 @@ public abstract class APartEngineGeared extends APartEngine{
 	}
 	
 	public float getGearshiftPosition_Horizontal(){
-		int columns = (pack.engine.gearRatios.length)/2;
+		int columns = (definition.engine.gearRatios.length)/2;
 		int firstColumnAngle = columns/2*-5;
 		float columnAngleDelta = columns != 1 ? -firstColumnAngle*2/(columns - 1) : 0; 
 		if(currentGear == -1){
@@ -78,8 +79,8 @@ public abstract class APartEngineGeared extends APartEngine{
 			}else if(vehicle.world.isRemote){
 				MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1);
 			}
-		}else if(currentGear < pack.engine.gearRatios.length - 2){
-			if(pack.engine.isAutomatic && packet){
+		}else if(currentGear < definition.engine.gearRatios.length - 2){
+			if(definition.engine.isAutomatic && packet){
 				currentGear = 1;
 			}else{
 				++currentGear;
@@ -89,7 +90,7 @@ public abstract class APartEngineGeared extends APartEngine{
 	
 	public void shiftDown(boolean packet){
 		if(currentGear > 0){
-			if(pack.engine.isAutomatic && packet){
+			if(definition.engine.isAutomatic && packet){
 				currentGear = 0;
 			}else{
 				--currentGear;

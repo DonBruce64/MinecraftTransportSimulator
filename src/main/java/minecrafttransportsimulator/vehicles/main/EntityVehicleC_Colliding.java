@@ -7,7 +7,8 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBBCollective;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -46,14 +47,14 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 		super(world);
 	}
 	
-	public EntityVehicleC_Colliding(World world, float posX, float posY, float posZ, float playerRotation, String vehicleName){
-		super(world, posX, posY, posZ, playerRotation, vehicleName);
+	public EntityVehicleC_Colliding(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
+		super(world, posX, posY, posZ, playerRotation, definition);
 	}
 	
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		if(pack != null){
+		if(definition != null){
 			//Make sure the collision bounds for MC are big enough to collide with this entity.
 			if(World.MAX_ENTITY_RADIUS < 32){
 				World.MAX_ENTITY_RADIUS = 32;
@@ -102,12 +103,12 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	 * CPU and RAM intensive!
 	 */
 	private void updateCollisionBoxes(){
-		if(this.pack != null){
+		if(this.definition != null){
 			//Get all collision boxes and set the bounding Collective to encompass all of them.
 			currentCollisionBoxes.clear();
 			double furthestWidth = 0;
 			double furthestHeight = 0;
-			for(PackCollisionBox box : pack.collision){
+			for(VehicleCollisionBox box : definition.collision){
 				Vec3d partOffset = new Vec3d(box.pos[0], box.pos[1], box.pos[2]);
 				Vec3d offset = RotationSystem.getRotatedPoint(partOffset, rotationPitch, rotationYaw, rotationRoll);
 				VehicleAxisAlignedBB newBox = new VehicleAxisAlignedBB(this.getPositionVector().add(offset), partOffset, box.width, box.height, box.isInterior, box.collidesWithLiquids);

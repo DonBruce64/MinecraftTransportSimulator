@@ -9,15 +9,15 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.BlockDecor;
 import minecrafttransportsimulator.blocks.core.TileEntityDecor;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.systems.OBJParserSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.ResourceLocation;
 
 public class RenderDecor extends TileEntitySpecialRenderer<TileEntityDecor>{
 	private static final ResourceLocation defaultSignTexture = new ResourceLocation(MTS.MODID, "textures/blocks/trafficsign.png");
-	private static final Map<String, Integer> displayListMap = new HashMap<String, Integer>();
-	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
+	private static final Map<JSONDecor, Integer> displayListMap = new HashMap<JSONDecor, Integer>();
+	private static final Map<JSONDecor, ResourceLocation> textureMap = new HashMap<JSONDecor, ResourceLocation>();
 	
 	public RenderDecor(){}
 	
@@ -30,9 +30,10 @@ public class RenderDecor extends TileEntitySpecialRenderer<TileEntityDecor>{
 		GL11.glRotatef(decor.getWorld().getBlockState(decor.getPos()).getValue(BlockDecor.FACING).getHorizontalAngle(), 0, 1, 0);
 		
 		//If we don't have the displaylist and texture cached, do it now.
-		if(!displayListMap.containsKey(decor.decorName)){
+		if(!displayListMap.containsKey(decor.definition)){
 			//Check to make sure this block is still in the packs before we try to parse an OBJ that isn't there.
-			if(PackParserSystem.getDecor(decor.decorName) == null){
+			//We alco could be waiting for a packet from the server with this info.
+			if(decor.definition == null){
 				//We are an invalid decor.  Render a MTS sign to let players know.
 				bindTexture(defaultSignTexture);
 				//Top-left
@@ -54,8 +55,8 @@ public class RenderDecor extends TileEntitySpecialRenderer<TileEntityDecor>{
 				GL11.glPopMatrix();
 				return;
 			}else{
-				String optionalModelName = PackParserSystem.getDecor(decor.decorName).general.modelName;
-				Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(decor.decorName.substring(0, decor.decorName.indexOf(':')), "objmodels/decors/" + (optionalModelName != null ? optionalModelName : decor.decorName.substring(decor.decorName.indexOf(':') + 1)) + ".obj");
+				String optionalModelName = decor.definition.general.modelName;
+				Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(decor.definition.packID, "objmodels/decors/" + (optionalModelName != null ? optionalModelName : decor.definition.systemName) + ".obj");
 				int displayListIndex = GL11.glGenLists(1);
 				
 				GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
@@ -69,14 +70,14 @@ public class RenderDecor extends TileEntitySpecialRenderer<TileEntityDecor>{
 				}
 				GL11.glEnd();
 				GL11.glEndList();
-				displayListMap.put(decor.decorName, displayListIndex);
-				textureMap.put(decor.decorName, new ResourceLocation(decor.decorName.substring(0, decor.decorName.indexOf(':')), "textures/decors/" + decor.decorName.substring(decor.decorName.indexOf(':') + 1) + ".png"));
+				displayListMap.put(decor.definition, displayListIndex);
+				textureMap.put(decor.definition, new ResourceLocation(decor.definition.packID, "textures/decors/" + decor.definition.systemName + ".png"));
 			}
 		}
 		
 		//Bind the decor texture and render.
-		bindTexture(textureMap.get(decor.decorName));
-		GL11.glCallList(displayListMap.get(decor.decorName));
+		bindTexture(textureMap.get(decor.definition));
+		GL11.glCallList(displayListMap.get(decor.definition));
 		GL11.glPopMatrix();
 	}
 }

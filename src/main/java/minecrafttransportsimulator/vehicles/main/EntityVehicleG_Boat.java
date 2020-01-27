@@ -1,10 +1,9 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartEngineBoat;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 
@@ -14,8 +13,8 @@ public final class EntityVehicleG_Boat extends EntityVehicleF_Ground{
 		super(world);
 	}
 	
-	public EntityVehicleG_Boat(World world, float posX, float posY, float posZ, float rotation, String vehicleName){
-		super(world, posX, posY, posZ, rotation, vehicleName);
+	public EntityVehicleG_Boat(World world, float posX, float posY, float posZ, float rotation, JSONVehicle definition){
+		super(world, posX, posY, posZ, rotation, definition);
 	}
 	
 	@Override

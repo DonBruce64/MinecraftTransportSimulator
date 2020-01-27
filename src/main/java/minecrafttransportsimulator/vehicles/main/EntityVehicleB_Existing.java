@@ -7,10 +7,11 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
@@ -74,21 +75,21 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		super(world);
 	}
 	
-	public EntityVehicleB_Existing(World world, float posX, float posY, float posZ, float playerRotation, String vehicleName){
-		super(world, vehicleName);
+	public EntityVehicleB_Existing(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
+		super(world, definition);
 		//Set position to the spot that was clicked by the player.
 		//Add a -90 rotation offset so the vehicle is facing perpendicular.
 		//Makes placement easier and is less likely for players to get stuck.
 		this.setPositionAndRotation(posX, posY, posZ, playerRotation-90, 0);
 		
 		//This only gets done at the beginning when the entity is first spawned.
-		this.displayText = pack.rendering.defaultDisplayText;
+		this.displayText = definition.rendering.defaultDisplayText;
 	}
 	
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		if(pack != null){
+		if(definition != null){
 			currentMass = getCurrentMass();
 			airDensity = 1.225*Math.pow(2, -posY/(500D*world.getHeight()/256D));
 			getBasicProperties();
@@ -192,7 +193,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			passenger.motionX = this.motionX;
 			passenger.motionY = this.motionY;
 			passenger.motionZ = this.motionZ;
-		}else if(pack != null && !this.riderSeatPositions.isEmpty()){
+		}else if(definition != null && !this.riderSeatPositions.isEmpty()){
 			Double[] seatLocation = this.riderSeatPositions.get(this.getPassengers().indexOf(passenger));
 			APart part = getPartAtLocation(seatLocation[0], seatLocation[1], seatLocation[2]);
 			if(part instanceof PartSeat){
@@ -281,7 +282,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		rider.setSneaking(false);
 		if(!world.isRemote){
 			Vec3d placePosition;
-			PackPart packPart = this.getPackDefForLocation(seat.offset.x, seat.offset.y, seat.offset.z);
+			VehiclePart packPart = this.getPackDefForLocation(seat.offset.x, seat.offset.y, seat.offset.z);
 			if(packPart.dismountPos != null){
 				placePosition = RotationSystem.getRotatedPoint(new Vec3d(packPart.dismountPos[0], packPart.dismountPos[1], packPart.dismountPos[2]), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());
 			}else{
@@ -326,7 +327,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		}
 		
 		//Also drop some crafting ingredients as items.
-		for(ItemStack craftingStack : PackParserSystem.getMaterials(this.vehicleName)){
+		for(ItemStack craftingStack : MTSRegistry.getMaterials(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName))){
 			for(byte i=0; i<craftingStack.getCount(); ++i){
 				if(this.rand.nextDouble() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
 					world.spawnEntity(new EntityItem(world, this.posX, this.posY, this.posZ, new ItemStack(craftingStack.getItem(), 1, craftingStack.getMetadata())));
@@ -355,7 +356,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	
 	
 	protected float getCurrentMass(){
-		int currentMass = pack.general.emptyMass;
+		int currentMass = definition.general.emptyMass;
 		for(APart part : this.getVehicleParts()){
 			if(part instanceof PartCrate){
 				currentMass += calculateInventoryWeight(((PartCrate) part).crateInventory);

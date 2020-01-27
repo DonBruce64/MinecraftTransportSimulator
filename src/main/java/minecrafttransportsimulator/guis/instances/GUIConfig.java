@@ -11,7 +11,7 @@ import minecrafttransportsimulator.guis.components.GUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.jsondefs.CoreConfigObject.BooleanConfig;
+import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigBoolean;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
@@ -27,7 +27,7 @@ public class GUIConfig extends GUIBase{
 	
 	//Config variables.
 	private boolean configuringControls = true;
-	private Map<GUIComponentButton, BooleanConfig> configButtons = new HashMap<GUIComponentButton, BooleanConfig>();
+	private Map<GUIComponentButton, ConfigBoolean> configButtons = new HashMap<GUIComponentButton, ConfigBoolean>();
 	
 	//Keybind selection variables.
 	private String vehicleConfiguring = "";
@@ -97,9 +97,9 @@ public class GUIConfig extends GUIBase{
 		//Config buttons and text.
 		configButtons.clear();
 		for(Field field : ConfigSystem.configObject.client.getClass().getFields()){
-			if(field.getType().equals(BooleanConfig.class)){
+			if(field.getType().equals(ConfigBoolean.class)){
 				try{
-					BooleanConfig config = (BooleanConfig) field.get(ConfigSystem.configObject.client);
+					ConfigBoolean config = (ConfigBoolean) field.get(ConfigSystem.configObject.client);
 					GUIComponentButton button = new GUIComponentButton(guiLeft+140, guiTop+20+configButtons.size()*20, 60, String.valueOf(config.value)){
 						public void onClicked(){
 							configButtons.get(this).value = !Boolean.valueOf(text);

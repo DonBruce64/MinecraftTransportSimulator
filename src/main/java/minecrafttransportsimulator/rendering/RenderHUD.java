@@ -2,10 +2,9 @@ package minecrafttransportsimulator.rendering;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackInstrument;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.VehicleInstrument;
 import net.minecraft.client.Minecraft;
 
 /**Main render class for the HUD.
@@ -29,12 +28,12 @@ public final class RenderHUD{
 		}
 
 		if(CameraSystem.hudMode == 3 || inGUI){
-			drawLowerPanel(vehicle.pack.rendering.hudBackplaneTexturePercentages);
+			drawLowerPanel(vehicle.definition.rendering.hudBackplaneTexturePercentages);
 		}else{
 			GL11.glTranslatef(0, screenDefaultY/4, 0);
 		}
 		if(CameraSystem.hudMode == 2 || CameraSystem.hudMode == 3 || inGUI){
-			drawUpperPanel(vehicle.pack.rendering.hudBackplaneTexturePercentages, vehicle.pack.rendering.hudMouldingTexturePercentages);
+			drawUpperPanel(vehicle.definition.rendering.hudBackplaneTexturePercentages, vehicle.definition.rendering.hudMouldingTexturePercentages);
 		}
 		if(CameraSystem.hudMode > 0 || inGUI){
 			drawInstruments(vehicle, 
@@ -57,7 +56,7 @@ public final class RenderHUD{
 		if(!inGUI){
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		}
-		drawAuxiliaryPanel(vehicle.pack.rendering.hudBackplaneTexturePercentages, vehicle.pack.rendering.hudMouldingTexturePercentages);
+		drawAuxiliaryPanel(vehicle.definition.rendering.hudBackplaneTexturePercentages, vehicle.definition.rendering.hudMouldingTexturePercentages);
 		drawInstruments(vehicle, 0, 100, 100, false);
 		if(!inGUI){
 			Minecraft.getMinecraft().entityRenderer.disableLightmap();
@@ -66,8 +65,8 @@ public final class RenderHUD{
 	}
 	
 	private static void drawInstruments(EntityVehicleE_Powered vehicle, int minX, int maxX, int maxY, boolean main){
-		for(byte i=0; i<vehicle.pack.motorized.instruments.size(); ++i){
-			PackInstrument packInstrument = vehicle.pack.motorized.instruments.get(i);
+		for(byte i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
+			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
 			//Render the instruments in the correct panel.
 			if((packInstrument.optionalEngineNumber == 0 && main) || (packInstrument.optionalEngineNumber != 0 && !main)){
 				if(packInstrument.hudpos != null){
@@ -75,9 +74,8 @@ public final class RenderHUD{
 						GL11.glPushMatrix();
 						GL11.glTranslated(packInstrument.hudpos[0]*screenDefaultX/100D, packInstrument.hudpos[1]*screenDefaultY/100D, 0);
 						GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-						VehicleInstrument instrument = vehicle.getInstrumentInfoInSlot(i);
-						if(instrument != null){
-							RenderInstruments.drawInstrument(vehicle, instrument, true, packInstrument.optionalEngineNumber);
+						if(vehicle.instruments.containsKey(i)){
+							RenderInstruments.drawInstrument(vehicle, vehicle.instruments.get(i), true, packInstrument.optionalEngineNumber);
 						}
 						GL11.glPopMatrix();
 					}

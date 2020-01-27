@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.entity.player.EntityPlayer;
@@ -19,14 +20,14 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
-public final class PartBarrel extends APart implements IFluidTank, IFluidHandler{
+public final class PartBarrel extends APart<EntityVehicleE_Powered> implements IFluidTank, IFluidHandler{
 	
 	private FluidTankInfo tankInfo;
 	private final FluidTankInfo emptyTankInfo;
 	
-	public PartBarrel(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
-		this.emptyTankInfo =  new FluidTankInfo(null, pack.barrel.capacity);
+	public PartBarrel(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
+		this.emptyTankInfo =  new FluidTankInfo(null, definition.barrel.capacity);
 		if(dataTag.hasKey("FluidName")){
         	this.tankInfo = new FluidTankInfo(FluidStack.loadFluidStackFromNBT(dataTag), emptyTankInfo.capacity);
         }else{

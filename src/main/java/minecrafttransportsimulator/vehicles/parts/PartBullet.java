@@ -7,11 +7,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.jsondefs.PackPartObject;
+import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.systems.OBJParserSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.state.IBlockState;
@@ -41,26 +39,24 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public final class PartBullet extends Particle{
-	private final String bulletName;
-	private final PackPartObject pack;
+	private final ItemPartBullet bulletItem;
 	private final int playerID;
 	private final EntityVehicleE_Powered vehicle;
 	
-	private final Map<String, Map<String, Float[][]>> parsedBulletModels = new HashMap<String, Map<String, Float[][]>>();
+	private final Map<ItemPartBullet, Map<String, Float[][]>> parsedBulletModels = new HashMap<ItemPartBullet, Map<String, Float[][]>>();
 	
-    public PartBullet(World world, double x, double y, double z, double motionX, double motionY, double motionZ, String bulletName, int playerID, EntityVehicleE_Powered vehicle){
+    public PartBullet(World world, double x, double y, double z, double motionX, double motionY, double motionZ, ItemPartBullet bulletItem, int playerID, EntityVehicleE_Powered vehicle){
     	super(world, x, y, z);
         //Set basic properties.
     	this.particleMaxAge = 60;
-        this.bulletName = bulletName;
-        this.pack = PackParserSystem.getPartPack(this.bulletName);
-        this.setParticleTexture(Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getParticleIcon(MTSRegistry.partItemMap.get(bulletName), 0));
+        this.bulletItem = bulletItem;
+        this.setParticleTexture(Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getParticleIcon(bulletItem, 0));
         
         //Set physical state and runtime properties.
         this.motionX = motionX;
         this.motionY = motionY;
         this.motionZ = motionZ;
-        this.setSize(pack.bullet.diameter/1000F, pack.bullet.diameter/1000F);
+        this.setSize(bulletItem.definition.bullet.diameter/1000F, bulletItem.definition.bullet.diameter/1000F);
         this.setBoundingBox(new AxisAlignedBB(posX - width/2F, posY - height/2F, posZ - width/2F, posX + width/2F, posY + height/2F, posZ + width/2F));
         this.playerID = playerID;
         this.vehicle = vehicle;
@@ -116,13 +112,13 @@ public final class PartBullet extends Particle{
 				//Doing this prevents all clients from sending collision packets to the server.
 				if(collidedEntity != null){
 					if(this.playerID == Minecraft.getMinecraft().player.getEntityId()){
-						MTS.MTSNet.sendToServer(new PacketBulletHit(this.posX + velocityOffset*normalizedVelocity.x, this.posY + velocityOffset*normalizedVelocity.y, this.posZ + velocityOffset*normalizedVelocity.z, velocity, this.bulletName, this.playerID, collidedEntity.getEntityId()));
+						MTS.MTSNet.sendToServer(new PacketBulletHit(this.posX + velocityOffset*normalizedVelocity.x, this.posY + velocityOffset*normalizedVelocity.y, this.posZ + velocityOffset*normalizedVelocity.z, velocity, bulletItem, playerID, collidedEntity.getEntityId()));
 					}
 					this.setExpired();
 					return;
 				}else if(collidedBlockPos != null){
 					if(this.playerID == Minecraft.getMinecraft().player.getEntityId()){
-						MTS.MTSNet.sendToServer(new PacketBulletHit(collidedBlockPos.getX(), collidedBlockPos.getY(), collidedBlockPos.getZ(), velocity, this.bulletName, this.playerID, -1));
+						MTS.MTSNet.sendToServer(new PacketBulletHit(collidedBlockPos.getX(), collidedBlockPos.getY(), collidedBlockPos.getZ(), velocity, bulletItem, playerID, -1));
 					}
 					this.setExpired();
 					return;
@@ -152,19 +148,19 @@ public final class PartBullet extends Particle{
         float renderPosZ = (float)(this.prevPosZ + (this.posZ - this.prevPosZ) * (double)partialTicks - interpPosZ);
         
         //Get brightness information.
-        int brightness = pack.bullet.type.equals("tracer") ? (15 << 20 | 15 << 4) : getBrightnessForRender(partialTicks); 
+        int brightness = bulletItem.definition.bullet.type.equals("tracer") ? (15 << 20 | 15 << 4) : getBrightnessForRender(partialTicks); 
         int skyLight = brightness >> 16 & 65535;
         int blockLight = brightness & 65535;
         
         //Parse the model if we haven't already.
-        if(!parsedBulletModels.containsKey(bulletName)){
+        if(!parsedBulletModels.containsKey(bulletItem)){
         	ResourceLocation modelLocation;
-        	if(pack.general.modelName != null){
-				modelLocation = new ResourceLocation(bulletName.substring(0, bulletName.indexOf(':')), "objmodels/parts/" + pack.general.modelName + ".obj");
+        	if(bulletItem.definition.general.modelName != null){
+				modelLocation = new ResourceLocation(bulletItem.definition.packID, "objmodels/parts/" + bulletItem.definition.general.modelName + ".obj");
 			}else{
-				modelLocation = new ResourceLocation(bulletName.substring(0, bulletName.indexOf(':')), "objmodels/parts/" + bulletName.substring(bulletName.indexOf(':') + 1) + ".obj");
+				modelLocation = new ResourceLocation(bulletItem.definition.packID, "objmodels/parts/" + bulletItem.definition.systemName + ".obj");
 			}
-        	parsedBulletModels.put(bulletName, OBJParserSystem.parseOBJModel(modelLocation.getResourceDomain(), modelLocation.getResourcePath()));
+        	parsedBulletModels.put(bulletItem, OBJParserSystem.parseOBJModel(modelLocation.getResourceDomain(), modelLocation.getResourcePath()));
         }
         
         //Render the parsed model.
@@ -174,7 +170,7 @@ public final class PartBullet extends Particle{
         byte index = 1;
         double yaw = -Math.toDegrees(Math.atan2(motionX, motionZ));
         double pitch = -Math.toDegrees(Math.asin(motionY/Math.sqrt(motionX*motionX+motionY*motionY+motionZ*motionZ)));
-        for(Entry<String, Float[][]> modelObjects : parsedBulletModels.get(bulletName).entrySet()){
+        for(Entry<String, Float[][]> modelObjects : parsedBulletModels.get(bulletItem).entrySet()){
         	for(Float[] modelPoints : modelObjects.getValue()){
         		if(index != 4 && index != 6){
 	        		Vec3d rotatedCoords = RotationSystem.getRotatedPoint(new Vec3d(modelPoints[0], modelPoints[1], modelPoints[2]), (float) pitch, (float) yaw, 0);
@@ -187,7 +183,7 @@ public final class PartBullet extends Particle{
 	
 	@Override
 	public int getBrightnessForRender(float partialTicks){
-        if(!pack.bullet.type.equals("tracer")){
+        if(!bulletItem.definition.bullet.type.equals("tracer")){
 			int i = super.getBrightnessForRender(partialTicks);
 		    int j = 240;
 		    int k = i >> 16 & 255;

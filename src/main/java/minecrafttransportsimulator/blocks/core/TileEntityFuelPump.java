@@ -56,7 +56,7 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 				}
 				return;
 			}
-			if(connectedVehicle.pack.motorized.fuelCapacity - connectedVehicle.fuel >= 10){
+			if(connectedVehicle.definition.motorized.fuelCapacity - connectedVehicle.fuel >= 10){
 				if(tankInfo.fluid != null){
 					int fuelToFill = Math.min(this.tankInfo.fluid.amount, 10);
 					this.tankInfo.fluid.amount -= fuelToFill;

@@ -248,7 +248,7 @@ public final class VehicleSoundSystem{
 	 */
 	public static boolean isPlayerInsideEnclosedVehicle(){
 		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.getRidingEntity() instanceof EntityVehicleD_Moving){
-			return !((EntityVehicleD_Moving) Minecraft.getMinecraft().player.getRidingEntity()).pack.general.openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
+			return !((EntityVehicleD_Moving) Minecraft.getMinecraft().player.getRidingEntity()).definition.general.openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
 		}else{
 			return false;
 		}

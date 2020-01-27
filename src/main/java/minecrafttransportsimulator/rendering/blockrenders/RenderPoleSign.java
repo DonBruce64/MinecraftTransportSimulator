@@ -9,8 +9,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
-import minecrafttransportsimulator.jsondefs.PackSignObject;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.jsondefs.JSONSign;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -18,7 +17,7 @@ import net.minecraft.util.ResourceLocation;
 
 public class RenderPoleSign extends TileEntitySpecialRenderer<TileEntityPoleSign>{
 	private static final ResourceLocation defaultSignTexture = new ResourceLocation(MTS.MODID, "textures/blocks/trafficsign.png");
-	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
+	private static final Map<JSONSign, ResourceLocation> textureMap = new HashMap<JSONSign, ResourceLocation>();
 	private static final Map<String, FontRenderer> fontMap = new HashMap<String, FontRenderer>();
 	
 	
@@ -35,11 +34,11 @@ public class RenderPoleSign extends TileEntitySpecialRenderer<TileEntityPoleSign
 		}
 		GL11.glTranslatef(0F, 0F, 0.0635F);
 		//Bind the sign texture.
-		if(sign.definition.isEmpty()){
+		if(sign.definition == null){
 			bindTexture(defaultSignTexture);
 		}else{
 			if(!textureMap.containsKey(sign.definition)){
-				textureMap.put(sign.definition, new ResourceLocation(sign.definition.substring(0, sign.definition.indexOf(':')), "textures/signs/" + sign.definition.substring(sign.definition.indexOf(':') + 1) + ".png"));
+				textureMap.put(sign.definition, new ResourceLocation(sign.definition.packID, "textures/signs/" + sign.definition.systemName + ".png"));
 			}
 			bindTexture(textureMap.get(sign.definition));
 		}
@@ -85,26 +84,25 @@ public class RenderPoleSign extends TileEntitySpecialRenderer<TileEntityPoleSign
 		GL11.glEnd();
 		
 		//Now render the text.
-		PackSignObject pack = PackParserSystem.getSign(sign.definition);
-		if(pack != null){
-			if(pack.general.textLines != null){
-				if(!fontMap.containsKey(pack.general.font)){
-					if(pack.general.font.equals("default")){
-						fontMap.put(pack.general.font, Minecraft.getMinecraft().fontRenderer);
+		if(sign.definition != null){
+			if(sign.definition.general.textLines != null){
+				if(!fontMap.containsKey(sign.definition.general.font)){
+					if(sign.definition.general.font.equals("default")){
+						fontMap.put(sign.definition.general.font, Minecraft.getMinecraft().fontRenderer);
 					}else{
-						String fontName = pack.general.font;
+						String fontName = sign.definition.general.font;
 						ResourceLocation fontLocation = new ResourceLocation(fontName.substring(0, fontName.indexOf(':')), "textures/fonts/" + fontName.substring(fontName.indexOf(':') + 1) + ".png");;
-						fontMap.put(pack.general.font, new FontRenderer(Minecraft.getMinecraft().gameSettings, fontLocation, Minecraft.getMinecraft().renderEngine, false));
+						fontMap.put(sign.definition.general.font, new FontRenderer(Minecraft.getMinecraft().gameSettings, fontLocation, Minecraft.getMinecraft().renderEngine, false));
 					}
 				}
-				FontRenderer currentFont = fontMap.get(pack.general.font);
+				FontRenderer currentFont = fontMap.get(sign.definition.general.font);
 				
-				for(byte i=0; i<pack.general.textLines.length; ++i){
+				for(byte i=0; i<sign.definition.general.textLines.length; ++i){
 					GL11.glPushMatrix();
-					GL11.glTranslatef(pack.general.textLines[i].xPos - 0.5F, pack.general.textLines[i].yPos - 0.5F, 0.01F);
-					GL11.glScalef(pack.general.textLines[i].scale/16F, pack.general.textLines[i].scale/16F, pack.general.textLines[i].scale/16F);
+					GL11.glTranslatef(sign.definition.general.textLines[i].xPos - 0.5F, sign.definition.general.textLines[i].yPos - 0.5F, 0.01F);
+					GL11.glScalef(sign.definition.general.textLines[i].scale/16F, sign.definition.general.textLines[i].scale/16F, sign.definition.general.textLines[i].scale/16F);
 					GL11.glRotatef(180, 1, 0, 0);
-					currentFont.drawString(sign.text.get(i), -currentFont.getStringWidth(sign.text.get(i))/2, 0, Color.decode(pack.general.textLines[i].color).getRGB());
+					currentFont.drawString(sign.text.get(i), -currentFont.getStringWidth(sign.text.get(i))/2, 0, Color.decode(sign.definition.general.textLines[i].color).getRGB());
 					GL11.glPopMatrix();
 				}
 			}

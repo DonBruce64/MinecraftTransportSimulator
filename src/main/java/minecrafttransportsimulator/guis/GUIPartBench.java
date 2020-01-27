@@ -14,32 +14,32 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.BlockBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.items.packs.ItemVehicle;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModel;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.systems.OBJParserSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
 public class GUIPartBench extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting.png");	
-	private static final Map<String, String[]> lastOpenedItem = new HashMap<String, String[]>();
+	/*Last item this bench was on when closed.  Keyed by block*/
+	private static final Map<BlockBench, AItemPack> lastOpenedItem = new HashMap<BlockBench, AItemPack>();
 	
-	private final List<String> partTypes;
+	private final BlockBench bench;
 	private final EntityPlayer player;
-	private final boolean isForVehicles;
-	private final boolean isForInstruments;
-	private final boolean isForItems;
-	private final Map<String, ? extends Item> itemMap;
 	
 	private GuiButton leftPackButton;
 	private GuiButton rightPackButton;
@@ -52,35 +52,44 @@ public class GUIPartBench extends GuiScreen{
 	private int guiLeft;
 	private int guiTop;
 	
-	private String packName = "";
-	private String prevPackName = "";
-	private String nextPackName = "";
+	private String prevPack;
+	private String currentPack;
+	private String nextPack;
 	
-	private String partName = "";
-	private String prevPartName = "";
-	private String nextPartName = "";
+	private AItemPack prevItem;
+	private AItemPack currentItem;
+	private AItemPack nextItem;
 	
-	private String colorName = "";
-	private String prevColorName = "";
-	private String nextColorName = "";
+	//Only used for vehicles.
+	private AItemPack prevSubItem;
+	private AItemPack nextSubItem;
 	
-	/**Display list GL integers.  Keyed by part name.*/
-	private final Map<String, Integer> partDisplayLists = new HashMap<String, Integer>();
-	private final Map<String, Float> partScalingFactors = new HashMap<String, Float>();
+	/**Display list GL integers.  Keyed by pack item.*/
+	private final Map<AItemPack, Integer> partDisplayLists = new HashMap<AItemPack, Integer>();
+	private final Map<AItemPack, Float> partScalingFactors = new HashMap<AItemPack, Float>();
 	
-	/**Part texture name.  Keyed by part name.*/
-	private final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
+	/**Part texture.  Keyed by pack item.*/
+	private final Map<AItemPack, ResourceLocation> textureMap = new HashMap<AItemPack, ResourceLocation>();
 	
 	public GUIPartBench(BlockBench bench, EntityPlayer player){
-		this.partTypes = bench.partTypes;
+		this.bench = bench;
 		this.player = player;
-		this.isForVehicles = this.partTypes.contains("plane") || this.partTypes.contains("car");
-		this.isForInstruments = this.partTypes.contains("instrument");
-		this.isForItems = this.partTypes.contains("item");
-		this.itemMap = isForVehicles ? MTSRegistry.vehicleItemMap : (isForInstruments ? MTSRegistry.instrumentItemMap : (isForItems ? MTSRegistry.itemItemMap :MTSRegistry.partItemMap));
-		if(lastOpenedItem.containsKey(bench.partTypes.get(0))){
-			packName = lastOpenedItem.get(bench.partTypes.get(0))[0];
-			partName = lastOpenedItem.get(bench.partTypes.get(0))[1];
+		if(lastOpenedItem.containsKey(bench)){
+			currentItem = lastOpenedItem.get(bench);
+			currentPack = currentItem.definition.packID;
+		}else{
+			//Find a pack that has the item we are supposed to craft and set it.
+			//If we are for vehicles, make sure to set the next subItem if we can.
+			for(String packID : MTSRegistry.packItemMap.keySet()){
+				if(currentPack == null){
+					for(AItemPack packItem : MTSRegistry.packItemMap.get(packID).values()){
+						if(bench.isJSONValid(packItem.definition)){
+							currentPack = packID;
+							break;
+						}
+					}
+				}
+			}
 		}
 		updatePartNames();
 	}
@@ -88,14 +97,14 @@ public class GUIPartBench extends GuiScreen{
 	@Override 
 	public void initGui(){
 		super.initGui();
-		guiLeft = this.isForVehicles ? (this.width - 356)/2 : (this.width - 256)/2;
+		guiLeft = bench.renderType.isForVehicles ? (this.width - 356)/2 : (this.width - 256)/2;
 		guiTop = (this.height - 220)/2;
 		
 		buttonList.add(leftPackButton = new GuiButton(0, guiLeft + 10, guiTop + 5, 20, 20, "<"));
 		buttonList.add(rightPackButton = new GuiButton(0, guiLeft + 226, guiTop + 5, 20, 20, ">"));
 		buttonList.add(leftPartButton = new GuiButton(0, guiLeft + 10, guiTop + 25, 20, 20, "<"));
 		buttonList.add(rightPartButton = new GuiButton(0, guiLeft + 226, guiTop + 25, 20, 20, ">"));
-		if(isForVehicles){
+		if(bench.renderType.isForVehicles){
 			buttonList.add(leftColorButton = new GuiButton(0, guiLeft + 280, guiTop + 25, 20, 20, "<"));
 			buttonList.add(rightColorButton = new GuiButton(0, guiLeft + 300, guiTop + 25, 20, 20, ">"));
 		}
@@ -111,7 +120,7 @@ public class GUIPartBench extends GuiScreen{
 		drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 201);
 		
 		//If we are for vehicles, draw an extra segment to the right for the info text.
-		if(this.isForVehicles){
+		if(bench.renderType.isForVehicles){
 			drawTexturedModalRect(guiLeft + 250, guiTop, 144, 0, 111, 201);
 		}
 		
@@ -121,51 +130,44 @@ public class GUIPartBench extends GuiScreen{
 		}
 		
 		//Render the text headers.
-		drawCenteredString(!packName.isEmpty() ? I18n.format("itemGroup." + packName) : "", guiLeft + 130, guiTop + 10);
-		drawCenteredString(!partName.isEmpty() ? I18n.format(itemMap.get(partName).getUnlocalizedName() + ".name") : "", guiLeft + 130, guiTop + 30);
-		if(this.isForVehicles){
+		drawCenteredString(I18n.format("itemGroup." + currentPack), guiLeft + 130, guiTop + 10);
+		drawCenteredString(currentItem.definition.general.name != null ? currentItem.definition.general.name : currentItem.definition.systemName, guiLeft + 130, guiTop + 30);
+		if(bench.renderType.isForVehicles){
 			drawCenteredString(I18n.format("gui.vehicle_bench.color"), guiLeft + 300, guiTop + 10);
 		}
 		
 		//Set button states and render.
-		startButton.enabled = PacketPlayerCrafting.doesPlayerHaveMaterials(player, partName);
-		leftPackButton.enabled = !prevPackName.isEmpty();
-		rightPackButton.enabled = !nextPackName.isEmpty();
-		if(this.isForVehicles){
+		startButton.enabled = PacketPlayerCrafting.doesPlayerHaveMaterials(player, currentItem);
+		leftPackButton.enabled = prevPack != null;
+		rightPackButton.enabled = nextPack != null;
+		if(bench.renderType.isForVehicles){
 			//If we are for vehicles, don't enable the part button if there's not a part that doesn't match the color.
 			//We need to enable the color button instead for that.
-			leftPartButton.enabled = !prevPartName.isEmpty();
-			rightPartButton.enabled = !nextPartName.isEmpty();
-			leftColorButton.enabled = !prevColorName.isEmpty();
-			rightColorButton.enabled = !nextColorName.isEmpty();
+			leftPartButton.enabled = prevItem != null;
+			rightPartButton.enabled = nextItem != null;
+			leftColorButton.enabled = prevSubItem != null;
+			rightColorButton.enabled = nextSubItem != null;
 		}else{
-			leftPartButton.enabled = !prevPartName.isEmpty();
-			rightPartButton.enabled = !nextPartName.isEmpty();
+			leftPartButton.enabled = prevItem != null;
+			rightPartButton.enabled = nextItem != null;
 		}
 		for(Object obj : buttonList){
 			((GuiButton) obj).drawButton(mc, mouseX, mouseY, 0);
 		}
 		this.drawRect(guiLeft + 190, guiTop + 188, guiLeft + 206, guiTop + 172, startButton.enabled ? Color.GREEN.getRGB() : Color.RED.getRGB());
 		
-		//If we don't have any parts of this type, don't do anything else.
-		if(partName.isEmpty()){
-			return;
-		}
-		
 		//Render descriptive text.
-		if(this.isForVehicles){
+		if(bench.renderType.isForVehicles){
 			renderVehicleInfoText();
-		}else if(!this.isForInstruments){
-			renderPartInfoText();
 		}else{
-			renderInstrumentInfoText();
+			renderInfoText();
 		}
 		
 		//Render materials in the bottom slots.
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         RenderHelper.enableGUIStandardItemLighting();
 		int stackOffset = 9;
-		for(ItemStack craftingStack : PackParserSystem.getMaterials(partName)){
+		for(ItemStack craftingStack : MTSRegistry.getMaterials(currentItem)){
 			ItemStack renderedStack = new ItemStack(craftingStack.getItem(), craftingStack.getCount(), craftingStack.getMetadata());
 			this.itemRender.renderItemAndEffectIntoGUI(renderedStack, guiLeft + stackOffset, guiTop + 172);
 			this.itemRender.renderItemOverlays(fontRenderer, renderedStack, guiLeft + stackOffset, guiTop + 172);
@@ -175,7 +177,7 @@ public class GUIPartBench extends GuiScreen{
 		//We render the text afterwards to ensure it doesn't render behind the items.
 		stackOffset = 9;
 		int itemTooltipBounds = 16;
-		for(ItemStack craftingStack : PackParserSystem.getMaterials(partName)){
+		for(ItemStack craftingStack : MTSRegistry.getMaterials(currentItem)){
 			if(mouseX > guiLeft + stackOffset && mouseX < guiLeft + stackOffset + itemTooltipBounds && mouseY > guiTop + 172 && mouseY < guiTop + 172 + itemTooltipBounds){
 				ItemStack renderedStack = new ItemStack(craftingStack.getItem(), craftingStack.getCount(), craftingStack.getMetadata());
 				renderToolTip(renderedStack, guiLeft + stackOffset,  guiTop + 172);
@@ -184,65 +186,68 @@ public class GUIPartBench extends GuiScreen{
 		}
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 		
-		//If we are for instruments or items, render the 2D item and be done.
-		if(this.isForInstruments || this.isForItems){
+		//If we are for 2D components, render the 2D item and be done.
+		if(!bench.renderType.isFor3DModels){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(guiLeft + 172.5F, guiTop + 82.5F, 0);
 			GL11.glScalef(3, 3, 3);
-			this.itemRender.renderItemAndEffectIntoGUI(new ItemStack(itemMap.get(partName)), 0, 0);
+			this.itemRender.renderItemAndEffectIntoGUI(new ItemStack(currentItem), 0, 0);
 			GL11.glPopMatrix();
 			return;
 		}
 		
 		//Parse the model if we haven't already.
-		if(!partDisplayLists.containsKey(partName)){
-			if(this.isForVehicles){
-				String jsonName = PackParserSystem.getVehicleJSONName(partName);
+		if(!partDisplayLists.containsKey(currentItem)){
+			if(bench.renderType.isForVehicles){
+				String genericName = ((JSONVehicle) currentItem.definition).genericName;
 				//Check to make sure we haven't parsed this model for another item with another texture but same model.
-				for(String parsedItemName : partDisplayLists.keySet()){
-					if(PackParserSystem.getVehicleJSONName(parsedItemName).equals(jsonName)){
-						partDisplayLists.put(partName, partDisplayLists.get(parsedItemName));
-						partScalingFactors.put(partName, partScalingFactors.get(parsedItemName));
-						break;
+				for(AItemPack parsedItem : partDisplayLists.keySet()){
+					if(parsedItem instanceof ItemVehicle){
+						if(((ItemVehicle) parsedItem).definition.genericName.equals(genericName)){
+							partDisplayLists.put(currentItem, partDisplayLists.get(parsedItem));
+							partScalingFactors.put(currentItem, partScalingFactors.get(parsedItem));
+							break;
+						}
 					}
 				}
 				
 				//If we didn't find an existing model, parse one now.
-				if(!partDisplayLists.containsKey(partName)){
-					parseModel(partName.substring(0, partName.indexOf(':')), "objmodels/vehicles/" + jsonName + ".obj");
+				if(!partDisplayLists.containsKey(currentItem)){
+					parseModel(currentItem.definition.packID, "objmodels/vehicles/" + genericName + ".obj");
 				}
-			}else if(!this.isForItems){
-				if(PackParserSystem.getPartPack(partName).general.modelName != null){
-					parseModel(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + PackParserSystem.getPartPack(partName).general.modelName + ".obj");
+			}else if(bench.renderType.isFor3DModels){
+				String customModel = ((AJSONMultiModel.General) currentItem.definition.general).modelName;
+				if(customModel != null){
+					parseModel(currentItem.definition.packID, "objmodels/parts/" + customModel + ".obj");
 				}else{
-					parseModel(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + ".obj");
+					parseModel(currentItem.definition.packID, "objmodels/parts/" + currentItem.definition.systemName + ".obj");
 				}
 			}
 		}
 		
 		//Cache the texture mapping if we haven't seen this part before.
-		if(!textureMap.containsKey(partName)){
+		if(!textureMap.containsKey(currentItem)){
 			final ResourceLocation partTextureLocation;
-			if(this.isForVehicles){
-				partTextureLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "textures/vehicles/" + partName.substring(partName.indexOf(':') + 1) + ".png");
+			if(bench.renderType.isForVehicles){
+				partTextureLocation = new ResourceLocation(currentItem.definition.packID, "textures/vehicles/" + currentItem.definition.systemName + ".png");
 			}else{
-				partTextureLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "textures/parts/" + partName.substring(partName.indexOf(':') + 1) + ".png");
+				partTextureLocation = new ResourceLocation(currentItem.definition.packID, "textures/parts/" + currentItem.definition.systemName + ".png");
 			}
-			textureMap.put(partName, partTextureLocation);
+			textureMap.put(currentItem, partTextureLocation);
 		}
 		
 		//Render the part in the GUI.
 		GL11.glPushMatrix();
 		GL11.glDisable(GL11.GL_LIGHTING);
-		mc.getTextureManager().bindTexture(textureMap.get(partName));
+		mc.getTextureManager().bindTexture(textureMap.get(currentItem));
 		GL11.glTranslatef(guiLeft + 190, guiTop + 110, 100);
 		GL11.glRotatef(180, 0, 0, 1);
 		GL11.glRotatef(45, 0, 1, 0);
 		GL11.glRotatef(35.264F, 1, 0, 1);
 		GL11.glRotatef(-player.world.getTotalWorldTime()*2, 0, 1, 0);
-		float scale = 30F*partScalingFactors.get(partName);
+		float scale = 30F*partScalingFactors.get(currentItem);
 		GL11.glScalef(scale, scale, scale);
-		GL11.glCallList(partDisplayLists.get(partName));
+		GL11.glCallList(partDisplayLists.get(currentItem));
 		GL11.glPopMatrix();
 		
 		
@@ -250,7 +255,7 @@ public class GUIPartBench extends GuiScreen{
 	}
 	
 	private void renderVehicleInfoText(){
-		PackVehicleObject pack = PackParserSystem.getVehiclePack(partName);
+		JSONVehicle vehicleDefinition = (JSONVehicle) currentItem.definition;
 		byte controllers = 0;
 		byte passengers = 0;
 		byte cargo = 0;
@@ -259,7 +264,7 @@ public class GUIPartBench extends GuiScreen{
 		float maxFuelConsumption = 0;
 		float minWheelSize = 99;
 		float maxWheelSize = 0;
-		for(PackPart part : pack.parts){
+		for(VehiclePart part : vehicleDefinition.parts){
 			if(part.isController){
 				++controllers;
 			}else{
@@ -322,9 +327,9 @@ public class GUIPartBench extends GuiScreen{
 		}
 		
 		List<String> descriptiveLines = new ArrayList<String>();
-		descriptiveLines.add(String.valueOf(pack.general.type));
-		descriptiveLines.add(String.valueOf(pack.general.emptyMass));
-		descriptiveLines.add(String.valueOf(pack.motorized.fuelCapacity));
+		descriptiveLines.add(String.valueOf(vehicleDefinition.general.type));
+		descriptiveLines.add(String.valueOf(vehicleDefinition.general.emptyMass));
+		descriptiveLines.add(String.valueOf(vehicleDefinition.motorized.fuelCapacity));
 		descriptiveLines.add(String.valueOf(controllers));
 		descriptiveLines.add(String.valueOf(passengers));
 		descriptiveLines.add(String.valueOf(cargo));
@@ -340,12 +345,12 @@ public class GUIPartBench extends GuiScreen{
 		GL11.glPushMatrix();
 		GL11.glTranslatef(guiLeft + 255, guiTop + 55, 0);
 		GL11.glScalef(0.8F, 0.8F, 0.8F);
-		fontRenderer.drawSplitString(I18n.format("description." + partName.substring(0, partName.indexOf(':')) + "." + PackParserSystem.getVehicleJSONName(partName)), 0, 0, 120, Color.WHITE.getRGB());
+		fontRenderer.drawSplitString(vehicleDefinition.general.description != null ? vehicleDefinition.general.description : "No description for this vehicle.", 0, 0, 120, Color.WHITE.getRGB());
 		GL11.glPopMatrix();
 	}
 	
-	private void renderPartInfoText(){
-		ItemStack tempStack = new ItemStack(itemMap.get(partName));
+	private void renderInfoText(){
+		ItemStack tempStack = new ItemStack(currentItem);
 		tempStack.setTagCompound(new NBTTagCompound());
 		List<String> descriptiveLines = new ArrayList<String>();
 		tempStack.getItem().addInformation(tempStack, player.world, descriptiveLines, ITooltipFlag.TooltipFlags.NORMAL);
@@ -354,10 +359,6 @@ public class GUIPartBench extends GuiScreen{
 			mc.fontRenderer.drawStringWithShadow(line, guiLeft + 10, guiTop + lineOffset, Color.WHITE.getRGB());
 			lineOffset += 10;
 		}
-	}
-	
-	private void renderInstrumentInfoText(){
-		fontRenderer.drawSplitString(I18n.format(itemMap.get(partName).getUnlocalizedName() + ".description"), guiLeft + 10, guiTop + 55, 120, Color.WHITE.getRGB());
 	}
     
 	private void parseModel(String partPack, String partModelLocation){
@@ -385,10 +386,10 @@ public class GUIPartBench extends GuiScreen{
 			}
 		}
 		float globalMax = Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
-		partScalingFactors.put(partName, globalMax > 1.5 ? 1.5F/globalMax : 1.0F);
+		partScalingFactors.put(currentItem, globalMax > 1.5 ? 1.5F/globalMax : 1.0F);
 		GL11.glEnd();
 		GL11.glEndList();
-		partDisplayLists.put(partName, displayListIndex);
+		partDisplayLists.put(currentItem, displayListIndex);
 	}
 	
 	@Override
@@ -396,22 +397,22 @@ public class GUIPartBench extends GuiScreen{
 		super.actionPerformed(buttonClicked);
 		if(buttonClicked.equals(startButton)){
 			MTS.proxy.playSound(player.getPositionVector(), MTS.MODID + ":bench_running", 1, 1);
-			MTS.MTSNet.sendToServer(new PacketPlayerCrafting(player, partName));
+			MTS.MTSNet.sendToServer(new PacketPlayerCrafting(player, currentItem));
 		}else{
 			if(buttonClicked.equals(leftPackButton)){
-				packName = prevPackName;
-				partName = "";
+				currentPack = prevPack;
+				currentItem = null;
 			}else if(buttonClicked.equals(rightPackButton)){
-				packName = nextPackName;
-				partName = "";
+				currentPack = nextPack;
+				currentItem = null;
 			}else if(buttonClicked.equals(leftPartButton)){
-				partName = prevPartName;
+				currentItem = prevItem;
 			}else if(buttonClicked.equals(rightPartButton)){
-				partName = nextPartName;
+				currentItem = nextItem;
 			}else if(buttonClicked.equals(leftColorButton)){
-				partName = prevColorName;
+				currentItem = prevSubItem;
 			}else if(buttonClicked.equals(rightColorButton)){
-				partName = nextColorName;
+				currentItem = nextSubItem;
 			}
 			updatePartNames();
 		}
@@ -440,7 +441,7 @@ public class GUIPartBench extends GuiScreen{
 		}
 		
 		//Save the last clicked part for reference later.
-		lastOpenedItem.put(partTypes.get(0), new String[]{packName, partName});
+		lastOpenedItem.put(bench, currentItem);
     }
 	
 	@Override
@@ -467,94 +468,115 @@ public class GUIPartBench extends GuiScreen{
 	 * logic MUST be called to update the button action states!
 	 */
 	private void updatePartNames(){
-		//Set all prev/next variables blank before executing the loop.
-		prevPackName = "";
-		nextPackName = "";	
-		prevPartName = "";
-		nextPartName = "";
-		prevColorName = "";
-		nextColorName = "";
+		//Set back indexes.
+		List<String> packIDs = new ArrayList<String>(MTSRegistry.packItemMap.keySet());
+		int currentPackIndex = packIDs.indexOf(currentPack);
 		
-		boolean passedPack = false;
-		boolean passedPart = false;
-		boolean passedColor = false;
-		for(String partItemName : itemMap.keySet()){
-			//First check to make sure this item matches the type on the bench.
-			final boolean isValid;
-			if(this.isForVehicles){
-				isValid = partTypes.contains(PackParserSystem.getVehiclePack(partItemName).general.type);
-			}else if(!this.isForInstruments && !this.isForItems){
-				isValid = partTypes.contains(PackParserSystem.getPartPack(partItemName).general.type);
-			}else{
-				isValid = true;
-			}
-			if(isValid){
-				//If packName is empty, set it now.  Otherwise, if we haven't seen the pack for the
-				//currently-selected item, and the pack is different than the item, set the prevPack.
-				//This will continue to be set until we see the same pack as the current item, so it
-				//will be the pack of the closest item in the list with a different pack.
-				if(packName.isEmpty()){
-					packName = partItemName.substring(0, partItemName.indexOf(':'));
-				}else if(!passedPack && !partItemName.startsWith(packName)){
-					prevPackName = partItemName.substring(0, partItemName.indexOf(':'));
+		//Loop forwards to find a pack that has the items we need and set that as the next pack.
+		//Only set the pack if it has items in it that match our bench's parameters.
+		nextPack = null;
+		if(currentPackIndex < packIDs.size()){
+			for(int i=currentPackIndex+1; i<packIDs.size() && nextPack == null; ++i){
+				for(AItemPack packItem : MTSRegistry.packItemMap.get(packIDs.get(i)).values()){
+					if(bench.isJSONValid(packItem.definition)){
+						nextPack = packIDs.get(i);
+						break;
+					}
 				}
-				if(partItemName.startsWith(packName)){
-					//Set the variable to show we are in the same pack.
-					//Subsequent logic is executed to set other variables, and differs depending on
-					//if this GUI is for vehicles.  This is done because vehicles have a color selector
-					//so even though the pack might be the same, the vehicle may just be 6 colors rather
-					//that 6 unique vehicles.  This keeps packs with 16-colors of sedans from taking
-					//up 100s of part slots.
-					passedPack = true;
-					if(this.isForVehicles){
-						if(partName.isEmpty()){
-							partName = partItemName;
-							passedPart = true;
-						}else if(partName.equals(partItemName)){
-							passedPart = true;
-						}else if(!passedPart){
-							//Set the prevColorName if the part is the same color (JSON) as the current part.
-							//Set the prevPartName only if the part is a different color (JSON) than the current part.
-							if(PackParserSystem.getVehicleJSONName(partName).equals(PackParserSystem.getVehicleJSONName(partItemName))){
-								prevColorName = partItemName;
-							}else{
-								//For prevPartName, we want only the first part that is different.
-								//Once we have this, we don't set it again unless the JSON differs.
-								//This ensures that when we hit the prevPart button, the color is always
-								//the first color in the set and the right button is lit for subsequent colors.
-								if(prevPartName.isEmpty() || !PackParserSystem.getVehicleJSONName(prevPartName).equals(PackParserSystem.getVehicleJSONName(partItemName))){
-									prevPartName = partItemName;
-								}
+			}
+		}
+		
+		//Loop backwards to find a pack that has the items we need and set that as the prev pack.
+		//Only set the pack if it has items in it that match our bench's parameters.
+		prevPack = null;
+		if(currentPackIndex > 0){
+			for(int i=currentPackIndex-1; i<=0 && prevPack == null; --i){
+				for(AItemPack packItem : MTSRegistry.packItemMap.get(packIDs.get(i)).values()){
+					if(bench.isJSONValid(packItem.definition)){
+						prevPack = packIDs.get(i);
+						break;
+					}
+				}
+			}
+		}
+		
+		
+		//Set item indexes.
+		List<AItemPack> packItems = new ArrayList<AItemPack>(MTSRegistry.packItemMap.get(currentPack).values());
+		int currentItemIndex = packItems.indexOf(currentItem);
+		boolean switchedItems = prevItem == currentItem || nextItem == currentItem;
+		
+		//If currentItem is null, it means we swtiched packs and need to re-set it to the first item of the new pack.
+		//Do so now before we do looping to prevent crashes.
+		//Find a pack that has the item we are supposed to craft and set it.
+		//If we are for vehicles, make sure to set the next subItem if we can.
+		if(currentItem == null){
+			for(AItemPack packItem : MTSRegistry.packItemMap.get(currentPack).values()){
+				if(currentItem == null || (bench.renderType.isForVehicles && nextSubItem == null)){
+					if(bench.isJSONValid(packItem.definition)){
+						if(currentItem == null){
+							currentItem = packItem;
+						}else if(bench.renderType.isForVehicles && nextSubItem == null){
+							if(((JSONVehicle) packItem.definition).genericName.equals(((JSONVehicle) currentItem.definition).genericName)){
+								nextSubItem = packItem;
 							}
-						}else if(nextPartName.isEmpty()){
-							//Set the nextColorName if the part is the same color (JSON) as the current part.
-							//Set the nextPartName only if the part is a different color (JSON) than the current part.
-							if(PackParserSystem.getVehicleJSONName(partName).equals(PackParserSystem.getVehicleJSONName(partItemName))){
-								//Need this here to prevent the color from being overwritten by further colors.
-								if(nextColorName.isEmpty()){
-									nextColorName = partItemName;
-								}
-							}else{
-								nextPartName = partItemName;
+						}
+					}
+				}
+			}
+		}
+
+		//Loop forwards in our pack to find the next item in that pack.
+		//Only set the pack if it has items in it that match our bench's parameters.
+		nextItem = null;
+		nextSubItem = null;
+		if(currentItemIndex < packItems.size()){
+			for(int i=currentItemIndex+1; i<packItems.size() && nextItem == null; ++i){
+				if(bench.isJSONValid(packItems.get(i).definition)){
+					//If we are for vehicles, and this item is the same sub-item classification, 
+					//set nextSubItem and continue on.
+					if(bench.renderType.isForVehicles){
+						if(((JSONVehicle) packItems.get(i).definition).genericName.equals(((JSONVehicle) currentItem.definition).genericName)){
+							if(nextSubItem == null){
+								nextSubItem = packItems.get(i);
+							}
+							continue;
+						}
+					}
+					nextItem = packItems.get(i);
+					break;
+				}
+			}
+		}
+		
+		//Loop backwards in our pack to find the prev item in that pack.
+		//Only set the pack if it has items in it that match our bench's parameters.
+		prevItem = null;
+		prevSubItem = null;
+		if(currentItemIndex > 0){
+			for(int i=currentItemIndex-1; i>=0 && (prevItem == null || bench.renderType.isForVehicles); --i){
+				if(bench.isJSONValid(packItems.get(i).definition)){
+					//If we are for vehicles, and we didn't switch items, and this item
+					//is the same sub-item classification, set prevSubItem and continue on.
+					//If we did switch, we want the first subItem in the set of items to
+					//be the prevItem we pick.  This ensures when we switch we'll be on the 
+					//same subItem each time we switch items.
+					if(bench.renderType.isForVehicles){
+						if(((JSONVehicle) packItems.get(i).definition).genericName.equals(((JSONVehicle) currentItem.definition).genericName)){
+							if(prevSubItem == null){
+								prevSubItem = packItems.get(i);
+							}
+						}else{
+							if(prevItem == null){
+								prevItem = packItems.get(i);
+							}else if(((JSONVehicle) packItems.get(i).definition).genericName.equals(((JSONVehicle) prevItem.definition).genericName)){
+								prevItem = packItems.get(i);
 							}
 						}
 					}else{
-						if(partName.isEmpty()){
-							partName = partItemName;
-							passedPart = true;
-						}else if(partName.equals(partItemName)){
-							passedPart = true;
-						}else if(!passedPart){
-							prevPartName = partItemName;
-						}else if(nextPartName.isEmpty()){
-							nextPartName = partItemName;
-						}
+						prevItem = packItems.get(i);
+						break;
 					}
-				}else if(nextPackName.isEmpty() && passedPack){
-					//Since we've passed our pack, and this item isn't the same as our pack, it must be an item from the next pack.
-					//Set the variable and then return, as we don't need to iterate any more as everything is set.
-					nextPackName = partItemName.substring(0, partItemName.indexOf(':'));
-					return;
 				}
 			}
 		}

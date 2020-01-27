@@ -3,6 +3,7 @@ package minecrafttransportsimulator.vehicles.main;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
@@ -21,14 +22,14 @@ public final class EntityVehicleG_Car extends EntityVehicleF_Ground{
 		super(world);
 	}
 	
-	public EntityVehicleG_Car(World world, float posX, float posY, float posZ, float rotation, String vehicleName){
-		super(world, posX, posY, posZ, rotation, vehicleName);
+	public EntityVehicleG_Car(World world, float posX, float posY, float posZ, float rotation, JSONVehicle definition){
+		super(world, posX, posY, posZ, rotation, definition);
 	}
 	
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		if(pack != null){
+		if(definition != null){
 			//Populate grounded wheels.  Needs to be independent of non-wheeled ground devices.
 			groundedWheels.clear();
 			for(APartGroundDevice wheel : this.wheels){
@@ -91,6 +92,6 @@ public final class EntityVehicleG_Car extends EntityVehicleF_Ground{
 	
 	@Override
 	protected float getDragCoefficient(){
-		return pack.car.dragCoefficient;
+		return definition.car.dragCoefficient;
 	}
 }

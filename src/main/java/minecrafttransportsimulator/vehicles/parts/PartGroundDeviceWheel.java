@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
@@ -24,8 +25,8 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	private int ticksCalcsSkipped = 0;
 	private float prevAngularVelocity;
 	
-	public PartGroundDeviceWheel(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
+	public PartGroundDeviceWheel(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
 		this.isFlat = dataTag.getBoolean("isFlat");
 	}
 	
@@ -80,12 +81,12 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	
 	@Override
 	public float getWidth(){
-		return this.pack.wheel.diameter/2F;
+		return this.definition.wheel.diameter/2F;
 	}
 	
 	@Override
 	public float getHeight(){
-		return this.isFlat ? this.pack.wheel.diameter/2F : this.pack.wheel.diameter;
+		return this.isFlat ? this.definition.wheel.diameter/2F : this.definition.wheel.diameter;
 	}
 	
 	@Override
@@ -97,10 +98,10 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	public ResourceLocation getModelLocation(){
 		if(this.isFlat){
 			if(flatModelLocation == null){
-				if(pack.general.modelName != null){
-					flatModelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + pack.general.modelName + "_flat.obj");
+				if(definition.general.modelName != null){
+					flatModelLocation = new ResourceLocation(definition.packID, "objmodels/parts/" + definition.general.modelName + "_flat.obj");
 				}else{
-					flatModelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + "_flat.obj");
+					flatModelLocation = new ResourceLocation(definition.packID, "objmodels/parts/" + definition.systemName + "_flat.obj");
 				}
 			}
 			return flatModelLocation;
@@ -116,12 +117,12 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	
 	@Override
 	public float getMotiveFriction(){
-		return !this.isFlat ? this.pack.wheel.motiveFriction : this.pack.wheel.motiveFriction/10F;
+		return !this.isFlat ? this.definition.wheel.motiveFriction : this.definition.wheel.motiveFriction/10F;
 	}
 	
 	@Override
 	public float getLateralFriction(){
-		return !this.isFlat ? this.pack.wheel.lateralFriction : this.pack.wheel.lateralFriction/10F;
+		return !this.isFlat ? this.definition.wheel.lateralFriction : this.definition.wheel.lateralFriction/10F;
 	}
 	
 	@Override

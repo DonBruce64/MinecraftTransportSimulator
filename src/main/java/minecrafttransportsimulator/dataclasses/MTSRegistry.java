@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.dataclasses;
 
 import java.io.InputStreamReader;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.BlockBench;
@@ -18,16 +18,19 @@ import minecrafttransportsimulator.blocks.pole.BlockPoleAttachment;
 import minecrafttransportsimulator.blocks.pole.BlockPoleNormal;
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
 import minecrafttransportsimulator.blocks.pole.BlockPoleWallConnector;
-import minecrafttransportsimulator.items.core.ItemDecor;
-import minecrafttransportsimulator.items.core.ItemInstrument;
-import minecrafttransportsimulator.items.core.ItemItem;
+import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.items.core.ItemJerrycan;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.items.core.ItemKey;
-import minecrafttransportsimulator.items.core.ItemBooklet;
-import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.core.ItemWrench;
-import minecrafttransportsimulator.items.parts.AItemPart;
+import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.items.packs.ItemBooklet;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONSign;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.control.AileronPacket;
 import minecrafttransportsimulator.packets.control.BrakePacket;
 import minecrafttransportsimulator.packets.control.ElevatorPacket;
@@ -79,6 +82,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
@@ -102,30 +106,25 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod.EventBusSubscriber
 public final class MTSRegistry{
 	/**All registered core items are stored in this list as they are added.  Used to sort items in the creative tab.**/
-	public static List<Item> itemList = new ArrayList<Item>();
+	public static List<Item> coreItems = new ArrayList<Item>();
 	
-	/**Maps vehicle item names to items.  All vehicle items for all packs will be populated here.*/
-	public static Map<String, ItemVehicle> vehicleItemMap = new LinkedHashMap<String, ItemVehicle>();
+	/**All registered pack items are stored in this map as they are added.  Used to sort items in the creative tab,
+	 * and will be sent to packs for item registration when so asked via {@link #getItemsForPack(String)}.  May also
+	 * be used if we need to lookup a registered part item.  Map is keyed by packID to allow sorting for items from 
+	 * different packs, while the sub-map is keyed by the part's {@link AJSONItem#systemName}.**/
+	public static TreeMap<String, LinkedHashMap<String, AItemPack>> packItemMap = new TreeMap<String, LinkedHashMap<String, AItemPack>>();
 	
-	/**Maps part item names to items.  All part items for all packs will be populated here.*/
-	public static Map<String, AItemPart> partItemMap = new LinkedHashMap<String, AItemPart>();
+	/**Special map for signs, as they don't have items associated with them.  Instead, they just have a definition
+	 * that's linked to a unique two-string keyset like the items do.**/
+	public static TreeMap<String, LinkedHashMap<String, JSONSign>> packSignMap = new TreeMap<String, LinkedHashMap<String, JSONSign>>();
 	
-	/**Maps instrument item names to items.  All instrument items for all packs will be populated here.*/
-	public static Map<String, ItemInstrument> instrumentItemMap = new LinkedHashMap<String, ItemInstrument>();
+	/**Maps pack items to their list of crafting ingredients.*/
+	public static final Map<AItemPack, String[]> packCraftingMap = new HashMap<AItemPack, String[]>();
 	
-	/**Maps decor item names to items.  All decor items for all packs will be populated here.*/
-	public static Map<String, ItemDecor> decorItemMap = new LinkedHashMap<String, ItemDecor>();
-	
-	/**Maps item item names to items.  All item items for all packs will be populated here.*/
-	public static Map<String, ItemItem> itemItemMap = new LinkedHashMap<String, ItemItem>();
-	
-	/**Maps item item names to items.  All booklet items for all packs will be populated here.*/
-	public static Map<String, ItemBooklet> bookletItemMap = new LinkedHashMap<String, ItemBooklet>();
-		
 	/**Core creative tab for base MTS items**/
 	public static final CreativeTabCore coreTab = new CreativeTabCore();
 	
-	/**Map of creative tabs for packs.  Keyed by pack IDs.  Populated by the {@link PackParserSystem}**/
+	/**Map of creative tabs for packs.  Keyed by packID.  Populated by the {@link PackParserSystem}**/
 	public static final Map<String, CreativeTabPack> packTabs = new HashMap<String, CreativeTabPack>();
 
 	//Vehicle interaction items.
@@ -135,15 +134,15 @@ public final class MTSRegistry{
 	public static final Item jerrycan = new ItemJerrycan().setCreativeTab(coreTab);
 	
 	//Crafting benches.
-	public static final Block vehicleBench = new BlockBench("plane", "car", "blimp", "boat");
-	public static final Block propellerBench = new BlockBench("propeller");
-	public static final Block engineBench = new BlockBench("engine_aircraft", "engine_jet", "engine_car", "engine_boat");
-	public static final Block wheelBench = new BlockBench("wheel", "skid", "pontoon", "tread");
-	public static final Block seatBench = new BlockBench("seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand");
-	public static final Block gunBench = new BlockBench("gun_fixed", "gun_tripod", "bullet");
-	public static final Block customBench = new BlockBench("custom");
-	public static final Block instrumentBench = new BlockBench("instrument");
-	public static final Block componentBench = new BlockBench("item");
+	public static final Block vehicleBench = new BlockBench(JSONVehicle.class);
+	public static final Block propellerBench = new BlockBench(JSONPart.class, "propeller");
+	public static final Block engineBench = new BlockBench(JSONPart.class, "engine_aircraft", "engine_jet", "engine_car", "engine_boat");
+	public static final Block wheelBench = new BlockBench(JSONPart.class, "wheel", "skid", "pontoon", "tread");
+	public static final Block seatBench = new BlockBench(JSONPart.class, "seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand");
+	public static final Block gunBench = new BlockBench(JSONPart.class, "gun_fixed", "gun_tripod", "bullet");
+	public static final Block customBench = new BlockBench(JSONPart.class, "custom");
+	public static final Block instrumentBench = new BlockBench(JSONInstrument.class);
+	public static final Block componentBench = new BlockBench(JSONItem.class);
 	
 	//Fuel pump.
 	public static final Block fuelPump = new BlockFuelPump();
@@ -160,14 +159,12 @@ public final class MTSRegistry{
 	public static final Block trafficSign = new BlockPoleSign(0.125F);
 		
 	//Decor blocks.
-	//TODO make a creative tab exception for these.
 	public static final Block decorBasicDark = new BlockDecor(false, false);
 	public static final Block decorOrientedDark = new BlockDecor(true, false);
 	public static final Block decorBasicLight = new BlockDecor(false, true);
 	public static final Block decorOrientedLight = new BlockDecor(true, true);
 	
-	//Counters for registry systems.
-	private static int entityNumber = 0;
+	//Counter for packets.
 	private static int packetNumber = 0;
 	
 	
@@ -180,41 +177,35 @@ public final class MTSRegistry{
 	/**
 	 * This is called by packs to query what items they have registered.
 	 * Used to allow packs to register their own items after core mod processing.
+	 * We need to cast-down the items to the Item class as a List with type Item is what
+	 * the packloader is expecting.
 	 */
-	public static List<Item> getItemsForPack(String modID){
-		List<Item> packItems = new ArrayList<Item>();
-		for(ItemVehicle item : vehicleItemMap.values()){
-			if(item.vehicleName.startsWith(modID)){
-				packItems.add(item);
-			}
+	public static List<Item> getItemsForPack(String packID){
+		List<Item> items = new ArrayList<Item>();
+		for(AItemPack packItem : packItemMap.get(packID).values()){
+			items.add(packItem);
 		}
-		for(AItemPart item : partItemMap.values()){
-			if(item.partName.startsWith(modID)){
-				packItems.add(item);
-			}
-		}
-		for(ItemInstrument item : instrumentItemMap.values()){
-			if(item.instrumentName.startsWith(modID)){
-				packItems.add(item);
-			}
-		}
-		for(ItemDecor item : decorItemMap.values()){
-			if(item.decorName.startsWith(modID)){
-				packItems.add(item);
-			}
-		}
-		for(ItemItem item : itemItemMap.values()){
-			if(item.itemName.startsWith(modID)){
-				packItems.add(item);
-			}
-		}
-		for(ItemBooklet item : bookletItemMap.values()){
-			if(item.bookletName.startsWith(modID)){
-				packItems.add(item);
-			}
-		}
-		return packItems;
+		return items;
 	}
+	
+	/**
+	 * This method returns a list of ItemStacks that are required
+	 * to craft the passed-in pack item.  Used by {@link GUIPartBench}
+	 * amd {@link PacketPlayerCrafting} as well as any other systems that 
+	 * need to know what materials make up pack items.
+	 */
+    public static List<ItemStack> getMaterials(AItemPack item){
+    	final List<ItemStack> materialList = new ArrayList<ItemStack>();
+		for(String itemText : MTSRegistry.packCraftingMap.get(item)){
+			int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+			
+			int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+			materialList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata));
+		}
+    	return materialList;
+    }
 	
 	/**
 	 * Registers all blocks present in this class.
@@ -262,7 +253,7 @@ public final class MTSRegistry{
 					Item item = (Item) field.get(null);
 					String name = field.getName().toLowerCase();
 					event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
-					MTSRegistry.itemList.add(item);
+					MTSRegistry.coreItems.add(item);
 				}catch(Exception e){
 					e.printStackTrace();
 				}
@@ -274,7 +265,7 @@ public final class MTSRegistry{
 						itemBlock.setCreativeTab(block.getCreativeTabToDisplayOn());
 						String name = field.getName().toLowerCase();
 						event.getRegistry().register(itemBlock.setRegistryName(name).setUnlocalizedName(name));
-						MTSRegistry.itemList.add(itemBlock);
+						MTSRegistry.coreItems.add(itemBlock);
 					}
 				}catch(Exception e){
 					e.printStackTrace();
@@ -282,56 +273,15 @@ public final class MTSRegistry{
 			}
 		}
 		
-		
-		//Next add multipart items to the lists and creative tabs.
-		for(String multipartName : PackParserSystem.getAllVehiclePackNames()){
-			ItemVehicle itemMultipart = new ItemVehicle(multipartName);
-			vehicleItemMap.put(multipartName, itemMultipart);
-		}
-		
-		//Now add part items to the lists.
-		for(String partName : PackParserSystem.getAllPartPackNames()){
-			try{
-				Class<? extends AItemPart> itemClass = PackParserSystem.getPartItemClass(partName);
-				Constructor<? extends AItemPart> construct = itemClass.getConstructor(String.class);
-				AItemPart itemPart = construct.newInstance(partName);
-				partItemMap.put(partName, itemPart);
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-		}
-		
-		//Then add instrument items to the lists.
-		for(String instrumentName : PackParserSystem.getAllInstruments()){
-			ItemInstrument itemInstrument = new ItemInstrument(instrumentName);
-			instrumentItemMap.put(instrumentName, itemInstrument);
-		}
-		
-		//Next add decor items to the lists.
-		for(String decorName : PackParserSystem.getAllDecor()){
-			ItemDecor itemDecor = new ItemDecor(decorName);
-			decorItemMap.put(decorName, itemDecor);
-		}
-		
-		//Now add item items to the lists.
-		for(String itemName : PackParserSystem.getAllItems()){
-			ItemItem itemItem = new ItemItem(itemName);
-			itemItemMap.put(itemName, itemItem);
-		}
-		
-		//Now add booklet items to the lists.
-		for(String bookletName : PackParserSystem.getAllBooklets()){
-			ItemBooklet itemBooklet = new ItemBooklet(bookletName);
-			bookletItemMap.put(bookletName, itemBooklet);
-		}
-		
 		//We also add the core game manual item here.  This one is special, as it doesn't come
 		//with any pack as it's for the main game.  Same code applies as pack manuals for consistency.
 		PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json")), "handbook_en", MTS.MODID);
-		ItemBooklet handbook = new ItemBooklet("mts:handbook_en");
-		bookletItemMap.put("mts:handbook_en", handbook);
-		event.getRegistry().register(handbook.setRegistryName("handbook_en").setUnlocalizedName("handbook_en"));
-		MTSRegistry.itemList.add(handbook);
+		//We know we will only have one item registered for the core "pack" as a pack item, and it's the handbook, so this cast is safe.
+		ItemBooklet handbook = (ItemBooklet) MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_en");
+		event.getRegistry().register(handbook.setRegistryName("mts:handbook_en").setUnlocalizedName("mts:handbook_en"));
+		//Get rid of the handbook from the pack item map as those shouldn't exist.
+		MTSRegistry.packItemMap.remove(MTS.MODID);
+		MTSRegistry.coreItems.add(handbook);
 	}
 
 	/**
@@ -340,6 +290,7 @@ public final class MTSRegistry{
 	 * the pack data stored in NBT is what makes for different vehicles.
 	 */
 	private static void initEntities(){
+		int entityNumber = 0;
 		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Car.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Car.class, "vehiclecar", entityNumber++, MTS.MODID, 256, 5, false);
 		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Boat.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Boat.class, "vehicleboat", entityNumber++, MTS.MODID, 256, 5, false);
 		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Plane.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Plane.class, "vehicleplane", entityNumber++, MTS.MODID, 256, 5, false);
