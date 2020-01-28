@@ -106,7 +106,6 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     
     public class VehicleRendering{
     	public int displayTextMaxLength;
-    	public byte numberWindows;
         public boolean textLighted;
         public String defaultDisplayText;
         public float[] hudBackplaneTexturePercentages;
