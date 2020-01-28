@@ -86,23 +86,12 @@ public class RenderPoleSign extends TileEntitySpecialRenderer<TileEntityPoleSign
 		//Now render the text.
 		if(sign.definition != null){
 			if(sign.definition.general.textLines != null){
-				if(!fontMap.containsKey(sign.definition.general.font)){
-					if(sign.definition.general.font.equals("default")){
-						fontMap.put(sign.definition.general.font, Minecraft.getMinecraft().fontRenderer);
-					}else{
-						String fontName = sign.definition.general.font;
-						ResourceLocation fontLocation = new ResourceLocation(fontName.substring(0, fontName.indexOf(':')), "textures/fonts/" + fontName.substring(fontName.indexOf(':') + 1) + ".png");;
-						fontMap.put(sign.definition.general.font, new FontRenderer(Minecraft.getMinecraft().gameSettings, fontLocation, Minecraft.getMinecraft().renderEngine, false));
-					}
-				}
-				FontRenderer currentFont = fontMap.get(sign.definition.general.font);
-				
 				for(byte i=0; i<sign.definition.general.textLines.length; ++i){
 					GL11.glPushMatrix();
 					GL11.glTranslatef(sign.definition.general.textLines[i].xPos - 0.5F, sign.definition.general.textLines[i].yPos - 0.5F, 0.01F);
 					GL11.glScalef(sign.definition.general.textLines[i].scale/16F, sign.definition.general.textLines[i].scale/16F, sign.definition.general.textLines[i].scale/16F);
 					GL11.glRotatef(180, 1, 0, 0);
-					currentFont.drawString(sign.text.get(i), -currentFont.getStringWidth(sign.text.get(i))/2, 0, Color.decode(sign.definition.general.textLines[i].color).getRGB());
+					Minecraft.getMinecraft().fontRenderer.drawString(sign.text.get(i), -Minecraft.getMinecraft().fontRenderer.getStringWidth(sign.text.get(i))/2, 0, Color.decode(sign.definition.general.textLines[i].color).getRGB());
 					GL11.glPopMatrix();
 				}
 			}

@@ -3,11 +3,10 @@ package minecrafttransportsimulator.jsondefs;
 public class JSONSign extends AJSONItem<JSONSign.SignGeneral>{
 
     public class SignGeneral extends AJSONItem.General{
-    	public String font;
-    	public TextLines[] textLines;
+    	public TextLine[] textLines;
     }
     
-    public class TextLines{
+    public class TextLine{
     	public byte characters;
     	public float xPos;
     	public float yPos;

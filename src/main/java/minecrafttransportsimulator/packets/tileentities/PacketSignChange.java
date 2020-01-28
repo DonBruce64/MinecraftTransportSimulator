@@ -7,7 +7,6 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.jsondefs.JSONSign;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -25,12 +24,12 @@ public class PacketSignChange extends APacketTileEntity{
 
 	public PacketSignChange(){}
 	
-	public PacketSignChange(TileEntityPoleSign tile, JSONSign definition, List<String> text, int playerID){
-		super(tile);
-		this.packID = definition.packID;
-		this.systemName = definition.systemName;
-		this.textLines = (byte) text.size();
-		this.text = text;
+	public PacketSignChange(TileEntityPoleSign sign, int playerID){
+		super(sign);
+		this.packID = sign.definition.packID;
+		this.systemName = sign.definition.systemName;
+		this.textLines = (byte) sign.text.size();
+		this.text = sign.text;
 		this.playerID = playerID;
 	}
 	

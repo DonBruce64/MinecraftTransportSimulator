@@ -36,10 +36,12 @@ public class TileEntityPoleSign extends TileEntityPoleAttachment{
 	@Override
     public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
         super.writeToNBT(tagCompound);
-        tagCompound.setString("packID",  this.definition.packID);
-        tagCompound.setString("systemName",  this.definition.systemName);
-        for(byte i=0; i<text.size(); ++i){
-        	tagCompound.setString("text" + String.valueOf(i), text.get(i));
+        if(this.definition != null){
+	        tagCompound.setString("packID",  this.definition.packID);
+	        tagCompound.setString("systemName",  this.definition.systemName);
+	        for(byte i=0; i<text.size(); ++i){
+	        	tagCompound.setString("text" + String.valueOf(i), text.get(i));
+	        }
         }
         return tagCompound;
     }
