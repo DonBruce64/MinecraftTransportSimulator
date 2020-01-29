@@ -79,7 +79,7 @@ public class GUIPanelGround extends GuiScreen{
 		
 		//If the running lights are on, we want to light up the switches in the panel.
 		//This is done in numerous places.
-		final boolean lightsOn = RenderInstruments.lightsOn(vehicle);
+		final boolean lightsOn = RenderInstruments.isPanelIlluminated(vehicle);
 		
 		//Disable the main HUD overlay if it's active.
 		CameraSystem.disableHUD = true;

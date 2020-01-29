@@ -1170,7 +1170,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	}
 	
 	private static void renderTextMarkings(EntityVehicleE_Powered vehicle){
-		if(vehicle.definition.rendering.textLighted && RenderInstruments.lightsOn(vehicle)){
+		if(vehicle.definition.rendering.textLighted && RenderInstruments.isPanelIlluminated(vehicle)){
 			GL11.glDisable(GL11.GL_LIGHTING);
 			minecraft.entityRenderer.disableLightmap();
 		}

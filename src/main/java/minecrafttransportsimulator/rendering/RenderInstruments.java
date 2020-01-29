@@ -46,7 +46,7 @@ public final class RenderInstruments{
 		}
 		
 		//Check if the lights are on.  If so, disable the lightmap.
-		boolean lightsOn = lightsOn(vehicle);
+		boolean lightsOn = isPanelIlluminated(vehicle);
 		
 		//Subtract 1 from the current engine number (if greater than 0) to account for zero-indexed engine mappings.
 		if(engineNumber > 0){
@@ -152,7 +152,7 @@ public final class RenderInstruments{
     /**
      * Checks if lights are on for this vehicle and instruments need to be lit up.
      */
-	public static boolean lightsOn(EntityVehicleE_Powered vehicle){
+	public static boolean isPanelIlluminated(EntityVehicleE_Powered vehicle){
 		return (vehicle.isLightOn(LightTypes.NAVIGATIONLIGHT) || vehicle.isLightOn(LightTypes.RUNNINGLIGHT)) && vehicle.electricPower > 3;
 	}
 	

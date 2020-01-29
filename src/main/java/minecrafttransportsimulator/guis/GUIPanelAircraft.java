@@ -108,7 +108,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		
 		//If the navigation lights are on, we want to light up the switches in the panel.
 		//This is done in numerous places.
-		final boolean lightsOn = RenderInstruments.lightsOn(aircraft);
+		final boolean lightsOn = RenderInstruments.isPanelIlluminated(aircraft);
 		
 		//If we have propellers with reverse thrust capabilities, or are a blimp, render the reverse thrust button.
 		haveReverseThrustOption = aircraft instanceof EntityVehicleG_Blimp;
