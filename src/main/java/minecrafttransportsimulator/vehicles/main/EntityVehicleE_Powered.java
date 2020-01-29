@@ -321,11 +321,23 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			}
 			lightsOnString = lightsOnString.substring(lightsOnString.indexOf(',') + 1);
 		}
-		
 		for(byte i = 0; i<definition.motorized.instruments.size(); ++i){
-			String instrumentPackID = tagCompound.getString("instrument" + i + "_packID");
+			String instrumentPackID;
+			String instrumentSystemName;
+			//Check to see if we were an old or new vehicle.  If we are old, load using the old naming convention.
+			if(tagCompound.hasKey("vehicleName")){
+				String instrumentInSlot = tagCompound.getString("instrumentInSlot" + i);
+				if(!instrumentInSlot.isEmpty()){
+					instrumentPackID = instrumentInSlot.substring(0, instrumentInSlot.indexOf(':'));
+					instrumentSystemName =  instrumentInSlot.substring(instrumentInSlot.indexOf(':') + 1);
+				}else{
+					continue;
+				}
+			}else{
+				instrumentPackID = tagCompound.getString("instrument" + i + "_packID");
+				instrumentSystemName = tagCompound.getString("instrument" + i + "_systemName");
+			}
 			if(!instrumentPackID.isEmpty()){
-				String instrumentSystemName = tagCompound.getString("instrumentInSlot" + i);
 				ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName);
 				//Check to prevent loading of faulty instruments for the wrong vehicle due to updates or stupid people.
 				if(instrument != null && instrument.definition.general.validVehicles.contains(this.definition.general.type)){

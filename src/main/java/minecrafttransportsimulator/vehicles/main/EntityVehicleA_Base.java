@@ -257,7 +257,15 @@ public abstract class EntityVehicleA_Base extends Entity{
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
-		this.definition = (JSONVehicle) MTSRegistry.packItemMap.get(tagCompound.getString("packID")).get(tagCompound.getString("systemName")).definition;
+		//Check to see if we were an old or new vehicle.  If we are old, load using the old naming convention.
+		if(tagCompound.hasKey("vehicleName")){
+			String oldVehicleName = tagCompound.getString("vehicleName");
+			String parsedPackID = oldVehicleName.substring(0, oldVehicleName.indexOf(':'));
+			String parsedSystemName =  oldVehicleName.substring(oldVehicleName.indexOf(':') + 1);
+			this.definition = (JSONVehicle) MTSRegistry.packItemMap.get(parsedPackID).get(parsedSystemName).definition;
+		}else{
+			this.definition = (JSONVehicle) MTSRegistry.packItemMap.get(tagCompound.getString("packID")).get(tagCompound.getString("systemName")).definition;
+		}
 		
 		if(this.parts.size() == 0){
 			NBTTagList partTagList = tagCompound.getTagList("Parts", 10);
@@ -267,8 +275,18 @@ public abstract class EntityVehicleA_Base extends Entity{
 				try{
 					NBTTagCompound partTag = partTagList.getCompoundTagAt(i);
 					VehiclePart packPart = getPackDefForLocation(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ"));
-					JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(partTag.getString("packID")).get(partTag.getString("systemName")).definition;
-					addPart(PackParserSystem.createPart((EntityVehicleE_Powered) this, packPart, partDefinition, partTag), true);
+					//If we are using the old naming system for this vehicle, use it to load parts too.
+					if(tagCompound.hasKey("vehicleName")){
+						String oldPartName = partTag.getString("partName");
+						String parsedPackID = oldPartName.substring(0, oldPartName.indexOf(':'));
+						String parsedSystemName =  oldPartName.substring(oldPartName.indexOf(':') + 1);
+						JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(parsedPackID).get(parsedSystemName).definition;
+						addPart(PackParserSystem.createPart((EntityVehicleE_Powered) this, packPart, partDefinition, partTag), true);
+					}else{
+						JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(partTag.getString("packID")).get(partTag.getString("systemName")).definition;
+						addPart(PackParserSystem.createPart((EntityVehicleE_Powered) this, packPart, partDefinition, partTag), true);
+					}
+					
 				}catch(Exception e){
 					MTS.MTSLog.error("ERROR IN LOADING PART FROM NBT!");
 					e.printStackTrace();
@@ -290,8 +308,8 @@ public abstract class EntityVehicleA_Base extends Entity{
 				NBTTagCompound partTag = part.getPartNBTTag();
 				//We need to set some extra data here for the part to allow this vehicle to know where it went.
 				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
-				partTag.setString("partPackID", part.definition.packID);
-				partTag.setString("partSystemName", part.definition.systemName);
+				partTag.setString("packID", part.definition.packID);
+				partTag.setString("systemName", part.definition.systemName);
 				partTag.setDouble("offsetX", part.offset.x);
 				partTag.setDouble("offsetY", part.offset.y);
 				partTag.setDouble("offsetZ", part.offset.z);

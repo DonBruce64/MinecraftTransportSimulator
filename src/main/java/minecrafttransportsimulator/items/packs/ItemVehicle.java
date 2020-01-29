@@ -51,8 +51,17 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 							try{
 								NBTTagCompound partTag = partTagList.getCompoundTagAt(i);
 								VehiclePart packPart = newVehicle.getPackDefForLocation(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ"));
-								JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(partTag.getString("packID")).get(partTag.getString("systemName")).definition;
-								newVehicle.addPart(PackParserSystem.createPart((EntityVehicleE_Powered) newVehicle, packPart, partDefinition, partTag), true);
+								//If we are using the old naming system for this vehicle, use it to load parts too.
+								if(tagCompound.hasKey("vehicleName")){
+									String oldPartName = partTag.getString("partName");
+									String parsedPackID = oldPartName.substring(0, oldPartName.indexOf(':'));
+									String parsedSystemName =  oldPartName.substring(oldPartName.indexOf(':') + 1);
+									JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(parsedPackID).get(parsedSystemName).definition;
+									newVehicle.addPart(PackParserSystem.createPart(newVehicle, packPart, partDefinition, partTag), true);
+								}else{
+									JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(partTag.getString("packID")).get(partTag.getString("systemName")).definition;
+									newVehicle.addPart(PackParserSystem.createPart(newVehicle, packPart, partDefinition, partTag), true);
+								}
 							}catch(Exception e){
 								MTS.MTSLog.error("ERROR IN LOADING PART FROM NBT!");
 								e.printStackTrace();
@@ -74,9 +83,22 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 						newVehicle.fluidName=tagCompound.getString("fluidName");
 						newVehicle.electricPower=tagCompound.getDouble("electricPower");
 						for(byte i = 0; i<definition.motorized.instruments.size(); ++i){
-							String instrumentPackID = tagCompound.getString("instrument" + i + "_packID");
+							String instrumentPackID;
+							String instrumentSystemName;
+							//Check to see if we were an old or new vehicle.  If we are old, load using the old naming convention.
+							if(tagCompound.hasKey("vehicleName")){
+								String instrumentInSlot = tagCompound.getString("instrumentInSlot" + i);
+								if(!instrumentInSlot.isEmpty()){
+									instrumentPackID = instrumentInSlot.substring(0, instrumentInSlot.indexOf(':'));
+									instrumentSystemName =  instrumentInSlot.substring(instrumentInSlot.indexOf(':') + 1);
+								}else{
+									continue;
+								}
+							}else{
+								instrumentPackID = tagCompound.getString("instrument" + i + "_packID");
+								instrumentSystemName = tagCompound.getString("instrument" + i + "_systemName");
+							}
 							if(!instrumentPackID.isEmpty()){
-								String instrumentSystemName = tagCompound.getString("instrumentInSlot" + i);
 								ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName);
 								//Check to prevent loading of faulty instruments for the wrong vehicle due to updates or stupid people.
 								if(instrument != null && instrument.definition.general.validVehicles.contains(this.definition.general.type)){
