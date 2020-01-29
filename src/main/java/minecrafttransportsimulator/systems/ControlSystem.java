@@ -226,7 +226,7 @@ public final class ControlSystem{
 		
 		//Increment or decrement throttle.
 		if(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName != null){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), (byte) ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState((short) 0)));
+			MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), (byte) ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState((short) 100)));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()){
 				MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MAX_VALUE));
@@ -331,7 +331,7 @@ public final class ControlSystem{
 		
 		//Change gas to on or off.
 		if(ControlsJoystick.CAR_GAS.config.joystickName != null){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) ControlsJoystick.CAR_GAS.getAxisState((short) 0)));
+			MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) ControlsJoystick.CAR_GAS.getAxisState((short) 100)));
 		}else{
 			if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
 				MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) 50));
