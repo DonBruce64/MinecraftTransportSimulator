@@ -31,6 +31,7 @@ public class VehicleGroundDeviceBox{
 	public boolean isCollided;
 	public boolean isGrounded;
 	public double collisionDepth;
+	public VehicleAxisAlignedBB currentBox;
 	public double xCoord;
 	public double yCoord;
 	public double zCoord;
@@ -103,14 +104,14 @@ public class VehicleGroundDeviceBox{
 		isGrounded = false;
 		collisionDepth = 0;
 		if(!groundDevices.isEmpty()){
-			final VehicleAxisAlignedBB groundCollisionBox = getSolidPoint();
-			final List<AxisAlignedBB> groundCollidingBoxes = groundCollisionBox.getAABBCollisions(vehicle.world, null);
+			currentBox = getSolidPoint();
+			final List<AxisAlignedBB> groundCollidingBoxes = currentBox.getAABBCollisions(vehicle.world, null);
 			isCollided = !groundCollidingBoxes.isEmpty();
-			isGrounded = isCollided ? false : !groundCollisionBox.offset(0, APartGroundDevice.groundDetectionOffset.y, 0).getAABBCollisions(vehicle.world, null).isEmpty();
-			collisionDepth = isCollided ? getCollisionDepthForCollisions(groundCollisionBox, groundCollidingBoxes) : 0;
-			xCoord = groundCollisionBox.rel.x;
-			yCoord = groundCollisionBox.rel.y - groundCollisionBox.height/2D;
-			zCoord = groundCollisionBox.rel.z;
+			isGrounded = isCollided ? false : !currentBox.offset(0, APartGroundDevice.groundDetectionOffset.y, 0).getAABBCollisions(vehicle.world, null).isEmpty();
+			collisionDepth = isCollided ? getCollisionDepthForCollisions(currentBox, groundCollidingBoxes) : 0;
+			xCoord = currentBox.rel.x;
+			yCoord = currentBox.rel.y - currentBox.height/2D;
+			zCoord = currentBox.rel.z;
 		}
 		
 		if(!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()){

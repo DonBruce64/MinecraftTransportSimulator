@@ -53,10 +53,10 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public final List<APartGroundDevice> groundedGroundDevices = new ArrayList<APartGroundDevice>();
 	
 	//Classes used for ground device collisions.
-	private VehicleGroundDeviceBox frontLeftGroundDeviceBox;
-	private VehicleGroundDeviceBox frontRightGroundDeviceBox;
-	private VehicleGroundDeviceBox rearLeftGroundDeviceBox;
-	private VehicleGroundDeviceBox rearRightGroundDeviceBox;
+	protected VehicleGroundDeviceBox frontLeftGroundDeviceBox;
+	protected VehicleGroundDeviceBox frontRightGroundDeviceBox;
+	protected VehicleGroundDeviceBox rearLeftGroundDeviceBox;
+	protected VehicleGroundDeviceBox rearRightGroundDeviceBox;
 	
 	public static final double maxRotationInRadPerTick = 0.0174533D*2D;
 	
