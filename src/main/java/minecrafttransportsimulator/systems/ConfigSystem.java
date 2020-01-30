@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.jsondefs.JSONConfig;
 
 
@@ -20,7 +21,6 @@ import minecrafttransportsimulator.jsondefs.JSONConfig;
  */
 public final class ConfigSystem{
 	
-	//-----------------NEW CODE---------------------
 	private static File configFile;
 	public static JSONConfig configObject;
 	
@@ -39,8 +39,8 @@ public final class ConfigSystem{
 			try{
 				configObject = new Gson().fromJson(new FileReader(configFile), JSONConfig.class);
 			}catch(Exception e){
-				System.err.println("ERROR: ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
-				e.printStackTrace();
+				MTS.MTSLog.error("ERROR: ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
+				MTS.MTSLog.error(e.getMessage());
 			}
 		}
 		

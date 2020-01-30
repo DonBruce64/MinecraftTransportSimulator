@@ -4,7 +4,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.gson.Gson;
 
@@ -82,9 +81,10 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public final class PackParserSystem{
-    
-    /**Map that keys the unique name of a sign to its pack.*/
-    private static final Map<String, JSONSign> signPackMap = new LinkedHashMap<String, JSONSign>();
+	
+	/**List of log entries to be added to the log.  Saved here as the log won't be ready till preInit, which
+	 * runs after this parsing operation.*/
+	public static List<String> logEntries = new ArrayList<String>();
     
     
     //-----START OF INIT LOGIC-----
@@ -132,8 +132,8 @@ public final class PackParserSystem{
     		}
     		
     	}catch(Exception e){
-    		System.err.println("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		e.printStackTrace();
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
     }
     
@@ -142,8 +142,8 @@ public final class PackParserSystem{
     	try{
     		setupItem(createPartItem(new Gson().fromJson(jsonReader, JSONPart.class)), jsonFileName, packID, ItemClassification.PART);
     	}catch(Exception e){
-    		System.err.println("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		e.printStackTrace();
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
     }
     
@@ -152,8 +152,8 @@ public final class PackParserSystem{
     	try{
     		setupItem(new ItemInstrument(new Gson().fromJson(jsonReader, JSONInstrument.class)), jsonFileName, packID, ItemClassification.INSTRUMENT);
     	}catch(Exception e){
-    		System.err.println("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		e.printStackTrace();
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
     }
     
@@ -172,8 +172,8 @@ public final class PackParserSystem{
 	    	}
 	    	MTSRegistry.packSignMap.get(packID).put(jsonFileName, definition);
     	}catch(Exception e){
-    		System.err.println("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		e.printStackTrace();
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
     }
     
@@ -182,8 +182,8 @@ public final class PackParserSystem{
     	try{
     		setupItem(new ItemDecor(new Gson().fromJson(jsonReader, JSONDecor.class)), jsonFileName, packID, ItemClassification.DECOR);
     	}catch(Exception e){
-    		System.err.println("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		e.printStackTrace();
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
     }
     
@@ -192,8 +192,8 @@ public final class PackParserSystem{
     	try{
 	    	setupItem(new ItemItem(new Gson().fromJson(jsonReader, JSONItem.class)), jsonFileName, packID, ItemClassification.ITEM);
     	}catch(Exception e){
-    		System.err.println("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		e.printStackTrace();
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
     }
     
@@ -202,8 +202,8 @@ public final class PackParserSystem{
     	try{
     		setupItem(new ItemBooklet(new Gson().fromJson(jsonReader, JSONBooklet.class)), jsonFileName, packID, ItemClassification.BOOKLET);
     	}catch(Exception e){
-    		System.err.println("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		e.printStackTrace();
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
     }
     
