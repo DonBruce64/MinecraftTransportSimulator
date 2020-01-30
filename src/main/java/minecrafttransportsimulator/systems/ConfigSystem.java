@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONConfig;
 
 
@@ -45,9 +46,20 @@ public final class ConfigSystem{
 		}
 		
 		//If we don't have a valid configObject, we must not have a file or have a corrupted file.
+		//If our configObject is valid, parse out the crafting overrides.
 		//In either case, make a fresh object now.
 		if(configObject == null){
 			configObject = new JSONConfig();
+		}else{
+			for(String craftingOverridePackID : configObject.crafting.overrides.keySet()){
+				if(MTSRegistry.packItemMap.containsKey(craftingOverridePackID)){
+					for(String craftingOverrideSystemName : configObject.crafting.overrides.get(craftingOverridePackID).keySet()){
+						if(MTSRegistry.packItemMap.get(craftingOverridePackID).containsKey(craftingOverrideSystemName)){
+							MTSRegistry.packCraftingMap.put(MTSRegistry.packItemMap.get(craftingOverridePackID).get(craftingOverrideSystemName), configObject.crafting.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
+						}
+					}
+				}
+			}
 		}
 		
 		//After parsing the config save it.  This allows new entries to be populated.

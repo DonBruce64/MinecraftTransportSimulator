@@ -118,7 +118,8 @@ public final class MTSRegistry{
 	 * that's linked to a unique two-string keyset like the items do.**/
 	public static TreeMap<String, LinkedHashMap<String, JSONSign>> packSignMap = new TreeMap<String, LinkedHashMap<String, JSONSign>>();
 	
-	/**Maps pack items to their list of crafting ingredients.*/
+	/**Maps pack items to their list of crafting ingredients.  This is used rather than the core JSON to allow for
+	 * overriding the crafting materials in said JSON, and to concatonate the materials in {@link JSONVehicle}*/
 	public static final Map<AItemPack, String[]> packCraftingMap = new HashMap<AItemPack, String[]>();
 	
 	/**Core creative tab for base MTS items**/
