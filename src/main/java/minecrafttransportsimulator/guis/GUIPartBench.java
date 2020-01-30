@@ -16,6 +16,7 @@ import minecrafttransportsimulator.blocks.core.BlockBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.items.packs.ItemVehicle;
+import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModel;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -218,9 +219,17 @@ public class GUIPartBench extends GuiScreen{
 			}else if(bench.renderType.isFor3DModels){
 				String customModel = ((AJSONMultiModel.General) currentItem.definition.general).modelName;
 				if(customModel != null){
-					parseModel(currentItem.definition.packID, "objmodels/parts/" + customModel + ".obj");
+					if(currentItem instanceof AItemPart){
+						parseModel(currentItem.definition.packID, "objmodels/parts/" + customModel + ".obj");
+					}else{
+						parseModel(currentItem.definition.packID, "objmodels/decors/" + customModel + ".obj");
+					}
 				}else{
-					parseModel(currentItem.definition.packID, "objmodels/parts/" + currentItem.definition.systemName + ".obj");
+					if(currentItem instanceof AItemPart){
+						parseModel(currentItem.definition.packID, "objmodels/parts/" + currentItem.definition.systemName + ".obj");
+					}else{
+						parseModel(currentItem.definition.packID, "objmodels/decors/" + currentItem.definition.systemName + ".obj");
+					}
 				}
 			}
 		}
@@ -230,8 +239,10 @@ public class GUIPartBench extends GuiScreen{
 			final ResourceLocation partTextureLocation;
 			if(bench.renderType.isForVehicles){
 				partTextureLocation = new ResourceLocation(currentItem.definition.packID, "textures/vehicles/" + currentItem.definition.systemName + ".png");
-			}else{
+			}else if(currentItem instanceof AItemPart){
 				partTextureLocation = new ResourceLocation(currentItem.definition.packID, "textures/parts/" + currentItem.definition.systemName + ".png");
+			}else{
+				partTextureLocation = new ResourceLocation(currentItem.definition.packID, "textures/decors/" + currentItem.definition.systemName + ".png");
 			}
 			textureMap.put(currentItem, partTextureLocation);
 		}
