@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.guis;
+package minecrafttransportsimulator.guis.instances;
 
 import java.awt.Color;
 import java.util.ArrayList;
