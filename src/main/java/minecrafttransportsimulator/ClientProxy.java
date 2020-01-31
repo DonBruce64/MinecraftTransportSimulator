@@ -5,9 +5,9 @@ import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
 import minecrafttransportsimulator.guis.GUIDevRender;
 import minecrafttransportsimulator.guis.GUIInstruments;
-import minecrafttransportsimulator.guis.GUIBooklet;
 import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.guis.GUISign;
+import minecrafttransportsimulator.guis.instances.GUIBooklet;
 import minecrafttransportsimulator.guis.instances.GUITrafficSignalController;
 import minecrafttransportsimulator.items.packs.ItemBooklet;
 import minecrafttransportsimulator.systems.ControlSystem;
