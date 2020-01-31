@@ -26,6 +26,7 @@ import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.items.packs.ItemBooklet;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -128,6 +129,9 @@ public final class MTSRegistry{
 	/**Map of creative tabs for packs.  Keyed by packID.  Populated by the {@link PackParserSystem}**/
 	public static final Map<String, CreativeTabPack> packTabs = new HashMap<String, CreativeTabPack>();
 
+	//Booklets for manuals.  Not made final as they are created dynamically at runtime.
+	public static Item handbook_en;
+	
 	//Vehicle interaction items.
 	public static final Item wrench = new ItemWrench().setCreativeTab(coreTab);
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
@@ -144,6 +148,7 @@ public final class MTSRegistry{
 	public static final Block customBench = new BlockBench(JSONPart.class, "custom");
 	public static final Block instrumentBench = new BlockBench(JSONInstrument.class);
 	public static final Block componentBench = new BlockBench(JSONItem.class);
+	public static final Block decorBench = new BlockBench(JSONDecor.class);
 	
 	//Fuel pump.
 	public static final Block fuelPump = new BlockFuelPump();
@@ -247,7 +252,18 @@ public final class MTSRegistry{
 	 */
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event){
-		//First register all core items.
+		//Before doing any item registration, create the pack handbooks.
+		//These are special, as they don't come from any packs, yet they use the booklet code.
+		//This is done to avoid the need to make a new GUI.
+		PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json")), "handbook_en", MTS.MODID);
+		handbook_en = (ItemBooklet) MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_en").setUnlocalizedName("mts:handbook_en");
+		//Get rid of the handbooks from the pack item map as those shouldn't exist.
+		//Then add them to the coreItem list to be displayed on the core creative tab.
+		MTSRegistry.packItemMap.remove(MTS.MODID);
+		MTSRegistry.coreItems.add(handbook_en);
+		
+		
+		//Now register all core items.
 		for(Field field : MTSRegistry.class.getFields()){
 			if(field.getType().equals(Item.class)){
 				try{
@@ -273,16 +289,6 @@ public final class MTSRegistry{
 				}
 			}
 		}
-		
-		//We also add the core game manual item here.  This one is special, as it doesn't come
-		//with any pack as it's for the main game.  Same code applies as pack manuals for consistency.
-		PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json")), "handbook_en", MTS.MODID);
-		//We know we will only have one item registered for the core "pack" as a pack item, and it's the handbook, so this cast is safe.
-		ItemBooklet handbook = (ItemBooklet) MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_en");
-		event.getRegistry().register(handbook.setRegistryName("mts:handbook_en").setUnlocalizedName("mts:handbook_en"));
-		//Get rid of the handbook from the pack item map as those shouldn't exist.
-		MTSRegistry.packItemMap.remove(MTS.MODID);
-		MTSRegistry.coreItems.add(handbook);
 	}
 
 	/**
