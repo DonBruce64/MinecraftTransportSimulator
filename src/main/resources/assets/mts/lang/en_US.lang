@@ -291,6 +291,7 @@ tile.gunbench.name=Rifling Machine (Guns & Ammo)
 tile.custombench.name=Tool Bench (Custom Parts)
 tile.instrumentbench.name=Instrument Bench
 tile.componentbench.name=Component Bench (Custom Items)
+tile.decorbench.name=Decor Bench (Decorative Blocks)
 
 tile.fuelpump.name=Fuel Pump
 tile.fuelpump.level=LVL:
@@ -318,6 +319,8 @@ advancements.mts.componentbench.title=You Can Buy Anything Online
 advancements.mts.componentbench.description=Create a Component Bench
 advancements.mts.custombench.title=Custom Parts
 advancements.mts.custombench.description=Create a Tool Bench
+advancements.mts.decorbench.title=I Thought This Was Decocraft...
+advancements.mts.decorbench.description=Create a Decor Bench
 advancements.mts.enginebench.title=Rev it Up
 advancements.mts.enginebench.description=Create an Engine Hoist
 advancements.mts.gunbench.title=Pew Pew

@@ -11,10 +11,13 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BlockBench extends ABlockRotatable{
 	private final List<String> validPartTypes;
@@ -45,6 +48,12 @@ public class BlockBench extends ABlockRotatable{
 			return validJsonClass.equals(JSONPart.class) ? validPartTypes.contains(((JSONPart) definition).general.type) : true;
 		}
 		return false;
+	}
+	
+	//Need to override this to make the decor bench render its glass texture correctly.
+	@Override
+	public BlockRenderLayer getBlockLayer(){
+		return BlockRenderLayer.CUTOUT;
 	}
 	
 	public static enum RenderType{
