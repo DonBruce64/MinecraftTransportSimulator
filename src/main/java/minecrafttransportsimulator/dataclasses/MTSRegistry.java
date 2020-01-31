@@ -258,9 +258,7 @@ public final class MTSRegistry{
 		PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json")), "handbook_en", MTS.MODID);
 		handbook_en = (ItemBooklet) MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_en").setUnlocalizedName("mts:handbook_en");
 		//Get rid of the handbooks from the pack item map as those shouldn't exist.
-		//Then add them to the coreItem list to be displayed on the core creative tab.
 		MTSRegistry.packItemMap.remove(MTS.MODID);
-		MTSRegistry.coreItems.add(handbook_en);
 		
 		
 		//Now register all core items.
