@@ -141,6 +141,7 @@ public class JSONConfig{
 		public ConfigBoolean keyboardOverride = new ConfigBoolean(true, "Should keyboard controls be ignored when a joystick control is mapped?  Leave true to free up the keyboard while using a joysick.");
 		public ConfigInteger renderReductionHeight = new ConfigInteger(250, "When riding in a vehicle above this height MTS will reduce the render distance to 1.  This provides a significant speedup for worldgen and render lag.  Note that this is only active on Singleplayer.");
 		public ConfigInteger controlSurfaceCooldown = new ConfigInteger(4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.  This is not used when using a joystick.");
+		public ConfigInteger steeringIncrement = new ConfigInteger(20, "How many units (1/10 of a degree) to turn the wheels on vehicles for every tick the button is held down.  This is not used when using a joystick.");
 		public ConfigDouble joystickDeadZone = new ConfigDouble(0.03D, "Dead zone for joystick axis.  This is NOT joystick specific.");
 	}
 	

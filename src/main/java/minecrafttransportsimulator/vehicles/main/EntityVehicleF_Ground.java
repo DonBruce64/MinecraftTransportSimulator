@@ -12,7 +12,8 @@ import net.minecraft.world.World;
 public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{	
 	//Note that angle variable should be divided by 10 to get actual angle.
 	public short steeringAngle;
-	public short steeringCooldown; 
+	public final short MAX_STEERING_ANGLE = 450;
+	public byte steeringCooldown; 
 	
 	//Internal variables
 	private double forwardForce;//kg*m/ticks^2
@@ -134,8 +135,13 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	protected void dampenControlSurfaces(){
 		if(steeringCooldown==0){
 			if(steeringAngle != 0){
-				MTS.MTSNet.sendToAll(new SteeringPacket(this.getEntityId(), steeringAngle < 0, (short) 0));
-				steeringAngle += steeringAngle < 0 ? 20 : -20;
+				if(steeringAngle < 20 && steeringAngle > -20){
+					MTS.MTSNet.sendToAll(new SteeringPacket(this.getEntityId(), (short) 0, (byte) 0));
+					steeringAngle = 0;
+				}else{
+					MTS.MTSNet.sendToAll(new SteeringPacket(this.getEntityId(), (short) (steeringAngle < 0 ? 20 : -20), (byte) 0));
+					steeringAngle += steeringAngle < 0 ? 20 : -20;
+				}
 			}
 		}else{
 			--steeringCooldown;

@@ -11,35 +11,36 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class RudderPacket implements IMessage{
 	private int id;
-	private byte packetType;
-	private short rudderData;
+	private short value;
+	private byte cooldown;
+	
 
 	public RudderPacket() { }
 	
-	public RudderPacket(int id, boolean increment, short rudderCooldown){
-		this.id=id;
-		this.rudderData=rudderCooldown;
-		this.packetType = (byte) (increment ? 1 : -1);
+	public RudderPacket(int id, short value, byte cooldown){
+		this.id = id;
+		this.value = value;
+		this.cooldown = cooldown;
 	}
 	
 	public RudderPacket(int id, short rudderAngle){
-		this.id=id;
-		this.rudderData=rudderAngle;
-		this.packetType = 0;
+		this.id = id;
+		this.value = rudderAngle;
+		this.cooldown = -1;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		this.id=buf.readInt();
-		this.packetType=buf.readByte();
-		this.rudderData=buf.readShort();
+		this.value=buf.readShort();
+		this.cooldown=buf.readByte();
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		buf.writeInt(this.id);
-		buf.writeByte(this.packetType);
-		buf.writeShort(this.rudderData);
+		buf.writeShort(this.value);
+		buf.writeByte(this.cooldown);
 	}
 
 	public static class Handler implements IMessageHandler<RudderPacket, IMessage>{
@@ -47,33 +48,26 @@ public class RudderPacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityVehicleF_Air thisEntity;
+					EntityVehicleF_Air vehicle;
 					if(ctx.side.isServer()){
-						thisEntity = (EntityVehicleF_Air) ctx.getServerHandler().player.world.getEntityByID(message.id);
+						vehicle = (EntityVehicleF_Air) ctx.getServerHandler().player.world.getEntityByID(message.id);
 					}else{
 						if(Minecraft.getMinecraft().world == null){
 							return;
 						}
-						thisEntity = (EntityVehicleF_Air) Minecraft.getMinecraft().world.getEntityByID(message.id);
+						vehicle = (EntityVehicleF_Air) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
-					if(thisEntity!=null){
-						if(message.packetType == 1){
-							thisEntity.rudderCooldown = message.rudderData;
-							if(thisEntity.rudderAngle + 6 <= 250){
-								thisEntity.rudderAngle += 6;
-							}else{
-								return;
-							}
-						}else if(message.packetType == -1){
-							thisEntity.rudderCooldown = message.rudderData;
-							if(thisEntity.rudderAngle - 6 >= -250){
-								thisEntity.rudderAngle -= 6;
+					if(vehicle!=null){
+						if(message.cooldown != -1){
+							vehicle.rudderCooldown = message.cooldown;
+							if(vehicle.rudderAngle + message.value > -vehicle.MAX_RUDDER_ANGLE && vehicle.rudderAngle + message.value < vehicle.MAX_RUDDER_ANGLE){
+								vehicle.rudderAngle += message.value; 
 							}else{
 								return;
 							}
 						}else{
-							thisEntity.rudderAngle = message.rudderData;
-							thisEntity.rudderCooldown = Short.MAX_VALUE;
+							vehicle.rudderAngle = message.value;
+							vehicle.rudderCooldown = Byte.MAX_VALUE;
 						}
 						if(ctx.side.isServer()){
 							MTS.MTSNet.sendToAll(message);

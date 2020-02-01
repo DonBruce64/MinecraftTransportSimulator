@@ -251,10 +251,10 @@ public final class ControlSystem{
 			MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), ControlsJoystick.AIRCRAFT_YAW.getAxisState((short) 250)));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_YAW_R.isPressed()){
-				MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), true, ConfigSystem.configObject.client.controlSurfaceCooldown.value.shortValue()));
+				MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), (short) (ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(aircraft.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 			}
 			if(ControlsKeyboard.AIRCRAFT_YAW_L.isPressed()){
-				MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), false, ConfigSystem.configObject.client.controlSurfaceCooldown.value.shortValue()));
+				MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), (short) (-ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(aircraft.rudderAngle > 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 			}
 		}
 		if(ControlsJoystick.AIRCRAFT_TRIM_YAW_R.isPressed()){
@@ -353,13 +353,15 @@ public final class ControlSystem{
 			if(ControlsJoystick.CAR_TURN.config.joystickName != null){
 				MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), ControlsJoystick.CAR_TURN.getAxisState((short) 450)));
 			}else{
+				//Depending on what we are pressing, send out packets.
+				//If we are turning in the opposite direction of our current angle, send out a packet with twice the value.
 				boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
 				boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();
 				long currentTime = powered.world.getTotalWorldTime();
 				if(turningRight && !turningLeft){
-					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), true, ConfigSystem.configObject.client.controlSurfaceCooldown.value.shortValue()));
+					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), (short) (ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(powered.steeringAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 				}else if(turningLeft && !turningRight){
-					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), false, ConfigSystem.configObject.client.controlSurfaceCooldown.value.shortValue()));
+					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), (short) (-ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(powered.steeringAngle > 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 				}
 			}
 		}

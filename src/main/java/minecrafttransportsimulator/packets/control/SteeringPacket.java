@@ -11,35 +11,36 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class SteeringPacket implements IMessage{
 	private int id;
-	private byte packetType;
-	private short steeringData;
+	private short value;
+	private byte cooldown;
+	
 
 	public SteeringPacket() { }
 	
-	public SteeringPacket(int id, boolean increment, short steeringCooldown){
-		this.id=id;
-		this.steeringData=steeringCooldown;
-		this.packetType = (byte) (increment ? 1 : -1);
+	public SteeringPacket(int id, short value, byte cooldown){
+		this.id = id;
+		this.value = value;
+		this.cooldown = cooldown;
 	}
 	
 	public SteeringPacket(int id, short steeringAngle){
-		this.id=id;
-		this.steeringData=steeringAngle;
-		this.packetType = 0;
+		this.id = id;
+		this.value = steeringAngle;
+		this.cooldown = -1;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		this.id=buf.readInt();
-		this.packetType=buf.readByte();
-		this.steeringData=buf.readShort();
+		this.value=buf.readShort();
+		this.cooldown=buf.readByte();
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		buf.writeInt(this.id);
-		buf.writeByte(this.packetType);
-		buf.writeShort(this.steeringData);
+		buf.writeShort(this.value);
+		buf.writeByte(this.cooldown);
 	}
 
 	public static class Handler implements IMessageHandler<SteeringPacket, IMessage>{
@@ -57,23 +58,16 @@ public class SteeringPacket implements IMessage{
 						vehicle = (EntityVehicleF_Ground) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
 					if(vehicle!=null){
-						if(message.packetType == 1){
-							vehicle.steeringCooldown = message.steeringData;
-							if(vehicle.steeringAngle + 20 <= 450){
-								vehicle.steeringAngle += 20;
-							}else{
-								return;
-							}
-						}else if(message.packetType == -1){
-							vehicle.steeringCooldown = message.steeringData;
-							if(vehicle.steeringAngle - 20 >= -450){
-								vehicle.steeringAngle -= 20;
+						if(message.cooldown != -1){
+							vehicle.steeringCooldown = message.cooldown;
+							if(vehicle.steeringAngle + message.value > -vehicle.MAX_STEERING_ANGLE && vehicle.steeringAngle + message.value < vehicle.MAX_STEERING_ANGLE){
+								vehicle.steeringAngle += message.value; 
 							}else{
 								return;
 							}
 						}else{
-							vehicle.steeringAngle = message.steeringData;
-							vehicle.steeringCooldown = Short.MAX_VALUE;
+							vehicle.steeringAngle = message.value;
+							vehicle.steeringCooldown = Byte.MAX_VALUE;
 						}
 						if(ctx.side.isServer()){
 							MTS.MTSNet.sendToAll(message);

@@ -27,13 +27,14 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	public short aileronAngle;
 	public short elevatorAngle;
 	public short rudderAngle;
+	public final short MAX_RUDDER_ANGLE = 450;
 	public short aileronTrim;
 	public short elevatorTrim;
 	public short rudderTrim;
 	
 	public short aileronCooldown;
 	public short elevatorCooldown;
-	public short rudderCooldown;
+	public byte rudderCooldown;
 	
 	public double trackAngle;
 	public Vec3d verticalVec = Vec3d.ZERO;
@@ -119,8 +120,13 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		}
 		if(rudderCooldown==0){
 			if(rudderAngle != 0){
-				MTS.MTSNet.sendToAll(new RudderPacket(this.getEntityId(), rudderAngle < 0, (short) 0));
-				rudderAngle += rudderAngle < 0 ? 6 : -6;
+				if(rudderAngle < 20 && rudderAngle > -20){
+					MTS.MTSNet.sendToAll(new RudderPacket(this.getEntityId(), (short) 0, (byte) 0));
+					rudderAngle = 0;
+				}else{
+					MTS.MTSNet.sendToAll(new RudderPacket(this.getEntityId(), (short) (rudderAngle < 0 ? 20 : -20), (byte) 0));
+					rudderAngle += rudderAngle < 0 ? 20 : -20;
+				}
 			}
 		}else{
 			--rudderCooldown;
