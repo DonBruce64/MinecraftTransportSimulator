@@ -185,7 +185,7 @@ public class WrapperInput{
 			case AIRCRAFT_THROTTLE_U: return Keyboard.KEY_I;
 			case AIRCRAFT_THROTTLE_D: return Keyboard.KEY_K;
 			case AIRCRAFT_FLAPS_U: return Keyboard.KEY_Y;
-			case AIRCRAFT_FLAPS_D: return Keyboard.KEY_K;
+			case AIRCRAFT_FLAPS_D: return Keyboard.KEY_H;
 			case AIRCRAFT_BRAKE: return Keyboard.KEY_B;
 			case AIRCRAFT_PANEL: return Keyboard.KEY_U;
 			case AIRCRAFT_RADIO: return Keyboard.KEY_MINUS;
