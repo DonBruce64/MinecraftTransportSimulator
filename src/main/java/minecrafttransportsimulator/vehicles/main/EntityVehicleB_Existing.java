@@ -29,10 +29,8 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.event.entity.EntityMountEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /**This is the next class level above the base vehicle.
  * At this level we add methods for the vehicle's existence in the world.
@@ -64,12 +62,6 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	
 	/**Names for reflection to get the entity any entity is riding.**/
 	private static final String[] ridingEntityNames = { "ridingEntity", "field_73141_v", "field_184239_as"};
-	
-	/**ID of the current rider that wants to dismount this tick.  This gets set when the vehicle detects that an entity wants to dismount.**/
-	private int riderIDToDismountThisTick = -1;
-	
-	/**Boolean paired with above to determine if dismounting code needs to be inhibited or if we are just changing seats.**/
-	private boolean didRiderClickSeat;
 			
 	public EntityVehicleB_Existing(World world){
 		super(world);
@@ -95,37 +87,30 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			getBasicProperties();
 		}
 		
-		if(riderIDToDismountThisTick != -1){
-			Entity riderToDismount = world.getEntityByID(riderIDToDismountThisTick);
-			if(riderToDismount != null){
-				PartSeat seat = this.getSeatForRider(riderToDismount);
-				if(seat != null){
-					removeRiderFromSeat(riderToDismount, seat);
-					riderIDToDismountThisTick = -1;
+		//Check every tick to see if we still have riders in seats.
+		//If we are missing a rider, dismount them off of the vehicle.
+		Integer riderToRemove = -1;
+		for(Integer entityID : riderSeats.keySet()){
+			boolean passengerIsValid = false;
+			for(Entity passenger : getPassengers()){
+				if(passenger.getEntityId() == entityID){
+					passengerIsValid = true;
+					break;
 				}
 			}
-			
-			if(riderIDToDismountThisTick != -1){
-				//We couldn't dismount this rider.
-				//Likely a Sponge issue, so find the missing rider and remove him.
-				Integer missingRiderID = -1;
-				for(Integer entityID : riderSeats.keySet()){
-					boolean passengerIsValid = false;
-					for(Entity passenger : getPassengers()){
-						if(passenger.getEntityId() == entityID){
-							passengerIsValid = true;
-							break;
-						}
-					}
-					if(!passengerIsValid){
-						missingRiderID = entityID;
+			if(!passengerIsValid){
+				Entity rider = world.getEntityByID(entityID);
+				if(rider != null){
+					PartSeat seat = getSeatForRider(rider);
+					if(seat != null){
+						riderToRemove = entityID;
 					}
 				}
-				riderSeats.remove(missingRiderID);
 			}
-			riderIDToDismountThisTick = -1;
 		}
-		didRiderClickSeat = false;
+		if(riderToRemove != -1){
+			removeRiderFromSeat(world.getEntityByID(riderToRemove), getSeatForRider(world.getEntityByID(riderToRemove)));
+		}
 	}
 	
 	@Override
@@ -159,30 +144,6 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		}
 		return true;
 	}
-	
-	/**
-	 * Prevent dismounting from this vehicle naturally as MC sucks at finding good spots to dismount.
-	 * Instead, chose a better spot manually to prevent the player from getting stuck inside things.
-	 * This event is used to populate a list of riders to dismount the next tick.  This list is cleared when the operation
-	 * is done successfully.  If the operation fails, the rider will still be in the list so in that case the
-	 * event should proceed as normal to allow regular MC dismounting.
-	 */
-	@SubscribeEvent
-	public static void on(EntityMountEvent event){
-		if(event.getEntityBeingMounted() instanceof EntityVehicleB_Existing  && event.isDismounting() && event.getEntityMounting() != null && !event.getWorldObj().isRemote && !event.getEntityBeingMounted().isDead){
-			EntityVehicleB_Existing vehicle = (EntityVehicleB_Existing) event.getEntityBeingMounted();
-			if(!vehicle.didRiderClickSeat){
-				if(vehicle.riderIDToDismountThisTick == -1){
-					vehicle.riderIDToDismountThisTick = event.getEntityMounting().getEntityId();
-					event.setCanceled(true);
-				}else{
-					vehicle.riderIDToDismountThisTick = -1;
-					event.setCanceled(false);
-				}
-			}
-			vehicle.didRiderClickSeat = false;
-		}
-	 }
 	
 	@Override
 	public void updatePassenger(Entity passenger){
@@ -256,7 +217,6 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
      * All riders MUST be added through this method.
      */
 	public void setRiderInSeat(Entity rider, PartSeat seat){
-		this.didRiderClickSeat = true;
 		riderSeats.put(rider.getEntityId(), seat);
 		rider.startRiding(this, true);
 		//Set the player's yaw to the same yaw as the vehicle to ensure we don't have 360+ rotations to deal with.
