@@ -10,6 +10,7 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -19,8 +20,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -422,7 +423,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 	}
 	
 	protected boolean isInLiquid(){
-		return vehicle.world.getBlockState(new BlockPos(partPos)).getMaterial().isLiquid();
+		return vehicle.world.getBlockState(new BlockPos(partPos.addVector(0, packVehicleDef.intakeOffset, 0))).getMaterial().isLiquid();
 	}
 	
 	public double getEngineRotation(float partialTicks){
@@ -439,12 +440,28 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 	@SideOnly(Side.CLIENT)
 	public void spawnParticles(){
 		if(Minecraft.getMinecraft().effectRenderer != null){
+			//Render engine smoke if we're overheating.
 			if(temp > engineOverheatTemp1){
-				Minecraft.getMinecraft().world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, partPos.x, partPos.y + 0.5, partPos.z, 0, 0.15, 0);
+				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y + 0.5, partPos.z, 0, 0.15, 0, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F));
 				if(temp > engineOverheatTemp2){
-					Minecraft.getMinecraft().world.spawnParticle(EnumParticleTypes.SMOKE_LARGE, partPos.x, partPos.y + 0.5, partPos.z, 0, 0.15, 0);
+					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y + 0.5, partPos.z, 0, 0.15, 0, 0.0F, 0.0F, 0.0F, 2.5F, 1.0F));
 				}
 			}
+			
+			//Render exhaust smoke if we have any exhausts.
+			if(packVehicleDef.exhaustPos != null){
+				int particleCycle = (int) Math.floor(definition.engine.maxRPM/(RPM + engineStartRPM));
+				if(state.running && (particleCycle == 0 || (vehicle.world.getTotalWorldTime()%particleCycle == 0))){
+					float particleColor = (float) Math.max(1 - temp/engineColdTemp, 0);
+					for(int i=0; i<packVehicleDef.exhaustPos.length; i+=3){
+						Vec3d exhaustOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustPos[i], packVehicleDef.exhaustPos[i+1], packVehicleDef.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+						Vec3d velocityOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustVelocity[i], packVehicleDef.exhaustVelocity[i+1], packVehicleDef.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
+						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04, particleColor, particleColor, particleColor, 1.0F, (float) Math.min((50 + hours)/500, 1)));
+					}
+				}
+			}
+			
+			//Render oil and fuel leak particles.
 			if(oilLeak){
 				if(vehicle.ticksExisted%20 == 0){
 					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.OilDropParticleFX(vehicle.world, partPos.x - 0.25*Math.sin(Math.toRadians(vehicle.rotationYaw)), partPos.y, partPos.z + 0.25*Math.cos(Math.toRadians(vehicle.rotationYaw))));
@@ -455,10 +472,23 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.FuelDropParticleFX(vehicle.world, partPos.y, partPos.y, partPos.z));
 				}
 			}
+			
+			//If we backfired, render a few puffs.
+			//Will be from the engine or the exhaust if we have any.
 			if(backfired){
 				backfired = false;
-				for(byte i=0; i<5; ++i){
-					Minecraft.getMinecraft().world.spawnParticle(EnumParticleTypes.SMOKE_LARGE, partPos.x, partPos.y + 0.5, partPos.z, Math.random()*0.15, 0.15, Math.random()*0.15);
+				if(packVehicleDef.exhaustPos != null){
+					for(int i=0; i<packVehicleDef.exhaustPos.length; i+=3){
+						Vec3d exhaustOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustPos[i], packVehicleDef.exhaustPos[i+1], packVehicleDef.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+						Vec3d velocityOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustVelocity[i], packVehicleDef.exhaustVelocity[i+1], packVehicleDef.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
+						for(byte j=0; j<5; ++j){
+							Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.07 - Math.random()*0.14, velocityOffset.y/10D, velocityOffset.z/10D + 0.07 - Math.random()*0.14, 0.0F, 0.0F, 0.0F, 2.5F, 1.0F));
+						}
+					}
+				}else{
+					for(byte i=0; i<5; ++i){
+						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y + 0.5, partPos.z, 0.07 - Math.random()*0.14, 0.15, 0.07 - Math.random()*0.14, 0.0F, 0.0F, 0.0F, 2.5F, 1.0F));
+					}
 				}
 			}
 		}

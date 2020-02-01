@@ -80,6 +80,9 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public float minValue;
         public float maxValue;
         public float[] dismountPos;
+        public float[] exhaustPos;
+        public float[] exhaustVelocity;
+        public float intakeOffset;
         public VehiclePart additionalPart;
         public float[] treadYPoints;
         public float[] treadZPoints;

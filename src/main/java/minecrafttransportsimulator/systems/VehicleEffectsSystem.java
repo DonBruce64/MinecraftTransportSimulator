@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.systems;
 
 import net.minecraft.block.material.Material;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleDrip;
-import net.minecraft.client.particle.ParticleSmokeNormal;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.relauncher.Side;
@@ -26,6 +26,7 @@ public final class VehicleEffectsSystem{
 		@Override
 		public void onUpdate(){
 			super.onUpdate();
+			//Override color to always be black.
 			this.setRBGColorF(0, 0, 0);
 		}
 	}
@@ -36,16 +37,31 @@ public final class VehicleEffectsSystem{
 		}
 	}
 	
-	public static class WhiteSmokeFX extends ParticleSmokeNormal{
-		public WhiteSmokeFX(World world, double posX, double posY, double posZ, double motionX, double motionY, double motionZ){
-			super(world, posX, posY, posZ, motionX, motionY, motionZ, 1.0F);
+	public static class ColoredSmokeFX extends Particle{
+		public ColoredSmokeFX(World world, double posX, double posY, double posZ, double motionX, double motionY, double motionZ, float red, float green, float blue, float scale, float alpha){
+			super(world, posX, posY, posZ);
+			this.particleMaxAge = (int)(8.0D / (Math.random() * 0.8D + 0.2D));
+			this.motionX = motionX;
+			this.motionY = motionY;
+			this.motionZ = motionZ;
+			this.particleRed = red;
+			this.particleGreen = green;
+			this.particleBlue = blue;
+			this.particleScale = scale;
+			this.particleAlpha = alpha;
+			setParticleTextureIndex(7);
 		}
 		
 		@Override
 		public void onUpdate(){
 			super.onUpdate();
-			this.setRBGColorF(1, 1, 1);
-		}
+			//Need to set the texture to smaller particles as we get older.
+			setParticleTextureIndex(7 - particleAge * 8 / particleMaxAge);
+			//Need to make sure we only go upwards.
+			this.motionX *= 0.9;
+			this.motionY += 0.004;
+	        this.motionZ *= 0.9;
+	    }
 	}
 	
 	/**Implement this interface on any parts that spawns particles or FX, and do the spawning there.
