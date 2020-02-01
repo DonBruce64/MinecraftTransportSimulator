@@ -29,7 +29,7 @@ public final class CreativeTabPack extends CreativeTabs{
 	public ItemStack getIconItemStack(){
 		//Render cycling items.
 		AItemPack[] packItems = MTSRegistry.packItemMap.get(getTabLabel()).values().toArray(new AItemPack[0]);
-		return new ItemStack(packItems[(int) (Minecraft.getMinecraft().world.getTotalWorldTime()/5%packItems.length)]);
+		return new ItemStack(packItems[(int) (Minecraft.getMinecraft().world.getTotalWorldTime()/20%packItems.length)]);
 	}
 
 	@Override
