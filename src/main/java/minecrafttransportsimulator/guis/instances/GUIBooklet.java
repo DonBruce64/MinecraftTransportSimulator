@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.GUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -71,9 +72,20 @@ public class GUIBooklet extends GUIBase{
 		for(BookletPage page : booklet.definition.general.pages){
 			List<GUIComponentLabel> pageLabels = new ArrayList<GUIComponentLabel>();
 			for(BookletText text : page.pageText){
-				GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + text.offsetX, guiTop + text.offsetY, Color.decode(text.color), text.text, text.scale, text.centered, false, text.wrapWidth);
-				pageLabels.add(pageLabel);
-				addLabel(pageLabel);
+				try{
+					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + text.offsetX, guiTop + text.offsetY, Color.decode(text.color), text.text, text.scale, text.centered, false, text.wrapWidth);
+					pageLabels.add(pageLabel);
+					addLabel(pageLabel);
+				}catch(Exception e){
+					int pageNumber = -1;
+					for(byte i=0;i<booklet.definition.general.pages.length; ++i){
+						if(booklet.definition.general.pages[i].equals(page)){
+							pageNumber = i + 1;
+						}
+					}
+					MTS.MTSLog.error("AN ERROR WAS ENCOUNTERED WHEN CREATING BOOKLET PAGE: " + pageNumber);
+					MTS.MTSLog.error(e.getMessage());
+				}
 			}
 			pageTextLabels.add(pageLabels);
 		}
