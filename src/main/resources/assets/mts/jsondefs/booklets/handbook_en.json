@@ -691,7 +691,7 @@
             "centered": true
           },
           {
-            "text": "MTS has many config options, some of which aren't available in the in-game config menu.  See the mts.cfg file in your config directory for a full listing and description of configs.  Commonly-modified configs include block breagage, fuel consumption, and fuel values.",
+            "text": "MTS has many config options, some of which aren't available in the in-game config menu.  See the mtsconfig.json file in your config directory for a full listing and description of configs.  Commonly-modified configs include block breagage, fuel consumption, and fuel values.",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 20,
@@ -700,7 +700,7 @@
             "centered": false
           },
           {
-            "text": "Should you wish to modify the recipes for the benches, or any other items in the core mod, you may do so by editing the recipe JSONs located inside the mod .jars.  You may also use an external mod should it make server management easier.  Look for the materials[] section and edit those values to your liking.",
+            "text": "Should you wish to modify the recipes for the items made on the benches, you may do so by adding an override in the mtsconfig.json file.  See that file for details on how to do so.  Anything created on a crafting bench follows the normal process for editing, e.g. CraftTweaker.",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 155,
