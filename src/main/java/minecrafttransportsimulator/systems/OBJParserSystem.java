@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import minecrafttransportsimulator.MTS;
+
 /**Class responsible for parsing OBJ models into arrays that can be fed to the GPU.
  * Much more versatile than the Forge system.
  * 
@@ -73,7 +75,8 @@ public final class OBJParserSystem{
 			reader.close();
 			return partMap;
 		}catch (Exception e){
-			e.printStackTrace();
+			MTS.MTSLog.error("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + modelLocation);
+			MTS.MTSLog.error(e.getMessage());
 			return null;
 		}
 	}
