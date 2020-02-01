@@ -131,6 +131,7 @@ public final class MTSRegistry{
 
 	//Booklets for manuals.  Not made final as they are created dynamically at runtime.
 	public static Item handbook_en;
+	public static Item handbook_ru;
 	
 	//Vehicle interaction items.
 	public static final Item wrench = new ItemWrench().setCreativeTab(coreTab);
@@ -255,10 +256,18 @@ public final class MTSRegistry{
 		//Before doing any item registration, create the pack handbooks.
 		//These are special, as they don't come from any packs, yet they use the booklet code.
 		//This is done to avoid the need to make a new GUI.
-		PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json")), "handbook_en", MTS.MODID);
-		handbook_en = (ItemBooklet) MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_en").setUnlocalizedName("mts:handbook_en");
-		//Get rid of the handbooks from the pack item map as those shouldn't exist.
-		MTSRegistry.packItemMap.remove(MTS.MODID);
+		try {
+			PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json"), "UTF-8"), "handbook_en", MTS.MODID);
+			PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_ru.json"), "UTF-8"), "handbook_ru", MTS.MODID);
+			handbook_en = (ItemBooklet) MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_en").setUnlocalizedName("mts:handbook_en");
+			handbook_ru = (ItemBooklet) MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_ru").setUnlocalizedName("mts:handbook_ru");
+		}catch(Exception e){
+			MTS.MTSLog.error("ERROR PARSING HANDBOOK AS UTF-8 STRING ENCODING!  HANDBOOKS MAY NOT APPEAR!");
+			MTS.MTSLog.error(e.getMessage());
+		}finally{
+			//Get rid of the handbooks from the pack item map as those shouldn't exist.
+			MTSRegistry.packItemMap.remove(MTS.MODID);
+		}
 		
 		
 		//Now register all core items.
