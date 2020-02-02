@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.guis.components.GUIBase;
+import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.packs.ItemBooklet;
@@ -13,7 +13,7 @@ import minecrafttransportsimulator.jsondefs.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONBooklet.BookletText;
 import minecrafttransportsimulator.wrappers.WrapperInput;
 
-public class GUIBooklet extends GUIBase{
+public class GUIBooklet extends AGUIBase{
 	//Buttons and text.
 	private GUIComponentButton leftButton;
 	private GUIComponentButton rightButton;

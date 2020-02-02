@@ -2,11 +2,11 @@ package minecrafttransportsimulator.guis.instances;
 
 import java.awt.Color;
 
-import minecrafttransportsimulator.guis.components.GUIBase;
+import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 
-public class GUIPackMissing extends GUIBase{
+public class GUIPackMissing extends AGUIBase{
 	GUIComponentLabel noticeLabel;
 	
 	@Override

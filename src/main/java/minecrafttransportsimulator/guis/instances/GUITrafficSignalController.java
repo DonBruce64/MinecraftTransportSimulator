@@ -5,7 +5,7 @@ import java.awt.Color;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.guis.components.GUIBase;
+import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -15,7 +15,7 @@ import minecrafttransportsimulator.wrappers.WrapperGUI;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
 
-public class GUITrafficSignalController extends GUIBase{
+public class GUITrafficSignalController extends AGUIBase{
 	
 	//Buttons.
 	private GUIComponentButton orientationButton;

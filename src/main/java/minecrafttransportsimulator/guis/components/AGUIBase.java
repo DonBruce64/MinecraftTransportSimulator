@@ -13,7 +13,7 @@ import minecrafttransportsimulator.wrappers.WrapperGUI;
  *
  * @author don_bruce
  */
-public abstract class GUIBase{
+public abstract class AGUIBase{
 	private static final int STANDARD_TEXTURE_WIDTH = 256;
 	private static final int STANDARD_TEXTURE_HEIGHT = 192;
 	private static final String STANDARD_TEXTURE_NAME = "mts:textures/guis/standard.png";

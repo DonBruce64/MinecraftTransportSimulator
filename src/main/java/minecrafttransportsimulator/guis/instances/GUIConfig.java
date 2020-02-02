@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.guis.components.GUIBase;
+import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
@@ -20,7 +20,7 @@ import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboardDynamic
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
 
-public class GUIConfig extends GUIBase{
+public class GUIConfig extends AGUIBase{
 	//Global variables.
 	private GUIComponentButton configScreenButton;
 	private GUIComponentButton controlScreenButton;

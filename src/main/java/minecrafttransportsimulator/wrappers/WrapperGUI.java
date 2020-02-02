@@ -6,7 +6,7 @@ import java.io.IOException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.guis.components.GUIBase;
+import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -28,12 +28,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
-/**Wrapper for MC GUI classes.  Constructor takes a type of {@link GUIBase}, but
- * is only visible when calling {@link #openGUI(GUIBase)}.  This will automatically
+/**Wrapper for MC GUI classes.  Constructor takes a type of {@link AGUIBase}, but
+ * is only visible when calling {@link #openGUI(AGUIBase)}.  This will automatically
  * construct the wrapper and open the GUI, all without exposing MC-specific code.
  * On that note, this is where all MC-specific code should be located.  Preferably
  * in static methods that can be accessed by anything that needs GUI
- * functionality, even if it doesn't extend the {@link GUIBase} class.
+ * functionality, even if it doesn't extend the {@link AGUIBase} class.
  *
  * @author don_bruce
  */
@@ -44,9 +44,9 @@ public class WrapperGUI extends GuiScreen{
 	private int guiLeft;
 	private int guiTop;
 	
-	private final GUIBase gui;
+	private final AGUIBase gui;
 	
-	private WrapperGUI(GUIBase gui){
+	private WrapperGUI(AGUIBase gui){
 		this.gui = gui;
 	}
 	
@@ -330,7 +330,7 @@ public class WrapperGUI extends GuiScreen{
 	 *  Opens the passed-in GUI, wrapping it in an instance of this class in the process.
 	 *  This makes it compatible with all MC-specific systems.
 	 */
-	public static void openGUI(GUIBase gui){
+	public static void openGUI(AGUIBase gui){
 		FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(gui));
 	}
 }
