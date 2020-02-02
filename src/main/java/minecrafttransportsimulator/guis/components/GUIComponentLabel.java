@@ -12,10 +12,6 @@ import minecrafttransportsimulator.wrappers.WrapperGUI;
  * @author don_bruce
  */
 public class GUIComponentLabel{
-	private static final int BUTTON_TEXTURE_U_OFFSET = 196;
-	private static final int BUTTON_TEXTURE_WIDTH = 200;
-	private static final int BUTTON_TEXTURE_HEIGHT = 20;
-	
 	public final int x;
 	public final int y;
 	public final Color color;
