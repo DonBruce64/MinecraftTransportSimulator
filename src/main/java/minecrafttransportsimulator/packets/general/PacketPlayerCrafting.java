@@ -3,6 +3,7 @@ package minecrafttransportsimulator.packets.general;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -20,7 +21,7 @@ public class PacketPlayerCrafting implements IMessage{
 
 	public PacketPlayerCrafting(){}
 	
-	public PacketPlayerCrafting(EntityPlayer player, AItemPack item){
+	public PacketPlayerCrafting(EntityPlayer player, AItemPack<? extends AJSONItem<?>> item){
 		this.playerID = player.getEntityId();
 		this.packID = item.definition.packID;
 		this.systemName = item.definition.systemName;
@@ -52,7 +53,7 @@ public class PacketPlayerCrafting implements IMessage{
 		}
 	}
 	
-	public static boolean doesPlayerHaveMaterials(EntityPlayer player, AItemPack item){
+	public static boolean doesPlayerHaveMaterials(EntityPlayer player, AItemPack<? extends AJSONItem<?>> item){
 		if(!player.capabilities.isCreativeMode){
 			for(ItemStack materialStack : MTSRegistry.getMaterials(item)){
 				int requiredMaterialCount = materialStack.getCount();
@@ -69,7 +70,7 @@ public class PacketPlayerCrafting implements IMessage{
 		return true;
 	}
 	
-	protected static void removeMaterials(EntityPlayer player, AItemPack item){
+	protected static void removeMaterials(EntityPlayer player, AItemPack<? extends AJSONItem<?>> item){
 		if(!player.capabilities.isCreativeMode){
 			for(ItemStack materialStack : MTSRegistry.getMaterials(item)){
 				player.inventory.clearMatchingItems(materialStack.getItem(), materialStack.getMetadata(), materialStack.getCount(), null);
@@ -84,7 +85,7 @@ public class PacketPlayerCrafting implements IMessage{
 				public void run(){
 					EntityPlayer player = getPlayer(message, ctx);
 					if(player != null){
-						AItemPack item = MTSRegistry.packItemMap.get(message.packID).get(message.systemName);
+						AItemPack<? extends AJSONItem<?>> item = MTSRegistry.packItemMap.get(message.packID).get(message.systemName);
 						if(doesPlayerHaveMaterials(player, item)){
 							removeMaterials(player, item);
 							player.getEntityWorld().spawnEntity(new EntityItem(player.getEntityWorld(), player.posX, player.posY, player.posZ, new ItemStack(item)));

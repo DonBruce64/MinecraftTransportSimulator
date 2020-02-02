@@ -14,6 +14,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
 import minecrafttransportsimulator.rendering.RenderHUD;
@@ -137,7 +138,7 @@ public class GUIInstruments extends GuiScreen{
 			}
 		}else{
 			for(String packID : MTSRegistry.packItemMap.keySet()){
-				for(AItemPack packItem : MTSRegistry.packItemMap.get(packID).values()){
+				for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packID).values()){
 					if(packItem instanceof ItemInstrument){
 						ItemInstrument instrumentItem = (ItemInstrument) packItem;
 						if(instrumentItem.definition.general.validVehicles.contains(vehicle.definition.general.type)){

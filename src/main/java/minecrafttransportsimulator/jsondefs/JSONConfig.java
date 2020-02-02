@@ -56,7 +56,7 @@ public class JSONConfig{
 		private static Map<String, Map<String, Double>> populateDefaultFuels(){
 			Map<String, Map<String, Double>> fuels = new HashMap<String, Map<String, Double>>();
 			for(String packID : MTSRegistry.packItemMap.keySet()){
-				for(AItemPack item : MTSRegistry.packItemMap.get(packID).values()){
+				for(AItemPack<? extends AJSONItem<?>> item : MTSRegistry.packItemMap.get(packID).values()){
 					if(item instanceof AItemPartEngine){
 						AItemPartEngine itemEngine = (AItemPartEngine) item;
 						if(itemEngine.definition.general.type.startsWith("engine")){

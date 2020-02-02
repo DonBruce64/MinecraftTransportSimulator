@@ -122,7 +122,7 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			
 			//Add all part boxes to the interaction list.
 			currentInteractionBoxes.clear();
-			for(APart part : this.getVehicleParts()){
+			for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
 				currentInteractionBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));
 			}
 		}

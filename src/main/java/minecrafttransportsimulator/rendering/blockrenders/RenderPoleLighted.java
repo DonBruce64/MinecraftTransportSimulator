@@ -22,7 +22,6 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.EnumSkyBlock;
 
 public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleAttachment>{
-	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
 	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lensflare.png");
 	private static final ResourceLocation lightTexture = new ResourceLocation(MTS.MODID, "textures/rendering/light.png");
 	private static final ResourceLocation lightBeamTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lightbeam.png");

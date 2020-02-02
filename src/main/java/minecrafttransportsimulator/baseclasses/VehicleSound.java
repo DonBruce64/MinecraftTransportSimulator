@@ -10,14 +10,14 @@ import net.minecraft.util.math.Vec3d;
 
 public final class VehicleSound{
 	private final EntityVehicleE_Powered vehicle;
-	private final APart optionalPart;
+	private final APart<? extends EntityVehicleE_Powered> optionalPart;
 	private final EntityPlayer player;
 	private final SoundTypes soundType;
 	
 	private Vec3d playerPos;
 	private Vec3d sourcePos;
 	
-	public VehicleSound(EntityVehicleE_Powered vehicle, APart optionalPart, SoundTypes soundType){
+	public VehicleSound(EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart, SoundTypes soundType){
 		this.vehicle = vehicle;
 		this.optionalPart = optionalPart;
 		this.player = Minecraft.getMinecraft().player;
@@ -87,7 +87,7 @@ public final class VehicleSound{
     
 	public boolean isSoundActive(){
 		switch(soundType){
-			case ENGINE: return ((APartEngine) optionalPart).state.running || ((APartEngine) optionalPart).internalFuel > 0;
+			case ENGINE: return ((APartEngine<? extends EntityVehicleE_Powered>) optionalPart).state.running || ((APartEngine<? extends EntityVehicleE_Powered>) optionalPart).internalFuel > 0;
 			case HORN: return vehicle.hornOn;
 			case SIREN: return vehicle.sirenOn;
 			default: return true;
@@ -96,7 +96,7 @@ public final class VehicleSound{
 	
 	private float getCurrentVolume(){
 		switch(soundType){
-			case ENGINE: return (float) (30F*((APartEngine) optionalPart).RPM/((APartEngine) optionalPart).definition.engine.maxRPM);
+			case ENGINE: return (float) (30F*((APartEngine<? extends EntityVehicleE_Powered>) optionalPart).RPM/((APartEngine<? extends EntityVehicleE_Powered>) optionalPart).definition.engine.maxRPM);
 			case HORN: return 5.0F;
 			case SIREN: return 10.0F;
 			default: return 1.0F;
@@ -105,7 +105,7 @@ public final class VehicleSound{
 	
 	private float getCurrentPitch(){
 		switch(soundType){
-			case ENGINE: return (float) (((APartEngine) optionalPart).RPM/(optionalPart.definition.engine.maxRPM/2F));
+			case ENGINE: return (float) (((APartEngine<? extends EntityVehicleE_Powered>) optionalPart).RPM/(optionalPart.definition.engine.maxRPM/2F));
 			default: return 1.0F;
 		}
 	}

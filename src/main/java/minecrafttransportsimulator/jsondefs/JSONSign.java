@@ -2,7 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 public class JSONSign extends AJSONItem<JSONSign.SignGeneral>{
 
-    public class SignGeneral extends AJSONItem.General{
+    public class SignGeneral extends AJSONItem<JSONSign.SignGeneral>.General{
     	public TextLine[] textLines;
     }
     

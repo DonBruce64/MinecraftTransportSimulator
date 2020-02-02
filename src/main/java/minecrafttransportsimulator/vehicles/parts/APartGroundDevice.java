@@ -22,7 +22,6 @@ import net.minecraft.util.math.Vec3d;
  */
 public abstract class APartGroundDevice extends APart<EntityVehicleE_Powered>{
 	public static final Vec3d groundDetectionOffset = new Vec3d(0, -0.05F, 0);
-	private static final Vec3d mirrorRotation = new Vec3d(0, 180, 0);
 	private final PartGroundDeviceFake fakePart;
 	
 	public boolean skipAngularCalcs = false;

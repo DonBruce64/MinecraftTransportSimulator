@@ -1,6 +1,10 @@
 package minecrafttransportsimulator.dataclasses;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -28,8 +32,8 @@ public final class CreativeTabPack extends CreativeTabs{
 	@Override
 	public ItemStack getIconItemStack(){
 		//Render cycling items.
-		AItemPack[] packItems = MTSRegistry.packItemMap.get(getTabLabel()).values().toArray(new AItemPack[0]);
-		return new ItemStack(packItems[(int) (Minecraft.getMinecraft().world.getTotalWorldTime()/20%packItems.length)]);
+		List<AItemPack<? extends AJSONItem<?>>> packItems = new ArrayList<AItemPack<? extends AJSONItem<?>>>(MTSRegistry.packItemMap.get(getTabLabel()).values());
+		return new ItemStack(packItems.get((int) (Minecraft.getMinecraft().world.getTotalWorldTime()/20%packItems.size())));
 	}
 
 	@Override

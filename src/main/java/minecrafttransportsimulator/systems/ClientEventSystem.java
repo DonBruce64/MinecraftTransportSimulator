@@ -208,7 +208,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(TickEvent.PlayerTickEvent event){
-    	if(event.side.isServer() && event.phase.equals(event.phase.END)){
+    	if(event.side.isServer() && event.phase.equals(Phase.END)){
     		EntityPlayerMP serverPlayer = (EntityPlayerMP) event.player;
     		if(((WorldServer) serverPlayer.world).getMinecraftServer().isSinglePlayer()){
 	    		if(defaultRenderDistance == 0){
@@ -376,7 +376,7 @@ public final class ClientEventSystem{
         		RenderVehicle.clearCaches();
         		FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
         		FMLClientHandler.instance().refreshResources(VanillaResourceType.TEXTURES);
-        		for(Entity entity : minecraft.getMinecraft().world.loadedEntityList){
+        		for(Entity entity : Minecraft.getMinecraft().world.loadedEntityList){
 					if(entity instanceof EntityVehicleA_Base){
 						EntityVehicleA_Base vehicle = (EntityVehicleA_Base) entity;
 						vehicle.definition = (JSONVehicle) MTSRegistry.packItemMap.get(vehicle.definition.packID).get(vehicle.definition.systemName).definition;

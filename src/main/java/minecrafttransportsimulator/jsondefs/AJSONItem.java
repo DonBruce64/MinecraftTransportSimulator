@@ -9,7 +9,7 @@ import minecrafttransportsimulator.systems.PackParserSystem.ItemClassification;
  * 
  * @author don_bruce
  */
-public abstract class AJSONItem<GeneralConfig extends AJSONItem.General>{
+public abstract class AJSONItem<GeneralConfig extends AJSONItem<GeneralConfig>.General>{
 	/**ID of the pack that this JSON was pulled from.  Set after JSON is parsed into an object and used
 	 * to tell MTS what jar to load assets from.*/
 	public String packID;

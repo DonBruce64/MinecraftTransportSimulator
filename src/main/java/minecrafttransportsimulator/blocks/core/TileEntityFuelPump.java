@@ -173,7 +173,7 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
     @Override
     public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing){
     	//Only let fluid be interacted with on the bottom face.
-    	if(facing != null && facing.equals(facing.DOWN)){
+    	if(facing != null && facing.equals(EnumFacing.DOWN)){
     		return capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
     	}else{
     		return super.hasCapability(capability, facing);
@@ -183,7 +183,7 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
     @SuppressWarnings("unchecked")
     @Override
     public <T> T getCapability(Capability<T> capability, EnumFacing facing){
-    	if(facing != null && facing.equals(facing.DOWN)){
+    	if(facing != null && facing.equals(EnumFacing.DOWN)){
     		if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY){
     			return (T) this;
     		}

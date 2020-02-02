@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -13,7 +14,7 @@ public class PacketPartEngineSignal extends APacketPart{
 
 	public PacketPartEngineSignal(){}
 	
-	public PacketPartEngineSignal(APartEngine engine, PacketEngineTypes packetType){
+	public PacketPartEngineSignal(APartEngine<? extends EntityVehicleE_Powered> engine, PacketEngineTypes packetType){
 		super(engine);
 		this.packetType = (byte) packetType.ordinal();
 	}
@@ -35,7 +36,7 @@ public class PacketPartEngineSignal extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					APartEngine engine = (APartEngine) getVehiclePartFromMessage(message, ctx);
+					APartEngine<? extends EntityVehicleE_Powered> engine = (APartEngine<? extends EntityVehicleE_Powered>) getVehiclePartFromMessage(message, ctx);
 					if(engine != null){
 						PacketEngineTypes packetType = PacketEngineTypes.values()[message.packetType];
 						switch(packetType){

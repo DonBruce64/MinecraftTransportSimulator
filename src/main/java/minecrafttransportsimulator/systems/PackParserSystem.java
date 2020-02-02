@@ -32,6 +32,7 @@ import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDeviceWheel;
 import minecrafttransportsimulator.items.packs.parts.ItemPartGun;
 import minecrafttransportsimulator.items.packs.parts.ItemPartPropeller;
 import minecrafttransportsimulator.jsondefs.AJSONCraftable;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONBooklet;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
@@ -41,6 +42,7 @@ import minecrafttransportsimulator.jsondefs.JSONSign;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
@@ -208,7 +210,7 @@ public final class PackParserSystem{
     }
     
     /**Sets up the item in the system. Item must be created prior to this as we can't use generics for instantiation.**/
-    public static <ItemInstance extends AItemPack> void setupItem(AItemPack item, String systemName, String packID, ItemClassification classification){
+    public static <ItemInstance extends AItemPack<? extends AJSONItem<?>>> void setupItem(AItemPack<? extends AJSONItem<?>> item, String systemName, String packID, ItemClassification classification){
     	//Set code-based definition values.
     	item.definition.packID = packID;
     	item.definition.classification = classification;
@@ -220,13 +222,13 @@ public final class PackParserSystem{
     	
     	//Put the item in the map in the registry.
     	if(!MTSRegistry.packItemMap.containsKey(packID)){
-    		MTSRegistry.packItemMap.put(packID, new LinkedHashMap<String, AItemPack>());
+    		MTSRegistry.packItemMap.put(packID, new LinkedHashMap<String, AItemPack<? extends AJSONItem<?>>>());
     	}
     	MTSRegistry.packItemMap.get(packID).put(item.definition.systemName, item);
     	
     	//If we are craftable, put us in the crafting map.
     	if(item.definition.general instanceof AJSONCraftable.General){
-    		MTSRegistry.packCraftingMap.put(item, ((AJSONCraftable.General) item.definition.general).materials);
+    		MTSRegistry.packCraftingMap.put(item, ((AJSONCraftable<?>.General) item.definition.general).materials);
     	}
     	
     	//Set the creative tab.  Need to check if we're an internal item or not.
@@ -251,7 +253,7 @@ public final class PackParserSystem{
 		}
     }    
     
-    public static APart createPart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+    public static APart<? extends EntityVehicleA_Base> createPart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
     	switch(definition.general.type){
 			case "crate": return new PartCrate(vehicle, packVehicleDef, definition, dataTag);
 			case "barrel": return new PartBarrel(vehicle, packVehicleDef, definition, dataTag);

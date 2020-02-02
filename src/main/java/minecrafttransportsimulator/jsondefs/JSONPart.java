@@ -22,7 +22,7 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     public List<VehiclePart> subParts = new ArrayList<VehiclePart>();
     public PartRendering rendering;
 
-    public class PartGeneral extends AJSONMultiModel.General{
+    public class PartGeneral extends AJSONMultiModel<JSONPart.PartGeneral>.General{
     	public String type;
     	public String customType;
     	public boolean disableMirroring;

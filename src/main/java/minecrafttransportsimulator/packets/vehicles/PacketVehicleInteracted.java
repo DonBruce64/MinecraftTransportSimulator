@@ -2,7 +2,6 @@ package minecrafttransportsimulator.packets.vehicles;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.core.ItemKey;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -38,20 +37,19 @@ public class PacketVehicleInteracted extends APacketVehiclePlayer{
 						//If we clicked a part, try to interact with it.
 						//If we didn't interact with a part, check other interactions.
 						//All interactions are done on the server, except GUI openings.
-						APart hitPart = vehicle.getHitPart(player);
+						APart<? extends EntityVehicleB_Existing> hitPart = vehicle.getHitPart(player);
 						ItemStack heldStack = player.getHeldItemMainhand();
 						if(hitPart != null && hitPart.interactPart(player)){
 							return;
 						}else if(heldStack.getItem().equals(MTSRegistry.key)){
-							ItemKey key = (ItemKey) heldStack.getItem();
 							//Sneaking changes ownership, regular use changes the lock state.
 							if(player.isSneaking()){
 								if(vehicle.ownerName.isEmpty()){
-									vehicle.ownerName = player.getUUID(player.getGameProfile()).toString();
+									vehicle.ownerName = EntityPlayer.getUUID(player.getGameProfile()).toString();
 									MTS.MTSNet.sendTo(new PacketChat("interact.key.info.own"), (EntityPlayerMP) player);
 								}else{
 									boolean isPlayerOP = player.getServer() == null || player.getServer().isSinglePlayer() || player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null;
-									if(player.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName) || isPlayerOP){
+									if(EntityPlayer.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName) || isPlayerOP){
 										vehicle.ownerName = "";
 										MTS.MTSNet.sendTo(new PacketChat("interact.key.info.unown"), (EntityPlayerMP) player);
 									}else{
@@ -62,7 +60,7 @@ public class PacketVehicleInteracted extends APacketVehiclePlayer{
 								String vehicleUUID = heldStack.hasTagCompound() ? heldStack.getTagCompound().getString("vehicle") : "";
 								if(vehicleUUID.isEmpty()){
 									if(!vehicle.ownerName.isEmpty()){
-										if(!player.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName)){
+										if(!EntityPlayer.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName)){
 											MTS.MTSNet.sendTo(new PacketChat("interact.key.failure.notowner"), (EntityPlayerMP) player);
 										}
 									}

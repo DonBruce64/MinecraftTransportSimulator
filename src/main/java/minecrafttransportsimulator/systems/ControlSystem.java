@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.systems;
 
-import java.util.List;
-
 import minecrafttransportsimulator.ClientProxy;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.GUIPanelAircraft;
@@ -21,6 +19,7 @@ import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
@@ -161,22 +160,18 @@ public final class ControlSystem{
 				MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) seat.parentPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 			}
 			//Now check subParts of our seat.
-			for(APart subPart : seat.childParts){
+			for(APart<? extends EntityVehicleE_Powered> subPart : seat.childParts){
 				if(subPart instanceof APartGun){
 					MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) subPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 				}
 			}
 			//If we are the vehicle controller, check for guns that don't have seats. 
 			if(seat.isController){
-				for(APart part : vehicle.getVehicleParts()){
+				for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
 					if(part instanceof APartGun){
 						if(!(part.parentPart instanceof PartSeat)){
 							boolean hasControllingSeats = false;
-							//TODO might need to check this code section...
-							//For some reason Eclipse didn't like me putting part.childParts directly in the for loop.
-							//Not sure what's up with that...
-							List<APart> parts = part.childParts;
-							for(APart subPart : parts){
+							for(APart<? extends EntityVehicleE_Powered> subPart : part.childParts){
 								if(subPart instanceof PartSeat){
 									hasControllingSeats = true;
 								}
@@ -357,7 +352,6 @@ public final class ControlSystem{
 				//If we are turning in the opposite direction of our current angle, send out a packet with twice the value.
 				boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
 				boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();
-				long currentTime = powered.world.getTotalWorldTime();
 				if(turningRight && !turningLeft){
 					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), (short) (ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(powered.steeringAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 				}else if(turningLeft && !turningRight){

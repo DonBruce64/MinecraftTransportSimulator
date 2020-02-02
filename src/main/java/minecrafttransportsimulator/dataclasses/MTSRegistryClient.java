@@ -9,6 +9,7 @@ import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleAttachment;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
 import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.rendering.RenderVehicle;
 import minecrafttransportsimulator.rendering.blockrenders.RenderDecor;
 import minecrafttransportsimulator.rendering.blockrenders.RenderFuelPump;
@@ -71,7 +72,7 @@ public final class MTSRegistryClient{
 		
 		//Now register items for the packs.
 		for(String packID : MTSRegistry.packItemMap.keySet()){
-			for(AItemPack packItem : MTSRegistry.packItemMap.get(packID).values()){
+			for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packID).values()){
 				ModelLoader.setCustomModelResourceLocation(packItem, 0, new ModelResourceLocation(packItem.definition.packID + ":" + packItem.definition.classification.assetFolder + "/" + packItem.definition.systemName, "inventory"));
 			}	
 		}

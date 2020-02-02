@@ -2,6 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
@@ -29,7 +30,7 @@ public final class PartFertilizer extends APartGroundEffector{
             if(growable.canGrow(vehicle.world, pos, cropState, vehicle.world.isRemote)){
             	if(!vehicle.world.isRemote){
             		//Check for bonemeal in crates.
-            		for(APart part : vehicle.getVehicleParts()){
+            		for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
     					if(part instanceof PartCrate){
     						InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
     						for(byte i=0; i<crateInventory.getSizeInventory(); ++i){

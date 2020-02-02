@@ -108,7 +108,7 @@ public class GUISign extends GuiScreen{
 		for(GuiButton button : buttonList){
 			button.drawButton(mc, mouseX, mouseY, 0);
 		}
-		this.drawRect(guiLeft + 190, guiTop + 188, guiLeft + 206, guiTop + 172, startButton.enabled ? Color.GREEN.getRGB() : Color.RED.getRGB());
+		drawRect(guiLeft + 190, guiTop + 188, guiLeft + 206, guiTop + 172, startButton.enabled ? Color.GREEN.getRGB() : Color.RED.getRGB());
 		
 		//Now make the selected sign render in the GUI using the TE code.
 		//Also set the sign text boxes to render.

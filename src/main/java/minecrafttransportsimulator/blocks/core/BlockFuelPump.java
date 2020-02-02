@@ -4,6 +4,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
@@ -86,11 +87,9 @@ public class BlockFuelPump extends ABlockRotatable implements ITileEntityProvide
     						}
     					}
     					
-    					boolean isFluidValidFuelForEngines = false;
-    					for(APart part : nearestVehicle.getVehicleParts()){
+    					for(APart<? extends EntityVehicleA_Base> part : nearestVehicle.getVehicleParts()){
     						if(part instanceof APartEngine){
     							if(ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).containsKey(fluidName)){
-    								isFluidValidFuelForEngines = true;
     								pump.setConnectedVehicle((EntityVehicleE_Powered) nearestEntity);
     	    						MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.connect"), (EntityPlayerMP) player);
     	    						return true;

@@ -77,7 +77,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//as well as which ground devices are on the ground.
 			//This needs to be done before movement calculations so we can do checks during them.
 			groundedGroundDevices.clear();
-			for(APart part : this.getVehicleParts()){
+			for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
 				if(part instanceof APartGroundDevice){
 					if(((APartGroundDevice) part).isOnGround()){
 						groundedGroundDevices.add((APartGroundDevice) part);
@@ -117,7 +117,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 			
 			//Finally, update parts.
-			for(APart part : this.getVehicleParts()){
+			for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
 				part.updatePart();
 			}
 		}

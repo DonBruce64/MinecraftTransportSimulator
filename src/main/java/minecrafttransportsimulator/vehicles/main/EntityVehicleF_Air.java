@@ -90,7 +90,7 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		thrustForce = thrustTorque = 0;
 		double thrust = 0;
 		for(byte i=0; i<this.getNumberEngineBays(); ++i){
-			APartEngine engine = getEngineByNumber(i);
+			APartEngine<? extends EntityVehicleE_Powered> engine = getEngineByNumber(i);
 			if(engine != null){
 				thrust = engine.getForceOutput();
 				thrustForce += thrust;
@@ -138,7 +138,7 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		return -rudderAngle/10F;
 	}
 	
-	protected double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
+	protected static double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
 		if(Math.abs(angleOfAttack) <= 15*1.25){
 			return maxLiftCoeff*Math.sin(Math.PI/2*angleOfAttack/15);
 		}else if(Math.abs(angleOfAttack) <= 15*1.5){

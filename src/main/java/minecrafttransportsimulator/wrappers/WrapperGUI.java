@@ -308,10 +308,10 @@ public class WrapperGUI extends GuiScreen{
 	}
 	
 	/**
-	 *  Returns true if the passed=in GUI is currently active.
+	 *  Returns true if the passed-in GUI is currently active.
 	 *  If null is passed-in, then this method returns true if no GUI is active.
 	 */
-	public static boolean isGUIActive(Class guiClass){
+	public static boolean isGUIActive(Class<? extends GuiScreen> guiClass){
 		if(guiClass == null){
 			return Minecraft.getMinecraft().currentScreen == null;
 		}else{

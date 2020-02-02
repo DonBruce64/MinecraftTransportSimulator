@@ -45,9 +45,8 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 	public double temp = 20;
 	public double oilPressure = 90;
 	private double ambientTemp;
-	private double engineHeat;
 	private double coolingFactor;
-	public APartEngine linkedEngine;
+	public APartEngine<? extends EntityVehicleE_Powered> linkedEngine;
 	
 	//Rotation data.  Should be set by each engine type individually.
 	protected double engineRotationLast;
@@ -90,24 +89,23 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 		//If so, and we aren't linked, do engine linking logic.
 		ItemStack heldStack = player.getHeldItemMainhand();
 		if(heldStack.getItem() instanceof ItemJumperCable){
-			ItemJumperCable jumperCableItem = (ItemJumperCable) heldStack.getItem();
 			if(linkedEngine == null){
-				if(jumperCableItem.lastEngineClicked == null){
-					jumperCableItem.lastEngineClicked = this;
+				if(ItemJumperCable.lastEngineClicked == null){
+					ItemJumperCable.lastEngineClicked = this;
 					MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.firstlink"), (EntityPlayerMP) player);
-				}else if(!jumperCableItem.lastEngineClicked.equals(this)){
-					if(jumperCableItem.lastEngineClicked.vehicle.equals(this.vehicle)){
+				}else if(!ItemJumperCable.lastEngineClicked.equals(this)){
+					if(ItemJumperCable.lastEngineClicked.vehicle.equals(this.vehicle)){
 						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.samevehicle"), (EntityPlayerMP) player);
-						jumperCableItem.lastEngineClicked = null;
-					}else if(this.partPos.distanceTo(jumperCableItem.lastEngineClicked.partPos) < 15){
-						linkedEngine = jumperCableItem.lastEngineClicked;
-						jumperCableItem.lastEngineClicked.linkedEngine = this;
-						jumperCableItem.lastEngineClicked = null;
+						ItemJumperCable.lastEngineClicked = null;
+					}else if(this.partPos.distanceTo(ItemJumperCable.lastEngineClicked.partPos) < 15){
+						linkedEngine = ItemJumperCable.lastEngineClicked;
+						ItemJumperCable.lastEngineClicked.linkedEngine = this;
+						ItemJumperCable.lastEngineClicked = null;
 						MTS.MTSNet.sendToAll(new PacketPartEngineLinked(this, linkedEngine));
 						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.secondlink"), (EntityPlayerMP) player);	
 					}else{
 						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.toofar"), (EntityPlayerMP) player);
-						jumperCableItem.lastEngineClicked = null;
+						ItemJumperCable.lastEngineClicked = null;
 					}
 				}
 			}else{

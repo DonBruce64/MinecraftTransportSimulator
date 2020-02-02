@@ -73,7 +73,7 @@ public final class EntityVehicleG_Car extends EntityVehicleF_Ground{
 	}
 	
 	@Override
-	public void addPart(APart part, boolean ignoreCollision){
+	public void addPart(APart<? extends EntityVehicleA_Base> part, boolean ignoreCollision){
 		super.addPart(part, ignoreCollision);
 		if(part instanceof APartGroundDevice){
 			if(((APartGroundDevice) part).canBeDrivenByEngine()){
@@ -83,7 +83,7 @@ public final class EntityVehicleG_Car extends EntityVehicleF_Ground{
 	}
 	
 	@Override
-	public void removePart(APart part, boolean playBreakSound){
+	public void removePart(APart<? extends EntityVehicleA_Base> part, boolean playBreakSound){
 		super.removePart(part, playBreakSound);
 		if(wheels.contains(part)){
 			wheels.remove(part);

@@ -2,6 +2,8 @@ package minecrafttransportsimulator.guis;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 
@@ -15,6 +17,8 @@ import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.rendering.RenderInstruments;
 import minecrafttransportsimulator.rendering.RenderVehicle;
 import minecrafttransportsimulator.systems.CameraSystem;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
@@ -39,7 +43,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	private static final String[] lightText = new String[]{I18n.format("gui.panel.navigationlights"), I18n.format("gui.panel.strobelights"), I18n.format("gui.panel.taxilights"), I18n.format("gui.panel.landinglights")};
 	
 	private final EntityVehicleF_Air aircraft;
-	private final APartEngine[] engines;
+	private final List<APartEngine<? extends EntityVehicleE_Powered>> engines = new ArrayList<APartEngine<? extends EntityVehicleE_Powered>>();
 	private final boolean[] hasLight;
 	private final int[][] lightButtonCoords;
 	private final int[][] magnetoButtonCoords;
@@ -60,26 +64,25 @@ public class GUIPanelAircraft extends GuiScreen{
 	public GUIPanelAircraft(EntityVehicleF_Air aircraft){
 		super();
 		this.aircraft = aircraft;
-		engines = new APartEngine[aircraft.getNumberEngineBays()];
-		for(byte i=0; i<engines.length; ++i){
-			engines[i] = aircraft.getEngineByNumber(i);
+		for(byte i=0; i<aircraft.getNumberEngineBays(); ++i){
+			engines.add(aircraft.getEngineByNumber(i));
 		}
 		hasLight = new boolean[4];
 		lightButtonCoords = new int[4][4];
 		for(byte i=0; i<lightButtonCoords.length; ++i){
 			lightButtonCoords[i] = new int[]{16, 48, 280+50*i+32, 280+50*i};
 		}
-		magnetoButtonCoords = new int[engines.length][4];
+		magnetoButtonCoords = new int[engines.size()][4];
 		for(byte i=0; i<magnetoButtonCoords.length; ++i){
 			int xOffset = i < 4 ? 64 : 144;
 			magnetoButtonCoords[i] = new int[]{xOffset, xOffset + 32, 280+50*(i%4)+32, 280+50*(i%4)};
 		}
-		starterButtonCoords = new int[engines.length][4];
+		starterButtonCoords = new int[engines.size()][4];
 		for(byte i=0; i<starterButtonCoords.length; ++i){
 			int xOffset = i < 4 ? 96 : 176;
 			starterButtonCoords[i] = new int[]{xOffset, xOffset + 32, 280+50*(i%4)+32, 280+50*(i%4)};
 		}
-		int xOffset = engines.length < 4 ? 160 : 240;
+		int xOffset = engines.size() < 4 ? 160 : 240;
 		reverseButtonCoords = new int[]{xOffset, xOffset+32, 430+32, 430};
 	}
 	
@@ -88,7 +91,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		for(byte i=0; i<lightButtonCoords.length; ++i){
 			hasLight[i] = RenderVehicle.doesVehicleHaveLight(aircraft, lights[i]);
 		}
-		int xOffset = engines.length < 4 ? 90 : 140;
+		int xOffset = engines.size() < 4 ? 90 : 140;
 		buttonList.add(aileronTrimUpButton = new GuiButton(0, xOffset, 175, 20, 20, "<"));
 		buttonList.add(aileronTrimDownButton = new GuiButton(0, xOffset + 20, 175, 20, 20, ">"));
 		buttonList.add(elevatorTrimUpButton = new GuiButton(0, xOffset, 206, 20, 20, "/\\"));
@@ -113,7 +116,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		//If we have propellers with reverse thrust capabilities, or are a blimp, render the reverse thrust button.
 		haveReverseThrustOption = aircraft instanceof EntityVehicleG_Blimp;
 		if(!haveReverseThrustOption){
-			for(APart part : aircraft.getVehicleParts()){
+			for(APart<? extends EntityVehicleA_Base> part : aircraft.getVehicleParts()){
 				if(part instanceof PartPropeller){
 					if(part.definition.propeller.isDynamicPitch){
 						haveReverseThrustOption = true;
@@ -147,8 +150,8 @@ public class GUIPanelAircraft extends GuiScreen{
 		//Check if an engine is present and render the status if so.
 		//Otherwise just leave the lights off.
 		for(byte i=0; i<magnetoButtonCoords.length; ++i){
-			drawRedstoneButton(magnetoButtonCoords[i], engines[i] != null ? engines[i].state.magnetoOn : false);
-			drawRedstoneButton(starterButtonCoords[i], engines[i] != null ? engines[i].state.esOn : false);
+			drawRedstoneButton(magnetoButtonCoords[i], engines.get(i) != null ? engines.get(i).state.magnetoOn : false);
+			drawRedstoneButton(starterButtonCoords[i], engines.get(i) != null ? engines.get(i).state.esOn : false);
 		}
 		
 		//Render the trim buttons.
@@ -185,7 +188,7 @@ public class GUIPanelAircraft extends GuiScreen{
 		}
 		
 		//Render trim button text.
-		int xOffset = engines.length < 4 ? 176 : 256;
+		int xOffset = engines.size() < 4 ? 176 : 256;
 		fontRenderer.drawString(I18n.format("gui.panel.trim_roll"), xOffset - fontRenderer.getStringWidth(I18n.format("gui.panel.trim_roll"))/2, 312 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		fontRenderer.drawString(I18n.format("gui.panel.trim_pitch"), xOffset - fontRenderer.getStringWidth(I18n.format("gui.panel.trim_pitch"))/2, 362 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
 		fontRenderer.drawString(I18n.format("gui.panel.trim_yaw"), xOffset - fontRenderer.getStringWidth(I18n.format("gui.panel.trim_yaw"))/2, 412 + 2, lightsOn ? Color.WHITE.getRGB() : Color.BLACK.getRGB());
@@ -232,19 +235,19 @@ public class GUIPanelAircraft extends GuiScreen{
 			
 			//Check if a magneto button has been pressed.
 			for(byte i=0; i<magnetoButtonCoords.length; ++i){
-				if(engines[i] != null){
+				if(engines.get(i) != null){
 					if(mouseX > magnetoButtonCoords[i][0] && mouseX < magnetoButtonCoords[i][1] && mouseY < magnetoButtonCoords[i][2] && mouseY > magnetoButtonCoords[i][3]){
-						MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines[i], engines[i].state.magnetoOn ? PacketEngineTypes.MAGNETO_OFF : PacketEngineTypes.MAGNETO_ON));
+						MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines.get(i), engines.get(i).state.magnetoOn ? PacketEngineTypes.MAGNETO_OFF : PacketEngineTypes.MAGNETO_ON));
 					}
 				}
 			}
 			
 			//Check if a starter button has been pressed.
 			for(byte i=0; i<starterButtonCoords.length; ++i){
-				if(engines[i] != null){
+				if(engines.get(i) != null){
 					if(mouseX > starterButtonCoords[i][0] && mouseX < starterButtonCoords[i][1] && mouseY < starterButtonCoords[i][2] && mouseY > starterButtonCoords[i][3]){
-						if(!engines[i].state.esOn){
-							MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines[i], PacketEngineTypes.ES_ON));
+						if(!engines.get(i).state.esOn){
+							MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines.get(i), PacketEngineTypes.ES_ON));
 						}
 						lastEngineStarted = i;
 					}
@@ -274,7 +277,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	protected void mouseReleased(int mouseX, int mouseY, int actionType){
 	    if(actionType == 0){
 	    	if(lastEngineStarted != -1 && starterButtonCoords.length > 0){
-	    		MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines[lastEngineStarted], PacketEngineTypes.ES_OFF));
+	    		MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines.get(lastEngineStarted), PacketEngineTypes.ES_OFF));
 	    	}
 	    	lastButtonPressed = null;
 	    }
@@ -304,7 +307,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	public void onGuiClosed(){
 		CameraSystem.disableHUD = false;
 		if(lastEngineStarted != -1){
-			MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines[lastEngineStarted], PacketEngineTypes.ES_OFF));
+			MTS.MTSNet.sendToServer(new PacketPartEngineSignal(engines.get(lastEngineStarted), PacketEngineTypes.ES_OFF));
     	}
 	}
 	

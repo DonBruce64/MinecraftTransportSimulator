@@ -47,7 +47,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
 	
 	private byte numberEngineBays = 0;
-	private final Map<Byte, APartEngine> engineByNumber = new HashMap<Byte, APartEngine>();
+	private final Map<Byte, APartEngine<? extends EntityVehicleE_Powered>> engineByNumber = new HashMap<Byte, APartEngine<? extends EntityVehicleE_Powered>>();
 	private final List<LightTypes> lightsOn = new ArrayList<LightTypes>();
 	private final List<VehicleSound> sounds = new ArrayList<VehicleSound>();
 	
@@ -115,11 +115,10 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		//so although all parts are DROPPED, not all parts may actually survive the explosion.
 		if(ConfigSystem.configObject.damage.explosions.value){
 			double fuelPresent = this.fuel;
-			for(APart part : getVehicleParts()){
+			for(APart<? extends EntityVehicleA_Base> part : getVehicleParts()){
 				if(part instanceof PartBarrel){
 					PartBarrel barrel = (PartBarrel) part;
 					if(barrel.getFluid() != null){
-						boolean validFuelFound = false;
 						for(Map<String, Double> fuelEntry : ConfigSystem.configObject.fuel.fuels.values()){
 							if(fuelEntry.containsKey(barrel.getFluid().getFluid())){
 								fuelPresent += barrel.getFluidAmount()*fuelEntry.get(barrel.getFluid().getFluid());
@@ -139,7 +138,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	@Override
-	public void addPart(APart part, boolean ignoreCollision){
+	public void addPart(APart<? extends EntityVehicleA_Base> part, boolean ignoreCollision){
 		super.addPart(part, ignoreCollision);
 		if(part instanceof APartEngine){
 			//Because parts is a list, the #1 engine will always come before the #2 engine.
@@ -149,7 +148,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				for(String type : packPart.types){
 					if(type.startsWith("engine")){
 						if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
-							engineByNumber.put(engineNumber, (APartEngine) part);							
+							engineByNumber.put(engineNumber, (APartEngine<? extends EntityVehicleE_Powered>) part);							
 						}
 						++engineNumber;
 					}
@@ -159,7 +158,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	@Override
-	public void removePart(APart part, boolean playBreakSound){
+	public void removePart(APart<? extends EntityVehicleA_Base> part, boolean playBreakSound){
 		super.removePart(part, playBreakSound);
 		byte engineNumber = 0;
 		for(VehiclePart packPart : definition.parts){
@@ -231,7 +230,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	 * Gets the 'numbered' engine.
 	 * Cached for efficiency.
 	 */
-	public APartEngine getEngineByNumber(byte number){
+	public APartEngine<? extends EntityVehicleE_Powered> getEngineByNumber(byte number){
 		return engineByNumber.get(number);
 	}
 	
@@ -270,7 +269,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public final void addSound(SoundTypes typeToAdd, APart optionalPart){
+	public final void addSound(SoundTypes typeToAdd, APart<? extends EntityVehicleE_Powered> optionalPart){
 		VehicleSound newSound = new VehicleSound(this, optionalPart, typeToAdd);
 		//If we already have a sound for this part, remove it before adding this new one.
 		for(byte i=0; i<sounds.size(); ++i){

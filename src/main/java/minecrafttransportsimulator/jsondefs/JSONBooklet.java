@@ -2,7 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 public class JSONBooklet extends AJSONCraftable<JSONBooklet.BookletGeneral>{
 	
-    public class BookletGeneral extends AJSONCraftable.General{
+    public class BookletGeneral extends AJSONCraftable<JSONBooklet.BookletGeneral>.General{
     	public int textureWidth;
     	public int textureHeight;
     	public boolean disableTOC;

@@ -17,9 +17,8 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.items.packs.ItemVehicle;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModel;
-import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
@@ -37,7 +36,7 @@ import net.minecraft.util.ResourceLocation;
 public class GUIPartBench extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting.png");	
 	/*Last item this bench was on when closed.  Keyed by block*/
-	private static final Map<BlockBench, AItemPack> lastOpenedItem = new HashMap<BlockBench, AItemPack>();
+	private static final Map<BlockBench, AItemPack<? extends AJSONItem<?>>> lastOpenedItem = new HashMap<BlockBench, AItemPack<? extends AJSONItem<?>>>();
 	
 	private final BlockBench bench;
 	private final EntityPlayer player;
@@ -57,20 +56,20 @@ public class GUIPartBench extends GuiScreen{
 	private String currentPack;
 	private String nextPack;
 	
-	private AItemPack prevItem;
-	private AItemPack currentItem;
-	private AItemPack nextItem;
+	private AItemPack<? extends AJSONItem<?>> prevItem;
+	private AItemPack<? extends AJSONItem<?>> currentItem;
+	private AItemPack<? extends AJSONItem<?>> nextItem;
 	
 	//Only used for vehicles.
-	private AItemPack prevSubItem;
-	private AItemPack nextSubItem;
+	private AItemPack<? extends AJSONItem<?>> prevSubItem;
+	private AItemPack<? extends AJSONItem<?>> nextSubItem;
 	
 	/**Display list GL integers.  Keyed by pack item.*/
-	private final Map<AItemPack, Integer> partDisplayLists = new HashMap<AItemPack, Integer>();
-	private final Map<AItemPack, Float> partScalingFactors = new HashMap<AItemPack, Float>();
+	private final Map<AItemPack<? extends AJSONItem<?>>, Integer> partDisplayLists = new HashMap<AItemPack<? extends AJSONItem<?>>, Integer>();
+	private final Map<AItemPack<? extends AJSONItem<?>>, Float> partScalingFactors = new HashMap<AItemPack<? extends AJSONItem<?>>, Float>();
 	
 	/**Part texture.  Keyed by pack item.*/
-	private final Map<AItemPack, ResourceLocation> textureMap = new HashMap<AItemPack, ResourceLocation>();
+	private final Map<AItemPack<? extends AJSONItem<?>>, ResourceLocation> textureMap = new HashMap<AItemPack<? extends AJSONItem<?>>, ResourceLocation>();
 	
 	public GUIPartBench(BlockBench bench, EntityPlayer player){
 		this.bench = bench;
@@ -83,7 +82,7 @@ public class GUIPartBench extends GuiScreen{
 			//If we are for vehicles, make sure to set the next subItem if we can.
 			for(String packID : MTSRegistry.packItemMap.keySet()){
 				if(currentPack == null){
-					for(AItemPack packItem : MTSRegistry.packItemMap.get(packID).values()){
+					for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packID).values()){
 						if(bench.isJSONValid(packItem.definition)){
 							currentPack = packID;
 							break;
@@ -155,7 +154,7 @@ public class GUIPartBench extends GuiScreen{
 		for(Object obj : buttonList){
 			((GuiButton) obj).drawButton(mc, mouseX, mouseY, 0);
 		}
-		this.drawRect(guiLeft + 190, guiTop + 188, guiLeft + 206, guiTop + 172, startButton.enabled ? Color.GREEN.getRGB() : Color.RED.getRGB());
+		drawRect(guiLeft + 190, guiTop + 188, guiLeft + 206, guiTop + 172, startButton.enabled ? Color.GREEN.getRGB() : Color.RED.getRGB());
 		
 		//Render descriptive text.
 		if(bench.renderType.isForVehicles){
@@ -202,7 +201,7 @@ public class GUIPartBench extends GuiScreen{
 			if(bench.renderType.isForVehicles){
 				String genericName = ((JSONVehicle) currentItem.definition).genericName;
 				//Check to make sure we haven't parsed this model for another item with another texture but same model.
-				for(AItemPack parsedItem : partDisplayLists.keySet()){
+				for(AItemPack<? extends AJSONItem<?>> parsedItem : partDisplayLists.keySet()){
 					if(parsedItem instanceof ItemVehicle){
 						if(((ItemVehicle) parsedItem).definition.genericName.equals(genericName)){
 							partDisplayLists.put(currentItem, partDisplayLists.get(parsedItem));
@@ -217,7 +216,7 @@ public class GUIPartBench extends GuiScreen{
 					parseModel(currentItem.definition.packID, "objmodels/vehicles/" + genericName + ".obj");
 				}
 			}else if(bench.renderType.isFor3DModels){
-				String customModel = ((AJSONMultiModel.General) currentItem.definition.general).modelName;
+				String customModel = ((AJSONMultiModel<?>.General) currentItem.definition.general).modelName;
 				if(customModel != null){
 					if(currentItem instanceof AItemPart){
 						parseModel(currentItem.definition.packID, "objmodels/parts/" + customModel + ".obj");
@@ -488,7 +487,7 @@ public class GUIPartBench extends GuiScreen{
 		nextPack = null;
 		if(currentPackIndex < packIDs.size()){
 			for(int i=currentPackIndex+1; i<packIDs.size() && nextPack == null; ++i){
-				for(AItemPack packItem : MTSRegistry.packItemMap.get(packIDs.get(i)).values()){
+				for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packIDs.get(i)).values()){
 					if(bench.isJSONValid(packItem.definition)){
 						nextPack = packIDs.get(i);
 						break;
@@ -502,7 +501,7 @@ public class GUIPartBench extends GuiScreen{
 		prevPack = null;
 		if(currentPackIndex > 0){
 			for(int i=currentPackIndex-1; i<=0 && prevPack == null; --i){
-				for(AItemPack packItem : MTSRegistry.packItemMap.get(packIDs.get(i)).values()){
+				for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packIDs.get(i)).values()){
 					if(bench.isJSONValid(packItem.definition)){
 						prevPack = packIDs.get(i);
 						break;
@@ -513,16 +512,14 @@ public class GUIPartBench extends GuiScreen{
 		
 		
 		//Set item indexes.
-		List<AItemPack> packItems = new ArrayList<AItemPack>(MTSRegistry.packItemMap.get(currentPack).values());
+		List<AItemPack<? extends AJSONItem<?>>> packItems = new ArrayList<AItemPack<? extends AJSONItem<?>>>(MTSRegistry.packItemMap.get(currentPack).values());
 		int currentItemIndex = packItems.indexOf(currentItem);
-		boolean switchedItems = prevItem == currentItem || nextItem == currentItem;
-		
 		//If currentItem is null, it means we swtiched packs and need to re-set it to the first item of the new pack.
 		//Do so now before we do looping to prevent crashes.
 		//Find a pack that has the item we are supposed to craft and set it.
 		//If we are for vehicles, make sure to set the next subItem if we can.
 		if(currentItem == null){
-			for(AItemPack packItem : MTSRegistry.packItemMap.get(currentPack).values()){
+			for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(currentPack).values()){
 				if(currentItem == null || (bench.renderType.isForVehicles && nextSubItem == null)){
 					if(bench.isJSONValid(packItem.definition)){
 						if(currentItem == null){

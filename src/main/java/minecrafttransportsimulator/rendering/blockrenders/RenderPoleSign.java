@@ -11,15 +11,12 @@ import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
 import minecrafttransportsimulator.jsondefs.JSONSign;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.ResourceLocation;
 
 public class RenderPoleSign extends TileEntitySpecialRenderer<TileEntityPoleSign>{
 	private static final ResourceLocation defaultSignTexture = new ResourceLocation(MTS.MODID, "textures/blocks/trafficsign.png");
-	private static final Map<JSONSign, ResourceLocation> textureMap = new HashMap<JSONSign, ResourceLocation>();
-	private static final Map<String, FontRenderer> fontMap = new HashMap<String, FontRenderer>();
-	
+	private static final Map<JSONSign, ResourceLocation> textureMap = new HashMap<JSONSign, ResourceLocation>();	
 	
 	public RenderPoleSign(){}
 	

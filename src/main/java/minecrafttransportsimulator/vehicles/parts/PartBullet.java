@@ -185,7 +185,6 @@ public final class PartBullet extends Particle{
 	public int getBrightnessForRender(float partialTicks){
         if(!bulletItem.definition.bullet.type.equals("tracer")){
 			int i = super.getBrightnessForRender(partialTicks);
-		    int j = 240;
 		    int k = i >> 16 & 255;
 		    return 240 | k << 16;
         }else{

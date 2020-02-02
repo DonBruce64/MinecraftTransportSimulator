@@ -113,7 +113,7 @@ public final class MTSRegistry{
 	 * and will be sent to packs for item registration when so asked via {@link #getItemsForPack(String)}.  May also
 	 * be used if we need to lookup a registered part item.  Map is keyed by packID to allow sorting for items from 
 	 * different packs, while the sub-map is keyed by the part's {@link AJSONItem#systemName}.**/
-	public static TreeMap<String, LinkedHashMap<String, AItemPack>> packItemMap = new TreeMap<String, LinkedHashMap<String, AItemPack>>();
+	public static TreeMap<String, LinkedHashMap<String, AItemPack<? extends AJSONItem<?>>>> packItemMap = new TreeMap<String, LinkedHashMap<String, AItemPack<? extends AJSONItem<?>>>>();
 	
 	/**Special map for signs, as they don't have items associated with them.  Instead, they just have a definition
 	 * that's linked to a unique two-string keyset like the items do.**/
@@ -121,7 +121,7 @@ public final class MTSRegistry{
 	
 	/**Maps pack items to their list of crafting ingredients.  This is used rather than the core JSON to allow for
 	 * overriding the crafting materials in said JSON, and to concatonate the materials in {@link JSONVehicle}*/
-	public static final Map<AItemPack, String[]> packCraftingMap = new HashMap<AItemPack, String[]>();
+	public static final Map<AItemPack<? extends AJSONItem<?>>, String[]> packCraftingMap = new HashMap<AItemPack<? extends AJSONItem<?>>, String[]>();
 	
 	/**Core creative tab for base MTS items**/
 	public static final CreativeTabCore coreTab = new CreativeTabCore();
@@ -189,7 +189,7 @@ public final class MTSRegistry{
 	 */
 	public static List<Item> getItemsForPack(String packID){
 		List<Item> items = new ArrayList<Item>();
-		for(AItemPack packItem : packItemMap.get(packID).values()){
+		for(AItemPack<? extends AJSONItem<?>> packItem : packItemMap.get(packID).values()){
 			items.add(packItem);
 		}
 		return items;
@@ -201,7 +201,7 @@ public final class MTSRegistry{
 	 * amd {@link PacketPlayerCrafting} as well as any other systems that 
 	 * need to know what materials make up pack items.
 	 */
-    public static List<ItemStack> getMaterials(AItemPack item){
+    public static List<ItemStack> getMaterials(AItemPack<? extends AJSONItem<?>> item){
     	final List<ItemStack> materialList = new ArrayList<ItemStack>();
 		for(String itemText : MTSRegistry.packCraftingMap.get(item)){
 			int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));

@@ -120,7 +120,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 				//This is a projectile of some sort.  If this projectile is inside a part
 				//make it hit the part rather than hit the vehicle.
 				Entity projectile = source.getImmediateSource();
-				for(APart part : this.getVehicleParts()){
+				for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
 					//Expand this box by the speed of the projectile just in case the projectile is custom and
 					//calls its attack code before it actually gets inside the collision box.
 					if(part.getAABBWithOffset(Vec3d.ZERO).expand(Math.abs(projectile.motionX), Math.abs(projectile.motionY), Math.abs(projectile.motionZ)).contains(projectile.getPositionVector())){
@@ -134,7 +134,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 				//part attack that part.
 				Entity attacker = source.getTrueSource();
 				if(attacker != null){
-					APart hitPart = this.getHitPart(attacker);
+					APart<? extends EntityVehicleB_Existing> hitPart = this.getHitPart(attacker);
 					if(hitPart != null){
 						hitPart.attackPart(source, damage);
 						return true;
@@ -156,7 +156,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			passenger.motionZ = this.motionZ;
 		}else if(definition != null && !this.riderSeatPositions.isEmpty()){
 			Double[] seatLocation = this.riderSeatPositions.get(this.getPassengers().indexOf(passenger));
-			APart part = getPartAtLocation(seatLocation[0], seatLocation[1], seatLocation[2]);
+			APart<? extends EntityVehicleB_Existing> part = getPartAtLocation(seatLocation[0], seatLocation[1], seatLocation[2]);
 			if(part instanceof PartSeat){
 				riderSeats.put(passenger.getEntityId(), (PartSeat) part);
 			}else{
@@ -170,7 +170,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	@Override
-	public void addPart(APart part, boolean ignoreCollision){
+	public void addPart(APart<? extends EntityVehicleA_Base> part, boolean ignoreCollision){
 		if(!ignoreCollision){
 			//Check if we are colliding and adjust roll before letting part addition continue.
 			//This is needed as the vehicle system doesn't know about roll.
@@ -198,11 +198,11 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
      * Is determined by the rotation of the entity and distance from parts.
      * If a part is found to be hit-able, it is returned.  Else null is returned.
      */
-	public APart getHitPart(Entity entity){
+	public APart<? extends EntityVehicleB_Existing> getHitPart(Entity entity){
 		Vec3d lookVec = entity.getLook(1.0F);
 		Vec3d hitVec = entity.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
 		for(float f=1.0F; f<4.0F; f += 0.1F){
-			for(APart part : this.getVehicleParts()){
+			for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
 				if(part.getAABBWithOffset(Vec3d.ZERO).contains(hitVec)){
 					return part;
 				}
@@ -275,7 +275,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void destroyAtPosition(double x, double y, double z){
 		this.setDead();
 		//Remove all parts from the vehicle and place them as items.
-		for(APart part : getVehicleParts()){
+		for(APart<? extends EntityVehicleA_Base> part : getVehicleParts()){
 			if(part.getItemForPart() != null){
 				ItemStack partStack = new ItemStack(part.getItemForPart());
 				NBTTagCompound stackTag = part.getPartNBTTag();
@@ -305,7 +305,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	 * what was attacked on the vehicle.
 	 */
 	public void attackManuallyAtPosition(double x, double y, double z, DamageSource source, float damage){
-		for(APart part : this.getVehicleParts()){
+		for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
 			if(part.getAABBWithOffset(Vec3d.ZERO).contains(new Vec3d(x, y, z))){
 				part.attackPart(source, damage);
 				return;
@@ -317,7 +317,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	
 	protected float getCurrentMass(){
 		int currentMass = definition.general.emptyMass;
-		for(APart part : this.getVehicleParts()){
+		for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
 			if(part instanceof PartCrate){
 				currentMass += calculateInventoryWeight(((PartCrate) part).crateInventory);
 			}else if(part instanceof PartBarrel){

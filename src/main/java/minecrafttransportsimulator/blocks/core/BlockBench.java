@@ -16,16 +16,14 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BlockBench extends ABlockRotatable{
 	private final List<String> validPartTypes;
-	private final Class<? extends AJSONItem> validJsonClass;
+	private final Class<? extends AJSONItem<?>> validJsonClass;
 	public final RenderType renderType;
 
 	
-	public BlockBench(Class<? extends AJSONItem> validJsonClass, String... validPartTypes){
+	public BlockBench(Class<? extends AJSONItem<?>> validJsonClass, String... validPartTypes){
 		super();
 		this.setCreativeTab(MTSRegistry.coreTab);
 		this.validPartTypes = Arrays.asList(validPartTypes);
@@ -43,7 +41,7 @@ public class BlockBench extends ABlockRotatable{
 		return true;
 	}
 	
-	public boolean isJSONValid(AJSONItem definition){
+	public boolean isJSONValid(AJSONItem<?> definition){
 		if(definition.getClass().equals(validJsonClass)){
 			return validJsonClass.equals(JSONPart.class) ? validPartTypes.contains(((JSONPart) definition).general.type) : true;
 		}

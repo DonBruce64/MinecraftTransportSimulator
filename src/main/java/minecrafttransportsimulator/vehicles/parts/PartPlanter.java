@@ -2,6 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -28,10 +29,9 @@ public final class PartPlanter extends APartGroundEffector{
 		Block farmlandBlock = farmlandState.getBlock();
 		if(farmlandBlock.equals(Blocks.FARMLAND)){
 			BlockPos cropPos = farmlandPos.up();
-			Block cropBlock = vehicle.world.getBlockState(cropPos).getBlock();
 			if(vehicle.world.isAirBlock(cropPos)){
 				//Check for valid seeds and plant if able.
-				for(APart part : vehicle.getVehicleParts()){
+				for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
 					if(part instanceof PartCrate){
 						InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
 						for(byte i=0; i<crateInventory.getSizeInventory(); ++i){

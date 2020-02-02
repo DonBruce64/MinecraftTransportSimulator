@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.systems.RotationSystem;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleD_Moving;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
@@ -37,8 +39,8 @@ public class VehicleGroundDeviceBox{
 	public double zCoord;
 	
 	//The following variables are only used for intermediary calculations.
-	private final List<APart> groundDevices = new ArrayList<APart>();
-	private final List<APart> liquidDevices = new ArrayList<APart>();
+	private final List<APart<? extends EntityVehicleE_Powered>> groundDevices = new ArrayList<APart<? extends EntityVehicleE_Powered>>();
+	private final List<APart<? extends EntityVehicleE_Powered>> liquidDevices = new ArrayList<APart<? extends EntityVehicleE_Powered>>();
 	private final List<VehicleAxisAlignedBB> liquidCollisionBoxes = new ArrayList<VehicleAxisAlignedBB>();
 	
 	
@@ -64,7 +66,7 @@ public class VehicleGroundDeviceBox{
 	public void updateGroundDevices(){
 		groundDevices.clear();
 		liquidDevices.clear();
-		for(APart part : vehicle.getVehicleParts()){
+		for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
 			if(part instanceof APartGroundDevice){
 				//X-offsets of 0 are both left and right as they are center points.
 				//This ensures we don't roll to try and align a center point.
@@ -143,7 +145,7 @@ public class VehicleGroundDeviceBox{
 		double yCoords = 0;
 		double zCoords = 0;
 		
-		for(APart groundDevice : groundDevices){
+		for(APart<? extends EntityVehicleE_Powered> groundDevice : groundDevices){
 			heights += groundDevice.getHeight();
 			widths += groundDevice.getWidth();
 			xCoords += groundDevice.offset.x;
@@ -170,7 +172,7 @@ public class VehicleGroundDeviceBox{
 		double yCoords = 0;
 		double zCoords = 0;
 		
-		for(APart groundDevice : liquidDevices){
+		for(APart<? extends EntityVehicleE_Powered> groundDevice : liquidDevices){
 			heights += groundDevice.getHeight();
 			widths += groundDevice.getWidth();
 			xCoords += groundDevice.offset.x;
@@ -202,7 +204,7 @@ public class VehicleGroundDeviceBox{
 	 * This function is used for ground device collisions only, and makes some assumptions that are incorrect
 	 * for a general-purpose function.
 	 */
-	private double getCollisionDepthForCollisions(VehicleAxisAlignedBB groundDeviceBox, List<AxisAlignedBB> boxList){
+	private static double getCollisionDepthForCollisions(VehicleAxisAlignedBB groundDeviceBox, List<AxisAlignedBB> boxList){
 		double collisionDepth = 0;
 		for(AxisAlignedBB box : boxList){
 			if(groundDeviceBox.minY < box.maxY){

@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.parts.APartEngineGeared;
 import net.minecraft.client.Minecraft;
@@ -45,7 +46,7 @@ public class ShiftPacket implements IMessage{
 						thisEntity = (EntityVehicleF_Ground) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
-						APartEngineGeared engine = (APartEngineGeared) thisEntity.getEngineByNumber((byte) 0);
+						APartEngineGeared<? extends EntityVehicleE_Powered> engine = (APartEngineGeared<? extends EntityVehicleE_Powered>) thisEntity.getEngineByNumber((byte) 0);
 						if(engine != null){
 							if(message.shiftUp){
 								engine.shiftUp(true);

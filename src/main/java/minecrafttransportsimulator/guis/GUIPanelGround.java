@@ -16,6 +16,7 @@ import minecrafttransportsimulator.rendering.RenderInstruments;
 import minecrafttransportsimulator.rendering.RenderVehicle;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.client.gui.GuiScreen;
@@ -34,7 +35,7 @@ public class GUIPanelGround extends GuiScreen{
 	private static final String[] lightText = new String[]{I18n.format("gui.panel.runninglights"), I18n.format("gui.panel.headlights"), I18n.format("gui.panel.emergencylights")};
 	
 	private final EntityVehicleF_Ground vehicle;
-	private final APartEngine engine;
+	private final APartEngine<? extends EntityVehicleE_Powered> engine;
 	private final boolean[] hasLight;
 	private final int[][] lightButtonCoords;
 	private final int[] starterButtonCoords;

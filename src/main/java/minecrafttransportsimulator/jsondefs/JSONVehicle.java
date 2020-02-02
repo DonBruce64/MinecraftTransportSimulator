@@ -20,7 +20,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     public List<VehicleCollisionBox> collision = new ArrayList<VehicleCollisionBox>();
     public VehicleRendering rendering;
     
-    public class VehicleGeneral extends AJSONCraftable.General{
+    public class VehicleGeneral extends AJSONCraftable<JSONVehicle.VehicleGeneral>.General{
     	public boolean openTop;
     	public int emptyMass;
     	public String type;

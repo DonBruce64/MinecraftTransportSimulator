@@ -18,7 +18,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * 
  * @author don_bruce
  */
-public abstract class AItemPack<JSONDefinition extends AJSONItem> extends Item{
+public abstract class AItemPack<JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> extends Item{
 	public final JSONDefinition definition;
 	
 	public AItemPack(JSONDefinition definition){

@@ -6,7 +6,7 @@ import java.util.List;
 public class JSONInstrument extends AJSONCraftable<JSONInstrument.InstrumentGeneral>{
     public List<InstrumentComponent> components = new ArrayList<InstrumentComponent>();
 
-    public class InstrumentGeneral extends AJSONCraftable.General{
+    public class InstrumentGeneral extends AJSONCraftable<JSONInstrument.InstrumentGeneral>.General{
     	public List<String> validVehicles;
     	public int textureXSectorStart;
     	public int textureYSectorStart;

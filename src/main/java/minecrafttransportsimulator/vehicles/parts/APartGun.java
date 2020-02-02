@@ -7,6 +7,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -111,7 +112,7 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 				//If we are out of bullets, and we can automatically reload, and are not doing so, start the reload sequence.
 				if(bulletsLeft == 0 && definition.gun.autoReload && !reloading){
 					//Iterate through all the inventory slots in crates to try to find matching ammo.
-					for(APart part : vehicle.getVehicleParts()){
+					for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
 						if(part instanceof PartCrate){
 							InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
 							for(byte i=0; i<crateInventory.getSizeInventory(); ++i){

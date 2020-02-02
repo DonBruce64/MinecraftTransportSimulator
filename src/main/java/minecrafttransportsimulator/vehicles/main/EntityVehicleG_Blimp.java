@@ -7,7 +7,6 @@ import net.minecraft.world.World;
 public final class EntityVehicleG_Blimp extends EntityVehicleF_Air{
 	//Internal plane variables
 	private double dragCoeff;
-	private double wingLiftCoeff;
 	
 	private double dragForce;//kg*m/ticks^2
 	private double rudderForce;//kg*m/ticks^2

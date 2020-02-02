@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -15,7 +16,7 @@ public class PacketPartEngineDamage extends APacketPart{
 
 	public PacketPartEngineDamage(){}
 	
-	public PacketPartEngineDamage(APartEngine engine, float hours){
+	public PacketPartEngineDamage(APartEngine<? extends EntityVehicleE_Powered> engine, float hours){
 		super(engine);
 		this.hours = hours;
 		this.oilLeak = engine.oilLeak;
@@ -46,7 +47,7 @@ public class PacketPartEngineDamage extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					APartEngine engine = (APartEngine) getVehiclePartFromMessage(message, ctx);
+					APartEngine<? extends EntityVehicleE_Powered> engine = (APartEngine<? extends EntityVehicleE_Powered>) getVehiclePartFromMessage(message, ctx);
 					if(engine != null){
 						engine.hours += message.hours;
 						if(!engine.fuelLeak){

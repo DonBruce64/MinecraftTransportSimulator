@@ -41,7 +41,7 @@ public class PacketVehicleAttacked extends APacketVehiclePlayer{
 								//Attacker is a sneaking player with a wrench.
 								//Remove this entity if possible.
 								boolean isPlayerOP = player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
-								if(vehicle.ownerName.isEmpty() || player.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName) || isPlayerOP){
+								if(vehicle.ownerName.isEmpty() || EntityPlayer.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName) || isPlayerOP){
 									if(isPlayerOP || !ConfigSystem.configObject.general.opPickupVehiclesOnly.value){
 										ItemStack stack = new ItemStack(MTSRegistry.packItemMap.get(vehicle.definition.packID).get(vehicle.definition.systemName));
 										NBTTagCompound stackTag = vehicle.writeToNBT(new NBTTagCompound());
@@ -56,10 +56,10 @@ public class PacketVehicleAttacked extends APacketVehiclePlayer{
 							}else{
 								//Attacker is a player swinging a wrench.
 								//If they hit a part, remove it if pemitted.
-								APart hitPart = vehicle.getHitPart(player);
+								APart<? extends EntityVehicleB_Existing> hitPart = vehicle.getHitPart(player);
 								if(hitPart != null){
 									boolean isPlayerOP = player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
-									if(vehicle.ownerName.isEmpty() || player.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName) || isPlayerOP){
+									if(vehicle.ownerName.isEmpty() || EntityPlayer.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName) || isPlayerOP){
 										//Player can remove part.  Spawn item in the world and remove part.
 										//Make sure to remove the part before spawning the item.  Some parts
 										//care about this order and won't spawn items unless they've been removed.

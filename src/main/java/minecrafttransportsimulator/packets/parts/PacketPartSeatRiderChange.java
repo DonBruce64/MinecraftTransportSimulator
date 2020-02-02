@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
@@ -16,7 +17,7 @@ public class PacketPartSeatRiderChange extends APacketPart{
 
 	public PacketPartSeatRiderChange() {}
 	
-	public PacketPartSeatRiderChange(APart part, Entity rider, boolean mount){
+	public PacketPartSeatRiderChange(APart<? extends EntityVehicleE_Powered> part, Entity rider, boolean mount){
 		super(part);
 		this.rider = rider.getEntityId();
 		this.mount = mount;

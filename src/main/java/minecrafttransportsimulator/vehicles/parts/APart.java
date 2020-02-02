@@ -43,9 +43,9 @@ public abstract class APart<EntityVehicleX_Type extends EntityVehicleE_Powered>{
 	public final boolean disableMirroring;
 	
 	/**The parent of this part, if this part is a sub-part of a part or an additional part for a vehicle.*/
-	public final APart parentPart;
+	public final APart<? extends EntityVehicleE_Powered> parentPart;
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
-	public final List<APart> childParts = new ArrayList<APart>();
+	public final List<APart<? extends EntityVehicleE_Powered>> childParts = new ArrayList<APart<? extends EntityVehicleE_Powered>>();
 	
 	public Vec3d partPos;
 	
@@ -77,7 +77,7 @@ public abstract class APart<EntityVehicleX_Type extends EntityVehicleE_Powered>{
 			}
 			
 			//If we aren't an additional part, see if we are a sub-part.
-			for(APart part : vehicle.getVehicleParts()){
+			for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
 				if(part.definition.subParts != null){
 					for(VehiclePart partSubPartPack : part.definition.subParts){
 						if((float) part.offset.x + partSubPartPack.pos[0] == (float) this.offset.x && (float) part.offset.y + partSubPartPack.pos[1] == (float) this.offset.y && (float) part.offset.z + partSubPartPack.pos[2] == (float) this.offset.z){
@@ -143,7 +143,7 @@ public abstract class APart<EntityVehicleX_Type extends EntityVehicleE_Powered>{
 	public void removePart(){
 		this.isValid = false;
 		while(childParts.size() > 0){
-			APart childPart = childParts.get(0);
+			APart<? extends EntityVehicleE_Powered> childPart = childParts.get(0);
 			childPart.removePart();
 			vehicle.removePart(childPart, false);
 			if(!vehicle.world.isRemote){

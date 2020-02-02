@@ -15,5 +15,5 @@ public class CommonProxy{
 	public void initControls(){}
 	public void openGUI(Object clicked, EntityPlayer clicker){}
 	public void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){}
-	public void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine engine){}
+	public void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine<? extends EntityVehicleE_Powered> engine){}
 }

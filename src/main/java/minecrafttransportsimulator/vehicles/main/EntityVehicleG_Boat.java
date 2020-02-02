@@ -47,7 +47,7 @@ public final class EntityVehicleG_Boat extends EntityVehicleF_Ground{
 		if(steeringAngle != 0){
 			float turningFactor = 0;
 			float turningDistance = 0;
-			for(APart part : this.getVehicleParts()){
+			for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
 				//Adjust yaw if we have an engine in the water.
 				if(part instanceof PartEngineBoat){
 					turningFactor += 1.0F;
