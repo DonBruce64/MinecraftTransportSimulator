@@ -281,7 +281,7 @@ public final class ClientEventSystem{
 	        	if(seat != null){
 		            //First restrict the player's yaw to prevent them from being able to rotate their body in a seat.
 		            Vec3d placementRotation = seat.partRotation;
-		            event.getEntityPlayer().renderYawOffset = (float) (vehicle.rotationYaw + placementRotation.y);
+		            event.getEntityPlayer().renderYawOffset = vehicle.rotationYaw + (float)(seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0) - (float)seat.partRotation.y;
 		            if(vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90){
 		            	event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw*-1F;
 		            }else{

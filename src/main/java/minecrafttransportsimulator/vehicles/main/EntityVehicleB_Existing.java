@@ -154,6 +154,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			passenger.motionX = this.motionX;
 			passenger.motionY = this.motionY;
 			passenger.motionZ = this.motionZ;
+			((EntityLivingBase)passenger).renderYawOffset = this.rotationYaw + (float)(seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0) - (float)seat.partRotation.y;
 		}else if(definition != null && !this.riderSeatPositions.isEmpty()){
 			Double[] seatLocation = this.riderSeatPositions.get(this.getPassengers().indexOf(passenger));
 			APart<? extends EntityVehicleB_Existing> part = getPartAtLocation(seatLocation[0], seatLocation[1], seatLocation[2]);
@@ -220,7 +221,8 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		riderSeats.put(rider.getEntityId(), seat);
 		rider.startRiding(this, true);
 		//Set the player's yaw to the same yaw as the vehicle to ensure we don't have 360+ rotations to deal with.
-		rider.rotationYaw =  (float) (this.rotationYaw + seat.partRotation.y);
+		rider.rotationYaw =  this.rotationYaw;
+		((EntityLivingBase)rider).renderYawOffset = this.rotationYaw + (float)(seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0) - (float)seat.partRotation.y;
 		if(!world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, true));
 		}
