@@ -10,6 +10,7 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
+import net.minecraftforge.fml.common.Loader;
 
 /**Pack-specific creative tab class.  One of each will be made for every pack
  * that loads into MTS.  These are held in the {@link MTSRegistry} along with the
@@ -22,6 +23,11 @@ public final class CreativeTabPack extends CreativeTabs{
 	public CreativeTabPack(String packID){
 		super(packID);
 	}
+	
+	public String getTranslatedTabLabel(){
+		//Need to return the information from the MCMOD.info file here.
+		return Loader.instance().getIndexedModList().get(this.getTabLabel()).getName();
+    }
 	
 	@Override
 	public ItemStack getTabIconItem(){
