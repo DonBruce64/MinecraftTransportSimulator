@@ -506,7 +506,7 @@ public class GUIPartBench extends GuiScreen{
 		//Only set the pack if it has items in it that match our bench's parameters.
 		prevPack = null;
 		if(currentPackIndex > 0){
-			for(int i=currentPackIndex-1; i<=0 && prevPack == null; --i){
+			for(int i=currentPackIndex-1; i>=0 && prevPack == null; --i){
 				for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packIDs.get(i)).values()){
 					if(bench.isJSONValid(packItem.definition)){
 						prevPack = packIDs.get(i);
