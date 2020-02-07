@@ -488,12 +488,12 @@ public final class ControlSystem{
 		AIRCRAFT_LOOK_U(false, false),
 		AIRCRAFT_LOOK_D(false, false),
 		AIRCRAFT_LOOK_A(false, false),
-		AIRCRAFT_TRIM_YAW_R(false, true),
-		AIRCRAFT_TRIM_YAW_L(false, true),
-		AIRCRAFT_TRIM_PITCH_U(false, true),
-		AIRCRAFT_TRIM_PITCH_D(false, true),
-		AIRCRAFT_TRIM_ROLL_R(false, true),
-		AIRCRAFT_TRIM_ROLL_L(false, true),
+		AIRCRAFT_TRIM_YAW_R(false, false),
+		AIRCRAFT_TRIM_YAW_L(false, false),
+		AIRCRAFT_TRIM_PITCH_U(false, false),
+		AIRCRAFT_TRIM_PITCH_D(false, false),
+		AIRCRAFT_TRIM_ROLL_R(false, false),
+		AIRCRAFT_TRIM_ROLL_L(false, false),
 		AIRCRAFT_REVERSE(false, true),
 		
 		
