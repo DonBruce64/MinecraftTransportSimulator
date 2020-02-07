@@ -124,6 +124,12 @@ public class GUIPartBench extends GuiScreen{
 			drawTexturedModalRect(guiLeft + 250, guiTop, 144, 0, 111, 201);
 		}
 		
+		//If we don't have a pack it means we don't have any compatible items.
+		//Don't go any further as we'll end up crashing the game.
+		if(currentPack == null){
+			return;
+		}
+		
 		//If we can make this part, draw the start arrow.
 		if(startButton.enabled){
 			drawTexturedModalRect(guiLeft + 140, guiTop + 173, 0, 201, 44, 16);
@@ -512,6 +518,10 @@ public class GUIPartBench extends GuiScreen{
 		
 		
 		//Set item indexes.
+		//If we don't have a pack, it means we don't have any items that are for this bench, so we shouldn't do anything else.
+		if(currentPack == null){
+			return;
+		}
 		List<AItemPack<? extends AJSONItem<?>>> packItems = new ArrayList<AItemPack<? extends AJSONItem<?>>>(MTSRegistry.packItemMap.get(currentPack).values());
 		int currentItemIndex = packItems.indexOf(currentItem);
 		//If currentItem is null, it means we swtiched packs and need to re-set it to the first item of the new pack.
