@@ -534,6 +534,7 @@ public class GUIPartBench extends GuiScreen{
 					if(bench.isJSONValid(packItem.definition)){
 						if(currentItem == null){
 							currentItem = packItem;
+							currentItemIndex = packItems.indexOf(currentItem);
 						}else if(bench.renderType.isForVehicles && nextSubItem == null){
 							if(((JSONVehicle) packItem.definition).genericName.equals(((JSONVehicle) currentItem.definition).genericName)){
 								nextSubItem = packItem;
