@@ -136,7 +136,7 @@ public class GUIPartBench extends GuiScreen{
 		}
 		
 		//Render the text headers.
-		drawCenteredString(I18n.format("itemGroup." + currentPack), guiLeft + 130, guiTop + 10);
+		drawCenteredString(MTSRegistry.packTabs.get(currentPack).getTranslatedTabLabel(), guiLeft + 130, guiTop + 10);
 		drawCenteredString(currentItem.definition.general.name != null ? currentItem.definition.general.name : currentItem.definition.systemName, guiLeft + 130, guiTop + 30);
 		if(bench.renderType.isForVehicles){
 			drawCenteredString(I18n.format("gui.vehicle_bench.color"), guiLeft + 300, guiTop + 10);
