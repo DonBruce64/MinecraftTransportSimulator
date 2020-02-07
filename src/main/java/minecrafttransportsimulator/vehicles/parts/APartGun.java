@@ -252,9 +252,9 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 	        float f3 = MathHelper.sin(-bulletPitch * 0.017453292F);
 	        Vec3d bulletOrientation = new Vec3d((double)(f1 * f2), (double)f3, (double)(f * f2));
 			
-			double bulletMotionX = bulletOrientation.x*definition.gun.muzzleVelocity/20D/10D;
-			double bulletMotionY = bulletOrientation.y*definition.gun.muzzleVelocity/20D/10D;
-			double bulletMotionZ = bulletOrientation.z*definition.gun.muzzleVelocity/20D/10D;
+			double bulletMotionX = bulletOrientation.x*definition.gun.muzzleVelocity/20D/10D + vehicle.motionX;
+			double bulletMotionY = bulletOrientation.y*definition.gun.muzzleVelocity/20D/10D + vehicle.motionY;
+			double bulletMotionZ = bulletOrientation.z*definition.gun.muzzleVelocity/20D/10D + vehicle.motionZ;
 			
 			//Now add the bullet as a particle.
 			Minecraft.getMinecraft().effectRenderer.addEffect(new PartBullet(vehicle.world, partPos.x + bulletOrientation.x*definition.gun.length, partPos.y + bulletOrientation.x*definition.gun.length, partPos.z + bulletOrientation.x*definition.gun.length, bulletMotionX, bulletMotionY, bulletMotionZ, loadedBullet, playerControllerID, this.vehicle));
