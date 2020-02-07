@@ -28,6 +28,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     
     public class VehicleDefinition{
     	public String subName;
+    	public String name;
     	public String[] extraMaterials;
     }
     

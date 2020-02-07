@@ -110,7 +110,16 @@ public final class PackParserSystem{
     			mainDefinitionCopy.packID = mainDefinition.packID;
     			mainDefinitionCopy.classification = mainDefinition.classification;
     			mainDefinitionCopy.genericName = mainDefinition.genericName;
-    			mainDefinitionCopy.general = mainDefinition.general;
+    			//Need to copy general too, as we need to set the name for each general section to be unique.
+    			mainDefinitionCopy.general = mainDefinition.new VehicleGeneral();
+    			mainDefinitionCopy.general.name = subDefinition.name;
+    			mainDefinitionCopy.general.description = mainDefinition.general.description;
+    			mainDefinitionCopy.general.materials = mainDefinition.general.materials;
+    			mainDefinitionCopy.general.openTop = mainDefinition.general.openTop;
+    			mainDefinitionCopy.general.emptyMass = mainDefinition.general.emptyMass;
+    			mainDefinitionCopy.general.type = mainDefinition.general.type;
+    			
+    			//Copy the rest of the parameters as-is.
     			mainDefinitionCopy.definitions = mainDefinition.definitions;
     			mainDefinitionCopy.motorized = mainDefinition.motorized;
     			mainDefinitionCopy.plane = mainDefinition.plane;
