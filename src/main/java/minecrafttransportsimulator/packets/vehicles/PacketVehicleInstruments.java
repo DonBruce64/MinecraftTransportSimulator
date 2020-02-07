@@ -23,8 +23,13 @@ public class PacketVehicleInstruments extends APacketVehiclePlayer{
 	public PacketVehicleInstruments(EntityVehicleE_Powered vehicle, EntityPlayer player, byte slot, ItemInstrument instrument){
 		super(vehicle, player);
 		this.slot = slot;
-		this.instrumentPackID = instrument.definition.packID;
-		this.instrumentSystemName = instrument.definition.systemName;
+		if(instrument != null){
+			this.instrumentPackID = instrument.definition.packID;
+			this.instrumentSystemName = instrument.definition.systemName;
+		}else{
+			this.instrumentPackID = "";
+			this.instrumentSystemName = "";
+		}
 	}
 	
 	@Override
@@ -59,21 +64,23 @@ public class PacketVehicleInstruments extends APacketVehiclePlayer{
 							}
 						}
 						
-						//Check to make sure player has the instrument they are trying to put in.
-						ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(message.instrumentPackID).get(message.instrumentSystemName);
-						if(!player.capabilities.isCreativeMode && ctx.side.isServer() && instrument != null){
-							if(player.inventory.hasItemStack(new ItemStack(instrument))){
-								player.inventory.clearMatchingItems(instrument, -1, 1, null);
-							}else{
-								return;
+						//If we are removing the instrument, do so now.
+						//Otherwise add the instrument.
+						if(message.instrumentPackID.isEmpty()){
+							vehicle.instruments.remove(message.slot);
+						}else{
+							//Check to make sure player has the instrument they are trying to put in.
+							ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(message.instrumentPackID).get(message.instrumentSystemName);
+							if(!player.capabilities.isCreativeMode && ctx.side.isServer() && instrument != null){
+								if(player.inventory.hasItemStack(new ItemStack(instrument))){
+									player.inventory.clearMatchingItems(instrument, -1, 1, null);
+								}else{
+									return;
+								}
 							}
+							vehicle.instruments.put(message.slot, instrument);
 						}
 						
-						if(instrument != null){
-							vehicle.instruments.put(message.slot, instrument);
-						}else{
-							vehicle.instruments.remove(message.slot);
-						}
 						if(ctx.side.isServer()){
 							MTS.MTSNet.sendToAll(message);
 						}
