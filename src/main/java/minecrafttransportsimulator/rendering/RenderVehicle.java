@@ -684,10 +684,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		
 		if(!part.partRotation.equals(Vec3d.ZERO)){
 			if(part.parentPart != null) {
+				GL11.glRotated(part.partRotation.z, -Math.sin((part.parentPart.getActionRotation(0).y) * 0.017453292F), 0, Math.cos((part.parentPart.getActionRotation(0).y) * 0.017453292F));
 				GL11.glRotated(part.partRotation.y, 0, 1, 0);
 				GL11.glRotated(part.partRotation.x, Math.cos((part.parentPart.getActionRotation(0).y) * 0.017453292F), 0, Math.sin((part.parentPart.getActionRotation(0).y) * 0.017453292F));
-				GL11.glRotated(part.partRotation.z, Math.sin((part.parentPart.getActionRotation(0).y) * 0.017453292F), 0, Math.cos((part.parentPart.getActionRotation(0).y) * 0.017453292F));
-			}
+				}
 			else{
 				GL11.glRotated(part.partRotation.x, 1, 0, 0);
 				GL11.glRotated(part.partRotation.y, 0, 1, 0);
