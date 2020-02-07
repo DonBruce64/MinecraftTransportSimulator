@@ -189,6 +189,15 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				return true;
 			}
 		}
+		for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+			if(partLightLists.containsKey(part.getModelLocation())){
+				for(LightPart lightPart : partLightLists.get(part.getModelLocation())){
+					if(lightPart.type.equals(light)){
+						return true;
+					}
+				}
+			}
+		}
 		return false;
 	}
 	
