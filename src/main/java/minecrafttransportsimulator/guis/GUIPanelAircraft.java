@@ -58,7 +58,7 @@ public class GUIPanelAircraft extends GuiScreen{
 	private GuiButton rudderTrimDownButton;
 	
 	private boolean haveReverseThrustOption;
-	private byte lastEngineStarted;
+	private byte lastEngineStarted = -1;
 	private GuiButton lastButtonPressed;
 	
 	public GUIPanelAircraft(EntityVehicleF_Air aircraft){
