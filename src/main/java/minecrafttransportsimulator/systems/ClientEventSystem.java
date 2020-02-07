@@ -328,14 +328,14 @@ public final class ClientEventSystem{
 		                float playerDistanceZ = (float) (renderedPlayer.posZ - masterPlayer.posZ);
 		                GL11.glTranslatef(playerDistanceX, playerDistanceY, playerDistanceZ);
 		                GL11.glTranslated(0, masterPlayer.getEyeHeight(), 0);
-		                GL11.glRotated(vehicle.rotationPitch + placementRotation.x, Math.cos(vehicle.rotationYaw  * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
-		                GL11.glRotated(vehicle.rotationRoll + placementRotation.z, -Math.sin(vehicle.rotationYaw  * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
+		                GL11.glRotated(vehicle.rotationPitch + placementRotation.x, Math.cos((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 )) * 0.017453292F), 0, Math.sin((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 )) * 0.017453292F));
+		                GL11.glRotated(vehicle.rotationRoll + placementRotation.z, -Math.sin((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 ))  * 0.017453292F), 0, Math.cos((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 )) * 0.017453292F));
 		                GL11.glTranslated(0, -masterPlayer.getEyeHeight(), 0);
 		                GL11.glTranslatef(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
 		            }else{
 		                GL11.glTranslated(0, event.getEntityPlayer().getEyeHeight(), 0);
-		                GL11.glRotated(vehicle.rotationPitch + placementRotation.x, Math.cos(vehicle.rotationYaw  * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
-		                GL11.glRotated(vehicle.rotationRoll + placementRotation.z, -Math.sin(vehicle.rotationYaw  * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
+		                GL11.glRotated(vehicle.rotationPitch + placementRotation.x, Math.cos((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 ))  * 0.017453292F), 0, Math.sin((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 )) * 0.017453292F));
+		                GL11.glRotated(vehicle.rotationRoll + placementRotation.z, -Math.sin((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 ))  * 0.017453292F), 0, Math.cos((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 )) * 0.017453292F));
 		                GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
 		            }
 		            
