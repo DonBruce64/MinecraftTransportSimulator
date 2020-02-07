@@ -7,7 +7,7 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.items.packs.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.JSONInstrument.InstrumentComponent;
+import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
@@ -22,23 +22,15 @@ import net.minecraft.util.ResourceLocation;
 public final class RenderInstruments{
 	protected static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	
-	/**Map for texture sheets.  First keyed by vehicle, then keyed by the gauge itself.**/
-	private static Map<String, Map<String, ResourceLocation>> instrumentTextureSheets = new HashMap<String, Map<String, ResourceLocation>>();
+	/**Map for texture sheets.  Keyed by packID.**/
+	private static Map<String, ResourceLocation> instrumentTextureSheets = new HashMap<String, ResourceLocation>();
 	
 	public static void drawInstrument(EntityVehicleE_Powered vehicle, ItemInstrument instrument, boolean hud, byte engineNumber){
-		//First get the appropriate texture file for this vehicle/instrument combination.
-		if(!instrumentTextureSheets.containsKey(vehicle.definition.general.type)){
-			instrumentTextureSheets.put(vehicle.definition.general.type, new HashMap<String, ResourceLocation>());
+		//First get the appropriate texture file for this instrument combination.
+		if(!instrumentTextureSheets.containsKey(instrument.definition.packID)){
+			instrumentTextureSheets.put(instrument.definition.packID, new ResourceLocation(instrument.definition.packID, "textures/instruments.png"));
 		}
-		if(!instrumentTextureSheets.get(vehicle.definition.general.type).containsKey(instrument.definition.systemName)){			
-			instrumentTextureSheets.get(vehicle.definition.general.type).put(instrument.definition.systemName, new ResourceLocation(instrument.definition.packID, "textures/instruments/" + vehicle.definition.general.type + ".png"));
-		}
-		textureManager.bindTexture(instrumentTextureSheets.get(vehicle.definition.general.type).get(instrument.definition.systemName));
-		
-		//Next get the appropriate starting sector for this instrument.
-		//This is based on a 1024x1024 texture sheet divided into 8 - 128x128 sectors.
-		float textureUStart = (instrument.definition.general.textureXSectorStart - 1)/8F;
-		float textureVStart = (instrument.definition.general.textureYSectorStart - 1)/8F;
+		textureManager.bindTexture(instrumentTextureSheets.get(instrument.definition.packID));
 		
 		//If we are in the HUD, invert the rendering to get correct orientation.
 		if(hud){
@@ -54,11 +46,11 @@ public final class RenderInstruments{
 		}
 		
 		//Finally, render the instrument based on the JSON definitions.
-		byte currentLayer = 0;
-		for(InstrumentComponent component : instrument.definition.components){
+		for(byte i=0; i<instrument.definition.components.size(); ++i){
+			Component section = instrument.definition.components.get(i);
 			GL11.glPushMatrix();
-			//Translate slightly away from the instrument location to prevent clipping.
-			GL11.glTranslatef(0, 0, -currentLayer*0.1F);
+			//Translate to the component, but slightly away from the instrument location to prevent clipping.
+			GL11.glTranslatef(section.xCenter, section.yCenter, -i*0.1F);
 			
 			//If the vehicle lights are on, disable the lightmap.
 			if(lightsOn){
@@ -67,48 +59,67 @@ public final class RenderInstruments{
 				Minecraft.getMinecraft().entityRenderer.enableLightmap();
 			}
 			
-			//Set the UV location for the render.
-			float layerHeight = 128;
-			float layerUStart = textureUStart;
-			float layerUEnd = textureUStart + 0.125F;
-			float layerVStart = textureVStart + currentLayer/8F;
-			float layerVEnd = textureVStart + (1 + currentLayer)/8F;
+			//Init variables.
+			float layerUStart;
+			float layerUEnd;
+			float layerVStart;
+			float layerVEnd;
 			
-			//If we use a rotation variable, rotate now.
-			//Otherwise, just render normally.
-			if(component.rotationVariable != null && !component.rotationVariable.isEmpty()){
-				double rotation = component.rotationOffset + getVariableValue(vehicle, component.rotationVariable, engineNumber)*component.rotationFactor;
-				GL11.glTranslatef(-component.xRotationPositionOffset, component.yRotationPositionOffset, 0);
-				GL11.glRotated(rotation, 0, 0, 1);
-				GL11.glTranslatef(component.xRotationPositionOffset, -component.yRotationPositionOffset, 0);
+			//Depending on what variables are set we do different rendering operations.
+			//If we are rotating the window, but not the texture we should initialize the texture points to that rotated point.
+			//Otherwise, set the points to their normal location.
+			if(section.rotationVariable != null && section.rotateWindow){
+				double rotation = section.rotationOffset + getVariableValue(vehicle, section.rotationVariable, engineNumber)*section.rotationFactor;
+				double sin = Math.sin(Math.toRadians(rotation));
+				double cos = Math.sin(Math.toRadians(rotation));
+				layerUStart = (float) ((-section.textureWidth/2F)*cos - (-section.textureHeight/2F)*sin);
+				layerVStart = (float) ((-section.textureWidth/2F)*sin + (-section.textureHeight/2F)*cos);
+				layerUEnd = (float) ((section.textureWidth/2F)*cos - (section.textureHeight/2F)*sin);
+				layerVEnd = (float) ((section.textureWidth/2F)*sin + (section.textureHeight/2F)*cos);
+			}else{
+				layerUStart = section.textureXCenter - section.textureWidth/2F;
+				layerUEnd = layerUStart + section.textureWidth;
+				layerVStart = section.textureYCenter - section.textureHeight/2F;
+				layerVEnd = layerVStart + section.textureHeight;
 			}
 			
-			//If we have a visibility variable, adjust the UV mapping.
-			if(component.visibilityVariable != null && !component.visibilityVariable.isEmpty()){
-				double height = getVariableValue(vehicle, component.visibilityVariable, engineNumber)*component.visibilityFactor;
-				//If the height is locked, move the UV map to the variable.
-				//If not, increase the UV map height with the variable.
-				if(!component.dynamicVisibility){
-					layerHeight = component.visibleSectionHeight;
-					layerVStart += (float) ((64F + component.visibilityOffset + height - component.visibleSectionHeight/2F)/1024F);
-					layerVEnd = layerVStart + component.visibleSectionHeight/1024F;
+			//If we are translating, offset the coords based on the translated amount.
+			//Adjust the window to either move or scale depending on settings.
+			if(section.translationVariable != null){
+				float translation = (float) (getVariableValue(vehicle, section.translationVariable, engineNumber)*section.translationFactor);
+				if(section.extendWindow){
+					//We need to add to the edge of the window in this case rather than move the entire window.
+					if(section.translateHorizontal){
+						layerUEnd += translation;
+					}else{
+						layerVEnd += translation;
+					}
 				}else{
-					layerHeight = (float) (component.visibilityOffset + height);
-					layerVStart += (component.visibilityOffset)/1024F;
-					layerVEnd = (float) (layerVStart + layerHeight/1024F);
-					GL11.glTranslatef(0, layerHeight/2F, 0);
+					//Translate the window to the appropriate section of the texture sheet.
+					if(section.translateHorizontal){
+						layerUStart += translation;
+						layerUEnd = layerUStart + section.textureWidth;
+					}else{
+						layerVStart += translation;
+						layerVEnd = layerVStart + section.textureHeight;
+					}
 				}
 			}
 			
-			//Finally, render the instrument shape.
-			if(!component.lightOverlay){
-				renderSquareUV(128, layerHeight, 0, layerUStart, layerUEnd, layerVStart, layerVEnd);
+			//If we are rotating the texture, and not the window, apply the rotation here after the translation.
+			if(section.rotationVariable != null && !section.rotateWindow){
+				float rotation = (float) (section.rotationOffset + getVariableValue(vehicle, section.rotationVariable, engineNumber)*section.rotationFactor);
+				GL11.glRotatef(rotation, 0, 0, 1);
+			}
+			
+			//Now that all transforms are done, render the instrument shape.
+			if(!section.lightOverlay){
+				renderSquareUV(section.textureWidth, section.textureHeight, 0, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
 			}else if(lightsOn){
 				GL11.glEnable(GL11.GL_BLEND);
 				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-			    renderSquareUV(128, layerHeight, 0, layerUStart, layerUEnd, layerVStart, layerVEnd);
+			    renderSquareUV(section.textureWidth, section.textureHeight, 0, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
 			}
-			++currentLayer;
 			GL11.glPopMatrix();
 		}
 		
