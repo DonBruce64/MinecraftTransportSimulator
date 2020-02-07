@@ -4,26 +4,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JSONInstrument extends AJSONCraftable<JSONInstrument.InstrumentGeneral>{
-    public List<InstrumentComponent> components = new ArrayList<InstrumentComponent>();
+    public List<Component> components = new ArrayList<Component>();
 
     public class InstrumentGeneral extends AJSONCraftable<JSONInstrument.InstrumentGeneral>.General{
     	public List<String> validVehicles;
-    	public int textureXSectorStart;
-    	public int textureYSectorStart;
     }
     
-    public class InstrumentComponent{
+    public class Component{
+    	public int xCenter;
+    	public int yCenter;
+    	
+    	public int textureXCenter;
+    	public int textureYCenter;
+    	public int textureWidth;
+    	public int textureHeight;
+    	
     	public String rotationVariable;
-    	public int xRotationPositionOffset;
-    	public int yRotationPositionOffset;
+    	public boolean rotateWindow;
     	public float rotationOffset;
     	public float rotationFactor;
     	
-    	public String visibilityVariable;
-    	public boolean dynamicVisibility;
-    	public int visibleSectionHeight;
-    	public float visibilityOffset;
-    	public float visibilityFactor;
+    	public String translationVariable;
+    	public boolean extendWindow;
+    	public boolean translateHorizontal;
+    	public float translationFactor;
+
     	
     	public boolean lightOverlay;
     }
