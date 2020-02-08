@@ -176,16 +176,27 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 				//When we do yaw, make sure we do calculations with positive values.
 				//Both the vehicle and the player can have yaw greater than 360.
 				double deltaPitch = playerController.rotationPitch - vehicle.rotationPitch;
-				double deltaYaw = (playerController.rotationYaw%360 + 360)%360 - (vehicle.rotationYaw%360 - partRotation.y + 360)%360;
+				double deltaYaw = (playerController.rotationYaw + 360)%360 - (vehicle.rotationYaw + 360 - partRotation.y + 360)%360;
 				if(deltaPitch < currentPitch && currentPitch > getMinPitch()){
 					currentPitch -= Math.min(anglePerTickSpeed, currentPitch - deltaPitch);
 				}else if(deltaPitch > currentPitch && currentPitch < getMaxPitch()){
 					currentPitch += Math.min(anglePerTickSpeed, deltaPitch - currentPitch);
 				}
-				if(deltaYaw < currentYaw && currentYaw > getMinYaw()){
-					currentYaw -= Math.min(anglePerTickSpeed, currentYaw - deltaYaw);
-				}else if(deltaYaw > currentYaw && currentYaw < getMaxYaw()){
-					currentYaw += Math.min(anglePerTickSpeed, deltaYaw - currentYaw);
+				if(getMinYaw() > 0  && getMaxYaw() < 0) {
+					if(deltaYaw < currentYaw){
+						currentYaw -= Math.min(anglePerTickSpeed, currentYaw - deltaYaw);
+					}else if(deltaYaw > currentYaw){
+						currentYaw += Math.min(anglePerTickSpeed, deltaYaw - currentYaw);
+					}
+					if(currentYaw > 180 ) currentYaw -= 360;
+					else if(currentYaw < -180) currentYaw += 360;
+				}
+				else {
+					if(deltaYaw < currentYaw && currentYaw > getMinYaw()){
+						currentYaw -= Math.min(anglePerTickSpeed, currentYaw - deltaYaw);
+					}else if(deltaYaw > currentYaw && currentYaw < getMaxYaw()){
+						currentYaw += Math.min(anglePerTickSpeed, deltaYaw - currentYaw);
+					}
 				}
 			}else{
 				playerControllerID = -1;
