@@ -20,12 +20,12 @@ public class PartGunTurret extends APartGun{
 	
 	@Override
 	public float getMinYaw(){
-		return -180;
+		return 1;
 	}
 	
 	@Override
 	public float getMaxYaw(){
-		return 180;
+		return -1;
 	}
 	
 	@Override
