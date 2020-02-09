@@ -319,6 +319,8 @@ public final class ClientEventSystem{
 			            event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw;
 		            }
 		            
+		            double parentYaw = 0;
+		            if (seat.parentPart != null) parentYaw = seat.parentPart.getActionRotation(0).y;
 		            //Now add the pitch rotation.
 		            if(!event.getEntityPlayer().equals(minecraft.player)){
 		                EntityPlayer masterPlayer = Minecraft.getMinecraft().player;
@@ -330,16 +332,16 @@ public final class ClientEventSystem{
 		                GL11.glTranslated(0, masterPlayer.getEyeHeight(), 0);
 		                GL11.glRotated(vehicle.rotationPitch, Math.cos(vehicle.rotationYaw * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
 		                GL11.glRotated(vehicle.rotationRoll, -Math.sin(vehicle.rotationYaw * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
-		                GL11.glRotated(placementRotation.x, Math.cos((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 )) * 0.017453292F), 0, Math.sin((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 )) * 0.017453292F));
-		                GL11.glRotated(placementRotation.z, -Math.sin((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 ))  * 0.017453292F), 0, Math.cos((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 )) * 0.017453292F));
+		                GL11.glRotated(placementRotation.x, Math.cos((vehicle.rotationYaw + parentYaw) * 0.017453292F), 0, Math.sin((vehicle.rotationYaw + parentYaw) * 0.017453292F));
+		                GL11.glRotated(placementRotation.z, -Math.sin((vehicle.rotationYaw + parentYaw)  * 0.017453292F), 0, Math.cos((vehicle.rotationYaw + parentYaw) * 0.017453292F));
 		                GL11.glTranslated(0, -masterPlayer.getEyeHeight(), 0);
 		                GL11.glTranslatef(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
 		            }else{
 		                GL11.glTranslated(0, event.getEntityPlayer().getEyeHeight(), 0);
 		                GL11.glRotated(vehicle.rotationPitch, Math.cos(vehicle.rotationYaw * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
 		                GL11.glRotated(vehicle.rotationRoll, -Math.sin(vehicle.rotationYaw * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
-		                GL11.glRotated(placementRotation.x, Math.cos((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 ))  * 0.017453292F), 0, Math.sin((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 )) * 0.017453292F));
-		                GL11.glRotated(placementRotation.z, -Math.sin((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 ))  * 0.017453292F), 0, Math.cos((vehicle.rotationYaw + (seat.parentPart != null? seat.parentPart.getActionRotation(0).y:0 )) * 0.017453292F));
+		                GL11.glRotated(placementRotation.x, Math.cos((vehicle.rotationYaw + parentYaw)  * 0.017453292F), 0, Math.sin((vehicle.rotationYaw + parentYaw) * 0.017453292F));
+		                GL11.glRotated(placementRotation.z, -Math.sin((vehicle.rotationYaw + parentYaw)  * 0.017453292F), 0, Math.cos((vehicle.rotationYaw + parentYaw) * 0.017453292F));
 		                GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
 		            }
 		            
