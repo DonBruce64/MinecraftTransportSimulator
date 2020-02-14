@@ -21,7 +21,7 @@ public class ItemPartBarrel extends AItemPart{
 	
 	@Override
 	public boolean isPartValidForPackDef(VehiclePart packPart){
-		return packPart.minValue <= definition.barrel.capacity && packPart.maxValue >= definition.barrel.capacity ? super.isPartValidForPackDef(packPart) : false;
+		return packPart.minValue <= definition.barrel.capacity/1000 && packPart.maxValue >= definition.barrel.capacity/1000 ? super.isPartValidForPackDef(packPart) : false;
 	}
 	
 	@Override
