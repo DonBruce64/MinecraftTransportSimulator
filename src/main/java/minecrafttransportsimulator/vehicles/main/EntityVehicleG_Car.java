@@ -5,8 +5,9 @@ import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.APartEngineGeared;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import net.minecraft.world.World;
 
 
@@ -44,20 +45,20 @@ public final class EntityVehicleG_Car extends EntityVehicleF_Ground{
 			if(steeringAngle < -200){
 				turningLeft = true;
 				turningCooldown = 40;
-				changeLightStatus(LightTypes.LEFTTURNLIGHT, true);
+				changeLightStatus(LightType.LEFTTURNLIGHT, true);
 			}else if(steeringAngle > 200){
 				turningRight = true;
 				turningCooldown = 40;
-				changeLightStatus(LightTypes.RIGHTTURNLIGHT, true);
+				changeLightStatus(LightType.RIGHTTURNLIGHT, true);
 			}
 			if(velocity != 0){
 				if(turningLeft && (steeringAngle > 0 || turningCooldown == 0)){
 					turningLeft = false;
-					changeLightStatus(LightTypes.LEFTTURNLIGHT, false);
+					changeLightStatus(LightType.LEFTTURNLIGHT, false);
 				}
 				if(turningRight && (steeringAngle < 0 || turningCooldown == 0)){
 					turningRight = false;
-					changeLightStatus(LightTypes.RIGHTTURNLIGHT, false);
+					changeLightStatus(LightType.RIGHTTURNLIGHT, false);
 				}
 				if(turningCooldown > 0 && steeringAngle == 0){
 					--turningCooldown;
@@ -65,10 +66,18 @@ public final class EntityVehicleG_Car extends EntityVehicleF_Ground{
 			}
 			
 			//Turn on brake/indicator and backup lights if they are activated.
-			changeLightStatus(LightTypes.BRAKELIGHT, brakeOn);
-			changeLightStatus(LightTypes.LEFTINDICATORLIGHT, brakeOn && !this.isLightOn(LightTypes.LEFTTURNLIGHT));
-			changeLightStatus(LightTypes.RIGHTINDICATORLIGHT, brakeOn && !this.isLightOn(LightTypes.RIGHTTURNLIGHT));
-			changeLightStatus(LightTypes.BACKUPLIGHT, getEngineByNumber((byte) 0) != null && ((PartEngineCar) getEngineByNumber((byte) 0)).getGearshiftRotation() < 0);
+			changeLightStatus(LightType.BRAKELIGHT, brakeOn);
+			changeLightStatus(LightType.LEFTINDICATORLIGHT, brakeOn && !this.isLightOn(LightType.LEFTTURNLIGHT));
+			changeLightStatus(LightType.RIGHTINDICATORLIGHT, brakeOn && !this.isLightOn(LightType.RIGHTTURNLIGHT));
+			boolean backupLightOn = false;
+			for(APartEngine<? extends EntityVehicleE_Powered> engine : engines.values()){
+				if(engine instanceof APartEngineGeared){
+					if(((APartEngineGeared<? extends EntityVehicleE_Powered>) engine).currentGear < 0){
+						backupLightOn = true;
+					}
+				}
+			}
+			changeLightStatus(LightType.BACKUPLIGHT, backupLightOn);
 		}
 	}
 	

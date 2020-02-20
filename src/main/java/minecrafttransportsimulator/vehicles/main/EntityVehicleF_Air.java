@@ -89,13 +89,10 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	protected void getForcesAndMotions(){
 		thrustForce = thrustTorque = 0;
 		double thrust = 0;
-		for(byte i=0; i<this.getNumberEngineBays(); ++i){
-			APartEngine<? extends EntityVehicleE_Powered> engine = getEngineByNumber(i);
-			if(engine != null){
-				thrust = engine.getForceOutput();
-				thrustForce += thrust;
-				thrustTorque += thrust*engine.offset.x;
-			}
+		for(APartEngine<? extends EntityVehicleE_Powered> engine : engines.values()){
+			thrust = engine.getForceOutput();
+			thrustForce += thrust;
+			thrustTorque += thrust*engine.offset.x;
 		}
 		gravitationalForce = currentMass*(9.8/400);
 	}

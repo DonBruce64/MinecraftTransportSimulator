@@ -14,12 +14,13 @@ import minecrafttransportsimulator.wrappers.WrapperGUI;
  * @author don_bruce
  */
 public abstract class AGUIBase{
-	private static final int STANDARD_TEXTURE_WIDTH = 256;
-	private static final int STANDARD_TEXTURE_HEIGHT = 192;
+	private static final int STANDARD_GUI_WIDTH = 256;
+	private static final int STANDARD_GUI_HEIGHT = 192;
 	private static final String STANDARD_TEXTURE_NAME = "mts:textures/guis/standard.png";
 	
 	public final List<GUIComponentLabel> labels = new ArrayList<GUIComponentLabel>();
 	public final List<GUIComponentButton> buttons = new ArrayList<GUIComponentButton>();
+	public final List<GUIComponentSelector> selectors = new ArrayList<GUIComponentSelector>();
 	public final List<GUIComponentTextBox> textBoxes = new ArrayList<GUIComponentTextBox>();
 	public final List<GUIComponentItem> items = new ArrayList<GUIComponentItem>();
 	
@@ -46,6 +47,19 @@ public abstract class AGUIBase{
 	}
 	
 	/**
+	 *  Used to determine lighting for this GUI.  If {@link GUILightingMode#NONE} is returned,
+	 *  then this GUI renders as normal.  If {@link GUILightingMode#DARK} is returned, then the
+	 *  brightness of the GUI is set to the brightness of the player.  If {@link GUILightingMode#LIT}
+	 *  is returned, then the GUI is rendered with lit text and items, but dark controls.  It is
+	 *  also rendered with the lit texture (the texture name with _lit appended) as well.  This
+	 *  can be used to make light-sensitive GUIs for vehicles as well as other things.
+	 *  
+	 */
+	public GUILightingMode getGUILightMode(){
+		return GUILightingMode.NONE;
+	}
+	
+	/**
 	 *  If this is true, then the GUI will pause the game when open.
 	 */
 	public boolean pauseOnOpen(){
@@ -56,14 +70,38 @@ public abstract class AGUIBase{
 	 *  Returns the width of this GUI.  Used for centering.
 	 */
 	public int getWidth(){
-		return STANDARD_TEXTURE_WIDTH;
+		return STANDARD_GUI_WIDTH;
 	}
 	
 	/**
-	 *  Returns the heightof this GUI.  Used for centering.
+	 *  Returns the height of this GUI.  Used for centering.
 	 */
 	public int getHeight(){
-		return STANDARD_TEXTURE_HEIGHT;
+		return STANDARD_GUI_HEIGHT;
+	}
+	
+	/**
+	 *  If true, the GUI will be rendered flush with the bottom
+	 *  and sides of the screen rather than the center of the screen.
+	 *  This may cause textures to not render in their proper locations,
+	 *  so watch out!
+	 */
+	public boolean renderFlushBottom(){
+		return false;
+	}
+	
+	/**
+	 *  Returns the width of this GUI's texture.  Used for rendering.
+	 */
+	public final int getTextureWidth(){
+		return getWidth() <= 256 ? 256 : (getWidth() <= 512 ? 512 : (getWidth() <= 1024 ? 1024 : 2048));
+	}
+	
+	/**
+	 *  Returns the height of this GUI's texture.  Used for rendering.
+	 */
+	public final int getTextureHeight(){
+		return getHeight() <= 256 ? 256 : (getHeight() <= 512 ? 512 : (getHeight() <= 1024 ? 1024 : 2048));
 	}
 	
 	/**
@@ -85,12 +123,22 @@ public abstract class AGUIBase{
 	
 	/**
 	 *  Adds an {@link GUIComponentButton} to this GUIs component set.  When a mouse click is
-	 *  sensed, this GUI will attempt to click all buttons in this set via {@link GUIComponentButton#clicked()}.
+	 *  sensed, this GUI will attempt to click all buttons in this set via {@link GUIComponentButton#canClick(int, int)}.
 	 *  If any of those buttons say they were clicked, their {@link GUIComponentButton#onClicked()} method 
 	 *  is fired to allow the button to handle clicking actions.
 	 */
 	public void addButton(GUIComponentButton button){
 		buttons.add(button);
+	}
+	
+	/**
+	 *  Adds an {@link GUIComponentSelector} to this GUIs component set.  When a mouse click is
+	 *  sensed, this GUI will attempt to click all selectors in this set via {@link GUIComponentSelector#canClick(int, int)}.
+	 *  If any of those selectors say they were clicked, their {@link GUIComponentButton#onClicked(boolean)} method 
+	 *  is fired to allow the button to handle clicking actions.
+	 */
+	public void addSelector(GUIComponentSelector selector){
+		selectors.add(selector);
 	}
 	
 	/**
@@ -116,7 +164,14 @@ public abstract class AGUIBase{
 	public void clearComponents(){
 		labels.clear();
 		buttons.clear();
+		selectors.clear();
 		textBoxes.clear();
 		items.clear();
+	}
+	
+	public enum GUILightingMode{
+		NONE,
+		DARK,
+		LIT;
 	}
 }

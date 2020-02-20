@@ -2,8 +2,8 @@ package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.ClientProxy;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.guis.GUIPanelAircraft;
-import minecrafttransportsimulator.guis.GUIPanelGround;
+import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
+import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigKeyboard;
@@ -29,7 +29,6 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 
 /**Class that handles all control operations.
  * Keybinding lists are initiated during the {@link ClientProxy} init method.
@@ -207,10 +206,11 @@ public final class ControlSystem{
 		//Open or close the panel.
 		if(ControlsKeyboard.AIRCRAFT_PANEL.isPressed()){
 			if(WrapperGUI.isGUIActive(null)){
-				FMLCommonHandler.instance().showGuiScreen(new GUIPanelAircraft(aircraft));
-			}else if(WrapperGUI.isGUIActive(GUIPanelAircraft.class)){
-				WrapperGUI.closeGUI();
-			}
+				WrapperGUI.openGUI(new GUIPanelAircraft(aircraft));
+			}//FIXME need to check for panel GUI here.
+			//}else if(WrapperGUI.isGUIActive(GUIPanelAircraft.class)){
+				//WrapperGUI.closeGUI();
+			//}
 		}
 		
 		//Check for thrust reverse button.
@@ -318,10 +318,11 @@ public final class ControlSystem{
 		//Open or close the panel.
 		if(ControlsKeyboard.CAR_PANEL.isPressed()){
 			if(WrapperGUI.isGUIActive(null)){
-				FMLCommonHandler.instance().showGuiScreen(new GUIPanelGround(powered));
-			}else if(WrapperGUI.isGUIActive(GUIPanelGround.class)){
-				WrapperGUI.closeGUI();
-			}
+				WrapperGUI.openGUI(new GUIPanelGround(powered));
+			}//FIXME need to check for panel GUI here.
+			//else if(WrapperGUI.isGUIActive(GUIPanelGround.class)){
+				//WrapperGUI.closeGUI();
+			//}
 		}
 		
 		//Change gas to on or off.

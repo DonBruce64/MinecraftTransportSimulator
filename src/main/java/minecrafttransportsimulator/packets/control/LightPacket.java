@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.control;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -16,7 +16,7 @@ public class LightPacket implements IMessage{
 
 	public LightPacket() { }
 	
-	public LightPacket(int id, LightTypes light){
+	public LightPacket(int id, LightType light){
 		this.id=id;
 		this.lightOrdinal=(byte) light.ordinal();
 	}
@@ -45,7 +45,7 @@ public class LightPacket implements IMessage{
 						thisEntity = (EntityVehicleE_Powered) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
-						thisEntity.changeLightStatus(LightTypes.values()[message.lightOrdinal], !thisEntity.isLightOn(LightTypes.values()[message.lightOrdinal]));
+						thisEntity.changeLightStatus(LightType.values()[message.lightOrdinal], !thisEntity.isLightOn(LightType.values()[message.lightOrdinal]));
 						if(ctx.side.isServer()){
 							MTS.MTSNet.sendToAll(message);
 						}

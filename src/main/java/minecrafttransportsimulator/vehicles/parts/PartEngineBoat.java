@@ -7,6 +7,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 
 public class PartEngineBoat extends APartEngineGeared<EntityVehicleG_Boat>{
+	private boolean inLiquid;
 
 	public PartEngineBoat(EntityVehicleG_Boat vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
@@ -19,7 +20,7 @@ public class PartEngineBoat extends APartEngineGeared<EntityVehicleG_Boat>{
 		//This pitch is only used when the engine is turned off and not providing power, so it's not really critical.
 		//Gear ratio is assumed to be 1, as it'll be a straight-shaft connection.
 		//Check 1 block down for liquid.  If we are in liquid, then we should provide power.
-		boolean inLiquid = vehicle.world.getBlockState(new BlockPos(partPos).down()).getMaterial().isLiquid();
+		inLiquid = vehicle.world.getBlockState(new BlockPos(partPos).down()).getMaterial().isLiquid();
 		if(state.running){
 			double engineTargetRPM = (vehicle.throttle/100F*((inLiquid ? getSafeRPMFromMax(definition.engine.maxRPM) : definition.engine.maxRPM) - engineStartRPM*1.25 - hours) + engineStartRPM*1.25);
 			if(inLiquid){
@@ -39,7 +40,7 @@ public class PartEngineBoat extends APartEngineGeared<EntityVehicleG_Boat>{
 	
 	@Override
 	public double getForceOutput(){
-		return state.running ? RPM/definition.engine.maxRPM*50*definition.engine.fuelConsumption*currentGear : 0;
+		return state.running && inLiquid ? RPM/definition.engine.maxRPM*50*definition.engine.fuelConsumption*currentGear : 0;
 	}
 	
 	@Override

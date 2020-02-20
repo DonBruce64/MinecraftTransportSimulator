@@ -24,7 +24,7 @@ import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.systems.VehicleSoundSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
@@ -183,7 +183,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 	}
 	
-	public static boolean doesVehicleHaveLight(EntityVehicleE_Powered vehicle, LightTypes light){
+	public static boolean doesVehicleHaveLight(EntityVehicleE_Powered vehicle, LightType light){
 		for(LightPart lightPart : vehicleLightLists.get(vehicle.definition.genericName)){
 			if(lightPart.type.equals(light)){
 				return true;
@@ -427,17 +427,17 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		switch(variable){
 			case("cycle"): return vehicle.world.getTotalWorldTime()%20;
 			case("door"): return vehicle.parkingBrakeAngle*2;
-			case("hood"): return vehicle.getEngineByNumber((byte) 0) == null ? 60 : 0;
+			case("hood"): return vehicle.engines.containsKey((byte) 0) ? 0 : 60;
 			case("throttle"): return vehicle.throttle/4F;
 			case("brake"): return vehicle.brakeOn ? 25 : 0;
 			case("p_brake"): return vehicle.parkingBrakeAngle;
 			case("horn"): return vehicle.hornOn ? 30 : 0;
 			case("trailer"): return ((EntityVehicleF_Ground) vehicle).towingAngle;
 			case("hookup"): return ((EntityVehicleF_Ground) vehicle).towedByVehicle != null ? ((EntityVehicleF_Ground) vehicle).towedByVehicle.towingAngle : 0;
-			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared<? extends EntityVehicleE_Powered>) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation() : 0;
-			case("gearshift_hvertical"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared<? extends EntityVehicleE_Powered>) vehicle.getEngineByNumber((byte) 0))).getGearshiftPosition_Vertical() : 0;
-			case("gearshift_hhorizontal"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared<? extends EntityVehicleE_Powered>) vehicle.getEngineByNumber((byte) 0))).getGearshiftPosition_Horizontal() : 0;
-			case("engine"): return (float) (vehicle.getEngineByNumber((byte) 0) != null ? ((APartEngine<? extends EntityVehicleE_Powered>) vehicle.getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) : 0);
+			case("gearshift"): return vehicle.engines.containsKey((byte) 0) ? (((APartEngineGeared<? extends EntityVehicleE_Powered>) vehicle.engines.get((byte) 0))).getGearshiftRotation() : 0;
+			case("gearshift_hvertical"): return vehicle.engines.containsKey((byte) 0) ? (((APartEngineGeared<? extends EntityVehicleE_Powered>) vehicle.engines.get((byte) 0))).getGearshiftPosition_Vertical() : 0;
+			case("gearshift_hhorizontal"): return vehicle.engines.containsKey((byte) 0) ? (((APartEngineGeared<? extends EntityVehicleE_Powered>) vehicle.engines.get((byte) 0))).getGearshiftPosition_Horizontal() : 0;
+			case("engine"): return (float) (vehicle.engines.containsKey((byte) 0) ? ((APartEngine<? extends EntityVehicleE_Powered>) vehicle.engines.get((byte) 0)).getEngineRotation(partialTicks) : 0);
 			case("driveshaft"): return getDriveshaftValue(vehicle, partialTicks, (byte) 0);
 			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0) + 180F)))/2F;
 			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0) + 180F));
@@ -457,10 +457,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//Take off the part following the _, and check for that instead.
 		byte index = (byte) (Byte.valueOf(variable.substring(variable.lastIndexOf('_') + 1)) - 1);
 		switch(variable.substring(0, variable.lastIndexOf('_'))){
-			case("magneto"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.magnetoOn ? 30 : 0) : 0;
-			case("starter"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.esOn ? 30 : 0) : 0;
-			case("pitch"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).childParts.get(0) instanceof PartEngineAircraft ? ((PartEngineAircraft) vehicle.getEngineByNumber(index).childParts.get(0)).propeller.currentPitch : 0) : 0;
-			case("engine"): return (float) (vehicle.getEngineByNumber(index) != null ? vehicle.getEngineByNumber(index).getEngineRotation(partialTicks) : 0);
+			case("magneto"): return vehicle.engines.containsKey(index) ? (vehicle.engines.get(index).state.magnetoOn ? 30 : 0) : 0;
+			case("starter"): return vehicle.engines.containsKey(index) ? (vehicle.engines.get(index).state.esOn ? 30 : 0) : 0;
+			case("pitch"): return vehicle.engines.containsKey(index) ? (vehicle.engines.get(index).childParts.get(0) instanceof PartEngineAircraft ? ((PartEngineAircraft) vehicle.engines.get(index).childParts.get(0)).propeller.currentPitch : 0) : 0;
+			case("engine"): return (float) (vehicle.engines.containsKey(index) ? vehicle.engines.get(index).getEngineRotation(partialTicks) : 0);
 			case("driveshaft"): return getDriveshaftValue(vehicle, partialTicks, index);
 			default: return 0;
 		}
@@ -485,8 +485,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			case("horn"): return vehicle.hornOn ? 1 : 0;
 			case("trailer"): return ((EntityVehicleF_Ground) vehicle).towingAngle/30F;
 			case("hookup"): return ((EntityVehicleF_Ground) vehicle).towedByVehicle != null ? ((EntityVehicleF_Ground) vehicle).towedByVehicle.towingAngle/30F : 0;
-			case("gearshift"): return vehicle.getEngineByNumber((byte) 0) != null ? (((APartEngineGeared<? extends EntityVehicleE_Powered>) vehicle.getEngineByNumber((byte) 0))).getGearshiftRotation()/5F : 0;
-			case("engine_sin"): return (float) (vehicle.getEngineByNumber((byte) 0) != null ? (1 + Math.cos(Math.toRadians(((APartEngine<? extends EntityVehicleE_Powered>) vehicle.getEngineByNumber((byte) 0)).getEngineRotation(partialTicks) + 180F)))/2F : 0);
+			case("gearshift"): return vehicle.engines.containsKey((byte) 0) ? (((APartEngineGeared<? extends EntityVehicleE_Powered>) vehicle.engines.get((byte) 0))).getGearshiftRotation()/5F : 0;
+			case("engine_sin"): return (float) (vehicle.engines.containsKey((byte) 0) ? (1 + Math.cos(Math.toRadians(((APartEngine<? extends EntityVehicleE_Powered>) vehicle.engines.get((byte) 0)).getEngineRotation(partialTicks) + 180F)))/2F : 0);
 			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0) + 180F)))/2F;
 			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0)));
 			case("steeringwheel"): return vehicle.getSteerAngle()/35F;
@@ -505,15 +505,15 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//Take off the part following the _, and check for that instead.
 		byte index = (byte) (Byte.valueOf(variable.substring(variable.lastIndexOf('_') + 1)) - 1);
 		switch(variable.substring(0, variable.lastIndexOf('_'))){
-			case("magneto"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.magnetoOn ? 1 : 0) : 0;
-			case("starter"): return vehicle.getEngineByNumber(index) != null ? (vehicle.getEngineByNumber(index).state.esOn ? 1 : 0) : 0;
+			case("magneto"): return vehicle.engines.containsKey(index) ? (vehicle.engines.get(index).state.magnetoOn ? 1 : 0) : 0;
+			case("starter"): return vehicle.engines.containsKey(index) ? (vehicle.engines.get(index).state.esOn ? 1 : 0) : 0;
 			default: return 0;
 		}
 	}
 	
 	private static float getDriveshaftValue(EntityVehicleE_Powered vehicle, float partialTicks, byte engineNumber){
-		if(vehicle.getEngineByNumber(engineNumber) != null){
-			return (float) (vehicle.getEngineByNumber(engineNumber).getDriveshaftRotation(partialTicks)%360);
+		if(vehicle.engines.containsKey(engineNumber)){
+			return (float) (vehicle.engines.get(engineNumber).getDriveshaftRotation(partialTicks)%360);
 		}else{
 			return 0;
 		}		
@@ -654,7 +654,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		
 		//If we are an engine-specific variable, get the engine now.
 		//Otherwise, get the 1st engine.
-		APartEngine<? extends EntityVehicleE_Powered> engine = (APartEngine<? extends EntityVehicleE_Powered>) (part.parentPart instanceof APartEngine ? part.parentPart : part.vehicle.getEngineByNumber((byte) 0));
+		APartEngine<? extends EntityVehicleE_Powered> engine = (APartEngine<? extends EntityVehicleE_Powered>) (part.parentPart instanceof APartEngine ? part.parentPart : part.vehicle.engines.get((byte) 0));
 		switch(variable){
 			case("engine"): return (float) (engine != null ? engine.getEngineRotation(partialTicks) : 0);
 			case("driveshaft"): return (float) (engine != null ? engine.getDriveshaftRotation(partialTicks) : 0);
@@ -1650,7 +1650,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	
 	private static final class LightPart{
 		private final String name;
-		private final LightTypes type;
+		private final LightType type;
 		private final Float[][] vertices;
 		private final Vec3d[] centerPoints;
 		private final Float[] size;
@@ -1717,8 +1717,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			this.renderCover = Integer.valueOf(name.substring(name.length() - 1)) > 0;
 		}
 		
-		private static LightTypes getTypeFromName(String lightName){
-			for(LightTypes light : LightTypes.values()){
+		private static LightType getTypeFromName(String lightName){
+			for(LightType light : LightType.values()){
 				if(lightName.toLowerCase().contains(light.name().toLowerCase())){
 					return light;
 				}

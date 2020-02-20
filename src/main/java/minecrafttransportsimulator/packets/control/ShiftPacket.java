@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
+import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.APartEngineGeared;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -46,16 +47,17 @@ public class ShiftPacket implements IMessage{
 						thisEntity = (EntityVehicleF_Ground) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
 					if(thisEntity!=null){
-						APartEngineGeared<? extends EntityVehicleE_Powered> engine = (APartEngineGeared<? extends EntityVehicleE_Powered>) thisEntity.getEngineByNumber((byte) 0);
-						if(engine != null){
-							if(message.shiftUp){
-								engine.shiftUp(true);
-							}else{
-								engine.shiftDown(true);
+						for(APartEngine<? extends EntityVehicleE_Powered> engine : thisEntity.engines.values()){
+							if(engine instanceof APartEngineGeared){
+								if(message.shiftUp){
+									((APartEngineGeared<? extends EntityVehicleE_Powered>) engine).shiftUp(true);
+								}else{
+									((APartEngineGeared<? extends EntityVehicleE_Powered>) engine).shiftDown(true);
+								}
 							}
-							if(ctx.side.isServer()){
-								MTS.MTSNet.sendToAll(message);
-							}
+						}	
+						if(ctx.side.isServer()){
+							MTS.MTSNet.sendToAll(message);
 						}
 					}
 				}

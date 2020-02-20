@@ -45,10 +45,9 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public String fluidName = "";
 	public Vec3d velocityVec = Vec3d.ZERO;
 	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
+	public final Map<Byte, APartEngine<? extends EntityVehicleE_Powered>> engines = new HashMap<Byte, APartEngine<? extends EntityVehicleE_Powered>>();
 	
-	private byte numberEngineBays = 0;
-	private final Map<Byte, APartEngine<? extends EntityVehicleE_Powered>> engineByNumber = new HashMap<Byte, APartEngine<? extends EntityVehicleE_Powered>>();
-	private final List<LightTypes> lightsOn = new ArrayList<LightTypes>();
+	private final List<LightType> lightsOn = new ArrayList<LightType>();
 	private final List<VehicleSound> sounds = new ArrayList<VehicleSound>();
 	
 	public EntityVehicleE_Powered(World world){
@@ -69,7 +68,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				fluidName = "";
 			}
 			if(electricPower > 2){
-				for(LightTypes light : lightsOn){
+				for(LightType light : lightsOn){
 					if(light.hasBeam){
 						electricUsage += 0.0005F;
 					}else{
@@ -148,7 +147,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				for(String type : packPart.types){
 					if(type.startsWith("engine")){
 						if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
-							engineByNumber.put(engineNumber, (APartEngine<? extends EntityVehicleE_Powered>) part);							
+							engines.put(engineNumber, (APartEngine<? extends EntityVehicleE_Powered>) part);
+							return;
 						}
 						++engineNumber;
 					}
@@ -165,7 +165,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			for(String type : packPart.types){
 				if(type.startsWith("engine")){
 					if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
-						engineByNumber.remove(engineNumber);
+						engines.remove(engineNumber);
 						return;
 					}
 					++engineNumber;
@@ -208,35 +208,9 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	
-	//-----START OF ENGINE CODE-----
-	/**
-	 * Gets the number of bays available for engines.
-	 * Cached for efficiency.
-	 */
-	public byte getNumberEngineBays(){
-		if(numberEngineBays == 0){
-			for(VehiclePart part : definition.parts){
-				for(String type : part.types){
-					if(type.startsWith("engine")){
-						++numberEngineBays;
-					}
-				}
-			}
-		}
-		return numberEngineBays;
-	}
-	
-	/**
-	 * Gets the 'numbered' engine.
-	 * Cached for efficiency.
-	 */
-	public APartEngine<? extends EntityVehicleE_Powered> getEngineByNumber(byte number){
-		return engineByNumber.get(number);
-	}
-	
-	
 	//-----START OF LIGHT CODE-----
-	public void changeLightStatus(LightTypes light, boolean isOn){
+	public void changeLightStatus(LightType light, boolean isOn){
+		//FIXME make this not a method.
 		if(isOn){
 			if(!lightsOn.contains(light)){
 				lightsOn.add(light);
@@ -248,7 +222,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		}
 	}
 	
-	public boolean isLightOn(LightTypes light){
+	public boolean isLightOn(LightType light){
 		return lightsOn.contains(light);
 	}
 	
@@ -312,7 +286,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		String lightsOnString = tagCompound.getString("lightsOn");
 		while(!lightsOnString.isEmpty()){
 			String lightName = lightsOnString.substring(0, lightsOnString.indexOf(','));
-			for(LightTypes light : LightTypes.values()){
+			for(LightType light : LightType.values()){
 				if(light.name().equals(lightName)){
 					lightsOn.add(light);
 					break;
@@ -355,7 +329,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		tagCompound.setString("fluidName", this.fluidName);
 		
 		String lightsOnString = "";
-		for(LightTypes light : this.lightsOn){
+		for(LightType light : this.lightsOn){
 			lightsOnString += light.name() + ",";
 		}
 		tagCompound.setString("lightsOn", lightsOnString);
@@ -370,7 +344,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		return tagCompound;
 	}
 	
-	public enum LightTypes{
+	public static enum LightType{
 		NAVIGATIONLIGHT(false),
 		STROBELIGHT(false),
 		TAXILIGHT(true),
@@ -386,8 +360,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		EMERGENCYLIGHT(false);
 		
 		public final boolean hasBeam;
-		
-		private LightTypes(boolean hasBeam){
+		private LightType(boolean hasBeam){
 			this.hasBeam = hasBeam;
 		}
 	}

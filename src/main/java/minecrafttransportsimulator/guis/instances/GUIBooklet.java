@@ -32,16 +32,18 @@ public class GUIBooklet extends AGUIBase{
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
 		//Page navigation buttons.
-		addButton(leftButton = new GUIComponentButton(guiLeft + 10, guiTop + 150, 20, "<"){
+		//We auto-calculate the texture size from here based on the GUI size.
+		//This is needed to tell the buttons what texture size they are using.
+		addButton(leftButton = new GUIComponentButton(guiLeft + 10, guiTop + 150, 20, "<", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(){
 				--booklet.pageNumber;
 			}
 		});
-		addButton(rightButton = new GUIComponentButton(guiLeft + 250, guiTop + 150, 20, ">"){
+		addButton(rightButton = new GUIComponentButton(guiLeft + 250, guiTop + 150, 20, ">", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(){
-				++booklet.pageNumber;				
+				++booklet.pageNumber;
 			}
 		});
 		

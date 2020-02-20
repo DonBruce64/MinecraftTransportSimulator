@@ -4,6 +4,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.systems.RotationSystem;
+import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -53,7 +54,7 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	}
 	
 	@Override
-	public boolean isLightOn(LightTypes light){
+	public boolean isLightOn(LightType light){
 		return definition.motorized.isTrailer && towedByVehicle != null ? towedByVehicle.isLightOn(light) : super.isLightOn(light);
 	}
 	
@@ -76,12 +77,10 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	
 	@Override
 	protected void getForcesAndMotions(){
-		if(getEngineByNumber((byte) 0) != null){
-			forwardForce = getEngineByNumber((byte) 0).getForceOutput();
-		}else{
-			forwardForce = 0;
+		forwardForce = 0;
+		for(APartEngine<? extends EntityVehicleE_Powered> engine : engines.values()){
+			forwardForce += engine.getForceOutput();
 		}
-		
 		dragForce = 0.5F*airDensity*velocity*velocity*5.0F*getDragCoefficient();
 		gravitationalForce = currentMass*(9.8/400);
 		

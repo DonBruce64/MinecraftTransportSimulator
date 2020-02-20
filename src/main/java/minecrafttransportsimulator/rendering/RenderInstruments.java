@@ -10,7 +10,7 @@ import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightTypes;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
@@ -150,12 +150,12 @@ public final class RenderInstruments{
 			case("electric_power"): return vehicle.electricPower;
 			case("electric_usage"): return Math.min(vehicle.electricFlow*20, 1);
 			case("fuel"): return vehicle.fuel/vehicle.definition.motorized.fuelCapacity*100F;
-			case("rpm"): return vehicle.getEngineByNumber(engineNumber) != null ? (vehicle.getEngineByNumber(engineNumber).definition.engine.maxRPM < 15000 ? vehicle.getEngineByNumber(engineNumber).RPM : vehicle.getEngineByNumber(engineNumber).RPM/10D) : 0;
-			case("rpm_max"): return vehicle.getEngineByNumber(engineNumber) != null ? (vehicle.getEngineByNumber(engineNumber).definition.engine.maxRPM < 15000 ? APartEngine.getSafeRPMFromMax(vehicle.getEngineByNumber(engineNumber).definition.engine.maxRPM) : APartEngine.getSafeRPMFromMax(vehicle.getEngineByNumber(engineNumber).definition.engine.maxRPM)/10D) : 0;
-			case("fuel_flow"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).fuelFlow*20F*60F/1000F : 0;
-			case("temp"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).temp : 0;
-			case("oil"): return vehicle.getEngineByNumber(engineNumber) != null ? vehicle.getEngineByNumber(engineNumber).oilPressure : 0;
-			case("gear"): return vehicle.getEngineByNumber(engineNumber) != null ? ((PartEngineCar) vehicle.getEngineByNumber(engineNumber)).currentGear : 0;
+			case("rpm"): return vehicle.engines.containsKey(engineNumber) ? (vehicle.engines.get(engineNumber).definition.engine.maxRPM < 15000 ? vehicle.engines.get(engineNumber).RPM : vehicle.engines.get(engineNumber).RPM/10D) : 0;
+			case("rpm_max"): return vehicle.engines.containsKey(engineNumber) ? (vehicle.engines.get(engineNumber).definition.engine.maxRPM < 15000 ? APartEngine.getSafeRPMFromMax(vehicle.engines.get(engineNumber).definition.engine.maxRPM) : APartEngine.getSafeRPMFromMax(vehicle.engines.get(engineNumber).definition.engine.maxRPM)/10D) : 0;
+			case("fuel_flow"): return vehicle.engines.containsKey(engineNumber) ? vehicle.engines.get(engineNumber).fuelFlow*20F*60F/1000F : 0;
+			case("temp"): return vehicle.engines.containsKey(engineNumber) ? vehicle.engines.get(engineNumber).temp : 0;
+			case("oil"): return vehicle.engines.containsKey(engineNumber) ? vehicle.engines.get(engineNumber).oilPressure : 0;
+			case("gear"): return vehicle.engines.containsKey(engineNumber) ? ((PartEngineCar) vehicle.engines.get(engineNumber)).currentGear : 0;
 			default: return 0;
 		}
 	}
@@ -164,7 +164,7 @@ public final class RenderInstruments{
      * Checks if lights are on for this vehicle and instruments need to be lit up.
      */
 	public static boolean isPanelIlluminated(EntityVehicleE_Powered vehicle){
-		return (vehicle.isLightOn(LightTypes.NAVIGATIONLIGHT) || vehicle.isLightOn(LightTypes.RUNNINGLIGHT)) && vehicle.electricPower > 3;
+		return (vehicle.isLightOn(LightType.NAVIGATIONLIGHT) || vehicle.isLightOn(LightType.RUNNINGLIGHT)) && vehicle.electricPower > 3;
 	}
 	
     /**
