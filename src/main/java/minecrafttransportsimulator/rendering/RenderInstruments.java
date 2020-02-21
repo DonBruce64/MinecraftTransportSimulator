@@ -10,7 +10,6 @@ import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
@@ -25,20 +24,15 @@ public final class RenderInstruments{
 	/**Map for texture sheets.  Keyed by packID.**/
 	private static Map<String, ResourceLocation> instrumentTextureSheets = new HashMap<String, ResourceLocation>();
 	
-	public static void drawInstrument(EntityVehicleE_Powered vehicle, ItemInstrument instrument, boolean hud, byte engineNumber){
+	public static void drawInstrument(EntityVehicleE_Powered vehicle, ItemInstrument instrument, byte engineNumber){
 		//First get the appropriate texture file for this instrument combination.
 		if(!instrumentTextureSheets.containsKey(instrument.definition.packID)){
 			instrumentTextureSheets.put(instrument.definition.packID, new ResourceLocation(instrument.definition.packID, "textures/instruments.png"));
 		}
 		textureManager.bindTexture(instrumentTextureSheets.get(instrument.definition.packID));
 		
-		//If we are in the HUD, invert the rendering to get correct orientation.
-		if(hud){
-			GL11.glScalef(-1, -1, 0);
-		}
-		
 		//Check if the lights are on.  If so, disable the lightmap.
-		boolean lightsOn = isPanelIlluminated(vehicle);
+		boolean lightsOn = RenderVehicle.isVehicleIlluminated(vehicle);
 		
 		//Subtract 1 from the current engine number (if greater than 0) to account for zero-indexed engine mappings.
 		if(engineNumber > 0){
@@ -158,13 +152,6 @@ public final class RenderInstruments{
 			case("gear"): return vehicle.engines.containsKey(engineNumber) ? ((PartEngineCar) vehicle.engines.get(engineNumber)).currentGear : 0;
 			default: return 0;
 		}
-	}
-	
-    /**
-     * Checks if lights are on for this vehicle and instruments need to be lit up.
-     */
-	public static boolean isPanelIlluminated(EntityVehicleE_Powered vehicle){
-		return (vehicle.isLightOn(LightType.NAVIGATIONLIGHT) || vehicle.isLightOn(LightType.RUNNINGLIGHT)) && vehicle.electricPower > 3;
 	}
 	
     /**

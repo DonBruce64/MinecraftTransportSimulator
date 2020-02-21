@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
+import minecrafttransportsimulator.items.packs.ItemInstrument;
+import minecrafttransportsimulator.rendering.RenderInstruments;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 
 /**Base GUI class.  This type is used in the constructor of {@link WrapperGUI} to allow us to use
@@ -23,6 +26,7 @@ public abstract class AGUIBase{
 	public final List<GUIComponentSelector> selectors = new ArrayList<GUIComponentSelector>();
 	public final List<GUIComponentTextBox> textBoxes = new ArrayList<GUIComponentTextBox>();
 	public final List<GUIComponentItem> items = new ArrayList<GUIComponentItem>();
+	public final List<GUIComponentInstrument> instruments = new ArrayList<GUIComponentInstrument>();
 	
 	//--------------------START OF NEW CUSTOM METHODS FOR MAKING GUIS--------------------	
 	/**
@@ -159,6 +163,14 @@ public abstract class AGUIBase{
 	}
 	
 	/**
+	 *  Adds an {@link GUIComponentInstrument} to this GUIs component set.  These are rendered
+	 *  depending on the vehicle's state, and are really just a pass-through to {@link RenderInstruments#drawInstrument(EntityVehicleE_Powered, ItemInstrument, byte)}.
+	 */
+	public void addInstrument(GUIComponentInstrument instrument){
+		instruments.add(instrument);
+	}
+	
+	/**
 	 *  Convenience method to clear out all component lists.
 	 */
 	public void clearComponents(){
@@ -167,6 +179,7 @@ public abstract class AGUIBase{
 		selectors.clear();
 		textBoxes.clear();
 		items.clear();
+		instruments.clear();
 	}
 	
 	public enum GUILightingMode{

@@ -20,6 +20,9 @@ public abstract class GUIComponentSelector{
 	public final int y;
 	public final int width;
 	public final int height;
+	public final String text;
+	public final Color regularColor;
+	public final Color litColor;
 	public final int selectorSectionWidth;
 	public final int selectorSectionHeight;
 	public final int selectorSectionWidthOffset;
@@ -29,14 +32,15 @@ public abstract class GUIComponentSelector{
 	
 	public boolean visible = true;
 	public int selectorState = 0;
-	public String text;
 	
-	public GUIComponentSelector(int x, int y, int width, int height, String text, int selectorSectionWidth, int selectorSectionHeight, int selectorSectionWidthOffset, int selectorSectionHeightOffset, int textureWidth, int textureHeight){
+	public GUIComponentSelector(int x, int y, int width, int height, String text, String regularColor, String litColor, int selectorSectionWidth, int selectorSectionHeight, int selectorSectionWidthOffset, int selectorSectionHeightOffset, int textureWidth, int textureHeight){
 		this.x = x;
 		this.y = y;
 		this.width = width;
 		this.height = height;
 		this.text = text;
+		this.regularColor = regularColor != null ? Color.decode(regularColor) : Color.WHITE;
+		this.litColor = regularColor != null ? Color.decode(litColor) : Color.WHITE;
 		this.selectorSectionWidth = selectorSectionWidth;
 		this.selectorSectionHeight = selectorSectionHeight;
 		this.selectorSectionWidthOffset = selectorSectionWidthOffset;
@@ -88,12 +92,12 @@ public abstract class GUIComponentSelector{
     /**
 	 *  Renders the selector's text.  This is done separately from the selector to allow all selectors to render in one pass
 	 *  before binding the font texture for rendering text.  It also prevents oddities that occur from font
-	 *  rendering with respect to OpenGL states.
+	 *  rendering with respect to OpenGL states.  The lightsOn parameter allows for switching of the text color
+	 *  based on the lighting state of this GUI.  Useful if you have black text normally but want it to be white when lit..
 	 */
-    public void renderText(){
+    public void renderText(boolean lightsOn){
     	if(visible){
-    		//FIXME make this pack based.
-    		WrapperGUI.drawScaledText(text, x + width/2, y + height + 1, Color.WHITE, true, false, 0, 0.75F);
+    		WrapperGUI.drawScaledText(text, x + width/2, y + height + 1, lightsOn ? litColor : regularColor, true, false, 0, 0.75F);
     	}
     }
 }

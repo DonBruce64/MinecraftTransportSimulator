@@ -201,6 +201,13 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		return false;
 	}
 	
+    /**
+     * Checks if lights are on for this vehicle and instruments need to be lit up.
+     */
+	public static boolean isVehicleIlluminated(EntityVehicleE_Powered vehicle){
+		return (vehicle.isLightOn(LightType.NAVIGATIONLIGHT) || vehicle.isLightOn(LightType.RUNNINGLIGHT)) && vehicle.electricPower > 3;
+	}
+	
 	private static void render(EntityVehicleE_Powered vehicle, EntityPlayer playerRendering, float partialTicks, boolean wasRenderedPrior){
 		//Get position and rotation.
 		Entity renderViewEntity = minecraft.getRenderViewEntity();
@@ -1180,7 +1187,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	}
 	
 	private static void renderTextMarkings(EntityVehicleE_Powered vehicle){
-		if(vehicle.definition.rendering.textLighted && RenderInstruments.isPanelIlluminated(vehicle)){
+		if(vehicle.definition.rendering.textLighted && isVehicleIlluminated(vehicle)){
 			GL11.glDisable(GL11.GL_LIGHTING);
 			minecraft.entityRenderer.disableLightmap();
 		}
@@ -1396,7 +1403,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			GL11.glRotatef(packInstrument.rot[2], 0, 0, 1);
 			GL11.glScalef(packInstrument.scale/16F, packInstrument.scale/16F, packInstrument.scale/16F);
 			if(vehicle.instruments.containsKey(i)){
-				RenderInstruments.drawInstrument(vehicle, vehicle.instruments.get(i), false, packInstrument.optionalEngineNumber);
+				RenderInstruments.drawInstrument(vehicle, vehicle.instruments.get(i), packInstrument.optionalEngineNumber);
 			}
 			GL11.glPopMatrix();
 		}

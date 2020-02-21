@@ -32,9 +32,15 @@ import minecrafttransportsimulator.wrappers.WrapperGUI;
  * @author don_bruce
  */
 public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
-	private static final int LIGHT_TEXTURE_WIDTH_OFFSET = 80;
-	private static final int LIGHT_TEXTURE_HEIGHT_OFFSET = 216;
-	private static final int ENGINEMAG_TEXTURE_WIDTH_OFFSET = LIGHT_TEXTURE_WIDTH_OFFSET + 20;
+	private static final int NAVIGATION_TEXTURE_WIDTH_OFFSET = 120;
+	private static final int NAVIGATION_TEXTURE_HEIGHT_OFFSET = 216;
+	private static final int STROBE_TEXTURE_WIDTH_OFFSET = NAVIGATION_TEXTURE_WIDTH_OFFSET + 20;
+	private static final int STROBE_TEXTURE_HEIGHT_OFFSET = 216;
+	private static final int TAXI_TEXTURE_WIDTH_OFFSET = STROBE_TEXTURE_WIDTH_OFFSET + 20;
+	private static final int TAXI_TEXTURE_HEIGHT_OFFSET = 216;
+	private static final int LANDING_TEXTURE_WIDTH_OFFSET = TAXI_TEXTURE_WIDTH_OFFSET + 20;
+	private static final int LANDING_TEXTURE_HEIGHT_OFFSET = 216;
+	private static final int ENGINEMAG_TEXTURE_WIDTH_OFFSET = LANDING_TEXTURE_WIDTH_OFFSET + 20;
 	private static final int ENGINEMAG_TEXTURE_HEIGHT_OFFSET = 216;
 	private static final int ENGINESTART_TEXTURE_WIDTH_OFFSET = ENGINEMAG_TEXTURE_WIDTH_OFFSET + 20;
 	private static final int ENGINESTART_TEXTURE_HEIGHT_OFFSET = 196;
@@ -83,9 +89,18 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 		lightSelectors.clear();
 		//Create up to four lights depending on how many this vehicle has.
 		for(LightType lightType : new LightType[]{NAVIGATIONLIGHT, STROBELIGHT, TAXILIGHT, LANDINGLIGHT}){
+			final int LIGHT_TEXTURE_WIDTH_OFFSET;
+			final int LIGHT_TEXTURE_HEIGHT_OFFSET;
+			switch(lightType){
+				case NAVIGATIONLIGHT:  LIGHT_TEXTURE_WIDTH_OFFSET = NAVIGATION_TEXTURE_WIDTH_OFFSET; LIGHT_TEXTURE_HEIGHT_OFFSET = NAVIGATION_TEXTURE_HEIGHT_OFFSET; break;
+				case STROBELIGHT:  LIGHT_TEXTURE_WIDTH_OFFSET = STROBE_TEXTURE_WIDTH_OFFSET; LIGHT_TEXTURE_HEIGHT_OFFSET = STROBE_TEXTURE_HEIGHT_OFFSET; break;
+				case TAXILIGHT:  LIGHT_TEXTURE_WIDTH_OFFSET = TAXI_TEXTURE_WIDTH_OFFSET; LIGHT_TEXTURE_HEIGHT_OFFSET = TAXI_TEXTURE_HEIGHT_OFFSET; break;
+				case LANDINGLIGHT:  LIGHT_TEXTURE_WIDTH_OFFSET = LANDING_TEXTURE_WIDTH_OFFSET; LIGHT_TEXTURE_HEIGHT_OFFSET = LANDING_TEXTURE_HEIGHT_OFFSET; break;
+				default: throw new IllegalArgumentException(lightType + " has no texture assigned in the panel!");
+			}
 			if(RenderVehicle.doesVehicleHaveLight(vehicle, lightType)){
 				String lightName = WrapperGUI.translate("gui.panel." + lightType.name().toLowerCase() + "s");
-				GUIComponentSelector lightSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + lightSelectors.size()*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, lightName, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, LIGHT_TEXTURE_WIDTH_OFFSET, LIGHT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				GUIComponentSelector lightSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + lightSelectors.size()*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, lightName, vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, LIGHT_TEXTURE_WIDTH_OFFSET, LIGHT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){
 						MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), lightType));
@@ -112,7 +127,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 				xOffset += 2*SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
 			}
 			
-			GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS)*(engineNumber%4), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.magneto"), SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+			GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS)*(engineNumber%4), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.magneto"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
 					MTS.MTSNet.sendToServer(new PacketPartEngineSignal(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.magnetoOn ? PacketEngineTypes.MAGNETO_OFF : PacketEngineTypes.MAGNETO_ON));
@@ -124,7 +139,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 			magnetoSelectors.put(engineNumber, magnetoSwitch);
 			addSelector(magnetoSwitch);
 			
-			GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.x + SELECTOR_SIZE, magnetoSwitch.y, SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.start"), SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+			GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.x + SELECTOR_SIZE, magnetoSwitch.y, SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.start"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
 					if(vehicle.engines.get(engineNumber).state.magnetoOn){
@@ -144,7 +159,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 		xOffset += 2*SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
 		
 		//Add the trim selectors first.
-		aileronTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 0*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.trim_roll"), SELECTOR_TEXTURE_SIZE*2, SELECTOR_TEXTURE_SIZE, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+		aileronTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 0*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.trim_roll"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE*2, SELECTOR_TEXTURE_SIZE, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(boolean leftSide){
 				selectedTrimSelector = this;
@@ -159,7 +174,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 		};
 		addSelector(aileronTrimSelector);
 		
-		elevatorTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 1*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.trim_pitch"), SELECTOR_TEXTURE_SIZE*2, SELECTOR_TEXTURE_SIZE, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+		elevatorTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 1*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.trim_pitch"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE*2, SELECTOR_TEXTURE_SIZE, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(boolean leftSide){
 				selectedTrimSelector = this;
@@ -174,7 +189,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 		};
 		addSelector(elevatorTrimSelector);
 		
-		rudderTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.trim_yaw"), SELECTOR_TEXTURE_SIZE*2, SELECTOR_TEXTURE_SIZE, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+		rudderTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.trim_yaw"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE*2, SELECTOR_TEXTURE_SIZE, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(boolean leftSide){
 				selectedTrimSelector = this;
@@ -191,7 +206,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 		
 		//If we have reverse thrust, add a selector for it.
 		if(haveReverseThrustOption){
-			reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+			reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
 					MTS.MTSNet.sendToServer(new ReverseThrustPacket(vehicle.getEntityId(), !vehicle.reverseThrust));

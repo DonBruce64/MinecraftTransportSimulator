@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.guis.instances;
 
 import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.rendering.RenderInstruments;
+import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
+import minecrafttransportsimulator.rendering.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
@@ -37,7 +38,10 @@ public abstract class AGUIPanel<EntityVehicleX_Type extends EntityVehicleE_Power
 		//Add engine selectors.  These are to the right of the light switches.
 		xOffset = setupEngineComponents(guiLeft, guiTop, xOffset);
 		
-		//FIXME need to somehow draw instrument here.  Perhaps through another GUI component?
+		//Add instruments.  These go wherever they are specified in the JSON.
+		for(Byte instrumentNumber : vehicle.instruments.keySet()){
+			addInstrument(new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, vehicle));
+		}
 	}
 	
 	protected abstract int setupLightComponents(int guiLeft, int guiTop, int xOffset);
@@ -46,7 +50,7 @@ public abstract class AGUIPanel<EntityVehicleX_Type extends EntityVehicleE_Power
 	
 	@Override
 	public GUILightingMode getGUILightMode(){
-		return RenderInstruments.isPanelIlluminated(vehicle) ? GUILightingMode.LIT : GUILightingMode.DARK;
+		return RenderVehicle.isVehicleIlluminated(vehicle) ? GUILightingMode.LIT : GUILightingMode.DARK;
 	}
 	
 	@Override
@@ -66,7 +70,6 @@ public abstract class AGUIPanel<EntityVehicleX_Type extends EntityVehicleE_Power
 	
 	@Override
 	public String getTexture(){
-		//FIXME make this pack-based.
-		return "mts:textures/guis/panel.png";
+		return vehicle.definition.rendering.panelTexture != null ? vehicle.definition.rendering.panelTexture : "mts:textures/guis/panel.png";
 	}
 }

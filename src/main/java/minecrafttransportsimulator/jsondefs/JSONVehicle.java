@@ -102,8 +102,9 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     public class PackInstrument{
         public float[] pos;
         public float[] rot;
-        public float[] hudpos;
         public float scale;
+        public int hudX;
+        public int hudY;
         public float hudScale;
         public byte optionalEngineNumber;
     }
@@ -112,8 +113,10 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     	public int displayTextMaxLength;
         public boolean textLighted;
         public String defaultDisplayText;
-        public float[] hudBackplaneTexturePercentages;
-        public float[] hudMouldingTexturePercentages;
+        public String hudTexture;
+        public String panelTexture;
+        public String panelTextColor;
+        public String panelLitTextColor;
         public List<VehicleDisplayText> textMarkings = new ArrayList<VehicleDisplayText>();
         public List<VehicleRotatableModelObject> rotatableModelObjects = new ArrayList<VehicleRotatableModelObject>();
         public List<VehicleTranslatableModelObject> translatableModelObjects = new ArrayList<VehicleTranslatableModelObject>();

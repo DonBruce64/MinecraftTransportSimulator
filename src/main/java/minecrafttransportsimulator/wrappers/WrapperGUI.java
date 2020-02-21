@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIBase.GUILightingMode;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
@@ -139,13 +140,13 @@ public class WrapperGUI extends GuiScreen{
 			button.renderText();
 		}
 		for(GUIComponentSelector selector : gui.selectors){
-			selector.renderText();
+			selector.renderText(gui.getGUILightMode().equals(GUILightingMode.LIT));
 		}
 		for(GUIComponentTextBox textBox : gui.textBoxes){
         	textBox.renderBox();
         }
 		
-		//Items go last, as they need item-specific rendering changes to lighting which can mess things up.
+		//Now render items.  These need to go after the components due to their tooltips.
 		RenderHelper.enableGUIStandardItemLighting();
 		for(GUIComponentItem item : gui.items){
 			item.renderItem();
@@ -154,10 +155,17 @@ public class WrapperGUI extends GuiScreen{
 			item.renderTooltip(this, mouseX, mouseY);
 		}
 		
-		//If we haven't enabled the lightmap yet due to us being a dark GUI, do so now.
-		if(gui.getGUILightMode().equals(GUILightingMode.DARK)){
-			mc.entityRenderer.disableLightmap();
+		//Finally, render any instruments.
+		//We need to do an OpenGL inversion here to ensure the instruments don't render upside-down.
+		GL11.glPushMatrix();
+		GL11.glScalef(-1, -1, 0);
+		for(GUIComponentInstrument instrument : gui.instruments){
+			instrument.renderInstrument();
 		}
+		GL11.glPopMatrix();
+		
+		//Make sure the lightmap is disabled after this rendering is done.
+		mc.entityRenderer.disableLightmap();
 	}
 	
 	/**

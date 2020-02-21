@@ -28,36 +28,23 @@ public final class RenderHUD{
 		}
 
 		if(CameraSystem.hudMode == 3 || inGUI){
-			drawLowerPanel(vehicle.definition.rendering.hudBackplaneTexturePercentages);
+			drawLowerPanel(new float[]{0F, 0F, 1F, 1F});
 		}else{
 			GL11.glTranslatef(0, screenDefaultY/4, 0);
 		}
 		if(CameraSystem.hudMode == 2 || CameraSystem.hudMode == 3 || inGUI){
-			drawUpperPanel(vehicle.definition.rendering.hudBackplaneTexturePercentages, vehicle.definition.rendering.hudMouldingTexturePercentages);
+			drawUpperPanel(new float[]{0F, 0F, 1F, 1F}, new float[]{0F, 0F, 1F, 1F});
 		}
 		if(CameraSystem.hudMode > 0 || inGUI){
+			/*
 			drawInstruments(vehicle, 
 					CameraSystem.hudMode == 1 && !inGUI ? 25 : 0,
 					CameraSystem.hudMode == 1 && !inGUI  ? 75 : 100,
 					CameraSystem.hudMode != 3 && !inGUI ? 75 : 100,
 					true);
+					*/
 		}
 
-		if(!inGUI){
-			Minecraft.getMinecraft().entityRenderer.disableLightmap();
-		}
-		GL11.glPopMatrix();
-	}
-	
-	public static void drawAuxiliaryHUD(EntityVehicleE_Powered vehicle, int width, int height, boolean inGUI){		
-		GL11.glPushMatrix();
-		GL11.glColor4f(1, 1, 1, 1);
-		Minecraft.getMinecraft().getTextureManager().bindTexture(RenderVehicle.getTextureForVehicle(vehicle));
-		if(!inGUI){
-			Minecraft.getMinecraft().entityRenderer.enableLightmap();
-		}
-		drawAuxiliaryPanel(vehicle.definition.rendering.hudBackplaneTexturePercentages, vehicle.definition.rendering.hudMouldingTexturePercentages);
-		drawInstruments(vehicle, 0, 100, 100, false);
 		if(!inGUI){
 			Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		}
@@ -69,16 +56,14 @@ public final class RenderHUD{
 			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
 			//Render the instruments in the correct panel.
 			if((packInstrument.optionalEngineNumber == 0 && main) || (packInstrument.optionalEngineNumber != 0 && !main)){
-				if(packInstrument.hudpos != null){
-					if(packInstrument.hudpos[0] >= minX && packInstrument.hudpos[0] <= maxX && packInstrument.hudpos[1] <= maxY){
-						GL11.glPushMatrix();
-						GL11.glTranslated(packInstrument.hudpos[0]*screenDefaultX/100D, packInstrument.hudpos[1]*screenDefaultY/100D, 0);
-						GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-						if(vehicle.instruments.containsKey(i)){
-							RenderInstruments.drawInstrument(vehicle, vehicle.instruments.get(i), true, packInstrument.optionalEngineNumber);
-						}
-						GL11.glPopMatrix();
+				if(packInstrument.hudX >= minX && packInstrument.hudX <= maxX && packInstrument.hudY <= maxY){
+					GL11.glPushMatrix();
+					GL11.glTranslated(packInstrument.hudX*screenDefaultX/100D, packInstrument.hudY*screenDefaultY/100D, 0);
+					GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
+					if(vehicle.instruments.containsKey(i)){
+						RenderInstruments.drawInstrument(vehicle, vehicle.instruments.get(i), packInstrument.optionalEngineNumber);
 					}
+					GL11.glPopMatrix();
 				}
 			}
 		}
@@ -148,30 +133,6 @@ public final class RenderHUD{
 		GL11.glVertex2d(screenDefaultX, screenDefaultY);
 		GL11.glTexCoord2f(backplanePercentages[1], backplanePercentages[2]);
 		GL11.glVertex2d(screenDefaultX, 3*screenDefaultY/4);
-		GL11.glEnd();
-    }
-
-	private static void drawAuxiliaryPanel(float[] backplanePercentages, float[] mouldingPercentages){
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(backplanePercentages[0], backplanePercentages[2]);
-		GL11.glVertex2d(0, screenDefaultY/2+16);
-		GL11.glTexCoord2f(backplanePercentages[0], backplanePercentages[3]);
-		GL11.glVertex2d(0, screenDefaultY);
-		GL11.glTexCoord2f(backplanePercentages[1], backplanePercentages[3]);
-		GL11.glVertex2d(screenDefaultX, screenDefaultY);
-		GL11.glTexCoord2f(backplanePercentages[1], backplanePercentages[2]);
-		GL11.glVertex2d(screenDefaultX, screenDefaultY/2+16);
-		GL11.glEnd();
-    	
-		GL11.glBegin(GL11.GL_QUADS);
-    	GL11.glTexCoord2f(mouldingPercentages[0], mouldingPercentages[2]);
-    	GL11.glVertex2d(0, screenDefaultY/2);
-		GL11.glTexCoord2f(mouldingPercentages[0], mouldingPercentages[3]);
-		GL11.glVertex2d(0, screenDefaultY/2 + 16);
-		GL11.glTexCoord2f(mouldingPercentages[1], mouldingPercentages[3]);
-		GL11.glVertex2d(screenDefaultX, screenDefaultY/2 + 16);
-		GL11.glTexCoord2f(mouldingPercentages[1], mouldingPercentages[2]);
-		GL11.glVertex2d(screenDefaultX, screenDefaultY/2);
 		GL11.glEnd();
     }
 }
