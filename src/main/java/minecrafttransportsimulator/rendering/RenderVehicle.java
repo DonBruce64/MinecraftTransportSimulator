@@ -1401,7 +1401,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			GL11.glRotatef(packInstrument.rot[0], 1, 0, 0);
 			GL11.glRotatef(packInstrument.rot[1], 0, 1, 0);
 			GL11.glRotatef(packInstrument.rot[2], 0, 0, 1);
-			GL11.glScalef(packInstrument.scale/16F, packInstrument.scale/16F, packInstrument.scale/16F);
+			//Need to scale by -1 to get the coordinate system to behave and align to the texture-based coordinate system.
+			GL11.glScalef(-packInstrument.scale/16F, -packInstrument.scale/16F, -packInstrument.scale/16F);
 			if(vehicle.instruments.containsKey(i)){
 				RenderInstruments.drawInstrument(vehicle, vehicle.instruments.get(i), packInstrument.optionalEngineNumber);
 			}

@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.rendering;
 
-import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,8 +20,8 @@ import net.minecraft.util.ResourceLocation;
 public final class RenderInstruments{
 	protected static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
 	
-	/**Map for texture sheets.  Keyed by packID.**/
 	private static Map<String, ResourceLocation> instrumentTextureSheets = new HashMap<String, ResourceLocation>();
+
 	
 	public static void drawInstrument(EntityVehicleE_Powered vehicle, ItemInstrument instrument, byte engineNumber){
 		//First get the appropriate texture file for this instrument combination.
@@ -44,7 +43,7 @@ public final class RenderInstruments{
 			Component section = instrument.definition.components.get(i);
 			GL11.glPushMatrix();
 			//Translate to the component, but slightly away from the instrument location to prevent clipping.
-			GL11.glTranslatef(section.xCenter, section.yCenter, -i*0.1F);
+			GL11.glTranslatef(section.xCenter, section.yCenter, i*0.1F);
 			
 			//If the vehicle lights are on, disable the lightmap.
 			if(lightsOn){
@@ -108,23 +107,24 @@ public final class RenderInstruments{
 			
 			//Now that all transforms are done, render the instrument shape.
 			if(!section.lightOverlay){
-				renderSquareUV(section.textureWidth, section.textureHeight, 0, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
+				renderSquareUV(section.textureWidth, section.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
 			}else if(lightsOn){
 				GL11.glEnable(GL11.GL_BLEND);
 				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-			    renderSquareUV(section.textureWidth, section.textureHeight, 0, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
+			    renderSquareUV(section.textureWidth, section.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
 			}
 			GL11.glPopMatrix();
 		}
 		
 		//Reset blend functions changed in light operations.
 		if(lightsOn){
+			GL11.glDisable(GL11.GL_BLEND);
 			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		}
 	}
 	
-	private static double getVariableValue(EntityVehicleE_Powered vehicle, String variable, byte engineNumber){
+	public static double getVariableValue(EntityVehicleE_Powered vehicle, String variable, byte engineNumber){
 		switch(variable){
 			case("yaw"): return -vehicle.rotationYaw;
 			case("pitch"): return Math.max(Math.min(vehicle.rotationPitch, 25), -25);
@@ -156,33 +156,23 @@ public final class RenderInstruments{
 	
     /**
      * Renders a textured quad from the current bound texture of a specific width and height.
-     * Used for rendering control and instrument textures off their texture sheets.
+     * Used for rendering instrument textures off their texture sheets.
      */
-	protected static void renderSquareUV(float width, float height, float depth, float u, float U, float v, float V){
+	private static void renderSquareUV(float width, float height, float u, float U, float v, float V){
 		GL11.glBegin(GL11.GL_QUADS);
 		GL11.glTexCoord2f(u, v);
 		GL11.glNormal3f(0, 0, 1);
-		GL11.glVertex3f(width/2, height/2, depth/2);
+		GL11.glVertex3f(-width/2, -height/2, 0);
 		GL11.glTexCoord2f(u, V);
 		GL11.glNormal3f(0, 0, 1);
-		GL11.glVertex3f(width/2, -height/2, -depth/2);
+		GL11.glVertex3f(-width/2, height/2, 0);
 		GL11.glTexCoord2f(U, V);
 		GL11.glNormal3f(0, 0, 1);
-		GL11.glVertex3f(-width/2, -height/2, -depth/2);
+		GL11.glVertex3f(width/2, height/2, 0);
 		GL11.glTexCoord2f(U, v);
 		GL11.glNormal3f(0, 0, 1);
-		GL11.glVertex3f(-width/2, height/2, depth/2);
+		GL11.glVertex3f(width/2, -height/2, 0);
 		GL11.glEnd();
 	}
-	
-    /**
-     * Draws a scaled string with the bottom-left at x, y.
-     */
-	protected static void drawScaledString(String string, int x, int y, float scale){
-    	GL11.glPushMatrix();
-    	GL11.glScalef(scale, scale, scale);
-    	Minecraft.getMinecraft().fontRenderer.drawString(string, x, y, Color.WHITE.getRGB());
-    	GL11.glPopMatrix();
-    }
 }
 

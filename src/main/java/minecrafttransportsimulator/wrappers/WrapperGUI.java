@@ -2,6 +2,8 @@ package minecrafttransportsimulator.wrappers;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
@@ -43,6 +45,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 public class WrapperGUI extends GuiScreen{
 	private static FontRenderer fontRenderer;
 	private static RenderItem itemRenderer;
+	private static Map<String, ResourceLocation> instrumentTextureSheets = new HashMap<String, ResourceLocation>();
 	
 	private int guiLeft;
 	private int guiTop;
@@ -145,27 +148,23 @@ public class WrapperGUI extends GuiScreen{
 		for(GUIComponentTextBox textBox : gui.textBoxes){
         	textBox.renderBox();
         }
+				
+		//Now render the instruments.
+		for(GUIComponentInstrument instrument : gui.instruments){
+			instrument.renderInstrument();
+		}
 		
-		//Now render items.  These need to go after the components due to their tooltips.
+		//Now render items.
+		//These will cause a texture re-bind, so they need to go after the components.
+		//However, since they muck up the lighting, they MUST go last no matter what.
 		RenderHelper.enableGUIStandardItemLighting();
+		mc.entityRenderer.disableLightmap();
 		for(GUIComponentItem item : gui.items){
 			item.renderItem();
 		}
 		for(GUIComponentItem item : gui.items){
 			item.renderTooltip(this, mouseX, mouseY);
-		}
-		
-		//Finally, render any instruments.
-		//We need to do an OpenGL inversion here to ensure the instruments don't render upside-down.
-		GL11.glPushMatrix();
-		GL11.glScalef(-1, -1, 0);
-		for(GUIComponentInstrument instrument : gui.instruments){
-			instrument.renderInstrument();
-		}
-		GL11.glPopMatrix();
-		
-		//Make sure the lightmap is disabled after this rendering is done.
-		mc.entityRenderer.disableLightmap();
+		}		
 	}
 	
 	/**
@@ -332,7 +331,7 @@ public class WrapperGUI extends GuiScreen{
 	 *  passed-in here to allow this method to translate pixels into relative texture coords.  
 	 *  Draw starts at the  bottom-left point and goes counter-clockwise to the top-left point.
 	 */
-	public static void renderSheetTexture(int x, int y, int width, int height, int u, int v, int U, int V, int textureWidth, int textureHeight){
+	public static void renderSheetTexture(int x, int y, int width, int height, float u, float v, float U, float V, int textureWidth, int textureHeight){
 	 	float widthPixelPercent = 1.0F/textureWidth;
         float heightPixelPercent = 1.0F/textureHeight;
         Tessellator tessellator = Tessellator.getInstance();
