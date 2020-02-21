@@ -35,7 +35,9 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem<? extends AJSON
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
 		if(definition.general.description != null){
-			tooltipLines.add(definition.general.description);
+			for(String tooltipLine : definition.general.description.split("\n")){
+				tooltipLines.add(tooltipLine);
+			}
 		}
 	}
 }
