@@ -258,7 +258,7 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 			double bulletMotionZ = bulletOrientation.z*definition.gun.muzzleVelocity/20D/10D + vehicle.motionZ*ConfigSystem.configObject.general.speedFactor.value;
 			
 			//Now add the bullet as a particle.
-			Minecraft.getMinecraft().effectRenderer.addEffect(new PartBullet(vehicle.world, partPos.x + bulletOrientation.x*(definition.gun.length + definition.gun.muzzleVelocity/20D/10D*0.5) + vehicle.motionX*0.5, partPos.y + bulletOrientation.y*(definition.gun.length + definition.gun.muzzleVelocity/20D/10D*0.5) + vehicle.motionY*0.5, partPos.z + bulletOrientation.z*(definition.gun.length + definition.gun.muzzleVelocity/20D/10D*0.5) + vehicle.motionZ*0.5, bulletMotionX, bulletMotionY, bulletMotionZ, loadedBullet, playerControllerID, this.vehicle));
+			Minecraft.getMinecraft().effectRenderer.addEffect(new PartBullet(vehicle.world, partPos.x + bulletOrientation.x*definition.gun.length, partPos.y + bulletOrientation.y*definition.gun.length, partPos.z + bulletOrientation.z*definition.gun.length, bulletMotionX, bulletMotionY, bulletMotionZ, loadedBullet, playerControllerID, this.vehicle));
 			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_firing", 1, 1);
 			lastTickFired = lastTickToFire;
 		}
