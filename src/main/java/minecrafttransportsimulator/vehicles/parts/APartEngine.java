@@ -169,7 +169,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 				if(vehicle.electricPower > 2){
 					starterLevel += definition.engine.starterDuration;
 					if(vehicle.world.isRemote){
-						MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM));
+						MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM), vehicle);
 					}
 				}else{
 					setElectricStarterStatus(false);
@@ -325,7 +325,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 			}else if(state.equals(EngineStates.RUNNING)){
 				state = EngineStates.ENGINE_OFF;
 				internalFuel = 100;
-				MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1);
+				MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1, vehicle);
 			}
 		}
 	}
@@ -364,7 +364,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 		}
 		starterLevel += definition.engine.starterDuration;
 		if(vehicle.world.isRemote){
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM));
+			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM), vehicle);
 		}
 	}
 	
@@ -373,7 +373,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.BACKFIRE));
 		}else{
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_sputter", 0.5F, 1);
+			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_sputter", 0.5F, 1, vehicle);
 			backfired = true;
 		}
 	}
@@ -391,7 +391,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.START));
 		}else{
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_starting", 1, 1);
+			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_starting", 1, 1, vehicle);
 		}
 	}
 	
@@ -409,7 +409,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 			if(!packetType.equals(PacketEngineTypes.DROWN)){
 				internalFuel = 100;
 			}
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1);
+			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1, vehicle);
 		}
 	}
 	

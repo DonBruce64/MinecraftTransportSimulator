@@ -122,9 +122,11 @@ public final class VehicleSoundSystem{
 	
 	//--------------------START OF CUSTOM METHODS--------------------//
 	/**
-	 * Plays a single sound.  Format of soundName should be modID:soundFileName.
+	 * Plays a single sound.  Format of soundName should be modID:soundFileName.  If this sound
+	 * came from a vehicle, pass it in as a parameter.  This lets the system do volume calculations
+	 * if it finds the the player is riding the vehicle.
 	 */
-	public static void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){
+	public static void playSound(Vec3d soundPosition, String soundName, float volume, float pitch, EntityVehicleE_Powered optionalVehicle){
 		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().world.isRemote){
 			//If we don't have the running instance of the SoundSystem, get it now.
 			if(mcSoundSystem == null){
@@ -144,7 +146,19 @@ public final class VehicleSoundSystem{
 					EntityPlayer player = Minecraft.getMinecraft().player;
 					Vec3d soundNormalizedPosition = new Vec3d(soundPosition.x - player.posX, soundPosition.y - player.posY, soundPosition.z - player.posZ).normalize().scale(5).add(player.getPositionVector());
 					String soundTempName = mcSoundSystem.quickPlay(false, soundURL, soundURL.getFile(), false, (float) soundNormalizedPosition.x, (float) soundNormalizedPosition.y, (float) soundNormalizedPosition.z, SoundSystemConfig.ATTENUATION_LINEAR, 16.0F);
-					mcSoundSystem.setVolume(soundTempName, (float) (volume/player.getPositionVector().distanceTo(soundPosition)*(VehicleSoundSystem.isPlayerInsideEnclosedVehicle() ? 0.5F : 1.0F)));
+					
+					//If the player is not riding this vehicle, or the sound didn't come from a vehicle, reduce the volume by the distance.
+					if(optionalVehicle != null && !optionalVehicle.equals(player.getRidingEntity())){
+						volume /= player.getPositionVector().distanceTo(soundPosition);
+					}
+
+					//If the player is inside an enclosed vehicle, half the volume.
+					if(isPlayerInsideEnclosedVehicle()){
+						volume *= 0.5;
+					}
+					
+					
+					mcSoundSystem.setVolume(soundTempName, (float) (volume));
 					mcSoundSystem.setPitch(soundTempName, pitch);
 				}
 			}catch(Exception e){
@@ -157,7 +171,7 @@ public final class VehicleSoundSystem{
 	/**
 	 * Does sound updates for the vehicle sounds.
 	 */
-	public static void updateVehicleSounds(EntityVehicleE_Powered vehicle, float partialTicks){
+	public static void updateVehicleSounds(EntityVehicleE_Powered vehicle){
 		//If we don't have the running instance of the SoundSystem, get it now.
 		if(mcSoundSystem == null){
 			if(soundSystemStartupDelay > 0){

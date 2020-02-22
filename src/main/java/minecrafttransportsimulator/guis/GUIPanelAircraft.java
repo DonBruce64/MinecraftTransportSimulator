@@ -258,7 +258,7 @@ public class GUIPanelAircraft extends GuiScreen{
 			if(haveReverseThrustOption){
 				if(mouseX > reverseButtonCoords[0] && mouseX < reverseButtonCoords[1] && mouseY < reverseButtonCoords[2] && mouseY > reverseButtonCoords[3]){
 					MTS.MTSNet.sendToServer(new ReverseThrustPacket(aircraft.getEntityId(), !((EntityVehicleF_Air) aircraft).reverseThrust));
-					MTS.proxy.playSound(aircraft.getPositionVector(), MTS.MODID + ":panel_buzzer", 1.0F, 1.0F);
+					MTS.proxy.playSound(aircraft.getPositionVector(), MTS.MODID + ":panel_buzzer", 1.0F, 1.0F, aircraft);
 				}
 			}
 			

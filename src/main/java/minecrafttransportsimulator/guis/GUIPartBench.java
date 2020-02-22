@@ -412,7 +412,7 @@ public class GUIPartBench extends GuiScreen{
     protected void actionPerformed(GuiButton buttonClicked) throws IOException{
 		super.actionPerformed(buttonClicked);
 		if(buttonClicked.equals(startButton)){
-			MTS.proxy.playSound(player.getPositionVector(), MTS.MODID + ":bench_running", 1, 1);
+			MTS.proxy.playSound(player.getPositionVector(), MTS.MODID + ":bench_running", 1, 1, null);
 			MTS.MTSNet.sendToServer(new PacketPlayerCrafting(player, currentItem));
 		}else{
 			if(buttonClicked.equals(leftPackButton)){

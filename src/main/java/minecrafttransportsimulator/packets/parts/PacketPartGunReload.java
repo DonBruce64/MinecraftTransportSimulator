@@ -49,7 +49,7 @@ public class PacketPartGunReload extends APacketPart{
 						gun.bulletsLeft += gun.loadedBullet.definition.bullet.quantity;
 						gun.reloadTimeRemaining = gun.definition.gun.reloadTime;
 						gun.reloading = true;
-						MTS.proxy.playSound(Minecraft.getMinecraft().player.getPositionVector(), gun.definition.packID + ":" + gun.definition.systemName + "_reloading", 1, 1);
+						MTS.proxy.playSound(Minecraft.getMinecraft().player.getPositionVector(), gun.definition.packID + ":" + gun.definition.systemName + "_reloading", 1, 1, gun.vehicle);
 					}
 				}
 			});

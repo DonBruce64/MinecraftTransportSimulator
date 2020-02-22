@@ -51,7 +51,7 @@ public class PartEngineCar extends APartEngineGeared<EntityVehicleG_Car>{
 		
 		//If running, in reverse, and we are a big truck, fire the backup beepers.
 		if(state.running && this.currentGear == -1 && vehicle.definition != null && vehicle.definition.car.isBigTruck && vehicle.electricPower > 4 && vehicle.world.getTotalWorldTime()%20==1 && vehicle.world.isRemote){
-			MTS.proxy.playSound(vehicle.getPositionVector(), MTS.MODID + ":backup_beeper", 1.0F, 1);
+			MTS.proxy.playSound(vehicle.getPositionVector(), MTS.MODID + ":backup_beeper", 1.0F, 1, vehicle);
 		}
 		
 		//If running, use the friction of the wheels to determine the new speed.

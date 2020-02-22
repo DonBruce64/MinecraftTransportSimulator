@@ -52,8 +52,8 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	@Override
-	public void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){
-		VehicleSoundSystem.playSound(soundPosition, soundName, volume, pitch);
+	public void playSound(Vec3d soundPosition, String soundName, float volume, float pitch, EntityVehicleE_Powered optionalVehicle){
+		VehicleSoundSystem.playSound(soundPosition, soundName, volume, pitch, optionalVehicle);
 	}
 	
 	@Override

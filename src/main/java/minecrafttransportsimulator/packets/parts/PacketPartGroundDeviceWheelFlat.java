@@ -23,7 +23,7 @@ public final class PacketPartGroundDeviceWheelFlat extends APacketPart{
 					PartGroundDeviceWheel wheel = (PartGroundDeviceWheel) getVehiclePartFromMessage(message, ctx);
 					if(wheel != null){
 						wheel.setFlat();
-						MTS.proxy.playSound(wheel.partPos, MTS.MODID + ":wheel_blowout", 1, 1);
+						MTS.proxy.playSound(wheel.partPos, MTS.MODID + ":wheel_blowout", 1, 1, wheel.vehicle);
 					}
 				}
 			});
