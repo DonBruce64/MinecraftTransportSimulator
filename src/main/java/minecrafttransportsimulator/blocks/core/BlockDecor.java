@@ -51,7 +51,7 @@ public class BlockDecor extends ABlockRotatable implements ITileEntityProvider{
     	if(!isOriented){
     		if(regularAABB == null){
     			TileEntityDecor tile = ((TileEntityDecor) access.getTileEntity(pos));
-    			if(tile != null){
+    			if(tile != null && tile.definition != null){
 		    		regularAABB = new AxisAlignedBB(0.5F - tile.definition.general.width/2F, 0, 0.5F - tile.definition.general.depth/2F, 0.5F + tile.definition.general.width/2F, tile.definition.general.height, 0.5F +  tile.definition.general.depth/2F);
     			}
     		}else{
@@ -60,7 +60,7 @@ public class BlockDecor extends ABlockRotatable implements ITileEntityProvider{
     	}else{
     		if(regularAABB == null){
     			TileEntityDecor tile = ((TileEntityDecor) access.getTileEntity(pos));
-    			if(tile != null){
+    			if(tile != null && tile.definition != null){
 					regularAABB = new AxisAlignedBB(0.5F - tile.definition.general.width/2F, 0, 0.5F - tile.definition.general.depth/2F, 0.5F + tile.definition.general.width/2F, tile.definition.general.height, 0.5F +  tile.definition.general.depth/2F);
 					rotatedAABB = !isOriented ? regularAABB : new AxisAlignedBB(0.5F - tile.definition.general.depth/2F, 0, 0.5F - tile.definition.general.width/2F, 0.5F + tile.definition.general.depth/2F, tile.definition.general.height, 0.5F +  tile.definition.general.width/2F);
     			}
@@ -79,7 +79,7 @@ public class BlockDecor extends ABlockRotatable implements ITileEntityProvider{
 		}else{
 			if(regularAABB == null){
     			TileEntityDecor tile = ((TileEntityDecor) world.getTileEntity(pos));
-    			if(tile != null){
+    			if(tile != null && tile.definition != null){
 					regularAABB = new AxisAlignedBB(0.5F - tile.definition.general.width/2F, 0, 0.5F - tile.definition.general.depth/2F, 0.5F + tile.definition.general.width/2F, tile.definition.general.height, 0.5F +  tile.definition.general.depth/2F);
 					rotatedAABB = !isOriented ? regularAABB : new AxisAlignedBB(0.5F - tile.definition.general.depth/2F, 0, 0.5F - tile.definition.general.width/2F, 0.5F + tile.definition.general.depth/2F, tile.definition.general.height, 0.5F +  tile.definition.general.width/2F);
     			}
@@ -93,7 +93,11 @@ public class BlockDecor extends ABlockRotatable implements ITileEntityProvider{
 	@Override
 	public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player){
 		TileEntityDecor tile = ((TileEntityDecor) world.getTileEntity(pos));
-		return new ItemStack(MTSRegistry.packItemMap.get(tile.definition.packID).get(tile.definition.systemName));
+		if(tile.definition != null){
+			return new ItemStack(MTSRegistry.packItemMap.get(tile.definition.packID).get(tile.definition.systemName));
+		}else{
+			return ItemStack.EMPTY;
+		}
     }
     
     @Override
