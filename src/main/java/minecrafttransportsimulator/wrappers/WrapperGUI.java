@@ -2,8 +2,6 @@ package minecrafttransportsimulator.wrappers;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
@@ -31,7 +29,9 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import scala.actors.threadpool.Arrays;
 
 /**Wrapper for MC GUI classes.  Constructor takes a type of {@link AGUIBase}, but
  * is only visible when calling {@link #openGUI(AGUIBase)}.  This will automatically
@@ -45,7 +45,6 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 public class WrapperGUI extends GuiScreen{
 	private static FontRenderer fontRenderer;
 	private static RenderItem itemRenderer;
-	private static Map<String, ResourceLocation> instrumentTextureSheets = new HashMap<String, ResourceLocation>();
 	
 	private int guiLeft;
 	private int guiTop;
@@ -162,6 +161,11 @@ public class WrapperGUI extends GuiScreen{
 		for(GUIComponentItem item : gui.items){
 			item.renderItem();
 		}
+		
+		//Render any tooltips.  These are the final thing to render as they need to render over everything else.
+		for(GUIComponentButton button : gui.buttons){
+			button.renderTooltip(this, mouseX, mouseY);
+		}
 		for(GUIComponentItem item : gui.items){
 			item.renderTooltip(this, mouseX, mouseY);
 		}		
@@ -243,13 +247,24 @@ public class WrapperGUI extends GuiScreen{
 	
 	//--------------------START OF INSTANCE HELPER METHODS--------------------	
 	/**
-	 *  Draws the specified tooltip on the GUI.  This should be
+	 *  Draws the item's tooltip on the GUI.  This should be
 	 *  the last thing that gets rendered, as otherwise it may render
 	 *  behind other components.
 	 */
 	public void drawItemTooltip(String itemName, int qty, int metadata, int mouseX, int mouseY){
 		ItemStack stack = new ItemStack(Item.getByNameOrId(itemName), qty, metadata);
-		this.renderToolTip(stack, mouseX, mouseY);
+		GuiUtils.drawHoveringText(stack, getItemToolTip(stack), mouseX, mouseY, width, height, -1, fontRenderer);
+	}
+	
+	/**
+	 *  Draws a tooltip into the GUI.  This is for things that are NOT items, so
+	 *  rather than passing-in item parameters you need to pass in the lines to render.
+	 *  This should be rendered at the end of the render call to prevent the odd texture
+	 *  binding of this method from conflicting from other renders.
+	 */
+	@SuppressWarnings("unchecked")
+	public void drawGenericTooltip(String tooltip, int mouseX, int mouseY){
+		GuiUtils.drawHoveringText(Arrays.asList(new String[]{tooltip}), mouseX, mouseY, width, height, -1, fontRenderer);
 	}
 
 	
@@ -374,11 +389,11 @@ public class WrapperGUI extends GuiScreen{
 	 *  Returns true if the passed-in GUI is currently active.
 	 *  If null is passed-in, then this method returns true if no GUI is active.
 	 */
-	public static boolean isGUIActive(Class<? extends GuiScreen> guiClass){
+	public static boolean isGUIActive(Class<? extends AGUIBase> guiClass){
 		if(guiClass == null){
 			return Minecraft.getMinecraft().currentScreen == null;
 		}else{
-			return Minecraft.getMinecraft().currentScreen == null ? false : Minecraft.getMinecraft().currentScreen.getClass().equals(guiClass);
+			return Minecraft.getMinecraft().currentScreen == null ? false : (Minecraft.getMinecraft().currentScreen instanceof WrapperGUI ? ((WrapperGUI) Minecraft.getMinecraft().currentScreen).gui.getClass().equals(guiClass) : false);
 		}
 	}
 	

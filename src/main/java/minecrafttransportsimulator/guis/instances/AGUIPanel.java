@@ -12,6 +12,8 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
  * @author don_bruce
  */
 public abstract class AGUIPanel<EntityVehicleX_Type extends EntityVehicleE_Powered> extends AGUIBase{
+	public static final int PANEL_WIDTH = 400;
+	public static final int PANEL_HEIGHT = 140;
 	protected static final int GAP_BETWEEN_SELECTORS = 12;
 	protected static final int SELECTOR_SIZE = 20;
 	protected static final int SELECTOR_TEXTURE_SIZE = 20;
@@ -40,7 +42,10 @@ public abstract class AGUIPanel<EntityVehicleX_Type extends EntityVehicleE_Power
 		
 		//Add instruments.  These go wherever they are specified in the JSON.
 		for(Byte instrumentNumber : vehicle.instruments.keySet()){
-			addInstrument(new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, vehicle));
+			//Only add instruments that have an optionaEngineNumber as those are on the panel.
+			if(vehicle.definition.motorized.instruments.get(instrumentNumber).optionalEngineNumber != 0){
+				addInstrument(new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, vehicle));
+			}
 		}
 	}
 	
@@ -55,12 +60,12 @@ public abstract class AGUIPanel<EntityVehicleX_Type extends EntityVehicleE_Power
 	
 	@Override
 	public int getWidth(){
-		return 400;
+		return PANEL_WIDTH;
 	}
 	
 	@Override
 	public int getHeight(){
-		return 140;
+		return PANEL_HEIGHT;
 	}
 	
 	@Override

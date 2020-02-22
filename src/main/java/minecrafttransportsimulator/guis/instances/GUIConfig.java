@@ -100,16 +100,26 @@ public class GUIConfig extends AGUIBase{
 			if(field.getType().equals(ConfigBoolean.class)){
 				try{
 					ConfigBoolean config = (ConfigBoolean) field.get(ConfigSystem.configObject.client);
-					GUIComponentButton button = new GUIComponentButton(guiLeft+140, guiTop+20+configButtons.size()*20, 60, String.valueOf(config.value)){
+					GUIComponentButton button = new GUIComponentButton(guiLeft + 85 + 120*(configButtons.size()%2), guiTop + 20 + 20*(configButtons.size()/2), 40, String.valueOf(config.value)){
+						@Override
 						public void onClicked(){
 							configButtons.get(this).value = !Boolean.valueOf(text);
 							ConfigSystem.saveToDisk();
 							text = String.valueOf(configButtons.get(this).value);
 						}
+						
+						@Override
+						public void renderTooltip(WrapperGUI wrapper, int mouseX, int mouseY){
+							if(visible){
+								if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
+									wrapper.drawGenericTooltip(config.comment, mouseX, mouseY);
+								}
+							}
+						}
 					};
 					addButton(button);
 					configButtons.put(button, config);
-					addLabel(new GUIComponentLabel(guiLeft+15, button.y + 5, Color.BLACK, field.getName()).setButton(button));
+					addLabel(new GUIComponentLabel(button.x - 75, button.y + 5, Color.BLACK, field.getName()).setButton(button));
 				}catch(Exception e){
 					//How the heck does this even happen?
 				}

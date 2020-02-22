@@ -14,21 +14,30 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 
-public final class RenderInstruments{
-	protected static final TextureManager textureManager = Minecraft.getMinecraft().getTextureManager();
-	
+/**Main render class for instruments.  This class contains a main method that takes an instance of {@link ItemInstrument},
+ * as well as the engine associated with that instrument and the vehicle the instrument is on.  This allows for an
+ * instrument to be rendered a vehicle, GUI, or HUD.}.
+ *
+ * @author don_bruce
+ */
+public final class RenderInstrument{	
 	private static Map<String, ResourceLocation> instrumentTextureSheets = new HashMap<String, ResourceLocation>();
-
 	
-	public static void drawInstrument(EntityVehicleE_Powered vehicle, ItemInstrument instrument, byte engineNumber){
+    /**
+     * Renders the passed-in instrument using the vehicle's current state.  Note that this method does NOT take any 
+     * vehicle JSON parameters into account as it does not know which instrument is being rendered.  This means that 
+     * any transformations that need to be applied for translation or scaling should be applied prior to calling this
+     * method.  Such transformations will, of course, differ between applications, so care should be taken to ensure
+     * OpenGL states are not left out-of-whack after rendering is complete.
+     */
+	public static void drawInstrument(ItemInstrument instrument, byte engineNumber, EntityVehicleE_Powered vehicle){
 		//First get the appropriate texture file for this instrument combination.
 		if(!instrumentTextureSheets.containsKey(instrument.definition.packID)){
 			instrumentTextureSheets.put(instrument.definition.packID, new ResourceLocation(instrument.definition.packID, "textures/instruments.png"));
 		}
-		textureManager.bindTexture(instrumentTextureSheets.get(instrument.definition.packID));
+		Minecraft.getMinecraft().getTextureManager().bindTexture(instrumentTextureSheets.get(instrument.definition.packID));
 		
 		//Check if the lights are on.  If so, disable the lightmap.
 		boolean lightsOn = RenderVehicle.isVehicleIlluminated(vehicle);
@@ -106,20 +115,21 @@ public final class RenderInstruments{
 			}
 			
 			//Now that all transforms are done, render the instrument shape.
+			//If the shape is lit, do blending.  If not, disable blending to save GPU work.
 			if(!section.lightOverlay){
+				GL11.glDisable(GL11.GL_BLEND);
 				renderSquareUV(section.textureWidth, section.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
 			}else if(lightsOn){
 				GL11.glEnable(GL11.GL_BLEND);
 				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
 			    renderSquareUV(section.textureWidth, section.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
+			    GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 			}
 			GL11.glPopMatrix();
 		}
 		
-		//Reset blend functions changed in light operations.
+		//Reset lightmap if we had previously disabled it.
 		if(lightsOn){
-			GL11.glDisable(GL11.GL_BLEND);
-			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		}
 	}
@@ -129,7 +139,7 @@ public final class RenderInstruments{
 			case("yaw"): return -vehicle.rotationYaw;
 			case("pitch"): return Math.max(Math.min(vehicle.rotationPitch, 25), -25);
 			case("roll"): return vehicle.rotationRoll;
-			case("altitude"): return vehicle.posY - (ConfigSystem.configObject.client.seaLevelOffset.value ? vehicle.world.provider.getAverageGroundLevel() : 0);
+			case("altitude"): return vehicle.posY - (ConfigSystem.configObject.client.seaLvlOffset.value ? vehicle.world.provider.getAverageGroundLevel() : 0);
 			case("speed"): return Math.abs(vehicle.velocity*vehicle.speedFactor*20);
 			case("turn_coordinator"): return Math.max(Math.min(((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F, 50), -50);
 			case("turn_indicator"): return Math.max(Math.min((vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F, 50), -50);

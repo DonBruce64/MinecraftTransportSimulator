@@ -4,7 +4,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
-import minecrafttransportsimulator.rendering.RenderInstruments;
+import minecrafttransportsimulator.rendering.RenderInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 
 /**Custom instrument render class.  This class is designed to render an instrument into
@@ -41,7 +41,7 @@ public class GUIComponentInstrument{
     	GL11.glPushMatrix();
 		GL11.glTranslated(x, y, 0);
 		GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-		RenderInstruments.drawInstrument(vehicle, itemInstrument, packInstrument.optionalEngineNumber);
+		RenderInstrument.drawInstrument(itemInstrument, packInstrument.optionalEngineNumber, vehicle);
 		GL11.glPopMatrix();
     }
 }

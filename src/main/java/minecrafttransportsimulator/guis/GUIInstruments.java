@@ -12,21 +12,33 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.guis.instances.AGUIPanel;
+import minecrafttransportsimulator.guis.instances.GUIHUD;
+import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
+import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
-import minecrafttransportsimulator.rendering.RenderHUD;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 
 public class GUIInstruments extends GuiScreen{
+	public static final int screenDefaultX = 854;
+	public static final int screenDefaultY = 480;
+	
 	private final EntityVehicleE_Powered vehicle;
 	private final EntityPlayer player;
+	private final GUIHUD hudGUI;
+	private final AGUIPanel<? extends EntityVehicleE_Powered> panelGUI;
 	
 	private PackInstrument lastInstrumentClicked = null;
 	private final List<ItemInstrument> playerInstruments = new ArrayList<ItemInstrument>();
@@ -35,6 +47,17 @@ public class GUIInstruments extends GuiScreen{
 	public GUIInstruments(EntityVehicleE_Powered vehicle, EntityPlayer player){
 		this.vehicle = vehicle;
 		this.player = player;
+		this.hudGUI = new GUIHUD(vehicle);
+		this.panelGUI = vehicle instanceof EntityVehicleF_Ground ? new GUIPanelGround((EntityVehicleF_Ground) vehicle) : new GUIPanelAircraft((EntityVehicleF_Air) vehicle);
+	}
+	
+	@Override
+	public void initGui(){
+		super.initGui();
+		hudGUI.clearComponents();
+		hudGUI.setupComponents(0, 0);
+		panelGUI.clearComponents();
+		panelGUI.setupComponents(0, 0);
 	}
 
 	@Override
@@ -48,18 +71,20 @@ public class GUIInstruments extends GuiScreen{
 		
 		//First scale the GUI to match the HUD scaling.
 		GL11.glPushMatrix();
-		GL11.glScalef(1.0F*this.width/RenderHUD.screenDefaultX, 1.0F*this.height/RenderHUD.screenDefaultY, 0);
+		GL11.glScalef(1.0F*this.width/screenDefaultX, 1.0F*this.height/screenDefaultY, 0);
 		
 		//Draw the main HUD.
 		GL11.glPushMatrix();
-		GL11.glTranslatef(RenderHUD.screenDefaultX/2, 0, 0);
+		GL11.glTranslatef(screenDefaultX/2, screenDefaultY/4, 0);
 		GL11.glScalef(0.5F, 0.5F, 0.5F);
-		RenderHUD.drawMainHUD(vehicle, true);
-		//If we are a plane, draw the panel.
-		if(vehicle.definition.general.type.equals("plane")){
-			GL11.glTranslatef(0, 3*RenderHUD.screenDefaultY/4, 0);
-			RenderHUD.drawAuxiliaryHUD(vehicle, width, height, true);
-		}
+		mc.getTextureManager().bindTexture(new ResourceLocation(hudGUI.getTexture()));
+		WrapperGUI.renderSheetTexture(0, 0, hudGUI.getWidth(), hudGUI.getHeight(), 0, 0, hudGUI.getWidth(), hudGUI.getHeight(), hudGUI.getTextureWidth(), hudGUI.getTextureHeight());
+		
+		//Draw the panel.
+		GL11.glTranslatef(0, 3*screenDefaultY/4, 0);
+		mc.getTextureManager().bindTexture(new ResourceLocation(panelGUI.getTexture()));
+		WrapperGUI.renderSheetTexture(0, 0, panelGUI.getWidth(), panelGUI.getHeight(), 0, 0, panelGUI.getWidth(), panelGUI.getHeight(), panelGUI.getTextureWidth(), panelGUI.getTextureHeight());
+		
 		GL11.glDisable(GL11.GL_LIGHTING);
 		mc.entityRenderer.disableLightmap();
 		GL11.glPopMatrix();
@@ -68,15 +93,15 @@ public class GUIInstruments extends GuiScreen{
 		GL11.glPushMatrix();
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glColor3f(54F/255F, 57F/255F, 62F/255F);
-		GL11.glTranslatef(RenderHUD.screenDefaultX/2, 0, 0);
+		GL11.glTranslatef(screenDefaultX/2, screenDefaultY/4, 0);
 		for(byte i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
 			if(!vehicle.instruments.containsKey(i)){
 				PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
 				GL11.glPushMatrix();
 		    	if(packInstrument.optionalEngineNumber == 0){
-		    		GL11.glTranslated(RenderHUD.screenDefaultX*packInstrument.hudpos[0]/200F, RenderHUD.screenDefaultY*packInstrument.hudpos[1]/200F, 0);
+		    		GL11.glTranslated(screenDefaultX*packInstrument.hudX/200F, screenDefaultY*packInstrument.hudY/200F, 0);
 		    	}else{
-		    		GL11.glTranslated(RenderHUD.screenDefaultX*packInstrument.hudpos[0]/200F, 3*RenderHUD.screenDefaultY/8 + RenderHUD.screenDefaultY*packInstrument.hudpos[1]/200F, 0);
+		    		GL11.glTranslated(screenDefaultX*packInstrument.hudY/200F, 3*screenDefaultY/8 + screenDefaultY*packInstrument.hudY/200F, 0);
 		    	}
 		    	GL11.glScalef(packInstrument.hudScale/2F, packInstrument.hudScale/2F, 0);
 		    	GL11.glBegin(GL11.GL_QUADS);
@@ -97,9 +122,9 @@ public class GUIInstruments extends GuiScreen{
 			GL11.glPushMatrix();
 	    	GL11.glColor4f(1, 1, 1, 1);
 	    	if(lastInstrumentClicked.optionalEngineNumber == 0){
-	    		GL11.glTranslated(RenderHUD.screenDefaultX/2 + RenderHUD.screenDefaultX*lastInstrumentClicked.hudpos[0]/200F, RenderHUD.screenDefaultY*lastInstrumentClicked.hudpos[1]/200F, 0);
+	    		GL11.glTranslated(screenDefaultX/2 + screenDefaultX*lastInstrumentClicked.hudX/200F, screenDefaultY/4 + screenDefaultY*lastInstrumentClicked.hudY/200F, 0);
 	    	}else{
-	    		GL11.glTranslated(RenderHUD.screenDefaultX/2 + RenderHUD.screenDefaultX*lastInstrumentClicked.hudpos[0]/200F, 3*RenderHUD.screenDefaultY/8 + RenderHUD.screenDefaultY*lastInstrumentClicked.hudpos[1]/200F, 0);
+	    		GL11.glTranslated(screenDefaultX/2 + screenDefaultX*lastInstrumentClicked.hudX/200F, screenDefaultY/4 + 3*screenDefaultY/8 + screenDefaultY*lastInstrumentClicked.hudY/200F, 0);
 	    	}
 	    	GL11.glScalef(lastInstrumentClicked.hudScale/2F, lastInstrumentClicked.hudScale/2F, 0);
 	    	GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -129,7 +154,7 @@ public class GUIInstruments extends GuiScreen{
 							if(instrumentItem.definition.general.validVehicles.contains(vehicle.definition.general.type)){
 								byte xIndex = (byte) (playerInstruments.size()%6);
 								byte yIndex = (byte) (playerInstruments.size()/6);
-								renderedPlayerInstrumentsBounds.put(instrumentItem, new Integer[]{64 + xIndex*64-32, 64 + xIndex*64+32, RenderHUD.screenDefaultY/4 + yIndex*64-32, RenderHUD.screenDefaultY/4 + yIndex*64+32});
+								renderedPlayerInstrumentsBounds.put(instrumentItem, new Integer[]{64 + xIndex*64-32, 64 + xIndex*64+32, screenDefaultY/4 + yIndex*64-32, screenDefaultY/4 + yIndex*64+32});
 								playerInstruments.add(instrumentItem);
 							}	
 						}					
@@ -144,7 +169,7 @@ public class GUIInstruments extends GuiScreen{
 						if(instrumentItem.definition.general.validVehicles.contains(vehicle.definition.general.type)){
 							byte xIndex = (byte) (playerInstruments.size()%6);
 							byte yIndex = (byte) (playerInstruments.size()/6);
-							renderedPlayerInstrumentsBounds.put(instrumentItem, new Integer[]{64 + xIndex*64-32, 64 + xIndex*64+32, RenderHUD.screenDefaultY/4 + yIndex*64-32, RenderHUD.screenDefaultY/4 + yIndex*64+32});
+							renderedPlayerInstrumentsBounds.put(instrumentItem, new Integer[]{64 + xIndex*64-32, 64 + xIndex*64+32, screenDefaultY/4 + yIndex*64-32, screenDefaultY/4 + yIndex*64+32});
 							playerInstruments.add(instrumentItem);
 						}
 					}
@@ -163,45 +188,43 @@ public class GUIInstruments extends GuiScreen{
 		
 		//Render text into the GUI.
 		GL11.glPushMatrix();
-		GL11.glTranslatef(3*RenderHUD.screenDefaultX/4, 2.5F*RenderHUD.screenDefaultY/16, 0);
+		GL11.glTranslatef(3*screenDefaultX/4, 2.5F*screenDefaultY/16, 0);
 		GL11.glScalef(2.5F, 2.5F, 2.5F);
 		fontRenderer.drawString(I18n.format("gui.instruments.main"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.main"))/2), 0, Color.WHITE.getRGB());
 		GL11.glPopMatrix();
 		
-		if(vehicle.definition.general.type.equals("plane")){
-			GL11.glPushMatrix();
-			GL11.glTranslatef(3*RenderHUD.screenDefaultX/4, 9*RenderHUD.screenDefaultY/16, 0);
-			GL11.glScalef(2.5F, 2.5F, 2.5F);
-			fontRenderer.drawString(I18n.format("gui.instruments.control"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.control"))/2), 0, Color.WHITE.getRGB());
-			GL11.glPopMatrix();
-		}
+		GL11.glPushMatrix();
+		GL11.glTranslatef(3*screenDefaultX/4, 9*screenDefaultY/16, 0);
+		GL11.glScalef(2.5F, 2.5F, 2.5F);
+		fontRenderer.drawString(I18n.format("gui.instruments.control"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.control"))/2), 0, Color.WHITE.getRGB());
+		GL11.glPopMatrix();
 				
 		if(lastInstrumentClicked == null){
 			if(vehicle.ticksExisted%40 >= 20){
 				GL11.glPushMatrix();
-				GL11.glTranslatef(3*RenderHUD.screenDefaultX/4, RenderHUD.screenDefaultY/16, 0);
+				GL11.glTranslatef(3*screenDefaultX/4, screenDefaultY/16, 0);
 				GL11.glScalef(2.5F, 2.5F, 2.5F);
 				fontRenderer.drawString(I18n.format("gui.instruments.idle"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.idle"))/2), 0, Color.WHITE.getRGB());
 				GL11.glPopMatrix();
 			}
 		}else{
 			GL11.glPushMatrix();
-			GL11.glTranslatef(RenderHUD.screenDefaultX/2, RenderHUD.screenDefaultY/16, 0);
+			GL11.glTranslatef(screenDefaultX/2, screenDefaultY/16, 0);
 			GL11.glScalef(2.5F, 2.5F, 2.5F);
 			fontRenderer.drawString(I18n.format("gui.instruments.decide"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.decide"))/2), 0, Color.WHITE.getRGB());
 			GL11.glPopMatrix();
 		}
 		
 		GL11.glPushMatrix();
-		GL11.glTranslatef(RenderHUD.screenDefaultX/4, 11*RenderHUD.screenDefaultY/16, 0);
+		GL11.glTranslatef(screenDefaultX/4, 11*screenDefaultY/16, 0);
 		GL11.glScalef(2.5F, 2.5F, 2.5F);
 		fontRenderer.drawString(I18n.format("gui.instruments.clear"), (int) (-fontRenderer.getStringWidth(I18n.format("gui.instruments.clear"))/2), 0, Color.WHITE.getRGB());
 		GL11.glPopMatrix();
 		
 		//Need to do mouseover after main rendering or you get rendering issues.
 		//Scale mouse position to the scaled GUI;
-		mouseX = (int) (1.0F*mouseX/width*RenderHUD.screenDefaultX);
-		mouseY = (int) (1.0F*mouseY/height*RenderHUD.screenDefaultY);
+		mouseX = (int) (1.0F*mouseX/width*screenDefaultX);
+		mouseY = (int) (1.0F*mouseY/height*screenDefaultY);
 		for(Entry<ItemInstrument, Integer[]> renderedInstrumentsEntry : renderedPlayerInstrumentsBounds.entrySet()){
 			if(mouseX > renderedInstrumentsEntry.getValue()[0] && mouseX < renderedInstrumentsEntry.getValue()[1] && mouseY > renderedInstrumentsEntry.getValue()[2] && mouseY < renderedInstrumentsEntry.getValue()[3]){
 				GL11.glPushMatrix();
@@ -219,14 +242,20 @@ public class GUIInstruments extends GuiScreen{
     protected void mouseClicked(int mouseX, int mouseY, int button){
 		//Check to see if we clicked an instrument on the HUD.
 		//Scale mouse position to the scaled GUI;
-		mouseX = (int) (1.0F*mouseX/width*RenderHUD.screenDefaultX);
-		mouseY = (int) (1.0F*mouseY/height*RenderHUD.screenDefaultY);
+		mouseX = (int) (1.0F*mouseX/width*screenDefaultX);
+		mouseY = (int) (1.0F*mouseY/height*screenDefaultY);
 		for(PackInstrument instrument : vehicle.definition.motorized.instruments){
-			final float xCenter = RenderHUD.screenDefaultX/2 + RenderHUD.screenDefaultX*instrument.hudpos[0]/200;
-			final float yCenter = instrument.optionalEngineNumber == 0 ? RenderHUD.screenDefaultY*instrument.hudpos[1]/200 : 3*RenderHUD.screenDefaultY/8 + RenderHUD.screenDefaultY*instrument.hudpos[1]/200;
+			final float xCenter = screenDefaultX/2 + screenDefaultX*instrument.hudX/200;
+			final float yCenter = screenDefaultY/4 + (instrument.optionalEngineNumber == 0 ? screenDefaultY*instrument.hudY/200 : 3*screenDefaultY/8 + screenDefaultY*instrument.hudY/200);
 			if(mouseX > xCenter - 32*instrument.hudScale && mouseX < xCenter + 32*instrument.hudScale && mouseY > yCenter - 32*instrument.hudScale && mouseY < yCenter + 32*instrument.hudScale){
 				lastInstrumentClicked = instrument;
 				return;
+			}
+		}
+		
+		for(byte i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
+			if(!vehicle.instruments.containsKey(i)){
+				lastInstrumentClicked = vehicle.definition.motorized.instruments.get(i);
 			}
 		}
 
@@ -235,6 +264,7 @@ public class GUIInstruments extends GuiScreen{
 			//Check to see if the player clicked an instrument, and if so which one.
 			for(Entry<ItemInstrument, Integer[]> renderedInstrumentsEntry : renderedPlayerInstrumentsBounds.entrySet()){
 				if(mouseX > renderedInstrumentsEntry.getValue()[0] && mouseX < renderedInstrumentsEntry.getValue()[1] && mouseY > renderedInstrumentsEntry.getValue()[2] && mouseY < renderedInstrumentsEntry.getValue()[3]){
+				//FIXME temp code here.
 					MTS.MTSNet.sendToServer(new PacketVehicleInstruments(vehicle, player, getIndexOfLastInstrumentClicked(), renderedInstrumentsEntry.getKey()));
 					lastInstrumentClicked = null;
 					return;
@@ -242,7 +272,7 @@ public class GUIInstruments extends GuiScreen{
 			}
 			
 			//Either the player didn't click an instrument, or they clicked the CLEAR.
-			if(mouseX > RenderHUD.screenDefaultX/4 - 30 && mouseX < RenderHUD.screenDefaultX/4 + 30 && mouseY > 11*RenderHUD.screenDefaultY/16 - 30 && mouseY < 11*RenderHUD.screenDefaultY/16 + 30){
+			if(mouseX > screenDefaultX/4 - 30 && mouseX < screenDefaultX/4 + 30 && mouseY > 11*screenDefaultY/16 - 30 && mouseY < 11*screenDefaultY/16 + 30){
 				if(vehicle.instruments.containsKey(getIndexOfLastInstrumentClicked())){
 					MTS.MTSNet.sendToServer(new PacketVehicleInstruments(vehicle, player, getIndexOfLastInstrumentClicked(), null));
 					lastInstrumentClicked = null;

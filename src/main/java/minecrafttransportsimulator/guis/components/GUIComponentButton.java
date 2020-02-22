@@ -119,4 +119,15 @@ public abstract class GUIComponentButton{
     		WrapperGUI.drawText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText, false, 0);
     	}
     }
+    
+    /**
+	 *  Renders the tooltip for this button.  This needs to be done after the main buttons
+	 *  render as otherwise it will render behind other buttons.  This method needs an
+	 *  instance of {@link WrapperGUI} due to the MC GUI system hard-linking the
+	 *  tooltip rendering sequence to the GUI instance.  Most buttons don't have tooltips,
+	 *  but buttons that have complex functionality may need them to help explain what they do.
+	 */
+    public void renderTooltip(WrapperGUI wrapper, int mouseX, int mouseY){
+    	//Do nothing.
+    }
 }

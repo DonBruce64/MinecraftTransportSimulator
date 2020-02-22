@@ -116,11 +116,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		treadDeltas.clear();
 	}
 	
-	/**Returns the currently cached texture for the vehicle.  Static for use in other functions.**/
-	public static ResourceLocation getTextureForVehicle(EntityVehicleE_Powered entity){
-		return textureMap.get(entity.definition.systemName);
-	}
-	
 	@Override
 	protected ResourceLocation getEntityTexture(EntityVehicleE_Powered entity){
 		return null;
@@ -205,7 +200,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
      * Checks if lights are on for this vehicle and instruments need to be lit up.
      */
 	public static boolean isVehicleIlluminated(EntityVehicleE_Powered vehicle){
-		return (vehicle.isLightOn(LightType.NAVIGATIONLIGHT) || vehicle.isLightOn(LightType.RUNNINGLIGHT)) && vehicle.electricPower > 3;
+		return (vehicle.isLightOn(LightType.NAVIGATIONLIGHT) || vehicle.isLightOn(LightType.RUNNINGLIGHT) || vehicle.isLightOn(LightType.HEADLIGHT)) && vehicle.electricPower > 3;
 	}
 	
 	private static void render(EntityVehicleE_Powered vehicle, EntityPlayer playerRendering, float partialTicks, boolean wasRenderedPrior){
@@ -247,9 +242,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			renderParts(vehicle, partialTicks);
 			GL11.glEnable(GL11.GL_NORMALIZE);
 			renderWindows(vehicle, partialTicks);
+			GL11.glDisable(GL11.GL_NORMALIZE);
 			renderTextMarkings(vehicle);
 			renderInstruments(vehicle);
-			GL11.glDisable(GL11.GL_NORMALIZE);
 			if(Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()){
 				renderBoundingBoxes(vehicle);
 			}
@@ -1404,7 +1399,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			//Need to scale by -1 to get the coordinate system to behave and align to the texture-based coordinate system.
 			GL11.glScalef(-packInstrument.scale/16F, -packInstrument.scale/16F, -packInstrument.scale/16F);
 			if(vehicle.instruments.containsKey(i)){
-				RenderInstruments.drawInstrument(vehicle, vehicle.instruments.get(i), packInstrument.optionalEngineNumber);
+				RenderInstrument.drawInstrument(vehicle.instruments.get(i), packInstrument.optionalEngineNumber, vehicle);
 			}
 			GL11.glPopMatrix();
 		}

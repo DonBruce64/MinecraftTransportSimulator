@@ -189,6 +189,8 @@ public final class ControlSystem{
 		if(radio.isPressed()){
 			if(WrapperGUI.isGUIActive(null)){
 				WrapperGUI.openGUI(new GUIRadio(vehicle));
+			}else if(WrapperGUI.isGUIActive(GUIRadio.class)){
+				WrapperGUI.closeGUI();
 			}
 		}
 	}
@@ -207,10 +209,9 @@ public final class ControlSystem{
 		if(ControlsKeyboard.AIRCRAFT_PANEL.isPressed()){
 			if(WrapperGUI.isGUIActive(null)){
 				WrapperGUI.openGUI(new GUIPanelAircraft(aircraft));
-			}//FIXME need to check for panel GUI here.
-			//}else if(WrapperGUI.isGUIActive(GUIPanelAircraft.class)){
-				//WrapperGUI.closeGUI();
-			//}
+			}else if(WrapperGUI.isGUIActive(GUIPanelAircraft.class)){
+				WrapperGUI.closeGUI();
+			}
 		}
 		
 		//Check for thrust reverse button.
@@ -319,10 +320,9 @@ public final class ControlSystem{
 		if(ControlsKeyboard.CAR_PANEL.isPressed()){
 			if(WrapperGUI.isGUIActive(null)){
 				WrapperGUI.openGUI(new GUIPanelGround(powered));
-			}//FIXME need to check for panel GUI here.
-			//else if(WrapperGUI.isGUIActive(GUIPanelGround.class)){
-				//WrapperGUI.closeGUI();
-			//}
+			}else if(WrapperGUI.isGUIActive(GUIPanelGround.class)){
+				WrapperGUI.closeGUI();
+			}
 		}
 		
 		//Change gas to on or off.
@@ -448,7 +448,7 @@ public final class ControlSystem{
 		public boolean isPressed(){
 			if(linkedJoystick.isPressed()){
 				return true;
-			}else if(linkedJoystick.config.joystickName != null && ConfigSystem.configObject.client.keyboardOverride.value){
+			}else if(linkedJoystick.config.joystickName != null && ConfigSystem.configObject.client.kbOverride.value){
 				return false;
 			}else{
 				if(isMomentary){

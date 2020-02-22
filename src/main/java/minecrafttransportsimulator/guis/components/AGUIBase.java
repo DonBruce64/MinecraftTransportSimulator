@@ -5,7 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
-import minecrafttransportsimulator.rendering.RenderInstruments;
+import minecrafttransportsimulator.rendering.RenderInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 
@@ -164,7 +164,7 @@ public abstract class AGUIBase{
 	
 	/**
 	 *  Adds an {@link GUIComponentInstrument} to this GUIs component set.  These are rendered
-	 *  depending on the vehicle's state, and are really just a pass-through to {@link RenderInstruments#drawInstrument(EntityVehicleE_Powered, ItemInstrument, byte)}.
+	 *  depending on the vehicle's state, and are really just a pass-through to {@link RenderInstrument#drawInstrument(EntityVehicleE_Powered, ItemInstrument, byte)}.
 	 */
 	public void addInstrument(GUIComponentInstrument instrument){
 		instruments.add(instrument);

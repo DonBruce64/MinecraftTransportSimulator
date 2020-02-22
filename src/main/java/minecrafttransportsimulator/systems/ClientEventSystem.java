@@ -5,15 +5,17 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
+import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
 import minecrafttransportsimulator.radio.RadioManager;
 import minecrafttransportsimulator.radio.RadioThread;
-import minecrafttransportsimulator.rendering.RenderHUD;
+import minecrafttransportsimulator.rendering.RenderInstrument;
 import minecrafttransportsimulator.rendering.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
@@ -32,6 +34,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
@@ -328,25 +331,54 @@ public final class ClientEventSystem{
     }
 
     /**
-     * Renders HUDs for Aircraft.
+     * Renders the HUD on vehicles.  We don't use the GU here as it would lock inputs.
      */
     @SubscribeEvent
     public static void on(RenderGameOverlayEvent.Pre event){    	
-        if(minecraft.player.getRidingEntity() instanceof EntityVehicleC_Colliding){
+    	boolean inFirstPerson = minecraft.gameSettings.thirdPersonView == 0;
+        if(minecraft.player.getRidingEntity() instanceof EntityVehicleE_Powered && (inFirstPerson ? ConfigSystem.configObject.client.renderHUD_1P.value : ConfigSystem.configObject.client.renderHUD_3P.value)){
             if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
                 event.setCanceled(true);
             }else if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
-                if(minecraft.player.getRidingEntity() instanceof EntityVehicleE_Powered){
-                	EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.player.getRidingEntity();
-                	if(vehicle.getSeatForRider(minecraft.player) != null){
-	                	if(vehicle.getSeatForRider(minecraft.player).isController && (minecraft.gameSettings.thirdPersonView==0 || CameraSystem.hudMode == 1) && !CameraSystem.disableHUD){
-	                		GL11.glPushMatrix();
-	                		GL11.glScalef(1.0F*event.getResolution().getScaledWidth()/RenderHUD.screenDefaultX, 1.0F*event.getResolution().getScaledHeight()/RenderHUD.screenDefaultY, 0);
-	                		RenderHUD.drawMainHUD(vehicle, false);
-	                		GL11.glPopMatrix();
-	                	}
+            	EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.player.getRidingEntity();
+            	if(vehicle.getSeatForRider(minecraft.player) != null){
+                	if(vehicle.getSeatForRider(minecraft.player).isController){
+                		//Get the HUD start position.
+                		boolean halfHud = inFirstPerson ? ConfigSystem.configObject.client.fullHUD_1P.value : ConfigSystem.configObject.client.fullHUD_3P.value; 
+                		final int guiLeft = (event.getResolution().getScaledWidth() - GUIHUD.HUD_WIDTH)/2;
+                		final int guiTop = halfHud ? event.getResolution().getScaledHeight() - GUIHUD.HUD_HEIGHT : (event.getResolution().getScaledHeight() - GUIHUD.HUD_HEIGHT/2);
+                		
+                		//Enable the lightmap to take brightness into account.
+                		//Normally this is disabled for the overlays.
+                		//The same goes for alpha testing.
+                		Minecraft.getMinecraft().entityRenderer.enableLightmap();
+        				GL11.glEnable(GL11.GL_ALPHA_TEST);
+                		
+                		//Bind the HUD texture and render it if set in the config.
+                		if(inFirstPerson ? !ConfigSystem.configObject.client.transpHUD_1P.value : !ConfigSystem.configObject.client.transpHUD_3P.value){
+                			//Set the render height depending on the config.
+	                		Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(vehicle.definition.rendering.hudTexture != null ? vehicle.definition.rendering.hudTexture : "mts:textures/guis/hud.png"));
+	                		WrapperGUI.renderSheetTexture(guiLeft, guiTop, GUIHUD.HUD_WIDTH, GUIHUD.HUD_HEIGHT, 0, 0, GUIHUD.HUD_WIDTH, GUIHUD.HUD_HEIGHT, 512, 256);
+                		}
+                		
+                		//Iterate though all the instruments the vehicle has and render them. 
+                		for(Byte instrumentNumber : vehicle.instruments.keySet()){
+                			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(instrumentNumber);
+                			//Only render instruments that don't have an optionaEngineNumber.
+                			if(vehicle.definition.motorized.instruments.get(instrumentNumber).optionalEngineNumber == 0){
+                				GL11.glPushMatrix();
+                				GL11.glTranslated(guiLeft + packInstrument.hudX, guiTop + packInstrument.hudY, 0);
+                				GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
+                				RenderInstrument.drawInstrument(vehicle.instruments.get(instrumentNumber), packInstrument.optionalEngineNumber, vehicle);
+                				GL11.glPopMatrix();
+                			}
+                		}
+                		
+                		//Disable the lightmap and alpha to put it back to its old state.
+                		Minecraft.getMinecraft().entityRenderer.disableLightmap();
+                		GL11.glDisable(GL11.GL_ALPHA_TEST);
                 	}
-                }
+            	}
             }
         }
     }

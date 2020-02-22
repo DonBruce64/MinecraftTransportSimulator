@@ -102,6 +102,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     public class PackInstrument{
         public float[] pos;
         public float[] rot;
+        public float[] hudpos;
         public float scale;
         public int hudX;
         public int hudY;
