@@ -8,6 +8,7 @@ import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
@@ -83,7 +84,12 @@ public final class ClientEventSystem{
     		if(event.getTarget() instanceof EntityVehicleC_Colliding){
     			EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) event.getTarget();
     			if(player.getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
-    				MTS.proxy.openGUI(vehicle, player);
+    				boolean isPlayerOP = player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
+					if(vehicle.ownerName.isEmpty() || EntityPlayer.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName) || isPlayerOP){
+						MTS.proxy.openGUI(vehicle, player);
+					}else{
+						MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehicleowned"), (EntityPlayerMP) player);
+					}
 				}else if(!(player.getHeldItemMainhand().getItem() instanceof AItemPart)){
 					MTS.MTSNet.sendToServer(new PacketVehicleInteracted(vehicle, event.getEntityPlayer()));
 					event.setCanceled(true);
