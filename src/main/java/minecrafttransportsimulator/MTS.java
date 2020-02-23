@@ -21,7 +21,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="16.0.0";
+	public static final String MODVER="16.1.0";
 	
 	@Instance(value = MTS.MODID)
 	public static MTS instance;
