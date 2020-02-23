@@ -343,15 +343,14 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		for(int i=0; i<inventory.getSizeInventory(); ++i){
 			ItemStack stack = inventory.getStackInSlot(i);
 			if(stack != null){
-				boolean isHeavy = false;
-				for(String heavyItemName : ConfigSystem.configObject.general.heavyItems.value){
-					if(stack.getItem().getUnlocalizedName().substring(5).contains(heavyItemName)){
-						isHeavy = true;
+				double weightMultiplier = 1.0;
+				for(String heavyItemName : ConfigSystem.configObject.general.itemWeights.weights.keySet()){
+					if(stack.getItem().getRegistryName().toString().contains(heavyItemName)){
+						weightMultiplier = ConfigSystem.configObject.general.itemWeights.weights.get(heavyItemName);
 						break;
 					}
-					
 				}
-				weight += 1.2F*stack.getCount()/stack.getMaxStackSize()*(isHeavy ? 2 : 1);
+				weight += 5F*stack.getCount()/stack.getMaxStackSize()*weightMultiplier;
 			}
 		}
 		return weight;

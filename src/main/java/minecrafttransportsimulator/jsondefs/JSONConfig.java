@@ -32,7 +32,25 @@ public class JSONConfig{
 		public ConfigDouble fuelUsageFactor = new ConfigDouble(1.0D, "Factor times which engines use fuel.  Change this if you think engines use fuel too fast or slow.");
 		public ConfigDouble engineHoursFactor = new ConfigDouble(1.0D, "Factor times which engines hours accumulate.  Change this if you want to adjust how fast engines wear out.");
 		public ConfigDouble clingSpeed = new ConfigDouble(0.25D, "Speed (in BLK/S) at which players start to slide off vehicles due to wind.  Does not affect collision boxes set as interior in the vehicle JSON.");
-		public ConfigStringArray heavyItems = new ConfigStringArray(new String[]{"diamond, iron, gold, coal, ore, stone"}, "Any item that contains these words will be counted as heavy (double mass) when considering plane mass.  Change and tweak to your liking.");
+		public ConfigItemWeights itemWeights = new ConfigItemWeights();
+		
+		public static class ConfigItemWeights{
+			public String comment1 = "The following section is used for calculating item weights.  Any item that contains the text bits will have its weight multiplied by the following factor.";
+			public String comment2 = "This mass factors into vehicle performance, with particular emphasis on vehicle payloads.  Some defaults are presented here, but you can add/remove to your liking.";
+			public String comment3 = "Note that the part of the name searched is the item's registry name, NOT the in-game display name.  This is similar to what is in the /give command.";
+			public Map<String, Double> weights = populateDefaultWeights();
+			
+			private static Map<String, Double> populateDefaultWeights(){
+				Map<String, Double> weights = new HashMap<String, Double>();
+				weights.put("diamond", 4.0);
+				weights.put("iron", 4.0);
+				weights.put("gold", 4.0);
+				weights.put("coal", 2.0);
+				weights.put("ore", 2.5);
+				weights.put("stone", 1.5);
+				return weights;
+			}
+		}
 	}
 	
 	public static class ConfigDamage{
