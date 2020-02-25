@@ -62,6 +62,7 @@ public class PacketVehicleInteracted extends APacketVehiclePlayer{
 									if(!vehicle.ownerName.isEmpty()){
 										if(!EntityPlayer.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName)){
 											MTS.MTSNet.sendTo(new PacketChat("interact.key.failure.notowner"), (EntityPlayerMP) player);
+											return;
 										}
 									}
 									NBTTagCompound tag = new NBTTagCompound();
