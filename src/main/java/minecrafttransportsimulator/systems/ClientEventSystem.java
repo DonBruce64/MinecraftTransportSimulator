@@ -84,7 +84,7 @@ public final class ClientEventSystem{
     		if(event.getTarget() instanceof EntityVehicleC_Colliding){
     			EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) event.getTarget();
     			if(player.getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
-    				boolean isPlayerOP = player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
+    				boolean isPlayerOP = player.getServer() == null || player.getServer().isSinglePlayer() || player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null;
 					if(vehicle.ownerName.isEmpty() || EntityPlayer.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName) || isPlayerOP){
 						MTS.proxy.openGUI(vehicle, player);
 					}else{
