@@ -210,7 +210,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	
 	//-----START OF LIGHT CODE-----
 	public void changeLightStatus(LightType light, boolean isOn){
-		//FIXME make this not a method.
 		if(isOn){
 			if(!lightsOn.contains(light)){
 				lightsOn.add(light);
