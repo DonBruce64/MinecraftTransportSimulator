@@ -37,7 +37,7 @@ public class ClientProxy extends CommonProxy{
 	@Override
 	public void openGUI(Object clicked, EntityPlayer clicker){
 		if(clicked instanceof EntityVehicleE_Powered){
-			FMLCommonHandler.instance().showGuiScreen(new GUIInstruments((EntityVehicleE_Powered) clicked, clicker));
+			WrapperGUI.openGUI(new GUIInstruments((EntityVehicleE_Powered) clicked, clicker));
 		}else if(clicked instanceof BlockBench){
 			FMLCommonHandler.instance().showGuiScreen(new GUIPartBench((BlockBench) clicked, clicker));
 		}else if(clicked instanceof ItemBooklet){

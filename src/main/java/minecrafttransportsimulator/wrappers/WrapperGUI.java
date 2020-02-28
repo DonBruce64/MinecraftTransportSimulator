@@ -281,7 +281,11 @@ public class WrapperGUI extends GuiScreen{
 			fontRenderer = Minecraft.getMinecraft().fontRenderer;
 		}
 		if(centered){
-			x -= fontRenderer.getStringWidth(text)/2;
+			if(wrapWidth == 0){
+				x -= fontRenderer.getStringWidth(text)/2;
+			}else{
+				x -= Math.min(wrapWidth/2, fontRenderer.getStringWidth(text)/2);
+			}
 		}
 		if(shadow){
 			fontRenderer.drawStringWithShadow(text, x, y, color.getRGB());
