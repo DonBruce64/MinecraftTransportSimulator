@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.guis;
+package minecrafttransportsimulator.guis.instances;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -14,10 +14,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.instances.AGUIPanel;
-import minecrafttransportsimulator.guis.instances.GUIHUD;
-import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
-import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
