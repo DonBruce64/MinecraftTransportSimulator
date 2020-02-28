@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import minecrafttransportsimulator.MTS;
@@ -16,7 +15,6 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.jsondefs.JSONConfig;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -131,7 +129,7 @@ public class GUIVehicleEditor extends AGUIBase{
 							dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loadingInstrument.rot[2]));
 							dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loadingInstrument.scale));
 							
-							//FIXME temp code for conversion.
+							//We have this here so old instruments convert themselves correctly.
 							if(loadingInstrument.hudX == 0 && loadingInstrument.hudY == 0){
 								loadingInstrument.hudX = (int) (400D*(loadingInstrument.hudpos[0]/100D));
 								loadingInstrument.hudY = (int) (2D*(loadingInstrument.hudpos[1]/100D -0.5D)*140);
