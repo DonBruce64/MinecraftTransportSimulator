@@ -96,13 +96,13 @@ public class GUIInstruments extends AGUIBase{
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){
 		//Create the prior and next pack buttons.
-		addButton(prevPackButton = new TexturelessButton(guiLeft + 5, guiTop - 80, 20, "<"){
+		addButton(prevPackButton = new TexturelessButton(guiLeft, guiTop - 74, 20, "<"){
 			@Override
 			public void onClicked(){
 				currentPack = playerInstruments.lowerKey(currentPack);
 			}
 		});
-		addButton(nextPackButton = new TexturelessButton(guiLeft + 5, guiTop - 50, 20, ">"){
+		addButton(nextPackButton = new TexturelessButton(guiLeft, guiTop - 52, 20, ">"){
 			@Override
 			public void onClicked(){
 				currentPack = playerInstruments.higherKey(currentPack);
@@ -113,10 +113,10 @@ public class GUIInstruments extends AGUIBase{
 		//That depends if there are that many instruments present for the currentPack.
 		instrumentSlots.clear();
 		instrumentSlotIcons.clear();
-		final int instrumentButtonSize = 30;
+		final int instrumentButtonSize = 22;
 		if(currentPack != null){
-			for(byte i=0; i<20; ++i){				
-				TexturelessButton instrumentButton = new TexturelessButton(guiLeft + 40 + instrumentButtonSize*(i/2), guiTop - 85 + instrumentButtonSize*(i%2), instrumentButtonSize, "", instrumentButtonSize, false){
+			for(byte i=0; i<30; ++i){				
+				TexturelessButton instrumentButton = new TexturelessButton(guiLeft + 23 + instrumentButtonSize*(i/2), guiTop - 75 + instrumentButtonSize*(i%2), instrumentButtonSize, "", instrumentButtonSize, false){
 					@Override
 					public void onClicked(){
 						MTS.MTSNet.sendToServer(new PacketVehicleInstruments(vehicle, player, (byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
@@ -133,17 +133,17 @@ public class GUIInstruments extends AGUIBase{
 				instrumentSlots.add(instrumentButton);
 				
 				//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
-				GUIComponentItem instrumentItem = new GUIComponentItem(guiLeft + 40 + instrumentButtonSize*(i/2), guiTop - 85 + instrumentButtonSize*(i%2), instrumentButtonSize/16F, null, 1, -1);
+				GUIComponentItem instrumentItem = new GUIComponentItem(instrumentButton.x, instrumentButton.y, instrumentButtonSize/16F, null, 1, -1);
 				addItem(instrumentItem);
 				instrumentSlotIcons.add(instrumentItem);
 			}
 		}
 		
 		//Create the pack name label.
-		addLabel(packName = new GUIComponentLabel(guiLeft + 45, guiTop - 95, Color.WHITE, "", 1.0F, false, false, 0));
+		addLabel(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, Color.WHITE, "", 1.0F, false, false, 0));
 
 		//Create the clear button.
-		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 40, guiTop - 75, 40, WrapperGUI.translate("gui.instruments.clear"), 40, true){
+		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, WrapperGUI.translate("gui.instruments.clear"), 2*instrumentButtonSize, true){
 			@Override
 			public void onClicked(){
 				MTS.MTSNet.sendToServer(new PacketVehicleInstruments(vehicle, player, (byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), null));
