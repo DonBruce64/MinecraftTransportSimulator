@@ -216,13 +216,13 @@ public final class ControlSystem{
 		
 		//Check for thrust reverse button.
 		if(ControlsJoystick.AIRCRAFT_REVERSE.isPressed()){
-			MTS.proxy.playSound(aircraft.getPositionVector(), MTS.MODID + ":panel_buzzer", 1.0F, 1.0F);
+			MTS.proxy.playSound(aircraft.getPositionVector(), MTS.MODID + ":panel_buzzer", 1.0F, 1.0F, aircraft);
 			MTS.MTSNet.sendToServer(new ReverseThrustPacket(aircraft.getEntityId(), !aircraft.reverseThrust));
 		}
 		
 		//Increment or decrement throttle.
 		if(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName != null){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), (byte) ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState((short) 100)));
+			MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), (byte) ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState((short) 0)));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()){
 				MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MAX_VALUE));
@@ -327,7 +327,7 @@ public final class ControlSystem{
 		
 		//Change gas to on or off.
 		if(ControlsJoystick.CAR_GAS.config.joystickName != null){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) ControlsJoystick.CAR_GAS.getAxisState((short) 100)));
+			MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) ControlsJoystick.CAR_GAS.getAxisState((short) 0)));
 		}else{
 			if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
 				MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) 50));
@@ -565,14 +565,14 @@ public final class ControlSystem{
 			if(Math.abs(pollValue) > ConfigSystem.configObject.client.joystickDeadZone.value || pollBounds == 0){
 				//Clamp the poll value to the defined axis bounds set during config to prevent over and under-runs.
 				pollValue = (float) Math.max(config.axisMinTravel, pollValue);
-				pollValue = (float) Math.min(config.axisMaxTravel, pollValue);				
+				pollValue = (float) Math.min(config.axisMaxTravel, pollValue);
 				
 				//If we don't need to normalize the axis, return it as-is.  Otherwise do a normalization from 0-1.
 				if(pollBounds != 0){
 					return (short) (config.invertedAxis ? (-pollBounds*pollValue) : (pollBounds*pollValue));
 				}else{
 					//Divide the poll value plus the min bounds by the span to get it in the range of 0-1.
-					pollValue = (float) ((pollValue - config.axisMinTravel)/(config.axisMinTravel - config.axisMinTravel));
+					pollValue = (float) ((pollValue - config.axisMinTravel)/(config.axisMaxTravel - config.axisMinTravel));
 					
 					//If axis is inverted, invert poll.
 					if(config.invertedAxis){

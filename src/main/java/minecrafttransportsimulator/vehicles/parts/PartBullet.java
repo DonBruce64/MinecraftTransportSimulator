@@ -83,10 +83,14 @@ public final class PartBullet extends Particle{
 					//We might have hit more than one entity.  Pick the closest one if so.
 					//Only do this if the entities in question are NOT vehicles.
 					//If they are just use whatever came first in the queue.
-					if(collidedEntity == null){
-						collidedEntity = entity;
-					}else if(!(entity instanceof EntityVehicleE_Powered) && (collidedEntity.getDistanceSq(this.posX, this.posY, this.posZ) > entity.getDistanceSq(this.posX, this.posY, this.posZ))){
-						collidedEntity = entity;
+					//Make sure not to collide with any entities that are riding the vehicle this bullet came from.
+					//This could cause players firing guns at high speeds to be hurt.
+					if(!vehicle.equals(entity.getRidingEntity())){
+						if(collidedEntity == null){
+							collidedEntity = entity;
+						}else if(!(entity instanceof EntityVehicleE_Powered) && (collidedEntity.getDistanceSq(this.posX, this.posY, this.posZ) > entity.getDistanceSq(this.posX, this.posY, this.posZ))){
+							collidedEntity = entity;
+						}
 					}
 				}
 				

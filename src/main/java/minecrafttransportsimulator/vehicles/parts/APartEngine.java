@@ -169,7 +169,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 				if(vehicle.electricPower > 2){
 					starterLevel += definition.engine.starterDuration;
 					if(vehicle.world.isRemote){
-						MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM));
+						MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM), vehicle);
 					}
 				}else{
 					setElectricStarterStatus(false);
@@ -232,8 +232,14 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 			}
 
 			if(!isCreative && !vehicle.fluidName.isEmpty()){
-				fuelFlow = definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicle.fluidName)*RPM*(fuelLeak ? 1.5F : 1.0F)/definition.engine.maxRPM;
-				vehicle.fuel -= fuelFlow;
+				if(!ConfigSystem.configObject.fuel.fuels.containsKey(definition.engine.fuelType)){					
+					throw new IllegalArgumentException("ERROR: Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.configObject.fuel.fuels.keySet().toString());
+				}else if(!ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicle.fluidName)){
+					throw new IllegalArgumentException("ERROR: Vehicle:" + vehicle.definition.packID + ":" + vehicle.definition.systemName + " wanted " + definition.engine.fuelType + " fuel value for fluid of type:" + vehicle.fluidName + ", this fluid is not associated with this engine fuel type.  Fuels valid for this type are:" + ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).keySet().toString());
+				}else{
+					fuelFlow = definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicle.fluidName)*RPM*(fuelLeak ? 1.5F : 1.0F)/definition.engine.maxRPM;
+					vehicle.fuel -= fuelFlow;
+				}
 			}
 			
 			if(!vehicle.world.isRemote){
@@ -319,7 +325,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 			}else if(state.equals(EngineStates.RUNNING)){
 				state = EngineStates.ENGINE_OFF;
 				internalFuel = 100;
-				MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1);
+				MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1, vehicle);
 			}
 		}
 	}
@@ -358,7 +364,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 		}
 		starterLevel += definition.engine.starterDuration;
 		if(vehicle.world.isRemote){
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM));
+			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM), vehicle);
 		}
 	}
 	
@@ -367,7 +373,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.BACKFIRE));
 		}else{
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_sputter", 0.5F, 1);
+			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_sputter", 0.5F, 1, vehicle);
 			backfired = true;
 		}
 	}
@@ -385,7 +391,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.START));
 		}else{
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_starting", 1, 1);
+			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_starting", 1, 1, vehicle);
 		}
 	}
 	
@@ -403,7 +409,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 			if(!packetType.equals(PacketEngineTypes.DROWN)){
 				internalFuel = 100;
 			}
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1);
+			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1, vehicle);
 		}
 	}
 	

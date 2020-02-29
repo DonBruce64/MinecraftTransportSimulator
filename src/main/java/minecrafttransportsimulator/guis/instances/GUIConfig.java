@@ -289,6 +289,8 @@ public class GUIConfig extends AGUIBase{
 						GUIComponentButton button = new GUIComponentButton(guiLeft + 85, guiTop + 40 + topOffsetAnalog, 80, joystickControl.translatedName, 20, true){
 							public void onClicked(){
 								controlCalibrating = analogAssignButtons.get(vehicleConfiguring).get(this);
+								axisMinBoundsTextBox.setText("0.0");
+								axisMaxBoundsTextBox.setText("0.0");
 								calibrating = true;
 							}
 						};
