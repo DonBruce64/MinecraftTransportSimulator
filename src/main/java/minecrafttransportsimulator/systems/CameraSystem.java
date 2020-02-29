@@ -14,8 +14,6 @@ import net.minecraft.init.SoundEvents;
  */
 public final class CameraSystem{
 	public static boolean lockedView = true;
-	public static boolean disableHUD = false;
-	public static int hudMode = 2;
 	private static int zoomLevel = 0;
 		
 	public static void performZoomAction(){

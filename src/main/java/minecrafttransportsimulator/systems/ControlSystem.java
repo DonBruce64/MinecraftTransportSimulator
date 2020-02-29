@@ -71,14 +71,8 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlCamera(ControlsKeyboardDynamic dynamic, ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsJoystick changeView){
-		if(dynamic.isPressed()){
-			if(CameraSystem.hudMode == 3){
-				CameraSystem.hudMode = 0;
-			}else{
-				++CameraSystem.hudMode;
-			}
-		}else if(dynamic.mainControl.isPressed()){
+	private static void controlCamera(ControlsKeyboard camLock, ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsJoystick changeView){
+		if(camLock.isPressed()){
 			CameraSystem.changeCameraLock();
 		}
 		
@@ -196,7 +190,7 @@ public final class ControlSystem{
 	}
 	
 	private static void controlAircraft(EntityVehicleF_Air aircraft, boolean isPlayerController){
-		controlCamera(ControlsKeyboardDynamic.AIRCRAFT_CHANGEHUD, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
+		controlCamera(ControlsKeyboard.AIRCRAFT_CAMLOCK, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
 		controlRadio(aircraft, ControlsKeyboard.AIRCRAFT_RADIO);
 		controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN);
@@ -307,7 +301,7 @@ public final class ControlSystem{
 	}
 	
 	private static void controlGroundVehicle(EntityVehicleF_Ground powered, boolean isPlayerController){
-		controlCamera(ControlsKeyboardDynamic.CAR_CHANGEHUD, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEVIEW);
+		controlCamera(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
 		controlRadio(powered, ControlsKeyboard.CAR_RADIO);
 		controlGun(powered, ControlsKeyboard.CAR_GUN);
@@ -606,10 +600,8 @@ public final class ControlSystem{
 	}
 	
 	public static enum ControlsKeyboardDynamic{
-		AIRCRAFT_CHANGEHUD(ControlsKeyboard.AIRCRAFT_CAMLOCK, ControlsKeyboard.AIRCRAFT_MOD),
 		AIRCRAFT_PARK(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD),
 		
-		CAR_CHANGEHUD(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_MOD),
 		CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD),
 		CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD);		
 		
