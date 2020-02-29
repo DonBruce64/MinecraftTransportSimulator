@@ -24,7 +24,11 @@ public class GUIComponentLabel{
 	public String text;
 	private GUIComponentButton button;
 	private GUIComponentTextBox box;
-	    	
+
+	public GUIComponentLabel(int x, int y, Color color, String text){
+		this(x, y, color, text, 1.0F, false, false, 0);
+	}
+	
 	public GUIComponentLabel(int x, int y, Color color, String text, float scale, boolean centered, boolean shadow, int wrapWidth){
 		this.x = x;
 		this.y = y;
@@ -34,11 +38,6 @@ public class GUIComponentLabel{
 		this.centered = centered;
 		this.shadow = shadow;
 		this.wrapWidth = wrapWidth;
-	}
-	
-	//Simpler constructor for simple labels.
-	public GUIComponentLabel(int x, int y, Color color, String text){
-		this(x, y, color, text, 1.0F, false, false, 0);
 	}
 	
 	/**
