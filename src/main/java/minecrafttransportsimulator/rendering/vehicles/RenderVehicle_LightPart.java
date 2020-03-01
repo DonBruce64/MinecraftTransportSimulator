@@ -84,9 +84,9 @@ public final class RenderVehicle_LightPart{
 					case(0): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
 					case(1): newVertex[3] = 0.0F; newVertex[4] = 1.0F; break;
 					case(2): newVertex[3] = 1.0F; newVertex[4] = 1.0F; break;
-					case(3): newVertex[3] = 1.0F; newVertex[4] = 1.0F; break;
-					case(4): newVertex[3] = 1.0F; newVertex[4] = 0.0F; break;
-					case(5): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
+					case(3): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
+					case(4): newVertex[3] = 1.0F; newVertex[4] = 1.0F; break;
+					case(5): newVertex[3] = 1.0F; newVertex[4] = 0.0F; break;
 				}
 				newVertex[5] = masterVertex[5];
 				newVertex[6] = masterVertex[6];

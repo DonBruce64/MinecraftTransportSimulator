@@ -82,9 +82,10 @@ public final class OBJParserSystem{
 	}
 	
 	private static Float[][] compileVertexArray(List<Float[]> vertexList, List<Float[]> normalList, List<Float[]> textureList, List<String> faceList, boolean isWindow){
-		List<Integer[]> faceValues = new ArrayList<Integer[]>();
+		List<Integer[]> vertexDataSets = new ArrayList<Integer[]>();
 		for(String faceString : faceList){
-			for(byte i=0; i<3; ++i){
+			List<Integer[]> faceVertexData = new ArrayList<Integer[]>();	
+			while(!faceString.isEmpty()){
 				//Get the face string in format X/Y/Z.  Use the space as a separator between vertices making up the face.
 				int defEnd = faceString.indexOf(' ');
 				String faceDef;
@@ -97,6 +98,7 @@ public final class OBJParserSystem{
 					faceDef = faceString;
 					faceString = "";
 				}
+				
 				//Vertex number is the first entry before the slash.
 				//Texture number is the second entry between the two slashes.
 				//Normal number is the third entry after the second slash.
@@ -106,28 +108,17 @@ public final class OBJParserSystem{
 				int vertexNumber = Integer.valueOf(faceDef.substring(0, firstSlash)) - 1;
 				int textureNumber = Integer.valueOf(faceDef.substring(firstSlash + 1, secondSlash)) - 1;
 				int normalNumber = Integer.valueOf(faceDef.substring(secondSlash + 1)) - 1;
-				faceValues.add(new Integer[]{vertexNumber, textureNumber, normalNumber});
 				
-			}
-			
-			if(!faceString.isEmpty()){
-				//This only happens when there's quads in an obj.
-				//Make a second face by
-				//duplicating point 3, adding point 4, and duplicating point 1.
-				int defEnd = faceString.indexOf(' ');
-				if(defEnd != -1){
-					faceString = faceString.substring(0, defEnd);
+				//If we have three or more points in faceValues, it means we need to make a triangle out of this shape.
+				//Add the first point, the most recent point, and this point to make a triangle.
+				//Otherwise, just add the face as-is.
+				if(faceVertexData.size() >= 3){
+					faceVertexData.add(faceVertexData.get(0));
+					faceVertexData.add(faceVertexData.get(faceVertexData.size() - 2));
 				}
-				
-				faceValues.add(faceValues.get(faceValues.size() - 1));
-				int firstSlash = faceString.indexOf('/');
-				int secondSlash = faceString.lastIndexOf('/');
-				int vertexNumber = Integer.valueOf(faceString.substring(0, firstSlash)) - 1;
-				int textureNumber = Integer.valueOf(faceString.substring(firstSlash + 1, secondSlash)) - 1;
-				int normalNumber = Integer.valueOf(faceString.substring(secondSlash + 1)) - 1;
-				faceValues.add(new Integer[]{vertexNumber, textureNumber, normalNumber});
-				faceValues.add(faceValues.get(faceValues.size() - 5));
+				faceVertexData.add(new Integer[]{vertexNumber, textureNumber, normalNumber});
 			}
+			vertexDataSets.addAll(faceVertexData);
 		}
 		
 		//Get the correct offset for face values in the lists.
@@ -135,45 +126,45 @@ public final class OBJParserSystem{
 		int vertexOffset = Integer.MAX_VALUE;
 		int textureOffset = Integer.MAX_VALUE;
 		int normalOffset = Integer.MAX_VALUE;
-		for(Integer[] face : faceValues){
-			vertexOffset = Math.min(vertexOffset, face[0]);
-			textureOffset = Math.min(textureOffset, face[1]);
-			normalOffset = Math.min(normalOffset, face[2]);
+		for(Integer[] vertexData : vertexDataSets){
+			vertexOffset = Math.min(vertexOffset, vertexData[0]);
+			textureOffset = Math.min(textureOffset, vertexData[1]);
+			normalOffset = Math.min(normalOffset, vertexData[2]);
 		}
 		
-		//Populate the vertex array in order of the vertcies used in the faces.
+		//Populate the vertex array in order of the vertices used in the faces.
 		List<Float[]> vertexArray = new ArrayList<Float[]>();
-		for(Integer[] face : faceValues){
-			vertexArray.add(vertexList.get(face[0] - vertexOffset));
+		for(Integer[] vertexData : vertexDataSets){
+			vertexArray.add(vertexList.get(vertexData[0] - vertexOffset));
 		}
 		
 		//Now populate the texture array.
 		//If we are parsing windows override the texture coords.
 		List<Float[]> textureArray = new ArrayList<Float[]>();
 		if(isWindow){
-			for(int i=0; i<faceValues.size(); i+=3){
+			for(int i=0; i<vertexDataSets.size(); i+=3){
 				textureArray.add(new Float[]{0.0F, 1.0F});
 				textureArray.add(new Float[]{1.0F, 1.0F});
 				textureArray.add(new Float[]{1.0F, 0.0F});
 				//If we have only 3 points, it means this window is just a single triangle.
 				//Don't add the 4th fake point and just end compilation here.
 				if(vertexArray.size() > 3){
+					textureArray.add(new Float[]{0.0F, 1.0F});
 					textureArray.add(new Float[]{1.0F, 0.0F});
 					textureArray.add(new Float[]{0.0F, 0.0F});
-					textureArray.add(new Float[]{0.0F, 1.0F});
 				}else{
 					break;
 				}
 			}
 		}else{
-			for(Integer[] face : faceValues){
+			for(Integer[] face : vertexDataSets){
 				textureArray.add(textureList.get(face[1] - textureOffset));
 			}
 		}
 		
 		//Finally, populate the normal array.
 		List<Float[]> normalArray = new ArrayList<Float[]>();
-		for(Integer[] face : faceValues){
+		for(Integer[] face : vertexDataSets){
 			normalArray.add(normalList.get(face[2] - normalOffset));
 		}
 
