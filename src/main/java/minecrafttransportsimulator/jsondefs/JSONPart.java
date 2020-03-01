@@ -5,6 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject;
 
 public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     public PartEngine engine;
@@ -111,5 +112,6 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     
     public class PartRendering{
         public List<VehicleRotatableModelObject> rotatableModelObjects = new ArrayList<VehicleRotatableModelObject>();
+        public List<VehicleTranslatableModelObject> translatableModelObjects = new ArrayList<VehicleTranslatableModelObject>();
     }
 }

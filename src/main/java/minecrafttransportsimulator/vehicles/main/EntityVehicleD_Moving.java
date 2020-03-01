@@ -30,6 +30,7 @@ import net.minecraft.world.World;
 public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
+	public byte prevParkingBrakeAngle;
 	public byte parkingBrakeAngle;
 	public float motionRoll;
 	public float motionPitch;
@@ -108,10 +109,12 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 			if(parkingBrakeOn && velocity == 0 && !locked){
 				if(parkingBrakeAngle < 30){
+					prevParkingBrakeAngle = parkingBrakeAngle;
 					++parkingBrakeAngle;
 				}
 			}else{
 				if(parkingBrakeAngle > 0){
+					prevParkingBrakeAngle = parkingBrakeAngle;
 					--parkingBrakeAngle;
 				}
 			}

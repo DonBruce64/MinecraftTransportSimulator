@@ -9,14 +9,11 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
@@ -25,16 +22,8 @@ import minecrafttransportsimulator.systems.VehicleSoundSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
-import minecrafttransportsimulator.vehicles.parts.APartEngineGeared;
-import minecrafttransportsimulator.vehicles.parts.APartGun;
-import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
-import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
@@ -46,7 +35,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.EnumSkyBlock;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 
@@ -62,17 +50,18 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	
 	//VEHICLE MAPS.  Maps are keyed by generic name.
 	private static final Map<String, Integer> vehicleDisplayLists = new HashMap<String, Integer>();
-	private static final Map<String, List<RotatablePart>> vehicleRotatableLists = new HashMap<String, List<RotatablePart>>();
-	private static final Map<String, List<TranslatablePart>> vehicleTranslatableLists = new HashMap<String, List<TranslatablePart>>();
-	private static final Map<String, List<LightPart>> vehicleLightLists = new HashMap<String, List<LightPart>>();
+	private static final Map<String, List<RenderVehicle_RotatablePart>> vehicleRotatableLists = new HashMap<String, List<RenderVehicle_RotatablePart>>();
+	private static final Map<String, List<RenderVehicle_TranslatablePart>> vehicleTranslatableLists = new HashMap<String, List<RenderVehicle_TranslatablePart>>();
+	private static final Map<String, List<RenderVehicle_LightPart>> vehicleLightLists = new HashMap<String, List<RenderVehicle_LightPart>>();
 	private static final Map<String, List<WindowPart>> vehicleWindowLists = new HashMap<String, List<WindowPart>>();
 	private static final Map<String, List<Float[]>> treadDeltas = new HashMap<String, List<Float[]>>();
 	private static final Map<String, List<Double[]>> treadPoints = new HashMap<String, List<Double[]>>();
 	
 	//PART MAPS.  Maps are keyed by the part model location.
 	private static final Map<ResourceLocation, Integer> partDisplayLists = new HashMap<ResourceLocation, Integer>();
-	private static final Map<ResourceLocation, List<RotatablePart>> partRotatableLists = new HashMap<ResourceLocation, List<RotatablePart>>();
-	private static final Map<ResourceLocation, List<LightPart>> partLightLists = new HashMap<ResourceLocation, List<LightPart>>();
+	private static final Map<ResourceLocation, List<RenderVehicle_RotatablePart>> partRotatableLists = new HashMap<ResourceLocation, List<RenderVehicle_RotatablePart>>();
+	private static final Map<ResourceLocation, List<RenderVehicle_TranslatablePart>> partTranslatableLists = new HashMap<ResourceLocation, List<RenderVehicle_TranslatablePart>>();
+	private static final Map<ResourceLocation, List<RenderVehicle_LightPart>> partLightLists = new HashMap<ResourceLocation, List<RenderVehicle_LightPart>>();
 	
 	//COMMON MAPS.  Keyed by systemName.
 	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
@@ -89,9 +78,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	
 	//Constants for built-in textures.
 	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
-	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lensflare.png");
-	private static final ResourceLocation lightTexture = new ResourceLocation(MTS.MODID, "textures/rendering/light.png");
-	private static final ResourceLocation lightBeamTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lightbeam.png");
 	
 	public RenderVehicle(RenderManager renderManager){
 		super(renderManager);
@@ -179,14 +165,14 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	}
 	
 	public static boolean doesVehicleHaveLight(EntityVehicleE_Powered vehicle, LightType light){
-		for(LightPart lightPart : vehicleLightLists.get(vehicle.definition.genericName)){
+		for(RenderVehicle_LightPart lightPart : vehicleLightLists.get(vehicle.definition.genericName)){
 			if(lightPart.type.equals(light)){
 				return true;
 			}
 		}
 		for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
 			if(partLightLists.containsKey(part.getModelLocation())){
-				for(LightPart lightPart : partLightLists.get(part.getModelLocation())){
+				for(RenderVehicle_LightPart lightPart : partLightLists.get(part.getModelLocation())){
 					if(lightPart.type.equals(light)){
 						return true;
 					}
@@ -203,6 +189,14 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		return (vehicle.isLightOn(LightType.NAVIGATIONLIGHT) || vehicle.isLightOn(LightType.RUNNINGLIGHT) || vehicle.isLightOn(LightType.HEADLIGHT)) && vehicle.electricPower > 3;
 	}
 	
+	/**
+	 *  Renders the vehicle in its entirety.  Rendering happens in all three passes (0, 1, and -1), unless the vehicle wasn't rendered in
+	 *  pass 0 or 1 due to it being over the world height limit.  The parameter wasRenderedPrior should be true if the vehicle was rendered
+	 *  before in either of those passes, otherwise it will render again in pass -1 which will cause issues.  Some rendering routines
+	 *  only run on specific passes, so see the comments on the called methods for information on what is rendered when.  Note that if we
+	 *  didn't get rendered in pass 0 or 1, then all rendering will need to be done in pass -1, so methods that wish to run in pass 0 or 1
+	 *  will be forced to run in pass -1 if wasRenderedPrior is false.
+	 */
 	private static void render(EntityVehicleE_Powered vehicle, EntityPlayer playerRendering, float partialTicks, boolean wasRenderedPrior){
 		//Get position and rotation.
 		Entity renderViewEntity = minecraft.getRenderViewEntity();
@@ -269,34 +263,20 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}
 		
-		//Lights and beacons get rendered in two passes.
-		//The first renders the cases and bulbs, the second renders the beams and effects.
-		//Make sure the light list is populated here before we try to render this, as loading de-syncs can leave it null.
+		//Render lights, but make sure the light list is populated here before we try to render this, as loading de-syncs can leave it null.
 		if(vehicleLightLists.get(vehicle.definition.genericName) != null){
-			float sunLight = vehicle.world.getSunBrightness(0)*vehicle.world.getLightBrightness(vehicle.getPosition());
-			float blockLight = vehicle.world.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, vehicle.getPosition())/15F;
-			float electricFactor = (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1);
-			float lightBrightness = (float) Math.min((1 - Math.max(sunLight, blockLight))*electricFactor, 1);
-
 			GL11.glPushMatrix();
 			GL11.glEnable(GL11.GL_NORMALIZE);
 	        GL11.glRotated(rotateYaw, 0, 1, 0);
 	        GL11.glRotated(rotatePitch, 1, 0, 0);
 	        GL11.glRotated(rotateRoll, 0, 0, 1);
-	        renderLights(vehicle, sunLight, blockLight, lightBrightness, electricFactor, wasRenderedPrior, partialTicks);
+	        renderLights(vehicle, wasRenderedPrior, partialTicks);
 			GL11.glDisable(GL11.GL_NORMALIZE);
 			GL11.glPopMatrix();
-			
-			//Return all states to normal.
-			minecraft.entityRenderer.enableLightmap();
-			GL11.glEnable(GL11.GL_LIGHTING);
-			GL11.glEnable(GL11.GL_TEXTURE_2D);
-			GL11.glDepthMask(true);
-			GL11.glColor4f(1, 1, 1, 1);
 		}
 		
 		//Render holograms for missing parts if applicable.
-		if(MinecraftForgeClient.getRenderPass() != 0){
+		if(MinecraftForgeClient.getRenderPass() != 0 && !wasRenderedPrior){
 			renderPartBoxes(vehicle);
 		}
 		
@@ -321,6 +301,15 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 	}
 	
+	/**
+	 *  Renders the main vehicle model.  The model file is determined from the general name of the JSON, which is really
+	 *  just the JSON's file name.  Vehicle model is first translated to the position of the vehicle in the world,
+	 *  rotated to the roll, pitch, and yaw, of the vehicle, and then all static portions are rendered.  Dynamic
+	 *  animated portions like {@link RenderVehicle_RotatablePart}s, {@link RenderVehicle_TranslatablePart}s, and
+	 *  {@link WindowPart}s are rendered after this with their respective transformations applied.  All renders are
+	 *  cached in DisplayLists, as we only need to translate and rotate them, not apply any transforms or splits.
+	 *  This should only be called in pass 0, as we don't do any alpha blending in this routine.
+	 */
 	private static void renderMainModel(EntityVehicleE_Powered vehicle, float partialTicks){
 		GL11.glPushMatrix();
 		//Normally we use the pack name, but since all displaylists
@@ -330,48 +319,39 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			
 			//The display list only renders static parts.  We need to render dynamic ones manually.
 			//If this is a window, don't render it as that gets done all at once later.
-			for(RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
-				if(!rotatable.name.contains("window")){
+			//First render all rotatable parts.  If they are also translatable, translate first.
+			for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
+				if(!rotatable.name.toLowerCase().contains("window")){
 					GL11.glPushMatrix();
 					if(rotatable.name.contains("%")){
-						for(TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
+						for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
 							if(translatable.name.equals(rotatable.name)){
-								translateModelObject(vehicle, translatable, partialTicks);
+								translatable.translate(vehicle, null, partialTicks);
 								break;
 							}
 						}
 					}
-					rotateModelObject(vehicle, rotatable, partialTicks);
-					GL11.glBegin(GL11.GL_TRIANGLES);
-					for(Float[] vertex : rotatable.vertices){
-						GL11.glTexCoord2f(vertex[3], vertex[4]);
-						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-					}
-					GL11.glEnd();
+					rotatable.render(vehicle, null, partialTicks);
 					GL11.glPopMatrix();
 				}
 			}
-			for(TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
-				if(!translatable.name.contains("window") && !translatable.name.contains("$")){
+			
+			//Now render all translatable parts that don't rotate.
+			for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
+				if(!translatable.name.toLowerCase().contains("window") && !translatable.name.contains("$")){
 					GL11.glPushMatrix();
-					translateModelObject(vehicle, translatable, partialTicks);
-					GL11.glBegin(GL11.GL_TRIANGLES);
-					for(Float[] vertex : translatable.vertices){
-						GL11.glTexCoord2f(vertex[3], vertex[4]);
-						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-					}
-					GL11.glEnd();
+					translatable.render(vehicle, null, partialTicks);
 					GL11.glPopMatrix();
 				}
 			}
 		}else{
-			List<RotatablePart> rotatableParts = new ArrayList<RotatablePart>();
-			List<TranslatablePart> translatableParts = new ArrayList<TranslatablePart>();
-			List<LightPart> lightParts = new ArrayList<LightPart>();
+			List<RenderVehicle_RotatablePart> rotatableParts = new ArrayList<RenderVehicle_RotatablePart>();
+			List<RenderVehicle_TranslatablePart> translatableParts = new ArrayList<RenderVehicle_TranslatablePart>();
+			List<RenderVehicle_LightPart> lightParts = new ArrayList<RenderVehicle_LightPart>();
 			List<WindowPart> windows = new ArrayList<WindowPart>();
-			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(vehicle.definition.packID, "objmodels/vehicles/" + vehicle.definition.genericName + ".obj");
+			
+			ResourceLocation vehicleModelLocation = new ResourceLocation(vehicle.definition.packID, "objmodels/vehicles/" + vehicle.definition.genericName + ".obj");
+			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(vehicleModelLocation.getResourceDomain(), vehicleModelLocation.getResourcePath());
 			int displayListIndex = GL11.glGenLists(1);
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 			GL11.glBegin(GL11.GL_TRIANGLES);
@@ -381,15 +361,23 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				//Do add lights, as they will be rendered both as part of the model and with special things.
 				boolean shouldShapeBeInDL = true;
 				if(entry.getKey().contains("$")){
-					rotatableParts.add(new RotatablePart(entry.getKey(), entry.getValue(), vehicle.definition.rendering.rotatableModelObjects));
-					shouldShapeBeInDL = false;
+					if(vehicle.definition.rendering.rotatableModelObjects != null){
+    					rotatableParts.add(new RenderVehicle_RotatablePart(entry.getKey(), entry.getValue(), vehicleModelLocation.toString(), vehicle.definition.rendering.rotatableModelObjects));
+    					shouldShapeBeInDL = false;
+					}else{
+						throw new NullPointerException("ERROR: Vehicle:" + vehicle.definition.packID + ":" + vehicle.definition.genericName + " has a rotatable part:" + entry.getKey() + ", but no rotatableModelObjects are present in the JSON!");
+					}
 				}
 				if(entry.getKey().contains("%")){
-					translatableParts.add(new TranslatablePart(entry.getKey(), entry.getValue(), vehicle.definition.rendering.translatableModelObjects));
-					shouldShapeBeInDL = false;
+					if(vehicle.definition.rendering.translatableModelObjects != null){
+    					translatableParts.add(new RenderVehicle_TranslatablePart(entry.getKey(), entry.getValue(), vehicleModelLocation.toString(), vehicle.definition.rendering.translatableModelObjects));
+    					shouldShapeBeInDL = false;
+					}else{
+						throw new NullPointerException("ERROR: Vehicle:" + vehicle.definition.packID + ":" + vehicle.definition.genericName + " has a translatable part:" + entry.getKey() + ", but no translatableModelObjects are present in the JSON!");
+					}
 				}
 				if(entry.getKey().contains("&")){
-					lightParts.add(new LightPart(entry.getKey(), entry.getValue()));
+					lightParts.add(new RenderVehicle_LightPart(entry.getKey(), entry.getValue()));
 				}
 				if(entry.getKey().toLowerCase().contains("window")){
 					windows.add(new WindowPart(entry.getKey(), entry.getValue()));
@@ -407,142 +395,57 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			GL11.glEndList();
 			
 			//Now finalize the maps.
+			vehicleDisplayLists.put(vehicle.definition.genericName, displayListIndex);
 			vehicleRotatableLists.put(vehicle.definition.genericName, rotatableParts);
 			vehicleTranslatableLists.put(vehicle.definition.genericName, translatableParts);
 			vehicleLightLists.put(vehicle.definition.genericName, lightParts);
 			vehicleWindowLists.put(vehicle.definition.genericName, windows);
-			vehicleDisplayLists.put(vehicle.definition.genericName, displayListIndex);
 		}
 		GL11.glPopMatrix();
 	}
 	
-	private static void rotateModelObject(EntityVehicleE_Powered vehicle, RotatablePart rotatable, float partialTicks){
-		for(byte i=0; i<rotatable.rotationVariables.length; ++i){
-			float rotation = getRotationAngleForModelVariable(vehicle, rotatable.rotationVariables[i], partialTicks);
-			if(rotation != 0){
-				GL11.glTranslated(rotatable.rotationPoints[i].x, rotatable.rotationPoints[i].y, rotatable.rotationPoints[i].z);
-				GL11.glRotated(rotation*rotatable.rotationMagnitudes[i], rotatable.rotationAxis[i].x, rotatable.rotationAxis[i].y, rotatable.rotationAxis[i].z);
-				GL11.glTranslated(-rotatable.rotationPoints[i].x, -rotatable.rotationPoints[i].y, -rotatable.rotationPoints[i].z);
-			}
-		}
-	}
-	
-	private static float getRotationAngleForModelVariable(EntityVehicleE_Powered vehicle, String variable, float partialTicks){
-		switch(variable){
-			case("cycle"): return vehicle.world.getTotalWorldTime()%20;
-			case("door"): return vehicle.parkingBrakeAngle*2;
-			case("hood"): return vehicle.engines.containsKey((byte) 0) ? 0 : 60;
-			case("throttle"): return vehicle.throttle/4F;
-			case("brake"): return vehicle.brakeOn ? 25 : 0;
-			case("p_brake"): return vehicle.parkingBrakeAngle;
-			case("horn"): return vehicle.hornOn ? 30 : 0;
-			case("trailer"): return ((EntityVehicleF_Ground) vehicle).towingAngle;
-			case("hookup"): return ((EntityVehicleF_Ground) vehicle).towedByVehicle != null ? ((EntityVehicleF_Ground) vehicle).towedByVehicle.towingAngle : 0;
-			case("gearshift"): return vehicle.engines.containsKey((byte) 0) ? (((APartEngineGeared<? extends EntityVehicleE_Powered>) vehicle.engines.get((byte) 0))).getGearshiftRotation() : 0;
-			case("gearshift_hvertical"): return vehicle.engines.containsKey((byte) 0) ? (((APartEngineGeared<? extends EntityVehicleE_Powered>) vehicle.engines.get((byte) 0))).getGearshiftPosition_Vertical() : 0;
-			case("gearshift_hhorizontal"): return vehicle.engines.containsKey((byte) 0) ? (((APartEngineGeared<? extends EntityVehicleE_Powered>) vehicle.engines.get((byte) 0))).getGearshiftPosition_Horizontal() : 0;
-			case("engine"): return (float) (vehicle.engines.containsKey((byte) 0) ? ((APartEngine<? extends EntityVehicleE_Powered>) vehicle.engines.get((byte) 0)).getEngineRotation(partialTicks) : 0);
-			case("driveshaft"): return getDriveshaftValue(vehicle, partialTicks, (byte) 0);
-			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0) + 180F)))/2F;
-			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0) + 180F));
-			case("steeringwheel"): return vehicle.getSteerAngle();
-			
-			case("aileron"): return ((EntityVehicleF_Air) vehicle).aileronAngle/10F;
-			case("elevator"): return ((EntityVehicleF_Air) vehicle).elevatorAngle/10F;
-			case("rudder"): return ((EntityVehicleF_Air) vehicle).rudderAngle/10F;
-			case("flap"): return ((EntityVehicleG_Plane) vehicle).flapCurrentAngle/10F;
-			case("trim_aileron"): return ((EntityVehicleF_Air) vehicle).aileronTrim/10F;
-			case("trim_elevator"): return ((EntityVehicleF_Air) vehicle).elevatorTrim/10F;
-			case("trim_rudder"): return ((EntityVehicleF_Air) vehicle).rudderTrim/10F;
-			case("reverser"): return ((EntityVehicleF_Air) vehicle).reversePercent/20F;
-		}
-		
-		//If we aren't a static variable, we are a part-specific variable.
-		//Take off the part following the _, and check for that instead.
-		byte index = (byte) (Byte.valueOf(variable.substring(variable.lastIndexOf('_') + 1)) - 1);
-		switch(variable.substring(0, variable.lastIndexOf('_'))){
-			case("magneto"): return vehicle.engines.containsKey(index) ? (vehicle.engines.get(index).state.magnetoOn ? 30 : 0) : 0;
-			case("starter"): return vehicle.engines.containsKey(index) ? (vehicle.engines.get(index).state.esOn ? 30 : 0) : 0;
-			case("pitch"): return vehicle.engines.containsKey(index) ? (vehicle.engines.get(index).childParts.get(0) instanceof PartEngineAircraft ? ((PartEngineAircraft) vehicle.engines.get(index).childParts.get(0)).propeller.currentPitch : 0) : 0;
-			case("engine"): return (float) (vehicle.engines.containsKey(index) ? vehicle.engines.get(index).getEngineRotation(partialTicks) : 0);
-			case("driveshaft"): return getDriveshaftValue(vehicle, partialTicks, index);
-			default: return 0;
-		}
-	}
-	
-	private static void translateModelObject(EntityVehicleE_Powered vehicle, TranslatablePart translatable, float partialTicks){
-		for(byte i=0; i<translatable.translationVariables.length; ++i){
-			float translation = getTranslationLengthForModelVariable(vehicle, translatable.translationVariables[i], partialTicks);
-			if(translation != 0){
-				float translationMagnitude = translation*translatable.translationMagnitudes[i];
-				GL11.glTranslated(translationMagnitude*translatable.translationAxis[i].x, translationMagnitude*translatable.translationAxis[i].y, translationMagnitude*translatable.translationAxis[i].z);
-			}
-		}
-	}
-	
-	private static float getTranslationLengthForModelVariable(EntityVehicleE_Powered vehicle, String variable, float partialTicks){
-		switch(variable){
-			case("door"): return vehicle.parkingBrakeAngle/30F;
-			case("throttle"): return vehicle.throttle/100F;
-			case("brake"): return vehicle.brakeOn ? 1 : 0;
-			case("p_brake"): return vehicle.parkingBrakeAngle/30F;
-			case("horn"): return vehicle.hornOn ? 1 : 0;
-			case("trailer"): return ((EntityVehicleF_Ground) vehicle).towingAngle/30F;
-			case("hookup"): return ((EntityVehicleF_Ground) vehicle).towedByVehicle != null ? ((EntityVehicleF_Ground) vehicle).towedByVehicle.towingAngle/30F : 0;
-			case("gearshift"): return vehicle.engines.containsKey((byte) 0) ? (((APartEngineGeared<? extends EntityVehicleE_Powered>) vehicle.engines.get((byte) 0))).getGearshiftRotation()/5F : 0;
-			case("engine_sin"): return (float) (vehicle.engines.containsKey((byte) 0) ? (1 + Math.cos(Math.toRadians(((APartEngine<? extends EntityVehicleE_Powered>) vehicle.engines.get((byte) 0)).getEngineRotation(partialTicks) + 180F)))/2F : 0);
-			case("driveshaft_sin"): return (float) (1 + Math.cos(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0) + 180F)))/2F;
-			case("driveshaft_sin_offset"): return (float) Math.sin(Math.toRadians(getDriveshaftValue(vehicle, partialTicks, (byte) 0)));
-			case("steeringwheel"): return vehicle.getSteerAngle()/35F;
-			
-			case("aileron"): return ((EntityVehicleF_Air) vehicle).aileronAngle/350F;
-			case("elevator"): return ((EntityVehicleF_Air) vehicle).elevatorAngle/350F;
-			case("rudder"): return ((EntityVehicleF_Air) vehicle).rudderAngle/350F;
-			case("flap"): return ((EntityVehicleG_Plane) vehicle).flapCurrentAngle/350F;
-			case("trim_aileron"): return ((EntityVehicleF_Air) vehicle).aileronTrim/350F;
-			case("trim_elevator"): return ((EntityVehicleF_Air) vehicle).elevatorTrim/350F;
-			case("trim_rudder"): return ((EntityVehicleF_Air) vehicle).rudderTrim/350F;
-			case("reverser"): return ((EntityVehicleF_Air) vehicle).reversePercent/20F;
-		}
-		
-		//If we aren't a static variable, we are a part-specific variable.
-		//Take off the part following the _, and check for that instead.
-		byte index = (byte) (Byte.valueOf(variable.substring(variable.lastIndexOf('_') + 1)) - 1);
-		switch(variable.substring(0, variable.lastIndexOf('_'))){
-			case("magneto"): return vehicle.engines.containsKey(index) ? (vehicle.engines.get(index).state.magnetoOn ? 1 : 0) : 0;
-			case("starter"): return vehicle.engines.containsKey(index) ? (vehicle.engines.get(index).state.esOn ? 1 : 0) : 0;
-			default: return 0;
-		}
-	}
-	
-	private static float getDriveshaftValue(EntityVehicleE_Powered vehicle, float partialTicks, byte engineNumber){
-		if(vehicle.engines.containsKey(engineNumber)){
-			return (float) (vehicle.engines.get(engineNumber).getDriveshaftRotation(partialTicks)%360);
-		}else{
-			return 0;
-		}		
-	}
-	
+	/**
+	 *  Renders all parts on the vehicle.  Parts are first translated to their actual position, which they keep track of.
+	 *  After this they are rotated via {@link #rotatePart(APart, Vec3d, boolean)}.  Finally, any parts of the part
+	 *  model that are {@link RenderVehicle_RotatablePart}s or {@link RenderVehicle_TranslatablePart}s are rendered with
+	 *  their rotations applied.  This makes rendering a split process.  Translate to position, rotate at position,
+	 *  render static portions of part model, apply transforms to animated portions of the part model, and then
+	 *  render the animated portions.  This should only be called in pass 0, as we don't do any alpha blending in this routine.
+	 */
 	private static void renderParts(EntityVehicleE_Powered vehicle, float partialTicks){
 		for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
 			ResourceLocation partModelLocation = part.getModelLocation();
 			if(partModelLocation == null){
 				continue;
 			}else if(!partDisplayLists.containsKey(partModelLocation)){
-				List<RotatablePart> rotatableParts = new ArrayList<RotatablePart>();
-    			List<LightPart> lightParts = new ArrayList<LightPart>();
-				Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation.getResourceDomain(), partModelLocation.getResourcePath());
+				List<RenderVehicle_RotatablePart> rotatableParts = new ArrayList<RenderVehicle_RotatablePart>();
+				List<RenderVehicle_TranslatablePart> translatableParts = new ArrayList<RenderVehicle_TranslatablePart>();
+    			List<RenderVehicle_LightPart> lightParts = new ArrayList<RenderVehicle_LightPart>();
+				
+    			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation.getResourceDomain(), partModelLocation.getResourcePath());
     			int displayListIndex = GL11.glGenLists(1);
     			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
     			GL11.glBegin(GL11.GL_TRIANGLES);
     			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
     				boolean shouldShapeBeInDL = true;
     				if(entry.getKey().contains("$")){
-    					rotatableParts.add(new RotatablePart(entry.getKey(), entry.getValue(), part.definition.rendering.rotatableModelObjects));
-    					shouldShapeBeInDL = false;
+    					if(part.definition.rendering.rotatableModelObjects != null){
+	    					rotatableParts.add(new RenderVehicle_RotatablePart(entry.getKey(), entry.getValue(), partModelLocation.toString(), part.definition.rendering.rotatableModelObjects));
+	    					shouldShapeBeInDL = false;
+    					}else{
+    						throw new NullPointerException("ERROR: Part:" + part.definition.packID + ":" + part.definition.systemName + " has a rotatable part:" + entry.getKey() + ", but no rotatableModelObjects are present in the JSON!");
+    					}
+    				}
+    				if(entry.getKey().contains("%")){
+    					if(part.definition.rendering.translatableModelObjects != null){
+	    					translatableParts.add(new RenderVehicle_TranslatablePart(entry.getKey(), entry.getValue(), partModelLocation.toString(), part.definition.rendering.translatableModelObjects));
+	    					shouldShapeBeInDL = false;
+    					}else{
+    						throw new NullPointerException("ERROR: Part:" + part.definition.packID + ":" + part.definition.systemName + " has a translatable part:" + entry.getKey() + ", but no translatableModelObjects are present in the JSON!");
+    					}
     				}
     				if(entry.getKey().contains("&")){
-    					lightParts.add(new LightPart(entry.getKey(), entry.getValue()));
+    					lightParts.add(new RenderVehicle_LightPart(entry.getKey(), entry.getValue()));
     				}
     				if(shouldShapeBeInDL){
     					for(Float[] vertex : entry.getValue()){
@@ -554,8 +457,11 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     			}
     			GL11.glEnd();
     			GL11.glEndList();
+    			
+    			//Now finalize the maps
     			partDisplayLists.put(partModelLocation, displayListIndex);
     			partRotatableLists.put(partModelLocation, rotatableParts);
+    			partTranslatableLists.put(partModelLocation, translatableParts);
     			partLightLists.put(partModelLocation, lightParts);
     		}else{
     			//If we aren't using the vehicle texture, bind the texture for this part.
@@ -604,16 +510,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	        		GL11.glCallList(partDisplayLists.get(partModelLocation));
 	    			
 	    			//The display list only renders static parts.  We need to render dynamic ones manually.
-	    			for(RotatablePart rotatable : partRotatableLists.get(partModelLocation)){
+	    			for(RenderVehicle_RotatablePart rotatable : partRotatableLists.get(partModelLocation)){
 	    				GL11.glPushMatrix();
-	    				rotatePartObject(part, rotatable, partialTicks);
-	    				GL11.glBegin(GL11.GL_TRIANGLES);
-	    				for(Float[] vertex : rotatable.vertices){
-	    					GL11.glTexCoord2f(vertex[3], vertex[4]);
-	    					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-	    					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-	    				}
-	    				GL11.glEnd();
+	    				rotatable.render(vehicle, part, partialTicks);
 	    				GL11.glPopMatrix();
 	    			}
     			}
@@ -623,50 +522,12 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
         }
 	}
 	
-	private static void rotatePartObject(APart<? extends EntityVehicleE_Powered> part, RotatablePart rotatable, float partialTicks){
-		for(byte i=0; i<rotatable.rotationVariables.length; ++i){
-			float rotation = getRotationAngleForPartVariable(part, rotatable.rotationVariables[i], partialTicks);
-			if(rotation != 0){
-				GL11.glTranslated(rotatable.rotationPoints[i].x, rotatable.rotationPoints[i].y, rotatable.rotationPoints[i].z);
-				GL11.glRotated(rotation*rotatable.rotationMagnitudes[i], rotatable.rotationAxis[i].x, rotatable.rotationAxis[i].y, rotatable.rotationAxis[i].z);
-				GL11.glTranslated(-rotatable.rotationPoints[i].x, -rotatable.rotationPoints[i].y, -rotatable.rotationPoints[i].z);
-			}
-		}
-	}
-	
-	private static float getRotationAngleForPartVariable(APart<? extends EntityVehicleE_Powered> part, String variable, float partialTicks){
-		if(part instanceof APartEngine){
-			APartEngine<? extends EntityVehicleE_Powered> engine = (APartEngine<? extends EntityVehicleE_Powered>) part;
-			switch(variable){
-				case("engine"): return (float) engine.getEngineRotation(partialTicks);
-				case("driveshaft"): return (float) engine.getDriveshaftRotation(partialTicks);
-			}
-		}else if(part instanceof PartPropeller){
-			if(variable.equals("propellerpitch")){
-				return (float) Math.toDegrees(Math.atan(((PartPropeller) part).currentPitch / (((PartPropeller) part).definition.propeller.diameter*0.75D*Math.PI)));
-			}
-		}else if(part instanceof APartGun){
-			switch(variable){
-				case("gun_pitch"): return ((APartGun) part).currentPitch;
-				case("gun_yaw"): return ((APartGun) part).currentYaw;
-			}
-		}
-		switch(variable){
-			case("door"): return part.vehicle.parkingBrakeAngle*2;
-			case("steeringwheel"): return part.vehicle.getSteerAngle();
-		}
-		
-		//If we are an engine-specific variable, get the engine now.
-		//Otherwise, get the 1st engine.
-		APartEngine<? extends EntityVehicleE_Powered> engine = (APartEngine<? extends EntityVehicleE_Powered>) (part.parentPart instanceof APartEngine ? part.parentPart : part.vehicle.engines.get((byte) 0));
-		switch(variable){
-			case("engine"): return (float) (engine != null ? engine.getEngineRotation(partialTicks) : 0);
-			case("driveshaft"): return (float) (engine != null ? engine.getDriveshaftRotation(partialTicks) : 0);
-			case("hood"): return engine == null ? 60 : 0;
-			default: return 0;
-		}
-	}
-	
+	/**
+	 *  Rotates a part on the model.  This is an actual part, not an instance of a {@link RenderVehicle_RotatablePart}.
+	 *  The rotation takes into account the vehicle, static, JSON-applied rotation, as well as the dynamic
+	 *  rotation returned by {@link APart#getActionRotation(float)}.  Rotation needs to be done after translation to the
+	 *  part's position to avoid coordinate system conflicts. 
+	 */
 	private static void rotatePart(APart<? extends EntityVehicleE_Powered> part, Vec3d actionRotation, boolean cullface){
 		if(part.turnsWithSteer){
 			//Use custom steering rotation point if it's set in the JSON.
@@ -709,6 +570,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 	}
 	
+	/**
+	 *  Renders the treads using a manual system.  Points are defined by pack authors and are located in the
+	 *  vehicle JSON.  This method is more cumbersome for the authors, but allows for precise path control.
+	 */
 	private static void doManualTreadRender(PartGroundDeviceTread treadPart, float partialTicks, int displayListIndex){
 		List<Float[]> deltas = treadDeltas.get(treadPart.vehicle.definition.genericName);
 		if(deltas == null){
@@ -842,127 +707,26 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		GL11.glPopMatrix();
 	}
 	
+	/**
+	 *  Renders the treads using an automatic calculation system.  This system is good for simple treads,
+	 *  though will render oddly on complex paths.
+	 */
 	private static void doAutomaticTreadRender(PartGroundDeviceTread treadPart, float partialTicks, int displayListIndex){
 		List<Double[]> points = treadPoints.get(treadPart.vehicle.definition.genericName);
 		if(points == null){
-			//If we don't have the deltas, calculate them based on the points of the rollers on the vehicle.
-			//We use a helper class here to make life easy, as we have a LOT of points to calculate.
-			//In all cases, an angle of 0 implies the tread is facing down to the ground.
-			class TreadRoller{
-				final double yPos;
-				final double zPos;
-				final double radius;
-				final double circumference;
-				
-				double startY;
-				double startZ;
-				double startAngle;
-				double endY;
-				double endZ;
-				double endAngle;
-				
-				public TreadRoller(RotatablePart roller){
-					//Get the radius and center of the roller.
-					//To do this we get the min and max Y and Z points.
-					double minY = 999;
-					double maxY = -999;
-					double minZ = 999;
-					double maxZ = -999;
-					for(Float[] point : roller.vertices){
-						minY = Math.min(minY, point[1]);
-						maxY = Math.max(maxY, point[1]);
-						minZ = Math.min(minZ, point[2]);
-						maxZ = Math.max(maxZ, point[2]);
-					}
-					radius = (maxZ - minZ)/2D;
-					circumference = 2*Math.PI*radius;
-					yPos = minY + (maxY - minY)/2D;
-					zPos = minZ + (maxZ - minZ)/2D;
-				}
-				
-				/**
-				 * Calculates the end point of this roller and the
-				 * start point of the passed-in roller using trigonometry.
-				 * We can assume that we'll always be on the outside point of any roller.
-				 * Additionally, we know we'll start on the bottom of a roller, so between
-				 * those two things we can tell which tangent we should follow.
-				 */
-				public void calculateEndpoints(TreadRoller nextRoller){
-					//What calculations we do depend on if the rollers are the same size.
-					//If so, we can do simple calcs.  If not, we get to do trig.
-					if(radius == nextRoller.radius){
-						//First, get the angle from the vector from this roller to the next roller.
-						//From this, we can calculate the end angle for this roller as perpendicular to
-						//the vector.  We rotate 90 degrees as we know the roller orientation will be
-						//counter-clockwise, and thus we always want the tread to be on that side.
-						endAngle = Math.toDegrees(Math.atan2(nextRoller.zPos - zPos, nextRoller.yPos - yPos)) - 90D;
-						nextRoller.startAngle = endAngle;
-						
-						//Now that we know the start and end angles, we can calculate the start and end points.
-						//Simple polar to rectangular coord conversion here.
-						endY = yPos + radius*Math.cos(Math.toRadians(endAngle));
-						endZ = zPos + radius*Math.sin(Math.toRadians(endAngle));
-						nextRoller.startY = nextRoller.yPos + nextRoller.radius*Math.cos(Math.toRadians(endAngle));
-						nextRoller.startZ = nextRoller.zPos + nextRoller.radius*Math.sin(Math.toRadians(endAngle));
-					}else{
-						//First, get the distance between the roller centers.
-						double centerDistance = Math.hypot(nextRoller.zPos - zPos, nextRoller.yPos - yPos);
-						
-						//The next parts depend which roller is bigger.  From here on out, the
-						//smaller roller is r1, and the larger is r2.
-						boolean nextRollerLarger = radius < nextRoller.radius;
-						double r1CenterY = nextRollerLarger ? yPos : nextRoller.yPos;
-						double r1CenterZ = nextRollerLarger ? zPos : nextRoller.zPos;
-						double r2CenterY = !nextRollerLarger ? yPos : nextRoller.yPos;
-						double r2CenterZ = !nextRollerLarger ? zPos : nextRoller.zPos;
-						double r1Radius = nextRollerLarger ? radius : nextRoller.radius;
-						double r2Radius = !nextRollerLarger ? radius : nextRoller.radius;
-						
-						//Get the angle of the vector between the two centers.
-						double centerVectorAngle = Math.atan2(r2CenterZ - r1CenterZ, r2CenterY - r1CenterY);
-						
-						//If were were to draw a circle with a radius equal to r3 = r2 - r1, then
-						//if we were to use a point on that circle as the center of r2, then we could
-						//make the assumption that r1 and r3 are of equal diameter and our easy method
-						//above would work.  To do this, we inscribe a circle of radius r3 with the center
-						//point of r2, and then get the angle between r1, r2, and r3t, where r3t is the point
-						//of the tangent line from r1 to r3t. This angle ie easy to calculate as we already
-						//know what two of the lengths of the triangle are: the distance between the
-						//two center points, and the radius of r3.
-						double inscribedVectorAngle = Math.asin((r2Radius - r1Radius)/centerDistance);
-						
-						//Now that we have this angle, we know the angle for the line from c1 to r3t.
-						//Since r3t is essentially the center of a circle with radius r1, we know that
-						//our r1r2 tangent line must be perpendicular to this line.  Find the angle for 
-						//this line, and use it to calculate our actual start angle for r1.
-						//The final angle depends on which roller we are using as r1.
-						double netAngle = centerVectorAngle + (nextRollerLarger ? -inscribedVectorAngle - Math.PI/2D : inscribedVectorAngle + Math.PI/2D);						
-						endAngle = Math.toDegrees(netAngle);
-						nextRoller.startAngle = endAngle;
-						
-						//Now that we know the start and end angles, we can calculate the start and end points.
-						//Simple polar to rectangular coord conversion here.
-						endY = yPos + radius*Math.cos(Math.toRadians(endAngle));
-						endZ = zPos + radius*Math.sin(Math.toRadians(endAngle));
-						nextRoller.startY = nextRoller.yPos + nextRoller.radius*Math.cos(Math.toRadians(endAngle));
-						nextRoller.startZ = nextRoller.zPos + nextRoller.radius*Math.sin(Math.toRadians(endAngle));
-					}
-				}
-			}
-			
-
+			//If we don't have the deltas, calculate them based on the points of the rollers on the vehicle.			
 			//Search through rotatable parts on the vehicle and grab the rollers.
-			Map<Integer, TreadRoller> parsedRollers = new HashMap<Integer, TreadRoller>();
-			for(RotatablePart rotatable : vehicleRotatableLists.get(treadPart.vehicle.definition.genericName)){
+			Map<Integer, RenderVehicle_TreadRoller> parsedRollers = new HashMap<Integer, RenderVehicle_TreadRoller>();
+			for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(treadPart.vehicle.definition.genericName)){
 				if(rotatable.name.contains("roller")){
-					parsedRollers.put(Integer.valueOf(rotatable.name.substring(rotatable.name.lastIndexOf('_') + 1)), new TreadRoller(rotatable));
+					parsedRollers.put(Integer.valueOf(rotatable.name.substring(rotatable.name.lastIndexOf('_') + 1)), rotatable.createTreadRoller());
 				}
 			}
 			
 			//Now that we have all the rollers, we can start calculating points.
 			//First calculate the endpoints on the rollers by calling the calculation method.
 			//We also transfer the rollers to an ordered array for convenience later.
-			TreadRoller[] rollers = new TreadRoller[parsedRollers.size()];
+			RenderVehicle_TreadRoller[] rollers = new RenderVehicle_TreadRoller[parsedRollers.size()];
 			for(int i=0; i<parsedRollers.size(); ++ i){
 				if(i < parsedRollers.size() - 1){
 					parsedRollers.get(i).calculateEndpoints(parsedRollers.get(i + 1));
@@ -981,7 +745,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			//At the end, we should have an end angle of 540, or 180 + 360.
 			rollers[0].endAngle = 180;
 			for(int i=1; i<rollers.length; ++i){
-				TreadRoller roller = rollers[i];
+				RenderVehicle_TreadRoller roller = rollers[i];
 				roller.startAngle = rollers[i - 1].endAngle;
 				//End angle should be 0-360 greater than start angle, or within
 				//10 degrees less, as is the case for concave rollers. 
@@ -1010,7 +774,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			double deltaDist = treadPart.definition.tread.spacing;
 			double leftoverPathLength = 0;
 			for(int i=0; i<rollers.length; ++i){
-				TreadRoller roller = rollers[i];
+				RenderVehicle_TreadRoller roller = rollers[i];
 				//Follow the curve of the roller from the start and end point.
 				//Do this until we don't have enough roller path left to make a point.
 				//If we have any remaining path from a prior operation, we
@@ -1068,7 +832,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				//If we have any leftover roller path, account for it here to keep spacing consistent.
 				//We may also have leftover straight path length if we didn't do anything on a roller.
 				//If we are on the last roller, we need to get the first roller to complete the loop.
-				TreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
+				RenderVehicle_TreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
 				double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
 				double normalizedY = (nextRoller.startY - roller.endY)/straightPathLength;
 				double normalizedZ = (nextRoller.startZ - roller.endZ)/straightPathLength;
@@ -1154,6 +918,12 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		GL11.glPopMatrix();
 	}
 	
+	/**
+	 *  Renders all windows in this vehicle.  Windows may rotate or translate like
+	 *  regular rotatable or translatable parts.  This allows for placement on doors
+	 *  or other animated vehicle sections.  This should only be called in pass 0, as
+	 *  we don't do any alpha blending in this routine.
+	 */
 	private static void renderWindows(EntityVehicleE_Powered vehicle, float partialTicks){
 		minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
 		//Iterate through all windows.
@@ -1162,14 +932,14 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			//This is a window or set of windows.  Like the model, it will be triangle-based.
 			//However, windows may be rotatable or translatable.  Check this before continuing.
 			WindowPart window = vehicleWindowLists.get(vehicle.definition.genericName).get(i);
-			for(RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
+			for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
 				if(rotatable.name.equals(window.name)){
-					rotateModelObject(vehicle, rotatable, partialTicks);
+					rotatable.rotate(vehicle, null, partialTicks);
 				}
 			}
-			for(TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
+			for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
 				if(translatable.name.equals(window.name)){
-					translateModelObject(vehicle, translatable, partialTicks);
+					translatable.translate(vehicle, null, partialTicks);
 				}
 			}
 			GL11.glBegin(GL11.GL_TRIANGLES);
@@ -1183,6 +953,11 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 	}
 	
+	/**
+	 *  Renders all text markings for this vehicle.  Text is changed via the player,
+	 *  and may be lit up if configured to do so in the JSON.  This should only be called 
+	 *  in pass 0, as we don't do any alpha blending in this routine.
+	 */
 	private static void renderTextMarkings(EntityVehicleE_Powered vehicle){
 		if(vehicle.definition.rendering.textLighted && isVehicleIlluminated(vehicle)){
 			GL11.glDisable(GL11.GL_LIGHTING);
@@ -1222,21 +997,17 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	}
 	
 	/**
-	 *  Renders all lights for this vehicle.  This method needs to know the brightness of the sun and blocks
-	 *  to calculate the brightness of the lights.  Electric factor is different than light brightness as
-	 *  the electric factor is used for the regular rendering that happens for the color portion of the light,
-	 *  while the brightness is for the flare and beam portion and depends on the world around the vehicle,
-	 *  not the electricity present in the vehicle itself.
+	 *  Renders all lights for this vehicle.  
 	 */
-	private static void renderLights(EntityVehicleE_Powered vehicle, float sunLight, float blockLight, float lightBrightness, float electricFactor, boolean wasRenderedPrior, float partialTicks){
+	private static void renderLights(EntityVehicleE_Powered vehicle, boolean wasRenderedPrior, float partialTicks){
 		//Get all the lights for the vehicle and parts and put them into one common list.
-		List<LightPart> vehicleLights = vehicleLightLists.get(vehicle.definition.genericName);
+		List<RenderVehicle_LightPart> vehicleLights = vehicleLightLists.get(vehicle.definition.genericName);
 		Map<Integer, APart<? extends EntityVehicleE_Powered>> lightIndexToParts = new HashMap<Integer, APart<? extends EntityVehicleE_Powered>>();
-		List<LightPart> allLights = new ArrayList<LightPart>();
+		List<RenderVehicle_LightPart> allLights = new ArrayList<RenderVehicle_LightPart>();
 		allLights.addAll(vehicleLights);
 		for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
 			if(partLightLists.containsKey(part.getModelLocation())){
-				for(LightPart partLight : partLightLists.get(part.getModelLocation())){
+				for(RenderVehicle_LightPart partLight : partLightLists.get(part.getModelLocation())){
 					lightIndexToParts.put(allLights.size(), part);
 					allLights.add(partLight);
 				}
@@ -1245,68 +1016,37 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		
 		//Iterate through the common light list to render all the lights.
 		for(int lightIndex=0; lightIndex<allLights.size(); ++lightIndex){
-			LightPart light = allLights.get(lightIndex);
-			boolean lightActuallyOn = light.isLightActuallyOn(vehicle);
-			
+			RenderVehicle_LightPart light = allLights.get(lightIndex);
 			GL11.glPushMatrix();
 			//This light may be rotateable.  Check this before continuing.
 			//It could rotate based on a vehicle rotation variable, or a part rotation.
 			if(vehicleLights.contains(light)){
-				for(RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
+				for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
 					if(rotatable.name.equals(light.name)){
-						rotateModelObject(vehicle, rotatable, partialTicks);
+						rotatable.rotate(vehicle, null, partialTicks);
 					}
 				}
 			}else{
 				APart<? extends EntityVehicleE_Powered> part = lightIndexToParts.get(lightIndex);
 				GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
 				rotatePart(part, part.getActionRotation(partialTicks), false);
-				for(RotatablePart rotatable : partRotatableLists.get(part.getModelLocation())){
+				for(RenderVehicle_RotatablePart rotatable : partRotatableLists.get(part.getModelLocation())){
 					if(rotatable.name.equals(light.name)){
-						rotatePartObject(part, rotatable, partialTicks);
+						rotatable.rotate(vehicle, part, partialTicks);
 					}
 				}
 			}
 
-			//Render the color and case in pass 0 or -1 as we don't want blending.
-			if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
-				GL11.glPushMatrix();
-				//If the light brightness is brighter then the surroundings, make the case brighter too.
-				if(lightBrightness > Math.max(sunLight, blockLight) && lightActuallyOn){
-					GL11.glDisable(GL11.GL_LIGHTING);
-					minecraft.entityRenderer.disableLightmap();
-				}else{
-					GL11.glEnable(GL11.GL_LIGHTING);
-					minecraft.entityRenderer.enableLightmap();
-				}
-				GL11.glDisable(GL11.GL_BLEND);
-				
-				//Render the color portion of the light.
-				if(lightActuallyOn){
-					light.renderColor(electricFactor);
-				}
-				
-				//Render the cover portion of this light.
-				light.renderCover();
-				
-				GL11.glPopMatrix();
-			}
-			
-			//If the light is on, and our brightness is non-zero, render the flare portion of the light.
-			if(lightActuallyOn && lightBrightness > 0 && MinecraftForgeClient.getRenderPass() != 0 && !wasRenderedPrior){
-				light.renderFlare(lightBrightness);
-			}
-			
-			//Render beam if the light is on and the brightness is non-zero.
-			if(lightActuallyOn && lightBrightness > 0 && MinecraftForgeClient.getRenderPass() == -1){
-				light.renderBeam(Math.min(vehicle.electricPower > 4 ? 1.0F : 0, lightBrightness/2F));
-			}
+			//Render the light.
+			light.render(vehicle, wasRenderedPrior);
 			GL11.glPopMatrix();
 		}
 	}
 	
-   
-	
+	/**
+	 *  Renders all instruments on the vehicle.  Uses the instrument's render code.
+	 *  We only apply the appropriate translation and rotation.
+	 */
 	private static void renderInstruments(EntityVehicleE_Powered vehicle){
 		for(byte i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
@@ -1324,6 +1064,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 	}
 	
+	/**
+	 *  Renders the bounding boxes for the vehicle collision, and centers of all
+	 *  parts currently on the vehicle.
+	 */
 	private static void renderBoundingBoxes(EntityVehicleE_Powered vehicle){
 		GL11.glPushMatrix();
 		GL11.glDisable(GL11.GL_LIGHTING);
@@ -1380,6 +1124,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		GL11.glPopMatrix();
 	}
 	
+	/**
+	 *  Renders holographic part boxes when holding parts that can go on this vehicle.  This
+	 *  needs to be rendered in pass 1 to do alpha blending.
+	 */
 	private static void renderPartBoxes(EntityVehicleE_Powered vehicle){
 		EntityPlayer player = minecraft.player;
 		ItemStack heldStack = player.getHeldItemMainhand();
@@ -1412,14 +1160,14 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 							box = new AxisAlignedBB((float) (offset.x) - 0.375F, (float) (offset.y) - 0.5F, (float) (offset.z) - 0.375F, (float) (offset.x) + 0.375F, (float) (offset.y) + 1.25F, (float) (offset.z) + 0.375F);
 						}
 						
+						Minecraft.getMinecraft().entityRenderer.disableLightmap();
 						GL11.glPushMatrix();
 						GL11.glDisable(GL11.GL_TEXTURE_2D);
 						GL11.glDisable(GL11.GL_LIGHTING);
-						GL11.glEnable(GL11.GL_BLEND);
 						if(isPartValid){
-							GL11.glColor4f(0, 1, 0, 0.25F);
+							GL11.glColor4f(0, 1, 0, 0.5F);
 						}else{
-							GL11.glColor4f(1, 0, 0, 0.25F);
+							GL11.glColor4f(1, 0, 0, 0.5F);
 						}
 						GL11.glBegin(GL11.GL_QUADS);
 						
@@ -1455,121 +1203,13 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 						GL11.glEnd();
 
 						GL11.glColor4f(1, 1, 1, 1);
-						GL11.glDisable(GL11.GL_BLEND);
 						GL11.glEnable(GL11.GL_LIGHTING);
 						GL11.glEnable(GL11.GL_TEXTURE_2D);
 						GL11.glPopMatrix();
+						Minecraft.getMinecraft().entityRenderer.enableLightmap();
 					}
 				}
 			}
-		}
-	}
-	
-	private static final class RotatablePart{
-		private final String name;
-		private final Float[][] vertices;
-		
-		private final Vec3d[] rotationPoints;
-		private final Vec3d[] rotationAxis;
-		private final float[] rotationMagnitudes;
-		private final String[] rotationVariables;
-		
-		private RotatablePart(String name, Float[][] vertices, List<VehicleRotatableModelObject> rotatableModelObjects){
-			this.name = name.toLowerCase();
-			this.vertices = vertices;
-			this.rotationPoints = getRotationPoints(name, rotatableModelObjects);
-			
-			Vec3d rotationAxisTemp[] = getRotationAxis(name, rotatableModelObjects);
-			this.rotationAxis = new Vec3d[rotationAxisTemp.length];
-			this.rotationMagnitudes = new float[rotationAxisTemp.length];
-			for(byte i=0; i<rotationAxisTemp.length; ++i){
-				rotationAxis[i] = rotationAxisTemp[i].normalize();
-				rotationMagnitudes[i] = (float) rotationAxisTemp[i].lengthVector();
-			}
-			this.rotationVariables = getRotationVariables(name, rotatableModelObjects);
-		}
-		
-		private static Vec3d[] getRotationPoints(String name, List<VehicleRotatableModelObject> rotatableModelObjects){
-			List<Vec3d> rotationPoints = new ArrayList<Vec3d>();
-			for(VehicleRotatableModelObject rotatable : rotatableModelObjects){
-				if(rotatable.partName.equals(name)){
-					if(rotatable.rotationPoint != null){
-						rotationPoints.add(new Vec3d(rotatable.rotationPoint[0], rotatable.rotationPoint[1], rotatable.rotationPoint[2]));
-					}
-				}
-			}
-			return rotationPoints.toArray(new Vec3d[rotationPoints.size()]);
-		}
-		
-		private static Vec3d[] getRotationAxis(String name, List<VehicleRotatableModelObject> rotatableModelObjects){
-			List<Vec3d> rotationAxis = new ArrayList<Vec3d>();
-			for(VehicleRotatableModelObject rotatable : rotatableModelObjects){
-				if(rotatable.partName.equals(name)){
-					if(rotatable.rotationAxis != null){
-						rotationAxis.add(new Vec3d(rotatable.rotationAxis[0], rotatable.rotationAxis[1], rotatable.rotationAxis[2]));
-					}
-				}
-			}
-			return rotationAxis.toArray(new Vec3d[rotationAxis.size()]);
-		}
-		
-		private static String[] getRotationVariables(String name, List<VehicleRotatableModelObject> rotatableModelObjects){
-			List<String> rotationVariables = new ArrayList<String>();
-			for(VehicleRotatableModelObject rotatable : rotatableModelObjects){
-				if(rotatable.partName.equals(name)){
-					if(rotatable.partName != null){
-						rotationVariables.add(rotatable.rotationVariable.toLowerCase());
-					}
-				}
-			}
-			return rotationVariables.toArray(new String[rotationVariables.size()]);
-		}
-	}
-	
-	private static final class TranslatablePart{
-		private final String name;
-		private final Float[][] vertices;
-		
-		private final Vec3d[] translationAxis;
-		private final float[] translationMagnitudes;
-		private final String[] translationVariables;
-		
-		private TranslatablePart(String name, Float[][] vertices, List<VehicleTranslatableModelObject> translatableModelObjects){
-			this.name = name.toLowerCase();
-			this.vertices = vertices;
-			
-			Vec3d translationAxisTemp[] = getRotationAxis(name, translatableModelObjects);
-			this.translationAxis = new Vec3d[translationAxisTemp.length];
-			this.translationMagnitudes = new float[translationAxisTemp.length];
-			for(byte i=0; i<translationAxisTemp.length; ++i){
-				translationAxis[i] = translationAxisTemp[i].normalize();
-				translationMagnitudes[i] = (float) translationAxisTemp[i].lengthVector();
-			}
-			this.translationVariables = getRotationVariables(name, translatableModelObjects);
-		}
-		
-		private static Vec3d[] getRotationAxis(String name, List<VehicleTranslatableModelObject> translatableModelObjects){
-			List<Vec3d> translationAxis = new ArrayList<Vec3d>();
-			for(VehicleTranslatableModelObject translatable : translatableModelObjects){
-				if(translatable.partName.equals(name)){
-					if(translatable.translationAxis != null){
-						translationAxis.add(new Vec3d(translatable.translationAxis[0], translatable.translationAxis[1], translatable.translationAxis[2]));
-					}
-				}
-			}
-			return translationAxis.toArray(new Vec3d[translationAxis.size()]);
-		}
-		
-		private static String[] getRotationVariables(String name, List<VehicleTranslatableModelObject> translatableModelObjects){
-			List<String> translationVariables = new ArrayList<String>();
-			for(VehicleTranslatableModelObject translatable : translatableModelObjects){
-				if(translatable.partName.equals(name)){
-					if(translatable.partName != null){
-						translationVariables.add(translatable.translationVariable.toLowerCase());
-					}
-				}
-			}
-			return translationVariables.toArray(new String[translationVariables.size()]);
 		}
 	}
 	
