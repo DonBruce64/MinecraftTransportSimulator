@@ -201,20 +201,24 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 	@Override
 	public void setStates(){
 		//Set the state of the light selector.
-		lightSelector.selectorState = vehicle.isLightOn(HEADLIGHT) ? 2 : (vehicle.isLightOn(RUNNINGLIGHT) ? 1 : 0);
+		if(lightSelector != null){
+			lightSelector.selectorState = vehicle.isLightOn(HEADLIGHT) ? 2 : (vehicle.isLightOn(RUNNINGLIGHT) ? 1 : 0);
+		}
 		
 		//Set the state of the turn signal selector.
-		boolean halfSecondClock = WrapperGUI.inClockPeriod(20, 10);
-		if(vehicle.isLightOn(LEFTTURNLIGHT) && halfSecondClock){
-			if(vehicle.isLightOn(RIGHTTURNLIGHT)){
-				turnSignalSelector.selectorState = 3;
+		if(turnSignalSelector != null){
+			boolean halfSecondClock = WrapperGUI.inClockPeriod(20, 10);
+			if(vehicle.isLightOn(LEFTTURNLIGHT) && halfSecondClock){
+				if(vehicle.isLightOn(RIGHTTURNLIGHT)){
+					turnSignalSelector.selectorState = 3;
+				}else{
+					turnSignalSelector.selectorState = 1;
+				}
+			}else if(vehicle.isLightOn(RIGHTTURNLIGHT) && halfSecondClock){
+				turnSignalSelector.selectorState = 2;
 			}else{
-				turnSignalSelector.selectorState = 1;
+				turnSignalSelector.selectorState = 0;
 			}
-		}else if(vehicle.isLightOn(RIGHTTURNLIGHT) && halfSecondClock){
-			turnSignalSelector.selectorState = 2;
-		}else{
-			turnSignalSelector.selectorState = 0;
 		}
 		 
 		
