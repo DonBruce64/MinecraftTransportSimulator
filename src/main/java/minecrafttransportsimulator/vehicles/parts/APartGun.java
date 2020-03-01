@@ -103,6 +103,9 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 	@Override
 	public void updatePart(){
 		super.updatePart();
+		prevPitch = currentPitch;
+		prevYaw = currentYaw;
+		
 		//Before we do any logic, check to make sure the player is still seated in the gunner seat.
 		//It it quite possible they could dismount with their hands on the trigger, so we need to be sure we check.
 		//Otherwise, guns could be set to fire and the player could just run away...
@@ -192,8 +195,6 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 				playerControllerID = -1;
 			}
 		}
-		prevPitch = currentPitch;
-		prevYaw = currentYaw;
 	}
 	
 	@Override
@@ -222,7 +223,7 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 
 	@Override
 	public Vec3d getActionRotation(float partialTicks){
-		return new Vec3d(currentPitch, currentYaw, 0);
+		return new Vec3d(prevPitch + (currentPitch - prevPitch)*partialTicks, prevYaw + (currentYaw - prevYaw)*partialTicks, 0);
 	}
 	
 	public abstract float getMinYaw();
