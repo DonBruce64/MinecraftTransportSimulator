@@ -245,11 +245,13 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			GL11.glDisable(GL11.GL_NORMALIZE);
 			renderTextMarkings(vehicle);
 			renderInstruments(vehicle);
+			GL11.glShadeModel(GL11.GL_FLAT);
+			GL11.glPopMatrix();
+			
+			//Don't want the rotation applied for bounding boxes as they don't rotate.
 			if(Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()){
 				renderBoundingBoxes(vehicle);
 			}
-			GL11.glShadeModel(GL11.GL_FLAT);
-			GL11.glPopMatrix();
 		}
 		
 		//Check to see if we need to manually render riders.
@@ -1411,36 +1413,49 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glColor3f(0.0F, 0.0F, 0.0F);
 		GL11.glLineWidth(3.0F);
+		//Draw collision boxes for the vehicle.
 		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
+			Vec3d boxOffset = box.pos.subtract(vehicle.posX, vehicle.posY, vehicle.posZ);
 			GL11.glBegin(GL11.GL_LINES);
-			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y - box.height/2F, box.rel.z - box.width/2F);
-			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y - box.height/2F, box.rel.z - box.width/2F);
-			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y - box.height/2F, box.rel.z + box.width/2F);
-			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y - box.height/2F, box.rel.z + box.width/2F);
-			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y + box.height/2F, box.rel.z - box.width/2F);
-			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y + box.height/2F, box.rel.z - box.width/2F);
-			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y + box.height/2F, box.rel.z + box.width/2F);
-			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y + box.height/2F, box.rel.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
 			
-			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y - box.height/2F, box.rel.z - box.width/2F);
-			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y - box.height/2F, box.rel.z + box.width/2F);
-			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y - box.height/2F, box.rel.z - box.width/2F);
-			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y - box.height/2F, box.rel.z + box.width/2F);
-			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y + box.height/2F, box.rel.z - box.width/2F);
-			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y + box.height/2F, box.rel.z + box.width/2F);
-			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y + box.height/2F, box.rel.z - box.width/2F);
-			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y + box.height/2F, box.rel.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
 			
-			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y - box.height/2F, box.rel.z - box.width/2F);
-			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y + box.height/2F, box.rel.z - box.width/2F);
-			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y - box.height/2F, box.rel.z - box.width/2F);
-			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y + box.height/2F, box.rel.z - box.width/2F);
-			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y - box.height/2F, box.rel.z + box.width/2F);
-			GL11.glVertex3d(box.rel.x - box.width/2F, box.rel.y + box.height/2F, box.rel.z + box.width/2F);
-			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y - box.height/2F, box.rel.z + box.width/2F);
-			GL11.glVertex3d(box.rel.x + box.width/2F, box.rel.y + box.height/2F, box.rel.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
 			GL11.glEnd();
 		}
+		
+		//Draw part center points.
+		GL11.glColor3f(0.0F, 1.0F, 0.0F);
+		GL11.glBegin(GL11.GL_LINES);
+		for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+			GL11.glVertex3d(part.partPos.x - vehicle.posX, part.partPos.y - vehicle.posY - part.getHeight(), part.partPos.z - vehicle.posZ);
+			GL11.glVertex3d(part.partPos.x - vehicle.posX, part.partPos.y - vehicle.posY + part.getHeight(), part.partPos.z - vehicle.posZ);
+		}
+		GL11.glEnd();
+		
+		//Set params back to normal.
 		GL11.glLineWidth(1.0F);
 		GL11.glColor3f(1.0F, 1.0F, 1.0F);
 		GL11.glEnable(GL11.GL_LIGHTING);
