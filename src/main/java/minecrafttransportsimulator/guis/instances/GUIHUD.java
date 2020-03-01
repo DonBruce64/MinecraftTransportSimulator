@@ -2,7 +2,7 @@ package minecrafttransportsimulator.guis.instances;
 
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
-import minecrafttransportsimulator.rendering.RenderVehicle;
+import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 
 /**A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}

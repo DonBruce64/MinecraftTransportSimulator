@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering;
+package minecrafttransportsimulator.rendering.vehicles;
 
 import java.awt.Color;
 import java.util.ArrayList;

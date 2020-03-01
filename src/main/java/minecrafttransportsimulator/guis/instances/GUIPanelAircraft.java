@@ -16,7 +16,7 @@ import minecrafttransportsimulator.packets.control.ReverseThrustPacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
-import minecrafttransportsimulator.rendering.RenderVehicle;
+import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;

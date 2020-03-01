@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.blockrenders;
+package minecrafttransportsimulator.rendering.blocks;
 
 import java.util.HashMap;
 import java.util.Map;

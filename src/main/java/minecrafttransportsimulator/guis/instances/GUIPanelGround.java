@@ -19,7 +19,7 @@ import minecrafttransportsimulator.packets.control.SirenPacket;
 import minecrafttransportsimulator.packets.control.TrailerPacket;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
-import minecrafttransportsimulator.rendering.RenderVehicle;
+import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.wrappers.WrapperGUI;

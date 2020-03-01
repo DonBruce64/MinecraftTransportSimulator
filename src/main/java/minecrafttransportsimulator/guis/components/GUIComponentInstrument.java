@@ -4,7 +4,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
-import minecrafttransportsimulator.rendering.RenderInstrument;
+import minecrafttransportsimulator.rendering.vehicles.RenderInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 
 /**Custom instrument render class.  This class is designed to render an instrument into
