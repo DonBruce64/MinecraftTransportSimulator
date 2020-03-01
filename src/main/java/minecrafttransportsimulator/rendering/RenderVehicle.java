@@ -1291,7 +1291,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				//Light rendering.
 				if(lightActuallyOn && light.renderColor){
 					GL11.glDisable(GL11.GL_LIGHTING);
-					GL11.glEnable(GL11.GL_BLEND);
 					minecraft.getTextureManager().bindTexture(lightTexture);
 					GL11.glColor4f(light.color.getRed()/255F, light.color.getGreen()/255F, light.color.getBlue()/255F, electricFactor);
 					GL11.glBegin(GL11.GL_TRIANGLES);
@@ -1302,7 +1301,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 						GL11.glVertex3f(vertex[0]+vertex[5]*0.0001F, vertex[1]+vertex[6]*0.0001F, vertex[2]+vertex[7]*0.0001F);	
 					}
 					GL11.glEnd();
-					GL11.glDisable(GL11.GL_BLEND);
 					GL11.glEnable(GL11.GL_LIGHTING);
 				}
 				GL11.glPopMatrix();
