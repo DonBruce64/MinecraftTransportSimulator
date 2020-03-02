@@ -108,6 +108,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public int hudY;
         public float hudScale;
         public byte optionalPartNumber;
+        public String defaultInstrument;
     }
     
     public class VehicleRendering{

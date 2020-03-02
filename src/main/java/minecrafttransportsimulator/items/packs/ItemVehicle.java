@@ -5,6 +5,7 @@ import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -109,7 +110,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 						}
 					}else{
 						//Since we don't have NBT data, we must be a new vehicle.
-						//If we have any default parts, we should add them now.
+						//If we have any default parts or instruments, we should add them now.
 						for(VehiclePart packDef : newVehicle.definition.parts){
 							while(packDef != null){
 								if(packDef.defaultPart != null){
@@ -118,6 +119,13 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 									newVehicle.addPart(PackParserSystem.createPart(newVehicle, packDef, (JSONPart) MTSRegistry.packItemMap.get(partPackID).get(partSystemName).definition, new NBTTagCompound()), true);
 								}
 								packDef = packDef.additionalPart != null ? packDef.additionalPart : null;
+							}
+						}
+						for(PackInstrument packInstrument : newVehicle.definition.motorized.instruments){
+							if(packInstrument.defaultInstrument != null){
+								String instrumentPackID = packInstrument.defaultInstrument.substring(0, packInstrument.defaultInstrument.indexOf(':'));
+								String instrumentSystemName = packInstrument.defaultInstrument.substring(packInstrument.defaultInstrument.indexOf(':') + 1);
+								newVehicle.instruments.put((byte) newVehicle.definition.motorized.instruments.indexOf(packInstrument), (ItemInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName));
 							}
 						}
 						
