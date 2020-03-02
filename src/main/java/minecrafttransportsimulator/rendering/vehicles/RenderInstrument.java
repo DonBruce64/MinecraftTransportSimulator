@@ -27,7 +27,7 @@ public final class RenderInstrument{
      * method.  Such transformations will, of course, differ between applications, so care should be taken to ensure
      * OpenGL states are not left out-of-whack after rendering is complete.
      */
-	public static void drawInstrument(ItemInstrument instrument, byte engineNumber, EntityVehicleE_Powered vehicle){
+	public static void drawInstrument(ItemInstrument instrument, byte partNumber, EntityVehicleE_Powered vehicle){
 		//First get the appropriate texture file for this instrument combination.
 		if(!instrumentTextureSheets.containsKey(instrument.definition.packID)){
 			instrumentTextureSheets.put(instrument.definition.packID, new ResourceLocation(instrument.definition.packID, "textures/instruments.png"));
@@ -36,11 +36,6 @@ public final class RenderInstrument{
 		
 		//Check if the lights are on.  If so, disable the lightmap.
 		boolean lightsOn = RenderVehicle.isVehicleIlluminated(vehicle);
-		
-		//Subtract 1 from the current engine number (if greater than 0) to account for zero-indexed engine mappings.
-		if(engineNumber > 0){
-			--engineNumber;
-		}
 		
 		//Finally, render the instrument based on the JSON definitions.
 		for(byte i=0; i<instrument.definition.components.size(); ++i){
@@ -56,6 +51,18 @@ public final class RenderInstrument{
 				Minecraft.getMinecraft().entityRenderer.enableLightmap();
 			}
 			
+			//If the partNumber is non-zero, we need to check if we are applying a part-based animation.
+			//If so, we need to let the animation system know by adding a suffix to the variable.
+			//Otherwise, as we don't pass-in the part, it will assume it's a vehicle variable.
+			//We also need to set the partNumber to 1 if we have a part number of 0 and we're
+			//doing a part-specific animation.
+			final boolean addRotationSuffix = section.rotationVariable != null && (section.rotationVariable.startsWith("engine_") || section.rotationVariable.startsWith("propeller_") || section.rotationVariable.startsWith("gun_"));
+			final boolean addTranslationSuffix = section.translationVariable != null && (section.translationVariable.startsWith("engine_") || section.translationVariable.startsWith("propeller_") || section.translationVariable.startsWith("gun_"));
+			if(partNumber == 0 && (addRotationSuffix || addTranslationSuffix)){
+				partNumber = 1;
+			}
+			
+			
 			//Init variables.
 			float layerUStart;
 			float layerUEnd;
@@ -66,7 +73,12 @@ public final class RenderInstrument{
 			//If we are rotating the window, but not the texture we should initialize the texture points to that rotated point.
 			//Otherwise, set the points to their normal location.
 			if(section.rotationVariable != null && section.rotateWindow){
-				double rotation = section.rotationOffset + RenderAnimations.getVariableValue(section.rotationVariable, 0, vehicle, vehicle.engines.get(engineNumber))*section.rotationFactor;
+				double rotation;
+				if(section.rotationClamp != 0){
+					 rotation = section.rotationOffset + Math.max(Math.min(RenderAnimations.getVariableValue(addRotationSuffix ? section.rotationVariable + partNumber : section.rotationVariable, 0, vehicle, null)*section.rotationFactor, section.rotationClamp), -section.rotationClamp);
+				}else{
+					 rotation = section.rotationOffset + RenderAnimations.getVariableValue(addRotationSuffix ? section.rotationVariable + partNumber : section.rotationVariable, 0, vehicle, null)*section.rotationFactor;
+				}
 				double sin = Math.sin(Math.toRadians(rotation));
 				double cos = Math.sin(Math.toRadians(rotation));
 				layerUStart = (float) ((-section.textureWidth/2F)*cos - (-section.textureHeight/2F)*sin);
@@ -83,7 +95,12 @@ public final class RenderInstrument{
 			//If we are translating, offset the coords based on the translated amount.
 			//Adjust the window to either move or scale depending on settings.
 			if(section.translationVariable != null){
-				float translation = (float) (RenderAnimations.getVariableValue(section.translationVariable, 0, vehicle, vehicle.engines.get(engineNumber))*section.translationFactor);
+				float translation;
+				if(section.translationClamp != 0){
+					translation = (float) (Math.max(Math.min(RenderAnimations.getVariableValue(addTranslationSuffix ? section.translationVariable + partNumber : section.translationVariable, 0, vehicle, null)*section.translationFactor, section.translationClamp), -section.translationClamp));
+				}else{
+					translation = (float) (RenderAnimations.getVariableValue(addTranslationSuffix ? section.translationVariable + partNumber : section.translationVariable, 0, vehicle, null)*section.translationFactor);
+				}
 				if(section.extendWindow){
 					//We need to add to the edge of the window in this case rather than move the entire window.
 					if(section.translateHorizontal){
@@ -105,7 +122,12 @@ public final class RenderInstrument{
 			
 			//If we are rotating the texture, and not the window, apply the rotation here after the translation.
 			if(section.rotationVariable != null && !section.rotateWindow){
-				float rotation = (float) (section.rotationOffset + RenderAnimations.getVariableValue(section.rotationVariable, 0, vehicle, vehicle.engines.get(engineNumber))*section.rotationFactor);
+				float rotation;
+				if(section.rotationClamp != 0){
+					 rotation = (float) (section.rotationOffset + Math.max(Math.min(RenderAnimations.getVariableValue(addRotationSuffix ? section.rotationVariable + partNumber : section.rotationVariable, 0, vehicle, null)*section.rotationFactor, section.rotationClamp), -section.rotationClamp));
+				}else{
+					 rotation = (float) (section.rotationOffset + RenderAnimations.getVariableValue(addRotationSuffix ? section.rotationVariable + partNumber : section.rotationVariable, 0, vehicle, null)*section.rotationFactor);
+				}
 				GL11.glRotatef(rotation, 0, 0, 1);
 			}
 			

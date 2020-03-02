@@ -107,7 +107,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public int hudX;
         public int hudY;
         public float hudScale;
-        public byte optionalEngineNumber;
+        public byte optionalPartNumber;
     }
     
     public class VehicleRendering{

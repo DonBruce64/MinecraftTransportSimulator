@@ -107,6 +107,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			if(!world.isRemote){
 				dampenControlSurfaces();
 			}
+			prevParkingBrakeAngle = parkingBrakeAngle;
 			if(parkingBrakeOn && velocity == 0 && !locked){
 				if(parkingBrakeAngle < 30){
 					prevParkingBrakeAngle = parkingBrakeAngle;

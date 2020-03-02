@@ -1058,7 +1058,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			//Need to scale by -1 to get the coordinate system to behave and align to the texture-based coordinate system.
 			GL11.glScalef(-packInstrument.scale/16F, -packInstrument.scale/16F, -packInstrument.scale/16F);
 			if(vehicle.instruments.containsKey(i)){
-				RenderInstrument.drawInstrument(vehicle.instruments.get(i), packInstrument.optionalEngineNumber, vehicle);
+				RenderInstrument.drawInstrument(vehicle.instruments.get(i), packInstrument.optionalPartNumber, vehicle);
 			}
 			GL11.glPopMatrix();
 		}
@@ -1218,7 +1218,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		private final Float[][] vertices;
 		
 		private WindowPart(String name, Float[][] vertices){
-			this.name = name.toLowerCase();
+			this.name = name;
 			this.vertices = vertices;
 		}
 	}

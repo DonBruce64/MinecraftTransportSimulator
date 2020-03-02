@@ -88,7 +88,7 @@ public class GUIVehicleEditor extends AGUIBase{
 							dataEntryLabels.get(labelBoxIndex++).text = "HUD X-Pos (in texture px)";
 							dataEntryLabels.get(labelBoxIndex++).text = "HUD Y-Pos (in texture px)";
 							dataEntryLabels.get(labelBoxIndex++).text = "HUD Scale (normally 128x128 px):";
-							dataEntryLabels.get(labelBoxIndex++).text = "Engine# (puts on panel too):";
+							dataEntryLabels.get(labelBoxIndex++).text = "Part# (puts on panel too):";
 							numberComponents = labelBoxIndex;
 						}
 					}
@@ -138,7 +138,7 @@ public class GUIVehicleEditor extends AGUIBase{
 							dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loadingInstrument.hudX));
 							dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loadingInstrument.hudY));
 							dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loadingInstrument.hudScale));
-							dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loadingInstrument.optionalEngineNumber));
+							dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loadingInstrument.optionalPartNumber));
 							debugBox.setText("Loaded instrument definition: " + dataEntryBoxes.get(0).getText());
 							lastComponentIndexModified = instrumentNumber;
 						}catch(Exception e){
@@ -173,7 +173,7 @@ public class GUIVehicleEditor extends AGUIBase{
 						packInstrument.hudX = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 						packInstrument.hudY = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 						packInstrument.hudScale = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-						packInstrument.optionalEngineNumber = Byte.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+						packInstrument.optionalPartNumber = Byte.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 						
 						if(instrumentNumber >= vehicle.definition.motorized.instruments.size()){
 							instrumentNumber = vehicle.definition.motorized.instruments.size();

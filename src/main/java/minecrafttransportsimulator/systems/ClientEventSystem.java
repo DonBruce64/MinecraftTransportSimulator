@@ -370,12 +370,12 @@ public final class ClientEventSystem{
                 		//Iterate though all the instruments the vehicle has and render them. 
                 		for(Byte instrumentNumber : vehicle.instruments.keySet()){
                 			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(instrumentNumber);
-                			//Only render instruments that don't have an optionaEngineNumber.
-                			if(vehicle.definition.motorized.instruments.get(instrumentNumber).optionalEngineNumber == 0){
+                			//Only render instruments that don't have an optionalPartNumber.
+                			if(vehicle.definition.motorized.instruments.get(instrumentNumber).optionalPartNumber == 0){
                 				GL11.glPushMatrix();
                 				GL11.glTranslated(guiLeft + packInstrument.hudX, guiTop + packInstrument.hudY, 0);
                 				GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-                				RenderInstrument.drawInstrument(vehicle.instruments.get(instrumentNumber), packInstrument.optionalEngineNumber, vehicle);
+                				RenderInstrument.drawInstrument(vehicle.instruments.get(instrumentNumber), packInstrument.optionalPartNumber, vehicle);
                 				GL11.glPopMatrix();
                 			}
                 		}

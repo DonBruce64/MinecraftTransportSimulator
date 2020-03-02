@@ -42,8 +42,8 @@ public abstract class AGUIPanel<EntityVehicleX_Type extends EntityVehicleE_Power
 		
 		//Add instruments.  These go wherever they are specified in the JSON.
 		for(Byte instrumentNumber : vehicle.instruments.keySet()){
-			//Only add instruments that have an optionaEngineNumber as those are on the panel.
-			if(vehicle.definition.motorized.instruments.get(instrumentNumber).optionalEngineNumber != 0){
+			//Only add instruments that have an optionalPartNumber as those are on the panel.
+			if(vehicle.definition.motorized.instruments.get(instrumentNumber).optionalPartNumber != 0){
 				addInstrument(new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, vehicle));
 			}
 		}

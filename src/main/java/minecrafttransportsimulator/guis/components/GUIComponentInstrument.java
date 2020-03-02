@@ -41,7 +41,7 @@ public class GUIComponentInstrument{
     	GL11.glPushMatrix();
 		GL11.glTranslated(x, y, 0);
 		GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-		RenderInstrument.drawInstrument(itemInstrument, packInstrument.optionalEngineNumber, vehicle);
+		RenderInstrument.drawInstrument(itemInstrument, packInstrument.optionalPartNumber, vehicle);
 		GL11.glPopMatrix();
     }
 }

@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.vehicles;
 
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -28,23 +29,40 @@ public final class RenderAnimations{
 	public static double getVariableValue(String variable, float partialTicks, EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart){
 		//If we have a variable with a suffix, we need to get that part first and pass
 		//it into this method rather than trying to run through the code now.
-		if(variable.substring(variable.length() - 2).matches("[0-9]+")){
+		if(variable.substring(variable.length() - 1).matches("[0-9]+")){
 			//Take off one because we are zero-indexed.
-			int partNumber = Integer.parseInt(variable.substring(variable.length() - 2)) - 1;
+			int partNumber = Integer.parseInt(variable.substring(variable.length() - 1)) - 1;
+			String partType = variable.substring(0, variable.indexOf('_'));
 			final Class<?> partClass;
-			switch(variable.substring(variable.lastIndexOf('_') + 1, variable.length() - 3)){
+			switch(partType){
 				case("engine"): partClass = APartEngine.class; break;
 				case("propeller"): partClass = PartPropeller.class; break;
 				case("gun"): partClass = APartGun.class; break;
-				default: throw new IllegalArgumentException("ERROR: Tried to find indexed part:" + variable.substring(variable.lastIndexOf('_') + 1, variable.length() - 3) + " for rotation definition: " + variable + " but could not.  Is your formatting correct?");
+				default: if(ConfigSystem.configObject.client.devMode.value){
+					throw new IllegalArgumentException("ERROR: Was told to find part: " + variable.substring(0, variable.indexOf('_')) + " for rotation definition: " + variable + " but could not as the part isn't a valid part name.  Is your spelling correct?");
+				}else{
+					//Don't crash if we have a fault here.  It could be that we have an old pack that has a bad name.
+					return 0;
+				}
 			}
-			for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
-				if(partClass.isInstance(part.getClass())){
-					if(partNumber == 0){
-						//We found the part we were supposed to link to.  Return the value for it.
-						return getVariableValue(variable.substring(variable.lastIndexOf('_')), partialTicks, vehicle, part);
-					}else{
-						--partNumber;
+			
+			//Iterate through the pack defs to find the index of the pack def for the part we want.
+			for(VehiclePart vehiclePart : vehicle.definition.parts){
+				for(String defPartType : vehiclePart.types){
+					if(defPartType.startsWith(partType)){
+						if(partNumber == 0){
+							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
+							//If it's not, or it doesn't exist, return 0.
+							APart<? extends EntityVehicleA_Base> foundPart = vehicle.getPartAtLocation(vehiclePart.pos[0], vehiclePart.pos[1], vehiclePart.pos[2]);
+							if(foundPart != null && partClass.isInstance(foundPart)){
+								return getVariableValue(variable.substring(0, variable.length() - 1), partialTicks, vehicle, foundPart);
+							}else{
+								return 0;
+							}
+						}else{
+							--partNumber;
+							break;
+						}
 					}
 				}
 			}
@@ -104,19 +122,17 @@ public final class RenderAnimations{
 			case("roll"): return vehicle.rotationRoll;
 			case("altitude"): return vehicle.posY - (ConfigSystem.configObject.client.seaLvlOffset.value ? vehicle.world.provider.getAverageGroundLevel() : 0);
 			case("speed"): return Math.abs(vehicle.velocity*vehicle.speedFactor*20);
-			case("vertical_speed"): return vehicle.motionY;
-			case("turn_coordinator"): return ((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15D*25;
-			case("turn_indicator"): return (vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F;
 			
 			//Vehicle state cases.
-			case("throttle"): return vehicle.throttle;
-			case("fuel"): return vehicle.fuel/vehicle.definition.motorized.fuelCapacity*100D;
+			case("throttle"): return vehicle.throttle/100D;
+			case("fuel"): return vehicle.fuel/vehicle.definition.motorized.fuelCapacity;
 			case("electric_power"): return vehicle.electricPower;
 			case("electric_usage"): return vehicle.electricFlow*20D;
 			case("brake"): return vehicle.brakeOn ? 1 : 0;
-			case("p_brake"): return vehicle.prevParkingBrakeAngle + (vehicle.parkingBrakeAngle - vehicle.prevParkingBrakeAngle)*partialTicks;
-			case("steeringwheel"): return vehicle.getSteerAngle();
+			case("p_brake"): return (vehicle.prevParkingBrakeAngle + (vehicle.parkingBrakeAngle - vehicle.prevParkingBrakeAngle)*partialTicks)/30D;
+			case("steering_wheel"): return vehicle.getSteerAngle();
 			case("horn"): return vehicle.hornOn ? 1 : 0;
+			case("siren"): return vehicle.sirenOn ? 1 : 0;
 			case("hood"): return vehicle.engines.isEmpty() ? 1 : 0;
 		}
 		
@@ -131,7 +147,7 @@ public final class RenderAnimations{
 		if(vehicle instanceof EntityVehicleF_Ground){
 			EntityVehicleF_Ground ground = (EntityVehicleF_Ground) vehicle;
 			switch(variable){
-				case("trailer"): return ground.towingAngle;
+				case("trailer"): return ground.towingAngle/30D;
 				case("hookup"): return ground.towedByVehicle != null ? ground.towedByVehicle.towingAngle/30D : 0;
 			}
 		}else if(vehicle instanceof EntityVehicleF_Air){
@@ -144,12 +160,15 @@ public final class RenderAnimations{
 				case("trim_elevator"): return aircraft.elevatorTrim/10D;
 				case("trim_rudder"): return aircraft.rudderTrim/10D;
 				case("reverser"): return aircraft.reversePercent/20D;
+				case("vertical_speed"): return vehicle.motionY*vehicle.speedFactor*20;
 				case("slip"): return 75*aircraft.sideVec.dotProduct(vehicle.velocityVec);
-				case("lift_reserve"): return aircraft.trackAngle*3 + 20;
+				case("turn_coordinator"): return ((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15D*25;
+				case("turn_indicator"): return (vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F;
 			}
 			if(aircraft instanceof EntityVehicleG_Plane){
 				EntityVehicleG_Plane plane = (EntityVehicleG_Plane) aircraft;
-				switch(variable){	
+				switch(variable){
+					case("lift_reserve"): return aircraft.trackAngle*3 + 20;
 					case("flaps_setpoint"): return plane.flapDesiredAngle/10D;
 					case("flaps_actual"): return plane.flapCurrentAngle/10D;
 				}

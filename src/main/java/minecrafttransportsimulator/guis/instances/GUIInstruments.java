@@ -181,7 +181,7 @@ public class GUIInstruments extends AGUIBase{
 		vehicleInstrumentSlots.clear();
 		for(PackInstrument packInstrument : vehicle.definition.motorized.instruments){
 			int instrumentRadius = (int) (64F*packInstrument.hudScale);
-			if(hudSelected ^ packInstrument.optionalEngineNumber != 0){
+			if(hudSelected ^ packInstrument.optionalPartNumber != 0){
 				TexturelessButton instrumentSlotButton = new TexturelessButton(guiLeft + packInstrument.hudX - instrumentRadius, guiTop + packInstrument.hudY - instrumentRadius, 2*instrumentRadius, "", 2*instrumentRadius, false){
 					@Override
 					public void onClicked(){
@@ -221,7 +221,7 @@ public class GUIInstruments extends AGUIBase{
 		vehicleInstruments.clear();
 		for(byte i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
-			if(hudSelected ^ packInstrument.optionalEngineNumber != 0){
+			if(hudSelected ^ packInstrument.optionalPartNumber != 0){
 				GUIComponentInstrument vehicleInstrument = new GUIComponentInstrument(guiLeft, guiTop, i, vehicle){
 					@Override
 					public void renderInstrument(){
@@ -230,7 +230,7 @@ public class GUIInstruments extends AGUIBase{
 							GL11.glPushMatrix();
 							GL11.glTranslated(x, y, 0);
 							GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-							RenderInstrument.drawInstrument(vehicle.instruments.get(this.instrumentPackIndex), packInstrument.optionalEngineNumber, vehicle);
+							RenderInstrument.drawInstrument(vehicle.instruments.get(this.instrumentPackIndex), packInstrument.optionalPartNumber, vehicle);
 							GL11.glPopMatrix();
 						}
 					}
