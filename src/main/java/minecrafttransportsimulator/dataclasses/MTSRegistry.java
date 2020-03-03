@@ -203,13 +203,17 @@ public final class MTSRegistry{
 	 */
     public static List<ItemStack> getMaterials(AItemPack<? extends AJSONItem<?>> item){
     	final List<ItemStack> materialList = new ArrayList<ItemStack>();
-		for(String itemText : MTSRegistry.packCraftingMap.get(item)){
-			int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-			
-			int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-			materialList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata));
+		try{
+	    	for(String itemText : MTSRegistry.packCraftingMap.get(item)){
+				int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+				itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+				
+				int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+				itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+				materialList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata));
+			}
+		}catch(Exception e){
+			throw new NullPointerException("ERROR: Could not parse crafting ingredients for item: " + item.definition.packID + item.definition.systemName + ".  Report this to the pack author!");
 		}
     	return materialList;
     }
