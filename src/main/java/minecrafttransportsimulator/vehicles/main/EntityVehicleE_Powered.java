@@ -71,8 +71,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				for(LightType light : lightsOn){
 					if(light.hasBeam){
 						electricUsage += 0.0005F;
-					}else{
-						electricUsage += 0.0001F;
 					}
 				}
 			}
