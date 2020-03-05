@@ -4,6 +4,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -32,7 +33,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	
 	@Override
 	public void attackPart(DamageSource source, float damage){
-		if(!this.isFlat){
+		if(!this.isFlat && ConfigSystem.configObject.damage.wheelBreakage.value){
 			if(source.isExplosion() || Math.random() < 0.1){
 				if(!vehicle.world.isRemote){
 					this.setFlat();
@@ -62,7 +63,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 				}
 			}else if(!isFlat){
 				++ticksCalcsSkipped;
-				if(Math.random()*50000 < ticksCalcsSkipped){
+				if(Math.random()*50000 < ticksCalcsSkipped && ConfigSystem.configObject.damage.wheelBreakage.value){
 					if(!vehicle.world.isRemote){
 						this.setFlat();
 						MTS.MTSNet.sendToAll(new PacketPartGroundDeviceWheelFlat(this));
