@@ -25,7 +25,6 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.creativetab.CreativeTabs;
@@ -176,90 +175,87 @@ public final class ClientEventSystem{
     }
     
     public static boolean lockedView = true;
+    private static int defaultRenderDistance;
+	private static int currentRenderDistance;
     /**
-     * Rotates player in the seat for proper rendering and forwards camera control options to the ControlSystem.
-     * When rotating the player, the pitch and yaw are only applied if the player has locked their viewpoint.
-     * If not, the player doesn't change their orientation.  Note that this does not affect roll or zoom, as that 
-     * needs to be done via camera transforms rather than adjusting player angles.
-     * 
-     * Also tells the RadioSystem to update, so it can adjust volume and playing status.
+     * Performs updates to the player related to vehicle functions.  These include: <br>
+     * 1) Sending the player to the {@link ControlSystem} for controls checks when seated in a vehicle.<br>
+     * 2) Updating the player's yaw/pitch to match vehicle movement if camera is locked (roll happens in {@link #on(CameraSetup)}.<br>
+     * 3) Disabling the mouse if mouseYoke is set and the camera is locked (also enables mouse if player isn't in a vehicle)<br>
+     * 4) Automatically lowering render distance to 1 when flying above the world to reduce worldgen lag.<br>
      */
     @SubscribeEvent
-    public static void on(TickEvent.ClientTickEvent event){
-        //Make sure the world isn't null.  This is possible when switching worlds.
-    	if(minecraft.world != null){
-    		//Only do updates at the end of a phase to prevent double-updates.
-            if(event.phase.equals(Phase.END)){
-            	EntityPlayerSP player = minecraft.player;
-            	//If we are in a vehicle, do actions.
-                if(player.getRidingEntity() instanceof EntityVehicleE_Powered){
-                	EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.player.getRidingEntity();
+    public static void on(TickEvent.PlayerTickEvent event){
+    	//Only do updates at the end of a phase to prevent double-updates.
+        if(event.phase.equals(Phase.END)){
+    		//If we are on the integrated server, and riding a vehicle, reduce render height.
+    		if(event.side.isServer()){
+    			if(event.player.getRidingEntity() instanceof EntityVehicleE_Powered){
+            		WorldServer serverWorld = (WorldServer) event.player.world;
+            		if(serverWorld.getMinecraftServer().isSinglePlayer()){
+        	    		//If default render distance is 0, we must have not set it yet.
+            			//Set both it and the current distance to the actual current distance.
+            			if(defaultRenderDistance == 0){
+        	    			defaultRenderDistance = serverWorld.getMinecraftServer().getPlayerList().getViewDistance();
+        	    			currentRenderDistance = defaultRenderDistance;
+        				}
+        	    		
+            			//If the player is above the configured renderReductionHeight, reduce render.
+            			//Once the player drops 10 blocks below it, put the render back to the value it was before.
+            			//We don't want to set this every tick as it'll confuse the server.
+        	    		if(event.player.posY > ConfigSystem.configObject.client.renderReductionHeight.value && currentRenderDistance != 1){
+        	    			currentRenderDistance = 1;
+        	    			serverWorld.getPlayerChunkMap().setPlayerViewRadius(1);
+        	    		}else if(event.player.posY < ConfigSystem.configObject.client.renderReductionHeight.value - 10 && currentRenderDistance == 1){
+        	    			currentRenderDistance = defaultRenderDistance;
+        	    			serverWorld.getPlayerChunkMap().setPlayerViewRadius(defaultRenderDistance);
+        	    		}
+        	    	}
+    			}
+        	}else{
+        		//We are on the client.  Do update logic.
+        		//First update the radio threa.
+        		if(!radioThread.isAlive()){
+                	radioThread.start();
+                }else{
+                	radioThread.setListenerPosition(event.player.posX, event.player.posY, event.player.posZ, !minecraft.isGamePaused());	
+                }
+        		
+        		//If we are riding a vehicle, do rotation and control operation.
+        		if(event.player.getRidingEntity() instanceof EntityVehicleE_Powered){
+        			EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.player.getRidingEntity();
 
                     //If we aren't paused, and we have a lockedView, rotate us with the vehicle.
                     if(!minecraft.isGamePaused() && lockedView){
-            			player.rotationYaw += vehicle.rotationYaw - vehicle.prevRotationYaw;
+            			event.player.rotationYaw += vehicle.rotationYaw - vehicle.prevRotationYaw;
             			if((vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90) ^ (vehicle.prevRotationPitch > 90 || vehicle.prevRotationPitch < -90)){
-            				player.rotationYaw+=180;
+            				event.player.rotationYaw+=180;
             			}
-                		if(ConfigSystem.configObject.client.mouseYoke.value && Minecraft.getMinecraft().gameSettings.thirdPersonView != 0){
-                			player.rotationPitch += vehicle.rotationPitch - vehicle.prevRotationPitch;
+                		if(Minecraft.getMinecraft().gameSettings.thirdPersonView != 0){
+                			event.player.rotationPitch += vehicle.rotationPitch - vehicle.prevRotationPitch;
                 		}
                      }
                 	
                 	//If the player is seated, and the seat is a controller, check their controls.
-        			//If we have mouseYoke enabled, and our view is locked disable the mouse from MC.
+        			//If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.
                 	//We need to check here for the seat because the link could be broken for a bit due to syncing errors.
-                	if(vehicle.getSeatForRider(player) != null){
-                		boolean isSeatController = vehicle.getSeatForRider(player).isController;
-                		if(isSeatController){
-                			ControlSystem.controlVehicle(vehicle, vehicle.getSeatForRider(player).isController);
-                			WrapperInput.setMouseEnabled(!(ConfigSystem.configObject.client.mouseYoke.value && lockedView));
+                	if(vehicle.getSeatForRider(event.player) != null){
+                		PartSeat playeSeat = vehicle.getSeatForRider(event.player);
+                		if(playeSeat != null){
+                			ControlSystem.controlVehicle(vehicle, playeSeat.isController);
+                			WrapperInput.setMouseEnabled(!(playeSeat.isController && ConfigSystem.configObject.client.mouseYoke.value && lockedView));
+                			return;
                 		}
             		}
-                }else{
-                	//If we aren't riding a vehicle, and we have mouseYoke enabled, make sure to re-enable the mouse.
-                	if(ConfigSystem.configObject.client.mouseYoke.value){
-                		WrapperInput.setMouseEnabled(true);
-                	}
-                }
-                //Update the player position located in the Radio thread.
-                if(!radioThread.isAlive()){
-                	radioThread.start();
-                }else{
-                	radioThread.setListenerPosition(player.posX, player.posY, player.posZ, !minecraft.isGamePaused());	
-                }
-                
-            }
+        		}
+        		
+        		//If we got down here, we must not be riding and controlling a vehicle via mouseYoke.
+        		//Re-enable the mouse to ensure we don't keep it locked.
+    			if(ConfigSystem.configObject.client.mouseYoke.value){
+            		WrapperInput.setMouseEnabled(true);
+            	}
+        	}
         }
-    }
-    
-    
-    private static int defaultRenderDistance;
-	private static int currentRenderDistance;
-    /**
-     * Automatically lowers render distance when flying above the world to reduce worldgen.
-     * Results in significant TPS improvements at high speeds.
-     * Note that this only runs on the integrated server.
-     */
-    @SubscribeEvent
-    public static void on(TickEvent.PlayerTickEvent event){
-    	if(event.side.isServer() && event.phase.equals(Phase.END)){
-    		EntityPlayerMP serverPlayer = (EntityPlayerMP) event.player;
-    		if(((WorldServer) serverPlayer.world).getMinecraftServer().isSinglePlayer()){
-	    		if(defaultRenderDistance == 0){
-	    			defaultRenderDistance = ((WorldServer) serverPlayer.world).getMinecraftServer().getPlayerList().getViewDistance();
-	    			currentRenderDistance = defaultRenderDistance;
-				}
-	    		
-	    		if(serverPlayer.posY > ConfigSystem.configObject.client.renderReductionHeight.value && currentRenderDistance != 1){
-	    			currentRenderDistance = 1;
-	    			((WorldServer) serverPlayer.world).getPlayerChunkMap().setPlayerViewRadius(1);
-	    		}else if(serverPlayer.posY < ConfigSystem.configObject.client.renderReductionHeight.value - 10 && currentRenderDistance == 1){
-	    			currentRenderDistance = defaultRenderDistance;
-	    			((WorldServer) serverPlayer.world).getPlayerChunkMap().setPlayerViewRadius(defaultRenderDistance);
-	    		}
-	    	}
-    	}
     }
 
     
