@@ -19,13 +19,13 @@ import minecrafttransportsimulator.radio.RadioThread;
 import minecrafttransportsimulator.rendering.vehicles.RenderInstrument;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleC_Colliding;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.creativetab.CreativeTabs;
@@ -175,32 +175,58 @@ public final class ClientEventSystem{
     	}
     }
     
+    public static boolean lockedView = true;
     /**
      * Rotates player in the seat for proper rendering and forwards camera control options to the ControlSystem.
+     * When rotating the player, the pitch and yaw are only applied if the player has locked their viewpoint.
+     * If not, the player doesn't change their orientation.  Note that this does not affect roll or zoom, as that 
+     * needs to be done via camera transforms rather than adjusting player angles.
+     * 
      * Also tells the RadioSystem to update, so it can adjust volume and playing status.
      */
     @SubscribeEvent
     public static void on(TickEvent.ClientTickEvent event){
-        if(minecraft.world != null){
-            if(event.phase.equals(Phase.END)){            	
-                if(minecraft.player.getRidingEntity() instanceof EntityVehicleC_Colliding){
-                    if(!Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen()){
-                    	if(minecraft.player.getRidingEntity() instanceof EntityVehicleE_Powered){
-                    		EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.player.getRidingEntity();
-                    		if(vehicle.getSeatForRider(minecraft.player) != null){
-                    			ControlSystem.controlVehicle(vehicle, vehicle.getSeatForRider(minecraft.player).isController);
-                    		}
-                        }
-                    }
-                    if(!minecraft.isGamePaused()){
-        				CameraSystem.updatePlayerYawAndPitch(minecraft.player, (EntityVehicleB_Existing) minecraft.player.getRidingEntity());
+        //Make sure the world isn't null.  This is possible when switching worlds.
+    	if(minecraft.world != null){
+    		//Only do updates at the end of a phase to prevent double-updates.
+            if(event.phase.equals(Phase.END)){
+            	EntityPlayerSP player = minecraft.player;
+            	//If we are in a vehicle, do actions.
+                if(player.getRidingEntity() instanceof EntityVehicleE_Powered){
+                	EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.player.getRidingEntity();
+
+                    //If we aren't paused, and we have a lockedView, rotate us with the vehicle.
+                    if(!minecraft.isGamePaused() && lockedView){
+            			player.rotationYaw += vehicle.rotationYaw - vehicle.prevRotationYaw;
+            			if((vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90) ^ (vehicle.prevRotationPitch > 90 || vehicle.prevRotationPitch < -90)){
+            				player.rotationYaw+=180;
+            			}
+                		if(ConfigSystem.configObject.client.mouseYoke.value && Minecraft.getMinecraft().gameSettings.thirdPersonView != 0){
+                			player.rotationPitch += vehicle.rotationPitch - vehicle.prevRotationPitch;
+                		}
                      }
+                	
+                	//If the player is seated, and the seat is a controller, check their controls.
+        			//If we have mouseYoke enabled, and our view is locked disable the mouse from MC.
+                	//We need to check here for the seat because the link could be broken for a bit due to syncing errors.
+                	if(vehicle.getSeatForRider(player) != null){
+                		boolean isSeatController = vehicle.getSeatForRider(player).isController;
+                		if(isSeatController){
+                			ControlSystem.controlVehicle(vehicle, vehicle.getSeatForRider(player).isController);
+                			WrapperInput.setMouseEnabled(!(ConfigSystem.configObject.client.mouseYoke.value && lockedView));
+                		}
+            		}
+                }else{
+                	//If we aren't riding a vehicle, and we have mouseYoke enabled, make sure to re-enable the mouse.
+                	if(ConfigSystem.configObject.client.mouseYoke.value){
+                		WrapperInput.setMouseEnabled(true);
+                	}
                 }
                 //Update the player position located in the Radio thread.
                 if(!radioThread.isAlive()){
                 	radioThread.start();
                 }else{
-                	radioThread.setListenerPosition(minecraft.player.posX, minecraft.player.posY, minecraft.player.posZ, !minecraft.isGamePaused());	
+                	radioThread.setListenerPosition(player.posX, player.posY, player.posZ, !minecraft.isGamePaused());	
                 }
                 
             }
@@ -236,9 +262,13 @@ public final class ClientEventSystem{
     	}
     }
 
+    
+    public static int zoomLevel = 0;
     /**
-     * Adjusts roll and pitch for camera.
-     * Only works when camera is inside vehicles.
+     * Adjusts roll, pitch, and zoom for camera.
+     * Roll and pitch only gets updated when inside vehicles as we use OpenGL transforms.
+     * For external rotations, we just move the player's head with the vehicle's movement as
+     * the camera will need to naturally follow the vehicle's motion.
      */
     @SubscribeEvent
     public static void on(CameraSetup event){
@@ -256,8 +286,10 @@ public final class ClientEventSystem{
             	float pitchPitchComponent = (float) (Math.cos(Math.toRadians(playerYawAngle))*(vehicle.rotationPitch + (vehicle.rotationPitch - vehicle.prevRotationPitch)*(double)event.getRenderPartialTicks()));
             	GL11.glRotated(pitchPitchComponent + rollPitchComponent, 1, 0, 0);
         		GL11.glRotated(rollRollComponent - pitchRollComponent, 0, 0, 1);
-        	}else{
-        		CameraSystem.performZoomAction();
+        	}else if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 1){
+        		GL11.glTranslatef(0, 0F, -zoomLevel);
+            }else{
+                GL11.glTranslatef(0, 0F, zoomLevel);
         	}
         }
     }
@@ -337,7 +369,7 @@ public final class ClientEventSystem{
     }
 
     /**
-     * Renders the HUD on vehicles.  We don't use the GU here as it would lock inputs.
+     * Renders the HUD on vehicles.  We don't use the GUI here as it would lock inputs.
      */
     @SubscribeEvent
     public static void on(RenderGameOverlayEvent.Pre event){    	
@@ -405,7 +437,8 @@ public final class ClientEventSystem{
     }
 
     /**
-     * Opens the MFS config screen.
+     * Opens the config screen when the config key is pressed.
+     * Also reloads assets if we are in devMode.
      */
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent event){

@@ -13,7 +13,9 @@ import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboard;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.MouseHelper;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 
 /**Wrapper for MC input classes.  Constructor does not exist, as this is simply a
@@ -28,10 +30,17 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
  * @author don_bruce
  */
 public class WrapperInput{
+	//Common variables.
 	private static KeyBinding configKey;
-	private static boolean joystickEnabled = false;
+	
+	//Mouse variables.
+	private static boolean enableMouse = false;
 	private static int mousePosX = 0;
 	private static int mousePosY = 0;
+	private static InhibitableMouseHelper customMouseHelper = new InhibitableMouseHelper();
+	
+	//Joystick variables.
+	private static boolean joystickEnabled = false;
 	private static final Map<String, Controller> joystickMap = new HashMap<String, Controller>();
 	
 	/**
@@ -139,24 +148,45 @@ public class WrapperInput{
 	}
 	
 	/**
-	 *  Returns the current mouse position as a long comprised of two ints.  The
+	 *  Sets the mouse to be enabled or disabled.  Disabling the mouse
+	 *  prevents MC from getting mouse updates, though it does not prevent
+	 *  updates from {@link #getTrackedMousePosition()}.
+	 */
+	public static void setMouseEnabled(boolean enabled){
+		enableMouse = enabled;
+		//Replace the default MC MouseHelper class with our own.
+		//This allows us to disable mouse movement.
+		Minecraft.getMinecraft().mouseHelper = customMouseHelper;
+	}
+	
+	/**
+	 *  Returns the current mouse deltas as a long comprised of two ints.  The
 	 *  first half being the X-coord, and the second half being the Y-coord.  Note
 	 *  that this method can only get the delta the mouse has moved, not the absolute
 	 *  change, so unless you call this every tick you will get bad data!
 	 */
-	public static long getTrackedMousePosition(){
+	public static long getTrackedMouseInfo(){
 		//Don't want to track mouse if we have a high delta.
 		//This usually means we paused the game, which will cause pain if we apply
 		//the movement after un-pausing.
-		int dx = Mouse.getDX();
-		int dy = Mouse.getDY();
-		if(Math.abs(dx) < 100){
-			mousePosX = (int) Math.max(Math.min(mousePosX + dx/5F, 250), -250);
+		if(Math.abs(customMouseHelper.deltaXForced) < 100){
+			mousePosX = (int) Math.max(Math.min(mousePosX + customMouseHelper.deltaXForced, 250), -250);
 		}
-		if(Math.abs(dy) < 100){
-			mousePosY = (int) Math.max(Math.min(mousePosY - dy, 250), -250);
+		if(Math.abs(customMouseHelper.deltaYForced) < 100){
+			mousePosY = (int) Math.max(Math.min(mousePosY + customMouseHelper.deltaYForced, 250), -250);
 		}
-		return mousePosX << Integer.SIZE + mousePosY;
+		//Take a unit off of the mouse value to make it more snappy.
+		if(mousePosX > 0){
+			--mousePosX;
+		}else if(mousePosX < 0){
+			++mousePosX;
+		}
+		if(mousePosY > 0){
+			--mousePosY;
+		}else if(mousePosY < 0){
+			++mousePosY;
+		}
+		return (((long) 2*mousePosX) << Integer.SIZE) | (2*mousePosY & 0xffffffffL);
 	}
 	
 	/**
@@ -211,4 +241,25 @@ public class WrapperInput{
 			default: throw new EnumConstantNotPresentException(ControlsKeyboard.class, kbEnum.name());
 		}
 	}
+	
+	/**
+	 *  Custom MouseHelper class that can have movement checks inhibited based on
+	 *  settings in this class.  Allows us to prevent player movement.
+	 */
+	private static class InhibitableMouseHelper extends MouseHelper{
+		private int deltaXForced;
+		private int deltaYForced;
+		
+		@Override
+		public void mouseXYChange(){
+			//If the mouse is disabled, capture the deltas and prevent MC from seeing them.
+			super.mouseXYChange();
+			if(!enableMouse){
+				deltaXForced = deltaX;
+				deltaYForced = deltaY;
+				deltaX = 0;
+				deltaY = 0;
+			}
+		}
+	};
 }

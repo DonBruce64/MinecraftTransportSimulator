@@ -73,14 +73,14 @@ public final class ControlSystem{
 	
 	private static void controlCamera(ControlsKeyboard camLock, ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsJoystick changeView){
 		if(camLock.isPressed()){
-			CameraSystem.changeCameraLock();
+			ClientEventSystem.lockedView = !ClientEventSystem.lockedView; 
 		}
 		
-		if(zoomIn.isPressed()){
-			CameraSystem.changeCameraZoom(false);
+		if(zoomIn.isPressed() && ClientEventSystem.zoomLevel > 0){
+			ClientEventSystem.zoomLevel -= 2;
 		}
 		if(zoomOut.isPressed()){
-			CameraSystem.changeCameraZoom(true);
+			ClientEventSystem.zoomLevel += 2;
 		}
 		
 		if(changeView.isPressed()){
@@ -256,10 +256,10 @@ public final class ControlSystem{
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.client.mouseYoke.value){
-			if(CameraSystem.lockedView && WrapperGUI.isGUIActive(null)){
-				long mousePosition = WrapperInput.getTrackedMousePosition();
+			if(ClientEventSystem.lockedView && WrapperGUI.isGUIActive(null)){
+				long mousePosition = WrapperInput.getTrackedMouseInfo();
 				MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), (short) (mousePosition >> Integer.SIZE)));
-				MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), (short) (mousePosition & Integer.MAX_VALUE)));
+				MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), (short) ((int) -mousePosition)));
 			}
 		}else{
 			//Check pitch.
@@ -335,8 +335,8 @@ public final class ControlSystem{
 		//Check steering, turn signals, and lights.
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.client.mouseYoke.value){
-			if(CameraSystem.lockedView && WrapperGUI.isGUIActive(null)){
-				long mousePosition = WrapperInput.getTrackedMousePosition();
+			if(ClientEventSystem.lockedView && WrapperGUI.isGUIActive(null)){
+				long mousePosition = WrapperInput.getTrackedMouseInfo();
 				MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), (short) (mousePosition >> Integer.SIZE)));
 			}
 		}else{
