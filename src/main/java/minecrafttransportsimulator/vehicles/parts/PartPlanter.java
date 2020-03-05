@@ -43,6 +43,7 @@ public final class PartPlanter extends APartGroundEffector{
 									vehicle.world.setBlockState(cropPos, plantState, 11);
 									vehicle.world.playSound(partPos.x, partPos.y, partPos.z, plantState.getBlock().getSoundType(plantState, vehicle.world, pos, null).getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 1.0F, false);
 									crateInventory.decrStackSize(i, 1);
+									return;
 								}
 							}
 						}
