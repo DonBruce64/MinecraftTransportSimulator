@@ -21,12 +21,21 @@ import minecrafttransportsimulator.vehicles.parts.PartPropeller;
  * @author don_bruce
  */
 public final class RenderAnimations{
-	
 	/**
 	 *  Returns the current value for the passed-in variable on the passed-in vehicle.  A part may or
 	 *  may not be passed in to allow for part-specific animations (such as a specific engine's RPM).
+	 *  If a value other than 0 is passed-in, the variable returned will be clamped to that value.
+	 *  This is in both the positive and negative direction.
 	 */
-	public static double getVariableValue(String variable, float partialTicks, EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart){
+	public static double getVariableValue(String variable, float scaling, float clamp, float partialTicks, EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart){
+		if(clamp != 0){
+			return Math.max(-clamp, Math.min(clamp, scaling*getVariableValue(variable, partialTicks, vehicle, optionalPart)));
+		}else{
+			return scaling*getVariableValue(variable, partialTicks, vehicle, optionalPart);
+		}
+	}
+	
+	private static double getVariableValue(String variable, float partialTicks, EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart){
 		//If we have a variable with a suffix, we need to get that part first and pass
 		//it into this method rather than trying to run through the code now.
 		if(variable.substring(variable.length() - 1).matches("[0-9]+")){

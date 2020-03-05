@@ -27,6 +27,7 @@ public final class RenderVehicle_RotatablePart{
 	private final Vec3d[] rotationAxis;
 	private final Float[] rotationMagnitudes;
 	private final String[] rotationVariables;
+	private final Float[] rotationClamps;
 	
 	private static final Map<String, Integer> partDisplayLists = new HashMap<String, Integer>();
 	
@@ -41,6 +42,7 @@ public final class RenderVehicle_RotatablePart{
 		List<Vec3d> rotationAxisList = new ArrayList<Vec3d>();
 		List<Float> rotationMagnitudesList = new ArrayList<Float>();
 		List<String> rotationVariablesList = new ArrayList<String>();
+		List<Float> rotationClampsList = new ArrayList<Float>();
 		for(VehicleRotatableModelObject rotatable : rotatableModelObjects){
 			if(rotatable != null && rotatable.partName.equals(this.name)){
 				if(rotatable.rotationPoint != null){
@@ -61,6 +63,11 @@ public final class RenderVehicle_RotatablePart{
 				}else{
 					throw new NullPointerException("ERROR: Rotatable part definition:" + this.name + " is missing a rotationVariable in the vehicle JSON!");
 				}
+				if(rotatable.rotationClamp != null){
+					rotationClampsList.add(rotatable.rotationClamp);
+				}else{
+					rotationClampsList.add(0F);
+				}
 			}
 		}
 		
@@ -69,6 +76,7 @@ public final class RenderVehicle_RotatablePart{
 		this.rotationAxis = rotationAxisList.toArray(new Vec3d[rotationAxisList.size()]);
 		this.rotationMagnitudes = rotationMagnitudesList.toArray(new Float[rotationMagnitudesList.size()]);
 		this.rotationVariables = rotationVariablesList.toArray(new String[rotationVariablesList.size()]);
+		this.rotationClamps = rotationClampsList.toArray(new Float[rotationClampsList.size()]);
 	}
 	
 	/**
@@ -79,10 +87,10 @@ public final class RenderVehicle_RotatablePart{
 	 */
 	public void rotate(EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart, float partialTicks){
 		for(byte i=0; i<rotationVariables.length; ++i){
-			double rotation = RenderAnimations.getVariableValue(rotationVariables[i], partialTicks, vehicle, optionalPart);
+			double rotation = RenderAnimations.getVariableValue(rotationVariables[i], rotationMagnitudes[i], rotationClamps[i], partialTicks, vehicle, optionalPart);
 			if(rotation != 0){
 				GL11.glTranslated(rotationPoints[i].x, rotationPoints[i].y, rotationPoints[i].z);
-				GL11.glRotated(rotation*rotationMagnitudes[i], rotationAxis[i].x, rotationAxis[i].y, rotationAxis[i].z);
+				GL11.glRotated(rotation, rotationAxis[i].x, rotationAxis[i].y, rotationAxis[i].z);
 				GL11.glTranslated(-rotationPoints[i].x, -rotationPoints[i].y, -rotationPoints[i].z);
 			}
 		}
