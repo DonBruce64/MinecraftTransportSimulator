@@ -39,7 +39,7 @@ public class ItemWrench extends Item{
 	
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand){
-		if(ConfigSystem.configObject.client.devMode.value){
+		if(ConfigSystem.configObject.client.devMode.value && world.isRemote){
 			if(player.getRidingEntity() instanceof EntityVehicleE_Powered){
 				WrapperGUI.openGUI(new GUIVehicleEditor((EntityVehicleE_Powered) player.getRidingEntity()));
 			}
