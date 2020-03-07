@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -46,6 +49,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 	public double oilPressure = 90;
 	private double ambientTemp;
 	private double coolingFactor;
+	private Long lastTimeParticleSpawned = 0L;
 	public APartEngine<? extends EntityVehicleE_Powered> linkedEngine;
 	
 	//Rotation data.  Should be set by each engine type individually.
@@ -452,16 +456,43 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 				}
 			}
 			
-			//Render exhaust smoke if we have any exhausts.
-			if(packVehicleDef.exhaustPos != null){
-				int particleCycle = (int) Math.floor(definition.engine.maxRPM/(RPM + engineStartRPM));
-				if(state.running && (particleCycle == 0 || (vehicle.world.getTotalWorldTime()%particleCycle == 0))){
-					float particleColor = (float) Math.max(1 - temp/engineColdTemp, 0);
-					for(int i=0; i<packVehicleDef.exhaustPos.length; i+=3){
-						Vec3d exhaustOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustPos[i], packVehicleDef.exhaustPos[i+1], packVehicleDef.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
-						Vec3d velocityOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustVelocity[i], packVehicleDef.exhaustVelocity[i+1], packVehicleDef.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
-						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04, particleColor, particleColor, particleColor, 1.0F, (float) Math.min((50 + hours)/500, 1)));
+			//Render exhaust smoke if we have any exhausts and are running..
+			if(packVehicleDef.exhaustPos != null && state.running){
+				//Render a smoke for every cycle the exhaust makes.
+				//Depending on the number of positions we have, render an exhaust for every one.
+				//So for 1 position, we render 1 every 2 engine cycles (4 stroke), and for 4, we render 4.
+				//Note that the rendering is offset for multi-position points to simulate the cylinders firing
+				//in their aligned order.
+				
+				//Get timing information and particle information.
+				long engineCycleTimeMills = (long) (2D*(1D/(RPM/60D/1000D)));
+				long currentTime = System.currentTimeMillis();
+				long camTime = currentTime%engineCycleTimeMills;
+				
+				float particleColor = (float) Math.max(1 - temp/engineColdTemp, 0);
+				boolean singleExhaust = packVehicleDef.exhaustPos.length == 3;
+				
+				//Iterate through all the exhaust positions and fire them if it is time to do so.
+				//We need to offset the time we are supposed to spawn by the cycle time for multi-point exhausts.
+				//For single-point exhausts, we only fire if we didn't fire this cycle.
+				for(int i=0; i<packVehicleDef.exhaustPos.length; i+=3){
+					if(singleExhaust){
+						if(lastTimeParticleSpawned + camTime > currentTime){
+							continue;
+						}
+					}else{
+						long camOffset = engineCycleTimeMills*3/packVehicleDef.exhaustPos.length;
+						long camMin = (i/3)*camOffset;
+						long camMax = camMin + camOffset;
+						if(camTime < camMin || camTime > camMax || (lastTimeParticleSpawned > camMin && lastTimeParticleSpawned < camMax)){
+							continue;
+						}
 					}
+					
+					Vec3d exhaustOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustPos[i], packVehicleDef.exhaustPos[i+1], packVehicleDef.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+					Vec3d velocityOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustVelocity[i], packVehicleDef.exhaustVelocity[i+1], packVehicleDef.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
+					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04, particleColor, particleColor, particleColor, 1.0F, (float) Math.min((50 + hours)/500, 1)));
+					lastTimeParticleSpawned = singleExhaust ? currentTime : camTime;
 				}
 			}
 			
