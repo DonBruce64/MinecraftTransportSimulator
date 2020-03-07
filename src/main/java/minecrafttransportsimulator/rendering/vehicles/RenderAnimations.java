@@ -86,8 +86,8 @@ public final class RenderAnimations{
 				switch(variable){
 					case("engine_rotation"): return engine.getEngineRotation(partialTicks);
 					case("engine_driveshaft_rotation"): return engine.getDriveshaftRotation(partialTicks);
-					case("engine_driveshaft_sin"): return 1 + Math.cos(Math.toRadians(engine.getDriveshaftRotation(partialTicks) + 180D))/2D;
-					case("engine_driveshaft_sin_offset"): return Math.sin(Math.toRadians(engine.getDriveshaftRotation(partialTicks) + 180D));
+					case("engine_driveshaft_sin"): return Math.sin(Math.toRadians(engine.getDriveshaftRotation(partialTicks)));
+					case("engine_driveshaft_cos"): return Math.cos(Math.toRadians(engine.getDriveshaftRotation(partialTicks)));
 					case("engine_rpm"): return engine.definition.engine.maxRPM < 15000 ? engine.RPM : engine.RPM/10D;
 					case("engine_rpm_safe"): return engine.definition.engine.maxRPM < 15000 ? APartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM) : APartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM)/10D;
 					case("engine_rpm_max"): return engine.definition.engine.maxRPM < 15000 ? engine.definition.engine.maxRPM : engine.definition.engine.maxRPM/10D;
