@@ -293,9 +293,11 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//Update SFX, but only once per render cycle.
 		if(MinecraftForgeClient.getRenderPass() == -1){
 			VehicleSoundSystem.updateVehicleSounds(vehicle);
-			for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
-				if(part instanceof FXPart){
-					((FXPart) part).spawnParticles();
+			if(!minecraft.isGamePaused()){
+				for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+					if(part instanceof FXPart){
+						((FXPart) part).spawnParticles();
+					}
 				}
 			}
 		}
