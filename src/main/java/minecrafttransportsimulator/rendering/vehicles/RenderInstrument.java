@@ -73,7 +73,7 @@ public final class RenderInstrument{
 			//If we are rotating the window, but not the texture we should initialize the texture points to that rotated point.
 			//Otherwise, set the points to their normal location.
 			if(section.rotationVariable != null && section.rotateWindow){
-				double rotation = section.rotationOffset + RenderAnimations.getVariableValue(addRotationSuffix ? section.rotationVariable + partNumber : section.rotationVariable, section.rotationFactor, section.rotationClamp, 0, vehicle, null);
+				double rotation = section.rotationOffset + RenderAnimations.getVariableValue(addRotationSuffix ? section.rotationVariable + "_" + partNumber : section.rotationVariable, section.rotationFactor, section.rotationClamp, 0, vehicle, null);
 				double sin = Math.sin(Math.toRadians(rotation));
 				double cos = Math.sin(Math.toRadians(rotation));
 				layerUStart = (float) ((-section.textureWidth/2F)*cos - (-section.textureHeight/2F)*sin);
@@ -90,7 +90,7 @@ public final class RenderInstrument{
 			//If we are translating, offset the coords based on the translated amount.
 			//Adjust the window to either move or scale depending on settings.
 			if(section.translationVariable != null){
-				float translation = (float) (RenderAnimations.getVariableValue(addTranslationSuffix ? section.translationVariable + partNumber : section.translationVariable, section.translationFactor, section.translationClamp, 0, vehicle, null));
+				float translation = (float) (RenderAnimations.getVariableValue(addTranslationSuffix ? section.translationVariable + "_" + partNumber : section.translationVariable, section.translationFactor, section.translationClamp, 0, vehicle, null));
 				if(section.extendWindow){
 					//We need to add to the edge of the window in this case rather than move the entire window.
 					if(section.translateHorizontal){
@@ -112,7 +112,7 @@ public final class RenderInstrument{
 			
 			//If we are rotating the texture, and not the window, apply the rotation here after the translation.
 			if(section.rotationVariable != null && !section.rotateWindow){
-				float rotation = (float) (section.rotationOffset + RenderAnimations.getVariableValue(addRotationSuffix ? section.rotationVariable + partNumber : section.rotationVariable, section.rotationFactor, section.rotationClamp, 0, vehicle, null));
+				float rotation = (float) (section.rotationOffset + RenderAnimations.getVariableValue(addRotationSuffix ? section.rotationVariable + "_" + partNumber : section.rotationVariable, section.rotationFactor, section.rotationClamp, 0, vehicle, null));
 				GL11.glRotatef(rotation, 0, 0, 1);
 			}
 			

@@ -39,6 +39,7 @@ public final class RenderAnimations{
 		//If we have a variable with a suffix, we need to get that part first and pass
 		//it into this method rather than trying to run through the code now.
 		if(variable.substring(variable.length() - 1).matches("[0-9]+")){
+			//Get the part number and the type from the variable.
 			//Take off one because we are zero-indexed.
 			int partNumber = Integer.parseInt(variable.substring(variable.length() - 1)) - 1;
 			String partType = variable.substring(0, variable.indexOf('_'));
@@ -64,7 +65,7 @@ public final class RenderAnimations{
 							//If it's not, or it doesn't exist, return 0.
 							APart<? extends EntityVehicleA_Base> foundPart = vehicle.getPartAtLocation(vehiclePart.pos[0], vehiclePart.pos[1], vehiclePart.pos[2]);
 							if(foundPart != null && partClass.isInstance(foundPart)){
-								return getVariableValue(variable.substring(0, variable.length() - 1), partialTicks, vehicle, foundPart);
+								return getVariableValue(variable.substring(0, variable.length() - 2), partialTicks, vehicle, foundPart);
 							}else{
 								return 0;
 							}
@@ -88,6 +89,7 @@ public final class RenderAnimations{
 					case("engine_driveshaft_sin"): return 1 + Math.cos(Math.toRadians(engine.getDriveshaftRotation(partialTicks) + 180D))/2D;
 					case("engine_driveshaft_sin_offset"): return Math.sin(Math.toRadians(engine.getDriveshaftRotation(partialTicks) + 180D));
 					case("engine_rpm"): return engine.definition.engine.maxRPM < 15000 ? engine.RPM : engine.RPM/10D;
+					case("engine_rpm_safe"): return engine.definition.engine.maxRPM < 15000 ? APartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM) : APartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM)/10D;
 					case("engine_rpm_max"): return engine.definition.engine.maxRPM < 15000 ? engine.definition.engine.maxRPM : engine.definition.engine.maxRPM/10D;
 					case("engine_fuel_flow"): return engine.fuelFlow*20D*60D/1000D;
 					case("engine_temp"): return engine.temp;
@@ -138,11 +140,12 @@ public final class RenderAnimations{
 			case("electric_power"): return vehicle.electricPower;
 			case("electric_usage"): return vehicle.electricFlow*20D;
 			case("brake"): return vehicle.brakeOn ? 1 : 0;
-			case("p_brake"): return (vehicle.prevParkingBrakeAngle + (vehicle.parkingBrakeAngle - vehicle.prevParkingBrakeAngle)*partialTicks)/30D;
+			case("p_brake"): return vehicle.parkingBrakeOn ? 1 : 0;
 			case("steering_wheel"): return vehicle.getSteerAngle();
 			case("horn"): return vehicle.hornOn ? 1 : 0;
 			case("siren"): return vehicle.sirenOn ? 1 : 0;
 			case("hood"): return vehicle.engines.isEmpty() ? 1 : 0;
+			case("door"): return (vehicle.prevParkingBrakeAngle + (vehicle.parkingBrakeAngle - vehicle.prevParkingBrakeAngle)*partialTicks)/30D;
 		}
 		
 		//Check if this is a light variable.
