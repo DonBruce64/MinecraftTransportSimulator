@@ -42,6 +42,7 @@ public class WrapperInput{
 	//Joystick variables.
 	private static boolean joystickEnabled = false;
 	private static final Map<String, Controller> joystickMap = new HashMap<String, Controller>();
+	private static final Map<String, Integer> joystickNameCounters = new HashMap<String, Integer>();
 	
 	/**
 	 *  This is called to set up the master keybinding after the main MC systems have started,
@@ -58,9 +59,15 @@ public class WrapperInput{
 		for(Controller joystick : ControllerEnvironment.getDefaultEnvironment().getControllers()){
 			joystickEnabled = true;
 			if(joystick.getType() != null && joystick.getName() != null){
-				if(!joystick.getType().equals(Controller.Type.MOUSE) && !joystick.getType().equals(Controller.Type.KEYBOARD)){
+				if(!joystick.getType().equals(Controller.Type.MOUSE) && !joystick.getType().equals(Controller.Type.KEYBOARD) && !joystick.getType().equals(Controller.Type.UNKNOWN)){
 					if(joystick.getComponents().length != 0){
-						joystickMap.put(joystick.getName(), joystick);
+						String joystickName = joystick.getName();
+						//Add an index on this joystick to be sure we don't override multi-component units.
+						if(!joystickNameCounters.containsKey(joystickName)){
+							joystickNameCounters.put(joystickName, 0);
+						}
+						joystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
+						joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
 					}
 				}
 			}
