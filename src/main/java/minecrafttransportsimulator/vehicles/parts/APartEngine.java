@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -456,8 +453,9 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 				}
 			}
 			
-			//Render exhaust smoke if we have any exhausts and are running..
-			if(packVehicleDef.exhaustPos != null && state.running){
+			//Render exhaust smoke if we have any exhausts and are running.
+			//If we are starting and have flames set, render those instead.
+			if(packVehicleDef.exhaustPos != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
 				//Render a smoke for every cycle the exhaust makes.
 				//Depending on the number of positions we have, render an exhaust for every one.
 				//So for 1 position, we render 1 every 2 engine cycles (4 stroke), and for 4, we render 4.
@@ -491,7 +489,12 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 					
 					Vec3d exhaustOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustPos[i], packVehicleDef.exhaustPos[i+1], packVehicleDef.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
 					Vec3d velocityOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustVelocity[i], packVehicleDef.exhaustVelocity[i+1], packVehicleDef.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
-					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04, particleColor, particleColor, particleColor, 1.0F, (float) Math.min((50 + hours)/500, 1)));
+					if(state.running){
+						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04, particleColor, particleColor, particleColor, 1.0F, (float) Math.min((50 + hours)/500, 1)));
+					}
+					if(definition.engine.flamesOnStartup && state.esOn){
+						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.EngineFlameParticleFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04));
+					}
 					lastTimeParticleSpawned = singleExhaust ? currentTime : camTime;
 				}
 			}

@@ -3,6 +3,7 @@ package minecrafttransportsimulator.systems;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleDrip;
+import net.minecraft.client.particle.ParticleFlame;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.relauncher.Side;
@@ -34,6 +35,12 @@ public final class VehicleEffectsSystem{
 	public static class FuelDropParticleFX extends ParticleDrip{
 		public FuelDropParticleFX(World world, double posX, double posY, double posZ){
 			super(world, posX, posY, posZ, Material.LAVA);
+		}
+	}
+	
+	public static class EngineFlameParticleFX extends ParticleFlame{
+		public EngineFlameParticleFX(World world, double posX, double posY, double posZ, double motionX, double motionY, double motionZ){
+			super(world, posX, posY, posZ, motionX, motionY, motionZ);
 		}
 	}
 	

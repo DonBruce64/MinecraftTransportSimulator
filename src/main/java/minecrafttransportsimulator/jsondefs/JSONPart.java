@@ -32,6 +32,7 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     
     public class PartEngine{
     	public boolean isAutomatic;
+    	public boolean flamesOnStartup;
     	public byte starterPower;
     	public byte starterDuration;
     	public int maxRPM;
