@@ -2,6 +2,7 @@ package minecrafttransportsimulator.wrappers;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
@@ -31,7 +32,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import scala.actors.threadpool.Arrays;
 
 /**Wrapper for MC GUI classes.  Constructor takes a type of {@link AGUIBase}, but
  * is only visible when calling {@link #openGUI(AGUIBase)}.  This will automatically
@@ -262,7 +262,6 @@ public class WrapperGUI extends GuiScreen{
 	 *  This should be rendered at the end of the render call to prevent the odd texture
 	 *  binding of this method from conflicting from other renders.
 	 */
-	@SuppressWarnings("unchecked")
 	public void drawGenericTooltip(String tooltip, int mouseX, int mouseY){
 		GuiUtils.drawHoveringText(Arrays.asList(new String[]{tooltip}), mouseX, mouseY, width, height, -1, fontRenderer);
 	}
