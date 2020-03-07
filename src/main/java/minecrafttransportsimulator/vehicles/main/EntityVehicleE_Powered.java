@@ -67,6 +67,18 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				fuel = 0;
 				fluidName = "";
 			}
+			
+			//Turn on the DRLs if we have an engine on.
+			boolean anyEngineOn = false;
+			for(APartEngine<? extends EntityVehicleE_Powered> engine : engines.values()){
+				if(engine.state.running){
+					anyEngineOn = true;
+					break;
+				}
+			}
+			changeLightStatus(LightType.DAYTIMERUNNINGLIGHT, anyEngineOn);
+			
+			//Set electric usage based on light status.
 			if(electricPower > 2){
 				for(LightType light : lightsOn){
 					if(light.hasBeam){
@@ -354,7 +366,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		RIGHTINDICATORLIGHT(false),
 		RUNNINGLIGHT(false),
 		HEADLIGHT(true),
-		EMERGENCYLIGHT(false);
+		EMERGENCYLIGHT(false),
+		DAYTIMERUNNINGLIGHT(false);
 		
 		public final boolean hasBeam;
 		private LightType(boolean hasBeam){
