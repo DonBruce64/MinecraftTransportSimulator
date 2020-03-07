@@ -503,7 +503,7 @@ public final class ControlSystem{
 		CAR_SHIFT_D(false, true),
 		CAR_HORN(false, false),
 		CAR_PARK(false, true),
-		CAR_RADIO(false, false),
+		CAR_RADIO(false, true),
 		CAR_GUN(false, false),
 		CAR_ZOOM_I(false, true),
 		CAR_ZOOM_O(false, true),
