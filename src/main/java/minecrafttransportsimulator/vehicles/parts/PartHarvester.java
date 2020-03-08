@@ -37,7 +37,7 @@ public final class PartHarvester extends APartGroundEffector{
 			if(!vehicle.world.isRemote){
 				harvestedBlock.getDrops(drops, vehicle.world, pos, state, 0);
 				vehicle.world.setBlockToAir(pos);
-				if(!(harvestedBlock instanceof BlockBush)){
+				if(harvestedBlock instanceof BlockCrops){
 					Iterator<ItemStack> iterator = drops.iterator();
 					while(iterator.hasNext()){
 						ItemStack stack = iterator.next();
@@ -46,6 +46,7 @@ public final class PartHarvester extends APartGroundEffector{
 								InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
 								if(crateInventory.addItem(stack).getCount() == 0){
 									iterator.remove();
+									break;
 								}
 							}
 						}
