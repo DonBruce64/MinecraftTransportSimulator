@@ -98,8 +98,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 		partDisplayLists.clear();
 		partRotatableLists.clear();
+		partTranslatableLists.clear();
 		partLightLists.clear();
 		treadDeltas.clear();
+		treadPoints.clear();
 	}
 	
 	@Override
