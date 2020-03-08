@@ -60,7 +60,7 @@ public final class RenderAnimations{
 			}
 			
 			//Iterate through the pack defs to find the index of the pack def for the part we want.
-			for(VehiclePart vehiclePart : vehicle.definition.parts){
+			for(VehiclePart vehiclePart : vehicle.getAllPossiblePackParts().values()){
 				for(String defPartType : vehiclePart.types){
 					if(defPartType.startsWith(partType)){
 						if(partNumber == 0){
@@ -105,10 +105,11 @@ public final class RenderAnimations{
 					case("engine_starter"): return engine.state.esOn ? 1 : 0;
 				}
 			}else if(optionalPart instanceof PartPropeller){
+				PartPropeller propeller = (PartPropeller) optionalPart;
 				switch(variable){
-					case("propeller_pitch_deg"): return Math.toDegrees(Math.atan(((PartPropeller) optionalPart).currentPitch / (((PartPropeller) optionalPart).definition.propeller.diameter*0.75D*Math.PI)));
-					case("propeller_pitch_in"): return((PartPropeller) optionalPart).currentPitch;
-					case("propeller_pitch_percent"): return((PartPropeller) optionalPart).currentPitch/optionalPart.definition.propeller.pitch;
+					case("propeller_pitch_deg"): return Math.toDegrees(Math.atan(propeller.currentPitch / (propeller.definition.propeller.diameter*0.75D*Math.PI)));
+					case("propeller_pitch_in"): return propeller.currentPitch;
+					case("propeller_pitch_percent"): return 1D*propeller.currentPitch/propeller.definition.propeller.pitch;
 				}
 			}else if(optionalPart instanceof APartGun){
 				APartGun gun = (APartGun) optionalPart;
