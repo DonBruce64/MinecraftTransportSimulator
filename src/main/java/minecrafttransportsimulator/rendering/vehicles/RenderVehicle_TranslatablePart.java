@@ -113,4 +113,12 @@ public final class RenderVehicle_TranslatablePart{
 		}
 		GL11.glCallList(partDisplayLists.get(uniqueModelName));
 	}
+	
+	/**Used to clear out the rendering caches in dev mode to allow the re-loading of models.**/
+	public void clearCaches(){
+		if(partDisplayLists.containsKey(uniqueModelName)){
+			GL11.glDeleteLists(partDisplayLists.get(uniqueModelName), 1);
+		}
+		partDisplayLists.remove(uniqueModelName);
+	}
 }

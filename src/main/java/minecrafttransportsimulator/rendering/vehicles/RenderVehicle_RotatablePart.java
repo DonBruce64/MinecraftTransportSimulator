@@ -143,6 +143,14 @@ public final class RenderVehicle_RotatablePart{
 		GL11.glCallList(partDisplayLists.get(uniqueModelName));
 	}
 	
+	/**Used to clear out the rendering caches in dev mode to allow the re-loading of models.**/
+	public void clearCaches(){
+		if(partDisplayLists.containsKey(uniqueModelName)){
+			GL11.glDeleteLists(partDisplayLists.get(uniqueModelName), 1);
+		}
+		partDisplayLists.remove(uniqueModelName);
+	}
+	
 	/**
 	 *  This method creates an {@link RenderVehicle_TreadRoller} class from this RotatablePart.
 	 *  Used for vehicle treads in the auto configuration.

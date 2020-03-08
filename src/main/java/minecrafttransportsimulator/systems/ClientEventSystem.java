@@ -17,7 +17,6 @@ import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
 import minecrafttransportsimulator.radio.RadioManager;
 import minecrafttransportsimulator.radio.RadioThread;
 import minecrafttransportsimulator.rendering.vehicles.RenderInstrument;
-import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleC_Colliding;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -440,7 +439,6 @@ public final class ClientEventSystem{
     public static void onKeyInput(InputEvent.KeyInputEvent event){
         if(WrapperInput.isMasterControlButttonPressed()){
         	if(ConfigSystem.configObject.client.devMode.value && minecraft.isSingleplayer()){
-        		RenderVehicle.clearCaches();
         		FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
         		FMLClientHandler.instance().refreshResources(VanillaResourceType.TEXTURES);
         		for(Entity entity : Minecraft.getMinecraft().world.loadedEntityList){

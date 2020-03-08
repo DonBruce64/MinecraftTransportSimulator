@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.systems;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +20,12 @@ public final class OBJParserSystem{
 	public static Map<String, Float[][]> parseOBJModel(String packID, String modelLocation){
 		try{
 			Map<String, Float[][]> partMap = new HashMap<String, Float[][]>();
-			BufferedReader reader = new BufferedReader(new InputStreamReader (OBJParserSystem.class.getResourceAsStream("/assets/" + packID + "/" + modelLocation)));
+			BufferedReader reader;
+			if(packID != null){
+				reader = new BufferedReader(new InputStreamReader(OBJParserSystem.class.getResourceAsStream("/assets/" + packID + "/" + modelLocation)));
+			}else{
+				reader = new BufferedReader(new FileReader(new File(modelLocation)));
+			}
 			
 			String partName = null;
 			final List<Float[]> vertexList = new ArrayList<Float[]>();

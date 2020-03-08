@@ -50,6 +50,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	
 	//VEHICLE MAPS.  Maps are keyed by generic name.
 	private static final Map<String, Integer> vehicleDisplayLists = new HashMap<String, Integer>();
+	private static final Map<String, String> vehicleModelOverrides = new HashMap<String, String>();
 	private static final Map<String, List<RenderVehicle_RotatablePart>> vehicleRotatableLists = new HashMap<String, List<RenderVehicle_RotatablePart>>();
 	private static final Map<String, List<RenderVehicle_TranslatablePart>> vehicleTranslatableLists = new HashMap<String, List<RenderVehicle_TranslatablePart>>();
 	private static final Map<String, List<RenderVehicle_LightPart>> vehicleLightLists = new HashMap<String, List<RenderVehicle_LightPart>>();
@@ -83,25 +84,30 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		super(renderManager);
 	}
 	
-	/**Used to clear out the rendering caches in dev mode to allow the re-loading of models.**/
-	public static void clearCaches(){
-		for(Integer index : vehicleDisplayLists.values()){
-			GL11.glDeleteLists(index, 1);
+	/**Used to clear out the rendering caches of the passed-in vehicle in dev mode to allow the re-loading of models.**/
+	public static void clearVehicleCaches(EntityVehicleE_Powered vehicle){
+		vehicleDisplayLists.remove(vehicle.definition.genericName);
+		for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
+			rotatable.clearCaches();
 		}
-		vehicleDisplayLists.clear();
-		vehicleRotatableLists.clear();
-		vehicleTranslatableLists.clear();
-		vehicleLightLists.clear();
-		vehicleWindowLists.clear();
-		for(Integer index : partDisplayLists.values()){
-			GL11.glDeleteLists(index, 1);
+		vehicleRotatableLists.remove(vehicle.definition.genericName);
+		
+		for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
+			translatable.clearCaches();
 		}
-		partDisplayLists.clear();
-		partRotatableLists.clear();
-		partTranslatableLists.clear();
-		partLightLists.clear();
-		treadDeltas.clear();
-		treadPoints.clear();
+		vehicleTranslatableLists.remove(vehicle.definition.genericName);
+		vehicleLightLists.remove(vehicle.definition.genericName);
+		vehicleWindowLists.remove(vehicle.definition.genericName);
+		treadDeltas.remove(vehicle.definition.genericName);
+		treadPoints.remove(vehicle.definition.genericName);
+	}
+	
+	/**
+	 * Used to inject a new model into the model map for vehicles.
+	 * Allow for hotloading models outside of the normal jar locations.
+	 **/
+	public static void injectModel(EntityVehicleE_Powered vehicle, String modelLocation){
+		vehicleModelOverrides.put(vehicle.definition.genericName, modelLocation);
 	}
 	
 	@Override
@@ -355,7 +361,12 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			List<WindowPart> windows = new ArrayList<WindowPart>();
 			
 			ResourceLocation vehicleModelLocation = new ResourceLocation(vehicle.definition.packID, "objmodels/vehicles/" + vehicle.definition.genericName + ".obj");
-			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(vehicleModelLocation.getResourceDomain(), vehicleModelLocation.getResourcePath());
+			Map<String, Float[][]> parsedModel;
+			if(vehicleModelOverrides.containsKey(vehicle.definition.genericName)){
+				parsedModel = OBJParserSystem.parseOBJModel(null, vehicleModelOverrides.get(vehicle.definition.genericName));
+			}else{
+				parsedModel = OBJParserSystem.parseOBJModel(vehicleModelLocation.getResourceDomain(), vehicleModelLocation.getResourcePath());
+			}
 			int displayListIndex = GL11.glGenLists(1);
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 			GL11.glBegin(GL11.GL_TRIANGLES);

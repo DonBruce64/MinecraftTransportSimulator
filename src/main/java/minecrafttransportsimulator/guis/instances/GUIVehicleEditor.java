@@ -160,8 +160,8 @@ public class GUIVehicleEditor extends AGUIBase{
 					e.printStackTrace();
 				}
 				
-				//Reset the rendering system to update rendering cahces.
-				RenderVehicle.clearCaches();
+				//Reset the rendering system to update rendering caches.
+				RenderVehicle.clearVehicleCaches(vehicle);
 			}
 		});
 		
@@ -210,10 +210,11 @@ public class GUIVehicleEditor extends AGUIBase{
 	 */
 	private static enum EditScreen{
 		NONE(null),
+		MODELS(new ModelLoader()),
 		INSTRUMENTS(new InstrumentLoader()),
 		ROTATIONS(new RotationLoader()),
 		TRANSLATIONS(new TranslationLoader()),
-		TEXT(new TextLoader());;
+		TEXTS(new TextLoader());;
 		
 		private final LoaderHelper<?> loader;
 		
@@ -264,8 +265,61 @@ public class GUIVehicleEditor extends AGUIBase{
 		public abstract int saveObject(List<GUIComponentTextBox> dataEntryBoxes);
 	}
 	
-	private static class InstrumentLoader extends LoaderHelper<PackInstrument>{
+	private static class ModelLoader extends LoaderHelper<String>{
 
+		@Override
+		public boolean setIndex(int index){
+			return true;
+		}
+		
+		@Override
+		public int setLabels(List<GUIComponentLabel> dataEntryLabels){
+			int labelBoxIndex = 0;
+			dataEntryLabels.get(labelBoxIndex++).text = "Just put a number here:";
+			dataEntryLabels.get(labelBoxIndex++).text = "Model Folder (optional):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Model Name:";
+			return labelBoxIndex;
+		}
+
+		@Override
+		public void loadObject(List<GUIComponentTextBox> dataEntryBoxes){
+			int dataEntryBoxIndex = 1;
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText("");
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText("");
+		}
+
+		@Override
+		public int saveObject(List<GUIComponentTextBox> dataEntryBoxes){
+			int dataEntryBoxIndex = 1;
+			File modelFile;
+			try{
+				String folderName = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
+				if(!folderName.isEmpty() && !(new File(MTS.minecraftDir, folderName).exists())){
+					return -1; 
+				}
+				
+				String fileName = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
+				if(fileName.isEmpty()){
+					return -2;
+				}
+				if(!folderName.isEmpty()){
+					modelFile = new File(new File(MTS.minecraftDir, folderName), fileName);
+				}else{
+					modelFile = new File(MTS.minecraftDir, fileName);
+				}
+				if(!modelFile.exists()){
+					return -2;
+				}
+			}catch(Exception e){
+				return -(--dataEntryBoxIndex);
+			}
+			
+			RenderVehicle.injectModel(vehicle, modelFile.getAbsolutePath());
+			return 0;
+		}
+	}
+	
+	private static class InstrumentLoader extends LoaderHelper<PackInstrument>{
 		@Override
 		public boolean setIndex(int index){
 			if(index < vehicle.definition.motorized.instruments.size()){
@@ -354,7 +408,6 @@ public class GUIVehicleEditor extends AGUIBase{
 	}
 	
 	private static class RotationLoader extends LoaderHelper<VehicleRotatableModelObject>{
-
 		@Override
 		public boolean setIndex(int index){
 			if(index < vehicle.definition.rendering.rotatableModelObjects.size()){
@@ -433,7 +486,6 @@ public class GUIVehicleEditor extends AGUIBase{
 	}
 	
 	private static class TranslationLoader extends LoaderHelper<VehicleTranslatableModelObject>{
-
 		@Override
 		public boolean setIndex(int index){
 			if(index < vehicle.definition.rendering.translatableModelObjects.size()){
@@ -502,7 +554,6 @@ public class GUIVehicleEditor extends AGUIBase{
 	}
 	
 	private static class TextLoader extends LoaderHelper<VehicleDisplayText>{
-
 		@Override
 		public boolean setIndex(int index){
 			if(index < vehicle.definition.rendering.textMarkings.size()){
