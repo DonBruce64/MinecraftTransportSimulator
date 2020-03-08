@@ -8,16 +8,13 @@ import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.packets.general.PacketChat;
-import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
 import minecrafttransportsimulator.radio.RadioManager;
 import minecrafttransportsimulator.radio.RadioThread;
 import minecrafttransportsimulator.rendering.vehicles.RenderInstrument;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleC_Colliding;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
@@ -41,10 +38,8 @@ import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.client.resource.VanillaResourceType;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
@@ -433,25 +428,11 @@ public final class ClientEventSystem{
 
     /**
      * Opens the config screen when the config key is pressed.
-     * Also reloads assets if we are in devMode.
      */
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent event){
-        if(WrapperInput.isMasterControlButttonPressed()){
-        	if(ConfigSystem.configObject.client.devMode.value && minecraft.isSingleplayer()){
-        		FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
-        		FMLClientHandler.instance().refreshResources(VanillaResourceType.TEXTURES);
-        		for(Entity entity : Minecraft.getMinecraft().world.loadedEntityList){
-					if(entity instanceof EntityVehicleA_Base){
-						EntityVehicleA_Base vehicle = (EntityVehicleA_Base) entity;
-						vehicle.definition = (JSONVehicle) MTSRegistry.packItemMap.get(vehicle.definition.packID).get(vehicle.definition.systemName).definition;
-					}
-				}
-        		MTS.MTSNet.sendToServer(new PacketPackReload());
-        	}
-            if(minecraft.currentScreen == null){
-            	WrapperGUI.openGUI(new GUIConfig());
-            }
+        if(WrapperInput.isMasterControlButttonPressed() && minecraft.currentScreen == null){
+            WrapperGUI.openGUI(new GUIConfig());
         }
     }
 }
