@@ -109,7 +109,7 @@ public final class RenderAnimations{
 				switch(variable){
 					case("propeller_pitch_deg"): return Math.toDegrees(Math.atan(propeller.currentPitch / (propeller.definition.propeller.diameter*0.75D*Math.PI)));
 					case("propeller_pitch_in"): return propeller.currentPitch;
-					case("propeller_pitch_percent"): return 1D*propeller.currentPitch/propeller.definition.propeller.pitch;
+					case("propeller_pitch_percent"): return 1D*(propeller.currentPitch - PartPropeller.MIN_DYNAMIC_PITCH)/(propeller.definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH);
 				}
 			}else if(optionalPart instanceof APartGun){
 				APartGun gun = (APartGun) optionalPart;

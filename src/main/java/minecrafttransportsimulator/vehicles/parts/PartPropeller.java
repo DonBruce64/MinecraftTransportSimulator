@@ -26,6 +26,8 @@ public class PartPropeller extends APart<EntityVehicleF_Air>{
 	
 	private final PartEngineAircraft connectedEngine;
 	
+	public static final int MIN_DYNAMIC_PITCH = 45;
+	
 	public PartPropeller(EntityVehicleF_Air vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 		this.damage = dataTag.getFloat("damage");
@@ -54,11 +56,11 @@ public class PartPropeller extends APart<EntityVehicleF_Air>{
 		//If we are a dynamic-pitch propeller, adjust ourselves to the speed of the engine.
 		//But don't do this for blimps, as they reverse their engines rather than adjust their propellers.
 		if(definition.propeller.isDynamicPitch && !(vehicle instanceof EntityVehicleG_Blimp)){
-			if(vehicle.reverseThrust && currentPitch > -45){
+			if(vehicle.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH){
 				--currentPitch;
-			}else if(!vehicle.reverseThrust && currentPitch < 45){
+			}else if(!vehicle.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
 				++currentPitch;
-			}else if(connectedEngine.RPM < connectedEngine.definition.engine.maxRPM*0.80 && currentPitch > 45){
+			}else if(connectedEngine.RPM < connectedEngine.definition.engine.maxRPM*0.80 && currentPitch > MIN_DYNAMIC_PITCH){
 				--currentPitch;
 			}else if(connectedEngine.RPM > connectedEngine.definition.engine.maxRPM*0.85 && currentPitch < definition.propeller.pitch){
 				++currentPitch;
