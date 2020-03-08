@@ -134,7 +134,7 @@ public final class ClientEventSystem{
     
     private static boolean doClickEvent(EntityPlayer player){
     	Vec3d lookVec = player.getLook(1.0F);
-		for(Entity entity : minecraft.world.loadedEntityList){
+		for(Entity entity : player.world.loadedEntityList){
 			if(entity instanceof EntityVehicleC_Colliding){
 				EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) entity;
 				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
@@ -223,7 +223,7 @@ public final class ClientEventSystem{
         		
         		//If we are riding a vehicle, do rotation and control operation.
         		if(event.player.getRidingEntity() instanceof EntityVehicleE_Powered){
-        			EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.player.getRidingEntity();
+        			EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) event.player.getRidingEntity();
 
                     //If we aren't paused, and we have a lockedView, rotate us with the vehicle.
                     if(!minecraft.isGamePaused() && lockedView){
