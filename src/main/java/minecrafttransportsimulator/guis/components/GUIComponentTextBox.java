@@ -152,12 +152,12 @@ public class GUIComponentTextBox{
     		//Otherwise, render it at the top aligned.
     		if(enabled){
     			if(focused && WrapperGUI.inClockPeriod(20, 10)){
-    				WrapperGUI.drawText(String.format(flashText), x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, false, false, width);
+    				WrapperGUI.drawText(flashText, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, false, false, width);
     			}else{
-    				WrapperGUI.drawText(String.format(text), x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, false, false, width);
+    				WrapperGUI.drawText(text, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, false, false, width);
     			}
     		}else{
-    			WrapperGUI.drawText(String.format(text), x + 4, y + (height >= 20 ? 5 : 1 + height/10), Color.GRAY, false, false, width);
+    			WrapperGUI.drawText(text, x + 4, y + (height >= 20 ? 5 : 1 + height/10), Color.GRAY, false, false, width);
     		}
     	}
     }
