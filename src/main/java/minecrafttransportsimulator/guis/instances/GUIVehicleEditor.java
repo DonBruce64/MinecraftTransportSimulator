@@ -17,6 +17,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
@@ -211,7 +212,8 @@ public class GUIVehicleEditor extends AGUIBase{
 		NONE(null),
 		INSTRUMENTS(new InstrumentLoader()),
 		ROTATIONS(new RotationLoader()),
-		TRANSLATIONS(new TranslationLoader());
+		TRANSLATIONS(new TranslationLoader()),
+		TEXT(new TextLoader());;
 		
 		private final LoaderHelper<?> loader;
 		
@@ -494,6 +496,79 @@ public class GUIVehicleEditor extends AGUIBase{
 				return 100 + currentIndex;
 			}else{
 				vehicle.definition.rendering.translatableModelObjects.set(currentIndex, saving);
+				return currentIndex;
+			}
+		}
+	}
+	
+	private static class TextLoader extends LoaderHelper<VehicleDisplayText>{
+
+		@Override
+		public boolean setIndex(int index){
+			if(index < vehicle.definition.rendering.textMarkings.size()){
+				currentIndex = index;
+				return true;
+			}else{
+				return false;
+			}
+		}
+		
+		@Override
+		public int setLabels(List<GUIComponentLabel> dataEntryLabels){
+			int labelBoxIndex = 0;
+			dataEntryLabels.get(labelBoxIndex++).text = "Text# (0 is first):";
+			dataEntryLabels.get(labelBoxIndex++).text = "X-Pos (blocks):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Y-Pos (blocks):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Z-Pos (blocks):";
+			dataEntryLabels.get(labelBoxIndex++).text = "X-Rot (deg):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Y-Rot (deg):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Z-Rot (deg):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Scale (1=1/2 block):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Color (hex, #FFFFFF):";
+			return labelBoxIndex;
+		}
+
+		@Override
+		public void loadObject(List<GUIComponentTextBox> dataEntryBoxes){
+			VehicleDisplayText loading = vehicle.definition.rendering.textMarkings.get(currentIndex);
+			
+			int dataEntryBoxIndex = 1;
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.pos[0]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.pos[1]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.pos[2]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rot[0]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rot[1]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rot[2]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.scale));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.color));
+		}
+
+		@Override
+		public int saveObject(List<GUIComponentTextBox> dataEntryBoxes){
+			VehicleDisplayText saving = vehicle.definition.new VehicleDisplayText();
+			
+			int dataEntryBoxIndex = 1;
+			try{
+				saving.pos = new float[3];
+				saving.pos[0] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.pos[1] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.pos[2] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.rot = new float[3];
+				saving.rot[0] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.rot[1] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.rot[2] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.scale = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.color = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
+			}catch(Exception e){
+				return -(--dataEntryBoxIndex);
+			}
+			
+			if(currentIndex >= vehicle.definition.rendering.textMarkings.size()){
+				currentIndex = vehicle.definition.rendering.textMarkings.size();
+				vehicle.definition.rendering.textMarkings.add(saving);
+				return 100 + currentIndex;
+			}else{
+				vehicle.definition.rendering.textMarkings.set(currentIndex, saving);
 				return currentIndex;
 			}
 		}
