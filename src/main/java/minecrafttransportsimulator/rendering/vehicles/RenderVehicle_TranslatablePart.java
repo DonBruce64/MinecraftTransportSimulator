@@ -26,7 +26,8 @@ public final class RenderVehicle_TranslatablePart{
 	private final Vec3d[] translationAxis;
 	private final Float[] translationMagnitudes;
 	private final String[] translationVariables;
-	private final Float[] translationClamps;
+	private final Float[] translationClampsMin;
+	private final Float[] translationClampsMax;
 	
 	private static final Map<String, Integer> partDisplayLists = new HashMap<String, Integer>();
 	
@@ -40,7 +41,8 @@ public final class RenderVehicle_TranslatablePart{
 		List<Vec3d> translationAxisList = new ArrayList<Vec3d>();
 		List<Float> translationMagnitudesList = new ArrayList<Float>();
 		List<String> translationVariablesList = new ArrayList<String>();
-		List<Float> translationClampsList = new ArrayList<Float>();
+		List<Float> translationClampsMinList = new ArrayList<Float>();
+		List<Float> translationClampsMaxList = new ArrayList<Float>();
 		for(VehicleTranslatableModelObject translatable : translatableModelObjects){
 			if(translatable != null && translatable.partName.equals(this.name)){
 				if(translatable.translationAxis != null){
@@ -56,10 +58,15 @@ public final class RenderVehicle_TranslatablePart{
 				}else{
 					throw new NullPointerException("ERROR: Translatable part definition:" + this.name + " is missing a translationVariable in the vehicle JSON!");
 				}
-				if(translatable.translationClamp != null){
-					translationClampsList.add(translatable.translationClamp);
+				if(translatable.translationClampMin != null){
+					translationClampsMinList.add(translatable.translationClampMin);
 				}else{
-					translationClampsList.add(0F);
+					translationClampsMinList.add(0F);
+				}
+				if(translatable.translationClampMax != null){
+					translationClampsMaxList.add(translatable.translationClampMax);
+				}else{
+					translationClampsMaxList.add(0F);
 				}
 			}
 		}
@@ -68,7 +75,8 @@ public final class RenderVehicle_TranslatablePart{
 		this.translationAxis = translationAxisList.toArray(new Vec3d[translationAxisList.size()]);
 		this.translationMagnitudes = translationMagnitudesList.toArray(new Float[translationMagnitudesList.size()]);
 		this.translationVariables = translationVariablesList.toArray(new String[translationVariablesList.size()]);
-		this.translationClamps = translationClampsList.toArray(new Float[translationClampsList.size()]);
+		this.translationClampsMin = translationClampsMinList.toArray(new Float[translationClampsMinList.size()]);
+		this.translationClampsMax = translationClampsMaxList.toArray(new Float[translationClampsMaxList.size()]);
 	}
 	
 	/**
@@ -79,7 +87,7 @@ public final class RenderVehicle_TranslatablePart{
 	 */
 	public void translate(EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart, float partialTicks){
 		for(byte i=0; i<translationVariables.length; ++i){
-			double translation = RenderAnimations.getVariableValue(translationVariables[i], translationMagnitudes[i], translationClamps[i], partialTicks, vehicle, null);
+			double translation = RenderAnimations.getVariableValue(translationVariables[i], translationMagnitudes[i], 0F, translationClampsMin[i], translationClampsMax[i], partialTicks, vehicle, null);
 			if(translation != 0){
 				GL11.glTranslated(translation*translationAxis[i].x, translation*translationAxis[i].y, translation*translationAxis[i].z);
 			}

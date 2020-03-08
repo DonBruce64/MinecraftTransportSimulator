@@ -136,13 +136,15 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     	public float[] rotationPoint;
     	public float[] rotationAxis;
     	public String rotationVariable;
-    	public Float rotationClamp;
+    	public Float rotationClampMin;
+    	public Float rotationClampMax;
     }
     
     public class VehicleTranslatableModelObject{
     	public String partName;
     	public float[] translationAxis;
     	public String translationVariable;
-    	public Float translationClamp;
+    	public Float translationClampMin;
+    	public Float translationClampMax;
     }
 }

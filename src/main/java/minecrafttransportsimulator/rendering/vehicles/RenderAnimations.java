@@ -27,11 +27,14 @@ public final class RenderAnimations{
 	 *  If a value other than 0 is passed-in, the variable returned will be clamped to that value.
 	 *  This is in both the positive and negative direction.
 	 */
-	public static double getVariableValue(String variable, float scaling, float clamp, float partialTicks, EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart){
-		if(clamp != 0){
-			return Math.max(-clamp, Math.min(clamp, scaling*getVariableValue(variable, partialTicks, vehicle, optionalPart)));
+	public static double getVariableValue(String variable, float scaling, float offset, float minClamp, float maxClamp, float partialTicks, EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart){
+		double value = offset + scaling*getVariableValue(variable, partialTicks, vehicle, optionalPart);
+		if(minClamp != 0 && value < minClamp){
+			return minClamp;
+		}else if(maxClamp != 0 && value > maxClamp){
+			return maxClamp;
 		}else{
-			return scaling*getVariableValue(variable, partialTicks, vehicle, optionalPart);
+			return value;
 		}
 	}
 	

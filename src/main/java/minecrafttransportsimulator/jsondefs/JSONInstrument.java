@@ -23,13 +23,15 @@ public class JSONInstrument extends AJSONCraftable<JSONInstrument.InstrumentGene
     	public boolean rotateWindow;
     	public float rotationOffset;
     	public float rotationFactor;
-    	public float rotationClamp;
+    	public float rotationClampMin;
+    	public float rotationClampMax;
     	
     	public String translationVariable;
     	public boolean extendWindow;
     	public boolean translateHorizontal;
     	public float translationFactor;
-    	public float translationClamp;
+    	public float translationClampMin;
+    	public float translationClampMax;
 
     	
     	public boolean lightOverlay;
