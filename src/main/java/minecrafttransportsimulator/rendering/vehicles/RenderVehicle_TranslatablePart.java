@@ -58,16 +58,8 @@ public final class RenderVehicle_TranslatablePart{
 				}else{
 					throw new NullPointerException("ERROR: Translatable part definition:" + this.name + " is missing a translationVariable in the vehicle JSON!");
 				}
-				if(translatable.translationClampMin != null){
-					translationClampsMinList.add(translatable.translationClampMin);
-				}else{
-					translationClampsMinList.add(0F);
-				}
-				if(translatable.translationClampMax != null){
-					translationClampsMaxList.add(translatable.translationClampMax);
-				}else{
-					translationClampsMaxList.add(0F);
-				}
+				translationClampsMinList.add(translatable.translationClampMin);
+				translationClampsMaxList.add(translatable.translationClampMax);
 			}
 		}
 		

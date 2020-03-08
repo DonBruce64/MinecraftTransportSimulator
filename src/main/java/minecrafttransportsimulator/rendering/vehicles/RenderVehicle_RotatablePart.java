@@ -65,16 +65,8 @@ public final class RenderVehicle_RotatablePart{
 				}else{
 					throw new NullPointerException("ERROR: Rotatable part definition:" + this.name + " is missing a rotationVariable in the vehicle JSON!");
 				}
-				if(rotatable.rotationClampMin != null){
-					rotationClampsMinList.add(rotatable.rotationClampMin);
-				}else{
-					rotationClampsMinList.add(0F);
-				}
-				if(rotatable.rotationClampMax != null){
-					rotationClampsMaxList.add(rotatable.rotationClampMax);
-				}else{
-					rotationClampsMaxList.add(0F);
-				}
+				rotationClampsMinList.add(rotatable.rotationClampMin);
+				rotationClampsMaxList.add(rotatable.rotationClampMax);
 			}
 		}
 		
