@@ -88,10 +88,10 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     	public int fireDelay;
     	public int reloadTime;
     	public int muzzleVelocity;
-    	public int minPitch;
-    	public int maxPitch;
-    	public int minYaw;
-    	public int maxYaw;
+    	public float minPitch;
+    	public float maxPitch;
+    	public float minYaw;
+    	public float maxYaw;
     	public float diameter;
     	public float length;
     }

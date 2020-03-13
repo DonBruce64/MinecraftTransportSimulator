@@ -17,24 +17,28 @@ public class PartGunTurret extends APartGun{
 		//Don't return pitch here, as turrets don't pitch up, only their barrels do.
 		return new Vec3d(0, currentYaw - (currentYaw - prevYaw)*(1 - partialTicks), 0);
 	}
-	
+
 	@Override
 	public float getMinYaw(){
-		return 1;
+		if (definition.gun.minYaw == 0) return 1;
+		else return definition.gun.minYaw;
 	}
 	
 	@Override
 	public float getMaxYaw(){
-		return -1;
+		if (definition.gun.maxYaw == 0) return -1;
+		else return definition.gun.maxYaw;
 	}
 	
 	@Override
 	public float getMinPitch(){
-		return -75;
+		if (definition.gun.minPitch == 0) return 0;
+		else return definition.gun.minPitch;
 	}
 	
 	@Override
 	public float getMaxPitch(){
-		return 0;
+		if (definition.gun.maxPitch == 0) return 75;
+		else return definition.gun.maxPitch;
 	}
 }

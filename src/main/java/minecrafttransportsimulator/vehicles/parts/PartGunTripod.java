@@ -13,21 +13,25 @@ public class PartGunTripod extends APartGun{
 	
 	@Override
 	public float getMinYaw(){
-		return -45;
+		if (definition.gun.minYaw == 0) return -45;
+		else return definition.gun.minYaw;
 	}
 	
 	@Override
 	public float getMaxYaw(){
-		return 45;
+		if (definition.gun.maxYaw == 0) return 45;
+		else return definition.gun.maxYaw;
 	}
 	
 	@Override
 	public float getMinPitch(){
-		return -35;
+		if (definition.gun.minPitch == 0) return -35;
+		else return definition.gun.minPitch;
 	}
 	
 	@Override
 	public float getMaxPitch(){
-		return 35;
+		if (definition.gun.maxPitch == 0) return 35;
+		else return definition.gun.maxPitch;
 	}
 }
