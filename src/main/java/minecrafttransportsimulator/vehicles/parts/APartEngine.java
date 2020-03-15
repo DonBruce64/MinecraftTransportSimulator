@@ -138,7 +138,9 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 				}
 			}
 			if(starterLevel > 0){
-				vehicle.electricUsage += 0.05F;
+				if(!isCreative){
+					vehicle.electricUsage += 0.05F;
+				}
 				if(vehicle.fuel > definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value && !isCreative){
 					vehicle.fuel -= definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
 					fuelFlow += definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
