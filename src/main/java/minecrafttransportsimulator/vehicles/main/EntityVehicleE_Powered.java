@@ -140,7 +140,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 					}
 				}
 			}
-			world.newExplosion(this, x, y, z, (float) (fuelPresent/1000F + 1F), true, true);
+			world.newExplosion(this, x, y, z, (float) (fuelPresent/10000F + 1F), true, true);
 		}
 	}
 	
