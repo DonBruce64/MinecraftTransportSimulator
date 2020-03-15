@@ -32,7 +32,7 @@ import minecrafttransportsimulator.wrappers.WrapperGUI;
  * @author don_bruce
  */
 public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
-	private static final int NAVIGATION_TEXTURE_WIDTH_OFFSET = 120;
+	private static final int NAVIGATION_TEXTURE_WIDTH_OFFSET = 200;
 	private static final int NAVIGATION_TEXTURE_HEIGHT_OFFSET = 216;
 	private static final int STROBE_TEXTURE_WIDTH_OFFSET = NAVIGATION_TEXTURE_WIDTH_OFFSET + 20;
 	private static final int STROBE_TEXTURE_HEIGHT_OFFSET = 216;
