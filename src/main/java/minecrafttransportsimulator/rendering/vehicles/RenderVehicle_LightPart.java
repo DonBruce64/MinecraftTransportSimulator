@@ -55,47 +55,54 @@ public final class RenderVehicle_LightPart{
 			throw new NumberFormatException("ERROR: Attempted to parse light information from: " + this.name + " but faulted.  This is likely due to a naming convention error.");
 		}
 		
-		this.vertices = new Float[masterVertices.length][];
-		this.centerPoints = new Vec3d[masterVertices.length/6];
-		this.size = new Float[masterVertices.length/6];
 		
-		for(short i=0; i<centerPoints.length; ++i){
-			double minX = 999;
-			double maxX = -999;
-			double minY = 999;
-			double maxY = -999;
-			double minZ = 999;
-			double maxZ = -999;
-			for(byte j=0; j<6; ++j){
-				Float[] masterVertex = masterVertices[i*6 + j];
-				minX = Math.min(masterVertex[0], minX);
-				maxX = Math.max(masterVertex[0], maxX);
-				minY = Math.min(masterVertex[1], minY);
-				maxY = Math.max(masterVertex[1], maxY);
-				minZ = Math.min(masterVertex[2], minZ);
-				maxZ = Math.max(masterVertex[2], maxZ);
-				
-				Float[] newVertex = new Float[masterVertex.length];
-				newVertex[0] = masterVertex[0];
-				newVertex[1] = masterVertex[1];
-				newVertex[2] = masterVertex[2];
-				//Adjust UV point here to change this to glass coords.
-				switch(j){
-					case(0): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
-					case(1): newVertex[3] = 0.0F; newVertex[4] = 1.0F; break;
-					case(2): newVertex[3] = 1.0F; newVertex[4] = 1.0F; break;
-					case(3): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
-					case(4): newVertex[3] = 1.0F; newVertex[4] = 1.0F; break;
-					case(5): newVertex[3] = 1.0F; newVertex[4] = 0.0F; break;
+		//If we need to render a flare or cover, calculate the center points and re-calculate the UV points.
+		if(renderFlare || renderCover){
+			this.vertices = new Float[masterVertices.length][];
+			this.centerPoints = new Vec3d[masterVertices.length/6];
+			this.size = new Float[masterVertices.length/6];
+			for(short i=0; i<centerPoints.length; ++i){
+				double minX = 999;
+				double maxX = -999;
+				double minY = 999;
+				double maxY = -999;
+				double minZ = 999;
+				double maxZ = -999;
+				for(byte j=0; j<6; ++j){
+					Float[] masterVertex = masterVertices[i*6 + j];
+					minX = Math.min(masterVertex[0], minX);
+					maxX = Math.max(masterVertex[0], maxX);
+					minY = Math.min(masterVertex[1], minY);
+					maxY = Math.max(masterVertex[1], maxY);
+					minZ = Math.min(masterVertex[2], minZ);
+					maxZ = Math.max(masterVertex[2], maxZ);
+					
+					Float[] newVertex = new Float[masterVertex.length];
+					newVertex[0] = masterVertex[0];
+					newVertex[1] = masterVertex[1];
+					newVertex[2] = masterVertex[2];
+					//Adjust UV point here to change this to glass coords.
+					switch(j){
+						case(0): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
+						case(1): newVertex[3] = 0.0F; newVertex[4] = 1.0F; break;
+						case(2): newVertex[3] = 1.0F; newVertex[4] = 1.0F; break;
+						case(3): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
+						case(4): newVertex[3] = 1.0F; newVertex[4] = 1.0F; break;
+						case(5): newVertex[3] = 1.0F; newVertex[4] = 0.0F; break;
+					}
+					newVertex[5] = masterVertex[5];
+					newVertex[6] = masterVertex[6];
+					newVertex[7] = masterVertex[7];
+					
+					this.vertices[((short) i)*6 + j] = newVertex;
 				}
-				newVertex[5] = masterVertex[5];
-				newVertex[6] = masterVertex[6];
-				newVertex[7] = masterVertex[7];
-				
-				this.vertices[((short) i)*6 + j] = newVertex;
+				this.centerPoints[i] = new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
+				this.size[i] = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*32F;
 			}
-			this.centerPoints[i] = new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
-			this.size[i] = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*32F;
+		}else{
+			this.vertices = masterVertices;
+			this.centerPoints = null;
+			this.size = null;
 		}
 	}
 	
