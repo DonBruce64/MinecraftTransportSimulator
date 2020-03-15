@@ -31,7 +31,7 @@ public final class EntityVehicleG_Boat extends EntityVehicleF_Ground{
 	@Override
 	protected float getSkiddingFactor(){
 		float skiddingFactor = 0;
-		for(VehicleAxisAlignedBB box : this.getCurrentCollisionBoxes()){
+		for(VehicleAxisAlignedBB box : collisionBoxes){
 			if(box.collidesWithLiquids){
 				skiddingFactor += 0.125F; 
 			}
@@ -65,13 +65,13 @@ public final class EntityVehicleG_Boat extends EntityVehicleF_Ground{
 				steeringAngle /= turningDistance;
 				//Another thing that can affect the steering angle is speed.
 				//More speed makes for less wheel turn to prevent crazy circles.
-				if(Math.abs(velocity*speedFactor/0.35F) - turningFactor/3F > 0){
-					steeringAngle *= Math.pow(0.25F, (Math.abs(velocity*(0.75F + speedFactor/0.35F/4F)) - turningFactor/3F));
+				if(Math.abs(velocity*SPEED_FACTOR/0.35F) - turningFactor/3F > 0){
+					steeringAngle *= Math.pow(0.25F, (Math.abs(velocity*(0.75F + SPEED_FACTOR/0.35F/4F)) - turningFactor/3F));
 				}
 				//Adjust turn force to steer angle based on turning factor.
 				turningForce = -(float) (steeringAngle*velocity/2F);
 				//Correct for speedFactor changes.
-				turningForce *= speedFactor/0.35F;
+				turningForce *= SPEED_FACTOR/0.35F;
 				//Now add the sign to this force.
 				turningForce *= Math.signum(this.getSteerAngle());
 			}

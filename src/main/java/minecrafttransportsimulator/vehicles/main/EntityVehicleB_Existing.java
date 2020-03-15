@@ -24,12 +24,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 /**This is the next class level above the base vehicle.
@@ -38,13 +36,12 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
  * this vehicle are present until later sub-classes.  Also not present
  * are variables that define how this vehicle COULD move (motions, states
  * of brakes/throttles, collision boxes, etc.)  This is where the pack information comes in
- * as this is where we start needing it.  This is also where we handle how this
- * vehicle reacts with events like clicking and crashing with players inside.
+ * as this is where we start needing it.  This is also where we handle players interaction
+ * with seats of this vehicle (mounting, dismounting, updates).
  * 
  * @author don_bruce
  */
-@Mod.EventBusSubscriber
-public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
+abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public boolean locked;
 	public float rotationRoll;
 	public float prevRotationRoll;
@@ -114,38 +111,6 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	@Override
-	public boolean attackEntityFrom(DamageSource source, float damage){
-		if(!world.isRemote){
-			if(source.getImmediateSource() != null && !source.getImmediateSource().equals(source.getTrueSource())){
-				//This is a projectile of some sort.  If this projectile is inside a part
-				//make it hit the part rather than hit the vehicle.
-				Entity projectile = source.getImmediateSource();
-				for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
-					//Expand this box by the speed of the projectile just in case the projectile is custom and
-					//calls its attack code before it actually gets inside the collision box.
-					if(part.getAABBWithOffset(Vec3d.ZERO).expand(Math.abs(projectile.motionX), Math.abs(projectile.motionY), Math.abs(projectile.motionZ)).contains(projectile.getPositionVector())){
-						part.attackPart(source, damage);
-						return true;
-					}
-				}
-			}else{
-				//This is not a projectile, and therefore must be some sort of entity.
-				//Check to see where this entity is looking and if it has hit a
-				//part attack that part.
-				Entity attacker = source.getTrueSource();
-				if(attacker != null){
-					APart<? extends EntityVehicleB_Existing> hitPart = this.getHitPart(attacker);
-					if(hitPart != null){
-						hitPart.attackPart(source, damage);
-						return true;
-					}
-				}
-			}
-		}
-		return true;
-	}
-	
-	@Override
 	public void updatePassenger(Entity passenger){
 		PartSeat seat = this.getSeatForRider(passenger);
 		if(seat != null){
@@ -170,7 +135,7 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	@Override
-	public void addPart(APart<? extends EntityVehicleA_Base> part, boolean ignoreCollision){
+	public void addPart(APart<? extends EntityVehicleE_Powered> part, boolean ignoreCollision){
 		if(!ignoreCollision){
 			//Check if we are colliding and adjust roll before letting part addition continue.
 			//This is needed as the vehicle system doesn't know about roll.
@@ -186,41 +151,20 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
         //Need to render in pass 1 to render transparent things in the world like light beams.
     	return true;
     }
-    
-	@Override
-	public boolean canBeCollidedWith(){
-		//This gets overridden to allow players to interact with this vehicle.
-		return true;
-	}
-	
-    /**
-     * Checks to see if the entity passed in could have hit a part.
-     * Is determined by the rotation of the entity and distance from parts.
-     * If a part is found to be hit-able, it is returned.  Else null is returned.
-     */
-	public APart<? extends EntityVehicleB_Existing> getHitPart(Entity entity){
-		Vec3d lookVec = entity.getLook(1.0F);
-		Vec3d hitVec = entity.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
-		for(float f=1.0F; f<4.0F; f += 0.1F){
-			for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
-				if(part.getAABBWithOffset(Vec3d.ZERO).contains(hitVec)){
-					return part;
-				}
-			}
-			hitVec = hitVec.addVector(lookVec.x*0.1F, lookVec.y*0.1F, lookVec.z*0.1F);
-		}
-		return null;
-	}
 	
     /**
      * Adds a rider to this vehicle and sets their seat.
      * All riders MUST be added through this method.
      */
 	public void setRiderInSeat(Entity rider, PartSeat seat){
+		boolean riderAlreadyInSeat = getSeatForRider(rider) != null;
 		riderSeats.put(rider.getEntityId(), seat);
 		rider.startRiding(this, true);
-		//Set the player's yaw to the same yaw as the vehicle to ensure we don't have 360+ rotations to deal with.
-		rider.rotationYaw =  (float) (this.rotationYaw + seat.partRotation.y);
+		//If we weren't riding before, set the player's yaw to the same yaw as the vehicle.
+		//We do this to ensure we don't have 360+ rotations to deal with.
+		if(!riderAlreadyInSeat){
+			rider.rotationYaw =  (float) (this.rotationYaw + seat.partRotation.y);
+		}
 		if(!world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, true));
 		}
@@ -294,27 +238,12 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 				}
 			}
 		}
-	}
+	}	
 	
 	/**
-	 * This code is allow for this vehicle to be "attacked" without an entity present.
-	 * Normally the attack code will check the attacking entity to figure out what was
-	 * attacked on the vehicle, but for some situations this may not be desireable.
-	 * In particular, this is done for the particle-based bullet system as there are
-	 * no projectile entities to allow the attack system to automatically calculate
-	 * what was attacked on the vehicle.
+	 * Calculates the current mass of the vehicle.
+	 * Includes core mass, player weight and inventory, and cargo.
 	 */
-	public void attackManuallyAtPosition(double x, double y, double z, DamageSource source, float damage){
-		for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
-			if(part.getAABBWithOffset(Vec3d.ZERO).contains(new Vec3d(x, y, z))){
-				part.attackPart(source, damage);
-				return;
-			}
-		}
-	}
-	
-	
-	
 	protected float getCurrentMass(){
 		int currentMass = definition.general.emptyMass;
 		for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
@@ -336,7 +265,8 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		return currentMass;
 	}
 	
-	/**Calculates the weight of the inventory passed in.  Used for physics calculations.
+	/**
+	 * Calculates the weight of the inventory passed in.
 	 */
 	private static float calculateInventoryWeight(IInventory inventory){
 		float weight = 0;
@@ -370,12 +300,6 @@ public abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	 * calculating anything.
 	 */
 	protected abstract void getBasicProperties();
-	
-	/**
-	 * Returns whatever the steering angle is.
-	 * Used for rendering and possibly other things.
-	 */
-	public abstract float getSteerAngle();
 	
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){

@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.vehicles;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -11,7 +11,7 @@ public abstract class APacketVehicle implements IMessage{
 
 	public APacketVehicle(){}
 	
-	public APacketVehicle(EntityVehicleA_Base vehicle){
+	public APacketVehicle(EntityVehicleE_Powered vehicle){
 		this.id = vehicle.getEntityId();
 	}
 	
@@ -25,11 +25,11 @@ public abstract class APacketVehicle implements IMessage{
 		buf.writeInt(this.id);
 	}
 	
-	protected static EntityVehicleA_Base getVehicle(APacketVehicle message, MessageContext ctx){
+	protected static EntityVehicleE_Powered getVehicle(APacketVehicle message, MessageContext ctx){
 		if(ctx.side.isServer()){
-			return (EntityVehicleA_Base) ctx.getServerHandler().player.world.getEntityByID(message.id);
+			return (EntityVehicleE_Powered) ctx.getServerHandler().player.world.getEntityByID(message.id);
 		}else{
-			return (EntityVehicleA_Base) Minecraft.getMinecraft().world.getEntityByID(message.id);
+			return (EntityVehicleE_Powered) Minecraft.getMinecraft().world.getEntityByID(message.id);
 		}
 	}
 }

@@ -42,7 +42,6 @@ import minecrafttransportsimulator.jsondefs.JSONSign;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
@@ -262,7 +261,7 @@ public final class PackParserSystem{
 		}
     }    
     
-    public static APart<? extends EntityVehicleA_Base> createPart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+    public static APart<? extends EntityVehicleE_Powered> createPart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
     	switch(definition.general.type){
 			case "crate": return new PartCrate(vehicle, packVehicleDef, definition, dataTag);
 			case "barrel": return new PartBarrel(vehicle, packVehicleDef, definition, dataTag);

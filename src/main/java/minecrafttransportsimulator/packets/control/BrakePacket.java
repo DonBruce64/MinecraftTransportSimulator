@@ -2,7 +2,6 @@ package minecrafttransportsimulator.packets.control;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleD_Moving;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import net.minecraft.client.Minecraft;
@@ -39,11 +38,11 @@ public class BrakePacket implements IMessage{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityVehicleD_Moving vehicle;
+					EntityVehicleE_Powered vehicle;
 					if(ctx.side.isServer()){
-						vehicle = (EntityVehicleD_Moving) ctx.getServerHandler().player.world.getEntityByID(message.id);
+						vehicle = (EntityVehicleE_Powered) ctx.getServerHandler().player.world.getEntityByID(message.id);
 					}else{
-						vehicle = (EntityVehicleD_Moving) Minecraft.getMinecraft().world.getEntityByID(message.id);
+						vehicle = (EntityVehicleE_Powered) Minecraft.getMinecraft().world.getEntityByID(message.id);
 					}
 					if(vehicle!=null){
 						if((message.brakeCode & 2) == 2){

@@ -1,12 +1,10 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -15,9 +13,6 @@ import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
@@ -85,49 +80,15 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 	}
 	
 	@Override
-	public boolean interactPart(EntityPlayer player){
-		//Only allow interaction if the player is holding jumper cables.
-		//If so, and we aren't linked, do engine linking logic.
-		ItemStack heldStack = player.getHeldItemMainhand();
-		if(heldStack.getItem() instanceof ItemJumperCable){
-			if(linkedEngine == null){
-				if(ItemJumperCable.lastEngineClicked == null){
-					ItemJumperCable.lastEngineClicked = this;
-					MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.firstlink"), (EntityPlayerMP) player);
-				}else if(!ItemJumperCable.lastEngineClicked.equals(this)){
-					if(ItemJumperCable.lastEngineClicked.vehicle.equals(this.vehicle)){
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.samevehicle"), (EntityPlayerMP) player);
-						ItemJumperCable.lastEngineClicked = null;
-					}else if(this.partPos.distanceTo(ItemJumperCable.lastEngineClicked.partPos) < 15){
-						linkedEngine = ItemJumperCable.lastEngineClicked;
-						ItemJumperCable.lastEngineClicked.linkedEngine = this;
-						ItemJumperCable.lastEngineClicked = null;
-						MTS.MTSNet.sendToAll(new PacketPartEngineLinked(this, linkedEngine));
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.secondlink"), (EntityPlayerMP) player);	
-					}else{
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.toofar"), (EntityPlayerMP) player);
-						ItemJumperCable.lastEngineClicked = null;
-					}
-				}
-			}else{
-				MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.alreadylinked"), (EntityPlayerMP) player);
-			}
-			return true;
-		}else{
-			return false;
-		}
-    }
-	
-	@Override
 	public void attackPart(DamageSource source, float damage){
 		if(source.isExplosion()){
-			hours += damage*10*ConfigSystem.configObject.general.engineHoursFactor.value;
+			hours += damage*20*ConfigSystem.configObject.general.engineHoursFactor.value;
 			if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
 			if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
 			if(!brokenStarter)brokenStarter = Math.random() < 0.05;
 			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, (float) (damage*10*ConfigSystem.configObject.general.engineHoursFactor.value)));
 		}else{
-			hours += damage*ConfigSystem.configObject.general.engineHoursFactor.value;
+			hours += damage*2*ConfigSystem.configObject.general.engineHoursFactor.value;
 			if(source.isProjectile()){
 				if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
 				if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;

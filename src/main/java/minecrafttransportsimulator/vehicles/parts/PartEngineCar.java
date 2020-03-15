@@ -125,7 +125,7 @@ public class PartEngineCar extends APartEngineGeared<EntityVehicleG_Car>{
 				driveShaftDesiredSpeed = (float) Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
 			}
 		}
-		driveShaftDesiredSpeed = (float) (vehicle.speedFactor*driveShaftDesiredSpeed*Math.signum(vehicle.velocity)*360D);
+		driveShaftDesiredSpeed = (float) (vehicle.SPEED_FACTOR*driveShaftDesiredSpeed*Math.signum(vehicle.velocity)*360D);
 		engineDriveshaftRotationLast = engineDriveshaftRotation;
 		engineDriveshaftRotation += driveShaftDesiredSpeed;
 	}

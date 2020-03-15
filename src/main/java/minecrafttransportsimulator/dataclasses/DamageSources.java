@@ -35,7 +35,6 @@ public abstract class DamageSources extends DamageSource{
 						new Object[] {player.getDisplayName()});
 			}
 		}
-	                
 	}
 	
 	public static class DamageSourcePropellor extends DamageSources{

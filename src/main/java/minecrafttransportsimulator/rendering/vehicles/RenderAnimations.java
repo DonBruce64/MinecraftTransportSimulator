@@ -2,7 +2,6 @@ package minecrafttransportsimulator.rendering.vehicles;
 
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
@@ -66,7 +65,7 @@ public final class RenderAnimations{
 						if(partNumber == 0){
 							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
 							//If it's not, or it doesn't exist, return 0.
-							APart<? extends EntityVehicleA_Base> foundPart = vehicle.getPartAtLocation(vehiclePart.pos[0], vehiclePart.pos[1], vehiclePart.pos[2]);
+							APart<? extends EntityVehicleE_Powered> foundPart = vehicle.getPartAtLocation(vehiclePart.pos[0], vehiclePart.pos[1], vehiclePart.pos[2]);
 							if(foundPart != null && partClass.isInstance(foundPart)){
 								return getVariableValue(variable.substring(0, variable.length() - 2), partialTicks, vehicle, foundPart);
 							}else{
@@ -136,7 +135,7 @@ public final class RenderAnimations{
 			case("pitch"): return vehicle.rotationPitch;
 			case("roll"): return vehicle.rotationRoll;
 			case("altitude"): return vehicle.posY - (ConfigSystem.configObject.client.seaLvlOffset.value ? vehicle.world.provider.getAverageGroundLevel() : 0);
-			case("speed"): return Math.abs(vehicle.velocity*vehicle.speedFactor*20);
+			case("speed"): return Math.abs(vehicle.velocity*vehicle.SPEED_FACTOR*20);
 			
 			//Vehicle state cases.
 			case("throttle"): return vehicle.throttle/100D;
@@ -176,7 +175,7 @@ public final class RenderAnimations{
 				case("trim_elevator"): return aircraft.elevatorTrim/10D;
 				case("trim_rudder"): return aircraft.rudderTrim/10D;
 				case("reverser"): return aircraft.reversePercent/20D;
-				case("vertical_speed"): return vehicle.motionY*vehicle.speedFactor*20;
+				case("vertical_speed"): return vehicle.motionY*vehicle.SPEED_FACTOR*20;
 				case("slip"): return 75*aircraft.sideVec.dotProduct(vehicle.velocityVec);
 				case("turn_coordinator"): return ((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15D*25;
 				case("turn_indicator"): return (vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F;

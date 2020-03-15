@@ -8,7 +8,6 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.RotationSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -77,7 +76,7 @@ public abstract class APart<EntityVehicleX_Type extends EntityVehicleE_Powered>{
 			}
 			
 			//If we aren't an additional part, see if we are a sub-part.
-			for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+			for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
 				if(part.definition.subParts != null){
 					for(VehiclePart partSubPartPack : part.definition.subParts){
 						if((float) part.offset.x + partSubPartPack.pos[0] == (float) this.offset.x && (float) part.offset.y + partSubPartPack.pos[1] == (float) this.offset.y && (float) part.offset.z + partSubPartPack.pos[2] == (float) this.offset.z){

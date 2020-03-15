@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.packets.vehicles;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -14,7 +13,7 @@ public class PacketVehicleJerrycan extends APacketVehicle{
 
 	public PacketVehicleJerrycan(){}
 	
-	public PacketVehicleJerrycan(EntityVehicleB_Existing vehicle, String fluidName){
+	public PacketVehicleJerrycan(EntityVehicleE_Powered vehicle, String fluidName){
 		super(vehicle);
 		this.fluidName = fluidName;
 	}
@@ -37,7 +36,7 @@ public class PacketVehicleJerrycan extends APacketVehicle{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) getVehicle(message, ctx);
+					EntityVehicleE_Powered vehicle = getVehicle(message, ctx);
 					if(vehicle != null){
 						vehicle.fluidName = message.fluidName;
 						vehicle.fuel += 1000;

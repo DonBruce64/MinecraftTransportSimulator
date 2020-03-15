@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.systems.RotationSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleD_Moving;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
@@ -26,7 +24,7 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public class VehicleGroundDeviceBox{
-	private final EntityVehicleD_Moving vehicle;
+	private final EntityVehicleE_Powered vehicle;
 	private final boolean isFront;
 	private final boolean isLeft;
 	
@@ -44,14 +42,14 @@ public class VehicleGroundDeviceBox{
 	private final List<VehicleAxisAlignedBB> liquidCollisionBoxes = new ArrayList<VehicleAxisAlignedBB>();
 	
 	
-	public VehicleGroundDeviceBox(EntityVehicleD_Moving vehicle, boolean isFront, boolean isLeft){
+	public VehicleGroundDeviceBox(EntityVehicleE_Powered vehicle, boolean isFront, boolean isLeft){
 		this.vehicle = vehicle;
 		this.isFront = isFront;
 		this.isLeft = isLeft;
 		
 		//Get all liquid collision boxes during construction.
 		//While their actual position may change, their relative position is static.
-		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
+		for(VehicleAxisAlignedBB box : vehicle.collisionBoxes){
 			if(box.collidesWithLiquids){
 				liquidCollisionBoxes.add(box);
 			}
@@ -66,7 +64,7 @@ public class VehicleGroundDeviceBox{
 	public void updateGroundDevices(){
 		groundDevices.clear();
 		liquidDevices.clear();
-		for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+		for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
 			if(part instanceof APartGroundDevice){
 				//X-offsets of 0 are both left and right as they are center points.
 				//This ensures we don't roll to try and align a center point.
@@ -161,7 +159,7 @@ public class VehicleGroundDeviceBox{
 		
 		Vec3d boxRelativePosition = new Vec3d(xCoords, yCoords, zCoords);
 		Vec3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
-		return new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset).addVector(vehicle.motionX*vehicle.speedFactor, vehicle.motionY*vehicle.speedFactor, vehicle.motionZ*vehicle.speedFactor), boxRelativePosition, widths, heights, false, false);
+		return new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset).addVector(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, false);
 	}
 	
 	/**Updates the liquid collision point based on position of liquid devices and collision boxes.**/
@@ -196,7 +194,7 @@ public class VehicleGroundDeviceBox{
 		
 		Vec3d boxRelativePosition = new Vec3d(xCoords, yCoords, zCoords);
 		Vec3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
-		return new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset).addVector(vehicle.motionX*vehicle.speedFactor, vehicle.motionY*vehicle.speedFactor, vehicle.motionZ*vehicle.speedFactor), boxRelativePosition, widths, heights, false, true);
+		return new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset).addVector(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, true);
 	}
 	
 	/**

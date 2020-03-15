@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.vehicles;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleD_Moving;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -17,7 +17,7 @@ public class PacketVehicleDeltas extends APacketVehicle{
 
 	public PacketVehicleDeltas(){}
 	
-	public PacketVehicleDeltas(EntityVehicleD_Moving vehicle, double deltaX, double deltaY, double deltaZ, float deltaYaw, float deltaPitch, float deltaRoll){
+	public PacketVehicleDeltas(EntityVehicleE_Powered vehicle, double deltaX, double deltaY, double deltaZ, float deltaYaw, float deltaPitch, float deltaRoll){
 		super(vehicle);
 		this.deltaX=deltaX;
 		this.deltaY=deltaY;
@@ -55,7 +55,7 @@ public class PacketVehicleDeltas extends APacketVehicle{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityVehicleD_Moving vehicle = (EntityVehicleD_Moving) getVehicle(message, ctx);
+					EntityVehicleE_Powered vehicle = getVehicle(message, ctx);
 					if(vehicle != null){
 						vehicle.addToServerDeltas(message.deltaX, message.deltaY, message.deltaZ, message.deltaYaw, message.deltaPitch, message.deltaRoll);
 					}

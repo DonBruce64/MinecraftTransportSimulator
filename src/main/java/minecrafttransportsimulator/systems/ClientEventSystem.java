@@ -3,19 +3,18 @@ package minecrafttransportsimulator.systems;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
-import minecrafttransportsimulator.items.packs.parts.AItemPart;
+import minecrafttransportsimulator.items.core.IItemVehicleInteractable;
+import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
-import minecrafttransportsimulator.packets.general.PacketChat;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
 import minecrafttransportsimulator.radio.RadioManager;
 import minecrafttransportsimulator.radio.RadioThread;
 import minecrafttransportsimulator.rendering.vehicles.RenderInstrument;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleC_Colliding;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
@@ -26,7 +25,6 @@ import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
@@ -45,126 +43,82 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**This class handles rendering/camera edits that need to happen when riding vehicles,
  * as well as clicking of vehicles and their parts, as well as some other misc things.
  *
  * @author don_bruce
  */
-@Mod.EventBusSubscriber(Side.CLIENT)
-@SideOnly(Side.CLIENT)
+@Mod.EventBusSubscriber
 public final class ClientEventSystem{
     private static final Minecraft minecraft = Minecraft.getMinecraft();
     private static final RadioThread radioThread = new RadioThread();
     
     /**
-     * Checks if a player has right-clicked a vehicle.
-     * If so send a packet off to the server for processing.
-     * This is done as the server culls all interactions based
-     * on distance, so large entities aren't able to be interacted with.
-     * We don't do anything in the entity interact function as we
-     * do it in the packet instead.
-     * 
-     * The only exception here is if we use a wrench.  In that case, we
-     * need to open a GUI, which is only on the client.
+     * Fired when the player right-clicks an entity.  Check to see if the entity clicked is a vehicle.  If so,
+     * fire off an interaction packet to the server and end interaction.  This is called when the player
+     * clicks a hitbox of the vehicle, the hitbox of a part, or an interaction area of where a part could
+     * be placed.
      */
     @SubscribeEvent
     public static void on(PlayerInteractEvent.EntityInteract event){
-    	//You might think this only gets called on clients.  You'd be wrong.
-    	//Forge will gladly call this on the client and server threads on SP.
-    	//This is despite the fact this class is labeled as client-only.
-    	EntityPlayer player = event.getEntityPlayer();
-    	if(player.world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND)){
-    		if(event.getTarget() instanceof EntityVehicleC_Colliding){
-    			EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) event.getTarget();
-    			if(player.getHeldItemMainhand().getItem().equals(MTSRegistry.wrench)){
-    				boolean isPlayerOP = player.getServer() == null || player.getServer().isSinglePlayer() || player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null;
-					if(vehicle.ownerName.isEmpty() || EntityPlayer.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName) || isPlayerOP){
-						MTS.proxy.openGUI(vehicle, player);
-					}else{
-						MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehicleowned"), (EntityPlayerMP) player);
-					}
-				}else if(!(player.getHeldItemMainhand().getItem() instanceof AItemPart)){
-					MTS.MTSNet.sendToServer(new PacketVehicleInteracted(vehicle, event.getEntityPlayer()));
-					event.setCanceled(true);
-	    			event.setCancellationResult(EnumActionResult.SUCCESS);
-				}
-	    	}
-    	}
-    }
-    
-    /**
-     * While the above event method will catch most interactions, it won't
-     * handle interactions when we are seated in the vehicle we are trying
-     * to interact with.  This prevents players from locking doors and
-     * changing seats in planes.  We add this event here to catch these
-     * edge-cases.
-     */
-    @SubscribeEvent
-    public static void on(PlayerInteractEvent.RightClickItem event){
-    	if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND)){
-    		if(doClickEvent(event.getEntityPlayer())){
-	    		event.setCanceled(true);
-				event.setCancellationResult(EnumActionResult.SUCCESS);
+    	if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND) && event.getTarget() instanceof EntityVehicleE_Powered){
+    		EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) event.getTarget();
+    		
+    		//Check to see what we clicked, and fire the appropriate packet.
+    		VehicleAxisAlignedBB boxClicked = vehicle.getEntityBoundingBox().lastBoxRayTraced;
+    		if(vehicle.collisionBoxes.contains(boxClicked)){
+    			MTS.MTSNet.sendToServer(new PacketVehicleInteract(vehicle, event.getEntityPlayer(), boxClicked.rel.x, boxClicked.rel.y, boxClicked.rel.z, PacketVehicleInteract.PacketVehicleInteractType.COLLISION_RIGHTCLICK));
+    		}else if(vehicle.partBoxes.contains(boxClicked)){
+    			MTS.MTSNet.sendToServer(new PacketVehicleInteract(vehicle, event.getEntityPlayer(), boxClicked.rel.x, boxClicked.rel.y, boxClicked.rel.z, PacketVehicleInteract.PacketVehicleInteractType.PART_RIGHTCLICK));
+    		}else if(vehicle.openPartSpotBoxes.contains(boxClicked)){
+    			//If the player is not holding a custom part, then we need to offset the box as it's in the wrong spot.
+    			if(event.getEntityPlayer().getHeldItemMainhand().getItem() instanceof ItemPartCustom){
+    				MTS.MTSNet.sendToServer(new PacketVehicleInteract(vehicle, event.getEntityPlayer(), boxClicked.rel.x, boxClicked.rel.y, boxClicked.rel.z, PacketVehicleInteract.PacketVehicleInteractType.PART_SLOT_RIGHTCLICK));
+    			}else{
+    				MTS.MTSNet.sendToServer(new PacketVehicleInteract(vehicle, event.getEntityPlayer(), boxClicked.rel.x, boxClicked.rel.y - 0.5D, boxClicked.rel.z, PacketVehicleInteract.PacketVehicleInteractType.PART_SLOT_RIGHTCLICK));
+    			}
+    		}else{
+    			throw new NullPointerException("ERROR: A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
     		}
+    		event.setCanceled(true);
+			event.setCancellationResult(EnumActionResult.SUCCESS);
     	}
-    }
-    
-    /**
-     * There is one more edge-case we need to account for.  And that's being
-     * seated in a vehicle, but not having anything in our hands.  This, for
-     * some dumb reason, results in a different event call.  We catch it here
-     * to ensure even if the player isn't holding anything, they can still
-     * change seats while in a vehicle.
-     */
-    @SubscribeEvent
-    public static void on(PlayerInteractEvent.RightClickEmpty event){
-    	if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND)){
-    		doClickEvent(event.getEntityPlayer());
-    	}
-    }
-    
-    private static boolean doClickEvent(EntityPlayer player){
-    	Vec3d lookVec = player.getLook(1.0F);
-		for(Entity entity : player.world.loadedEntityList){
-			if(entity instanceof EntityVehicleC_Colliding){
-				EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) entity;
-				Vec3d clickedVec = player.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
-	    		for(float f=1.0F; f<4.0F; f += 0.1F){
-	    			if(vehicle.getEntityBoundingBox().contains(clickedVec)){
-	    				MTS.MTSNet.sendToServer(new PacketVehicleInteracted(vehicle, player));
-	    				return true;
-	    			}
-	    			clickedVec = clickedVec.addVector(lookVec.x*0.1F, lookVec.y*0.1F, lookVec.z*0.1F);
-	    		}
-			}
-		}
-		return false;
-    }
-    
+    }    
     
     /**
      * If a player swings and misses a vehicle they may still have hit it.
      * MC doesn't look for attacks based on AABB, rather it uses RayTracing.
      * This works on the client where we can see the part, but on the server
      * the internal distance check nulls this out.
-     * If we are attacking a vehicle here cancel the attack and instead fire
-     * the attack manually from a packet to make dang sure we get it to the vehicle!
+     * If we click a vehicle with an item that can interact with it here,
+     * cancel the "attack" and instead send a packet to the server
+     * to make dang sure we get it to the vehicle!
      */
     @SubscribeEvent
     public static void on(AttackEntityEvent event){
-    	//You might think this only gets called on clients, you'd be wrong.
-    	//Forge will gladly call this on the client and server threads on SP.
-    	if(event.getEntityPlayer().world.isRemote){
-	    	if(event.getTarget() instanceof EntityVehicleC_Colliding){
-	    		MTS.MTSNet.sendToServer(new PacketVehicleAttacked((EntityVehicleC_Colliding) event.getTarget(), event.getEntityPlayer()));
-	    		event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
-	    	}
-    	}
-    	if(event.getTarget() instanceof EntityVehicleC_Colliding){
+    	if(event.getTarget() instanceof EntityVehicleE_Powered && event.getEntityPlayer().getHeldItemMainhand().getItem() instanceof IItemVehicleInteractable){
+    		//We clicked the vehicle with an item that can interact with it.
+    		//Cancel the attack and check if we need to interact with the vehicle.
+    		//Only do checks if we are on the client, as the server does bad hitscanning.
+    		EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) event.getTarget();
     		event.setCanceled(true);
+    		
+    		if(event.getEntityPlayer().world.isRemote){
+	    		//Check to see what we clicked, and fire the appropriate packet.
+    			//Don't do anything if we left-clicked a part placement box.
+	    		VehicleAxisAlignedBB boxClicked = vehicle.getEntityBoundingBox().lastBoxRayTraced;
+	    		if(!vehicle.openPartSpotBoxes.contains(boxClicked)){
+	    			if(vehicle.collisionBoxes.contains(boxClicked)){
+	        			MTS.MTSNet.sendToServer(new PacketVehicleInteract(vehicle, event.getEntityPlayer(), boxClicked.rel.x, boxClicked.rel.y, boxClicked.rel.z, PacketVehicleInteract.PacketVehicleInteractType.COLLISION_LEFTCLICK));
+	        		}else if(vehicle.partBoxes.contains(boxClicked)){
+	        			MTS.MTSNet.sendToServer(new PacketVehicleInteract(vehicle, event.getEntityPlayer(), boxClicked.rel.x, boxClicked.rel.y, boxClicked.rel.z, PacketVehicleInteract.PacketVehicleInteractType.PART_LEFTCLICK));
+	        		}else{
+	        			throw new NullPointerException("ERROR: A vehicle was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
+	        		}
+	    			event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
+	    		}
+    		}
     	}
     }
     
@@ -262,9 +216,9 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(CameraSetup event){
-    	if(event.getEntity().getRidingEntity() instanceof EntityVehicleC_Colliding){
+    	if(event.getEntity().getRidingEntity() instanceof EntityVehicleE_Powered){
     		if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){            	
-            	EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) event.getEntity().getRidingEntity();
+    			EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) event.getEntity().getRidingEntity();
             	//Get yaw delta from vehicle and player.  -180 to 180.
             	float playerYawAngle = (360 + (event.getEntity().rotationYaw - vehicle.rotationYaw))%360;
             	if(playerYawAngle > 180){
@@ -304,8 +258,8 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Pre event){
-        if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleC_Colliding){
-        	EntityVehicleC_Colliding vehicle = (EntityVehicleC_Colliding) event.getEntityPlayer().getRidingEntity();
+        if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleE_Powered){
+        	EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) event.getEntityPlayer().getRidingEntity();
         	GL11.glPushMatrix();
         	if(vehicle.definition != null){
 	        	PartSeat seat = vehicle.getSeatForRider(event.getEntityPlayer());
@@ -353,7 +307,7 @@ public final class ClientEventSystem{
 
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Post event){
-    	if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleC_Colliding){
+    	if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleE_Powered){
     		GL11.glPopMatrix();
         }
     }

@@ -4,7 +4,6 @@ import java.util.Iterator;
 
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
@@ -41,7 +40,7 @@ public final class PartHarvester extends APartGroundEffector{
 					Iterator<ItemStack> iterator = drops.iterator();
 					while(iterator.hasNext()){
 						ItemStack stack = iterator.next();
-						for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+						for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
 							if(part instanceof PartCrate){
 								InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
 								if(crateInventory.addItem(stack).getCount() == 0){

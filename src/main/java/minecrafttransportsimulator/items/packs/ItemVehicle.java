@@ -9,7 +9,6 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
@@ -132,7 +131,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 						//If we have a default fuel, add it now as we SHOULD have an engine to tell
 						//us what fuel type we will need to add.
 						if(newVehicle.definition.motorized.defaultFuelQty > 0){
-							for(APart<? extends EntityVehicleA_Base> part : newVehicle.getVehicleParts()){
+							for(APart<? extends EntityVehicleE_Powered> part : newVehicle.getVehicleParts()){
 								if(part instanceof APartEngine){
 									newVehicle.fluidName = part.definition.engine.fuelType;
 									newVehicle.fuel = newVehicle.definition.motorized.defaultFuelQty;
@@ -150,14 +149,14 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 					}
 					
 					//Next, boost based on parts.
-					for(APart<? extends EntityVehicleA_Base> part : newVehicle.getVehicleParts()){
+					for(APart<? extends EntityVehicleE_Powered> part : newVehicle.getVehicleParts()){
 						minHeight = Math.min(part.offset.x - part.getHeight()/2F, minHeight);
 					}
 					
 					//Apply the boost, and check collisions.
 					//If the core collisions are colliding, set the vehicle as dead and abort.
 					newVehicle.posY += -minHeight;
-					for(VehicleAxisAlignedBB coreBox : newVehicle.getCurrentCollisionBoxes()){
+					for(VehicleAxisAlignedBB coreBox : newVehicle.collisionBoxes){
 						if(world.collidesWithAnyBlock(coreBox)){
 							newVehicle.setDead();
 							return EnumActionResult.FAIL;

@@ -29,7 +29,10 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 /**This class adds engine components for vehicles, such as fuel, throttle,
  * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.
  * This is added on-top of the D level to keep the crazy movement calculations
- * seperate from the vehicle power overhead bits.
+ * seperate from the vehicle power overhead bits.  This is the first level of
+ * class that can be used for references in systems as it's the last common class for
+ * vehicles.  All other sub-levels are simply functional building-blocks to keep this
+ *  class from having 1000+ lines of code and to better segment things out.
  * 
  * @author don_bruce
  */
@@ -147,7 +150,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	@Override
-	public void addPart(APart<? extends EntityVehicleA_Base> part, boolean ignoreCollision){
+	public void addPart(APart<? extends EntityVehicleE_Powered> part, boolean ignoreCollision){
 		super.addPart(part, ignoreCollision);
 		if(part instanceof APartEngine){
 			//Because parts is a list, the #1 engine will always come before the #2 engine.
@@ -168,7 +171,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	@Override
-	public void removePart(APart<? extends EntityVehicleA_Base> part, boolean playBreakSound){
+	public void removePart(APart<? extends EntityVehicleE_Powered> part, boolean playBreakSound){
 		super.removePart(part, playBreakSound);
 		byte engineNumber = 0;
 		for(VehiclePart packPart : definition.parts){

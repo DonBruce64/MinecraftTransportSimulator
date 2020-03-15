@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.client.Minecraft;
@@ -39,15 +38,15 @@ public abstract class APacketPart implements IMessage{
 		buf.writeDouble(this.z);
 	}
 	
-	protected static APart<? extends EntityVehicleA_Base> getVehiclePartFromMessage(APacketPart message, MessageContext ctx){
-		EntityVehicleA_Base vehicle;
+	protected static APart<? extends EntityVehicleE_Powered> getVehiclePartFromMessage(APacketPart message, MessageContext ctx){
+		EntityVehicleE_Powered vehicle;
 		if(ctx.side.isServer()){
-			vehicle = (EntityVehicleA_Base) ctx.getServerHandler().player.world.getEntityByID(message.id);
+			vehicle = (EntityVehicleE_Powered) ctx.getServerHandler().player.world.getEntityByID(message.id);
 		}else{
-			vehicle = (EntityVehicleA_Base) Minecraft.getMinecraft().world.getEntityByID(message.id);
+			vehicle = (EntityVehicleE_Powered) Minecraft.getMinecraft().world.getEntityByID(message.id);
 		}
 		if(vehicle != null){
-			for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+			for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
 				if(part.offset.x == message.x && part.offset.y == message.y && part.offset.z == message.z){
 					return part;
 				}

@@ -19,7 +19,6 @@ import minecrafttransportsimulator.packets.control.SteeringPacket;
 import minecrafttransportsimulator.packets.control.ThrottlePacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
@@ -160,7 +159,7 @@ public final class ControlSystem{
 			}
 			//If we are the vehicle controller, check for guns that don't have seats. 
 			if(seat.isController){
-				for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+				for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
 					if(part instanceof APartGun){
 						if(!(part.parentPart instanceof PartSeat)){
 							boolean hasControllingSeats = false;

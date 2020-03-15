@@ -15,7 +15,6 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleSound;
 import minecrafttransportsimulator.baseclasses.VehicleSound.SoundTypes;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleD_Moving;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import net.minecraft.client.Minecraft;
@@ -261,8 +260,8 @@ public final class VehicleSoundSystem{
 	 * This is used to determine the volume of MTS sounds.
 	 */
 	public static boolean isPlayerInsideEnclosedVehicle(){
-		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.getRidingEntity() instanceof EntityVehicleD_Moving){
-			return !((EntityVehicleD_Moving) Minecraft.getMinecraft().player.getRidingEntity()).definition.general.openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
+		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.getRidingEntity() instanceof EntityVehicleE_Powered){
+			return !((EntityVehicleE_Powered) Minecraft.getMinecraft().player.getRidingEntity()).definition.general.openTop && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
 		}else{
 			return false;
 		}

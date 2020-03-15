@@ -17,7 +17,7 @@ import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
@@ -69,7 +69,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 		if(vehicle instanceof EntityVehicleG_Blimp){
 			haveReverseThrustOption = true;
 		}else{
-			for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+			for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
 				if(part instanceof PartPropeller){
 					if(part.definition.propeller.isDynamicPitch){
 						haveReverseThrustOption = true;
