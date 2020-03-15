@@ -8,6 +8,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -133,7 +134,14 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 						if(newVehicle.definition.motorized.defaultFuelQty > 0){
 							for(APart<? extends EntityVehicleE_Powered> part : newVehicle.getVehicleParts()){
 								if(part instanceof APartEngine){
-									newVehicle.fluidName = part.definition.engine.fuelType;
+									//Get the most potent fuel for the vehicle from the fuel configs.
+									String mostPotentFluid = "";
+									for(String fluidName : ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).keySet()){
+										if(mostPotentFluid.isEmpty() || ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).get(mostPotentFluid) < ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).get(fluidName)){
+											mostPotentFluid = fluidName;
+										}
+									}
+									newVehicle.fluidName = mostPotentFluid;
 									newVehicle.fuel = newVehicle.definition.motorized.defaultFuelQty;
 									break;
 								}
