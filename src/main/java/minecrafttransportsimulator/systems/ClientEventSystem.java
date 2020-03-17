@@ -43,13 +43,16 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**This class handles rendering/camera edits that need to happen when riding vehicles,
  * as well as clicking of vehicles and their parts, as well as some other misc things.
  *
  * @author don_bruce
  */
-@Mod.EventBusSubscriber
+@Mod.EventBusSubscriber(Side.CLIENT)
+@SideOnly(Side.CLIENT)
 public final class ClientEventSystem{
     private static final Minecraft minecraft = Minecraft.getMinecraft();
     private static final RadioThread radioThread = new RadioThread();
