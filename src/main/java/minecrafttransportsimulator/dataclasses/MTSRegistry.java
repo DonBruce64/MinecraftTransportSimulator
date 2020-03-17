@@ -48,7 +48,6 @@ import minecrafttransportsimulator.packets.control.TrailerPacket;
 import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.packets.general.PacketChat;
-import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
@@ -335,7 +334,6 @@ public final class MTSRegistry{
 		registerPacket(PacketBulletHit.class, PacketBulletHit.Handler.class, true, true);
 		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);
 		registerPacket(PacketPartGunReload.class, PacketPartGunReload.Handler.class, true, false);
-		registerPacket(PacketManualPageUpdate.class, PacketManualPageUpdate.Handler.class, true, true);
 		registerPacket(PacketPlayerCrafting.class, PacketPlayerCrafting.Handler.class, false, true);
 		
 		//Packets in packets.tileentity
