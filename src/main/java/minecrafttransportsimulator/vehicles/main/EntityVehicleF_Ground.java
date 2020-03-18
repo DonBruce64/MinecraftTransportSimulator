@@ -92,15 +92,9 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 			if(towedByVehicle.isDead){
 				towedByVehicle = null;
 			}else{
-				//Turn off the parking brake
+				//Turn off the parking brake, but turn on the brake if we are a trailer and our tower is braking.
 				parkingBrakeOn = false;
-				
-				//Trailer Brakes when truck brakes
-				if(definition.motorized.isTrailer && towedByVehicle.brakeOn){
-					brakeOn = true;
-				}else{
-					brakeOn = false;
-				}
+				brakeOn = definition.motorized.isTrailer && towedByVehicle.brakeOn;
 				
 				//We use a second hitchPos here to allow us to calculate the yaw angle we need to apply.
 				//If we don't, the vehicle has no clue of the orientation of the towed vehicle hitch and gets all jittery.
@@ -131,12 +125,14 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 				motionZ = hitchPos.z - hookupPos.z;
 				return;
 			}
+		}else{
+			//Make sure the parking brake is on if this is a disconnected trailer
+			if(definition.motorized.isTrailer){
+				parkingBrakeOn = true;
+			}
+
 		}
 		
-		//Make sure the parking brake is on if this is a disconnected Trailer
-		if(definition.motorized.isTrailer){
-			parkingBrakeOn = true;
-		}
 		motionX += (headingVec.x*forwardForce - velocityVec.x*dragForce)/currentMass;
 		motionZ += (headingVec.z*forwardForce - velocityVec.z*dragForce)/currentMass;
 		motionY += (headingVec.y*forwardForce - velocityVec.y*dragForce - gravitationalForce)/currentMass;
