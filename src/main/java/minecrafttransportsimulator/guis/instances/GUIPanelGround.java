@@ -15,14 +15,14 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.packets.control.LightPacket;
-import minecrafttransportsimulator.packets.control.SirenPacket;
-import minecrafttransportsimulator.packets.control.TrailerPacket;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
+import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
@@ -125,7 +125,7 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 			sirenSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.siren"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, SIREN_TEXTURE_WIDTH_OFFSET, SIREN_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MTS.MTSNet.sendToServer(new SirenPacket(vehicle.getEntityId()));
+					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SIREN, !leftSide));
 				}
 				
 				@Override
@@ -186,7 +186,7 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 					for(int i=0; i<trailerNumber; ++ i){
 						currentVehicle = currentVehicle.towedVehicle;
 					}
-					MTS.MTSNet.sendToServer(new TrailerPacket(currentVehicle.getEntityId()));
+					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(currentVehicle, PacketVehicleControlDigital.Controls.TRAILER, true));
 				}
 				
 				@Override

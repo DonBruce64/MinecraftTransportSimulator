@@ -7,17 +7,8 @@ import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigKeyboard;
-import minecrafttransportsimulator.packets.control.AileronPacket;
-import minecrafttransportsimulator.packets.control.BrakePacket;
-import minecrafttransportsimulator.packets.control.ElevatorPacket;
-import minecrafttransportsimulator.packets.control.FlapPacket;
-import minecrafttransportsimulator.packets.control.HornPacket;
-import minecrafttransportsimulator.packets.control.ReverseThrustPacket;
-import minecrafttransportsimulator.packets.control.RudderPacket;
-import minecrafttransportsimulator.packets.control.ShiftPacket;
-import minecrafttransportsimulator.packets.control.SteeringPacket;
-import minecrafttransportsimulator.packets.control.ThrottlePacket;
-import minecrafttransportsimulator.packets.control.TrimPacket;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
@@ -27,6 +18,7 @@ import minecrafttransportsimulator.vehicles.parts.APartGun;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
+import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraft.client.Minecraft;
 
 /**Class that handles all control operations.
@@ -122,22 +114,24 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlBrake(ControlsKeyboardDynamic dynamic, ControlsJoystick analogBrake, ControlsJoystick pBrake, int entityID){
-		if(analogBrake.config.joystickName != null){
-			if(pBrake.isPressed()){
-				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 12));
-			}else if(analogBrake.getAxisState((short) 0) > 25){
-				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 11));
-			}else{
-				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 2));
+	private static void controlBrake(EntityVehicleE_Powered vehicle, ControlsKeyboardDynamic dynamic, ControlsJoystick analogBrake, ControlsJoystick pBrake){
+		//If the analog brake is set, do brake state based on that rather than the keyboard.
+		boolean isParkingBrakePressed = analogBrake.config.joystickName != null ? pBrake.isPressed() : dynamic.isPressed() || pBrake.isPressed();
+		boolean isBrakePressed = analogBrake.config.joystickName != null ? analogBrake.getAxisState((short) 0) > 25 : dynamic.mainControl.isPressed();
+		if(isParkingBrakePressed){
+			if(!vehicle.parkingBrakeOn){
+				WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+			}
+		}else if(isBrakePressed){
+			if(!vehicle.brakeOn){
+				WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.BRAKE, true));
+			}
+			if(vehicle.parkingBrakeOn){
+				WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 			}
 		}else{
-			if(dynamic.isPressed() || pBrake.isPressed()){
-				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 12));
-			}else if(dynamic.mainControl.isPressed()){
-				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 11));
-			}else{
-				MTS.MTSNet.sendToServer(new BrakePacket(entityID, (byte) 2));
+			if(vehicle.brakeOn){
+				WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.BRAKE, false));
 			}
 		}
 	}
@@ -196,7 +190,7 @@ public final class ControlSystem{
 		if(!isPlayerController){
 			return;
 		}
-		controlBrake(ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_BRAKE_ANALOG, ControlsJoystick.AIRCRAFT_PARK, aircraft.getEntityId());
+		controlBrake(aircraft, ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_BRAKE_ANALOG, ControlsJoystick.AIRCRAFT_PARK);
 		
 		//Open or close the panel.
 		if(ControlsKeyboard.AIRCRAFT_PANEL.isPressed()){
@@ -209,92 +203,92 @@ public final class ControlSystem{
 		
 		//Check for thrust reverse button.
 		if(ControlsJoystick.AIRCRAFT_REVERSE.isPressed()){
-			MTS.proxy.playSound(aircraft.getPositionVector(), MTS.MODID + ":panel_buzzer", 1.0F, 1.0F, aircraft);
-			MTS.MTSNet.sendToServer(new ReverseThrustPacket(aircraft.getEntityId(), !aircraft.reverseThrust));
+			WrapperNetwork.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.REVERSE, !aircraft.reverseThrust));
 		}
 		
 		//Increment or decrement throttle.
 		if(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName != null){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), (byte) ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState((short) 0)));
+			WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState((short) 0), Byte.MAX_VALUE));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()){
-				MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MAX_VALUE));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0));
 			}
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_D.isPressed()){
-				MTS.MTSNet.sendToServer(new ThrottlePacket(aircraft.getEntityId(), Byte.MIN_VALUE));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0));
 			}
 		}		
 		
 		//Check flaps.
 		if(aircraft.definition.plane != null && aircraft.definition.plane.hasFlaps){
 			if(ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed()){
-				MTS.MTSNet.sendToServer(new FlapPacket(aircraft.getEntityId(), (byte) -50));
+				WrapperNetwork.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.FLAPS, false));
 			}
 			if(ControlsKeyboard.AIRCRAFT_FLAPS_D.isPressed()){
-				MTS.MTSNet.sendToServer(new FlapPacket(aircraft.getEntityId(), (byte) 50));
+				WrapperNetwork.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.FLAPS, true));
 			}
 		}
 		
 		//Check yaw.
 		if(ControlsJoystick.AIRCRAFT_YAW.config.joystickName != null){
-			MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), ControlsJoystick.AIRCRAFT_YAW.getAxisState((short) 250)));
+			WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.AIRCRAFT_YAW.getAxisState(aircraft.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_YAW_R.isPressed()){
-				MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), (short) (ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(aircraft.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(aircraft.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 			}
 			if(ControlsKeyboard.AIRCRAFT_YAW_L.isPressed()){
-				MTS.MTSNet.sendToServer(new RudderPacket(aircraft.getEntityId(), (short) (-ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(aircraft.rudderAngle > 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, (short) (-ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(aircraft.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 			}
 		}
 		if(ControlsJoystick.AIRCRAFT_TRIM_YAW_R.isPressed()){
-			MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 10));
+			WrapperNetwork.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_YAW, true));
 		}
 		if(ControlsJoystick.AIRCRAFT_TRIM_YAW_L.isPressed()){
-			MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 2));
+			WrapperNetwork.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_YAW, false));
 		}
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.client.mouseYoke.value){
 			if(ClientEventSystem.lockedView && WrapperGUI.isGUIActive(null)){
 				long mousePosition = WrapperInput.getTrackedMouseInfo();
-				MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), (short) (mousePosition >> Integer.SIZE)));
-				MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), (short) ((int) -mousePosition)));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) ((int) -mousePosition), Byte.MAX_VALUE));
+				
 			}
 		}else{
 			//Check pitch.
 			if(ControlsJoystick.AIRCRAFT_PITCH.config.joystickName != null){
-				MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), ControlsJoystick.AIRCRAFT_PITCH.getAxisState((short) 250)));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, ControlsJoystick.AIRCRAFT_PITCH.getAxisState(aircraft.MAX_ELEVATOR_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_PITCH_U.isPressed()){
-					MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), true, ConfigSystem.configObject.client.controlSurfaceCooldown.value.shortValue()));
+					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) (ConfigSystem.configObject.client.flightIncrement.value.shortValue()*(aircraft.elevatorAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 				}
 				if(ControlsKeyboard.AIRCRAFT_PITCH_D.isPressed()){
-					MTS.MTSNet.sendToServer(new ElevatorPacket(aircraft.getEntityId(), false, ConfigSystem.configObject.client.controlSurfaceCooldown.value.shortValue()));
+					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) (-ConfigSystem.configObject.client.flightIncrement.value.shortValue()*(aircraft.elevatorAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 				}
 			}
 			if(ControlsJoystick.AIRCRAFT_TRIM_PITCH_U.isPressed()){
-				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 9));
+				WrapperNetwork.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
 			}
 			if(ControlsJoystick.AIRCRAFT_TRIM_PITCH_D.isPressed()){
-				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 1));
+				WrapperNetwork.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
 			}
 			
 			//Check roll.
 			if(ControlsJoystick.AIRCRAFT_ROLL.config.joystickName != null){
-				MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), ControlsJoystick.AIRCRAFT_ROLL.getAxisState((short) 250)));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, ControlsJoystick.AIRCRAFT_ROLL.getAxisState(aircraft.MAX_AILERON_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_ROLL_R.isPressed()){
-					MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), true, ConfigSystem.configObject.client.controlSurfaceCooldown.value.shortValue()));
+					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (ConfigSystem.configObject.client.flightIncrement.value.shortValue()*(aircraft.aileronAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 				}
 				if(ControlsKeyboard.AIRCRAFT_ROLL_L.isPressed()){
-					MTS.MTSNet.sendToServer(new AileronPacket(aircraft.getEntityId(), false, ConfigSystem.configObject.client.controlSurfaceCooldown.value.shortValue()));
+					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (-ConfigSystem.configObject.client.flightIncrement.value.shortValue()*(aircraft.aileronAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 				}
 			}
 			if(ControlsJoystick.AIRCRAFT_TRIM_ROLL_R.isPressed()){
-				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 8));
+				WrapperNetwork.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
 			}
 			if(ControlsJoystick.AIRCRAFT_TRIM_ROLL_L.isPressed()){
-				MTS.MTSNet.sendToServer(new TrimPacket(aircraft.getEntityId(), (byte) 0));
+				WrapperNetwork.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
 			}
 		}
 	}
@@ -307,7 +301,7 @@ public final class ControlSystem{
 		if(!isPlayerController){
 			return;
 		}
-		controlBrake(ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE_ANALOG, ControlsJoystick.CAR_PARK, powered.getEntityId());
+		controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE_ANALOG, ControlsJoystick.CAR_PARK);
 		
 		//Open or close the panel.
 		if(ControlsKeyboard.CAR_PANEL.isPressed()){
@@ -320,14 +314,14 @@ public final class ControlSystem{
 		
 		//Change gas to on or off.
 		if(ControlsJoystick.CAR_GAS.config.joystickName != null){
-			MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) ControlsJoystick.CAR_GAS.getAxisState((short) 0)));
+			WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.CAR_GAS.getAxisState((short) 0), Byte.MAX_VALUE));
 		}else{
 			if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
-				MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) 50));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 50, Byte.MAX_VALUE));
 			}else if(ControlsKeyboard.CAR_GAS.isPressed()){
-				MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) 100));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 100, Byte.MAX_VALUE));
 			}else{
-				MTS.MTSNet.sendToServer(new ThrottlePacket(powered.getEntityId(), (byte) 0));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
 			}
 		}
 		
@@ -336,37 +330,37 @@ public final class ControlSystem{
 		if(ConfigSystem.configObject.client.mouseYoke.value){
 			if(ClientEventSystem.lockedView && WrapperGUI.isGUIActive(null)){
 				long mousePosition = WrapperInput.getTrackedMouseInfo();
-				MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), (short) (mousePosition >> Integer.SIZE)));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.STEERING, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
 			}
 		}else{
 			if(ControlsJoystick.CAR_TURN.config.joystickName != null){
-				MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), ControlsJoystick.CAR_TURN.getAxisState((short) 450)));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.STEERING, ControlsJoystick.CAR_TURN.getAxisState(powered.MAX_STEERING_ANGLE), Byte.MAX_VALUE));
 			}else{
 				//Depending on what we are pressing, send out packets.
 				//If we are turning in the opposite direction of our current angle, send out a packet with twice the value.
 				boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
 				boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();
 				if(turningRight && !turningLeft){
-					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), (short) (ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(powered.steeringAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
+					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.STEERING, (short) (ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(powered.steeringAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 				}else if(turningLeft && !turningRight){
-					MTS.MTSNet.sendToServer(new SteeringPacket(powered.getEntityId(), (short) (-ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(powered.steeringAngle > 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
+					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.STEERING, (short) (-ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(powered.steeringAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 				}
 			}
 		}
 		
 		//Check if we are shifting.
 		if(ControlsKeyboard.CAR_SHIFT_U.isPressed()){
-			MTS.MTSNet.sendToServer(new ShiftPacket(powered.getEntityId(), true));
+			WrapperNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT, true));
 		}
 		if(ControlsKeyboard.CAR_SHIFT_D.isPressed()){
-			MTS.MTSNet.sendToServer(new ShiftPacket(powered.getEntityId(), false));
+			WrapperNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT, false));
 		}
 		
 		//Check if horn button is pressed.
-		if(ControlsKeyboard.CAR_HORN.isPressed()){
-			MTS.MTSNet.sendToServer(new HornPacket(powered.getEntityId(), true));
-		}else{
-			MTS.MTSNet.sendToServer(new HornPacket(powered.getEntityId(), false));
+		if(ControlsKeyboard.CAR_HORN.isPressed() && !powered.hornOn){
+			WrapperNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.HORN, true));
+		}else if(!ControlsKeyboard.CAR_HORN.isPressed() && powered.hornOn){
+			WrapperNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.HORN, false));
 		}
 	}
 

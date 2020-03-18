@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.vehicles.main;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.packets.control.SteeringPacket;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -12,8 +12,9 @@ import net.minecraft.world.World;
 
 public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{	
 	//Note that angle variable should be divided by 10 to get actual angle.
-	public short steeringAngle;
 	public final short MAX_STEERING_ANGLE = 450;
+	public final short STEERING_DAMPEN_RATE = 20;
+	public short steeringAngle;
 	public byte steeringCooldown; 
 	
 	//Internal variables
@@ -134,12 +135,12 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	protected void dampenControlSurfaces(){
 		if(steeringCooldown==0){
 			if(steeringAngle != 0){
-				if(steeringAngle < 20 && steeringAngle > -20){
-					MTS.MTSNet.sendToAll(new SteeringPacket(this.getEntityId(), (short) 0, (byte) 0));
+				if(steeringAngle < STEERING_DAMPEN_RATE && steeringAngle > -STEERING_DAMPEN_RATE){
+					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.STEERING, (short) -steeringAngle, (byte) 0), this);
 					steeringAngle = 0;
 				}else{
-					MTS.MTSNet.sendToAll(new SteeringPacket(this.getEntityId(), (short) (steeringAngle < 0 ? 20 : -20), (byte) 0));
-					steeringAngle += steeringAngle < 0 ? 20 : -20;
+					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.STEERING, steeringAngle < 0 ? STEERING_DAMPEN_RATE : -STEERING_DAMPEN_RATE, (byte) 0), this);
+					steeringAngle += steeringAngle < 0 ? STEERING_DAMPEN_RATE : -STEERING_DAMPEN_RATE;
 				}
 			}
 		}else{

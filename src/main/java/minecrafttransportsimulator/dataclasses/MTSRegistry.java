@@ -32,20 +32,7 @@ import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONSign;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.packets.control.AileronPacket;
-import minecrafttransportsimulator.packets.control.BrakePacket;
-import minecrafttransportsimulator.packets.control.ElevatorPacket;
-import minecrafttransportsimulator.packets.control.FlapPacket;
-import minecrafttransportsimulator.packets.control.HornPacket;
 import minecrafttransportsimulator.packets.control.LightPacket;
-import minecrafttransportsimulator.packets.control.ReverseThrustPacket;
-import minecrafttransportsimulator.packets.control.RudderPacket;
-import minecrafttransportsimulator.packets.control.ShiftPacket;
-import minecrafttransportsimulator.packets.control.SirenPacket;
-import minecrafttransportsimulator.packets.control.SteeringPacket;
-import minecrafttransportsimulator.packets.control.ThrottlePacket;
-import minecrafttransportsimulator.packets.control.TrailerPacket;
-import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
@@ -315,20 +302,7 @@ public final class MTSRegistry{
 	
 	private static void initPackets(){
 		//Packets in packets.control
-		registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
-		registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);
-		registerPacket(ElevatorPacket.class, ElevatorPacket.Handler.class, true, true);
-		registerPacket(FlapPacket.class, FlapPacket.Handler.class, true, true);
-		registerPacket(HornPacket.class, HornPacket.Handler.class, true, true);
 		registerPacket(LightPacket.class, LightPacket.Handler.class, true, true);
-		registerPacket(ReverseThrustPacket.class, ReverseThrustPacket.Handler.class, true, true);
-		registerPacket(RudderPacket.class, RudderPacket.Handler.class, true, true);
-		registerPacket(SirenPacket.class, SirenPacket.Handler.class, true, true);
-		registerPacket(ShiftPacket.class, ShiftPacket.Handler.class, true, true);
-		registerPacket(SteeringPacket.class, SteeringPacket.Handler.class, true, true);
-		registerPacket(ThrottlePacket.class, ThrottlePacket.Handler.class, true, true);
-		registerPacket(TrailerPacket.class, TrailerPacket.Handler.class, true, true);
-		registerPacket(TrimPacket.class, TrimPacket.Handler.class, true, true);
 		
 		//Packets in packets.general
 		registerPacket(PacketBulletHit.class, PacketBulletHit.Handler.class, true, true);

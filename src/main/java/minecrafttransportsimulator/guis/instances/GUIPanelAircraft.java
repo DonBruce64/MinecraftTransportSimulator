@@ -12,8 +12,7 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.packets.control.LightPacket;
-import minecrafttransportsimulator.packets.control.ReverseThrustPacket;
-import minecrafttransportsimulator.packets.control.TrimPacket;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
@@ -25,6 +24,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngineJet;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
+import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * Used for controlling engines, lights, trim, and other things.
@@ -58,7 +58,8 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 	private GUIComponentSelector reverseSelector;
 	
 	private GUIComponentSelector selectedTrimSelector;
-	private byte selectedTrimCode = -1;
+	private PacketVehicleControlDigital.Controls selectedTrimType = null;
+	private boolean selectedTrimDirection;
 	private boolean appliedTrimThisRender;
 	
 	private final boolean haveReverseThrustOption;
@@ -163,13 +164,14 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 			@Override
 			public void onClicked(boolean leftSide){
 				selectedTrimSelector = this;
-				selectedTrimCode = (byte) (leftSide ? 0 : 8);
+				selectedTrimType = PacketVehicleControlDigital.Controls.TRIM_ROLL;
+				selectedTrimDirection = !leftSide;
 			}
 			
 			@Override
 			public void onReleased(){
 				selectedTrimSelector = null;
-				selectedTrimCode = -1;
+				selectedTrimType = null;
 			}
 		};
 		addSelector(aileronTrimSelector);
@@ -178,13 +180,14 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 			@Override
 			public void onClicked(boolean leftSide){
 				selectedTrimSelector = this;
-				selectedTrimCode = (byte) (leftSide ? 9 : 1);
+				selectedTrimType = PacketVehicleControlDigital.Controls.TRIM_PITCH;
+				selectedTrimDirection = leftSide;
 			}
 			
 			@Override
 			public void onReleased(){
 				selectedTrimSelector = null;
-				selectedTrimCode = -1;
+				selectedTrimType = null;
 			}
 		};
 		addSelector(elevatorTrimSelector);
@@ -193,13 +196,14 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 			@Override
 			public void onClicked(boolean leftSide){
 				selectedTrimSelector = this;
-				selectedTrimCode = (byte) (leftSide ? 2 : 10);
+				selectedTrimType = PacketVehicleControlDigital.Controls.TRIM_YAW;
+				selectedTrimDirection = !leftSide;
 			}
 			
 			@Override
 			public void onReleased(){
 				selectedTrimSelector = null;
-				selectedTrimCode = -1;
+				selectedTrimType = null;
 			}
 		};
 		addSelector(rudderTrimSelector);
@@ -209,7 +213,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 			reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MTS.MTSNet.sendToServer(new ReverseThrustPacket(vehicle.getEntityId(), !vehicle.reverseThrust));
+					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
 				}
 				
 				@Override
@@ -242,7 +246,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 			if(WrapperGUI.inClockPeriod(3, 1)){
 				if(!appliedTrimThisRender){
 					selectedTrimSelector.selectorState = selectedTrimSelector.selectorState == 0 ? 1 : 0; 
-					MTS.MTSNet.sendToServer(new TrimPacket(vehicle.getEntityId(), selectedTrimCode));
+					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, selectedTrimType, selectedTrimDirection));
 					appliedTrimThisRender = true;
 				}
 			}else{
