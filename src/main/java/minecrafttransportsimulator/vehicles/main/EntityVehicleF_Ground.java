@@ -92,6 +92,16 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 			if(towedByVehicle.isDead){
 				towedByVehicle = null;
 			}else{
+				//Turn off the parking brake
+				parkingBrakeOn = false;
+				
+				//Trailer Brakes when truck brakes
+				if(definition.motorized.isTrailer && towedByVehicle.brakeOn){
+					brakeOn = true;
+				}else{
+					brakeOn = false;
+				}
+				
 				//We use a second hitchPos here to allow us to calculate the yaw angle we need to apply.
 				//If we don't, the vehicle has no clue of the orientation of the towed vehicle hitch and gets all jittery.
 				//This is because when the hitch and the hookup are at the same point, the dot product returns floating-point errors.
@@ -109,10 +119,10 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 					deltaYaw *= -1;
 				}
 				
-				//Don't apply yaw if we aren't moving.
-				motionYaw = velocity > 0 ? (float) (deltaYaw/10) : 0;
-				//If we are in the air, pitch up to get our devices on the ground.
-				motionPitch = groundedGroundDevices.isEmpty() ? -1F : 0;
+				//Don't apply yaw if we aren't moving. Apply Yaw in proportion to trailer length
+				motionYaw = velocity > 0 ? (float) (deltaYaw/(2*Math.abs(definition.motorized.hookupPos[2]))) : 0;
+				//If we are in the air, pitch up to get our devices on the ground. Pitching speed is determined by elevation difference of rear wheels.
+				motionPitch = groundedGroundDevices.isEmpty() ? -(float)(Math.min(Math.max(Math.abs((((towedByVehicle.rearLeftGroundDeviceBox.currentBox.minY + towedByVehicle.rearRightGroundDeviceBox.currentBox.minY)/2) - ((rearLeftGroundDeviceBox.currentBox.minY + rearRightGroundDeviceBox.currentBox.minY)/2)) * 2),0.1),1.0)) : 0;
 				//Match our tower's roll.
 				motionRoll = (towedByVehicle.rotationRoll - rotationRoll)/10;
 				
@@ -121,6 +131,11 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 				motionZ = hitchPos.z - hookupPos.z;
 				return;
 			}
+		}
+		
+		//Make sure the parking brake is on if this is a disconnected Trailer
+		if(definition.motorized.isTrailer){
+			parkingBrakeOn = true;
 		}
 		motionX += (headingVec.x*forwardForce - velocityVec.x*dragForce)/currentMass;
 		motionZ += (headingVec.z*forwardForce - velocityVec.z*dragForce)/currentMass;
