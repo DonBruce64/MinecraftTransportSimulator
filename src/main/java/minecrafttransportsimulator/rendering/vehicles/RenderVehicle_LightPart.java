@@ -56,8 +56,8 @@ public final class RenderVehicle_LightPart{
 		}
 		
 		
-		//If we need to render a flare or cover, calculate the center points and re-calculate the UV points.
-		if(renderFlare || renderCover){
+		//If we need to render a flare, cover, or beam, calculate the center points and re-calculate the UV points.
+		if(renderFlare || renderCover || type.hasBeam){
 			this.vertices = new Float[masterVertices.length][];
 			this.centerPoints = new Vec3d[masterVertices.length/6];
 			this.size = new Float[masterVertices.length/6];
