@@ -21,7 +21,7 @@ import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Powered> extends APart<EntityVehicleX_Type> implements FXPart{
+public abstract class APartEngine extends APart<EntityVehicleE_Powered> implements FXPart{
 	
 	//NBT data
 	public boolean isCreative;
@@ -42,7 +42,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 	private double ambientTemp;
 	private double coolingFactor;
 	private Long lastTimeParticleSpawned = 0L;
-	public APartEngine<? extends EntityVehicleE_Powered> linkedEngine;
+	public APartEngine linkedEngine;
 	
 	//Rotation data.  Should be set by each engine type individually.
 	protected double engineRotationLast;
@@ -60,7 +60,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 	public final float engineStartRPM;
 
 	
-	public APartEngine(EntityVehicleX_Type vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public APartEngine(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 		engineStallRPM = definition.engine.maxRPM < 15000 ? 300 : 1500;
 		engineStartRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;

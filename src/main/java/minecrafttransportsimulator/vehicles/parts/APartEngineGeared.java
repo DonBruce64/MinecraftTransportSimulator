@@ -3,13 +3,13 @@ package minecrafttransportsimulator.vehicles.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 
-public abstract class APartEngineGeared<EntityVehicleX_Type extends EntityVehicleF_Ground> extends APartEngine<EntityVehicleX_Type>{
+public abstract class APartEngineGeared extends APartEngine{
 	public byte currentGear;
 
-	public APartEngineGeared(EntityVehicleX_Type vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public APartEngineGeared(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 		this.currentGear = dataTag.getByte("gearNumber");
 	}

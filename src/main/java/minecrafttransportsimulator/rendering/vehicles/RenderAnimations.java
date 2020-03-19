@@ -84,7 +84,7 @@ public final class RenderAnimations{
 		}else if(optionalPart != null){
 			//If we passed-in a part, check for part-specific animations first.
 			if(optionalPart instanceof APartEngine){
-				APartEngine<? extends EntityVehicleE_Powered> engine = (APartEngine<? extends EntityVehicleE_Powered>) optionalPart;
+				APartEngine engine = (APartEngine) optionalPart;
 				switch(variable){
 					case("engine_rotation"): return engine.getEngineRotation(partialTicks);
 					case("engine_driveshaft_rotation"): return engine.getDriveshaftRotation(partialTicks);
@@ -96,10 +96,10 @@ public final class RenderAnimations{
 					case("engine_fuel_flow"): return engine.fuelFlow*20D*60D/1000D;
 					case("engine_temp"): return engine.temp;
 					case("engine_oil"): return engine.oilPressure;
-					case("engine_gear"): return ((APartEngineGeared<? extends EntityVehicleE_Powered>) engine).currentGear;
-					case("engine_gearshift"): return ((APartEngineGeared<? extends EntityVehicleE_Powered>) engine).getGearshiftRotation();
-					case("engine_gearshift_hvertical"): return ((APartEngineGeared<? extends EntityVehicleE_Powered>) engine).getGearshiftPosition_Vertical();
-					case("engine_gearshift_hhorizontal"): return ((APartEngineGeared<? extends EntityVehicleE_Powered>) engine).getGearshiftPosition_Horizontal();
+					case("engine_gear"): return ((APartEngineGeared) engine).currentGear;
+					case("engine_gearshift"): return ((APartEngineGeared) engine).getGearshiftRotation();
+					case("engine_gearshift_hvertical"): return ((APartEngineGeared) engine).getGearshiftPosition_Vertical();
+					case("engine_gearshift_hhorizontal"): return ((APartEngineGeared) engine).getGearshiftPosition_Horizontal();
 					case("engine_magneto"): return engine.state.magnetoOn ? 1 : 0;
 					case("engine_starter"): return engine.state.esOn ? 1 : 0;
 				}

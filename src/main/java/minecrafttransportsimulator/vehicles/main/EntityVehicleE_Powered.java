@@ -16,6 +16,7 @@ import minecrafttransportsimulator.radio.RadioContainer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
@@ -40,15 +41,22 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public boolean soundsNeedInit;
 	public boolean hornOn;
 	public boolean sirenOn;
+	
 	public byte throttle;
 	public double fuel;
+	public boolean reverseThrust;
+	public short reversePercent;
+	
 	public double electricPower = 12;
 	public double electricUsage;
 	public double electricFlow;
 	public String fluidName = "";
 	public Vec3d velocityVec = Vec3d.ZERO;
+	
 	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
-	public final Map<Byte, APartEngine<? extends EntityVehicleE_Powered>> engines = new HashMap<Byte, APartEngine<? extends EntityVehicleE_Powered>>();
+	public final Map<Byte, APartEngine> engines = new HashMap<Byte, APartEngine>();
+	public final List<APartGroundDevice> wheels = new ArrayList<APartGroundDevice>();
+	public final List<APartGroundDevice> groundedWheels = new ArrayList<APartGroundDevice>();
 	
 	private final List<LightType> lightsOn = new ArrayList<LightType>();
 	private final List<VehicleSound> sounds = new ArrayList<VehicleSound>();
@@ -73,7 +81,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			
 			//Turn on the DRLs if we have an engine on.
 			boolean anyEngineOn = false;
-			for(APartEngine<? extends EntityVehicleE_Powered> engine : engines.values()){
+			for(APartEngine engine : engines.values()){
 				if(engine.state.running){
 					anyEngineOn = true;
 					break;
@@ -92,6 +100,21 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
 			electricFlow = electricUsage;
 			electricUsage = 0;
+			
+			//Adjust reverse thrust variables.
+			if(reverseThrust && reversePercent < 20){
+				++reversePercent;
+			}else if(!reverseThrust && reversePercent > 0){
+				--reversePercent;
+			}
+			
+			//Populate grounded wheels.  Needs to be independent of non-wheeled ground devices.
+			groundedWheels.clear();
+			for(APartGroundDevice wheel : this.wheels){
+				if(wheel.isOnGround()){
+					groundedWheels.add(wheel);
+				}
+			}
 		}
 	}
 	
@@ -160,12 +183,16 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				for(String type : packPart.types){
 					if(type.startsWith("engine")){
 						if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
-							engines.put(engineNumber, (APartEngine<? extends EntityVehicleE_Powered>) part);
+							engines.put(engineNumber, (APartEngine) part);
 							return;
 						}
 						++engineNumber;
 					}
 				}
+			}
+		}else if(part instanceof APartGroundDevice){
+			if(((APartGroundDevice) part).canBeDrivenByEngine()){
+				wheels.add((APartGroundDevice) part);
 			}
 		}
 	}
@@ -184,6 +211,9 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 					++engineNumber;
 				}
 			}
+		}
+		if(wheels.contains(part)){
+			wheels.remove(part);
 		}
 	}
 	

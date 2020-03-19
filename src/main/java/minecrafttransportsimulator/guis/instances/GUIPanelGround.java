@@ -43,11 +43,14 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 	private static final int ENGINE_TEXTURE_HEIGHT_OFFSET = 196;
 	private static final int TRAILER_TEXTURE_WIDTH_OFFSET = ENGINE_TEXTURE_WIDTH_OFFSET + 20;
 	private static final int TRAILER_TEXTURE_HEIGHT_OFFSET = 216;
+	private static final int REVERSE_TEXTURE_WIDTH_OFFSET = TRAILER_TEXTURE_WIDTH_OFFSET + 20;
+	private static final int REVERSE_TEXTURE_HEIGHT_OFFSET = 216;
 	
 	private GUIComponentSelector lightSelector;
 	private GUIComponentSelector turnSignalSelector;
 	private GUIComponentSelector emergencySelector;
 	private GUIComponentSelector sirenSelector;
+	private GUIComponentSelector reverseSelector;
 	private final Map<Byte, GUIComponentSelector> engineSelectors = new HashMap<Byte, GUIComponentSelector>();
 	private final List<GUIComponentSelector> trailerSelectors = new ArrayList<GUIComponentSelector>();
 	
@@ -170,6 +173,20 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 			addSelector(engineSelector);
 		}
 		
+		//If we have reverse thrust, add a selector for it.
+		if(haveReverseThrustOption){
+			reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			addSelector(reverseSelector);
+		}
+		
 		//Create the 8 trailer selectors.  Note that not all may be rendered.
 		for(int i=0; i<8; ++i){
 			//Go to next column if we are on our 4th row.
@@ -236,6 +253,11 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 		for(Entry<Byte, GUIComponentSelector> engineEntry : engineSelectors.entrySet()){
 			APartEngine.EngineStates engineState = vehicle.engines.get(engineEntry.getKey()).state;
 			engineEntry.getValue().selectorState = !engineState.magnetoOn ? 0 : (!engineState.esOn ? 1 : 2);
+		}
+		
+		//If we have reverse thrust, set the selector state.
+		if(haveReverseThrustOption){
+			reverseSelector.selectorState = vehicle.reverseThrust ? 1 : 0;
 		}
 		
 		//Iterate through trailers and set the visibility of the trailer selectors based on their state.

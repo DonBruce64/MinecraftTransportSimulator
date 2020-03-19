@@ -4,6 +4,10 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
+import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartEngineJet;
+import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * This class is abstract and contains the base code for rendering things common to
@@ -19,11 +23,29 @@ public abstract class AGUIPanel<EntityVehicleX_Type extends EntityVehicleE_Power
 	protected static final int SELECTOR_TEXTURE_SIZE = 20;
 	
 	protected final EntityVehicleX_Type vehicle;
+	protected final boolean haveReverseThrustOption;
 	protected int xOffset;
 
 
 	public AGUIPanel(EntityVehicleX_Type vehicle){
 		this.vehicle = vehicle;
+		//If we have propellers with reverse thrust capabilities, or are a blimp, or have jet engines, render the reverse thrust selector.
+		if(vehicle instanceof EntityVehicleG_Blimp){
+			haveReverseThrustOption = true;
+		}else{
+			for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+				if(part instanceof PartPropeller){
+					if(part.definition.propeller.isDynamicPitch){
+						haveReverseThrustOption = true;
+						return;
+					}
+				}else if(part instanceof PartEngineJet){
+					haveReverseThrustOption = true;
+					return;
+				}
+			}
+			haveReverseThrustOption = false;
+		}
 	}
 	
 	@Override

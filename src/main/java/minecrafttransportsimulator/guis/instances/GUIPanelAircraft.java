@@ -16,13 +16,8 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
-import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartEngineJet;
-import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
@@ -62,27 +57,8 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 	private boolean selectedTrimDirection;
 	private boolean appliedTrimThisRender;
 	
-	private final boolean haveReverseThrustOption;
-	
 	public GUIPanelAircraft(EntityVehicleF_Air aircraft){
 		super(aircraft);
-		//If we have propellers with reverse thrust capabilities, or are a blimp, render the reverse thrust selector.
-		if(vehicle instanceof EntityVehicleG_Blimp){
-			haveReverseThrustOption = true;
-		}else{
-			for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
-				if(part instanceof PartPropeller){
-					if(part.definition.propeller.isDynamicPitch){
-						haveReverseThrustOption = true;
-						return;
-					}
-				}else if(part instanceof PartEngineJet){
-					haveReverseThrustOption = true;
-					return;
-				}
-			}
-			haveReverseThrustOption = false;
-		}
 	}
 	
 	@Override

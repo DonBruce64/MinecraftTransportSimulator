@@ -20,7 +20,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ItemJumperCable extends Item implements IItemVehicleInteractable{
-	public static APartEngine<? extends EntityVehicleE_Powered> lastEngineClicked;
+	public static APartEngine lastEngineClicked;
 	
 	public ItemJumperCable(){
 		super();
@@ -39,7 +39,7 @@ public class ItemJumperCable extends Item implements IItemVehicleInteractable{
 	public void doVehicleInteraction(ItemStack stack, EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
 		if(rightClick){
 			if(part instanceof APartEngine){
-				APartEngine<? extends EntityVehicleE_Powered> engine = (APartEngine<? extends EntityVehicleE_Powered>) part;
+				APartEngine engine = (APartEngine) part;
 				if(engine.linkedEngine == null){
 					if(lastEngineClicked == null){
 						lastEngineClicked = engine;

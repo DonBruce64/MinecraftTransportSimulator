@@ -103,18 +103,18 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				return false;
 			}
 			case SHIFT : {
-				for(APartEngine<? extends EntityVehicleE_Powered> engine : vehicle.engines.values()){
+				for(APartEngine engine : vehicle.engines.values()){
 					if(engine instanceof APartEngineGeared){
 						if(controlState){
-							((APartEngineGeared<? extends EntityVehicleE_Powered>) engine).shiftUp(true);
+							((APartEngineGeared) engine).shiftUp(true);
 						}else{
-							((APartEngineGeared<? extends EntityVehicleE_Powered>) engine).shiftDown(true);
+							((APartEngineGeared) engine).shiftDown(true);
 						}
 					}
 				}
 				break;
 			}
-			case REVERSE : ((EntityVehicleF_Air) vehicle).reverseThrust = controlState; break;
+			case REVERSE : vehicle.reverseThrust = controlState; break;
 			case FLAPS : ((EntityVehicleG_Plane) vehicle).flapDesiredAngle = (short) clampAngle(0, 350, ((EntityVehicleG_Plane) vehicle).flapDesiredAngle + (controlState ? 50 : -50)); break;
 			case TRIM_ROLL : ((EntityVehicleF_Air) vehicle).aileronTrim = (short) clampAngle(-100, 100, ((EntityVehicleF_Air) vehicle).aileronTrim + (controlState ? 1 : -1)); break;
 			case TRIM_PITCH : ((EntityVehicleF_Air) vehicle).elevatorTrim = (short) clampAngle(-100, 100, ((EntityVehicleF_Air) vehicle).elevatorTrim + (controlState ? 1 : -1)); break;

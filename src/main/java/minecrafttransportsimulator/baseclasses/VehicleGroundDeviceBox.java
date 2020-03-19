@@ -29,7 +29,9 @@ public class VehicleGroundDeviceBox{
 	private final boolean isLeft;
 	
 	public boolean isCollided;
+	public boolean isCollidedLiquid;
 	public boolean isGrounded;
+	public boolean isGroundedLiquid;
 	public double collisionDepth;
 	public VehicleAxisAlignedBB currentBox;
 	public double xCoord;
@@ -118,15 +120,15 @@ public class VehicleGroundDeviceBox{
 			final VehicleAxisAlignedBB liquidCollisionBox = getLiquidPoint();
 			final List<AxisAlignedBB> liquidCollidingBoxes = getLiquidCollisions(liquidCollisionBox, vehicle.world);
 			//Liquids are checked a bit differently as we already checked solids.
-			boolean isLiquidCollided = !liquidCollidingBoxes.isEmpty();
-			boolean isLiquidGrounded = isLiquidCollided ? false : !getLiquidCollisions(liquidCollisionBox.offset(0, APartGroundDevice.groundDetectionOffset.y, 0), vehicle.world).isEmpty(); 
-			double liquidCollisionDepth = isLiquidCollided ? getCollisionDepthForCollisions(liquidCollisionBox, liquidCollidingBoxes) : 0;
+			isCollidedLiquid = !liquidCollidingBoxes.isEmpty();
+			isGroundedLiquid = isCollidedLiquid ? false : !getLiquidCollisions(liquidCollisionBox.offset(0, APartGroundDevice.groundDetectionOffset.y, 0), vehicle.world).isEmpty(); 
+			double liquidCollisionDepth = isCollidedLiquid ? getCollisionDepthForCollisions(liquidCollisionBox, liquidCollidingBoxes) : 0;
 			
 			//If the liquid boxes are more collided, set collisions to those.
 			//Otherwise, use the solid values.
-			if(isLiquidCollided && (liquidCollisionDepth > collisionDepth)){
-				isCollided = isLiquidCollided;
-				isGrounded = isLiquidGrounded;
+			if(isCollidedLiquid && (liquidCollisionDepth > collisionDepth)){
+				isCollided = isCollidedLiquid;
+				isGrounded = isGroundedLiquid;
 				collisionDepth = liquidCollisionDepth;
 				xCoord = liquidCollisionBox.rel.x;
 				yCoord = liquidCollisionBox.rel.y - liquidCollisionBox.height/2D;

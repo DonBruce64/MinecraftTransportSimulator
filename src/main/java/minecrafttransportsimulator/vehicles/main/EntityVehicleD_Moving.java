@@ -12,6 +12,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
+import minecrafttransportsimulator.vehicles.parts.PartEngineBoat;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -769,6 +770,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	protected float getBrakingForceFactor(){
 		float brakingFactor = 0;
 		//First get the ground device braking contributions.
+		//This is both grounded ground devices, and liquid collision boxes that are set as such.
 		for(APartGroundDevice groundDevice : this.groundedGroundDevices){
 			float addedFactor = 0;
 			if(brakeOn || parkingBrakeOn){
@@ -777,6 +779,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			if(addedFactor != 0){
 				brakingFactor += Math.max(addedFactor - groundDevice.getFrictionLoss(), 0);
 			}
+		}
+		if(brakeOn || parkingBrakeOn){
+			if(frontLeftGroundDeviceBox.isCollidedLiquid || frontLeftGroundDeviceBox.isGroundedLiquid)brakingFactor += 0.5;
+			if(frontRightGroundDeviceBox.isCollidedLiquid || frontRightGroundDeviceBox.isGroundedLiquid)brakingFactor += 0.5;
+			if(rearLeftGroundDeviceBox.isCollidedLiquid || rearLeftGroundDeviceBox.isGroundedLiquid)brakingFactor += 0.5;
+			if(rearRightGroundDeviceBox.isCollidedLiquid || rearRightGroundDeviceBox.isGroundedLiquid)brakingFactor += 0.5;
 		}
 		
 		//Now get any contributions from the colliding collision bits.
@@ -793,16 +801,24 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	
 	/**
 	 * Returns factor for skidding based on lateral friction and velocity.
-	 * If the value is non-zero, it indicates that yaw should be restricted
-	 * due to ground devices being in contact with the ground.
-	 * Note that this should be called prior to turning code as it will interpret
-	 * the yaw change as a skid and will attempt to prevent it!
+	 * If the value is non-zero, it indicates that yaw changes from ground
+	 * device calculations should be applied due to said devices being in
+	 * contact with the ground.  Note that this should be called prior to 
+	 * turning code as it will interpret the yaw change as a skid and will 
+	 * attempt to prevent it!
 	 */
 	protected float getSkiddingFactor(){
 		float skiddingFactor = 0;
+		//First check grounded ground devices.
 		for(APartGroundDevice groundDevice : this.groundedGroundDevices){
 			skiddingFactor += groundDevice.getLateralFriction() - groundDevice.getFrictionLoss();
 		}
+		
+		//Now check if any collision boxes are in liquid.  Needed for maritime vehicles.
+		if(frontLeftGroundDeviceBox.isCollidedLiquid || frontLeftGroundDeviceBox.isGroundedLiquid)skiddingFactor += 0.5;
+		if(frontRightGroundDeviceBox.isCollidedLiquid || frontRightGroundDeviceBox.isGroundedLiquid)skiddingFactor += 0.5;
+		if(rearLeftGroundDeviceBox.isCollidedLiquid || rearLeftGroundDeviceBox.isGroundedLiquid)skiddingFactor += 0.5;
+		if(rearRightGroundDeviceBox.isCollidedLiquid || rearRightGroundDeviceBox.isGroundedLiquid)skiddingFactor += 0.5;
 		return skiddingFactor > 0 ? skiddingFactor : 0;
 	}
 	
@@ -817,12 +833,22 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(steeringAngle != 0){
 			float turningFactor = 0;
 			float turningDistance = 0;
+			//Check grounded wheels for turn contributions.
 			for(APartGroundDevice groundDevice : this.groundedGroundDevices){
 				float frictionLoss = groundDevice.getFrictionLoss();
 				//Do we have enough friction to change yaw?
 				if(groundDevice.turnsWithSteer && groundDevice.getLateralFriction() - frictionLoss > 0){
 					turningFactor += groundDevice.getLateralFriction() - frictionLoss;
 					turningDistance = (float) Math.max(turningDistance, Math.abs(groundDevice.offset.z));
+				}
+			}
+			//Also check for boat engines, which can make us turn if we are in water.
+			for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
+				if(part instanceof PartEngineBoat){
+					if(((PartEngineBoat) part).isInLiquid){
+						turningFactor += 1.0F;
+						turningDistance = (float) Math.max(turningDistance, Math.abs(part.offset.z));
+					}
 				}
 			}
 			if(turningFactor > 0){
@@ -886,7 +912,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	
 	/**
 	 * Returns whatever the steering angle is.
-	 * Used for rendering and turning force calculations..
+	 * Used for rendering and turning force calculations.
 	 */
 	public abstract float getSteerAngle();
 	

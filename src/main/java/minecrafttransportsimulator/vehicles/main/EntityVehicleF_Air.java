@@ -18,9 +18,6 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
-	public boolean reverseThrust;
-	public short reversePercent;
-	
 	//Note that angle variable should be divided by 10 to get actual angle.
 	public final short MAX_AILERON_ANGLE = 250;
 	public final short AILERON_DAMPEN_RATE = 6;
@@ -68,12 +65,6 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	
 	@Override
 	protected void getBasicProperties(){
-		if(reverseThrust && reversePercent < 20){
-			++reversePercent;
-		}else if(!reverseThrust && reversePercent > 0){
-			--reversePercent;
-		}
-		
 		momentRoll = (float) (definition.general.emptyMass*(1.5F+(fuel/10000F)));
 		momentPitch = (float) (2*currentMass);
 		momentYaw = (float) (3*currentMass);
@@ -94,7 +85,7 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	protected void getForcesAndMotions(){
 		thrustForce = thrustTorque = 0;
 		double thrust = 0;
-		for(APartEngine<? extends EntityVehicleE_Powered> engine : engines.values()){
+		for(APartEngine engine : engines.values()){
 			thrust = engine.getForceOutput();
 			thrustForce += thrust;
 			thrustTorque += thrust*engine.offset.x;

@@ -79,7 +79,7 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	@Override
 	protected void getForcesAndMotions(){
 		forwardForce = 0;
-		for(APartEngine<? extends EntityVehicleE_Powered> engine : engines.values()){
+		for(APartEngine engine : engines.values()){
 			forwardForce += engine.getForceOutput();
 		}
 		dragForce = 0.5F*airDensity*velocity*velocity*5.0F*getDragCoefficient();

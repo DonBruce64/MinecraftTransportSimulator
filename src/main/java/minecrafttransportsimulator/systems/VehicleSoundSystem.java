@@ -270,7 +270,7 @@ public final class VehicleSoundSystem{
 	/**
 	 * Helper wrapper to add vehicle engine sounds to vehicles.
 	 */
-	public static void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine<? extends EntityVehicleE_Powered> engine){
+	public static void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine engine){
 		if(vehicle.world.isRemote){
 			vehicle.addSound(SoundTypes.ENGINE, engine);
 		}

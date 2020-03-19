@@ -57,7 +57,7 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	@Override
-	public void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine<? extends EntityVehicleE_Powered> engine){
+	public void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine engine){
 		VehicleSoundSystem.addVehicleEngineSound(vehicle, engine);
 	}
 }

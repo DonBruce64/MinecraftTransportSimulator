@@ -18,7 +18,7 @@ public class PacketPartEngineLinked extends APacketPart{
 
 	public PacketPartEngineLinked(){}
 	
-	public PacketPartEngineLinked(APartEngine<? extends EntityVehicleE_Powered> engine, APartEngine<? extends EntityVehicleE_Powered> engineLinked){
+	public PacketPartEngineLinked(APartEngine engine, APartEngine engineLinked){
 		super(engine);
 		this.linkedId = engineLinked.vehicle.getEntityId();
 		this.linkedX = engineLinked.offset.x;
@@ -49,14 +49,14 @@ public class PacketPartEngineLinked extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					APartEngine<? extends EntityVehicleE_Powered> engine = (APartEngine<? extends EntityVehicleE_Powered>) getVehiclePartFromMessage(message, ctx);
+					APartEngine engine = (APartEngine) getVehiclePartFromMessage(message, ctx);
 					
 					EntityVehicleE_Powered linkedVehicle = (EntityVehicleE_Powered) Minecraft.getMinecraft().world.getEntityByID(message.linkedId);
-					APartEngine<? extends EntityVehicleE_Powered> linkedEngine = null;
+					APartEngine linkedEngine = null;
 					if(linkedVehicle != null){
 						for(APart<? extends EntityVehicleE_Powered> part : linkedVehicle.getVehicleParts()){
 							if(part.offset.x == message.linkedX && part.offset.y == message.linkedY && part.offset.z == message.linkedZ){
-								linkedEngine = (APartEngine<? extends EntityVehicleE_Powered>) part;
+								linkedEngine = (APartEngine) part;
 							}
 						}
 					}
