@@ -53,7 +53,19 @@ public class VehicleGroundDeviceBox{
 		//While their actual position may change, their relative position is static.
 		for(VehicleAxisAlignedBB box : vehicle.collisionBoxes){
 			if(box.collidesWithLiquids){
-				liquidCollisionBoxes.add(box);
+				if(isFront && box.rel.z > 0){
+					if(isLeft && box.rel.x >= 0){
+						liquidCollisionBoxes.add(box);
+					}else if(!isLeft && box.rel.x <= 0){
+						liquidCollisionBoxes.add(box);
+					}
+				}else if(!isFront && box.rel.z <= 0){
+					if(isLeft && box.rel.x >= 0){
+						liquidCollisionBoxes.add(box);
+					}else if(!isLeft && box.rel.x <= 0){
+						liquidCollisionBoxes.add(box);
+					}
+				}
 			}
 		}
 		
