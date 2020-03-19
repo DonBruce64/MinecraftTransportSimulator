@@ -144,6 +144,7 @@ public final class RenderAnimations{
 			case("electric_usage"): return vehicle.electricFlow*20D;
 			case("brake"): return vehicle.brakeOn ? 1 : 0;
 			case("p_brake"): return vehicle.parkingBrakeOn ? 1 : 0;
+			case("reverser"): return vehicle.reversePercent/20D;
 			case("steering_wheel"): return vehicle.getSteerAngle();
 			case("horn"): return vehicle.hornOn ? 1 : 0;
 			case("siren"): return vehicle.sirenOn ? 1 : 0;
@@ -174,7 +175,6 @@ public final class RenderAnimations{
 				case("trim_aileron"): return aircraft.aileronTrim/10D;
 				case("trim_elevator"): return aircraft.elevatorTrim/10D;
 				case("trim_rudder"): return aircraft.rudderTrim/10D;
-				case("reverser"): return aircraft.reversePercent/20D;
 				case("vertical_speed"): return vehicle.motionY*vehicle.SPEED_FACTOR*20;
 				case("slip"): return 75*aircraft.sideVec.dotProduct(vehicle.velocityVec);
 				case("turn_coordinator"): return ((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15D*25;
