@@ -98,7 +98,6 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		if(aileronCooldown==0){
 			if(aileronAngle != 0){
 				if(aileronAngle < AILERON_DAMPEN_RATE && aileronAngle > -AILERON_DAMPEN_RATE){
-					System.out.println(aileronAngle);
 					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, (short) -aileronAngle, (byte) 0), this);
 					aileronAngle = 0;
 				}else{
