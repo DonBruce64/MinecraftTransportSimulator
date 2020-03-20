@@ -8,7 +8,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-public abstract class APartGroundEffector extends APart<EntityVehicleE_Powered>{
+public abstract class APartGroundEffector extends APart{
 	protected final BlockPos[] lastBlocksModified;
 	protected final BlockPos[] affectedBlocks;
 	

@@ -146,18 +146,18 @@ public final class ControlSystem{
 				MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) seat.parentPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 			}
 			//Now check subParts of our seat.
-			for(APart<? extends EntityVehicleE_Powered> subPart : seat.childParts){
+			for(APart subPart : seat.childParts){
 				if(subPart instanceof APartGun){
 					MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) subPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 				}
 			}
 			//If we are the vehicle controller, check for guns that don't have seats. 
 			if(seat.isController){
-				for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+				for(APart part : vehicle.getVehicleParts()){
 					if(part instanceof APartGun){
 						if(!(part.parentPart instanceof PartSeat)){
 							boolean hasControllingSeats = false;
-							for(APart<? extends EntityVehicleE_Powered> subPart : part.childParts){
+							for(APart subPart : part.childParts){
 								if(subPart instanceof PartSeat){
 									hasControllingSeats = true;
 								}

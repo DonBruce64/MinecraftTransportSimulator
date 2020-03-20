@@ -54,7 +54,7 @@ public class PacketPartEngineLinked extends APacketPart{
 					EntityVehicleE_Powered linkedVehicle = (EntityVehicleE_Powered) Minecraft.getMinecraft().world.getEntityByID(message.linkedId);
 					APartEngine linkedEngine = null;
 					if(linkedVehicle != null){
-						for(APart<? extends EntityVehicleE_Powered> part : linkedVehicle.getVehicleParts()){
+						for(APart part : linkedVehicle.getVehicleParts()){
 							if(part.offset.x == message.linkedX && part.offset.y == message.linkedY && part.offset.z == message.linkedZ){
 								linkedEngine = (APartEngine) part;
 							}

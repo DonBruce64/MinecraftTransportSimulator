@@ -15,7 +15,7 @@ public abstract class APacketPart implements IMessage{
 
 	public APacketPart(){}
 	
-	public APacketPart(APart<? extends EntityVehicleE_Powered> part){
+	public APacketPart(APart part){
 		this.id = part.vehicle.getEntityId();
 		this.x = part.offset.x;
 		this.y = part.offset.y;
@@ -38,7 +38,7 @@ public abstract class APacketPart implements IMessage{
 		buf.writeDouble(this.z);
 	}
 	
-	protected static APart<? extends EntityVehicleE_Powered> getVehiclePartFromMessage(APacketPart message, MessageContext ctx){
+	protected static APart getVehiclePartFromMessage(APacketPart message, MessageContext ctx){
 		EntityVehicleE_Powered vehicle;
 		if(ctx.side.isServer()){
 			vehicle = (EntityVehicleE_Powered) ctx.getServerHandler().player.world.getEntityByID(message.id);
@@ -46,7 +46,7 @@ public abstract class APacketPart implements IMessage{
 			vehicle = (EntityVehicleE_Powered) Minecraft.getMinecraft().world.getEntityByID(message.id);
 		}
 		if(vehicle != null){
-			for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+			for(APart part : vehicle.getVehicleParts()){
 				if(part.offset.x == message.x && part.offset.y == message.y && part.offset.z == message.z){
 					return part;
 				}

@@ -98,7 +98,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 					//Expand this box by the speed of the projectile just in case the projectile is custom and
 					//calls its attack code before it actually gets inside the collision box.
 					if(partBox.grow(Math.abs(attacker.motionX), Math.abs(attacker.motionY), Math.abs(attacker.motionZ)).contains(attacker.getPositionVector())){
-						APart<? extends EntityVehicleE_Powered> part = getPartAtLocation(partBox.rel.x, partBox.rel.y, partBox.rel.z);
+						APart part = getPartAtLocation(partBox.rel.x, partBox.rel.y, partBox.rel.z);
 						if(part != null){
 							part.attackPart(source, damage);
 						}
@@ -110,7 +110,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 					//Expand the box by the explosion size and attack any parts in it.
 					for(VehicleAxisAlignedBB partBox : partBoxes){
 						if(partBox.grow(damage).contains(lastExplosionPosition)){
-							APart<? extends EntityVehicleE_Powered> part = getPartAtLocation(partBox.rel.x, partBox.rel.y, partBox.rel.z);
+							APart part = getPartAtLocation(partBox.rel.x, partBox.rel.y, partBox.rel.z);
 							if(part != null){
 								part.attackPart(source, damage);
 							}
@@ -134,7 +134,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	public void attackManuallyAtPosition(double x, double y, double z, DamageSource source, float damage){
 		for(VehicleAxisAlignedBB partBox : partBoxes){
 			if(partBox.contains(new Vec3d(x, y, z))){
-				APart<? extends EntityVehicleE_Powered> part = getPartAtLocation(partBox.rel.x, partBox.rel.y, partBox.rel.z);
+				APart part = getPartAtLocation(partBox.rel.x, partBox.rel.y, partBox.rel.z);
 				if(part != null){
 					part.attackPart(source, damage);
 				}
@@ -208,7 +208,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			//If the part is a seat, and there is a rider in that seat, don't add it.
 			//This keeps riders from getting their clicks blocked by their own seats.
 			partBoxes.clear();
-			for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
+			for(APart part : this.getVehicleParts()){
 				if(part instanceof PartSeat){
 					if(getRiderForSeat((PartSeat) part) != null){
 						continue;

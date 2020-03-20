@@ -43,7 +43,7 @@ abstract class EntityVehicleA_Base extends Entity{
 	
 	/**This list contains all parts this vehicle has.  Do NOT use it in loops or you will get CMEs all over!
 	 * Use the getVehicleParts() method instead to return a loop-safe array.*/
-	private final List<APart<? extends EntityVehicleE_Powered>> parts = new ArrayList<APart<? extends EntityVehicleE_Powered>>();
+	private final List<APart> parts = new ArrayList<APart>();
 
 	/**Cooldown byte to prevent packet spam requests during client-side loading of part packs.**/
 	private byte clientPackPacketCooldown = 0;
@@ -113,7 +113,7 @@ abstract class EntityVehicleA_Base extends Entity{
     	return false;
     }
 	
-	public void addPart(APart<? extends EntityVehicleE_Powered> part, boolean ignoreCollision){
+	public void addPart(APart part, boolean ignoreCollision){
 		parts.add(part);
 		if(!ignoreCollision){
 			//Check for collision, and boost if needed.
@@ -128,7 +128,7 @@ abstract class EntityVehicleA_Base extends Entity{
 		}
 	}
 	
-	public void removePart(APart<? extends EntityVehicleE_Powered> part, boolean playBreakSound){
+	public void removePart(APart part, boolean playBreakSound){
 		if(parts.contains(part)){
 			parts.remove(part);
 			if(part.isValid()){
@@ -149,15 +149,15 @@ abstract class EntityVehicleA_Base extends Entity{
 	 * Returns a loop-safe array for iterating over parts.
 	 * Use this for everything that needs to look at parts.
 	 */
-	public List<APart<? extends EntityVehicleE_Powered>> getVehicleParts(){
+	public List<APart> getVehicleParts(){
 		return ImmutableList.copyOf(parts);
 	}
 	
 	/**
 	 * Gets the part at the specified location.
 	 */
-	public APart<? extends EntityVehicleE_Powered> getPartAtLocation(double offsetX, double offsetY, double offsetZ){
-		for(APart<? extends EntityVehicleE_Powered> part : this.parts){
+	public APart getPartAtLocation(double offsetX, double offsetY, double offsetZ){
+		for(APart part : this.parts){
 			if(part.offset.x == offsetX && part.offset.y == offsetY && part.offset.z == offsetZ){
 				return part;
 			}
@@ -183,7 +183,7 @@ abstract class EntityVehicleA_Base extends Entity{
 			//If a part is present at a location that can have an additional part, we allow it to be placed.
 			while(packPart.additionalPart != null){
 				boolean foundPart = false;
-				for(APart<? extends EntityVehicleE_Powered> part : this.parts){
+				for(APart part : this.parts){
 					if(part.offset.equals(partPos)){
 						partPos = new Vec3d(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]);
 						packPart = packPart.additionalPart;
@@ -199,7 +199,7 @@ abstract class EntityVehicleA_Base extends Entity{
 		}
 		
 		//Next get any sub parts on parts that are present.
-		for(APart<? extends EntityVehicleE_Powered> part : this.parts){
+		for(APart part : this.parts){
 			if(part.definition.subParts != null){
 				VehiclePart parentPack = getPackDefForLocation(part.offset.x, part.offset.y, part.offset.z);
 				for(VehiclePart extraPackPart : part.definition.subParts){
@@ -233,7 +233,7 @@ abstract class EntityVehicleA_Base extends Entity{
 		}
 		
 		//If this is not a main part or an additional part, check the sub-parts.
-		for(APart<? extends EntityVehicleE_Powered> part : this.parts){
+		for(APart part : this.parts){
 			if(part.definition.subParts.size() > 0){
 				VehiclePart parentPack = getPackDefForLocation(part.offset.x, part.offset.y, part.offset.z);
 				for(VehiclePart extraPackPart : part.definition.subParts){
@@ -332,7 +332,7 @@ abstract class EntityVehicleA_Base extends Entity{
 		tagCompound.setString("systemName", definition.systemName);
 		
 		NBTTagList partTagList = new NBTTagList();
-		for(APart<? extends EntityVehicleE_Powered> part : this.getVehicleParts()){
+		for(APart part : this.getVehicleParts()){
 			//Don't save the part if it's not valid.
 			if(part.isValid()){
 				NBTTagCompound partTag = part.getPartNBTTag();

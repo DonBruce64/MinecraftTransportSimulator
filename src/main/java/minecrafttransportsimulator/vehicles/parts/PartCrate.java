@@ -12,7 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
-public final class PartCrate extends APart<EntityVehicleE_Powered>{
+public final class PartCrate extends APart{
 	public final InventoryBasic crateInventory;
 	
 	public PartCrate(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){

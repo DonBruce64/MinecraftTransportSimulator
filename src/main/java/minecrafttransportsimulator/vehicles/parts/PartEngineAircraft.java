@@ -18,7 +18,7 @@ public class PartEngineAircraft extends APartEngine{
 		super.updatePart();
 		if(propeller == null){
 			if(!childParts.isEmpty()){
-				for(APart<? extends EntityVehicleE_Powered> part : childParts) {
+				for(APart part : childParts) {
 					if(part instanceof PartPropeller) {
 						propeller = (PartPropeller) part;
 						break;

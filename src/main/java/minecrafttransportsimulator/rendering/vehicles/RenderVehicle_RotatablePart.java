@@ -85,7 +85,7 @@ public final class RenderVehicle_RotatablePart{
 	 *  to be used as rotation helper classes in addition to actual
 	 *  rotatable renderable parts.
 	 */
-	public void rotate(EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart, float partialTicks){
+	public void rotate(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
 		//We need to define the rotation out here in case we encounter rotation definitions in sequence.
 		//If that is the case, we can skip all but the last definition to save on rotation calls.
 		//This also allows for multi-variable clamping.
@@ -122,7 +122,7 @@ public final class RenderVehicle_RotatablePart{
 	 *  the part came from.  This is to prevent the issue of same-named
 	 *  parts on two different models conflicting.
 	 */
-	public void render(EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart, float partialTicks){
+	public void render(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
 		//Rotate prior to rendering.
 		rotate(vehicle, optionalPart, partialTicks);
 		

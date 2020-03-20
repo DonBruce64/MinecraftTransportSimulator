@@ -29,7 +29,7 @@ public final class PartFertilizer extends APartGroundEffector{
             if(growable.canGrow(vehicle.world, pos, cropState, vehicle.world.isRemote)){
             	if(!vehicle.world.isRemote){
             		//Check for bonemeal in crates.
-            		for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+            		for(APart part : vehicle.getVehicleParts()){
     					if(part instanceof PartCrate){
     						InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
     						for(byte i=0; i<crateInventory.getSizeInventory(); ++i){

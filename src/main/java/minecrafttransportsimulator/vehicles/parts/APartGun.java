@@ -21,7 +21,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class APartGun extends APart<EntityVehicleE_Powered> implements FXPart{	
+public abstract class APartGun extends APart implements FXPart{	
 	//Stored variables used to determine bullet firing behavior.
 	public int shotsFired;
 	public int bulletsLeft;
@@ -115,7 +115,7 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 				//If we are out of bullets, and we can automatically reload, and are not doing so, start the reload sequence.
 				if(bulletsLeft == 0 && definition.gun.autoReload && !reloading){
 					//Iterate through all the inventory slots in crates to try to find matching ammo.
-					for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+					for(APart part : vehicle.getVehicleParts()){
 						if(part instanceof PartCrate){
 							InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
 							for(byte i=0; i<crateInventory.getSizeInventory(); ++i){

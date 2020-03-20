@@ -39,8 +39,8 @@ public class VehicleGroundDeviceBox{
 	public double zCoord;
 	
 	//The following variables are only used for intermediary calculations.
-	private final List<APart<? extends EntityVehicleE_Powered>> groundDevices = new ArrayList<APart<? extends EntityVehicleE_Powered>>();
-	private final List<APart<? extends EntityVehicleE_Powered>> liquidDevices = new ArrayList<APart<? extends EntityVehicleE_Powered>>();
+	private final List<APart> groundDevices = new ArrayList<APart>();
+	private final List<APart> liquidDevices = new ArrayList<APart>();
 	private final List<VehicleAxisAlignedBB> liquidCollisionBoxes = new ArrayList<VehicleAxisAlignedBB>();
 	
 	
@@ -78,7 +78,7 @@ public class VehicleGroundDeviceBox{
 	public void updateGroundDevices(){
 		groundDevices.clear();
 		liquidDevices.clear();
-		for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+		for(APart part : vehicle.getVehicleParts()){
 			if(part instanceof APartGroundDevice){
 				//X-offsets of 0 are both left and right as they are center points.
 				//This ensures we don't roll to try and align a center point.
@@ -157,7 +157,7 @@ public class VehicleGroundDeviceBox{
 		double yCoords = 0;
 		double zCoords = 0;
 		
-		for(APart<? extends EntityVehicleE_Powered> groundDevice : groundDevices){
+		for(APart groundDevice : groundDevices){
 			heights += groundDevice.getHeight();
 			widths += groundDevice.getWidth();
 			xCoords += groundDevice.offset.x;
@@ -184,7 +184,7 @@ public class VehicleGroundDeviceBox{
 		double yCoords = 0;
 		double zCoords = 0;
 		
-		for(APart<? extends EntityVehicleE_Powered> groundDevice : liquidDevices){
+		for(APart groundDevice : liquidDevices){
 			heights += groundDevice.getHeight();
 			widths += groundDevice.getWidth();
 			xCoords += groundDevice.offset.x;

@@ -148,7 +148,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 					//If we have a default fuel, add it now as we SHOULD have an engine to tell
 					//us what fuel type we will need to add.
 					if(newVehicle.definition.motorized.defaultFuelQty > 0){
-						for(APart<? extends EntityVehicleE_Powered> part : newVehicle.getVehicleParts()){
+						for(APart part : newVehicle.getVehicleParts()){
 							if(part instanceof APartEngine){
 								//Get the most potent fuel for the vehicle from the fuel configs.
 								String mostPotentFluid = "";
@@ -176,7 +176,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 				}
 				
 				//Next, boost based on parts.
-				for(APart<? extends EntityVehicleE_Powered> part : newVehicle.getVehicleParts()){
+				for(APart part : newVehicle.getVehicleParts()){
 					minHeight = Math.min(part.offset.x - part.getHeight()/2F, minHeight);
 				}
 				

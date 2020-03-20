@@ -150,7 +150,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		//so although all parts are DROPPED, not all parts may actually survive the explosion.
 		if(ConfigSystem.configObject.damage.explosions.value){
 			double fuelPresent = this.fuel;
-			for(APart<? extends EntityVehicleA_Base> part : getVehicleParts()){
+			for(APart part : getVehicleParts()){
 				if(part instanceof PartBarrel){
 					PartBarrel barrel = (PartBarrel) part;
 					if(barrel.getFluid() != null){
@@ -173,7 +173,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	@Override
-	public void addPart(APart<? extends EntityVehicleE_Powered> part, boolean ignoreCollision){
+	public void addPart(APart part, boolean ignoreCollision){
 		super.addPart(part, ignoreCollision);
 		if(part instanceof APartEngine){
 			//Because parts is a list, the #1 engine will always come before the #2 engine.
@@ -198,7 +198,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	@Override
-	public void removePart(APart<? extends EntityVehicleE_Powered> part, boolean playBreakSound){
+	public void removePart(APart part, boolean playBreakSound){
 		super.removePart(part, playBreakSound);
 		byte engineNumber = 0;
 		for(VehiclePart packPart : definition.parts){
@@ -285,7 +285,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public final void addSound(SoundTypes typeToAdd, APart<? extends EntityVehicleE_Powered> optionalPart){
+	public final void addSound(SoundTypes typeToAdd, APart optionalPart){
 		VehicleSound newSound = new VehicleSound(this, optionalPart, typeToAdd);
 		//If we already have a sound for this part, remove it before adding this new one.
 		for(byte i=0; i<sounds.size(); ++i){

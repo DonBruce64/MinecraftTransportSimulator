@@ -86,7 +86,7 @@ public class BlockFuelPump extends ABlockRotatable implements ITileEntityProvide
     						}
     					}
     					
-    					for(APart<? extends EntityVehicleE_Powered> part : nearestVehicle.getVehicleParts()){
+    					for(APart part : nearestVehicle.getVehicleParts()){
     						if(part instanceof APartEngine){
     							if(ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).containsKey(fluidName)){
     								pump.setConnectedVehicle((EntityVehicleE_Powered) nearestEntity);

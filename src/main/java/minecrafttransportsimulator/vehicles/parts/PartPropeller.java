@@ -18,7 +18,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.Vec3d;
 
-public class PartPropeller extends APart<EntityVehicleE_Powered>{	
+public class PartPropeller extends APart{	
 	public float angularPosition;
 	public float angularVelocity;
 	public float damage;

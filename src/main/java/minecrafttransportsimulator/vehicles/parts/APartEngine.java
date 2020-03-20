@@ -21,7 +21,7 @@ import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class APartEngine extends APart<EntityVehicleE_Powered> implements FXPart{
+public abstract class APartEngine extends APart implements FXPart{
 	
 	//NBT data
 	public boolean isCreative;

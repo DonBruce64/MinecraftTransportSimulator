@@ -33,7 +33,7 @@ public abstract class AGUIPanel<EntityVehicleX_Type extends EntityVehicleE_Power
 		if(vehicle instanceof EntityVehicleG_Blimp){
 			haveReverseThrustOption = true;
 		}else{
-			for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+			for(APart part : vehicle.getVehicleParts()){
 				if(part instanceof PartPropeller){
 					if(part.definition.propeller.isDynamicPitch){
 						haveReverseThrustOption = true;

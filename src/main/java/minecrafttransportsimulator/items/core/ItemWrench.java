@@ -40,7 +40,7 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 	}
 	
 	@Override
-	public void doVehicleInteraction(ItemStack stack, EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
+	public void doVehicleInteraction(ItemStack stack, EntityVehicleE_Powered vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
 		//If the player isn't the owner of the vehicle, they can't interact with it.
 		if(!ownerState.equals(PlayerOwnerState.USER)){
 			if(rightClick){

@@ -121,7 +121,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			passenger.motionZ = this.motionZ;
 		}else if(definition != null && !this.riderSeatPositions.isEmpty()){
 			Double[] seatLocation = this.riderSeatPositions.get(this.getPassengers().indexOf(passenger));
-			APart<? extends EntityVehicleB_Existing> part = getPartAtLocation(seatLocation[0], seatLocation[1], seatLocation[2]);
+			APart part = getPartAtLocation(seatLocation[0], seatLocation[1], seatLocation[2]);
 			if(part instanceof PartSeat){
 				riderSeats.put(passenger.getEntityId(), (PartSeat) part);
 			}else{
@@ -135,7 +135,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	@Override
-	public void addPart(APart<? extends EntityVehicleE_Powered> part, boolean ignoreCollision){
+	public void addPart(APart part, boolean ignoreCollision){
 		if(!ignoreCollision){
 			//Check if we are colliding and adjust roll before letting part addition continue.
 			//This is needed as the vehicle system doesn't know about roll.
@@ -219,7 +219,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void destroyAtPosition(double x, double y, double z){
 		this.setDead();
 		//Remove all parts from the vehicle and place them as items.
-		for(APart<? extends EntityVehicleA_Base> part : getVehicleParts()){
+		for(APart part : getVehicleParts()){
 			if(part.getItemForPart() != null){
 				ItemStack partStack = new ItemStack(part.getItemForPart());
 				NBTTagCompound stackTag = part.getPartNBTTag();
@@ -246,7 +246,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	 */
 	protected float getCurrentMass(){
 		int currentMass = definition.general.emptyMass;
-		for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
+		for(APart part : this.getVehicleParts()){
 			if(part instanceof PartCrate){
 				currentMass += calculateInventoryWeight(((PartCrate) part).crateInventory);
 			}else if(part instanceof PartBarrel){

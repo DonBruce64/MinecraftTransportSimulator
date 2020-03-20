@@ -40,7 +40,7 @@ public final class PartHarvester extends APartGroundEffector{
 					Iterator<ItemStack> iterator = drops.iterator();
 					while(iterator.hasNext()){
 						ItemStack stack = iterator.next();
-						for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+						for(APart part : vehicle.getVehicleParts()){
 							if(part instanceof PartCrate){
 								InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
 								if(crateInventory.addItem(stack).getCount() == 0){

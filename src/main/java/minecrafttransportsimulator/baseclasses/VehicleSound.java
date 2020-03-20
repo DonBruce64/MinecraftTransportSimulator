@@ -10,14 +10,14 @@ import net.minecraft.util.math.Vec3d;
 
 public final class VehicleSound{
 	private final EntityVehicleE_Powered vehicle;
-	private final APart<? extends EntityVehicleE_Powered> optionalPart;
+	private final APart optionalPart;
 	private final EntityPlayer player;
 	private final SoundTypes soundType;
 	
 	private Vec3d playerPos;
 	private Vec3d sourcePos;
 	
-	public VehicleSound(EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart, SoundTypes soundType){
+	public VehicleSound(EntityVehicleE_Powered vehicle, APart optionalPart, SoundTypes soundType){
 		this.vehicle = vehicle;
 		this.optionalPart = optionalPart;
 		this.player = Minecraft.getMinecraft().player;

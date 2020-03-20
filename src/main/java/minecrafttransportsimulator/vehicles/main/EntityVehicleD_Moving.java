@@ -79,7 +79,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//as well as which ground devices are on the ground.
 			//This needs to be done before movement calculations so we can do checks during them.
 			groundedGroundDevices.clear();
-			for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
+			for(APart part : this.getVehicleParts()){
 				if(part instanceof APartGroundDevice){
 					if(((APartGroundDevice) part).isOnGround()){
 						groundedGroundDevices.add((APartGroundDevice) part);
@@ -122,7 +122,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 			
 			//Finally, update parts.
-			for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
+			for(APart part : this.getVehicleParts()){
 				part.updatePart();
 			}
 		}
@@ -843,7 +843,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				}
 			}
 			//Also check for boat engines, which can make us turn if we are in water.
-			for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
+			for(APart part : this.getVehicleParts()){
 				if(part instanceof PartEngineBoat){
 					if(((PartEngineBoat) part).isInLiquid){
 						turningFactor += 1.0F;

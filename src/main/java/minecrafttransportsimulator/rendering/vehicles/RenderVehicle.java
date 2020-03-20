@@ -177,7 +177,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				return true;
 			}
 		}
-		for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+		for(APart part : vehicle.getVehicleParts()){
 			if(partLightLists.containsKey(part.getModelLocation())){
 				for(RenderVehicle_LightPart lightPart : partLightLists.get(part.getModelLocation())){
 					if(lightPart.type.equals(light)){
@@ -301,7 +301,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		if(MinecraftForgeClient.getRenderPass() == -1){
 			VehicleSoundSystem.updateVehicleSounds(vehicle);
 			if(!minecraft.isGamePaused()){
-				for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+				for(APart part : vehicle.getVehicleParts()){
 					if(part instanceof FXPart){
 						((FXPart) part).spawnParticles();
 					}
@@ -427,7 +427,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  render the animated portions.  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 */
 	private static void renderParts(EntityVehicleE_Powered vehicle, float partialTicks){
-		for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+		for(APart part : vehicle.getVehicleParts()){
 			ResourceLocation partModelLocation = part.getModelLocation();
 			if(partModelLocation == null){
 				continue;
@@ -542,7 +542,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  rotation returned by {@link APart#getActionRotation(float)}.  Rotation needs to be done after translation to the
 	 *  part's position to avoid coordinate system conflicts. 
 	 */
-	private static void rotatePart(APart<? extends EntityVehicleE_Powered> part, Vec3d actionRotation, boolean cullface){
+	private static void rotatePart(APart part, Vec3d actionRotation, boolean cullface){
 		if(part.turnsWithSteer){
 			//Use custom steering rotation point if it's set in the JSON.
 			if(part.packVehicleDef.steerRotationOffset == null){
@@ -1016,10 +1016,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	private static void renderLights(EntityVehicleE_Powered vehicle, boolean wasRenderedPrior, float partialTicks){
 		//Get all the lights for the vehicle and parts and put them into one common list.
 		List<RenderVehicle_LightPart> vehicleLights = vehicleLightLists.get(vehicle.definition.genericName);
-		Map<Integer, APart<? extends EntityVehicleE_Powered>> lightIndexToParts = new HashMap<Integer, APart<? extends EntityVehicleE_Powered>>();
+		Map<Integer, APart> lightIndexToParts = new HashMap<Integer, APart>();
 		List<RenderVehicle_LightPart> allLights = new ArrayList<RenderVehicle_LightPart>();
 		allLights.addAll(vehicleLights);
-		for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+		for(APart part : vehicle.getVehicleParts()){
 			if(partLightLists.containsKey(part.getModelLocation())){
 				for(RenderVehicle_LightPart partLight : partLightLists.get(part.getModelLocation())){
 					lightIndexToParts.put(allLights.size(), part);
@@ -1041,7 +1041,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 					}
 				}
 			}else{
-				APart<? extends EntityVehicleE_Powered> part = lightIndexToParts.get(lightIndex);
+				APart part = lightIndexToParts.get(lightIndex);
 				GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
 				rotatePart(part, part.getActionRotation(partialTicks), false);
 				for(RenderVehicle_RotatablePart rotatable : partRotatableLists.get(part.getModelLocation())){
@@ -1124,7 +1124,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//Draw part center points.
 		GL11.glColor3f(0.0F, 1.0F, 0.0F);
 		GL11.glBegin(GL11.GL_LINES);
-		for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+		for(APart part : vehicle.getVehicleParts()){
 			GL11.glVertex3d(part.partPos.x - vehicle.posX, part.partPos.y - vehicle.posY - part.getHeight(), part.partPos.z - vehicle.posZ);
 			GL11.glVertex3d(part.partPos.x - vehicle.posX, part.partPos.y - vehicle.posY + part.getHeight(), part.partPos.z - vehicle.posZ);
 		}

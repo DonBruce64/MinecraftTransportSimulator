@@ -260,7 +260,7 @@ public final class PackParserSystem{
 		}
     }    
     
-    public static APart<? extends EntityVehicleE_Powered> createPart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+    public static APart createPart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
     	switch(definition.general.type){
 			case "crate": return new PartCrate(vehicle, packVehicleDef, definition, dataTag);
 			case "barrel": return new PartBarrel(vehicle, packVehicleDef, definition, dataTag);

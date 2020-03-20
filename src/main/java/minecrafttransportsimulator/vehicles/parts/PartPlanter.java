@@ -30,7 +30,7 @@ public final class PartPlanter extends APartGroundEffector{
 			BlockPos cropPos = farmlandPos.up();
 			if(vehicle.world.isAirBlock(cropPos)){
 				//Check for valid seeds and plant if able.
-				for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+				for(APart part : vehicle.getVehicleParts()){
 					if(part instanceof PartCrate){
 						InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
 						for(byte i=0; i<crateInventory.getSizeInventory(); ++i){

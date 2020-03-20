@@ -18,23 +18,22 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 
-/**This class is the base for all parts and should be
- * extended for any vehicle-compatible parts.
+/**This class is the base for all parts and should be extended for any vehicle-compatible parts.
  * Use {@link EntityVehicleA_Base#addPart(APart, boolean)} to add parts 
  * and {@link EntityVehicleA_Base#removePart(APart, boolean)} to remove them.
- * You may extend {@link EntityVehicleA_Base} to get more functionality with those systems.
+ * You may extend {@link EntityVehicleE_Powered} to get more functionality with those systems.
  * If you need to keep extra data ensure it is packed into whatever NBT is returned in item form.
  * This NBT will be fed into the constructor when creating this part, so expect it and ONLY look for it there.
  * 
  * @author don_bruce
  */
-public abstract class APart<EntityVehicleX_Type extends EntityVehicleE_Powered>{	
+public abstract class APart{	
 	/** Can a rider of this part send inputs to the vehicle this is a part of.*/
 	public final boolean isController;
 	/** Does this part rotate in-sync with the yaw changes of the vehicle.*/
 	public final boolean turnsWithSteer;
 	public final Vec3d offset;
-	public final EntityVehicleX_Type vehicle;
+	public final EntityVehicleE_Powered vehicle;
 	public final VehiclePart packVehicleDef;
 	public final JSONPart definition;
 	public final Vec3d partRotation;
@@ -42,16 +41,16 @@ public abstract class APart<EntityVehicleX_Type extends EntityVehicleE_Powered>{
 	public final boolean disableMirroring;
 	
 	/**The parent of this part, if this part is a sub-part of a part or an additional part for a vehicle.*/
-	public final APart<? extends EntityVehicleE_Powered> parentPart;
+	public final APart parentPart;
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
-	public final List<APart<? extends EntityVehicleE_Powered>> childParts = new ArrayList<APart<? extends EntityVehicleE_Powered>>();
+	public final List<APart> childParts = new ArrayList<APart>();
 	
 	public Vec3d partPos;
 	
 	private boolean isValid;
 	private ResourceLocation modelLocation;
 		
-	public APart(EntityVehicleX_Type vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public APart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		this.vehicle = vehicle;
 		this.offset = new Vec3d(packVehicleDef.pos[0], packVehicleDef.pos[1], packVehicleDef.pos[2]);
 		this.definition = definition;;
@@ -76,7 +75,7 @@ public abstract class APart<EntityVehicleX_Type extends EntityVehicleE_Powered>{
 			}
 			
 			//If we aren't an additional part, see if we are a sub-part.
-			for(APart<? extends EntityVehicleE_Powered> part : vehicle.getVehicleParts()){
+			for(APart part : vehicle.getVehicleParts()){
 				if(part.definition.subParts != null){
 					for(VehiclePart partSubPartPack : part.definition.subParts){
 						if((float) part.offset.x + partSubPartPack.pos[0] == (float) this.offset.x && (float) part.offset.y + partSubPartPack.pos[1] == (float) this.offset.y && (float) part.offset.z + partSubPartPack.pos[2] == (float) this.offset.z){
@@ -142,7 +141,7 @@ public abstract class APart<EntityVehicleX_Type extends EntityVehicleE_Powered>{
 	public void removePart(){
 		this.isValid = false;
 		while(childParts.size() > 0){
-			APart<? extends EntityVehicleE_Powered> childPart = childParts.get(0);
+			APart childPart = childParts.get(0);
 			childPart.removePart();
 			vehicle.removePart(childPart, false);
 			if(!vehicle.world.isRemote){

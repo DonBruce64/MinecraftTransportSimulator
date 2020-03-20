@@ -19,7 +19,7 @@ public interface IItemVehicleInteractable{
 	 *  Is a combination of owner name and if the player is OP.  This is only called on the SERVER.
 	 *  Note that the part passed in MAY be null if the box clicked was a collision box or part slot.
 	 */
-	public void doVehicleInteraction(ItemStack stack, EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick);
+	public void doVehicleInteraction(ItemStack stack, EntityVehicleE_Powered vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick);
 	
 	public static enum PlayerOwnerState{
 		USER,

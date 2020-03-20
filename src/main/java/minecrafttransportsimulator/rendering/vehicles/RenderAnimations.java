@@ -26,7 +26,7 @@ public final class RenderAnimations{
 	 *  If a value other than 0 is passed-in, the variable returned will be clamped to that value.
 	 *  This is in both the positive and negative direction.
 	 */
-	public static double getVariableValue(String variable, float scaling, float offset, float minClamp, float maxClamp, float partialTicks, EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart){
+	public static double getVariableValue(String variable, float scaling, float offset, float minClamp, float maxClamp, float partialTicks, EntityVehicleE_Powered vehicle, APart optionalPart){
 		double value = offset + scaling*getVariableValue(variable, partialTicks, vehicle, optionalPart);
 		if(minClamp != 0 && value < minClamp){
 			return minClamp;
@@ -37,7 +37,7 @@ public final class RenderAnimations{
 		}
 	}
 	
-	private static double getVariableValue(String variable, float partialTicks, EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart){
+	private static double getVariableValue(String variable, float partialTicks, EntityVehicleE_Powered vehicle, APart optionalPart){
 		//If we have a variable with a suffix, we need to get that part first and pass
 		//it into this method rather than trying to run through the code now.
 		if(variable.substring(variable.length() - 1).matches("[0-9]+")){
@@ -65,7 +65,7 @@ public final class RenderAnimations{
 						if(partNumber == 0){
 							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
 							//If it's not, or it doesn't exist, return 0.
-							APart<? extends EntityVehicleE_Powered> foundPart = vehicle.getPartAtLocation(vehiclePart.pos[0], vehiclePart.pos[1], vehiclePart.pos[2]);
+							APart foundPart = vehicle.getPartAtLocation(vehiclePart.pos[0], vehiclePart.pos[1], vehiclePart.pos[2]);
 							if(foundPart != null && partClass.isInstance(foundPart)){
 								return getVariableValue(variable.substring(0, variable.length() - 2), partialTicks, vehicle, foundPart);
 							}else{

@@ -20,7 +20,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
-public final class PartBarrel extends APart<EntityVehicleE_Powered> implements IFluidTank, IFluidHandler{
+public final class PartBarrel extends APart implements IFluidTank, IFluidHandler{
 	
 	private FluidTankInfo tankInfo;
 	private final FluidTankInfo emptyTankInfo;

@@ -65,7 +65,7 @@ public class PacketVehicleInteract extends APacketVehiclePlayer{
 					
 					if(vehicle != null && player != null && !vehicle.isDead){
 						ItemStack heldStack = player.getHeldItemMainhand();
-						APart<? extends EntityVehicleE_Powered> part = vehicle.getPartAtLocation(message.hitX, message.hitY, message.hitZ);
+						APart part = vehicle.getPartAtLocation(message.hitX, message.hitY, message.hitZ);
 						
 						//If we clicked with with an item that can interact with a part or vehicle, perform that interaction.
 						//Otherwise, try to do part-based interaction.
