@@ -35,7 +35,7 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 		tooltipLines.add(I18n.format("info.item.wrench.attack"));
 		tooltipLines.add(I18n.format("info.item.wrench.sneakattack"));
 		if(ConfigSystem.configObject.client.devMode.value){
-			tooltipLines.add("Use while seated in a vehicle to activate the DevMode editor.");
+			tooltipLines.add("Use on a vehicle while seated in it to activate the DevMode editor.");
 		}
 	}
 	
