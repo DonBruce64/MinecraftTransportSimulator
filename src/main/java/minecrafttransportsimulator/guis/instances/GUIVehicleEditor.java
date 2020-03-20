@@ -266,7 +266,9 @@ public class GUIVehicleEditor extends AGUIBase{
 	}
 	
 	private static class ModelLoader extends LoaderHelper<String>{
-
+		private static String folderName = "";
+		private static String fileName = "";
+		
 		@Override
 		public boolean setIndex(int index){
 			return true;
@@ -284,8 +286,8 @@ public class GUIVehicleEditor extends AGUIBase{
 		@Override
 		public void loadObject(List<GUIComponentTextBox> dataEntryBoxes){
 			int dataEntryBoxIndex = 1;
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText("");
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText("");
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(folderName);
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(fileName);
 		}
 
 		@Override
@@ -293,12 +295,12 @@ public class GUIVehicleEditor extends AGUIBase{
 			int dataEntryBoxIndex = 1;
 			File modelFile;
 			try{
-				String folderName = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
+				folderName = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
 				if(!folderName.isEmpty() && !(new File(MTS.minecraftDir, folderName).exists())){
 					return -1; 
 				}
 				
-				String fileName = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
+				fileName = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
 				if(fileName.isEmpty()){
 					return -2;
 				}
