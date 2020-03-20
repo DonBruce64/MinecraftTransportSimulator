@@ -126,7 +126,7 @@ public final class RenderAnimations{
 				return getVariableValue(variable, partialTicks, vehicle, optionalPart.parentPart);
 			}
 		}
-		
+
 		//Either we don't have a part, or we have a part and we don't want a part-specific variable.
 		//Try vehicle variables now.
 		switch(variable){
@@ -149,6 +149,7 @@ public final class RenderAnimations{
 			case("horn"): return vehicle.hornOn ? 1 : 0;
 			case("siren"): return vehicle.sirenOn ? 1 : 0;
 			case("hood"): return vehicle.engines.isEmpty() ? 1 : 0;
+			case("rain"): return vehicle.world.getRainStrength(1.0F) == 1.0F ? (1.0D + Math.sin(((int)(vehicle.world.getRainStrength(1.0F) + vehicle.world.getThunderStrength(1.0F))*Math.toRadians(360*System.currentTimeMillis()/1000))))/2D : 0;
 			case("door"): return (vehicle.prevParkingBrakeAngle + (vehicle.parkingBrakeAngle - vehicle.prevParkingBrakeAngle)*partialTicks)/30D;
 		}
 		
