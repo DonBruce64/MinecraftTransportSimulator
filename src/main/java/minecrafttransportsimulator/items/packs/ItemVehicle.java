@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.items.packs;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -111,24 +114,8 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 				}else{
 					//Since we don't have NBT data, we must be a new vehicle.
 					//If we have any default parts or instruments, we should add them now.
-					for(VehiclePart packDef : newVehicle.definition.parts){
-						while(packDef != null){
-							if(packDef.defaultPart != null){
-								try{
-									String partPackID = packDef.defaultPart.substring(0, packDef.defaultPart.indexOf(':'));
-									String partSystemName = packDef.defaultPart.substring(packDef.defaultPart.indexOf(':') + 1);
-									try{
-										newVehicle.addPart(PackParserSystem.createPart(newVehicle, packDef, (JSONPart) MTSRegistry.packItemMap.get(partPackID).get(partSystemName).definition, new NBTTagCompound()), true);
-									}catch(NullPointerException e){
-										throw new IllegalArgumentException("ERROR: Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + newVehicle.definition.genericName + " but that part doesn't exist in the pack item registry.");
-									}
-								}catch(IndexOutOfBoundsException e){
-									throw new IllegalArgumentException("ERROR: Could not parse defaultPart definition: " + packDef.defaultPart + ".  Format should be \"packId:partName\"");
-								}
-							}
-							packDef = packDef.additionalPart != null ? packDef.additionalPart : null;
-						}
-					}
+					addDefaultParts(newVehicle.definition.parts, newVehicle);
+					
 					for(PackInstrument packInstrument : newVehicle.definition.motorized.instruments){
 						if(packInstrument.defaultInstrument != null){
 							try{
@@ -198,5 +185,45 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 			}
 		}
 		return EnumActionResult.SUCCESS;
+	}
+	
+	/**
+	 * Static helper method to allow for recursion when adding default parts.
+	 */
+	private static void addDefaultParts(List<VehiclePart> partsToAdd, EntityVehicleE_Powered newVehicle){
+		for(VehiclePart packDef : partsToAdd){
+			if(packDef.defaultPart != null){
+				try{
+					String partPackID = packDef.defaultPart.substring(0, packDef.defaultPart.indexOf(':'));
+					String partSystemName = packDef.defaultPart.substring(packDef.defaultPart.indexOf(':') + 1);
+					try{
+						APart newPart = PackParserSystem.createPart(newVehicle, packDef, (JSONPart) MTSRegistry.packItemMap.get(partPackID).get(partSystemName).definition, new NBTTagCompound());
+						newVehicle.addPart(newPart, true);
+						
+						//Check if we have an additional part.
+						//If so, we need to check that for default parts.
+						if(packDef.additionalPart != null){
+							List<VehiclePart> additionalPart = new ArrayList<VehiclePart>();
+							additionalPart.add(packDef.additionalPart);
+							addDefaultParts(additionalPart, newVehicle);
+						}
+						
+						//Check all sub-parts, if we have any.
+						//We need to make sure to convert them to the right type as they're offset.
+						if(newPart.definition.subParts != null){
+							List<VehiclePart> subPartsToAdd = new ArrayList<VehiclePart>();
+							for(VehiclePart subPartPack : newPart.definition.subParts){
+								subPartsToAdd.add(newVehicle.getPackForSubPart(packDef, subPartPack));
+							}
+							addDefaultParts(subPartsToAdd, newVehicle);
+						}
+					}catch(NullPointerException e){
+						throw new IllegalArgumentException("ERROR: Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + newVehicle.definition.genericName + " but that part doesn't exist in the pack item registry.");
+					}
+				}catch(IndexOutOfBoundsException e){
+					throw new IllegalArgumentException("ERROR: Could not parse defaultPart definition: " + packDef.defaultPart + ".  Format should be \"packId:partName\"");
+				}
+			}
+		}
 	}
 }

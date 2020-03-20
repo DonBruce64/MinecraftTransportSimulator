@@ -252,7 +252,7 @@ abstract class EntityVehicleA_Base extends Entity{
 	 * Returns a PackPart with the correct properties for a SubPart.  This is because
 	 * subParts inherit some properties from their parent parts. 
 	 */
-	private VehiclePart getPackForSubPart(VehiclePart parentPack, VehiclePart subPack){
+	public VehiclePart getPackForSubPart(VehiclePart parentPack, VehiclePart subPack){
 		VehiclePart correctPack = this.definition.new VehiclePart();
 		correctPack.pos = new float[3];
 		//If we will be mirrored, make sure to invert the x-coords of any sub-parts.
@@ -281,6 +281,15 @@ abstract class EntityVehicleA_Base extends Entity{
 		correctPack.customTypes = subPack.customTypes;
 		correctPack.minValue = subPack.minValue;
 		correctPack.maxValue = subPack.maxValue;
+		correctPack.dismountPos = subPack.dismountPos;
+		correctPack.exhaustPos = subPack.exhaustPos;
+        correctPack.exhaustVelocity = subPack.exhaustVelocity;
+        correctPack.intakeOffset = subPack.intakeOffset;
+        correctPack.additionalPart = subPack.additionalPart;
+        correctPack.treadYPoints = subPack.treadYPoints;
+        correctPack.treadZPoints = subPack.treadZPoints;
+        correctPack.treadAngles = subPack.treadAngles;
+        correctPack.defaultPart = subPack.defaultPart;
 		return correctPack;
 	}
 			
