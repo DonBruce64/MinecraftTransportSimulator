@@ -157,7 +157,7 @@ public final class VehicleSoundSystem{
 					}
 					
 					
-					mcSoundSystem.setVolume(soundTempName, (float) (volume));
+					mcSoundSystem.setVolume(soundTempName, volume);
 					mcSoundSystem.setPitch(soundTempName, pitch);
 				}
 			}catch(Exception e){

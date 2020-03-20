@@ -66,7 +66,7 @@ public abstract class APartEngineGeared extends APartEngine{
 			//Divide the currentGear-1 by two to get our column (0 for column 1, 1 for 2).
 			//Then add multiply that by columnAngleDelta to get our delta for this column.
 			//Return that value, plus the initial angle.
-			return firstColumnAngle + (int)((currentGear - 1)/2)*columnAngleDelta;
+			return firstColumnAngle + (currentGear - 1)/2*columnAngleDelta;
 		}
 	}
 	

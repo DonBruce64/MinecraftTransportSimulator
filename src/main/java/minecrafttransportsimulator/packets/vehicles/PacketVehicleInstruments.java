@@ -53,7 +53,7 @@ public class PacketVehicleInstruments extends APacketVehiclePlayer{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) getVehicle(message, ctx);
+					EntityVehicleE_Powered vehicle = getVehicle(message, ctx);
 					EntityPlayer player = getPlayer(message, ctx);
 					
 					if(vehicle != null && player != null){

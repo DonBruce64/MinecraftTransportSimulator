@@ -26,7 +26,7 @@ public final class PartPlow extends APartGroundEffector{
 		if(block.equals(Blocks.GRASS) || block.equals(Blocks.GRASS_PATH)){
 			setBlockFromPlow(Blocks.FARMLAND.getDefaultState(), pos);
 		 }else if(block.equals(Blocks.DIRT)){
-			 switch((BlockDirt.DirtType)state.getValue(BlockDirt.VARIANT)){
+			 switch(state.getValue(BlockDirt.VARIANT)){
 			 	case DIRT: setBlockFromPlow(Blocks.FARMLAND.getDefaultState(), pos); return;
 			 	case COARSE_DIRT: setBlockFromPlow(Blocks.DIRT.getDefaultState().withProperty(BlockDirt.VARIANT, BlockDirt.DirtType.DIRT), pos); return;
 			 	default: return;

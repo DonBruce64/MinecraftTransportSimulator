@@ -44,7 +44,7 @@ public final class PartCrate extends APart<EntityVehicleE_Powered>{
 			ItemStack stack = crateInventory.getStackInSlot(i);
 			if(!stack.isEmpty()){
 				NBTTagCompound stackTag = new NBTTagCompound();
-				stackTag.setByte("Slot", (byte)i);
+				stackTag.setByte("Slot", i);
                 stack.writeToNBT(stackTag);
                 stackTagList.appendTag(stackTag);
 			}

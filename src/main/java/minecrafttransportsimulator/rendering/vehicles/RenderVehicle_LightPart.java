@@ -94,7 +94,7 @@ public final class RenderVehicle_LightPart{
 					newVertex[6] = masterVertex[6];
 					newVertex[7] = masterVertex[7];
 					
-					this.vertices[((short) i)*6 + j] = newVertex;
+					this.vertices[(i)*6 + j] = newVertex;
 				}
 				this.centerPoints[i] = new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
 				this.size[i] = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*32F;
@@ -119,7 +119,7 @@ public final class RenderVehicle_LightPart{
 		//Lights start dimming due to low power at 8V.
 		float electricFactor = (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1);
 		//Max brightness occurs when ambient light is 0 and we have at least 8V power.
-		float lightBrightness = (float) Math.min((1 - Math.max(sunLight, blockLight))*electricFactor, 1);
+		float lightBrightness = Math.min((1 - Math.max(sunLight, blockLight))*electricFactor, 1);
 
 		//Render the color and cover in pass 0 or -1 as we don't want blending.
 		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
@@ -221,7 +221,7 @@ public final class RenderVehicle_LightPart{
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(byte i=0; i<centerPoints.length; ++i){
 			for(byte j=0; j<6; ++j){
-				Float[] vertex = vertices[((short) i)*6+j];
+				Float[] vertex = vertices[(i)*6+j];
 				//Add a slight translation to the light size to make the flare move off it.
 				//Then apply scaling factor to make the flare larger than the light.
 				GL11.glTexCoord2f(vertex[3], vertex[4]);

@@ -227,10 +227,10 @@ public final class ClientEventSystem{
             	if(playerYawAngle > 180){
             		playerYawAngle = -360 + playerYawAngle;
             	}
-            	float rollRollComponent = (float) (Math.cos(Math.toRadians(playerYawAngle))*(vehicle.rotationRoll + (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)event.getRenderPartialTicks()));
-            	float pitchRollComponent = (float) (Math.sin(Math.toRadians(playerYawAngle))*(vehicle.rotationPitch + (vehicle.rotationPitch - vehicle.prevRotationPitch)*(double)event.getRenderPartialTicks()));
-            	float rollPitchComponent = (float) (Math.sin(Math.toRadians(playerYawAngle))*(vehicle.rotationRoll + (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)event.getRenderPartialTicks()));
-            	float pitchPitchComponent = (float) (Math.cos(Math.toRadians(playerYawAngle))*(vehicle.rotationPitch + (vehicle.rotationPitch - vehicle.prevRotationPitch)*(double)event.getRenderPartialTicks()));
+            	float rollRollComponent = (float) (Math.cos(Math.toRadians(playerYawAngle))*(vehicle.rotationRoll + (vehicle.rotationRoll - vehicle.prevRotationRoll)*event.getRenderPartialTicks()));
+            	float pitchRollComponent = (float) (Math.sin(Math.toRadians(playerYawAngle))*(vehicle.rotationPitch + (vehicle.rotationPitch - vehicle.prevRotationPitch)*event.getRenderPartialTicks()));
+            	float rollPitchComponent = (float) (Math.sin(Math.toRadians(playerYawAngle))*(vehicle.rotationRoll + (vehicle.rotationRoll - vehicle.prevRotationRoll)*event.getRenderPartialTicks()));
+            	float pitchPitchComponent = (float) (Math.cos(Math.toRadians(playerYawAngle))*(vehicle.rotationPitch + (vehicle.rotationPitch - vehicle.prevRotationPitch)*event.getRenderPartialTicks()));
             	GL11.glRotated(pitchPitchComponent + rollPitchComponent, 1, 0, 0);
         		GL11.glRotated(rollRollComponent - pitchRollComponent, 0, 0, 1);
         	}else if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 1){
@@ -298,7 +298,7 @@ public final class ClientEventSystem{
 		            
 		            //Make the player dance if the radio is playing.
 		            RenderPlayer render = event.getRenderer();
-		            if(RadioManager.getRadio((EntityVehicleE_Powered) vehicle).getPlayState() != -1){
+		            if(RadioManager.getRadio(vehicle).getPlayState() != -1){
 		            	render.getMainModel().bipedHead.offsetZ = 0.075F - 0.15F*(Minecraft.getMinecraft().world.getTotalWorldTime()%6)/6F;
 		            }else{
 		            	render.getMainModel().bipedHead.offsetZ = 0.0F;

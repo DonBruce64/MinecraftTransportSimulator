@@ -43,7 +43,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 		final BlockPoleAttachment decorBlock = (BlockPoleAttachment) block;
 		final float sunLight = polePart.getWorld().getSunBrightness(0)*polePart.getWorld().getLightBrightness(polePart.getPos());
 		final float blockLight = polePart.getWorld().getLightFromNeighborsFor(EnumSkyBlock.BLOCK, polePart.getPos())/15F;
-		final float lightBrightness = (float) Math.min((1 - Math.max(sunLight, blockLight)), 1);
+		final float lightBrightness = Math.min((1 - Math.max(sunLight, blockLight)), 1);
 		
 		GL11.glPushMatrix();
 		GL11.glTranslated(x, y, z);

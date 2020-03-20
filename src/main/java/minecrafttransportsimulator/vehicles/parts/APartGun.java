@@ -251,7 +251,7 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 	        float f1 = MathHelper.sin(-bulletYaw * 0.017453292F - (float)Math.PI);
 	        float f2 = -MathHelper.cos(-bulletPitch * 0.017453292F);
 	        float f3 = MathHelper.sin(-bulletPitch * 0.017453292F);
-	        Vec3d bulletOrientation = new Vec3d((double)(f1 * f2), (double)f3, (double)(f * f2));
+	        Vec3d bulletOrientation = new Vec3d(f1 * f2, f3, f * f2);
 			
 			double bulletMotionX = bulletOrientation.x*definition.gun.muzzleVelocity/20D/10D + vehicle.motionX*ConfigSystem.configObject.general.speedFactor.value;
 			double bulletMotionY = bulletOrientation.y*definition.gun.muzzleVelocity/20D/10D + vehicle.motionY*ConfigSystem.configObject.general.speedFactor.value;

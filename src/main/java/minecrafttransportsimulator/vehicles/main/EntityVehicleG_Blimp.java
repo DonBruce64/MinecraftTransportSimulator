@@ -30,7 +30,7 @@ public final class EntityVehicleG_Blimp extends EntityVehicleF_Air{
 		//which key is pressed, they both activate the rudder for turning.
 		if((aileronAngle < 0 && aileronAngle < rudderAngle) || (aileronAngle > 0 && aileronAngle > rudderAngle)){
 			rudderAngle = aileronAngle;
-			rudderCooldown = (byte) aileronCooldown;
+			rudderCooldown = aileronCooldown;
 		}
 		dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.04F;
 	}

@@ -24,7 +24,6 @@ import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.items.core.ItemKey;
 import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.packs.AItemPack;
-import minecrafttransportsimulator.items.packs.ItemBooklet;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
@@ -248,8 +247,8 @@ public final class MTSRegistry{
 		try {
 			PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json"), "UTF-8"), "handbook_en", MTS.MODID);
 			PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_ru.json"), "UTF-8"), "handbook_ru", MTS.MODID);
-			handbook_en = (ItemBooklet) MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_en").setUnlocalizedName("mts:handbook_en");
-			handbook_ru = (ItemBooklet) MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_ru").setUnlocalizedName("mts:handbook_ru");
+			handbook_en = MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_en").setUnlocalizedName("mts:handbook_en");
+			handbook_ru = MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_ru").setUnlocalizedName("mts:handbook_ru");
 		}catch(Exception e){
 			MTS.MTSLog.error("ERROR PARSING HANDBOOK AS UTF-8 STRING ENCODING!  HANDBOOKS MAY NOT APPEAR!");
 			MTS.MTSLog.error(e.getMessage());
