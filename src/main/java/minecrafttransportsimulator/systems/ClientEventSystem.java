@@ -190,7 +190,9 @@ public final class ClientEventSystem{
                 	//If the player is seated, and the seat is a controller, check their controls.
         			//If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.
                 	//We need to check here for the seat because the link could be broken for a bit due to syncing errors.
-                	if(vehicle.getSeatForRider(event.player) != null){
+                    //We also need to make sure the player in this event is the actual client player.  If we are on a server,
+                    //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
+                	if(vehicle.getSeatForRider(event.player) != null && event.player.equals(Minecraft.getMinecraft().player)){
                 		PartSeat playeSeat = vehicle.getSeatForRider(event.player);
                 		if(playeSeat != null){
                 			ControlSystem.controlVehicle(vehicle, playeSeat.isController);
