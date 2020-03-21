@@ -199,6 +199,12 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 					}else if(currentYaw < -180){
 						currentYaw += 360;
 					}
+					
+					//If we crossed the -180/180 yaw border this tick, change prevYaw to prevent spazzing.
+					//We know this if we have a sign difference, and yaw is large.
+					if(prevYaw*currentYaw < 0 && prevYaw*currentYaw < -180){
+						prevYaw += prevYaw < 0 ? 360 : -360;
+					}
 				}else{
 					if(deltaYaw < currentYaw && currentYaw > getMinYaw()){
 						currentYaw -= Math.min(anglePerTickSpeed, currentYaw - deltaYaw);
