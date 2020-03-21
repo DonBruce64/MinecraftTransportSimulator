@@ -2,7 +2,6 @@ package minecrafttransportsimulator.systems;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,109 +17,105 @@ import java.util.Map;
  */
 public final class OBJParserSystem{
 	public static Map<String, Float[][]> parseOBJModel(String packID, String modelLocation){
-		//try{
-		try{	
-			Map<String, Float[][]> partMap = new HashMap<String, Float[][]>();
-			BufferedReader reader;
-			if(packID != null){
-				reader = new BufferedReader(new InputStreamReader(OBJParserSystem.class.getResourceAsStream("/assets/" + packID + "/" + modelLocation)));
-			}else{
-				reader = new BufferedReader(new FileReader(new File(modelLocation)));
-			}
-			
-			String partName = null;
-			final List<Float[]> vertexList = new ArrayList<Float[]>();
-			final List<Float[]> normalList = new ArrayList<Float[]>();
-			final List<Float[]> textureList = new ArrayList<Float[]>();
-			final List<String> faceList = new ArrayList<String>();
-			
+		Map<String, Float[][]> partMap = new HashMap<String, Float[][]>();
+		BufferedReader reader;
+		if(packID != null){
 			try{
-				int lineNumber = 0;
-				while(reader.ready()){
-					String line = reader.readLine();
-					++lineNumber;
-					if(line.isEmpty()){
-						continue;
-					}
-					if(line.startsWith("o")){
-						//Declaration of an object.
-						//Save current part we are parsing (if any) and start new part.
-						if(partName != null){
-							partMap.put(partName, compileVertexArray(vertexList, normalList, textureList, faceList, partName.toLowerCase().contains("window")));
-							vertexList.clear();
-							normalList.clear();
-							textureList.clear();
-							faceList.clear();
-						}
-						try{
-							partName = line.trim().substring(2, line.length());
-						}catch(Exception e){
-							throw new IllegalArgumentException("ERROR: Object found with no name at line: " + lineNumber + " of: " + modelLocation + ".  Make sure your model exporter isn't making things into groups rather than objects.");
-						}
-					}
-					if(partName != null){
-						if(line.startsWith("v ")){
-							try{
-								Float[] coords = new Float[3];
-								line = line.trim().substring(2, line.trim().length()).trim();
-								coords[0] = Float.valueOf(line.substring(0, line.indexOf(' ')));
-								coords[1] = Float.valueOf(line.substring(line.indexOf(' ') + 1, line.lastIndexOf(' ')));
-								coords[2] = Float.valueOf(line.substring(line.lastIndexOf(' ') + 1, line.length()));
-								vertexList.add(coords);
-							}catch(Exception e){
-								throw new NumberFormatException("ERROR: Could not parse vertex info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex lines must consist of only three numbers (X, Y, Z).");
-							}
-						}else if(line.startsWith("vt ")){
-							try{
-								Float[] coords = new Float[2];
-								line = line.trim().substring(3, line.trim().length()).trim();
-								int space = line.indexOf(' ');
-								int vertexEnd = line.lastIndexOf(' ') == space ? line.length() : line.lastIndexOf(' ');
-								coords[0] = Float.valueOf(line.substring(0, space));
-								coords[1] = 1 - Float.valueOf(line.substring(space + 1, vertexEnd));
-								textureList.add(coords);
-							}catch(Exception e){
-								throw new NumberFormatException("ERROR: Could not parse vertex texture info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex texture lines must consist of only two numbers (U, V).");
-							}
-						}else if(line.startsWith("vn ")){
-							try{
-								Float[] coords = new Float[3];
-								line = line.trim().substring(2, line.trim().length()).trim();
-								coords[0] = Float.valueOf(line.substring(0, line.indexOf(' ')));
-								coords[1] = Float.valueOf(line.substring(line.indexOf(' ') + 1, line.lastIndexOf(' ')));
-								coords[2] = Float.valueOf(line.substring(line.lastIndexOf(' ') + 1, line.length()));
-								normalList.add(coords);
-							}catch(Exception e){
-								throw new NumberFormatException("ERROR: Could not parse normals info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Normals lines must consist of only three numbers (Xn, Yn, Zn).");
-							}
-						}else if(line.startsWith("f ")){
-							faceList.add(line.trim().substring(2, line.trim().length()));
-						}
-					}
-				}
-				
-				//End of file.  Save the last part in process and close the file.
-				try{
-					partMap.put(partName, compileVertexArray(vertexList, normalList, textureList, faceList, partName.toLowerCase().contains("window")));
-				}catch(Exception e){
-					throw new IllegalArgumentException("ERROR: Could not compile points of: " + modelLocation + ".  This is likely due to missing UV mapping on some or all faces.");
-				}
-				reader.close();
-				return partMap;
-				
-			}catch(IOException e){
-				throw new IllegalStateException("ERROR: Could not finish parsing: " + modelLocation + " due to IOException error.  Did the file change state during parsing?");
+				reader = new BufferedReader(new InputStreamReader(OBJParserSystem.class.getResourceAsStream("/assets/" + packID + "/" + modelLocation)));
+			}catch(Exception e){
+				throw new NullPointerException("ERROR: Attempted to parse the OBJ model at: " + "/assets/" + packID + "/" + modelLocation + " but could not find it.  Check the path and try again.");
 			}
-		}catch(FileNotFoundException e){
-			throw new NullPointerException("ERROR: Attempted to parse the OBJ model at: " + modelLocation + " but could not find it.  This should have been checked in a prior method...");
+		}else{
+			try{
+				reader = new BufferedReader(new FileReader(new File(modelLocation)));
+			}catch(Exception e){
+				throw new NullPointerException("ERROR: Attempted to parse the OBJ model at: " + modelLocation + " but could not find it.  Check the path and try again.");
+			}
 		}
+		
+		String partName = null;
+		final List<Float[]> vertexList = new ArrayList<Float[]>();
+		final List<Float[]> normalList = new ArrayList<Float[]>();
+		final List<Float[]> textureList = new ArrayList<Float[]>();
+		final List<String> faceList = new ArrayList<String>();
+		
+		try{
+			int lineNumber = 0;
+			while(reader.ready()){
+				String line = reader.readLine();
+				++lineNumber;
+				if(line.isEmpty()){
+					continue;
+				}
+				if(line.startsWith("o")){
+					//Declaration of an object.
+					//Save current part we are parsing (if any) and start new part.
+					if(partName != null){
+						partMap.put(partName, compileVertexArray(vertexList, normalList, textureList, faceList, partName.toLowerCase().contains("window")));
+						vertexList.clear();
+						normalList.clear();
+						textureList.clear();
+						faceList.clear();
+					}
+					try{
+						partName = line.trim().substring(2, line.length());
+					}catch(Exception e){
+						throw new IllegalArgumentException("ERROR: Object found with no name at line: " + lineNumber + " of: " + modelLocation + ".  Make sure your model exporter isn't making things into groups rather than objects.");
+					}
+				}
+				if(partName != null){
+					if(line.startsWith("v ")){
+						try{
+							Float[] coords = new Float[3];
+							line = line.trim().substring(2, line.trim().length()).trim();
+							coords[0] = Float.valueOf(line.substring(0, line.indexOf(' ')));
+							coords[1] = Float.valueOf(line.substring(line.indexOf(' ') + 1, line.lastIndexOf(' ')));
+							coords[2] = Float.valueOf(line.substring(line.lastIndexOf(' ') + 1, line.length()));
+							vertexList.add(coords);
+						}catch(Exception e){
+							throw new NumberFormatException("ERROR: Could not parse vertex info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex lines must consist of only three numbers (X, Y, Z).");
+						}
+					}else if(line.startsWith("vt ")){
+						try{
+							Float[] coords = new Float[2];
+							line = line.trim().substring(3, line.trim().length()).trim();
+							int space = line.indexOf(' ');
+							int vertexEnd = line.lastIndexOf(' ') == space ? line.length() : line.lastIndexOf(' ');
+							coords[0] = Float.valueOf(line.substring(0, space));
+							coords[1] = 1 - Float.valueOf(line.substring(space + 1, vertexEnd));
+							textureList.add(coords);
+						}catch(Exception e){
+							throw new NumberFormatException("ERROR: Could not parse vertex texture info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex texture lines must consist of only two numbers (U, V).");
+						}
+					}else if(line.startsWith("vn ")){
+						try{
+							Float[] coords = new Float[3];
+							line = line.trim().substring(2, line.trim().length()).trim();
+							coords[0] = Float.valueOf(line.substring(0, line.indexOf(' ')));
+							coords[1] = Float.valueOf(line.substring(line.indexOf(' ') + 1, line.lastIndexOf(' ')));
+							coords[2] = Float.valueOf(line.substring(line.lastIndexOf(' ') + 1, line.length()));
+							normalList.add(coords);
+						}catch(Exception e){
+							throw new NumberFormatException("ERROR: Could not parse normals info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Normals lines must consist of only three numbers (Xn, Yn, Zn).");
+						}
+					}else if(line.startsWith("f ")){
+						faceList.add(line.trim().substring(2, line.trim().length()));
+					}
+				}
+			}
 			
+			//End of file.  Save the last part in process and close the file.
+			try{
+				partMap.put(partName, compileVertexArray(vertexList, normalList, textureList, faceList, partName.toLowerCase().contains("window")));
+			}catch(Exception e){
+				throw new IllegalArgumentException("ERROR: Could not compile points of: " + modelLocation + ".  This is likely due to missing UV mapping on some or all faces.");
+			}
+			reader.close();
+			return partMap;
 			
-		//}catch (Exception e){
-		//	MTS.MTSLog.error("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + modelLocation);
-		//	MTS.MTSLog.error(e.getMessage());
-		//	return null;
-		//}
+		}catch(IOException e){
+			throw new IllegalStateException("ERROR: Could not finish parsing: " + modelLocation + " due to IOException error.  Did the file change state during parsing?");
+		}
 	}
 	
 	private static Float[][] compileVertexArray(List<Float[]> vertexList, List<Float[]> normalList, List<Float[]> textureList, List<String> faceList, boolean isWindow){
