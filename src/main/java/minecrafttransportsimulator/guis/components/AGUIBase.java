@@ -27,6 +27,7 @@ public abstract class AGUIBase{
 	public final List<GUIComponentTextBox> textBoxes = new ArrayList<GUIComponentTextBox>();
 	public final List<GUIComponentItem> items = new ArrayList<GUIComponentItem>();
 	public final List<GUIComponentInstrument> instruments = new ArrayList<GUIComponentInstrument>();
+	public final List<GUIComponentOBJModel> objModels = new ArrayList<GUIComponentOBJModel>();
 	
 	//--------------------START OF NEW CUSTOM METHODS FOR MAKING GUIS--------------------	
 	/**
@@ -171,6 +172,16 @@ public abstract class AGUIBase{
 	}
 	
 	/**
+	 *  Adds an {@link GUIComponentOBJModel} to this GUIs component set.  These are rendered
+	 *  based on their internal variables, which may be set after creation to allow for switching
+	 *  without re-creating the object.  Note that while they cause a texture re-bind, they don't
+	 *  do any other odd state changes so can be rendered any time the main texture is done with.
+	 */
+	public void addOBJModel(GUIComponentOBJModel objModel){
+		objModels.add(objModel);
+	}
+	
+	/**
 	 *  Convenience method to clear out all component lists.
 	 */
 	public void clearComponents(){
@@ -180,6 +191,7 @@ public abstract class AGUIBase{
 		textBoxes.clear();
 		items.clear();
 		instruments.clear();
+		objModels.clear();
 	}
 	
 	public enum GUILightingMode{

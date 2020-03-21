@@ -3,7 +3,6 @@ package minecrafttransportsimulator;
 import minecrafttransportsimulator.blocks.core.BlockBench;
 import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController;
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
-import minecrafttransportsimulator.guis.GUIDevRender;
 import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.guis.GUISign;
 import minecrafttransportsimulator.guis.instances.GUIBooklet;
@@ -46,8 +45,6 @@ public class ClientProxy extends CommonProxy{
 			FMLCommonHandler.instance().showGuiScreen(new GUISign((BlockPoleSign) clicked, clicker));
 		}else if(clicked instanceof TileEntityTrafficSignalController){
 			WrapperGUI.openGUI(new GUITrafficSignalController((TileEntityTrafficSignalController) clicked));
-		}else if(clicked == null){
-			FMLCommonHandler.instance().showGuiScreen(new GUIDevRender());
 		}
 	}
 	

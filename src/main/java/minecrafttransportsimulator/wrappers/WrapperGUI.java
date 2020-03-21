@@ -13,6 +13,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
@@ -148,9 +149,18 @@ public class WrapperGUI extends GuiScreen{
         	textBox.renderBox();
         }
 				
-		//Now render the instruments.
+		//Now render the instruments.  These use their own texture.
 		for(GUIComponentInstrument instrument : gui.instruments){
 			instrument.renderInstrument();
+		}
+		
+		//Now render any OBJModels we may have.
+		//CHeck to make sure the texture exists before binding.
+		for(GUIComponentOBJModel objModel : gui.objModels){
+			if(!objModel.textureDomain.isEmpty()){
+				mc.getTextureManager().bindTexture(new ResourceLocation(objModel.textureDomain, objModel.textureLocation));
+			}
+			objModel.renderModel();
 		}
 		
 		//Now render items.
@@ -404,7 +414,9 @@ public class WrapperGUI extends GuiScreen{
 	 *  Closes the currently-opened GUI, returning back to the main game.
 	 */
 	public static void closeGUI(){
+		//Set current screen to null and clear out the OBJ DisplayLists if we have any.
 		Minecraft.getMinecraft().displayGuiScreen(null);
+		GUIComponentOBJModel.clearDisplayListCaches();
 	}
 	
 	/**
