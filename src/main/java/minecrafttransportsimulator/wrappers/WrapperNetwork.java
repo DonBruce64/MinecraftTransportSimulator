@@ -9,6 +9,8 @@ import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
+import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
+import minecrafttransportsimulator.packets.instances.PacketVehicleWrenchGUI;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -41,6 +43,8 @@ public class WrapperNetwork{
 		packetMappings.put(packetIndex++, PacketPlayerChatMessage.class);
 		packetMappings.put(packetIndex++, PacketVehicleControlAnalog.class);
 		packetMappings.put(packetIndex++, PacketVehicleControlDigital.class);
+		packetMappings.put(packetIndex++, PacketVehicleInstruments.class);
+		packetMappings.put(packetIndex++, PacketVehicleWrenchGUI.class);
 	}
 	
 	/**
@@ -82,7 +86,8 @@ public class WrapperNetwork{
 	 *  since we need an actual player instance here rather than a wrapper, so we
 	 *  shouldn't be able to call this from non-wrapper code.
 	 */
-	static void sendToPlayer(APacketBase packet, EntityPlayerMP player){
+	//TODO make this private when vehicle interaction gets wrapper interaction.
+	public static void sendToPlayer(APacketBase packet, EntityPlayerMP player){
 		network.sendTo(new WrapperPacket(packet), player);
 	}
 	

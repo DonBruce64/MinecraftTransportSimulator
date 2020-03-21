@@ -4,14 +4,14 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.packets.general.PacketChat;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleWrench;
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.packets.instances.PacketVehicleWrenchGUI;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import net.minecraft.client.resources.I18n;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
+import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -31,9 +31,9 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
-		tooltipLines.add(I18n.format("info.item.wrench.use"));
-		tooltipLines.add(I18n.format("info.item.wrench.attack"));
-		tooltipLines.add(I18n.format("info.item.wrench.sneakattack"));
+		tooltipLines.add(WrapperGUI.translate("info.item.wrench.use"));
+		tooltipLines.add(WrapperGUI.translate("info.item.wrench.attack"));
+		tooltipLines.add(WrapperGUI.translate("info.item.wrench.sneakattack"));
 		if(ConfigSystem.configObject.client.devMode.value){
 			tooltipLines.add("Use on a vehicle while seated in it to activate the DevMode editor.");
 		}
@@ -44,7 +44,7 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 		//If the player isn't the owner of the vehicle, they can't interact with it.
 		if(!ownerState.equals(PlayerOwnerState.USER)){
 			if(rightClick){
-				MTS.MTSNet.sendTo(new PacketVehicleWrench(vehicle, player), player);
+				WrapperNetwork.sendToPlayer(new PacketVehicleWrenchGUI(vehicle), player);
 			}else{
 				if(part != null && !player.isSneaking()){
 					//Player can remove part.  Spawn item in the world and remove part.
@@ -70,7 +70,7 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 				}
 			}
 		}else{
-			MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehicleowned"), player);
+			WrapperNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.failure.vehicleowned"), player);
 		}
 	}
 }

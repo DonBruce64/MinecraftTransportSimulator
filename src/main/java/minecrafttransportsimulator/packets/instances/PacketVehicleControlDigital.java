@@ -44,7 +44,7 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleE_Powered vehicle){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleE_Powered vehicle){
 		switch(controlType){
 			case BRAKE : vehicle.brakeOn = controlState; break;
 			case P_BRAKE : {

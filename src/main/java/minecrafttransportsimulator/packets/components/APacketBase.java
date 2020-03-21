@@ -51,7 +51,7 @@ public abstract class APacketBase{
 		if(stringAsBytes.length > Short.MAX_VALUE){
 			throw new IndexOutOfBoundsException("ERROR: Tried to write a string of: " + stringAsBytes.length + " bytes to a packet.  Max string byte size is: " + Short.MAX_VALUE);
 		}else{
-			buf.writeShort(string.length());
+			buf.writeShort(stringAsBytes.length);
 	        buf.writeBytes(stringAsBytes);
 		}
 	}
@@ -60,6 +60,10 @@ public abstract class APacketBase{
 	 *  Helper method to read a string from the buffer.
 	 */
 	protected static String readStringFromBuffer(ByteBuf buf){
-		return buf.toString(buf.readerIndex(), buf.readShort(), StandardCharsets.UTF_8);
+		short stringLength = buf.readShort();
+		String returnString = buf.toString(buf.readerIndex(), stringLength, StandardCharsets.UTF_8);
+		//Need to increment the index as the read doesn't do that automatically.
+		buf.readerIndex(buf.readerIndex() + stringLength);
+		return returnString;
 	}
 }

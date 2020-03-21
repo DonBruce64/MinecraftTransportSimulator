@@ -45,7 +45,7 @@ public class PacketVehicleControlAnalog extends APacketVehicle{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleE_Powered vehicle){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleE_Powered vehicle){
 		switch(controlType){
 			case THROTTLE : {
 				vehicle.throttle = (byte) clampAngle(0, 100, cooldown == Byte.MAX_VALUE ? value : vehicle.throttle + value);

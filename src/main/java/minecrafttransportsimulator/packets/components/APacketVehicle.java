@@ -57,5 +57,5 @@ public abstract class APacketVehicle extends APacketBase{
 	 *  if the action failed due to an issue) return false.  Otherwise, return true to 
 	 *  send this packet on to all clients.  Return method has no function on clients.
 	 */
-	public abstract boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleE_Powered vehicle);
+	protected abstract boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleE_Powered vehicle);
 }
