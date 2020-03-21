@@ -11,8 +11,8 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
-import minecrafttransportsimulator.packets.control.LightPacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
+import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
@@ -80,7 +80,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 				GUIComponentSelector lightSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + lightSelectors.size()*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, lightName, vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, LIGHT_TEXTURE_WIDTH_OFFSET, LIGHT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){
-						MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), lightType));
+						WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, lightType));
 					}
 					
 					@Override

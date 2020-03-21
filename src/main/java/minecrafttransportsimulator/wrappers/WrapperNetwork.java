@@ -10,6 +10,7 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
+import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehicleWrenchGUI;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
@@ -36,14 +37,18 @@ public class WrapperNetwork{
 	 *  This method is responsible for registering all packets.
 	 */
 	public static void init(){
+		//First register the main wrapper packet.
 		network.registerMessage(WrapperHandler.class, WrapperPacket.class, 0, Side.CLIENT);
 		network.registerMessage(WrapperHandler.class, WrapperPacket.class, 1, Side.SERVER);
 		
+		//Now register all classes in the minecrafttransportsimulator.packets.instances package.
+		//Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
 		byte packetIndex = 0;
 		packetMappings.put(packetIndex++, PacketPlayerChatMessage.class);
 		packetMappings.put(packetIndex++, PacketVehicleControlAnalog.class);
 		packetMappings.put(packetIndex++, PacketVehicleControlDigital.class);
 		packetMappings.put(packetIndex++, PacketVehicleInstruments.class);
+		packetMappings.put(packetIndex++, PacketVehicleLightToggle.class);
 		packetMappings.put(packetIndex++, PacketVehicleWrenchGUI.class);
 	}
 	

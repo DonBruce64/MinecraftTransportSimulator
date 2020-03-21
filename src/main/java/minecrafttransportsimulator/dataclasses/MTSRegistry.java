@@ -31,7 +31,6 @@ import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONSign;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.packets.control.LightPacket;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
@@ -298,9 +297,6 @@ public final class MTSRegistry{
 	}
 	
 	private static void initPackets(){
-		//Packets in packets.control
-		registerPacket(LightPacket.class, LightPacket.Handler.class, true, true);
-		
 		//Packets in packets.general
 		registerPacket(PacketBulletHit.class, PacketBulletHit.Handler.class, true, true);
 		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);

@@ -14,8 +14,8 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
-import minecrafttransportsimulator.packets.control.LightPacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
+import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
@@ -68,19 +68,19 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 				public void onClicked(boolean leftSide){
 					if(leftSide){
 						if(selectorState == 2){
-							MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), HEADLIGHT));
+							WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, HEADLIGHT));
 						}else if(selectorState == 1){
-							MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), RUNNINGLIGHT));
+							WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, RUNNINGLIGHT));
 						}
 					}else{
 						if(selectorState == 0){
 							if(RenderVehicle.doesVehicleHaveLight(vehicle, RUNNINGLIGHT)){
-								MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), RUNNINGLIGHT));
+								WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, RUNNINGLIGHT));
 							}else{
-								MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), HEADLIGHT));
+								WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, HEADLIGHT));
 							}
 						}else if(selectorState == 1){
-							MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), HEADLIGHT));
+							WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, HEADLIGHT));
 						}
 					}
 				}
@@ -97,9 +97,9 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 				@Override
 				public void onClicked(boolean leftSide){
 					if(leftSide){
-						MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), LEFTTURNLIGHT));
+						WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, LEFTTURNLIGHT));
 					}else{
-						MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), RIGHTTURNLIGHT));
+						WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, RIGHTTURNLIGHT));
 					}
 				}
 				
@@ -114,7 +114,7 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 			emergencySelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.emergencylights"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, EMERGENCY_TEXTURE_WIDTH_OFFSET, EMERGENCY_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), EMERGENCYLIGHT));
+					WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, EMERGENCYLIGHT));
 				}
 				
 				@Override
