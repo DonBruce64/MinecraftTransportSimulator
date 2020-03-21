@@ -20,25 +20,21 @@ public class PartGunTurret extends APartGun{
 
 	@Override
 	public float getMinYaw(){
-		if (definition.gun.minYaw == 0) return 1;
-		else return definition.gun.minYaw;
+		return definition.gun.minYaw == 0 ? -180 : definition.gun.minYaw;
 	}
 	
 	@Override
 	public float getMaxYaw(){
-		if (definition.gun.maxYaw == 0) return -1;
-		else return definition.gun.maxYaw;
+		return definition.gun.maxYaw == 0 ? 180 : definition.gun.maxYaw;
 	}
 	
 	@Override
 	public float getMinPitch(){
-		if (definition.gun.minPitch == 0) return 0;
-		else return definition.gun.minPitch;
+		return definition.gun.minPitch == 0 ? -10 : definition.gun.minPitch;
 	}
 	
 	@Override
 	public float getMaxPitch(){
-		if (definition.gun.maxPitch == 0) return 75;
-		else return definition.gun.maxPitch;
+		return definition.gun.minPitch == 0 ? 60 : definition.gun.minPitch;
 	}
 }

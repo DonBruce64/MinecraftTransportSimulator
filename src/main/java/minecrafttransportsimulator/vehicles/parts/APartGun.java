@@ -186,17 +186,20 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 				}else if(deltaPitch > currentPitch && currentPitch < getMaxPitch()){
 					currentPitch += Math.min(anglePerTickSpeed, deltaPitch - currentPitch);
 				}
-				if(getMinYaw() > 0  && getMaxYaw() < 0) {
-					if((deltaYaw - currentYaw + 360)%360 >= 180) {
+				//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
+				//We need to do special rotation logic for that.
+				if(getMinYaw() == -180  && getMaxYaw() == 180){
+					if((deltaYaw - currentYaw + 360)%360 >= 180){
 						currentYaw -= Math.min(anglePerTickSpeed,360 - (deltaYaw - currentYaw + 360)%360);
-					}
-					else if((deltaYaw - currentYaw + 360)%360 < 180) {
+					}else if((deltaYaw - currentYaw + 360)%360 < 180){
 						currentYaw += Math.min(anglePerTickSpeed,(deltaYaw - currentYaw + 360)%360);
 					}
-					if(currentYaw > 180 ) currentYaw -= 360;
-					else if(currentYaw < -180) currentYaw += 360;
-				}
-				else {
+					if(currentYaw > 180 ){
+						currentYaw -= 360;
+					}else if(currentYaw < -180){
+						currentYaw += 360;
+					}
+				}else{
 					if(deltaYaw < currentYaw && currentYaw > getMinYaw()){
 						currentYaw -= Math.min(anglePerTickSpeed, currentYaw - deltaYaw);
 					}else if(deltaYaw > currentYaw && currentYaw < getMaxYaw()){
