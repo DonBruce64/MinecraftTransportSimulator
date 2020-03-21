@@ -321,15 +321,16 @@ public final class ClientEventSystem{
      * Renders the HUD on vehicles.  We don't use the GUI here as it would lock inputs.
      */
     @SubscribeEvent
-    public static void on(RenderGameOverlayEvent.Pre event){    	
+    public static void on(RenderGameOverlayEvent.Post event){    	
     	boolean inFirstPerson = minecraft.gameSettings.thirdPersonView == 0;
         if(minecraft.player.getRidingEntity() instanceof EntityVehicleE_Powered && (inFirstPerson ? ConfigSystem.configObject.client.renderHUD_1P.value : ConfigSystem.configObject.client.renderHUD_3P.value)){
             if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
-                event.setCanceled(true);
-            }else if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
             	EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.player.getRidingEntity();
             	if(vehicle.getSeatForRider(minecraft.player) != null){
                 	if(vehicle.getSeatForRider(minecraft.player).isController){
+                		//Translate far enough to not render behind the items.
+                		GL11.glTranslated(0, 0, 250);
+                		
                 		//Get the HUD start position.
                 		boolean halfHud = inFirstPerson ? ConfigSystem.configObject.client.fullHUD_1P.value : ConfigSystem.configObject.client.fullHUD_3P.value; 
                 		final int guiLeft = (event.getResolution().getScaledWidth() - GUIHUD.HUD_WIDTH)/2;
@@ -361,7 +362,8 @@ public final class ClientEventSystem{
                 			}
                 		}
                 		
-                		//Disable the lightmap and alpha to put it back to its old state.
+                		//Disable the translating, lightmap, alpha to put it back to its old state.
+                		GL11.glTranslated(0, 0, -250);
                 		Minecraft.getMinecraft().entityRenderer.disableLightmap();
                 		GL11.glDisable(GL11.GL_ALPHA_TEST);
                 	}
