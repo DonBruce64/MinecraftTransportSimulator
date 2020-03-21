@@ -6,7 +6,6 @@ import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
 import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.guis.GUISign;
 import minecrafttransportsimulator.guis.instances.GUIBooklet;
-import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.guis.instances.GUITrafficSignalController;
 import minecrafttransportsimulator.items.packs.ItemBooklet;
 import minecrafttransportsimulator.systems.ControlSystem;
@@ -35,9 +34,7 @@ public class ClientProxy extends CommonProxy{
 	}
 	@Override
 	public void openGUI(Object clicked, EntityPlayer clicker){
-		if(clicked instanceof EntityVehicleE_Powered){
-			WrapperGUI.openGUI(new GUIInstruments((EntityVehicleE_Powered) clicked, clicker));
-		}else if(clicked instanceof BlockBench){
+		if(clicked instanceof BlockBench){
 			FMLCommonHandler.instance().showGuiScreen(new GUIPartBench((BlockBench) clicked, clicker));
 		}else if(clicked instanceof ItemBooklet){
 			WrapperGUI.openGUI(new GUIBooklet((ItemBooklet) clicked));
