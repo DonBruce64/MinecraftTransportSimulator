@@ -392,6 +392,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				}
 				if(entry.getKey().contains("&")){
 					lightParts.add(new RenderVehicle_LightPart(entry.getKey(), entry.getValue()));
+					shouldShapeBeInDL = !lightParts.get(lightParts.size() - 1).isLightupTexture;
 				}
 				if(entry.getKey().toLowerCase().contains("window")){
 					windows.add(new WindowPart(entry.getKey(), entry.getValue()));
@@ -460,6 +461,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     				}
     				if(entry.getKey().contains("&")){
     					lightParts.add(new RenderVehicle_LightPart(entry.getKey(), entry.getValue()));
+    					shouldShapeBeInDL = !lightParts.get(lightParts.size() - 1).isLightupTexture;
     				}
     				if(shouldShapeBeInDL){
     					for(Float[] vertex : entry.getValue()){
@@ -1052,7 +1054,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 
 			//Render the light.
-			light.render(vehicle, wasRenderedPrior);
+			light.render(vehicle, wasRenderedPrior, textureMap.get(vehicle.definition.systemName));
 			GL11.glPopMatrix();
 		}
 	}
