@@ -23,9 +23,9 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
+import minecrafttransportsimulator.wrappers.WrapperGame;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import net.minecraftforge.fml.common.Loader;
 
 /**A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
  * to {@link GUIHUD} and {@link AGUIPanel} that uses the textures from those GUIs, but does
@@ -256,7 +256,7 @@ public class GUIInstruments extends AGUIBase{
 					instrumentSlotIcons.get(i).itemName = null;
 				}
 			}
-			packName.text = Loader.instance().getIndexedModList().get(currentPack).getName();
+			packName.text = WrapperGame.getModName(currentPack);
 		}
 		
 		//Set buttons depending on which vehicle section is selected.
