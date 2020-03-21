@@ -109,12 +109,6 @@ public class BlockFuelPump extends ABlockRotatable implements ITileEntityProvide
 	}
 	
 	@Override
-    public void breakBlock(World world, BlockPos pos, IBlockState state){
-        super.breakBlock(world, pos, state);
-        world.removeTileEntity(pos);
-    }
-	
-	@Override
 	public TileEntityFuelPump createNewTileEntity(World worldIn, int meta){
 		return new TileEntityFuelPump();
 	}

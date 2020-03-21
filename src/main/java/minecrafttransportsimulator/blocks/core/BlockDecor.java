@@ -12,6 +12,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -34,15 +35,16 @@ public class BlockDecor extends ABlockRotatable implements ITileEntityProvider{
 	}
     
     @Override
-    public void breakBlock(World world, BlockPos pos, IBlockState state){
-        super.breakBlock(world, pos, state);
-        world.removeTileEntity(pos);
-    }
-    
-    @Override
     public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack){
     	TileEntityDecor decorTile = ((TileEntityDecor) world.getTileEntity(pos));
     	decorTile.definition = ((ItemDecor) stack.getItem()).definition;
+    }
+    
+    @Override
+    public void harvestBlock(World worldIn, EntityPlayer player, BlockPos pos, IBlockState state, @Nullable TileEntity te, ItemStack stack){
+    	super.harvestBlock(worldIn, player, pos, state, te, stack);
+    	TileEntityDecor decor = (TileEntityDecor) te;
+    	spawnAsEntity(worldIn, pos, new ItemStack(MTSRegistry.packItemMap.get(decor.definition.packID).get(decor.definition.systemName)));
     }
     
     @Override
