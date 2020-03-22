@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.systems.RotationSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleD_Moving;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
@@ -24,13 +24,16 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public class VehicleGroundDeviceBox{
-	private final EntityVehicleD_Moving vehicle;
+	private final EntityVehicleE_Powered vehicle;
 	private final boolean isFront;
 	private final boolean isLeft;
 	
 	public boolean isCollided;
+	public boolean isCollidedLiquid;
 	public boolean isGrounded;
+	public boolean isGroundedLiquid;
 	public double collisionDepth;
+	public VehicleAxisAlignedBB currentBox;
 	public double xCoord;
 	public double yCoord;
 	public double zCoord;
@@ -41,16 +44,28 @@ public class VehicleGroundDeviceBox{
 	private final List<VehicleAxisAlignedBB> liquidCollisionBoxes = new ArrayList<VehicleAxisAlignedBB>();
 	
 	
-	public VehicleGroundDeviceBox(EntityVehicleD_Moving vehicle, boolean isFront, boolean isLeft){
+	public VehicleGroundDeviceBox(EntityVehicleE_Powered vehicle, boolean isFront, boolean isLeft){
 		this.vehicle = vehicle;
 		this.isFront = isFront;
 		this.isLeft = isLeft;
 		
 		//Get all liquid collision boxes during construction.
 		//While their actual position may change, their relative position is static.
-		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
+		for(VehicleAxisAlignedBB box : vehicle.collisionBoxes){
 			if(box.collidesWithLiquids){
-				liquidCollisionBoxes.add(box);
+				if(isFront && box.rel.z > 0){
+					if(isLeft && box.rel.x >= 0){
+						liquidCollisionBoxes.add(box);
+					}else if(!isLeft && box.rel.x <= 0){
+						liquidCollisionBoxes.add(box);
+					}
+				}else if(!isFront && box.rel.z <= 0){
+					if(isLeft && box.rel.x >= 0){
+						liquidCollisionBoxes.add(box);
+					}else if(!isLeft && box.rel.x <= 0){
+						liquidCollisionBoxes.add(box);
+					}
+				}
 			}
 		}
 		
@@ -103,29 +118,29 @@ public class VehicleGroundDeviceBox{
 		isGrounded = false;
 		collisionDepth = 0;
 		if(!groundDevices.isEmpty()){
-			final VehicleAxisAlignedBB groundCollisionBox = getSolidPoint();
-			final List<AxisAlignedBB> groundCollidingBoxes = groundCollisionBox.getAABBCollisions(vehicle.world, null);
+			currentBox = getSolidPoint();
+			final List<AxisAlignedBB> groundCollidingBoxes = currentBox.getAABBCollisions(vehicle.world, null);
 			isCollided = !groundCollidingBoxes.isEmpty();
-			isGrounded = isCollided ? false : !groundCollisionBox.offset(0, APartGroundDevice.groundDetectionOffset.y, 0).getAABBCollisions(vehicle.world, null).isEmpty();
-			collisionDepth = isCollided ? getCollisionDepthForCollisions(groundCollisionBox, groundCollidingBoxes) : 0;
-			xCoord = groundCollisionBox.rel.x;
-			yCoord = groundCollisionBox.rel.y - groundCollisionBox.height/2D;
-			zCoord = groundCollisionBox.rel.z;
+			isGrounded = isCollided ? false : !currentBox.offset(0, APartGroundDevice.groundDetectionOffset.y, 0).getAABBCollisions(vehicle.world, null).isEmpty();
+			collisionDepth = isCollided ? getCollisionDepthForCollisions(currentBox, groundCollidingBoxes) : 0;
+			xCoord = currentBox.rel.x;
+			yCoord = currentBox.rel.y - currentBox.height/2D;
+			zCoord = currentBox.rel.z;
 		}
 		
 		if(!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()){
 			final VehicleAxisAlignedBB liquidCollisionBox = getLiquidPoint();
 			final List<AxisAlignedBB> liquidCollidingBoxes = getLiquidCollisions(liquidCollisionBox, vehicle.world);
 			//Liquids are checked a bit differently as we already checked solids.
-			boolean isLiquidCollided = !liquidCollidingBoxes.isEmpty();
-			boolean isLiquidGrounded = isLiquidCollided ? false : !getLiquidCollisions(liquidCollisionBox.offset(0, APartGroundDevice.groundDetectionOffset.y, 0), vehicle.world).isEmpty(); 
-			double liquidCollisionDepth = isLiquidCollided ? getCollisionDepthForCollisions(liquidCollisionBox, liquidCollidingBoxes) : 0;
+			isCollidedLiquid = !liquidCollidingBoxes.isEmpty();
+			isGroundedLiquid = isCollidedLiquid ? false : !getLiquidCollisions(liquidCollisionBox.offset(0, APartGroundDevice.groundDetectionOffset.y, 0), vehicle.world).isEmpty(); 
+			double liquidCollisionDepth = isCollidedLiquid ? getCollisionDepthForCollisions(liquidCollisionBox, liquidCollidingBoxes) : 0;
 			
 			//If the liquid boxes are more collided, set collisions to those.
 			//Otherwise, use the solid values.
-			if(isLiquidCollided && (liquidCollisionDepth > collisionDepth)){
-				isCollided = isLiquidCollided;
-				isGrounded = isLiquidGrounded;
+			if(isCollidedLiquid && (liquidCollisionDepth > collisionDepth)){
+				isCollided = isCollidedLiquid;
+				isGrounded = isGroundedLiquid;
 				collisionDepth = liquidCollisionDepth;
 				xCoord = liquidCollisionBox.rel.x;
 				yCoord = liquidCollisionBox.rel.y - liquidCollisionBox.height/2D;
@@ -158,7 +173,7 @@ public class VehicleGroundDeviceBox{
 		
 		Vec3d boxRelativePosition = new Vec3d(xCoords, yCoords, zCoords);
 		Vec3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
-		return new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset).addVector(vehicle.motionX*vehicle.speedFactor, vehicle.motionY*vehicle.speedFactor, vehicle.motionZ*vehicle.speedFactor), boxRelativePosition, widths, heights, false, false);
+		return new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset).addVector(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, false);
 	}
 	
 	/**Updates the liquid collision point based on position of liquid devices and collision boxes.**/
@@ -193,7 +208,7 @@ public class VehicleGroundDeviceBox{
 		
 		Vec3d boxRelativePosition = new Vec3d(xCoords, yCoords, zCoords);
 		Vec3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
-		return new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset).addVector(vehicle.motionX*vehicle.speedFactor, vehicle.motionY*vehicle.speedFactor, vehicle.motionZ*vehicle.speedFactor), boxRelativePosition, widths, heights, false, true);
+		return new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset).addVector(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, true);
 	}
 	
 	/**
@@ -201,7 +216,7 @@ public class VehicleGroundDeviceBox{
 	 * This function is used for ground device collisions only, and makes some assumptions that are incorrect
 	 * for a general-purpose function.
 	 */
-	private double getCollisionDepthForCollisions(VehicleAxisAlignedBB groundDeviceBox, List<AxisAlignedBB> boxList){
+	private static double getCollisionDepthForCollisions(VehicleAxisAlignedBB groundDeviceBox, List<AxisAlignedBB> boxList){
 		double collisionDepth = 0;
 		for(AxisAlignedBB box : boxList){
 			if(groundDeviceBox.minY < box.maxY){

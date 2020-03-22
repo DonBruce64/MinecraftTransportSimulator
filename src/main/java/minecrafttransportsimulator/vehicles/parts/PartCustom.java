@@ -1,13 +1,14 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 
 public final class PartCustom extends APart{
 	
-	public PartCustom(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
+	public PartCustom(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
 	}
 	
 	@Override
@@ -17,11 +18,11 @@ public final class PartCustom extends APart{
 	
 	@Override
 	public float getWidth(){
-		return pack.custom.width;
+		return definition.custom.width;
 	}
 
 	@Override
 	public float getHeight(){
-		return pack.custom.height;
+		return definition.custom.height;
 	}
 }

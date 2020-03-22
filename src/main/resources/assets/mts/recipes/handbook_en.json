@@ -1,0 +1,17 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern":[
+        " a ",
+        "cbc",
+        " d "
+    ],
+    "key":{
+        "a":{"item": "minecraft:feather"},
+		"b":{"item": "minecraft:book"},
+		"c":{"item": "minecraft:dye", "data": 0},
+		"d":{"item": "minecraft:paper"}
+    },
+    "result":{
+        "item": "mts:handbook_en"
+    }
+}

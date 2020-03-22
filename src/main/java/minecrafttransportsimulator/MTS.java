@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -21,7 +22,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="15.9.2";
+	public static final String MODVER="17.3.0";
 	
 	@Instance(value = MTS.MODID)
 	public static MTS instance;
@@ -38,7 +39,9 @@ public class MTS {
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event){
 		MTSLog = event.getModLog();
-		PackParserSystem.outputLog();
+		for(String logEntry : PackParserSystem.logEntries){
+			MTSLog.error(logEntry);
+		}
 		ConfigSystem.loadFromDisk(new File(event.getSuggestedConfigurationFile().getParent(), "mtsconfig.json"));
 		proxy.initControls();
 		minecraftDir = new File(event.getModConfigurationDirectory().getParent());
@@ -47,5 +50,6 @@ public class MTS {
 	@EventHandler
 	public void init(FMLInitializationEvent event){
 		MTSRegistry.init();
+		WrapperNetwork.init();
 	}
 }

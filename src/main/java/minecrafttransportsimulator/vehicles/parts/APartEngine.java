@@ -1,25 +1,22 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.items.core.ItemJumperCable;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -43,8 +40,8 @@ public abstract class APartEngine extends APart implements FXPart{
 	public double temp = 20;
 	public double oilPressure = 90;
 	private double ambientTemp;
-	private double engineHeat;
 	private double coolingFactor;
+	private Long lastTimeParticleSpawned = 0L;
 	public APartEngine linkedEngine;
 	
 	//Rotation data.  Should be set by each engine type individually.
@@ -63,10 +60,10 @@ public abstract class APartEngine extends APart implements FXPart{
 	public final float engineStartRPM;
 
 	
-	public APartEngine(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
-		engineStallRPM = pack.engine.maxRPM < 15000 ? 300 : 1500;
-		engineStartRPM = pack.engine.maxRPM < 15000 ? 500 : 2000;
+	public APartEngine(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
+		engineStallRPM = definition.engine.maxRPM < 15000 ? 300 : 1500;
+		engineStartRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;
 		if(dataTag.hasKey("engineState")){
 			this.state = EngineStates.values()[dataTag.getByte("engineState")];
 		}else{
@@ -83,50 +80,15 @@ public abstract class APartEngine extends APart implements FXPart{
 	}
 	
 	@Override
-	public boolean interactPart(EntityPlayer player){
-		//Only allow interaction if the player is holding jumper cables.
-		//If so, and we aren't linked, do engine linking logic.
-		ItemStack heldStack = player.getHeldItemMainhand();
-		if(heldStack.getItem() instanceof ItemJumperCable){
-			ItemJumperCable jumperCableItem = (ItemJumperCable) heldStack.getItem();
-			if(linkedEngine == null){
-				if(jumperCableItem.lastEngineClicked == null){
-					jumperCableItem.lastEngineClicked = this;
-					MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.firstlink"), (EntityPlayerMP) player);
-				}else if(!jumperCableItem.lastEngineClicked.equals(this)){
-					if(jumperCableItem.lastEngineClicked.vehicle.equals(this.vehicle)){
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.samevehicle"), (EntityPlayerMP) player);
-						jumperCableItem.lastEngineClicked = null;
-					}else if(this.partPos.distanceTo(jumperCableItem.lastEngineClicked.partPos) < 15){
-						linkedEngine = jumperCableItem.lastEngineClicked;
-						jumperCableItem.lastEngineClicked.linkedEngine = this;
-						jumperCableItem.lastEngineClicked = null;
-						MTS.MTSNet.sendToAll(new PacketPartEngineLinked(this, linkedEngine));
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.secondlink"), (EntityPlayerMP) player);	
-					}else{
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.toofar"), (EntityPlayerMP) player);
-						jumperCableItem.lastEngineClicked = null;
-					}
-				}
-			}else{
-				MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.alreadylinked"), (EntityPlayerMP) player);
-			}
-			return true;
-		}else{
-			return false;
-		}
-    }
-	
-	@Override
 	public void attackPart(DamageSource source, float damage){
 		if(source.isExplosion()){
-			hours += damage*10*ConfigSystem.configObject.general.engineHoursFactor.value;
+			hours += damage*20*ConfigSystem.configObject.general.engineHoursFactor.value;
 			if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
 			if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
 			if(!brokenStarter)brokenStarter = Math.random() < 0.05;
 			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, (float) (damage*10*ConfigSystem.configObject.general.engineHoursFactor.value)));
 		}else{
-			hours += damage*ConfigSystem.configObject.general.engineHoursFactor.value;
+			hours += damage*2*ConfigSystem.configObject.general.engineHoursFactor.value;
 			if(source.isProjectile()){
 				if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
 				if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
@@ -167,19 +129,21 @@ public abstract class APartEngine extends APart implements FXPart{
 		if(state.esOn){
 			if(starterLevel == 0){
 				if(vehicle.electricPower > 2){
-					starterLevel += pack.engine.starterDuration;
+					starterLevel += definition.engine.starterDuration;
 					if(vehicle.world.isRemote){
-						MTS.proxy.playSound(partPos, partName + "_cranking", 1, (float) (RPM/engineStartRPM));
+						MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM), vehicle);
 					}
 				}else{
 					setElectricStarterStatus(false);
 				}
 			}
 			if(starterLevel > 0){
-				vehicle.electricUsage += 0.05F;
-				if(vehicle.fuel > pack.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value && !isCreative){
-					vehicle.fuel -= pack.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
-					fuelFlow += pack.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
+				if(!isCreative){
+					vehicle.electricUsage += 0.05F;
+				}
+				if(vehicle.fuel > definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value && !isCreative){
+					vehicle.fuel -= definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
+					fuelFlow += definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
 				}
 			}
 		}else if(state.hsOn){
@@ -191,32 +155,32 @@ public abstract class APartEngine extends APart implements FXPart{
 		if(starterLevel > 0){
 			--starterLevel;
 			if(RPM < engineStartRPM*1.2){
-				RPM = Math.min(RPM + pack.engine.starterPower, engineStartRPM*1.2);
+				RPM = Math.min(RPM + definition.engine.starterPower, engineStartRPM*1.2);
 			}else{
-				RPM = Math.max(RPM - pack.engine.starterPower, engineStartRPM*1.2);
+				RPM = Math.max(RPM - definition.engine.starterPower, engineStartRPM*1.2);
 			}
 		}
 		
 		ambientTemp = 25*vehicle.world.getBiome(vehicle.getPosition()).getTemperature(vehicle.getPosition()) - 5*(Math.pow(2, vehicle.posY/400) - 1);
 		coolingFactor = 0.001 + Math.abs(vehicle.velocity)/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
-		vehicle.electricUsage -= state.running ? 0.05*RPM/pack.engine.maxRPM : 0;
+		vehicle.electricUsage -= state.running ? 0.05*RPM/definition.engine.maxRPM : 0;
 		
 		if(state.running){
 			//First part is temp affect on oil, second is engine oil pump.
 			oilPressure = Math.min(90 - temp/10, oilPressure + RPM/engineStartRPM - 0.5*(oilLeak ? 5F : 1F)*(oilPressure/engineOilDanger));
 			if(oilPressure < engineOilDanger){
-				temp += Math.max(0, (20*RPM/pack.engine.maxRPM)/20);
+				temp += Math.max(0, (20*RPM/definition.engine.maxRPM)/20);
 				hours += 0.01*ConfigSystem.configObject.general.engineHoursFactor.value;
 			}else{
-				temp += Math.max(0, (7*RPM/pack.engine.maxRPM - temp/(engineColdTemp*2))/20);
+				temp += Math.max(0, (7*RPM/definition.engine.maxRPM - temp/(engineColdTemp*2))/20);
 				hours += 0.001*ConfigSystem.configObject.general.engineHoursFactor.value;	
 			}
 			if(RPM > engineStartRPM*1.5 && temp < engineColdTemp){//Not warmed up
 				hours += 0.001*(RPM/engineStartRPM - 1)*ConfigSystem.configObject.general.engineHoursFactor.value;
 			}
-			if(RPM > getSafeRPMFromMax(this.pack.engine.maxRPM)){//Too fast
-				hours += 0.001*(RPM - getSafeRPMFromMax(this.pack.engine.maxRPM))/10F*ConfigSystem.configObject.general.engineHoursFactor.value;
+			if(RPM > getSafeRPMFromMax(this.definition.engine.maxRPM)){//Too fast
+				hours += 0.001*(RPM - getSafeRPMFromMax(this.definition.engine.maxRPM))/10F*ConfigSystem.configObject.general.engineHoursFactor.value;
 			}
 			if(temp > engineOverheatTemp1){//Too hot
 				hours += 0.001*(temp - engineOverheatTemp1)*ConfigSystem.configObject.general.engineHoursFactor.value;
@@ -226,14 +190,22 @@ public abstract class APartEngine extends APart implements FXPart{
 			}
 			
 			if(hours > 200 && !vehicle.world.isRemote){
-				if(Math.random() < hours/10000*(getSafeRPMFromMax(this.pack.engine.maxRPM)/(RPM+getSafeRPMFromMax(this.pack.engine.maxRPM)/2))){
+				if(Math.random() < hours/10000*(getSafeRPMFromMax(this.definition.engine.maxRPM)/(RPM+getSafeRPMFromMax(this.definition.engine.maxRPM)/2))){
 					backfireEngine();
 				}
 			}
 
 			if(!isCreative && !vehicle.fluidName.isEmpty()){
-				fuelFlow = pack.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(pack.engine.fuelType).get(vehicle.fluidName)*RPM*(fuelLeak ? 1.5F : 1.0F)/pack.engine.maxRPM;
-				vehicle.fuel -= fuelFlow;
+				if(!ConfigSystem.configObject.fuel.fuels.containsKey(definition.engine.fuelType)){					
+					throw new IllegalArgumentException("ERROR: Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.configObject.fuel.fuels.keySet().toString());
+				}else if(!ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicle.fluidName)){
+					//Clear out the fuel from this vehicle as it's the wrong type.
+					vehicle.fuel = 0;
+					vehicle.fluidName = "";
+				}else{
+					fuelFlow = definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicle.fluidName)*RPM*(fuelLeak ? 1.5F : 1.0F)/definition.engine.maxRPM;
+					vehicle.fuel -= fuelFlow;
+				}
 			}
 			
 			if(!vehicle.world.isRemote){
@@ -319,7 +291,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			}else if(state.equals(EngineStates.RUNNING)){
 				state = EngineStates.ENGINE_OFF;
 				internalFuel = 100;
-				MTS.proxy.playSound(partPos, partName + "_stopping", 1, 1);
+				MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1, vehicle);
 			}
 		}
 	}
@@ -356,18 +328,18 @@ public abstract class APartEngine extends APart implements FXPart{
 		}else{
 			return;
 		}
-		starterLevel += pack.engine.starterDuration;
+		starterLevel += definition.engine.starterDuration;
 		if(vehicle.world.isRemote){
-			MTS.proxy.playSound(partPos, partName + "_cranking", 1, (float) (RPM/engineStartRPM));
+			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM), vehicle);
 		}
 	}
 	
 	public void backfireEngine(){
-		RPM -= pack.engine.maxRPM < 15000 ? 100 : 500;
+		RPM -= definition.engine.maxRPM < 15000 ? 100 : 500;
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.BACKFIRE));
 		}else{
-			MTS.proxy.playSound(partPos, partName + "_sputter", 0.5F, 1);
+			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_sputter", 0.5F, 1, vehicle);
 			backfired = true;
 		}
 	}
@@ -385,7 +357,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.START));
 		}else{
-			MTS.proxy.playSound(partPos, partName + "_starting", 1, 1);
+			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_starting", 1, 1, vehicle);
 		}
 	}
 	
@@ -403,7 +375,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(!packetType.equals(PacketEngineTypes.DROWN)){
 				internalFuel = 100;
 			}
-			MTS.proxy.playSound(partPos, partName + "_stopping", 1, 1);
+			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1, vehicle);
 		}
 	}
 	
@@ -421,7 +393,7 @@ public abstract class APartEngine extends APart implements FXPart{
 	}
 	
 	protected boolean isInLiquid(){
-		return vehicle.world.getBlockState(new BlockPos(partPos)).getMaterial().isLiquid();
+		return vehicle.world.getBlockState(new BlockPos(partPos.addVector(0, packVehicleDef.intakeOffset, 0))).getMaterial().isLiquid();
 	}
 	
 	public double getEngineRotation(float partialTicks){
@@ -438,12 +410,61 @@ public abstract class APartEngine extends APart implements FXPart{
 	@SideOnly(Side.CLIENT)
 	public void spawnParticles(){
 		if(Minecraft.getMinecraft().effectRenderer != null){
+			//Render engine smoke if we're overheating.
 			if(temp > engineOverheatTemp1){
-				Minecraft.getMinecraft().world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, partPos.x, partPos.y + 0.5, partPos.z, 0, 0.15, 0);
+				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y + 0.5, partPos.z, 0, 0.15, 0, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F));
 				if(temp > engineOverheatTemp2){
-					Minecraft.getMinecraft().world.spawnParticle(EnumParticleTypes.SMOKE_LARGE, partPos.x, partPos.y + 0.5, partPos.z, 0, 0.15, 0);
+					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y + 0.5, partPos.z, 0, 0.15, 0, 0.0F, 0.0F, 0.0F, 2.5F, 1.0F));
 				}
 			}
+			
+			//Render exhaust smoke if we have any exhausts and are running.
+			//If we are starting and have flames set, render those instead.
+			if(packVehicleDef.exhaustPos != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
+				//Render a smoke for every cycle the exhaust makes.
+				//Depending on the number of positions we have, render an exhaust for every one.
+				//So for 1 position, we render 1 every 2 engine cycles (4 stroke), and for 4, we render 4.
+				//Note that the rendering is offset for multi-position points to simulate the cylinders firing
+				//in their aligned order.
+				
+				//Get timing information and particle information.
+				long engineCycleTimeMills = (long) (2D*(1D/(RPM/60D/1000D)));
+				long currentTime = System.currentTimeMillis();
+				long camTime = currentTime%engineCycleTimeMills;
+				
+				float particleColor = (float) Math.max(1 - temp/engineColdTemp, 0);
+				boolean singleExhaust = packVehicleDef.exhaustPos.length == 3;
+				
+				//Iterate through all the exhaust positions and fire them if it is time to do so.
+				//We need to offset the time we are supposed to spawn by the cycle time for multi-point exhausts.
+				//For single-point exhausts, we only fire if we didn't fire this cycle.
+				for(int i=0; i<packVehicleDef.exhaustPos.length; i+=3){
+					if(singleExhaust){
+						if(lastTimeParticleSpawned + camTime > currentTime){
+							continue;
+						}
+					}else{
+						long camOffset = engineCycleTimeMills*3/packVehicleDef.exhaustPos.length;
+						long camMin = (i/3)*camOffset;
+						long camMax = camMin + camOffset;
+						if(camTime < camMin || camTime > camMax || (lastTimeParticleSpawned > camMin && lastTimeParticleSpawned < camMax)){
+							continue;
+						}
+					}
+					
+					Vec3d exhaustOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustPos[i], packVehicleDef.exhaustPos[i+1], packVehicleDef.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+					Vec3d velocityOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustVelocity[i], packVehicleDef.exhaustVelocity[i+1], packVehicleDef.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
+					if(state.running){
+						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04, particleColor, particleColor, particleColor, 1.0F, (float) Math.min((50 + hours)/500, 1)));
+					}
+					if(definition.engine.flamesOnStartup && state.esOn){
+						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.EngineFlameParticleFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04));
+					}
+					lastTimeParticleSpawned = singleExhaust ? currentTime : camTime;
+				}
+			}
+			
+			//Render oil and fuel leak particles.
 			if(oilLeak){
 				if(vehicle.ticksExisted%20 == 0){
 					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.OilDropParticleFX(vehicle.world, partPos.x - 0.25*Math.sin(Math.toRadians(vehicle.rotationYaw)), partPos.y, partPos.z + 0.25*Math.cos(Math.toRadians(vehicle.rotationYaw))));
@@ -454,10 +475,23 @@ public abstract class APartEngine extends APart implements FXPart{
 					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.FuelDropParticleFX(vehicle.world, partPos.y, partPos.y, partPos.z));
 				}
 			}
+			
+			//If we backfired, render a few puffs.
+			//Will be from the engine or the exhaust if we have any.
 			if(backfired){
 				backfired = false;
-				for(byte i=0; i<5; ++i){
-					Minecraft.getMinecraft().world.spawnParticle(EnumParticleTypes.SMOKE_LARGE, partPos.x, partPos.y + 0.5, partPos.z, Math.random()*0.15, 0.15, Math.random()*0.15);
+				if(packVehicleDef.exhaustPos != null){
+					for(int i=0; i<packVehicleDef.exhaustPos.length; i+=3){
+						Vec3d exhaustOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustPos[i], packVehicleDef.exhaustPos[i+1], packVehicleDef.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+						Vec3d velocityOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustVelocity[i], packVehicleDef.exhaustVelocity[i+1], packVehicleDef.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
+						for(byte j=0; j<5; ++j){
+							Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.07 - Math.random()*0.14, velocityOffset.y/10D, velocityOffset.z/10D + 0.07 - Math.random()*0.14, 0.0F, 0.0F, 0.0F, 2.5F, 1.0F));
+						}
+					}
+				}else{
+					for(byte i=0; i<5; ++i){
+						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y + 0.5, partPos.z, 0.07 - Math.random()*0.14, 0.15, 0.07 - Math.random()*0.14, 0.0F, 0.0F, 0.0F, 2.5F, 1.0F));
+					}
 				}
 			}
 		}

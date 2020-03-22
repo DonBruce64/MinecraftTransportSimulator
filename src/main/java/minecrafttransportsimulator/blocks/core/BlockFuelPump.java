@@ -86,11 +86,9 @@ public class BlockFuelPump extends ABlockRotatable implements ITileEntityProvide
     						}
     					}
     					
-    					boolean isFluidValidFuelForEngines = false;
     					for(APart part : nearestVehicle.getVehicleParts()){
     						if(part instanceof APartEngine){
-    							if(ConfigSystem.configObject.fuel.fuels.get(part.pack.engine.fuelType).containsKey(fluidName)){
-    								isFluidValidFuelForEngines = true;
+    							if(ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).containsKey(fluidName)){
     								pump.setConnectedVehicle((EntityVehicleE_Powered) nearestEntity);
     	    						MTS.MTSNet.sendTo(new PacketChat("interact.fuelpump.connect"), (EntityPlayerMP) player);
     	    						return true;
@@ -109,12 +107,6 @@ public class BlockFuelPump extends ABlockRotatable implements ITileEntityProvide
 		}
 		return true;
 	}
-	
-	@Override
-    public void breakBlock(World world, BlockPos pos, IBlockState state){
-        super.breakBlock(world, pos, state);
-        world.removeTileEntity(pos);
-    }
 	
 	@Override
 	public TileEntityFuelPump createNewTileEntity(World worldIn, int meta){

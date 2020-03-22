@@ -1,15 +1,10 @@
 package minecrafttransportsimulator.packets.vehicles;
 
-import java.lang.reflect.Constructor;
-
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.items.parts.AItemPart;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.items.packs.parts.AItemPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -23,9 +18,12 @@ public class PacketVehicleClientPartAddition extends APacketVehiclePart{
 
 	public PacketVehicleClientPartAddition(){}
 	
-	public PacketVehicleClientPartAddition(EntityVehicleA_Base vehicle, double offsetX, double offsetY, double offsetZ, ItemStack partStack){
+	public PacketVehicleClientPartAddition(EntityVehicleE_Powered vehicle, double offsetX, double offsetY, double offsetZ, AItemPart partItem, NBTTagCompound partTag){
 		super(vehicle, offsetX, offsetY, offsetZ);
-		this.partStack = partStack;
+		this.partStack = new ItemStack(partItem);
+		if(partTag != null){
+			this.partStack.setTagCompound(partTag);
+		}
 	}
 	
 	@Override
@@ -46,19 +44,10 @@ public class PacketVehicleClientPartAddition extends APacketVehiclePart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityVehicleA_Base vehicle = (EntityVehicleA_Base) getVehicle(message, ctx);
+					EntityVehicleE_Powered vehicle = getVehicle(message, ctx);
 					if(vehicle != null){
-						PackPart packPart = vehicle.getPackDefForLocation(message.offsetX, message.offsetY, message.offsetZ);
-						String partName = ((AItemPart) message.partStack.getItem()).partName;
-						try{
-							Class<? extends APart> partClass = PackParserSystem.getPartPartClass(partName);
-							Constructor<? extends APart> construct = partClass.getConstructor(EntityVehicleE_Powered.class, PackPart.class, String.class, NBTTagCompound.class);
-							APart newPart = construct.newInstance((EntityVehicleE_Powered) vehicle, packPart, partName, message.partStack.hasTagCompound() ? message.partStack.getTagCompound() : new NBTTagCompound());
-							vehicle.addPart(newPart, false);
-						}catch(Exception e){
-							MTS.MTSLog.error("ERROR SPAWING PART ON CLIENT!");
-							MTS.MTSLog.error(e.getMessage());
-						}
+						VehiclePart packPart = vehicle.getPackDefForLocation(message.offsetX, message.offsetY, message.offsetZ);
+						vehicle.addPart(PackParserSystem.createPart(vehicle, packPart, ((AItemPart) message.partStack.getItem()).definition, message.partStack.hasTagCompound() ? message.partStack.getTagCompound() : new NBTTagCompound()), false);
 					}
 				}
 			});

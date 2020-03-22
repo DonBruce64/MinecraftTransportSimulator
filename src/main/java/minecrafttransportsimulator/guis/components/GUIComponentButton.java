@@ -6,20 +6,34 @@ import minecrafttransportsimulator.wrappers.WrapperGUI;
 
 /**Custom button class.  This allows for a custom button texture, as well as a cleaner constructor.
  * It also allows us to cut out a few MC methods from their own button class and use our own.
+ * The simplest constructor will create a button at the point specified with a height of 20
+ * and centered text.  The more complex constructor will create it with the specified height
+ * and gives the choice of centered text or not.  The most complex constructor gives all those
+ * options, as well as allowing the selection of where on the texture sheet to render the button.
+ * 
  * 
  *
  * @author don_bruce
  */
 public abstract class GUIComponentButton{
-	private static final int BUTTON_TEXTURE_U_OFFSET = 196;
-	private static final int BUTTON_TEXTURE_WIDTH = 200;
-	private static final int BUTTON_TEXTURE_HEIGHT = 20;
+	private static final int DEFAULT_TEXTURE_WIDTH = 256;
+	private static final int DEFAULT_TEXTURE_HEIGHT = 256;
+	private static final int DEFAULT_BUTTON_SECTION_WIDTH = 200;
+	private static final int DEFAULT_BUTTON_SECTION_HEIGHT = 20;
+	private static final int DEFAULT_BUTTON_SECTION_WIDTH_OFFSET = 0;
+	private static final int DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET = 196;
 	
 	public final int x;
 	public final int y;
 	public final int width;
 	public final int height;
 	public final boolean centeredText;
+	public final int buttonSectionWidth;
+	public final int buttonSectionHeight;
+	public final int buttonSectionWidthOffset;
+	public final int buttonSectionHeightOffset;
+	public final int textureWidth;
+	public final int textureHeight;
 	
 	public boolean visible = true;
 	public boolean enabled = true;
@@ -30,20 +44,30 @@ public abstract class GUIComponentButton{
 	}
 	
 	public GUIComponentButton(int x, int y, int width, String text, int height, boolean centeredText){
+		this(x, y, width, text, height, centeredText, DEFAULT_BUTTON_SECTION_WIDTH, DEFAULT_BUTTON_SECTION_HEIGHT, DEFAULT_BUTTON_SECTION_WIDTH_OFFSET, DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET, DEFAULT_TEXTURE_WIDTH, DEFAULT_TEXTURE_HEIGHT);
+	}
+	
+	public GUIComponentButton(int x, int y, int width, String text, int height, boolean centeredText, int buttonSectionWidth, int buttonSectionHeight, int buttonSectionWidthOffset, int buttonSectionHeightOffset, int textureWidth, int textureHeight){
 		this.x = x;
 		this.y = y;
 		this.width = width;
 		this.height = height;
 		this.text = text;
 		this.centeredText = centeredText;
+		this.buttonSectionWidth = buttonSectionWidth;
+		this.buttonSectionHeight = buttonSectionHeight;
+		this.buttonSectionWidthOffset = buttonSectionWidthOffset;
+		this.buttonSectionHeightOffset = buttonSectionHeightOffset;
+		this.textureWidth = textureWidth;
+		this.textureHeight = textureHeight;
 	}
 	
 	/**
-	 *  Returns true if the mouse could have clicked this button, given the mouse
+	 *  Returns true if the mouse can click this button, given the mouse
 	 *  position and current button state.  Used to know if we need to call
 	 *  {@link #onClicked()} to do clicking actions.
 	 */
-	public boolean clicked(int xPos, int yPos){
+	public boolean canClick(int xPos, int yPos){
 		return visible && enabled && x < xPos && xPos < x + width && y < yPos && yPos < y + height; 
 	}
 	
@@ -63,25 +87,25 @@ public abstract class GUIComponentButton{
 	 *  This scales the texture vertically to match the height of the button, unlike the traditional 
 	 *  MC way of using a constant value which can overrun or underrun.  Because of this, button sizes 
 	 *  other than 20px tall are supported, though values significantly outside this range may look odd.
-	 *  When rendering, we use the currently-bound texture.  This is done to allow for dynamic button
-	 *  textures in different GUIs without the need to sub-class this class.  Also note that the
-	 *  text is NOT rendered here; that is done in its own method as rendering text would require
-	 *  a texture switch in this method.
+	 *  When rendering, we use the currently-bound texture and selected points.  This is done to allow 
+	 *  for dynamic button textures in different GUIs without the need to sub-class this class.  Also 
+	 *  note that the text is NOT rendered here; that is done in its own method as rendering text would 
+	 *  require a texture switch in this method.
 	 */
     public void renderButton(int mouseX, int mouseY){
     	if(visible){
 			int textureUStart;
     		if(enabled){
 				if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
-					textureUStart = BUTTON_TEXTURE_U_OFFSET + 2*BUTTON_TEXTURE_HEIGHT;//Highlighted
+					textureUStart = buttonSectionHeightOffset + 2*buttonSectionHeight;//Highlighted
 				}else{
-					textureUStart = BUTTON_TEXTURE_U_OFFSET + 1*BUTTON_TEXTURE_HEIGHT;//Normal
+					textureUStart = buttonSectionHeightOffset + 1*buttonSectionHeight;//Normal
 				}
 			}else{
-				textureUStart = BUTTON_TEXTURE_U_OFFSET;//Disabled
+				textureUStart = buttonSectionHeightOffset;//Disabled
 			}
-    		WrapperGUI.renderSheetTexture(x, y, width/2, height, 0, textureUStart, width/2, textureUStart + BUTTON_TEXTURE_HEIGHT);
-    		WrapperGUI.renderSheetTexture(x + width/2, y, width/2, height, BUTTON_TEXTURE_WIDTH - width/2, textureUStart, BUTTON_TEXTURE_WIDTH, textureUStart + BUTTON_TEXTURE_HEIGHT);
+    		WrapperGUI.renderSheetTexture(x, y, width/2, height, buttonSectionWidthOffset, textureUStart, buttonSectionWidthOffset + width/2, textureUStart + buttonSectionHeight, textureWidth, textureHeight);
+    		WrapperGUI.renderSheetTexture(x + width/2, y, width/2, height, buttonSectionWidthOffset + buttonSectionWidth - width/2, textureUStart, buttonSectionWidthOffset + buttonSectionWidth, textureUStart + buttonSectionHeight, textureWidth, textureHeight);
 		}
     }
     
@@ -92,7 +116,18 @@ public abstract class GUIComponentButton{
 	 */
     public void renderText(){
     	if(visible){
-    		WrapperGUI.drawText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText, false, -1);
+    		WrapperGUI.drawText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText, false, 0);
     	}
+    }
+    
+    /**
+	 *  Renders the tooltip for this button.  This needs to be done after the main buttons
+	 *  render as otherwise it will render behind other buttons.  This method needs an
+	 *  instance of {@link WrapperGUI} due to the MC GUI system hard-linking the
+	 *  tooltip rendering sequence to the GUI instance.  Most buttons don't have tooltips,
+	 *  but buttons that have complex functionality may need them to help explain what they do.
+	 */
+    public void renderTooltip(WrapperGUI wrapper, int mouseX, int mouseY){
+    	//Do nothing.
     }
 }

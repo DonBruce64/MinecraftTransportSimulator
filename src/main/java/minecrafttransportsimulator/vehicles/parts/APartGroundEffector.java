@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
@@ -11,17 +12,17 @@ public abstract class APartGroundEffector extends APart{
 	protected final BlockPos[] lastBlocksModified;
 	protected final BlockPos[] affectedBlocks;
 	
-	public APartGroundEffector(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
-		lastBlocksModified = new BlockPos[pack.effector.blocksWide];
-		affectedBlocks = new BlockPos[pack.effector.blocksWide];
+	public APartGroundEffector(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
+		lastBlocksModified = new BlockPos[definition.effector.blocksWide];
+		affectedBlocks = new BlockPos[definition.effector.blocksWide];
 	}
 	
 	@Override
 	public void updatePart(){
 		super.updatePart();
-		int startingIndex = -pack.effector.blocksWide/2;
-		for(int i=0; i<pack.effector.blocksWide; ++i){
+		int startingIndex = -definition.effector.blocksWide/2;
+		for(int i=0; i<definition.effector.blocksWide; ++i){
 			int xOffset = startingIndex + i;
 			if(effectIsBelowPart()){
 				affectedBlocks[i] = new BlockPos(RotationSystem.getRotatedPoint(new Vec3d(xOffset, 0, 0), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(partPos)).down();

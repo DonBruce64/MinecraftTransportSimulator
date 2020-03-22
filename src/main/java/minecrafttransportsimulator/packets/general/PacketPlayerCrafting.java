@@ -2,7 +2,8 @@ package minecrafttransportsimulator.packets.general;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,25 +16,29 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketPlayerCrafting implements IMessage{
 	private int playerID;
-	private String selectedItem;
+	private String packID;
+	private String systemName;
 
 	public PacketPlayerCrafting(){}
 	
-	public PacketPlayerCrafting(EntityPlayer player, String selectedItem){
+	public PacketPlayerCrafting(EntityPlayer player, AItemPack<? extends AJSONItem<?>> item){
 		this.playerID = player.getEntityId();
-		this.selectedItem = selectedItem;
+		this.packID = item.definition.packID;
+		this.systemName = item.definition.systemName;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		this.playerID = buf.readInt();
-		this.selectedItem = ByteBufUtils.readUTF8String(buf);
+		this.packID = ByteBufUtils.readUTF8String(buf);
+		this.systemName = ByteBufUtils.readUTF8String(buf);
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf){
 		buf.writeInt(this.playerID);
-		ByteBufUtils.writeUTF8String(buf, this.selectedItem);
+		ByteBufUtils.writeUTF8String(buf, this.packID);
+		ByteBufUtils.writeUTF8String(buf, this.systemName);
 	}
 	
 	protected static EntityPlayer getPlayer(PacketPlayerCrafting message, MessageContext ctx){
@@ -48,9 +53,9 @@ public class PacketPlayerCrafting implements IMessage{
 		}
 	}
 	
-	public static boolean doesPlayerHaveMaterials(EntityPlayer player, String partToCraft){
+	public static boolean doesPlayerHaveMaterials(EntityPlayer player, AItemPack<? extends AJSONItem<?>> item){
 		if(!player.capabilities.isCreativeMode){
-			for(ItemStack materialStack : PackParserSystem.getMaterials(partToCraft)){
+			for(ItemStack materialStack : MTSRegistry.getMaterials(item)){
 				int requiredMaterialCount = materialStack.getCount();
 				for(ItemStack stack : player.inventory.mainInventory){
 					if(ItemStack.areItemsEqual(stack, materialStack)){
@@ -65,9 +70,9 @@ public class PacketPlayerCrafting implements IMessage{
 		return true;
 	}
 	
-	protected static void removeMaterials(EntityPlayer player, String partToCraft){
+	protected static void removeMaterials(EntityPlayer player, AItemPack<? extends AJSONItem<?>> item){
 		if(!player.capabilities.isCreativeMode){
-			for(ItemStack materialStack : PackParserSystem.getMaterials(partToCraft)){
+			for(ItemStack materialStack : MTSRegistry.getMaterials(item)){
 				player.inventory.clearMatchingItems(materialStack.getItem(), materialStack.getMetadata(), materialStack.getCount(), null);
 			}
 		}
@@ -80,21 +85,10 @@ public class PacketPlayerCrafting implements IMessage{
 				public void run(){
 					EntityPlayer player = getPlayer(message, ctx);
 					if(player != null){
-						if(doesPlayerHaveMaterials(player, message.selectedItem)){
-							removeMaterials(player, message.selectedItem);
-							ItemStack stack;
-							if(MTSRegistry.vehicleItemMap.containsKey(message.selectedItem)){
-								stack = new ItemStack(MTSRegistry.vehicleItemMap.get(message.selectedItem));
-							}else if(MTSRegistry.partItemMap.containsKey(message.selectedItem)){
-								stack = new ItemStack(MTSRegistry.partItemMap.get(message.selectedItem));
-							}else if(MTSRegistry.instrumentItemMap.containsKey(message.selectedItem)){
-								stack = new ItemStack(MTSRegistry.instrumentItemMap.get(message.selectedItem));
-							}else if(MTSRegistry.itemItemMap.containsKey(message.selectedItem)){
-								stack = new ItemStack(MTSRegistry.itemItemMap.get(message.selectedItem));
-							}else{
-								return;
-							}
-							player.getEntityWorld().spawnEntity(new EntityItem(player.getEntityWorld(), player.posX, player.posY, player.posZ, stack));
+						AItemPack<? extends AJSONItem<?>> item = MTSRegistry.packItemMap.get(message.packID).get(message.systemName);
+						if(doesPlayerHaveMaterials(player, item)){
+							removeMaterials(player, item);
+							player.getEntityWorld().spawnEntity(new EntityItem(player.getEntityWorld(), player.posX, player.posY, player.posZ, new ItemStack(item)));
 						}
 					}
 				}

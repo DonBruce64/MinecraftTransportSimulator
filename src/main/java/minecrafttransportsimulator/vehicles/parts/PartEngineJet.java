@@ -3,33 +3,31 @@ package minecrafttransportsimulator.vehicles.parts;
 import java.util.List;
 
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceJet;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class PartEngineJet extends APartEngine{
-	private final EntityVehicleF_Air aircraft;
 
-	public PartEngineJet(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
-		this.aircraft = (EntityVehicleF_Air) vehicle;
+	public PartEngineJet(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
 	}
 	
 	@Override
 	public void updatePart(){
 		super.updatePart();
 		if(state.running){
-			double engineTargetRPM = aircraft.throttle/100F*(pack.engine.maxRPM - engineStartRPM*1.25 - hours*10) + engineStartRPM*1.25;
+			double engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - engineStartRPM*1.25 - hours*10) + engineStartRPM*1.25;
 			double engineRPMDifference = engineTargetRPM - RPM;
 			//This is governed by the core, so use the bypass ratio and air density to calculate how fast this thing spools up.
 			//Smaller cores and higher altitudes will cause spool times to increase due to lack of airflow to push.
-			RPM += pack.engine.fuelConsumption*engineRPMDifference/(10 + pack.engine.gearRatios[0])/vehicle.airDensity;
+			RPM += definition.engine.fuelConsumption*engineRPMDifference/(10 + definition.engine.gearRatios[0])/vehicle.airDensity;
 		}else if(!state.esOn){
-			RPM = Math.max(RPM + (aircraft.velocity - 0.0254*250*RPM/60/20)*15 - 10, 0);
+			RPM = Math.max(RPM + (vehicle.velocity - 0.0254*250*RPM/60/20)*15 - 10, 0);
 		}
 		
 		if(!vehicle.world.isRemote){
@@ -85,15 +83,15 @@ public class PartEngineJet extends APartEngine{
 			//We then multiply that by the RPM and the fuel consumption to get the raw power produced
 			//by the core of the engine.  This is speed-independent as the core will ALWAYS accelerate air.
 			//Note that due to a lack of jet physics formulas available, this is "hacky math".
-			double safeRPMFactor = RPM/getSafeRPMFromMax(pack.engine.maxRPM);
-			double coreContribution = Math.max(10*vehicle.airDensity*pack.engine.fuelConsumption*safeRPMFactor - pack.engine.gearRatios[0], 0);
+			double safeRPMFactor = RPM/getSafeRPMFromMax(definition.engine.maxRPM);
+			double coreContribution = Math.max(10*vehicle.airDensity*definition.engine.fuelConsumption*safeRPMFactor - definition.engine.gearRatios[0], 0);
 			//The fan portion is calculated similarly to how propellers are calculated.
 			//This takes into account the air density, and relative speed of the engine versus the fan's desired speed.
 			//Again, this is "hacky math", as for some reason there's no data on fan pitches.
 			//In this case, however, we don't care about the fuelConsumption as that's only used by the core.
-			double fanVelocityFactor = (0.0254*250*RPM/60/20 - aircraft.velocity)/200D;
-			double fanContribution = 10*vehicle.airDensity*safeRPMFactor*fanVelocityFactor*pack.engine.gearRatios[0];
-			return aircraft.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution;
+			double fanVelocityFactor = (0.0254*250*RPM/60/20 - vehicle.velocity)/200D;
+			double fanContribution = 10*vehicle.airDensity*safeRPMFactor*fanVelocityFactor*definition.engine.gearRatios[0];
+			return vehicle.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution;
 		}else{
 			return 0;
 		}

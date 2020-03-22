@@ -1,11 +1,10 @@
 package minecrafttransportsimulator.vehicles.main;
 
-import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.packets.control.AileronPacket;
-import minecrafttransportsimulator.packets.control.ElevatorPacket;
-import minecrafttransportsimulator.packets.control.RudderPacket;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -19,21 +18,26 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
-	public boolean reverseThrust;
-	public short reversePercent;
-	
 	//Note that angle variable should be divided by 10 to get actual angle.
+	public final short MAX_AILERON_ANGLE = 250;
+	public final short AILERON_DAMPEN_RATE = 6;
 	public short aileronAngle;
-	public short elevatorAngle;
-	public short rudderAngle;
 	public short aileronTrim;
+	public byte aileronCooldown;
+	
+	public final short MAX_ELEVATOR_ANGLE = 250;
+	public final short ELEVATOR_DAMPEN_RATE = 6;
+	public short elevatorAngle;
 	public short elevatorTrim;
+	public byte elevatorCooldown;
+	
+	public final short MAX_RUDDER_ANGLE = 450;
+	public final short RUDDER_DAMPEN_RATE = 20;
+	public short rudderAngle;
 	public short rudderTrim;
+	public byte rudderCooldown;
 	
-	public short aileronCooldown;
-	public short elevatorCooldown;
-	public short rudderCooldown;
-	
+	//Other variables.
 	public double trackAngle;
 	public Vec3d verticalVec = Vec3d.ZERO;
 	public Vec3d sideVec = Vec3d.ZERO;
@@ -55,19 +59,13 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		super(world);
 	}
 	
-	public EntityVehicleF_Air(World world, float posX, float posY, float posZ, float rotation, String name){
-		super(world, posX, posY, posZ, rotation, name);
+	public EntityVehicleF_Air(World world, float posX, float posY, float posZ, float rotation, JSONVehicle definition){
+		super(world, posX, posY, posZ, rotation, definition);
 	}
 	
 	@Override
 	protected void getBasicProperties(){
-		if(reverseThrust && reversePercent < 20){
-			++reversePercent;
-		}else if(!reverseThrust && reversePercent > 0){
-			--reversePercent;
-		}
-		
-		momentRoll = (float) (pack.general.emptyMass*(1.5F+(fuel/10000F)));
+		momentRoll = (float) (definition.general.emptyMass*(1.5F+(fuel/10000F)));
 		momentPitch = (float) (2*currentMass);
 		momentYaw = (float) (3*currentMass);
 		
@@ -87,13 +85,10 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	protected void getForcesAndMotions(){
 		thrustForce = thrustTorque = 0;
 		double thrust = 0;
-		for(byte i=0; i<this.getNumberEngineBays(); ++i){
-			APartEngine engine = getEngineByNumber(i);
-			if(engine != null){
-				thrust = engine.getForceOutput();
-				thrustForce += thrust;
-				thrustTorque += thrust*engine.offset.x;
-			}
+		for(APartEngine engine : engines.values()){
+			thrust = engine.getForceOutput();
+			thrustForce += thrust;
+			thrustTorque += thrust*engine.offset.x;
 		}
 		gravitationalForce = currentMass*(9.8/400);
 	}
@@ -102,24 +97,41 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	protected void dampenControlSurfaces(){
 		if(aileronCooldown==0){
 			if(aileronAngle != 0){
-				MTS.MTSNet.sendToAll(new AileronPacket(this.getEntityId(), aileronAngle < 0, (short) 0));
-				aileronAngle += aileronAngle < 0 ? 6 : -6;
+				if(aileronAngle < AILERON_DAMPEN_RATE && aileronAngle > -AILERON_DAMPEN_RATE){
+					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, (short) -aileronAngle, (byte) 0), this);
+					aileronAngle = 0;
+				}else{
+					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, aileronAngle < 0 ? AILERON_DAMPEN_RATE : -AILERON_DAMPEN_RATE, (byte) 0), this);
+					aileronAngle += aileronAngle < 0 ? AILERON_DAMPEN_RATE : -AILERON_DAMPEN_RATE;
+				}
 			}
 		}else{
 			--aileronCooldown;
 		}
+		
 		if(elevatorCooldown==0){
 			if(elevatorAngle != 0){
-				MTS.MTSNet.sendToAll(new ElevatorPacket(this.getEntityId(), elevatorAngle < 0, (short) 0));
-				elevatorAngle += elevatorAngle < 0 ? 6 : -6;
+				if(elevatorAngle < ELEVATOR_DAMPEN_RATE && elevatorAngle > -ELEVATOR_DAMPEN_RATE){
+					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) -elevatorAngle, (byte) 0), this);
+					elevatorAngle = 0;
+				}else{
+					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, elevatorAngle < 0 ? ELEVATOR_DAMPEN_RATE : -ELEVATOR_DAMPEN_RATE, (byte) 0), this);
+					elevatorAngle += elevatorAngle < 0 ? ELEVATOR_DAMPEN_RATE : -ELEVATOR_DAMPEN_RATE;
+				}
 			}
 		}else{
 			--elevatorCooldown;
 		}
+		
 		if(rudderCooldown==0){
 			if(rudderAngle != 0){
-				MTS.MTSNet.sendToAll(new RudderPacket(this.getEntityId(), rudderAngle < 0, (short) 0));
-				rudderAngle += rudderAngle < 0 ? 6 : -6;
+				if(rudderAngle < RUDDER_DAMPEN_RATE && rudderAngle > -RUDDER_DAMPEN_RATE){
+					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, (short) -rudderAngle, (byte) 0), this);
+					rudderAngle = 0;
+				}else{
+					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, rudderAngle < 0 ? RUDDER_DAMPEN_RATE : -RUDDER_DAMPEN_RATE, (byte) 0), this);
+					rudderAngle += rudderAngle < 0 ? RUDDER_DAMPEN_RATE : -RUDDER_DAMPEN_RATE;
+				}
 			}
 		}else{
 			--rudderCooldown;
@@ -131,7 +143,7 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		return -rudderAngle/10F;
 	}
 	
-	protected double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
+	protected static double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
 		if(Math.abs(angleOfAttack) <= 15*1.25){
 			return maxLiftCoeff*Math.sin(Math.PI/2*angleOfAttack/15);
 		}else if(Math.abs(angleOfAttack) <= 15*1.5){

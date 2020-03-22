@@ -50,7 +50,7 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 				}
 				return;
 			}
-			if(connectedVehicle.pack.motorized.fuelCapacity - connectedVehicle.fuel >= 10){
+			if(connectedVehicle.definition.motorized.fuelCapacity - connectedVehicle.fuel >= 10){
 				if(tankInfo.fluid != null){
 					int fuelToFill = Math.min(this.tankInfo.fluid.amount, 10);
 					this.tankInfo.fluid.amount -= fuelToFill;
@@ -132,7 +132,7 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 	public int fill(FluidStack stack, boolean doFill){
 		if(tankInfo.fluid == null || stack.isFluidEqual(tankInfo.fluid)){
 			int amountAbleToFill = tankInfo.capacity - (tankInfo.fluid != null ? tankInfo.fluid.amount : 0);
-			int amountToFill = (int) Math.min(amountAbleToFill, stack.amount);
+			int amountToFill = Math.min(amountAbleToFill, stack.amount);
 			if(doFill){
 				if(tankInfo.fluid == null){
 					this.setFluid(stack.getFluid());
@@ -173,7 +173,7 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
     @Override
     public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing){
     	//Only let fluid be interacted with on the bottom face.
-    	if(facing != null && facing.equals(facing.DOWN)){
+    	if(facing != null && facing.equals(EnumFacing.DOWN)){
     		return capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
     	}else{
     		return super.hasCapability(capability, facing);
@@ -183,7 +183,7 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
     @SuppressWarnings("unchecked")
     @Override
     public <T> T getCapability(Capability<T> capability, EnumFacing facing){
-    	if(facing != null && facing.equals(facing.DOWN)){
+    	if(facing != null && facing.equals(EnumFacing.DOWN)){
     		if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY){
     			return (T) this;
     		}

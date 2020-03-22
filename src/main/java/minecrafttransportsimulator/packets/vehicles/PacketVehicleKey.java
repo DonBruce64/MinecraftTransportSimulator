@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.vehicles;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -12,7 +12,7 @@ public class PacketVehicleKey extends APacketVehicle{
 	
 	public PacketVehicleKey(){}
 	
-	public PacketVehicleKey(EntityVehicleB_Existing vehicle){
+	public PacketVehicleKey(EntityVehicleE_Powered vehicle){
 		super(vehicle);
 		this.isLocked = vehicle.locked;
 	}
@@ -35,7 +35,7 @@ public class PacketVehicleKey extends APacketVehicle{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityVehicleB_Existing vehicle = (EntityVehicleB_Existing) getVehicle(message, ctx);
+					EntityVehicleE_Powered vehicle = getVehicle(message, ctx);
 					if(vehicle != null){
 						vehicle.locked = message.isLocked;
 					}

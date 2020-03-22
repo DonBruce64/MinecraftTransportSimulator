@@ -14,6 +14,6 @@ import net.minecraft.util.math.Vec3d;
 public class CommonProxy{	
 	public void initControls(){}
 	public void openGUI(Object clicked, EntityPlayer clicker){}
-	public void playSound(Vec3d soundPosition, String soundName, float volume, float pitch){}
+	public void playSound(Vec3d soundPosition, String soundName, float volume, float pitch, EntityVehicleE_Powered optionalVehicle){}
 	public void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine engine){}
 }

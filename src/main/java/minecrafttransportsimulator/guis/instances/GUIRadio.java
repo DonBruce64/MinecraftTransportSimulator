@@ -6,14 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.guis.components.GUIBase;
+import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.radio.Radio;
 import minecrafttransportsimulator.radio.RadioContainer;
 import minecrafttransportsimulator.radio.RadioManager;
 
-public class GUIRadio extends GUIBase{	
+public class GUIRadio extends AGUIBase{	
 	//Buttons.
 	private GUIComponentButton offButton;
 	private GUIComponentButton localButton;

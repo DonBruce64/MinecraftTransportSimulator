@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -39,11 +39,11 @@ public abstract class APacketPart implements IMessage{
 	}
 	
 	protected static APart getVehiclePartFromMessage(APacketPart message, MessageContext ctx){
-		EntityVehicleA_Base vehicle;
+		EntityVehicleE_Powered vehicle;
 		if(ctx.side.isServer()){
-			vehicle = (EntityVehicleA_Base) ctx.getServerHandler().player.world.getEntityByID(message.id);
+			vehicle = (EntityVehicleE_Powered) ctx.getServerHandler().player.world.getEntityByID(message.id);
 		}else{
-			vehicle = (EntityVehicleA_Base) Minecraft.getMinecraft().world.getEntityByID(message.id);
+			vehicle = (EntityVehicleE_Powered) Minecraft.getMinecraft().world.getEntityByID(message.id);
 		}
 		if(vehicle != null){
 			for(APart part : vehicle.getVehicleParts()){

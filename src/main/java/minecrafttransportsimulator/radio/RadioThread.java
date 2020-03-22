@@ -21,7 +21,7 @@ public class RadioThread extends Thread{
 			RadioManager.updateRadios(listenerX, listenerY, listenerZ, enablePlayback);
 			//Wait 1 second before updating again.
 			try{
-				this.sleep(1000);
+				Thread.sleep(1000);
 			}catch(InterruptedException e){
 				//Do nothing.
 			}

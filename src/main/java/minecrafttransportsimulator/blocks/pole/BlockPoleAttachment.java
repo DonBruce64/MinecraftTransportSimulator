@@ -45,13 +45,13 @@ public class BlockPoleAttachment extends BlockPoleNormal implements ITileEntityP
 
     @Override
     public int getMetaFromState(IBlockState state){
-        return ((EnumFacing)state.getValue(FACING)).getHorizontalIndex();
+        return state.getValue(FACING).getHorizontalIndex();
     }
 
     @Override
     @SuppressWarnings("deprecation")
     public IBlockState withRotation(IBlockState state, Rotation rot){
-        return state.getBlock() != this ? state : state.withProperty(FACING, rot.rotate((EnumFacing)state.getValue(FACING)));
+        return state.getBlock() != this ? state : state.withProperty(FACING, rot.rotate(state.getValue(FACING)));
     }
 
     @Override

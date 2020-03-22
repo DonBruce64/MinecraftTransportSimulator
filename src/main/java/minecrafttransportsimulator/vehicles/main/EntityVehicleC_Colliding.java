@@ -2,20 +2,32 @@ package minecrafttransportsimulator.vehicles.main;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBBCollective;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackCollisionBox;
+import minecrafttransportsimulator.items.packs.parts.AItemPart;
+import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartSeat;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.event.world.ExplosionEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /**Now that we have an existing vehicle its time to add the ability to collide with it.
  * This is where we add collision functions and collision AABB methods to allow
@@ -27,18 +39,24 @@ import net.minecraft.world.World;
  * 
  * @author don_bruce
  */
-public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
-	/**Collective wrapper that allows for the calling of multiple collision boxes in this vehicle.  May be null on the first scan.*/
+
+@Mod.EventBusSubscriber
+abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
+	//Internal collision frames.
 	private VehicleAxisAlignedBBCollective collisionFrame;
-	/**Collective wrapper that allows for the calling of multiple collision boxes in this vehicle.  May be null on the first scan.
-	 * This wrapper is used for interactions, so it will "collide" with both collision and interaction boxes.*/
 	private VehicleAxisAlignedBBCollective interactionFrame;
-	/**List of current collision boxes in this vehicle.  Contains both vehicle collision boxes and ground device collision boxes.*/
-	private final List<VehicleAxisAlignedBB> currentCollisionBoxes = new ArrayList<VehicleAxisAlignedBB>();
-	/**List of interaction boxes.  These are AABBs that can be clicked but do NOT affect vehicle collision.*/
-	private final List<VehicleAxisAlignedBB> currentInteractionBoxes = new ArrayList<VehicleAxisAlignedBB>();
+	
+	//Boxes used for collision and interaction with this vehicle.
+	public final List<VehicleAxisAlignedBB> collisionBoxes = new ArrayList<VehicleAxisAlignedBB>();
+	public final List<VehicleAxisAlignedBB> partBoxes = new ArrayList<VehicleAxisAlignedBB>();
+	public final List<VehicleAxisAlignedBB> openPartSpotBoxes = new ArrayList<VehicleAxisAlignedBB>();
+	public final List<VehicleAxisAlignedBB> interactionBoxes = new ArrayList<VehicleAxisAlignedBB>();
+	
+	//Last saved explosion position (used for damage calcs).
+	private static Vec3d lastExplosionPosition;
+
 	/**Cached config value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
-	public final double speedFactor = ConfigSystem.configObject.general.speedFactor.value;
+	public final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
 	private float hardnessHitThisTick = 0;
 			
@@ -46,17 +64,17 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 		super(world);
 	}
 	
-	public EntityVehicleC_Colliding(World world, float posX, float posY, float posZ, float playerRotation, String vehicleName){
-		super(world, posX, posY, posZ, playerRotation, vehicleName);
+	public EntityVehicleC_Colliding(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
+		super(world, posX, posY, posZ, playerRotation, definition);
 	}
 	
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		if(pack != null){
+		if(definition != null){
 			//Make sure the collision bounds for MC are big enough to collide with this entity.
-			if(World.MAX_ENTITY_RADIUS < 32){
-				World.MAX_ENTITY_RADIUS = 32;
+			if(World.MAX_ENTITY_RADIUS < 64){
+				World.MAX_ENTITY_RADIUS = 64;
 			}
 			
 			//Update the box lists.
@@ -66,35 +84,103 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	}
 	
 	@Override
+	public boolean attackEntityFrom(DamageSource source, float damage){
+		//This is called if we attack the vehicle with something that isn't an interactable item.
+		//This attack can come from a player with a hand-held item, or a projectile such as an arrow.
+		//In any case, we check to see if the attacker is in the collision box of a part and forward the
+		//attack to that part of so.  Note that multiple parts may be hit by the attacker if their speed is
+		//fast enough, and sometimes the attack may hit nothing at all.  This is particularly true if the
+		//attack is from a player standing still and smacking the vehicle with a weapon.
+		if(!world.isRemote){
+			if(source.getImmediateSource() != null){
+				Entity attacker = source.getImmediateSource();
+				for(VehicleAxisAlignedBB partBox : partBoxes){
+					//Expand this box by the speed of the projectile just in case the projectile is custom and
+					//calls its attack code before it actually gets inside the collision box.
+					if(partBox.grow(Math.abs(attacker.motionX), Math.abs(attacker.motionY), Math.abs(attacker.motionZ)).contains(attacker.getPositionVector())){
+						APart part = getPartAtLocation(partBox.rel.x, partBox.rel.y, partBox.rel.z);
+						if(part != null){
+							part.attackPart(source, damage);
+						}
+					}
+				}
+			}else{
+				//Check if we encountered an explosion.  These don't have entities linked to them, despite TNT being a TE.
+				if(lastExplosionPosition != null && source.isExplosion()){
+					//Expand the box by the explosion size and attack any parts in it.
+					for(VehicleAxisAlignedBB partBox : partBoxes){
+						if(partBox.grow(damage).contains(lastExplosionPosition)){
+							APart part = getPartAtLocation(partBox.rel.x, partBox.rel.y, partBox.rel.z);
+							if(part != null){
+								part.attackPart(source, damage);
+							}
+						}
+					}
+					lastExplosionPosition = null;
+				}
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * This code allows for this vehicle to be "attacked" without an entity present.
+	 * Normally the attack code will check the attacking entity to figure out what was
+	 * attacked on the vehicle, but for some situations this may not be desirable.
+	 * In particular, this is done for the particle-based bullet system as there are
+	 * no projectile entities to allow the attack system to automatically calculate
+	 * what was attacked on the vehicle.
+	 */
+	public void attackManuallyAtPosition(double x, double y, double z, DamageSource source, float damage){
+		for(VehicleAxisAlignedBB partBox : partBoxes){
+			if(partBox.contains(new Vec3d(x, y, z))){
+				APart part = getPartAtLocation(partBox.rel.x, partBox.rel.y, partBox.rel.z);
+				if(part != null){
+					part.attackPart(source, damage);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * We need to use explosion events here as we don't know where explosions occur in the world.
+	 * This results in them being position-less, so we can't forward them to parts for damage calcs.
+	 * Whenever we have an explosion detonated in the world, save it's position.  We can then use it
+	 * in {@link #attackEntityFrom(DamageSource, float)} to tell the system which part to attack.
+	 */
+	@SubscribeEvent
+	public static void on(ExplosionEvent.Detonate event){
+		if(!event.getWorld().isRemote){
+			lastExplosionPosition = event.getExplosion().getPosition();
+		}
+	}
+    
+	@Override
+	public boolean canBeCollidedWith(){
+		//This gets overridden to allow players to interact with this vehicle.
+		return true;
+	}
+	
+	@Override
+	public boolean canRiderInteract(){
+		//Return true here to allow clicks while seated.
+        return true;
+    }
+	
+	@Override
 	public VehicleAxisAlignedBBCollective getEntityBoundingBox(){
 		//Override this to make interaction checks work with the multiple collision points.
-		return this.interactionFrame != null ? this.interactionFrame : new VehicleAxisAlignedBBCollective(this, 1, 1, true);
+		//We return the collision and interaction boxes here as we need a bounding box large enough to encompass both.
+		return this.interactionFrame != null ? this.interactionFrame : new VehicleAxisAlignedBBCollective((EntityVehicleE_Powered) this, 1, 1, interactionBoxes);
 	}
 	
 	@Override
     @Nullable
     public VehicleAxisAlignedBBCollective getCollisionBoundingBox(){
 		//Override this to make collision checks work with the multiple collision points.
-		return this.collisionFrame != null ? this.collisionFrame : new VehicleAxisAlignedBBCollective(this, 1, 1, false);
+		//We only return collision boxes here as we don't want the player to collide with interaction boxes.
+		return this.collisionFrame != null ? this.collisionFrame : new VehicleAxisAlignedBBCollective((EntityVehicleE_Powered) this, 1, 1, collisionBoxes);
     }
-	
-	/**
-	 * Called by systems needing information about collision with this entity.
-	 * This is a way to keep other bits from messing with the collision list
-	 * and a way to get collisions without going through the collective class wrapper.
-	 */
-	public List<VehicleAxisAlignedBB> getCurrentCollisionBoxes(){
-		return currentCollisionBoxes;
-	}
-	
-	/**
-	 * Called by the vehicle AABB wrapper to allow entities to collide with
-	 * interactable parts.  This allows for part collision with entities,
-	 * but prevents the parts from being used in movement systems.
-	 */
-	public List<VehicleAxisAlignedBB> getCurrentInteractionBoxes(){
-		return currentInteractionBoxes;
-	}
     
 	/**
 	 * Called to populate the collision lists for this entity.
@@ -102,55 +188,80 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	 * CPU and RAM intensive!
 	 */
 	private void updateCollisionBoxes(){
-		if(this.pack != null){
-			//Get all collision boxes and set the bounding Collective to encompass all of them.
-			currentCollisionBoxes.clear();
+		if(this.definition != null){
+			//Get all collision boxes and set the bounding collective to encompass all of them.
+			collisionBoxes.clear();
 			double furthestWidth = 0;
 			double furthestHeight = 0;
-			for(PackCollisionBox box : pack.collision){
-				Vec3d partOffset = new Vec3d(box.pos[0], box.pos[1], box.pos[2]);
-				Vec3d offset = RotationSystem.getRotatedPoint(partOffset, rotationPitch, rotationYaw, rotationRoll);
-				VehicleAxisAlignedBB newBox = new VehicleAxisAlignedBB(this.getPositionVector().add(offset), partOffset, box.width, box.height, box.isInterior, box.collidesWithLiquids);
-				currentCollisionBoxes.add(newBox);
+			for(VehicleCollisionBox box : definition.collision){
+				Vec3d boxOffset = new Vec3d(box.pos[0], box.pos[1], box.pos[2]);
+				Vec3d offset = RotationSystem.getRotatedPoint(boxOffset, rotationPitch, rotationYaw, rotationRoll);
+				VehicleAxisAlignedBB newBox = new VehicleAxisAlignedBB(this.getPositionVector().add(offset), boxOffset, box.width, box.height, box.isInterior, box.collidesWithLiquids);
+				collisionBoxes.add(newBox);
 				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.x) + box.width/2F);
 				furthestHeight = (float) Math.max(furthestHeight, Math.abs(newBox.rel.y) + box.height/2F);
 				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.z) + box.width/2F);
 			}
-			this.collisionFrame = new VehicleAxisAlignedBBCollective(this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, false);
-			this.interactionFrame = new VehicleAxisAlignedBBCollective(this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, true);
+			this.collisionFrame = new VehicleAxisAlignedBBCollective((EntityVehicleE_Powered) this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, collisionBoxes);
 			
-			//Add all part boxes to the interaction list.
-			currentInteractionBoxes.clear();
+			//Add all part boxes to the part box list.
+			//If the part is a seat, and there is a rider in that seat, don't add it.
+			//This keeps riders from getting their clicks blocked by their own seats.
+			partBoxes.clear();
 			for(APart part : this.getVehicleParts()){
-				currentInteractionBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));
-			}
-		}
-	}
-	
-    /**
-     * Checks if the passed-in entity could have clicked this vehicle.
-     * Result is based on rotation of the entity passed in and the current collision boxes.
-     */
-	public boolean wasVehicleClicked(Entity entity){
-		Vec3d lookVec = entity.getLook(1.0F);
-		Vec3d hitVec = entity.getPositionVector().addVector(0, entity.getEyeHeight(), 0);
-		for(float f=1.0F; f<4.0F; f += 0.1F){
-			//First check the collision boxes.
-			for(VehicleAxisAlignedBB box : this.currentCollisionBoxes){
-				if(box.contains(hitVec)){
-					return true;
+				if(part instanceof PartSeat){
+					if(getRiderForSeat((PartSeat) part) != null){
+						continue;
+					}
 				}
+				partBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));
 			}
-			//If we didn't hit a collision box we may have hit an interaction box instead.
-			for(VehicleAxisAlignedBB box : this.currentInteractionBoxes){
-				if(box.contains(hitVec)){
-					return true;
+			
+			//Finally, add all possible part boxes that don't have parts to the list.
+			//If we are on a server, we add all boxes with a size of 0 to prevent them from being attacked.
+			//If we are on a client, we add only the ones that correspond with the item the player is holding.
+			openPartSpotBoxes.clear();
+			final double PART_SLOT_HITBOX_OFFSET = 0.5D;
+			final float PART_SLOT_HITBOX_WIDTH = 0.75F;
+			final float PART_SLOT_HITBOX_HEIGHT = 1.75F;
+			for(Entry<Vec3d, VehiclePart> packPartEntry : getAllPossiblePackParts().entrySet()){
+				if(getPartAtLocation(packPartEntry.getKey().x, packPartEntry.getKey().y, packPartEntry.getKey().z) == null){
+					if(world.isRemote){
+						ItemStack heldStack = Minecraft.getMinecraft().player.getHeldItemMainhand();
+						if(heldStack.getItem() instanceof AItemPart){
+							AItemPart heldPart = (AItemPart) heldStack.getItem();
+							//Does the part held match this packPart?
+							if(packPartEntry.getValue().types.contains(heldPart.definition.general.type)){
+								//Part matches.  Add the box.  If we are holding a custom part, add that box
+								//instead of the generic box.
+								if(heldPart instanceof ItemPartCustom){
+									Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), rotationPitch, rotationYaw, rotationRoll);
+									openPartSpotBoxes.add(new VehicleAxisAlignedBB(getPositionVector().add(offset), packPartEntry.getKey(), heldPart.definition.custom.width, heldPart.definition.custom.height, false, false));
+								}else{
+									Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey().addVector(0, PART_SLOT_HITBOX_OFFSET, 0), rotationPitch, rotationYaw, rotationRoll);
+									openPartSpotBoxes.add(new VehicleAxisAlignedBB(getPositionVector().add(offset), packPartEntry.getKey().addVector(0, PART_SLOT_HITBOX_OFFSET, 0), PART_SLOT_HITBOX_WIDTH, PART_SLOT_HITBOX_HEIGHT, false, false));
+								}
+							}
+						}else{
+							//We aren't holding a part, do don't even bother adding hitboxes.
+							break;
+						}
+					}else{
+						//We are on the server.  Set width and height to 0 to prevent clicking.
+						Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey().addVector(0, 0, 0), rotationPitch, rotationYaw, rotationRoll);
+						openPartSpotBoxes.add(new VehicleAxisAlignedBB(getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0, 0), 0, 0, false, false));
+					}
 				}
 			}
 			
-			hitVec = hitVec.addVector(lookVec.x*0.1F, lookVec.y*0.1F, lookVec.z*0.1F);
+			//Add all the boxes together and put in the interaction frame.
+			//We arrange them in order of importance to influence which ones get checked first.
+			interactionBoxes.clear();
+			interactionBoxes.addAll(partBoxes);
+			interactionBoxes.addAll(openPartSpotBoxes);
+			interactionBoxes.addAll(collisionBoxes);
+			this.interactionFrame = new VehicleAxisAlignedBBCollective((EntityVehicleE_Powered) this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, interactionBoxes);
 		}
-		return false;
 	}
 	
 	/**
@@ -159,7 +270,7 @@ public abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	 * Otherwise, we return the collision depth in the specified axis.
 	 */
 	protected float getCollisionForAxis(VehicleAxisAlignedBB box, boolean xAxis, boolean yAxis, boolean zAxis){
-		Vec3d motion = new Vec3d(this.motionX*speedFactor, this.motionY*speedFactor, this.motionZ*speedFactor);
+		Vec3d motion = new Vec3d(this.motionX*SPEED_FACTOR, this.motionY*SPEED_FACTOR, this.motionZ*SPEED_FACTOR);
 		box = box.offset(xAxis ? motion.x : 0, yAxis ? motion.y : 0, zAxis ? motion.z : 0);
 		List<BlockPos> collidedBlockPos = new ArrayList<BlockPos>();
 		List<AxisAlignedBB> collidingAABBList = box.getAABBCollisions(world, collidedBlockPos);

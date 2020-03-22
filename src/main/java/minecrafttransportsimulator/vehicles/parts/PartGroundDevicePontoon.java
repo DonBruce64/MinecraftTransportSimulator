@@ -1,15 +1,17 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
 public final class PartGroundDevicePontoon extends APartGroundDevice{
-	public PartGroundDevicePontoon(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
+	
+	public PartGroundDevicePontoon(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
 	}
 	
 	@Override
@@ -19,7 +21,7 @@ public final class PartGroundDevicePontoon extends APartGroundDevice{
 	
 	@Override
 	public float getWidth(){
-		return this.pack.pontoon.width;
+		return this.definition.pontoon.width;
 	}
 	
 	@Override
@@ -63,12 +65,12 @@ public final class PartGroundDevicePontoon extends APartGroundDevice{
 	
 	@Override
 	public float getLateralFriction(){
-		return this.pack.pontoon.lateralFriction;
+		return this.definition.pontoon.lateralFriction;
 	}
 	
 	@Override
 	public float getLongPartOffset(){
-		return pack.pontoon.extraCollisionBoxOffset;
+		return definition.pontoon.extraCollisionBoxOffset;
 	}
 	
 	@Override

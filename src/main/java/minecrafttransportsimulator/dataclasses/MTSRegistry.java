@@ -1,12 +1,13 @@
 package minecrafttransportsimulator.dataclasses;
 
-import java.lang.reflect.Constructor;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.BlockBench;
@@ -17,34 +18,21 @@ import minecrafttransportsimulator.blocks.pole.BlockPoleAttachment;
 import minecrafttransportsimulator.blocks.pole.BlockPoleNormal;
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
 import minecrafttransportsimulator.blocks.pole.BlockPoleWallConnector;
-import minecrafttransportsimulator.items.core.ItemDecor;
-import minecrafttransportsimulator.items.core.ItemInstrument;
-import minecrafttransportsimulator.items.core.ItemItem;
+import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.items.core.ItemJerrycan;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.items.core.ItemKey;
-import minecrafttransportsimulator.items.core.ItemManual;
-import minecrafttransportsimulator.items.core.ItemVehicle;
 import minecrafttransportsimulator.items.core.ItemWrench;
-import minecrafttransportsimulator.items.parts.AItemPart;
-import minecrafttransportsimulator.packets.control.AileronPacket;
-import minecrafttransportsimulator.packets.control.BrakePacket;
-import minecrafttransportsimulator.packets.control.ElevatorPacket;
-import minecrafttransportsimulator.packets.control.FlapPacket;
-import minecrafttransportsimulator.packets.control.HornPacket;
-import minecrafttransportsimulator.packets.control.LightPacket;
-import minecrafttransportsimulator.packets.control.ReverseThrustPacket;
-import minecrafttransportsimulator.packets.control.RudderPacket;
-import minecrafttransportsimulator.packets.control.ShiftPacket;
-import minecrafttransportsimulator.packets.control.SirenPacket;
-import minecrafttransportsimulator.packets.control.SteeringPacket;
-import minecrafttransportsimulator.packets.control.ThrottlePacket;
-import minecrafttransportsimulator.packets.control.TrailerPacket;
-import minecrafttransportsimulator.packets.control.TrimPacket;
+import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONSign;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.packets.general.PacketChat;
-import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
-import minecrafttransportsimulator.packets.general.PacketPackReload;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
@@ -58,14 +46,12 @@ import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
 import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
 import minecrafttransportsimulator.packets.tileentities.PacketTileEntityClientServerHandshake;
 import minecrafttransportsimulator.packets.tileentities.PacketTrafficSignalControllerChange;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInitResponse;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartAddition;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartRemoval;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleJerrycan;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
@@ -78,6 +64,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
@@ -101,46 +88,49 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod.EventBusSubscriber
 public final class MTSRegistry{
 	/**All registered core items are stored in this list as they are added.  Used to sort items in the creative tab.**/
-	public static List<Item> itemList = new ArrayList<Item>();
+	public static List<Item> coreItems = new ArrayList<Item>();
 	
-	/**Maps vehicle item names to items.  All vehicle items for all packs will be populated here.*/
-	public static Map<String, ItemVehicle> vehicleItemMap = new LinkedHashMap<String, ItemVehicle>();
+	/**All registered pack items are stored in this map as they are added.  Used to sort items in the creative tab,
+	 * and will be sent to packs for item registration when so asked via {@link #getItemsForPack(String)}.  May also
+	 * be used if we need to lookup a registered part item.  Map is keyed by packID to allow sorting for items from 
+	 * different packs, while the sub-map is keyed by the part's {@link AJSONItem#systemName}.**/
+	public static TreeMap<String, LinkedHashMap<String, AItemPack<? extends AJSONItem<?>>>> packItemMap = new TreeMap<String, LinkedHashMap<String, AItemPack<? extends AJSONItem<?>>>>();
 	
-	/**Maps part item names to items.  All part items for all packs will be populated here.*/
-	public static Map<String, AItemPart> partItemMap = new LinkedHashMap<String, AItemPart>();
+	/**Special map for signs, as they don't have items associated with them.  Instead, they just have a definition
+	 * that's linked to a unique two-string keyset like the items do.**/
+	public static TreeMap<String, LinkedHashMap<String, JSONSign>> packSignMap = new TreeMap<String, LinkedHashMap<String, JSONSign>>();
 	
-	/**Maps instrument item names to items.  All instrument items for all packs will be populated here.*/
-	public static Map<String, ItemInstrument> instrumentItemMap = new LinkedHashMap<String, ItemInstrument>();
+	/**Maps pack items to their list of crafting ingredients.  This is used rather than the core JSON to allow for
+	 * overriding the crafting materials in said JSON, and to concatonate the materials in {@link JSONVehicle}*/
+	public static final Map<AItemPack<? extends AJSONItem<?>>, String[]> packCraftingMap = new HashMap<AItemPack<? extends AJSONItem<?>>, String[]>();
 	
-	/**Maps decor item names to items.  All decor items for all packs will be populated here.*/
-	public static Map<String, ItemDecor> decorItemMap = new LinkedHashMap<String, ItemDecor>();
-	
-	/**Maps item item names to items.  All item items for all packs will be populated here.*/
-	public static Map<String, ItemItem> itemItemMap = new LinkedHashMap<String, ItemItem>();
-		
 	/**Core creative tab for base MTS items**/
 	public static final CreativeTabCore coreTab = new CreativeTabCore();
 	
-	/**Map of creative tabs for packs.  Keyed by pack IDs.  Populated by the {@link PackParserSystem}**/
+	/**Map of creative tabs for packs.  Keyed by packID.  Populated by the {@link PackParserSystem}**/
 	public static final Map<String, CreativeTabPack> packTabs = new HashMap<String, CreativeTabPack>();
 
+	//Booklets for manuals.  Not made final as they are created dynamically at runtime.
+	public static Item handbook_en;
+	public static Item handbook_ru;
+	
 	//Vehicle interaction items.
-	public static final Item manual = new ItemManual().setCreativeTab(coreTab);
 	public static final Item wrench = new ItemWrench().setCreativeTab(coreTab);
 	public static final Item key = new ItemKey().setCreativeTab(coreTab);
 	public static final Item jumperCable = new ItemJumperCable().setCreativeTab(coreTab);
 	public static final Item jerrycan = new ItemJerrycan().setCreativeTab(coreTab);
 	
 	//Crafting benches.
-	public static final Block vehicleBench = new BlockBench("plane", "car", "blimp", "boat");
-	public static final Block propellerBench = new BlockBench("propeller");
-	public static final Block engineBench = new BlockBench("engine_aircraft", "engine_jet", "engine_car", "engine_boat");
-	public static final Block wheelBench = new BlockBench("wheel", "skid", "pontoon", "tread");
-	public static final Block seatBench = new BlockBench("seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand");
-	public static final Block gunBench = new BlockBench("gun_fixed", "gun_tripod", "bullet");
-	public static final Block customBench = new BlockBench("custom");
-	public static final Block instrumentBench = new BlockBench("instrument");
-	public static final Block componentBench = new BlockBench("item");
+	public static final Block vehicleBench = new BlockBench(JSONVehicle.class);
+	public static final Block propellerBench = new BlockBench(JSONPart.class, "propeller");
+	public static final Block engineBench = new BlockBench(JSONPart.class, "engine_aircraft", "engine_jet", "engine_car", "engine_boat");
+	public static final Block wheelBench = new BlockBench(JSONPart.class, "wheel", "skid", "pontoon", "tread");
+	public static final Block seatBench = new BlockBench(JSONPart.class, "seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand");
+	public static final Block gunBench = new BlockBench(JSONPart.class, "gun_fixed", "gun_tripod", "bullet");
+	public static final Block customBench = new BlockBench(JSONPart.class, "custom");
+	public static final Block instrumentBench = new BlockBench(JSONInstrument.class);
+	public static final Block componentBench = new BlockBench(JSONItem.class);
+	public static final Block decorBench = new BlockBench(JSONDecor.class);
 	
 	//Fuel pump.
 	public static final Block fuelPump = new BlockFuelPump();
@@ -157,14 +147,12 @@ public final class MTSRegistry{
 	public static final Block trafficSign = new BlockPoleSign(0.125F);
 		
 	//Decor blocks.
-	//TODO make a creative tab exception for these.
 	public static final Block decorBasicDark = new BlockDecor(false, false);
 	public static final Block decorOrientedDark = new BlockDecor(true, false);
 	public static final Block decorBasicLight = new BlockDecor(false, true);
 	public static final Block decorOrientedLight = new BlockDecor(true, true);
 	
-	//Counters for registry systems.
-	private static int entityNumber = 0;
+	//Counter for packets.
 	private static int packetNumber = 0;
 	
 	
@@ -177,36 +165,39 @@ public final class MTSRegistry{
 	/**
 	 * This is called by packs to query what items they have registered.
 	 * Used to allow packs to register their own items after core mod processing.
+	 * We need to cast-down the items to the Item class as a List with type Item is what
+	 * the packloader is expecting.
 	 */
-	public static List<Item> getItemsForPack(String modID){
-		List<Item> packItems = new ArrayList<Item>();
-		for(ItemVehicle item : vehicleItemMap.values()){
-			if(item.vehicleName.startsWith(modID)){
-				packItems.add(item);
-			}
+	public static List<Item> getItemsForPack(String packID){
+		List<Item> items = new ArrayList<Item>();
+		for(AItemPack<? extends AJSONItem<?>> packItem : packItemMap.get(packID).values()){
+			items.add(packItem);
 		}
-		for(AItemPart item : partItemMap.values()){
-			if(item.partName.startsWith(modID)){
-				packItems.add(item);
-			}
-		}
-		for(ItemInstrument item : instrumentItemMap.values()){
-			if(item.instrumentName.startsWith(modID)){
-				packItems.add(item);
-			}
-		}
-		for(ItemDecor item : decorItemMap.values()){
-			if(item.decorName.startsWith(modID)){
-				packItems.add(item);
-			}
-		}
-		for(ItemItem item : itemItemMap.values()){
-			if(item.itemName.startsWith(modID)){
-				packItems.add(item);
-			}
-		}
-		return packItems;
+		return items;
 	}
+	
+	/**
+	 * This method returns a list of ItemStacks that are required
+	 * to craft the passed-in pack item.  Used by {@link GUIPartBench}
+	 * amd {@link PacketPlayerCrafting} as well as any other systems that 
+	 * need to know what materials make up pack items.
+	 */
+    public static List<ItemStack> getMaterials(AItemPack<? extends AJSONItem<?>> item){
+    	final List<ItemStack> materialList = new ArrayList<ItemStack>();
+		try{
+	    	for(String itemText : MTSRegistry.packCraftingMap.get(item)){
+				int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+				itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+				
+				int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+				itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+				materialList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata));
+			}
+		}catch(Exception e){
+			throw new NullPointerException("ERROR: Could not parse crafting ingredients for item: " + item.definition.packID + item.definition.systemName + ".  Report this to the pack author!");
+		}
+    	return materialList;
+    }
 	
 	/**
 	 * Registers all blocks present in this class.
@@ -247,14 +238,31 @@ public final class MTSRegistry{
 	 */
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event){
-		//First register all core items.
+		//Before doing any item registration, create the pack handbooks.
+		//These are special, as they don't come from any packs, yet they use the booklet code.
+		//This is done to avoid the need to make a new GUI.
+		try {
+			PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json"), "UTF-8"), "handbook_en", MTS.MODID);
+			PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_ru.json"), "UTF-8"), "handbook_ru", MTS.MODID);
+			handbook_en = MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_en").setUnlocalizedName("mts:handbook_en");
+			handbook_ru = MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_ru").setUnlocalizedName("mts:handbook_ru");
+		}catch(Exception e){
+			MTS.MTSLog.error("ERROR PARSING HANDBOOK AS UTF-8 STRING ENCODING!  HANDBOOKS MAY NOT APPEAR!");
+			MTS.MTSLog.error(e.getMessage());
+		}finally{
+			//Get rid of the handbooks from the pack item map as those shouldn't exist.
+			MTSRegistry.packItemMap.remove(MTS.MODID);
+		}
+		
+		
+		//Now register all core items.
 		for(Field field : MTSRegistry.class.getFields()){
 			if(field.getType().equals(Item.class)){
 				try{
 					Item item = (Item) field.get(null);
 					String name = field.getName().toLowerCase();
 					event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
-					MTSRegistry.itemList.add(item);
+					MTSRegistry.coreItems.add(item);
 				}catch(Exception e){
 					e.printStackTrace();
 				}
@@ -266,49 +274,12 @@ public final class MTSRegistry{
 						itemBlock.setCreativeTab(block.getCreativeTabToDisplayOn());
 						String name = field.getName().toLowerCase();
 						event.getRegistry().register(itemBlock.setRegistryName(name).setUnlocalizedName(name));
-						MTSRegistry.itemList.add(itemBlock);
+						MTSRegistry.coreItems.add(itemBlock);
 					}
 				}catch(Exception e){
 					e.printStackTrace();
 				}
 			}
-		}
-		
-		
-		//Next add multipart items to the lists and creative tabs.
-		for(String multipartName : PackParserSystem.getAllVehiclePackNames()){
-			ItemVehicle itemMultipart = new ItemVehicle(multipartName);
-			vehicleItemMap.put(multipartName, itemMultipart);
-		}
-		
-		//Now add part items to the lists.
-		for(String partName : PackParserSystem.getAllPartPackNames()){
-			try{
-				Class<? extends AItemPart> itemClass = PackParserSystem.getPartItemClass(partName);
-				Constructor<? extends AItemPart> construct = itemClass.getConstructor(String.class);
-				AItemPart itemPart = construct.newInstance(partName);
-				partItemMap.put(partName, itemPart);
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-		}
-		
-		//Then add instrument items to the lists.
-		for(String instrumentName : PackParserSystem.getAllInstruments()){
-			ItemInstrument itemInstrument = new ItemInstrument(instrumentName);
-			instrumentItemMap.put(instrumentName, itemInstrument);
-		}
-		
-		//Next add decor items to the lists.
-		for(String decorName : PackParserSystem.getAllDecor()){
-			ItemDecor itemDecor = new ItemDecor(decorName);
-			decorItemMap.put(decorName, itemDecor);
-		}
-		
-		//Now add item items to the lists.
-		for(String itemName : PackParserSystem.getAllItems()){
-			ItemItem itemItem = new ItemItem(itemName);
-			itemItemMap.put(itemName, itemItem);
 		}
 	}
 
@@ -318,6 +289,7 @@ public final class MTSRegistry{
 	 * the pack data stored in NBT is what makes for different vehicles.
 	 */
 	private static void initEntities(){
+		int entityNumber = 0;
 		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Car.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Car.class, "vehiclecar", entityNumber++, MTS.MODID, 256, 5, false);
 		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Boat.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Boat.class, "vehicleboat", entityNumber++, MTS.MODID, 256, 5, false);
 		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Plane.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Plane.class, "vehicleplane", entityNumber++, MTS.MODID, 256, 5, false);
@@ -325,28 +297,10 @@ public final class MTSRegistry{
 	}
 	
 	private static void initPackets(){
-		//Packets in packets.control
-		registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
-		registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);
-		registerPacket(ElevatorPacket.class, ElevatorPacket.Handler.class, true, true);
-		registerPacket(FlapPacket.class, FlapPacket.Handler.class, true, true);
-		registerPacket(HornPacket.class, HornPacket.Handler.class, true, true);
-		registerPacket(LightPacket.class, LightPacket.Handler.class, true, true);
-		registerPacket(ReverseThrustPacket.class, ReverseThrustPacket.Handler.class, true, true);
-		registerPacket(RudderPacket.class, RudderPacket.Handler.class, true, true);
-		registerPacket(SirenPacket.class, SirenPacket.Handler.class, true, true);
-		registerPacket(ShiftPacket.class, ShiftPacket.Handler.class, true, true);
-		registerPacket(SteeringPacket.class, SteeringPacket.Handler.class, true, true);
-		registerPacket(ThrottlePacket.class, ThrottlePacket.Handler.class, true, true);
-		registerPacket(TrailerPacket.class, TrailerPacket.Handler.class, true, true);
-		registerPacket(TrimPacket.class, TrimPacket.Handler.class, true, true);
-		
 		//Packets in packets.general
 		registerPacket(PacketBulletHit.class, PacketBulletHit.Handler.class, true, true);
 		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);
 		registerPacket(PacketPartGunReload.class, PacketPartGunReload.Handler.class, true, false);
-		registerPacket(PacketManualPageUpdate.class, PacketManualPageUpdate.Handler.class, false, true);
-		registerPacket(PacketPackReload.class, PacketPackReload.Handler.class, false, true);
 		registerPacket(PacketPlayerCrafting.class, PacketPlayerCrafting.Handler.class, false, true);
 		
 		//Packets in packets.tileentity
@@ -357,14 +311,12 @@ public final class MTSRegistry{
 		registerPacket(PacketTrafficSignalControllerChange.class, PacketTrafficSignalControllerChange.Handler.class, true, true);
 		
 		//Packets in packets.vehicles.
-		registerPacket(PacketVehicleAttacked.class, PacketVehicleAttacked.Handler.class, false, true);
 		registerPacket(PacketVehicleClientInit.class, PacketVehicleClientInit.Handler.class, false, true);
 		registerPacket(PacketVehicleClientInitResponse.class, PacketVehicleClientInitResponse.Handler.class, true, false);
 		registerPacket(PacketVehicleClientPartAddition.class, PacketVehicleClientPartAddition.Handler.class, true, false);
 		registerPacket(PacketVehicleClientPartRemoval.class, PacketVehicleClientPartRemoval.Handler.class, true, false);
 		registerPacket(PacketVehicleDeltas.class, PacketVehicleDeltas.Handler.class, true, false);
-		registerPacket(PacketVehicleInstruments.class, PacketVehicleInstruments.Handler.class, true, true);
-		registerPacket(PacketVehicleInteracted.class, PacketVehicleInteracted.Handler.class, false, true);
+		registerPacket(PacketVehicleInteract.class, PacketVehicleInteract.Handler.class, false, true);
 		registerPacket(PacketVehicleJerrycan.class, PacketVehicleJerrycan.Handler.class, true, false);
 		registerPacket(PacketVehicleKey.class, PacketVehicleKey.Handler.class, true, false);
 		registerPacket(PacketVehicleNameTag.class, PacketVehicleNameTag.Handler.class, true, false);

@@ -6,8 +6,8 @@ import java.util.List;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -16,27 +16,31 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketSignChange extends APacketTileEntity{
-	private String definition;
+	private String packID;
+	private String systemName;
+	private byte textLines;
 	private List<String> text = new ArrayList<String>();
 	private int playerID;
 
 	public PacketSignChange(){}
 	
-	public PacketSignChange(TileEntityPoleSign tile, String definition, List<String> text, int playerID){
-		super(tile);
-		this.definition = definition;
-		this.text = text;
+	public PacketSignChange(TileEntityPoleSign sign, int playerID){
+		super(sign);
+		this.packID = sign.definition.packID;
+		this.systemName = sign.definition.systemName;
+		this.textLines = (byte) sign.text.size();
+		this.text = sign.text;
 		this.playerID = playerID;
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
 		super.fromBytes(buf);
-		this.definition = ByteBufUtils.readUTF8String(buf);
-		if(PackParserSystem.getSign(definition).general.textLines != null){
-			for(byte i=0; i<PackParserSystem.getSign(definition).general.textLines.length; ++i){
-				this.text.add(ByteBufUtils.readUTF8String(buf));
-			}
+		this.packID = ByteBufUtils.readUTF8String(buf);
+		this.systemName = ByteBufUtils.readUTF8String(buf);
+		this.textLines = buf.readByte();
+		for(byte i=0; i<textLines; ++i){
+			this.text.add(ByteBufUtils.readUTF8String(buf));
 		}
 		this.playerID = buf.readInt();
 	}
@@ -44,11 +48,11 @@ public class PacketSignChange extends APacketTileEntity{
 	@Override
 	public void toBytes(ByteBuf buf){
 		super.toBytes(buf);
-		ByteBufUtils.writeUTF8String(buf, this.definition);
-		if(PackParserSystem.getSign(definition).general.textLines != null){
-			for(byte i=0; i<PackParserSystem.getSign(definition).general.textLines.length; ++i){
-				ByteBufUtils.writeUTF8String(buf, text.get(i));
-			}
+		ByteBufUtils.writeUTF8String(buf, this.packID);
+		ByteBufUtils.writeUTF8String(buf, this.systemName);
+		buf.writeByte(this.textLines);
+		for(byte i=0; i<this.textLines; ++i){
+			ByteBufUtils.writeUTF8String(buf, text.get(i));
 		}
 		buf.writeInt(this.playerID);
 	}
@@ -70,7 +74,7 @@ public class PacketSignChange extends APacketTileEntity{
 						}
 					}
 					if(decor != null){
-						decor.definition = message.definition;
+						decor.definition = MTSRegistry.packSignMap.get(message.packID).get(message.systemName);
 						decor.text = message.text;
 						if(ctx.side.isServer()){
 							MTS.MTSNet.sendToAll(message);

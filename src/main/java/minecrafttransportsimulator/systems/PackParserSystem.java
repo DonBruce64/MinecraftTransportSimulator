@@ -2,41 +2,46 @@ package minecrafttransportsimulator.systems;
 
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import com.google.gson.Gson;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.CreativeTabPack;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.parts.AItemPart;
-import minecrafttransportsimulator.items.parts.ItemPartBarrel;
-import minecrafttransportsimulator.items.parts.ItemPartBullet;
-import minecrafttransportsimulator.items.parts.ItemPartCrate;
-import minecrafttransportsimulator.items.parts.ItemPartCustom;
-import minecrafttransportsimulator.items.parts.ItemPartEngineAircraft;
-import minecrafttransportsimulator.items.parts.ItemPartEngineBoat;
-import minecrafttransportsimulator.items.parts.ItemPartEngineCar;
-import minecrafttransportsimulator.items.parts.ItemPartEngineJet;
-import minecrafttransportsimulator.items.parts.ItemPartGeneric;
-import minecrafttransportsimulator.items.parts.ItemPartGroundDevicePontoon;
-import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceSkid;
-import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceTread;
-import minecrafttransportsimulator.items.parts.ItemPartGroundDeviceWheel;
-import minecrafttransportsimulator.items.parts.ItemPartGun;
-import minecrafttransportsimulator.items.parts.ItemPartPropeller;
-import minecrafttransportsimulator.jsondefs.PackDecorObject;
-import minecrafttransportsimulator.jsondefs.PackInstrumentObject;
-import minecrafttransportsimulator.jsondefs.PackItemObject;
-import minecrafttransportsimulator.jsondefs.PackPartObject;
-import minecrafttransportsimulator.jsondefs.PackSignObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackFileDefinitions;
+import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.items.packs.ItemBooklet;
+import minecrafttransportsimulator.items.packs.ItemDecor;
+import minecrafttransportsimulator.items.packs.ItemInstrument;
+import minecrafttransportsimulator.items.packs.ItemItem;
+import minecrafttransportsimulator.items.packs.ItemVehicle;
+import minecrafttransportsimulator.items.packs.parts.AItemPart;
+import minecrafttransportsimulator.items.packs.parts.ItemPartBarrel;
+import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
+import minecrafttransportsimulator.items.packs.parts.ItemPartCrate;
+import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
+import minecrafttransportsimulator.items.packs.parts.ItemPartEngineAircraft;
+import minecrafttransportsimulator.items.packs.parts.ItemPartEngineBoat;
+import minecrafttransportsimulator.items.packs.parts.ItemPartEngineCar;
+import minecrafttransportsimulator.items.packs.parts.ItemPartEngineJet;
+import minecrafttransportsimulator.items.packs.parts.ItemPartGeneric;
+import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDevicePontoon;
+import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDeviceSkid;
+import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDeviceTread;
+import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDeviceWheel;
+import minecrafttransportsimulator.items.packs.parts.ItemPartGun;
+import minecrafttransportsimulator.items.packs.parts.ItemPartPropeller;
+import minecrafttransportsimulator.jsondefs.AJSONCraftable;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONBooklet;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONSign;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
@@ -52,7 +57,7 @@ import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
 import minecrafttransportsimulator.vehicles.parts.PartEngineBoat;
 import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import minecrafttransportsimulator.vehicles.parts.PartEngineJet;
-import minecrafttransportsimulator.vehicles.parts.PartFertilizer;
+import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorFertilizer;
 import minecrafttransportsimulator.vehicles.parts.PartFurnace;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceSkid;
@@ -61,15 +66,13 @@ import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceWheel;
 import minecrafttransportsimulator.vehicles.parts.PartGunFixed;
 import minecrafttransportsimulator.vehicles.parts.PartGunTripod;
 import minecrafttransportsimulator.vehicles.parts.PartGunTurret;
-import minecrafttransportsimulator.vehicles.parts.PartHarvester;
-import minecrafttransportsimulator.vehicles.parts.PartPlanter;
-import minecrafttransportsimulator.vehicles.parts.PartPlow;
+import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorHarvester;
+import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlanter;
+import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlow;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
-import net.minecraft.client.Minecraft;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
 
 /**
  * Class responsible for parsing content pack data.  Gets properties from the text files that other parts
@@ -78,356 +81,270 @@ import net.minecraft.util.ResourceLocation;
  * @author don_bruce
  */
 public final class PackParserSystem{
-	/**Map that keys the unique name of a vehicle to its pack.  Used for associating packs with saved vehicles.**/
-    private static final Map<String, PackVehicleObject> vehiclePackMap = new LinkedHashMap<String, PackVehicleObject>();
-   
-    /**Map that keys the unique name of a vehicle to its JSON file name.**/
-    private static final Map<String, String> vehicleJSONMap = new HashMap<String, String>();
-   
-    /**Same function as the vehicle map, just for parts.**/
-    private static final Map<String, PackPartObject> partPackMap = new LinkedHashMap<String, PackPartObject>();
-    
-    /**Same function as the vehicle map, just for instruments.**/
-    private static final Map<String, PackInstrumentObject> partInstrumentMap = new LinkedHashMap<String, PackInstrumentObject>();
-    
-    /**Map that keys the unique name of a sign to its pack.*/
-    private static final Map<String, PackSignObject> signPackMap = new LinkedHashMap<String, PackSignObject>();
-    
-    /**Map that keys the unique name of a decor block to its pack.*/
-    private static final Map<String, PackDecorObject> decorPackMap = new LinkedHashMap<String, PackDecorObject>();
-    
-    /**Map that keys the unique name of an item to its pack.*/
-    private static final Map<String, PackItemObject> itemPackMap = new LinkedHashMap<String, PackItemObject>();
-    
-	/**Maps all things craftable on benches to their crafting ingredients.*/
-	private static final Map<String, String[]> craftingItemMap = new HashMap<String, String[]>();
-  
-    /**Listing of log messages.  Stored here on bootstrap and outputted once the logging system comes online.**/
-    private static final List<String> logList = new ArrayList<String>();
+	
+	/**List of log entries to be added to the log.  Saved here as the log won't be ready till preInit, which
+	 * runs after this parsing operation.*/
+	public static List<String> logEntries = new ArrayList<String>();
     
     
     //-----START OF INIT LOGIC-----
     /**Packs should call this upon load to add their content to the mod.
      * This will return an array of strings that correspond to content types.
      * These content types will be content that has items in the jsondefs folder
-     * that the pack should send to MTS.  The pack should only send the ResourceLocation
-     * of such an item as it will allow MTS to load the information from ResourcePacks in modpacks.
-     * This is done to allow server owners to modify pack JSONs to their liking (say for crafting recipes)
-     * and distribute them in their modpacks without having to modify the actual pack JSON.**/
+     * that the pack should send to MTS.  The pack should only send the location
+     * of such an item as it will allow MTS to load the information in modpacks.**/
     public static String[] getValidPackContentNames(){
-    	return new String[]{"vehicle", "part", "instrument", "sign", "decor", "item"};
+    	return ItemClassification.getAllTypesAsStrings().toArray(new String[ItemClassification.values().length]);
     }
     
     /**Packs should call this upon load to add their vehicles to the mod.**/
-    public static void addVehicleDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
+    public static void addVehicleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		PackVehicleObject pack = new Gson().fromJson(jsonReader, PackVehicleObject.class);
-    		for(PackFileDefinitions definition : pack.definitions){
-    			if(definition != null){
-    				String vehicleName = modID + ":" + jsonFileName + definition.subName;
-    				vehiclePackMap.put(vehicleName, pack);
-    				vehicleJSONMap.put(vehicleName, jsonFileName);
-    				if(!MTSRegistry.packTabs.containsKey(modID)){
-    					MTSRegistry.packTabs.put(modID, new CreativeTabPack(modID));
-    				}
-    				
-    				List<String> materials = new ArrayList<String>();
-    				for(String material : pack.general.materials){
-    					materials.add(material);
-    				}
-    				for(String material : definition.extraMaterials){
-    					materials.add(material);
-    				}
-    				craftingItemMap.put(vehicleName, materials.toArray(new String[materials.size()]));
-    			}
+    		JSONVehicle mainDefinition = new Gson().fromJson(jsonReader, JSONVehicle.class);
+    		mainDefinition.genericName = jsonFileName;
+    		for(VehicleDefinition subDefinition : mainDefinition.definitions){
+    			//Need to copy the JSON into a new instance to allow differing systemNames.
+    			JSONVehicle mainDefinitionCopy = new JSONVehicle();
+    			mainDefinitionCopy.packID = mainDefinition.packID;
+    			mainDefinitionCopy.classification = mainDefinition.classification;
+    			mainDefinitionCopy.genericName = mainDefinition.genericName;
+    			//Need to copy general too, as we need to set the name for each general section to be unique.
+    			mainDefinitionCopy.general = mainDefinition.new VehicleGeneral();
+    			mainDefinitionCopy.general.name = subDefinition.name;
+    			mainDefinitionCopy.general.description = mainDefinition.general.description;
+    			mainDefinitionCopy.general.materials = mainDefinition.general.materials;
+    			mainDefinitionCopy.general.openTop = mainDefinition.general.openTop;
+    			mainDefinitionCopy.general.emptyMass = mainDefinition.general.emptyMass;
+    			mainDefinitionCopy.general.type = mainDefinition.general.type;
+    			
+    			//Copy the rest of the parameters as-is.
+    			mainDefinitionCopy.definitions = mainDefinition.definitions;
+    			mainDefinitionCopy.motorized = mainDefinition.motorized;
+    			mainDefinitionCopy.plane = mainDefinition.plane;
+    			mainDefinitionCopy.blimp = mainDefinition.blimp;
+    			mainDefinitionCopy.car = mainDefinition.car;
+    			mainDefinitionCopy.parts = mainDefinition.parts;
+    			mainDefinitionCopy.collision = mainDefinition.collision;
+    			mainDefinitionCopy.rendering = mainDefinition.rendering;
+    			
+    			ItemVehicle vehicle = new ItemVehicle(mainDefinitionCopy, subDefinition.subName);
+    			setupItem(vehicle, jsonFileName + subDefinition.subName, packID, ItemClassification.VEHICLE);
+    			List<String> materials = new ArrayList<String>();
+				for(String material : mainDefinitionCopy.general.materials){
+					materials.add(material);
+				}
+				for(String material : subDefinition.extraMaterials){
+					materials.add(material);
+				}
+				//Need to set this again to account for the extraMaterials.
+				MTSRegistry.packCraftingMap.put(vehicle, materials.toArray(new String[materials.size()]));
     		}
+    		
     	}catch(Exception e){
-    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
-    		logList.add(e.getMessage());
-    		e.printStackTrace();
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
     }
     
     /**Packs should call this upon load to add their parts to the mod.**/
-    public static void addPartDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
+    public static void addPartDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-	    	PackPartObject pack =  new Gson().fromJson(jsonReader, PackPartObject.class);
-	    	String partName = modID + ":" + jsonFileName;
-	    	partPackMap.put(partName, pack);
-	    	if(!MTSRegistry.packTabs.containsKey(modID)){
-				MTSRegistry.packTabs.put(modID, new CreativeTabPack(modID));
-			}
-	    	craftingItemMap.put(partName, pack.general.materials);
+    		setupItem(createPartItem(new Gson().fromJson(jsonReader, JSONPart.class)), jsonFileName, packID, ItemClassification.PART);
     	}catch(Exception e){
-    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
-    		logList.add(e.getMessage());
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
     }
     
     /**Packs should call this upon load to add their instrument set to the mod.**/
-    public static void addInstrumentDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
+    public static void addInstrumentDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-	    	PackInstrumentObject pack =  new Gson().fromJson(jsonReader, PackInstrumentObject.class);
-	    	String instrumentName = modID + ":" + jsonFileName;
-    		partInstrumentMap.put(instrumentName, pack);
-    		craftingItemMap.put(instrumentName, pack.general.materials);
+    		setupItem(new ItemInstrument(new Gson().fromJson(jsonReader, JSONInstrument.class)), jsonFileName, packID, ItemClassification.INSTRUMENT);
     	}catch(Exception e){
-    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
-    		logList.add(e.getMessage());
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
     }
     
     /**Packs should call this upon load to add their signs to the mod.**/
-    public static void addSignDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
+    public static void addSignDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-	    	PackSignObject pack =  new Gson().fromJson(jsonReader, PackSignObject.class);
-	    	String signName = modID + ":" + jsonFileName;
-    		signPackMap.put(signName, pack);
+    		//Signs are a special-case as they don't have items or crafting materials.
+	    	//Instead, they are just definitions that sit by themselves.
+    		JSONSign definition =  new Gson().fromJson(jsonReader, JSONSign.class);
+	    	definition.packID = packID;
+	    	definition.classification = ItemClassification.SIGN;
+	    	definition.systemName = jsonFileName;
+	    	
+	    	if(!MTSRegistry.packSignMap.containsKey(packID)){
+	    		MTSRegistry.packSignMap.put(packID, new LinkedHashMap<String, JSONSign>());
+	    	}
+	    	MTSRegistry.packSignMap.get(packID).put(jsonFileName, definition);
     	}catch(Exception e){
-    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
-    		logList.add(e.getMessage());
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
     }
     
     /**Packs should call this upon load to add their decor blocks to the mod.**/
-    public static void addDecorDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
+    public static void addDecorDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-	    	PackDecorObject pack =  new Gson().fromJson(jsonReader, PackDecorObject.class);
-	    	String decorName = modID + ":" + jsonFileName;
-    		decorPackMap.put(decorName, pack);
-    		craftingItemMap.put(decorName, pack.general.materials);
+    		setupItem(new ItemDecor(new Gson().fromJson(jsonReader, JSONDecor.class)), jsonFileName, packID, ItemClassification.DECOR);
     	}catch(Exception e){
-    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
-    		logList.add(e.getMessage());
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
     }
     
     /**Packs should call this upon load to add their crafting items to the mod.**/
-    public static void addItemDefinition(InputStreamReader jsonReader, String jsonFileName, String modID){
+    public static void addItemDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		PackItemObject pack =  new Gson().fromJson(jsonReader, PackItemObject.class);
-	    	String itemName = modID + ":" + jsonFileName;
-	    	itemPackMap.put(itemName, pack);
-	    	craftingItemMap.put(itemName, pack.general.materials);
+	    	setupItem(new ItemItem(new Gson().fromJson(jsonReader, JSONItem.class)), jsonFileName, packID, ItemClassification.ITEM);
     	}catch(Exception e){
-    		logList.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + modID + ":" + jsonFileName);
-    		logList.add(e.getMessage());
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
     }
-
-    public static void outputLog(){
-    	for(String logLine : logList){
-    		MTS.MTSLog.error(logLine);
-    	}
-    	logList.clear();
-    }
     
-    
-    //-----START OF RELOAD LOGIC-----
-    public static void reloadPackData(){
+    /**Packs should call this upon load to add their booklets to the mod.**/
+    public static void addBookletDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-	    	//We need to shove the strings into a list to keep us from getting CMEs while iterating the map.
-	    	List<String> jsonFilesToReload = new ArrayList<String>();
-	    	for(Entry<String, String> vehicleJSONEntry : vehicleJSONMap.entrySet()){
-	    		jsonFilesToReload.add(vehicleJSONEntry.getKey().substring(0, vehicleJSONEntry.getKey().indexOf(':') + 1) + vehicleJSONEntry.getValue());
-	    	}
-	    	for(String jsonFile : jsonFilesToReload){
-	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/vehicles/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
-	    		addVehicleDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
-	    	}
-	    	jsonFilesToReload.clear();
-	    	
-	    	for(String partJSONFile : partPackMap.keySet()){
-	    		jsonFilesToReload.add(partJSONFile);
-	    	}
-	    	for(String jsonFile : jsonFilesToReload){
-	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/parts/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
-	    		addPartDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
-	    	}
-	    	jsonFilesToReload.clear();
-	    	
-	    	for(String instrumentJSONFile : partInstrumentMap.keySet()){
-	    		jsonFilesToReload.add(instrumentJSONFile);
-	    	}
-	    	for(String jsonFile : jsonFilesToReload){
-	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/instruments/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
-	    		addInstrumentDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
-	    	}
-	    	jsonFilesToReload.clear();
-	    	
-	    	for(String signJSONFile : signPackMap.keySet()){
-	    		jsonFilesToReload.add(signJSONFile);
-	    	}
-	    	for(String jsonFile : jsonFilesToReload){
-	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/signs/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
-	    		addSignDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
-	    	}
-	    	jsonFilesToReload.clear();
-	    	
-	    	for(String decorJSONFile : decorPackMap.keySet()){
-	    		jsonFilesToReload.add(decorJSONFile);
-	    	}
-	    	for(String jsonFile : jsonFilesToReload){
-	    		ResourceLocation jsonResource = new ResourceLocation(jsonFile.substring(0, jsonFile.indexOf(':')), "jsondefs/decors/" + jsonFile.substring(jsonFile.indexOf(':') + 1) + ".json");
-	    		addDecorDefinition(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(jsonResource).getInputStream()), jsonFile.substring(jsonFile.indexOf(':') + 1), jsonFile.substring(0, jsonFile.indexOf(':')));
-	    	}
+    		setupItem(new ItemBooklet(new Gson().fromJson(jsonReader, JSONBooklet.class)), jsonFileName, packID, ItemClassification.BOOKLET);
     	}catch(Exception e){
-    		logList.add("AN I/O ERROR WAS ENCOUNTERED WHEN TRYING TO RELOAD PACK DATA");
-    		e.printStackTrace();
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
     	}
-    	outputLog();
     }
     
+    /**Sets up the item in the system. Item must be created prior to this as we can't use generics for instantiation.**/
+    public static <ItemInstance extends AItemPack<? extends AJSONItem<?>>> void setupItem(AItemPack<? extends AJSONItem<?>> item, String systemName, String packID, ItemClassification classification){
+    	//Set code-based definition values.
+    	item.definition.packID = packID;
+    	item.definition.classification = classification;
+    	item.definition.systemName = systemName;
+    	
+		//Set the unlocalized name.  The packs use this to register the items on their side,
+    	//so the format needs to be standard.
+		item.setUnlocalizedName(packID + "." + systemName);
+    	
+    	//Put the item in the map in the registry.
+    	if(!MTSRegistry.packItemMap.containsKey(packID)){
+    		MTSRegistry.packItemMap.put(packID, new LinkedHashMap<String, AItemPack<? extends AJSONItem<?>>>());
+    	}
+    	MTSRegistry.packItemMap.get(packID).put(item.definition.systemName, item);
+    	
+    	//If we are craftable, put us in the crafting map.
+    	if(item.definition.general instanceof AJSONCraftable.General){
+    		MTSRegistry.packCraftingMap.put(item, ((AJSONCraftable<?>.General) item.definition.general).materials);
+    	}
+    	
+    	//Set the creative tab.  Need to check if we're an internal item or not.
+    	if(item.definition.packID.equals("mts")){
+    		item.setCreativeTab(MTSRegistry.coreTab);
+		}else{
+			if(!MTSRegistry.packTabs.containsKey(packID)){
+				MTSRegistry.packTabs.put(packID, new CreativeTabPack(packID));
+			}
+			item.setCreativeTab(MTSRegistry.packTabs.get(packID));
+		}
+    }
     
-    //-----START OF GENERAL LOOKUP LOGIC-----
-    public static List<ItemStack> getMaterials(String componentName){
-    	final List<ItemStack> materialList = new ArrayList<ItemStack>();
-		for(String itemText : craftingItemMap.get(componentName)){
-			int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+    public static EntityVehicleE_Powered createVehicle(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition, String subName){
+    	switch(definition.general.type){
+			case "plane": return new EntityVehicleG_Plane(world, posX, posY, posZ, playerRotation, definition);
+			case "car": return new EntityVehicleG_Car(world, posX, posY, posZ, playerRotation, definition);
+			case "blimp": return new EntityVehicleG_Blimp(world, posX, posY, posZ, playerRotation, definition);
+			case "boat": return new EntityVehicleG_Boat(world, posX, posY, posZ, playerRotation, definition);
 			
-			int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-			materialList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata));
+			default: throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a vehicle.");
 		}
-    	return materialList;
-    }
+    }    
     
-    
-    //-----START OF VEHICLE LOOKUP LOGIC-----
-    public static PackVehicleObject getVehiclePack(String name){
-        return vehiclePackMap.get(name);
-    }
-    
-    public static Set<String> getAllVehiclePackNames(){
-        return vehiclePackMap.keySet();
-    }
-    
-    public static String getVehicleJSONName(String name){
-    	return vehicleJSONMap.get(name);
-    }
-    
-    public static Class<? extends EntityVehicleE_Powered> getVehicleClass(String vehicleName){
-    	switch(getVehiclePack(vehicleName).general.type){
-			case "plane": return EntityVehicleG_Plane.class;
-			case "car": return EntityVehicleG_Car.class;
-			case "blimp": return EntityVehicleG_Blimp.class;
-			case "boat": return EntityVehicleG_Boat.class;
-			default: return null;
-		}
-    }
-    
-    
-    //-----START OF PART LOOKUP LOGIC-----
-    public static PackPartObject getPartPack(String name){
-        return partPackMap.get(name);
-    }
-    
-    public static Set<String> getAllPartPackNames(){
-        return partPackMap.keySet();
-    }
-    
-    
-    //-----START OF INSTRUMENT LOOKUP LOGIC-----
-    public static PackInstrumentObject getInstrument(String name){
-        return partInstrumentMap.get(name);
-    }
-    
-    public static Set<String> getAllInstruments(){
-        return partInstrumentMap.keySet();
-    }
-    
-    
-    //-----START OF SIGN LOOKUP LOGIC-----
-    public static PackSignObject getSign(String name){
-        return signPackMap.get(name);
-    }
-    
-    public static Set<String> getAllSigns(){
-        return signPackMap.keySet();
-    }
-    
-    
-    //-----START OF DECOR LOOKUP LOGIC-----
-    public static PackDecorObject getDecor(String name){
-        return decorPackMap.get(name);
-    }
-    
-    public static Set<String> getAllDecor(){
-        return decorPackMap.keySet();
-    }
-    
-    
-    //-----START OF ITEM LOOKUP LOGIC-----
-    public static PackItemObject getItem(String name){
-        return itemPackMap.get(name);
-    }
-    
-    public static Set<String> getAllItems(){
-        return itemPackMap.keySet();
-    }
-    
-    
-    //-----START OF CONSTANTS AND SWITCHES-----
-    public static Class<? extends APart> getPartPartClass(String partName){
-    	switch(getPartPack(partName).general.type){
-			case "crate": return PartCrate.class;
-			case "barrel": return PartBarrel.class;
-			case "crafting_table": return PartCraftingTable.class;
-			case "furnace": return PartFurnace.class;
-			case "brewing_stand": return PartBrewingStand.class;
-			case "plow": return PartPlow.class;
-			case "planter": return PartPlanter.class;
-			case "fertilizer": return PartFertilizer.class;
-			case "harvester": return PartHarvester.class;
-			case "engine_aircraft": return PartEngineAircraft.class;
-			case "engine_jet": return PartEngineJet.class;
-			case "engine_car": return PartEngineCar.class;
-			case "engine_boat": return PartEngineBoat.class;
-			case "wheel": return PartGroundDeviceWheel.class;
-			case "skid": return PartGroundDeviceSkid.class;
-			case "pontoon": return PartGroundDevicePontoon.class;
-			case "tread": return PartGroundDeviceTread.class;
-			case "propeller": return PartPropeller.class;
-			case "seat": return PartSeat.class;
-			case "gun_fixed": return PartGunFixed.class;
-			case "gun_tripod": return PartGunTripod.class;
-			case "gun_turret": return PartGunTurret.class;
+    public static APart createPart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+    	switch(definition.general.type){
+			case "crate": return new PartCrate(vehicle, packVehicleDef, definition, dataTag);
+			case "barrel": return new PartBarrel(vehicle, packVehicleDef, definition, dataTag);
+			case "crafting_table": return new PartCraftingTable(vehicle, packVehicleDef, definition, dataTag);
+			case "furnace": return new PartFurnace(vehicle, packVehicleDef, definition, dataTag);
+			case "brewing_stand": return new PartBrewingStand(vehicle, packVehicleDef, definition, dataTag);
+			case "plow": return new PartGroundEffectorPlow(vehicle, packVehicleDef, definition, dataTag);
+			case "planter": return new PartGroundEffectorPlanter(vehicle, packVehicleDef, definition, dataTag);
+			case "fertilizer": return new PartGroundEffectorFertilizer(vehicle, packVehicleDef, definition, dataTag);
+			case "harvester": return new PartGroundEffectorHarvester(vehicle, packVehicleDef, definition, dataTag);
+			case "engine_aircraft": return new PartEngineAircraft(vehicle, packVehicleDef, definition, dataTag);
+			case "engine_jet": return new PartEngineJet(vehicle, packVehicleDef, definition, dataTag);
+			case "engine_car": return new PartEngineCar(vehicle, packVehicleDef, definition, dataTag);
+			case "engine_boat": return new PartEngineBoat(vehicle, packVehicleDef, definition, dataTag);
+			case "wheel": return new PartGroundDeviceWheel(vehicle, packVehicleDef, definition, dataTag);
+			case "skid": return new PartGroundDeviceSkid(vehicle, packVehicleDef, definition, dataTag);
+			case "pontoon": return new PartGroundDevicePontoon(vehicle, packVehicleDef, definition, dataTag);
+			case "tread": return new PartGroundDeviceTread(vehicle, packVehicleDef, definition, dataTag);
+			case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, dataTag);
+			case "seat": return new PartSeat(vehicle, packVehicleDef, definition, dataTag);
+			case "gun_fixed": return new PartGunFixed(vehicle, packVehicleDef, definition, dataTag);
+			case "gun_tripod": return new PartGunTripod(vehicle, packVehicleDef, definition, dataTag);
+			case "gun_turret": return new PartGunTurret(vehicle, packVehicleDef, definition, dataTag);
 			//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
 			//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
 			//case "bullet": return PartBullet.class;
-			case "custom": return PartCustom.class;
-			default: return null;
+			case "custom": return new PartCustom(vehicle, packVehicleDef, definition, dataTag);
+			
+			default: throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a part.");
 		}
     }
     
-    public static Class<? extends AItemPart> getPartItemClass(String partName){
-    	switch(getPartPack(partName).general.type){
-			case "crate": return ItemPartCrate.class;
-			case "barrel": return ItemPartBarrel.class;
-			case "crafting_table": return ItemPartGeneric.class;
-			case "furnace": return ItemPartGeneric.class;
-			case "brewing_stand": return ItemPartGeneric.class;
-			case "plow": return ItemPartGeneric.class;
-			case "planter": return ItemPartGeneric.class;
-			case "fertilizer": return ItemPartGeneric.class;
-			case "harvester": return ItemPartGeneric.class;
-			case "engine_aircraft": return ItemPartEngineAircraft.class;
-			case "engine_jet": return ItemPartEngineJet.class;
-			case "engine_car": return ItemPartEngineCar.class;
-			case "engine_boat": return ItemPartEngineBoat.class;
-			case "wheel": return ItemPartGroundDeviceWheel.class;
-			case "skid": return ItemPartGroundDeviceSkid.class;
-			case "pontoon": return ItemPartGroundDevicePontoon.class;
-			case "tread": return ItemPartGroundDeviceTread.class;
-			case "propeller": return ItemPartPropeller.class;
-			case "seat": return ItemPartGeneric.class;
-			case "gun_fixed": return ItemPartGun.class;
-			case "gun_tripod": return ItemPartGun.class;
-			case "gun_turret": return ItemPartGun.class;
-			case "bullet": return ItemPartBullet.class;
-			case "custom": return ItemPartCustom.class;
-			default: return null;
+    public static AItemPart createPartItem(JSONPart definition){
+    	switch(definition.general.type){
+	    	case "crate": return new ItemPartCrate(definition);
+			case "barrel": return new ItemPartBarrel(definition);
+			case "crafting_table": return new ItemPartGeneric(definition);
+			case "furnace": return new ItemPartGeneric(definition);
+			case "brewing_stand": return new ItemPartGeneric(definition);
+			case "plow": return new ItemPartGeneric(definition);
+			case "planter": return new ItemPartGeneric(definition);
+			case "fertilizer": return new ItemPartGeneric(definition);
+			case "harvester": return new ItemPartGeneric(definition);
+			case "engine_aircraft": return new ItemPartEngineAircraft(definition);
+			case "engine_jet": return new ItemPartEngineJet(definition);
+			case "engine_car": return new ItemPartEngineCar(definition);
+			case "engine_boat": return new ItemPartEngineBoat(definition);
+			case "wheel": return new ItemPartGroundDeviceWheel(definition);
+			case "skid": return new ItemPartGroundDeviceSkid(definition);
+			case "pontoon": return new ItemPartGroundDevicePontoon(definition);
+			case "tread": return new ItemPartGroundDeviceTread(definition);
+			case "propeller": return new ItemPartPropeller(definition);
+			case "seat": return new ItemPartGeneric(definition);
+			case "gun_fixed": return new ItemPartGun(definition);
+			case "gun_tripod": return new ItemPartGun(definition);
+			case "gun_turret": return new ItemPartGun(definition);
+			case "bullet": return new ItemPartBullet(definition);
+			case "custom": return new ItemPartCustom(definition);
+			
+			default: throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a part item.");
 		}
+    }
+    
+    public enum ItemClassification{
+    	VEHICLE,
+    	PART,
+    	INSTRUMENT,
+    	SIGN,
+    	DECOR,
+    	ITEM,
+    	BOOKLET;
+    	
+    	public final String assetFolder;
+    	
+    	private ItemClassification(){
+    		this.assetFolder = this.name().toLowerCase() + "s";
+    	}
+    	
+    	public static List<String> getAllTypesAsStrings(){
+        	List<String> assetTypes = new ArrayList<String>();
+        	for(ItemClassification classification : ItemClassification.values()){
+        		assetTypes.add(classification.name().toLowerCase());
+        	}
+        	return assetTypes;
+    	}
     }
 }

@@ -1,6 +1,6 @@
 {
-    "parent": "mts:item/basic",
-    "textures": {
-        "layer0": "mts:items/wrench"
-    }
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "mts:items/wrench"
+  }
 }

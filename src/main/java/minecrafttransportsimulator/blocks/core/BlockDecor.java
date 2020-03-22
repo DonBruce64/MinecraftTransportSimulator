@@ -5,15 +5,14 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.core.ItemDecor;
-import minecrafttransportsimulator.jsondefs.PackDecorObject;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.items.packs.ItemDecor;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -36,41 +35,36 @@ public class BlockDecor extends ABlockRotatable implements ITileEntityProvider{
 	}
     
     @Override
-    public void breakBlock(World world, BlockPos pos, IBlockState state){
-        super.breakBlock(world, pos, state);
-        world.removeTileEntity(pos);
+    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack){
+    	TileEntityDecor decorTile = ((TileEntityDecor) world.getTileEntity(pos));
+    	decorTile.definition = ((ItemDecor) stack.getItem()).definition;
     }
     
     @Override
-    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack){
-    	TileEntityDecor decorTile = ((TileEntityDecor) world.getTileEntity(pos));
-    	decorTile.decorName = ((ItemDecor) stack.getItem()).decorName;
+    public void harvestBlock(World worldIn, EntityPlayer player, BlockPos pos, IBlockState state, @Nullable TileEntity te, ItemStack stack){
+    	super.harvestBlock(worldIn, player, pos, state, te, stack);
+    	TileEntityDecor decor = (TileEntityDecor) te;
+    	spawnAsEntity(worldIn, pos, new ItemStack(MTSRegistry.packItemMap.get(decor.definition.packID).get(decor.definition.systemName)));
     }
     
     @Override
     @SuppressWarnings("deprecation")
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess access, BlockPos pos){
-    	if(!this.isOriented){
-    		if(this.regularAABB == null){
+    	if(!isOriented){
+    		if(regularAABB == null){
     			TileEntityDecor tile = ((TileEntityDecor) access.getTileEntity(pos));
-    			if(tile != null){
-    				PackDecorObject pack = PackParserSystem.getDecor(tile.decorName);
-    				if(pack != null){
-    		    		this.regularAABB = new AxisAlignedBB(0.5F - pack.general.width/2F, 0, 0.5F - pack.general.depth/2F, 0.5F + pack.general.width/2F, pack.general.height, 0.5F +  pack.general.depth/2F);
-    				}
+    			if(tile != null && tile.definition != null){
+		    		regularAABB = new AxisAlignedBB(0.5F - tile.definition.general.width/2F, 0, 0.5F - tile.definition.general.depth/2F, 0.5F + tile.definition.general.width/2F, tile.definition.general.height, 0.5F +  tile.definition.general.depth/2F);
     			}
     		}else{
-    			return this.regularAABB;
+    			return regularAABB;
     		}
     	}else{
-    		if(this.regularAABB == null){
+    		if(regularAABB == null){
     			TileEntityDecor tile = ((TileEntityDecor) access.getTileEntity(pos));
-    			if(tile != null){
-    				PackDecorObject pack = PackParserSystem.getDecor(tile.decorName);
-    				if(pack != null){
-    					this.regularAABB = new AxisAlignedBB(0.5F - pack.general.width/2F, 0, 0.5F - pack.general.depth/2F, 0.5F + pack.general.width/2F, pack.general.height, 0.5F +  pack.general.depth/2F);
-    					this.rotatedAABB = !this.isOriented ? regularAABB : new AxisAlignedBB(0.5F - pack.general.depth/2F, 0, 0.5F - pack.general.width/2F, 0.5F + pack.general.depth/2F, pack.general.height, 0.5F +  pack.general.width/2F);
-    				}
+    			if(tile != null && tile.definition != null){
+					regularAABB = new AxisAlignedBB(0.5F - tile.definition.general.width/2F, 0, 0.5F - tile.definition.general.depth/2F, 0.5F + tile.definition.general.width/2F, tile.definition.general.height, 0.5F +  tile.definition.general.depth/2F);
+					rotatedAABB = !isOriented ? regularAABB : new AxisAlignedBB(0.5F - tile.definition.general.depth/2F, 0, 0.5F - tile.definition.general.width/2F, 0.5F + tile.definition.general.depth/2F, tile.definition.general.height, 0.5F +  tile.definition.general.width/2F);
     			}
     		}else{
     			return state.getValue(FACING).getAxis().equals(EnumFacing.Axis.Z) ? regularAABB : rotatedAABB;
@@ -82,17 +76,14 @@ public class BlockDecor extends ABlockRotatable implements ITileEntityProvider{
 	@Override
 	@SuppressWarnings("deprecation")
     public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entity, boolean p_185477_7_){
-		if(!this.isOriented){
+		if(!isOriented){
 			addCollisionBoxToList(pos, entityBox, collidingBoxes, FULL_BLOCK_AABB);
 		}else{
-			if(this.regularAABB == null){
+			if(regularAABB == null){
     			TileEntityDecor tile = ((TileEntityDecor) world.getTileEntity(pos));
-    			if(tile != null){
-    				PackDecorObject pack = PackParserSystem.getDecor(tile.decorName);
-    				if(pack != null){
-    					this.regularAABB = new AxisAlignedBB(0.5F - pack.general.width/2F, 0, 0.5F - pack.general.depth/2F, 0.5F + pack.general.width/2F, pack.general.height, 0.5F +  pack.general.depth/2F);
-    					this.rotatedAABB = !this.isOriented ? regularAABB : new AxisAlignedBB(0.5F - pack.general.depth/2F, 0, 0.5F - pack.general.width/2F, 0.5F + pack.general.depth/2F, pack.general.height, 0.5F +  pack.general.width/2F);
-    				}
+    			if(tile != null && tile.definition != null){
+					regularAABB = new AxisAlignedBB(0.5F - tile.definition.general.width/2F, 0, 0.5F - tile.definition.general.depth/2F, 0.5F + tile.definition.general.width/2F, tile.definition.general.height, 0.5F +  tile.definition.general.depth/2F);
+					rotatedAABB = !isOriented ? regularAABB : new AxisAlignedBB(0.5F - tile.definition.general.depth/2F, 0, 0.5F - tile.definition.general.width/2F, 0.5F + tile.definition.general.depth/2F, tile.definition.general.height, 0.5F +  tile.definition.general.width/2F);
     			}
     			addCollisionBoxToList(pos, entityBox, collidingBoxes, FULL_BLOCK_AABB);
     		}else{
@@ -103,7 +94,12 @@ public class BlockDecor extends ABlockRotatable implements ITileEntityProvider{
 	
 	@Override
 	public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player){
-		return new ItemStack(MTSRegistry.decorItemMap.get(((TileEntityDecor) world.getTileEntity(pos)).decorName));
+		TileEntityDecor tile = ((TileEntityDecor) world.getTileEntity(pos));
+		if(tile.definition != null){
+			return new ItemStack(MTSRegistry.packItemMap.get(tile.definition.packID).get(tile.definition.systemName));
+		}else{
+			return ItemStack.EMPTY;
+		}
     }
     
     @Override

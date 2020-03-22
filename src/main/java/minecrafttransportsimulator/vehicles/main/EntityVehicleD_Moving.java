@@ -6,11 +6,13 @@ import java.util.List;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceBox;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
+import minecrafttransportsimulator.vehicles.parts.PartEngineBoat;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -26,9 +28,10 @@ import net.minecraft.world.World;
  * 
  * @author don_bruce
  */
-public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
+abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
+	public byte prevParkingBrakeAngle;
 	public byte parkingBrakeAngle;
 	public float motionRoll;
 	public float motionPitch;
@@ -52,10 +55,10 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public final List<APartGroundDevice> groundedGroundDevices = new ArrayList<APartGroundDevice>();
 	
 	//Classes used for ground device collisions.
-	private VehicleGroundDeviceBox frontLeftGroundDeviceBox;
-	private VehicleGroundDeviceBox frontRightGroundDeviceBox;
-	private VehicleGroundDeviceBox rearLeftGroundDeviceBox;
-	private VehicleGroundDeviceBox rearRightGroundDeviceBox;
+	protected VehicleGroundDeviceBox frontLeftGroundDeviceBox;
+	protected VehicleGroundDeviceBox frontRightGroundDeviceBox;
+	protected VehicleGroundDeviceBox rearLeftGroundDeviceBox;
+	protected VehicleGroundDeviceBox rearRightGroundDeviceBox;
 	
 	public static final double maxRotationInRadPerTick = 0.0174533D*2D;
 	
@@ -63,14 +66,14 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		super(world);
 	}
 	
-	public EntityVehicleD_Moving(World world, float posX, float posY, float posZ, float playerRotation, String vehicleName){
-		super(world, posX, posY, posZ, playerRotation, vehicleName);
+	public EntityVehicleD_Moving(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
+		super(world, posX, posY, posZ, playerRotation, definition);
 	}
 	
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		if(pack != null){
+		if(definition != null){
 			//Populate the ground device lists for use in the methods here.
 			//We need to get which ground devices are in which quadrant,
 			//as well as which ground devices are on the ground.
@@ -87,10 +90,10 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//Init boxes if we haven't yet.
 			//Update ground devices for them if we have.
 			if(frontLeftGroundDeviceBox == null){
-				frontLeftGroundDeviceBox = new VehicleGroundDeviceBox(this, true, true);
-				frontRightGroundDeviceBox = new VehicleGroundDeviceBox(this, true, false);
-				rearLeftGroundDeviceBox = new VehicleGroundDeviceBox(this, false, true);
-				rearRightGroundDeviceBox = new VehicleGroundDeviceBox(this, false, false);
+				frontLeftGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleE_Powered) this, true, true);
+				frontRightGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleE_Powered) this, true, false);
+				rearLeftGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleE_Powered) this, false, true);
+				rearRightGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleE_Powered) this, false, false);
 			}else{
 				frontLeftGroundDeviceBox.updateGroundDevices();
 				frontRightGroundDeviceBox.updateGroundDevices();
@@ -105,12 +108,15 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			if(!world.isRemote){
 				dampenControlSurfaces();
 			}
+			prevParkingBrakeAngle = parkingBrakeAngle;
 			if(parkingBrakeOn && velocity == 0 && !locked){
 				if(parkingBrakeAngle < 30){
+					prevParkingBrakeAngle = parkingBrakeAngle;
 					++parkingBrakeAngle;
 				}
 			}else{
 				if(parkingBrakeAngle > 0){
+					prevParkingBrakeAngle = parkingBrakeAngle;
 					--parkingBrakeAngle;
 				}
 			}
@@ -143,7 +149,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			if(motionPitch >= -0.1){
 				if((frontLeftGroundDeviceBox.isCollided && rearRightGroundDeviceBox.isCollided) || (frontRightGroundDeviceBox.isCollided && rearLeftGroundDeviceBox.isCollided)){
 					double collisionDepth = Math.max(Math.min(frontLeftGroundDeviceBox.collisionDepth, rearRightGroundDeviceBox.collisionDepth), Math.min(frontRightGroundDeviceBox.collisionDepth, rearLeftGroundDeviceBox.collisionDepth));
-					double motionToNotCollide = collisionDepth/speedFactor;
+					double motionToNotCollide = collisionDepth/SPEED_FACTOR;
 					motionY += motionToNotCollide;
 					//Check if motionY is close to 0.  If so, we should make it 0 as we are
 					//just sitting on the ground and shouldn't have any motionY to begin with.
@@ -160,7 +166,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}else{
 				if(rearLeftGroundDeviceBox.isCollided || rearRightGroundDeviceBox.isCollided){
 					double collisionDepth = Math.max(rearLeftGroundDeviceBox.collisionDepth, rearRightGroundDeviceBox.collisionDepth);
-					double motionToNotCollide = collisionDepth/speedFactor;
+					double motionToNotCollide = collisionDepth/SPEED_FACTOR;
 					motionY += motionToNotCollide;
 					frontLeftGroundDeviceBox.update();
 					frontRightGroundDeviceBox.update();
@@ -172,7 +178,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		}else if(motionY > 0){
 			if(motionPitch > 0 && (frontLeftGroundDeviceBox.isCollided || frontRightGroundDeviceBox.isCollided)){
 				double collisionDepth = Math.max(frontLeftGroundDeviceBox.collisionDepth, frontRightGroundDeviceBox.collisionDepth);
-				double motionToNotCollide = collisionDepth/speedFactor;
+				double motionToNotCollide = collisionDepth/SPEED_FACTOR;
 				motionY += motionToNotCollide;
 				frontLeftGroundDeviceBox.update();
 				frontRightGroundDeviceBox.update();
@@ -181,7 +187,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				return motionY;
 			}else if(motionPitch < 0 && (rearLeftGroundDeviceBox.isCollided || rearRightGroundDeviceBox.isCollided)){
 				double collisionDepth = Math.max(rearLeftGroundDeviceBox.collisionDepth, rearRightGroundDeviceBox.collisionDepth);
-				double motionToNotCollide = collisionDepth/speedFactor;
+				double motionToNotCollide = collisionDepth/SPEED_FACTOR;
 				motionY += motionToNotCollide;
 				frontLeftGroundDeviceBox.update();
 				frontRightGroundDeviceBox.update();
@@ -208,15 +214,15 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//First check the X-axis.
 		if(motionX != 0){
-			for(VehicleAxisAlignedBB box : this.getCurrentCollisionBoxes()){
+			for(VehicleAxisAlignedBB box : collisionBoxes){
 				float collisionDepth = getCollisionForAxis(box, true, false, false);
 				if(collisionDepth == -1){
 					return;
 				}else{
 					if(this.motionX > 0){
-						this.motionX = Math.max(motionX - collisionDepth/speedFactor, 0);
+						this.motionX = Math.max(motionX - collisionDepth/SPEED_FACTOR, 0);
 					}else if(this.motionX < 0){
-						this.motionX = Math.min(motionX + collisionDepth/speedFactor, 0);
+						this.motionX = Math.min(motionX + collisionDepth/SPEED_FACTOR, 0);
 					}
 				}
 			}
@@ -224,15 +230,15 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//Do the same for the Z-axis
 		if(motionZ != 0){
-			for(VehicleAxisAlignedBB box : this.getCurrentCollisionBoxes()){
+			for(VehicleAxisAlignedBB box : collisionBoxes){
 				float collisionDepth = getCollisionForAxis(box, false, false, true);
 				if(collisionDepth == -1){
 					return;
 				}else{
 					if(this.motionZ > 0){
-						this.motionZ = Math.max(motionZ - collisionDepth/speedFactor, 0);
+						this.motionZ = Math.max(motionZ - collisionDepth/SPEED_FACTOR, 0);
 					}else if(this.motionZ < 0){
-						this.motionZ = Math.min(motionZ + collisionDepth/speedFactor, 0);
+						this.motionZ = Math.min(motionZ + collisionDepth/SPEED_FACTOR, 0);
 					}
 				}
 			}
@@ -240,15 +246,15 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//Now that the XZ motion has been limited based on collision we can move in the Y.
 		if(motionY != 0){
-			for(VehicleAxisAlignedBB box : this.getCurrentCollisionBoxes()){
+			for(VehicleAxisAlignedBB box : collisionBoxes){
 				float collisionDepth = getCollisionForAxis(box, false, true, false);
 				if(collisionDepth == -1){
 					return;
 				}else if(collisionDepth != 0){
 					if(this.motionY > 0){
-						this.motionY = Math.max(motionY - collisionDepth/speedFactor, 0);
+						this.motionY = Math.max(motionY - collisionDepth/SPEED_FACTOR, 0);
 					}else if(this.motionY < 0){
-						this.motionY = Math.min(motionY + collisionDepth/speedFactor, 0);
+						this.motionY = Math.min(motionY + collisionDepth/SPEED_FACTOR, 0);
 					}
 				}
 			}
@@ -256,11 +262,11 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//Check the yaw.
 		if(motionYaw != 0){
-			for(VehicleAxisAlignedBB box : this.getCurrentCollisionBoxes()){
+			for(VehicleAxisAlignedBB box : collisionBoxes){
 				while(motionYaw != 0){
 					Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch, rotationYaw + motionYaw, rotationRoll);
 					//Raise this box ever so slightly because Floating Point errors are a PITA.
-					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*speedFactor, motionY*speedFactor + 0.1, motionZ*speedFactor));
+					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR + 0.1, motionZ*SPEED_FACTOR));
 					if(offsetBox.getAABBCollisions(world, null).isEmpty()){
 						break;
 					}
@@ -276,10 +282,10 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Now do pitch.
 		//Make sure to take into account yaw as it's already been checked.
 		if(motionPitch != 0){
-			for(VehicleAxisAlignedBB box : this.getCurrentCollisionBoxes()){
+			for(VehicleAxisAlignedBB box : collisionBoxes){
 				while(motionPitch != 0){
 					Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll);
-					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor));
+					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
 					if(offsetBox.getAABBCollisions(world, null).isEmpty()){
 						break;
 					}
@@ -294,10 +300,10 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//And lastly the roll.
 		if(motionRoll != 0){
-			for(VehicleAxisAlignedBB box : this.getCurrentCollisionBoxes()){
+			for(VehicleAxisAlignedBB box : collisionBoxes){
 				while(motionRoll != 0){
 					Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor));
+					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
 					if(offsetBox.getAABBCollisions(world, null).isEmpty()){
 						break;
 					}
@@ -398,7 +404,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				double angle = -maxRotationInRadPerTick;
 				motionPitch += Math.toDegrees(angle);
 				if(motionY < 0){
-					ptichRotationBoost = Math.sin(angle)*Math.hypot(frontY, frontZ) + motionY*speedFactor;
+					ptichRotationBoost = Math.sin(angle)*Math.hypot(frontY, frontZ) + motionY*SPEED_FACTOR;
 					motionY = 0;
 				}else{
 					ptichRotationBoost = Math.sin(angle)*Math.hypot(frontY, frontZ);
@@ -457,7 +463,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				double angle = maxRotationInRadPerTick;
 				motionPitch += Math.toDegrees(angle);
 				if(motionY < 0){
-					ptichRotationBoost = -Math.sin(angle)*Math.hypot(rearY, rearZ) + motionY*speedFactor;
+					ptichRotationBoost = -Math.sin(angle)*Math.hypot(rearY, rearZ) + motionY*SPEED_FACTOR;
 					motionY = 0;
 				}else{
 					ptichRotationBoost = -Math.sin(angle)*Math.hypot(rearY, rearZ);
@@ -534,7 +540,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				double angle = -maxRotationInRadPerTick;
 				motionRoll+= Math.toDegrees(angle);
 				if(motionY < 0){
-					rollRotationBoost = Math.sin(angle)*Math.hypot(rightY, rightX) + motionY*speedFactor;
+					rollRotationBoost = Math.sin(angle)*Math.hypot(rightY, rightX) + motionY*SPEED_FACTOR;
 					motionY = 0;
 				}else{
 					rollRotationBoost = Math.sin(angle)*Math.hypot(rightY, rightX);
@@ -593,7 +599,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				double angle = maxRotationInRadPerTick;
 				motionRoll += Math.toDegrees(angle);
 				if(motionY < 0){
-					rollRotationBoost = -Math.sin(angle)*Math.hypot(leftY, leftX) + motionY*speedFactor;
+					rollRotationBoost = -Math.sin(angle)*Math.hypot(leftY, leftX) + motionY*SPEED_FACTOR;
 					motionY = 0;
 				}else{
 					rollRotationBoost = -Math.sin(angle)*Math.hypot(leftY, leftX);
@@ -622,9 +628,9 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//If the vehicle can move without a collision box colliding with something, then we can move to the re-positioning of the vehicle.
 		//That is done through trig functions.  If we hit something, however, we need to inhibit the movement so we don't do that.
 		boolean collisionBoxCollided = false;
-		for(VehicleAxisAlignedBB box : this.getCurrentCollisionBoxes()){
+		for(VehicleAxisAlignedBB box : collisionBoxes){
 			Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-			VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor));
+			VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
 			List<AxisAlignedBB> collisionBoxes = offsetBox.getAABBCollisions(world, null);
 			if(!collisionBoxes.isEmpty()){
 				collisionBoxCollided = true;
@@ -646,10 +652,10 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			double pitchRotationBoost = correctPitchMovement();
 			if(pitchRotationBoost != 0){
 				groundRotationBoost = pitchRotationBoost;
-				motionY += groundRotationBoost/speedFactor;
+				motionY += groundRotationBoost/SPEED_FACTOR;
 			}else{
 				groundRotationBoost = correctRollMovement();
-				motionY += groundRotationBoost/speedFactor;
+				motionY += groundRotationBoost/SPEED_FACTOR;
 			}
 		}
 
@@ -660,9 +666,9 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				rotationYaw += motionYaw;
 				rotationPitch += motionPitch;
 				rotationRoll += motionRoll;
-				setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
-				addToServerDeltas(motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll);
-				MTS.MTSNet.sendToAll(new PacketVehicleDeltas(this, motionX*speedFactor, motionY*speedFactor, motionZ*speedFactor, motionYaw, motionPitch, motionRoll));
+				setPosition(posX + motionX*SPEED_FACTOR, posY + motionY*SPEED_FACTOR, posZ + motionZ*SPEED_FACTOR);
+				addToServerDeltas(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR, motionYaw, motionPitch, motionRoll);
+				MTS.MTSNet.sendToAll(new PacketVehicleDeltas((EntityVehicleE_Powered) this, motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR, motionYaw, motionPitch, motionRoll));
 			}
 		}else{
 			//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.
@@ -672,21 +678,21 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//movement due to floating-point errors.
 				final double deltaX;
 				if(serverDeltaX - clientDeltaX != 0){
-					deltaX = motionX*speedFactor + (serverDeltaX - clientDeltaX)/25D*Math.abs(serverDeltaX - clientDeltaX);
+					deltaX = motionX*SPEED_FACTOR + (serverDeltaX - clientDeltaX)/25D*Math.abs(serverDeltaX - clientDeltaX);
 				}else{
 					deltaX = 0;
 				}
 				
 				final double deltaY; 
 				if(serverDeltaY - clientDeltaY !=  0){
-					deltaY = motionY*speedFactor + (serverDeltaY - clientDeltaY)/25D*Math.abs(serverDeltaY - clientDeltaY);
+					deltaY = motionY*SPEED_FACTOR + (serverDeltaY - clientDeltaY)/25D*Math.abs(serverDeltaY - clientDeltaY);
 				}else{
 					deltaY = 0;
 				}
 				
 				final double deltaZ; 
 				if(serverDeltaZ - clientDeltaZ !=  0){
-					deltaZ = motionZ*speedFactor + (serverDeltaZ - clientDeltaZ)/25D*Math.abs(serverDeltaZ - clientDeltaZ);
+					deltaZ = motionZ*SPEED_FACTOR + (serverDeltaZ - clientDeltaZ)/25D*Math.abs(serverDeltaZ - clientDeltaZ);
 				}else{
 					deltaZ = 0;
 				}
@@ -721,7 +727,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				rotationYaw += motionYaw;
 				rotationPitch += motionPitch;
 				rotationRoll += motionRoll;
-				setPosition(posX + motionX*speedFactor, posY + motionY*speedFactor, posZ + motionZ*speedFactor);
+				setPosition(posX + motionX*SPEED_FACTOR, posY + motionY*SPEED_FACTOR, posZ + motionZ*SPEED_FACTOR);
 			}
 		}
 		
@@ -730,7 +736,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(this.velocity != 0){
 			for(EntityPlayer player : world.playerEntities){
 				if(!this.equals(player.getRidingEntity())){
-					for(VehicleAxisAlignedBB box : this.getCurrentCollisionBoxes()){
+					for(VehicleAxisAlignedBB box : collisionBoxes){
 						//Add a slight yOffset to every box to "grab" players standing on collision points.
 						if(box.offset(this.posX - this.prevPosX, this.posY - this.prevPosY + 0.1F, this.posZ - this.prevPosZ).intersects(player.getEntityBoundingBox())){
 							//Player has collided with this vehicle.  Adjust movement to allow them to ride on it.
@@ -753,7 +759,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Leaving them in will cause the physics system to think a force was applied, which will make it behave badly!
 		//We need to strip away any positive motionY we gave the vehicle to get it out of the ground if it
 		//collided on its ground devices, as well as any motionY we added when doing rotation adjustments.
-		motionY -= (groundCollisionBoost + groundRotationBoost/speedFactor);
+		motionY -= (groundCollisionBoost + groundRotationBoost/SPEED_FACTOR);
 	}
 	
 	
@@ -764,6 +770,7 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	protected float getBrakingForceFactor(){
 		float brakingFactor = 0;
 		//First get the ground device braking contributions.
+		//This is both grounded ground devices, and liquid collision boxes that are set as such.
 		for(APartGroundDevice groundDevice : this.groundedGroundDevices){
 			float addedFactor = 0;
 			if(brakeOn || parkingBrakeOn){
@@ -773,9 +780,15 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				brakingFactor += Math.max(addedFactor - groundDevice.getFrictionLoss(), 0);
 			}
 		}
+		if(brakeOn || parkingBrakeOn){
+			if(frontLeftGroundDeviceBox.isCollidedLiquid || frontLeftGroundDeviceBox.isGroundedLiquid)brakingFactor += 0.5;
+			if(frontRightGroundDeviceBox.isCollidedLiquid || frontRightGroundDeviceBox.isGroundedLiquid)brakingFactor += 0.5;
+			if(rearLeftGroundDeviceBox.isCollidedLiquid || rearLeftGroundDeviceBox.isGroundedLiquid)brakingFactor += 0.5;
+			if(rearRightGroundDeviceBox.isCollidedLiquid || rearRightGroundDeviceBox.isGroundedLiquid)brakingFactor += 0.5;
+		}
 		
 		//Now get any contributions from the colliding collision bits.
-		for(VehicleAxisAlignedBB box : this.getCurrentCollisionBoxes()){
+		for(VehicleAxisAlignedBB box : collisionBoxes){
 			if(!world.getCollisionBoxes(null, box.offset(0, -0.05F, 0)).isEmpty()){
 				//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
 				BlockPos pos = new BlockPos(box.pos.addVector(0, -1, 0));
@@ -788,16 +801,24 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	
 	/**
 	 * Returns factor for skidding based on lateral friction and velocity.
-	 * If the value is non-zero, it indicates that yaw should be restricted
-	 * due to ground devices being in contact with the ground.
-	 * Note that this should be called prior to turning code as it will interpret
-	 * the yaw change as a skid and will attempt to prevent it!
+	 * If the value is non-zero, it indicates that yaw changes from ground
+	 * device calculations should be applied due to said devices being in
+	 * contact with the ground.  Note that this should be called prior to 
+	 * turning code as it will interpret the yaw change as a skid and will 
+	 * attempt to prevent it!
 	 */
 	protected float getSkiddingFactor(){
 		float skiddingFactor = 0;
+		//First check grounded ground devices.
 		for(APartGroundDevice groundDevice : this.groundedGroundDevices){
 			skiddingFactor += groundDevice.getLateralFriction() - groundDevice.getFrictionLoss();
 		}
+		
+		//Now check if any collision boxes are in liquid.  Needed for maritime vehicles.
+		if(frontLeftGroundDeviceBox.isCollidedLiquid || frontLeftGroundDeviceBox.isGroundedLiquid)skiddingFactor += 0.5;
+		if(frontRightGroundDeviceBox.isCollidedLiquid || frontRightGroundDeviceBox.isGroundedLiquid)skiddingFactor += 0.5;
+		if(rearLeftGroundDeviceBox.isCollidedLiquid || rearLeftGroundDeviceBox.isGroundedLiquid)skiddingFactor += 0.5;
+		if(rearRightGroundDeviceBox.isCollidedLiquid || rearRightGroundDeviceBox.isGroundedLiquid)skiddingFactor += 0.5;
 		return skiddingFactor > 0 ? skiddingFactor : 0;
 	}
 	
@@ -812,12 +833,22 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(steeringAngle != 0){
 			float turningFactor = 0;
 			float turningDistance = 0;
+			//Check grounded wheels for turn contributions.
 			for(APartGroundDevice groundDevice : this.groundedGroundDevices){
 				float frictionLoss = groundDevice.getFrictionLoss();
 				//Do we have enough friction to change yaw?
 				if(groundDevice.turnsWithSteer && groundDevice.getLateralFriction() - frictionLoss > 0){
 					turningFactor += groundDevice.getLateralFriction() - frictionLoss;
 					turningDistance = (float) Math.max(turningDistance, Math.abs(groundDevice.offset.z));
+				}
+			}
+			//Also check for boat engines, which can make us turn if we are in water.
+			for(APart part : this.getVehicleParts()){
+				if(part instanceof PartEngineBoat){
+					if(((PartEngineBoat) part).isInLiquid){
+						turningFactor += 1.0F;
+						turningDistance = (float) Math.max(turningDistance, Math.abs(part.offset.z));
+					}
 				}
 			}
 			if(turningFactor > 0){
@@ -830,13 +861,13 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				steeringAngle /= turningDistance;
 				//Another thing that can affect the steering angle is speed.
 				//More speed makes for less wheel turn to prevent crazy circles.
-				if(Math.abs(velocity*speedFactor/0.35F) - turningFactor/3F > 0){
-					steeringAngle *= Math.pow(0.25F, (Math.abs(velocity*(0.75F + speedFactor/0.35F/4F)) - turningFactor/3F));
+				if(Math.abs(velocity*SPEED_FACTOR/0.35F) - turningFactor/3F > 0){
+					steeringAngle *= Math.pow(0.25F, (Math.abs(velocity*(0.75F + SPEED_FACTOR/0.35F/4F)) - turningFactor/3F));
 				}
 				//Adjust turn force to steer angle based on turning factor.
 				turningForce = -(float) (steeringAngle*velocity/2F);
 				//Correct for speedFactor changes.
-				turningForce *= speedFactor/0.35F;
+				turningForce *= SPEED_FACTOR/0.35F;
 				//Now add the sign to this force.
 				turningForce *= Math.signum(this.getSteerAngle());
 			}
@@ -878,6 +909,12 @@ public abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 * Must come AFTER force calculations as it depends on motions.
 	 */
 	protected abstract void performGroundOperations();
+	
+	/**
+	 * Returns whatever the steering angle is.
+	 * Used for rendering and turning force calculations.
+	 */
+	public abstract float getSteerAngle();
 	
 	/**
 	 * Method block for dampening control surfaces.

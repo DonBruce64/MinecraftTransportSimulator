@@ -70,9 +70,9 @@ public final class VehicleSound{
 	
 	public String getSoundName(){
 		switch(soundType){
-			case ENGINE: return optionalPart.partName + "_running";
-			case HORN: return vehicle.pack.motorized.hornSound;
-			case SIREN: return vehicle.pack.motorized.sirenSound;
+			case ENGINE: return optionalPart.definition.packID + ":" + optionalPart.definition.systemName + "_running";
+			case HORN: return vehicle.definition.motorized.hornSound;
+			case SIREN: return vehicle.definition.motorized.sirenSound;
 			default: return "";
 		}
 	}
@@ -96,7 +96,7 @@ public final class VehicleSound{
 	
 	private float getCurrentVolume(){
 		switch(soundType){
-			case ENGINE: return (float) (30F*((APartEngine) optionalPart).RPM/((APartEngine) optionalPart).pack.engine.maxRPM);
+			case ENGINE: return (float) (30F*((APartEngine) optionalPart).RPM/((APartEngine) optionalPart).definition.engine.maxRPM);
 			case HORN: return 5.0F;
 			case SIREN: return 10.0F;
 			default: return 1.0F;
@@ -105,7 +105,7 @@ public final class VehicleSound{
 	
 	private float getCurrentPitch(){
 		switch(soundType){
-			case ENGINE: return (float) (((APartEngine) optionalPart).RPM/(optionalPart.pack.engine.maxRPM/2F));
+			case ENGINE: return (float) (((APartEngine) optionalPart).RPM/(optionalPart.definition.engine.maxRPM/2F));
 			default: return 1.0F;
 		}
 	}

@@ -25,8 +25,6 @@ public class Radio{
 	private int selectedPreset = -1;
 	/**Current radio volume.**/
 	private byte volume = 10;
-	/**Last time this radio was called for update.**/
-	private long lastUpdateTime = 0;
 	
 	public Radio(RadioContainer container){
 		this.container = container;

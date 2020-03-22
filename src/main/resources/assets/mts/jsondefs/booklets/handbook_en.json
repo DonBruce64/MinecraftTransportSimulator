@@ -1,0 +1,715 @@
+{
+  "general": {
+	"name" : "MTS Manual (READ ME!)",
+    "textureWidth": 280,
+	"textureHeight": 180,
+	"titleText": [
+      {
+        "text": "MINECRAFT",
+        "color": "0xFFFFFF",
+        "scale": 1.5,
+        "offsetX": 210,
+        "offsetY": 40,
+        "wrapWidth": 0,
+        "centered": true
+      },
+      {
+        "text": "TRANSPORT",
+        "color": "0xFFFFFF",
+        "scale": 1.5,
+        "offsetX": 210,
+        "offsetY": 55,
+        "wrapWidth": 0,
+        "centered": true
+      },
+      {
+        "text": "SIMULATOR",
+        "color": "0xFFFFFF",
+        "scale": 1.5,
+        "offsetX": 210,
+        "offsetY": 70,
+        "wrapWidth": 0,
+        "centered": true
+      },
+      {
+        "text": "HANDBOOK",
+        "color": "0xFFFFFF",
+        "scale": 1.5,
+        "offsetX": 210,
+        "offsetY": 85,
+        "wrapWidth": 0,
+        "centered": true
+      },
+      {
+        "text": "Formerly Minecraft",
+        "color": "0xFFFFFF",
+        "scale": 1.0,
+        "offsetX": 210,
+        "offsetY": 140,
+        "wrapWidth": 0,
+        "centered": true
+      },
+      {
+        "text": "Flight Simulator",
+        "color": "0xFFFFFF",
+        "scale": 1.0,
+        "offsetX": 210,
+        "offsetY": 150,
+        "wrapWidth": 0,
+        "centered": true
+      },
+      {
+        "text": "-by don_bruce",
+        "color": "0xFFFFFF",
+        "scale": 1.0,
+        "offsetX": 210,
+        "offsetY": 160,
+        "wrapWidth": 0,
+        "centered": true
+      }
+    ],
+    "coverTexture": "mts:textures/guis/manual_cover.png",
+    "pages": [
+      {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Introduction",
+        "pageText": [
+          {
+            "text": "Introduction",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "Thank you for downloading Minecraft Transport Simulator, the new and improved version of Minecraft Flight Simulator!  This manual contains lots of important information, so please read closely.  It\u0027s STRONGLY recommended you read the portions on flight if you plan on piloting MTS planes, especially if you haven\u0027t had experience with planes outside of video games or simulators.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "If there's something that is not included in this manual please see the MTS team on Discord.  We'll be happy to answer your question and add it to the manual in a later update.  Oh, and you can scroll through this manual (as well as all MTS GUIs) with your mouse wheel, if your mouse is equipped with one.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Basic Crafting",
+        "pageText": [
+          {
+            "text": "Basic Crafting",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "Like most mods that have packs and lots of content, MTS uses crafting benches for crafting.  The Drafting Table is used to craft vehicles, while the other benches craft their own parts.  You'll likely want to start filling your garage early with these benches as most vehicles use at least one type of every part.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "One of the most critical benches is the Component Bench.  The bench is used by a lot of packs to add custom items that are used to craft vehicle parts, and even vehicles themselves.  If you find yourself needing an item that's not picked up by JEI or other crafting systems, it's likely in there!",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Vehicle Assembly",
+        "pageText": [
+          {
+            "text": "Vehicle Assembly",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "Assembling vehicles is a simple as clicking them with the required parts.  When holding a valid part a green hologram will appear in locations where you can place it.  Simply right-click with that part and it will attach to the vehicle.  Note that some parts may require other parts to be installed before they may be placed, such as propellers that connect to aircraft engines.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "Also note that you must not be inside the vehicle in order to work on it, so no mid-air repairs of failing plane engines!  If you are holding a part and the hologram is red, it means the part is the correct type, but the wrong size.  One common example is a wheel that is too big or too small for the vehicle.  Another is if a pack creator wants to restrict that location to specific parts, such as a specific engine, so try parts from the pack first.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Vehicle Destruction",
+        "pageText": [
+          {
+            "text": "Vehicle Destruction",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "There may come a time when you find yourself needing to repair a part on your vehicle, or just want to change the color of your seats.  To remove a part simply left-click it with a wrench.  You can also remove the whole vehicle with a shift-left-click.  This will drop it as an item that can be placed down later with all parts still attached, or dispensed in a store on servers.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "On the flip side, hitting blocks at speed may break them, with heavier vehicles breaking more and harder blocks.  Hitting blocks too fast may result in your vehicle blowing up due to the impact, with more fuel equaling a bigger explosion.  While parts will be spawned when a vehicle crashes, a big enough explosion is likely to destroy them.  Explosions and block-breakage may be disabled in the config if you don't feel like getting into the road-repair business.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Fueling",
+        "pageText": [
+          {
+            "text": "Fueling",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "Vehicles are fueled from the fuel pump block.  Just click the fuel pump and it will automatically connect to the nearest vehicle.  The pump will then transfer fuel at a rate of 10 mb/t.  The pump itself has a 15000mb reservoir and can be filled directly from liquid-holding containers, or by connecting a pipe to the bottom from pipe systems compatible with Forge fluids.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "Each engine has a fuel type that is associated with it.  This type is not the name of the fluid it takes a fuel.  Rather, it is a general name for the fuel that the engine uses.  Fuel types can be served by multiple fluids, but lava is by default always supported.  Some of the more common fuel types allow for usage of other mod's fluids out of the box.  For example, gasoline engines support Immersive Petroleum gasoline and Immersive Engineering ethanol.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Fuel Potency",
+        "pageText": [
+          {
+            "text": "Fuel Potency",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "All fluids are not created equal.  While an engine may take multiple fluids as a fuel, each fluid's potency will likely differ.  Potency is how much energy that fluid has, with higher-potency fluids lasting longer in vehicles.  For example, diesel engines take diesel at 1.0, biodiesel at 0.8, oil at 0.5, and lava at 1.0.  These values, and the modification of which fluids go to which types of engines, are configurable.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "In addition to the configuration of each individual fuel, there exists a config option called fuelUsageFactor that globally sets the fuel consumption for all engines.  If you find engines to be thirstier than you'd like, you can adjust that rather than adjusting each fuel individually.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Theft Prevention",
+        "pageText": [
+          {
+            "text": "Theft Prevention",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "The only thing worse than getting your nice car blown up by a creeper is having it (or parts of it) stolen by other players.  Normally vehicles can be messed with by anyone, but by using a key you can mark them as owned, allowing only you to change their parts.  This also extends to entering the vehicle or accessing the contents of inventories inside of it.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "Keys can be given to other players, allowing them to enter, but not modify, your vehicles.  It is HIGHLY recommended to make more than one key, as locked vehicles cannot be unlocked without their keys, nor can owned vehicles be relinquished.  Note that OPs bypass these restrictions to allow server admins to move/remove abandoned vehicles.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Keyboard Controls",
+        "pageText": [
+          {
+            "text": "Keyboard Controls",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "MTS offers multiple control schemes.  The standard scheme is the keyboard control.  Unlike other mods, MTS is equipped with a no-bind system.  This prevents it from clogging up keybindings and from intercepting and taking other mod's keystrokes.  Configuration for this mode, and the other control modes, can be activated by pressing the config key (P by default).",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "This key is the only one that's bound in the standard way in the controls menu, and may be double-bound by default in some modpacks, so if you can't bring up the config menu check your keybindings.  Do note that while MTS will not block other mod's key signals, it may still be affected by the signals of other mods who do not use context-sensitive triggers.  Keep this in mind when controlling vehicles.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Joystick Controls",
+        "pageText": [
+          {
+            "text": "Joystick Controls",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "The second control scheme is a Joystick-Keyboard hybrid.  This controller MUST be connected at the time you start Minecraft.  Configuration is done though the JOYSTICK section of the P-key menu.  When an axis such as yaw or pitch is being controlled by a joystick it will be unavailable on the keyboard.  Button inputs will also be disabled, but can be re-enabled though a CONFIG setting.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "The final method of control available is a mouse-yoke system similar to both Flan's and MCHeli.  This system is currently in Beta and is not perfect, but should be functional enough for general use.  For all of these controls, there are a few extra settings in the P-key CONFIG menu.  These can be used to control joystick dead-zone, sensitivity, keyboard cooldown, as well as other general control settings.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Engines",
+        "pageText": [
+          {
+            "text": "Engines",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "No matter if they are in cars or planes, engines form the heart of your vehicle.  Not having one is like having a base without a furnace.  Engines come in a variety of fuel consumptions and max RPMs, so chose carefully based on your application.  There is even a fuel-less engine in the creative inventory if you don't want to mess with fuel.  Engines are crafted on the engine hoist.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "Beware: engines will gradually accumulate hours and lose their power, going so far as to start backfiring when really worn out.  Over-revving, over-heating, and running the engine too fast before it has warmed up will quickly add hours to an otherwise new engine.  Engines may also accumulate hours from damage, going so far as to spring leaks or lose their electric starters.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Ground Devices",
+        "pageText": [
+          {
+            "text": "Ground Devices",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "If it touches the ground, it's a ground device.  Ground devices come in all sorts of configurations and types.  The most common ground device you will encounter are wheels.  These may be powered or un-powered depending on how the vehicle is set up.  Floating ground devices like pontoons are also available, so check the stats of the device before you decide to make it.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "Wheels also have a few rules that do not apply to other ground devices.  The first is that for cars, wheels MUST be used on the axles if they are to provide power.  While you can equip a vehicle with half pontoons and half wheels, only the wheels will provide power.  Wheels may also blow out if spun too much, so that white smoke you see when doing burnouts is there for more that just show.  All ground devices are created on the Wheel Workbench.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Propellers",
+        "pageText": [
+          {
+            "text": "Propellers",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "If you're going to fly an aircraft, it will likely need one of these (well, unless it's a jet).  Larger diameter propellers provide more thrust than smaller ones; however, larger-diameter propellers also need larger engines to turn, so it may be that a weak engine can produce more thrust with a smaller propeller than a larger one.  Propellers are created on the Propeller Bench.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "Propeller pitch is also important, perhaps moreso than diameter, as it determines the optimal speed at any RPM.  Anything below this speed will speed the aircraft up, anything below will slow it down.  Note that propellers that have dynamic pitch will adjust their pitch in flight to maintain optimum thrust, and may also be reversed by pressing the REVERSE THRUST button in the plane panel.  Reversed propellers are not very effective, so make sure to use plenty of throttle and watch your temps!",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Seats/Cargo",
+        "pageText": [
+          {
+            "text": "Seats/Cargo",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "Seats and cargo may all be placed in vehicles, however exactly where they may be placed depends on the vehicle itself.  The number of these items a vehicle can contain is shown in the Drafting Table, so use this to determine if the vehicle meets your needs or not.  Some vehicles allow for either seats or cargo in some spots, which means you can add or remove them as you see fit.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "Note that crates and barrels hold their inventory when in item form and will still have that inventory if placed in another vehicle or if the vehicle they are in is destroyed.  This allows for quick transfer of items from one vehicle to another.  Both seats and cargo are created on the Table Saw.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Instruments",
+        "pageText": [
+          {
+            "text": "Instruments",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "Instruments make piloting a plane and driving a car much more immersive.  They are also useful for monitoring key properties like fuel levels, RPM, and engine temps, and make flying in the dark much less hazardous.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "Instruments are added to vehicles by using the wrench on them.  The resulting GUI shows a view of the HUD and all instruments in your possession that work on that vehicle.  Simply click the slot you want to put the instrument in, and click that instrument.  Instruments are created on the Instrument Workbench.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Vehicle Panels",
+        "pageText": [
+          {
+            "text": "Vehicle Panels",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "While most things on vehicles can be controled from your keyboard or joystick, a few functions are in the vehicle panel.  To open this panel, press the U key when in a vehicle.  This brings up the MAG/POWER switch for vehicles, and the START button to engage the starter.  You will need to turn the engine power on and THEN press the starter key to start an engine.  Please do remember this.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "Numerous other things are located on this panel besides the engine controls.  The switches for the different lights are on the left side, and trim controls for aircraft are towards the middle-left.  You can also find the thrust reverse button, which will cause planes to move backward if equipped with dynamic-pitch propellers, as well as trailer buttons for hitching traliers in ground-based vehicles.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Driver's Ed",
+        "pageText": [
+          {
+            "text": "Driver's Ed",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "Driving a car is so simple, even a villager could do it.  Once the engine is running press the R key to shift into forwards gear and press the W key to give it some gas and you're off!  The A and D keys can be used to steer the car, while S key activates the brake.  Some vehicles are equipped with lights, horns, sirens, or even turn signals.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "Do note that all cars start in neutral, and you pressing R puts them into forwards.  Pressing F will shift back into neutral, and F again will shift into reverse.  Shifting should be done while stopped to avoid scary transmission noises.  The only exception are engines with manual transmissions.  These must be shifted up and down manually, which means they have multiple 'forwards' gears for you to shift though.  If you hear the engine getting noisy, it means it's time to shift!",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Time to Fly!",
+        "pageText": [
+          {
+            "text": "Time to Fly!",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "Before your first flight you should be aware of a few key facts.  First, planes do not go up when you pull up.  We repeat: PLANES DO NOT GO UP WHEN YOU PULL UP!  This is the #1 cause of crashes for new pilots.  In MTS, and in real-life, planes gain lift through moving air over the wings.  Therefore, the proper way to lift off the ground is to go fast so lots of air moves over the wings and makes lots of lift.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "This means that you will need a decent runway for takeoff, and it is highly recommended you avoid taking off towards high things like trees and mountains.  If you are piloting a plane equipped with flaps you can set a few notches to increase the lifting power of the plane.  Note that this will cause a loss in fuel efficiency and slow you down, so only use flaps when performing takeoffs and landings.  Also note that weight (items in inventory and cargo) is a factor in plane handling, so make sure not to overload your plane.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "In-Flight",
+        "pageText": [
+          {
+            "text": "In-Flight",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "Once your plane is up in the air flying just becomes a matter of two things: not crashing into wild mountains, and not crashing into the ground.  The former can simply be dodged by banking the plane into a turn by rolling the airplane (A and D) or simply flying above build height.  Turns will slowly decrease your altitude, so watch that if you're close to terrain.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "While flying you may have to keep holding inputs to make your plane behave the way you want.  If you keep climbing, it's because you have too much thrust and should let off the throttle.  You can also add some trim and keep the throttle up to get a bit more speed at the cost of fuel economy.  You may also move to other seats while flying by right-clicking them, and some planes even allow for multiple pilots.  Check the Vehicle Bench for specifics on seat and pilot counts.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Landing",
+        "pageText": [
+          {
+            "text": "Landing",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "There is a fine line between successfully landing a plane and a controlled crash.  To avoid that second category it is important to remember the saying, 'To go down you need to slow down.'  Speed is what keeps your plane aloft, so a reduction in speed is needed to land.  This can be as simple as lowering the throttle and applying the flaps.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "Some times, however, you end up in that second category.  Running out of fuel is the most common way to get down quickly, but it is not necessarily deadly.  Planes can glide without engines, giving you a short amount of time to pick a flat spot to become an impromptu runway.  Should one not be available a body of water is also a good choice as it will prevent explosions on a hard crash or will allow you to bail while in mid-air.  Anything hilly should be avoided at all costs.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      },
+	  {
+        "pageTexture": "mts:textures/guis/manual_pages.png",
+        "title": "Tweaks",
+        "pageText": [
+          {
+            "text": "Tweaks",
+            "color": "0x000000",
+            "scale": 1.0,
+            "offsetX": 75,
+            "offsetY": 25,
+            "centered": true
+          },
+          {
+            "text": "MTS has many config options, some of which aren't available in the in-game config menu.  See the mtsconfig.json file in your config directory for a full listing and description of configs.  Commonly-modified configs include block breagage, fuel consumption, and fuel values.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 20,
+            "offsetY": 40,
+            "wrapWidth": 150,
+            "centered": false
+          },
+          {
+            "text": "Should you wish to modify the recipes for the items made on the benches, you may do so by adding an override in the mtsconfig.json file.  See that file for details on how to do so.  Anything created on a crafting bench follows the normal process for editing, e.g. CraftTweaker.",
+            "color": "0x000000",
+            "scale": 0.75,
+            "offsetX": 155,
+            "offsetY": 20,
+            "wrapWidth": 150,
+            "centered": false
+          }
+        ]
+      }
+    ]
+  }
+}

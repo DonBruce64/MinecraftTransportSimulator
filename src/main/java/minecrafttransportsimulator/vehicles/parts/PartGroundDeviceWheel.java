@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.jsondefs.PackVehicleObject.PackPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -24,14 +26,14 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	private int ticksCalcsSkipped = 0;
 	private float prevAngularVelocity;
 	
-	public PartGroundDeviceWheel(EntityVehicleE_Powered vehicle, PackPart packPart, String partName, NBTTagCompound dataTag){
-		super(vehicle, packPart, partName, dataTag);
+	public PartGroundDeviceWheel(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+		super(vehicle, packVehicleDef, definition, dataTag);
 		this.isFlat = dataTag.getBoolean("isFlat");
 	}
 	
 	@Override
 	public void attackPart(DamageSource source, float damage){
-		if(!this.isFlat){
+		if(!this.isFlat && ConfigSystem.configObject.damage.wheelBreakage.value){
 			if(source.isExplosion() || Math.random() < 0.1){
 				if(!vehicle.world.isRemote){
 					this.setFlat();
@@ -61,7 +63,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 				}
 			}else if(!isFlat){
 				++ticksCalcsSkipped;
-				if(Math.random()*50000 < ticksCalcsSkipped){
+				if(Math.random()*50000 < ticksCalcsSkipped && ConfigSystem.configObject.damage.wheelBreakage.value){
 					if(!vehicle.world.isRemote){
 						this.setFlat();
 						MTS.MTSNet.sendToAll(new PacketPartGroundDeviceWheelFlat(this));
@@ -80,12 +82,12 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	
 	@Override
 	public float getWidth(){
-		return this.pack.wheel.diameter/2F;
+		return this.definition.wheel.diameter/2F;
 	}
 	
 	@Override
 	public float getHeight(){
-		return this.isFlat ? this.pack.wheel.diameter/2F : this.pack.wheel.diameter;
+		return this.isFlat ? this.definition.wheel.diameter/2F : this.definition.wheel.diameter;
 	}
 	
 	@Override
@@ -97,10 +99,10 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	public ResourceLocation getModelLocation(){
 		if(this.isFlat){
 			if(flatModelLocation == null){
-				if(pack.general.modelName != null){
-					flatModelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + pack.general.modelName + "_flat.obj");
+				if(definition.general.modelName != null){
+					flatModelLocation = new ResourceLocation(definition.packID, "objmodels/parts/" + definition.general.modelName + "_flat.obj");
 				}else{
-					flatModelLocation = new ResourceLocation(partName.substring(0, partName.indexOf(':')), "objmodels/parts/" + partName.substring(partName.indexOf(':') + 1) + "_flat.obj");
+					flatModelLocation = new ResourceLocation(definition.packID, "objmodels/parts/" + definition.systemName + "_flat.obj");
 				}
 			}
 			return flatModelLocation;
@@ -111,17 +113,17 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	
 	@Override
 	public Vec3d getActionRotation(float partialTicks){
-		return new Vec3d(vehicle.speedFactor*(this.angularPosition + this.angularVelocity*partialTicks)*360D, 0, 0);
+		return new Vec3d(vehicle.SPEED_FACTOR*(this.angularPosition + this.angularVelocity*partialTicks)*360D, 0, 0);
 	}
 	
 	@Override
 	public float getMotiveFriction(){
-		return !this.isFlat ? this.pack.wheel.motiveFriction : this.pack.wheel.motiveFriction/10F;
+		return !this.isFlat ? this.definition.wheel.motiveFriction : this.definition.wheel.motiveFriction/10F;
 	}
 	
 	@Override
 	public float getLateralFriction(){
-		return !this.isFlat ? this.pack.wheel.lateralFriction : this.pack.wheel.lateralFriction/10F;
+		return !this.isFlat ? this.definition.wheel.lateralFriction : this.definition.wheel.lateralFriction/10F;
 	}
 	
 	@Override
@@ -143,14 +145,14 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	public void spawnParticles(){
 		if(contactThisTick){
 			for(byte i=0; i<4; ++i){
-				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.WhiteSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05));
+				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
-			MTS.proxy.playSound(this.partPos, MTS.MODID + ":" + "wheel_striking", 1, 1);
+			MTS.proxy.playSound(this.partPos, MTS.MODID + ":" + "wheel_striking", 1, 1, vehicle);
 			contactThisTick = false;
 		}
 		if(skipAngularCalcs && this.isOnGround()){
 			for(byte i=0; i<4; ++i){
-				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.WhiteSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05));
+				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
 		}
 	}

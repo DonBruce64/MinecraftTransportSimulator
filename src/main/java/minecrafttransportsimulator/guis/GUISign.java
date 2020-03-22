@@ -11,9 +11,9 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
 import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
-import minecrafttransportsimulator.jsondefs.PackSignObject;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.jsondefs.JSONSign;
 import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -26,7 +26,7 @@ public class GUISign extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting.png");	
 	private final EntityPlayer player;
 	private final TileEntityPoleSign sign;
-	private final TileEntityPoleSign signTemp;
+	private final TileEntityPoleSign signGUIInstance;
 	private final List<GuiTextField> signTextBoxes = new ArrayList<GuiTextField>();
 	
 	private GuiButton leftPackButton;
@@ -34,28 +34,26 @@ public class GUISign extends GuiScreen{
 	private GuiButton leftSignButton;
 	private GuiButton rightSignButton;
 	private GuiButton startButton;
-	private GuiButton textButton;
 	
 	private int guiLeft;
 	private int guiTop;
 	
-	private String packName = "";
-	private String prevPackName = "";
-	private String nextPackName = "";
+	private String currentPack;
+	private String prevPack;
+	private String nextPack;
 	
-	private String signName = "";
-	private String prevSignName = "";
-	private String nextSignName = "";
-	
-	private PackSignObject pack;
-		
+	private JSONSign currentSign;
+	private JSONSign prevSign;
+	private JSONSign nextSign;
+			
 	public GUISign(BlockPoleSign block, EntityPlayer player){
 		this.sign = (TileEntityPoleSign) player.world.getTileEntity(block.lastClickedPos);
-		this.signTemp = new TileEntityPoleSign();
+		this.signGUIInstance = new TileEntityPoleSign();
+		this.signGUIInstance.setPos(sign.getPos());
 		this.player = player;
-		if(!sign.definition.isEmpty()){
-			packName = sign.definition.substring(0, sign.definition.indexOf(':'));
-			signName = sign.definition;
+		if(sign.definition != null){
+			currentPack = sign.definition.packID;
+			currentSign = sign.definition;
 		}
 		updateSignNames();
 	}
@@ -71,11 +69,16 @@ public class GUISign extends GuiScreen{
 		buttonList.add(leftSignButton = new GuiButton(0, guiLeft + 25, guiTop + 25, 20, 20, "<"));
 		buttonList.add(rightSignButton = new GuiButton(0, guiLeft + 215, guiTop + 25, 20, 20, ">"));
 		buttonList.add(startButton = new GuiButton(0, guiLeft + 188, guiTop + 170, 20, 20, ""));
-		buttonList.add(textButton = new GuiButton(0, guiLeft + 8, guiTop + 55, 126, 108, ""));
 		
 		for(byte i=0; i<10; ++i){
 			signTextBoxes.add(new GuiTextField(0, fontRenderer, guiLeft + 9, guiTop + 54 + i*10, 125, 10));
 			signTextBoxes.get(i).setEnabled(false);
+			//Set the text box text to the current sign if it has text.
+			if(sign.text.size() > i){
+				signTextBoxes.get(i).setText(sign.text.get(i));
+			}else{
+				signTextBoxes.get(i).setText("");
+			}
 		}
 	}
 	
@@ -93,34 +96,31 @@ public class GUISign extends GuiScreen{
 		}
 		
 		//Render the text headers.
-		drawCenteredString(!packName.isEmpty() ? I18n.format("itemGroup." + packName) : "", guiLeft + 130, guiTop + 10);
-		drawCenteredString(!signName.isEmpty() ? I18n.format("sign." + packName + "." + signName.substring(signName.indexOf(':') + 1) + ".name") : "", guiLeft + 130, guiTop + 30);
+		drawCenteredString(currentPack != null ? I18n.format("itemGroup." + currentPack) : "", guiLeft + 130, guiTop + 10);
+		drawCenteredString(currentSign != null ? (currentSign.general.name != null ? currentSign.general.name : currentSign.systemName) : "", guiLeft + 130, guiTop + 30);
 		
 		//Set button states and render.
-		startButton.enabled = !signName.isEmpty();
-		leftPackButton.enabled = !prevPackName.isEmpty();
-		rightPackButton.enabled = !nextPackName.isEmpty();
-		leftSignButton.enabled = !prevSignName.isEmpty();
-		rightSignButton.enabled = !nextSignName.isEmpty();
-		textButton.enabled = !signName.isEmpty() && pack.general.textLines != null;
+		startButton.enabled = currentSign != null;
+		leftPackButton.enabled = prevPack != null;
+		rightPackButton.enabled = nextPack != null;
+		leftSignButton.enabled = prevSign != null;
+		rightSignButton.enabled = nextSign != null;
 		for(GuiButton button : buttonList){
-			if(!button.equals(textButton)){
-				button.drawButton(mc, mouseX, mouseY, 0);
-			}
+			button.drawButton(mc, mouseX, mouseY, 0);
 		}
-		this.drawRect(guiLeft + 190, guiTop + 188, guiLeft + 206, guiTop + 172, startButton.enabled ? Color.GREEN.getRGB() : Color.RED.getRGB());
+		drawRect(guiLeft + 190, guiTop + 188, guiLeft + 206, guiTop + 172, startButton.enabled ? Color.GREEN.getRGB() : Color.RED.getRGB());
 		
 		//Now make the selected sign render in the GUI using the TE code.
-		if(!signName.isEmpty()){
-			//Set the definition and text of the sign.
-			signTemp.definition = signName;
-			if(pack.general.textLines != null){
-				for(byte i=0; i<PackParserSystem.getSign(signTemp.definition).general.textLines.length; ++i){
-					if(sign.definition.equals(signTemp.definition) && sign.text.size() > i){
-						signTemp.text.add(sign.text.get(i));
-					}else{
-						signTemp.text.add("");
-					}
+		//Also set the sign text boxes to render.
+		if(currentSign != null){
+			signGUIInstance.definition = currentSign;
+			signGUIInstance.text.clear();
+			if(currentSign.general.textLines != null){
+				for(byte i=0; i<currentSign.general.textLines.length; ++i){
+					signTextBoxes.get(i).setMaxStringLength(currentSign.general.textLines[i].characters);
+					signTextBoxes.get(i).setEnabled(true);
+					signTextBoxes.get(i).drawTextBox();
+					signGUIInstance.text.add(signTextBoxes.get(i).getText());
 				}
 			}
 			
@@ -130,19 +130,8 @@ public class GUISign extends GuiScreen{
 			GL11.glRotatef(180, 0, 1, 0);
 			float scale = -90F;
 			GL11.glScalef(scale, scale, scale);
-			TileEntityRendererDispatcher.instance.render(signTemp, -0.5F, -0.5F, -0.5F, renderPartialTicks, 0);
+			TileEntityRendererDispatcher.instance.render(signGUIInstance, -0.5F, -0.5F, -0.5F, renderPartialTicks, 0);
 			GL11.glPopMatrix();
-			
-			//If we have text on the sign, render it in the text boxes.
-			if(pack.general.textLines != null){
-				for(byte i=0; i<pack.general.textLines.length; ++i){
-					GuiTextField textBox = signTextBoxes.get(i);
-					textBox.setText(signTemp.text.get(i));
-					textBox.setMaxStringLength(pack.general.textLines[i].characters);
-					textBox.drawTextBox();
-					textBox.setEnabled(true);
-				}
-			}
 		}
 	}
 	
@@ -150,20 +139,19 @@ public class GUISign extends GuiScreen{
     protected void actionPerformed(GuiButton buttonClicked) throws IOException{
 		super.actionPerformed(buttonClicked);
 		if(buttonClicked.equals(startButton)){
-			MTS.MTSNet.sendToServer(new PacketSignChange(sign, signName, signTemp.text, player.getEntityId()));
+			MTS.MTSNet.sendToServer(new PacketSignChange(signGUIInstance, player.getEntityId()));
 			mc.player.closeScreen();
-			return;
 		}else{
 			if(buttonClicked.equals(leftPackButton)){
-				packName = prevPackName;
-				signName = "";
+				currentPack = prevPack;
+				currentSign = null;
 			}else if(buttonClicked.equals(rightPackButton)){
-				packName = nextPackName;
-				signName = "";
+				currentPack = nextPack;
+				currentSign = null;
 			}else if(buttonClicked.equals(leftSignButton)){
-				signName = prevSignName;
+				currentSign = prevSign;
 			}else if(buttonClicked.equals(rightSignButton)){
-				signName = nextSignName;
+				currentSign = nextSign;
 			}
 			updateSignNames();
 		}
@@ -202,10 +190,10 @@ public class GUISign extends GuiScreen{
         	for(byte i=0; i<signTextBoxes.size(); ++i){
         		//This check *shouldn't* be needed, but some users crash without it.
         		//Likely other mods not playing nice with GUIs....
-        		if(signTemp.text.size() > i){
+        		if(signGUIInstance.text.size() > i){
 	        		GuiTextField box = signTextBoxes.get(i);
 	        		if(box.textboxKeyTyped(typedChar, keyCode)){
-	        			signTemp.text.set(i, box.getText());
+	        			signGUIInstance.text.set(i, box.getText());
 	        		}
         		}
         	}
@@ -222,42 +210,53 @@ public class GUISign extends GuiScreen{
 	}
 	
 	private void updateSignNames(){
-		prevPackName = "";
-		nextPackName = "";	
-		prevSignName = "";
-		nextSignName = "";
+		//If we don't have a pack yet, set it now to the first pack if one exists.
+		if(currentPack == null){
+			if(MTSRegistry.packSignMap.size() > 0){
+				currentPack = MTSRegistry.packSignMap.firstEntry().getKey();
+			}else{
+				//Bail, as we have no signs.
+				return;
+			}
+		}
 		
-		boolean passedPack = false;
-		boolean passedSign = false;
-		for(String signFullName : PackParserSystem.getAllSigns()){
-			if(packName.isEmpty()){
-				packName = signFullName.substring(0, signFullName.indexOf(':'));
-			}else if(!passedPack && !signFullName.startsWith(packName)){
-				prevPackName = signFullName.substring(0, signFullName.indexOf(':'));
-			}
-			if(signFullName.startsWith(packName)){
-				passedPack = true;
-				if(signName.isEmpty()){
-					signName = signFullName;
-					passedSign = true;
-				}else if(signName.equals(signFullName)){
-					passedSign = true;
-				}else if(!passedSign){
-					prevSignName = signFullName;
-				}else if(nextSignName.isEmpty()){
-					nextSignName = signFullName;
-				}
-			}else if(nextPackName.isEmpty() && passedPack){
-				nextPackName = signFullName.substring(0, signFullName.indexOf(':'));
-			}
+		//Set the prev and next packs.  Since the order of packs in the
+		//map is the same, we can just get the entries to the left and right 
+		//of this packID and be done.
+		prevPack = null;
+		nextPack = null;
+		List<String> packIDs = new ArrayList<String>(MTSRegistry.packSignMap.keySet());
+		int currentPackIndex = packIDs.indexOf(currentPack); 
+		if(currentPackIndex > 0){
+			prevPack = packIDs.get(currentPackIndex - 1);
 		}
-		if(signName != null){
-			pack = PackParserSystem.getSign(signName);
-			for(GuiTextField textBox : signTextBoxes){
-				textBox.setText("");
-				textBox.setEnabled(false);
-			}
-			signTemp.text.clear();
+		if(currentPackIndex + 1 < packIDs.size() - 1){
+			nextPack = packIDs.get(currentPackIndex + 1);
 		}
+		
+		//Set the prev and next signs.  For these, we just get the next
+		//sign in the list of signs for this pack in the map.
+		prevSign = null;
+		nextSign = null;
+		List<JSONSign> signs = new ArrayList<JSONSign>(MTSRegistry.packSignMap.get(currentPack).values());
+		int currentSignIndex = signs.indexOf(currentSign);
+		//If the current sign is invalid (null) set it to the first sign.
+		if(currentSignIndex == -1){
+			currentSign = signs.get(0);
+			currentSignIndex = 0;
+		}
+		if(currentSignIndex > 0){
+			prevSign = signs.get(currentSignIndex - 1);
+		}
+		if(currentSignIndex + 1 < signs.size() - 1){
+			nextSign = signs.get(currentSignIndex + 1);
+		}
+		
+		//Clear out the text boxes so they don't bleed over onto a sign they shouldn't.
+		for(GuiTextField textBox : signTextBoxes){
+			textBox.setText("");
+			textBox.setEnabled(false);
+		}
+		signGUIInstance.text.clear();
 	}
 }

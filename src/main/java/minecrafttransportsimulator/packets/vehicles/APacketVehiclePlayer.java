@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.vehicles;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -11,7 +11,7 @@ public abstract class APacketVehiclePlayer extends APacketVehicle{
 
 	public APacketVehiclePlayer(){}
 	
-	public APacketVehiclePlayer(EntityVehicleA_Base vehicle, EntityPlayer player){
+	public APacketVehiclePlayer(EntityVehicleE_Powered vehicle, EntityPlayer player){
 		super(vehicle);
 		this.player = player.getEntityId();
 	}

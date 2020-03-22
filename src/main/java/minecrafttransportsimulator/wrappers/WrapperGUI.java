@@ -2,15 +2,19 @@ package minecrafttransportsimulator.wrappers;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.guis.components.GUIBase;
+import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.AGUIBase.GUILightingMode;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
+import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import net.minecraft.client.Minecraft;
@@ -27,27 +31,29 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.client.config.GuiUtils;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
-/**Wrapper for MC GUI classes.  Constructor takes a type of {@link GUIBase}.
- * This is where all MC-specific code should be located.  Preferably
+/**Wrapper for MC GUI classes.  Constructor takes a type of {@link AGUIBase}, but
+ * is only visible when calling {@link #openGUI(AGUIBase)}.  This will automatically
+ * construct the wrapper and open the GUI, all without exposing MC-specific code.
+ * On that note, this is where all MC-specific code should be located.  Preferably
  * in static methods that can be accessed by anything that needs GUI
- * functionality, even if it doesn't extend the {@link GUIBase} class.
+ * functionality, even if it doesn't extend the {@link AGUIBase} class.
  *
  * @author don_bruce
  */
 public class WrapperGUI extends GuiScreen{
-	protected static final ResourceLocation standardTexture = new ResourceLocation(MTS.MODID, "textures/guis/standard.png");
-	private static final int STANDARD_TEXTURE_WIDTH = 256;
-	private static final int STANDARD_TEXTURE_HEIGHT = 192;
-	private static final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-	private static final RenderItem itemRenderer = Minecraft.getMinecraft().getRenderItem();
+	private static FontRenderer fontRenderer;
+	private static RenderItem itemRenderer;
 	
 	private int guiLeft;
 	private int guiTop;
+	private GUIComponentSelector lastSelectorClicked;
 	
-	private final GUIBase gui;
+	private final AGUIBase gui;
 	
-	public WrapperGUI(GUIBase gui){
+	private WrapperGUI(AGUIBase gui){
 		this.gui = gui;
 	}
 	
@@ -60,8 +66,13 @@ public class WrapperGUI extends GuiScreen{
 	@Override 
 	public void initGui(){
 		super.initGui();
-		guiLeft = (width - STANDARD_TEXTURE_WIDTH)/2;
-		guiTop = (height - STANDARD_TEXTURE_HEIGHT)/2;
+		guiLeft = (width - gui.getWidth())/2;
+		if(gui.renderFlushBottom()){
+			guiTop = height - gui.getHeight();
+		}else{
+			guiTop = (height - gui.getHeight())/2;
+		}
+		
 		
 		//Clear out the component lists before populating them again.
 		//If we don't, we get duplicates when re-sizing.
@@ -91,13 +102,36 @@ public class WrapperGUI extends GuiScreen{
 			drawDefaultBackground();
 		}
 		
-		//Bind the standard texture and render the background.
-		mc.getTextureManager().bindTexture(standardTexture);
-		renderSheetTexture(guiLeft, guiTop, STANDARD_TEXTURE_WIDTH, STANDARD_TEXTURE_HEIGHT, 0, 0, STANDARD_TEXTURE_WIDTH, STANDARD_TEXTURE_HEIGHT);
+		//If we are light-sensitive, enable the lightmap.
+		if(!gui.getGUILightMode().equals(GUILightingMode.NONE)){
+			mc.entityRenderer.enableLightmap();
+		}
 		
-		//Render buttons.  Buttons choose if they render or not depending on visibility.
+		//Bind the standard texture and render the background.
+		mc.getTextureManager().bindTexture(new ResourceLocation(gui.getTexture()));
+		renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
+		
+		//Render buttons and selectors.  These choose if they render or not depending on visibility.
 		for(GUIComponentButton button : gui.buttons){
 			button.renderButton(mouseX, mouseY);
+		}
+		for(GUIComponentSelector selector : gui.selectors){
+			selector.renderSelector(mouseX, mouseY);
+		}
+		
+		//If we are light-sensitive, and this GUI is said to be lit up, disable the lightmap.
+		//This allows all text to be lit up if required.  We also render the lit texture now.
+		//This requires a re-render of all the components to ensure the lit texture portions of said components render.
+		if(gui.getGUILightMode().equals(GUILightingMode.LIT)){
+			mc.entityRenderer.disableLightmap();
+			mc.getTextureManager().bindTexture(new ResourceLocation(gui.getTexture().replace(".png", "_lit.png")));
+			renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
+			for(GUIComponentButton button : gui.buttons){
+				button.renderButton(mouseX, mouseY);
+			}
+			for(GUIComponentSelector selector : gui.selectors){
+				selector.renderSelector(mouseX, mouseY);
+			}
 		}
 		
 		//Now that all main rendering is done, render text.
@@ -108,33 +142,65 @@ public class WrapperGUI extends GuiScreen{
 		for(GUIComponentButton button : gui.buttons){
 			button.renderText();
 		}
+		for(GUIComponentSelector selector : gui.selectors){
+			selector.renderText(gui.getGUILightMode().equals(GUILightingMode.LIT));
+		}
 		for(GUIComponentTextBox textBox : gui.textBoxes){
         	textBox.renderBox();
         }
+				
+		//Now render the instruments.  These use their own texture.
+		for(GUIComponentInstrument instrument : gui.instruments){
+			instrument.renderInstrument();
+		}
 		
-		//Items go last, as they need item-specific rendering changes to lighting which can mess things up.
+		//Now render any OBJModels we may have.
+		//CHeck to make sure the texture exists before binding.
+		for(GUIComponentOBJModel objModel : gui.objModels){
+			if(!objModel.textureDomain.isEmpty()){
+				mc.getTextureManager().bindTexture(new ResourceLocation(objModel.textureDomain, objModel.textureLocation));
+			}
+			objModel.renderModel();
+		}
+		
+		//Now render items.
+		//These will cause a texture re-bind, so they need to go after the components.
+		//However, since they muck up the lighting, they MUST go last no matter what.
 		RenderHelper.enableGUIStandardItemLighting();
+		mc.entityRenderer.disableLightmap();
 		for(GUIComponentItem item : gui.items){
 			item.renderItem();
 		}
+		
+		//Render any tooltips.  These are the final thing to render as they need to render over everything else.
+		for(GUIComponentButton button : gui.buttons){
+			button.renderTooltip(this, mouseX, mouseY);
+		}
 		for(GUIComponentItem item : gui.items){
 			item.renderTooltip(this, mouseX, mouseY);
-		}
+		}		
 	}
 	
 	/**
-	 *  This is called by the main MC system for click events.  We Override it here to check
-	 *  to see if we have clicked any of the registered buttons or text boxes.  If so,
-	 *  we fire the appropriate event for those components.  In the case of {@link GUIComponentButton}
-	 *  we fire {@link GUIComponentButton#onClicked()}.  If we click a button, we don't check any other
-	 *  buttons or text boxes as that could result in us being in a transition state when doing checks.
+	 *  This is called by the main MC system for click events.  We override it here to check
+	 *  to see if we have clicked any of the registered components.  If so, we fire the appropriate 
+	 *  event for those components.  If we click something, we don't check any other components as 
+	 *  that could result in us being in a transition state when doing checks.
 	 */
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException{
         for(GUIComponentButton button : gui.buttons){
-        	if(button.clicked(mouseX, mouseY)){
+        	if(button.canClick(mouseX, mouseY)){
     			mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
     			button.onClicked();
+    			return;
+        	}
+        }
+        for(GUIComponentSelector selector : gui.selectors){
+        	if(selector.canClick(mouseX, mouseY)){
+    			mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+    			selector.onClicked(mouseX <= selector.x + selector.width/2);
+    			lastSelectorClicked = selector;
     			return;
         	}
         }
@@ -142,6 +208,20 @@ public class WrapperGUI extends GuiScreen{
         	textBox.updateFocus(mouseX, mouseY);
         }
     }
+	
+	/**
+	 *  This is called by the main MC system for click events.  We override it here to tell 
+	 *  the last selector we clicked, if any, that the mouse has been released.  This allows
+	 *  the selector to resume to it's "resting" state.  This is dependent on the selector code;
+	 *  some selectors may not do anything with this action.
+	 */
+	@Override
+	protected void mouseReleased(int mouseX, int mouseY, int actionType){
+	    if(lastSelectorClicked != null){
+	    	lastSelectorClicked.onReleased();
+	    	lastSelectorClicked = null;
+	    }
+	}
 	
 	/**
 	 *  This is called by the main MC system for keyboard events.  We Override it here to check
@@ -177,13 +257,23 @@ public class WrapperGUI extends GuiScreen{
 	
 	//--------------------START OF INSTANCE HELPER METHODS--------------------	
 	/**
-	 *  Draws the specified tooltip on the GUI.  This should be
+	 *  Draws the item's tooltip on the GUI.  This should be
 	 *  the last thing that gets rendered, as otherwise it may render
 	 *  behind other components.
 	 */
 	public void drawItemTooltip(String itemName, int qty, int metadata, int mouseX, int mouseY){
 		ItemStack stack = new ItemStack(Item.getByNameOrId(itemName), qty, metadata);
-		this.renderToolTip(stack, mouseX, mouseY);
+		GuiUtils.drawHoveringText(stack, getItemToolTip(stack), mouseX, mouseY, width, height, -1, fontRenderer);
+	}
+	
+	/**
+	 *  Draws a tooltip into the GUI.  This is for things that are NOT items, so
+	 *  rather than passing-in item parameters you need to pass in the lines to render.
+	 *  This should be rendered at the end of the render call to prevent the odd texture
+	 *  binding of this method from conflicting from other renders.
+	 */
+	public void drawGenericTooltip(String tooltip, int mouseX, int mouseY){
+		GuiUtils.drawHoveringText(Arrays.asList(new String[]{tooltip}), mouseX, mouseY, width, height, -1, fontRenderer);
 	}
 
 	
@@ -196,13 +286,20 @@ public class WrapperGUI extends GuiScreen{
 	 *  so take care when calling this method in the middle of rendering operations.
 	 */
 	public static void drawText(String text, int x, int y, Color color, boolean centered, boolean shadow, int wrapWidth){
+		if(fontRenderer == null){
+			fontRenderer = Minecraft.getMinecraft().fontRenderer;
+		}
 		if(centered){
-			x -= fontRenderer.getStringWidth(text)/2;
+			if(wrapWidth == 0){
+				x -= fontRenderer.getStringWidth(text)/2;
+			}else{
+				x -= Math.min(wrapWidth/2, fontRenderer.getStringWidth(text)/2);
+			}
 		}
 		if(shadow){
 			fontRenderer.drawStringWithShadow(text, x, y, color.getRGB());
 		}else{
-			if(wrapWidth == -1){
+			if(wrapWidth == 0){
 				fontRenderer.drawString(text, x, y, color.getRGB());
 			}else{
 				fontRenderer.drawSplitString(text, x, y, wrapWidth, color.getRGB());
@@ -216,9 +313,12 @@ public class WrapperGUI extends GuiScreen{
 	 *  to get this to work, so it's in it's own method for code simplicity.
 	 */
 	public static void drawScaledText(String text, int x, int y, Color color, boolean centered, boolean shadow, int wrapWidth, float scale){
+		if(fontRenderer == null){
+			fontRenderer = Minecraft.getMinecraft().fontRenderer;
+		}
 		GL11.glPushMatrix();
 		if(centered){
-			GL11.glTranslatef(x - fontRenderer.getStringWidth(text)/2, y, 0);
+			GL11.glTranslatef(x - scale*fontRenderer.getStringWidth(text)/2, y, 0);
 		}else{
 			GL11.glTranslatef(x, y, 0);
 		}
@@ -233,6 +333,9 @@ public class WrapperGUI extends GuiScreen{
 	 *  choosing where to put this component in your GUI.
 	 */
 	public static void drawItem(String itemName, int qty, int metadata, int x, int y, float scale){
+		if(itemRenderer == null){
+			itemRenderer = Minecraft.getMinecraft().getRenderItem();
+		}
 		ItemStack stack = new ItemStack(Item.getByNameOrId(itemName), qty, metadata);
 		if(scale != 1.0F){
 			GL11.glPushMatrix();
@@ -252,14 +355,13 @@ public class WrapperGUI extends GuiScreen{
 	}
 	
 	/**
-	 *  Draws the specified portion of the currently-bound texture.  Normally, this will be the standardTexture,
-	 *  but other textures are possible if they are bound prior to calling this method.  A texture size
-	 *  of 256x256 is assumed here, so don't use anything but that!  Draw starts at the bottom-left
-	 *  point and goes counter-clockwise to the top-left point.
+	 *  Draws the specified portion of the currently-bound texture.  Texture size needs to be
+	 *  passed-in here to allow this method to translate pixels into relative texture coords.  
+	 *  Draw starts at the  bottom-left point and goes counter-clockwise to the top-left point.
 	 */
-	public static void renderSheetTexture(int x, int y, int width, int height, int u, int v, int U, int V){
-	 	float widthPixelPercent = 1.0F/256F;
-        float heightPixelPercent = 1.0F/256F;
+	public static void renderSheetTexture(int x, int y, int width, int height, float u, float v, float U, float V, int textureWidth, int textureHeight){
+	 	float widthPixelPercent = 1.0F/textureWidth;
+        float heightPixelPercent = 1.0F/textureHeight;
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuffer();
         bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
@@ -297,9 +399,31 @@ public class WrapperGUI extends GuiScreen{
 	}
 	
 	/**
-	 *  Closes this screen, returning back to the main game.
+	 *  Returns true if the passed-in GUI is currently active.
+	 *  If null is passed-in, then this method returns true if no GUI is active.
 	 */
-	public static void closeScreen(){
-		Minecraft.getMinecraft().player.closeScreen();
+	public static boolean isGUIActive(Class<? extends AGUIBase> guiClass){
+		if(guiClass == null){
+			return Minecraft.getMinecraft().currentScreen == null;
+		}else{
+			return Minecraft.getMinecraft().currentScreen == null ? false : (Minecraft.getMinecraft().currentScreen instanceof WrapperGUI ? ((WrapperGUI) Minecraft.getMinecraft().currentScreen).gui.getClass().equals(guiClass) : false);
+		}
+	}
+	
+	/**
+	 *  Closes the currently-opened GUI, returning back to the main game.
+	 */
+	public static void closeGUI(){
+		//Set current screen to null and clear out the OBJ DisplayLists if we have any.
+		Minecraft.getMinecraft().displayGuiScreen(null);
+		GUIComponentOBJModel.clearDisplayListCaches();
+	}
+	
+	/**
+	 *  Opens the passed-in GUI, wrapping it in an instance of this class in the process.
+	 *  This makes it compatible with all MC-specific systems.
+	 */
+	public static void openGUI(AGUIBase gui){
+		FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(gui));
 	}
 }

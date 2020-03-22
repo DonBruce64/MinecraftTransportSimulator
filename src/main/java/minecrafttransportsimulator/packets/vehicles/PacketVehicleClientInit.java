@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.vehicles;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -12,7 +12,7 @@ public class PacketVehicleClientInit extends APacketVehicle{
 
 	public PacketVehicleClientInit(){}
 	
-	public PacketVehicleClientInit(EntityVehicleA_Base vehicle){
+	public PacketVehicleClientInit(EntityVehicleE_Powered vehicle){
 		super(vehicle);
 	}
 
@@ -22,7 +22,7 @@ public class PacketVehicleClientInit extends APacketVehicle{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityVehicleA_Base vehicle = getVehicle(message, ctx);
+					EntityVehicleE_Powered vehicle = getVehicle(message, ctx);
 					if(vehicle!=null){
 						NBTTagCompound tagCompound = new NBTTagCompound();
 						vehicle.writeToNBT(tagCompound);
