@@ -181,9 +181,11 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 				//Both the vehicle and the player can have yaw greater than 360.
 				double deltaPitch = playerController.rotationPitch - vehicle.rotationPitch;
 				double deltaYaw = (playerController.rotationYaw + 360 - vehicle.rotationYaw + 360 + partRotation.y + 360)%360;
-				if(deltaPitch < currentPitch && currentPitch > getMinPitch()){
+				//I know this is weird, but the pitch is bigger when it's pointing the ground and smaller when it's pointing the sky.
+				//At least this won't be confusing on the pack creator's end in this way. -Bunting_chj
+				if(deltaPitch < currentPitch && currentPitch > -getMaxPitch()){
 					currentPitch -= Math.min(anglePerTickSpeed, currentPitch - deltaPitch);
-				}else if(deltaPitch > currentPitch && currentPitch < getMaxPitch()){
+				}else if(deltaPitch > currentPitch && currentPitch < -getMinPitch()){
 					currentPitch += Math.min(anglePerTickSpeed, deltaPitch - currentPitch);
 				}
 				//If yaw is from -180 to 180, we are a gun that can spin around on its mount.

@@ -35,6 +35,6 @@ public class PartGunTurret extends APartGun{
 	
 	@Override
 	public float getMaxPitch(){
-		return definition.gun.minPitch == 0 ? 60 : definition.gun.minPitch;
+		return definition.gun.maxPitch == 0 ? 60 : definition.gun.maxPitch;
 	}
 }
