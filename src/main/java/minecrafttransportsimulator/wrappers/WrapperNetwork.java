@@ -13,7 +13,6 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehicleWrenchGUI;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -96,6 +95,22 @@ public class WrapperNetwork{
 		network.sendTo(new WrapperPacket(packet), player);
 	}
 	
+	/**
+	 *  Gets the world this packet was sent from based on its context.
+	 *  Used for handling packets arriving on the server.
+	 */
+	private static WrapperWorld getServerWorld(MessageContext ctx){
+		return new WrapperWorld(ctx.getServerHandler().player.world);
+	}
+	
+	/**
+	 *  Gets the player this packet was sent by based on its context.
+	 *  Used for handling packets arriving on the server.
+	 */
+	private static WrapperPlayer getServerPlayer(MessageContext ctx){
+		return new WrapperPlayer(ctx.getServerHandler().player);
+	}
+	
 	
 	/**
 	 *  Custom class for packets.  Allows for a common packet to be used for all MC versions, 
@@ -135,22 +150,23 @@ public class WrapperNetwork{
 	 *  class passed-in with all fields populated by {@link WrapperPacket#fromBytes}.
 	 */
 	public static class WrapperHandler implements IMessageHandler<WrapperPacket, IMessage>{
-
 		@Override
 		public IMessage onMessage(WrapperPacket message, MessageContext ctx){
 			//Need to put this in a runnable to not run it on the network thread and get a CME.
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
+					//We need to use side-specific getters here to avoid side-specific classes from trying to be loaded
+					//by the JVM when this method is created.  Failure to do this will result in network faults.
+					//For this, we use abstract methods that are extended in our sub-classes.
 					if(ctx.side.isServer()){
-						message.packet.handle(new WrapperWorld(ctx.getServerHandler().player.world), new WrapperPlayer(ctx.getServerHandler().player));
+						message.packet.handle(getServerWorld(ctx), getServerPlayer(ctx));
 					}else{
-						message.packet.handle(new WrapperWorld(Minecraft.getMinecraft().world), new WrapperPlayer(Minecraft.getMinecraft().player));
+						message.packet.handle(WrapperGame.getClientWorld(), WrapperGame.getClientPlayer());
 					}
 				}
 			});
 			return null;
 		}
 	};
-
 }

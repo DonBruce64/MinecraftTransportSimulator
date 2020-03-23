@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.wrappers;
 
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.Loader;
 
 /**Wrapper for the core MC game.  This class has methods used for determining
@@ -23,5 +24,22 @@ public class WrapperGame{
 	 */
 	public static String getModName(String modID){
 		return Loader.instance().getIndexedModList().get(modID).getName();
+	}
+	
+	/**
+	 *  Returns the world.  Only valid on CLIENTs as on servers
+	 *  there are multiple worlds (dimensions) so a global reference
+	 *  isn't possible. 
+	 */
+	public static WrapperWorld getClientWorld(){
+		return new WrapperWorld(Minecraft.getMinecraft().world);
+	}
+	
+	/**
+	 *  Returns the player.  Only valid on CLIENTs as on servers
+	 *  there are multiple players.
+	 */
+	public static WrapperPlayer getClientPlayer(){
+		return new WrapperPlayer(Minecraft.getMinecraft().player);
 	}
 }
