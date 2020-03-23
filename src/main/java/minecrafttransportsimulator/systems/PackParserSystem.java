@@ -42,9 +42,7 @@ import minecrafttransportsimulator.jsondefs.JSONSign;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
@@ -59,7 +57,7 @@ import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
 import minecrafttransportsimulator.vehicles.parts.PartEngineBoat;
 import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import minecrafttransportsimulator.vehicles.parts.PartEngineJet;
-import minecrafttransportsimulator.vehicles.parts.PartFertilizer;
+import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorFertilizer;
 import minecrafttransportsimulator.vehicles.parts.PartFurnace;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceSkid;
@@ -68,9 +66,9 @@ import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceWheel;
 import minecrafttransportsimulator.vehicles.parts.PartGunFixed;
 import minecrafttransportsimulator.vehicles.parts.PartGunTripod;
 import minecrafttransportsimulator.vehicles.parts.PartGunTurret;
-import minecrafttransportsimulator.vehicles.parts.PartHarvester;
-import minecrafttransportsimulator.vehicles.parts.PartPlanter;
-import minecrafttransportsimulator.vehicles.parts.PartPlow;
+import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorHarvester;
+import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlanter;
+import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlow;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.nbt.NBTTagCompound;
@@ -262,26 +260,26 @@ public final class PackParserSystem{
 		}
     }    
     
-    public static APart<? extends EntityVehicleA_Base> createPart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+    public static APart createPart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
     	switch(definition.general.type){
 			case "crate": return new PartCrate(vehicle, packVehicleDef, definition, dataTag);
 			case "barrel": return new PartBarrel(vehicle, packVehicleDef, definition, dataTag);
 			case "crafting_table": return new PartCraftingTable(vehicle, packVehicleDef, definition, dataTag);
 			case "furnace": return new PartFurnace(vehicle, packVehicleDef, definition, dataTag);
 			case "brewing_stand": return new PartBrewingStand(vehicle, packVehicleDef, definition, dataTag);
-			case "plow": return new PartPlow(vehicle, packVehicleDef, definition, dataTag);
-			case "planter": return new PartPlanter(vehicle, packVehicleDef, definition, dataTag);
-			case "fertilizer": return new PartFertilizer(vehicle, packVehicleDef, definition, dataTag);
-			case "harvester": return new PartHarvester(vehicle, packVehicleDef, definition, dataTag);
-			case "engine_aircraft": return new PartEngineAircraft((EntityVehicleF_Air) vehicle, packVehicleDef, definition, dataTag);
-			case "engine_jet": return new PartEngineJet((EntityVehicleG_Plane) vehicle, packVehicleDef, definition, dataTag);
-			case "engine_car": return new PartEngineCar((EntityVehicleG_Car) vehicle, packVehicleDef, definition, dataTag);
-			case "engine_boat": return new PartEngineBoat((EntityVehicleG_Boat) vehicle, packVehicleDef, definition, dataTag);
+			case "plow": return new PartGroundEffectorPlow(vehicle, packVehicleDef, definition, dataTag);
+			case "planter": return new PartGroundEffectorPlanter(vehicle, packVehicleDef, definition, dataTag);
+			case "fertilizer": return new PartGroundEffectorFertilizer(vehicle, packVehicleDef, definition, dataTag);
+			case "harvester": return new PartGroundEffectorHarvester(vehicle, packVehicleDef, definition, dataTag);
+			case "engine_aircraft": return new PartEngineAircraft(vehicle, packVehicleDef, definition, dataTag);
+			case "engine_jet": return new PartEngineJet(vehicle, packVehicleDef, definition, dataTag);
+			case "engine_car": return new PartEngineCar(vehicle, packVehicleDef, definition, dataTag);
+			case "engine_boat": return new PartEngineBoat(vehicle, packVehicleDef, definition, dataTag);
 			case "wheel": return new PartGroundDeviceWheel(vehicle, packVehicleDef, definition, dataTag);
 			case "skid": return new PartGroundDeviceSkid(vehicle, packVehicleDef, definition, dataTag);
 			case "pontoon": return new PartGroundDevicePontoon(vehicle, packVehicleDef, definition, dataTag);
 			case "tread": return new PartGroundDeviceTread(vehicle, packVehicleDef, definition, dataTag);
-			case "propeller": return new PartPropeller((EntityVehicleF_Air) vehicle, packVehicleDef, definition, dataTag);
+			case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, dataTag);
 			case "seat": return new PartSeat(vehicle, packVehicleDef, definition, dataTag);
 			case "gun_fixed": return new PartGunFixed(vehicle, packVehicleDef, definition, dataTag);
 			case "gun_tripod": return new PartGunTripod(vehicle, packVehicleDef, definition, dataTag);

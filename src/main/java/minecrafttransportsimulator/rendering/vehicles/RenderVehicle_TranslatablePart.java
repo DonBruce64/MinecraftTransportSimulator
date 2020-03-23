@@ -77,7 +77,7 @@ public final class RenderVehicle_TranslatablePart{
 	 *  to be used as translation helper classes in addition to actual
 	 *  translatable renderable parts.
 	 */
-	public void translate(EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart, float partialTicks){
+	public void translate(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
 		for(byte i=0; i<translationVariables.length; ++i){
 			double translation = RenderAnimations.getVariableValue(translationVariables[i], translationMagnitudes[i], 0F, translationClampsMin[i], translationClampsMax[i], partialTicks, vehicle, null);
 			if(translation != 0){
@@ -93,7 +93,7 @@ public final class RenderVehicle_TranslatablePart{
 	 *  the part came from.  This is to prevent the issue of same-named
 	 *  parts on two different models conflicting.
 	 */
-	public void render(EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart, float partialTicks){
+	public void render(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
 		//Translate prior to rendering.
 		translate(vehicle, optionalPart, partialTicks);
 		

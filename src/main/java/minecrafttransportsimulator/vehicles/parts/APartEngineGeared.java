@@ -3,13 +3,13 @@ package minecrafttransportsimulator.vehicles.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 
-public abstract class APartEngineGeared<EntityVehicleX_Type extends EntityVehicleF_Ground> extends APartEngine<EntityVehicleX_Type>{
+public abstract class APartEngineGeared extends APartEngine{
 	public byte currentGear;
 
-	public APartEngineGeared(EntityVehicleX_Type vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public APartEngineGeared(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 		this.currentGear = dataTag.getByte("gearNumber");
 	}
@@ -66,7 +66,7 @@ public abstract class APartEngineGeared<EntityVehicleX_Type extends EntityVehicl
 			//Divide the currentGear-1 by two to get our column (0 for column 1, 1 for 2).
 			//Then add multiply that by columnAngleDelta to get our delta for this column.
 			//Return that value, plus the initial angle.
-			return firstColumnAngle + (int)((currentGear - 1)/2)*columnAngleDelta;
+			return firstColumnAngle + (currentGear - 1)/2*columnAngleDelta;
 		}
 	}
 	

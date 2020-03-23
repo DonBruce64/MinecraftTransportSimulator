@@ -24,7 +24,6 @@ import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.items.core.ItemKey;
 import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.packs.AItemPack;
-import minecrafttransportsimulator.items.packs.ItemBooklet;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
@@ -32,23 +31,8 @@ import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONSign;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.packets.control.AileronPacket;
-import minecrafttransportsimulator.packets.control.BrakePacket;
-import minecrafttransportsimulator.packets.control.ElevatorPacket;
-import minecrafttransportsimulator.packets.control.FlapPacket;
-import minecrafttransportsimulator.packets.control.HornPacket;
-import minecrafttransportsimulator.packets.control.LightPacket;
-import minecrafttransportsimulator.packets.control.ReverseThrustPacket;
-import minecrafttransportsimulator.packets.control.RudderPacket;
-import minecrafttransportsimulator.packets.control.ShiftPacket;
-import minecrafttransportsimulator.packets.control.SirenPacket;
-import minecrafttransportsimulator.packets.control.SteeringPacket;
-import minecrafttransportsimulator.packets.control.ThrottlePacket;
-import minecrafttransportsimulator.packets.control.TrailerPacket;
-import minecrafttransportsimulator.packets.control.TrimPacket;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.packets.general.PacketChat;
-import minecrafttransportsimulator.packets.general.PacketManualPageUpdate;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
@@ -62,14 +46,12 @@ import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
 import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
 import minecrafttransportsimulator.packets.tileentities.PacketTileEntityClientServerHandshake;
 import minecrafttransportsimulator.packets.tileentities.PacketTrafficSignalControllerChange;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleAttacked;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInitResponse;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartAddition;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartRemoval;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleInstruments;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteracted;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleJerrycan;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
@@ -262,8 +244,8 @@ public final class MTSRegistry{
 		try {
 			PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json"), "UTF-8"), "handbook_en", MTS.MODID);
 			PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_ru.json"), "UTF-8"), "handbook_ru", MTS.MODID);
-			handbook_en = (ItemBooklet) MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_en").setUnlocalizedName("mts:handbook_en");
-			handbook_ru = (ItemBooklet) MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_ru").setUnlocalizedName("mts:handbook_ru");
+			handbook_en = MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_en").setUnlocalizedName("mts:handbook_en");
+			handbook_ru = MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_ru").setUnlocalizedName("mts:handbook_ru");
 		}catch(Exception e){
 			MTS.MTSLog.error("ERROR PARSING HANDBOOK AS UTF-8 STRING ENCODING!  HANDBOOKS MAY NOT APPEAR!");
 			MTS.MTSLog.error(e.getMessage());
@@ -315,27 +297,10 @@ public final class MTSRegistry{
 	}
 	
 	private static void initPackets(){
-		//Packets in packets.control
-		registerPacket(AileronPacket.class, AileronPacket.Handler.class, true, true);
-		registerPacket(BrakePacket.class, BrakePacket.Handler.class, true, true);
-		registerPacket(ElevatorPacket.class, ElevatorPacket.Handler.class, true, true);
-		registerPacket(FlapPacket.class, FlapPacket.Handler.class, true, true);
-		registerPacket(HornPacket.class, HornPacket.Handler.class, true, true);
-		registerPacket(LightPacket.class, LightPacket.Handler.class, true, true);
-		registerPacket(ReverseThrustPacket.class, ReverseThrustPacket.Handler.class, true, true);
-		registerPacket(RudderPacket.class, RudderPacket.Handler.class, true, true);
-		registerPacket(SirenPacket.class, SirenPacket.Handler.class, true, true);
-		registerPacket(ShiftPacket.class, ShiftPacket.Handler.class, true, true);
-		registerPacket(SteeringPacket.class, SteeringPacket.Handler.class, true, true);
-		registerPacket(ThrottlePacket.class, ThrottlePacket.Handler.class, true, true);
-		registerPacket(TrailerPacket.class, TrailerPacket.Handler.class, true, true);
-		registerPacket(TrimPacket.class, TrimPacket.Handler.class, true, true);
-		
 		//Packets in packets.general
 		registerPacket(PacketBulletHit.class, PacketBulletHit.Handler.class, true, true);
 		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);
 		registerPacket(PacketPartGunReload.class, PacketPartGunReload.Handler.class, true, false);
-		registerPacket(PacketManualPageUpdate.class, PacketManualPageUpdate.Handler.class, true, true);
 		registerPacket(PacketPlayerCrafting.class, PacketPlayerCrafting.Handler.class, false, true);
 		
 		//Packets in packets.tileentity
@@ -346,14 +311,12 @@ public final class MTSRegistry{
 		registerPacket(PacketTrafficSignalControllerChange.class, PacketTrafficSignalControllerChange.Handler.class, true, true);
 		
 		//Packets in packets.vehicles.
-		registerPacket(PacketVehicleAttacked.class, PacketVehicleAttacked.Handler.class, false, true);
 		registerPacket(PacketVehicleClientInit.class, PacketVehicleClientInit.Handler.class, false, true);
 		registerPacket(PacketVehicleClientInitResponse.class, PacketVehicleClientInitResponse.Handler.class, true, false);
 		registerPacket(PacketVehicleClientPartAddition.class, PacketVehicleClientPartAddition.Handler.class, true, false);
 		registerPacket(PacketVehicleClientPartRemoval.class, PacketVehicleClientPartRemoval.Handler.class, true, false);
 		registerPacket(PacketVehicleDeltas.class, PacketVehicleDeltas.Handler.class, true, false);
-		registerPacket(PacketVehicleInstruments.class, PacketVehicleInstruments.Handler.class, true, true);
-		registerPacket(PacketVehicleInteracted.class, PacketVehicleInteracted.Handler.class, false, true);
+		registerPacket(PacketVehicleInteract.class, PacketVehicleInteract.Handler.class, false, true);
 		registerPacket(PacketVehicleJerrycan.class, PacketVehicleJerrycan.Handler.class, true, false);
 		registerPacket(PacketVehicleKey.class, PacketVehicleKey.Handler.class, true, false);
 		registerPacket(PacketVehicleNameTag.class, PacketVehicleNameTag.Handler.class, true, false);

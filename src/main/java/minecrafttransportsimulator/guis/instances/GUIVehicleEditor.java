@@ -14,6 +14,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
@@ -22,6 +23,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObj
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**This is a special GUI that is called in devMode to allow vehicle editing.
  * The idea is that pack authors can use it to modify their vehicle's JSON
@@ -43,6 +45,9 @@ public class GUIVehicleEditor extends AGUIBase{
 	private GUIComponentTextBox debugBox;
 	private int numberComponents = 0;
 	private boolean needToLoadState = false;
+	
+	//Screen-specific components.  These are static as screens are static.
+	private static GUIComponentOBJModel componentItemModel;
 	
 	//Static savers for GUI state.
 	private static EntityVehicleE_Powered vehicle;
@@ -172,6 +177,14 @@ public class GUIVehicleEditor extends AGUIBase{
 				numberComponents = -1;
 			}
 		});
+		
+		//Add item icon model component if we haven't already.
+		//We don't want to re-create it here if we have it, otherwise we'll blow out the selection.
+		if(componentItemModel != null){
+			componentItemModel = new GUIComponentOBJModel(guiLeft + 208, guiTop + 205, false, true);
+			componentItemModel.scale = 6.0F;
+		}
+		addOBJModel(componentItemModel);
 	}
 	
 	@Override
@@ -201,6 +214,7 @@ public class GUIVehicleEditor extends AGUIBase{
 		componentSaveButton.visible = !currentScreen.equals(EditScreen.NONE);
 		componentBackButton.visible = !currentScreen.equals(EditScreen.NONE);
 		debugBox.visible = !currentScreen.equals(EditScreen.NONE);
+		componentItemModel.visible = currentScreen.equals(EditScreen.ITEM_ICON_RENDER);
 	}
 	
 	
@@ -214,7 +228,8 @@ public class GUIVehicleEditor extends AGUIBase{
 		INSTRUMENTS(new InstrumentLoader()),
 		ROTATIONS(new RotationLoader()),
 		TRANSLATIONS(new TranslationLoader()),
-		TEXTS(new TextLoader());;
+		TEXTS(new TextLoader()),
+		ITEM_ICON_RENDER(new ItemIconLoader());
 		
 		private final LoaderHelper<?> loader;
 		
@@ -266,7 +281,9 @@ public class GUIVehicleEditor extends AGUIBase{
 	}
 	
 	private static class ModelLoader extends LoaderHelper<String>{
-
+		private static String folderName = "";
+		private static String fileName = "";
+		
 		@Override
 		public boolean setIndex(int index){
 			return true;
@@ -284,8 +301,8 @@ public class GUIVehicleEditor extends AGUIBase{
 		@Override
 		public void loadObject(List<GUIComponentTextBox> dataEntryBoxes){
 			int dataEntryBoxIndex = 1;
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText("");
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText("");
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(folderName);
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(fileName);
 		}
 
 		@Override
@@ -293,12 +310,12 @@ public class GUIVehicleEditor extends AGUIBase{
 			int dataEntryBoxIndex = 1;
 			File modelFile;
 			try{
-				String folderName = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
+				folderName = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
 				if(!folderName.isEmpty() && !(new File(MTS.minecraftDir, folderName).exists())){
 					return -1; 
 				}
 				
-				String fileName = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
+				fileName = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
 				if(fileName.isEmpty()){
 					return -2;
 				}
@@ -622,6 +639,70 @@ public class GUIVehicleEditor extends AGUIBase{
 				vehicle.definition.rendering.textMarkings.set(currentIndex, saving);
 				return currentIndex;
 			}
+		}
+	}
+	
+	private static class ItemIconLoader extends LoaderHelper<String>{
+
+		@Override
+		public boolean setIndex(int index){
+			if(index < vehicle.getVehicleParts().size()){
+				currentIndex = index;
+				return true;
+			}else{
+				return false;
+			}
+		}
+		
+		@Override
+		public int setLabels(List<GUIComponentLabel> dataEntryLabels){
+			int labelBoxIndex = 0;
+			dataEntryLabels.get(labelBoxIndex++).text = "Part# (0 first, -1 vehch.):";
+			dataEntryLabels.get(labelBoxIndex++).text = "X-Pos (px):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Y-Pos (px):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Scale (1block=1px):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Part Pack Loaded:";
+			dataEntryLabels.get(labelBoxIndex++).text = "Part Name Loaded:";
+			return labelBoxIndex;
+		}
+
+		@Override
+		public void loadObject(List<GUIComponentTextBox> dataEntryBoxes){
+			int dataEntryBoxIndex = 1;
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(componentItemModel.x));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(componentItemModel.y));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(componentItemModel.scale));
+			if(currentIndex == -1){
+				//Render vehicle.
+				componentItemModel.modelDomain = vehicle.definition.packID;
+				componentItemModel.modelLocation = "objmodels/vehicles/" + vehicle.definition.genericName + ".obj";
+				componentItemModel.textureDomain = vehicle.definition.packID;
+				componentItemModel.textureLocation = "textures/vehicles/" + vehicle.definition.systemName + ".png";
+				dataEntryBoxes.get(dataEntryBoxIndex++).setText("N/A");
+				dataEntryBoxes.get(dataEntryBoxIndex++).setText("N/A");
+			}else{
+				//Render part
+				APart partToRender = vehicle.getVehicleParts().get(currentIndex);
+				componentItemModel.modelDomain = partToRender.definition.packID;
+				componentItemModel.modelLocation = "objmodels/parts/" + (partToRender.definition.general.modelName != null ? partToRender.definition.general.modelName : partToRender.definition.systemName) + ".obj";
+				componentItemModel.textureDomain = partToRender.definition.packID;
+				componentItemModel.textureLocation = "textures/parts/" + partToRender.definition.systemName + ".png";
+				dataEntryBoxes.get(dataEntryBoxIndex++).setText(partToRender.definition.packID);
+				dataEntryBoxes.get(dataEntryBoxIndex++).setText(partToRender.definition.systemName);
+			}
+		}
+
+		@Override
+		public int saveObject(List<GUIComponentTextBox> dataEntryBoxes){
+			int dataEntryBoxIndex = 1;
+			try{
+				componentItemModel.x = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				componentItemModel.y = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				componentItemModel.scale = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+			}catch(Exception e){
+				return -(--dataEntryBoxIndex);
+			}
+			return 0;
 		}
 	}
 }

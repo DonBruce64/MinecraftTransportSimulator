@@ -1,26 +1,27 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
-import minecrafttransportsimulator.vehicles.main.EntityVehicleC_Colliding;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 
 /**This "collective" is essentially a wrapper AABB class.  It intercepts all AABB calls
- * and re-routes them to all the AABBs in the passed-in vehicle.  Essentially,
- * it's a way to have one vehicle with multiple collision AABBs.
+ * and re-routes them to all the vehicle AABBs that were passed-in.  Essentially, it's a 
+ * way to  have a multi-AABB system for vehicles.
  * 
  * @author don_bruce
  */
 public class VehicleAxisAlignedBBCollective extends VehicleAxisAlignedBB{
-	private final EntityVehicleC_Colliding vehicle;
-	private final boolean includeInteractionBoxes;
+	public final List<VehicleAxisAlignedBB> boxes;
+	public VehicleAxisAlignedBB lastBoxRayTraced;
 	
-	public VehicleAxisAlignedBBCollective(EntityVehicleC_Colliding vehicle, float width, float height, boolean includeInteractionBoxes){
+	public VehicleAxisAlignedBBCollective(EntityVehicleE_Powered vehicle, float width, float height, List<VehicleAxisAlignedBB> boxes){
 		super(vehicle.getPositionVector(), Vec3d.ZERO, width, height, false, false);
-		this.vehicle = vehicle;
-		this.includeInteractionBoxes = includeInteractionBoxes;
+		this.boxes = boxes;
 	}
 	
 	@Override
@@ -30,55 +31,33 @@ public class VehicleAxisAlignedBBCollective extends VehicleAxisAlignedBB{
 	
 	@Override
 	public double calculateXOffset(AxisAlignedBB other, double offsetX){
-		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
+		for(VehicleAxisAlignedBB box : boxes){
 			offsetX = box.calculateXOffset(other, offsetX);
-		}
-		if(includeInteractionBoxes){
-			for(VehicleAxisAlignedBB box : vehicle.getCurrentInteractionBoxes()){
-				offsetX = box.calculateXOffset(other, offsetX);
-			}
 		}
 		return offsetX;
     }
 	
 	@Override
 	public double calculateYOffset(AxisAlignedBB other, double offsetY){
-		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
+		for(VehicleAxisAlignedBB box : boxes){
 			offsetY = box.calculateYOffset(other, offsetY);
-		}
-		if(includeInteractionBoxes){
-			for(VehicleAxisAlignedBB box : vehicle.getCurrentInteractionBoxes()){
-				offsetY = box.calculateXOffset(other, offsetY);
-			}
 		}
 		return offsetY;
     }
 	
 	@Override
 	public double calculateZOffset(AxisAlignedBB other, double offsetZ){
-		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
+		for(VehicleAxisAlignedBB box : boxes){
 			offsetZ = box.calculateZOffset(other, offsetZ);
-		}
-		if(includeInteractionBoxes){
-			for(VehicleAxisAlignedBB box : vehicle.getCurrentInteractionBoxes()){
-				offsetZ = box.calculateXOffset(other, offsetZ);
-			}
 		}
 		return offsetZ;
     }
 	
 	@Override
     public boolean intersects(AxisAlignedBB other){
-		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
+		for(VehicleAxisAlignedBB box : boxes){
 			if(box.intersects(other)){
 				return true;
-			}
-		}
-		if(includeInteractionBoxes){
-			for(VehicleAxisAlignedBB box : vehicle.getCurrentInteractionBoxes()){
-				if(box.intersects(other)){
-					return true;
-				}
 			}
 		}
 		return false;
@@ -86,16 +65,9 @@ public class VehicleAxisAlignedBBCollective extends VehicleAxisAlignedBB{
 	
 	@Override
     public boolean intersects(double x1, double y1, double z1, double x2, double y2, double z2){
-		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
+		for(VehicleAxisAlignedBB box : boxes){
 			if(box.intersects(x1, y1, z1, x2, y2, z2)){
 				return true;
-			}
-		}
-		if(includeInteractionBoxes){
-			for(VehicleAxisAlignedBB box : vehicle.getCurrentInteractionBoxes()){
-				if(box.intersects(x1, y1, z1, x2, y2, z2)){
-					return true;
-				}
 			}
 		}
 		return false;
@@ -103,16 +75,9 @@ public class VehicleAxisAlignedBBCollective extends VehicleAxisAlignedBB{
 	
 	@Override
 	public boolean contains(Vec3d vec){
-		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
+		for(VehicleAxisAlignedBB box : boxes){
 			if(box.contains(vec)){
 				return true;
-			}
-		}
-		if(includeInteractionBoxes){
-			for(VehicleAxisAlignedBB box : vehicle.getCurrentInteractionBoxes()){
-				if(box.contains(vec)){
-					return true;
-				}
 			}
 		}
 		return false;
@@ -122,18 +87,12 @@ public class VehicleAxisAlignedBBCollective extends VehicleAxisAlignedBB{
 	@Nullable
     public RayTraceResult calculateIntercept(Vec3d vecA, Vec3d vecB){
 		RayTraceResult result = null;
-		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
+		lastBoxRayTraced = null;
+		for(VehicleAxisAlignedBB box : boxes){
 			result = box.calculateIntercept(vecA, vecB);
 			if(result != null){
+				lastBoxRayTraced = box;
 				return result;
-			}
-		}
-		if(includeInteractionBoxes){
-			for(VehicleAxisAlignedBB box : vehicle.getCurrentInteractionBoxes()){
-				result = box.calculateIntercept(vecA, vecB);
-				if(result != null){
-					return result;
-				}
 			}
 		}
 		return result;

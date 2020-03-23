@@ -11,7 +11,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityFurnace;
 
-public final class PartFurnace extends APart<EntityVehicleE_Powered>{
+public final class PartFurnace extends APart{
 	private final TileEntityFurnaceVehicle fakeFurnace;
 	
 	public PartFurnace(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){

@@ -1,12 +1,10 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -15,9 +13,6 @@ import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
@@ -26,7 +21,7 @@ import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Powered> extends APart<EntityVehicleX_Type> implements FXPart{
+public abstract class APartEngine extends APart implements FXPart{
 	
 	//NBT data
 	public boolean isCreative;
@@ -47,7 +42,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 	private double ambientTemp;
 	private double coolingFactor;
 	private Long lastTimeParticleSpawned = 0L;
-	public APartEngine<? extends EntityVehicleE_Powered> linkedEngine;
+	public APartEngine linkedEngine;
 	
 	//Rotation data.  Should be set by each engine type individually.
 	protected double engineRotationLast;
@@ -65,7 +60,7 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 	public final float engineStartRPM;
 
 	
-	public APartEngine(EntityVehicleX_Type vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public APartEngine(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 		engineStallRPM = definition.engine.maxRPM < 15000 ? 300 : 1500;
 		engineStartRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;
@@ -85,49 +80,15 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 	}
 	
 	@Override
-	public boolean interactPart(EntityPlayer player){
-		//Only allow interaction if the player is holding jumper cables.
-		//If so, and we aren't linked, do engine linking logic.
-		ItemStack heldStack = player.getHeldItemMainhand();
-		if(heldStack.getItem() instanceof ItemJumperCable){
-			if(linkedEngine == null){
-				if(ItemJumperCable.lastEngineClicked == null){
-					ItemJumperCable.lastEngineClicked = this;
-					MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.firstlink"), (EntityPlayerMP) player);
-				}else if(!ItemJumperCable.lastEngineClicked.equals(this)){
-					if(ItemJumperCable.lastEngineClicked.vehicle.equals(this.vehicle)){
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.samevehicle"), (EntityPlayerMP) player);
-						ItemJumperCable.lastEngineClicked = null;
-					}else if(this.partPos.distanceTo(ItemJumperCable.lastEngineClicked.partPos) < 15){
-						linkedEngine = ItemJumperCable.lastEngineClicked;
-						ItemJumperCable.lastEngineClicked.linkedEngine = this;
-						ItemJumperCable.lastEngineClicked = null;
-						MTS.MTSNet.sendToAll(new PacketPartEngineLinked(this, linkedEngine));
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.secondlink"), (EntityPlayerMP) player);	
-					}else{
-						MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.toofar"), (EntityPlayerMP) player);
-						ItemJumperCable.lastEngineClicked = null;
-					}
-				}
-			}else{
-				MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.alreadylinked"), (EntityPlayerMP) player);
-			}
-			return true;
-		}else{
-			return false;
-		}
-    }
-	
-	@Override
 	public void attackPart(DamageSource source, float damage){
 		if(source.isExplosion()){
-			hours += damage*10*ConfigSystem.configObject.general.engineHoursFactor.value;
+			hours += damage*20*ConfigSystem.configObject.general.engineHoursFactor.value;
 			if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
 			if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
 			if(!brokenStarter)brokenStarter = Math.random() < 0.05;
 			MTS.MTSNet.sendToAll(new PacketPartEngineDamage(this, (float) (damage*10*ConfigSystem.configObject.general.engineHoursFactor.value)));
 		}else{
-			hours += damage*ConfigSystem.configObject.general.engineHoursFactor.value;
+			hours += damage*2*ConfigSystem.configObject.general.engineHoursFactor.value;
 			if(source.isProjectile()){
 				if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
 				if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
@@ -177,7 +138,9 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 				}
 			}
 			if(starterLevel > 0){
-				vehicle.electricUsage += 0.05F;
+				if(!isCreative){
+					vehicle.electricUsage += 0.05F;
+				}
 				if(vehicle.fuel > definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value && !isCreative){
 					vehicle.fuel -= definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
 					fuelFlow += definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
@@ -236,7 +199,9 @@ public abstract class APartEngine<EntityVehicleX_Type extends EntityVehicleE_Pow
 				if(!ConfigSystem.configObject.fuel.fuels.containsKey(definition.engine.fuelType)){					
 					throw new IllegalArgumentException("ERROR: Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.configObject.fuel.fuels.keySet().toString());
 				}else if(!ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicle.fluidName)){
-					throw new IllegalArgumentException("ERROR: Vehicle:" + vehicle.definition.packID + ":" + vehicle.definition.systemName + " wanted " + definition.engine.fuelType + " fuel value for fluid of type:" + vehicle.fluidName + ", this fluid is not associated with this engine fuel type.  Fuels valid for this type are:" + ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).keySet().toString());
+					//Clear out the fuel from this vehicle as it's the wrong type.
+					vehicle.fuel = 0;
+					vehicle.fluidName = "";
 				}else{
 					fuelFlow = definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicle.fluidName)*RPM*(fuelLeak ? 1.5F : 1.0F)/definition.engine.maxRPM;
 					vehicle.fuel -= fuelFlow;

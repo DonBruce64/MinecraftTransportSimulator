@@ -8,7 +8,6 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -22,7 +21,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class APartGun extends APart<EntityVehicleE_Powered> implements FXPart{	
+public abstract class APartGun extends APart implements FXPart{	
 	//Stored variables used to determine bullet firing behavior.
 	public int shotsFired;
 	public int bulletsLeft;
@@ -116,7 +115,7 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 				//If we are out of bullets, and we can automatically reload, and are not doing so, start the reload sequence.
 				if(bulletsLeft == 0 && definition.gun.autoReload && !reloading){
 					//Iterate through all the inventory slots in crates to try to find matching ammo.
-					for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+					for(APart part : vehicle.getVehicleParts()){
 						if(part instanceof PartCrate){
 							InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
 							for(byte i=0; i<crateInventory.getSizeInventory(); ++i){
@@ -252,7 +251,7 @@ public abstract class APartGun extends APart<EntityVehicleE_Powered> implements 
 	        float f1 = MathHelper.sin(-bulletYaw * 0.017453292F - (float)Math.PI);
 	        float f2 = -MathHelper.cos(-bulletPitch * 0.017453292F);
 	        float f3 = MathHelper.sin(-bulletPitch * 0.017453292F);
-	        Vec3d bulletOrientation = new Vec3d((double)(f1 * f2), (double)f3, (double)(f * f2));
+	        Vec3d bulletOrientation = new Vec3d(f1 * f2, f3, f * f2);
 			
 			double bulletMotionX = bulletOrientation.x*definition.gun.muzzleVelocity/20D/10D + vehicle.motionX*ConfigSystem.configObject.general.speedFactor.value;
 			double bulletMotionY = bulletOrientation.y*definition.gun.muzzleVelocity/20D/10D + vehicle.motionY*ConfigSystem.configObject.general.speedFactor.value;

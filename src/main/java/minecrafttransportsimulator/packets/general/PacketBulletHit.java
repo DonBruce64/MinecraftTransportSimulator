@@ -7,7 +7,7 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -87,8 +87,8 @@ public class PacketBulletHit implements IMessage{
 									//If we are attacking a vehicle, call the custom attack code to relay our position.
 									//Otherwise call the regular attack code.
 									float damage = (float) (Math.pow(20*message.velocity/100F, 2)*bulletDefinition.bullet.diameter/10F*ConfigSystem.configObject.damage.bulletDamageFactor.value);
-									if(entityHit instanceof EntityVehicleB_Existing){
-										((EntityVehicleB_Existing) entityHit).attackManuallyAtPosition(message.x, message.y, message.z, new DamageSourceBullet(entityAttacking, bulletDefinition.bullet.type), damage);
+									if(entityHit instanceof EntityVehicleE_Powered){
+										((EntityVehicleE_Powered) entityHit).attackManuallyAtPosition(message.x, message.y, message.z, new DamageSourceBullet(entityAttacking, bulletDefinition.bullet.type), damage);
 									}else{
 										entityHit.attackEntityFrom(new DamageSourceBullet(entityAttacking,  bulletDefinition.bullet.type), damage);
 										if(bulletDefinition.bullet.type.equals("incendiary")){

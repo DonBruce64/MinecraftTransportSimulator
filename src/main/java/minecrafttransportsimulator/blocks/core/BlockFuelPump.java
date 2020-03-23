@@ -4,7 +4,6 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
@@ -87,7 +86,7 @@ public class BlockFuelPump extends ABlockRotatable implements ITileEntityProvide
     						}
     					}
     					
-    					for(APart<? extends EntityVehicleA_Base> part : nearestVehicle.getVehicleParts()){
+    					for(APart part : nearestVehicle.getVehicleParts()){
     						if(part instanceof APartEngine){
     							if(ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).containsKey(fluidName)){
     								pump.setConnectedVehicle((EntityVehicleE_Powered) nearestEntity);
@@ -108,12 +107,6 @@ public class BlockFuelPump extends ABlockRotatable implements ITileEntityProvide
 		}
 		return true;
 	}
-	
-	@Override
-    public void breakBlock(World world, BlockPos pos, IBlockState state){
-        super.breakBlock(world, pos, state);
-        world.removeTileEntity(pos);
-    }
 	
 	@Override
 	public TileEntityFuelPump createNewTileEntity(World worldIn, int meta){

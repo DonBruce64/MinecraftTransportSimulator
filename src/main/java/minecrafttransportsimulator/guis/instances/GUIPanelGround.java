@@ -14,15 +14,15 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
-import minecrafttransportsimulator.packets.control.LightPacket;
-import minecrafttransportsimulator.packets.control.SirenPacket;
-import minecrafttransportsimulator.packets.control.TrailerPacket;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
+import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
+import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
@@ -43,11 +43,14 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 	private static final int ENGINE_TEXTURE_HEIGHT_OFFSET = 196;
 	private static final int TRAILER_TEXTURE_WIDTH_OFFSET = ENGINE_TEXTURE_WIDTH_OFFSET + 20;
 	private static final int TRAILER_TEXTURE_HEIGHT_OFFSET = 216;
+	private static final int REVERSE_TEXTURE_WIDTH_OFFSET = TRAILER_TEXTURE_WIDTH_OFFSET + 20;
+	private static final int REVERSE_TEXTURE_HEIGHT_OFFSET = 216;
 	
 	private GUIComponentSelector lightSelector;
 	private GUIComponentSelector turnSignalSelector;
 	private GUIComponentSelector emergencySelector;
 	private GUIComponentSelector sirenSelector;
+	private GUIComponentSelector reverseSelector;
 	private final Map<Byte, GUIComponentSelector> engineSelectors = new HashMap<Byte, GUIComponentSelector>();
 	private final List<GUIComponentSelector> trailerSelectors = new ArrayList<GUIComponentSelector>();
 	
@@ -65,19 +68,19 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 				public void onClicked(boolean leftSide){
 					if(leftSide){
 						if(selectorState == 2){
-							MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), HEADLIGHT));
+							WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, HEADLIGHT));
 						}else if(selectorState == 1){
-							MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), RUNNINGLIGHT));
+							WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, RUNNINGLIGHT));
 						}
 					}else{
 						if(selectorState == 0){
 							if(RenderVehicle.doesVehicleHaveLight(vehicle, RUNNINGLIGHT)){
-								MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), RUNNINGLIGHT));
+								WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, RUNNINGLIGHT));
 							}else{
-								MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), HEADLIGHT));
+								WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, HEADLIGHT));
 							}
 						}else if(selectorState == 1){
-							MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), HEADLIGHT));
+							WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, HEADLIGHT));
 						}
 					}
 				}
@@ -94,9 +97,9 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 				@Override
 				public void onClicked(boolean leftSide){
 					if(leftSide){
-						MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), LEFTTURNLIGHT));
+						WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, LEFTTURNLIGHT));
 					}else{
-						MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), RIGHTTURNLIGHT));
+						WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, RIGHTTURNLIGHT));
 					}
 				}
 				
@@ -111,7 +114,7 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 			emergencySelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.emergencylights"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, EMERGENCY_TEXTURE_WIDTH_OFFSET, EMERGENCY_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MTS.MTSNet.sendToServer(new LightPacket(vehicle.getEntityId(), EMERGENCYLIGHT));
+					WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, EMERGENCYLIGHT));
 				}
 				
 				@Override
@@ -125,7 +128,7 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 			sirenSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.siren"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, SIREN_TEXTURE_WIDTH_OFFSET, SIREN_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MTS.MTSNet.sendToServer(new SirenPacket(vehicle.getEntityId()));
+					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SIREN, !leftSide));
 				}
 				
 				@Override
@@ -170,6 +173,20 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 			addSelector(engineSelector);
 		}
 		
+		//If we have reverse thrust, add a selector for it.
+		if(haveReverseThrustOption){
+			reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			addSelector(reverseSelector);
+		}
+		
 		//Create the 8 trailer selectors.  Note that not all may be rendered.
 		for(int i=0; i<8; ++i){
 			//Go to next column if we are on our 4th row.
@@ -186,7 +203,7 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 					for(int i=0; i<trailerNumber; ++ i){
 						currentVehicle = currentVehicle.towedVehicle;
 					}
-					MTS.MTSNet.sendToServer(new TrailerPacket(currentVehicle.getEntityId()));
+					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(currentVehicle, PacketVehicleControlDigital.Controls.TRAILER, true));
 				}
 				
 				@Override
@@ -238,11 +255,17 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 			engineEntry.getValue().selectorState = !engineState.magnetoOn ? 0 : (!engineState.esOn ? 1 : 2);
 		}
 		
+		//If we have reverse thrust, set the selector state.
+		if(haveReverseThrustOption){
+			reverseSelector.selectorState = vehicle.reverseThrust ? 1 : 0;
+		}
+		
 		//Iterate through trailers and set the visibility of the trailer selectors based on their state.
 		EntityVehicleF_Ground currentVehicle = vehicle;
 		for(int i=0; i<trailerSelectors.size(); ++i){
 			if(currentVehicle != null && currentVehicle.definition.motorized.hitchPos != null){
 				trailerSelectors.get(i).visible = true;
+				trailerSelectors.get(i).selectorState = currentVehicle.towedVehicle != null ? 1 : 0;
 				currentVehicle = currentVehicle.towedVehicle;
 			}else{
 				trailerSelectors.get(i).visible = false;

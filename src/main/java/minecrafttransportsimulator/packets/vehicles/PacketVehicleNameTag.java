@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.vehicles;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleB_Existing;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -13,7 +13,7 @@ public class PacketVehicleNameTag extends APacketVehicle{
 
 	public PacketVehicleNameTag(){}
 	
-	public PacketVehicleNameTag(EntityVehicleB_Existing vehicle){
+	public PacketVehicleNameTag(EntityVehicleE_Powered vehicle){
 		super(vehicle);
 		this.displayText = vehicle.displayText;
 	}
@@ -36,7 +36,7 @@ public class PacketVehicleNameTag extends APacketVehicle{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityVehicleB_Existing vehicle = (EntityVehicleB_Existing) getVehicle(message, ctx);
+					EntityVehicleE_Powered vehicle = getVehicle(message, ctx);
 					if(vehicle != null){
 						vehicle.displayText = message.displayText;
 					}

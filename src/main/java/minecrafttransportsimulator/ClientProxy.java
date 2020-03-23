@@ -3,11 +3,9 @@ package minecrafttransportsimulator;
 import minecrafttransportsimulator.blocks.core.BlockBench;
 import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController;
 import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
-import minecrafttransportsimulator.guis.GUIDevRender;
 import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.guis.GUISign;
 import minecrafttransportsimulator.guis.instances.GUIBooklet;
-import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.guis.instances.GUITrafficSignalController;
 import minecrafttransportsimulator.items.packs.ItemBooklet;
 import minecrafttransportsimulator.systems.ControlSystem;
@@ -36,9 +34,7 @@ public class ClientProxy extends CommonProxy{
 	}
 	@Override
 	public void openGUI(Object clicked, EntityPlayer clicker){
-		if(clicked instanceof EntityVehicleE_Powered){
-			WrapperGUI.openGUI(new GUIInstruments((EntityVehicleE_Powered) clicked, clicker));
-		}else if(clicked instanceof BlockBench){
+		if(clicked instanceof BlockBench){
 			FMLCommonHandler.instance().showGuiScreen(new GUIPartBench((BlockBench) clicked, clicker));
 		}else if(clicked instanceof ItemBooklet){
 			WrapperGUI.openGUI(new GUIBooklet((ItemBooklet) clicked));
@@ -46,8 +42,6 @@ public class ClientProxy extends CommonProxy{
 			FMLCommonHandler.instance().showGuiScreen(new GUISign((BlockPoleSign) clicked, clicker));
 		}else if(clicked instanceof TileEntityTrafficSignalController){
 			WrapperGUI.openGUI(new GUITrafficSignalController((TileEntityTrafficSignalController) clicked));
-		}else if(clicked == null){
-			FMLCommonHandler.instance().showGuiScreen(new GUIDevRender());
 		}
 	}
 	
@@ -57,7 +51,7 @@ public class ClientProxy extends CommonProxy{
 	}
 	
 	@Override
-	public void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine<? extends EntityVehicleE_Powered> engine){
+	public void addVehicleEngineSound(EntityVehicleE_Powered vehicle, APartEngine engine){
 		VehicleSoundSystem.addVehicleEngineSound(vehicle, engine);
 	}
 }

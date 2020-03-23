@@ -177,10 +177,10 @@ public class WrapperInput{
 		//This usually means we paused the game, which will cause pain if we apply
 		//the movement after un-pausing.
 		if(Math.abs(customMouseHelper.deltaXForced) < 100){
-			mousePosX = (int) Math.max(Math.min(mousePosX + customMouseHelper.deltaXForced, 250), -250);
+			mousePosX = Math.max(Math.min(mousePosX + customMouseHelper.deltaXForced, 250), -250);
 		}
 		if(Math.abs(customMouseHelper.deltaYForced) < 100){
-			mousePosY = (int) Math.max(Math.min(mousePosY + customMouseHelper.deltaYForced, 250), -250);
+			mousePosY = Math.max(Math.min(mousePosY + customMouseHelper.deltaYForced, 250), -250);
 		}
 		//Take a unit off of the mouse value to make it more snappy.
 		if(mousePosX > 0){

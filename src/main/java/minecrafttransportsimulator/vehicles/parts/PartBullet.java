@@ -147,9 +147,9 @@ public final class PartBullet extends Particle{
 	@Override
 	public void renderParticle(BufferBuilder worldRendererIn, Entity entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ){
         //Get the current rendering position based on the particles current position and velocity.
-        float renderPosX = (float)(this.prevPosX + (this.posX - this.prevPosX) * (double)partialTicks - interpPosX);
-        float renderPosY = (float)(this.prevPosY + (this.posY - this.prevPosY) * (double)partialTicks - interpPosY);
-        float renderPosZ = (float)(this.prevPosZ + (this.posZ - this.prevPosZ) * (double)partialTicks - interpPosZ);
+        float renderPosX = (float)(this.prevPosX + (this.posX - this.prevPosX) * partialTicks - interpPosX);
+        float renderPosY = (float)(this.prevPosY + (this.posY - this.prevPosY) * partialTicks - interpPosY);
+        float renderPosZ = (float)(this.prevPosZ + (this.posZ - this.prevPosZ) * partialTicks - interpPosZ);
         
         //Get brightness information.
         int brightness = bulletItem.definition.bullet.type.equals("tracer") ? (15 << 20 | 15 << 4) : getBrightnessForRender(partialTicks); 

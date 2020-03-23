@@ -3,13 +3,13 @@ package minecrafttransportsimulator.vehicles.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 
-public class PartEngineCar extends APartEngineGeared<EntityVehicleG_Car>{
+public class PartEngineCar extends APartEngineGeared{
 	private double engineForce;
 
-	public PartEngineCar(EntityVehicleG_Car vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public PartEngineCar(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 	}
 	
@@ -122,10 +122,10 @@ public class PartEngineCar extends APartEngineGeared<EntityVehicleG_Car>{
 		float driveShaftDesiredSpeed = -999F;
 		for(APartGroundDevice wheel : vehicle.wheels){
 			if((wheel.offset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
-				driveShaftDesiredSpeed = (float) Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
+				driveShaftDesiredSpeed = Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
 			}
 		}
-		driveShaftDesiredSpeed = (float) (vehicle.speedFactor*driveShaftDesiredSpeed*Math.signum(vehicle.velocity)*360D);
+		driveShaftDesiredSpeed = (float) (vehicle.SPEED_FACTOR*driveShaftDesiredSpeed*Math.signum(vehicle.velocity)*360D);
 		engineDriveshaftRotationLast = engineDriveshaftRotation;
 		engineDriveshaftRotation += driveShaftDesiredSpeed;
 	}

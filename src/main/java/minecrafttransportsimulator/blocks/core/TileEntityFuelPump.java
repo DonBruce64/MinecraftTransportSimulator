@@ -132,7 +132,7 @@ public class TileEntityFuelPump extends TileEntityBase implements IFluidTank, IF
 	public int fill(FluidStack stack, boolean doFill){
 		if(tankInfo.fluid == null || stack.isFluidEqual(tankInfo.fluid)){
 			int amountAbleToFill = tankInfo.capacity - (tankInfo.fluid != null ? tankInfo.fluid.amount : 0);
-			int amountToFill = (int) Math.min(amountAbleToFill, stack.amount);
+			int amountToFill = Math.min(amountAbleToFill, stack.amount);
 			if(doFill){
 				if(tankInfo.fluid == null){
 					this.setFluid(stack.getFluid());

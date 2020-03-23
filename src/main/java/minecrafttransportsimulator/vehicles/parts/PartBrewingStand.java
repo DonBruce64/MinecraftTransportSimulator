@@ -11,7 +11,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityBrewingStand;
 
-public final class PartBrewingStand extends APart<EntityVehicleE_Powered>{
+public final class PartBrewingStand extends APart{
 	private final TileEntityBrewingStandVehicle fakeBrewingStand;
 	
 	public PartBrewingStand(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){

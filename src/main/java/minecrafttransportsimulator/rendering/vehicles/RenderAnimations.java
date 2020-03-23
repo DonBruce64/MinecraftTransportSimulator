@@ -2,7 +2,6 @@ package minecrafttransportsimulator.rendering.vehicles;
 
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
@@ -27,7 +26,7 @@ public final class RenderAnimations{
 	 *  If a value other than 0 is passed-in, the variable returned will be clamped to that value.
 	 *  This is in both the positive and negative direction.
 	 */
-	public static double getVariableValue(String variable, float scaling, float offset, float minClamp, float maxClamp, float partialTicks, EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart){
+	public static double getVariableValue(String variable, float scaling, float offset, float minClamp, float maxClamp, float partialTicks, EntityVehicleE_Powered vehicle, APart optionalPart){
 		double value = offset + scaling*getVariableValue(variable, partialTicks, vehicle, optionalPart);
 		if(minClamp != 0 && value < minClamp){
 			return minClamp;
@@ -38,7 +37,7 @@ public final class RenderAnimations{
 		}
 	}
 	
-	private static double getVariableValue(String variable, float partialTicks, EntityVehicleE_Powered vehicle, APart<? extends EntityVehicleE_Powered> optionalPart){
+	private static double getVariableValue(String variable, float partialTicks, EntityVehicleE_Powered vehicle, APart optionalPart){
 		//If we have a variable with a suffix, we need to get that part first and pass
 		//it into this method rather than trying to run through the code now.
 		if(variable.substring(variable.length() - 1).matches("[0-9]+")){
@@ -66,7 +65,7 @@ public final class RenderAnimations{
 						if(partNumber == 0){
 							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
 							//If it's not, or it doesn't exist, return 0.
-							APart<? extends EntityVehicleA_Base> foundPart = vehicle.getPartAtLocation(vehiclePart.pos[0], vehiclePart.pos[1], vehiclePart.pos[2]);
+							APart foundPart = vehicle.getPartAtLocation(vehiclePart.pos[0], vehiclePart.pos[1], vehiclePart.pos[2]);
 							if(foundPart != null && partClass.isInstance(foundPart)){
 								return getVariableValue(variable.substring(0, variable.length() - 2), partialTicks, vehicle, foundPart);
 							}else{
@@ -85,7 +84,7 @@ public final class RenderAnimations{
 		}else if(optionalPart != null){
 			//If we passed-in a part, check for part-specific animations first.
 			if(optionalPart instanceof APartEngine){
-				APartEngine<? extends EntityVehicleE_Powered> engine = (APartEngine<? extends EntityVehicleE_Powered>) optionalPart;
+				APartEngine engine = (APartEngine) optionalPart;
 				switch(variable){
 					case("engine_rotation"): return engine.getEngineRotation(partialTicks);
 					case("engine_driveshaft_rotation"): return engine.getDriveshaftRotation(partialTicks);
@@ -97,10 +96,10 @@ public final class RenderAnimations{
 					case("engine_fuel_flow"): return engine.fuelFlow*20D*60D/1000D;
 					case("engine_temp"): return engine.temp;
 					case("engine_oil"): return engine.oilPressure;
-					case("engine_gear"): return ((APartEngineGeared<? extends EntityVehicleE_Powered>) engine).currentGear;
-					case("engine_gearshift"): return ((APartEngineGeared<? extends EntityVehicleE_Powered>) engine).getGearshiftRotation();
-					case("engine_gearshift_hvertical"): return ((APartEngineGeared<? extends EntityVehicleE_Powered>) engine).getGearshiftPosition_Vertical();
-					case("engine_gearshift_hhorizontal"): return ((APartEngineGeared<? extends EntityVehicleE_Powered>) engine).getGearshiftPosition_Horizontal();
+					case("engine_gear"): return ((APartEngineGeared) engine).currentGear;
+					case("engine_gearshift"): return ((APartEngineGeared) engine).getGearshiftRotation();
+					case("engine_gearshift_hvertical"): return ((APartEngineGeared) engine).getGearshiftPosition_Vertical();
+					case("engine_gearshift_hhorizontal"): return ((APartEngineGeared) engine).getGearshiftPosition_Horizontal();
 					case("engine_magneto"): return engine.state.magnetoOn ? 1 : 0;
 					case("engine_starter"): return engine.state.esOn ? 1 : 0;
 				}
@@ -109,7 +108,7 @@ public final class RenderAnimations{
 				switch(variable){
 					case("propeller_pitch_deg"): return Math.toDegrees(Math.atan(propeller.currentPitch / (propeller.definition.propeller.diameter*0.75D*Math.PI)));
 					case("propeller_pitch_in"): return propeller.currentPitch;
-					case("propeller_pitch_percent"): return 1D*propeller.currentPitch/propeller.definition.propeller.pitch;
+					case("propeller_pitch_percent"): return 1D*(propeller.currentPitch - PartPropeller.MIN_DYNAMIC_PITCH)/(propeller.definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH);
 				}
 			}else if(optionalPart instanceof APartGun){
 				APartGun gun = (APartGun) optionalPart;
@@ -127,7 +126,7 @@ public final class RenderAnimations{
 				return getVariableValue(variable, partialTicks, vehicle, optionalPart.parentPart);
 			}
 		}
-		
+
 		//Either we don't have a part, or we have a part and we don't want a part-specific variable.
 		//Try vehicle variables now.
 		switch(variable){
@@ -136,7 +135,7 @@ public final class RenderAnimations{
 			case("pitch"): return vehicle.rotationPitch;
 			case("roll"): return vehicle.rotationRoll;
 			case("altitude"): return vehicle.posY - (ConfigSystem.configObject.client.seaLvlOffset.value ? vehicle.world.provider.getAverageGroundLevel() : 0);
-			case("speed"): return Math.abs(vehicle.velocity*vehicle.speedFactor*20);
+			case("speed"): return Math.abs(vehicle.velocity*vehicle.SPEED_FACTOR*20);
 			
 			//Vehicle state cases.
 			case("throttle"): return vehicle.throttle/100D;
@@ -145,10 +144,12 @@ public final class RenderAnimations{
 			case("electric_usage"): return vehicle.electricFlow*20D;
 			case("brake"): return vehicle.brakeOn ? 1 : 0;
 			case("p_brake"): return vehicle.parkingBrakeOn ? 1 : 0;
+			case("reverser"): return vehicle.reversePercent/20D;
 			case("steering_wheel"): return vehicle.getSteerAngle();
 			case("horn"): return vehicle.hornOn ? 1 : 0;
 			case("siren"): return vehicle.sirenOn ? 1 : 0;
 			case("hood"): return vehicle.engines.isEmpty() ? 1 : 0;
+			case("rain"): return vehicle.world.getRainStrength(1.0F) == 1.0F ? (1.0D + Math.sin(((int)(vehicle.world.getRainStrength(1.0F) + vehicle.world.getThunderStrength(1.0F))*Math.toRadians(360*System.currentTimeMillis()/1000))))/2D : 0;
 			case("door"): return (vehicle.prevParkingBrakeAngle + (vehicle.parkingBrakeAngle - vehicle.prevParkingBrakeAngle)*partialTicks)/30D;
 		}
 		
@@ -175,8 +176,7 @@ public final class RenderAnimations{
 				case("trim_aileron"): return aircraft.aileronTrim/10D;
 				case("trim_elevator"): return aircraft.elevatorTrim/10D;
 				case("trim_rudder"): return aircraft.rudderTrim/10D;
-				case("reverser"): return aircraft.reversePercent/20D;
-				case("vertical_speed"): return vehicle.motionY*vehicle.speedFactor*20;
+				case("vertical_speed"): return vehicle.motionY*vehicle.SPEED_FACTOR*20;
 				case("slip"): return 75*aircraft.sideVec.dotProduct(vehicle.velocityVec);
 				case("turn_coordinator"): return ((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15D*25;
 				case("turn_indicator"): return (vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F;

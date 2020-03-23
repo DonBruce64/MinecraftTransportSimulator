@@ -20,7 +20,7 @@ import net.minecraft.util.math.Vec3d;
  * 
  * @author don_bruce
  */
-public abstract class APartGroundDevice extends APart<EntityVehicleE_Powered>{
+public abstract class APartGroundDevice extends APart{
 	public static final Vec3d groundDetectionOffset = new Vec3d(0, -0.05F, 0);
 	private final PartGroundDeviceFake fakePart;
 	

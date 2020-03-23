@@ -26,6 +26,7 @@ public final class RenderVehicle_LightPart{
 	
 	public final String name;
 	public final LightType type;
+	public final boolean isLightupTexture;
 	
 	private final Color color;
 	private final int flashBits;
@@ -36,6 +37,9 @@ public final class RenderVehicle_LightPart{
 	private final Float[][] vertices;
 	private final Vec3d[] centerPoints;
 	private final Float[] size;
+	
+	//This can't be final as we'll do a double-display-list if we try to do this on construction.
+	private int displayListIndex = -1;
 	
 	public RenderVehicle_LightPart(String name, Float[][] masterVertices){
 		this.name = name;
@@ -55,48 +59,58 @@ public final class RenderVehicle_LightPart{
 			throw new NumberFormatException("ERROR: Attempted to parse light information from: " + this.name + " but faulted.  This is likely due to a naming convention error.");
 		}
 		
-		this.vertices = new Float[masterVertices.length][];
-		this.centerPoints = new Vec3d[masterVertices.length/6];
-		this.size = new Float[masterVertices.length/6];
 		
-		for(short i=0; i<centerPoints.length; ++i){
-			double minX = 999;
-			double maxX = -999;
-			double minY = 999;
-			double maxY = -999;
-			double minZ = 999;
-			double maxZ = -999;
-			for(byte j=0; j<6; ++j){
-				Float[] masterVertex = masterVertices[i*6 + j];
-				minX = Math.min(masterVertex[0], minX);
-				maxX = Math.max(masterVertex[0], maxX);
-				minY = Math.min(masterVertex[1], minY);
-				maxY = Math.max(masterVertex[1], maxY);
-				minZ = Math.min(masterVertex[2], minZ);
-				maxZ = Math.max(masterVertex[2], maxZ);
-				
-				Float[] newVertex = new Float[masterVertex.length];
-				newVertex[0] = masterVertex[0];
-				newVertex[1] = masterVertex[1];
-				newVertex[2] = masterVertex[2];
-				//Adjust UV point here to change this to glass coords.
-				switch(j){
-					case(0): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
-					case(1): newVertex[3] = 0.0F; newVertex[4] = 1.0F; break;
-					case(2): newVertex[3] = 1.0F; newVertex[4] = 1.0F; break;
-					case(3): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
-					case(4): newVertex[3] = 1.0F; newVertex[4] = 1.0F; break;
-					case(5): newVertex[3] = 1.0F; newVertex[4] = 0.0F; break;
+		//If we need to render a flare, cover, or beam, calculate the center points and re-calculate the UV points.
+		if(renderFlare || renderCover || type.hasBeam){
+			this.vertices = new Float[masterVertices.length][];
+			this.centerPoints = new Vec3d[masterVertices.length/6];
+			this.size = new Float[masterVertices.length/6];
+			for(short i=0; i<centerPoints.length; ++i){
+				double minX = 999;
+				double maxX = -999;
+				double minY = 999;
+				double maxY = -999;
+				double minZ = 999;
+				double maxZ = -999;
+				for(byte j=0; j<6; ++j){
+					Float[] masterVertex = masterVertices[i*6 + j];
+					minX = Math.min(masterVertex[0], minX);
+					maxX = Math.max(masterVertex[0], maxX);
+					minY = Math.min(masterVertex[1], minY);
+					maxY = Math.max(masterVertex[1], maxY);
+					minZ = Math.min(masterVertex[2], minZ);
+					maxZ = Math.max(masterVertex[2], maxZ);
+					
+					Float[] newVertex = new Float[masterVertex.length];
+					newVertex[0] = masterVertex[0];
+					newVertex[1] = masterVertex[1];
+					newVertex[2] = masterVertex[2];
+					//Adjust UV point here to change this to glass coords.
+					switch(j){
+						case(0): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
+						case(1): newVertex[3] = 0.0F; newVertex[4] = 1.0F; break;
+						case(2): newVertex[3] = 1.0F; newVertex[4] = 1.0F; break;
+						case(3): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
+						case(4): newVertex[3] = 1.0F; newVertex[4] = 1.0F; break;
+						case(5): newVertex[3] = 1.0F; newVertex[4] = 0.0F; break;
+					}
+					newVertex[5] = masterVertex[5];
+					newVertex[6] = masterVertex[6];
+					newVertex[7] = masterVertex[7];
+					
+					this.vertices[(i)*6 + j] = newVertex;
 				}
-				newVertex[5] = masterVertex[5];
-				newVertex[6] = masterVertex[6];
-				newVertex[7] = masterVertex[7];
-				
-				this.vertices[((short) i)*6 + j] = newVertex;
+				this.centerPoints[i] = new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
+				this.size[i] = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*32F;
 			}
-			this.centerPoints[i] = new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
-			this.size[i] = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*32F;
+		}else{
+			this.vertices = masterVertices;
+			this.centerPoints = null;
+			this.size = null;
 		}
+		
+		//Set the light-up texture status.
+		this.isLightupTexture = !renderColor && !renderFlare && !renderCover && !type.hasBeam;
 	}
 	
 	/**
@@ -105,17 +119,22 @@ public final class RenderVehicle_LightPart{
 	 *  It calculates this based on the environment of the passed-in vehicle.  It also uses the vehicle's electric
 	 *  power level to determine brightness.  Rendering is done in all passes.
 	 */
-	public void render(EntityVehicleE_Powered vehicle, boolean wasRenderedPrior){
+	public void render(EntityVehicleE_Powered vehicle, boolean wasRenderedPrior, ResourceLocation vehicleTexture){
 		boolean lightActuallyOn = isLightActuallyOn(vehicle);
 		float sunLight = vehicle.world.getSunBrightness(0)*vehicle.world.getLightBrightness(vehicle.getPosition());
 		float blockLight = vehicle.world.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, vehicle.getPosition())/15F;
 		//Lights start dimming due to low power at 8V.
 		float electricFactor = (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1);
 		//Max brightness occurs when ambient light is 0 and we have at least 8V power.
-		float lightBrightness = (float) Math.min((1 - Math.max(sunLight, blockLight))*electricFactor, 1);
+		float lightBrightness = Math.min((1 - Math.max(sunLight, blockLight))*electricFactor, 1);
 
-		//Render the color and cover in pass 0 or -1 as we don't want blending.
+		//Render the texture, color, and cover in pass 0 or -1 as we don't want blending.
 		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
+			//Render the texture if we are a light-up texture light.
+			//Otherwise, don't render the texture here as it'll be in the main vehicle DisplayList.
+			if(isLightupTexture){
+				renderTexture(lightActuallyOn && electricFactor > 0, vehicleTexture);
+			}
 			
 			//Render the color portion of the light if required and we have power.
 			//We use electricFactor as color shows up even in daylight.
@@ -150,6 +169,39 @@ public final class RenderVehicle_LightPart{
 	private boolean isLightActuallyOn(EntityVehicleE_Powered vehicle){
 		//Fun with bit shifting!  20 bits make up the light on index here, so align to a 20 tick cycle.
 		return vehicle.isLightOn(type) ? ((flashBits >> vehicle.world.getTotalWorldTime()%20) & 1) > 0 : false;
+	}
+	
+	/**
+	 *  Renders the textured portion of this light.  All that really needs to be done here
+	 *  is disabling lighting to make the texture be bright if we have enough electricity to do so.
+	 */
+	private void renderTexture(boolean disableLighting, ResourceLocation vehicleTexture){
+		Minecraft.getMinecraft().getTextureManager().bindTexture(vehicleTexture);
+		if(disableLighting){
+			//GL11.glDisable(GL11.GL_LIGHTING);
+			Minecraft.getMinecraft().entityRenderer.disableLightmap();
+		}
+		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+		
+		//If we don't have a DisplayList, create one now.
+		if(displayListIndex == -1){
+			displayListIndex = GL11.glGenLists(1);
+			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
+			GL11.glBegin(GL11.GL_TRIANGLES);
+			for(Float[] vertex : vertices){
+				GL11.glTexCoord2f(vertex[3], vertex[4]);
+				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);	
+			}
+			GL11.glEnd();
+			GL11.glEndList();
+		}
+		GL11.glCallList(displayListIndex);
+		
+		if(disableLighting){
+			//GL11.glEnable(GL11.GL_LIGHTING);
+			Minecraft.getMinecraft().entityRenderer.enableLightmap();
+		}
 	}
 	
 	/**
@@ -214,7 +266,7 @@ public final class RenderVehicle_LightPart{
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(byte i=0; i<centerPoints.length; ++i){
 			for(byte j=0; j<6; ++j){
-				Float[] vertex = vertices[((short) i)*6+j];
+				Float[] vertex = vertices[(i)*6+j];
 				//Add a slight translation to the light size to make the flare move off it.
 				//Then apply scaling factor to make the flare larger than the light.
 				GL11.glTexCoord2f(vertex[3], vertex[4]);

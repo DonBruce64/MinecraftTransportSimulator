@@ -27,12 +27,6 @@ public class BlockTrafficSignalController extends ABlockRotatable implements ITi
 	}
 	
 	@Override
-    public void breakBlock(World world, BlockPos pos, IBlockState state){
-        super.breakBlock(world, pos, state);
-        world.removeTileEntity(pos);
-    }
-	
-	@Override
 	public TileEntityTrafficSignalController createNewTileEntity(World worldIn, int meta){
 		return new TileEntityTrafficSignalController();
 	}

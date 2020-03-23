@@ -3,14 +3,13 @@ package minecrafttransportsimulator.vehicles.parts;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import net.minecraft.nbt.NBTTagCompound;
 
-public class PartEngineAircraft extends APartEngine<EntityVehicleF_Air>{
+public class PartEngineAircraft extends APartEngine{
 	public PartPropeller propeller;
 
-	public PartEngineAircraft(EntityVehicleF_Air vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public PartEngineAircraft(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 	}
 	
@@ -19,7 +18,7 @@ public class PartEngineAircraft extends APartEngine<EntityVehicleF_Air>{
 		super.updatePart();
 		if(propeller == null){
 			if(!childParts.isEmpty()){
-				for(APart<? extends EntityVehicleE_Powered> part : childParts) {
+				for(APart part : childParts) {
 					if(part instanceof PartPropeller) {
 						propeller = (PartPropeller) part;
 						break;

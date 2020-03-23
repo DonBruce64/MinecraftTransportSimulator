@@ -4,23 +4,25 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import minecrafttransportsimulator.guis.instances.GUIVehicleEditor;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.packets.instances.PacketVehicleWrenchGUI;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
-import net.minecraft.client.resources.I18n;
+import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumHand;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class ItemWrench extends Item{
+public class ItemWrench extends Item implements IItemVehicleInteractable{
 	public ItemWrench(){
 		super();
 		setFull3D();
@@ -29,21 +31,46 @@ public class ItemWrench extends Item{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
-		tooltipLines.add(I18n.format("info.item.wrench.use"));
-		tooltipLines.add(I18n.format("info.item.wrench.attack"));
-		tooltipLines.add(I18n.format("info.item.wrench.sneakattack"));
+		tooltipLines.add(WrapperGUI.translate("info.item.wrench.use"));
+		tooltipLines.add(WrapperGUI.translate("info.item.wrench.attack"));
+		tooltipLines.add(WrapperGUI.translate("info.item.wrench.sneakattack"));
 		if(ConfigSystem.configObject.client.devMode.value){
-			tooltipLines.add("Use while seated in a vehicle to activate the DevMode editor.");
+			tooltipLines.add("Use on a vehicle while seated in it to activate the DevMode editor.");
 		}
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand){
-		if(ConfigSystem.configObject.client.devMode.value && world.isRemote){
-			if(player.getRidingEntity() instanceof EntityVehicleE_Powered){
-				WrapperGUI.openGUI(new GUIVehicleEditor((EntityVehicleE_Powered) player.getRidingEntity()));
+	public void doVehicleInteraction(ItemStack stack, EntityVehicleE_Powered vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
+		//If the player isn't the owner of the vehicle, they can't interact with it.
+		if(!ownerState.equals(PlayerOwnerState.USER)){
+			if(rightClick){
+				WrapperNetwork.sendToPlayer(new PacketVehicleWrenchGUI(vehicle), player);
+			}else{
+				if(part != null && !player.isSneaking()){
+					//Player can remove part.  Spawn item in the world and remove part.
+					//Make sure to remove the part before spawning the item.  Some parts
+					//care about this order and won't spawn items unless they've been removed.
+					vehicle.removePart(part, false);
+					Item droppedItem = part.getItemForPart();
+					if(droppedItem != null){
+						ItemStack droppedStack = new ItemStack(droppedItem);
+						droppedStack.setTagCompound(part.getPartNBTTag());
+						vehicle.world.spawnEntity(new EntityItem(vehicle.world, part.partPos.x, part.partPos.y, part.partPos.z, droppedStack));
+					}
+				}else if(player.isSneaking()){
+					//Attacker is a sneaking player with a wrench.
+					//Remove this vehicle if possible.
+					if(!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)){
+						ItemStack vehicleStack = new ItemStack(MTSRegistry.packItemMap.get(vehicle.definition.packID).get(vehicle.definition.systemName));
+						NBTTagCompound stackTag = vehicle.writeToNBT(new NBTTagCompound());
+						vehicleStack.setTagCompound(stackTag);
+						vehicle.world.spawnEntity(new EntityItem(vehicle.world, vehicle.posX, vehicle.posY, vehicle.posZ, vehicleStack));
+						vehicle.setDead();
+					}
+				}
 			}
+		}else{
+			WrapperNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.failure.vehicleowned"), player);
 		}
-		return new ActionResult<ItemStack>(EnumActionResult.PASS, player.getHeldItem(hand));
-    }
+	}
 }

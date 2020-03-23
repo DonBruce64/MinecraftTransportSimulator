@@ -12,9 +12,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 
-public final class PartPlow extends APartGroundEffector{
+public final class PartGroundEffectorPlow extends APartGroundEffector{
 	
-	public PartPlow(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public PartGroundEffectorPlow(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 	}
 	
@@ -26,7 +26,7 @@ public final class PartPlow extends APartGroundEffector{
 		if(block.equals(Blocks.GRASS) || block.equals(Blocks.GRASS_PATH)){
 			setBlockFromPlow(Blocks.FARMLAND.getDefaultState(), pos);
 		 }else if(block.equals(Blocks.DIRT)){
-			 switch((BlockDirt.DirtType)state.getValue(BlockDirt.VARIANT)){
+			 switch(state.getValue(BlockDirt.VARIANT)){
 			 	case DIRT: setBlockFromPlow(Blocks.FARMLAND.getDefaultState(), pos); return;
 			 	case COARSE_DIRT: setBlockFromPlow(Blocks.DIRT.getDefaultState().withProperty(BlockDirt.VARIANT, BlockDirt.DirtType.DIRT), pos); return;
 			 	default: return;

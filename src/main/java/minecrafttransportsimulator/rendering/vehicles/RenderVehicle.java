@@ -19,7 +19,6 @@ import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.systems.VehicleSoundSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -178,7 +177,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				return true;
 			}
 		}
-		for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+		for(APart part : vehicle.getVehicleParts()){
 			if(partLightLists.containsKey(part.getModelLocation())){
 				for(RenderVehicle_LightPart lightPart : partLightLists.get(part.getModelLocation())){
 					if(lightPart.type.equals(light)){
@@ -208,12 +207,12 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	private static void render(EntityVehicleE_Powered vehicle, EntityPlayer playerRendering, float partialTicks, boolean wasRenderedPrior){
 		//Get position and rotation.
 		Entity renderViewEntity = minecraft.getRenderViewEntity();
-		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * (double)partialTicks;
-		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * (double)partialTicks;
-		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * (double)partialTicks;
-        double thisX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * (double)partialTicks;
-        double thisY = vehicle.lastTickPosY + (vehicle.posY - vehicle.lastTickPosY) * (double)partialTicks;
-        double thisZ = vehicle.lastTickPosZ + (vehicle.posZ - vehicle.lastTickPosZ) * (double)partialTicks;
+		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * partialTicks;
+		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * partialTicks;
+		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * partialTicks;
+        double thisX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * partialTicks;
+        double thisY = vehicle.lastTickPosY + (vehicle.posY - vehicle.lastTickPosY) * partialTicks;
+        double thisZ = vehicle.lastTickPosZ + (vehicle.posZ - vehicle.lastTickPosZ) * partialTicks;
 		double rotateYaw = -vehicle.rotationYaw + (vehicle.rotationYaw - vehicle.prevRotationYaw)*(double)(1 - partialTicks);
         double rotatePitch = vehicle.rotationPitch - (vehicle.rotationPitch - vehicle.prevRotationPitch)*(double)(1 - partialTicks);
         double rotateRoll = vehicle.rotationRoll - (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)(1 - partialTicks);
@@ -302,7 +301,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		if(MinecraftForgeClient.getRenderPass() == -1){
 			VehicleSoundSystem.updateVehicleSounds(vehicle);
 			if(!minecraft.isGamePaused()){
-				for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+				for(APart part : vehicle.getVehicleParts()){
 					if(part instanceof FXPart){
 						((FXPart) part).spawnParticles();
 					}
@@ -393,6 +392,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				}
 				if(entry.getKey().contains("&")){
 					lightParts.add(new RenderVehicle_LightPart(entry.getKey(), entry.getValue()));
+					shouldShapeBeInDL = !lightParts.get(lightParts.size() - 1).isLightupTexture;
 				}
 				if(entry.getKey().toLowerCase().contains("window")){
 					windows.add(new WindowPart(entry.getKey(), entry.getValue()));
@@ -428,7 +428,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  render the animated portions.  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 */
 	private static void renderParts(EntityVehicleE_Powered vehicle, float partialTicks){
-		for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+		for(APart part : vehicle.getVehicleParts()){
 			ResourceLocation partModelLocation = part.getModelLocation();
 			if(partModelLocation == null){
 				continue;
@@ -461,6 +461,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     				}
     				if(entry.getKey().contains("&")){
     					lightParts.add(new RenderVehicle_LightPart(entry.getKey(), entry.getValue()));
+    					shouldShapeBeInDL = !lightParts.get(lightParts.size() - 1).isLightupTexture;
     				}
     				if(shouldShapeBeInDL){
     					for(Float[] vertex : entry.getValue()){
@@ -543,7 +544,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  rotation returned by {@link APart#getActionRotation(float)}.  Rotation needs to be done after translation to the
 	 *  part's position to avoid coordinate system conflicts. 
 	 */
-	private static void rotatePart(APart<? extends EntityVehicleE_Powered> part, Vec3d actionRotation, boolean cullface){
+	private static void rotatePart(APart part, Vec3d actionRotation, boolean cullface){
 		if(part.turnsWithSteer){
 			//Use custom steering rotation point if it's set in the JSON.
 			if(part.packVehicleDef.steerRotationOffset == null){
@@ -1024,10 +1025,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	private static void renderLights(EntityVehicleE_Powered vehicle, boolean wasRenderedPrior, float partialTicks){
 		//Get all the lights for the vehicle and parts and put them into one common list.
 		List<RenderVehicle_LightPart> vehicleLights = vehicleLightLists.get(vehicle.definition.genericName);
-		Map<Integer, APart<? extends EntityVehicleE_Powered>> lightIndexToParts = new HashMap<Integer, APart<? extends EntityVehicleE_Powered>>();
+		Map<Integer, APart> lightIndexToParts = new HashMap<Integer, APart>();
 		List<RenderVehicle_LightPart> allLights = new ArrayList<RenderVehicle_LightPart>();
 		allLights.addAll(vehicleLights);
-		for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+		for(APart part : vehicle.getVehicleParts()){
 			if(partLightLists.containsKey(part.getModelLocation())){
 				for(RenderVehicle_LightPart partLight : partLightLists.get(part.getModelLocation())){
 					lightIndexToParts.put(allLights.size(), part);
@@ -1049,7 +1050,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 					}
 				}
 			}else{
-				APart<? extends EntityVehicleE_Powered> part = lightIndexToParts.get(lightIndex);
+				APart part = lightIndexToParts.get(lightIndex);
 				GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
 				rotatePart(part, part.getActionRotation(partialTicks), false);
 				for(RenderVehicle_RotatablePart rotatable : partRotatableLists.get(part.getModelLocation())){
@@ -1060,7 +1061,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 
 			//Render the light.
-			light.render(vehicle, wasRenderedPrior);
+			light.render(vehicle, wasRenderedPrior, textureMap.get(vehicle.definition.systemName));
 			GL11.glPopMatrix();
 		}
 	}
@@ -1097,7 +1098,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		GL11.glColor3f(0.0F, 0.0F, 0.0F);
 		GL11.glLineWidth(3.0F);
 		//Draw collision boxes for the vehicle.
-		for(VehicleAxisAlignedBB box : vehicle.getCurrentCollisionBoxes()){
+		for(VehicleAxisAlignedBB box : vehicle.collisionBoxes){
 			Vec3d boxOffset = box.pos.subtract(vehicle.posX, vehicle.posY, vehicle.posZ);
 			GL11.glBegin(GL11.GL_LINES);
 			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
@@ -1132,7 +1133,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//Draw part center points.
 		GL11.glColor3f(0.0F, 1.0F, 0.0F);
 		GL11.glBegin(GL11.GL_LINES);
-		for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+		for(APart part : vehicle.getVehicleParts()){
 			GL11.glVertex3d(part.partPos.x - vehicle.posX, part.partPos.y - vehicle.posY - part.getHeight(), part.partPos.z - vehicle.posZ);
 			GL11.glVertex3d(part.partPos.x - vehicle.posX, part.partPos.y - vehicle.posY + part.getHeight(), part.partPos.z - vehicle.posZ);
 		}

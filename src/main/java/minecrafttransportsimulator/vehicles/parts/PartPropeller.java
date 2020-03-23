@@ -9,7 +9,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -18,7 +18,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.Vec3d;
 
-public class PartPropeller extends APart<EntityVehicleF_Air>{	
+public class PartPropeller extends APart{	
 	public float angularPosition;
 	public float angularVelocity;
 	public float damage;
@@ -26,7 +26,9 @@ public class PartPropeller extends APart<EntityVehicleF_Air>{
 	
 	private final PartEngineAircraft connectedEngine;
 	
-	public PartPropeller(EntityVehicleF_Air vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public static final int MIN_DYNAMIC_PITCH = 45;
+	
+	public PartPropeller(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 		this.damage = dataTag.getFloat("damage");
 		this.currentPitch = definition.propeller.pitch;
@@ -54,11 +56,11 @@ public class PartPropeller extends APart<EntityVehicleF_Air>{
 		//If we are a dynamic-pitch propeller, adjust ourselves to the speed of the engine.
 		//But don't do this for blimps, as they reverse their engines rather than adjust their propellers.
 		if(definition.propeller.isDynamicPitch && !(vehicle instanceof EntityVehicleG_Blimp)){
-			if(vehicle.reverseThrust && currentPitch > -45){
+			if(vehicle.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH){
 				--currentPitch;
-			}else if(!vehicle.reverseThrust && currentPitch < 45){
+			}else if(!vehicle.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
 				++currentPitch;
-			}else if(connectedEngine.RPM < connectedEngine.definition.engine.maxRPM*0.80 && currentPitch > 45){
+			}else if(connectedEngine.RPM < connectedEngine.definition.engine.maxRPM*0.80 && currentPitch > MIN_DYNAMIC_PITCH){
 				--currentPitch;
 			}else if(connectedEngine.RPM > connectedEngine.definition.engine.maxRPM*0.85 && currentPitch < definition.propeller.pitch){
 				++currentPitch;

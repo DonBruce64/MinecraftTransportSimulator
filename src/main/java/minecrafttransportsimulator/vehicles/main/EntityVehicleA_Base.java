@@ -4,15 +4,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.google.common.collect.ImmutableList;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
+import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartAddition;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartRemoval;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -22,8 +25,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**Base vehicle class.  All vehicle entities should extend this class.
  * It is primarily responsible for the adding and removal of parts,
@@ -33,7 +34,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * 
  * @author don_bruce
  */
-public abstract class EntityVehicleA_Base extends Entity{
+abstract class EntityVehicleA_Base extends Entity{
 	/**The pack definition for this vehicle.  This is set upon NBT load on the server, but needs a packet
 	 * to be present on the client.  Do NOT assume this will be valid simply because
 	 * the vehicle has been loaded!
@@ -42,7 +43,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 	
 	/**This list contains all parts this vehicle has.  Do NOT use it in loops or you will get CMEs all over!
 	 * Use the getVehicleParts() method instead to return a loop-safe array.*/
-	private final List<APart<? extends EntityVehicleA_Base>> parts = new ArrayList<APart<? extends EntityVehicleA_Base>>();
+	private final List<APart> parts = new ArrayList<APart>();
 
 	/**Cooldown byte to prevent packet spam requests during client-side loading of part packs.**/
 	private byte clientPackPacketCooldown = 0;
@@ -66,7 +67,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 			if(world.isRemote){
 				if(clientPackPacketCooldown == 0){
 					clientPackPacketCooldown = 40;
-					MTS.MTSNet.sendToServer(new PacketVehicleClientInit(this));
+					MTS.MTSNet.sendToServer(new PacketVehicleClientInit((EntityVehicleE_Powered) this));
 				}else{
 					--clientPackPacketCooldown;
 				}
@@ -75,15 +76,44 @@ public abstract class EntityVehicleA_Base extends Entity{
 	}
 	
     @Override
-    @SideOnly(Side.CLIENT)
     public void setPositionAndRotationDirect(double posX, double posY, double posZ, float yaw, float pitch, int posRotationIncrements, boolean teleport){
     	//Overridden due to stupid tracker behavior.
     	//Client-side render changes calls put in its place.
     	setRenderDistanceWeight(100);
     	this.ignoreFrustumCheck = true;
     }
+    
+    /**
+	 * Adds the passed-part to this vehicle, but in this case the part is in item form
+	 * with associated data rather than a fully-constructed form.  This method will check
+	 * if the item-based part can go to this vehicle.  If so, it is constructed and added,
+	 * and a packet is sent to all clients to inform them of this change.  Returns true
+	 * if all operations completed, false if the part was not able to be added.
+	 * Note that the passed-in data MAY be null if the item didn't have any.
+	 */
+    public boolean addPartFromItem(AItemPart partItem, NBTTagCompound partTag, double xPos, double yPos, double zPos){
+    	for(Entry<Vec3d, VehiclePart> packPartEntry : getAllPossiblePackParts().entrySet()){
+    		//Check to see if this is the part we want to add.
+    		if(packPartEntry.getKey().x == xPos && packPartEntry.getKey().y == yPos && packPartEntry.getKey().z == zPos){
+	    		//Check to make sure the spot is free.
+				if(getPartAtLocation(xPos, yPos, zPos) == null){
+					//Check to make sure the part is valid.
+					if(packPartEntry.getValue().types.contains(partItem.definition.general.type)){
+						//Check to make sure the part is in parameter ranges.
+						if(partItem.isPartValidForPackDef(packPartEntry.getValue())){
+							//Part is valid.  Create it and add it.
+							addPart(PackParserSystem.createPart((EntityVehicleE_Powered) this, packPartEntry.getValue(), partItem.definition, partTag != null ? partTag : new NBTTagCompound()), false);
+							MTS.MTSNet.sendToAll(new PacketVehicleClientPartAddition((EntityVehicleE_Powered) this, xPos, yPos, zPos, partItem, partTag));
+							return true;
+						}
+					}
+				}
+    		}
+		}
+    	return false;
+    }
 	
-	public void addPart(APart<? extends EntityVehicleA_Base> part, boolean ignoreCollision){
+	public void addPart(APart part, boolean ignoreCollision){
 		parts.add(part);
 		if(!ignoreCollision){
 			//Check for collision, and boost if needed.
@@ -98,13 +128,13 @@ public abstract class EntityVehicleA_Base extends Entity{
 		}
 	}
 	
-	public void removePart(APart<? extends EntityVehicleA_Base> part, boolean playBreakSound){
+	public void removePart(APart part, boolean playBreakSound){
 		if(parts.contains(part)){
 			parts.remove(part);
 			if(part.isValid()){
 				part.removePart();
 				if(!world.isRemote){
-					MTS.MTSNet.sendToAll(new PacketVehicleClientPartRemoval(this, part.offset.x, part.offset.y, part.offset.z));
+					MTS.MTSNet.sendToAll(new PacketVehicleClientPartRemoval((EntityVehicleE_Powered) this, part.offset.x, part.offset.y, part.offset.z));
 				}
 			}
 			if(!world.isRemote){
@@ -119,15 +149,15 @@ public abstract class EntityVehicleA_Base extends Entity{
 	 * Returns a loop-safe array for iterating over parts.
 	 * Use this for everything that needs to look at parts.
 	 */
-	public List<APart<? extends EntityVehicleA_Base>> getVehicleParts(){
+	public List<APart> getVehicleParts(){
 		return ImmutableList.copyOf(parts);
 	}
 	
 	/**
 	 * Gets the part at the specified location.
 	 */
-	public APart<? extends EntityVehicleA_Base> getPartAtLocation(double offsetX, double offsetY, double offsetZ){
-		for(APart<? extends EntityVehicleA_Base> part : this.parts){
+	public APart getPartAtLocation(double offsetX, double offsetY, double offsetZ){
+		for(APart part : this.parts){
 			if(part.offset.x == offsetX && part.offset.y == offsetY && part.offset.z == offsetZ){
 				return part;
 			}
@@ -153,7 +183,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 			//If a part is present at a location that can have an additional part, we allow it to be placed.
 			while(packPart.additionalPart != null){
 				boolean foundPart = false;
-				for(APart<? extends EntityVehicleA_Base> part : this.parts){
+				for(APart part : this.parts){
 					if(part.offset.equals(partPos)){
 						partPos = new Vec3d(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]);
 						packPart = packPart.additionalPart;
@@ -169,7 +199,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 		}
 		
 		//Next get any sub parts on parts that are present.
-		for(APart<? extends EntityVehicleA_Base> part : this.parts){
+		for(APart part : this.parts){
 			if(part.definition.subParts != null){
 				VehiclePart parentPack = getPackDefForLocation(part.offset.x, part.offset.y, part.offset.z);
 				for(VehiclePart extraPackPart : part.definition.subParts){
@@ -203,7 +233,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 		}
 		
 		//If this is not a main part or an additional part, check the sub-parts.
-		for(APart<? extends EntityVehicleA_Base> part : this.parts){
+		for(APart part : this.parts){
 			if(part.definition.subParts.size() > 0){
 				VehiclePart parentPack = getPackDefForLocation(part.offset.x, part.offset.y, part.offset.z);
 				for(VehiclePart extraPackPart : part.definition.subParts){
@@ -222,7 +252,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 	 * Returns a PackPart with the correct properties for a SubPart.  This is because
 	 * subParts inherit some properties from their parent parts. 
 	 */
-	private VehiclePart getPackForSubPart(VehiclePart parentPack, VehiclePart subPack){
+	public VehiclePart getPackForSubPart(VehiclePart parentPack, VehiclePart subPack){
 		VehiclePart correctPack = this.definition.new VehiclePart();
 		correctPack.pos = new float[3];
 		//If we will be mirrored, make sure to invert the x-coords of any sub-parts.
@@ -251,6 +281,15 @@ public abstract class EntityVehicleA_Base extends Entity{
 		correctPack.customTypes = subPack.customTypes;
 		correctPack.minValue = subPack.minValue;
 		correctPack.maxValue = subPack.maxValue;
+		correctPack.dismountPos = subPack.dismountPos;
+		correctPack.exhaustPos = subPack.exhaustPos;
+        correctPack.exhaustVelocity = subPack.exhaustVelocity;
+        correctPack.intakeOffset = subPack.intakeOffset;
+        correctPack.additionalPart = subPack.additionalPart;
+        correctPack.treadYPoints = subPack.treadYPoints;
+        correctPack.treadZPoints = subPack.treadZPoints;
+        correctPack.treadAngles = subPack.treadAngles;
+        correctPack.defaultPart = subPack.defaultPart;
 		return correctPack;
 	}
 			
@@ -302,7 +341,7 @@ public abstract class EntityVehicleA_Base extends Entity{
 		tagCompound.setString("systemName", definition.systemName);
 		
 		NBTTagList partTagList = new NBTTagList();
-		for(APart<? extends EntityVehicleA_Base> part : this.getVehicleParts()){
+		for(APart part : this.getVehicleParts()){
 			//Don't save the part if it's not valid.
 			if(part.isValid()){
 				NBTTagCompound partTag = part.getPartNBTTag();

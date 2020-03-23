@@ -20,7 +20,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
-public final class PartBarrel extends APart<EntityVehicleE_Powered> implements IFluidTank, IFluidHandler{
+public final class PartBarrel extends APart implements IFluidTank, IFluidHandler{
 	
 	private FluidTankInfo tankInfo;
 	private final FluidTankInfo emptyTankInfo;
@@ -111,7 +111,7 @@ public final class PartBarrel extends APart<EntityVehicleE_Powered> implements I
 	public int fill(FluidStack stack, boolean doFill){
 		if(stack != null && (tankInfo.fluid == null || stack.isFluidEqual(tankInfo.fluid))){
 			int amountAbleToFill = tankInfo.capacity - (tankInfo.fluid != null ? tankInfo.fluid.amount : 0);
-			int amountToFill = (int) Math.min(amountAbleToFill, stack.amount);
+			int amountToFill = Math.min(amountAbleToFill, stack.amount);
 			if(doFill){
 				if(tankInfo.fluid == null){
 					tankInfo = new FluidTankInfo(new FluidStack(stack.getFluid(), 0), emptyTankInfo.capacity);

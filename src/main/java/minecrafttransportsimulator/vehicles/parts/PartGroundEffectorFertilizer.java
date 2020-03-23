@@ -2,7 +2,6 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
@@ -14,9 +13,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 
-public final class PartFertilizer extends APartGroundEffector{
+public final class PartGroundEffectorFertilizer extends APartGroundEffector{
 	
-	public PartFertilizer(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public PartGroundEffectorFertilizer(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 	}
 	
@@ -30,7 +29,7 @@ public final class PartFertilizer extends APartGroundEffector{
             if(growable.canGrow(vehicle.world, pos, cropState, vehicle.world.isRemote)){
             	if(!vehicle.world.isRemote){
             		//Check for bonemeal in crates.
-            		for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+            		for(APart part : vehicle.getVehicleParts()){
     					if(part instanceof PartCrate){
     						InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
     						for(byte i=0; i<crateInventory.getSizeInventory(); ++i){

@@ -2,7 +2,6 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleA_Base;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -15,9 +14,9 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.IPlantable;
 
-public final class PartPlanter extends APartGroundEffector{
+public final class PartGroundEffectorPlanter extends APartGroundEffector{
 	
-	public PartPlanter(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public PartGroundEffectorPlanter(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 	}
 	
@@ -31,7 +30,7 @@ public final class PartPlanter extends APartGroundEffector{
 			BlockPos cropPos = farmlandPos.up();
 			if(vehicle.world.isAirBlock(cropPos)){
 				//Check for valid seeds and plant if able.
-				for(APart<? extends EntityVehicleA_Base> part : vehicle.getVehicleParts()){
+				for(APart part : vehicle.getVehicleParts()){
 					if(part instanceof PartCrate){
 						InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
 						for(byte i=0; i<crateInventory.getSizeInventory(); ++i){

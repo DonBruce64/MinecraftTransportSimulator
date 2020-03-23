@@ -16,6 +16,7 @@ import minecrafttransportsimulator.radio.RadioContainer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
@@ -29,7 +30,10 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 /**This class adds engine components for vehicles, such as fuel, throttle,
  * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.
  * This is added on-top of the D level to keep the crazy movement calculations
- * seperate from the vehicle power overhead bits.
+ * seperate from the vehicle power overhead bits.  This is the first level of
+ * class that can be used for references in systems as it's the last common class for
+ * vehicles.  All other sub-levels are simply functional building-blocks to keep this
+ *  class from having 1000+ lines of code and to better segment things out.
  * 
  * @author don_bruce
  */
@@ -37,15 +41,22 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public boolean soundsNeedInit;
 	public boolean hornOn;
 	public boolean sirenOn;
+	
 	public byte throttle;
 	public double fuel;
+	public boolean reverseThrust;
+	public short reversePercent;
+	
 	public double electricPower = 12;
 	public double electricUsage;
 	public double electricFlow;
 	public String fluidName = "";
 	public Vec3d velocityVec = Vec3d.ZERO;
+	
 	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
-	public final Map<Byte, APartEngine<? extends EntityVehicleE_Powered>> engines = new HashMap<Byte, APartEngine<? extends EntityVehicleE_Powered>>();
+	public final Map<Byte, APartEngine> engines = new HashMap<Byte, APartEngine>();
+	public final List<APartGroundDevice> wheels = new ArrayList<APartGroundDevice>();
+	public final List<APartGroundDevice> groundedWheels = new ArrayList<APartGroundDevice>();
 	
 	private final List<LightType> lightsOn = new ArrayList<LightType>();
 	private final List<VehicleSound> sounds = new ArrayList<VehicleSound>();
@@ -70,7 +81,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			
 			//Turn on the DRLs if we have an engine on.
 			boolean anyEngineOn = false;
-			for(APartEngine<? extends EntityVehicleE_Powered> engine : engines.values()){
+			for(APartEngine engine : engines.values()){
 				if(engine.state.running){
 					anyEngineOn = true;
 					break;
@@ -89,6 +100,21 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
 			electricFlow = electricUsage;
 			electricUsage = 0;
+			
+			//Adjust reverse thrust variables.
+			if(reverseThrust && reversePercent < 20){
+				++reversePercent;
+			}else if(!reverseThrust && reversePercent > 0){
+				--reversePercent;
+			}
+			
+			//Populate grounded wheels.  Needs to be independent of non-wheeled ground devices.
+			groundedWheels.clear();
+			for(APartGroundDevice wheel : this.wheels){
+				if(wheel.isOnGround()){
+					groundedWheels.add(wheel);
+				}
+			}
 		}
 	}
 	
@@ -124,7 +150,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		//so although all parts are DROPPED, not all parts may actually survive the explosion.
 		if(ConfigSystem.configObject.damage.explosions.value){
 			double fuelPresent = this.fuel;
-			for(APart<? extends EntityVehicleA_Base> part : getVehicleParts()){
+			for(APart part : getVehicleParts()){
 				if(part instanceof PartBarrel){
 					PartBarrel barrel = (PartBarrel) part;
 					if(barrel.getFluid() != null){
@@ -137,7 +163,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 					}
 				}
 			}
-			world.newExplosion(this, x, y, z, (float) (fuelPresent/1000F + 1F), true, true);
+			world.newExplosion(this, x, y, z, (float) (fuelPresent/10000F + 1F), true, true);
 		}
 	}
 	
@@ -147,7 +173,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	@Override
-	public void addPart(APart<? extends EntityVehicleA_Base> part, boolean ignoreCollision){
+	public void addPart(APart part, boolean ignoreCollision){
 		super.addPart(part, ignoreCollision);
 		if(part instanceof APartEngine){
 			//Because parts is a list, the #1 engine will always come before the #2 engine.
@@ -157,18 +183,22 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				for(String type : packPart.types){
 					if(type.startsWith("engine")){
 						if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
-							engines.put(engineNumber, (APartEngine<? extends EntityVehicleE_Powered>) part);
+							engines.put(engineNumber, (APartEngine) part);
 							return;
 						}
 						++engineNumber;
 					}
 				}
 			}
+		}else if(part instanceof APartGroundDevice){
+			if(((APartGroundDevice) part).canBeDrivenByEngine()){
+				wheels.add((APartGroundDevice) part);
+			}
 		}
 	}
 	
 	@Override
-	public void removePart(APart<? extends EntityVehicleA_Base> part, boolean playBreakSound){
+	public void removePart(APart part, boolean playBreakSound){
 		super.removePart(part, playBreakSound);
 		byte engineNumber = 0;
 		for(VehiclePart packPart : definition.parts){
@@ -181,6 +211,9 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 					++engineNumber;
 				}
 			}
+		}
+		if(wheels.contains(part)){
+			wheels.remove(part);
 		}
 	}
 	
@@ -252,7 +285,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public final void addSound(SoundTypes typeToAdd, APart<? extends EntityVehicleE_Powered> optionalPart){
+	public final void addSound(SoundTypes typeToAdd, APart optionalPart){
 		VehicleSound newSound = new VehicleSound(this, optionalPart, typeToAdd);
 		//If we already have a sound for this part, remove it before adding this new one.
 		for(byte i=0; i<sounds.size(); ++i){
