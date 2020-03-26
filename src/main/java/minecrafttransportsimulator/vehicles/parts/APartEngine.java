@@ -7,11 +7,13 @@ import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -66,6 +68,9 @@ public abstract class APartEngine extends APart implements FXPart{
 		engineStartRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;
 		if(dataTag.hasKey("engineState")){
 			this.state = EngineStates.values()[dataTag.getByte("engineState")];
+			if(state.running && vehicle.world.isRemote){
+				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+			}
 		}else{
 			this.state = EngineStates.ENGINE_OFF;
 		}
@@ -76,7 +81,6 @@ public abstract class APartEngine extends APart implements FXPart{
 		brokenStarter = dataTag.getBoolean("brokenStarter");
 		hours = dataTag.getDouble("hours");
 		RPM = dataTag.getDouble("rpm");
-		MTS.proxy.addVehicleEngineSound(vehicle, this);
 	}
 	
 	@Override
@@ -129,10 +133,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		if(state.esOn){
 			if(starterLevel == 0){
 				if(vehicle.electricPower > 2){
-					starterLevel += definition.engine.starterDuration;
-					if(vehicle.world.isRemote){
-						MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM), vehicle);
-					}
+					starterLevel += 4;
 				}else{
 					setElectricStarterStatus(false);
 				}
@@ -291,7 +292,9 @@ public abstract class APartEngine extends APart implements FXPart{
 			}else if(state.equals(EngineStates.RUNNING)){
 				state = EngineStates.ENGINE_OFF;
 				internalFuel = 100;
-				MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1, vehicle);
+				if(vehicle.world.isRemote){
+					WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
+				}
 			}
 		}
 	}
@@ -303,8 +306,14 @@ public abstract class APartEngine extends APart implements FXPart{
 					state = EngineStates.MAGNETO_OFF_ES_ON;
 				}else if(state.equals(EngineStates.MAGNETO_ON_STARTERS_OFF)){
 					state = EngineStates.MAGNETO_ON_ES_ON;
+					if(vehicle.world.isRemote){
+						WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+					}
 				}else if(state.equals(EngineStates.RUNNING)){
 					state =  EngineStates.RUNNING_ES_ON;
+					if(vehicle.world.isRemote){
+						WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+					}
 				}
 			}else{
 				if(state.equals(EngineStates.MAGNETO_OFF_ES_ON)){
@@ -328,9 +337,9 @@ public abstract class APartEngine extends APart implements FXPart{
 		}else{
 			return;
 		}
-		starterLevel += definition.engine.starterDuration;
+		starterLevel += 4;
 		if(vehicle.world.isRemote){
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM), vehicle);
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
 		}
 	}
 	
@@ -339,7 +348,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.BACKFIRE));
 		}else{
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_sputter", 0.5F, 1, vehicle);
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_sputter"));
 			backfired = true;
 		}
 	}
@@ -357,7 +366,8 @@ public abstract class APartEngine extends APart implements FXPart{
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.START));
 		}else{
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_starting", 1, 1, vehicle);
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_starting"));
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
 		}
 	}
 	
@@ -375,7 +385,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(!packetType.equals(PacketEngineTypes.DROWN)){
 				internalFuel = 100;
 			}
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1, vehicle);
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
 		}
 	}
 	
@@ -405,6 +415,27 @@ public abstract class APartEngine extends APart implements FXPart{
 	}
 	
 	public abstract double getForceOutput();
+	
+	@Override
+	public void updateProviderSound(SoundInstance sound){
+		super.updateProviderSound(sound);
+		//Adjust cranking sound pitch to match RPM and stop looping if we are done cranking.
+		//Adjust running sound to have pitch based on engine RPM.
+		if(sound.soundName.endsWith("_cranking")){
+			if(!state.esOn && !state.hsOn){
+				sound.looping = false;
+			}else{
+				sound.pitch = (float) (RPM/engineStartRPM);
+			}
+		}else if(sound.soundName.endsWith("_running")){
+			if(!state.running && internalFuel == 0){
+				sound.stopSound = true;
+			}else{
+				//Pitch should be 0.25 at idle, 1.0 at 2500, unless this is a high-idle engine in which case we divide it by 10..				
+				sound.pitch = (float) (0.25F + Math.max(0, (RPM - engineStartRPM)/((definition.engine.maxRPM < 15000 ? 2500 : 25000) - engineStartRPM)));
+			}
+		}
+	}
 
 	@Override
 	@SideOnly(Side.CLIENT)

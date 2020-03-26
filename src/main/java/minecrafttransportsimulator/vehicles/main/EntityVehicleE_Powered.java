@@ -1,22 +1,26 @@
 package minecrafttransportsimulator.vehicles.main;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.VehicleSound;
-import minecrafttransportsimulator.baseclasses.VehicleSound.SoundTypes;
+import org.lwjgl.BufferUtils;
+
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.radio.RadioContainer;
+import minecrafttransportsimulator.sound.ISoundProvider;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
+import minecrafttransportsimulator.vehicles.parts.APartGun;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
@@ -24,8 +28,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**This class adds engine components for vehicles, such as fuel, throttle,
  * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.
@@ -37,12 +39,13 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * 
  * @author don_bruce
  */
-public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements RadioContainer{
+public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements RadioContainer, ISoundProvider{
 	public boolean soundsNeedInit;
 	public boolean hornOn;
 	public boolean sirenOn;
 	
 	public byte throttle;
+	public byte totalGuns = 0;
 	public double fuel;
 	public boolean reverseThrust;
 	public short reversePercent;
@@ -59,8 +62,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public final List<APartGroundDevice> groundedWheels = new ArrayList<APartGroundDevice>();
 	
 	private final List<LightType> lightsOn = new ArrayList<LightType>();
-	private final List<VehicleSound> sounds = new ArrayList<VehicleSound>();
-	
+	private final FloatBuffer soundPosition = BufferUtils.createFloatBuffer(3);
+	private final FloatBuffer soundVelocity = BufferUtils.createFloatBuffer(3);
 	public EntityVehicleE_Powered(World world){
 		super(world);
 	}
@@ -115,6 +118,18 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 					groundedWheels.add(wheel);
 				}
 			}
+			
+			//Update sound variables.
+			soundPosition.rewind();
+			soundPosition.put((float) posX);
+			soundPosition.put((float) posY);
+			soundPosition.put((float) posZ);
+			soundPosition.flip();
+			soundVelocity.rewind();
+			soundVelocity.put((float) motionX);
+			soundVelocity.put((float) motionY);
+			soundVelocity.put((float) motionZ);
+			soundVelocity.flip();
 		}
 	}
 	
@@ -194,6 +209,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			if(((APartGroundDevice) part).canBeDrivenByEngine()){
 				wheels.add((APartGroundDevice) part);
 			}
+		}else if(part instanceof APartGun){
+			++totalGuns;
 		}
 	}
 	
@@ -214,6 +231,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		}
 		if(wheels.contains(part)){
 			wheels.remove(part);
+		}else if(part instanceof APartGun){
+			--totalGuns;
 		}
 	}
 	
@@ -269,32 +288,30 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	//-----START OF SOUND CODE-----
-	@SideOnly(Side.CLIENT)
-	public final void initSounds(){
-		if(definition.motorized.hornSound != null){
-			addSound(SoundTypes.HORN, null);
-		}
-		if(definition.motorized.sirenSound != null){
-			addSound(SoundTypes.SIREN, null);
-		}
-	}
-	
-	@SideOnly(Side.CLIENT)
-	public final List<VehicleSound> getSounds(){
-		return this.sounds;
-	}
-	
-	@SideOnly(Side.CLIENT)
-	public final void addSound(SoundTypes typeToAdd, APart optionalPart){
-		VehicleSound newSound = new VehicleSound(this, optionalPart, typeToAdd);
-		//If we already have a sound for this part, remove it before adding this new one.
-		for(byte i=0; i<sounds.size(); ++i){
-			if(sounds.get(i).getSoundUniqueName().equals(newSound.getSoundUniqueName())){
-				sounds.remove(i);
-				break;
+	@Override
+	public void updateProviderSound(SoundInstance sound){
+		//FIXME radio updates go here.
+		if(this.isDead){
+			sound.stopSound = true;
+		}else if(sound.soundName.equals(definition.motorized.hornSound)){
+			if(!hornOn){
+				sound.stopSound = true;
+			}
+		}else if(sound.soundName.equals(definition.motorized.sirenSound)){
+			if(!sirenOn){
+				sound.stopSound = true;
 			}
 		}
-		sounds.add(newSound);
+	}
+    
+	@Override
+    public FloatBuffer getProviderPosition(){
+		return soundPosition;
+	}
+    
+	@Override
+    public FloatBuffer getProviderVelocity(){
+		return soundVelocity;
 	}
 	
 	//-----START OF RADIO CODE-----

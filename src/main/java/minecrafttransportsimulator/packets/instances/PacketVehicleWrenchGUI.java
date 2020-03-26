@@ -29,7 +29,7 @@ public class PacketVehicleWrenchGUI extends APacketVehicle{
 	
 	@Override
 	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleE_Powered vehicle){
-		if(player.isRidingVehicle(vehicle) && ConfigSystem.configObject.client.devMode.value){
+		if(vehicle.equals(player.getVehicleRiding()) && ConfigSystem.configObject.client.devMode.value){
 			WrapperGUI.openGUI(new GUIVehicleEditor(vehicle));
 		}else{
 			WrapperGUI.openGUI(new GUIInstruments(vehicle, player));

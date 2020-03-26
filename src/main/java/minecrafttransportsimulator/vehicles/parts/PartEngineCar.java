@@ -3,7 +3,9 @@ package minecrafttransportsimulator.vehicles.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class PartEngineCar extends APartEngineGeared{
@@ -47,11 +49,6 @@ public class PartEngineCar extends APartEngineGeared{
 			if((wheel.offset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
 				wheelFriction += wheel.getMotiveFriction() - wheel.getFrictionLoss();
 			}
-		}
-		
-		//If running, in reverse, and we are a big truck, fire the backup beepers.
-		if(state.running && this.currentGear == -1 && vehicle.definition != null && vehicle.definition.car.isBigTruck && vehicle.electricPower > 4 && vehicle.world.getTotalWorldTime()%20==1 && vehicle.world.isRemote){
-			MTS.proxy.playSound(vehicle.getPositionVector(), MTS.MODID + ":backup_beeper", 1.0F, 1, vehicle);
 		}
 		
 		//If running, use the friction of the wheels to determine the new speed.
@@ -142,5 +139,25 @@ public class PartEngineCar extends APartEngineGeared{
 	
 	public double getForceOutput(){
 		return engineForce*30F;
+	}
+	
+	@Override
+	public void shiftDown(boolean packet){
+		//If we shifted into reverse, and the engine was running, and we are a big truck, turn on the backup beeper.
+		if(state.running && currentGear == 0 && vehicle.definition.car != null && vehicle.definition.car.isBigTruck && vehicle.world.isRemote){
+			WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
+		}
+		super.shiftDown(packet);
+	}
+	
+	@Override
+	public void updateProviderSound(SoundInstance sound){
+		super.updateProviderSound(sound);
+		//Turn off backup beeper if we are no longer in reverse.
+		if(sound.soundName.endsWith("backup_beeper")){
+			if(currentGear != -1){
+				sound.stopSound = true;
+			}
+		}	
 	}
 }

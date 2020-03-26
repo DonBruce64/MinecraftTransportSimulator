@@ -3,6 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
@@ -11,6 +12,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.APartEngineGeared;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraft.entity.Entity;
@@ -50,13 +52,25 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 			case P_BRAKE : {
 				//If we are a big truck on a client that just set the brake, play the brake sound.
 				if(world.isClient() && !vehicle.parkingBrakeOn && controlState && vehicle instanceof EntityVehicleG_Car && vehicle.definition.car.isBigTruck){
-					MTS.proxy.playSound(vehicle.getPositionVector(), MTS.MODID + ":air_brake_activating", 1.0F, 1, vehicle);
+					WrapperAudio.playQuickSound(new SoundInstance(vehicle, MTS.MODID + ":air_brake_activating"));
 				}
 				vehicle.parkingBrakeOn = controlState;
 				break;
 			}
-			case HORN : vehicle.hornOn = controlState; break;
-			case SIREN : vehicle.sirenOn = controlState; break;
+			case HORN : {
+				if(!vehicle.hornOn && controlState && vehicle.world.isRemote){
+					WrapperAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.hornSound, true));
+				}
+				vehicle.hornOn = controlState;
+				break;
+			}
+			case SIREN : {
+				if(!vehicle.sirenOn && controlState && vehicle.world.isRemote){
+					WrapperAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.sirenSound, true));
+				}
+				vehicle.sirenOn = controlState;
+				break;
+			}
 			case TRAILER : {
 				//TODO change this out when we make aircraft tow-able.
 				EntityVehicleF_Ground mainVehicle = (EntityVehicleF_Ground) vehicle;

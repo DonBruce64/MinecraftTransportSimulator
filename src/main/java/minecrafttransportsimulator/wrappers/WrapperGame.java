@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.wrappers;
 
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.Loader;
 
@@ -25,6 +26,30 @@ public class WrapperGame{
 	public static String getModName(String modID){
 		return Loader.instance().getIndexedModList().get(modID).getName();
 	}
+	
+	/**
+	 *  Returns true if the game is paused.
+	 */
+	public static boolean isGamePaused(){
+		return Minecraft.getMinecraft().isGamePaused();
+	}
+	
+	/**
+	 *  Returns true if the game is in first-person mode.
+	 */
+	public static boolean inFirstPerson(){
+		return Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
+	}
+	
+	/**
+	 *  Returns true if the player's sound should be dampened.
+	 *  Used if we are in an enclosed vehicle and in first-person mode.
+	 */
+	public static boolean shouldSoundBeDampened(){
+		EntityVehicleE_Powered vehicleRiding = getClientPlayer().getVehicleRiding();
+		return vehicleRiding != null && !vehicleRiding.definition.general.openTop && inFirstPerson();
+	}
+	
 	
 	/**
 	 *  Returns the world.  Only valid on CLIENTs as on servers
