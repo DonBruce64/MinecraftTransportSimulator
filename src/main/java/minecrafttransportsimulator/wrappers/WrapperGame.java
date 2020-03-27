@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.wrappers;
 
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.Loader;
@@ -44,12 +45,13 @@ public class WrapperGame{
 	/**
 	 *  Returns true if the player's sound should be dampened.
 	 *  Used if we are in an enclosed vehicle and in first-person mode.
+	 *  If the sound is streaming, and the vehicle is the provider, it is
+	 *  assumed the sound is the vehicle radio, so it should NOT be dampened.
 	 */
-	public static boolean shouldSoundBeDampened(){
+	public static boolean shouldSoundBeDampened(SoundInstance sound){
 		EntityVehicleE_Powered vehicleRiding = getClientPlayer().getVehicleRiding();
-		return vehicleRiding != null && !vehicleRiding.definition.general.openTop && inFirstPerson();
+		return vehicleRiding != null && !vehicleRiding.definition.general.openTop && inFirstPerson() && (!sound.streaming || !vehicleRiding.equals(sound.provider));
 	}
-	
 	
 	/**
 	 *  Returns the world.  Only valid on CLIENTs as on servers

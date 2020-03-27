@@ -12,6 +12,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.radio.Radio;
 import minecrafttransportsimulator.radio.RadioContainer;
 import minecrafttransportsimulator.radio.RadioManager;
+import minecrafttransportsimulator.sound.ISoundProvider;
 
 public class GUIRadio extends AGUIBase{	
 	//Buttons.
@@ -36,7 +37,7 @@ public class GUIRadio extends AGUIBase{
 	private static boolean randomMode = false;
 	private static boolean teachMode = false;
 	
-	public GUIRadio(RadioContainer container){
+	public GUIRadio(ISoundProvider provider){
 		RadioManager.init(MTS.minecraftDir);
 		radio = RadioManager.getRadio(container);
 	}

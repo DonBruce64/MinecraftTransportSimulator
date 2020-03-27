@@ -1,43 +1,145 @@
 package minecrafttransportsimulator.radio;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javazoom.jlgui.basicplayer.BasicPlayer;
+import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.radio.RadioManager;
 
 /**Base class for radios.  Used to provide a common set of tools for all radio implementations.
+ * This class keeps track of the sound source (local files, Internet, server), as well as the
+ * current volume for the source and equalization settings.
 *
 * @author don_bruce
 */
 public class Radio{
-	/**Reference to the RadioContainer that this player is for.**/
-	private final RadioContainer container;
-	/**Instance of the player associated with this container.**/
-	private final BasicPlayer player;
-	/**Songs this player will play.**/
-	private List<File> songsToPlay = new ArrayList<File>();
-	/**Directory or URL this player is playing from.**/
-	private String selectedSource = "";
-	/**Selected preset of this player.**/
-	private int selectedPreset = -1;
-	/**Current radio volume.**/
-	private byte volume = 10;
+	private static File musicDir;
+	private static File radioStationsFile;
 	
-	public Radio(RadioContainer container){
-		this.container = container;
-		this.player = new BasicPlayer();
+	//Public variables for modifying state.
+	public byte presetIndex = -1;
+	public byte volume = 10;
+	public boolean sorted;
+	public String displayText;
+	
+	//Private runtime variables.
+	private RadioSources source = RadioSources.LOCAL;
+	private SoundInstance currentSound;
+	private SoundInstance nextSound;
+	private List<InputStream> nextSounds = new ArrayList<InputStream>();
+	
+	/**
+	 * Need to set up global radio variables before we can create an instance of a radio.
+	 */
+	static{
+		musicDir = new File(MTS.minecraftDir, "mts_music");
+		musicDir.mkdir();
+		radioStationsFile = new File(musicDir.getAbsolutePath() + File.separator + "radio_stations.txt");
+		if(!radioStationsFile.exists()){
+			try{
+				radioStationsFile.createNewFile();
+			}catch(IOException e){
+				e.printStackTrace();
+			}
+		}
 	}
+	
+	public Radio(){
+		
+	}
+	
+	/**
+	 * Attempts to play music based on the current source and preset.
+	 */
+	public void pressPreset(){
+		//Stop the decoders and delete the sound references.
+		if(currentSound != null){
+			currentSound.decoder.abort();
+			currentSound = null;
+		}
+		if(nextSound != null){
+			nextSound.decoder.abort();
+			nextSound = null;
+		}
+		
+		//Close all InputStreams we have open before we try and play anything else.
+		for(InputStream stream : nextSounds){
+			stream.close();
+		}
+		
+		
+		switch(source){
+			case LOCAL : {
+				if(!playFromDirectory()){
+					displayText = "Fewer than " + presetIndex + " folders in mts_music.  Go add some!";
+				}
+				break;
+			}
+			case SERVER : {
+				displayText = "This method of playback is not supported .... yet!";
+				break;
+			}
+			case INTERNET : {
+				displayText = "This method of playback is not supported .... yet!";
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * Queues up songs from the preset directory and processes them for playing.
+	 * Returns true if the directory was found, false otherwise.
+	 */
+	private boolean playFromDirectory(){
+		List<File> musicDirectories = new ArrayList<File>();
+		for(File file : musicDir.listFiles()){
+			if(file.isDirectory()){
+				musicDirectories.add(file);
+			}
+		}
+		Collections.sort(musicDirectories);
+		
+		//If we have the directory of the preset, load a song from it.
+		if(musicDirectories.size() >= presetIndex){
+			List<File> musicFiles = new ArrayList<File>();
+			for(File musicFile : musicDirectories.get(presetIndex).listFiles()){
+				if(!musicFile.isDirectory()){
+					musicFiles.add(musicFile);
+				}
+			}
+			if(sorted){
+				Collections.sort(musicFiles);
+			}else{
+				Collections.shuffle(musicFiles);
+			}
+			
+			//Wrap files in an InputStream and exit.
+			for(File file : musicFiles){
+				nextSounds.add(new FileInputStream(file));
+			}
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	
+	private void 
 	
 	/**Sets the player to play sound files from a directory in the mts_music folder.
 	 * Actual play code is done during the update loop as it's sequential.**/
-	public void playLocal(String directoryName, int presetPressed, boolean sorted){
-		//Stop playing and reset if we are currently playing songs.
-		if(!(player.getStatus() == BasicPlayer.STOPPED || player.getStatus() == BasicPlayer.UNKNOWN)){
-			stopPlaying();
+	public void playLocal(String directoryName, boolean sorted){
+		if(currentSound != null){
+			currentSound.stopSound = true;
 		}
+		
 		songsToPlay = RadioManager.getMusicFiles(directoryName, sorted);
 		selectedPreset = presetPressed;
 		selectedSource = directoryName;
@@ -171,5 +273,11 @@ public class Radio{
 	/**Gets the current volume as a normalized value.**/
 	public byte getVolume(){
 		return volume;
+	}
+	
+	public enum RadioSources{
+		LOCAL,
+		SERVER,
+		INTERNET;
 	}
 }

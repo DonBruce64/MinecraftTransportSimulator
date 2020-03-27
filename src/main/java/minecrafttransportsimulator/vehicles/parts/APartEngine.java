@@ -423,7 +423,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		//Adjust running sound to have pitch based on engine RPM.
 		if(sound.soundName.endsWith("_cranking")){
 			if(!state.esOn && !state.hsOn){
-				sound.looping = false;
+				sound.stopSound = true;
 			}else{
 				sound.pitch = (float) (RPM/engineStartRPM);
 			}

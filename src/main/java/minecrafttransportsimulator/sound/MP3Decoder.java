@@ -107,6 +107,20 @@ public class MP3Decoder{
         decodedDataBuffer.flip();
         return decodedDataBuffer;
     }
+    
+    /**
+	 *  Aborts the decoding process.  This ensures all I/O
+	 *  references like streams are safely closed, allowing for
+	 *  this decoder to be stopped prior to the end of the stream.
+	 */
+    public void abort(){
+    	try{
+	    	bitstream.close();
+	    	dataSourceStream.close();
+    	}catch(Exception e){
+            e.printStackTrace();
+        }
+    }
 
     public int getChannels(){
         return channels;

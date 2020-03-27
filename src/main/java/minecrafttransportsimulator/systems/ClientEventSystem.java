@@ -25,18 +25,14 @@ import minecrafttransportsimulator.items.core.IItemVehicleInteractable;
 import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
-import minecrafttransportsimulator.radio.RadioManager;
-import minecrafttransportsimulator.radio.RadioThread;
 import minecrafttransportsimulator.rendering.vehicles.RenderInstrument;
 import minecrafttransportsimulator.sound.MP3Decoder;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
-import minecrafttransportsimulator.wrappers.WrapperAudio.AudioUpdateThread;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
-import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -70,8 +66,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public final class ClientEventSystem{
     private static final Minecraft minecraft = Minecraft.getMinecraft();
-    private static final RadioThread radioThread = new RadioThread();
-    private static final AudioUpdateThread audioThread = new AudioUpdateThread();
     
     /**
      * Fired when the player right-clicks an entity.  Check to see if the entity clicked is a vehicle.  If so,
@@ -181,14 +175,6 @@ public final class ClientEventSystem{
     			}
         	}else{
         		//We are on the client.  Do update logic.
-        		//First update the radio threa.
-        		if(!radioThread.isAlive()){
-                	radioThread.start();
-                }else{
-                	radioThread.setListenerPosition(event.player.posX, event.player.posY, event.player.posZ, !minecraft.isGamePaused());	
-                }
-        		audioThread.run();
-        		
         		//If we are riding a vehicle, do rotation and control operation.
         		if(event.player.getRidingEntity() instanceof EntityVehicleE_Powered){
         			EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) event.player.getRidingEntity();
@@ -313,14 +299,6 @@ public final class ClientEventSystem{
 		                GL11.glRotated(vehicle.rotationPitch + placementRotation.x, Math.cos(vehicle.rotationYaw  * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
 		                GL11.glRotated(vehicle.rotationRoll + placementRotation.z, -Math.sin(vehicle.rotationYaw  * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
 		                GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
-		            }
-		            
-		            //Make the player dance if the radio is playing.
-		            RenderPlayer render = event.getRenderer();
-		            if(RadioManager.getRadio(vehicle).getPlayState() != -1){
-		            	render.getMainModel().bipedHead.offsetZ = 0.075F - 0.15F*(Minecraft.getMinecraft().world.getTotalWorldTime()%6)/6F;
-		            }else{
-		            	render.getMainModel().bipedHead.offsetZ = 0.0F;
 		            }
 	        	}
         	}
@@ -538,12 +516,9 @@ public final class ClientEventSystem{
         	AL10.alSourceUnqueueBuffers(source.get(1), doneBuffers);
         	if(AL10.alGetError() != AL10.AL_INVALID_VALUE){
             	for(byte i=0; i<doneBuffers.capacity(); ++i){
-            		if(doneBuffers.get(i) != 0){
-            			System.out.println(i);
-	            		ShortBuffer dataBlock = mp3Data.readBlock();
-	            		if(dataBlock != null){
-	            			AL10.alBufferData(doneBuffers.get(i), AL10.AL_FORMAT_STEREO16, dataBlock, mp3Data.getSampleRate());
-	            		}
+            		ShortBuffer dataBlock = mp3Data.readBlock();
+            		if(dataBlock != null){
+            			AL10.alBufferData(doneBuffers.get(i), AL10.AL_FORMAT_STEREO16, dataBlock, mp3Data.getSampleRate());
             		}
         	    }
         	    AL10.alSourceQueueBuffers(source.get(1), doneBuffers);

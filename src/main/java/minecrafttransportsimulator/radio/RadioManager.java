@@ -46,18 +46,6 @@ public class RadioManager{
 		}
 	}
 	
-	/**Called to update all radios.  Should be called at the end of the tick on the client-side.
-	 * Passed-in coords are the location of the listener.**/
-	public static void updateRadios(double x, double y, double z, boolean enablePlayback){
-		Iterator<Radio> radioIterator = radios.values().iterator();
-		while(radioIterator.hasNext()){
-			Radio radio = radioIterator.next();
-			if(!radio.update(x, y, z, enablePlayback)){
-				radioIterator.remove();
-			}
-		}
-	}
-	
 	/**Gets the directories from the mts_music folder.  Used to tell the radio which directory
 	 * it will need to get music from.  Actual music files are gotten once the directory is selected.
 	 **/
@@ -133,13 +121,5 @@ public class RadioManager{
 			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
-	}
-	
-	/**Called to get the radio for a container.  If the radio is not found, one is created, cached, and returned.*/
-	public static Radio getRadio(RadioContainer container){
-		if(!radios.containsKey(container)){
-			radios.put(container, new Radio(container));
-		}
-		return radios.get(container);
 	}
 }

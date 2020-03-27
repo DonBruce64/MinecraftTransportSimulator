@@ -13,8 +13,7 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.radio.RadioContainer;
-import minecrafttransportsimulator.sound.ISoundProvider;
+import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -39,7 +38,7 @@ import net.minecraft.world.World;
  * 
  * @author don_bruce
  */
-public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements RadioContainer, ISoundProvider{
+public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements IRadioProvider{
 	public boolean soundsNeedInit;
 	public boolean hornOn;
 	public boolean sirenOn;
@@ -56,14 +55,20 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public String fluidName = "";
 	public Vec3d velocityVec = Vec3d.ZERO;
 	
+	//Collision maps.
 	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
 	public final Map<Byte, APartEngine> engines = new HashMap<Byte, APartEngine>();
 	public final List<APartGroundDevice> wheels = new ArrayList<APartGroundDevice>();
 	public final List<APartGroundDevice> groundedWheels = new ArrayList<APartGroundDevice>();
 	
+	//List of lights that are on.
 	private final List<LightType> lightsOn = new ArrayList<LightType>();
+	
+	//Sound variables.
 	private final FloatBuffer soundPosition = BufferUtils.createFloatBuffer(3);
 	private final FloatBuffer soundVelocity = BufferUtils.createFloatBuffer(3);
+	
+	
 	public EntityVehicleE_Powered(World world){
 		super(world);
 	}
@@ -287,6 +292,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		return lightsOn.contains(light);
 	}
 	
+	
 	//-----START OF SOUND CODE-----
 	@Override
 	public void updateProviderSound(SoundInstance sound){
@@ -314,24 +320,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		return soundVelocity;
 	}
 	
-	//-----START OF RADIO CODE-----
-	@Override
-	public double getDistanceTo(double x, double y, double z){
-		//Check to see if the listener is a passenger of this vehicle.
-		//If so, we should return a distance of 0.
-		for(Entity entity : getPassengers()){
-			if(entity.posX == x && entity.posY == y && entity.posZ == z){
-				return 0;
-			}
-		}
-		return Math.sqrt(Math.pow(this.posX - x, 2) + Math.pow(this.posY - y, 2) + Math.pow(this.posZ - z, 2));
-	}
 	
-	@Override
-	public boolean isValid(){
-		return !this.isDead;
-	}
-			
+	//-----START OF NBT CODE-----
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
     	this.soundsNeedInit = world.isRemote && definition == null; 

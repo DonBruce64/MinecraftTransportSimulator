@@ -8,6 +8,7 @@ import java.net.URLStreamHandler;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.lwjgl.LWJGLException;
 import org.lwjgl.openal.AL;
 import org.lwjgl.openal.AL10;
 
+import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.MP3Decoder;
 import minecrafttransportsimulator.sound.SoundInstance;
 import paulscode.sound.SoundBuffer;
@@ -43,10 +45,6 @@ public class WrapperAudio{
 	/**List of playing {@link SoundInstance} objects.  Is a CLQ to allow for add operations on the main
 	 * thread and remove operations on the audio thread.**/
 	private static final ConcurrentLinkedQueue<SoundInstance> playingSounds = new ConcurrentLinkedQueue<SoundInstance>();
-	
-	/**Map of sources as an Integer value from #soundSourceIndexes to MP3Parser objects.  Used to feed
-	 * sound sources from their data source parser objects during update loops.**/
-	private static final Map<Integer, MP3Decoder> mp3SourceParsers = new HashMap<Integer, MP3Decoder>();
 	
 	private static final WrapperPlayer player;
 	private static final FloatBuffer playerPosition = BufferUtils.createFloatBuffer(3);
@@ -135,71 +133,105 @@ public class WrapperAudio{
 						SoundInstance sound = iterator.next();
 						boolean soundHasPlayingSources = false;
 						for(int i=0; i<sound.sourceIndexes.capacity(); ++i){
-							int currentSourceIndex = sound.sourceIndexes.get(i);
-							int state = AL10.alGetSourcei(currentSourceIndex, AL10.AL_SOURCE_STATE);
+							int sourceIndex = sound.sourceIndexes.get(i);
+							int state = AL10.alGetSourcei(sourceIndex, AL10.AL_SOURCE_STATE);
 							
-							if(!sound.streaming){
-								if(state != AL10.AL_STOPPED){
-									sound.provider.updateProviderSound(sound);
-									if(sound.stopSound){
-										//If the sound has a following sound, play that.
-										//Otherwise, stop the source.
-										//First remove all bufferes queued, then stop the source and remove one buffer.
-										if(sound.nextSound != null){
-											AL10.alSourceUnqueueBuffers(currentSourceIndex, BufferUtils.createIntBuffer(AL10.alGetSourcei(currentSourceIndex, AL10.AL_BUFFERS_PROCESSED)));
-											AL10.alSourceStop(currentSourceIndex);
-											//AL10.alSourceUnqueueBuffers(currentSourceIndex, BufferUtils.createIntBuffer(AL10.alGetSourcei(currentSourceIndex, 1)));
-											//AL10.alSourcePlay(currentSourceIndex);
-										}else{
-											AL10.alSourceStop(currentSourceIndex);
-										}
+							//If we aren't stopped, do an update to pitch and volume.
+							if(state != AL10.AL_STOPPED){
+								sound.provider.updateProviderSound(sound);
+								if(sound.stopSound){
+									AL10.alSourceStop(sourceIndex);
+								}else{
+									//Update position and velocity.
+									AL10.alSource(sourceIndex, AL10.AL_POSITION, sound.provider.getProviderPosition());
+									AL10.alSource(sourceIndex, AL10.AL_VELOCITY, sound.provider.getProviderVelocity());
+									
+									//If the player is inside an enclosed vehicle, half the sound volume.
+									if(WrapperGame.shouldSoundBeDampened(sound)){
+										AL10.alSourcef(sourceIndex, AL10.AL_GAIN, sound.volume/2F);
 									}else{
-										//If the player is inside an enclosed vehicle, half the sound volume.
-										if(WrapperGame.shouldSoundBeDampened()){
-											AL10.alSourcef(currentSourceIndex, AL10.AL_GAIN, 0.5F);
-										}else{
-											AL10.alSourcef(currentSourceIndex, AL10.AL_GAIN, 1.0F);
-										}
-										
-										//Update sound source properties.
-										AL10.alSource(currentSourceIndex, AL10.AL_POSITION, sound.provider.getProviderPosition());
-							    	    AL10.alSource(currentSourceIndex, AL10.AL_VELOCITY, sound.provider.getProviderVelocity());
-							    	    AL10.alSourcei(currentSourceIndex, AL10.AL_LOOPING, sound.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
-							    	    AL10.alSourcef(currentSourceIndex, AL10.AL_PITCH, sound.pitch);
-										AL10.alSourcef(currentSourceIndex, AL10.AL_ROLLOFF_FACTOR, 1F/(0.25F + 3*sound.pitch));
-							    	    soundHasPlayingSources = true;
+										AL10.alSourcef(sourceIndex, AL10.AL_GAIN, sound.volume);
 									}
+									
+									//Update pitch and rolloff distance, which is based on pitch.
+						    	    AL10.alSourcef(sourceIndex, AL10.AL_PITCH, sound.pitch);
+									AL10.alSourcef(sourceIndex, AL10.AL_ROLLOFF_FACTOR, 1F/(0.25F + 3*sound.pitch));
+
+									//Mark source as having playing sounds so we know not to remove it.
+						    	    soundHasPlayingSources = true;
 								}
 							}
 						}
+						
 						if(!soundHasPlayingSources){
+							//No more playing sources for this sound.  Remove it from the list.
 							iterator.remove();
+						}else{
+							//Sound is still playing.  If it's a streamed MP3, get more data if possible.
+							//Need to un-queue a matching number of buffers to channels.
+							AL10.alGetError();
+							IntBuffer[] doneBuffers = new IntBuffer[sound.decoder.getChannels()];
+							for(int i=0; i<doneBuffers.length; ++i){
+								doneBuffers[i] = BufferUtils.createIntBuffer(1);
+								AL10.alSourceUnqueueBuffers(sound.sourceIndexes.get(i), doneBuffers[i]);
+							}
+							
+							//If we got our buffers, parse more data to fill our source back up.
+							if(AL10.alGetError() != AL10.AL_INVALID_VALUE){
+								ShortBuffer dataBlock = sound.decoder.readBlock();
+			            		if(dataBlock != null){
+		            				//Get the raw decoder output.
+		            				ShortBuffer decoderOutput = sound.decoder.readBlock();
+		            				
+		            				//If this is a stereo source, split the buffer before queuing it.
+		            				if(sound.sourceIndexes.capacity() == 2){
+		            					ByteBuffer leftChannel = ByteBuffer.allocateDirect(decoderOutput.limit()/2);
+		            					ByteBuffer rightChannel = ByteBuffer.allocateDirect(decoderOutput.limit()/2);
+		            					while(decoderOutput.hasRemaining()){
+		            						leftChannel.putShort(decoderOutput.get());
+		            						rightChannel.putShort(decoderOutput.get());
+		            					}
+		            					leftChannel.flip();
+		            					rightChannel.flip();
+		            					
+		            					AL10.alBufferData(doneBuffers[0].get(0),  AL10.AL_FORMAT_MONO16, leftChannel, sound.decoder.getSampleRate());
+		            					AL10.alBufferData(doneBuffers[1].get(0),  AL10.AL_FORMAT_MONO16, rightChannel, sound.decoder.getSampleRate());
+		            				}else{
+		            					AL10.alBufferData(doneBuffers[0].get(0),  AL10.AL_FORMAT_MONO16, decoderOutput, sound.decoder.getSampleRate());
+		            				}
+			            		}else{
+			            			//Data block returned null, this is the end of the stream.
+			            			//TODO add next stream here.
+			            			for(int i=0; i<sound.sourceIndexes.capacity(); ++i){
+				            			AL10.alSourceStop(sound.sourceIndexes.get(i));
+			            			}
+			            		}
+							}
 						}
 					}
+				}
 					
-					//Update player position velocity, and orientation.
-					//Don't need to re-bind these as they are buffers.
-					//Note that PaulsCode does this for us in 1.12.2, so we don't need to do that.
-					//However, it does foul up velocity, so wee need to re-do that one.
-					//We also need to check if the doppler has been set to 0.
-					//MC does that somewhere in the the code as it's 0 during the update cycle.
-					//player.putPosition(playerPosition);
-					player.putVelocity(playerVelocity);
-					//player.putOrientation(playerOrientation);
-				    AL10.alListener(AL10.AL_VELOCITY, playerVelocity);
-					if(AL10.alGetFloat(AL10.AL_DOPPLER_FACTOR) == 0){
-						//Sound normally is at a speed of 17.15m/tick.
-						//But the doppler equations assume m/second.
-						//We need to set the factor of 1/20 here to fix that.
-						//We the divide it by 2 again to lower the speed down a little further to account for MC's slow movement.
-						AL10.alDopplerVelocity(1F/20F/2F);
-						AL10.alDopplerFactor(1.0F);
-					}
+				//Update player position velocity, and orientation.
+				//Don't need to re-bind these as they are buffers.
+				//Note that PaulsCode does this for us in 1.12.2, so we don't need to do that.
+				//However, it does foul up velocity, so wee need to re-do that one.
+				//We also need to check if the doppler has been set to 0.
+				//MC does that somewhere in the the code as it's 0 during the update cycle.
+				//player.putPosition(playerPosition);
+				player.putVelocity(playerVelocity);
+				//player.putOrientation(playerOrientation);
+			    AL10.alListener(AL10.AL_VELOCITY, playerVelocity);
+				if(AL10.alGetFloat(AL10.AL_DOPPLER_FACTOR) == 0){
+					//Sound normally is at a speed of 17.15m/tick.
+					//But the doppler equations assume m/second.
+					//We need to set the factor of 1/20 here to fix that.
+					//We the divide it by 2 again to lower the speed down a little further to account for MC's slow movement.
+					AL10.alDopplerVelocity(1F/20F/2F);
+					AL10.alDopplerFactor(1.0F);
 				}
 				
 				//Sleep for a tick.
 				try{
-					System.out.println("SLEEP");
 					Thread.sleep(1000/20);
 				}catch(InterruptedException e){}
 			}
@@ -212,59 +244,33 @@ public class WrapperAudio{
 	 */
 	public static void playQuickSound(SoundInstance sound){
 		//First get the IntBuffer pointer to where this sound data is stored.
-		IntBuffer dataBuffer = loadJarSound(sound.soundName);
-		if(dataBuffer != null){
-			//Set up the IntBuffer for the sound to hold sources.  May be more than one.
-			//If we have a prior sound, use that one instead.
-			if(sound.priorSound != null){
-				sound.sourceIndexes = sound.priorSound.sourceIndexes;
-			}else{
-				sound.sourceIndexes = BufferUtils.createIntBuffer(dataBuffer.capacity());
-			}
-			
-			//Loop through the dataBuffer components of the sound.  Depends on how many channels it has.
-			for(int i=0; i<dataBuffer.capacity(); ++i){
-				//If we don't have a prior sound, we need to get a new source.
-				if(sound.priorSound == null){
-					sound.sourceIndexes.put(i, getFreeSource());
-				}
-				
-				//If we have a source, bind a buffer of data to it.
-				int currentSourceIndex = sound.sourceIndexes.get(i);
-				if(currentSourceIndex != -1){
-		    	    AL10.alSource(currentSourceIndex, AL10.AL_POSITION, sound.provider.getProviderPosition());
-		    	    AL10.alSource(currentSourceIndex, AL10.AL_VELOCITY, sound.provider.getProviderVelocity());
-		    	    AL10.alSourcei(currentSourceIndex, AL10.AL_LOOPING, sound.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
-		    	    
-		    	    //If this SoundInstance is part of a chain, enqueue it to the source.
-		    	    //We know if this is true if it has a prior or next sound.   
-		    	    if(sound.priorSound != null || sound.nextSound != null){
-		    	    	AL10.alSourceQueueBuffers(currentSourceIndex, dataBuffer.get(i));
-		    	    	//Set the source to playing to keep the free source checker from grabbing it again.
-		    	    }else{
-		    	    	AL10.alSourcei(currentSourceIndex, AL10.AL_BUFFER,	dataBuffer.get(i));
-		    	    }
+		IntBuffer dataBuffers = loadOGGJarSound(sound.soundName);
+		if(dataBuffers != null){
+			//Set up the IntBuffer for the sound to hold sources (channels).
+			sound.sourceIndexes = BufferUtils.createIntBuffer(dataBuffers.capacity());
+			for(int i=0; i<dataBuffers.capacity(); ++i){
+				//If we got a source, bind a buffer of data to it.
+				int sourceIndex = getFreeSource();
+				if(sourceIndex != -1){
+					//Set the source index, properties, and bind the dataBuffer to it.
+					sound.sourceIndexes.put(sourceIndex);
+					AL10.alSourcei(sourceIndex, AL10.AL_LOOPING, sound.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
+					AL10.alSource(sourceIndex, AL10.AL_POSITION, sound.provider.getProviderPosition());
+		    	    AL10.alSource(sourceIndex, AL10.AL_VELOCITY, sound.provider.getProviderVelocity());
+		    	    AL10.alSourcei(sourceIndex, AL10.AL_BUFFER,	dataBuffers.get(i));
 		    	    
 		    	    //Start the source playing.  This keeps us from grabbing it as a free buffer in subsequent loops.
-		    	    AL10.alSourcePlay(currentSourceIndex);
+		    	    AL10.alSourcePlay(sourceIndex);
 				}
-			}
-			
-			//Add the sound to the playing sounds list.
-			//Only add the first sound.  The next sound plays after the first is done.
-			if(sound.priorSound == null){
+				
+				//Done setting up buffer.  Set sound as playing.
 				playingSounds.add(sound);
-			}
-			
-			//If the sound has a nextSound, parse that one too.
-			if(sound.nextSound != null){
-				playQuickSound(sound.nextSound);
 			}
 		}
 	}
 
 	/**
-	 *  Loads a sound file (MP3 or OGG) by parsing it from the classpath. 
+	 *  Loads an OGG sound file by parsing it from the classpath. 
 	 *  The sound is then stored in a dataBuffer keyed by soundName located in {@link #dataSourceBuffers}.
 	 *  The pointer to the dataBuffer is returned for convenience as it allows for transparent sound caching.
 	 *  If a sound with the same name is passed-in at a later time, it is assumed to be the same and rather
@@ -272,11 +278,12 @@ public class WrapperAudio{
 	 *  Note that this loading routine will load the whole file into memory, so no  4-hour music files unless you want your RAM gone.
 	 *  Also note that the InputStream may be anything, be it a file, resource in a jar, or something else.
 	 */
-	private static IntBuffer loadJarSound(String soundName){
+	private static IntBuffer loadOGGJarSound(String soundName){
 		if(dataSourceBuffers.containsKey(soundName)){
 			//Already parsed the data.  Return the buffer.
 			return dataSourceBuffers.get(soundName);
 		}
+		
 		//Haven't parsed the data, do so now.
 		//Get the sound data stream from the jar.
     	String soundDomain = soundName.substring(0, soundName.indexOf(':'));
@@ -285,7 +292,6 @@ public class WrapperAudio{
     	if(stream == null){
     		return null;
     	}
-    	
     	
     	//Parse the stream into a buffer, and buffer that data to a dataBuffer.
 		try{
@@ -298,15 +304,15 @@ public class WrapperAudio{
 			
 			//Generate IntBuffers to store the data pointer.
 			//If we are stereo, we need two.
-			IntBuffer dataBuffer = BufferUtils.createIntBuffer(decoderOuput.audioFormat.getChannels());
-	    	AL10.alGenBuffers(dataBuffer);
+			IntBuffer dataBuffers = BufferUtils.createIntBuffer(decoderOuput.audioFormat.getChannels());
+	    	AL10.alGenBuffers(dataBuffers);
 			
 			//If we are a stereo source, make us mono.  We need this for attenuation.
 			//We do this by simply splitting the audio and making a second sound source.
-			//We'd use mono averaging here, but it creates artifacts on most sounds.
+			//We'd use mono averaging here, but it creates nasty artifacts on most sounds.
 			if(decoderOuput.audioFormat.getChannels() == 2){
-				ByteBuffer leftChannel = ByteBuffer.allocateDirect(decoderOuput.audioData.length/2);
-				ByteBuffer rightChannel = ByteBuffer.allocateDirect(decoderOuput.audioData.length/2);
+				ByteBuffer leftChannel = ByteBuffer.allocateDirect(decoderData.limit()/2);
+				ByteBuffer rightChannel = ByteBuffer.allocateDirect(decoderData.limit()/2);
 				while(decoderData.hasRemaining()){
 					leftChannel.putShort(decoderData.getShort());
 					rightChannel.putShort(decoderData.getShort());
@@ -314,22 +320,20 @@ public class WrapperAudio{
 				leftChannel.flip();
 				rightChannel.flip();
 				
-				AL10.alBufferData(dataBuffer.get(0),  AL10.AL_FORMAT_MONO16, leftChannel, (int) decoderOuput.audioFormat.getSampleRate());
-				AL10.alBufferData(dataBuffer.get(1),  AL10.AL_FORMAT_MONO16, rightChannel, (int) decoderOuput.audioFormat.getSampleRate());
+				AL10.alBufferData(dataBuffers.get(0), AL10.AL_FORMAT_MONO16, leftChannel, (int) decoderOuput.audioFormat.getSampleRate());
+				AL10.alBufferData(dataBuffers.get(1), AL10.AL_FORMAT_MONO16, rightChannel, (int) decoderOuput.audioFormat.getSampleRate());
 			}else{
-				AL10.alBufferData(dataBuffer.get(0),  AL10.AL_FORMAT_MONO16, decoderData, (int) decoderOuput.audioFormat.getSampleRate());
+				AL10.alBufferData(dataBuffers.get(0), AL10.AL_FORMAT_MONO16, decoderData, (int) decoderOuput.audioFormat.getSampleRate());
 			}
-			stream.close();
-	    	
-	    	//Done parsing.  Map the dataBuffer to the soundName and return the index.
-	    	dataSourceBuffers.put(soundName, dataBuffer);
+			
+	    	//Done parsing.  Map the dataBuffer(s) to the soundName and return the index.
+	    	dataSourceBuffers.put(soundName, dataBuffers);
 	    	return dataSourceBuffers.get(soundName);
 		}catch(IOException e){
 			e.printStackTrace();
 			return null;
 		}
 	}
-	
 	
 	private static final URLStreamHandler resourceStreamHandler = new ResourceStreamHandler();
 	/**
@@ -351,12 +355,67 @@ public class WrapperAudio{
             };
         }
     };
+    
+    /**
+	 *  Plays a streaming sound (one with a MP3Decoder attached).  This uses a buffer-based system for loading
+	 *  as it puts chunks (frames?) of the MP3 into a buffer queue rather than loading it all into one buffer and
+	 *  binding it to the source.  As the buffer queue is used up, the audio system will release the buffers and
+	 *  parse more data.  Once the data is done parsing, the {@link IRadioProvider}
+	 */
+    public static void playStreamedSound(SoundInstance sound){
+		//Set up the IntBuffer for the sound to hold sources (channels).
+		sound.sourceIndexes = BufferUtils.createIntBuffer(sound.decoder.getChannels());
+		
+		//Get 10 buffers worth of data from the decoder to prime the queue.
+		//We need one set for each channel.
+		IntBuffer[] dataBuffers = new IntBuffer[sound.decoder.getChannels()];
+		for(int i=0; i<sound.sourceIndexes.capacity(); ++i){
+			dataBuffers[i] = BufferUtils.createIntBuffer(10);
+		}
+		
+		//Now cycle through the channels and queue up their buffers.
+		for(int i=0; i<10; ++i){
+			//Get the raw decoder output.
+			ShortBuffer decoderOutput = sound.decoder.readBlock();
+			
+			//If this is a stereo source, split the buffer before queuing it.
+			if(sound.sourceIndexes.capacity() == 2){
+				ByteBuffer leftChannel = ByteBuffer.allocateDirect(decoderOutput.limit()/2);
+				ByteBuffer rightChannel = ByteBuffer.allocateDirect(decoderOutput.limit()/2);
+				while(decoderOutput.hasRemaining()){
+					leftChannel.putShort(decoderOutput.get());
+					rightChannel.putShort(decoderOutput.get());
+				}
+				leftChannel.flip();
+				rightChannel.flip();
+				
+				AL10.alBufferData(dataBuffers[0].get(i),  AL10.AL_FORMAT_MONO16, leftChannel, sound.decoder.getSampleRate());
+				AL10.alBufferData(dataBuffers[1].get(i),  AL10.AL_FORMAT_MONO16, rightChannel, sound.decoder.getSampleRate());
+			}else{
+				AL10.alBufferData(dataBuffers[0].get(i),  AL10.AL_FORMAT_MONO16, decoderOutput, sound.decoder.getSampleRate());
+			}
+		}
+		
+		//Data has been buffered.  Enqueue it and start playback.
+		//We get our source indexes here now as we have to start each
+		//channel before getting the next index.
+		for(int i=0; i<sound.sourceIndexes.capacity(); ++i){
+			int sourceIndex = getFreeSource();
+			if(sourceIndex != -1){
+				sound.sourceIndexes.put(sourceIndex);
+				AL10.alSourceQueueBuffers(sourceIndex, dataBuffers[i]);
+				AL10.alSourcePlay(sourceIndex);
+			}
+		}
+		
+		//Done setting up buffer.  Set sound as playing.
+		playingSounds.add(sound);
+	}
 	
 	/**
-	 *  Plays a MP3 file from the passed-in InputStream.  This is read in via chunks, and may be sent over the
-	 *  network via buffers if so desired as long as the InputSream implementation supports it.
+	 *  Plays a MP3 file from the passed-in InputStream.  This is read in via chunks.
 	 */
-	public static void playMP3File(InputStream stream, float x, float y, float z){
+	public static void loadMP3FileSound(InputStream stream){
 		int sourceIndex = getFreeSource();
 		if(sourceIndex != -1){
 			//We have a free buffer, setup a MP3 parser.
