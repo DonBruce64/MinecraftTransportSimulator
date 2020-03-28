@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.sound;
 
-import java.nio.IntBuffer;
-
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 
 /**Class that holds sound information.  One class is created for each sound that's playing
@@ -16,10 +14,10 @@ public class SoundInstance{
 	public final ISoundProvider provider;
 	public final String soundName;
 	public final boolean looping;
-	public final MP3Decoder decoder;
+	public final Radio radio;
 	
 	//Runtime variables.
-	public IntBuffer sourceIndexes;
+	public int sourceIndex;
 	public float volume = 1.0F;
 	public float pitch = 1.0F;
 	public boolean stopSound = false;
@@ -32,14 +30,18 @@ public class SoundInstance{
 		this(provider, soundName, looping, null);
 	}
 
-	public SoundInstance(ISoundProvider provider, String soundName, boolean looping, MP3Decoder decoder){
+	public SoundInstance(ISoundProvider provider, String soundName, boolean looping, Radio radio){
 		this.provider = provider;
 		this.soundName = soundName;
 		this.looping = looping;
-		if(decoder instanceof IRadioProvider){
-			this.decoder = decoder;
+		if(radio == null || (radio != null && provider instanceof IRadioProvider)){
+			this.radio = radio;
 		}else{
-			throw new IllegalArgumentException("ERROR: A sound with a MP3 decoder was attempted to be added to an object that isn't an instance of " + IRadioProvider.class.getSimpleName());
+			throw new IllegalArgumentException("ERROR: A sound played from a radio was attempted to be added to an object that isn't an instance of " + IRadioProvider.class.getSimpleName());
 		}
+	}
+	
+	public void stop(){
+		this.stopSound = true;
 	}
 }

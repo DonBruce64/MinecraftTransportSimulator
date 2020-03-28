@@ -242,7 +242,7 @@ public abstract class APart implements ISoundProvider{
 	@Override
 	public void updateProviderSound(SoundInstance sound){
 		if(!this.isValid || vehicle.isDead){
-			sound.stopSound = true;
+			sound.stop();
 		}
 	}
     

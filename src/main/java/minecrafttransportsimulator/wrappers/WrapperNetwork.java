@@ -11,6 +11,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
+import minecrafttransportsimulator.packets.instances.PacketVehicleRadioChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleWrenchGUI;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -48,6 +49,7 @@ public class WrapperNetwork{
 		packetMappings.put(packetIndex++, PacketVehicleControlDigital.class);
 		packetMappings.put(packetIndex++, PacketVehicleInstruments.class);
 		packetMappings.put(packetIndex++, PacketVehicleLightToggle.class);
+		packetMappings.put(packetIndex++, PacketVehicleRadioChange.class);
 		packetMappings.put(packetIndex++, PacketVehicleWrenchGUI.class);
 	}
 	

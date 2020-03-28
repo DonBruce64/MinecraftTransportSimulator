@@ -1,19 +1,24 @@
 package minecrafttransportsimulator.guis.instances;
 
 import java.awt.Color;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.radio.Radio;
-import minecrafttransportsimulator.radio.RadioContainer;
-import minecrafttransportsimulator.radio.RadioManager;
-import minecrafttransportsimulator.sound.ISoundProvider;
+import minecrafttransportsimulator.sound.IRadioProvider;
+import minecrafttransportsimulator.sound.Radio;
+import minecrafttransportsimulator.sound.Radio.RadioSources;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
 
+/**GUI for interfacing with radios.  Radios are stored on classes that
+ * extend {@link IRadioProvider} and are obtained via {@link IRadioProvider#getRadio()}.
+ * This GUI allows for state changes to those objects.  Those changes are then
+ * picked up by the audio system to affect the playing song.
+*
+* @author don_bruce
+*/
 public class GUIRadio extends AGUIBase{	
 	//Buttons.
 	private GUIComponentButton offButton;
@@ -23,56 +28,80 @@ public class GUIRadio extends AGUIBase{
 	private GUIComponentButton randomButton;
 	private GUIComponentButton orderedButton;
 	private GUIComponentButton setButton;
+	private GUIComponentButton equalizerButton;
+	private GUIComponentButton equalizerBackButton;
+	private GUIComponentButton equalizerResetButton;
 	private GUIComponentButton volUpButton;
 	private GUIComponentButton volDnButton;
 	private List<GUIComponentButton> presetButtons = new ArrayList<GUIComponentButton>();
+	private List<GUIComponentButton> equalizerButtons = new ArrayList<GUIComponentButton>();
 	
 	//Input boxes
 	private GUIComponentTextBox stationDisplay;
 	private GUIComponentTextBox volumeDisplay;
 	
 	//Runtime information.
+	private final IRadioProvider provider;
 	private final Radio radio;
-	private static boolean localMode = true;
-	private static boolean randomMode = false;
+	private final int bandsToSkip;
+	private final int bandsToShow;
+	private final int bandButtonSize;
+	private static boolean equalizerMode = false;
 	private static boolean teachMode = false;
 	
-	public GUIRadio(ISoundProvider provider){
-		RadioManager.init(MTS.minecraftDir);
-		radio = RadioManager.getRadio(container);
+	public GUIRadio(IRadioProvider provider){
+		this.provider = provider;
+		this.radio = provider.getRadio();
+		this.bandsToSkip = 4;
+		this.bandsToShow = radio.equalizer.getBandCount()/bandsToSkip;
+		this.bandButtonSize = 20;
 	}
 	
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){
+		//Add main screen buttons.
 		addButton(offButton = new GUIComponentButton(guiLeft + 15, guiTop + 20, 45, "OFF"){
+			@Override
 			public void onClicked(){
-				presetButtons.get(radio.getPresetSelected()).enabled = true;
-				radio.stopPlaying();
-				stationDisplay.setText("");
+				radio.stop();
 				teachMode = false;
 			}
 		});
 		addButton(localButton = new GUIComponentButton(guiLeft + 15, guiTop + 40, 45, "FOLDER"){
+			@Override
 			public void onClicked(){
-				localMode = true;
+				radio.changeSource(RadioSources.LOCAL);
 				teachMode = false;
-				if(radio.getPresetSelected() != -1){
-					offButton.onClicked();
-				}
 			}
 		});
 		addButton(remoteButton = new GUIComponentButton(guiLeft + 15, guiTop + 60, 45, "RADIO"){
+			@Override
 			public void onClicked(){
-				localMode = false;
-				if(radio.getPresetSelected() != -1){
-					offButton.onClicked();
+				radio.changeSource(RadioSources.INTERNET);
+				teachMode = false;
+			}
+		});
+		addButton(serverButton = new GUIComponentButton(guiLeft + 15, guiTop + 80, 45, "SERVER"){
+			@Override
+			public void onClicked(){
+				radio.changeSource(RadioSources.SERVER);
+				teachMode = false;
+			}
+		});
+		addButton(randomButton = new GUIComponentButton(guiLeft + 80, guiTop + 30, 45, "RANDOM"){public void onClicked(){radio.sorted = false;}});
+		addButton(orderedButton = new GUIComponentButton(guiLeft + 80, guiTop + 50, 45, "SORTED"){public void onClicked(){radio.sorted = true;}});
+		addButton(equalizerButton = new GUIComponentButton(guiLeft + 80, guiTop + 70, 45, "EQ"){public void onClicked(){equalizerMode = true;}});
+		addButton(equalizerBackButton = new GUIComponentButton(guiLeft + 40, guiTop + 162, 80, "BACK"){public void onClicked(){equalizerMode = false;}});
+		addButton(equalizerResetButton = new GUIComponentButton(guiLeft + getWidth() - 80 - 40, guiTop + 162, 80, "RESET"){
+			@Override
+			public void onClicked(){
+				for(int i=0; i<radio.equalizer.getBandCount(); ++i){
+					radio.equalizer.setBand(i, 0.0F);
 				}
 			}
 		});
-		addButton(serverButton = new GUIComponentButton(guiLeft + 15, guiTop + 80, 45, "SERVER"){public void onClicked(){}});
-		addButton(randomButton = new GUIComponentButton(guiLeft + 80, guiTop + 30, 45, "RANDOM"){public void onClicked(){randomMode = true;}});
-		addButton(orderedButton = new GUIComponentButton(guiLeft + 80, guiTop + 50, 45, "SORTED"){public void onClicked(){randomMode = false;}});
 		addButton(setButton = new GUIComponentButton(guiLeft + 190, guiTop + 80, 45, "SET"){
+			@Override
 			public void onClicked(){
 				if(teachMode){
 					teachMode = false;
@@ -84,8 +113,8 @@ public class GUIRadio extends AGUIBase{
 				}
 			}
 		});
-		addButton(volUpButton = new GUIComponentButton(guiLeft + 205, guiTop + 20, 30, "UP"){public void onClicked(){radio.setVolume((byte) (radio.getVolume() + 1));}});
-		addButton(volDnButton = new GUIComponentButton(guiLeft + 205, guiTop + 40, 30, "DN"){public void onClicked(){radio.setVolume((byte) (radio.getVolume() - 1));}});
+		addButton(volUpButton = new GUIComponentButton(guiLeft + 205, guiTop + 20, 30, "UP"){public void onClicked(){radio.changeVolume(++radio.volume);}});
+		addButton(volDnButton = new GUIComponentButton(guiLeft + 205, guiTop + 40, 30, "DN"){public void onClicked(){radio.changeVolume(--radio.volume);}});
 		
 		presetButtons.clear();
 		int x = 25;
@@ -95,76 +124,144 @@ public class GUIRadio extends AGUIBase{
 			x += 35;
 		}
 		
-		addTextBox(stationDisplay = new GUIComponentTextBox(guiLeft + 20, guiTop + 105, 220, radio.getSource(), 45, Color.WHITE, Color.BLACK, 100));
+		addTextBox(stationDisplay = new GUIComponentTextBox(guiLeft + 20, guiTop + 105, 220, radio.displayText, 45, Color.WHITE, Color.BLACK, 100));
 		addTextBox(volumeDisplay = new GUIComponentTextBox(guiLeft + 180, guiTop + 20, 25, "", 40, Color.WHITE, Color.BLACK, 32));
+		
+		//Add equalizer screen buttons.
+		//We only show one in every 4 bands (8 bands total).  Nobody needs a 32-band equalizer...
+		equalizerButtons.clear();
+		int startingOffset = (getWidth() - (bandsToShow - 1)*bandButtonSize)/2;
+		for(int i=0; i < bandsToShow; ++i){
+			GUIComponentButton bandUpButton = new GUIComponentEqualizerButton(guiLeft + startingOffset - bandButtonSize/2 + bandButtonSize*i, guiTop + 20, true);
+			GUIComponentButton bandDownButton = new GUIComponentEqualizerButton(guiLeft + startingOffset - bandButtonSize/2 + bandButtonSize*i, guiTop + 140, false);
+			equalizerButtons.add(bandUpButton);
+			equalizerButtons.add(bandDownButton);
+			addButton(bandUpButton);
+			addButton(bandDownButton);
+		}
 	}
 	
 	@Override
 	public void setStates(){
-		//Off button is enabled when radio is playing.
-		offButton.enabled = radio.getPlayState() != -1;
+		//Set visibility based on if we are in equalizer mode or not.
+		for(GUIComponentButton button : this.buttons){
+			button.visible = !((button.equals(equalizerBackButton) || equalizerButtons.contains(button)) ^ equalizerMode); 
+		}
+		equalizerButton.visible = !equalizerMode;
+		equalizerBackButton.visible = equalizerMode;
+		equalizerResetButton.visible = equalizerMode;
+		volumeDisplay.visible = !equalizerMode;
+		stationDisplay.visible = !equalizerMode;
 		
-		//Local-remote are toggles.  Server is for future use and permanently disabled.
-		localButton.enabled = !localMode;
-		remoteButton.enabled = localMode;
-		serverButton.enabled = false;
+		//Off button is enabled when radio is playing.
+		offButton.enabled = radio.playing();
+		
+		//Local-remote are toggles.
+		localButton.enabled = !radio.getSource().equals(RadioSources.LOCAL);
+		remoteButton.enabled = !radio.getSource().equals(RadioSources.INTERNET);
+		serverButton.enabled = !radio.getSource().equals(RadioSources.SERVER);
 		
 		//Random/ordered buttons are toggles, but only active when playing locally from folder.
-		randomButton.enabled = !randomMode && localMode;
-		orderedButton.enabled = randomMode && localMode;
+		randomButton.enabled = radio.getSource().equals(RadioSources.LOCAL) && radio.sorted;
+		orderedButton.enabled = radio.getSource().equals(RadioSources.LOCAL) && !radio.sorted;
 		
-		//Set button only works if not in local mode (playing from radio URL).
+		//Equalizer button isn't available for internet streams.
+		equalizerButton.enabled = !radio.getSource().equals(RadioSources.INTERNET);
+		
+		//Set button only works if in Internet mode (playing from radio URL).
 		//Once button is pressed, teach mode activates and stationDisplay becomes a station entry box.
 		//Otherwise, it's just a box that displays what's playing.
-		setButton.enabled = !localMode;
+		setButton.enabled = radio.getSource().equals(RadioSources.INTERNET);
 		stationDisplay.enabled = teachMode;
 		if(!teachMode){
-			stationDisplay.setText(radio.getSource());
+			stationDisplay.setText(radio.displayText);
 		}
 		
 		//Set volume system states to current volume settings.
 		volumeDisplay.enabled = false;
-		volumeDisplay.setText("VOL        " + String.valueOf(radio.getVolume()));
-		volUpButton.enabled = radio.getVolume() < 10;
-		volDnButton.enabled = radio.getVolume() > 0;
+		volumeDisplay.setText("VOL        " + String.valueOf(radio.volume));
+		volUpButton.enabled = radio.volume < 10;
+		volDnButton.enabled = radio.volume > 0;
+		
+		//Set preset button states depending on which preset the radio has selected.
+		for(byte i=0; i<6; ++i){
+			presetButtons.get(i).enabled = radio.presetIndex != i;
+		}
 	}
 	
 	private void presetButtonClicked(GUIComponentButton buttonClicked){
 		int presetClicked = presetButtons.indexOf(buttonClicked);
-		//Enable the last-selected button if needed.
-		if(radio.getPresetSelected() != -1){
-			presetButtons.get(radio.getPresetSelected()).enabled = true;
-		}
-		
 		if(teachMode){
-			RadioManager.setRadioStation(stationDisplay.getText(), presetClicked);
+			//In teach mode.  Set Internet radio stations.
+			Radio.setRadioStation(stationDisplay.getText(), presetClicked);
 			stationDisplay.setText("Station set to preset " + (presetClicked + 1));
 			teachMode = false;
-		}else if(localMode){
-			String directory = RadioManager.getMusicDirectories().get(presetClicked);
-			if(!directory.isEmpty()){
-				stationDisplay.setText(directory);
-				radio.playLocal(directory, presetClicked, !randomMode);
-				buttonClicked.enabled = false;
-			}else{
-				stationDisplay.setText("Fewer than " + (presetClicked + 1) + " folders in mts_music.");
-			}
 		}else{
-			String station = RadioManager.getRadioStations().get(presetClicked);
-			if(station.isEmpty()){
-				stationDisplay.setText("Press SET to teach a station.");
-			}else{
-				URL url = null;
-				try{
-					url = new URL(station);
-				}catch(Exception e){}
-				if(url == null || !radio.playInternet(url, presetClicked)){
-					stationDisplay.setText("INVALID URL!");
-					RadioManager.setRadioStation("", presetClicked);
-				}else{
-					stationDisplay.setText(station);
-					buttonClicked.enabled = false;
+			//Do preset press logic.
+			radio.pressPreset((byte) presetButtons.indexOf(buttonClicked));
+		}
+	}
+	
+	private class GUIComponentEqualizerButton extends GUIComponentButton{
+		private final boolean increment;
+		
+		public GUIComponentEqualizerButton(int x, int y, boolean increment){
+			super(x, y, bandButtonSize, increment ? "/\\" : "\\/", bandButtonSize, true);
+			this.increment = increment;
+		}
+		
+		@Override
+		public void onClicked(){
+			//Set the current band.  We use integer division as we have two buttons per band.
+			int bandIndex = bandsToSkip*(equalizerButtons.indexOf(this)/2);
+			float level = radio.equalizer.getBand(bandIndex);
+			if(increment ? level < 0.9F : level > -0.9F){
+				level += increment ? 0.2F : -0.2F;
+				radio.equalizer.setBand(bandIndex, level);
+				
+				//Also set the 4 bands before and after this one depending on other band states.
+				//We need to do interpolation here.
+				if(bandIndex + bandsToSkip < radio.equalizer.getBandCount()){
+					int nextBandIndex = bandIndex + bandsToSkip;
+					float nextBandLevel = radio.equalizer.getBand(nextBandIndex);
+					for(int i=1; i < bandsToSkip; ++i){
+						radio.equalizer.setBand(bandIndex + i, level + i*(nextBandLevel - level)/bandsToSkip);
+					}
 				}
+
+				if(bandIndex - bandsToSkip >= 0){
+					int priorBandIndex = bandIndex - bandsToSkip;
+					float priorBandLevel = radio.equalizer.getBand(priorBandIndex);
+					for(int i=1; i < bandsToSkip; ++i){
+						radio.equalizer.setBand(bandIndex - i, level - i*(level - priorBandLevel)/bandsToSkip);
+					}
+				}
+			}
+		}
+		
+		@Override
+		public void renderText(){
+			super.renderText();
+			//We need to manually draw the equalizer level here.  Do so via built-in rectangle render method
+			//as that is render-safe so we won't mess up any texture operations.  Only do this for the increment
+			//equalizer button, and only if it's visible.
+			if(visible && increment){
+				//Get the upper and lower rectangle bounds.  Lower is below this button,
+				//upper is above the button for decrementing.  We know that button is after us
+				//in the list of equalizer buttons, so get it and use that y value.
+				int upperBounds = y + bandButtonSize;
+				int lowerBounds = equalizerButtons.get(equalizerButtons.indexOf(this) + 1).y;
+				
+				//Render a black rectangle between the buttons.
+				int middlePoint = x + width/2;
+				WrapperGUI.renderRectangle(middlePoint - 2 , lowerBounds, 4, upperBounds - lowerBounds, Color.BLACK);
+				
+				//Now render a red square where the equalizer value is.
+				///Level is between -1.0 and 1.0, so we need to normalize it.
+				int squareSize = 8;
+				float level = (1.0F + radio.equalizer.getBand(bandsToSkip*(equalizerButtons.indexOf(this)/2)))/2F;
+				int bandCenter = lowerBounds - squareSize + (int)(level*((upperBounds+squareSize/2) - (lowerBounds-squareSize/2)));
+				WrapperGUI.renderRectangle(middlePoint - squareSize/2, bandCenter, squareSize, squareSize, Color.RED);
 			}
 		}
 	}

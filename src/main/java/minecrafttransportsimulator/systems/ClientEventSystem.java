@@ -1,19 +1,6 @@
 package minecrafttransportsimulator.systems;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
-
-import org.lwjgl.BufferUtils;
-import org.lwjgl.LWJGLException;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.openal.AL;
-import org.lwjgl.openal.AL10;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.WaveData;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
@@ -26,9 +13,9 @@ import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
 import minecrafttransportsimulator.rendering.vehicles.RenderInstrument;
-import minecrafttransportsimulator.sound.MP3Decoder;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
 import net.minecraft.client.Minecraft;
@@ -174,6 +161,7 @@ public final class ClientEventSystem{
         	    	}
     			}
         	}else{
+        		WrapperAudio.run();
         		//We are on the client.  Do update logic.
         		//If we are riding a vehicle, do rotation and control operation.
         		if(event.player.getRidingEntity() instanceof EntityVehicleE_Powered){
@@ -381,16 +369,6 @@ public final class ClientEventSystem{
 	    	}
     	}
     }
-    
-    
-    static IntBuffer dataBuffer;
-    static IntBuffer source;
-    static FloatBuffer listenerPos;
-    static FloatBuffer listenerVel;
-    static FloatBuffer listenerOri;
-    static float[] playerPos = new float[] { 0.0f, 0.0f, 0.0f };
-    static WaveData wavData;
-	static MP3Decoder mp3Data;
 
     /**
      * Opens the config screen when the config key is pressed.
@@ -399,161 +377,6 @@ public final class ClientEventSystem{
     public static void onKeyInput(InputEvent.KeyInputEvent event){
         if(WrapperInput.isMasterControlButttonPressed() && minecraft.currentScreen == null){
             WrapperGUI.openGUI(new GUIConfig());
-        }
-        if(Keyboard.isKeyDown(Keyboard.KEY_HOME)){
-        	try{
-        		if(!AL.isCreated()){
-        			AL.create();
-        			AL10.alGetError();
-        		}
-    	    }catch(LWJGLException e){
-    	    	e.printStackTrace();
-    	    	return;
-    	    }
-        	
-        	
-           // ByteBuffer mp3Buffer = 
-        	
-        	
-        	try{
-    	    	File wavFile = new File("D:/MinecraftDev/mts_workspace/src/main/resources/assets/mts/sounds/Surfing.wav");
-    	    	BufferedInputStream wavStream = new BufferedInputStream(new FileInputStream(wavFile));
-    	    	wavData = WaveData.create(wavStream);
-    	    	wavStream.close();
-    	    	System.out.format("Loaded WAV with format:%s and SR:%d and bytes:%d\n", wavData.format == AL10.AL_FORMAT_STEREO16 ? "16-bit" : "8-bit", wavData.samplerate, wavData.data.capacity());
-    	    	
-    	    	File mp3File = new File("D:/MinecraftDev/mts_workspace/src/main/resources/assets/mts/sounds/Surfing.mp3");
-    	    	mp3Data = new MP3Decoder(new FileInputStream(mp3File));
-                System.out.format("Loaded MP3 with format:%s and SR:%d and bytes:%d\n", "16-bit", mp3Data.getSampleRate(), 98304);
-			}catch(Exception e){
-				e.printStackTrace();
-				return;
-			}
-        	
-        	
-    	   
-    	    //Create a buffer and bind it for the main data buffer.
-        	if(dataBuffer == null){
-	    	    dataBuffer = BufferUtils.createIntBuffer(10);
-	    	    AL10.alGenBuffers(dataBuffer);
-	    	    if(AL10.alGetError() != AL10.AL_NO_ERROR) return;
-        	}
-    	    
-    	    //Put the sound into the buffer.
-        	
-    	    //AL10.alBufferData(dataBuffer.get(0), AL10.AL_FORMAT_STEREO16, wavData.data, wavData.samplerate);
-    	    wavData.dispose();
-    	    if(AL10.alGetError() != AL10.AL_NO_ERROR) return;
-    	    System.out.println("Loaded WAV.");
-    	    
-    	    //Create a buffer and bind it for the source playback objects.
-    	    if(source == null){
-	    	    source = BufferUtils.createIntBuffer(2);
-	    	    AL10.alGenSources(source);
-	    	    int error = AL10.alGetError();
-	    	    System.out.println(error);
-	    	    if(error != AL10.AL_NO_ERROR) return;
-	    	    
-	    	    
-	    	    //Set the source playback data.
-	    	    FloatBuffer sourcePos = (FloatBuffer) BufferUtils.createFloatBuffer(3).put(playerPos).rewind();
-	    	    FloatBuffer sourceVel = (FloatBuffer) BufferUtils.createFloatBuffer(3).put(new float[] { 0.0f, 0.0f, 0.0f }).rewind();
-	    	    //AL10.alSourcei(source.get(0),	AL10.AL_BUFFER,		dataBuffer.get(0)	);
-	    	    AL10.alSourcef(source.get(0),	AL10.AL_PITCH,		1.0f				);
-	    	    AL10.alSourcef(source.get(0),	AL10.AL_GAIN,		1.0f				);
-	    	    AL10.alSource (source.get(0),	AL10.AL_POSITION,	sourcePos			);
-	    	    AL10.alSource (source.get(0),	AL10.AL_VELOCITY,	sourceVel			);
-	    	    //AL10.alSourcei(source.get(1),	AL10.AL_BUFFER,		dataBuffer.get(1)	);
-	    	    AL10.alSourcef(source.get(1),	AL10.AL_PITCH,		1.0f				);
-	    	    AL10.alSourcef(source.get(1),	AL10.AL_GAIN,		1.0f				);
-	    	    AL10.alSource (source.get(1),	AL10.AL_POSITION,	sourcePos			);
-	    	    AL10.alSource (source.get(1),	AL10.AL_VELOCITY,	sourceVel			);
-	    	    if(AL10.alGetError() != AL10.AL_NO_ERROR) return;
-	    	    
-	    	    //Set the listerner data.
-	    	    listenerPos = (FloatBuffer) BufferUtils.createFloatBuffer(3).put(new float[] { 0.0f, 0.0f, 0.0f }).rewind();
-	    	    listenerVel = (FloatBuffer) BufferUtils.createFloatBuffer(3).put(new float[] { 0.0f, 0.0f, 0.0f }).rewind();
-	    	    /** Orientation of the listener. (first 3 elements are "at", second 3 are "up") */
-	    	    listenerOri = (FloatBuffer) BufferUtils.createFloatBuffer(6).put(new float[] { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f }).rewind();
-	    	    AL10.alListener(AL10.AL_POSITION,    listenerPos);
-	    	    AL10.alListener(AL10.AL_VELOCITY,    listenerVel);
-	    	    AL10.alListener(AL10.AL_ORIENTATION, listenerOri);
-	    	    
-	    	    for(byte i=0; i<dataBuffer.capacity();++i){
-	    	    	AL10.alBufferData(dataBuffer.get(i), AL10.AL_FORMAT_STEREO16, mp3Data.readBlock(), mp3Data.getSampleRate());
-	    	    }
-	    	    AL10.alSourceQueueBuffers(source.get(1), dataBuffer);
-	    	    
-	    	    if(AL10.alGetError() != AL10.AL_NO_ERROR) return;
-	    	    System.out.println("Loaded MP3.");
-    	    }
-        }else if(Keyboard.isKeyDown(Keyboard.KEY_END)){
-        	//Delete sources and buffers.  Sources need to be deleted first to free buffer linkings.
-        	AL10.alDeleteSources(source);
-        	AL10.alDeleteBuffers(dataBuffer);
-        	source = null;
-        	dataBuffer = null;
-        	System.out.println("DED");
-        }else if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD0)){
-        	if(AL10.alGetSourcei(source.get(0), AL10.AL_SOURCE_STATE) == AL10.AL_PLAYING){
-        		AL10.alSourceStop(source.get(0));
-        		System.out.println("STOP WAV");
-        	}else{
-        		AL10.alSourcePlay(source.get(0));
-        		System.out.println("PLAY WAV");
-        	}
-        }else if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD1)){
-        	if(AL10.alGetSourcei(source.get(1), AL10.AL_SOURCE_STATE) == AL10.AL_PLAYING){
-        		AL10.alSourceStop(source.get(1));
-        		System.out.println("STOP MP3");
-        	}else{
-        		AL10.alSourcePlay(source.get(1));
-        		System.out.println("PLAY MP3");
-        	}
-        }else if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD2)){
-        	System.out.println("LOAD MORE MP3");
-    	    IntBuffer doneBuffers = BufferUtils.createIntBuffer(3);
-        	AL10.alSourceUnqueueBuffers(source.get(1), doneBuffers);
-        	if(AL10.alGetError() != AL10.AL_INVALID_VALUE){
-            	for(byte i=0; i<doneBuffers.capacity(); ++i){
-            		ShortBuffer dataBlock = mp3Data.readBlock();
-            		if(dataBlock != null){
-            			AL10.alBufferData(doneBuffers.get(i), AL10.AL_FORMAT_STEREO16, dataBlock, mp3Data.getSampleRate());
-            		}
-        	    }
-        	    AL10.alSourceQueueBuffers(source.get(1), doneBuffers);
-        	}
-        }else if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD4)){
-        	System.out.println("PITCH DOWN MP3");
-        	
-        	float pitch = AL10.alGetSourcef(source.get(1), AL10.AL_PITCH);
-        	if(pitch > 0.5F){
-        		AL10.alSourcef(source.get(1), AL10.AL_PITCH, pitch - 0.1F);
-        	}
-        }else if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD5)){
-        	System.out.println("PITCH UP MP3");
-        	float pitch = AL10.alGetSourcef(source.get(1), AL10.AL_PITCH);
-        	if(pitch < 2.0F){
-        		AL10.alSourcef(source.get(1), AL10.AL_PITCH, pitch + 0.1F);
-        	}
-        }else if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD6)){
-        	System.out.println("DROP BASS MP3");
-        	for(int i=0; i<mp3Data.getEqualizer().getBandCount(); ++i){
-        		if(i < 3){
-        			mp3Data.getEqualizer().setBand(i, 0.0F);
-        		}else{
-        			mp3Data.getEqualizer().setBand(i, -1.0F);
-        		}
-        	}
-        }else if(Keyboard.isKeyDown(Keyboard.KEY_NUMPAD7)){
-        	System.out.println("RESET BASS MP3");
-        	for(int i=0; i<mp3Data.getEqualizer().getBandCount(); ++i){
-        		if(i < 3){
-        			mp3Data.getEqualizer().setBand(i, -1.0F);
-        		}else{
-        			mp3Data.getEqualizer().setBand(i, -1.0F);
-        		}
-        	}
         }
     }
 }

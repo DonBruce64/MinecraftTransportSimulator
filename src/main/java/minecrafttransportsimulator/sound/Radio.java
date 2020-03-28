@@ -1,17 +1,22 @@
-package minecrafttransportsimulator.radio;
+package minecrafttransportsimulator.sound;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javazoom.jlgui.basicplayer.BasicPlayer;
+import javazoom.jl.decoder.Equalizer;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.radio.RadioManager;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
+import minecrafttransportsimulator.wrappers.WrapperOGGDecoder;
 
 /**Base class for radios.  Used to provide a common set of tools for all radio implementations.
  * This class keeps track of the sound source (local files, Internet, server), as well as the
@@ -27,13 +32,16 @@ public class Radio{
 	public byte presetIndex = -1;
 	public byte volume = 10;
 	public boolean sorted;
-	public String displayText;
+	public String displayText = "";
+	public RadioSources source = RadioSources.LOCAL;
+	public IStreamDecoder decoder;
+	public final Equalizer equalizer;
 	
 	//Private runtime variables.
-	private RadioSources source = RadioSources.LOCAL;
+	private final ISoundProvider provider;
+	private final List<File> musicFiles = new ArrayList<File>();
 	private SoundInstance currentSound;
-	private SoundInstance nextSound;
-	private List<InputStream> nextSounds = new ArrayList<InputStream>();
+	
 	
 	/**
 	 * Need to set up global radio variables before we can create an instance of a radio.
@@ -51,53 +59,94 @@ public class Radio{
 		}
 	}
 	
-	public Radio(){
-		
+	public Radio(ISoundProvider provider){
+		this.provider = provider;
+		this.equalizer = new Equalizer();
+	}
+	
+	/**
+	 * Returns true if the radio is playing a song.
+	 */
+	public boolean playing(){
+		return currentSound != null;
+	}
+	
+	/**
+	 * Returns the curent radio source.
+	 */
+	public RadioSources getSource(){
+		return source;
+	}
+	
+	/**
+	 * Stops all playback, closing any and all streams.
+	 */
+	public void stop(){
+		System.out.println("RADIO STOP COMMAND RECEIVED");
+		if(currentSound != null){
+			System.out.println("RADIO RESETTING");
+			currentSound.stop();
+			currentSound = null;
+			displayText = "";
+		}
+		presetIndex = -1;
+	}
+	
+	/**
+	 * Changes the radio's source.
+	 */
+	public void changeSource(RadioSources source){
+		stop();
+		this.source = source;
+	}
+	
+	/**
+	 * Changes the volume of this radio, and sets the currentSounds volume to that volume.
+	 */
+	public void changeVolume(byte volume){
+		this.volume = volume;
+		if(currentSound != null){
+			currentSound.volume = volume/10F;
+		}
 	}
 	
 	/**
 	 * Attempts to play music based on the current source and preset.
 	 */
-	public void pressPreset(){
-		//Stop the decoders and delete the sound references.
-		if(currentSound != null){
-			currentSound.decoder.abort();
-			currentSound = null;
-		}
-		if(nextSound != null){
-			nextSound.decoder.abort();
-			nextSound = null;
-		}
+	public void pressPreset(byte index){
+		//First stop the decoders and delete the sound references.
+		stop();
 		
-		//Close all InputStreams we have open before we try and play anything else.
-		for(InputStream stream : nextSounds){
-			stream.close();
-		}
-		
-		
+		//Now set the preset and playback source.
+		this.presetIndex = index;
 		switch(source){
 			case LOCAL : {
-				if(!playFromDirectory()){
-					displayText = "Fewer than " + presetIndex + " folders in mts_music.  Go add some!";
+				if(parseLocalDirectory()){
+					if(!queueNextFile()){
+						return;
+					}
 				}
-				break;
 			}
 			case SERVER : {
 				displayText = "This method of playback is not supported .... yet!";
-				break;
+				return;
 			}
 			case INTERNET : {
-				displayText = "This method of playback is not supported .... yet!";
-				break;
+				if(!playFromInternet()){
+					return;
+				}
 			}
 		}
+		
+		//FIXME fire off radio packet here to have the radio update on the server and other clients.
 	}
 	
 	/**
 	 * Queues up songs from the preset directory and processes them for playing.
 	 * Returns true if the directory was found, false otherwise.
 	 */
-	private boolean playFromDirectory(){
+	private boolean parseLocalDirectory(){
+		musicFiles.clear();
 		List<File> musicDirectories = new ArrayList<File>();
 		for(File file : musicDir.listFiles()){
 			if(file.isDirectory()){
@@ -106,9 +155,8 @@ public class Radio{
 		}
 		Collections.sort(musicDirectories);
 		
-		//If we have the directory of the preset, load a song from it.
-		if(musicDirectories.size() >= presetIndex){
-			List<File> musicFiles = new ArrayList<File>();
+		//If we have the directory of the preset, load all the files in it.
+		if(musicDirectories.size() > presetIndex){
 			for(File musicFile : musicDirectories.get(presetIndex).listFiles()){
 				if(!musicFile.isDirectory()){
 					musicFiles.add(musicFile);
@@ -119,160 +167,136 @@ public class Radio{
 			}else{
 				Collections.shuffle(musicFiles);
 			}
-			
-			//Wrap files in an InputStream and exit.
-			for(File file : musicFiles){
-				nextSounds.add(new FileInputStream(file));
-			}
 			return true;
 		}else{
+			displayText = "Fewer than " + (presetIndex + 1) + " folders in mts_music.\nGo add some!";
 			return false;
 		}
 	}
 	
-	
-	private void 
-	
-	/**Sets the player to play sound files from a directory in the mts_music folder.
-	 * Actual play code is done during the update loop as it's sequential.**/
-	public void playLocal(String directoryName, boolean sorted){
-		if(currentSound != null){
-			currentSound.stopSound = true;
-		}
-		
-		songsToPlay = RadioManager.getMusicFiles(directoryName, sorted);
-		selectedPreset = presetPressed;
-		selectedSource = directoryName;
-	}
-	
-	/**Plays a sound file or stream from the web.  Returns true if the URL is able to be played.**/
-	public boolean playInternet(URL url, int presetPressed){
-		songsToPlay.clear();
-		try{
-			player.open(url);
-			player.play();
-			selectedPreset = presetPressed;
-			selectedSource = url.toString();
-			return true;
-		}catch(Exception e){
-			System.err.println("ERROR: BASICPLAYER URL PLAY CODE HAS FAULTED.");
-			System.err.println(e.getMessage());
-			e.printStackTrace();
-			return false;
-		}
-	}
-	
-	/**Plays a sound file from an InputStream.  Is a generic method for use with un-specified objects.
-	 * Could be used for MC sounds in a jar, or music disks from other mods.**/
-	public boolean playGeneric(InputStream stream){
-		try{
-			player.open(stream);
-			player.play();
-			selectedSource = "Streaming";
-			return true;
-		}catch(Exception e){
-			System.err.println("ERROR: BASICPLAYER INTERNAL PLAY CODE HAS FAULTED.");
-			System.err.println(e.getMessage());
-			e.printStackTrace();
-			return false;
-		}
-	}
-	
-	/**Get the current play state of the radio.
-	 * Returns -1 for not playing anything.
-	 * Returns 1-10 for playing from the internet.
-	 * Returns 11-20 for playing from a folder.**/
-	public int getPlayState(){
-		if(player.getStatus() == BasicPlayer.PLAYING){
-			return songsToPlay.isEmpty() ? selectedPreset + 10 : selectedPreset;
-		}
-		return -1;
-	}
-	
-	/**Gets the current preset pressed for this radio.**/
-	public int getPresetSelected(){
-		return selectedPreset;
-	}
-	
-	/**Gets the current source for this radio.  If we are playing from the internet, it will
-	 * be the URL.  If we are playing from a directory, it will be the directory name with
-	 * the file name of the current song after a newline.**/
-	public String getSource(){
-		return selectedSource;
-	}
-	
-	/**Stops all playing music.  Should be called when the class containing this RadioContainer is destroyed.
-	 * If it's not, then the radio won't stop even if the thing is gone!**/
-	public void stopPlaying(){
-		songsToPlay.clear();
-		selectedPreset = -1;
-		selectedSource = "";
-		try{
-			player.stop();
-		}catch(Exception e){
-			System.err.println("ERROR: BASICPLAYER STOP CODE HAS FAULTED.");
-			System.err.println(e.getMessage());
-			e.printStackTrace();
-		}
-	}
-	
-	/**Should be called every tick to update the volume and play/pause status.
-	 * Return false if we need to remove this radio because it's invalid.
-	 * Passed-in coords are where the listener is located.**/
-	public boolean update(double x, double y, double z, boolean enablePlayback){
-		try{
-			if(container.isValid()){
-				if(player.getStatus() == BasicPlayer.PLAYING){
-					if(enablePlayback){
-						//Set the volume to the player distance.
-						double dist = container.getDistanceTo(x, y, z);
-						if(dist > 0){
-							player.setGain(Math.min(2F*(volume/10F), 1.0F)/dist);
-						}else{
-							player.setGain(volume/10F);
-						}
-					}else{
-						player.pause();
-					}
-				}else if(player.getStatus() == BasicPlayer.STOPPED || player.getStatus() == BasicPlayer.UNKNOWN){
-					//If we are stopped, and we are have music files to play, go to the next song.
-					//Otherwise, clear out our variables.
-					if(!songsToPlay.isEmpty()){
-						player.open(songsToPlay.get(0));
-						player.play();
-						selectedSource = "Station:  " + songsToPlay.get(0).getParentFile().getName() + "\nPlaying:  " + songsToPlay.get(0).getName() + "\nUp Next: " + (songsToPlay.size() > 1 ? songsToPlay.get(1).getName() : ""); 
-						songsToPlay.remove(0);
-					}else{
-						if(selectedPreset != -1){
-							songsToPlay.clear();
-							selectedPreset = -1;
-							selectedSource = "";
-						}
-					}
-				}else if(enablePlayback && player.getStatus() == BasicPlayer.PAUSED){
-					player.resume();
-				}
-			}else{
-				stopPlaying();
-				return false;
+	/**
+	 * Queues the next file in the list of files to play on the local machine.
+	 * If there are no more files, nothing is done, and false is returned.
+	 */
+	public boolean queueNextFile(){
+		if(!musicFiles.isEmpty()){
+			try{
+				decoder = new MP3Decoder(new FileInputStream(musicFiles.get(0)), equalizer);
+				SoundInstance oldSound = currentSound;
+				currentSound = new SoundInstance(provider, musicFiles.get(0).getParentFile().getName() + "\nNow Playing: " + musicFiles.get(0).getName(), false, this);
+				currentSound.volume = volume/10F;
+				WrapperAudio.playStreamedSound(currentSound, oldSound);
+				displayText = "Station: " + currentSound.soundName;
+				return true;
+			}catch(Exception e){
+				e.printStackTrace();
 			}
-		}catch(Exception e){
-			System.err.println("ERROR: BASICPLAYER INTERNAL UPDATED CODE HAS FAULTED.");
+			musicFiles.remove(0);
+		}else{
+			System.out.println("END OF FILE LIST");
+			stop();
+		}
+		return false;
+	}
+	
+	/**
+	 * Plays the station of the current index from the Internet.
+	 * Returns true if the stream was able to be opened.
+	 */
+	private boolean playFromInternet(){
+		String station = getRadioStations().get(presetIndex);
+		if(station.isEmpty()){
+			displayText =  "Press SET to teach a station.";
+		}else{
+			try{
+				//Create a URL and open a connection.
+				URL url = new URL(station);
+				URLConnection connection = url.openConnection();
+				
+				//Check the headers content to see if we are a MP3 or OGG format.
+				String contentType = connection.getHeaderField("Content-Type");
+				if(contentType == null){
+					displayText = "ERROR: No Content-Type header found.  Contact the mod author for more information.";
+					return false;
+				}
+				
+				//Act based on our stream type.
+				switch(contentType){
+					case("audio/mpeg") : decoder = new MP3Decoder(url.openStream(), equalizer); break;
+					case("application/ogg") : decoder = new WrapperOGGDecoder(url); break;
+					case("audio/x-wav") : displayText = "ERROR: WAV file format not supported...yet.  Contact the mod author."; return false;
+					case("audio/flac") : displayText = "ERROR: Who the heck streams in FLAC?  Contact the mod author."; return false;
+					default : {
+						if(contentType.startsWith("audio")){
+							displayText = "ERROR: Unsupported audio format of " + contentType + ".  Contact the mod author.";
+						}else{
+							displayText = "ERROR: Format " + contentType + " is NOT an audio format.  Is this really a music URL?";
+						}
+						return false;
+					}
+				}
+				
+				//We have a valid media type/decoder.  Get station info before we start parsing.
+				displayText = "Name: " + (connection.getHeaderField("icy-name") != null ? connection.getHeaderField("icy-name") : "");
+				displayText += "\nDesc: " + (connection.getHeaderField("icy-description") != null ? connection.getHeaderField("icy-description") : "");
+				displayText += "\nGenre: " + (connection.getHeaderField("icy-genre") != null ? connection.getHeaderField("icy-genre") : "");
+				
+				//Done parsing data.  Create and start playing sound.
+				currentSound = new SoundInstance(provider, station, false, this);
+				currentSound.volume = volume/10F;
+				WrapperAudio.playStreamedSound(currentSound, null);
+				return true;
+			}catch(Exception e){
+				e.printStackTrace();
+				displayText = "ERROR: Unable to open URL.  Have you tried playing it in another application first?";
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Gets the list of radio stations present in the radio_stations.txt file in the mts_music directory.
+	*/
+	public static List<String> getRadioStations(){
+		List<String> stations = new ArrayList<String>();
+		try{
+			BufferedReader radioStationFileReader = new BufferedReader(new FileReader(radioStationsFile));
+			while(radioStationFileReader.ready()){
+				stations.add(radioStationFileReader.readLine());
+			}
+			radioStationFileReader.close();
+			//If we have no stations, make 6 blanks ones to avoid crashes.
+			if(stations.size() == 0){
+				for(byte i=0; i<6; ++i){
+					stations.add("");
+				}
+			}
+		}catch(IOException e){
+			System.err.println("ERROR: Unable to parse radio_stations.txt file.  Is it in use?");
 			System.err.println(e.getMessage());
 			e.printStackTrace();
-			stopPlaying();
 		}
-		return true;
+		//Don't sort the stations, as we want the order the user put them in.
+		return stations;
 	}
 	
-	/**Sets the player volume.  Parameter should be from 0-10, but can be greater and will be clamped.**/
-	public void setVolume(byte newVolume){
-		volume = newVolume > 10 ? 10 : newVolume;
-	}
-	
-	/**Gets the current volume as a normalized value.**/
-	public byte getVolume(){
-		return volume;
+	/**
+	 * Sets the radio station to the passed-in value and saves it to the radio_stations.txt file.
+	 */
+	public static void setRadioStation(String station, int presetPressed){
+		try{
+			List<String> stations = getRadioStations();
+			stations.set(presetPressed, station);
+			BufferedWriter radioStationFileWriter = new BufferedWriter(new FileWriter(radioStationsFile));
+			for(String stationToWrite : stations){
+				radioStationFileWriter.write(stationToWrite + "\n");
+			}
+			radioStationFileWriter.close();
+		}catch(IOException e){
+			System.err.println("ERROR: Unable to save radio_stations.txt file.  Is it in use?");
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+		}
 	}
 	
 	public enum RadioSources{

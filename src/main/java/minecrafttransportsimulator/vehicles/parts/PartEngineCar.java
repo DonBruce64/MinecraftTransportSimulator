@@ -156,7 +156,7 @@ public class PartEngineCar extends APartEngineGeared{
 		//Turn off backup beeper if we are no longer in reverse.
 		if(sound.soundName.endsWith("backup_beeper")){
 			if(currentGear != -1){
-				sound.stopSound = true;
+				sound.stop();
 			}
 		}	
 	}

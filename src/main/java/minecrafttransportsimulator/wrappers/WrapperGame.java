@@ -50,7 +50,7 @@ public class WrapperGame{
 	 */
 	public static boolean shouldSoundBeDampened(SoundInstance sound){
 		EntityVehicleE_Powered vehicleRiding = getClientPlayer().getVehicleRiding();
-		return vehicleRiding != null && !vehicleRiding.definition.general.openTop && inFirstPerson() && (!sound.streaming || !vehicleRiding.equals(sound.provider));
+		return vehicleRiding != null && !vehicleRiding.definition.general.openTop && inFirstPerson() && (sound.radio == null || !vehicleRiding.equals(sound.provider));
 	}
 	
 	/**

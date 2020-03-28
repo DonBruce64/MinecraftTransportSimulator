@@ -35,17 +35,8 @@ reobf {
 
 shadowJar {
 	classifier ''
- 
-	dependencies {
-        //exclude dependency(':org.slf4j')
-		exclude dependency('junit:junit')
-    }
-	
-	relocate 'com.jcraft', 'minecrafttransportsimulator.shadowed.jcraft'
+	//Need to shadow javazoom (jlayer) for MP3 support.
     relocate 'javazoom', 'minecrafttransportsimulator.shadowed.javazoom'
-    relocate 'org.tritonus', 'minecrafttransportsimulator.shadowed.tritonus'
-	relocate 'org.slf4j', 'minecrafttransportsimulator.shadowed.slf4j'
-
     exclude 'dummyThing'
 }
 
@@ -65,10 +56,7 @@ dependencies {
 	//tritonus_share.jar (utility classes for sound processing)
 	//vorbisspi1.0.2.jar (SPI to allow JavaSound loading of OGG files.)
 
-	//Don't need SPIs anymore.
-	//compile group: 'com.googlecode.soundlibs', name: 'vorbisspi', version: '1.0.3.3'
-	//compile group: 'com.googlecode.soundlibs', name: 'mp3spi', version: '1.9.5.4'
-    compile group: 'com.googlecode.soundlibs', name: 'basicplayer', version: '3.0.0.0'
+    compile group: 'com.googlecode.soundlibs', name: 'jlayer', version: '1.0.1.4'
 }
 
 

@@ -423,13 +423,13 @@ public abstract class APartEngine extends APart implements FXPart{
 		//Adjust running sound to have pitch based on engine RPM.
 		if(sound.soundName.endsWith("_cranking")){
 			if(!state.esOn && !state.hsOn){
-				sound.stopSound = true;
+				sound.stop();
 			}else{
 				sound.pitch = (float) (RPM/engineStartRPM);
 			}
 		}else if(sound.soundName.endsWith("_running")){
 			if(!state.running && internalFuel == 0){
-				sound.stopSound = true;
+				sound.stop();
 			}else{
 				//Pitch should be 0.25 at idle, 1.0 at 2500, unless this is a high-idle engine in which case we divide it by 10..				
 				sound.pitch = (float) (0.25F + Math.max(0, (RPM - engineStartRPM)/((definition.engine.maxRPM < 15000 ? 2500 : 25000) - engineStartRPM)));
