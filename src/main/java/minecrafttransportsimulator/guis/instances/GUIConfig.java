@@ -483,7 +483,7 @@ public class GUIConfig extends AGUIBase{
 		}
 		
 		@Override
-		 public void renderText(){
+		public void renderText(){
 			super.renderText();
 			if(visible){
 				//We need to manually draw the joystick state here.  Do so via built-in rectangle render method
