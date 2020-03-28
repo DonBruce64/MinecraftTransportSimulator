@@ -13,7 +13,7 @@ public interface IStreamDecoder{
 	 *  Note that this buffer is re-used, so do NOT make multiple
 	 *  calls to this method without storing the data somewhere in
 	 *  between them.  Once no more blocks are available this method
-	 *  will return null.  Subsequent calls WILL cause Bad Stuff. 
+	 *  will return null.
 	 */
     public ByteBuffer readBlock();
     

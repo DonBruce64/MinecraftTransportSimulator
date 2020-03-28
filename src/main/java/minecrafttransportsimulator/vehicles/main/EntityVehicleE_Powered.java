@@ -374,7 +374,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				}
 			}
 		}
-		
+		/*
 		//Load radio data, if it exists.
 		if(tagCompound.hasKey("radio")){
 			NBTTagCompound radioTag = tagCompound.getCompoundTag("radio");
@@ -396,7 +396,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			for(int i=0; i<radio.equalizer.getBandCount(); ++ i){
 				radio.equalizer.setBand(i, radioTag.getFloat("equalizer" + i));
 			}
-		}
+		}*/
 	}
     
 	@Override
@@ -422,13 +422,14 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		}
 		
 		//Save radio data. 
+		/*
 		NBTTagCompound radioTag = new NBTTagCompound();
 		radioTag.setByte("source", (byte) radio.getSource().ordinal());
 		radioTag.setByte("presetIndex", radio.presetIndex);
 		for(int i=0; i<radio.equalizer.getBandCount(); ++ i){
 			radioTag.setFloat("equalizer" + i, radio.equalizer.getBand(i));
 		}
-		tagCompound.setTag("radio", radioTag);
+		tagCompound.setTag("radio", radioTag);*/
 		
 		return tagCompound;
 	}

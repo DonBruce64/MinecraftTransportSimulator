@@ -93,11 +93,9 @@ public class MP3Decoder implements IStreamDecoder{
                 totalSamplesRead += samplesRead;
             	
             	//Read the next frame header.
-                //If it's null, we've reached the end of the file.
+                //If it's null, we've reached the end of the stream and should just return what we have.
                 currentFrameHeader = bitstream.readFrame();
                 if(currentFrameHeader == null){
-                	bitstream.close();
-                	dataSourceStream.close();
                 	break;
                 }
             }catch(Exception e){

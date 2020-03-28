@@ -9,8 +9,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import javazoom.jl.decoder.Equalizer;
@@ -29,18 +31,19 @@ public class Radio{
 	private static File radioStationsFile;
 	
 	//Public variables for modifying state.
-	public byte presetIndex = -1;
+	public byte presetIndex;
 	public byte volume = 10;
 	public boolean sorted;
-	public String displayText = "";
-	public RadioSources source = RadioSources.LOCAL;
-	public IStreamDecoder decoder;
+	public byte queuedBuffers;
+	public String displayText;
+	public RadioSources source;
 	public final Equalizer equalizer;
 	
 	//Private runtime variables.
 	private final ISoundProvider provider;
 	private final List<File> musicFiles = new ArrayList<File>();
 	private SoundInstance currentSound;
+	private volatile IStreamDecoder decoder;
 	
 	
 	/**
@@ -62,6 +65,8 @@ public class Radio{
 	public Radio(ISoundProvider provider){
 		this.provider = provider;
 		this.equalizer = new Equalizer();
+		//Set initial source to local.
+		changeSource(RadioSources.LOCAL);
 	}
 	
 	/**
@@ -72,22 +77,17 @@ public class Radio{
 	}
 	
 	/**
-	 * Returns the curent radio source.
-	 */
-	public RadioSources getSource(){
-		return source;
-	}
-	
-	/**
 	 * Stops all playback, closing any and all streams.
+	 * If we aren't playing anything back, we just reset the preset.
+	 * This happens when we reach the end of our list of playback files.
 	 */
 	public void stop(){
-		System.out.println("RADIO STOP COMMAND RECEIVED");
 		if(currentSound != null){
-			System.out.println("RADIO RESETTING");
 			currentSound.stop();
 			currentSound = null;
-			displayText = "";
+			musicFiles.clear();
+			decoder.abort();
+			displayText = "Radio turned off.";
 		}
 		presetIndex = -1;
 	}
@@ -98,6 +98,11 @@ public class Radio{
 	public void changeSource(RadioSources source){
 		stop();
 		this.source = source;
+		switch(source){
+			case LOCAL : displayText = "Ready to play from files on your PC.\nPress a station number to start."; break;
+			case SERVER : displayText = "Ready to play from files on the server.\nPress a station number to start."; break;
+			case INTERNET : displayText = "Ready to play from internet streams.\nPress a station number to start."; break;
+		}
 	}
 	
 	/**
@@ -126,6 +131,7 @@ public class Radio{
 						return;
 					}
 				}
+				break;
 			}
 			case SERVER : {
 				displayText = "This method of playback is not supported .... yet!";
@@ -135,10 +141,42 @@ public class Radio{
 				if(!playFromInternet()){
 					return;
 				}
+				break;
 			}
 		}
 		
 		//FIXME fire off radio packet here to have the radio update on the server and other clients.
+	}
+	
+	/**
+	 * Gets a ByteBuffer's worth of PCM samples from this radio.  Location of samples and
+	 * size of the buffer is dependent on what is playing and from what source.  Note that
+	 * the reference to the returned ByteBuffer may change during subsequent calls.  Copying/queuing
+	 * is HIGHLY recommended. 
+	 */
+	public ByteBuffer getSampleBuffer(){
+		ByteBuffer buffer = decoder.readBlock();
+		return buffer != null ? (decoder.isStereo() ? WrapperAudio.stereoToMono(buffer) : buffer) : null;
+	}
+	
+	/**
+	 * Gets the current sample rate of the source playing on this radio. 
+	 */
+	public int getSampleRate(){
+		return decoder.getSampleRate();
+	}
+	
+	/**
+	 * Tells the radio to update the number of buffers it has displayed. 
+	 */
+	public void updateBufferCounts(byte bufferCount){
+		if(bufferCount != queuedBuffers){
+			queuedBuffers = bufferCount;
+			displayText = displayText.substring(0, displayText.indexOf("Buffers:") + "Buffers:".length());
+			for(byte i=0; i<bufferCount; ++i){
+				displayText += " X";
+			}
+		}
 	}
 	
 	/**
@@ -175,26 +213,45 @@ public class Radio{
 	}
 	
 	/**
-	 * Queues the next file in the list of files to play on the local machine.
-	 * If there are no more files, nothing is done, and false is returned.
+	 * Queues the next file in the list of files to play on the local machine,
+	 * or re-starts the radio stream (because it has stopped and the source stopped).
+	 * If there is nothing else to play, false is returned.
 	 */
 	public boolean queueNextFile(){
 		if(!musicFiles.isEmpty()){
-			try{
-				decoder = new MP3Decoder(new FileInputStream(musicFiles.get(0)), equalizer);
-				SoundInstance oldSound = currentSound;
-				currentSound = new SoundInstance(provider, musicFiles.get(0).getParentFile().getName() + "\nNow Playing: " + musicFiles.get(0).getName(), false, this);
-				currentSound.volume = volume/10F;
-				WrapperAudio.playStreamedSound(currentSound, oldSound);
-				displayText = "Station: " + currentSound.soundName;
-				return true;
-			}catch(Exception e){
-				e.printStackTrace();
+			//Get the next MP3 file for playback.
+			//Use an iterator to keep non-MP3 files from blocking.
+			Iterator<File> iterator = musicFiles.iterator();
+			while(iterator.hasNext()){
+				try{
+					File musicFile = iterator.next();
+					if(!musicFile.getName().toLowerCase().endsWith(".mp3")){
+						iterator.remove();
+					}else{
+						decoder = new MP3Decoder(new FileInputStream(musicFiles.get(0)), equalizer);
+						currentSound = new SoundInstance(provider, musicFiles.get(0).getParentFile().getName() + "\nNow Playing: " + musicFiles.get(0).getName(), false, this);
+						currentSound.volume = volume/10F;
+						WrapperAudio.playStreamedSound(currentSound);
+						displayText = "Station: " + currentSound.soundName;
+						displayText += "\nBuffers:";
+						queuedBuffers = 0;
+						iterator.remove();
+						return true;
+					}
+				}catch(Exception e){
+					e.printStackTrace();
+					iterator.remove();
+				}
 			}
-			musicFiles.remove(0);
-		}else{
-			System.out.println("END OF FILE LIST");
+			//No more files.  Perform exit logic for files.
+			currentSound = null;
+			displayText = "Finished playing.";
 			stop();
+			return false;
+		}else if(source.equals(RadioSources.INTERNET)){
+			//Internet stream is done.  This usually means it was done with sending the OGG file.
+			//Try re-starting the stream to get new data.
+			return playFromInternet();
 		}
 		return false;
 	}
@@ -202,6 +259,8 @@ public class Radio{
 	/**
 	 * Plays the station of the current index from the Internet.
 	 * Returns true if the stream was able to be opened.
+	 * Most of this is done via a thread to keep the main loop from blocking
+	 * when parsing the initial buffer for playback.
 	 */
 	private boolean playFromInternet(){
 		String station = getRadioStations().get(presetIndex);
@@ -210,20 +269,20 @@ public class Radio{
 		}else{
 			try{
 				//Create a URL and open a connection.
-				URL url = new URL(station);
+				final URL url = new URL(station);
 				URLConnection connection = url.openConnection();
 				
-				//Check the headers content to see if we are a MP3 or OGG format.
+				//Verify stream is actually an HTTP stream.
 				String contentType = connection.getHeaderField("Content-Type");
 				if(contentType == null){
 					displayText = "ERROR: No Content-Type header found.  Contact the mod author for more information.";
 					return false;
 				}
 				
-				//Act based on our stream type.
+				//Check to make sure stream isn't an invalid type.
 				switch(contentType){
-					case("audio/mpeg") : decoder = new MP3Decoder(url.openStream(), equalizer); break;
-					case("application/ogg") : decoder = new WrapperOGGDecoder(url); break;
+					case("audio/mpeg") : break;
+					case("application/ogg") : break;
 					case("audio/x-wav") : displayText = "ERROR: WAV file format not supported...yet.  Contact the mod author."; return false;
 					case("audio/flac") : displayText = "ERROR: Who the heck streams in FLAC?  Contact the mod author."; return false;
 					default : {
@@ -236,15 +295,36 @@ public class Radio{
 					}
 				}
 				
-				//We have a valid media type/decoder.  Get station info before we start parsing.
+				//Parse out information from header.
 				displayText = "Name: " + (connection.getHeaderField("icy-name") != null ? connection.getHeaderField("icy-name") : "");
 				displayText += "\nDesc: " + (connection.getHeaderField("icy-description") != null ? connection.getHeaderField("icy-description") : "");
 				displayText += "\nGenre: " + (connection.getHeaderField("icy-genre") != null ? connection.getHeaderField("icy-genre") : "");
+				displayText += "\nBuffers:";
+				queuedBuffers = 0;
 				
-				//Done parsing data.  Create and start playing sound.
-				currentSound = new SoundInstance(provider, station, false, this);
-				currentSound.volume = volume/10F;
-				WrapperAudio.playStreamedSound(currentSound, null);
+				//Create a thread to start up the sound once the parsing is done.
+				//This keeps us from blocking the main thread.
+				final Radio thisRadio = this;
+				Thread decoderInitThread = new Thread(){
+					@Override
+					public void run(){
+						//Act based on our stream type.
+						try{
+							switch(contentType){
+								case("audio/mpeg") : decoder = new MP3Decoder(url.openStream(), equalizer); break;
+								case("application/ogg") : decoder = new WrapperOGGDecoder(url); break;
+							}
+						}catch(Exception e){
+							e.printStackTrace();
+						}
+
+						//Start this sound playing.
+						currentSound = new SoundInstance(provider, station, false, thisRadio);
+						currentSound.volume = volume/10F;
+						WrapperAudio.playStreamedSound(currentSound);
+					}
+				};
+				decoderInitThread.start();
 				return true;
 			}catch(Exception e){
 				e.printStackTrace();

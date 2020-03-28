@@ -34,6 +34,9 @@ public class WrapperAudio{
 	/**List of playing {@link SoundInstance} objects.**/
 	private static final List<SoundInstance> playingSounds = new ArrayList<SoundInstance>();
 	
+	/**List of sounds to start playing next update.  Split from playing sounds to avoid CMEs and odd states.**/
+	private static volatile List<SoundInstance> queuedSounds = new ArrayList<SoundInstance>();
+	
 	private static final WrapperPlayer player;
 	private static final FloatBuffer playerPosition = BufferUtils.createFloatBuffer(3);
 	private static final FloatBuffer playerVelocity = BufferUtils.createFloatBuffer(3);
@@ -94,6 +97,13 @@ public class WrapperAudio{
 				}
 				
 				if(!isSystemPaused){
+					//Add all queued sounds to playing sounds and start them.
+					for(SoundInstance sound : queuedSounds){
+						AL10.alSourcePlay(sound.sourceIndex);
+						playingSounds.add(sound);
+					}
+					queuedSounds.clear();
+					
 					//Update playing sounds.
 					Iterator<SoundInstance> iterator = playingSounds.iterator();
 					while(iterator.hasNext()){
@@ -120,49 +130,41 @@ public class WrapperAudio{
 								}else{
 									AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume);
 								}
-								
+
 								//Update pitch and rolloff distance, which is based on pitch.
 					    	    AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch);
 								AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 1F/(0.25F + 3*sound.pitch));
 
-								//If we are a radio, check for more data.
+								//If we are a radio, check for more data.  Also set the number of buffers we have.
 								if(sound.radio != null){									
 									//Do we have any processed buffers?  If so, use one to store more data.
-									if(AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED) > 0){
-										System.out.println("HAVE FREE BUFFERS");
-										//Remove the old buffer from the queue.
-										IntBuffer doneBuffer = BufferUtils.createIntBuffer(1);
-										AL10.alSourceUnqueueBuffers(sound.sourceIndex, doneBuffer);
-										
-										//Read more data from the decoder.
-										ByteBuffer decoderData = sound.radio.decoder.readBlock();
+									if(AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED) > 0){										
+										//We have free buffers.  See if we have data to fill them with before we un-bind them.										
+										ByteBuffer decoderData = sound.radio.getSampleBuffer();
 					            		if(decoderData != null){
-					            			System.out.println("HAVE DECODER DATA");
-					            			//Queue up new buffer data.
-				            				//If this is a stereo source, convert the buffer to mono before queuing it.
-					            			if(sound.radio.decoder.isStereo()){
-					            				decoderData = stereoToMono(decoderData);
-					            			}
-					            			AL10.alBufferData(doneBuffer.get(0),  AL10.AL_FORMAT_MONO16, decoderData, sound.radio.decoder.getSampleRate());
+					            			//Have data and buffers.  Remove buffer from queue and put it back in.
+											IntBuffer doneBuffer = BufferUtils.createIntBuffer(1);
+											AL10.alSourceUnqueueBuffers(sound.sourceIndex, doneBuffer);
+					            			AL10.alBufferData(doneBuffer.get(0),  AL10.AL_FORMAT_MONO16, decoderData, sound.radio.getSampleRate());
 					            			AL10.alSourceQueueBuffers(sound.sourceIndex, doneBuffer);
-					            		}else{
-					            			//Data block returned null, this is the end of the stream.
-					            			//Queue up the next file.  Even if we don't queue a file,
-					            			//we can just wait until the source stops and it'll get
-					            			//removed automatically like any other non-playing source.
-					            			System.out.println("NEXT FILE QUEUED!");
-					            			sound.radio.queueNextFile();
 					            		}
 									}
+									sound.radio.updateBufferCounts((byte) (AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_QUEUED) - AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED)));
 								}
 							}
 						}else{
 							//We are a stopped sound.  Un-bind and delete any sources and buffers we are using.
-							//If we are a radio we will need to un-bind and delete buffers to free up RAM.
 							if(sound.radio != null){
 								IntBuffer usedBuffers = BufferUtils.createIntBuffer(AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED));
 								AL10.alSourceUnqueueBuffers(sound.sourceIndex, usedBuffers);
 								AL10.alDeleteBuffers(usedBuffers);
+								
+								//Attempt to queue up the next song as this one is done.
+								//Only do this if the radio wasn't stopped manually.
+								if(!sound.stopSound){
+									System.out.println("NEXT SOUND QUEUED!");
+									sound.radio.queueNextFile();
+								}
 							}
 							
 							//Detach all buffers from the source, delete it, and remove the sound.
@@ -172,7 +174,6 @@ public class WrapperAudio{
 							iterator.remove();
 						}
 					}
-
 				}
 					
 				//Update player position velocity, and orientation.
@@ -221,9 +222,8 @@ public class WrapperAudio{
     	    AL10.alSource(sound.sourceIndex, AL10.AL_VELOCITY, sound.provider.getProviderVelocity());
     	    AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER,	dataBufferPointer);    
 				
-			//Done setting up buffer.  Set sound as playing.
-			AL10.alSourcePlay(sound.sourceIndex);
-			playingSounds.add(sound);
+			//Done setting up buffer.  Queue sound to start playing.
+			queuedSounds.add(sound);
 		}
 	}
 
@@ -241,19 +241,22 @@ public class WrapperAudio{
 		}else{
 			//Need to parse the data.  Do so now.
 			OGGDecoderOutput decoderOutput = WrapperOGGDecoder.parseWholeOGGFile(soundName);
-			
-			//Generate an IntBuffer to store a pointer to the data buffer.
-			IntBuffer dataBufferPointers = BufferUtils.createIntBuffer(1);
-	    	AL10.alGenBuffers(dataBufferPointers);
-	    	
-	    	//Bind the decoder output buffer to the data buffer pointer.
-	    	//If we are stereo, convert the data before binding.
-	    	ByteBuffer decoderData = decoderOutput.isStereo ? stereoToMono(decoderOutput.decodedData) : decoderOutput.decodedData;
-	    	AL10.alBufferData(dataBufferPointers.get(0), AL10.AL_FORMAT_MONO16, decoderData, decoderOutput.sampleRate);
-			
-	    	//Done parsing.  Map the dataBuffer(s) to the soundName and return the index.
-	    	dataSourceBuffers.put(soundName, dataBufferPointers.get(0));
-	    	return dataSourceBuffers.get(soundName);
+			if(decoderOutput != null){
+				//Generate an IntBuffer to store a pointer to the data buffer.
+				IntBuffer dataBufferPointers = BufferUtils.createIntBuffer(1);
+		    	AL10.alGenBuffers(dataBufferPointers);
+		    	
+		    	//Bind the decoder output buffer to the data buffer pointer.
+		    	//If we are stereo, convert the data before binding.
+		    	ByteBuffer decoderData = decoderOutput.isStereo ? stereoToMono(decoderOutput.decodedData) : decoderOutput.decodedData;
+		    	AL10.alBufferData(dataBufferPointers.get(0), AL10.AL_FORMAT_MONO16, decoderData, decoderOutput.sampleRate);
+				
+		    	//Done parsing.  Map the dataBuffer(s) to the soundName and return the index.
+		    	dataSourceBuffers.put(soundName, dataBufferPointers.get(0));
+		    	return dataSourceBuffers.get(soundName);
+			}else{
+				return null;
+			}
 		}
 	}
     
@@ -261,49 +264,41 @@ public class WrapperAudio{
 	 *  Plays a streaming sound (one with a Radio attached).  This uses a buffer-based system for loading
 	 *  as it puts chunks (frames?) of the data into a buffer queue rather than loading it all into one buffer and
 	 *  binding it to the source.  As the buffer queue is used up, the audio system will release the buffers and
-	 *  parse more data.  If oldSound is passed-in, then this method will append the data in sound to the same 
-	 *  source as oldSound rather than make a new one.  This allows for smooth transitions between sources.
+	 *  parse more data.  When the source runs out of buffers, the radio will be queried for another source.
 	 */
-    public static void playStreamedSound(SoundInstance sound, SoundInstance oldSound){
-		//Get 5 buffers worth of data from the decoder to prime the queue.
+    public static void playStreamedSound(SoundInstance sound){
+		//Create 5 buffers to be used as rolling storage for the stream.
 		IntBuffer dataBuffers = BufferUtils.createIntBuffer(5);
 		AL10.alGenBuffers(dataBuffers);
 		
 		//Now decode data for each dataBuffer.
 		while(dataBuffers.hasRemaining()){
 			//Get the raw decoder output and bind it to the data buffers.
-			ByteBuffer decoderData = sound.radio.decoder.readBlock();
-			
-			//If this is a stereo source, convert the buffer to mono before queuing it.
-			if(sound.radio.decoder.isStereo()){
-				decoderData = stereoToMono(decoderData);
+			//Note that we may not obtain this data if we haven't decoded it yet.
+			ByteBuffer decoderData = sound.radio.getSampleBuffer();
+			if(decoderData != null){
+				AL10.alBufferData(dataBuffers.get(), AL10.AL_FORMAT_MONO16, decoderData, sound.radio.getSampleRate());
 			}
-			AL10.alBufferData(dataBuffers.get(), AL10.AL_FORMAT_MONO16, decoderData, sound.radio.decoder.getSampleRate());
 		}
 		//Flip the data buffers to prepare them for reading.
 		dataBuffers.flip();
 		
 		//Data has been buffered.  Now get source index.
 		//If we have an old source, use that index instead to allow smooth streaming.
-		if(oldSound != null){
-			sound.sourceIndex = oldSound.sourceIndex;
-		}else{
-			IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
-			AL10.alGenSources(sourceBuffer);
-			sound.sourceIndex = sourceBuffer.get(0);
-		}
+		IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
+		AL10.alGenSources(sourceBuffer);
+		sound.sourceIndex = sourceBuffer.get(0);
 		
-		//Have source and data.  Queue and start playback.
+		//Have source and data.  Queue sound to start playing.
 		AL10.alSourceQueueBuffers(sound.sourceIndex, dataBuffers);
-		AL10.alSourcePlay(sound.sourceIndex);
-		playingSounds.add(sound);
+		queuedSounds.add(sound);
 	}
 	
 	/**
 	 *  Combines a stereo-sampled ByteBufer into a mono-sampled one.
 	 *  This allows us to use mono-only sounds that support attenuation.
 	 */
-	private static ByteBuffer stereoToMono(ByteBuffer stereoBuffer){
+	public static ByteBuffer stereoToMono(ByteBuffer stereoBuffer){
 		ByteBuffer monoBuffer = ByteBuffer.allocateDirect(stereoBuffer.limit()/2);
 		while(stereoBuffer.hasRemaining()){
 			//Combine samples using little-endian ordering.
