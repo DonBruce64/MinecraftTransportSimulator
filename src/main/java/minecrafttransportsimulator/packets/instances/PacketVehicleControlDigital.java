@@ -58,14 +58,14 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				break;
 			}
 			case HORN : {
-				if(!vehicle.hornOn && controlState && vehicle.world.isRemote){
+				if(world.isClient() && !vehicle.hornOn && controlState){
 					WrapperAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.hornSound, true));
 				}
 				vehicle.hornOn = controlState;
 				break;
 			}
 			case SIREN : {
-				if(!vehicle.sirenOn && controlState && vehicle.world.isRemote){
+				if(world.isClient() && !vehicle.sirenOn && controlState){
 					WrapperAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.sirenSound, true));
 				}
 				vehicle.sirenOn = controlState;
