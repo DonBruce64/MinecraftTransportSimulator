@@ -41,21 +41,6 @@ shadowJar {
 }
 
 dependencies {
-	//External jars used to be in libs, but now we use mavern.
-	//These are the jars that used to be there, and their functions:
-	
-	//basicplayer3.0.jar (used for the basic player (radio))
-	//jflac-1.2.jar (was used for flac parsing, removed)
-	//jl.0.jar (jlayer, used for parsing MP3 files, part of javazoom package)
-	//jmactritonusspi1.74.jar (utility classes for sound processing)
-	//jogg-0.0.7.jar (??, part of jcraft)
-	//jorbis-0.0.15.jar (OGG Vorbis decoder and encoder, part of jcraft)
-	//jspeex0.9.7.jar (speex plugin?  Not sure why I had this one...)
-	//kj_dsp1.1.jar (?? some sort of DSP?)
-	//mp3spi1.9.4.jar (spi to allow JavaSound loading of MP3 files.)
-	//tritonus_share.jar (utility classes for sound processing)
-	//vorbisspi1.0.2.jar (SPI to allow JavaSound loading of OGG files.)
-
     compile group: 'com.googlecode.soundlibs', name: 'jlayer', version: '1.0.1.4'
 }
 
