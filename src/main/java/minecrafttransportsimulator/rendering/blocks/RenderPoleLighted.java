@@ -33,7 +33,6 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 	@Override
 	public void render(TileEntityPoleAttachment polePart, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
 		super.render(polePart, x, y, z, partialTicks, destroyStage, alpha);
-		final Vec3i facingVec = polePart.getWorld().getBlockState(polePart.getPos()).getValue(BlockPoleAttachment.FACING).getDirectionVec();
 		final Block block = polePart.getWorld().getBlockState(polePart.getPos()).getBlock();
 		//Check to make sure we have the right block before continuing.
 		//We may not have the right one due to the TE being orphaned for some reason.
@@ -41,6 +40,7 @@ public class RenderPoleLighted extends TileEntitySpecialRenderer<TileEntityPoleA
 			return;
 		}
 		final BlockPoleAttachment decorBlock = (BlockPoleAttachment) block;
+		final Vec3i facingVec = polePart.getWorld().getBlockState(polePart.getPos()).getValue(BlockPoleAttachment.FACING).getDirectionVec();
 		final float sunLight = polePart.getWorld().getSunBrightness(0)*polePart.getWorld().getLightBrightness(polePart.getPos());
 		final float blockLight = polePart.getWorld().getLightFromNeighborsFor(EnumSkyBlock.BLOCK, polePart.getPos())/15F;
 		final float lightBrightness = Math.min((1 - Math.max(sunLight, blockLight)), 1);
