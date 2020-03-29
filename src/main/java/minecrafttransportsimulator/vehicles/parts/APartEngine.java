@@ -431,8 +431,8 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(!state.running && internalFuel == 0){
 				sound.stop();
 			}else{
-				//Pitch should be 0.25 at idle, 1.0 at 2500, unless this is a high-idle engine in which case we divide it by 10..				
-				sound.pitch = (float) (0.25F + Math.max(0, (RPM - engineStartRPM)/((definition.engine.maxRPM < 15000 ? 2500 : 25000) - engineStartRPM)));
+				//Pitch should be 0.35 at idle, 1.35 at 2500, unless this is a high-idle engine in which case we divide it by 10.			
+				sound.pitch = (float) (0.35F + Math.max(0, (RPM - engineStartRPM)/((definition.engine.maxRPM < 15000 ? 2500 : 25000) - engineStartRPM)));
 			}
 		}
 	}
