@@ -43,7 +43,6 @@ public class MTS {
 			MTSLog.error(logEntry);
 		}
 		ConfigSystem.loadFromDisk(new File(event.getSuggestedConfigurationFile().getParent(), "mtsconfig.json"));
-		proxy.initControls();
 		minecraftDir = new File(event.getModConfigurationDirectory().getParent());
 	}
 	

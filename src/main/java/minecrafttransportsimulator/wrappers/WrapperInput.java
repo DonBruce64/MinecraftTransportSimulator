@@ -8,7 +8,6 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboard;
 import net.java.games.input.Controller;
@@ -21,11 +20,7 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 /**Wrapper for MC input classes.  Constructor does not exist, as this is simply a
  * collection of static methods that can be called in placed of calling
  * the lwjgl Keyboard classes as these change in newer versions.  This
- * allows the {@link ControlSystem} to be version-independent.  Note that
- * this wrapper MUST have the {@link #init()} method called, as that sets up
- * the master key binding for opening {@link GUIConfig} for changing the rest
- * of the controls and input settings, as well as checks which controllers are
- * plugged in and able to be used.
+ * allows the {@link ControlSystem} to be version-independent.
  *
  * @author don_bruce
  */
@@ -45,11 +40,10 @@ public class WrapperInput{
 	private static final Map<String, Integer> joystickNameCounters = new HashMap<String, Integer>();
 	
 	/**
-	 *  This is called to set up the master keybinding after the main MC systems have started,
-	 *  as well as get a list of available controllers and populate the default keybinding map
-	 *  with the correct keyCodes.
+	 *  Static initializer to set up the master keybinding after the main MC systems have started.
+	 *  Also getsa list of available controllers and populates the default keybinding map with the correct keyCodes.
 	 */
-	public static void init(){
+	static{
 		//Set the master config key.
 		configKey = new KeyBinding("key.mts.config", Keyboard.KEY_P, "key.categories." + MTS.MODID);
 		ClientRegistry.registerKeyBinding(configKey);

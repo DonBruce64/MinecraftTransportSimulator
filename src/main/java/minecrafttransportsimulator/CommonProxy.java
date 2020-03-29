@@ -9,6 +9,5 @@ import net.minecraft.entity.player.EntityPlayer;
  * @author don_bruce
  */
 public class CommonProxy{	
-	public void initControls(){}
 	public void openGUI(Object clicked, EntityPlayer clicker){}
 }

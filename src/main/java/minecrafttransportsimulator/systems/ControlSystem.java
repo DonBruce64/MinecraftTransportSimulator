@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.systems;
 
-import minecrafttransportsimulator.ClientProxy;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.instances.GUIPanelGround;
@@ -22,7 +21,6 @@ import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraft.client.Minecraft;
 
 /**Class that handles all control operations.
- * Keybinding lists are initiated during the {@link ClientProxy} init method.
  * 
  * @author don_bruce
  */
@@ -30,15 +28,16 @@ public final class ControlSystem{
 	private static final int NULL_COMPONENT = 999;	
 	
 	/**
-	 * Init the wrapper system for inputs, then iterate through the enums to initialize them.
+	 * Static initializer for the wrapper inputs, as we need to iterate through the enums to initialize them
+	 * prior to using them in any of the methods contained in this wrapper (cause they'll be null).
 	 * Joystick enums need to come first, as the Keyboard enums take them as constructor args.
 	 * After we initialize the keboard enums, we set their default values.  If we don't initialize
 	 * them first, we hit a switch error in {@link WrapperInput#getDefaultKeyCode(ControlsKeyboard)}.
 	 * Once all this is done, save the results back to the disk to ensure the systems are synced.
+	 * Note that since this class won't be called until the world loads because we won't process inputs
+	 * out-of-world, it can be assumed that the ConfigSystem has already been initialized.
 	 */
-	public static void init(){
-		WrapperInput.init();
-		
+	static{
 		for(ControlsJoystick control : ControlsJoystick.values()){
 			ConfigSystem.configObject.controls.joystick.put(control.systemName, control.config);
 		}
