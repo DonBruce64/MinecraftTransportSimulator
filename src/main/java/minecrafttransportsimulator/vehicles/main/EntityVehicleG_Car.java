@@ -23,7 +23,7 @@ public final class EntityVehicleG_Car extends EntityVehicleF_Ground{
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
 		if(definition != null){
-			//Change turn signal status depending on turning status..
+			//Change turn signal status depending on turning status.
 			//Keep signals on until we have been moving without turning in the
 			//pressed direction for 2 seconds, or if we turn in the other direction.
 			if(steeringAngle < -200){
@@ -35,18 +35,16 @@ public final class EntityVehicleG_Car extends EntityVehicleF_Ground{
 				turningCooldown = 40;
 				changeLightStatus(LightType.RIGHTTURNLIGHT, true);
 			}
-			if(velocity != 0){
-				if(turningLeft && (steeringAngle > 0 || turningCooldown == 0)){
-					turningLeft = false;
-					changeLightStatus(LightType.LEFTTURNLIGHT, false);
-				}
-				if(turningRight && (steeringAngle < 0 || turningCooldown == 0)){
-					turningRight = false;
-					changeLightStatus(LightType.RIGHTTURNLIGHT, false);
-				}
-				if(turningCooldown > 0 && steeringAngle == 0){
-					--turningCooldown;
-				}
+			if(turningLeft && (steeringAngle > 0 || turningCooldown == 0)){
+				turningLeft = false;
+				changeLightStatus(LightType.LEFTTURNLIGHT, false);
+			}
+			if(turningRight && (steeringAngle < 0 || turningCooldown == 0)){
+				turningRight = false;
+				changeLightStatus(LightType.RIGHTTURNLIGHT, false);
+			}
+			if(velocity != 0 && turningCooldown > 0 && steeringAngle == 0){
+				--turningCooldown;
 			}
 			
 			//Turn on brake/indicator and backup lights if they are activated.
