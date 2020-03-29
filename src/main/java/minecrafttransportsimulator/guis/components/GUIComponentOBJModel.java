@@ -55,7 +55,7 @@ public class GUIComponentOBJModel{
 					parseModel(modelDomain, modelLocation);
 				}
 				GL11.glPushMatrix();
-				//FIXME see if we need this.
+				//TODO see if we need this when we do the crafting GUI.
 				//GL11.glDisable(GL11.GL_LIGHTING);
 				//Translate to position and rotate to isometric view.
 				GL11.glTranslatef(x, y, 100);

@@ -36,6 +36,7 @@ import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
@@ -161,8 +162,10 @@ public final class ClientEventSystem{
         	    	}
     			}
         	}else{
-        		WrapperAudio.run();
         		//We are on the client.  Do update logic.
+        		//Update the sounds in the audio system.
+        		WrapperAudio.update();
+        		
         		//If we are riding a vehicle, do rotation and control operation.
         		if(event.player.getRidingEntity() instanceof EntityVehicleE_Powered){
         			EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) event.player.getRidingEntity();
@@ -304,7 +307,7 @@ public final class ClientEventSystem{
      * Renders the HUD on vehicles.  We don't use the GUI here as it would lock inputs.
      */
     @SubscribeEvent
-    public static void on(RenderGameOverlayEvent.Post event){    	
+    public static void on(RenderGameOverlayEvent.Post event){
     	boolean inFirstPerson = minecraft.gameSettings.thirdPersonView == 0;
         if(minecraft.player.getRidingEntity() instanceof EntityVehicleE_Powered && (inFirstPerson ? ConfigSystem.configObject.client.renderHUD_1P.value : ConfigSystem.configObject.client.renderHUD_3P.value)){
             if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
@@ -374,9 +377,19 @@ public final class ClientEventSystem{
      * Opens the config screen when the config key is pressed.
      */
     @SubscribeEvent
-    public static void onKeyInput(InputEvent.KeyInputEvent event){
+    public static void on(InputEvent.KeyInputEvent event){
         if(WrapperInput.isMasterControlButttonPressed() && minecraft.currentScreen == null){
             WrapperGUI.openGUI(new GUIConfig());
         }
+    }
+    
+	/**
+     * Stop all sounds when the world is unloaded.
+     */
+    @SubscribeEvent
+    public static void on(WorldEvent.Unload event){
+    	if(event.getWorld().isRemote){
+    		WrapperAudio.halt();
+    	}
     }
 }

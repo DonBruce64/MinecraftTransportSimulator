@@ -127,7 +127,7 @@ public class Radio{
 		switch(source){
 			case LOCAL : {
 				if(parseLocalDirectory()){
-					if(!queueNextFile()){
+					if(!queueNext()){
 						return;
 					}
 				}
@@ -144,8 +144,6 @@ public class Radio{
 				break;
 			}
 		}
-		
-		//FIXME fire off radio packet here to have the radio update on the server and other clients.
 	}
 	
 	/**
@@ -174,7 +172,7 @@ public class Radio{
 			queuedBuffers = bufferCount;
 			displayText = displayText.substring(0, displayText.indexOf("Buffers:") + "Buffers:".length());
 			for(byte i=0; i<bufferCount; ++i){
-				displayText += " X";
+				displayText += "█";
 			}
 		}
 	}
@@ -213,12 +211,12 @@ public class Radio{
 	}
 	
 	/**
-	 * Queues the next file in the list of files to play on the local machine,
-	 * or re-starts the radio stream (because it has stopped and the source stopped).
+	 * Queues the next source.  This is either the list of files to play on the local machine,
+	 * ore the next song in the internet stream (cause some streams only send 1 song at a time).
 	 * If there is nothing else to play, false is returned.
 	 */
-	public boolean queueNextFile(){
-		if(!musicFiles.isEmpty()){
+	public boolean queueNext(){
+		if(source.equals(RadioSources.LOCAL)){
 			//Get the next MP3 file for playback.
 			//Use an iterator to keep non-MP3 files from blocking.
 			Iterator<File> iterator = musicFiles.iterator();

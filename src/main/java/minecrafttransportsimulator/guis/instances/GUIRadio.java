@@ -42,7 +42,6 @@ public class GUIRadio extends AGUIBase{
 	private GUIComponentTextBox volumeDisplay;
 	
 	//Runtime information.
-	private final IRadioProvider provider;
 	private final Radio radio;
 	private final int bandsToSkip;
 	private final int bandsToShow;
@@ -51,7 +50,6 @@ public class GUIRadio extends AGUIBase{
 	private static boolean teachMode = false;
 	
 	public GUIRadio(IRadioProvider provider){
-		this.provider = provider;
 		this.radio = provider.getRadio();
 		this.bandsToSkip = 4;
 		this.bandsToShow = radio.equalizer.getBandCount()/bandsToSkip;
@@ -92,7 +90,7 @@ public class GUIRadio extends AGUIBase{
 		});
 		
 		//Playback order for local files.
-		addButton(randomButton = new GUIComponentButton(offButton.x+ offButton.width + 10, offButton.y, offButton.width, "RANDOM", offButton.height, true){public void onClicked(){radio.sorted = false;}});
+		addButton(randomButton = new GUIComponentButton(offButton.x + offButton.width + 15, offButton.y, offButton.width, "RANDOM", offButton.height, true){public void onClicked(){radio.sorted = false;}});
 		addLabel(new GUIComponentLabel(randomButton.x + randomButton.width/2, randomButton.y - 10, Color.BLACK, "PLAY ORDER", 1.0F, true, false, 0).setButton(randomButton));
 		addButton(orderedButton = new GUIComponentButton(randomButton.x, randomButton.y + randomButton.height, randomButton.width, "SORTED", randomButton.height, true){public void onClicked(){radio.sorted = true;}});
 		
@@ -112,10 +110,11 @@ public class GUIRadio extends AGUIBase{
 		});
 		
 		//Volume controls.
-		addButton(volUpButton = new GUIComponentButton(guiLeft + 205, guiTop + 20, 30, "UP"){public void onClicked(){radio.changeVolume(++radio.volume);}});
+		addButton(volUpButton = new GUIComponentButton(guiLeft + 205, offButton.y, 30, "UP"){public void onClicked(){radio.changeVolume(++radio.volume);}});
 		addButton(volDnButton = new GUIComponentButton(volUpButton.x, volUpButton.y + volUpButton.height, volUpButton.width, "DN"){public void onClicked(){radio.changeVolume(--radio.volume);}});
-		addTextBox(volumeDisplay = new GUIComponentTextBox(guiLeft + 180, guiTop + 20, 25, "", 40, Color.WHITE, Color.BLACK, 32));
+		addTextBox(volumeDisplay = new GUIComponentTextBox(guiLeft + 180, volUpButton.y, 25, "", 40, Color.WHITE, Color.BLACK, 32));
 		addButton(equalizerButton = new GUIComponentButton(volumeDisplay.x, volumeDisplay.y + volumeDisplay.height, volumeDisplay.width + volDnButton.width, "EQ", volUpButton.height, true){public void onClicked(){equalizerMode = true;}});
+		addLabel(new GUIComponentLabel(volumeDisplay.x + volumeDisplay.width, volumeDisplay.y - 10, Color.BLACK, "VOLUME", 1.0F, true, false, 0).setButton(volUpButton));
 		
 		//Preset buttons.
 		presetButtons.clear();
@@ -127,7 +126,7 @@ public class GUIRadio extends AGUIBase{
 		}
 		
 		//Station display box.
-		addTextBox(stationDisplay = new GUIComponentTextBox(guiLeft + 20, guiTop + 95, 220, radio.displayText, 55, Color.WHITE, Color.BLACK, 100));
+		addTextBox(stationDisplay = new GUIComponentTextBox(guiLeft + 20, guiTop + 105, 220, radio.displayText, 45, Color.WHITE, Color.BLACK, 100));
 		
 		//Add equalizer screen buttons.
 		addButton(equalizerBackButton = new GUIComponentButton(guiLeft + 40, guiTop + 162, 80, "BACK"){public void onClicked(){equalizerMode = false;}});

@@ -116,9 +116,6 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		if(seat != null){
 			Vec3d playerOffsetVec = seat.partPos.add(RotationSystem.getRotatedPoint(new Vec3d(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll));
 			passenger.setPosition(playerOffsetVec.x, playerOffsetVec.y - passenger.height, playerOffsetVec.z);
-			passenger.motionX = this.motionX;
-			passenger.motionY = this.motionY;
-			passenger.motionZ = this.motionZ;
 		}else if(definition != null && !this.riderSeatPositions.isEmpty()){
 			Double[] seatLocation = this.riderSeatPositions.get(this.getPassengers().indexOf(passenger));
 			APart part = getPartAtLocation(seatLocation[0], seatLocation[1], seatLocation[2]);

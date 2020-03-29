@@ -73,9 +73,11 @@ public class WrapperEntity{
 	 *  Note that this may be called from another thread safely.
 	 */
 	public void putPosition(FloatBuffer buffer){
-		buffer.put(0, (float) entity.posX);
-		buffer.put(1, (float) entity.posY);
-		buffer.put(2, (float) -entity.posZ);
+		buffer.rewind();
+		buffer.put((float) entity.posX);
+		buffer.put((float) entity.posY);
+		buffer.put((float) entity.posZ);
+		buffer.flip();
 	}
 	
 	/**
@@ -84,9 +86,11 @@ public class WrapperEntity{
 	 *  Note that this may be called from another thread safely.
 	 */
 	public void putVelocity(FloatBuffer buffer){
-		buffer.put(0, (float) entity.motionX);
-		buffer.put(1, (float) entity.motionY);
-		buffer.put(2, (float) entity.motionZ);
+		buffer.rewind();
+		buffer.put((float) entity.motionX);
+		buffer.put((float) entity.motionY);
+		buffer.put((float) entity.motionZ);
+		buffer.flip();
 	}
 	
 	/**

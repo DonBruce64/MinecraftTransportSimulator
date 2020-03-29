@@ -298,7 +298,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	//-----START OF SOUND CODE-----
 	@Override
 	public void updateProviderSound(SoundInstance sound){
-		//FIXME radio updates go here.
 		if(this.isDead){
 			sound.stop();
 		}else if(sound.soundName.equals(definition.motorized.hornSound)){
@@ -374,29 +373,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				}
 			}
 		}
-		/*
-		//Load radio data, if it exists.
-		if(tagCompound.hasKey("radio")){
-			NBTTagCompound radioTag = tagCompound.getCompoundTag("radio");
-			//Don't want to trigger radio functions on the server, though.
-			if(world.isRemote){
-				Radio.RadioSources source = Radio.RadioSources.values()[radioTag.getByte("source")];
-				if(!radio.source.equals(source)){
-					radio.changeSource(source);
-				}
-				byte presetIndex = radioTag.getByte("presetIndex");
-				if(presetIndex != -1){
-					radio.pressPreset(presetIndex);
-				}
-			}else{
-				radio.source = Radio.RadioSources.values()[radioTag.getByte("source")];
-				radio.presetIndex = radioTag.getByte("presetIndex");
-			}
-			
-			for(int i=0; i<radio.equalizer.getBandCount(); ++ i){
-				radio.equalizer.setBand(i, radioTag.getFloat("equalizer" + i));
-			}
-		}*/
 	}
     
 	@Override
@@ -420,17 +396,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				tagCompound.setString("instrument" + i + "_systemName", instruments.get(i).definition.systemName);
 			}
 		}
-		
-		//Save radio data. 
-		/*
-		NBTTagCompound radioTag = new NBTTagCompound();
-		radioTag.setByte("source", (byte) radio.getSource().ordinal());
-		radioTag.setByte("presetIndex", radio.presetIndex);
-		for(int i=0; i<radio.equalizer.getBandCount(); ++ i){
-			radioTag.setFloat("equalizer" + i, radio.equalizer.getBand(i));
-		}
-		tagCompound.setTag("radio", radioTag);*/
-		
 		return tagCompound;
 	}
 	
