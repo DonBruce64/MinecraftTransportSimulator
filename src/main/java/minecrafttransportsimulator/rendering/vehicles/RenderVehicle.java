@@ -388,7 +388,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				}
 				if(entry.getKey().contains("&")){
 					lightParts.add(new RenderVehicle_LightPart(entry.getKey(), entry.getValue()));
-					shouldShapeBeInDL = !lightParts.get(lightParts.size() - 1).isLightupTexture;
+					if(shouldShapeBeInDL && lightParts.get(lightParts.size() - 1).isLightupTexture){
+						shouldShapeBeInDL = false;
+					}
 				}
 				if(entry.getKey().toLowerCase().contains("window")){
 					windows.add(new WindowPart(entry.getKey(), entry.getValue()));
@@ -457,7 +459,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     				}
     				if(entry.getKey().contains("&")){
     					lightParts.add(new RenderVehicle_LightPart(entry.getKey(), entry.getValue()));
-    					shouldShapeBeInDL = !lightParts.get(lightParts.size() - 1).isLightupTexture;
+    					if(shouldShapeBeInDL && lightParts.get(lightParts.size() - 1).isLightupTexture){
+    						shouldShapeBeInDL = false;
+    					}
     				}
     				if(shouldShapeBeInDL){
     					for(Float[] vertex : entry.getValue()){
