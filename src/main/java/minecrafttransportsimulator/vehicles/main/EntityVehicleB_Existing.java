@@ -18,7 +18,6 @@ import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.vehicles.parts.PartCrate;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -28,7 +27,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 /**This is the next class level above the base vehicle.
  * At this level we add methods for the vehicle's existence in the world.
@@ -56,9 +54,6 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	
 	/**List for storage of rider linkages to seats.  Populated during NBT load and used to populate the riderSeats map after riders load.*/
 	private List<Double[]> riderSeatPositions = new ArrayList<Double[]>();
-	
-	/**Names for reflection to get the entity any entity is riding.**/
-	private static final String[] ridingEntityNames = { "ridingEntity", "field_73141_v", "field_184239_as"};
 			
 	public EntityVehicleB_Existing(World world){
 		super(world);
@@ -168,19 +163,10 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	/**
-     * Removes the rider safely from this vehicle.  Returns true if removal was good, false if it failed.
+     * Removes the rider safely from this vehicle, attempting to set their dismount point in the process.
      */
 	public void removeRiderFromSeat(Entity rider, PartSeat seat){
-		try{
-			ObfuscationReflectionHelper.setPrivateValue(Entity.class, rider, null, ridingEntityNames);
-		}catch (Exception e){
-			MTS.MTSLog.fatal("ERROR IN VEHICLE RIDER REFLECTION!");
-			return;
-   	    }
-		
 		riderSeats.remove(rider.getEntityId());
-		this.removePassenger(rider);
-		rider.setSneaking(false);
 		if(!world.isRemote){
 			Vec3d placePosition;
 			VehiclePart packPart = this.getPackDefForLocation(seat.offset.x, seat.offset.y, seat.offset.z);
@@ -192,8 +178,6 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(placePosition));
 			if(!world.collidesWithAnyBlock(collisionDetectionBox)){
 				rider.setPositionAndRotation(placePosition.x, collisionDetectionBox.minY, placePosition.z, rider.rotationYaw, rider.rotationPitch);
-			}else if(rider instanceof EntityLivingBase){
-				((EntityLivingBase) rider).dismountEntity(this);
 			}
 			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, false));
 		}
