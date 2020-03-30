@@ -102,7 +102,9 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 											return true;
 										}
 									}
-									player.sendPacket(new PacketPlayerChatMessage("interact.trailer.wronghitch"));
+									if(!world.isClient()){
+										player.sendPacket(new PacketPlayerChatMessage("interact.trailer.wronghitch"));
+									}
 									break;
 								}
 							}
