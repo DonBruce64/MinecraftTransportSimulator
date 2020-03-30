@@ -180,11 +180,9 @@ public class JSONConfig{
 	
 	public static class Config<ConfigType>{
 		public ConfigType value;
-		public ConfigType defaultValue;
 		public String comment;
 		
 		public Config(ConfigType defaultValue, String comment){
-			this.defaultValue = defaultValue;
 			this.value = defaultValue;
 			this.comment = comment;
 		}
