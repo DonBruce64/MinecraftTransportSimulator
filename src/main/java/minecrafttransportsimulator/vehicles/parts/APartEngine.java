@@ -198,7 +198,7 @@ public abstract class APartEngine extends APart implements FXPart{
 
 			if(!isCreative && !vehicle.fluidName.isEmpty()){
 				if(!ConfigSystem.configObject.fuel.fuels.containsKey(definition.engine.fuelType)){					
-					throw new IllegalArgumentException("ERROR: Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.configObject.fuel.fuels.keySet().toString());
+					throw new IllegalArgumentException("ERROR: Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.configObject.fuel.fuels.keySet().toString() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BORKEN!");
 				}else if(!ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicle.fluidName)){
 					//Clear out the fuel from this vehicle as it's the wrong type.
 					vehicle.fuel = 0;
