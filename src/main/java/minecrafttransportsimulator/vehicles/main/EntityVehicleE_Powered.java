@@ -3,8 +3,10 @@ package minecrafttransportsimulator.vehicles.main;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.lwjgl.BufferUtils;
 
@@ -62,10 +64,10 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public final List<APartGroundDevice> wheels = new ArrayList<APartGroundDevice>();
 	public final List<APartGroundDevice> groundedWheels = new ArrayList<APartGroundDevice>();
 	
-	//List of lights that are on.
-	private final List<LightType> lightsOn = new ArrayList<LightType>();
+	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
+	public final Set<LightType> lightsOn = new HashSet<LightType>();
 	
-	//Sound variables.
+	//Internal radio variables.
 	private final Radio radio = new Radio(this);
 	private final FloatBuffer soundPosition = BufferUtils.createFloatBuffer(3);
 	private final FloatBuffer soundVelocity = BufferUtils.createFloatBuffer(3);
@@ -90,14 +92,13 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			}
 			
 			//Turn on the DRLs if we have an engine on.
-			boolean anyEngineOn = false;
+			lightsOn.remove(LightType.DAYTIMERUNNINGLIGHT);
 			for(APartEngine engine : engines.values()){
 				if(engine.state.running){
-					anyEngineOn = true;
+					lightsOn.add(LightType.DAYTIMERUNNINGLIGHT);
 					break;
 				}
 			}
-			changeLightStatus(LightType.DAYTIMERUNNINGLIGHT, anyEngineOn);
 			
 			//Set electric usage based on light status.
 			if(electricPower > 2){
@@ -274,24 +275,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		}
 		
 		motionYaw += getTurningFactor();
-	}
-	
-	
-	//-----START OF LIGHT CODE-----
-	public void changeLightStatus(LightType light, boolean isOn){
-		if(isOn){
-			if(!lightsOn.contains(light)){
-				lightsOn.add(light);
-			}
-		}else{
-			if(lightsOn.contains(light)){
-				lightsOn.remove(light);
-			}
-		}
-	}
-	
-	public boolean isLightOn(LightType light){
-		return lightsOn.contains(light);
 	}
 	
 	

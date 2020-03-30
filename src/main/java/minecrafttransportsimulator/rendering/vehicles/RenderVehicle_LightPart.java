@@ -168,7 +168,7 @@ public final class RenderVehicle_LightPart{
 	 */
 	private boolean isLightActuallyOn(EntityVehicleE_Powered vehicle){
 		//Fun with bit shifting!  20 bits make up the light on index here, so align to a 20 tick cycle.
-		return vehicle.isLightOn(type) ? ((flashBits >> vehicle.world.getTotalWorldTime()%20) & 1) > 0 : false;
+		return vehicle.lightsOn.contains(type) ? ((flashBits >> vehicle.world.getTotalWorldTime()%20) & 1) > 0 : false;
 	}
 	
 	/**

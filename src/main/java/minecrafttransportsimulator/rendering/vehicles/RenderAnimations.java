@@ -156,7 +156,7 @@ public final class RenderAnimations{
 		//Check if this is a light variable.
 		for(LightType light : LightType.values()){
 			if(light.name().toLowerCase().equals(variable)){
-				return vehicle.isLightOn(light) ? 1 : 0;
+				return vehicle.lightsOn.contains(light) ? 1 : 0;
 			}
 		}
 		

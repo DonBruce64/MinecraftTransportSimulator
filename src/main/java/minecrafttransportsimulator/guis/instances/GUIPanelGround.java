@@ -1,11 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import static minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType.EMERGENCYLIGHT;
-import static minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType.HEADLIGHT;
-import static minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType.LEFTTURNLIGHT;
-import static minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType.RIGHTTURNLIGHT;
-import static minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType.RUNNINGLIGHT;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +13,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
@@ -62,25 +57,25 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 	protected int setupLightComponents(int guiLeft, int guiTop, int xOffset){
 		//Create a tri-state selector for the running lights and headlights.
 		//For the tri-state we need to make sure we don't try to turn on running lights if we don't have any.
-		if(RenderVehicle.doesVehicleHaveLight(vehicle, RUNNINGLIGHT) || RenderVehicle.doesVehicleHaveLight(vehicle, HEADLIGHT)){
+		if(RenderVehicle.doesVehicleHaveLight(vehicle, LightType.RUNNINGLIGHT) || RenderVehicle.doesVehicleHaveLight(vehicle, LightType.HEADLIGHT)){
 			lightSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 0*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.headlights"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, LIGHT_TEXTURE_WIDTH_OFFSET, LIGHT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
 					if(leftSide){
 						if(selectorState == 2){
-							WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, HEADLIGHT));
+							WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.HEADLIGHT));
 						}else if(selectorState == 1){
-							WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, RUNNINGLIGHT));
+							WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.RUNNINGLIGHT));
 						}
 					}else{
 						if(selectorState == 0){
-							if(RenderVehicle.doesVehicleHaveLight(vehicle, RUNNINGLIGHT)){
-								WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, RUNNINGLIGHT));
+							if(RenderVehicle.doesVehicleHaveLight(vehicle, LightType.RUNNINGLIGHT)){
+								WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.RUNNINGLIGHT));
 							}else{
-								WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, HEADLIGHT));
+								WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.HEADLIGHT));
 							}
 						}else if(selectorState == 1){
-							WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, HEADLIGHT));
+							WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.HEADLIGHT));
 						}
 					}
 				}
@@ -92,14 +87,14 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 		}
 		
 		//Add the turn signal selector if we have turn signals.
-		if(RenderVehicle.doesVehicleHaveLight(vehicle, LEFTTURNLIGHT) || RenderVehicle.doesVehicleHaveLight(vehicle, RIGHTTURNLIGHT)){
+		if(RenderVehicle.doesVehicleHaveLight(vehicle, LightType.LEFTTURNLIGHT) || RenderVehicle.doesVehicleHaveLight(vehicle, LightType.RIGHTTURNLIGHT)){
 			turnSignalSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 1*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.turnsignals"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, TURNSIGNAL_TEXTURE_WIDTH_OFFSET, TURNSIGNAL_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
 					if(leftSide){
-						WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, LEFTTURNLIGHT));
+						WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.LEFTTURNLIGHT));
 					}else{
-						WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, RIGHTTURNLIGHT));
+						WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.RIGHTTURNLIGHT));
 					}
 				}
 				
@@ -110,11 +105,11 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 		}
 		
 		//Add the emergency light selector if we have those.
-		if(RenderVehicle.doesVehicleHaveLight(vehicle, EMERGENCYLIGHT)){
+		if(RenderVehicle.doesVehicleHaveLight(vehicle, LightType.EMERGENCYLIGHT)){
 			emergencySelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.emergencylights"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, EMERGENCY_TEXTURE_WIDTH_OFFSET, EMERGENCY_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, EMERGENCYLIGHT));
+					WrapperNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.EMERGENCYLIGHT));
 				}
 				
 				@Override
@@ -219,19 +214,19 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 	public void setStates(){
 		//Set the state of the light selector.
 		if(lightSelector != null){
-			lightSelector.selectorState = vehicle.isLightOn(HEADLIGHT) ? 2 : (vehicle.isLightOn(RUNNINGLIGHT) ? 1 : 0);
+			lightSelector.selectorState = vehicle.lightsOn.contains(LightType.HEADLIGHT) ? 2 : (vehicle.lightsOn.contains(LightType.RUNNINGLIGHT) ? 1 : 0);
 		}
 		
 		//Set the state of the turn signal selector.
 		if(turnSignalSelector != null){
 			boolean halfSecondClock = WrapperGUI.inClockPeriod(20, 10);
-			if(vehicle.isLightOn(LEFTTURNLIGHT) && halfSecondClock){
-				if(vehicle.isLightOn(RIGHTTURNLIGHT)){
+			if(vehicle.lightsOn.contains(LightType.LEFTTURNLIGHT) && halfSecondClock){
+				if(vehicle.lightsOn.contains(LightType.RIGHTTURNLIGHT)){
 					turnSignalSelector.selectorState = 3;
 				}else{
 					turnSignalSelector.selectorState = 1;
 				}
-			}else if(vehicle.isLightOn(RIGHTTURNLIGHT) && halfSecondClock){
+			}else if(vehicle.lightsOn.contains(LightType.RIGHTTURNLIGHT) && halfSecondClock){
 				turnSignalSelector.selectorState = 2;
 			}else{
 				turnSignalSelector.selectorState = 0;
@@ -241,7 +236,7 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 		
 		//If we have emergency lights, set the state of the emergency light selector.
 		if(emergencySelector != null){
-			emergencySelector.selectorState = vehicle.isLightOn(EMERGENCYLIGHT) ? 1 : 0;
+			emergencySelector.selectorState = vehicle.lightsOn.contains(LightType.EMERGENCYLIGHT) ? 1 : 0;
 		}
 		
 		//If we have a siren, set the state of the siren selector.

@@ -1,10 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import static minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType.LANDINGLIGHT;
-import static minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType.NAVIGATIONLIGHT;
-import static minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType.STROBELIGHT;
-import static minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType.TAXILIGHT;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -65,7 +60,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 	protected int setupLightComponents(int guiLeft, int guiTop, int xOffset){
 		lightSelectors.clear();
 		//Create up to four lights depending on how many this vehicle has.
-		for(LightType lightType : new LightType[]{NAVIGATIONLIGHT, STROBELIGHT, TAXILIGHT, LANDINGLIGHT}){
+		for(LightType lightType : new LightType[]{LightType.NAVIGATIONLIGHT, LightType.STROBELIGHT, LightType.TAXILIGHT, LightType.LANDINGLIGHT}){
 			final int LIGHT_TEXTURE_WIDTH_OFFSET;
 			final int LIGHT_TEXTURE_HEIGHT_OFFSET;
 			switch(lightType){
@@ -204,7 +199,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 	public void setStates(){
 		//Set the states of the light selectors.
 		for(Entry<LightType, GUIComponentSelector> lightEntry : lightSelectors.entrySet()){
-			lightEntry.getValue().selectorState = vehicle.isLightOn(lightEntry.getKey()) ? 1 : 0;
+			lightEntry.getValue().selectorState = vehicle.lightsOn.contains(lightEntry.getKey()) ? 1 : 0;
 		}
 		
 		//Set the states of the magneto selectors.

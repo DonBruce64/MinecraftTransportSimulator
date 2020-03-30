@@ -35,7 +35,11 @@ public class PacketVehicleLightToggle extends APacketVehicle{
 	
 	@Override
 	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleE_Powered vehicle){
-		vehicle.changeLightStatus(lightType, !vehicle.isLightOn(lightType));
+		if(vehicle.lightsOn.contains(lightType)){
+			vehicle.lightsOn.remove(lightType);
+		}else{
+			vehicle.lightsOn.add(lightType);
+		}
 		return true;
 	}
 }

@@ -55,11 +55,6 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	}
 	
 	@Override
-	public boolean isLightOn(LightType light){
-		return definition.motorized.isTrailer && towedByVehicle != null ? towedByVehicle.isLightOn(light) : super.isLightOn(light);
-	}
-	
-	@Override
 	protected void getBasicProperties(){
 		velocityVec = new Vec3d(motionX, motionY, motionZ);
 		velocity = velocityVec.dotProduct(headingVec);
@@ -92,6 +87,12 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 			if(towedByVehicle.isDead){
 				towedByVehicle = null;
 			}else{
+				//Update our lights to match our towers if we are a trailer.
+				if(definition.motorized.isTrailer){
+					lightsOn.clear();
+					lightsOn.addAll(towedByVehicle.lightsOn);
+				}
+				
 				//Turn off the parking brake, but turn on the brake if we are a trailer and our tower is braking.
 				parkingBrakeOn = false;
 				brakeOn = definition.motorized.isTrailer && towedByVehicle.brakeOn;
@@ -120,6 +121,7 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 				//Match our tower's roll.
 				motionRoll = (towedByVehicle.rotationRoll - rotationRoll)/10;
 				
+				//Now set the motions.
 				motionX = hitchPos.x - hookupPos.x;
 				motionY = hitchPos.y - hookupPos.y;
 				motionZ = hitchPos.z - hookupPos.z;

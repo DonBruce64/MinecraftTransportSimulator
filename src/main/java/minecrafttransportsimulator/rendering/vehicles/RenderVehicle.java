@@ -192,7 +192,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
      * Checks if lights are on for this vehicle and instruments need to be lit up.
      */
 	public static boolean isVehicleIlluminated(EntityVehicleE_Powered vehicle){
-		return (vehicle.isLightOn(LightType.NAVIGATIONLIGHT) || vehicle.isLightOn(LightType.RUNNINGLIGHT) || vehicle.isLightOn(LightType.HEADLIGHT)) && vehicle.electricPower > 3;
+		return (vehicle.lightsOn.contains(LightType.NAVIGATIONLIGHT) || vehicle.lightsOn.contains(LightType.RUNNINGLIGHT) || vehicle.lightsOn.contains(LightType.HEADLIGHT)) && vehicle.electricPower > 3;
 	}
 	
 	/**

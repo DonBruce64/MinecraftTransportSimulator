@@ -29,37 +29,53 @@ public final class EntityVehicleG_Car extends EntityVehicleF_Ground{
 			if(steeringAngle < -200){
 				turningLeft = true;
 				turningCooldown = 40;
-				changeLightStatus(LightType.LEFTTURNLIGHT, true);
+				lightsOn.add(LightType.LEFTTURNLIGHT);
 			}else if(steeringAngle > 200){
 				turningRight = true;
 				turningCooldown = 40;
-				changeLightStatus(LightType.RIGHTTURNLIGHT, true);
+				lightsOn.add(LightType.RIGHTTURNLIGHT);
 			}
 			if(turningLeft && (steeringAngle > 0 || turningCooldown == 0)){
 				turningLeft = false;
-				changeLightStatus(LightType.LEFTTURNLIGHT, false);
+				lightsOn.remove(LightType.LEFTTURNLIGHT);
 			}
 			if(turningRight && (steeringAngle < 0 || turningCooldown == 0)){
 				turningRight = false;
-				changeLightStatus(LightType.RIGHTTURNLIGHT, false);
+				lightsOn.remove(LightType.RIGHTTURNLIGHT);
 			}
 			if(velocity != 0 && turningCooldown > 0 && steeringAngle == 0){
 				--turningCooldown;
 			}
 			
-			//Turn on brake/indicator and backup lights if they are activated.
-			changeLightStatus(LightType.BRAKELIGHT, brakeOn);
-			changeLightStatus(LightType.LEFTINDICATORLIGHT, brakeOn && !this.isLightOn(LightType.LEFTTURNLIGHT));
-			changeLightStatus(LightType.RIGHTINDICATORLIGHT, brakeOn && !this.isLightOn(LightType.RIGHTTURNLIGHT));
-			boolean backupLightOn = false;
+			//Turn on brake lights and indicator lights.
+			if(brakeOn){
+				lightsOn.add(LightType.BRAKELIGHT);
+				if(lightsOn.contains(LightType.LEFTTURNLIGHT)){
+					lightsOn.remove(LightType.LEFTINDICATORLIGHT);
+				}else{
+					lightsOn.add(LightType.LEFTINDICATORLIGHT);
+				}
+				if(lightsOn.contains(LightType.RIGHTTURNLIGHT)){
+					lightsOn.remove(LightType.RIGHTINDICATORLIGHT);
+				}else{
+					lightsOn.add(LightType.RIGHTINDICATORLIGHT);
+				}
+			}else{
+				lightsOn.remove(LightType.BRAKELIGHT);
+				lightsOn.remove(LightType.LEFTINDICATORLIGHT);
+				lightsOn.remove(LightType.RIGHTINDICATORLIGHT);
+			}
+			
+			//Set backup light state.
+			lightsOn.remove(LightType.BACKUPLIGHT);
 			for(APartEngine engine : engines.values()){
 				if(engine instanceof APartEngineGeared){
 					if(((APartEngineGeared) engine).currentGear < 0){
-						backupLightOn = true;
+						lightsOn.add(LightType.BACKUPLIGHT);
+						break;
 					}
 				}
 			}
-			changeLightStatus(LightType.BACKUPLIGHT, backupLightOn);
 		}
 	}
 	
