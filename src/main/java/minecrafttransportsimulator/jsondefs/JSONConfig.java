@@ -70,9 +70,9 @@ public class JSONConfig{
 		public String comment1 = "The following section is used for fuel configs for engines.  Each entry here is a single fuel type for engines.";
 		public String comment2 = "Inside each entry exist values for the potency of the fluids that can be considered to be that fuel type.";
 		public String comment3 = "You can make engines take different types of fluids for their fuels by editing these values.  See the in-game handbook for more information.";
-		public Map<String, Map<String, Double>> fuels = populateDefaultFuels();
+		public Map<String, Map<String, Double>> fuels = getDefaultFuels();
 		
-		private static Map<String, Map<String, Double>> populateDefaultFuels(){
+		public static Map<String, Map<String, Double>> getDefaultFuels(){
 			Map<String, Map<String, Double>> fuels = new HashMap<String, Map<String, Double>>();
 			for(String packID : MTSRegistry.packItemMap.keySet()){
 				for(AItemPack<? extends AJSONItem<?>> item : MTSRegistry.packItemMap.get(packID).values()){
