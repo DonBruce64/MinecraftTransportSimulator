@@ -4,8 +4,6 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
 
-import org.lwjgl.BufferUtils;
-
 import javazoom.jl.decoder.Bitstream;
 import javazoom.jl.decoder.Decoder;
 import javazoom.jl.decoder.Equalizer;
@@ -56,7 +54,7 @@ public class MP3Decoder implements IStreamDecoder{
 		this.isStereo = currentFrameHeader.mode() != Header.SINGLE_CHANNEL;
 		this.sampleRate = currentFrameHeader.frequency();
 		this.decoderOutputBuffer = new SampleBuffer(sampleRate, isStereo ? 2 : 1);
-		this.decodedDataBuffer = BufferUtils.createByteBuffer(MP3_BUFFER_SIZE);
+		this.decodedDataBuffer = ByteBuffer.allocateDirect(MP3_BUFFER_SIZE);
 		this.decoder.setOutputBuffer(decoderOutputBuffer);
     }
 

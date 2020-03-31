@@ -1,10 +1,9 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.lwjgl.BufferUtils;
 
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -44,7 +43,7 @@ public abstract class APart implements ISoundProvider{
 	public final Vec3d partRotation;
 	public final boolean inverseMirroring;
 	public final boolean disableMirroring;
-	private final FloatBuffer soundPosition = BufferUtils.createFloatBuffer(3);
+	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).asFloatBuffer();
 	
 	/**The parent of this part, if this part is a sub-part of a part or an additional part for a vehicle.*/
 	public final APart parentPart;

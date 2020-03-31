@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.vehicles.main;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,8 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.lwjgl.BufferUtils;
 
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -69,8 +68,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	
 	//Internal radio variables.
 	private final Radio radio = new Radio(this);
-	private final FloatBuffer soundPosition = BufferUtils.createFloatBuffer(3);
-	private final FloatBuffer soundVelocity = BufferUtils.createFloatBuffer(3);
+	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).asFloatBuffer();
+	private final FloatBuffer soundVelocity = ByteBuffer.allocateDirect(3*Float.BYTES).asFloatBuffer();
 	
 	
 	public EntityVehicleE_Powered(World world){
