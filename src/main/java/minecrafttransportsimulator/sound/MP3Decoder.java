@@ -2,6 +2,7 @@ package minecrafttransportsimulator.sound;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 
 import javazoom.jl.decoder.Bitstream;
@@ -54,7 +55,7 @@ public class MP3Decoder implements IStreamDecoder{
 		this.isStereo = currentFrameHeader.mode() != Header.SINGLE_CHANNEL;
 		this.sampleRate = currentFrameHeader.frequency();
 		this.decoderOutputBuffer = new SampleBuffer(sampleRate, isStereo ? 2 : 1);
-		this.decodedDataBuffer = ByteBuffer.allocateDirect(MP3_BUFFER_SIZE);
+		this.decodedDataBuffer = ByteBuffer.allocateDirect(MP3_BUFFER_SIZE).order(ByteOrder.nativeOrder());
 		this.decoder.setOutputBuffer(decoderOutputBuffer);
     }
 
