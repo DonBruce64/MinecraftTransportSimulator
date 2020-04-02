@@ -4,16 +4,8 @@ import java.lang.reflect.Field;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.core.BlockDecor;
-import minecrafttransportsimulator.blocks.core.TileEntityDecor;
-import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
-import minecrafttransportsimulator.blocks.pole.TileEntityPoleAttachment;
-import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.rendering.blocks.RenderDecor;
-import minecrafttransportsimulator.rendering.blocks.RenderFuelPump;
-import minecrafttransportsimulator.rendering.blocks.RenderPoleLighted;
-import minecrafttransportsimulator.rendering.blocks.RenderPoleSign;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
@@ -23,7 +15,6 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
@@ -40,12 +31,6 @@ public final class MTSRegistryClient{
 	
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
-		//Register the TESRs for blocks.
-		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityFuelPump.class, new RenderFuelPump());
-		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPoleAttachment.class, new RenderPoleLighted());
-		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPoleSign.class, new RenderPoleSign());
-		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDecor.class, new RenderDecor());
-		
 		//Register the vehicle rendering class.
 		RenderingRegistry.registerEntityRenderingHandler(EntityVehicleE_Powered.class, MTSRenderFactory);
 		

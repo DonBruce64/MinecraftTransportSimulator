@@ -6,7 +6,5 @@ public class JSONDecor extends AJSONMultiModel<JSONDecor.DecorGeneral>{
     	public float width;
     	public float height;
     	public float depth;
-    	public boolean oriented;
-    	public boolean lighted;
     }
 }

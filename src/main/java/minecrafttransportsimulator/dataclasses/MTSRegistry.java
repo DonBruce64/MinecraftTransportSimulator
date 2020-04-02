@@ -121,16 +121,16 @@ public final class MTSRegistry{
 	public static final Item jerrycan = new ItemJerrycan().setCreativeTab(coreTab);
 	
 	//Crafting benches.
-	public static final Block vehicleBench = new BlockBench(JSONVehicle.class);
-	public static final Block propellerBench = new BlockBench(JSONPart.class, "propeller");
-	public static final Block engineBench = new BlockBench(JSONPart.class, "engine_aircraft", "engine_jet", "engine_car", "engine_boat");
-	public static final Block wheelBench = new BlockBench(JSONPart.class, "wheel", "skid", "pontoon", "tread");
-	public static final Block seatBench = new BlockBench(JSONPart.class, "seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand");
-	public static final Block gunBench = new BlockBench(JSONPart.class, "gun_fixed", "gun_tripod", "bullet");
-	public static final Block customBench = new BlockBench(JSONPart.class, "custom");
-	public static final Block instrumentBench = new BlockBench(JSONInstrument.class);
-	public static final Block componentBench = new BlockBench(JSONItem.class);
-	public static final Block decorBench = new BlockBench(JSONDecor.class);
+	public static final Block vehicleBench = new BlockPartsBench(JSONVehicle.class);
+	public static final Block propellerBench = new BlockPartsBench(JSONPart.class, "propeller");
+	public static final Block engineBench = new BlockPartsBench(JSONPart.class, "engine_aircraft", "engine_jet", "engine_car", "engine_boat");
+	public static final Block wheelBench = new BlockPartsBench(JSONPart.class, "wheel", "skid", "pontoon", "tread");
+	public static final Block seatBench = new BlockPartsBench(JSONPart.class, "seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand");
+	public static final Block gunBench = new BlockPartsBench(JSONPart.class, "gun_fixed", "gun_tripod", "bullet");
+	public static final Block customBench = new BlockPartsBench(JSONPart.class, "custom");
+	public static final Block instrumentBench = new BlockPartsBench(JSONInstrument.class);
+	public static final Block componentBench = new BlockPartsBench(JSONItem.class);
+	public static final Block decorBench = new BlockPartsBench(JSONDecor.class);
 	
 	//Fuel pump.
 	public static final Block fuelPump = new BlockFuelPump();

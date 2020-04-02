@@ -5,7 +5,7 @@ import java.util.List;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleSign;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.player.EntityPlayer;

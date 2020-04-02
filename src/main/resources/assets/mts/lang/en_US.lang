@@ -141,9 +141,11 @@ gui.trafficsignalcontroller.primary=Primary axis:
 gui.trafficsignalcontroller.signalmode=Mode: 
 gui.trafficsignalcontroller.modetime=Time Delay
 gui.trafficsignalcontroller.modetrigger=Vehicle Trigger
+gui.trafficsignalcontroller.moderemote=Computer Control
 gui.trafficsignalcontroller.greenmaintime=Time main signal is Green:
 gui.trafficsignalcontroller.greencrosstime=Time cross signal is Green: 
-gui.trafficsignalcontroller.yellowtime=Time all signals are Yellow: 
+gui.trafficsignalcontroller.yellowmaintime=Time main signal is Yellow: 
+gui.trafficsignalcontroller.yellowcrosstime=Time cross signal is Yellow: 
 gui.trafficsignalcontroller.allredtime=Time all signals are Red:
 gui.trafficsignalcontroller.confirm=CONFIRM 
 

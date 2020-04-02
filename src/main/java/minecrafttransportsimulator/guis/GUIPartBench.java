@@ -12,7 +12,7 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.core.BlockBench;
+import minecrafttransportsimulator.blocks.instances.BlockPartsBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.items.packs.ItemVehicle;
@@ -23,12 +23,12 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.systems.OBJParserSystem;
+import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
@@ -36,10 +36,10 @@ import net.minecraft.util.ResourceLocation;
 public class GUIPartBench extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting.png");	
 	/*Last item this bench was on when closed.  Keyed by block*/
-	private static final Map<BlockBench, AItemPack<? extends AJSONItem<?>>> lastOpenedItem = new HashMap<BlockBench, AItemPack<? extends AJSONItem<?>>>();
+	private static final Map<BlockPartsBench, AItemPack<? extends AJSONItem<?>>> lastOpenedItem = new HashMap<BlockPartsBench, AItemPack<? extends AJSONItem<?>>>();
 	
-	private final BlockBench bench;
-	private final EntityPlayer player;
+	private final BlockPartsBench bench;
+	private final WrapperPlayer player;
 	
 	private GuiButton leftPackButton;
 	private GuiButton rightPackButton;
@@ -71,7 +71,7 @@ public class GUIPartBench extends GuiScreen{
 	/**Part texture.  Keyed by pack item.*/
 	private final Map<AItemPack<? extends AJSONItem<?>>, ResourceLocation> textureMap = new HashMap<AItemPack<? extends AJSONItem<?>>, ResourceLocation>();
 	
-	public GUIPartBench(BlockBench bench, EntityPlayer player){
+	public GUIPartBench(BlockPartsBench bench, WrapperPlayer player){
 		this.bench = bench;
 		this.player = player;
 		if(lastOpenedItem.containsKey(bench)){

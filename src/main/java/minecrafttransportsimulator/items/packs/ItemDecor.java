@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.items.packs;
 
 import minecrafttransportsimulator.blocks.core.BlockDecor;
-import minecrafttransportsimulator.blocks.core.TileEntityDecor;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import net.minecraft.entity.player.EntityPlayer;

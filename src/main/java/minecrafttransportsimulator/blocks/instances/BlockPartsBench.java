@@ -1,42 +1,38 @@
-package minecrafttransportsimulator.blocks.core;
+package minecrafttransportsimulator.blocks.instances;
 
 import java.util.Arrays;
 import java.util.List;
 
-import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import minecrafttransportsimulator.wrappers.WrapperBlock;
+import minecrafttransportsimulator.wrappers.WrapperPlayer;
+import minecrafttransportsimulator.wrappers.WrapperWorld;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
-public class BlockBench extends ABlockRotatable{
+public class BlockPartsBench extends ABlockBase{
 	private final List<String> validPartTypes;
 	private final Class<? extends AJSONItem<?>> validJsonClass;
 	public final RenderType renderType;
 
 	
-	public BlockBench(Class<? extends AJSONItem<?>> validJsonClass, String... validPartTypes){
-		super();
-		this.setCreativeTab(MTSRegistry.coreTab);
+	public BlockPartsBench(WrapperBlock wrapperReference, Class<? extends AJSONItem<?>> validJsonClass, String... validPartTypes){
+		super(wrapperReference, 10.0F, 5.0F);
 		this.validPartTypes = Arrays.asList(validPartTypes);
 		this.validJsonClass = validJsonClass;
 		this.renderType = validJsonClass.equals(JSONVehicle.class) ? RenderType.SPINNING3D_EXTENDED : (validJsonClass.equals(JSONPart.class) || validJsonClass.equals(JSONDecor.class) ? RenderType.SPINNING3D : RenderType.SIMPLE2D);
 	}
 	
 	@Override
-	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ){
-		if(Math.sqrt(player.getDistanceSq(pos)) < 5){
-			if(world.isRemote){
-				MTS.proxy.openGUI(this, player);
-			}
+	public boolean onClicked(WrapperWorld world, Point3i point, WrapperPlayer playerClicking){
+		if(world.isClient()){
+			//TODO this needs to be re-done with abstract GUI.
+			FMLCommonHandler.instance().showGuiScreen(new GUIPartBench(this, playerClicking));
 		}
 		return true;
 	}
@@ -46,12 +42,6 @@ public class BlockBench extends ABlockRotatable{
 			return validJsonClass.equals(JSONPart.class) ? validPartTypes.contains(((JSONPart) definition).general.type) : true;
 		}
 		return false;
-	}
-	
-	//Need to override this to make the decor bench render its glass texture correctly.
-	@Override
-	public BlockRenderLayer getBlockLayer(){
-		return BlockRenderLayer.CUTOUT;
 	}
 	
 	public static enum RenderType{

@@ -9,22 +9,21 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
-import minecrafttransportsimulator.blocks.pole.TileEntityPoleSign;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleSign;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONSign;
 import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
+import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 
 public class GUISign extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting.png");	
-	private final EntityPlayer player;
+	private final WrapperPlayer player;
 	private final TileEntityPoleSign sign;
 	private final TileEntityPoleSign signGUIInstance;
 	private final List<GuiTextField> signTextBoxes = new ArrayList<GuiTextField>();
@@ -46,8 +45,8 @@ public class GUISign extends GuiScreen{
 	private JSONSign prevSign;
 	private JSONSign nextSign;
 			
-	public GUISign(BlockPoleSign block, EntityPlayer player){
-		this.sign = (TileEntityPoleSign) player.world.getTileEntity(block.lastClickedPos);
+	public GUISign(TileEntityPoleSign sign, WrapperPlayer player){
+		this.sign = sign;
 		this.signGUIInstance = new TileEntityPoleSign();
 		this.signGUIInstance.setPos(sign.getPos());
 		this.player = player;

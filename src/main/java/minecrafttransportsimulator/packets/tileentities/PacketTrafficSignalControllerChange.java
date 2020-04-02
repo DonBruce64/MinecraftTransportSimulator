@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.tileentities;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.core.TileEntityTrafficSignalController;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityTrafficSignalController;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.fml.common.FMLCommonHandler;
