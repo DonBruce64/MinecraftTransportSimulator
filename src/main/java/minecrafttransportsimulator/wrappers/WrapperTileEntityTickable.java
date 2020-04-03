@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.wrappers;
 
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBaseTickable;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityTickable;
 import net.minecraft.util.ITickable;
 
 /**Simply a wrapper for tickable tile entities.  All this adds is an update()
@@ -11,22 +11,22 @@ import net.minecraft.util.ITickable;
  */
 public class WrapperTileEntityTickable extends WrapperTileEntity implements ITickable{
 	
-	WrapperTileEntityTickable(ATileEntityBaseTickable tileEntity){
+	WrapperTileEntityTickable(ATileEntityTickable tileEntity){
 		super(tileEntity);
 	}
 
 	@Override
     public void update(){
-		((ATileEntityBaseTickable) tileEntity).update();
+		((ATileEntityTickable) tileEntity).update();
     }
 	
-	/**Interface that tells the system this block should create an instance of a {@link ATileEntityBaseTickable} when created.
+	/**Interface that tells the system this block should create an instance of a {@link ATileEntityTickable} when created.
 	*
 	* @author don_bruce
 	*/
 	public static interface IProvider extends WrapperTileEntity.IProvider{
 		
 		@Override
-		public abstract ATileEntityBaseTickable createTileEntity();
+		public abstract ATileEntityTickable createTileEntity();
 	}
 }

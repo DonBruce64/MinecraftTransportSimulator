@@ -4,62 +4,41 @@ import java.awt.Color;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.core.BlockFuelPump;
-import minecrafttransportsimulator.blocks.core.TileEntityFuelPump;
-import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.client.resources.I18n;
+import minecrafttransportsimulator.blocks.instances.BlockFuelPump;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
+import minecrafttransportsimulator.wrappers.WrapperGame;
+import minecrafttransportsimulator.wrappers.WrapperRender;
 
-public class RenderFuelPump extends TileEntitySpecialRenderer<TileEntityFuelPump>{
-	
-	public RenderFuelPump(){}
+public class RenderFuelPump extends ARenderTileEntityBase<TileEntityFuelPump, BlockFuelPump>{
 	
 	@Override
-	public void render(TileEntityFuelPump pump, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
-		super.render(pump, x, y, z, partialTicks, destroyStage, alpha);
-		Block block = pump.getWorld().getBlockState(pump.getPos()).getBlock();
-		if(!(block instanceof BlockFuelPump)){
-			return;
-		}
-
-		GL11.glPushMatrix();
-		GL11.glTranslated(x, y, z);
-		GL11.glTranslatef(0.5F, 0F, 0.5F);
-		GL11.glRotatef(-pump.getWorld().getBlockState(pump.getPos()).getValue(BlockFuelPump.FACING).getHorizontalAngle(), 0, 1, 0);
-		
+	public void render(TileEntityFuelPump tile, BlockFuelPump block, float partialTicks){
+		//Render the light-up texture for the pump state.
 		GL11.glPushMatrix();
 		GL11.glScalef(0.0625F, 0.0625F, 0.0625F);
 		GL11.glRotatef(180, 1, 0, 0);
-		GL11.glTranslatef(0, -8, -4.001F);
-		GL11.glScalef(0.25F, 0.25F, 0.25F);
-		getFontRenderer().drawString(MTS.MODID.toUpperCase(), -this.getFontRenderer().getStringWidth(MTS.MODID.toUpperCase())/2, 0, Color.BLACK.getRGB());
-		GL11.glPopMatrix();
-		
-		GL11.glPushMatrix();
-		GL11.glScalef(0.0625F, 0.0625F, 0.0625F);
-		GL11.glRotatef(180, 1, 0, 0);
-		GL11.glTranslatef(0, -17.25F, -4.001F);
+		GL11.glTranslatef(0, -9.25F, -4.001F);
 		GL11.glScalef(0.125F, 0.125F, 0.125F);
 		GL11.glDisable(GL11.GL_LIGHTING);
-		Minecraft.getMinecraft().entityRenderer.disableLightmap();
+		WrapperRender.setLightmapState(false);
 		
-		getFontRenderer().drawString(I18n.format("tile.fuelpump.level"), -40, 10, Color.ORANGE.getRGB());
-		getFontRenderer().drawString(I18n.format("tile.fuelpump.dispensed"), -40, 20, Color.ORANGE.getRGB());
-		if(pump.getFluid() != null){
-			String zeros = pump.getFluid().amount < 10 ? "0000" : pump.getFluid().amount < 100 ? "000" : pump.getFluid().amount < 1000 ? "00" : pump.getFluid().amount < 10000 ? "0" : "";
-			getFontRenderer().drawString(pump.getFluid().getLocalizedName().toUpperCase(), -this.getFontRenderer().getStringWidth(pump.getFluid().getLocalizedName().toUpperCase())/2, 0, Color.ORANGE.getRGB());
-			getFontRenderer().drawString(zeros + String.valueOf(pump.getFluid().amount) + "mb", 0, 10, Color.ORANGE.getRGB());
-		}else{
-			getFontRenderer().drawString("00000mb", 0, 10, Color.ORANGE.getRGB());
-		}
-		String zeros = pump.totalTransfered < 10 ? "0000" : pump.totalTransfered < 100 ? "000" : pump.totalTransfered < 1000 ? "00" : pump.totalTransfered < 10000 ? "0" : "";
-		getFontRenderer().drawString(zeros + String.valueOf(pump.totalTransfered) + "mb", 0, 20, Color.ORANGE.getRGB());
-		Minecraft.getMinecraft().entityRenderer.enableLightmap();
+		//Render fluid name text.
+		WrapperGUI.drawText(WrapperGame.getFluidName(tile.getFluid()), 0,  0, Color.ORANGE, true, false, 0);
+		
+		//Render fluid inside pump amount.
+		WrapperGUI.drawText(WrapperGUI.translate("tile.fuelpump.level"), -40,  10, Color.ORANGE, false, false, 0);
+		String fluidLevel = String.format("%05d", tile.getFluidLevel());
+		WrapperGUI.drawText(fluidLevel + "mb", 0,  10, Color.ORANGE, false, false, 0);
+		
+		//Render fluid dispensed amount.
+		WrapperGUI.drawText(WrapperGUI.translate("tile.fuelpump.dispensed"), -40,  20, Color.ORANGE, false, false, 0);
+		String fluidDispensed = String.format("%05d", tile.totalTransfered);
+		WrapperGUI.drawText(fluidDispensed + "mb", 0,  20, Color.ORANGE, false, false, 0);
+		
+		//Reset states.
+		WrapperRender.setLightmapState(true);
 		GL11.glEnable(GL11.GL_LIGHTING);
-		GL11.glPopMatrix();
-		
 		GL11.glPopMatrix();
 	}
 }

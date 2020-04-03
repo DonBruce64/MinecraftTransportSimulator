@@ -9,17 +9,9 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleT
 import minecrafttransportsimulator.wrappers.WrapperRender;
 
 public class RenderTrafficSignal extends ARenderTileEntityBase<TileEntityPoleTrafficSignal, BlockPoleTrafficSignal>{
-		
-	public RenderTrafficSignal(){}
 	
 	@Override
 	public void render(TileEntityPoleTrafficSignal tile, BlockPoleTrafficSignal block, float partialTicks){
-		//Start rendering by translating to the position of the TE and rotating it.
-		GL11.glPushMatrix();
-		GL11.glTranslated(tile.position.x, tile.position.y, tile.position.z);
-		GL11.glTranslatef(0.5F, 0F, 0.5F);
-		GL11.glRotatef(-block.getRotation(tile.world, tile.position), 0, 1, 0);
-	
 		//Disable the lighting prior to rendering the lights.
 		WrapperRender.setLightmapState(false);
 		GL11.glDisable(GL11.GL_LIGHTING);
@@ -39,7 +31,7 @@ public class RenderTrafficSignal extends ARenderTileEntityBase<TileEntityPoleTra
 		
 		//Render based on the current state.
 		if(lightColor != null && (!shouldFlash || (shouldFlash && (System.currentTimeMillis()%20000 < 10000)))){
-			GL11.glTranslatef(0, lightColor.equals(Color.RED) ? 13F/16F : (lightColor.equals(Color.YELLOW) ? 8F/16F : 3F/16F), 0.225F);
+			GL11.glTranslatef(0, lightColor.equals(Color.RED) ? 5F/16F : (lightColor.equals(Color.YELLOW) ? 0F : -5F/16F), 0.225F);
 			renderLightedSquare(4F/16F, lightBrightness, lightColor, "textures/rendering/light.png");
 		}
 		
@@ -47,6 +39,5 @@ public class RenderTrafficSignal extends ARenderTileEntityBase<TileEntityPoleTra
 		GL11.glEnable(GL11.GL_LIGHTING);
 		WrapperRender.setLightmapState(true);
 		GL11.glColor4f(1, 1, 1, 1);
-		GL11.glPopMatrix();
 	}
 }

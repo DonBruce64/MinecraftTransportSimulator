@@ -5,18 +5,19 @@ import com.google.common.collect.HashBiMap;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
-import minecrafttransportsimulator.packets.instances.PacketVehicleRadioChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleWrenchGUI;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -49,7 +50,6 @@ public class WrapperNetwork{
 		packetMappings.put(packetIndex++, PacketVehicleControlDigital.class);
 		packetMappings.put(packetIndex++, PacketVehicleInstruments.class);
 		packetMappings.put(packetIndex++, PacketVehicleLightToggle.class);
-		packetMappings.put(packetIndex++, PacketVehicleRadioChange.class);
 		packetMappings.put(packetIndex++, PacketVehicleWrenchGUI.class);
 	}
 	
@@ -82,6 +82,14 @@ public class WrapperNetwork{
 	 */
 	public static void sendToClientsTracking(APacketBase packet, EntityVehicleE_Powered trackingEntity){
 		network.sendToAllTracking(new WrapperPacket(packet), trackingEntity);
+	}
+	
+	/**
+	 *  Sends the passed-in packet to all clients near the passed-in
+	 *  point.  Useful for clients that are near things that output information.
+	 */
+	public static void sendToClientsNear(APacketBase packet, int dimension, Point3i point, int distance){
+		network.sendToAllTracking(new WrapperPacket(packet), new TargetPoint(dimension, point.x, point.y, point.z, distance));
 	}
 	
 	/**

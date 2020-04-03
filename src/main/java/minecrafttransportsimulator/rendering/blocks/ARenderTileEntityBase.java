@@ -5,11 +5,11 @@ import java.awt.Color;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 import minecrafttransportsimulator.wrappers.WrapperTileEntity;
 import minecrafttransportsimulator.wrappers.WrapperTileEntityRender;
-import net.minecraft.util.math.Vec3d;
 
 /**Base Tile Entity rendering class (TESR).  This type is used in the constructor of {@link WrapperTileEntityRender} 
  * to allow us to use completely custom render code that is not associated with MC's standard render code.  This should
@@ -69,7 +69,7 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 	 *  on both the outer and inner sections.  This can be used to create lights that shine on
 	 *  both sides of the cone, but one more than the other.
 	 */
-	protected static void drawLightCone(Vec3d endPoint, boolean reverse){
+	protected static void drawLightCone(Point3d endPoint, boolean reverse){
 		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/lightbeam.png");
 		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
 		GL11.glTexCoord2f(0, 0);

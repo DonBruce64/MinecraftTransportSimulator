@@ -4,7 +4,7 @@ package minecrafttransportsimulator.blocks.tileentities.components;
  *
  * @author don_bruce
  */
-public abstract class ATileEntityBaseTickable extends ATileEntityBase{
+public abstract class ATileEntityTickable extends ATileEntityBase{
 	/**
 	 *  Called every tick for updates.
 	 */

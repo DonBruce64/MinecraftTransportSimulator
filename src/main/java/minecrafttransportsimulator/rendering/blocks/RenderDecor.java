@@ -14,17 +14,9 @@ import minecrafttransportsimulator.wrappers.WrapperRender;
 
 public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor, BlockDecor>{
 	private static final Map<JSONDecor, Integer> displayListMap = new HashMap<JSONDecor, Integer>();
-	
-	public RenderDecor(){}
-	
+		
 	@Override
 	public void render(TileEntityDecor tile, BlockDecor block, float partialTicks){
-		//Start rendering by translating to the position of the TE and rotating it.
-		GL11.glPushMatrix();
-		GL11.glTranslated(tile.position.x, tile.position.y, tile.position.z);
-		GL11.glTranslatef(0.5F, 0.5F, 0.5F);
-		GL11.glRotatef(-block.getRotation(tile.world, tile.position), 0, 1, 0);
-		
 		//If we don't have the displaylist and texture cached, do it now.
 		if(!displayListMap.containsKey(block.definition)){
 			String optionalModelName = block.definition.general.modelName;
@@ -48,6 +40,5 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor, BlockDec
 		//Bind the decor texture and render.
 		WrapperRender.bindTexture(block.definition.packID, "textures/decors/" + block.definition.systemName + ".png");
 		GL11.glCallList(displayListMap.get(block.definition));
-		GL11.glPopMatrix();
 	}
 }

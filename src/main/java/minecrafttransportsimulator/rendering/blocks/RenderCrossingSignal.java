@@ -9,17 +9,9 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleC
 import minecrafttransportsimulator.wrappers.WrapperRender;
 
 public class RenderCrossingSignal extends ARenderTileEntityBase<TileEntityPoleCrossingSignal, BlockPoleCrossingSignal>{
-		
-	public RenderCrossingSignal(){}
 	
 	@Override
 	public void render(TileEntityPoleCrossingSignal tile, BlockPoleCrossingSignal block, float partialTicks){
-		//Start rendering by translating to the position of the TE and rotating it.
-		GL11.glPushMatrix();
-		GL11.glTranslated(tile.position.x, tile.position.y, tile.position.z);
-		GL11.glTranslatef(0.5F, 0F, 0.5F);
-		GL11.glRotatef(-block.getRotation(tile.world, tile.position), 0, 1, 0);
-	
 		//Disable the lighting prior to rendering the lights.
 		WrapperRender.setLightmapState(false);
 		GL11.glDisable(GL11.GL_LIGHTING);
@@ -38,10 +30,10 @@ public class RenderCrossingSignal extends ARenderTileEntityBase<TileEntityPoleCr
 		//Render based on the current state.
 		if(lightColor != null && (!shouldFlash || (shouldFlash && (System.currentTimeMillis()%20000 < 10000)))){
 			if(lightColor.equals(Color.GREEN)){
-				GL11.glTranslatef(0, 2F/16F, 0.145F);
+				GL11.glTranslatef(0, -6F/16F, 0.145F);
 				renderLightedSquare(3F/16F, lightBrightness*0.5F, lightColor, "textures/rendering/walk.png");
 			}else{
-				GL11.glTranslatef(0, 6F/16F, 0.145F);
+				GL11.glTranslatef(0, -2F/16F, 0.145F);
 				renderLightedSquare(3F/16F, lightBrightness*0.5F, lightColor, "textures/rendering/dontwalk.png");
 			}
 		}
@@ -50,6 +42,5 @@ public class RenderCrossingSignal extends ARenderTileEntityBase<TileEntityPoleCr
 		GL11.glEnable(GL11.GL_LIGHTING);
 		WrapperRender.setLightmapState(true);
 		GL11.glColor4f(1, 1, 1, 1);
-		GL11.glPopMatrix();
 	}
 }

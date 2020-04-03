@@ -11,17 +11,9 @@ import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 
 public class RenderPoleSign extends ARenderTileEntityBase<TileEntityPoleSign, BlockPoleSign>{
-	
-	public RenderPoleSign(){}
-	
+		
 	@Override
 	public void render(TileEntityPoleSign tile, BlockPoleSign block, float partialTicks){
-		//Start rendering by translating to the position of the TE and rotating it.
-		GL11.glPushMatrix();
-		GL11.glTranslated(tile.position.x, tile.position.y, tile.position.z);
-		GL11.glTranslatef(0.5F, 0.5F, 0.5F);
-		GL11.glRotatef(-block.getRotation(tile.world, tile.position), 0, 1, 0);
-		
 		//Translate a little to make the sign offset from the pole.
 		GL11.glTranslatef(0F, 0F, 0.0635F);
 		
@@ -85,6 +77,5 @@ public class RenderPoleSign extends ARenderTileEntityBase<TileEntityPoleSign, Bl
 				}
 			}
 		}
-		GL11.glPopMatrix();
 	}
 }

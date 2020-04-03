@@ -6,6 +6,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.text.TextComponentString;
 
 /**Wrapper for the main player class.  This class wraps the player into a more
@@ -84,6 +85,13 @@ public class WrapperPlayer extends WrapperEntity{
 	 */
 	public ItemStack getHeldStack(){
 		return player.getHeldItemMainhand();
+	}
+	
+	/**
+	 *  Sets the held stack.
+	 */
+	public void setHeldStack(ItemStack stack){
+		player.setHeldItem(EnumHand.MAIN_HAND, stack);
 	}
 	
 	/**

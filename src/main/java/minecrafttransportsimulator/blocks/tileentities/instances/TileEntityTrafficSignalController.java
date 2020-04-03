@@ -8,7 +8,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBaseTickable;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityTickable;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleCrossingSignal.CrossingState;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleTrafficSignal.SignalState;
 import minecrafttransportsimulator.rendering.blocks.ARenderTileEntityBase;
@@ -20,7 +20,7 @@ import minecrafttransportsimulator.wrappers.WrapperTileEntity;
 *
 * @author don_bruce
 */
-public class TileEntityTrafficSignalController extends ATileEntityBaseTickable{	
+public class TileEntityTrafficSignalController extends ATileEntityTickable{	
 	//Mode state.
 	public OpMode currentOpMode = OpMode.TIMED_CYCLE;
 	
