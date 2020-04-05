@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
+import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
+import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
 /**Base Tile Entity class with the ability to store fluids.
  *
@@ -50,10 +52,13 @@ public abstract class ATileEntityFluidTank extends ATileEntityTickable{
 				maxAmount = getMaxLevel() - currentFluidLevel;
 			}
 			if(doFill){
-				//FIXME add fluid packet here to clients.
 				currentFluidLevel += maxAmount;
 				if(currentFluid.isEmpty()){
 					currentFluid = fluid;
+				}
+				//Send off packet now that we know what fluid we will have on this tank.
+				if(!world.isClient()){
+					WrapperNetwork.sendToAllClients(new PacketFluidTankChange(this, maxAmount));
 				}
 			}
 			return maxAmount;
@@ -75,7 +80,10 @@ public abstract class ATileEntityFluidTank extends ATileEntityTickable{
 				maxAmount = currentFluidLevel;
 			}
 			if(doDrain){
-				//FIXME add fluid packet here to clients.
+				//Need to send off packet before we remove fluid due to empty tank.
+				if(!world.isClient()){
+					WrapperNetwork.sendToAllClients(new PacketFluidTankChange(this, maxAmount));
+				}
 				currentFluidLevel -= maxAmount;
 				if(currentFluidLevel == 0){
 					currentFluid = "";

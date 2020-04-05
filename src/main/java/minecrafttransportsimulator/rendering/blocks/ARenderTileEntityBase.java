@@ -6,9 +6,9 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.wrappers.WrapperRender;
-import minecrafttransportsimulator.wrappers.WrapperTileEntity;
 import minecrafttransportsimulator.wrappers.WrapperTileEntityRender;
 
 /**Base Tile Entity rendering class (TESR).  This type is used in the constructor of {@link WrapperTileEntityRender} 
@@ -17,7 +17,7 @@ import minecrafttransportsimulator.wrappers.WrapperTileEntityRender;
  *
  * @author don_bruce
  */
-public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEntityBase, RenderedBlock extends WrapperTileEntity.IProvider>{
+public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEntityBase, RenderedBlock extends IBlockTileEntity>{
 	
 	/**
 	 *  Called to render this tile entity.  The currently-bound texture is undefined, so you will need

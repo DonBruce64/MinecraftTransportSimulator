@@ -7,7 +7,6 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.wrappers.WrapperBlock;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
-import net.minecraft.item.ItemStack;
 
 /**Base Block class.  This type is used in the constructor of {@link WrapperBlock} to allow us to use
  * completely custom code that is not associated with MC's standard block code that changes EVERY FREAKING VERSION.
@@ -17,14 +16,12 @@ import net.minecraft.item.ItemStack;
  * @author don_bruce
  */
 public abstract class ABlockBase{
-	protected final WrapperBlock wrapperReference;
 	public final float hardness;
 	public final float blastResistance;
 	
 	protected static final BoundingBox SINGLE_BLOCK_BOUNDS = new BoundingBox(0, 0, 0, 0.5D, 0.5D, 0.5D);
 	
-	public ABlockBase(WrapperBlock wrapperReference, float hardness, float blastResistance){
-		this.wrapperReference = wrapperReference;
+	public ABlockBase(float hardness, float blastResistance){
 		this.hardness = hardness;
 		this.blastResistance = blastResistance;
 	}
@@ -45,17 +42,6 @@ public abstract class ABlockBase{
 	public boolean onClicked(WrapperWorld world, Point3i point, WrapperPlayer player){
 		return false;
 	}
-	
-	/**
-	 *  Gets the itemStack form of this block.  This should NEVER
-	 *  be null, as blocks should always drop themselves as the items
-	 *  that created them.  Use this to save the state of the TE
-	 *  should you wish to recover it later.
-	 */
-	public ItemStack getStack(WrapperWorld world, Point3i point){
-		//FIXME add item linking later.
-		return ItemStack.EMPTY;
-	}
 
 	/**
 	 *  Gets the current rotation of the block at the passed-in point.
@@ -64,7 +50,7 @@ public abstract class ABlockBase{
 	 *  not modifiable by any block-based code.
 	 */
 	public float getRotation(WrapperWorld world, Point3i point){
-		return wrapperReference.getRotation(world, point);
+		return WrapperBlock.getRotation(world, point);
 	}
 	
 	/**
@@ -74,13 +60,5 @@ public abstract class ABlockBase{
 	 */
 	public void addCollisionBoxes(WrapperWorld world, Point3i point, List<BoundingBox> collidingBoxes){
 		collidingBoxes.add(SINGLE_BLOCK_BOUNDS);
-	}
-	
-	/**
-	 *  If you add a TE model, that model will render with the main block model.
-	 *  If you don't want the main block model to render, make this return false.
-	 */
-	public boolean renderBlockModel(){
-		return true;
 	}
 }

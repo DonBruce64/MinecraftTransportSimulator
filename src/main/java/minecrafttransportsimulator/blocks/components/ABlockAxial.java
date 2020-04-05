@@ -21,8 +21,8 @@ public abstract class ABlockAxial extends ABlockBase{
 	protected final Map<Axis, BoundingBox> bounds = new HashMap<Axis, BoundingBox>();
 	protected final Map<Axis, Boolean> states = new HashMap<Axis, Boolean>();
 	
-	public ABlockAxial(WrapperBlockAxial wrapperReference, float hardness, float blastResistance, double connectorRadius){
-		super(wrapperReference, hardness, blastResistance);
+	public ABlockAxial(float hardness, float blastResistance, double connectorRadius){
+		super(hardness, blastResistance);
 		double axialRadius = (0.5D - connectorRadius)/2D;
 		double axialCenterPoint = 0.5D - axialRadius;
 		bounds.put(Axis.NONE, new BoundingBox(0, 0, 0, connectorRadius, connectorRadius, connectorRadius));
@@ -38,7 +38,7 @@ public abstract class ABlockAxial extends ABlockBase{
 	public void addCollisionBoxes(WrapperWorld world, Point3i point, List<BoundingBox> collidingBoxes){
 		//Need to add multiple collision boxes here.
 		//First update the axis states based on what MC has.
-		((WrapperBlockAxial) wrapperReference).updateAxisStates(world, point, states);
+		WrapperBlockAxial.updateAxisStates(world, point, states);
 		
 		//Now add the collision boxes.
 		for(Entry<Axis, Boolean> statePair : states.entrySet()){

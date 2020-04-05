@@ -10,14 +10,15 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.core.BlockBench;
-import minecrafttransportsimulator.blocks.core.BlockDecor;
-import minecrafttransportsimulator.blocks.core.BlockFuelPump;
-import minecrafttransportsimulator.blocks.core.BlockTrafficSignalController;
-import minecrafttransportsimulator.blocks.pole.BlockPoleAttachment;
-import minecrafttransportsimulator.blocks.pole.BlockPoleNormal;
-import minecrafttransportsimulator.blocks.pole.BlockPoleSign;
-import minecrafttransportsimulator.blocks.pole.BlockPoleWallConnector;
+import minecrafttransportsimulator.blocks.instances.BlockFuelPump;
+import minecrafttransportsimulator.blocks.instances.BlockPartsBench;
+import minecrafttransportsimulator.blocks.instances.BlockPole;
+import minecrafttransportsimulator.blocks.instances.BlockPoleCrossingSignal;
+import minecrafttransportsimulator.blocks.instances.BlockPoleSign;
+import minecrafttransportsimulator.blocks.instances.BlockPoleSolidConnector;
+import minecrafttransportsimulator.blocks.instances.BlockPoleStreetlight;
+import minecrafttransportsimulator.blocks.instances.BlockPoleTrafficSignal;
+import minecrafttransportsimulator.blocks.instances.BlockTrafficSignalController;
 import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.items.core.ItemJerrycan;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
@@ -41,11 +42,7 @@ import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat
 import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
-import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpConnection;
-import minecrafttransportsimulator.packets.tileentities.PacketFuelPumpFillDrain;
 import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
-import minecrafttransportsimulator.packets.tileentities.PacketTileEntityClientServerHandshake;
-import minecrafttransportsimulator.packets.tileentities.PacketTrafficSignalControllerChange;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInitResponse;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartAddition;
@@ -60,12 +57,11 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
-import net.minecraft.block.Block;
-import net.minecraft.block.ITileEntityProvider;
+import minecrafttransportsimulator.wrappers.WrapperBlock;
+import minecrafttransportsimulator.wrappers.WrapperBlockAxial;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -73,7 +69,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 
 /**Main registry class.  This class should be referenced by any class looking for
@@ -121,40 +116,33 @@ public final class MTSRegistry{
 	public static final Item jerrycan = new ItemJerrycan().setCreativeTab(coreTab);
 	
 	//Crafting benches.
-	public static final Block vehicleBench = new BlockPartsBench(JSONVehicle.class);
-	public static final Block propellerBench = new BlockPartsBench(JSONPart.class, "propeller");
-	public static final Block engineBench = new BlockPartsBench(JSONPart.class, "engine_aircraft", "engine_jet", "engine_car", "engine_boat");
-	public static final Block wheelBench = new BlockPartsBench(JSONPart.class, "wheel", "skid", "pontoon", "tread");
-	public static final Block seatBench = new BlockPartsBench(JSONPart.class, "seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand");
-	public static final Block gunBench = new BlockPartsBench(JSONPart.class, "gun_fixed", "gun_tripod", "bullet");
-	public static final Block customBench = new BlockPartsBench(JSONPart.class, "custom");
-	public static final Block instrumentBench = new BlockPartsBench(JSONInstrument.class);
-	public static final Block componentBench = new BlockPartsBench(JSONItem.class);
-	public static final Block decorBench = new BlockPartsBench(JSONDecor.class);
+	public static final WrapperBlock vehicleBench = new WrapperBlock(new BlockPartsBench(JSONVehicle.class));
+	public static final WrapperBlock propellerBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "propeller"));
+	public static final WrapperBlock engineBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "engine_aircraft", "engine_jet", "engine_car", "engine_boat"));
+	public static final WrapperBlock wheelBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "wheel", "skid", "pontoon", "tread"));
+	public static final WrapperBlock seatBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand"));
+	public static final WrapperBlock gunBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "gun_fixed", "gun_tripod", "bullet"));
+	public static final WrapperBlock customBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "custom"));
+	public static final WrapperBlock instrumentBench = new WrapperBlock(new BlockPartsBench(JSONInstrument.class));
+	public static final WrapperBlock componentBench = new WrapperBlock(new BlockPartsBench(JSONItem.class));
+	public static final WrapperBlock decorBench = new WrapperBlock(new BlockPartsBench(JSONDecor.class));
 	
 	//Fuel pump.
-	public static final Block fuelPump = new BlockFuelPump();
+	public static final WrapperBlock fuelPump = new WrapperBlock(new BlockFuelPump());
 	
-	//Traffic Controller
-	public static final Block trafficSignalController = new BlockTrafficSignalController();
+	//Traffic signal Controller
+	public static final WrapperBlock trafficSignalController = new WrapperBlock(new BlockTrafficSignalController());
 	
 	//Pole-based blocks.
-	public static final Block pole = new BlockPoleNormal(0.125F);
-	public static final Block poleBase = new BlockPoleWallConnector(0.125F);
-	public static final Block trafficSignal = new BlockPoleAttachment(0.125F);
-	public static final Block crossingSignal = new BlockPoleAttachment(0.125F);
-	public static final Block streetLight = new BlockPoleAttachment(0.125F);
-	public static final Block trafficSign = new BlockPoleSign(0.125F);
-		
-	//Decor blocks.
-	public static final Block decorBasicDark = new BlockDecor(false, false);
-	public static final Block decorOrientedDark = new BlockDecor(true, false);
-	public static final Block decorBasicLight = new BlockDecor(false, true);
-	public static final Block decorOrientedLight = new BlockDecor(true, true);
+	public static final WrapperBlock pole = new WrapperBlockAxial(new BlockPole());
+	public static final WrapperBlock poleBase = new WrapperBlockAxial(new BlockPoleSolidConnector());
+	public static final WrapperBlock trafficSignal = new WrapperBlockAxial(new BlockPoleTrafficSignal());
+	public static final WrapperBlock crossingSignal = new WrapperBlockAxial(new BlockPoleCrossingSignal());
+	public static final WrapperBlock streetLight = new WrapperBlockAxial(new BlockPoleStreetlight());
+	public static final WrapperBlock trafficSign = new WrapperBlockAxial(new BlockPoleSign());
 	
 	//Counter for packets.
 	private static int packetNumber = 0;
-	
 	
 	/**All run-time things go here.**/
 	public static void init(){
@@ -200,34 +188,6 @@ public final class MTSRegistry{
     }
 	
 	/**
-	 * Registers all blocks present in this class.
-	 * Also adds the respective TileEntity if the block has one.
-	 */
-	@SubscribeEvent
-	public static void registerBlocks(RegistryEvent.Register<Block> event){
-		//Need to keep track of which TE classes we've registered so we don't double-register them for blocks that use the same TE.
-		List<Class<? extends TileEntity>> registeredTileEntityClasses = new ArrayList<Class<? extends TileEntity>>();
-		for(Field field : MTSRegistry.class.getFields()){
-			if(field.getType().equals(Block.class)){
-				try{
-					Block block = (Block) field.get(null);
-					String name = field.getName().toLowerCase();
-					event.getRegistry().register(block.setRegistryName(name).setUnlocalizedName(name));
-					if(block instanceof ITileEntityProvider){
-						Class<? extends TileEntity> tileEntityClass = ((ITileEntityProvider) block).createNewTileEntity(null, 0).getClass();
-						if(!registeredTileEntityClasses.contains(tileEntityClass)){
-							GameRegistry.registerTileEntity(tileEntityClass, new ResourceLocation(MTS.MODID, tileEntityClass.getSimpleName()));
-							registeredTileEntityClasses.add(tileEntityClass);
-						}
-					}
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-	
-	/**
 	 * Registers all items (and itemblocks) present in this class.
 	 * Does not register any items from packs as Forge doesn't like us
 	 * registering pack-mod prefixed items from the core class.
@@ -262,20 +222,20 @@ public final class MTSRegistry{
 					Item item = (Item) field.get(null);
 					String name = field.getName().toLowerCase();
 					event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
-					MTSRegistry.coreItems.add(item);
+					item.setCreativeTab(coreTab);
+					coreItems.add(item);
 				}catch(Exception e){
 					e.printStackTrace();
 				}
-			}else if(field.getType().equals(Block.class)){
+			}else if(field.getType().equals(WrapperBlock.class)){
+				//Also need to make itemblocks for all blocks.
+				//This doesn't include packs, which have their own items.
 				try{
-					Block block = (Block) field.get(null);
-					if(!(block instanceof BlockDecor)){
-						ItemBlock itemBlock = new ItemBlock(block);
-						itemBlock.setCreativeTab(block.getCreativeTabToDisplayOn());
-						String name = field.getName().toLowerCase();
-						event.getRegistry().register(itemBlock.setRegistryName(name).setUnlocalizedName(name));
-						MTSRegistry.coreItems.add(itemBlock);
-					}
+					WrapperBlock block = (WrapperBlock) field.get(null);
+					ItemBlock itemBlock = new ItemBlock(block);
+					itemBlock.setCreativeTab(coreTab);
+					event.getRegistry().register(itemBlock.setRegistryName(block.getRegistryName()).setUnlocalizedName(block.getRegistryName().toString()));
+					MTSRegistry.coreItems.add(itemBlock);
 				}catch(Exception e){
 					e.printStackTrace();
 				}
@@ -304,11 +264,7 @@ public final class MTSRegistry{
 		registerPacket(PacketPlayerCrafting.class, PacketPlayerCrafting.Handler.class, false, true);
 		
 		//Packets in packets.tileentity
-		registerPacket(PacketFuelPumpConnection.class, PacketFuelPumpConnection.Handler.class, true, false);
-		registerPacket(PacketFuelPumpFillDrain.class, PacketFuelPumpFillDrain.Handler.class, true, false);
 		registerPacket(PacketSignChange.class, PacketSignChange.Handler.class, true, true);
-		registerPacket(PacketTileEntityClientServerHandshake.class, PacketTileEntityClientServerHandshake.Handler.class, true, true);
-		registerPacket(PacketTrafficSignalControllerChange.class, PacketTrafficSignalControllerChange.Handler.class, true, true);
 		
 		//Packets in packets.vehicles.
 		registerPacket(PacketVehicleClientInit.class, PacketVehicleClientInit.Handler.class, false, true);

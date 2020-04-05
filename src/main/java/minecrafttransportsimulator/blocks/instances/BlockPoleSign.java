@@ -1,23 +1,22 @@
 package minecrafttransportsimulator.blocks.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleSign;
 import minecrafttransportsimulator.guis.GUISign;
-import minecrafttransportsimulator.wrappers.WrapperBlockAxial;
+import minecrafttransportsimulator.wrappers.WrapperNBT;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperTileEntity;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
-public class BlockPoleSign extends BlockPole implements WrapperTileEntity.IProvider{
-    	
-	public BlockPoleSign(WrapperBlockAxial wrapperReference){
-		super(wrapperReference);
-	}
-	
+public class BlockPoleSign extends BlockPole implements IBlockTileEntity{
+    
 	@Override
 	public void onPlaced(WrapperWorld world, Point3i point, WrapperPlayer player){
-		//FIXME set sign NBT here.
+		//Load the NBT from the sign that was dropped prior.
+		if(player.getHeldStack().hasTagCompound()){
+			world.getTileEntity(point).load(new WrapperNBT(player.getHeldStack().getTagCompound()));
+		}
 		//Open the GUI for the sign when we place it.
 		onClicked(world, point, player);
 	}

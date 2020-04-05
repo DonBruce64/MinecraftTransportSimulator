@@ -37,7 +37,7 @@ public final class RenderInstrument{
 		//Check if the lights are on.  If so, disable the lightmap.
 		boolean lightsOn = RenderVehicle.isVehicleIlluminated(vehicle);
 		
-		//Finally, render the instrument based on the JSON definitions.
+		//Finally, render the instrument based on the JSON instrument.definitions.
 		for(byte i=0; i<instrument.definition.components.size(); ++i){
 			Component section = instrument.definition.components.get(i);
 			GL11.glPushMatrix();

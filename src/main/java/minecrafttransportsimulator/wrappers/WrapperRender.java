@@ -1,18 +1,33 @@
 package minecrafttransportsimulator.wrappers;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
+import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.client.registry.IRenderFactory;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 /**Wrapper for the various MC rendering engines.  This class has functions for
- * binding textures and changing lightmap statuses.
+ * binding textures, changing lightmap statuses, and registering rendering systems
+ * for TESRs, items, and entities.
  *
  * @author don_bruce
  */
@@ -62,7 +77,56 @@ public class WrapperRender{
 	 */
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
+		//Register the vehicle rendering class.
+		RenderingRegistry.registerEntityRenderingHandler(EntityVehicleE_Powered.class, MTSRenderFactory);
+				
 		//Register the TESR wrapper.
 		ClientRegistry.bindTileEntitySpecialRenderer(WrapperTileEntity.class, new WrapperTileEntityRender());
+		
+		//FIXME add block and item models.
+		//Register the item models.
+		//First register the core items.
+		for(Field field : MTSRegistry.class.getFields()){
+			//Regular item.
+			if(field.getType().equals(Item.class)){
+				try{
+					registerCoreItemRender((Item) field.get(null));
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}else if(field.getType().equals(WrapperBlock.class)){
+				//Wrapper block item, get item from it to register.
+				try{
+					WrapperBlock wrapper = (WrapperBlock) field.get(null);
+					registerCoreItemRender(Item.getItemFromBlock(wrapper));
+				}catch(Exception e){
+					e.printStackTrace();
+				}	
+			}
+		}
+		
+		//Now register items for the packs.
+		for(String packID : MTSRegistry.packItemMap.keySet()){
+			for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packID).values()){
+				ModelLoader.setCustomModelResourceLocation(packItem, 0, new ModelResourceLocation(packItem.definition.packID + ":" + packItem.definition.classification.assetFolder + "/" + packItem.definition.systemName, "inventory"));
+			}	
+		}
 	}
+	
+	/**
+	 *  Helper method to register renders.
+	 */
+	private static void registerCoreItemRender(Item item){
+		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(MTS.MODID + ":" + item.getRegistryName().getResourcePath(), "inventory"));
+	}
+	
+	/**
+	 *  Stupid Forge with their stupid factories...
+	 */
+	private static final IRenderFactory<EntityVehicleE_Powered> MTSRenderFactory = new IRenderFactory<EntityVehicleE_Powered>(){
+		@Override
+		public Render<? super EntityVehicleE_Powered> createRenderFor(RenderManager manager){
+			return new RenderVehicle(manager);
+		}
+	};
 }

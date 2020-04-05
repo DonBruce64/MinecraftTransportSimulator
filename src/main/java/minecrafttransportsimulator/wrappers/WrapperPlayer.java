@@ -17,7 +17,7 @@ import net.minecraft.util.text.TextComponentString;
  * @author don_bruce
  */
 public class WrapperPlayer extends WrapperEntity{
-	private final EntityPlayer player;
+	final EntityPlayer player;
 	
 	public WrapperPlayer(EntityPlayer player){
 		super(player);

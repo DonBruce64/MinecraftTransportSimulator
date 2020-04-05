@@ -3,6 +3,7 @@ package minecrafttransportsimulator.wrappers;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityFluidTank;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidEvent;
@@ -20,8 +21,12 @@ import net.minecraftforge.fluids.capability.IFluidTankProperties;
  * @author don_bruce
  */
 public class WrapperFluidTank extends WrapperTileEntityTickable implements IFluidTank, IFluidHandler{
-    private final ATileEntityFluidTank tank;
-	    
+    private ATileEntityFluidTank tank;
+    
+    public WrapperFluidTank(){
+		//Blank constructor for MC.  We set the TE variable in NBT instead.
+	}
+    
 	WrapperFluidTank(ATileEntityFluidTank tileEntity){
 		super(tileEntity);
 		this.tank = tileEntity;
@@ -97,5 +102,13 @@ public class WrapperFluidTank extends WrapperTileEntityTickable implements IFlui
     		}
     	}
     	return super.getCapability(capability, facing);
+    }
+    
+    @Override
+    public void readFromNBT(NBTTagCompound tag){
+		super.readFromNBT(tag);
+		if(tank == null){
+			tank = (ATileEntityFluidTank) tileEntity;
+		}
     }
 }

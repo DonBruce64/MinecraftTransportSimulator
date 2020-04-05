@@ -2,7 +2,6 @@ package minecrafttransportsimulator.guis.instances;
 
 import java.awt.Color;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockPoleCrossingSignal;
@@ -14,8 +13,9 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.packets.tileentities.PacketTrafficSignalControllerChange;
+import minecrafttransportsimulator.packets.instances.PacketTrafficSignalControllerChange;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
+import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
 public class GUITrafficSignalController extends AGUIBase{
 	
@@ -29,6 +29,7 @@ public class GUITrafficSignalController extends AGUIBase{
 	private GUIComponentTextBox greenMainTimeText;
 	private GUIComponentTextBox greenCrossTimeText;
 	private GUIComponentTextBox yellowMainTimeText;
+	private GUIComponentTextBox yellowCrossTimeText;
 	private GUIComponentTextBox allRedTimeText;
 	
 	//Labels
@@ -72,7 +73,7 @@ public class GUITrafficSignalController extends AGUIBase{
 		addItem(new GUIComponentItem(guiLeft + 170, guiTop + 50, 1.0F, "mts:crossingsignal", 1, -1));
 		addLabel(crossingSignalCount = new GUIComponentLabel(guiLeft + 185, guiTop + 55, Color.WHITE, " X " + String.valueOf(controller.crossingSignalLocations.size())));
 		
-		addButton(orientationButton = new GUIComponentButton(guiLeft + 125, guiTop + 70, 100, controller.mainDirectionXAxis ? "X" : "Z"){
+		addButton(orientationButton = new GUIComponentButton(guiLeft + 125, guiTop + 70, 100, controller.mainDirectionXAxis ? "X" : "Z", 15, true){
 			@Override
 			public void onClicked(){
 				if(controller.mainDirectionXAxis){
@@ -86,7 +87,7 @@ public class GUITrafficSignalController extends AGUIBase{
 		});
 		addLabel(new GUIComponentLabel(guiLeft + 30, orientationButton.y + 5, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.primary")).setButton(orientationButton));
 		
-		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 90, 100, WrapperGUI.translate("gui.trafficsignalcontroller." + (controller.currentOpMode.equals(OpMode.VEHICLE_TRIGGER) ? "modetrigger" : (controller.currentOpMode.equals(OpMode.TIMED_CYCLE) ? "modetime" : "moderemote")))){
+		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 85, 100, WrapperGUI.translate("gui.trafficsignalcontroller." + (controller.currentOpMode.equals(OpMode.VEHICLE_TRIGGER) ? "modetrigger" : (controller.currentOpMode.equals(OpMode.TIMED_CYCLE) ? "modetime" : "moderemote"))), 15, true){
 			@Override
 			public void onClicked(){
 				if(controller.currentOpMode.equals(OpMode.VEHICLE_TRIGGER)){
@@ -100,15 +101,17 @@ public class GUITrafficSignalController extends AGUIBase{
 		});
 		addLabel(new GUIComponentLabel(guiLeft + 30, modeButton.y + 5, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.signalmode")).setButton(modeButton));
 		
-		addTextBox(greenMainTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 115, 40, String.valueOf(controller.greenMainTime), 10, Color.WHITE, Color.BLACK, 3));
+		addTextBox(greenMainTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 105, 40, String.valueOf(controller.greenMainTime), 10, Color.WHITE, Color.BLACK, 3));
 		addLabel(new GUIComponentLabel(guiLeft + 30, greenMainTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.greenmaintime")).setBox(greenMainTimeText));
 		
-		addTextBox(greenCrossTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 125, 40, String.valueOf(controller.greenCrossTime), 10, Color.WHITE, Color.BLACK, 3));
+		addTextBox(greenCrossTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 115, 40, String.valueOf(controller.greenCrossTime), 10, Color.WHITE, Color.BLACK, 3));
 		addLabel(new GUIComponentLabel(guiLeft + 30, greenCrossTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.greencrosstime")).setBox(greenCrossTimeText));
 		
-		//FIXME add yellow cross time box.
-		addTextBox(yellowMainTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 135, 40, String.valueOf(controller.yellowMainTime), 10, Color.WHITE, Color.BLACK, 1));
-		addLabel(new GUIComponentLabel(guiLeft + 30, yellowMainTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.yellowtime")).setBox(yellowMainTimeText));
+		addTextBox(yellowMainTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 125, 40, String.valueOf(controller.yellowMainTime), 10, Color.WHITE, Color.BLACK, 1));
+		addLabel(new GUIComponentLabel(guiLeft + 30, yellowMainTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.yellowmaintime")).setBox(yellowMainTimeText));
+		
+		addTextBox(yellowCrossTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 135, 40, String.valueOf(controller.yellowCrossTime), 10, Color.WHITE, Color.BLACK, 1));
+		addLabel(new GUIComponentLabel(guiLeft + 30, yellowCrossTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.yellowcrosstime")).setBox(yellowMainTimeText));
 		
 		addTextBox(allRedTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 145, 40, String.valueOf(controller.allRedTime), 10, Color.WHITE, Color.BLACK, 1));
 		addLabel(new GUIComponentLabel(guiLeft + 30, allRedTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.allredtime")).setBox(allRedTimeText));
@@ -121,13 +124,13 @@ public class GUITrafficSignalController extends AGUIBase{
 				try{
 					controller.greenMainTime = Integer.valueOf(greenMainTimeText.getText());
 					controller.greenCrossTime = Integer.valueOf(greenCrossTimeText.getText());
-					//FIXME add yellow cross time box.
 					controller.yellowMainTime = Integer.valueOf(yellowMainTimeText.getText());
+					controller.yellowCrossTime = Integer.valueOf(yellowCrossTimeText.getText());
 					controller.allRedTime = Integer.valueOf(allRedTimeText.getText());
 				}catch(Exception e){
 					return;
 				}
-				MTS.MTSNet.sendToServer(new PacketTrafficSignalControllerChange(controller));
+				WrapperNetwork.sendToServer(new PacketTrafficSignalControllerChange(controller));
 				WrapperGUI.closeGUI();
 			}
 		});
@@ -135,7 +138,7 @@ public class GUITrafficSignalController extends AGUIBase{
 	
 	@Override
 	public void setStates(){
-		trafficSignalCount.text = " X " + String.valueOf(controller.trafficSignalLocations.size() - controller.crossingSignalLocations.size());
+		trafficSignalCount.text = " X " + String.valueOf(controller.trafficSignalLocations.size());
 		crossingSignalCount.text = " X " + String.valueOf(controller.crossingSignalLocations.size());
 		if(!controller.trafficSignalLocations.isEmpty()){
 			orientationButton.enabled = true;
@@ -143,6 +146,7 @@ public class GUITrafficSignalController extends AGUIBase{
 			greenMainTimeText.enabled = true;
 			greenCrossTimeText.enabled = true;
 			yellowMainTimeText.enabled = true;
+			yellowCrossTimeText.enabled = true;
 			allRedTimeText.enabled = true;
 			confirmButton.enabled = true;
 		}else{
@@ -151,6 +155,7 @@ public class GUITrafficSignalController extends AGUIBase{
 			greenMainTimeText.enabled = false;
 			greenCrossTimeText.enabled = false;
 			yellowMainTimeText.enabled = false;
+			yellowCrossTimeText.enabled = false;
 			allRedTimeText.enabled = false;
 			confirmButton.enabled = false;
 		}

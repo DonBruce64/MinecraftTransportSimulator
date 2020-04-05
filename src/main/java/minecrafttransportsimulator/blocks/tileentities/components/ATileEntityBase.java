@@ -2,6 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.rendering.blocks.ARenderTileEntityBase;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
 import minecrafttransportsimulator.wrappers.WrapperTileEntity;
@@ -45,5 +46,5 @@ public abstract class ATileEntityBase{
 	/**
 	 *  Called to get a render for this TE.  Only called on the client.
 	 */
-	public abstract ARenderTileEntityBase<? extends ATileEntityBase, ? extends WrapperTileEntity.IProvider> getRenderer();
+	public abstract ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity> getRenderer();
 }

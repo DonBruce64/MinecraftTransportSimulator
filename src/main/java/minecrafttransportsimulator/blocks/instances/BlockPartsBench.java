@@ -10,7 +10,6 @@ import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.wrappers.WrapperBlock;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -21,8 +20,8 @@ public class BlockPartsBench extends ABlockBase{
 	public final RenderType renderType;
 
 	
-	public BlockPartsBench(WrapperBlock wrapperReference, Class<? extends AJSONItem<?>> validJsonClass, String... validPartTypes){
-		super(wrapperReference, 10.0F, 5.0F);
+	public BlockPartsBench(Class<? extends AJSONItem<?>> validJsonClass, String... validPartTypes){
+		super(10.0F, 5.0F);
 		this.validPartTypes = Arrays.asList(validPartTypes);
 		this.validJsonClass = validJsonClass;
 		this.renderType = validJsonClass.equals(JSONVehicle.class) ? RenderType.SPINNING3D_EXTENDED : (validJsonClass.equals(JSONPart.class) || validJsonClass.equals(JSONDecor.class) ? RenderType.SPINNING3D : RenderType.SIMPLE2D);

@@ -59,9 +59,15 @@ public class WrapperBlockAxial extends WrapperBlock{
     
     /**
 	 *  Updates the state of axis connections.
+	 *  Block-insensitive, but assumes block is instance of this wrapper.
 	 */
-    public void updateAxisStates(WrapperWorld world, Point3i point, Map<Axis, Boolean> states){
-    	IBlockState state = world.world.getBlockState(new BlockPos(point.x, point.y, point.z));
+    public static void updateAxisStates(WrapperWorld world, Point3i point, Map<Axis, Boolean> states){
+    	BlockPos pos = new BlockPos(point.x, point.y, point.z);
+    	IBlockState state = world.world.getBlockState(pos);
+    	//Add-on actual dyanimc state based on neighbors.
+    	for(EnumFacing facing : EnumFacing.VALUES){
+			state = setStatesFor(state, world.world, pos, facing);
+		}
     	for(Axis axis : Axis.values()){
     		switch (axis){
 				case UP: states.put(axis, state.getValue(UP).booleanValue()); break;
@@ -74,6 +80,31 @@ public class WrapperBlockAxial extends WrapperBlock{
 			}
     	}
     }
+    
+    /**
+	 *  Helper method to set the boolean states.
+	 */
+	protected static IBlockState setStatesFor(IBlockState state, IBlockAccess access, BlockPos pos, EnumFacing facing){
+		//Get block info.
+		IBlockState offsetMCState = access.getBlockState(pos.offset(facing));
+		Block offsetMCBlock = offsetMCState.getBlock();
+		ABlockAxial offsetAxialBlock = offsetMCBlock instanceof WrapperBlockAxial ? (ABlockAxial) ((WrapperBlockAxial) offsetMCBlock).block : null;
+		
+		//Get block state flags.
+        boolean similarBlockOnSide = offsetAxialBlock != null ? offsetAxialBlock.canConnectOnFront() || !access.getBlockState(pos.offset(facing)).getValue(FACING).equals(facing.getOpposite()) : false;
+        boolean solidOnSide = offsetMCBlock != null ? ((ABlockAxial) ((WrapperBlockAxial) access.getBlockState(pos).getBlock()).block).canConnectToSolids() && !offsetMCBlock.equals(Blocks.BARRIER) && offsetMCState.getMaterial().isOpaque() && offsetMCState.isFullCube() && offsetMCState.getMaterial() != Material.GOURD : false;
+        
+        //Set the state.
+		switch (facing){
+			case UP: return state.withProperty(UP, similarBlockOnSide).withProperty(UP_SOLID, solidOnSide);
+			case DOWN: return state.withProperty(DOWN, similarBlockOnSide).withProperty(DOWN_SOLID, solidOnSide);
+			case NORTH: return state.withProperty(NORTH, similarBlockOnSide).withProperty(NORTH_SOLID, solidOnSide);
+			case SOUTH: return state.withProperty(SOUTH, similarBlockOnSide).withProperty(SOUTH_SOLID, solidOnSide);
+			case EAST: return state.withProperty(EAST, similarBlockOnSide).withProperty(EAST_SOLID, solidOnSide);
+			case WEST: return state.withProperty(WEST, similarBlockOnSide).withProperty(WEST_SOLID, solidOnSide);
+			default: return state;
+		}
+	}
 	
     @Override
     protected BlockStateContainer createBlockState(){
@@ -86,33 +117,8 @@ public class WrapperBlockAxial extends WrapperBlock{
     public IBlockState getActualState(IBlockState state, IBlockAccess access, BlockPos pos){
     	//Need to check here so the JSON files get the right states.
 		for(EnumFacing facing : EnumFacing.VALUES){
-			state = this.setStatesFor(state, access, pos, facing);
+			state = setStatesFor(state, access, pos, facing);
 		}
 		return state;
     }
-    
-    /**
-	 *  Helper method to set the boolean states.
-	 */
-	protected IBlockState setStatesFor(IBlockState state, IBlockAccess access, BlockPos pos, EnumFacing facing){
-		//Get block info.
-		IBlockState offsetMCState = access.getBlockState(pos.offset(facing));
-		Block offsetMCBlock = offsetMCState.getBlock();
-		ABlockAxial offsetBlock = offsetMCBlock instanceof WrapperBlockAxial ? (ABlockAxial) ((WrapperBlockAxial) offsetMCBlock).block : null;
-		
-		//Get block state flags.
-        boolean sameBlockOnSide = offsetBlock != null ? offsetBlock.equals(this.block) && (offsetBlock.canConnectOnFront() || !access.getBlockState(pos.offset(facing)).getValue(FACING).equals(facing.getOpposite())) : false;
-        boolean solidOnSide = offsetBlock.canConnectToSolids() ? !block.equals(Blocks.BARRIER) && offsetMCState.getMaterial().isOpaque() && offsetMCState.isFullCube() && offsetMCState.getMaterial() != Material.GOURD : false;
-        
-        //Set the state.
-		switch (facing){
-			case UP: return state.withProperty(UP, sameBlockOnSide).withProperty(UP_SOLID, solidOnSide);
-			case DOWN: return state.withProperty(DOWN, sameBlockOnSide).withProperty(DOWN_SOLID, solidOnSide);
-			case NORTH: return state.withProperty(NORTH, sameBlockOnSide).withProperty(NORTH_SOLID, solidOnSide);
-			case SOUTH: return state.withProperty(SOUTH, sameBlockOnSide).withProperty(SOUTH_SOLID, solidOnSide);
-			case EAST: return state.withProperty(EAST, sameBlockOnSide).withProperty(EAST_SOLID, solidOnSide);
-			case WEST: return state.withProperty(WEST, sameBlockOnSide).withProperty(WEST_SOLID, solidOnSide);
-			default: return state;
-		}
-	}
 }

@@ -11,6 +11,10 @@ import net.minecraft.util.ITickable;
  */
 public class WrapperTileEntityTickable extends WrapperTileEntity implements ITickable{
 	
+	public WrapperTileEntityTickable(){
+		//Blank constructor for MC.  We set the TE variable in NBT instead.
+	}
+	
 	WrapperTileEntityTickable(ATileEntityTickable tileEntity){
 		super(tileEntity);
 	}
@@ -19,14 +23,4 @@ public class WrapperTileEntityTickable extends WrapperTileEntity implements ITic
     public void update(){
 		((ATileEntityTickable) tileEntity).update();
     }
-	
-	/**Interface that tells the system this block should create an instance of a {@link ATileEntityTickable} when created.
-	*
-	* @author don_bruce
-	*/
-	public static interface IProvider extends WrapperTileEntity.IProvider{
-		
-		@Override
-		public abstract ATileEntityTickable createTileEntity();
-	}
 }

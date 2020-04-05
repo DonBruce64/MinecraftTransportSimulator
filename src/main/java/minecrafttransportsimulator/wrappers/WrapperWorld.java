@@ -10,9 +10,13 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
@@ -100,6 +104,29 @@ public class WrapperWorld{
 		return block instanceof WrapperBlock ? ((WrapperBlock) block).block : null;
 	}
 	
+    
+    /**
+	 *  Has the player place the passed-in block at the point specified.
+	 *  Returns true if the block was placed, false if not.
+	 */
+    public boolean setBlock(ABlockBase block, Point3i point, WrapperPlayer player){
+    	WrapperBlock wrapper = WrapperBlock.blockWrapperMap.get(block);
+    	ItemStack itemstack = player.getHeldStack();
+    	BlockPos pos = new BlockPos(point.x, point.y, point.z);
+    	EnumFacing facing = player.player.getHorizontalFacing();
+    	if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
+            pos = pos.offset(facing);
+        }
+    	if(!itemstack.isEmpty() && player.player.canPlayerEdit(pos, facing, itemstack) && world.mayPlace(wrapper, pos, false, facing, null)){
+            IBlockState newState = wrapper.getStateForPlacement(world, pos, facing, 0, 0, 0, 0, player.player, EnumHand.MAIN_HAND);
+            if(world.setBlockState(pos, newState, 11)){
+                itemstack.shrink(1);
+            }
+            return true;
+        }
+    	return false;
+    }
+	
 	/**
 	 *  Returns the tile entity at the passed-in location, or null if it doesn't exist in the world.
 	 *  Only valid for TEs of type {@link ATileEntityBase} others will return null.
@@ -107,6 +134,14 @@ public class WrapperWorld{
 	public ATileEntityBase getTileEntity(Point3i point){
 		TileEntity tile = world.getTileEntity(new BlockPos(point.x, point.y, point.z));
 		return tile instanceof WrapperTileEntity ? ((WrapperTileEntity) tile).tileEntity : null;
+	}
+	
+	/**
+	 *  Flags the tile entity at the passed-in point for saving.  This means the TE's
+	 *  NBT data will be saved to disk when the chunk unloads so it will maintain its state.
+	 */
+	public void markTileEntityChanged(Point3i point){
+		world.getTileEntity(new BlockPos(point.x, point.y, point.z)).markDirty();
 	}
 	
 	/**

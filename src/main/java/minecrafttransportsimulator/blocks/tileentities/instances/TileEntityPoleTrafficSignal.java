@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.rendering.blocks.ARenderTileEntityBase;
 import minecrafttransportsimulator.rendering.blocks.RenderTrafficSignal;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
-import minecrafttransportsimulator.wrappers.WrapperTileEntity;
 
 /**Traffic signal tile entity.  This doesn't tick, as the state of the light
  * is by default a flashing red until changed by a {@link TileEntityTrafficSignalController}.
@@ -21,7 +21,7 @@ public class TileEntityPoleTrafficSignal extends ATileEntityBase{
 	public void save(WrapperNBT data){}
 	
 	@Override
-	public ARenderTileEntityBase<? extends ATileEntityBase, ? extends WrapperTileEntity.IProvider> getRenderer(){
+	public ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity> getRenderer(){
 		return new RenderTrafficSignal();
 	}
 

@@ -5,18 +5,17 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.wrappers.WrapperBlock;
-import minecrafttransportsimulator.wrappers.WrapperTileEntity;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
 
-public class BlockDecor extends ABlockBase implements WrapperTileEntity.IProvider{
+public class BlockDecor extends ABlockBase implements IBlockTileEntity{
 	public final JSONDecor definition;
 	private final BoundingBox[] boundingBoxes = new BoundingBox[4];
 	
-    public BlockDecor(WrapperBlock wrapperReference, JSONDecor definition){
-    	super(wrapperReference, 10.0F, 5.0F);
+    public BlockDecor(JSONDecor definition){
+    	super(10.0F, 5.0F);
 		this.definition = definition;
 		//Add a bounding box for each rotation.
 		boundingBoxes[0] = new BoundingBox(0, 0, 0, definition.general.width, definition.general.height, definition.general.depth);

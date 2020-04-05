@@ -3,16 +3,17 @@ package minecrafttransportsimulator.blocks.instances;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.packets.instances.PacketPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
-import minecrafttransportsimulator.wrappers.WrapperBlock;
+import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperTileEntityTickable;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -20,14 +21,15 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
-public class BlockFuelPump extends ABlockBase implements WrapperTileEntityTickable.IProvider{
+public class BlockFuelPump extends ABlockBase implements IBlockTileEntity{
 	
-	public BlockFuelPump(WrapperBlock wrapperReference){
-		super(wrapperReference, 10.0F, 5.0F);
+	public BlockFuelPump(){
+		super(10.0F, 5.0F);
 	}
 	
 	@Override
 	public boolean onClicked(WrapperWorld world, Point3i point, WrapperPlayer player){
+		//Only check clicks on the server.
 		if(!world.isClient()){
 			TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(point);
 			
@@ -96,7 +98,7 @@ public class BlockFuelPump extends ABlockBase implements WrapperTileEntityTickab
     						if(part instanceof APartEngine){
     							if(ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).containsKey(pump.getFluid())){
     								pump.connectedVehicle = nearestVehicle;
-    								//FIXME send packet here to clients to connect them.
+    								WrapperNetwork.sendToAllClients(new PacketPumpConnection(pump));
     								player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.connect"));
     	    						return true;
     							}
@@ -109,11 +111,9 @@ public class BlockFuelPump extends ABlockBase implements WrapperTileEntityTickab
     			}
     		}else{
     			//Connected vehicle exists, disconnect it.
-    			//FIXME send packet here to clients to disconnect them.
     			pump.connectedVehicle = null;
-    			if(world.isClient()){
-    				player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.disconnect"));
-    			}
+    			WrapperNetwork.sendToAllClients(new PacketPumpConnection(pump));
+    			player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.disconnect"));
     		}
 		}
 		return true;

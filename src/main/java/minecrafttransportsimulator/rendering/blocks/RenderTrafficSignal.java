@@ -30,7 +30,7 @@ public class RenderTrafficSignal extends ARenderTileEntityBase<TileEntityPoleTra
 		}
 		
 		//Render based on the current state.
-		if(lightColor != null && (!shouldFlash || (shouldFlash && (System.currentTimeMillis()%20000 < 10000)))){
+		if(lightColor != null && (!shouldFlash || (shouldFlash && (System.currentTimeMillis()%1000 < 500)))){
 			GL11.glTranslatef(0, lightColor.equals(Color.RED) ? 5F/16F : (lightColor.equals(Color.YELLOW) ? 0F : -5F/16F), 0.225F);
 			renderLightedSquare(4F/16F, lightBrightness, lightColor, "textures/rendering/light.png");
 		}

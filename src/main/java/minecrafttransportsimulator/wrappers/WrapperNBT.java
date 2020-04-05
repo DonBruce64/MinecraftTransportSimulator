@@ -15,6 +15,10 @@ import net.minecraft.nbt.NBTTagCompound;
 public class WrapperNBT{
 	protected final NBTTagCompound tag;
 	
+	public WrapperNBT(){
+		tag = new NBTTagCompound();
+	}
+	
 	public WrapperNBT(NBTTagCompound tag){
 		this.tag = tag;
 	}
@@ -72,9 +76,10 @@ public class WrapperNBT{
 	}
 	
 	//Point array.
-	public List<Point3i> getPoints(String name, int qty){
+	public List<Point3i> getPoints(String name){
 		List<Point3i> values = new ArrayList<Point3i>();
-		for(int i=0; i<qty; ++i){
+		int count = getInteger(name + "count");
+		for(int i=0; i<count; ++i){
 			Point3i point = new Point3i(getInteger(name + i + "x"), getInteger(name + i + "y"), getInteger(name + i + "z"));
 			if(!point.equals(Point3i.ZERO)){
 				values.add(point);
@@ -84,6 +89,7 @@ public class WrapperNBT{
 	}
 	
 	public void setPoints(String name, List<Point3i> values){
+		setInteger(name + "count", values.size());
 		for(int i=0; i<values.size(); ++i){
 			setInteger(name + i + "x", values.get(i).x);
 			setInteger(name + i + "y", values.get(i).y);

@@ -20,7 +20,7 @@ public class GUIBooklet extends AGUIBase{
 	private GUIComponentLabel contentsLabel;
 	private List<List<GUIComponentLabel>> pageTextLabels = new ArrayList<List<GUIComponentLabel>>();
 	
-	//Manual item.
+	//Item properties.
 	private final ItemBooklet booklet;
 	private final int totalPages;
 	
