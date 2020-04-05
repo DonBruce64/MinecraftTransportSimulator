@@ -98,6 +98,7 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity{
     						if(part instanceof APartEngine){
     							if(ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).containsKey(pump.getFluid())){
     								pump.connectedVehicle = nearestVehicle;
+    								pump.totalTransfered = 0;
     								WrapperNetwork.sendToAllClients(new PacketPumpConnection(pump));
     								player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.connect"));
     	    						return true;

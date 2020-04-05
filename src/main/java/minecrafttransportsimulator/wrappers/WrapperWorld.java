@@ -110,6 +110,7 @@ public class WrapperWorld{
 	 *  Returns true if the block was placed, false if not.
 	 */
     public boolean setBlock(ABlockBase block, Point3i point, WrapperPlayer player){
+    	//TODO this will get used once we get sides working, or will move into the item wrapper.
     	WrapperBlock wrapper = WrapperBlock.blockWrapperMap.get(block);
     	ItemStack itemstack = player.getHeldStack();
     	BlockPos pos = new BlockPos(point.x, point.y, point.z);

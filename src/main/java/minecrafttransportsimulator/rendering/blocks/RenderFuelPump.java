@@ -18,13 +18,13 @@ public class RenderFuelPump extends ARenderTileEntityBase<TileEntityFuelPump, Bl
 		GL11.glPushMatrix();
 		GL11.glScalef(0.0625F, 0.0625F, 0.0625F);
 		GL11.glRotatef(180, 1, 0, 0);
-		GL11.glTranslatef(0, -9.25F, -4.001F);
+		GL11.glTranslatef(0, -17.25F, -4.001F);
 		GL11.glScalef(0.125F, 0.125F, 0.125F);
 		GL11.glDisable(GL11.GL_LIGHTING);
 		WrapperRender.setLightmapState(false);
 		
 		//Render fluid name text.
-		WrapperGUI.drawText(WrapperGame.getFluidName(tile.getFluid()), 0,  0, Color.ORANGE, true, false, 0);
+		WrapperGUI.drawText(tile.getFluidLevel() > 0 ? WrapperGame.getFluidName(tile.getFluid()).toUpperCase() : "", 0,  0, Color.ORANGE, true, false, 0);
 		
 		//Render fluid inside pump amount.
 		WrapperGUI.drawText(WrapperGUI.translate("tile.fuelpump.level"), -40,  10, Color.ORANGE, false, false, 0);

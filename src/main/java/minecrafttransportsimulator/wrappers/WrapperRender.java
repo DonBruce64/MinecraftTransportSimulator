@@ -83,7 +83,6 @@ public class WrapperRender{
 		//Register the TESR wrapper.
 		ClientRegistry.bindTileEntitySpecialRenderer(WrapperTileEntity.class, new WrapperTileEntityRender());
 		
-		//FIXME add block and item models.
 		//Register the item models.
 		//First register the core items.
 		for(Field field : MTSRegistry.class.getFields()){
@@ -101,7 +100,7 @@ public class WrapperRender{
 					registerCoreItemRender(Item.getItemFromBlock(wrapper));
 				}catch(Exception e){
 					e.printStackTrace();
-				}	
+				}
 			}
 		}
 		

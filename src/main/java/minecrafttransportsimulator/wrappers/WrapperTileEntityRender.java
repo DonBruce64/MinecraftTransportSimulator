@@ -37,7 +37,7 @@ public class WrapperTileEntityRender extends TileEntitySpecialRenderer<WrapperTi
 			//Makes for less boilerplate code.
 			GL11.glPushMatrix();
 			GL11.glTranslated(x, y, z);
-			GL11.glTranslatef(0.5F, 0.5F, 0.5F);
+			GL11.glTranslatef(0.5F, 0.0F, 0.5F);
 			GL11.glRotatef(-wrapper.tileEntity.getBlock().getRotation(wrapper.tileEntity.world, wrapper.tileEntity.position), 0, 1, 0);
 			
 			//Now get and render the TE.

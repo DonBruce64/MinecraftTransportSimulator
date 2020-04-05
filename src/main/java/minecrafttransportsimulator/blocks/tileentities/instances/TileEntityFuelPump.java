@@ -17,15 +17,16 @@ public class TileEntityFuelPump extends ATileEntityFluidTank{
 	
 	@Override
 	public void update(){
-		if(connectedVehicle != null){
+		//Do fuel checks.  Fuel checks only occur on servers.  Clients get packets for state changes.
+		if(connectedVehicle != null & !world.isClient()){
 			//Don't fuel vehicles that don't exist.
 			if(connectedVehicle.isDead){
 				connectedVehicle = null;
 				return;
 			}
+			
 			//Check distance to make sure the vehicle hasn't moved away.
-			//Only check on servers, clients will get a packet to disconnect.
-			if(!world.isClient() && connectedVehicle.getDistance(position.x, position.y, position.z) > 20){
+			if(connectedVehicle.getDistance(position.x, position.y, position.z) > 20){
 				connectedVehicle = null;
 				WrapperNetwork.sendToAllClients(new PacketPumpConnection(this));
 				WrapperNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.toofar"), world.getDimensionID(), position, 25);
@@ -38,9 +39,8 @@ public class TileEntityFuelPump extends ATileEntityFluidTank{
 					int fuelDrained = drain(getFluid(), 10, true);
 					connectedVehicle.fuel += fuelDrained;
 					totalTransfered += fuelDrained;
-				}else if(!world.isClient()){
-					//On a server without fuel in the pump.  Disconnect vehicle.
-					//Don't want to disconnect vehicle on clients as we might have packet lag.
+				}else{
+					//No more fuel.  Disconnect vehicle.
 					connectedVehicle = null;
 					WrapperNetwork.sendToAllClients(new PacketPumpConnection(this));
 					WrapperNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.empty"), world.getDimensionID(), position, 16);
@@ -48,11 +48,22 @@ public class TileEntityFuelPump extends ATileEntityFluidTank{
 			}else{
 				//No more room in the vehicle.  Disconnect.
 				connectedVehicle = null;
-				if(!world.isClient()){
-					WrapperNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.complete"), world.getDimensionID(), position, 16);
-				}
+				WrapperNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.complete"), world.getDimensionID(), position, 16);
 			}
 		}
+	}
+	
+	@Override
+	public int drain(String fluid, int maxAmount, boolean doDrain){
+		int fuelDrained = super.drain(fluid, maxAmount, doDrain);
+		//Need to fuel vehicle with fuel we've drained on the server.
+		if(world.isClient() && fuelDrained < 1000){
+			if(connectedVehicle != null){
+				connectedVehicle.fuel += fuelDrained;
+				totalTransfered += fuelDrained;
+			}
+		}
+		return fuelDrained;
 	}
 	
 	@Override

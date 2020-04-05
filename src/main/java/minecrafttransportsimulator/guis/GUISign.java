@@ -12,18 +12,17 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleSign;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONSign;
-import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
+import minecrafttransportsimulator.packets.instances.PacketSignChange;
+import minecrafttransportsimulator.rendering.blocks.RenderPoleSign;
+import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
 
 public class GUISign extends GuiScreen{
-	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/crafting.png");	
-	private final WrapperPlayer player;
+	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/sign.png");	
 	private final TileEntityPoleSign sign;
 	private final TileEntityPoleSign signGUIInstance;
 	private final List<GuiTextField> signTextBoxes = new ArrayList<GuiTextField>();
@@ -44,12 +43,13 @@ public class GUISign extends GuiScreen{
 	private JSONSign currentSign;
 	private JSONSign prevSign;
 	private JSONSign nextSign;
+	
+	private final RenderPoleSign hackyRender = new RenderPoleSign();
 			
-	public GUISign(TileEntityPoleSign sign, WrapperPlayer player){
+	public GUISign(TileEntityPoleSign sign){
 		this.sign = sign;
 		this.signGUIInstance = new TileEntityPoleSign();
-		this.signGUIInstance.setPos(sign.getPos());
-		this.player = player;
+		this.signGUIInstance.position = sign.position;
 		if(sign.definition != null){
 			currentPack = sign.definition.packID;
 			currentSign = sign.definition;
@@ -109,7 +109,7 @@ public class GUISign extends GuiScreen{
 		}
 		drawRect(guiLeft + 190, guiTop + 188, guiLeft + 206, guiTop + 172, startButton.enabled ? Color.GREEN.getRGB() : Color.RED.getRGB());
 		
-		//Now make the selected sign render in the GUI using the TE code.
+		//Now make the selected sign render in the GUI.
 		//Also set the sign text boxes to render.
 		if(currentSign != null){
 			signGUIInstance.definition = currentSign;
@@ -125,11 +125,13 @@ public class GUISign extends GuiScreen{
 			
 			GL11.glPushMatrix();
 			GL11.glDisable(GL11.GL_LIGHTING);
-			GL11.glTranslatef(guiLeft + 196, guiTop + 107, 100);
+			GL11.glTranslatef(guiLeft + 196, guiTop + 150, 100);
 			GL11.glRotatef(180, 0, 1, 0);
 			float scale = -90F;
 			GL11.glScalef(scale, scale, scale);
-			TileEntityRendererDispatcher.instance.render(signGUIInstance, -0.5F, -0.5F, -0.5F, renderPartialTicks, 0);
+			//FIXME make signs render without wonky TE abstraction.
+			hackyRender.render(signGUIInstance, null, 0);
+			//WrapperTileEntityRender.TileEntityRendererDispatcher.instance.render(signGUIInstance, -0.5F, -0.5F, -0.5F, renderPartialTicks, 0);
 			GL11.glPopMatrix();
 		}
 	}
@@ -138,7 +140,7 @@ public class GUISign extends GuiScreen{
     protected void actionPerformed(GuiButton buttonClicked) throws IOException{
 		super.actionPerformed(buttonClicked);
 		if(buttonClicked.equals(startButton)){
-			MTS.MTSNet.sendToServer(new PacketSignChange(signGUIInstance, player.getEntityId()));
+			WrapperNetwork.sendToServer(new PacketSignChange(signGUIInstance));
 			mc.player.closeScreen();
 		}else{
 			if(buttonClicked.equals(leftPackButton)){

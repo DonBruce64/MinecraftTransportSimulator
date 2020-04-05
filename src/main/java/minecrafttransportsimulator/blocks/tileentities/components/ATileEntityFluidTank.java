@@ -82,7 +82,7 @@ public abstract class ATileEntityFluidTank extends ATileEntityTickable{
 			if(doDrain){
 				//Need to send off packet before we remove fluid due to empty tank.
 				if(!world.isClient()){
-					WrapperNetwork.sendToAllClients(new PacketFluidTankChange(this, maxAmount));
+					WrapperNetwork.sendToAllClients(new PacketFluidTankChange(this, -maxAmount));
 				}
 				currentFluidLevel -= maxAmount;
 				if(currentFluidLevel == 0){

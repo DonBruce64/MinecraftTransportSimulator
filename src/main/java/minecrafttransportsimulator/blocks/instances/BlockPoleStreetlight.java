@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.blocks.instances;
 
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleSign;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleStreetlight;
 
 public class BlockPoleStreetlight extends BlockPole implements IBlockTileEntity{
     
@@ -11,7 +11,7 @@ public class BlockPoleStreetlight extends BlockPole implements IBlockTileEntity{
 	}
 
 	@Override
-	public TileEntityPoleSign createTileEntity(){
-		return new TileEntityPoleSign();
+	public TileEntityPoleStreetlight createTileEntity(){
+		return new TileEntityPoleStreetlight();
 	}
 }

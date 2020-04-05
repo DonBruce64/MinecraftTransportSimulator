@@ -24,6 +24,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
@@ -143,7 +144,7 @@ public class GUIPartBench extends GuiScreen{
 		}
 		
 		//Set button states and render.
-		startButton.enabled = PacketPlayerCrafting.doesPlayerHaveMaterials(player, currentItem);
+		startButton.enabled = player.hasMaterials(currentItem);
 		leftPackButton.enabled = prevPack != null;
 		rightPackButton.enabled = nextPack != null;
 		if(bench.renderType.isForVehicles){
@@ -260,7 +261,7 @@ public class GUIPartBench extends GuiScreen{
 		GL11.glRotatef(180, 0, 0, 1);
 		GL11.glRotatef(45, 0, 1, 0);
 		GL11.glRotatef(35.264F, 1, 0, 1);
-		GL11.glRotatef(-player.world.getTotalWorldTime()*2, 0, 1, 0);
+		GL11.glRotatef(-Minecraft.getMinecraft().world.getTotalWorldTime()*2, 0, 1, 0);
 		float scale = 30F*partScalingFactors.get(currentItem);
 		GL11.glScalef(scale, scale, scale);
 		GL11.glCallList(partDisplayLists.get(currentItem));
@@ -369,7 +370,7 @@ public class GUIPartBench extends GuiScreen{
 		ItemStack tempStack = new ItemStack(currentItem);
 		tempStack.setTagCompound(new NBTTagCompound());
 		List<String> descriptiveLines = new ArrayList<String>();
-		tempStack.getItem().addInformation(tempStack, player.world, descriptiveLines, ITooltipFlag.TooltipFlags.NORMAL);
+		tempStack.getItem().addInformation(tempStack, Minecraft.getMinecraft().world, descriptiveLines, ITooltipFlag.TooltipFlags.NORMAL);
 		int lineOffset = 55;
 		for(String line : descriptiveLines){
 			mc.fontRenderer.drawStringWithShadow(line, guiLeft + 10, guiTop + lineOffset, Color.WHITE.getRGB());

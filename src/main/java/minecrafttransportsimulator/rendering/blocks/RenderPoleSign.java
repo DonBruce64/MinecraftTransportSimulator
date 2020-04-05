@@ -15,7 +15,7 @@ public class RenderPoleSign extends ARenderTileEntityBase<TileEntityPoleSign, Bl
 	@Override
 	public void render(TileEntityPoleSign tile, BlockPoleSign block, float partialTicks){
 		//Translate a little to make the sign offset from the pole.
-		GL11.glTranslatef(0F, 0F, 0.0635F);
+		GL11.glTranslatef(0F, 8F/16F, 0.0635F);
 		
 		//Bind the sign texture.
 		if(tile.definition == null){

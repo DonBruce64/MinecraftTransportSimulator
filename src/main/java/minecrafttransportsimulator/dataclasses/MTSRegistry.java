@@ -42,7 +42,6 @@ import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat
 import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
-import minecrafttransportsimulator.packets.tileentities.PacketSignChange;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInitResponse;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartAddition;
@@ -220,9 +219,9 @@ public final class MTSRegistry{
 			if(field.getType().equals(Item.class)){
 				try{
 					Item item = (Item) field.get(null);
+					item.setCreativeTab(coreTab);
 					String name = field.getName().toLowerCase();
 					event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
-					item.setCreativeTab(coreTab);
 					coreItems.add(item);
 				}catch(Exception e){
 					e.printStackTrace();
@@ -232,6 +231,7 @@ public final class MTSRegistry{
 				//This doesn't include packs, which have their own items.
 				try{
 					WrapperBlock block = (WrapperBlock) field.get(null);
+					block.setCreativeTab(coreTab);
 					ItemBlock itemBlock = new ItemBlock(block);
 					itemBlock.setCreativeTab(coreTab);
 					event.getRegistry().register(itemBlock.setRegistryName(block.getRegistryName()).setUnlocalizedName(block.getRegistryName().toString()));
@@ -262,9 +262,6 @@ public final class MTSRegistry{
 		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);
 		registerPacket(PacketPartGunReload.class, PacketPartGunReload.Handler.class, true, false);
 		registerPacket(PacketPlayerCrafting.class, PacketPlayerCrafting.Handler.class, false, true);
-		
-		//Packets in packets.tileentity
-		registerPacket(PacketSignChange.class, PacketSignChange.Handler.class, true, true);
 		
 		//Packets in packets.vehicles.
 		registerPacket(PacketVehicleClientInit.class, PacketVehicleClientInit.Handler.class, false, true);

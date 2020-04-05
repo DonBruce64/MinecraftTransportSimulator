@@ -18,7 +18,7 @@ public class BlockDecor extends ABlockBase implements IBlockTileEntity{
     	super(10.0F, 5.0F);
 		this.definition = definition;
 		//Add a bounding box for each rotation.
-		boundingBoxes[0] = new BoundingBox(0, 0, 0, definition.general.width, definition.general.height, definition.general.depth);
+		boundingBoxes[0] = new BoundingBox(0, 0, 0, definition.general.width/2D, definition.general.height/2D, definition.general.depth/2D);
 		boundingBoxes[1] = boundingBoxes[0].getRotated90();
 		boundingBoxes[2] = boundingBoxes[0];
 		boundingBoxes[3] = boundingBoxes[1];

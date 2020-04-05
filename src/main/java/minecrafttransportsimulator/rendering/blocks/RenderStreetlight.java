@@ -19,7 +19,7 @@ public class RenderStreetlight extends ARenderTileEntityBase<TileEntityPoleStree
 		float lightBrightness = tile.world.getLightBrightness(tile.position);
 		
 		//Translate and render the colored square.
-		GL11.glTranslatef(0, -1.555F/16F, 6F/16F);
+		GL11.glTranslatef(0, 6.455F/16F, 6F/16F);
 		GL11.glRotatef(90, 1, 0, 0);
 		renderLightedSquare(4F/16F, lightBrightness,  Color.WHITE, "textures/rendering/light.png");
 		

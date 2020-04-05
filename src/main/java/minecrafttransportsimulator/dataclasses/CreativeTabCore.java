@@ -26,7 +26,7 @@ public final class CreativeTabCore extends CreativeTabs{
 		givenList.clear();
 		for(Item item : MTSRegistry.coreItems){
 			for(CreativeTabs tab : item.getCreativeTabs()){
-				if(tab.equals(this)){
+				if(this.equals(tab)){
 					item.getSubItems(tab, givenList);
 				}
 			}

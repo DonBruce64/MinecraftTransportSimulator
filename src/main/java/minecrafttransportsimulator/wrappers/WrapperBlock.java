@@ -31,7 +31,9 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -64,7 +66,8 @@ public class WrapperBlock extends Block{
 	protected static final PropertyDirection FACING = BlockHorizontal.FACING;
 	final ABlockBase block;
 	
-	static final Map<ABlockBase, WrapperBlock> blockWrapperMap = new HashMap<ABlockBase, WrapperBlock>();
+	//TODO make this package-private when we make a wrapper itemstack.
+	public static final Map<ABlockBase, WrapperBlock> blockWrapperMap = new HashMap<ABlockBase, WrapperBlock>();
 	static final Map<String, IBlockTileEntity> tileEntityMap = new HashMap<String, IBlockTileEntity>();
 	
     public WrapperBlock(ABlockBase block){
@@ -146,26 +149,26 @@ public class WrapperBlock extends Block{
     
     @Override
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune){
-    	//This gets called to drop the block as an item.  We override it here to return the correct item.
-    	//This is called from dropBlockAsItemWithChance, which then forwards the call to this method to get the actual drops.
-    	//dropBlockAsItemWithChance is called from harvestBlock to actually harvest the block.
-    	//Harvesting is done by the server when the player (who is not in creative) breaks (harvests) this block.
-    	//Said drops are then spawned in the world.  We return those drops here with TE data if applicable.
+    	//Don't drop this block as an item in the normal drops if we have a TE.
+    	if(!(block instanceof IBlockTileEntity)){
+    		super.getDrops(drops, world, pos, state, fortune);
+    	}
+    }
+    
+    @Override
+    public void breakBlock(World world, BlockPos pos, IBlockState state){
+    	//This gets called before the block is broken to do logic.  Normally we'd use the getDrops method,
+    	//by MC is stupid and deletes the TE before calling that method, meaning we can't save NBT.
     	if(block instanceof BlockDecor){
     		JSONDecor definition = ((BlockDecor) block).definition;
     		ItemStack stack = new ItemStack(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName));
+    		world.spawnEntity(new EntityItem(world, pos.getX(), pos.getY(), pos.getZ(), stack));
+    	}else if(block instanceof IBlockTileEntity){
+    		ItemStack stack = new ItemStack(Item.getItemFromBlock(this));
     		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
     		((WrapperTileEntity) world.getTileEntity(pos)).tileEntity.save(data);
     		stack.setTagCompound(data.tag);
-    		drops.add(stack);
-    	}else{
-    		super.getDrops(drops, world, pos, state, fortune);
-        	if(block instanceof IBlockTileEntity){
-        		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
-        		((WrapperTileEntity) world.getTileEntity(pos)).tileEntity.save(data);
-        		//Will only be one drop for our block.
-        		drops.get(0).setTagCompound(data.tag);
-        	}
+        	world.spawnEntity(new EntityItem(world, pos.getX(), pos.getY(), pos.getZ(), stack));
     	}
     }
     

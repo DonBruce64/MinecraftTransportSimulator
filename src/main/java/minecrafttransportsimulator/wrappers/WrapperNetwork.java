@@ -10,6 +10,7 @@ import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPumpConnection;
+import minecrafttransportsimulator.packets.instances.PacketSignChange;
 import minecrafttransportsimulator.packets.instances.PacketTrafficSignalControllerChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
@@ -51,6 +52,7 @@ public class WrapperNetwork{
 		packetMappings.put(packetIndex++, PacketFluidTankChange.class);
 		packetMappings.put(packetIndex++, PacketPlayerChatMessage.class);
 		packetMappings.put(packetIndex++, PacketPumpConnection.class);
+		packetMappings.put(packetIndex++, PacketSignChange.class);
 		packetMappings.put(packetIndex++, PacketTrafficSignalControllerChange.class);
 		packetMappings.put(packetIndex++, PacketVehicleControlAnalog.class);
 		packetMappings.put(packetIndex++, PacketVehicleControlDigital.class);

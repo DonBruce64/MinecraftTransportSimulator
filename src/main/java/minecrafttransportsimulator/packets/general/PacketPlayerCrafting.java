@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -21,8 +22,8 @@ public class PacketPlayerCrafting implements IMessage{
 
 	public PacketPlayerCrafting(){}
 	
-	public PacketPlayerCrafting(EntityPlayer player, AItemPack<? extends AJSONItem<?>> item){
-		this.playerID = player.getEntityId();
+	public PacketPlayerCrafting(WrapperPlayer player, AItemPack<? extends AJSONItem<?>> item){
+		this.playerID = player.getID();
 		this.packID = item.definition.packID;
 		this.systemName = item.definition.systemName;
 	}

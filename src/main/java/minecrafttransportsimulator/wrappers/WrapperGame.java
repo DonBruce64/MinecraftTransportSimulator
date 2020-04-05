@@ -33,7 +33,7 @@ public class WrapperGame{
 	 *  Returns the text-based name for the passed-in fluid.
 	 */
 	public static String getFluidName(String fluidID){
-		return WrapperGUI.translate(FluidRegistry.getFluid(fluidID) != null ? FluidRegistry.getFluid(fluidID).getUnlocalizedName() : "");
+		return FluidRegistry.getFluid(fluidID) != null ? FluidRegistry.getFluidName(FluidRegistry.getFluid(fluidID)) : "INVALID";
 	}
 	
 	/**

@@ -30,10 +30,10 @@ public class RenderCrossingSignal extends ARenderTileEntityBase<TileEntityPoleCr
 		//Render based on the current state.
 		if(lightColor != null && (!shouldFlash || (shouldFlash && (System.currentTimeMillis()%1000 < 500)))){
 			if(lightColor.equals(Color.GREEN)){
-				GL11.glTranslatef(0, -6F/16F, 0.145F);
+				GL11.glTranslatef(0, 2F/16F, 0.145F);
 				renderLightedSquare(3F/16F, lightBrightness*0.5F, lightColor, "textures/rendering/walk.png");
 			}else{
-				GL11.glTranslatef(0, -2F/16F, 0.145F);
+				GL11.glTranslatef(0, 6F/16F, 0.145F);
 				renderLightedSquare(3F/16F, lightBrightness*0.5F, lightColor, "textures/rendering/dontwalk.png");
 			}
 		}

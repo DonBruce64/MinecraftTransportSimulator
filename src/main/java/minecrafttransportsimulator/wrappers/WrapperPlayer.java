@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.wrappers;
 
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -108,6 +111,26 @@ public class WrapperPlayer extends WrapperEntity{
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 *  Returns true if this player has all the materials to make the pack-based item.
+	 */
+	public boolean hasMaterials(AItemPack<? extends AJSONItem<?>> item){
+		if(!isCreative()){
+			for(ItemStack materialStack : MTSRegistry.getMaterials(item)){
+				int requiredMaterialCount = materialStack.getCount();
+				for(ItemStack stack : player.inventory.mainInventory){
+					if(ItemStack.areItemsEqual(stack, materialStack)){
+						requiredMaterialCount -= stack.getCount();
+					}
+				}
+				if(requiredMaterialCount > 0){
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 	
 	/**
