@@ -3,8 +3,9 @@ package minecrafttransportsimulator.wrappers;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityFluidTank;
-import net.minecraft.nbt.NBTTagCompound;
+import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ITickable;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidEvent;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -16,20 +17,19 @@ import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
-/**Wrapper for tile entities that contain fluids.
+/**Wrapper for tile entities that contain fluids.  This wrapper does not tick.
+ * If you need a tickable instance, use {@link WrapperTileEntityFluidTank.Tickable} instead.
  *
  * @author don_bruce
  */
-public class WrapperFluidTank extends WrapperTileEntityTickable implements IFluidTank, IFluidHandler{
-    private ATileEntityFluidTank tank;
+public class WrapperTileEntityFluidTank<FluidTankTileEntity extends ATileEntityFluidTank<?>> extends WrapperTileEntity<FluidTankTileEntity> implements IFluidTank, IFluidHandler{
     
-    public WrapperFluidTank(){
+    public WrapperTileEntityFluidTank(){
 		//Blank constructor for MC.  We set the TE variable in NBT instead.
 	}
     
-	WrapperFluidTank(ATileEntityFluidTank tileEntity){
+	WrapperTileEntityFluidTank(FluidTankTileEntity tileEntity){
 		super(tileEntity);
-		this.tank = tileEntity;
 	}
 
 	@Override
@@ -39,17 +39,17 @@ public class WrapperFluidTank extends WrapperTileEntityTickable implements IFlui
 
 	@Override
 	public FluidStack getFluid(){
-		return !tank.getFluid().isEmpty() ? new FluidStack(FluidRegistry.getFluid(tank.getFluid()), tank.getFluidLevel()) : null;
+		return !tileEntity.getFluid().isEmpty() ? new FluidStack(FluidRegistry.getFluid(tileEntity.getFluid()), tileEntity.getFluidLevel()) : null;
 	}
 
 	@Override
 	public int getFluidAmount(){
-		return tank.getFluidLevel();
+		return tileEntity.getFluidLevel();
 	}
 
 	@Override
 	public int getCapacity(){
-		return tank.getFluidLevel();
+		return tileEntity.getFluidLevel();
 	}
 
 	@Override
@@ -59,7 +59,7 @@ public class WrapperFluidTank extends WrapperTileEntityTickable implements IFlui
 
 	@Override
 	public int fill(FluidStack stack, boolean doFill){
-		int fillAmount = tank.fill(stack.getFluid().getName(), stack.amount, !doFill);
+		int fillAmount = tileEntity.fill(stack.getFluid().getName(), stack.amount, !doFill);
 		if(fillAmount > 0){
 			FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(new FluidStack(getFluid().getFluid(), fillAmount), world, getPos(), this, fillAmount));
 		}
@@ -68,7 +68,7 @@ public class WrapperFluidTank extends WrapperTileEntityTickable implements IFlui
 
 	@Override
 	public FluidStack drain(int maxDrain, boolean doDrain){
-		if(tank.getFluidLevel() > 0){
+		if(tileEntity.getFluidLevel() > 0){
 			return this.drain(new FluidStack(getFluid().getFluid(), maxDrain), doDrain);
 		}
 		return null;
@@ -76,7 +76,7 @@ public class WrapperFluidTank extends WrapperTileEntityTickable implements IFlui
 	
 	@Override
 	public FluidStack drain(FluidStack stack, boolean doDrain){
-		int drainAmount = tank.drain(tank.getFluid(), stack.amount, !doDrain);
+		int drainAmount = tileEntity.drain(tileEntity.getFluid(), stack.amount, !doDrain);
 		if(drainAmount > 0){
 			FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(new FluidStack(getFluid().getFluid(), drainAmount), world, getPos(), this, drainAmount));
 		}
@@ -104,11 +104,24 @@ public class WrapperFluidTank extends WrapperTileEntityTickable implements IFlui
     	return super.getCapability(capability, facing);
     }
     
-    @Override
-    public void readFromNBT(NBTTagCompound tag){
-		super.readFromNBT(tag);
-		if(tank == null){
-			tank = (ATileEntityFluidTank) tileEntity;
+    
+    /**Tickable wrapper for {@link WrapperTileEntityFluidTank}.
+     *
+     * @author don_bruce
+     */
+	public static class Tickable<TickableTileEntity extends ATileEntityFluidTank<?>> extends WrapperTileEntityFluidTank<TickableTileEntity> implements ITickable{
+	    
+		public Tickable(){
+			//Blank constructor for MC.  We set the TE variable in NBT instead.
 		}
-    }
+	    
+		Tickable(TickableTileEntity tileEntity){
+			super(tileEntity);
+		}
+		
+		@Override
+		public void update(){
+			((ITileEntityTickable) tileEntity).update();
+		}
+	}
 }

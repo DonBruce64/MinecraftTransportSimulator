@@ -12,7 +12,7 @@ import minecrafttransportsimulator.wrappers.WrapperWorld;
  *
  * @author don_bruce
  */
-public abstract class APacketTileEntity<TileEntityType extends ATileEntityBase> extends APacketBase{
+public abstract class APacketTileEntity<TileEntityType extends ATileEntityBase<?>> extends APacketBase{
 	private final Point3i position;
 	
 	public APacketTileEntity(TileEntityType tile){

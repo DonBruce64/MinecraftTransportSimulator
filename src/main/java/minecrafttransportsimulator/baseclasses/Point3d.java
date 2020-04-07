@@ -38,4 +38,9 @@ public class Point3d extends APoint3<Double>{
 		this.y += y;
 		this.z += z;
 	}
+	
+	@Override
+	public Point3d newOffset(Double x, Double y, Double z){
+		return new Point3d(this.x + x, this.y + y, this.z + z);
+	}
 }

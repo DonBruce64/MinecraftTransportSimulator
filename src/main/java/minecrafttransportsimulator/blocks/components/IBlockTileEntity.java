@@ -1,23 +1,17 @@
 package minecrafttransportsimulator.blocks.components;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 
-/**Interface for blocks that have tile entities.
+/**Interface for blocks that have tile entities.  Such tile entities
+ * are pack-based, so are linked to a specific pack definition.
  *
  * @author don_bruce
  */
-public interface IBlockTileEntity{
+public interface IBlockTileEntity<JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>>{
 	
 	/**
 	 *  Gets a new Tile Entity for this block.
 	 */
-	public ATileEntityBase createTileEntity();
-	
-	/**
-	 *  If you add a TE model, that model will render with the main block model.
-	 *  If you don't want the main block model to render, make this return false.
-	 */
-	public default boolean renderBlockModel(){
-		return true;
-	}
+	public ATileEntityBase<JSONDefinition> createTileEntity();
 }

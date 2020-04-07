@@ -6,12 +6,15 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.blocks.components.ABlockBase;
-import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.blocks.instances.BlockSignalController;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityTickable;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleCrossingSignal.CrossingState;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleTrafficSignal.SignalState;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
+import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_CrossingSignal.CrossingState;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight.LightState;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal.SignalState;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.rendering.blocks.ARenderTileEntityBase;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
 
@@ -20,11 +23,12 @@ import minecrafttransportsimulator.wrappers.WrapperNBT;
 *
 * @author don_bruce
 */
-public class TileEntityTrafficSignalController extends ATileEntityTickable{	
+public class TileEntitySignalController extends ATileEntityBase<JSONDecor> implements ITileEntityTickable{	
 	//Mode state.
 	public OpMode currentOpMode = OpMode.TIMED_CYCLE;
 	
 	//Timers and controls for automatic control modes.
+	public boolean lightsOn = true;
 	public boolean mainDirectionXAxis = false;
 	public OpState currentOpState = OpState.GREEN_MAIN_RED_CROSS;
 	public long timeOperationStarted;
@@ -35,9 +39,7 @@ public class TileEntityTrafficSignalController extends ATileEntityTickable{
 	public int allRedTime = 1;
 	
 	//Locations of blocks.
-	public final List<Point3i> trafficSignalLocations = new ArrayList<Point3i>();
-	public final List<Point3i> crossingSignalLocations = new ArrayList<Point3i>();
-	
+	public final List<Point3i> componentLocations = new ArrayList<Point3i>();
 	
 	@Override
 	public void update(){
@@ -55,7 +57,7 @@ public class TileEntityTrafficSignalController extends ATileEntityTickable{
 						int maxX = Integer.MIN_VALUE;
 						int minZ = Integer.MAX_VALUE;
 						int maxZ = Integer.MIN_VALUE;
-						for(Point3i controllerSignalPos : trafficSignalLocations){
+						for(Point3i controllerSignalPos : componentLocations){
 							minX = Math.min(minX, controllerSignalPos.x);
 							maxX = Math.max(maxX, controllerSignalPos.x);
 							minZ = Math.min(minZ, controllerSignalPos.z);
@@ -129,38 +131,18 @@ public class TileEntityTrafficSignalController extends ATileEntityTickable{
 	public void changeState(OpState state){
 		currentOpState = state;
 		timeOperationStarted = System.currentTimeMillis()/1000;
-		Iterator<Point3i> iterator = trafficSignalLocations.iterator();
+		Iterator<Point3i> iterator = componentLocations.iterator();
 		while(iterator.hasNext()){
-			TileEntityPoleTrafficSignal signal = (TileEntityPoleTrafficSignal) world.getTileEntity(iterator.next());
+			TileEntityPole signal = (TileEntityPole) world.getTileEntity(iterator.next());
 			if(signal != null){
-				ABlockBase block = signal.getBlock();
-				if(block != null){
-					//If the rotation is 0 or 180, we're on the z-axis.
-					//Therefore, if that is true and main direction isn't x, then we're a main signal.
-					if(block.getRotation(world, signal.position)%180 == 0 ^ mainDirectionXAxis){
-						//On z-axis and main direction z, or on x-axis and main direction x.  Main signal.
-						signal.state = state.mainSignalState;
-					}else{
-						//On z-axis and main direction x, or on x-axis and main direction z.  Cross signal.
-						signal.state = state.crossSignalState;
-					}
-				}
-			}
-		}
-		iterator = crossingSignalLocations.iterator();
-		while(iterator.hasNext()){
-			TileEntityPoleCrossingSignal signal = (TileEntityPoleCrossingSignal) world.getTileEntity(iterator.next());
-			if(signal != null){
-				ABlockBase block = signal.getBlock();
-				if(block != null){
-					//If the rotation is 0 or 180, we're on the z-axis.
-					//Therefore, if that is true and main direction isn't x, then we're a main crossing.
-					if(block.getRotation(world, signal.position)%180 == 0 ^ mainDirectionXAxis){
-						//On z-axis and main direction z, or on x-axis and main direction x.  Main crossing.
-						signal.state = state.mainCrossingState;
-					}else{
-						//On z-axis and main direction x, or on x-axis and main direction z.  Cross crossing.
-						signal.state = state.crossCrossingState;
+				for(Axis axis : signal.components.keySet()){
+					ATileEntityPole_Component component = signal.components.get(axis);
+					if(component instanceof TileEntityPole_TrafficSignal){
+						((TileEntityPole_TrafficSignal) component).state = (axis.equals(Axis.NORTH) || axis.equals(Axis.SOUTH)) ^ mainDirectionXAxis ? state.mainSignalState : state.crossSignalState;
+					}else if(component instanceof TileEntityPole_CrossingSignal){
+						((TileEntityPole_CrossingSignal) component).state = (axis.equals(Axis.NORTH) || axis.equals(Axis.SOUTH)) ^ mainDirectionXAxis ? state.mainCrossingState : state.crossCrossingState;
+					}else if(component instanceof TileEntityPole_StreetLight){
+						((TileEntityPole_StreetLight) component).state = lightsOn ? LightState.ON : LightState.OFF;
 					}
 				}
 			}
@@ -168,12 +150,13 @@ public class TileEntityTrafficSignalController extends ATileEntityTickable{
 	}
 	
 	@Override
-	public ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity> getRenderer(){
+	public ARenderTileEntityBase<TileEntitySignalController, BlockSignalController> getRenderer(){
 		return null;
 	}
 	
 	@Override
     public void load(WrapperNBT data){
+		super.load(data);
 		currentOpMode = OpMode.values()[data.getInteger("currentOpMode")];
 		mainDirectionXAxis = data.getBoolean("mainDirectionXAxis");
         greenMainTime = data.getInteger("greenMainTime");
@@ -182,14 +165,13 @@ public class TileEntityTrafficSignalController extends ATileEntityTickable{
         yellowCrossTime = data.getInteger("yellowCrossTime");
         allRedTime = data.getInteger("allRedTime");
         
-        trafficSignalLocations.clear();
-        crossingSignalLocations.clear();
-        trafficSignalLocations.addAll(data.getPoints("trafficSignalLocations"));
-        crossingSignalLocations.addAll(data.getPoints("crossingSignalLocations"));
+        componentLocations.clear();
+        componentLocations.addAll(data.getPoints("componentLocations"));
     }
     
 	@Override
     public void save(WrapperNBT data){
+		super.save(data);
 		data.setInteger("currentOpMode", currentOpMode.ordinal());
         data.setBoolean("mainDirectionXAxis", mainDirectionXAxis);
         data.setInteger("greenMainTime", greenMainTime);
@@ -197,8 +179,7 @@ public class TileEntityTrafficSignalController extends ATileEntityTickable{
         data.setInteger("yellowMainTime", yellowMainTime);
         data.setInteger("yellowCrossTime", yellowCrossTime);
         data.setInteger("allRedTime", allRedTime);
-        data.setPoints("trafficSignalLocations", trafficSignalLocations);
-        data.setPoints("crossingSignalLocations", crossingSignalLocations);
+        data.setPoints("componentLocations", componentLocations);
     }
 	
 	public static enum OpMode{

@@ -6,13 +6,13 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.instances.BlockPoleStreetlight;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleStreetlight;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 
-public class RenderStreetlight extends ARenderTileEntityBase<TileEntityPoleStreetlight, BlockPoleStreetlight>{
+public class RenderStreetlight extends ARenderTileEntityBase<TileEntityPole_StreetLight, BlockPoleStreetlight>{
 		
 	@Override
-	public void render(TileEntityPoleStreetlight tile, BlockPoleStreetlight block, float partialTicks){
+	public void render(TileEntityPole_StreetLight tile, BlockPoleStreetlight block, float partialTicks){
 		//Disable the lighting prior to rendering the lights.
 		WrapperRender.setLightmapState(false);
 		GL11.glDisable(GL11.GL_LIGHTING);

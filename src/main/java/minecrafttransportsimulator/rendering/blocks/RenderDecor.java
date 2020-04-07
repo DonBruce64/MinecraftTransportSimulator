@@ -17,10 +17,11 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor, BlockDec
 		
 	@Override
 	public void render(TileEntityDecor tile, BlockDecor block, float partialTicks){
+		JSONDecor definition = tile.getDefinition();
 		//If we don't have the displaylist and texture cached, do it now.
-		if(!displayListMap.containsKey(block.definition)){
-			String optionalModelName = block.definition.general.modelName;
-			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(block.definition.packID, "objmodels/decors/" + (optionalModelName != null ? optionalModelName : block.definition.systemName) + ".obj");
+		if(!displayListMap.containsKey(definition)){
+			String optionalModelName = definition.general.modelName;
+			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(definition.packID, "objmodels/decors/" + (optionalModelName != null ? optionalModelName : definition.systemName) + ".obj");
 			int displayListIndex = GL11.glGenLists(1);
 			
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
@@ -34,11 +35,11 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor, BlockDec
 			}
 			GL11.glEnd();
 			GL11.glEndList();
-			displayListMap.put(block.definition, displayListIndex);
+			displayListMap.put(definition, displayListIndex);
 		}
 		
 		//Bind the decor texture and render.
-		WrapperRender.bindTexture(block.definition.packID, "textures/decors/" + block.definition.systemName + ".png");
-		GL11.glCallList(displayListMap.get(block.definition));
+		WrapperRender.bindTexture(definition.packID, "textures/decors/" + definition.systemName + ".png");
+		GL11.glCallList(displayListMap.get(definition));
 	}
 }

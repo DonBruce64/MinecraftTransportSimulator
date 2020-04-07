@@ -10,17 +10,17 @@ import minecrafttransportsimulator.wrappers.WrapperWorld;
  * 
  * @author don_bruce
  */
-public class PacketFluidTankChange extends APacketTileEntity<ATileEntityFluidTank>{
+public class PacketTileEntityFluidTankChange extends APacketTileEntity<ATileEntityFluidTank<?>>{
 	private final String fluidName;
 	private final int fluidDelta;
 	
-	public PacketFluidTankChange(ATileEntityFluidTank tank, int fluidDelta){
+	public PacketTileEntityFluidTankChange(ATileEntityFluidTank<?> tank, int fluidDelta){
 		super(tank);
 		this.fluidName = tank.getFluid();
 		this.fluidDelta = fluidDelta;
 	}
 	
-	public PacketFluidTankChange(ByteBuf buf){
+	public PacketTileEntityFluidTankChange(ByteBuf buf){
 		super(buf);
 		this.fluidName = readStringFromBuffer(buf);
 		this.fluidDelta = buf.readInt();
@@ -34,7 +34,7 @@ public class PacketFluidTankChange extends APacketTileEntity<ATileEntityFluidTan
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, ATileEntityFluidTank tank){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, ATileEntityFluidTank<?> tank){
 		if(fluidDelta < 0){
 			tank.drain(fluidName, -fluidDelta, true);
 		}else{

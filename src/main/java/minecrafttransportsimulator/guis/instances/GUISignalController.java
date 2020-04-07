@@ -6,18 +6,18 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockPoleCrossingSignal;
 import minecrafttransportsimulator.blocks.instances.BlockPoleTrafficSignal;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityTrafficSignalController;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityTrafficSignalController.OpMode;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.OpMode;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.packets.instances.PacketTrafficSignalControllerChange;
+import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
-public class GUITrafficSignalController extends AGUIBase{
+public class GUISignalController extends AGUIBase{
 	
 	//Buttons.
 	private GUIComponentButton orientationButton;
@@ -36,9 +36,9 @@ public class GUITrafficSignalController extends AGUIBase{
 	private GUIComponentLabel trafficSignalCount;
 	private GUIComponentLabel crossingSignalCount;
 	
-	private final TileEntityTrafficSignalController controller;
+	private final TileEntitySignalController controller;
 	
-	public GUITrafficSignalController(TileEntityTrafficSignalController controller){
+	public GUISignalController(TileEntitySignalController controller){
 		this.controller = controller;
 	}
 	
@@ -46,7 +46,7 @@ public class GUITrafficSignalController extends AGUIBase{
 	public void setupComponents(int guiLeft, int guiTop){
 		addButton(new GUIComponentButton(guiLeft + 25, guiTop + 15, 200, WrapperGUI.translate("gui.trafficsignalcontroller.scan")){
 			public void onClicked(){
-				controller.trafficSignalLocations.clear();
+				controller.componentLocations.clear();
 				controller.crossingSignalLocations.clear();
 				int scanDistance = Integer.valueOf(scanDistanceText.getText());
 				for(int i=controller.position.x-scanDistance; i<=controller.position.x+scanDistance; ++i){
@@ -55,7 +55,7 @@ public class GUITrafficSignalController extends AGUIBase{
 							Point3i point = new Point3i(i, j, k);
 							ABlockBase block = controller.world.getBlock(point);
 							if(block instanceof BlockPoleTrafficSignal){
-								controller.trafficSignalLocations.add(point);
+								controller.componentLocations.add(point);
 							}else if(block instanceof BlockPoleCrossingSignal){
 								controller.crossingSignalLocations.add(point);
 							}
@@ -69,7 +69,7 @@ public class GUITrafficSignalController extends AGUIBase{
 		
 		addLabel(new GUIComponentLabel(guiLeft + 30, guiTop + 55, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.scanfound")));
 		addItem(new GUIComponentItem(guiLeft + 120, guiTop + 50, 1.0F, "mts:trafficsignal", 1, -1));
-		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 55, Color.WHITE, " X " + String.valueOf(controller.trafficSignalLocations.size() - controller.crossingSignalLocations.size())));
+		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 55, Color.WHITE, " X " + String.valueOf(controller.componentLocations.size() - controller.crossingSignalLocations.size())));
 		addItem(new GUIComponentItem(guiLeft + 170, guiTop + 50, 1.0F, "mts:crossingsignal", 1, -1));
 		addLabel(crossingSignalCount = new GUIComponentLabel(guiLeft + 185, guiTop + 55, Color.WHITE, " X " + String.valueOf(controller.crossingSignalLocations.size())));
 		
@@ -130,7 +130,7 @@ public class GUITrafficSignalController extends AGUIBase{
 				}catch(Exception e){
 					return;
 				}
-				WrapperNetwork.sendToServer(new PacketTrafficSignalControllerChange(controller));
+				WrapperNetwork.sendToServer(new PacketTileEntitySignalControllerChange(controller));
 				WrapperGUI.closeGUI();
 			}
 		});
@@ -138,9 +138,9 @@ public class GUITrafficSignalController extends AGUIBase{
 	
 	@Override
 	public void setStates(){
-		trafficSignalCount.text = " X " + String.valueOf(controller.trafficSignalLocations.size());
+		trafficSignalCount.text = " X " + String.valueOf(controller.componentLocations.size());
 		crossingSignalCount.text = " X " + String.valueOf(controller.crossingSignalLocations.size());
-		if(!controller.trafficSignalLocations.isEmpty()){
+		if(!controller.componentLocations.isEmpty()){
 			orientationButton.enabled = true;
 			modeButton.enabled = true;
 			greenMainTimeText.enabled = true;

@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
  *
  * @author don_bruce
  */
+@SuppressWarnings("rawtypes")
 public class WrapperTileEntityRender extends TileEntitySpecialRenderer<WrapperTileEntity>{
 	private static final Map<ATileEntityBase, ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity>> renders = new HashMap<ATileEntityBase, ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity>>();
 	

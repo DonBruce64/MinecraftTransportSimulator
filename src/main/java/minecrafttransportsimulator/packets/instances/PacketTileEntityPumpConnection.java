@@ -11,15 +11,15 @@ import minecrafttransportsimulator.wrappers.WrapperWorld;
  * 
  * @author don_bruce
  */
-public class PacketPumpConnection extends APacketTileEntity<TileEntityFuelPump>{
+public class PacketTileEntityPumpConnection extends APacketTileEntity<TileEntityFuelPump>{
 	private final int vehicleID;
 	
-	public PacketPumpConnection(TileEntityFuelPump pump){
+	public PacketTileEntityPumpConnection(TileEntityFuelPump pump){
 		super(pump);
 		this.vehicleID = pump.connectedVehicle != null ? pump.connectedVehicle.getEntityId() : -1;
 	}
 	
-	public PacketPumpConnection(ByteBuf buf){
+	public PacketTileEntityPumpConnection(ByteBuf buf){
 		super(buf);
 		this.vehicleID = buf.readInt();
 	}

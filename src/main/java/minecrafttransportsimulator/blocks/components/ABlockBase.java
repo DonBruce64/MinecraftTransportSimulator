@@ -31,17 +31,22 @@ public abstract class ABlockBase{
 	 *  state of the associated TileEntity based on position or the item that was
 	 *  used to place this block.
 	 */
-	public void onPlaced(WrapperWorld world, Point3i point, WrapperPlayer player){}
+	public void onPlaced(WrapperWorld world, Point3i location, WrapperPlayer player){}
 	
 	/**
-	 *  Called when this block is right-clicked.  Return true if this block does
+	 *  Called when this block is clicked.  Return true if this block does
 	 *  a thing, false if the block just exists to be pretty.  Actions may
 	 *  or may not be taken.  Note that this is called both on the server and
 	 *  on the client, so watch your actions and packets!
 	 */
-	public boolean onClicked(WrapperWorld world, Point3i point, WrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player, boolean rightClick){
 		return false;
 	}
+	
+	/**
+	 *  Called when the world around this block updates.  Can be used to update states for rendering operations.
+	 */
+	public void onWorldUpdate(WrapperWorld world, Point3i location, boolean redstonePower){}
 
 	/**
 	 *  Gets the current rotation of the block at the passed-in point.
@@ -49,8 +54,8 @@ public abstract class ABlockBase{
 	 *  set by MC-standard methods when the player places the block, and is
 	 *  not modifiable by any block-based code.
 	 */
-	public float getRotation(WrapperWorld world, Point3i point){
-		return WrapperBlock.getRotation(world, point);
+	public float getRotation(WrapperWorld world, Point3i location){
+		return WrapperBlock.getRotation(world, location);
 	}
 	
 	/**
@@ -58,7 +63,36 @@ public abstract class ABlockBase{
 	 *  to handle collisions with this block.  May be based on state or TE data.
 	 *  Note that all collisions are relative to the block's location.
 	 */
-	public void addCollisionBoxes(WrapperWorld world, Point3i point, List<BoundingBox> collidingBoxes){
+	public void addCollisionBoxes(WrapperWorld world, Point3i location, List<BoundingBox> collidingBoxes){
 		collidingBoxes.add(SINGLE_BLOCK_BOUNDS);
+	}
+	
+	/**
+	 *  Enums for side-specific stuff.
+	 */
+	public static enum Axis{
+		NONE(0, 0, 0, 0),
+		UP(0, 1, 0, 0),
+		DOWN(0, -1 ,0, 0),
+		NORTH(0, 0, -1, 180),
+		SOUTH(0, 0, 1, 0),
+		EAST(1, 0, 0, 90),
+		WEST(-1, 0, 0, 270);
+		
+		public final int xOffset;
+		public final int yOffset;
+		public final int zOffset;
+		public final int yRotation;
+		
+		private Axis(int xOffset, int yOffset, int zOffset, int yRotation){
+			this.xOffset = xOffset;
+			this.yOffset = yOffset;
+			this.zOffset = zOffset;
+			this.yRotation = yRotation;
+		}
+		
+		public Point3i getOffsetPoint(Point3i point){
+			return point.newOffset(xOffset, yOffset, zOffset);
+		}
 	}
 }

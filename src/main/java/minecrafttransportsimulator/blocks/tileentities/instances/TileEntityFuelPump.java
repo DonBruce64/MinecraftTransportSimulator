@@ -1,18 +1,18 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityFluidTank;
+import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketPumpConnection;
-import minecrafttransportsimulator.rendering.blocks.ARenderTileEntityBase;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
 import minecrafttransportsimulator.rendering.blocks.RenderFuelPump;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
-public class TileEntityFuelPump extends ATileEntityFluidTank{
-    public EntityVehicleE_Powered connectedVehicle;
+public class TileEntityFuelPump extends ATileEntityFluidTank<JSONDecor>implements ITileEntityTickable{
+	public JSONDecor definition;
+	public EntityVehicleE_Powered connectedVehicle;
     public int totalTransfered;
 	
 	@Override
@@ -28,7 +28,7 @@ public class TileEntityFuelPump extends ATileEntityFluidTank{
 			//Check distance to make sure the vehicle hasn't moved away.
 			if(connectedVehicle.getDistance(position.x, position.y, position.z) > 20){
 				connectedVehicle = null;
-				WrapperNetwork.sendToAllClients(new PacketPumpConnection(this));
+				WrapperNetwork.sendToAllClients(new PacketTileEntityPumpConnection(this));
 				WrapperNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.toofar"), world.getDimensionID(), position, 25);
 				return;
 			}
@@ -42,7 +42,7 @@ public class TileEntityFuelPump extends ATileEntityFluidTank{
 				}else{
 					//No more fuel.  Disconnect vehicle.
 					connectedVehicle = null;
-					WrapperNetwork.sendToAllClients(new PacketPumpConnection(this));
+					WrapperNetwork.sendToAllClients(new PacketTileEntityPumpConnection(this));
 					WrapperNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.empty"), world.getDimensionID(), position, 16);
 				}
 			}else{
@@ -72,7 +72,7 @@ public class TileEntityFuelPump extends ATileEntityFluidTank{
 	}
 
 	@Override
-	public ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity> getRenderer(){
+	public RenderFuelPump getRenderer(){
 		return new RenderFuelPump();
 	}
 	

@@ -14,6 +14,7 @@ import minecrafttransportsimulator.items.packs.ItemBooklet;
 import minecrafttransportsimulator.items.packs.ItemDecor;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.items.packs.ItemItem;
+import minecrafttransportsimulator.items.packs.ItemPoleComponent;
 import minecrafttransportsimulator.items.packs.ItemVehicle;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.items.packs.parts.ItemPartBarrel;
@@ -38,7 +39,7 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
-import minecrafttransportsimulator.jsondefs.JSONSign;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -57,18 +58,18 @@ import minecrafttransportsimulator.vehicles.parts.PartEngineAircraft;
 import minecrafttransportsimulator.vehicles.parts.PartEngineBoat;
 import minecrafttransportsimulator.vehicles.parts.PartEngineCar;
 import minecrafttransportsimulator.vehicles.parts.PartEngineJet;
-import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorFertilizer;
 import minecrafttransportsimulator.vehicles.parts.PartFurnace;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceSkid;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceWheel;
-import minecrafttransportsimulator.vehicles.parts.PartGunFixed;
-import minecrafttransportsimulator.vehicles.parts.PartGunTripod;
-import minecrafttransportsimulator.vehicles.parts.PartGunTurret;
+import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorFertilizer;
 import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorHarvester;
 import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlanter;
 import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlow;
+import minecrafttransportsimulator.vehicles.parts.PartGunFixed;
+import minecrafttransportsimulator.vehicles.parts.PartGunTripod;
+import minecrafttransportsimulator.vehicles.parts.PartGunTurret;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.nbt.NBTTagCompound;
@@ -169,17 +170,20 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their signs to the mod.**/
     public static void addSignDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		//Signs are a special-case as they don't have items or crafting materials.
-	    	//Instead, they are just definitions that sit by themselves.
-    		JSONSign definition =  new Gson().fromJson(jsonReader, JSONSign.class);
-	    	definition.packID = packID;
-	    	definition.classification = ItemClassification.SIGN;
-	    	definition.systemName = jsonFileName;
-	    	
-	    	if(!MTSRegistry.packSignMap.containsKey(packID)){
-	    		MTSRegistry.packSignMap.put(packID, new LinkedHashMap<String, JSONSign>());
-	    	}
-	    	MTSRegistry.packSignMap.get(packID).put(jsonFileName, definition);
+    		//Convert the sign to a pole definition.  This is only here for legacy support.
+    		JSONPoleComponent component = new Gson().fromJson(jsonReader, JSONPoleComponent.class);
+    		component.general.type = "sign";
+    		setupItem(new ItemPoleComponent(component), jsonFileName, packID, ItemClassification.POLE);
+    	}catch(Exception e){
+    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		logEntries.add(e.getMessage());
+    	}
+    }
+    
+    /**Packs should call this upon load to add their pole components to the mod.**/
+    public static void addPoleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
+    	try{
+	    	setupItem(new ItemPoleComponent(new Gson().fromJson(jsonReader, JSONPoleComponent.class)), jsonFileName, packID, ItemClassification.POLE);
     	}catch(Exception e){
     		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		logEntries.add(e.getMessage());
@@ -329,6 +333,7 @@ public final class PackParserSystem{
     	PART,
     	INSTRUMENT,
     	SIGN,
+    	POLE,
     	DECOR,
     	ITEM,
     	BOOKLET;

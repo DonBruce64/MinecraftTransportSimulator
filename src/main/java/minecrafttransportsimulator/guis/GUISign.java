@@ -9,10 +9,10 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleSign;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONSign;
-import minecrafttransportsimulator.packets.instances.PacketSignChange;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.rendering.blocks.RenderPoleSign;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraft.client.gui.GuiButton;
@@ -23,8 +23,8 @@ import net.minecraft.util.ResourceLocation;
 
 public class GUISign extends GuiScreen{
 	private static final ResourceLocation background = new ResourceLocation(MTS.MODID, "textures/guis/sign.png");	
-	private final TileEntityPoleSign sign;
-	private final TileEntityPoleSign signGUIInstance;
+	private final TileEntityPole_Sign sign;
+	private final TileEntityPole_Sign signGUIInstance;
 	private final List<GuiTextField> signTextBoxes = new ArrayList<GuiTextField>();
 	
 	private GuiButton leftPackButton;
@@ -46,9 +46,9 @@ public class GUISign extends GuiScreen{
 	
 	private final RenderPoleSign hackyRender = new RenderPoleSign();
 			
-	public GUISign(TileEntityPoleSign sign){
+	public GUISign(TileEntityPole_Sign sign){
 		this.sign = sign;
-		this.signGUIInstance = new TileEntityPoleSign();
+		this.signGUIInstance = new TileEntityPole_Sign();
 		this.signGUIInstance.position = sign.position;
 		if(sign.definition != null){
 			currentPack = sign.definition.packID;
@@ -140,7 +140,7 @@ public class GUISign extends GuiScreen{
     protected void actionPerformed(GuiButton buttonClicked) throws IOException{
 		super.actionPerformed(buttonClicked);
 		if(buttonClicked.equals(startButton)){
-			WrapperNetwork.sendToServer(new PacketSignChange(signGUIInstance));
+			WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(signGUIInstance));
 			mc.player.closeScreen();
 		}else{
 			if(buttonClicked.equals(leftPackButton)){

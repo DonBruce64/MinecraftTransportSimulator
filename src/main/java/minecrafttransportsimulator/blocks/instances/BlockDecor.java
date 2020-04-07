@@ -7,34 +7,33 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
+import minecrafttransportsimulator.items.packs.ItemDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
 
-public class BlockDecor extends ABlockBase implements IBlockTileEntity{
-	public final JSONDecor definition;
-	private final BoundingBox[] boundingBoxes = new BoundingBox[4];
+public class BlockDecor extends ABlockBase implements IBlockTileEntity<JSONDecor>{
 	
-    public BlockDecor(JSONDecor definition){
+    public BlockDecor(){
     	super(10.0F, 5.0F);
-		this.definition = definition;
-		//Add a bounding box for each rotation.
-		boundingBoxes[0] = new BoundingBox(0, 0, 0, definition.general.width/2D, definition.general.height/2D, definition.general.depth/2D);
-		boundingBoxes[1] = boundingBoxes[0].getRotated90();
-		boundingBoxes[2] = boundingBoxes[0];
-		boundingBoxes[3] = boundingBoxes[1];
 	}
     
-    
-    @Override
-    public void addCollisionBoxes(WrapperWorld world, Point3i point, List<BoundingBox> collidingBoxes){
-    	byte rotationIndex = (byte) (getRotation(world, point)/90F);
-		collidingBoxes.add(boundingBoxes[rotationIndex]);
+	@Override
+	public void onPlaced(WrapperWorld world, Point3i location, WrapperPlayer player){
+		//New decor block.  Assign decor definition from item defnition.
+		((TileEntityDecor) world.getTileEntity(location)).setDefinition(((ItemDecor) player.getHeldStack().getItem()).definition);
 	}
     
     @Override
-    public boolean renderBlockModel(){
-		//No block models for decor.
-    	return false;
+    public void addCollisionBoxes(WrapperWorld world, Point3i location, List<BoundingBox> collidingBoxes){
+    	//Get collision box from decor.
+    	TileEntityDecor decor = (TileEntityDecor) world.getTileEntity(location);
+    	if(decor != null){
+    		byte rotationIndex = (byte) (getRotation(world, location)/90F);
+    		collidingBoxes.add(decor.boundingBoxes[rotationIndex]);
+    	}else{
+			super.addCollisionBoxes(world, location, collidingBoxes);
+		}
 	}
     
     @Override

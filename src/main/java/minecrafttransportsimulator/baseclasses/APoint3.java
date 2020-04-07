@@ -23,4 +23,9 @@ public abstract class APoint3<DataType extends Number>{
 	 * Offsets this point by the passed-in values.
 	 */
 	public abstract void offset(DataType x, DataType y, DataType z);
+	
+	/**
+	 * Returns a new instance of the point, offset by the passed-in values.
+	 */
+	public abstract APoint3<DataType> newOffset(DataType x, DataType y, DataType z);
 }

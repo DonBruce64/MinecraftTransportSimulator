@@ -1,9 +1,13 @@
 package minecrafttransportsimulator.items.core;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
+import java.util.HashMap;
+import java.util.Map;
 
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.wrappers.WrapperPlayer;
+import minecrafttransportsimulator.wrappers.WrapperWorld;
 
 /**Interface that allows for this item to spawn an instance of {@link ABlockBase} into the world.
  * This interface doesn't actually spawn the item; rather, it allows such an item to be obtained.
@@ -11,28 +15,52 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
  * @author don_bruce
  */
 public interface IItemBlock{
-	static final BiMap<IItemBlock, ABlockBase> itemToBlockMap = HashBiMap.create(); 
+	public static final Map<IItemBlock, ABlockBase> itemToBlockMap = new HashMap<IItemBlock, ABlockBase>(); 
 	
 	/**
-	 *  Creates the block that goes with this item.  This will only be called
-	 *  ONCE during construction of the item.
+	 *  Returns the block class that goes to this IItemBlock.
+	 *  Used to create an instance of the block, but functions
+	 *  as a key to prevent creating gobs of block instances
+	 *  that we just throw away after registration.
 	 */
-	public ABlockBase createBlock();
+	public Class<? extends ABlockBase> getBlockClass();
 	
 	/**
 	 *  Gets the block for this IItemBlock.
 	 */
 	public default ABlockBase getBlock(){
 		if(!itemToBlockMap.containsKey(this)){
-			itemToBlockMap.put(this, createBlock());
+			//First check to see if we already created the block class.
+			Class<? extends ABlockBase> blockClass = getBlockClass();
+			ABlockBase existingBlock = null;
+			for(ABlockBase block : itemToBlockMap.values()){
+				if(blockClass.equals(block.getClass())){
+					existingBlock = block;
+					break;
+				}
+			}
+			
+			//If we have an existing block, put it in the map.
+			//Otherwise, make a new one.
+			if(existingBlock != null){
+				itemToBlockMap.put(this, existingBlock);
+			}else{
+				try{
+					itemToBlockMap.put(this, getBlockClass().newInstance());
+				}catch(Exception e){
+					//Uh oh....
+					e.printStackTrace();
+				}
+			}
 		}
 		return itemToBlockMap.get(this);
 	}
 	
 	/**
-	 *  Gets the IItemBlock for the passed-in block.
+	 *  Tries to let this player place the block for this ITtemBlock into the world.
+	 *  Returns true if the block was placed.
 	 */
-	public static IItemBlock getItemForBlock(ABlockBase block){
-		return itemToBlockMap.inverse().get(block);
+	public default boolean placeBlock(WrapperWorld world, WrapperPlayer player, Point3i point, Axis axis){
+		return world.setBlock(getBlock(), point, player, axis);
 	}
 }

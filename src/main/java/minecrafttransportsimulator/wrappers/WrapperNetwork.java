@@ -7,11 +7,11 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.packets.components.APacketBase;
-import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketPumpConnection;
-import minecrafttransportsimulator.packets.instances.PacketSignChange;
-import minecrafttransportsimulator.packets.instances.PacketTrafficSignalControllerChange;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidTankChange;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
+import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
@@ -49,11 +49,12 @@ public class WrapperNetwork{
 		//Now register all classes in the minecrafttransportsimulator.packets.instances package.
 		//Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
 		byte packetIndex = 0;
-		packetMappings.put(packetIndex++, PacketFluidTankChange.class);
+		//Generic packets.
 		packetMappings.put(packetIndex++, PacketPlayerChatMessage.class);
-		packetMappings.put(packetIndex++, PacketPumpConnection.class);
-		packetMappings.put(packetIndex++, PacketSignChange.class);
-		packetMappings.put(packetIndex++, PacketTrafficSignalControllerChange.class);
+		packetMappings.put(packetIndex++, PacketTileEntityFluidTankChange.class);
+		packetMappings.put(packetIndex++, PacketTileEntityPoleChange.class);
+		packetMappings.put(packetIndex++, PacketTileEntityPumpConnection.class);
+		packetMappings.put(packetIndex++, PacketTileEntitySignalControllerChange.class);
 		packetMappings.put(packetIndex++, PacketVehicleControlAnalog.class);
 		packetMappings.put(packetIndex++, PacketVehicleControlDigital.class);
 		packetMappings.put(packetIndex++, PacketVehicleInstruments.class);

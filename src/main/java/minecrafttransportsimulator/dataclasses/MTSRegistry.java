@@ -10,15 +10,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.blocks.instances.BlockFuelPump;
 import minecrafttransportsimulator.blocks.instances.BlockPartsBench;
-import minecrafttransportsimulator.blocks.instances.BlockPole;
-import minecrafttransportsimulator.blocks.instances.BlockPoleCrossingSignal;
-import minecrafttransportsimulator.blocks.instances.BlockPoleSign;
-import minecrafttransportsimulator.blocks.instances.BlockPoleSolidConnector;
-import minecrafttransportsimulator.blocks.instances.BlockPoleStreetlight;
-import minecrafttransportsimulator.blocks.instances.BlockPoleTrafficSignal;
-import minecrafttransportsimulator.blocks.instances.BlockTrafficSignalController;
 import minecrafttransportsimulator.guis.GUIPartBench;
 import minecrafttransportsimulator.items.core.ItemJerrycan;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
@@ -30,7 +22,6 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
-import minecrafttransportsimulator.jsondefs.JSONSign;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.packets.general.PacketChat;
@@ -57,7 +48,6 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.wrappers.WrapperBlock;
-import minecrafttransportsimulator.wrappers.WrapperBlockAxial;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -90,12 +80,8 @@ public final class MTSRegistry{
 	 * different packs, while the sub-map is keyed by the part's {@link AJSONItem#systemName}.**/
 	public static TreeMap<String, LinkedHashMap<String, AItemPack<? extends AJSONItem<?>>>> packItemMap = new TreeMap<String, LinkedHashMap<String, AItemPack<? extends AJSONItem<?>>>>();
 	
-	/**Special map for signs, as they don't have items associated with them.  Instead, they just have a definition
-	 * that's linked to a unique two-string keyset like the items do.**/
-	public static TreeMap<String, LinkedHashMap<String, JSONSign>> packSignMap = new TreeMap<String, LinkedHashMap<String, JSONSign>>();
-	
 	/**Maps pack items to their list of crafting ingredients.  This is used rather than the core JSON to allow for
-	 * overriding the crafting materials in said JSON, and to concatonate the materials in {@link JSONVehicle}*/
+	 * overriding the crafting materials in said JSON, and to concatenate the materials in {@link JSONVehicle}*/
 	public static final Map<AItemPack<? extends AJSONItem<?>>, String[]> packCraftingMap = new HashMap<AItemPack<? extends AJSONItem<?>>, String[]>();
 	
 	/**Core creative tab for base MTS items**/
@@ -127,18 +113,12 @@ public final class MTSRegistry{
 	public static final WrapperBlock decorBench = new WrapperBlock(new BlockPartsBench(JSONDecor.class));
 	
 	//Fuel pump.
-	public static final WrapperBlock fuelPump = new WrapperBlock(new BlockFuelPump());
+	//FIXME make fuel pump a main pack item with regular crafting recipie.
+	//public static final WrapperBlock fuelPump = new WrapperBlock(new BlockFuelPump());
 	
 	//Traffic signal Controller
-	public static final WrapperBlock trafficSignalController = new WrapperBlock(new BlockTrafficSignalController());
-	
-	//Pole-based blocks.
-	public static final WrapperBlock pole = new WrapperBlockAxial(new BlockPole());
-	public static final WrapperBlock poleBase = new WrapperBlockAxial(new BlockPoleSolidConnector());
-	public static final WrapperBlock trafficSignal = new WrapperBlockAxial(new BlockPoleTrafficSignal());
-	public static final WrapperBlock crossingSignal = new WrapperBlockAxial(new BlockPoleCrossingSignal());
-	public static final WrapperBlock streetLight = new WrapperBlockAxial(new BlockPoleStreetlight());
-	public static final WrapperBlock trafficSign = new WrapperBlockAxial(new BlockPoleSign());
+	//FIXME make signal controller a main pack item with regular crafting recipie.
+	//public static final WrapperBlock trafficSignalController = new WrapperBlock(new BlockTrafficSignalController());
 	
 	//Counter for packets.
 	private static int packetNumber = 0;

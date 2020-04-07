@@ -5,13 +5,13 @@ import java.awt.Color;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.blocks.instances.BlockPoleTrafficSignal;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleTrafficSignal;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 
-public class RenderTrafficSignal extends ARenderTileEntityBase<TileEntityPoleTrafficSignal, BlockPoleTrafficSignal>{
+public class RenderTrafficSignal extends ARenderTileEntityBase<TileEntityPole_TrafficSignal, BlockPoleTrafficSignal>{
 	
 	@Override
-	public void render(TileEntityPoleTrafficSignal tile, BlockPoleTrafficSignal block, float partialTicks){
+	public void render(TileEntityPole_TrafficSignal tile, BlockPoleTrafficSignal block, float partialTicks){
 		//Disable the lighting prior to rendering the lights.
 		WrapperRender.setLightmapState(false);
 		GL11.glDisable(GL11.GL_LIGHTING);

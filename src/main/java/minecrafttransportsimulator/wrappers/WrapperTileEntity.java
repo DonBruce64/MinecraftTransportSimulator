@@ -2,8 +2,10 @@ package minecrafttransportsimulator.wrappers;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -13,18 +15,22 @@ import net.minecraft.world.World;
  * constructed by feeding it an instance of {@link ATileEntityBase}.  This constructor
  * is package-private, as it should only be used by {@link WrapperBlock} to return
  * a Tile Entity for Minecraft to use.  Note that MC re-constructs this class with an
- * empty constructor, so the TE variable may be null for a bit after construction..
+ * empty constructor, so the TE variable may be null for a bit after construction.
+ * 
+ * If ticking functionality is needed, have the tile entity implement {@link ITileEntityTickable}.
+ * This will make the TE wrapper call the {@link ITileEntityTickable#update()} method
+ * each tick.
  *
  * @author don_bruce
  */
-public class WrapperTileEntity extends TileEntity{
-	protected ATileEntityBase tileEntity;
+public class WrapperTileEntity<TileEntityType extends ATileEntityBase<?>> extends TileEntity{
+	protected TileEntityType tileEntity;
 	
 	public WrapperTileEntity(){
 		//Blank constructor for MC.  We set the TE variable in NBT instead.
 	}
 	
-	WrapperTileEntity(ATileEntityBase tileEntity){
+	WrapperTileEntity(TileEntityType tileEntity){
 		this.tileEntity = tileEntity;
 	}
 	
@@ -49,11 +55,12 @@ public class WrapperTileEntity extends TileEntity{
     }
 	
 	@Override
+	@SuppressWarnings("unchecked")
     public void readFromNBT(NBTTagCompound tag){
 		super.readFromNBT(tag);
 		if(tileEntity == null){
 			//Get the block that makes this TE and restore it from saved state.
-			tileEntity = WrapperBlock.tileEntityMap.get(tag.getString("teid")).createTileEntity();
+			tileEntity = (TileEntityType) WrapperBlock.tileEntityMap.get(tag.getString("teid")).createTileEntity();
 		}
 		tileEntity.position = new Point3i(pos.getX(), pos.getY(), pos.getZ());
         tileEntity.load(new WrapperNBT(tag));
@@ -67,4 +74,24 @@ public class WrapperTileEntity extends TileEntity{
 		tag.setString("teid", tileEntity.getClass().getSimpleName());
         return tag;
     }
+	
+	/**Tickable wrapper for {@link WrapperTileEntity}.
+    *
+    * @author don_bruce
+    */
+	public static class Tickable<TickableTileEntity extends ATileEntityBase<?>> extends WrapperTileEntity<TickableTileEntity> implements ITickable{
+	    
+		public Tickable(){
+			//Blank constructor for MC.  We set the TE variable in NBT instead.
+		}
+	    
+		Tickable(TickableTileEntity tileEntity){
+			super(tileEntity);
+		}
+		
+		@Override
+		public void update(){
+			((ITileEntityTickable) tileEntity).update();
+		}
+	}
 }

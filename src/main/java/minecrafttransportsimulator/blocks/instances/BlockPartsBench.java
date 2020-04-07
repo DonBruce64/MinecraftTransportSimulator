@@ -28,12 +28,16 @@ public class BlockPartsBench extends ABlockBase{
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i point, WrapperPlayer playerClicking){
-		if(world.isClient()){
-			//TODO this needs to be re-done with abstract GUI.
-			FMLCommonHandler.instance().showGuiScreen(new GUIPartBench(this, playerClicking));
+	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer playerClicking, boolean rightClick){
+		if(rightClick){
+			if(world.isClient()){
+				//TODO this needs to be re-done with abstract GUI.
+				FMLCommonHandler.instance().showGuiScreen(new GUIPartBench(this, playerClicking));
+			}
+			return true;
+		}else{
+			return false;
 		}
-		return true;
 	}
 	
 	public boolean isJSONValid(AJSONItem<?> definition){

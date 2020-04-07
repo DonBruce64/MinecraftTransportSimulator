@@ -17,7 +17,7 @@ import minecrafttransportsimulator.wrappers.WrapperTileEntityRender;
  *
  * @author don_bruce
  */
-public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEntityBase, RenderedBlock extends IBlockTileEntity>{
+public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEntityBase<?>, RenderedBlock extends IBlockTileEntity<?>>{
 	
 	/**
 	 *  Called to render this tile entity.  The currently-bound texture is undefined, so you will need

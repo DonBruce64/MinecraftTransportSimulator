@@ -7,12 +7,15 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -96,6 +99,17 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Returns true if the block at the passed-in location is solid.  Solid means
+	 *  that said block can be collided with, is a cube, and is generally able to have
+	 *  things placed or connected to it.
+	 */
+	public boolean isBlockSolid(Point3i point){
+		IBlockState offsetMCState = world.getBlockState(new BlockPos(point.x, point.y, point.z));
+		Block offsetMCBlock = offsetMCState.getBlock();
+        return offsetMCBlock != null ? !offsetMCBlock.equals(Blocks.BARRIER) && offsetMCState.getMaterial().isOpaque() && offsetMCState.isFullCube() && offsetMCState.getMaterial() != Material.GOURD : false;
+	}
+	
+	/**
 	 *  Returns the block at the passed-in location, or null if it doesn't exist in the world.
 	 *  Only valid for blocks of type {@link ABlockBase} others will return null.
 	 */
@@ -109,22 +123,23 @@ public class WrapperWorld{
 	 *  Has the player place the passed-in block at the point specified.
 	 *  Returns true if the block was placed, false if not.
 	 */
-    public boolean setBlock(ABlockBase block, Point3i point, WrapperPlayer player){
-    	//TODO this will get used once we get sides working, or will move into the item wrapper.
-    	WrapperBlock wrapper = WrapperBlock.blockWrapperMap.get(block);
-    	ItemStack itemstack = player.getHeldStack();
-    	BlockPos pos = new BlockPos(point.x, point.y, point.z);
-    	EnumFacing facing = player.player.getHorizontalFacing();
-    	if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
-            pos = pos.offset(facing);
-        }
-    	if(!itemstack.isEmpty() && player.player.canPlayerEdit(pos, facing, itemstack) && world.mayPlace(wrapper, pos, false, facing, null)){
-            IBlockState newState = wrapper.getStateForPlacement(world, pos, facing, 0, 0, 0, 0, player.player, EnumHand.MAIN_HAND);
-            if(world.setBlockState(pos, newState, 11)){
-                itemstack.shrink(1);
-            }
-            return true;
-        }
+    public boolean setBlock(ABlockBase block, Point3i point, WrapperPlayer player, Axis axis){
+    	if(!world.isRemote){
+	    	WrapperBlock wrapper = WrapperBlock.blockWrapperMap.get(block);
+	    	ItemStack itemstack = player.getHeldStack();
+	    	BlockPos pos = new BlockPos(point.x, point.y, point.z);
+	    	EnumFacing facing = EnumFacing.valueOf(axis.name());
+	    	if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
+	            pos = pos.offset(facing);
+	        }
+	    	if(!itemstack.isEmpty() && player.player.canPlayerEdit(pos, facing, itemstack) && world.mayPlace(wrapper, pos, false, facing, null)){
+	            IBlockState newState = wrapper.getStateForPlacement(world, pos, facing, 0, 0, 0, 0, player.player, EnumHand.MAIN_HAND);
+	            if(world.setBlockState(pos, newState, 11)){
+	                itemstack.shrink(1);
+	            }
+	            return true;
+	        }
+    	}
     	return false;
     }
 	
@@ -132,9 +147,9 @@ public class WrapperWorld{
 	 *  Returns the tile entity at the passed-in location, or null if it doesn't exist in the world.
 	 *  Only valid for TEs of type {@link ATileEntityBase} others will return null.
 	 */
-	public ATileEntityBase getTileEntity(Point3i point){
+	public ATileEntityBase<?> getTileEntity(Point3i point){
 		TileEntity tile = world.getTileEntity(new BlockPos(point.x, point.y, point.z));
-		return tile instanceof WrapperTileEntity ? ((WrapperTileEntity) tile).tileEntity : null;
+		return tile instanceof WrapperTileEntity ? ((WrapperTileEntity<?>) tile).tileEntity : null;
 	}
 	
 	/**

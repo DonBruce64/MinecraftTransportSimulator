@@ -38,4 +38,9 @@ public class Point3i extends APoint3<Integer>{
 		this.y += y;
 		this.z += z;
 	}
+	
+	@Override
+	public Point3i newOffset(Integer x, Integer y, Integer z){
+		return new Point3i(this.x + x, this.y + y, this.z + z);
+	}
 }

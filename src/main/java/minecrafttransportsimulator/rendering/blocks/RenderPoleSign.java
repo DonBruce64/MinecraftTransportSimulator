@@ -6,14 +6,14 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.instances.BlockPoleSign;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPoleSign;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 
-public class RenderPoleSign extends ARenderTileEntityBase<TileEntityPoleSign, BlockPoleSign>{
+public class RenderPoleSign extends ARenderTileEntityBase<TileEntityPole_Sign, BlockPoleSign>{
 		
 	@Override
-	public void render(TileEntityPoleSign tile, BlockPoleSign block, float partialTicks){
+	public void render(TileEntityPole_Sign tile, BlockPoleSign block, float partialTicks){
 		//Translate a little to make the sign offset from the pole.
 		GL11.glTranslatef(0F, 8F/16F, 0.0635F);
 		

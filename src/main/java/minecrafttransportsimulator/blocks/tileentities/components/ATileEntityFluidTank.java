@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidTankChange;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
@@ -8,7 +9,7 @@ import minecrafttransportsimulator.wrappers.WrapperNetwork;
  *
  * @author don_bruce
  */
-public abstract class ATileEntityFluidTank extends ATileEntityTickable{
+public abstract class ATileEntityFluidTank<JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> extends ATileEntityBase<JSONDefinition>{
 	private String currentFluid = "";
 	private int currentFluidLevel = 0;
 	
@@ -58,7 +59,7 @@ public abstract class ATileEntityFluidTank extends ATileEntityTickable{
 				}
 				//Send off packet now that we know what fluid we will have on this tank.
 				if(!world.isClient()){
-					WrapperNetwork.sendToAllClients(new PacketFluidTankChange(this, maxAmount));
+					WrapperNetwork.sendToAllClients(new PacketTileEntityFluidTankChange(this, maxAmount));
 				}
 			}
 			return maxAmount;
@@ -82,7 +83,7 @@ public abstract class ATileEntityFluidTank extends ATileEntityTickable{
 			if(doDrain){
 				//Need to send off packet before we remove fluid due to empty tank.
 				if(!world.isClient()){
-					WrapperNetwork.sendToAllClients(new PacketFluidTankChange(this, -maxAmount));
+					WrapperNetwork.sendToAllClients(new PacketTileEntityFluidTankChange(this, -maxAmount));
 				}
 				currentFluidLevel -= maxAmount;
 				if(currentFluidLevel == 0){
@@ -97,12 +98,14 @@ public abstract class ATileEntityFluidTank extends ATileEntityTickable{
 	
 	@Override
 	public void load(WrapperNBT data){
+		super.load(data);
 		currentFluid = data.getString("fluidName");
 		currentFluidLevel = data.getInteger("fluidLevel");
 	}
 	
 	@Override
 	public void save(WrapperNBT data){
+		super.save(data);
 		data.setString("fluidName", currentFluid);
 		data.setInteger("fluidLevel", currentFluidLevel);
 	}
