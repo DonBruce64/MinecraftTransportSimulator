@@ -90,7 +90,7 @@ public class PartPropeller extends APart{
 					damagePropeller(1);
 					
 				}
-				if(connectedEngine.RPM*connectedEngine.definition.engine.gearRatios[0]/60*Math.PI*definition.propeller.diameter*0.0254 > 340.29){
+				if(connectedEngine.RPM*connectedEngine.definition.engine.gearRatios[0]/60*Math.PI*0.5*definition.propeller.diameter*0.0254 > 340.29){
 					damagePropeller(9999);
 				}
 			}
