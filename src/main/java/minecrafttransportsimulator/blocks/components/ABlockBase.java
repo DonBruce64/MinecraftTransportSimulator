@@ -27,9 +27,9 @@ public abstract class ABlockBase{
 	}
 	
 	/**
-	 *  Called when this block is first placed in the world.  Can be used to set the
-	 *  state of the associated TileEntity based on position or the item that was
-	 *  used to place this block.
+	 *  Called when this block is first placed in the world.  Note that this is called
+	 *  after NBT is loaded into the TE from saved state, or after its definition is
+	 *  set from the item definition if no NBT data was present on the item.
 	 */
 	public void onPlaced(WrapperWorld world, Point3i location, WrapperPlayer player){}
 	
@@ -39,14 +39,9 @@ public abstract class ABlockBase{
 	 *  or may not be taken.  Note that this is called both on the server and
 	 *  on the client, so watch your actions and packets!
 	 */
-	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player, boolean rightClick){
+	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player){
 		return false;
 	}
-	
-	/**
-	 *  Called when the world around this block updates.  Can be used to update states for rendering operations.
-	 */
-	public void onWorldUpdate(WrapperWorld world, Point3i location, boolean redstonePower){}
 
 	/**
 	 *  Gets the current rotation of the block at the passed-in point.

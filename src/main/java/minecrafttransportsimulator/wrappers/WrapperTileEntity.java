@@ -1,9 +1,13 @@
 package minecrafttransportsimulator.wrappers;
 
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
@@ -50,9 +54,26 @@ public class WrapperTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 	
 	@Override
 	public NBTTagCompound getUpdateTag(){
+		//Gets called when the server sends this TE over as NBT data.
 		//Get the full NBT tag, not just the position!
         return this.writeToNBT(new NBTTagCompound());
     }
+	
+	@Override
+	@Nullable
+    public SPacketUpdateTileEntity getUpdatePacket(){
+		//Gets called when we do a blockstate update for this TE.
+		//Done during initial placedown so we need to get the full data for inital state. 
+		NBTTagCompound tag = new NBTTagCompound();
+		tileEntity.save(new WrapperNBT(tag));
+	    return new SPacketUpdateTileEntity(getPos(), -1, tag);
+    }
+	
+	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt){
+		//Called when the client gets a TE update packet.
+		//We load the server-sent data here.
+		tileEntity.load(new WrapperNBT(pkt.getNbtCompound()));
+	}
 	
 	@Override
 	@SuppressWarnings("unchecked")

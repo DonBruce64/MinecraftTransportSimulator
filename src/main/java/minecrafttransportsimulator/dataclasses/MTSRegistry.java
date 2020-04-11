@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.dataclasses;
 
-import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,7 +77,7 @@ public final class MTSRegistry{
 	 * and will be sent to packs for item registration when so asked via {@link #getItemsForPack(String)}.  May also
 	 * be used if we need to lookup a registered part item.  Map is keyed by packID to allow sorting for items from 
 	 * different packs, while the sub-map is keyed by the part's {@link AJSONItem#systemName}.**/
-	public static TreeMap<String, LinkedHashMap<String, AItemPack<? extends AJSONItem<?>>>> packItemMap = new TreeMap<String, LinkedHashMap<String, AItemPack<? extends AJSONItem<?>>>>();
+	public static TreeMap<String, LinkedHashMap<String, AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>>> packItemMap = new TreeMap<String, LinkedHashMap<String, AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>>>();
 	
 	/**Maps pack items to their list of crafting ingredients.  This is used rather than the core JSON to allow for
 	 * overriding the crafting materials in said JSON, and to concatenate the materials in {@link JSONVehicle}*/
@@ -90,15 +89,11 @@ public final class MTSRegistry{
 	/**Map of creative tabs for packs.  Keyed by packID.  Populated by the {@link PackParserSystem}**/
 	public static final Map<String, CreativeTabPack> packTabs = new HashMap<String, CreativeTabPack>();
 
-	//Booklets for manuals.  Not made final as they are created dynamically at runtime.
-	public static Item handbook_en;
-	public static Item handbook_ru;
-	
 	//Vehicle interaction items.
-	public static final Item wrench = new ItemWrench().setCreativeTab(coreTab);
-	public static final Item key = new ItemKey().setCreativeTab(coreTab);
-	public static final Item jumperCable = new ItemJumperCable().setCreativeTab(coreTab);
-	public static final Item jerrycan = new ItemJerrycan().setCreativeTab(coreTab);
+	public static final Item wrench = new ItemWrench();
+	public static final Item key = new ItemKey();
+	public static final Item jumperCable = new ItemJumperCable();
+	public static final Item jerrycan = new ItemJerrycan();
 	
 	//Crafting benches.
 	public static final WrapperBlock vehicleBench = new WrapperBlock(new BlockPartsBench(JSONVehicle.class));
@@ -115,10 +110,6 @@ public final class MTSRegistry{
 	//Fuel pump.
 	//FIXME make fuel pump a main pack item with regular crafting recipie.
 	//public static final WrapperBlock fuelPump = new WrapperBlock(new BlockFuelPump());
-	
-	//Traffic signal Controller
-	//FIXME make signal controller a main pack item with regular crafting recipie.
-	//public static final WrapperBlock trafficSignalController = new WrapperBlock(new BlockTrafficSignalController());
 	
 	//Counter for packets.
 	private static int packetNumber = 0;
@@ -177,24 +168,7 @@ public final class MTSRegistry{
 	 */
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event){
-		//Before doing any item registration, create the pack handbooks.
-		//These are special, as they don't come from any packs, yet they use the booklet code.
-		//This is done to avoid the need to make a new GUI.
-		try {
-			PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json"), "UTF-8"), "handbook_en", MTS.MODID);
-			PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_ru.json"), "UTF-8"), "handbook_ru", MTS.MODID);
-			handbook_en = MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_en").setUnlocalizedName("mts:handbook_en");
-			handbook_ru = MTSRegistry.packItemMap.get(MTS.MODID).get("handbook_ru").setUnlocalizedName("mts:handbook_ru");
-		}catch(Exception e){
-			MTS.MTSLog.error("ERROR PARSING HANDBOOK AS UTF-8 STRING ENCODING!  HANDBOOKS MAY NOT APPEAR!");
-			MTS.MTSLog.error(e.getMessage());
-		}finally{
-			//Get rid of the handbooks from the pack item map as those shouldn't exist.
-			MTSRegistry.packItemMap.remove(MTS.MODID);
-		}
-		
-		
-		//Now register all core items.
+		//Register all core items.
 		for(Field field : MTSRegistry.class.getFields()){
 			if(field.getType().equals(Item.class)){
 				try{
@@ -220,6 +194,14 @@ public final class MTSRegistry{
 					e.printStackTrace();
 				}
 			}
+		}
+		
+		//Register all core MTS "pack" items.
+		for(AItemPack<?> item : MTSRegistry.packItemMap.get(MTS.MODID).values()){
+			item.setCreativeTab(coreTab);
+			String name = item.definition.systemName;
+			event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
+			coreItems.add(item);
 		}
 	}
 

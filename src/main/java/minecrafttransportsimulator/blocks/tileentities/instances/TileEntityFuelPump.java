@@ -5,7 +5,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTic
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
-import minecrafttransportsimulator.rendering.blocks.RenderFuelPump;
+import minecrafttransportsimulator.rendering.blocks.RenderDecor;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
@@ -72,8 +72,8 @@ public class TileEntityFuelPump extends ATileEntityFluidTank<JSONDecor>implement
 	}
 
 	@Override
-	public RenderFuelPump getRenderer(){
-		return new RenderFuelPump();
+	public RenderDecor getRenderer(){
+		return new RenderDecor();
 	}
 	
 	@Override

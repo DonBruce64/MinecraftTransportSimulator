@@ -8,19 +8,16 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
-import minecrafttransportsimulator.guis.GUISign;
+import minecrafttransportsimulator.items.core.ItemWrench;
+import minecrafttransportsimulator.items.packs.ItemPole;
 import minecrafttransportsimulator.items.packs.ItemPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
-import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.wrappers.WrapperNBT;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 
 /**Pole block class.  This class allows for dynamic collision boxes and dynamic
  * placement of components on poles via the Tile Entity.
@@ -54,68 +51,23 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player, boolean rightClick){
+	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player){
+		//Fire a packet to interact with this pole.  Will either add, remove, or allow editing of the pole.
+		//Only fire packet if player is holding a pole component that's not an actual pole, a wrench,
+		//or is clicking a sign.
 		TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
-		if(rightClick){
-			//If we can place a component here, try and do so now.
-			if(player.getHeldStack().getItem() instanceof ItemPoleComponent && !pole.components.containsKey(axis)){
-				//We can place a component here.  Try and do so.
-				ItemPoleComponent item = (ItemPoleComponent) player.getHeldStack().getItem();
-				if(!world.isClient()){
-					//Check for interaction and send out packet if we could interact.
-					if((!ConfigSystem.configObject.general.opSignEditingOnly.value || player.isOP())){
-						ATileEntityPole_Component component = TileEntityPole.createComponent(item.definition);
-						//Add text if we created a sign component and have text from the NBT tag.
-						if(component instanceof TileEntityPole_Sign && player.getHeldStack().hasTagCompound()){
-							((TileEntityPole_Sign) component).textLines.addAll(new WrapperNBT(player.getHeldStack().getTagCompound()).getStrings("textLines", component.definition.general.textLines.length));
-						}
-						pole.components.put(axis, component);
-						world.markTileEntityChanged(pole.position);
-						WrapperNetwork.sendToAllClients(new PacketTileEntityPoleChange(pole, pole.components.get(axis), axis));
-						return true;
-					}
+		if(pole != null){
+			boolean isPlayerHoldingComponent = player.isHoldingItem(ItemPoleComponent.class) && !player.isHoldingItem(ItemPole.class);
+			boolean isPlayerHoldingWrench = player.isHoldingItem(ItemWrench.class);
+			boolean isPlayerClickingSign = pole.components.get(axis) instanceof TileEntityPole_Sign;
+			if(isPlayerHoldingComponent || isPlayerHoldingWrench || isPlayerClickingSign){
+				if(world.isClient()){
+					WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null));
 				}
 				return true;
-			}else{
-				//If we are on the client, and we clicked a sign component, open the GUI.
-				if(world.isClient() && pole.components.get(axis) instanceof TileEntityPole_Sign){
-					FMLCommonHandler.instance().showGuiScreen(new GUISign((TileEntityPole_Sign) pole.components.get(axis)));
-				}
-			}
-		}else{
-			//Try to remove a sign component if we have one.
-			if(!world.isClient()){
-				if(pole.components.containsKey(axis) && (!ConfigSystem.configObject.general.opSignEditingOnly.value || player.isOP())){
-					pole.components.remove(axis);
-					world.markTileEntityChanged(pole.position);
-					WrapperNetwork.sendToAllClients(new PacketTileEntityPoleChange(pole, null, axis));
-					return true;
-				}
 			}
 		}
 		return false;
-	}
-	
-	@Override
-	public void onWorldUpdate(WrapperWorld world, Point3i location, boolean redstonePower){
-		TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
-		if(pole != null){
-			pole.connections.clear();
-			pole.solidConnections.clear();
-			for(Axis axis : Axis.values()){
-				Point3i offsetPoint = axis.getOffsetPoint(location);
-				if(world.getBlock(offsetPoint) instanceof BlockPole){
-					pole.connections.put(axis, true);
-					pole.solidConnections.put(axis, false);
-				}else if(world.isBlockSolid(offsetPoint)){
-					pole.connections.put(axis, false);
-					pole.solidConnections.put(axis, true);
-				}else{
-					pole.connections.put(axis, false);
-					pole.solidConnections.put(axis, false);
-				}
-			}
-		}
 	}
 	
 	@Override
@@ -124,7 +76,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 		TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
 		if(pole != null){
 			for(Axis axis : Axis.values()){
-				if(pole.connections.containsKey(axis) || pole.solidConnections.containsKey(axis)){
+				if(world.getBlock(axis.getOffsetPoint(location)) instanceof BlockPole || world.isBlockSolid(axis.getOffsetPoint(location)) || pole.components.containsKey(axis)){
 					collidingBoxes.add(axisBounds.get(axis));
 				}
 			}

@@ -5,7 +5,7 @@ import minecrafttransportsimulator.blocks.instances.BlockPole;
 import minecrafttransportsimulator.items.core.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 
-public class ItemPole extends AItemPack<JSONPoleComponent> implements IItemBlock{
+public class ItemPole extends ItemPoleComponent implements IItemBlock{
 	
 	public ItemPole(JSONPoleComponent definition){
 		super(definition);

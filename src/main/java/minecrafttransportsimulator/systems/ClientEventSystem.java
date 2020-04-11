@@ -7,7 +7,6 @@ import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
-import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.items.core.IItemVehicleInteractable;
 import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
@@ -18,12 +17,15 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
+import minecrafttransportsimulator.wrappers.WrapperTileEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
@@ -250,6 +252,16 @@ public final class ClientEventSystem{
             	minecraft.getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
             }
         }
+        Entity renderViewEntity = minecraft.getRenderViewEntity();
+		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * event.getPartialTicks();
+		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * event.getPartialTicks();
+		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * event.getPartialTicks();
+        for(TileEntity tile : minecraft.world.loadedTileEntityList){
+        	if(tile instanceof WrapperTileEntity){
+        		Vec3d delta = new Vec3d(tile.getPos()).addVector(-playerX, -playerY, -playerZ);
+        		TileEntityRendererDispatcher.instance.getRenderer(tile).render(tile, delta.x, delta.y, delta.z, event.getPartialTicks(), 0, 0);
+        	}
+        }
     }
 
     /**
@@ -367,7 +379,8 @@ public final class ClientEventSystem{
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
 	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()].equals(MTSRegistry.coreTab)){
-	    			WrapperGUI.openGUI(new GUIPackMissing());
+	    			//FIXME re-enable this.
+	    			//WrapperGUI.openGUI(new GUIPackMissing());
 	    		}
 	    	}
     	}

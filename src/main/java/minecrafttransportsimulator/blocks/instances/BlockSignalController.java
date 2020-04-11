@@ -17,15 +17,11 @@ public class BlockSignalController extends ABlockBase implements IBlockTileEntit
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player, boolean rightClick){
-		if(rightClick){
-			if(world.isClient()){
-				WrapperGUI.openGUI(new GUISignalController((TileEntitySignalController) world.getTileEntity(point)));
-			}
-			return true;
-		}else{
-			return false;
+	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
+		if(world.isClient()){
+			WrapperGUI.openGUI(new GUISignalController((TileEntitySignalController) world.getTileEntity(point)));
 		}
+		return true;
 	}
 	
 	@Override

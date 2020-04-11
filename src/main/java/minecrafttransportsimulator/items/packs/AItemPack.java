@@ -56,7 +56,7 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem<? extends AJSON
 	public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
 		//If we are a type of pack item that can place blocks, try to do so now.
 		if(this instanceof IItemBlock){
-			return ((IItemBlock) this).placeBlock(new WrapperWorld(world), new WrapperPlayer(player), new Point3i(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.getName())) ? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
+			return ((IItemBlock) this).placeBlock(new WrapperWorld(world), new WrapperPlayer(player), new Point3i(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.name())) ? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
 		}else{
 			return super.onItemUse(player, world, pos, hand, facing, hitX, hitY, hitZ);
 		}

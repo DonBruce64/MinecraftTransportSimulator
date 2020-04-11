@@ -1,0 +1,33 @@
+{
+  "general": {
+	"name" : "Fuel Pump",
+		"type" : "fuel_pump",
+		"width" : 1.0,
+		"height" : 1.0,
+		"depth" : 1.0,
+		"materials" : [],
+		"textLines" : [
+			{
+				"xPos" : 0.0,
+				"yPos" : 1.078125,
+				"zPos" : 0.25,
+				"scale" : 0.125,
+				"color" : "0xFFC800"
+			},
+			{
+				"xPos" : 0.0,
+				"yPos" : 1.0,
+				"zPos" : 0.25,
+				"scale" : 0.125,
+				"color" : "0xFFC800"
+			},
+			{
+				"xPos" : 0.0,
+				"yPos" : 0.921875,
+				"zPos" : 0.25,
+				"scale" : 0.125,
+				"color" : "0xFFC800"
+			}
+		]
+	}
+}

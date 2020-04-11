@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -34,6 +35,15 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod.EventBusSubscriber(Side.CLIENT)
 public class WrapperRender{
 	private static final Map<String, Map<String, ResourceLocation>> textures = new HashMap<String, Map<String, ResourceLocation>>(); 
+	
+	
+	/**
+	 *  Gets the current render pass.  0 for solid blocks, 1 for transparent,
+	 *  and -1 for end-of world final renders.
+	 */
+	public static int getRenderPass(){
+		return MinecraftForgeClient.getRenderPass();
+	}
 	
 	/**
 	 *  Binds the passed-in texture to be rendered.  The instance of the texture is 
@@ -78,7 +88,11 @@ public class WrapperRender{
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
 		//Register the vehicle rendering class.
-		RenderingRegistry.registerEntityRenderingHandler(EntityVehicleE_Powered.class, MTSRenderFactory);
+		RenderingRegistry.registerEntityRenderingHandler(EntityVehicleE_Powered.class, new IRenderFactory<EntityVehicleE_Powered>(){
+			@Override
+			public Render<? super EntityVehicleE_Powered> createRenderFor(RenderManager manager){
+				return new RenderVehicle(manager);
+			}});
 				
 		//Register the TESR wrapper.
 		ClientRegistry.bindTileEntitySpecialRenderer(WrapperTileEntity.class, new WrapperTileEntityRender());
@@ -119,13 +133,90 @@ public class WrapperRender{
 		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(MTS.MODID + ":" + item.getRegistryName().getResourcePath(), "inventory"));
 	}
 	
-	/**
-	 *  Stupid Forge with their stupid factories...
-	 */
-	private static final IRenderFactory<EntityVehicleE_Powered> MTSRenderFactory = new IRenderFactory<EntityVehicleE_Powered>(){
+	/*
+	private static final ICustomModelLoader packModelLoader = new ICustomModelLoader(){
+
 		@Override
-		public Render<? super EntityVehicleE_Powered> createRenderFor(RenderManager manager){
-			return new RenderVehicle(manager);
+		public void onResourceManagerReload(IResourceManager resourceManager){
+			//Do nothing.  Packs don't change.
 		}
-	};
+
+		@Override
+		public boolean accepts(ResourceLocation modelLocation){
+			System.out.println(modelLocation.toString());
+			return modelLocation.getResourceDomain().equals(MTS.MODID) && modelLocation.getResourcePath().startsWith("pack_");
+		}
+
+		@Override
+		public IModel loadModel(ResourceLocation modelLocation) throws Exception{
+			final List<ResourceLocation> textures = new ArrayList<ResourceLocation>();
+			//FIXME make textures here.
+			textures.add(modelLocation);
+			
+			return new IModel(){
+				
+				@Override
+				public Collection<ResourceLocation> getTextures(){
+			        return textures;
+			    }
+			    
+				@Override
+				public IBakedModel bake(IModelState state, VertexFormat format, Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter){
+					return new IBakedModel(){
+						private final Map<EnumFacing, List<BakedQuad>> quadCache = new HashMap<EnumFacing, List<BakedQuad>>();
+						
+						@Override
+						public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand){
+							if(quadCache.containsKey(side)){
+								int[] newData = Arrays.copyOf(quad.getVertexData(), quad.getVertexData().length);
+
+				                VertexFormat format = quad.getFormat();
+
+				                for (int i = 0; i < 4; ++i) {
+				                    int j = format.getIntegerSize() * i;
+				                    newData[j + 0] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 0]) * (float) scale.x + (float) transform.x);
+				                    newData[j + 1] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 1]) * (float) scale.y + (float) transform.y);
+				                    newData[j + 2] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 2]) * (float) scale.z + (float) transform.z);
+				                }
+
+				                quadCache.get(side).add(new BakedQuad(newData, quad.getTintIndex(), quad.getFace(), quad.getSprite(), quad.shouldApplyDiffuseLighting(), quad.getFormat()));
+							}
+							return quads;
+							// TODO Auto-generated method stub
+						}
+
+						@Override
+						public boolean isAmbientOcclusion(){
+							//Not a block, don't care.
+							return false;
+						}
+
+						@Override
+						public boolean isGui3d(){
+							//3D models just look better.
+							return true;
+						}
+
+						@Override
+						public boolean isBuiltInRenderer(){
+							//This smells like code that will go away sometime...
+							return false;
+						}
+
+						@Override
+						public TextureAtlasSprite getParticleTexture(){
+							return bakedTextureGetter.apply(textures.get(0));
+						}
+
+						@Override
+						public ItemOverrideList getOverrides(){
+							//FIXME see if this works for TEs?
+							return ItemOverrideList.NONE;
+						}
+					};
+				}
+			};
+		}
+		
+	};*/
 }

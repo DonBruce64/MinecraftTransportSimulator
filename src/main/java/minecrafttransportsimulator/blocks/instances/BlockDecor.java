@@ -7,21 +7,13 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
-import minecrafttransportsimulator.items.packs.ItemDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
 
 public class BlockDecor extends ABlockBase implements IBlockTileEntity<JSONDecor>{
 	
     public BlockDecor(){
     	super(10.0F, 5.0F);
-	}
-    
-	@Override
-	public void onPlaced(WrapperWorld world, Point3i location, WrapperPlayer player){
-		//New decor block.  Assign decor definition from item defnition.
-		((TileEntityDecor) world.getTileEntity(location)).setDefinition(((ItemDecor) player.getHeldStack().getItem()).definition);
 	}
     
     @Override

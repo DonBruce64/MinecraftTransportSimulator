@@ -14,6 +14,7 @@ import minecrafttransportsimulator.items.packs.ItemBooklet;
 import minecrafttransportsimulator.items.packs.ItemDecor;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.items.packs.ItemItem;
+import minecrafttransportsimulator.items.packs.ItemPole;
 import minecrafttransportsimulator.items.packs.ItemPoleComponent;
 import minecrafttransportsimulator.items.packs.ItemVehicle;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
@@ -183,7 +184,8 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their pole components to the mod.**/
     public static void addPoleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-	    	setupItem(new ItemPoleComponent(new Gson().fromJson(jsonReader, JSONPoleComponent.class)), jsonFileName, packID, ItemClassification.POLE);
+    		JSONPoleComponent definition = new Gson().fromJson(jsonReader, JSONPoleComponent.class);
+	    	setupItem(definition.general.type.equals("core") ? new ItemPole(definition) : new ItemPoleComponent(definition), jsonFileName, packID, ItemClassification.POLE);
     	}catch(Exception e){
     		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		logEntries.add(e.getMessage());
@@ -233,7 +235,7 @@ public final class PackParserSystem{
     	
     	//Put the item in the map in the registry.
     	if(!MTSRegistry.packItemMap.containsKey(packID)){
-    		MTSRegistry.packItemMap.put(packID, new LinkedHashMap<String, AItemPack<? extends AJSONItem<?>>>());
+    		MTSRegistry.packItemMap.put(packID, new LinkedHashMap<String, AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>>());
     	}
     	MTSRegistry.packItemMap.get(packID).put(item.definition.systemName, item);
     	

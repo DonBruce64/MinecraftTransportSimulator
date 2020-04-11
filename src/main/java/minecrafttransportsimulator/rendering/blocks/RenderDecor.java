@@ -1,24 +1,30 @@
 package minecrafttransportsimulator.rendering.blocks;
 
+import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.blocks.instances.BlockDecor;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
+import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityFluidTank;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONDecor.TextLine;
 import minecrafttransportsimulator.systems.OBJParserSystem;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
+import minecrafttransportsimulator.wrappers.WrapperGame;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 
-public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor, BlockDecor>{
+public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor>, IBlockTileEntity<JSONDecor>>{
 	private static final Map<JSONDecor, Integer> displayListMap = new HashMap<JSONDecor, Integer>();
 		
 	@Override
-	public void render(TileEntityDecor tile, BlockDecor block, float partialTicks){
-		JSONDecor definition = tile.getDefinition();
+	public void render(ATileEntityBase<JSONDecor> tile, IBlockTileEntity<JSONDecor> block, float partialTicks){
 		//If we don't have the displaylist and texture cached, do it now.
+		JSONDecor definition = tile.getDefinition();
 		if(!displayListMap.containsKey(definition)){
 			String optionalModelName = definition.general.modelName;
 			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(definition.packID, "objmodels/decors/" + (optionalModelName != null ? optionalModelName : definition.systemName) + ".obj");
@@ -38,8 +44,43 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor, BlockDec
 			displayListMap.put(definition, displayListIndex);
 		}
 		
-		//Bind the decor texture and render.
-		WrapperRender.bindTexture(definition.packID, "textures/decors/" + definition.systemName + ".png");
-		GL11.glCallList(displayListMap.get(definition));
+		//Don't do solid model rendering if it's not pass 0.
+		if(WrapperRender.getRenderPass() == 0){
+			//Bind the texture and render.
+			WrapperRender.bindTexture(definition.packID, "textures/decors/" + definition.systemName + ".png");
+			GL11.glCallList(displayListMap.get(definition));
+			//If we are a fluid tank render text.
+			if(definition.general.textLines != null && tile instanceof ATileEntityFluidTank){
+				ATileEntityFluidTank<JSONDecor> tank = (ATileEntityFluidTank<JSONDecor>) tile;
+				WrapperRender.setLightmapState(false);
+				GL11.glDisable(GL11.GL_LIGHTING);
+				for(byte i=0; i<definition.general.textLines.length; ++i){
+					TextLine text = definition.general.textLines[i];
+					GL11.glPushMatrix();
+					GL11.glTranslatef(text.xPos, text.yPos, text.zPos + 0.01F);
+					GL11.glScalef(text.scale/16F, text.scale/16F, text.scale/16F);
+					GL11.glRotatef(180, 1, 0, 0);
+					switch(i%3){
+						case(0) :{//Render fuel name.
+							WrapperGUI.drawText(tank.getFluidLevel() > 0 ? WrapperGame.getFluidName(tank.getFluid()).toUpperCase() : "", 0, 0, Color.decode(text.color), true, false, 0);
+							break;
+						}
+						case(1) :{//Render fuel level.
+							String fluidLevel = String.format("%04.1f", tank.getFluidLevel()/1000F);
+							WrapperGUI.drawText(WrapperGUI.translate("tile.fuelpump.level") + fluidLevel + "mb", 0,  0, Color.decode(text.color), true, false, 0);
+							break;
+						}
+						case(2) :{//Render fuel dispensed.
+							String fluidDispensed = String.format("%04.1f", ((TileEntityFuelPump) tank).totalTransfered/1000F);
+							WrapperGUI.drawText(WrapperGUI.translate("tile.fuelpump.dispensed") + fluidDispensed + "mb", 0, 0, Color.decode(text.color), true, false, 0);
+							break;
+						}
+					}
+					GL11.glPopMatrix();
+				}
+				GL11.glEnable(GL11.GL_LIGHTING);
+				WrapperRender.setLightmapState(true);
+			}
+		}
 	}
 }

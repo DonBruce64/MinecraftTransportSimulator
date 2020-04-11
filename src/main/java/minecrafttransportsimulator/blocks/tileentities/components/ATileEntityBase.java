@@ -24,8 +24,8 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 	public WrapperWorld world;
 	/**Current position of this TileEntity.  Set both manually and during loading from world.**/
 	public Point3i position;
-	/**JSON definition for this tileEntity.**/
-	public JSONDefinition definition;
+	/**JSON definition for this tileEntity.  Private to allow getter/setter post-definition assignment logic.**/
+	private JSONDefinition definition;
 	
 	/**
 	 *  Gets the block that's associated with this TileEntity.
@@ -58,7 +58,9 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 	public void load(WrapperNBT data){
 		String packID = data.getString("packID");
 		String systemName = data.getString("systemName");
-		setDefinition((JSONDefinition) MTSRegistry.packItemMap.get(packID).get(systemName).definition);
+		if(!packID.isEmpty()){
+			setDefinition((JSONDefinition) MTSRegistry.packItemMap.get(packID).get(systemName).definition);
+		}
 	}
 	
 	/**
@@ -66,8 +68,10 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 	 *  should be written to at this point with any data needing to be saved.
 	 */
 	public void save(WrapperNBT data){
-		data.setString("packID", definition.packID);
-		data.setString("systemName", definition.systemName);
+		if(definition != null){
+			data.setString("packID", definition.packID);
+			data.setString("systemName", definition.systemName);
+		}
 	}
 
 	

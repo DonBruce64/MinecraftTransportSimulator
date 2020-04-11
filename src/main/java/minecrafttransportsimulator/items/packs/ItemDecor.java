@@ -22,11 +22,13 @@ public class ItemDecor extends AItemPack<JSONDecor> implements IItemBlock{
 	
 	@Override
 	public Class<? extends ABlockBase> getBlockClass(){
-		switch(definition.general.type){
-			case("fuel_pump") : return BlockFuelPump.class;
-			case("signal_controller") : return BlockSignalController.class;
-			//Decor is assumed to be default per legacy systems.
-			default: return BlockDecor.class;
+		if(definition.general.type != null){
+			switch(definition.general.type){
+				case("fuel_pump") : return BlockFuelPump.class;
+				case("signal_controller") : return BlockSignalController.class;
+			}
 		}
+		//Normal decor is assumed to be default per legacy systems.
+		return BlockDecor.class;
 	}
 }

@@ -218,9 +218,11 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
        
         //Set up lighting.
         int lightVar = vehicle.getBrightnessForRender();
-        minecraft.entityRenderer.enableLightmap();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
-        RenderHelper.enableStandardItemLighting();
+        if(MinecraftForgeClient.getRenderPass() == -1){
+	        minecraft.entityRenderer.enableLightmap();
+	        RenderHelper.enableStandardItemLighting();
+        }
         
 		//Bind texture.  Adds new element to cache if needed.
 		if(!textureMap.containsKey(vehicle.definition.systemName)){
@@ -243,8 +245,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			GL11.glEnable(GL11.GL_NORMALIZE);
 			renderWindows(vehicle, partialTicks);
 			GL11.glDisable(GL11.GL_NORMALIZE);
-			renderTextMarkings(vehicle);
 			renderInstruments(vehicle);
+			RenderHelper.disableStandardItemLighting();
+			renderTextMarkings(vehicle);
+			RenderHelper.enableStandardItemLighting();
 			GL11.glShadeModel(GL11.GL_FLAT);
 			GL11.glPopMatrix();
 			
@@ -269,6 +273,12 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}
 		
+		//Make sure lightmaps are set correctly.
+		if(MinecraftForgeClient.getRenderPass() == -1){
+			RenderHelper.disableStandardItemLighting();
+			minecraft.entityRenderer.disableLightmap();
+		}
+		
 		//Render lights, but make sure the light list is populated here before we try to render this, as loading de-syncs can leave it null.
 		if(vehicleLightLists.get(vehicle.definition.genericName) != null){
 			GL11.glPushMatrix();
@@ -284,15 +294,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//Render holograms for missing parts if applicable.
 		if(MinecraftForgeClient.getRenderPass() != 0 && !wasRenderedPrior){
 			renderPartBoxes(vehicle);
-		}
-		
-		//Make sure lightmaps are set correctly.
-		if(MinecraftForgeClient.getRenderPass() == -1){
-			RenderHelper.disableStandardItemLighting();
-			minecraft.entityRenderer.disableLightmap();
-		}else{
-			RenderHelper.enableStandardItemLighting();
-			minecraft.entityRenderer.enableLightmap();
 		}
 		GL11.glPopMatrix();
 		
@@ -1000,13 +1001,11 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			
 			//Finally, scale and render the text.
 			GL11.glScalef(text.scale, text.scale, text.scale);
-			RenderHelper.disableStandardItemLighting();
 			minecraft.fontRenderer.drawString(vehicle.displayText, -minecraft.fontRenderer.getStringWidth(vehicle.displayText)/2, 0, Color.decode(text.color).getRGB());
 			GL11.glPopMatrix();
 		}
 		GL11.glColor3f(1.0F, 1.0F, 1.0F);
-		RenderHelper.enableStandardItemLighting();
-		if(vehicle.definition.rendering.textLighted){
+		if(vehicle.definition.rendering.textLighted  && isVehicleIlluminated(vehicle)){
 			GL11.glEnable(GL11.GL_LIGHTING);
 			minecraft.entityRenderer.enableLightmap();
 		}
@@ -1054,7 +1053,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 
 			//Render the light.
-			light.render(vehicle, wasRenderedPrior, textureMap.get(vehicle.definition.systemName));
+			light.renderOnVehicle(vehicle, wasRenderedPrior, textureMap.get(vehicle.definition.systemName));
 			GL11.glPopMatrix();
 		}
 	}
@@ -1176,7 +1175,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 							box = new AxisAlignedBB((float) (offset.x) - 0.375F, (float) (offset.y) - 0.5F, (float) (offset.z) - 0.375F, (float) (offset.x) + 0.375F, (float) (offset.y) + 1.25F, (float) (offset.z) + 0.375F);
 						}
 						
-						Minecraft.getMinecraft().entityRenderer.disableLightmap();
+						//Minecraft.getMinecraft().entityRenderer.disableLightmap();
 						GL11.glPushMatrix();
 						GL11.glDisable(GL11.GL_TEXTURE_2D);
 						GL11.glDisable(GL11.GL_LIGHTING);
@@ -1222,7 +1221,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 						GL11.glEnable(GL11.GL_LIGHTING);
 						GL11.glEnable(GL11.GL_TEXTURE_2D);
 						GL11.glPopMatrix();
-						Minecraft.getMinecraft().entityRenderer.enableLightmap();
+						//Minecraft.getMinecraft().entityRenderer.enableLightmap();
 					}
 				}
 			}

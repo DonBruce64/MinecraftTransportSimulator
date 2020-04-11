@@ -26,6 +26,13 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 	public abstract void render(RenderedTileEntity tileEntity, RenderedBlock block, float partialTicks);
 	
 	/**
+	 *  Returns true if this TE should be rotated to the rotation of the block.
+	 */
+	public boolean rotateToBlock(){
+		return true;
+	}
+	
+	/**
 	 *  Renders a lighted square at the passed-in location.  Used for internal lights on JSON models.
 	 *  Renders both a colored square as well as a lens flare.
 	 */

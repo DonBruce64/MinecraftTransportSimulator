@@ -21,8 +21,6 @@ import minecrafttransportsimulator.wrappers.WrapperNBT;
 */
 public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
-	public final Map<Axis, Boolean> connections = new HashMap<Axis, Boolean>();
-	public final Map<Axis, Boolean> solidConnections = new HashMap<Axis, Boolean>();
 	
 	@Override
 	@SuppressWarnings("unchecked")
@@ -31,7 +29,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		//Load components back in.
 		for(Axis axis : Axis.values()){
 			String packID = data.getString("packID" + axis.ordinal());
-			if(packID != null){
+			if(!packID.isEmpty()){
 				String systemName = data.getString("systemName" + axis.ordinal());
 				AItemPack<JSONPoleComponent> component = (AItemPack<JSONPoleComponent>) MTSRegistry.packItemMap.get(packID).get(systemName);
 				components.put(axis, createComponent(component.definition));

@@ -71,7 +71,7 @@ public class WrapperPlayer extends WrapperEntity{
 	 *  passed-in class.  Assumes main-hand for all cases.
 	 */
 	public boolean isHoldingItem(Class<?> itemClass){
-		return player.getHeldItemMainhand().getItem().getClass().isInstance(itemClass);
+		return itemClass.isInstance(player.getHeldItemMainhand().getItem());
 	}
 	
 	/**

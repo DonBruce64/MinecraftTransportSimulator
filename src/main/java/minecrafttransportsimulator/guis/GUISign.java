@@ -130,7 +130,7 @@ public class GUISign extends GuiScreen{
 			float scale = -90F;
 			GL11.glScalef(scale, scale, scale);
 			//FIXME make signs render without wonky TE abstraction.
-			hackyRender.render(signGUIInstance, null, 0);
+			hackyRender.renderOnVehicle(signGUIInstance, null, 0);
 			//WrapperTileEntityRender.TileEntityRendererDispatcher.instance.render(signGUIInstance, -0.5F, -0.5F, -0.5F, renderPartialTicks, 0);
 			GL11.glPopMatrix();
 		}

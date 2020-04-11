@@ -396,7 +396,14 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		RUNNINGLIGHT(false),
 		HEADLIGHT(true),
 		EMERGENCYLIGHT(false),
-		DAYTIMERUNNINGLIGHT(false);
+		DAYTIMERUNNINGLIGHT(false),
+		
+		//The following light types are only for block-based systems.
+		STOPLIGHT(false),
+		CAUTIONLIGHT(false),
+		GOLIGHT(false),
+		STREETLIGHT(true),
+		DECORLIGHT(false);
 		
 		public final boolean hasBeam;
 		private LightType(boolean hasBeam){

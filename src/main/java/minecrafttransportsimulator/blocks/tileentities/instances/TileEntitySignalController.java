@@ -7,7 +7,6 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
-import minecrafttransportsimulator.blocks.instances.BlockSignalController;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
@@ -15,7 +14,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight.LightState;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal.SignalState;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.rendering.blocks.ARenderTileEntityBase;
+import minecrafttransportsimulator.rendering.blocks.RenderDecor;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
 
 /**Traffic signal controller tile entity.  Responsible for keeping the state of traffic
@@ -150,8 +149,8 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 	}
 	
 	@Override
-	public ARenderTileEntityBase<TileEntitySignalController, BlockSignalController> getRenderer(){
-		return null;
+	public RenderDecor getRenderer(){
+		return new RenderDecor();
 	}
 	
 	@Override

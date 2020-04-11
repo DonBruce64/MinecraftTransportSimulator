@@ -33,16 +33,23 @@ public class WrapperTileEntityRender extends TileEntitySpecialRenderer<WrapperTi
 			}
 			renders.put(wrapper.tileEntity, render);
 		}
-		if(wrapper.tileEntity.world != null && wrapper.tileEntity.getBlock() instanceof IBlockTileEntity){
-			//First translate and rotate to the TE location.
+		
+		//If the TE exists and has its definition, render it.
+		//Definition may take a bit to get to clients due to network lag.
+		if(wrapper.tileEntity.world != null && wrapper.tileEntity.getDefinition() != null){
+			//Get the render wrapper.
+			ARenderTileEntityBase<ATileEntityBase, IBlockTileEntity> render = (ARenderTileEntityBase<ATileEntityBase, IBlockTileEntity>) renders.get(wrapper.tileEntity);
+			
+			//Translate and rotate to the TE location.
 			//Makes for less boilerplate code.
 			GL11.glPushMatrix();
 			GL11.glTranslated(x, y, z);
-			GL11.glTranslatef(0.5F, 0.0F, 0.5F);
-			GL11.glRotatef(-wrapper.tileEntity.getBlock().getRotation(wrapper.tileEntity.world, wrapper.tileEntity.position), 0, 1, 0);
+			GL11.glTranslatef(0.5F, 0.0F, 0.5F);			
+			if(render.rotateToBlock()){
+				GL11.glRotatef(-wrapper.tileEntity.getBlock().getRotation(wrapper.tileEntity.world, wrapper.tileEntity.position), 0, 1, 0);
+			}
 			
-			//Now get and render the TE.
-			ARenderTileEntityBase<ATileEntityBase, IBlockTileEntity> render = (ARenderTileEntityBase<ATileEntityBase, IBlockTileEntity>) renders.get(wrapper.tileEntity);
+			//Render the TE.
 			render.render(wrapper.tileEntity, (IBlockTileEntity) wrapper.tileEntity.getBlock(), partialTicks);
 			
 			//End render matrix.

@@ -6,7 +6,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 
 /**Core mod creative tab class.  This is responsible for holding MTS core items/blocks
- * such as the crafting blocks, instruments, manual, wrench, etc.
+ * such as the crafting blocks, instruments, manual, wrench, etc.  While it would be
+ * nice to make the core mod just another pack, that's not really possible due to the fact
+ * some core mod items aren't pack-based, so they won't go into the pack lists.
  * 
  * @author don_bruce
  */

@@ -7,6 +7,14 @@ public class JSONDecor extends AJSONMultiModel<JSONDecor.DecorGeneral>{
     	public float width;
     	public float height;
     	public float depth;
-    	public String[] fuelTypes;
+    	public TextLine[] textLines;
+    }
+    
+    public class TextLine{
+    	public float xPos;
+    	public float yPos;
+    	public float zPos;
+    	public float scale;
+    	public String color;
     }
 }

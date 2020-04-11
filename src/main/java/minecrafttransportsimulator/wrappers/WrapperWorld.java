@@ -8,7 +8,10 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -123,19 +126,32 @@ public class WrapperWorld{
 	 *  Has the player place the passed-in block at the point specified.
 	 *  Returns true if the block was placed, false if not.
 	 */
-    public boolean setBlock(ABlockBase block, Point3i point, WrapperPlayer player, Axis axis){
+    @SuppressWarnings("unchecked")
+	public <JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> boolean setBlock(ABlockBase block, Point3i location, WrapperPlayer player, Axis axis){
     	if(!world.isRemote){
 	    	WrapperBlock wrapper = WrapperBlock.blockWrapperMap.get(block);
-	    	ItemStack itemstack = player.getHeldStack();
-	    	BlockPos pos = new BlockPos(point.x, point.y, point.z);
+	    	ItemStack stack = player.getHeldStack();
+	    	BlockPos pos = new BlockPos(location.x, location.y, location.z);
 	    	EnumFacing facing = EnumFacing.valueOf(axis.name());
 	    	if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
 	            pos = pos.offset(facing);
+	            location.offset(facing.getFrontOffsetX(), facing.getFrontOffsetY(), facing.getFrontOffsetZ());
 	        }
-	    	if(!itemstack.isEmpty() && player.player.canPlayerEdit(pos, facing, itemstack) && world.mayPlace(wrapper, pos, false, facing, null)){
+	    	if(!stack.isEmpty() && player.player.canPlayerEdit(pos, facing, stack) && world.mayPlace(wrapper, pos, false, facing, null)){
 	            IBlockState newState = wrapper.getStateForPlacement(world, pos, facing, 0, 0, 0, 0, player.player, EnumHand.MAIN_HAND);
 	            if(world.setBlockState(pos, newState, 11)){
-	                itemstack.shrink(1);
+	            	//Block is set.  See if we need to set TE data.
+	            	if(block instanceof IBlockTileEntity){
+	            		ATileEntityBase<JSONDefinition> tile = (ATileEntityBase<JSONDefinition>) getTileEntity(location);
+	            		if(stack.hasTagCompound()){
+	            			tile.load(new WrapperNBT(stack.getTagCompound()));
+	            		}else{
+	            			tile.setDefinition(((AItemPack<JSONDefinition>) stack.getItem()).definition);
+	            		}
+	            	}
+	            	//Send place event to block class, and also send initial update cheeck.
+	            	block.onPlaced(this, location, player);
+	                stack.shrink(1);
 	            }
 	            return true;
 	        }
@@ -165,9 +181,9 @@ public class WrapperWorld{
 	 *  sun brightness and the brightness of neighboring blocks.
 	 */
 	public float getLightBrightness(Point3i point){
-		BlockPos polePos = new BlockPos(point.x, point.y, point.z);
-		float sunLight = world.getSunBrightness(0)*world.getLightBrightness(polePos);
-		float blockLight = world.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, polePos)/15F;
+		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+		float sunLight = world.getSunBrightness(0)*world.getLightBrightness(pos);
+		float blockLight = world.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, pos)/15F;
 		return Math.min((1 - Math.max(sunLight, blockLight)), 1);
 	}
 }
