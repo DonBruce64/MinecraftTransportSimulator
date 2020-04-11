@@ -38,7 +38,7 @@ public class WrapperTileEntityRender extends TileEntitySpecialRenderer<WrapperTi
 		//Definition may take a bit to get to clients due to network lag.
 		if(wrapper.tileEntity.world != null && wrapper.tileEntity.getDefinition() != null){
 			//Get the render wrapper.
-			ARenderTileEntityBase<ATileEntityBase, IBlockTileEntity> render = (ARenderTileEntityBase<ATileEntityBase, IBlockTileEntity>) renders.get(wrapper.tileEntity);
+			ARenderTileEntityBase<ATileEntityBase<?>, IBlockTileEntity<?>> render = (ARenderTileEntityBase<ATileEntityBase<?>, IBlockTileEntity<?>>) renders.get(wrapper.tileEntity);
 			
 			//Translate and rotate to the TE location.
 			//Makes for less boilerplate code.
