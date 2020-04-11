@@ -31,6 +31,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.resource.VanillaResourceType;
+import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
@@ -63,7 +65,7 @@ public class WrapperRender{
 					@SuppressWarnings("unchecked")
 					List<IResourcePack> defaultPacks = (List<IResourcePack>) field.get(Minecraft.getMinecraft());
 					defaultPacks.add(new PackResourcePack());
-					Minecraft.getMinecraft().refreshResources();
+					FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
 				}catch(Exception e){
 					e.printStackTrace();
 				}
