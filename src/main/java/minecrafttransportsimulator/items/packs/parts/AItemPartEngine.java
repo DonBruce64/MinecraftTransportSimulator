@@ -32,9 +32,8 @@ public abstract class AItemPartEngine extends AItemPart{
 	@Override
     @SideOnly(Side.CLIENT)
     public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems){
+		super.getSubItems(tab, subItems);
 		if(this.getCreativeTab().equals(tab)){
-			subItems.add(new ItemStack(this));
-			
 			ItemStack engineStackCreative = new ItemStack(this);
 			NBTTagCompound stackTag = new NBTTagCompound();
 			stackTag.setBoolean("isCreative", true);
@@ -46,6 +45,7 @@ public abstract class AItemPartEngine extends AItemPart{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
+		super.addInformation(stack, world, tooltipLines, flagIn);
 		NBTTagCompound stackTag = stack.getTagCompound();
 		
 		if(stackTag != null && stackTag.getBoolean("isCreative")){

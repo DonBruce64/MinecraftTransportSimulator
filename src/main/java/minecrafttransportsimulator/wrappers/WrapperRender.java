@@ -245,7 +245,6 @@ public class WrapperRender{
 		@Override
 		public IModel loadModel(ResourceLocation modelLocation) throws Exception{
 			final List<ResourceLocation> textures = new ArrayList<ResourceLocation>();
-			//FIXME make textures here.
 			textures.add(modelLocation);
 			
 			return new IModel(){
@@ -277,7 +276,6 @@ public class WrapperRender{
 				                quadCache.get(side).add(new BakedQuad(newData, quad.getTintIndex(), quad.getFace(), quad.getSprite(), quad.shouldApplyDiffuseLighting(), quad.getFormat()));
 							}
 							return quads;
-							// TODO Auto-generated method stub
 						}
 
 						@Override
@@ -305,7 +303,6 @@ public class WrapperRender{
 
 						@Override
 						public ItemOverrideList getOverrides(){
-							//FIXME see if this works for TEs?
 							return ItemOverrideList.NONE;
 						}
 					};
