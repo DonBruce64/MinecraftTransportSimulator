@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.blocks;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,12 +15,15 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPol
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Core;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_CrossingSignal;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent.TextLine;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle_LightPart;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 
 public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>{
@@ -86,7 +90,12 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 					//Cache the displaylists and lights if we haven't already.
 					ATileEntityPole_Component component = tile.components.get(axis);
 					if(!componentDisplayListMap.containsKey(component.definition)){
-						Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(component.definition.packID, "objmodels/poles/" + component.definition.systemName + ".obj");
+						Map<String, Float[][]> parsedModel;
+						if(component.definition.general.modelName != null){
+							parsedModel = OBJParserSystem.parseOBJModel(component.definition.packID, "objmodels/poles/" + component.definition.general.modelName + ".obj");
+						}else{
+							parsedModel = OBJParserSystem.parseOBJModel(component.definition.packID, "objmodels/poles/" + component.definition.systemName + ".obj");
+						}
 						List<RenderVehicle_LightPart> lightParts = new ArrayList<RenderVehicle_LightPart>();
 						
 						int displayListIndex = GL11.glGenLists(1);
@@ -116,6 +125,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 					//Rotate to component axis and render.
 					GL11.glPushMatrix();
 					GL11.glRotatef(axis.yRotation, 0, 1, 0);
+					GL11.glTranslatef(0, 0, tile.getDefinition().general.radius + 0.001F);
 					
 					//Don't do solid model rendering if it's not pass 0.
 					if(WrapperRender.getRenderPass() == 0){
@@ -170,7 +180,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 						case DONTWALK:
 							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
 								if(lightPart.type.equals(LightType.STOPLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID + ":textures/poles/" + component.definition.systemName + ".png", false);
+									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID + ":textures/poles/" + component.definition.systemName + ".png", true);
 								}
 							}
 							break;
@@ -203,6 +213,21 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 						default:
 							//This only happens if the light is off.
 							break;
+						}
+					}else if(component instanceof TileEntityPole_Sign){
+						//Render text, if we have any.
+						if(component.definition.general.textLines != null){
+							for(byte i=0; i<component.definition.general.textLines.length; ++i){
+								TextLine text = component.definition.general.textLines[i];
+								GL11.glPushMatrix();
+								GL11.glTranslatef(text.xPos, text.yPos, text.zPos + 0.01F);
+								GL11.glScalef(text.scale/16F, text.scale/16F, text.scale/16F);
+								GL11.glRotatef(180, 1, 0, 0);
+								WrapperGUI.drawText(((TileEntityPole_Sign) component).textLines.get(i), 0, 0, Color.decode(text.color), true, false, 0);
+								GL11.glPopMatrix();
+							}
+							//Set color back to white to allow us to render other components.
+							WrapperRender.setColorState(1.0F, 1.0F, 1.0F);
 						}
 					}
 					GL11.glPopMatrix();

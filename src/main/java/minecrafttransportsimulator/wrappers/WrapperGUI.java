@@ -134,8 +134,20 @@ public class WrapperGUI extends GuiScreen{
 			}
 		}
 		
+		//Now render any OBJModels we may have.
+		//CHeck to make sure the texture exists before binding.
+		for(GUIComponentOBJModel objModel : gui.objModels){
+			if(!objModel.textureDomain.isEmpty()){
+				mc.getTextureManager().bindTexture(new ResourceLocation(objModel.textureDomain, objModel.textureLocation));
+			}
+			objModel.renderModel();
+		}
+		
 		//Now that all main rendering is done, render text.
 		//This includes labels, button text, and text boxes.
+		//We disable the depth test here, as we want the text to render above anything else.
+		//This prevents the need for z-scaling.
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		for(GUIComponentLabel label : gui.labels){
 			label.renderText();
 		}
@@ -148,19 +160,11 @@ public class WrapperGUI extends GuiScreen{
 		for(GUIComponentTextBox textBox : gui.textBoxes){
         	textBox.renderBox();
         }
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
 				
 		//Now render the instruments.  These use their own texture.
 		for(GUIComponentInstrument instrument : gui.instruments){
 			instrument.renderInstrument();
-		}
-		
-		//Now render any OBJModels we may have.
-		//CHeck to make sure the texture exists before binding.
-		for(GUIComponentOBJModel objModel : gui.objModels){
-			if(!objModel.textureDomain.isEmpty()){
-				mc.getTextureManager().bindTexture(new ResourceLocation(objModel.textureDomain, objModel.textureLocation));
-			}
-			objModel.renderModel();
 		}
 		
 		//Now render items.

@@ -303,6 +303,7 @@ public final class RenderVehicle_LightPart{
 			GL11.glDisable(GL11.GL_LIGHTING);
 		}else{
 			GL11.glDepthMask(false);
+			GL11.glEnable(GL11.GL_BLEND);
 		}
 		
 		
@@ -327,6 +328,7 @@ public final class RenderVehicle_LightPart{
 			GL11.glDisable(GL11.GL_LIGHTING);
 		}else{
 			GL11.glDepthMask(true);
+			GL11.glDisable(GL11.GL_BLEND);
 		}
 	}
 	
@@ -341,6 +343,8 @@ public final class RenderVehicle_LightPart{
 			if(WrapperRender.getRenderPass() != -1){
 				GL11.glDisable(GL11.GL_LIGHTING);
 				Minecraft.getMinecraft().entityRenderer.disableLightmap();
+			}else{
+				GL11.glEnable(GL11.GL_BLEND);
 			}
 			
 			GL11.glPushMatrix();
@@ -374,6 +378,8 @@ public final class RenderVehicle_LightPart{
 			if(WrapperRender.getRenderPass() != -1){
 				GL11.glEnable(GL11.GL_LIGHTING);
 				Minecraft.getMinecraft().entityRenderer.enableLightmap();
+			}else{
+				GL11.glDisable(GL11.GL_BLEND);
 			}
 		}
 	}

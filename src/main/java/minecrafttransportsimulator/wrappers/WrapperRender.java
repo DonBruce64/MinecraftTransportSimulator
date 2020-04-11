@@ -1,8 +1,16 @@
 package minecrafttransportsimulator.wrappers;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -11,9 +19,13 @@ import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.resources.IResourcePack;
+import net.minecraft.client.resources.data.IMetadataSection;
+import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.MinecraftForgeClient;
@@ -36,6 +48,28 @@ import net.minecraftforge.fml.relauncher.Side;
 public class WrapperRender{
 	private static final Map<String, Map<String, ResourceLocation>> textures = new HashMap<String, Map<String, ResourceLocation>>(); 
 	
+	/**
+	 *  We need to register a custom resource handler here to auto-generate JSON.
+	 *  FAR easier than trying to use the bloody bakery system.
+	 */
+	static{
+		for(Field field : Minecraft.class.getDeclaredFields()){
+			if(field.getName().equals("defaultResourcePacks") || field.getName().equals("field_110449_ao")){
+				try{
+					if(!field.isAccessible()){
+						field.setAccessible(true);
+					}
+					
+					@SuppressWarnings("unchecked")
+					List<IResourcePack> defaultPacks = (List<IResourcePack>) field.get(Minecraft.getMinecraft());
+					defaultPacks.add(new PackResourcePack());
+					Minecraft.getMinecraft().refreshResources();
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+		}
+	}
 	
 	/**
 	 *  Gets the current render pass.  0 for solid blocks, 1 for transparent,
@@ -82,6 +116,15 @@ public class WrapperRender{
 	}
 	
 	/**
+	 *  Sets MC color to the passed-in color.  Required when needing to keep MC states happy.
+	 *  In particular, this is needed if colors are changed during MC internal draw calls,
+	 *  such as rendering a string, changing the color, and then rendering another string.
+	 */
+	public static void setColorState(float red, float green, float blue){
+		GlStateManager.color(red, green, blue);
+	}
+	
+	/**
 	 *  Event that's called to register models.  We register our render wrapper
 	 *  classes here, as well as all item JSONs.
 	 */
@@ -121,7 +164,7 @@ public class WrapperRender{
 		//Now register items for the packs.
 		for(String packID : MTSRegistry.packItemMap.keySet()){
 			for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packID).values()){
-				ModelLoader.setCustomModelResourceLocation(packItem, 0, new ModelResourceLocation(packItem.definition.packID + ":" + packItem.definition.classification.assetFolder + "/" + packItem.definition.systemName, "inventory"));
+				ModelLoader.setCustomModelResourceLocation(packItem, 0, new ModelResourceLocation(MTS.MODID + "_packs:" + packItem.definition.packID + "." + packItem.definition.classification.assetFolder + "/" + packItem.definition.systemName, "inventory"));
 			}	
 		}
 	}
@@ -131,6 +174,58 @@ public class WrapperRender{
 	 */
 	private static void registerCoreItemRender(Item item){
 		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(MTS.MODID + ":" + item.getRegistryName().getResourcePath(), "inventory"));
+	}
+	
+	/**
+	 *  Custom ResourcePack class for auto-generating item JSONs.
+	 */
+	private static class PackResourcePack implements IResourcePack{
+		private final Set<String> domains;
+		
+		private PackResourcePack(){
+			 domains = new HashSet<String>();
+			 domains.add(MTS.MODID + "_packs");
+		}
+
+		@Override
+		public InputStream getInputStream(ResourceLocation location) throws IOException{
+			String jsonPath = location.getResourcePath();
+			//Strip header and suffix.
+			jsonPath = jsonPath.substring("models/item/".length(), jsonPath.length() - ".json".length());
+			//Get the packID.
+			String packID = jsonPath.substring(0, jsonPath.indexOf('.'));
+			//Get the asset name by stripping off the packID.
+			String asset = jsonPath.substring(packID.length() + 1);
+			//Auto-generate a JSON text file to feed to the loader.
+			String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + packID + ":items/" + asset + "\"}}";
+			//Send the fake JSON out as a stream.
+			return new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));				
+		}
+
+		@Override
+		public boolean resourceExists(ResourceLocation location){
+			return domains.contains(location.getResourceDomain()) && location.getResourcePath().startsWith("models/item/") && location.getResourcePath().endsWith(".json");
+		}
+
+		@Override
+		public Set<String> getResourceDomains(){
+			return domains;
+		}
+
+		@Override
+		public <T extends IMetadataSection> T getPackMetadata(MetadataSerializer metadataSerializer, String metadataSectionName) throws IOException{
+			return null;
+		}
+
+		@Override
+		public BufferedImage getPackImage() throws IOException{
+			return null;
+		}
+
+		@Override
+		public String getPackName(){
+			return MTS.MODID + "_packs";
+		}
 	}
 	
 	/*

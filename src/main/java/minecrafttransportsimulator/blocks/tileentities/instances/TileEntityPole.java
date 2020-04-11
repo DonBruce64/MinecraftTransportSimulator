@@ -34,7 +34,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				AItemPack<JSONPoleComponent> component = (AItemPack<JSONPoleComponent>) MTSRegistry.packItemMap.get(packID).get(systemName);
 				components.put(axis, createComponent(component.definition));
 				if(component.definition.general.textLines != null){
-					//Assume we are a sign and add text.
+					((TileEntityPole_Sign) components.get(axis)).textLines.clear();
 					((TileEntityPole_Sign) components.get(axis)).textLines.addAll(data.getStrings("textLines", component.definition.general.textLines.length));
 				}
 			}
@@ -48,7 +48,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		for(Entry<Axis, ATileEntityPole_Component> connectedObjectEntry : components.entrySet()){
 			data.setString("packID" + connectedObjectEntry.getKey().ordinal(), connectedObjectEntry.getValue().definition.packID);
 			data.setString("systemName" + connectedObjectEntry.getKey().ordinal(), connectedObjectEntry.getValue().definition.systemName);
-			if(connectedObjectEntry.getValue() instanceof TileEntityPole_Sign){
+			if(connectedObjectEntry.getValue().definition.general.textLines != null){
 				data.setStrings("textLines", ((TileEntityPole_Sign) connectedObjectEntry.getValue()).textLines);
 			}
 		}
@@ -68,8 +68,8 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			case("traffic_signal") : return new TileEntityPole_TrafficSignal(definition);
 			case("crossing_signal") : return new TileEntityPole_CrossingSignal(definition);
 			case("street_light") : return new TileEntityPole_StreetLight(definition);
-			//Sign is assumed to be default per legacy systems.
-			default : return new TileEntityPole_Sign(definition);
+			case("sign") : return new TileEntityPole_Sign(definition);
+			default : throw new IllegalArgumentException("ERROR: Wanted type: " + (definition.general.type != null ? definition.general.type : null) + " for pole:" + definition.packID + ":" + definition.systemName +", but such a type is not a valid pole component.  Contact the pack author." );
 		}
 	}
 }

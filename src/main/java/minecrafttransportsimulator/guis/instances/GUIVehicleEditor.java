@@ -182,7 +182,7 @@ public class GUIVehicleEditor extends AGUIBase{
 		//Add item icon model component if we haven't already.
 		//We don't want to re-create it here if we have it, otherwise we'll blow out the selection.
 		if(componentItemModel == null){
-			componentItemModel = new GUIComponentOBJModel(guiLeft + 208, guiTop + 205, false, true);
+			componentItemModel = new GUIComponentOBJModel(guiLeft + 208, guiTop + 205, 1.0F, true, false, true);
 			componentItemModel.scale = 6.0F;
 		}
 		addOBJModel(componentItemModel);

@@ -25,16 +25,6 @@ public class BlockSignalController extends ABlockBase implements IBlockTileEntit
 	}
 	
 	@Override
-	public void onWorldUpdate(WrapperWorld world, Point3i location, boolean redstonePower){
-		//Need to set the signal controller redstone state.
-		//We invert state to keep us from needing a redstone block on all controllers.
-		TileEntitySignalController controller = (TileEntitySignalController) world.getTileEntity(location);
-		if(controller != null){
-			controller.lightsOn = !redstonePower;
-		}
-	}
-	
-	@Override
 	public TileEntitySignalController createTileEntity(){
 		return new TileEntitySignalController();
 	}

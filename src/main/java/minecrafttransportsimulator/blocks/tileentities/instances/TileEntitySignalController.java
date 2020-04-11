@@ -45,6 +45,12 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 		long currentTime = System.currentTimeMillis()/1000;
 		//If we aren't in remote control mode, do checks for state changes.
 		if(!currentOpMode.equals(OpMode.REMOTE_CONTROL)){
+			//Change light status based on redstone state.
+			if(lightsOn ^ world.getRedstonePower(position.newOffset(0, -1, 0)) == 0){
+				lightsOn = !lightsOn;
+				changeState(currentOpState);
+			}
+			
 			//If we are in the idle op sate, check if we need to start a cycle.
 			if(currentOpState.equals(OpState.GREEN_MAIN_RED_CROSS)){
 				if(currentOpMode.equals(OpMode.VEHICLE_TRIGGER)){

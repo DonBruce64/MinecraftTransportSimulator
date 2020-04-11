@@ -7,6 +7,7 @@ import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
+import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.items.core.IItemVehicleInteractable;
 import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
@@ -379,8 +380,7 @@ public final class ClientEventSystem{
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
 	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()].equals(MTSRegistry.coreTab)){
-	    			//FIXME re-enable this.
-	    			//WrapperGUI.openGUI(new GUIPackMissing());
+	    			WrapperGUI.openGUI(new GUIPackMissing());
 	    		}
 	    	}
     	}

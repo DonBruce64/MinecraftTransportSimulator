@@ -121,6 +121,12 @@ public class WrapperWorld{
 		return block instanceof WrapperBlock ? ((WrapperBlock) block).block : null;
 	}
 	
+	/**
+	 *  Returns the current redstone power at the passed-in position.
+	 */
+	public int getRedstonePower(Point3i point){
+		return world.getStrongPower(new BlockPos(point.x, point.y, point.z));
+	}
     
     /**
 	 *  Has the player place the passed-in block at the point specified.

@@ -54,13 +54,13 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player){
 		//Fire a packet to interact with this pole.  Will either add, remove, or allow editing of the pole.
 		//Only fire packet if player is holding a pole component that's not an actual pole, a wrench,
-		//or is clicking a sign.
+		//or is clicking a sign with text.
 		TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
 		if(pole != null){
 			boolean isPlayerHoldingComponent = player.isHoldingItem(ItemPoleComponent.class) && !player.isHoldingItem(ItemPole.class);
 			boolean isPlayerHoldingWrench = player.isHoldingItem(ItemWrench.class);
-			boolean isPlayerClickingSign = pole.components.get(axis) instanceof TileEntityPole_Sign;
-			if(isPlayerHoldingComponent || isPlayerHoldingWrench || isPlayerClickingSign){
+			boolean isPlayerClickingEditableSign = pole.components.get(axis) instanceof TileEntityPole_Sign && pole.components.get(axis).definition.general.textLines != null;
+			if(isPlayerHoldingComponent || isPlayerHoldingWrench || isPlayerClickingEditableSign){
 				if(world.isClient()){
 					WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null));
 				}

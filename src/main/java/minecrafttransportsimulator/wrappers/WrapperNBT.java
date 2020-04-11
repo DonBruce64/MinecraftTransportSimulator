@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
 /**Wrapper for interfacing with NBT data.  This pares down a few of the method to ones
@@ -15,12 +16,17 @@ import net.minecraft.nbt.NBTTagCompound;
 public class WrapperNBT{
 	protected final NBTTagCompound tag;
 	
-	public WrapperNBT(){
-		tag = new NBTTagCompound();
-	}
-	
 	public WrapperNBT(NBTTagCompound tag){
 		this.tag = tag;
+	}
+	
+	public WrapperNBT(ItemStack stack){
+		if(stack.hasTagCompound()){
+			this.tag = stack.getTagCompound();
+		}else{
+			this.tag = new NBTTagCompound();
+			stack.setTagCompound(tag);
+		}
 	}
 	
 	//Booleans

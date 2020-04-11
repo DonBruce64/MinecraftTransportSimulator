@@ -168,19 +168,6 @@ public final class PackParserSystem{
     	}
     }
     
-    /**Packs should call this upon load to add their signs to the mod.**/
-    public static void addSignDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
-    	try{
-    		//Convert the sign to a pole definition.  This is only here for legacy support.
-    		JSONPoleComponent component = new Gson().fromJson(jsonReader, JSONPoleComponent.class);
-    		component.general.type = "sign";
-    		setupItem(new ItemPoleComponent(component), jsonFileName, packID, ItemClassification.POLE);
-    	}catch(Exception e){
-    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		logEntries.add(e.getMessage());
-    	}
-    }
-    
     /**Packs should call this upon load to add their pole components to the mod.**/
     public static void addPoleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
@@ -334,7 +321,6 @@ public final class PackParserSystem{
     	VEHICLE,
     	PART,
     	INSTRUMENT,
-    	SIGN,
     	POLE,
     	DECOR,
     	ITEM,

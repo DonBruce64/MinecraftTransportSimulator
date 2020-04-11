@@ -1,11 +1,16 @@
 package minecrafttransportsimulator.guis.instances;
 
 import java.awt.Color;
+import java.util.HashSet;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.blocks.components.ABlockBase;
-import minecrafttransportsimulator.blocks.instances.BlockPoleCrossingSignal;
-import minecrafttransportsimulator.blocks.instances.BlockPoleTrafficSignal;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_CrossingSignal;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.OpMode;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -32,32 +37,87 @@ public class GUISignalController extends AGUIBase{
 	private GUIComponentTextBox yellowCrossTimeText;
 	private GUIComponentTextBox allRedTimeText;
 	
-	//Labels
+	//Labels and items for scan results.
+	private byte trafficSignals;
+	private byte crossingSignals;
+	private byte streetLights;
+	
 	private GUIComponentLabel trafficSignalCount;
 	private GUIComponentLabel crossingSignalCount;
+	private GUIComponentLabel streetLightCount;
+	private GUIComponentItem trafficSignalItem;
+	private GUIComponentItem crossingSignalItem;
+	private GUIComponentItem streetLightItem;
+	
+	//These are only used to save the item names until we create the item components.
+	private String trafficSignalItemNameTemp;
+	private String crossingSignalItemNameTemp;
+	private String streetLightItemNameTemp;
+	
+	
+	//Internal controller locations point list.
+	//We set this to prevent the player from seeing changes on their clients.
+	//If we did set the actual locations here, there'd be de-syncs if the player didn't hit confirm.
+	private final Set<Point3i> componentLocations = new HashSet<Point3i>();
 	
 	private final TileEntitySignalController controller;
 	
 	public GUISignalController(TileEntitySignalController controller){
 		this.controller = controller;
+		
+		//Set initial signal counts.
+		for(Point3i location : controller.componentLocations){
+			ATileEntityBase<?> tile = controller.world.getTileEntity(location);
+			if(tile instanceof TileEntityPole){
+				for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
+					if(component instanceof TileEntityPole_TrafficSignal){
+						trafficSignalItemNameTemp = component.definition.packID + ":" + component.definition.systemName;
+						++trafficSignals;
+						componentLocations.add(location);
+					}else if(component instanceof TileEntityPole_CrossingSignal){
+						crossingSignalItemNameTemp = component.definition.packID + ":" + component.definition.systemName;
+						++crossingSignals;
+						componentLocations.add(location);
+					}else if(component instanceof TileEntityPole_StreetLight){
+						streetLightItemNameTemp = component.definition.packID + ":" + component.definition.systemName;
+						++streetLights;
+						componentLocations.add(location);
+					}
+				}
+			}
+		}
 	}
 	
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
 		addButton(new GUIComponentButton(guiLeft + 25, guiTop + 15, 200, WrapperGUI.translate("gui.trafficsignalcontroller.scan")){
 			public void onClicked(){
-				controller.componentLocations.clear();
-				controller.crossingSignalLocations.clear();
+				trafficSignals = 0;
+				crossingSignals = 0;
+				streetLights = 0;
+				componentLocations.clear();
 				int scanDistance = Integer.valueOf(scanDistanceText.getText());
 				for(int i=controller.position.x-scanDistance; i<=controller.position.x+scanDistance; ++i){
 					for(int j=controller.position.y-scanDistance; j<=controller.position.y+scanDistance; ++j){
 						for(int k=controller.position.z-scanDistance; k<=controller.position.z+scanDistance; ++k){
-							Point3i point = new Point3i(i, j, k);
-							ABlockBase block = controller.world.getBlock(point);
-							if(block instanceof BlockPoleTrafficSignal){
-								controller.componentLocations.add(point);
-							}else if(block instanceof BlockPoleCrossingSignal){
-								controller.crossingSignalLocations.add(point);
+							Point3i location = new Point3i(i, j, k);
+							ATileEntityBase<?> tile = controller.world.getTileEntity(location);
+							if(tile instanceof TileEntityPole){
+								for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
+									if(component instanceof TileEntityPole_TrafficSignal){
+										trafficSignalItem.itemName = component.definition.packID + ":" + component.definition.systemName;
+										++trafficSignals;
+										componentLocations.add(location);
+									}else if(component instanceof TileEntityPole_CrossingSignal){
+										crossingSignalItem.itemName = component.definition.packID + ":" + component.definition.systemName;
+										++crossingSignals;
+										componentLocations.add(location);
+									}else if(component instanceof TileEntityPole_StreetLight){
+										streetLightItem.itemName = component.definition.packID + ":" + component.definition.systemName;
+										++streetLights;
+										componentLocations.add(location);
+									}
+								}
 							}
 						}
 					}
@@ -66,12 +126,20 @@ public class GUISignalController extends AGUIBase{
 		});
 		addTextBox(scanDistanceText = new GUIComponentTextBox(guiLeft + 120, guiTop + 40, 40, "25", 10, Color.WHITE, Color.BLACK, 2));
 		addLabel(new GUIComponentLabel(guiLeft + 30, scanDistanceText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.scandistance")).setBox(scanDistanceText));
-		
 		addLabel(new GUIComponentLabel(guiLeft + 30, guiTop + 55, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.scanfound")));
-		addItem(new GUIComponentItem(guiLeft + 120, guiTop + 50, 1.0F, "mts:trafficsignal", 1, -1));
-		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 55, Color.WHITE, " X " + String.valueOf(controller.componentLocations.size() - controller.crossingSignalLocations.size())));
-		addItem(new GUIComponentItem(guiLeft + 170, guiTop + 50, 1.0F, "mts:crossingsignal", 1, -1));
-		addLabel(crossingSignalCount = new GUIComponentLabel(guiLeft + 185, guiTop + 55, Color.WHITE, " X " + String.valueOf(controller.crossingSignalLocations.size())));
+		
+		//Traffic signal scan results.
+		addItem(trafficSignalItem = new GUIComponentItem(guiLeft + 120, guiTop + 52, 1.0F, trafficSignalItemNameTemp, 1, -1));
+		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 56, Color.WHITE, " X" + trafficSignals));
+		
+		//Crossing signal scan results.
+		addItem(crossingSignalItem = new GUIComponentItem(guiLeft + 160, guiTop + 52, 1.0F, crossingSignalItemNameTemp, 1, -1));
+		addLabel(crossingSignalCount = new GUIComponentLabel(guiLeft + 175, guiTop + 56, Color.WHITE, " X" + crossingSignals));
+		
+		//Street lamp scan results.
+		addItem(streetLightItem = new GUIComponentItem(guiLeft + 200, guiTop + 52, 1.0F, streetLightItemNameTemp, 1, -1));
+		addLabel(streetLightCount = new GUIComponentLabel(guiLeft + 215, guiTop + 56, Color.WHITE, " X" + streetLights));
+		
 		
 		addButton(orientationButton = new GUIComponentButton(guiLeft + 125, guiTop + 70, 100, controller.mainDirectionXAxis ? "X" : "Z", 15, true){
 			@Override
@@ -127,6 +195,8 @@ public class GUISignalController extends AGUIBase{
 					controller.yellowMainTime = Integer.valueOf(yellowMainTimeText.getText());
 					controller.yellowCrossTime = Integer.valueOf(yellowCrossTimeText.getText());
 					controller.allRedTime = Integer.valueOf(allRedTimeText.getText());
+					controller.componentLocations.clear();
+					controller.componentLocations.addAll(componentLocations);
 				}catch(Exception e){
 					return;
 				}
@@ -138,9 +208,15 @@ public class GUISignalController extends AGUIBase{
 	
 	@Override
 	public void setStates(){
-		trafficSignalCount.text = " X " + String.valueOf(controller.componentLocations.size());
-		crossingSignalCount.text = " X " + String.valueOf(controller.crossingSignalLocations.size());
-		if(!controller.componentLocations.isEmpty()){
+		trafficSignalCount.visible = trafficSignals > 0;
+		crossingSignalCount.visible = crossingSignals > 0;
+		streetLightCount.visible = streetLights > 0;
+		
+		trafficSignalCount.text = " X" + trafficSignals;
+		crossingSignalCount.text = " X" + crossingSignals;
+		streetLightCount.text = " X" + streetLights;
+		
+		if(trafficSignals + crossingSignals > 0){
 			orientationButton.enabled = true;
 			modeButton.enabled = true;
 			greenMainTimeText.enabled = true;

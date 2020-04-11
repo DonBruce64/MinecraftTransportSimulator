@@ -1,6 +1,5 @@
 {    
     "engine_shifting_grinding"    : {"category": "master", "sounds": [{"name": "mts:engine_shifting_grinding","stream": false}]},
-    "bench_running"    : {"category": "master", "sounds": [{"name": "mts:bench_running","stream": false}]},
     "panel_buzzer"     : {"category": "master", "sounds": [{"name": "mts:panel_buzzer","stream": false}]},
     "wheel_striking"     : {"category": "master", "sounds": [{"name": "mts:wheel_striking","stream": false}]},
     "air_brake_activating"     : {"category": "master", "sounds": [{"name": "mts:air_brake_activating","stream": false}]},
