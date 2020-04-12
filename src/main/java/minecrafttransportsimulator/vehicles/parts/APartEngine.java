@@ -425,7 +425,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(!state.esOn && !state.hsOn){
 				sound.stop();
 			}else{
-				sound.pitch = (float) (RPM/engineStartRPM);
+				sound.pitch = (float) ((engineStartRPM*0.25F + RPM*0.75F)/engineStartRPM);
 			}
 		}else if(sound.soundName.endsWith("_running")){
 			if(!state.running && internalFuel == 0){
