@@ -15,6 +15,7 @@ import minecrafttransportsimulator.items.packs.ItemPole;
 import minecrafttransportsimulator.items.packs.ItemPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
+import minecrafttransportsimulator.wrappers.WrapperNBT;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
@@ -57,12 +58,23 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 		//or is clicking a sign with text.
 		TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
 		if(pole != null){
-			boolean isPlayerHoldingComponent = player.isHoldingItem(ItemPoleComponent.class) && !player.isHoldingItem(ItemPole.class);
 			boolean isPlayerHoldingWrench = player.isHoldingItem(ItemWrench.class);
 			boolean isPlayerClickingEditableSign = pole.components.get(axis) instanceof TileEntityPole_Sign && pole.components.get(axis).definition.general.textLines != null;
-			if(isPlayerHoldingComponent || isPlayerHoldingWrench || isPlayerClickingEditableSign){
-				if(world.isClient()){
-					WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null));
+			boolean isPlayerHoldingComponent = player.isHoldingItem(ItemPoleComponent.class) && !player.isHoldingItem(ItemPole.class);
+			if(world.isClient()){
+				if(isPlayerHoldingWrench){
+					WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
+				}else if(isPlayerClickingEditableSign){
+					WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
+				}else if(isPlayerHoldingComponent){
+					List<String> textLines = null;
+					ItemPoleComponent component = (ItemPoleComponent) player.getHeldStack().getItem();
+					if(player.getHeldStack().hasTagCompound()){							
+						textLines = new WrapperNBT(player.getHeldStack().getTagCompound()).getStrings("textLines", component.definition.general.textLines.length);
+					}
+					WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
+				}else{
+					return false;
 				}
 				return true;
 			}

@@ -72,7 +72,7 @@ public class GUISign extends AGUIBase{
 				for(GUIComponentTextBox box : signTextBoxes){
 					textLines.add(box.getText());
 				}
-				WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, textLines));
+				WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, textLines, false));
 				WrapperGUI.closeGUI();
 			}
 		});

@@ -10,8 +10,6 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUISign;
-import minecrafttransportsimulator.items.core.ItemWrench;
-import minecrafttransportsimulator.items.packs.ItemPole;
 import minecrafttransportsimulator.items.packs.ItemPoleComponent;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -25,24 +23,35 @@ import net.minecraft.item.ItemStack;
  * Packet does server-side checks to see if the player could change the pole, and if so, it applies those
  * changes and sends packets out to all clients to have them apply those changes as well.  This can either
  * be fired from the player clicking the pole directly, or by them clicking the confirm button in the pole
- * GUI to set text.  In the case of the former, text should be null.  In the case of the latter, text should
- * be a list of the text to apply to the sign.
+ * GUI to set text.  If this packet is sent with a null component and text lines, it is assumed it's from
+ * a sign GUI and the text needs to be applied to the sign.  If both the component and text is null, it's
+ * assumed that the player is trying to open the sign GUI to start editing text.  The removal flag will
+ * cause the component at the axis to be removed, so the component and textLines parameters may be null
+ * as they are ignored.
  * 
  * @author don_bruce
  */
 public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole>{
 	private final Axis axis;
+	private final String packID;
+	private final String systemName;
 	private final List<String> textLines;
+	private final boolean removal;
 	
-	public PacketTileEntityPoleChange(TileEntityPole pole, Axis axis, List<String> textLines){
+	public PacketTileEntityPoleChange(TileEntityPole pole, Axis axis, ItemPoleComponent component, List<String> textLines, boolean removal){
 		super(pole);
 		this.axis = axis;
+		this.packID = component != null ? component.definition.packID : "";
+		this.systemName = component != null ? component.definition.systemName : "";
 		this.textLines = textLines;
+		this.removal = removal;
 	}
 	
 	public PacketTileEntityPoleChange(ByteBuf buf){
 		super(buf);
 		this.axis = Axis.values()[buf.readByte()];
+		this.packID = readStringFromBuffer(buf);
+		this.systemName = readStringFromBuffer(buf);
 		if(buf.readBoolean()){
 			byte textLineCount = buf.readByte();
 			this.textLines = new ArrayList<String>();
@@ -52,12 +61,15 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 		}else{
 			this.textLines = null;
 		}
+		this.removal = buf.readBoolean();
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
 		buf.writeByte(axis.ordinal());
+		writeStringToBuffer(packID, buf);
+		writeStringToBuffer(systemName, buf);
 		buf.writeBoolean(textLines != null);
 		if(textLines != null){
 			buf.writeByte(textLines.size());
@@ -65,23 +77,15 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 				writeStringToBuffer(textLine, buf);
 			}
 		}
+		buf.writeBoolean(removal);
 	}
 	
 	@Override
 	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityPole pole){
 		//Check if we can do editing.
 		if(world.isClient() || !ConfigSystem.configObject.general.opSignEditingOnly.value || player.isOP()){
-			if(textLines != null){
-				//This is a packet attempting to change sign text.  Do so now.
-				if(pole.components.containsKey(axis)){
-					((TileEntityPole_Sign) pole.components.get(axis)).textLines.clear();
-					((TileEntityPole_Sign) pole.components.get(axis)).textLines.addAll(textLines);
-					return true;
-				}else{
-					return false;
-				}
-			}else if(player.isHoldingItem(ItemWrench.class)){
-				//If the player clicked with a wrench, try to remove the component on the axis.
+			if(removal){
+				//Player clicked with a wrench, try to remove the component on the axis.
 				if(pole.components.containsKey(axis)){
 					ATileEntityPole_Component component = pole.components.get(axis);
 					ItemStack poleStack = new ItemStack(MTSRegistry.packItemMap.get(component.definition.packID).get(component.definition.systemName));
@@ -94,26 +98,34 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 						return true;
 					}
 				}
-			}else if(player.isHoldingItem(ItemPoleComponent.class) && !player.isHoldingItem(ItemPole.class) && !pole.components.containsKey(axis)){
+			}else if(packID.isEmpty() && textLines == null){
+				if(pole.components.get(axis) instanceof TileEntityPole_Sign){
+					if(world.isClient()){
+						WrapperGUI.openGUI(new GUISign(pole, axis));
+					}else{
+						//Player clicked a sign with editable text.  Fire back a packet ONLY to the player who sent this to have them open the sign GUI.
+						player.sendPacket(new PacketTileEntityPoleChange(pole, axis, null, null, false));
+					}
+				}
+				return false;
+			}if(packID.isEmpty() && textLines != null){
+				//This is a packet attempting to change sign text.  Do so now.
+				if(pole.components.containsKey(axis)){
+					((TileEntityPole_Sign) pole.components.get(axis)).textLines.clear();
+					((TileEntityPole_Sign) pole.components.get(axis)).textLines.addAll(textLines);
+					return true;
+				}
+			}else if(!packID.isEmpty() && !pole.components.containsKey(axis)){
 				//Player clicked with a component.  Add it.
-				ItemPoleComponent component = ((ItemPoleComponent) player.getHeldStack().getItem());
+				ItemPoleComponent component = (ItemPoleComponent) MTSRegistry.packItemMap.get(packID).get(systemName);
 				pole.components.put(axis, TileEntityPole.createComponent(component.definition));
-				if(player.getHeldStack().hasTagCompound() && component.definition.general.textLines != null){
+				if(textLines != null && component.definition.general.textLines != null){
 					//Sign.  Restore text.
 					((TileEntityPole_Sign) pole.components.get(axis)).textLines.clear();
-					((TileEntityPole_Sign) pole.components.get(axis)).textLines.addAll(new WrapperNBT(player.getHeldStack()).getStrings("textLines", component.definition.general.textLines.length));
+					((TileEntityPole_Sign) pole.components.get(axis)).textLines.addAll(textLines);
 				}
 				return true;
-			}else if(pole.components.get(axis) instanceof TileEntityPole_Sign && pole.components.get(axis).definition.general.textLines != null && !world.isClient()){
-				//Player clicked a sign with editable text.  Fire back a packet ONLY to the player who sent this to have them open the sign GUI.
-				player.sendPacket(new PacketTileEntityPoleChange(pole, axis, textLines));
-				return false;
-			}
-		}
-		
-		//Check if we are getting a callback packet to open the sign GUI.
-		if(world.isClient() && pole.components.get(axis) instanceof TileEntityPole_Sign){
-			WrapperGUI.openGUI(new GUISign(pole, axis));
+			} 
 		}
 		return false;
 	}
