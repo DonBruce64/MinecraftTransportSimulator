@@ -158,6 +158,13 @@ public class PartEngineCar extends APartEngineGeared{
 			if(currentGear != -1){
 				sound.stop();
 			}
-		}	
+		}
+	}
+	
+	@Override
+	public void restartSound(SoundInstance sound){
+		if(sound.soundName.endsWith("backup_beeper")){
+			WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
+		}
 	}
 }

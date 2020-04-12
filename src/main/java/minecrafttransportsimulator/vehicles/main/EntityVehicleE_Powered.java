@@ -24,6 +24,7 @@ import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.APartGun;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
@@ -291,6 +292,15 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			if(!sirenOn){
 				sound.stop();
 			}
+		}
+	}
+	
+	@Override
+	public void restartSound(SoundInstance sound){
+		if(sound.soundName.equals(definition.motorized.hornSound)){
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.motorized.hornSound, true));
+		}else if(sound.soundName.equals(definition.motorized.sirenSound)){
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.motorized.sirenSound, true));
 		}
 	}
     

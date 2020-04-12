@@ -245,6 +245,9 @@ public abstract class APart implements ISoundProvider{
 			sound.stop();
 		}
 	}
+	
+	@Override
+	public void restartSound(SoundInstance sound){}
     
 	@Override
     public FloatBuffer getProviderPosition(){

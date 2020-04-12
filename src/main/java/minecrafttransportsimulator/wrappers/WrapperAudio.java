@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.LWJGLException;
 import org.lwjgl.openal.AL;
 import org.lwjgl.openal.AL10;
 
@@ -46,17 +45,6 @@ public class WrapperAudio{
 	 *  Inits this class.  Static as we only need to do this this the first time we play a sound.
 	 */
 	static{
-		try{
-    		//Create the OpenAL system if we haven't already.
-			if(!AL.isCreated()){
-    			AL.create();
-    			AL10.alGetError();
-    		}
-	    }catch(LWJGLException e){
-	    	e.printStackTrace();
-	    	//This should NEVER happen.  OpenAl is in all MC as it comes with lwjgl.
-	    }
-		
 		//Get a reference to the player.  This will be stored to be updated every
 		//audio tick to allow us to update sound accordingly.
 		//Check to make sure the player exists before we do this.
@@ -66,11 +54,6 @@ public class WrapperAudio{
 		player.putPosition(playerPosition);
 		player.putVelocity(playerVelocity);
 		player.putOrientation(playerOrientation);
-		
-		//Set listener initial parameters.
-		AL10.alListener(AL10.AL_POSITION, playerPosition);
-	    AL10.alListener(AL10.AL_VELOCITY, playerVelocity);
-		AL10.alListener(AL10.AL_ORIENTATION, playerOrientation);
 	}
 	
 	/**
@@ -90,6 +73,11 @@ public class WrapperAudio{
 	 *  as well as queue up sounds that aren't playing yet but need to.
 	 */
 	public static void update(){
+		if(!AL.isCreated()){
+			//Don't go any further if OpenAL isn't ready.
+			return;
+		}
+		
 		//Handle pause state logic.
 		if(WrapperGame.isGamePaused()){
 			if(!isSystemPaused){
@@ -108,9 +96,8 @@ public class WrapperAudio{
 		
 		
 		//Update player position velocity, and orientation.
-		//Don't need to re-bind these as they are buffers.
-		//Note that PaulsCode does this for us in 1.12.2, so we don't need to do that.
-		//However, it does foul up velocity, so we need to re-do that one.
+		//PaulsCode does this for us in 1.12.2, so we don't need to do that.
+		//However, it fouls up velocity, so we need to re-do that one.
 		//Note that players riding vehicles use the vehicle's velocity.
 		//player.putPosition(playerPosition);
 		//AL10.alListener(AL10.AL_POSITION, playerPosition);
@@ -150,11 +137,20 @@ public class WrapperAudio{
 		
 		
 		//Update playing sounds.
+		boolean soundSystemReset = false;
 		Iterator<SoundInstance> iterator = playingSounds.iterator();
 		while(iterator.hasNext()){
 			SoundInstance sound = iterator.next();
+			AL10.alGetError();
 			int state = AL10.alGetSourcei(sound.sourceIndex, AL10.AL_SOURCE_STATE);
-			//If we aren't stopped, do an update to pitch and volume.
+
+			//If we are an invalid name, it means the sound system was reset.
+			//Blow out all buffers and restart all sounds.
+			if(AL10.alGetError() == AL10.AL_INVALID_NAME){
+				soundSystemReset = true;
+				break;
+			}
+			
 			if(state != AL10.AL_STOPPED){
 				sound.provider.updateProviderSound(sound);
 				if(sound.stopSound){
@@ -208,7 +204,6 @@ public class WrapperAudio{
 					//Attempt to queue up the next song as this one is done.
 					//Only do this if the radio wasn't stopped manually.
 					if(!sound.stopSound){
-						System.out.println("NEXT SOUND QUEUED!");
 						sound.radio.queueNext();
 					}
 				}
@@ -219,6 +214,15 @@ public class WrapperAudio{
 				AL10.alDeleteSources(sourceBuffer);
 				iterator.remove();
 			}
+		}
+		
+		//If the sound system was reset, blow out all saved data points.
+		if(soundSystemReset){
+			dataSourceBuffers.clear();
+			for(SoundInstance sound : playingSounds){
+				sound.provider.restartSound(sound);
+			}
+			playingSounds.clear();
 		}
 	}
 	
@@ -236,11 +240,12 @@ public class WrapperAudio{
 			sound.sourceIndex = sourceBuffer.get(0);
 			
 			//Set properties and bind data buffer to source.
+			AL10.alGetError();
 			AL10.alSourcei(sound.sourceIndex, AL10.AL_LOOPING, sound.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
 			AL10.alSource(sound.sourceIndex, AL10.AL_POSITION, sound.provider.getProviderPosition());
     	    AL10.alSource(sound.sourceIndex, AL10.AL_VELOCITY, sound.provider.getProviderVelocity());
-    	    AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER,	dataBufferPointer);    
-				
+    	    AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, dataBufferPointer);
+    	    
 			//Done setting up buffer.  Queue sound to start playing.
 			queuedSounds.add(sound);
 		}

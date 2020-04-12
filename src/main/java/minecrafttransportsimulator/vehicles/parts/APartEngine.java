@@ -436,6 +436,15 @@ public abstract class APartEngine extends APart implements FXPart{
 			}
 		}
 	}
+	
+	@Override
+	public void restartSound(SoundInstance sound){
+		if(sound.soundName.endsWith("_cranking")){
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+		}else if(sound.soundName.endsWith("_running")){
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+		}
+	}
 
 	@Override
 	@SideOnly(Side.CLIENT)
