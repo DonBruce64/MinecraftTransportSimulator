@@ -42,7 +42,7 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 	
 	@Override
 	public void update(){
-		long currentTime = System.currentTimeMillis()/1000;
+		long currentTime = world.getTime()/20;
 		//If we aren't in remote control mode, do checks for state changes.
 		if(!currentOpMode.equals(OpMode.REMOTE_CONTROL)){
 			//Change light status based on redstone state.
@@ -87,7 +87,7 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 					}
 				}else{
 					//Not a triggered signal, we must be timed.
-					if(timeOperationStarted + greenMainTime < currentTime){
+					if(timeOperationStarted + greenMainTime <= currentTime){
 						changeState(OpState.YELLOW_MAIN_RED_CROSS);
 					}
 				}
@@ -96,31 +96,31 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 				switch(currentOpState){
 					case GREEN_MAIN_RED_CROSS : break; //Not gonna happen, we tested for this.
 					case YELLOW_MAIN_RED_CROSS : {
-						if(timeOperationStarted + yellowMainTime < currentTime){
+						if(timeOperationStarted + yellowMainTime <= currentTime){
 							changeState(OpState.RED_MAIN_RED_CROSS);
 						}
 						break;
 					}
 					case RED_MAIN_RED_CROSS : {
-						if(timeOperationStarted + allRedTime < currentTime){
+						if(timeOperationStarted + allRedTime <= currentTime){
 							changeState(OpState.RED_MAIN_GREEN_CROSS);
 						}
 						break;
 					}
 					case RED_MAIN_GREEN_CROSS : {
-						if(timeOperationStarted + greenCrossTime < currentTime){
+						if(timeOperationStarted + greenCrossTime <= currentTime){
 							changeState(OpState.RED_MAIN_YELLOW_CROSS);
 						}
 						break;
 					}
 					case RED_MAIN_YELLOW_CROSS : {
-						if(timeOperationStarted + yellowCrossTime < currentTime){
+						if(timeOperationStarted + yellowCrossTime <= currentTime){
 							changeState(OpState.RED_MAIN2_RED_CROSS2);
 						}
 						break;
 					}
 					case RED_MAIN2_RED_CROSS2 : {
-						if(timeOperationStarted + allRedTime < currentTime){
+						if(timeOperationStarted + allRedTime <= currentTime){
 							changeState(OpState.GREEN_MAIN_RED_CROSS);
 						}
 						break;
@@ -135,7 +135,7 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 	 */
 	public void changeState(OpState state){
 		currentOpState = state;
-		timeOperationStarted = System.currentTimeMillis()/1000;
+		timeOperationStarted = world.getTime()/20;
 		Iterator<Point3i> iterator = componentLocations.iterator();
 		while(iterator.hasNext()){
 			TileEntityPole signal = (TileEntityPole) world.getTileEntity(iterator.next());

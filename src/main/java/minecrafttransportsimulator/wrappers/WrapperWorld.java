@@ -66,6 +66,14 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Returns the current world time, in ticks.  Useful when you need to sync
+	 *  operations.  For animations, just use the system time.
+	 */
+	public long getTime(){
+		return world.getTotalWorldTime();
+	}
+	
+	/**
 	 *  Returns the entity that has the passed-in ID.
 	 */
 	public Entity getEntity(int id){
