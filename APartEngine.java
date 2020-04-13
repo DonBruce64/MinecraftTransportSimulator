@@ -409,7 +409,11 @@ public abstract class APartEngine extends APart implements FXPart{
 	}
 	//Get the total wear factor to be applied to this engine, to account for supercharged engines.
 	public double getTotalWearFactor(){
-		return definition.engine.superchargerEfficiency*ConfigSystem.configObject.general.engineHoursFactor.value;
+		if (definition.engine.superchargerEfficiency > 1.0F){
+			return definition.engine.superchargerEfficiency*ConfigSystem.configObject.general.engineHoursFactor.value;
+		}else{
+			return ConfigSystem.configObject.general.engineHoursFactor.value;
+		}
 	}
 	
 	protected boolean isInLiquid(){
@@ -449,7 +453,7 @@ public abstract class APartEngine extends APart implements FXPart{
 				sound.stop();
 			}else{
 				//Pitch should be 0.35 at idle with a 0.35 increase for every 2500 RPM, as with the regular engine sound, but in addition the volume increases with RPM so that it's 1.0 at the engine's max safe RPM.
-				sound.volume = (float) RPM/getSafeRPMFromMax(definition.engine.maxRPM);
+				sound.volume = (float) RPM/definition.engine.maxRPM;
 				sound.pitch = (float) (0.35*(1 + Math.max(0, (RPM - engineStartRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
 			}
 		}
