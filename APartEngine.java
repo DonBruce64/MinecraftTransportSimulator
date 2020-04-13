@@ -70,6 +70,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			this.state = EngineStates.values()[dataTag.getByte("engineState")];
 			if(state.running && vehicle.world.isRemote){
 				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
 			}
 		}else{
 			this.state = EngineStates.ENGINE_OFF;
@@ -368,6 +369,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		}else{
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_starting"));
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
 		}
 	}
 	
@@ -442,6 +444,14 @@ public abstract class APartEngine extends APart implements FXPart{
 				//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines.
 				sound.pitch = (float) (0.35*(1 + Math.max(0, (RPM - engineStartRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
 			}
+		}else if(sound.soundName.endsWith("_supercharger")){
+			if(!state.running && internalFuel == 0){
+				sound.stop();
+			}else{
+				//Pitch should be 0.35 at idle with a 0.35 increase for every 2500 RPM, as with the regular engine sound, but in addition the volume increases with RPM so that it's 1.0 at the engine's max safe RPM.
+				sound.volume = (float) RPM/getSafeRPMFromMax(definition.engine.maxRPM);
+				sound.pitch = (float) (0.35*(1 + Math.max(0, (RPM - engineStartRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
+			}
 		}
 	}
 	
@@ -451,7 +461,9 @@ public abstract class APartEngine extends APart implements FXPart{
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
 		}else if(sound.soundName.endsWith("_running")){
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
-		}
+		}else if(sound.soundName.endsWith("_supercharger")){
+		WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
+	}
 	}
 
 	@Override
