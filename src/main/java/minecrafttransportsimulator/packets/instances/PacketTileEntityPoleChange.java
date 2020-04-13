@@ -7,7 +7,6 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUISign;
 import minecrafttransportsimulator.items.packs.ItemPoleComponent;
@@ -89,41 +88,41 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 				if(pole.components.containsKey(axis)){
 					ATileEntityPole_Component component = pole.components.get(axis);
 					ItemStack poleStack = new ItemStack(MTSRegistry.packItemMap.get(component.definition.packID).get(component.definition.systemName));
-					if(component.definition.general.textLines != null){
+					if(component.getTextLines() != null){
 						WrapperNBT data = new WrapperNBT(poleStack);
-						data.setStrings("textLines", ((TileEntityPole_Sign) component).textLines);
+						data.setStrings("textLines", component.getTextLines());
 					}
 					if(world.isClient() || player.isCreative() || player.addItem(poleStack)){
 						pole.components.remove(axis);
+						pole.updateLightState();
 						return true;
 					}
 				}
 			}else if(packID.isEmpty() && textLines == null){
-				if(pole.components.get(axis) instanceof TileEntityPole_Sign){
+				if(pole.components.get(axis).getTextLines() != null){
 					if(world.isClient()){
 						WrapperGUI.openGUI(new GUISign(pole, axis));
 					}else{
-						//Player clicked a sign with editable text.  Fire back a packet ONLY to the player who sent this to have them open the sign GUI.
+						//Player clicked a component  with editable text.  Fire back a packet ONLY to the player who sent this to have them open the sign GUI.
 						player.sendPacket(new PacketTileEntityPoleChange(pole, axis, null, null, false));
 					}
 				}
 				return false;
 			}if(packID.isEmpty() && textLines != null){
-				//This is a packet attempting to change sign text.  Do so now.
+				//This is a packet attempting to change component text.  Do so now.
 				if(pole.components.containsKey(axis)){
-					((TileEntityPole_Sign) pole.components.get(axis)).textLines.clear();
-					((TileEntityPole_Sign) pole.components.get(axis)).textLines.addAll(textLines);
+					pole.components.get(axis).setTextLines(textLines);
 					return true;
 				}
 			}else if(!packID.isEmpty() && !pole.components.containsKey(axis)){
 				//Player clicked with a component.  Add it.
-				ItemPoleComponent component = (ItemPoleComponent) MTSRegistry.packItemMap.get(packID).get(systemName);
-				pole.components.put(axis, TileEntityPole.createComponent(component.definition));
-				if(textLines != null && component.definition.general.textLines != null){
-					//Sign.  Restore text.
-					((TileEntityPole_Sign) pole.components.get(axis)).textLines.clear();
-					((TileEntityPole_Sign) pole.components.get(axis)).textLines.addAll(textLines);
+				ItemPoleComponent componentItem = (ItemPoleComponent) MTSRegistry.packItemMap.get(packID).get(systemName);
+				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(componentItem.definition);
+				pole.components.put(axis, newComponent);
+				if(textLines != null && newComponent.getTextLines() != null){
+					newComponent.setTextLines(textLines);
 				}
+				pole.updateLightState();
 				return true;
 			} 
 		}

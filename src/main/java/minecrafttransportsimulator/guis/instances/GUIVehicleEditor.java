@@ -427,7 +427,7 @@ public class GUIVehicleEditor extends AGUIBase{
 			dataEntryLabels.get(labelBoxIndex++).text = "X-Rot (degrees):";
 			dataEntryLabels.get(labelBoxIndex++).text = "Y-Rot (degrees):";
 			dataEntryLabels.get(labelBoxIndex++).text = "Z-Rot (degrees):";
-			dataEntryLabels.get(labelBoxIndex++).text = "Scale (1=128x128 blocks):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Scale (1=128x128 px):";
 			dataEntryLabels.get(labelBoxIndex++).text = "HUD X-Pos (in texture px)";
 			dataEntryLabels.get(labelBoxIndex++).text = "HUD Y-Pos (in texture px)";
 			dataEntryLabels.get(labelBoxIndex++).text = "HUD Scale (1=128x128 px):";

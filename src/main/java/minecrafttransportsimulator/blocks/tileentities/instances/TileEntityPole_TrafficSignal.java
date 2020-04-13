@@ -15,6 +15,11 @@ public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component{
 	public TileEntityPole_TrafficSignal(JSONPoleComponent definition){
 		super(definition);
 	}
+
+	@Override
+	public float lightLevel(){
+		return !state.equals(SignalState.OFF) ? 12F/15F : 0.0F;
+	}
 	
 	public static enum SignalState{
 		OFF,

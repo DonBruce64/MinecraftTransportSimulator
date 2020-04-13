@@ -1053,7 +1053,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 
 			//Render the light.
-			light.renderOnVehicle(vehicle, wasRenderedPrior, textureMap.get(vehicle.definition.systemName));
+			light.renderOnVehicle(vehicle, wasRenderedPrior, textureMap.get(vehicle.definition.systemName).getResourceDomain(), textureMap.get(vehicle.definition.systemName).getResourcePath());
 			GL11.glPopMatrix();
 		}
 	}

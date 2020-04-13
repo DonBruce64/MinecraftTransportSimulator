@@ -12,4 +12,9 @@ public class TileEntityPole_Core extends ATileEntityPole_Component{
 	public TileEntityPole_Core(JSONPoleComponent definition){
 		super(definition);
 	}
+
+	@Override
+	public float lightLevel(){
+		return 0;
+	}
 }

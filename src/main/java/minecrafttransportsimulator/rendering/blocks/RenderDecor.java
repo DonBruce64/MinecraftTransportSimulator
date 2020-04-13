@@ -52,8 +52,7 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 			//If we are a fluid tank render text.
 			if(definition.general.textLines != null && tile instanceof ATileEntityFluidTank){
 				ATileEntityFluidTank<JSONDecor> tank = (ATileEntityFluidTank<JSONDecor>) tile;
-				WrapperRender.setLightmapState(false);
-				GL11.glDisable(GL11.GL_LIGHTING);
+				WrapperRender.setLightingState(false);
 				for(byte i=0; i<definition.general.textLines.length; ++i){
 					TextLine text = definition.general.textLines[i];
 					GL11.glPushMatrix();
@@ -78,8 +77,7 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 					}
 					GL11.glPopMatrix();
 				}
-				GL11.glEnable(GL11.GL_LIGHTING);
-				WrapperRender.setLightmapState(true);
+				WrapperRender.setLightingState(true);
 			}
 		}
 	}

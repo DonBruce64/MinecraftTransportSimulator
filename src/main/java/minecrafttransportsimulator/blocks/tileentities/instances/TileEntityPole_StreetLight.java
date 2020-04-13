@@ -15,6 +15,11 @@ public class TileEntityPole_StreetLight extends ATileEntityPole_Component{
 		super(definition);
 	}
 
+	@Override
+	public float lightLevel(){
+		return !state.equals(LightState.OFF) ? 12F/15F : 0.0F;
+	}
+	
 	public static enum LightState{
 		OFF,
 		ON;

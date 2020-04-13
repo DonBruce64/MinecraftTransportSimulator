@@ -55,10 +55,10 @@ public class GUISign extends AGUIBase{
 		//Add text box components for every text.  Paired with labels to render text on the sign.
 		TextLine[] textDefinitions = pole.components.get(axis).definition.general.textLines;
 		for(byte i=0; i<textDefinitions.length; ++i){
-			GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, guiTop + 54 + i*10, 100, sign.textLines.get(i), 10, Color.WHITE, Color.BLACK, textDefinitions[i].characters);
+			GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, guiTop + 54 + i*10, 100, sign.getTextLines().get(i), 10, Color.WHITE, Color.BLACK, textDefinitions[i].characters);
 			addTextBox(box);
 			signTextBoxes.add(box);
-			GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textDefinitions[i].xPos*64F), modelRender.y - (int) (textDefinitions[i].yPos*64F), Color.decode(textDefinitions[i].color), sign.textLines.get(i), textDefinitions[i].scale*64F/16F, true, false, 0);
+			GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textDefinitions[i].xPos*64F), modelRender.y - (int) (textDefinitions[i].yPos*64F), Color.decode(textDefinitions[i].color), sign.getTextLines().get(i), textDefinitions[i].scale*64F/16F, true, false, 0);
 			addLabel(label);
 			signTextLabels.add(label);
 		}

@@ -14,6 +14,7 @@ import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
+import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -191,13 +192,27 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Gets the brightness at this point, as a value between 0-1. Calculated from the
-	 *  sun brightness and the brightness of neighboring blocks.
+	 *  Gets the brightness at this point, as a value between 0.0-1.0. Calculated from the
+	 *  sun brightness, and possibly the block brightness if calculateBlock is true.
 	 */
-	public float getLightBrightness(Point3i point){
+	public float getLightBrightness(Point3i point, boolean calculateBlock){
 		BlockPos pos = new BlockPos(point.x, point.y, point.z);
-		float sunLight = world.getSunBrightness(0)*world.getLightBrightness(pos);
-		float blockLight = world.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, pos)/15F;
-		return Math.min((1 - Math.max(sunLight, blockLight)), 1);
+		float sunLight = world.getSunBrightness(0)*(world.getLightFor(EnumSkyBlock.SKY, pos) - world.getSkylightSubtracted())/15F;
+		float blockLight = calculateBlock ? world.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, pos)/15F : 0.0F;
+		return Math.max(sunLight, blockLight);
+	}
+	
+	/**
+	 *  Updates the brightness of the block at this point.  Only works if the block
+	 *  is a dynamic-brightness block that implements {@link ITileEntityProvider}. 
+	 */
+	public void updateLightBrightness(Point3i point){
+		ATileEntityBase<?> tile = getTileEntity(point);
+		if(tile != null){
+			BlockPos pos = new BlockPos(point.x, point.y, point.z);
+			//This needs to get fired manually as even if we update the blockstate the light value won't change
+			//as the actual state of the block doesn't change, so MC doesn't think it needs to do any lighting checks.
+			world.checkLight(pos);
+		}
 	}
 }

@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
@@ -107,9 +109,26 @@ public class WrapperRender{
 	}
 	
 	/**
-	 *  Sets the lightmap to either enabled or disabled based on the passed-in parameter.
+	 *  Sets the lighting to either enabled or disabled based on the passed-in parameter.
+	 *  Note that this both disables the internal lightmap as well as the lighting.
 	 */
-	public static void setLightmapState(boolean enabled){
+	public static void setLightingState(boolean enabled){
+		if(enabled){
+			GlStateManager.enableLighting();
+			Minecraft.getMinecraft().entityRenderer.enableLightmap();
+		}else{
+			GlStateManager.disableLighting();
+			Minecraft.getMinecraft().entityRenderer.disableLightmap();
+		}
+	}
+	
+	/**
+	 *  Tells the renderer to ignore world lighting for this draw sequence.
+	 *  This effectively makes the texture as bright as it would be during
+	 *  daytime.  Do note that it won't make the texture completely ignore
+	 *  lighting.  That only works if lighting is disabled. 
+	 */
+	public static void setWorldLightingState(boolean enabled){
 		if(enabled){
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		}else{
@@ -118,12 +137,48 @@ public class WrapperRender{
 	}
 	
 	/**
+	 *  Sets the blend state to enabled or disabled.  Also allows for
+	 *  the blend state to be set to accommodate beam lights with brightening
+	 *  properties rather than regular alpha blending.
+	 */
+	public static void setBlendState(boolean enabled, boolean brightBlend){
+		if(enabled){
+			GlStateManager.enableBlend();
+			GlStateManager.disableAlpha();
+			GlStateManager.depthMask(false);
+			if(brightBlend){
+				GlStateManager.blendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
+			}else{
+				GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+			}
+		}else{
+			GlStateManager.disableBlend();
+			GlStateManager.enableAlpha();
+			GlStateManager.depthMask(true);
+			GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		}
+	}
+	
+	/**
 	 *  Sets MC color to the passed-in color.  Required when needing to keep MC states happy.
 	 *  In particular, this is needed if colors are changed during MC internal draw calls,
 	 *  such as rendering a string, changing the color, and then rendering another string.
 	 */
-	public static void setColorState(float red, float green, float blue){
-		GlStateManager.color(red, green, blue);
+	public static void setColorState(float red, float green, float blue, float alpha){
+		GlStateManager.color(red, green, blue, alpha);
+	}
+	
+	/**
+	 *  Resets all the rendering states to the appropriate values for the pass we are in.
+	 *  Useful after doing a rendering routine where states may not be correct for the pass.
+	 */
+	public static void resetStates(){
+		//For pass 0, we do lighting but not blending.
+		//For pass 1, we do blending and lighting.
+		//For pass -1, we don't do blending or lighting.
+		setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+		setLightingState(getRenderPass() != -1);
+		setBlendState(getRenderPass() == 1, false);
 	}
 	
 	/**

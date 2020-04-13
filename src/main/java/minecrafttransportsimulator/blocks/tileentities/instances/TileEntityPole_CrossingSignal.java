@@ -15,6 +15,11 @@ public class TileEntityPole_CrossingSignal extends ATileEntityPole_Component{
 	public TileEntityPole_CrossingSignal(JSONPoleComponent definition){
 		super(definition);
 	}
+	
+	@Override
+	public float lightLevel(){
+		return !state.equals(CrossingState.OFF) ? 12F/15F : 0.0F;
+	}
 
 	public static enum CrossingState{
 		OFF,

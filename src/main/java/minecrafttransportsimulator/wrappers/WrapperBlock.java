@@ -269,6 +269,18 @@ public class WrapperBlock extends Block{
   		return BlockRenderLayer.CUTOUT;
   	}
   	
+  	@Override
+  	public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos){
+  		//Gets the light level.  We need to override this as light level can change.
+  		if(block instanceof IBlockTileEntity){
+  			TileEntity tile = world.getTileEntity(pos);
+  			if(tile instanceof WrapperTileEntity){
+  				return (int) (((WrapperTileEntity<?>) tile).tileEntity.lightLevel*15F);
+  			}
+  		}
+        return super.getLightValue(state, world, pos);
+    }
+  	
   	/**
 	 * Registers all blocks in the core mod, as well as any decors in packs.
 	 * Also adds the respective TileEntity if the block has one.

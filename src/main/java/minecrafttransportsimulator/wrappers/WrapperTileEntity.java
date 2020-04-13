@@ -10,6 +10,7 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -69,10 +70,23 @@ public class WrapperTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 	    return new SPacketUpdateTileEntity(getPos(), -1, tag);
     }
 	
+	@Override
 	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt){
 		//Called when the client gets a TE update packet.
 		//We load the server-sent data here.
 		tileEntity.load(new WrapperNBT(pkt.getNbtCompound()));
+	}
+	
+	@Override
+	public boolean shouldRenderInPass(int pass){
+		//We can render in all passes.
+        return true;
+    }
+	
+	@Override
+	public AxisAlignedBB getRenderBoundingBox(){
+		//Return a box of size 16x16 here to ensure this entity doesn't disappear when we aren't looking at it exactly.
+		return new AxisAlignedBB(pos).grow(8);
 	}
 	
 	@Override

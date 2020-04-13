@@ -138,7 +138,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 						case RED: {
 							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
 								if(lightPart.type.equals(LightType.STOPLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID + ":textures/poles/" + component.definition.systemName + ".png", true);
+									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
 								}
 							}
 							break;
@@ -146,28 +146,28 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 						case YELLOW:
 							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
 								if(lightPart.type.equals(LightType.CAUTIONLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID + ":textures/poles/" + component.definition.systemName + ".png", true);
+									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
 								}
 							}
 							break;
 						case GREEN:
 							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
 								if(lightPart.type.equals(LightType.GOLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID + ":textures/poles/" + component.definition.systemName + ".png", true);
+									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
 								}
 							}
 							break;
 						case FLASHING_RED:
 							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
 								if(lightPart.type.equals(LightType.STOPLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID + ":textures/poles/" + component.definition.systemName + ".png", false);
+									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", false);
 								}
 							}
 							break;
 						case FLASHING_YELLOW:
 							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
 								if(lightPart.type.equals(LightType.CAUTIONLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID + ":textures/poles/" + component.definition.systemName + ".png", false);
+									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", false);
 								}
 							}
 							break;
@@ -180,21 +180,21 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 						case DONTWALK:
 							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
 								if(lightPart.type.equals(LightType.STOPLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID + ":textures/poles/" + component.definition.systemName + ".png", true);
+									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
 								}
 							}
 							break;
 						case FLASHING_DONTWALK:
 							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
 								if(lightPart.type.equals(LightType.STOPLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID + ":textures/poles/" + component.definition.systemName + ".png", false);
+									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", false);
 								}
 							}
 							break;
 						case WALK:
 							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
 								if(lightPart.type.equals(LightType.GOLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID + ":textures/poles/" + component.definition.systemName + ".png", true);
+									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
 								}
 							}
 							break;
@@ -207,7 +207,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 						case ON:
 							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
 								if(lightPart.type.equals(LightType.STREETLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID + ":textures/poles/" + component.definition.systemName + ".png", true);
+									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
 								}
 							}
 						default:
@@ -223,11 +223,11 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 								GL11.glTranslatef(text.xPos, text.yPos, text.zPos + 0.01F);
 								GL11.glScalef(text.scale/16F, text.scale/16F, text.scale/16F);
 								GL11.glRotatef(180, 1, 0, 0);
-								WrapperGUI.drawText(((TileEntityPole_Sign) component).textLines.get(i), 0, 0, Color.decode(text.color), true, false, 0);
+								WrapperGUI.drawText(((TileEntityPole_Sign) component).getTextLines().get(i), 0, 0, Color.decode(text.color), true, false, 0);
 								GL11.glPopMatrix();
 							}
 							//Set color back to white to allow us to render other components.
-							WrapperRender.setColorState(1.0F, 1.0F, 1.0F);
+							WrapperRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 						}
 					}
 					GL11.glPopMatrix();

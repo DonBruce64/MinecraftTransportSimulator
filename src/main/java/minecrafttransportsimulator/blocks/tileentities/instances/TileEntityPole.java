@@ -22,6 +22,20 @@ import minecrafttransportsimulator.wrappers.WrapperNBT;
 public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
 	
+	/**
+	 * Helper method to update light state and re-do world lighting if required.
+	 */
+	public void updateLightState(){
+		float calculatedLevel = 0;
+		for(ATileEntityPole_Component component : components.values()){
+			calculatedLevel = Math.max(calculatedLevel, component.lightLevel());
+		}
+		if(lightLevel != calculatedLevel){
+			lightLevel = calculatedLevel;
+			world.updateLightBrightness(position);
+		}
+	}
+	
 	@Override
 	@SuppressWarnings("unchecked")
     public void load(WrapperNBT data){
@@ -31,11 +45,11 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			String packID = data.getString("packID" + axis.ordinal());
 			if(!packID.isEmpty()){
 				String systemName = data.getString("systemName" + axis.ordinal());
-				AItemPack<JSONPoleComponent> component = (AItemPack<JSONPoleComponent>) MTSRegistry.packItemMap.get(packID).get(systemName);
-				components.put(axis, createComponent(component.definition));
-				if(component.definition.general.textLines != null){
-					((TileEntityPole_Sign) components.get(axis)).textLines.clear();
-					((TileEntityPole_Sign) components.get(axis)).textLines.addAll(data.getStrings("textLines", component.definition.general.textLines.length));
+				AItemPack<JSONPoleComponent> componentItem = (AItemPack<JSONPoleComponent>) MTSRegistry.packItemMap.get(packID).get(systemName);
+				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(componentItem.definition);
+				components.put(axis, newComponent);
+				if(newComponent.getTextLines() != null){
+					newComponent.setTextLines(data.getStrings("textLines", newComponent.getTextLines().size()));
 				}
 			}
 		}
@@ -48,8 +62,8 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		for(Entry<Axis, ATileEntityPole_Component> connectedObjectEntry : components.entrySet()){
 			data.setString("packID" + connectedObjectEntry.getKey().ordinal(), connectedObjectEntry.getValue().definition.packID);
 			data.setString("systemName" + connectedObjectEntry.getKey().ordinal(), connectedObjectEntry.getValue().definition.systemName);
-			if(connectedObjectEntry.getValue().definition.general.textLines != null){
-				data.setStrings("textLines", ((TileEntityPole_Sign) connectedObjectEntry.getValue()).textLines);
+			if(connectedObjectEntry.getValue().getTextLines() != null){
+				data.setStrings("textLines", connectedObjectEntry.getValue().getTextLines());
 			}
 		}
     }

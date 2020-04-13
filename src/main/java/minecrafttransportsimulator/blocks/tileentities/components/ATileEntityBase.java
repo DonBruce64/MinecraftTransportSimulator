@@ -24,6 +24,8 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 	public WrapperWorld world;
 	/**Current position of this TileEntity.  Set both manually and during loading from world.**/
 	public Point3i position;
+	/**Current light level of the block for this TileEntity.  Defaults to 0, or no light.**/
+	public float lightLevel;
 	/**JSON definition for this tileEntity.  Private to allow getter/setter post-definition assignment logic.**/
 	private JSONDefinition definition;
 	
@@ -60,6 +62,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 		String systemName = data.getString("systemName");
 		if(!packID.isEmpty()){
 			setDefinition((JSONDefinition) MTSRegistry.packItemMap.get(packID).get(systemName).definition);
+			lightLevel = (float) data.getDouble("lightLevel");
 		}
 	}
 	
@@ -71,6 +74,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 		if(definition != null){
 			data.setString("packID", definition.packID);
 			data.setString("systemName", definition.systemName);
+			data.setDouble("lightLevel", lightLevel);
 		}
 	}
 

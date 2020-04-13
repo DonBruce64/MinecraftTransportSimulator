@@ -147,7 +147,10 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 					}else if(component instanceof TileEntityPole_CrossingSignal){
 						((TileEntityPole_CrossingSignal) component).state = (axis.equals(Axis.NORTH) || axis.equals(Axis.SOUTH)) ^ mainDirectionXAxis ? state.mainCrossingState : state.crossCrossingState;
 					}else if(component instanceof TileEntityPole_StreetLight){
-						((TileEntityPole_StreetLight) component).state = lightsOn ? LightState.ON : LightState.OFF;
+						if(((TileEntityPole_StreetLight) component).state.equals(LightState.ON) ^ lightsOn){
+							((TileEntityPole_StreetLight) component).state = lightsOn ? LightState.ON : LightState.OFF;
+							signal.updateLightState();
+						}
 					}
 				}
 			}
