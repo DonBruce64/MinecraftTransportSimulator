@@ -407,7 +407,7 @@ public abstract class APartEngine extends APart implements FXPart{
 	}
 	//Get the total wear factor to be applied to this engine, to account for supercharged engines.
 	public double getTotalWearFactor(){
-		return (definition.engine.superchargerEfficiency*2)*ConfigSystem.configObject.general.engineHoursFactor.value;
+		return definition.engine.superchargerEfficiency*ConfigSystem.configObject.general.engineHoursFactor.value;
 	}
 	
 	protected boolean isInLiquid(){
