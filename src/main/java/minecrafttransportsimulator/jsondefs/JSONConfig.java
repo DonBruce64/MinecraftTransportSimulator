@@ -158,6 +158,8 @@ public class JSONConfig{
 		public ConfigBoolean seaLvlOffset = new ConfigBoolean(false, "Does altimiter read zero at average sea level instead of Y=0?");
 		public ConfigBoolean mouseYoke = new ConfigBoolean(false, "Enable mouse yoke for vehicles? Prevents looking around unless unlocked.  Think MCHeli controls.");
 		public ConfigBoolean kbOverride = new ConfigBoolean(true, "Should keyboard controls be ignored when a joystick control is mapped?  Leave true to free up the keyboard while using a joysick.");
+		public ConfigBoolean lightBlending = new ConfigBoolean(true, "If false, cone-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
+		public ConfigBoolean lightInteriors = new ConfigBoolean(true, "If false, cone-based lights will not render interior cones.  May help if lights seem too bright or mess with shaders.");
 		public ConfigBoolean renderHUD_1P = new ConfigBoolean(true, "If false, the HUD in vehicles will not render in 1st-person mode.");
 		public ConfigBoolean renderHUD_3P = new ConfigBoolean(true, "If false, the HUD in vehicles will not render in 3rd-person mode.");
 		public ConfigBoolean fullHUD_1P = new ConfigBoolean(false, "If true, the full-size HUD will render in 1st-person rather than the half-size HUD.");

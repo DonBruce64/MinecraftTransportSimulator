@@ -2,12 +2,12 @@ package minecrafttransportsimulator.rendering.vehicles;
 
 import java.awt.Color;
 
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.wrappers.WrapperRender;
@@ -164,8 +164,8 @@ public final class RenderVehicle_LightPart{
 		
 		//Render beam if the light is on and the brightness is non-zero.
 		//This must be done in pass 1 or -1 to do proper blending.
-		if(type.hasBeam && lightOn && (Keyboard.isKeyDown(Keyboard.KEY_RSHIFT) ? WrapperRender.getRenderPass() == -1 : (WrapperRender.getRenderPass() != 0 && !wasRenderedPrior))){
-			renderBeam(Math.min(electricPower > 4 ? 1.0F : 0, lightBrightness/2F));
+		if(type.hasBeam && lightOn && lightBrightness > 0 && WrapperRender.getRenderPass() != 0 && !wasRenderedPrior){
+			renderBeam(Math.min(electricPower > 4 ? 1.0F : 0, lightBrightness));
 		}
 		
 		//Set color, lighting and blending state back to normal.
@@ -277,8 +277,7 @@ public final class RenderVehicle_LightPart{
 	private void renderBeam(float alphaValue){
 		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/lightbeam.png");
 		WrapperRender.setLightingState(false);
-		//FIXME put in a shaders config here  perhaps?
-		WrapperRender.setBlendState(true, true);
+		WrapperRender.setBlendState(true, ConfigSystem.configObject.client.lightBlending.value);
 		WrapperRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		
 		//As we can have more than one light per definition, we will only render 6 vertices at a time.
@@ -308,13 +307,11 @@ public final class RenderVehicle_LightPart{
 			GL11.glTexCoord2f(theta, 1);
 			GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
 		}
-		for(float theta=(float) (2*Math.PI); theta>=0 - 0.1; theta -= 2F*Math.PI/40F){
-			GL11.glTexCoord2f(theta, 1);
-			GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
-		}
-		for(float theta=0; theta < 2*Math.PI + 0.1; theta += 2F*Math.PI/40F){
-			GL11.glTexCoord2f(theta, 1);
-			GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
+		if(ConfigSystem.configObject.client.lightInteriors.value){
+			for(float theta=0; theta < 2*Math.PI + 0.1; theta += 2F*Math.PI/40F){
+				GL11.glTexCoord2f(theta, 1);
+				GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
+			}
 		}
 		GL11.glEnd();
 	}
