@@ -39,17 +39,17 @@ public class WrapperTileEntityFluidTank<FluidTankTileEntity extends ATileEntityF
 
 	@Override
 	public FluidStack getFluid(){
-		return !tileEntity.getFluid().isEmpty() ? new FluidStack(FluidRegistry.getFluid(tileEntity.getFluid()), tileEntity.getFluidLevel()) : null;
+		return tileEntity != null && !tileEntity.getFluid().isEmpty() ? new FluidStack(FluidRegistry.getFluid(tileEntity.getFluid()), tileEntity.getFluidLevel()) : null;
 	}
 
 	@Override
 	public int getFluidAmount(){
-		return tileEntity.getFluidLevel();
+		return tileEntity != null ? tileEntity.getFluidLevel() : 0;
 	}
 
 	@Override
 	public int getCapacity(){
-		return tileEntity.getFluidLevel();
+		return tileEntity != null ? tileEntity.getFluidLevel() : 0;
 	}
 
 	@Override
@@ -59,16 +59,20 @@ public class WrapperTileEntityFluidTank<FluidTankTileEntity extends ATileEntityF
 
 	@Override
 	public int fill(FluidStack stack, boolean doFill){
-		int fillAmount = tileEntity.fill(stack.getFluid().getName(), stack.amount, !doFill);
-		if(fillAmount > 0){
-			FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(new FluidStack(getFluid().getFluid(), fillAmount), world, getPos(), this, fillAmount));
+		if(tileEntity != null){
+			int fillAmount = tileEntity.fill(stack.getFluid().getName(), stack.amount, !doFill);
+			if(fillAmount > 0){
+				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(new FluidStack(getFluid().getFluid(), fillAmount), world, getPos(), this, fillAmount));
+			}
+			return fillAmount;
+		}else{
+			return 0;
 		}
-		return fillAmount;
 	}
 
 	@Override
 	public FluidStack drain(int maxDrain, boolean doDrain){
-		if(tileEntity.getFluidLevel() > 0){
+		if(getFluidAmount() > 0){
 			return this.drain(new FluidStack(getFluid().getFluid(), maxDrain), doDrain);
 		}
 		return null;
@@ -76,7 +80,7 @@ public class WrapperTileEntityFluidTank<FluidTankTileEntity extends ATileEntityF
 	
 	@Override
 	public FluidStack drain(FluidStack stack, boolean doDrain){
-		int drainAmount = tileEntity.drain(tileEntity.getFluid(), stack.amount, !doDrain);
+		int drainAmount = tileEntity != null ? tileEntity.drain(tileEntity.getFluid(), stack.amount, !doDrain) : 0;
 		if(drainAmount > 0){
 			FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(new FluidStack(getFluid().getFluid(), drainAmount), world, getPos(), this, drainAmount));
 		}
