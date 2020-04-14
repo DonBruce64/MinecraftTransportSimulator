@@ -233,7 +233,7 @@ public final class RenderVehicle_LightPart{
 	 *  passed-in will disable lighting for the cover if true.
 	 */
 	private void renderCover(boolean disableLighting){
-		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/glass.png");
+		WrapperRender.bindTexture("minecraft", "textures/blocks/glass.png");
 		WrapperRender.setLightingState(!disableLighting);
 		WrapperRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 		GL11.glBegin(GL11.GL_TRIANGLES);
