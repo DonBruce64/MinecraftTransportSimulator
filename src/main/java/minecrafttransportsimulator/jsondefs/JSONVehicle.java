@@ -47,12 +47,12 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     
     public class VehiclePlane{
         public boolean hasFlaps;
+        public boolean hasAutopilot;
         public float wingSpan;
         public float wingArea;
         public float tailDistance;
         public float rudderArea;
         public float elevatorArea;
-        public float hasAutopilot;
     }
     
     public class VehicleBlimp{

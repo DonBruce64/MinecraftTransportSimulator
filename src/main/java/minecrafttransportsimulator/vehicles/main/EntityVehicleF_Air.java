@@ -94,9 +94,27 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		}
 		gravitationalForce = currentMass*(9.8/400);
 	}
-
-	/*@Override
+	
+	@Override
 	protected void dampenControlSurfaces(){
+		if(autopilot){
+			if(-rotationRoll > aileronTrim + 1){
+				WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true), this);
+				++aileronTrim;
+			}else if(-rotationRoll < aileronTrim - 1){
+				WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false), this);
+				--aileronTrim;
+			}
+			//If we are not flying at a steady elevation, angle the elevator to compensate
+			if(-motionY*100 > elevatorTrim + 1){
+				WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true), this);
+				++elevatorTrim;
+			}else if(-motionY*100 < elevatorTrim - 1){
+				WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false), this);
+				--elevatorTrim;
+			}
+		}
+		
 		if(aileronCooldown==0){
 			if(aileronAngle != 0){
 				if(aileronAngle < AILERON_DAMPEN_RATE && aileronAngle > -AILERON_DAMPEN_RATE){
@@ -137,103 +155,6 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 			}
 		}else{
 			--rudderCooldown;
-		}
-	}*/
-	
-	@Override
-	protected void dampenControlSurfaces(){
-		//boolean autopilot = true;
-		boolean trimMode = true;
-		if(autopilot) {
-			//if (world.getTotalWorldTime()%10 == 0) { //Apply autopilot corrections once every 1/2 second
-			//If we are not flying level, angle the aileron to compensate.
-			//For every angle we are rotated, we should have the ailerons angled that much to compensate.
-			//System.out.println(elevatorAngle);
-			if(!trimMode){	
-				if(-rotationRoll > aileronAngle + 1){
-					System.out.format("Roll is:%f, aAngle is:%d, sending delta of:%d to client, and changing server to:%d\n", rotationRoll, aileronAngle, 1, aileronAngle + 1);
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, (short) 1, (byte) 0), this);
-					++aileronAngle;
-				}else if(-rotationRoll < aileronAngle - 1){
-					System.out.format("Roll is:%f, aAngle is:%d, sending delta of:%d to client, and changing server to:%d\n", rotationRoll, aileronAngle, -1, aileronAngle - 1);
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, (short) -1, (byte) 0), this);
-					--aileronAngle;
-				}
-				//If we are not flying at a steady elevation, angle the elevator to compensate
-				if(-motionY*100 > elevatorAngle + 1){
-					System.out.format("Pitch is:%f, aAngle is:%d, sending delta of:%d to client, and changing server to:%d\n", rotationPitch, elevatorAngle, 1, elevatorAngle + 1);
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) 1, (byte) 0), this);
-					++elevatorAngle;
-				}else if(-motionY*100 < elevatorAngle - 1){
-					System.out.format("Pitch is:%f, aAngle is:%d, sending delta of:%d to client, and changing server to:%d\n", rotationPitch, elevatorAngle, -1, elevatorAngle - 1);
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) -1, (byte) 0), this);
-					--elevatorAngle;
-				}
-			}else{
-				if(-rotationRoll > aileronTrim + 1){
-					System.out.format("Roll is:%f, aAngle is:%d, sending delta of:%d to client, and changing server to:%d\n", rotationRoll, aileronAngle, 1, aileronAngle + 1);
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true), this);
-					++aileronTrim;
-				}else if(-rotationRoll < aileronTrim - 1){
-					System.out.format("Roll is:%f, aAngle is:%d, sending delta of:%d to client, and changing server to:%d\n", rotationRoll, aileronAngle, -1, aileronAngle - 1);
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false), this);
-					--aileronTrim;
-				}
-				//If we are not flying at a steady elevation, angle the elevator to compensate
-				if(-motionY*100 > elevatorTrim + 1){
-					System.out.format("Pitch is:%f, aAngle is:%d, sending delta of:%d to client, and changing server to:%d\n", rotationPitch, elevatorAngle, 1, elevatorAngle + 1);
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true), this);
-					++elevatorTrim;
-				}else if(-motionY*100 < elevatorTrim - 1){
-					System.out.format("Pitch is:%f, aAngle is:%d, sending delta of:%d to client, and changing server to:%d\n", rotationPitch, elevatorAngle, -1, elevatorAngle - 1);
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false), this);
-					--elevatorTrim;
-				}
-			}
-		}
-		
-		if(!autopilot || trimMode){
-			if(aileronCooldown==0){
-				if(aileronAngle != 0){
-					if(aileronAngle < AILERON_DAMPEN_RATE && aileronAngle > -AILERON_DAMPEN_RATE){
-						WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, (short) -aileronAngle, (byte) 0), this);
-						aileronAngle = 0;
-					}else{
-						WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, aileronAngle < 0 ? AILERON_DAMPEN_RATE : -AILERON_DAMPEN_RATE, (byte) 0), this);
-						aileronAngle += aileronAngle < 0 ? AILERON_DAMPEN_RATE : -AILERON_DAMPEN_RATE;
-					}
-				}
-			}else{
-				--aileronCooldown;
-			}
-			
-			if(elevatorCooldown==0){
-				if(elevatorAngle != 0){
-					if(elevatorAngle < ELEVATOR_DAMPEN_RATE && elevatorAngle > -ELEVATOR_DAMPEN_RATE){
-						WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) -elevatorAngle, (byte) 0), this);
-						elevatorAngle = 0;
-					}else{
-						WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, elevatorAngle < 0 ? ELEVATOR_DAMPEN_RATE : -ELEVATOR_DAMPEN_RATE, (byte) 0), this);
-						elevatorAngle += elevatorAngle < 0 ? ELEVATOR_DAMPEN_RATE : -ELEVATOR_DAMPEN_RATE;
-					}
-				}
-			}else{
-				--elevatorCooldown;
-			}
-			
-			if(rudderCooldown==0){
-				if(rudderAngle != 0){
-					if(rudderAngle < RUDDER_DAMPEN_RATE && rudderAngle > -RUDDER_DAMPEN_RATE){
-						WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, (short) -rudderAngle, (byte) 0), this);
-						rudderAngle = 0;
-					}else{
-						WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, rudderAngle < 0 ? RUDDER_DAMPEN_RATE : -RUDDER_DAMPEN_RATE, (byte) 0), this);
-						rudderAngle += rudderAngle < 0 ? RUDDER_DAMPEN_RATE : -RUDDER_DAMPEN_RATE;
-					}
-				}
-			}else{
-				--rudderCooldown;
-			}
 		}
 	}
 	
