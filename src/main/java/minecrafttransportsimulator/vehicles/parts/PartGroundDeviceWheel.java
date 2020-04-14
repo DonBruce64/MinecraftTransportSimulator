@@ -158,6 +158,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 		if(skipAngularCalcs && this.isOnGround()){
 			for(byte i=0; i<4; ++i){
 				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+				WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":" + "wheel_squeal"));
 			}
 		}
 	}
