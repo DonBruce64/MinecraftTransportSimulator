@@ -519,6 +519,7 @@ public class GUIVehicleEditor extends AGUIBase{
 			dataEntryLabels.get(labelBoxIndex++).text = "Variable (see handbook):";
 			dataEntryLabels.get(labelBoxIndex++).text = "Min clamp (0 is no clamp):";
 			dataEntryLabels.get(labelBoxIndex++).text = "Max clamp (0 is no clamp):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Absolute Value:";
 			return labelBoxIndex;
 		}
 
@@ -537,6 +538,7 @@ public class GUIVehicleEditor extends AGUIBase{
 			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationVariable));
 			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationClampMin));
 			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationClampMax));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.absoluteValue));
 		}
 
 		@Override
@@ -557,6 +559,7 @@ public class GUIVehicleEditor extends AGUIBase{
 				saving.rotationVariable = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
 				saving.rotationClampMin = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 				saving.rotationClampMax = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.absoluteValue = Boolean.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 			}catch(Exception e){
 				return -(--dataEntryBoxIndex);
 			}
@@ -594,6 +597,7 @@ public class GUIVehicleEditor extends AGUIBase{
 			dataEntryLabels.get(labelBoxIndex++).text = "Variable (see handbook):";
 			dataEntryLabels.get(labelBoxIndex++).text = "Min clamp (0 is no clamp):";
 			dataEntryLabels.get(labelBoxIndex++).text = "Max clamp (0 is no clamp):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Absolute Value:";
 			return labelBoxIndex;
 		}
 
@@ -609,6 +613,7 @@ public class GUIVehicleEditor extends AGUIBase{
 			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.translationVariable));
 			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.translationClampMin));
 			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.translationClampMax));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.absoluteValue));
 		}
 
 		@Override
@@ -625,6 +630,7 @@ public class GUIVehicleEditor extends AGUIBase{
 				saving.translationVariable = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
 				saving.translationClampMin = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 				saving.translationClampMax = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.absoluteValue = Boolean.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 			}catch(Exception e){
 				return -(--dataEntryBoxIndex);
 			}

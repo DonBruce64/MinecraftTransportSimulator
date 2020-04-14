@@ -26,8 +26,8 @@ public final class RenderAnimations{
 	 *  If a value other than 0 is passed-in, the variable returned will be clamped to that value.
 	 *  This is in both the positive and negative direction.
 	 */
-	public static double getVariableValue(String variable, float scaling, float offset, float minClamp, float maxClamp, float partialTicks, EntityVehicleE_Powered vehicle, APart optionalPart){
-		double value = offset + scaling*getVariableValue(variable, partialTicks, vehicle, optionalPart);
+	public static double getVariableValue(String variable, float scaling, float offset, float minClamp, float maxClamp, boolean absolute, float partialTicks, EntityVehicleE_Powered vehicle, APart optionalPart){
+		double value = offset + scaling*(absolute ? Math.abs(getVariableValue(variable, partialTicks, vehicle, optionalPart)) : getVariableValue(variable, partialTicks, vehicle, optionalPart));
 		if(minClamp != 0 && value < minClamp){
 			return minClamp;
 		}else if(maxClamp != 0 && value > maxClamp){
@@ -135,7 +135,7 @@ public final class RenderAnimations{
 			case("pitch"): return vehicle.rotationPitch;
 			case("roll"): return vehicle.rotationRoll;
 			case("altitude"): return vehicle.posY - (ConfigSystem.configObject.client.seaLvlOffset.value ? vehicle.world.provider.getAverageGroundLevel() : 0);
-			case("speed"): return Math.abs(vehicle.velocity*vehicle.SPEED_FACTOR*20);
+			case("speed"): return vehicle.velocity*vehicle.SPEED_FACTOR*20;
 			
 			//Vehicle state cases.
 			case("throttle"): return vehicle.throttle/100D;

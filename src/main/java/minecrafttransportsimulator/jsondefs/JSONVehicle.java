@@ -139,6 +139,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     	public String rotationVariable;
     	public float rotationClampMin;
     	public float rotationClampMax;
+    	public boolean absoluteValue;
     }
     
     public class VehicleTranslatableModelObject{
@@ -147,5 +148,6 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     	public String translationVariable;
     	public float translationClampMin;
     	public float translationClampMax;
+    	public boolean absoluteValue;
     }
 }
