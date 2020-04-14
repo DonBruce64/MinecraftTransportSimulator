@@ -293,40 +293,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		}
 	}
 	
-	protected void performGroundOperations(){
-		float brakingFactor = getBrakingForceFactor();
-		if(brakingFactor > 0){
-			double groundSpeed = Math.hypot(motionX, motionZ)*Math.signum(velocity);
-			groundSpeed -= 20F*brakingFactor/currentMass*Math.signum(velocity);
-			if(Math.abs(groundSpeed) > 0.1){
-				reAdjustGroundSpeed(groundSpeed);
-			}else{
-				motionX = 0;
-				motionZ = 0;
-				motionYaw = 0;
-			}
-		}
-		
-		float skiddingFactor = getSkiddingFactor();
-		if(skiddingFactor != 0){
-			Vec3d groundVelocityVec = new Vec3d(motionX, 0, motionZ).normalize();
-			Vec3d groundHeadingVec = new Vec3d(headingVec.x, 0, headingVec.z).normalize();
-			float vectorDelta = (float) groundVelocityVec.distanceTo(groundHeadingVec);
-			byte velocitySign = (byte) (vectorDelta < 1 ? 1 : -1);
-			if(vectorDelta > 0.001){
-				vectorDelta = Math.min(skiddingFactor, vectorDelta);
-				float yawTemp = rotationYaw;
-				rotationYaw += vectorDelta;
-				updateHeadingVec();
-				reAdjustGroundSpeed(Math.hypot(motionX, motionZ)*velocitySign);
-				rotationYaw = yawTemp;
-			}
-		}
-		
-		motionYaw += getTurningFactor();
-	}
-	
-	
 	//-----START OF SOUND CODE-----
 	@Override
 	public void updateProviderSound(SoundInstance sound){
