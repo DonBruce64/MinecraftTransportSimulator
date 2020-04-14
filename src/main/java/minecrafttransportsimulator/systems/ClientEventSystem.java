@@ -402,7 +402,7 @@ public final class ClientEventSystem{
     @SubscribeEvent
     public static void on(WorldEvent.Unload event){
     	if(event.getWorld().isRemote){
-    		WrapperAudio.halt();
+    		WrapperAudio.haltSoundsIn(event.getWorld().provider.getDimension());
     	}
     }
 }

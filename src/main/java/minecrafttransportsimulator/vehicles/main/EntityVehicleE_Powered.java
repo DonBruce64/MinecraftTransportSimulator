@@ -363,6 +363,11 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	}
 	
 	@Override
+    public int getProviderDimension(){
+		return world.provider.getDimension();
+	}
+	
+	@Override
 	public Radio getRadio(){
 		return radio;
 	}

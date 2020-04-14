@@ -57,13 +57,22 @@ public class WrapperAudio{
 	}
 	
 	/**
-	 *  Stops all sounds from playing.  Should be called when the world is un-loaded.
+	 *  Stops all sounds from playing in the passed-in dimension.
+	 *  Should be called when a dimension is un-loaded to prevent orphaned sounds.
 	 */
-	public static void halt(){
-		queuedSounds.clear();
-        for(SoundInstance sound : playingSounds){
-        	sound.stop();
-        }
+	public static void haltSoundsIn(int dimension){
+		Iterator<SoundInstance> iterator = queuedSounds.iterator();
+		while(iterator.hasNext()){
+			if(iterator.next().provider.getProviderDimension() == dimension){
+				iterator.remove();
+			}
+		}
+		
+		for(SoundInstance playingSound : playingSounds){
+			if(playingSound.provider.getProviderDimension() == dimension){
+				playingSound.stop();
+			}
+		}
         isSystemPaused = false;
         update();
 	}

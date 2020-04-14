@@ -29,4 +29,9 @@ public interface ISoundProvider{
 	 *  Return the velocity of this ISoundProvider as a 3-unit FloatBuffer.
 	 */
     public FloatBuffer getProviderVelocity();
+    
+    /**
+	 *  Return the dimension this sound is in.  Required for world loading/unloading.
+	 */
+    public int getProviderDimension();
 }
