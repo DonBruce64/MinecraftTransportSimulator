@@ -205,13 +205,15 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			this.collisionFrame = new VehicleAxisAlignedBBCollective((EntityVehicleE_Powered) this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, collisionBoxes);
 			
 			//Add all part boxes to the part box list.
-			//If the part is a seat, and there is a rider in that seat, don't add it.
-			//This keeps riders from getting their clicks blocked by their own seats.
+			//If the part is a seat, and we are riding it, don't add it.
+			//This keeps us from clicking our own seat when we want to click other things.
 			partBoxes.clear();
 			for(APart part : this.getVehicleParts()){
-				if(part instanceof PartSeat){
-					if(getRiderForSeat((PartSeat) part) != null){
-						continue;
+				if(world.isRemote){
+					if(part instanceof PartSeat){
+						if(Minecraft.getMinecraft().player.equals(getRiderForSeat((PartSeat) part))){
+							continue;
+						}
 					}
 				}
 				partBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));

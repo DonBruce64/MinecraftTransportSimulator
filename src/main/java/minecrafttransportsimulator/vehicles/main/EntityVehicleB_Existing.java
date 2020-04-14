@@ -109,15 +109,15 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void updatePassenger(Entity passenger){
 		PartSeat seat = this.getSeatForRider(passenger);
 		if(seat != null){
-			Vec3d playerOffsetVec = seat.partPos.add(RotationSystem.getRotatedPoint(new Vec3d(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll));
-			passenger.setPosition(playerOffsetVec.x, playerOffsetVec.y - passenger.height, playerOffsetVec.z);
+			Vec3d passengerOffset = seat.partPos.add(RotationSystem.getRotatedPoint(new Vec3d(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll));
+			passenger.setPosition(passengerOffset.x, passengerOffset.y - passenger.height, passengerOffset.z);
 		}else if(definition != null && !this.riderSeatPositions.isEmpty()){
 			Double[] seatLocation = this.riderSeatPositions.get(this.getPassengers().indexOf(passenger));
 			APart part = getPartAtLocation(seatLocation[0], seatLocation[1], seatLocation[2]);
 			if(part instanceof PartSeat){
 				riderSeats.put(passenger.getEntityId(), (PartSeat) part);
 			}else{
-				MTS.MTSLog.error("ERROR: NO SEAT FOUND WHEN LINKING RIDER TO SEAT IN VEHICLE!");
+				MTS.MTSLog.error("ERROR: No seat was found when trying to update seated passenger.  Did someone change the seat linking?");
 				if(!world.isRemote){
 					passenger.dismountRidingEntity();
 				}
