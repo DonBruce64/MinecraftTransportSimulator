@@ -52,7 +52,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private float serverDeltaRoll;
 	
 	/**List of ground devices on the ground.  Populated after each movement to be used in turning/braking calculations.*/
-	public final List<APartGroundDevice> groundedGroundDevices = new ArrayList<APartGroundDevice>();
+	protected final List<APartGroundDevice> groundedGroundDevices = new ArrayList<APartGroundDevice>();
 	
 	//Classes used for ground device collisions.
 	protected VehicleGroundDeviceBox frontLeftGroundDeviceBox;

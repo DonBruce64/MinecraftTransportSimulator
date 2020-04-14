@@ -41,8 +41,6 @@ import net.minecraft.world.World;
  */
 abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public boolean locked;
-	public float rotationRoll;
-	public float prevRotationRoll;
 	public double airDensity;
 	public double currentMass;
 	public String ownerName="";
@@ -125,24 +123,6 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			}
 		}
 	}
-	
-	@Override
-	public void addPart(APart part, boolean ignoreCollision){
-		if(!ignoreCollision){
-			//Check if we are colliding and adjust roll before letting part addition continue.
-			//This is needed as the vehicle system doesn't know about roll.
-			if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
-				this.rotationRoll = 0;
-			}
-		}
-		super.addPart(part, ignoreCollision);
-	}
-	
-    @Override
-    public boolean shouldRenderInPass(int pass){
-        //Need to render in pass 1 to render transparent things in the world like light beams.
-    	return true;
-    }
 	
     /**
      * Adds a rider to this vehicle and sets their seat.
@@ -286,7 +266,6 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
 		this.locked=tagCompound.getBoolean("locked");
-		this.rotationRoll=tagCompound.getFloat("rotationRoll");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
 		
@@ -304,7 +283,6 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("locked", this.locked);
-		tagCompound.setFloat("rotationRoll", this.rotationRoll);
 		tagCompound.setString("ownerName", this.ownerName);
 		tagCompound.setString("displayText", this.displayText);
 		
