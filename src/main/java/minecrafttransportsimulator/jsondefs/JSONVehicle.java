@@ -52,6 +52,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public float tailDistance;
         public float rudderArea;
         public float elevatorArea;
+        public float hasAutopilot;
     }
     
     public class VehicleBlimp{
