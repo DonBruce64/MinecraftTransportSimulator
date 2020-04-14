@@ -55,7 +55,7 @@ public class PartEngineCar extends APartEngineGeared{
 		if(state.running || state.esOn){
 			double engineTargetRPM = !state.esOn ? vehicle.throttle/100F*(definition.engine.maxRPM - engineStartRPM/1.25 - hours) + engineStartRPM/1.25 : engineStartRPM*1.2;
 			if(getRatioForCurrentGear() != 0 && vehicle.wheels.size() > 0){
-				engineForce = (engineTargetRPM - RPM)/definition.engine.maxRPM*getRatioForCurrentGear()*vehicle.definition.car.axleRatio*definition.engine.fuelConsumption*0.6F;
+				engineForce = (engineTargetRPM - RPM)/definition.engine.maxRPM*getRatioForCurrentGear()*vehicle.definition.car.axleRatio*(definition.engine.fuelConsumption+(definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F;
 				//Check to see if the wheels have enough friction to affect the engine.
 				if(Math.abs(engineForce/10F) > wheelFriction || (Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) > 0.1 && Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) < Math.abs(engineForce/10F))){
 					engineForce *= vehicle.currentMass/100000F*wheelFriction/Math.abs(engineForce/10F);					

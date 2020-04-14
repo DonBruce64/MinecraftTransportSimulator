@@ -38,6 +38,8 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     	public float fuelConsumption;
     	public float[] gearRatios;
     	public String fuelType;
+		public float superchargerFuelConsumption;
+		public float superchargerEfficiency;
     }
     
     public class PartWheel{

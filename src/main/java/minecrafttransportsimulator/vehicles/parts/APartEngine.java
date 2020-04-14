@@ -70,6 +70,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			this.state = EngineStates.values()[dataTag.getByte("engineState")];
 			if(state.running && vehicle.world.isRemote){
 				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
 			}
 		}else{
 			this.state = EngineStates.ENGINE_OFF;
@@ -142,9 +143,9 @@ public abstract class APartEngine extends APart implements FXPart{
 				if(!isCreative){
 					vehicle.electricUsage += 0.05F;
 				}
-				if(vehicle.fuel > definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value && !isCreative){
-					vehicle.fuel -= definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
-					fuelFlow += definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
+				if(vehicle.fuel > getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value && !isCreative){
+					vehicle.fuel -= getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value;
+					fuelFlow += getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value;
 				}
 			}
 		}else if(state.hsOn){
@@ -163,7 +164,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		}
 		
 		ambientTemp = 25*vehicle.world.getBiome(vehicle.getPosition()).getTemperature(vehicle.getPosition()) - 5*(Math.pow(2, vehicle.posY/400) - 1);
-		coolingFactor = 0.001 + Math.abs(vehicle.velocity)/500F;
+		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(RPM/2000F)) + Math.abs(vehicle.velocity)/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		vehicle.electricUsage -= state.running ? 0.05*RPM/definition.engine.maxRPM : 0;
 		
@@ -172,19 +173,19 @@ public abstract class APartEngine extends APart implements FXPart{
 			oilPressure = Math.min(90 - temp/10, oilPressure + RPM/engineStartRPM - 0.5*(oilLeak ? 5F : 1F)*(oilPressure/engineOilDanger));
 			if(oilPressure < engineOilDanger){
 				temp += Math.max(0, (20*RPM/definition.engine.maxRPM)/20);
-				hours += 0.01*ConfigSystem.configObject.general.engineHoursFactor.value;
+				hours += 0.01*getTotalWearFactor();
 			}else{
 				temp += Math.max(0, (7*RPM/definition.engine.maxRPM - temp/(engineColdTemp*2))/20);
-				hours += 0.001*ConfigSystem.configObject.general.engineHoursFactor.value;	
+				hours += 0.001*getTotalWearFactor();	
 			}
 			if(RPM > engineStartRPM*1.5 && temp < engineColdTemp){//Not warmed up
-				hours += 0.001*(RPM/engineStartRPM - 1)*ConfigSystem.configObject.general.engineHoursFactor.value;
+				hours += 0.001*(RPM/engineStartRPM - 1)*getTotalWearFactor();
 			}
 			if(RPM > getSafeRPMFromMax(this.definition.engine.maxRPM)){//Too fast
-				hours += 0.001*(RPM - getSafeRPMFromMax(this.definition.engine.maxRPM))/10F*ConfigSystem.configObject.general.engineHoursFactor.value;
+				hours += 0.001*(RPM - getSafeRPMFromMax(this.definition.engine.maxRPM))/10F*getTotalWearFactor();
 			}
 			if(temp > engineOverheatTemp1){//Too hot
-				hours += 0.001*(temp - engineOverheatTemp1)*ConfigSystem.configObject.general.engineHoursFactor.value;
+				hours += 0.001*(temp - engineOverheatTemp1)*getTotalWearFactor();
 				if(temp > engineFailureTemp && !vehicle.world.isRemote && !isCreative){
 					explodeEngine();
 				}
@@ -204,7 +205,7 @@ public abstract class APartEngine extends APart implements FXPart{
 					vehicle.fuel = 0;
 					vehicle.fluidName = "";
 				}else{
-					fuelFlow = definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicle.fluidName)*RPM*(fuelLeak ? 1.5F : 1.0F)/definition.engine.maxRPM;
+					fuelFlow = getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicle.fluidName)*RPM*(fuelLeak ? 1.5F : 1.0F)/definition.engine.maxRPM;
 					vehicle.fuel -= fuelFlow;
 				}
 			}
@@ -368,6 +369,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		}else{
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_starting"));
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
 		}
 	}
 	
@@ -400,6 +402,18 @@ public abstract class APartEngine extends APart implements FXPart{
 	
 	public static int getSafeRPMFromMax(int maxRPM){
 		return maxRPM < 15000 ? maxRPM - (maxRPM - 2500)/2 : (int) (maxRPM/1.1);
+	}
+	//Get the total fuel consumption of this engine, to account for supercharged engines.
+	public float getTotalFuelConsumption(){
+		return definition.engine.fuelConsumption + definition.engine.superchargerFuelConsumption;
+	}
+	//Get the total wear factor to be applied to this engine, to account for supercharged engines.
+	public double getTotalWearFactor(){
+		if (definition.engine.superchargerEfficiency > 1.0F){
+			return definition.engine.superchargerEfficiency*ConfigSystem.configObject.general.engineHoursFactor.value;
+		}else{
+			return ConfigSystem.configObject.general.engineHoursFactor.value;
+		}
 	}
 	
 	protected boolean isInLiquid(){
@@ -434,6 +448,14 @@ public abstract class APartEngine extends APart implements FXPart{
 				//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines.
 				sound.pitch = (float) (0.35*(1 + Math.max(0, (RPM - engineStartRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
 			}
+		}else if(sound.soundName.endsWith("_supercharger")){
+			if(!state.running && internalFuel == 0){
+				sound.stop();
+			}else{
+				//Pitch should be 0.35 at idle with a 0.35 increase for every 2500 RPM, as with the regular engine sound, but in addition the volume increases with RPM so that it's 1.0 at the engine's max safe RPM.
+				sound.volume = (float) RPM/definition.engine.maxRPM;
+				sound.pitch = (float) (0.35*(1 + Math.max(0, (RPM - engineStartRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
+			}
 		}
 	}
 	
@@ -443,7 +465,9 @@ public abstract class APartEngine extends APart implements FXPart{
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
 		}else if(sound.soundName.endsWith("_running")){
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
-		}
+		}else if(sound.soundName.endsWith("_supercharger")){
+		WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
+	}
 	}
 
 	@Override
