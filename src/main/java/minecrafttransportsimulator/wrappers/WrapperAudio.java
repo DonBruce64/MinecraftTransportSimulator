@@ -231,23 +231,25 @@ public class WrapperAudio{
 	 *  Useful for quick sounds like gunshots or button presses.
 	 */
 	public static void playQuickSound(SoundInstance sound){
-		//First get the IntBuffer pointer to where this sound data is stored.
-		Integer dataBufferPointer = loadOGGJarSound(sound.soundName);
-		if(dataBufferPointer != null){
-			//Set the sound's source buffer index.
-			IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
-			AL10.alGenSources(sourceBuffer);
-			sound.sourceIndex = sourceBuffer.get(0);
-			
-			//Set properties and bind data buffer to source.
-			AL10.alGetError();
-			AL10.alSourcei(sound.sourceIndex, AL10.AL_LOOPING, sound.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
-			AL10.alSource(sound.sourceIndex, AL10.AL_POSITION, sound.provider.getProviderPosition());
-    	    AL10.alSource(sound.sourceIndex, AL10.AL_VELOCITY, sound.provider.getProviderVelocity());
-    	    AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, dataBufferPointer);
-    	    
-			//Done setting up buffer.  Queue sound to start playing.
-			queuedSounds.add(sound);
+		if(AL.isCreated()){
+			//First get the IntBuffer pointer to where this sound data is stored.
+			Integer dataBufferPointer = loadOGGJarSound(sound.soundName);
+			if(dataBufferPointer != null){
+				//Set the sound's source buffer index.
+				IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
+				AL10.alGenSources(sourceBuffer);
+				sound.sourceIndex = sourceBuffer.get(0);
+				
+				//Set properties and bind data buffer to source.
+				AL10.alGetError();
+				AL10.alSourcei(sound.sourceIndex, AL10.AL_LOOPING, sound.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
+				AL10.alSource(sound.sourceIndex, AL10.AL_POSITION, sound.provider.getProviderPosition());
+	    	    AL10.alSource(sound.sourceIndex, AL10.AL_VELOCITY, sound.provider.getProviderVelocity());
+	    	    AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, dataBufferPointer);
+	    	    
+				//Done setting up buffer.  Queue sound to start playing.
+				queuedSounds.add(sound);
+			}
 		}
 	}
 
@@ -291,31 +293,33 @@ public class WrapperAudio{
 	 *  parse more data.  When the source runs out of buffers, the radio will be queried for another source.
 	 */
     public static void playStreamedSound(SoundInstance sound){
-		//Create 5 buffers to be used as rolling storage for the stream.
-		IntBuffer dataBuffers = BufferUtils.createIntBuffer(5);
-		AL10.alGenBuffers(dataBuffers);
-		
-		//Now decode data for each dataBuffer.
-		while(dataBuffers.hasRemaining()){
-			//Get the raw decoder output and bind it to the data buffers.
-			//Note that we may not obtain this data if we haven't decoded it yet.
-			ByteBuffer decoderData = sound.radio.getSampleBuffer();
-			if(decoderData != null){
-				AL10.alBufferData(dataBuffers.get(), AL10.AL_FORMAT_MONO16, decoderData, sound.radio.getSampleRate());
+    	if(AL.isCreated()){
+	    	//Create 5 buffers to be used as rolling storage for the stream.
+			IntBuffer dataBuffers = BufferUtils.createIntBuffer(5);
+			AL10.alGenBuffers(dataBuffers);
+			
+			//Now decode data for each dataBuffer.
+			while(dataBuffers.hasRemaining()){
+				//Get the raw decoder output and bind it to the data buffers.
+				//Note that we may not obtain this data if we haven't decoded it yet.
+				ByteBuffer decoderData = sound.radio.getSampleBuffer();
+				if(decoderData != null){
+					AL10.alBufferData(dataBuffers.get(), AL10.AL_FORMAT_MONO16, decoderData, sound.radio.getSampleRate());
+				}
 			}
-		}
-		//Flip the data buffers to prepare them for reading.
-		dataBuffers.flip();
-		
-		//Data has been buffered.  Now get source index.
-		//If we have an old source, use that index instead to allow smooth streaming.
-		IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
-		AL10.alGenSources(sourceBuffer);
-		sound.sourceIndex = sourceBuffer.get(0);
-		
-		//Have source and data.  Queue sound to start playing.
-		AL10.alSourceQueueBuffers(sound.sourceIndex, dataBuffers);
-		queuedSounds.add(sound);
+			//Flip the data buffers to prepare them for reading.
+			dataBuffers.flip();
+			
+			//Data has been buffered.  Now get source index.
+			//If we have an old source, use that index instead to allow smooth streaming.
+			IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
+			AL10.alGenSources(sourceBuffer);
+			sound.sourceIndex = sourceBuffer.get(0);
+			
+			//Have source and data.  Queue sound to start playing.
+			AL10.alSourceQueueBuffers(sound.sourceIndex, dataBuffers);
+			queuedSounds.add(sound);
+    	}
 	}
 	
 	/**
