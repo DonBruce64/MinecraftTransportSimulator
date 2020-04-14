@@ -109,7 +109,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				dampenControlSurfaces();
 			}
 			prevParkingBrakeAngle = parkingBrakeAngle;
-			if(parkingBrakeOn && velocity == 0 && !locked){
+			if(parkingBrakeOn && !locked){
 				if(parkingBrakeAngle < 30){
 					prevParkingBrakeAngle = parkingBrakeAngle;
 					++parkingBrakeAngle;
