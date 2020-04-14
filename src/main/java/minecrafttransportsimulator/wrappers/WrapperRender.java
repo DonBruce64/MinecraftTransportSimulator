@@ -56,7 +56,7 @@ public class WrapperRender{
 	 *  We need to register a custom resource handler here to auto-generate JSON.
 	 *  FAR easier than trying to use the bloody bakery system.
 	 */
-	static{
+	public static void init(){
 		for(Field field : Minecraft.class.getDeclaredFields()){
 			if(field.getName().equals("defaultResourcePacks") || field.getName().equals("field_110449_ao")){
 				try{
@@ -187,6 +187,9 @@ public class WrapperRender{
 	 */
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
+		//Create the custom packload class.
+		init();
+		
 		//Register the vehicle rendering class.
 		RenderingRegistry.registerEntityRenderingHandler(EntityVehicleE_Powered.class, new IRenderFactory<EntityVehicleE_Powered>(){
 			@Override
@@ -253,10 +256,14 @@ public class WrapperRender{
 			String packID = jsonPath.substring(0, jsonPath.indexOf('.'));
 			//Get the asset name by stripping off the packID.
 			String asset = jsonPath.substring(packID.length() + 1);
-			//Auto-generate a JSON text file to feed to the loader.
-			String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + packID + ":items/" + asset + "\"}}";
-			//Send the fake JSON out as a stream.
-			return new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));				
+			//Attempt to get a JSON file normally from the path.  If this fails, generate a default JSON.
+			InputStream stream = getClass().getResourceAsStream("/assets/" + packID + "/models/item/" + asset + ".json");
+			if(stream != null){
+				return stream;
+			}else{
+				String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + packID + ":items/" + asset + "\"}}";
+				return new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
+			}
 		}
 
 		@Override
