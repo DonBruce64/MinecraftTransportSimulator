@@ -31,6 +31,8 @@ public class GUIBooklet extends AGUIBase{
 	
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
+		pageTextLabels.clear();
+		
 		//Page navigation buttons.
 		//We auto-calculate the texture size from here based on the GUI size.
 		//This is needed to tell the buttons what texture size they are using.
