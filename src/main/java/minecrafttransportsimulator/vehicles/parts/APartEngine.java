@@ -439,22 +439,35 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(!state.esOn && !state.hsOn){
 				sound.stop();
 			}else{
-				sound.pitch = (float) ((engineStartRPM*0.25F + RPM*0.75F)/engineStartRPM);
+				if (definition.engine.isCrankingNotPitched){
+					sound.pitch = (float) 1;
+				}else{
+				sound.pitch = (float) (RPM/engineStartRPM);
+				}
 			}
 		}else if(sound.soundName.endsWith("_running")){
 			if(!state.running && internalFuel == 0){
 				sound.stop();
 			}else{
-				//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines.
+				//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines by default.
+				//Custom pitched engines allow for more/less dynamic engine sounds without game crashing or a "one fix all" solution that fixes nothing
+				if (definition.engine.customPitch){
+				sound.pitch = (float) (((definition.engine.pitchRev*((1 + Math.max(0, ((RPM - engineStartRPM))/definition.engine.maxRPM))))- definition.engine.pitchRev)+ definition.engine.pitchIdle);
+				}else{
 				sound.pitch = (float) (0.35*(1 + Math.max(0, (RPM - engineStartRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
-			}
+				}
 		}else if(sound.soundName.endsWith("_supercharger")){
 			if(!state.running && internalFuel == 0){
 				sound.stop();
 			}else{
-				//Pitch should be 0.35 at idle with a 0.35 increase for every 2500 RPM, as with the regular engine sound, but in addition the volume increases with RPM so that it's 1.0 at the engine's max safe RPM.
-				sound.volume = (float) RPM/definition.engine.maxRPM;
+				//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines by default.
+				//Custom pitched engines allow for more/less dynamic engine sounds without game crashing or a "one fix all" solution that fixes nothing
+				//petition to add H
+				if (definition.engine.customPitch){
+				sound.pitch = (float) (((definition.engine.scPitchRev*((1 + Math.max(0, ((RPM - engineStartRPM))/definition.engine.maxRPM))))- definition.engine.scPitchRev)+ definition.engine.scPitchIdle);
+				}else{
 				sound.pitch = (float) (0.35*(1 + Math.max(0, (RPM - engineStartRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
+				}
 			}
 		}
 	}
