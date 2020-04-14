@@ -66,6 +66,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public boolean isBigTruck;
         public boolean isFrontWheelDrive;
         public boolean isRearWheelDrive;
+        public boolean hasCruiseControl;
         public float axleRatio;
         public float dragCoefficient;
     }

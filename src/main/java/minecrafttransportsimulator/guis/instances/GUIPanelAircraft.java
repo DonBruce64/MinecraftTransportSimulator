@@ -205,7 +205,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 				public void onReleased(){}
 			};
 			addSelector(autopilotSelector);
-		}else {
+		}else{
 			//If we have reverse thrust, add a selector for it.
 			if(haveReverseThrustOption){
 				reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
