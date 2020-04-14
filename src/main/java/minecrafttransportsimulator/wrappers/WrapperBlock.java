@@ -333,5 +333,8 @@ public class WrapperBlock extends Block{
 				}
 			}
 		}
+		
+		//Finally, register the fake light block.
+		event.getRegistry().register(WrapperBlockFakeLight.instance.setRegistryName(MTS.MODID + ":fake_light"));
 	}
 }

@@ -156,15 +156,18 @@ public final class RenderVehicle_LightPart{
 			}
 		}
 		
+		//Flag for flare and beam rendering.
+		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.client.lightsPass0.value ? WrapperRender.getRenderPass() != 1 : WrapperRender.getRenderPass() != 0) && !wasRenderedPrior; 
+		
 		//If we need to render a flare, and the light is on, and our brightness is non-zero, do so now.
 		//This needs to be done in pass 1 or -1 to do blending.
-		if(renderFlare && lightOn && lightBrightness > 0 && WrapperRender.getRenderPass() != 0 && !wasRenderedPrior){
+		if(renderFlare && lightOn && doBlendRenders){
 			renderFlare(lightBrightness);
 		}
 		
 		//Render beam if the light is on and the brightness is non-zero.
 		//This must be done in pass 1 or -1 to do proper blending.
-		if(type.hasBeam && lightOn && lightBrightness > 0 && WrapperRender.getRenderPass() != 0 && !wasRenderedPrior){
+		if(type.hasBeam && lightOn && doBlendRenders){
 			renderBeam(Math.min(electricPower > 4 ? 1.0F : 0, lightBrightness));
 		}
 		
@@ -252,7 +255,7 @@ public final class RenderVehicle_LightPart{
 	private void renderFlare(float alphaValue){
 		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/lensflare.png");
 		WrapperRender.setLightingState(false);
-		WrapperRender.setBlendState(true, false);
+		WrapperRender.setBlendState(true, ConfigSystem.configObject.client.flareBlending.value);
 		WrapperRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(byte i=0; i<centerPoints.length; ++i){
@@ -277,7 +280,7 @@ public final class RenderVehicle_LightPart{
 	private void renderBeam(float alphaValue){
 		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/lightbeam.png");
 		WrapperRender.setLightingState(false);
-		WrapperRender.setBlendState(true, ConfigSystem.configObject.client.lightBlending.value);
+		WrapperRender.setBlendState(true, ConfigSystem.configObject.client.beamBlending.value);
 		WrapperRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		
 		//As we can have more than one light per definition, we will only render 6 vertices at a time.
@@ -307,11 +310,9 @@ public final class RenderVehicle_LightPart{
 			GL11.glTexCoord2f(theta, 1);
 			GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
 		}
-		if(ConfigSystem.configObject.client.lightInteriors.value){
-			for(float theta=0; theta < 2*Math.PI + 0.1; theta += 2F*Math.PI/40F){
-				GL11.glTexCoord2f(theta, 1);
-				GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
-			}
+		for(float theta=0; theta < 2*Math.PI + 0.1; theta += 2F*Math.PI/40F){
+			GL11.glTexCoord2f(theta, 1);
+			GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
 		}
 		GL11.glEnd();
 	}

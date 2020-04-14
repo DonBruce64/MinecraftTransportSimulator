@@ -215,4 +215,25 @@ public class WrapperWorld{
 			world.checkLight(pos);
 		}
 	}
+	
+	/**
+	 *  Sets a fake light block at the passed-in position.
+	 *  Only sets the fake light if the block at the passed-in position is air.
+	 *  Make sure you track this position and remove the light when it's not in-use! 
+	 */
+	public void setFakeLight(Point3i point){
+		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+		if(world.isAirBlock(pos)){
+			world.setBlockState(pos, WrapperBlockFakeLight.instance.getDefaultState());
+		}
+	}
+	
+	/**
+	 *  Sets the block at the passed-in position to air. 
+	 *  This does no sanity checks, so make sure you're
+	 *  actually allowed to do such a thing before calling.
+	 */
+	public void setToAir(Point3i point){
+		world.setBlockToAir(new BlockPos(point.x, point.y, point.z));
+	}
 }

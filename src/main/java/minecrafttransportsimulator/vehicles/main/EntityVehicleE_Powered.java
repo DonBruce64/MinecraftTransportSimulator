@@ -25,10 +25,12 @@ import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.APartGun;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
+import minecrafttransportsimulator.wrappers.WrapperBlockFakeLight;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -68,6 +70,9 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
 	public final Set<LightType> lightsOn = new HashSet<LightType>();
 	
+	//Fake light position for this vehicle.
+	private BlockPos fakeLightPosition;
+	
 	//Internal radio variables.
 	private final Radio radio = new Radio(this);
 	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -98,6 +103,41 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				if(engine.state.running){
 					lightsOn.add(LightType.DAYTIMERUNNINGLIGHT);
 					break;
+				}
+			}
+			
+			//Make the light bright at our position if lights are on.
+			//DRLs are always on, so check for that.
+			if(world.isRemote){
+				if(ConfigSystem.configObject.client.vehicleBlklt.value){
+					if(lightsOn.contains(LightType.DAYTIMERUNNINGLIGHT) ? lightsOn.size() > 1 : !lightsOn.isEmpty()){
+						BlockPos newPos = getPosition();
+						//Check to see if we need to place a light.
+						if(!newPos.equals(fakeLightPosition)){
+							//If our prior position is not null, remove that block.
+							if(fakeLightPosition != null){
+								world.setBlockToAir(fakeLightPosition);
+								world.checkLight(fakeLightPosition);
+								fakeLightPosition = null;
+							}
+							//Set block in world and update pos.  Only do this if the block is air.
+							if(world.isAirBlock(newPos)){
+								world.setBlockState(newPos, WrapperBlockFakeLight.instance.getDefaultState());
+								world.checkLight(newPos);
+								fakeLightPosition = newPos;
+							}
+						}
+					}else if(fakeLightPosition != null){
+						//Lights are off, turn off fake light.
+						world.setBlockToAir(fakeLightPosition);
+						world.checkLight(fakeLightPosition);
+						fakeLightPosition = null;
+					}
+				}else if(fakeLightPosition != null){
+					//Fake light config was on, but was turned off.  Get rid of the remaining fake light.
+					world.setBlockToAir(fakeLightPosition);
+					world.checkLight(fakeLightPosition);
+					fakeLightPosition = null;
 				}
 			}
 			
@@ -139,6 +179,14 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			soundVelocity.put((float) motionY);
 			soundVelocity.put((float) motionZ);
 			soundVelocity.flip();
+		}
+	}
+	
+	@Override
+	public void setDead(){
+		super.setDead();
+		if(fakeLightPosition != null){
+			world.setBlockToAir(fakeLightPosition);
 		}
 	}
 	
