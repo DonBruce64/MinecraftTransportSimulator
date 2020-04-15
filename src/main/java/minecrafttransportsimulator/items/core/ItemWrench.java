@@ -32,6 +32,7 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
 		tooltipLines.add(WrapperGUI.translate("info.item.wrench.use"));
+		tooltipLines.add(WrapperGUI.translate("info.item.wrench.useblock"));
 		tooltipLines.add(WrapperGUI.translate("info.item.wrench.attack"));
 		tooltipLines.add(WrapperGUI.translate("info.item.wrench.sneakattack"));
 		if(ConfigSystem.configObject.client.devMode.value){
