@@ -16,6 +16,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.items.packs.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
@@ -427,6 +428,8 @@ public class GUIPartBench extends AGUIBase{
 			modelRender.textureDomain = currentPack;
 			modelRender.textureLocation = textureLocation;
 			itemRender.itemName = null;
+			//Don't spin signs.  That gets annoying.
+			modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).general.type.equals("sign"));
 		}else{
 			itemRender.itemName = currentItem.definition.packID + ":" + currentItem.definition.systemName;
 			modelRender.modelDomain = null;

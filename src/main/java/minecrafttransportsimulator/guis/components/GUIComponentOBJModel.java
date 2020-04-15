@@ -25,12 +25,12 @@ public class GUIComponentOBJModel{
 	private static final Map<String, Float> modelScalingFactors = new HashMap<String, Float>();
 	
 	public final float scaleFactor;
-	public final boolean spin;
 	public final boolean isometric;
 	public final boolean staticScaling;
 	
 	public int x;
 	public int y;
+	public boolean spin;
 	public float scale;
 	public String modelDomain;
 	public String modelLocation;
