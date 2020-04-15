@@ -58,12 +58,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	public EntityVehicleB_Existing(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
-		super(world, definition);
-		//Set position to the spot that was clicked by the player.
-		//Add a -90 rotation offset so the vehicle is facing perpendicular.
-		//Makes placement easier and is less likely for players to get stuck.
-		this.setPositionAndRotation(posX, posY, posZ, playerRotation-90, 0);
-		
+		super(world, posX, posY, posZ, playerRotation, definition);
 		//This only gets done at the beginning when the entity is first spawned.
 		this.displayText = definition.rendering.defaultDisplayText;
 	}

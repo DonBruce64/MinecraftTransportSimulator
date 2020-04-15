@@ -56,9 +56,13 @@ abstract class EntityVehicleA_Base extends Entity{
 		super(world);
 	}
 	
-	public EntityVehicleA_Base(World world, JSONVehicle definition){
+	public EntityVehicleA_Base(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
 		this(world);
-		this.definition = definition;
+		this.definition = definition;	
+		//Set position to the spot that was clicked by the player.
+		//Add a -90 rotation offset so the vehicle is facing perpendicular.
+		//Makes placement easier and is less likely for players to get stuck.
+		this.setPositionAndRotation(posX, posY, posZ, playerRotation-90, 0);
 	}
 	
 	@Override
