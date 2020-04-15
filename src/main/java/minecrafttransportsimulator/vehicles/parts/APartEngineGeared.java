@@ -20,7 +20,7 @@ public abstract class APartEngineGeared extends APartEngine{
 	public void updatePart(){
 		super.updatePart();
 		//Do automatic transmission functions if needed.
-		//"!definition.engine.customShifter" If we don't do that first the MTS will break all engines that don't the custom shifter system
+		//"!definition.engine.customShifter" If we don't do that first the MTS will break all engines that don't use the custom shifter system
 		if(state.running && definition.engine.isAutomatic){
 			if(currentGear > 0){
 				if (!definition.engine.customShifter){
