@@ -221,12 +221,6 @@ public class WrapperRender{
 				ModelLoader.setCustomModelResourceLocation(packItem, 0, new ModelResourceLocation(MTS.MODID + "_packs:" + packItem.definition.packID + "." + packItem.definition.classification.assetFolder + "/" + packItem.definition.systemName, "inventory"));
 			}	
 		}
-		
-		//Remove the core pack items from the pack maps.  We don't want these showing up in the benches.
-		for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(MTS.MODID).values()){
-			MTSRegistry.packCraftingMap.remove(packItem);
-		}
-		MTSRegistry.packItemMap.remove(MTS.MODID);
 	}
 	
 	/**

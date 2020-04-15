@@ -415,7 +415,7 @@ public class GUIPartBench extends AGUIBase{
 		    		craftingItemIcons.get(i).itemName = null;
 		    	}
 			}catch(Exception e){
-				throw new NullPointerException("ERROR: Could not parse crafting ingredients for item: " + currentItem.definition.packID + currentItem.definition.systemName + ".  Report this to the pack author!");
+				throw new NullPointerException("ERROR: Could not parse crafting ingredients for item: " + currentItem.definition.packID + ":" + currentItem.definition.systemName + ".  Report this to the pack author!");
 			}			
 		}
 		
