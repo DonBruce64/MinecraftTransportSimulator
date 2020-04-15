@@ -26,7 +26,6 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.packets.general.PacketChat;
-import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
@@ -49,6 +48,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.wrappers.WrapperBlock;
+import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -109,10 +109,6 @@ public final class MTSRegistry{
 	public static final WrapperBlock componentBench = new WrapperBlock(new BlockPartsBench(JSONItem.class).addValidClass(JSONBooklet.class));
 	public static final WrapperBlock decorBench = new WrapperBlock(new BlockPartsBench(JSONDecor.class).addValidClass(JSONPoleComponent.class));
 	
-	//Fuel pump.
-	//FIXME make fuel pump a main pack item with regular crafting recipie.
-	//public static final WrapperBlock fuelPump = new WrapperBlock(new BlockFuelPump());
-	
 	//Counter for packets.
 	private static int packetNumber = 0;
 	
@@ -139,7 +135,7 @@ public final class MTSRegistry{
 	/**
 	 * This method returns a list of ItemStacks that are required
 	 * to craft the passed-in pack item.  Used by {@link GUIPartBench}
-	 * amd {@link PacketPlayerCrafting} as well as any other systems that 
+	 * amd {@link WrapperPlayer#hasMaterials(AItemPack)} as well as any other systems that 
 	 * need to know what materials make up pack items.
 	 */
     public static List<ItemStack> getMaterials(AItemPack<? extends AJSONItem<?>> item){
@@ -225,7 +221,6 @@ public final class MTSRegistry{
 		registerPacket(PacketBulletHit.class, PacketBulletHit.Handler.class, true, true);
 		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);
 		registerPacket(PacketPartGunReload.class, PacketPartGunReload.Handler.class, true, false);
-		registerPacket(PacketPlayerCrafting.class, PacketPlayerCrafting.Handler.class, false, true);
 		
 		//Packets in packets.vehicles.
 		registerPacket(PacketVehicleClientInit.class, PacketVehicleClientInit.Handler.class, false, true);

@@ -18,6 +18,7 @@ import minecrafttransportsimulator.items.packs.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperGame;
 import minecrafttransportsimulator.wrappers.WrapperInput;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
@@ -46,9 +47,14 @@ public class GUIPartBench extends AGUIBase{
 	private GUIComponentButton prevPackButton;
 	private GUIComponentButton nextPackButton;
 	private GUIComponentLabel packName;
+	
 	private GUIComponentButton prevPartButton;
 	private GUIComponentButton nextPartButton;
 	private GUIComponentLabel partName;
+	
+	private GUIComponentButton prevColorButton;
+	private GUIComponentButton nextColorButton;
+	
 	private GUIComponentLabel partInfo;
 	private GUIComponentButton confirmButton;
 	
@@ -117,6 +123,7 @@ public class GUIPartBench extends AGUIBase{
 		int centerBetweenButtons = prevPackButton.x + prevPackButton.width + (nextPackButton.x - (prevPackButton.x + prevPackButton.width))/2;
 		addLabel(packName = new GUIComponentLabel(centerBetweenButtons, guiTop + 16, Color.WHITE, "", 1.0F, true, false, 0));
 		
+		
 		//Create part navigation section.
 		addButton(prevPartButton = new GUIComponentButton(prevPackButton.x, prevPackButton.y + prevPackButton.height, 20, "<", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
 			@Override
@@ -135,6 +142,25 @@ public class GUIPartBench extends AGUIBase{
 		addLabel(partName = new GUIComponentLabel(packName.x, packName.y + prevPackButton.height, Color.WHITE, "", 0.75F, true, false, 0));
 		addLabel(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, Color.WHITE, "", 1.0F, false, false, 150));
 		
+		
+		//Create color navigation section.
+		addButton(prevColorButton = new GUIComponentButton(guiLeft + 175, guiTop + 131, 20, "<", 15, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+			@Override
+			public void onClicked(){
+				currentItem = prevSubItem;
+				updateNames();
+			}
+		});
+		addButton(nextColorButton = new GUIComponentButton(guiLeft + 245, guiTop + 131, 20, ">", 15, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+			@Override
+			public void onClicked(){
+				currentItem = nextSubItem;
+				updateNames();
+			}
+		});
+		addLabel(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, Color.WHITE, WrapperGUI.translate("gui.vehicle_bench.color"), 1.0F, true, false, 0).setButton(nextColorButton));
+		
+		
 		//Create the crafting item slots.  14 18X18 slots (7X2) need to be made here.
 		craftingItemIcons.clear();
 		final int craftingIconSize = 18;
@@ -144,9 +170,11 @@ public class GUIPartBench extends AGUIBase{
 			craftingItemIcons.add(craftingItem);
 		}
 		
+		
 		//Create both the item and OBJ renders.  We choose which to display later.
 		addItem(itemRender = new GUIComponentItem(guiLeft + 175, guiTop + 56, 5.625F, null, 1, -1));
 		addOBJModel(modelRender = new GUIComponentOBJModel(guiLeft + 220, guiTop + 101, 32.0F, true, true, false));
+		
 		
 		//Create the confirm button.
 		addButton(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, "", 20, true, 20, 20, 20, 196, getTextureWidth(), getTextureHeight()){
@@ -156,7 +184,7 @@ public class GUIPartBench extends AGUIBase{
 			}
 		});
 		
-		//Upate the names now that we have everything put together.
+		//Update the names now that we have everything put together.
 		updateNames();
 	}
 
@@ -167,6 +195,10 @@ public class GUIPartBench extends AGUIBase{
 		nextPackButton.enabled = nextPack != null;
 		prevPartButton.enabled = prevItem != null;
 		nextPartButton.enabled = nextItem != null;
+		prevColorButton.visible = currentItem instanceof ItemVehicle;
+		prevColorButton.enabled = prevSubItem != null;
+		nextColorButton.visible = currentItem instanceof ItemVehicle;
+		nextColorButton.enabled = nextSubItem != null;
 		
 		//Set confirm button based on if player has materials.
 		confirmButton.enabled = currentItem != null && player.hasMaterials(currentItem);
