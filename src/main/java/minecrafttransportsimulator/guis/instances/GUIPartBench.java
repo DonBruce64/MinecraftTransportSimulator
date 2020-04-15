@@ -438,10 +438,10 @@ public class GUIPartBench extends AGUIBase{
 	
 	private String getVehicleInfoText(){
 		JSONVehicle vehicleDefinition = (JSONVehicle) currentItem.definition;
-		byte controllers = 0;
-		byte passengers = 0;
-		byte cargo = 0;
-		byte mixed = 0;
+		int controllers = 0;
+		int passengers = 0;
+		int cargo = 0;
+		int mixed = 0;
 		float minFuelConsumption = 99;
 		float maxFuelConsumption = 0;
 		float minWheelSize = 99;
