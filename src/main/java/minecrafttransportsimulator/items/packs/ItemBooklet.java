@@ -24,4 +24,14 @@ public class ItemBooklet extends AItemPack<JSONBooklet>{
 		}
         return new ActionResult<ItemStack>(EnumActionResult.FAIL, player.getHeldItem(hand));
     }
+	
+	@Override
+	public String getModelLocation(){
+		return null;
+	}
+	
+	@Override
+	public String getTextureLocation(){
+		return null;
+	}
 }

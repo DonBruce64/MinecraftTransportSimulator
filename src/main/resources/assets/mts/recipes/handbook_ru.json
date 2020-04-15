@@ -2,8 +2,8 @@
     "type": "minecraft:crafting_shaped",
     "pattern":[
         " a ",
-        "cbc",
-        " d "
+        "dbd",
+        " c "
     ],
     "key":{
         "a":{"item": "minecraft:feather"},

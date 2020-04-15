@@ -17,10 +17,12 @@ import minecrafttransportsimulator.items.core.ItemKey;
 import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONBooklet;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.packets.general.PacketChat;
@@ -104,8 +106,8 @@ public final class MTSRegistry{
 	public static final WrapperBlock gunBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "gun_fixed", "gun_tripod", "bullet"));
 	public static final WrapperBlock customBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "custom"));
 	public static final WrapperBlock instrumentBench = new WrapperBlock(new BlockPartsBench(JSONInstrument.class));
-	public static final WrapperBlock componentBench = new WrapperBlock(new BlockPartsBench(JSONItem.class));
-	public static final WrapperBlock decorBench = new WrapperBlock(new BlockPartsBench(JSONDecor.class));
+	public static final WrapperBlock componentBench = new WrapperBlock(new BlockPartsBench(JSONItem.class).addValidClass(JSONBooklet.class));
+	public static final WrapperBlock decorBench = new WrapperBlock(new BlockPartsBench(JSONDecor.class).addValidClass(JSONPoleComponent.class));
 	
 	//Fuel pump.
 	//FIXME make fuel pump a main pack item with regular crafting recipie.

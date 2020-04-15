@@ -31,4 +31,14 @@ public class ItemDecor extends AItemPack<JSONDecor> implements IItemBlock{
 		//Normal decor is assumed to be default per legacy systems.
 		return BlockDecor.class;
 	}
+	
+	@Override
+	public String getModelLocation(){
+		return definition.general.modelName != null ? "objmodels/decors/" + definition.general.modelName + ".obj" : "objmodels/decors/" + definition.systemName + ".obj";
+	}
+	
+	@Override
+	public String getTextureLocation(){
+		return "textures/decors/" + definition.systemName + ".png";
+	}
 }
