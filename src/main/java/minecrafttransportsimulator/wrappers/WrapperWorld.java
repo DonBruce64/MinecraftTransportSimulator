@@ -14,6 +14,7 @@ import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockSlab;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -119,6 +120,28 @@ public class WrapperWorld{
 		IBlockState offsetMCState = world.getBlockState(new BlockPos(point.x, point.y, point.z));
 		Block offsetMCBlock = offsetMCState.getBlock();
         return offsetMCBlock != null ? !offsetMCBlock.equals(Blocks.BARRIER) && offsetMCState.getMaterial().isOpaque() && offsetMCState.isFullCube() && offsetMCState.getMaterial() != Material.GOURD : false;
+	}
+	
+	/**
+	 *  Returns true if the block at the passed-in location is a slab, but only the
+	 *  bottom portion of the slab.  May be used to adjust renders to do half-block
+	 *  rendering to avoid floating blocks.
+	 */
+	public boolean isBlockBottomSlab(Point3i point){
+		IBlockState state = world.getBlockState(new BlockPos(point.x, point.y, point.z));
+		Block block = state.getBlock();
+		return block instanceof BlockSlab && !((BlockSlab) block).isDouble() && state.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM;
+	}
+	
+	/**
+	 *  Returns true if the block at the passed-in location is a slab, but only the
+	 *  top portion of the slab.  May be used to adjust renders to do half-block
+	 *  rendering to avoid floating blocks.
+	 */
+	public boolean isBlockTopSlab(Point3i point){
+		IBlockState state = world.getBlockState(new BlockPos(point.x, point.y, point.z));
+		Block block = state.getBlock();
+		return block instanceof BlockSlab && !((BlockSlab) block).isDouble() && state.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.TOP;
 	}
 	
 	/**

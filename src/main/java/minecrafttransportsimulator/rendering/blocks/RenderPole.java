@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockPole;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
@@ -64,18 +65,42 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 					if(axis.equals(Axis.NONE)){
 						GL11.glCallList(connectorDisplayListMap.get(definition).get(axis));
 					}else{
-						boolean adjacentPole = tile.world.getBlock(axis.getOffsetPoint(tile.position)) instanceof BlockPole;
-						boolean solidBlock = tile.world.isBlockSolid(axis.getOffsetPoint(tile.position));
+						Point3i offset = axis.getOffsetPoint(tile.position);
+						boolean adjacentPole = tile.world.getBlock(offset) instanceof BlockPole;
+						boolean solidBlock = tile.world.isBlockSolid(offset);
+						boolean slabBlock = (axis.equals(Axis.DOWN) && tile.world.isBlockBottomSlab(offset)) || (axis.equals(Axis.UP) && tile.world.isBlockTopSlab(offset));
 						if(adjacentPole || solidBlock){
-							//System.out.println("HAVE CONNECTION ON " + axis.name());
 							if(connectorDisplayListMap.get(definition).containsKey(axis)){
 								GL11.glCallList(connectorDisplayListMap.get(definition).get(axis));
 							}
 						}
 						if(solidBlock){
-							//System.out.println("HAVE SOLID CONNECTION ON " + axis.name());
 							if(solidConnectorDisplayListMap.get(definition).containsKey(axis)){
 								GL11.glCallList(solidConnectorDisplayListMap.get(definition).get(axis));
+							}
+						}else if(slabBlock){
+							//Slab.  Render the center and proper portion and center again to render at slab height.
+							//Also render solid portion as it's a solid block.
+							Axis oppositeAxis = axis.getOpposite();
+							if(connectorDisplayListMap.get(definition).containsKey(axis)){
+								GL11.glCallList(connectorDisplayListMap.get(definition).get(axis));
+								//Offset to slab block.
+								GL11.glTranslatef(0.0F, axis.yOffset, 0.0F);
+								
+								//Render upper and center section.  Upper joins lower above slab.
+								if(connectorDisplayListMap.get(definition).containsKey(oppositeAxis)){
+									GL11.glCallList(connectorDisplayListMap.get(definition).get(oppositeAxis));
+								}
+								GL11.glCallList(connectorDisplayListMap.get(definition).get(Axis.NONE));
+								
+								//Offset to top of slab and render solid lower connector, if we have one.
+								GL11.glTranslatef(0.0F, -axis.yOffset/2F, 0.0F);
+								if(solidConnectorDisplayListMap.get(definition).containsKey(axis)){
+									GL11.glCallList(solidConnectorDisplayListMap.get(definition).get(axis));
+								}
+								
+								//Translate back to the normal position.
+								GL11.glTranslatef(0.0F, -axis.yOffset/2F, 0.0F);
 							}
 						}
 					}
@@ -238,6 +263,11 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 	
 	@Override
 	public boolean rotateToBlock(){
+		return false;
+	}
+	
+	@Override
+	public boolean translateToSlabs(){
 		return false;
 	}
 	

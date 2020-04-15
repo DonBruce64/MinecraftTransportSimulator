@@ -25,4 +25,11 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 	public boolean rotateToBlock(){
 		return true;
 	}
+	
+	/**
+	 *  Returns true if this TE should translated down 0.5 units to sink on half-slabs.
+	 */
+	public boolean translateToSlabs(){
+		return true;
+	}
 }
