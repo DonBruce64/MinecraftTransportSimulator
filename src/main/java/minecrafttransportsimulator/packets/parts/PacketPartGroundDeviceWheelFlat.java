@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.packets.parts;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceWheel;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -23,7 +22,6 @@ public final class PacketPartGroundDeviceWheelFlat extends APacketPart{
 					PartGroundDeviceWheel wheel = (PartGroundDeviceWheel) getVehiclePartFromMessage(message, ctx);
 					if(wheel != null){
 						wheel.setFlat();
-						MTS.proxy.playSound(wheel.partPos, MTS.MODID + ":wheel_blowout", 1, 1, wheel.vehicle);
 					}
 				}
 			});

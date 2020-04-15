@@ -12,20 +12,21 @@ import minecrafttransportsimulator.items.core.IItemVehicleInteractable;
 import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
-import minecrafttransportsimulator.radio.RadioManager;
-import minecrafttransportsimulator.radio.RadioThread;
 import minecrafttransportsimulator.rendering.vehicles.RenderInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
+import minecrafttransportsimulator.wrappers.WrapperTileEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
-import net.minecraft.client.renderer.entity.RenderPlayer;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
@@ -38,6 +39,7 @@ import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
@@ -55,7 +57,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public final class ClientEventSystem{
     private static final Minecraft minecraft = Minecraft.getMinecraft();
-    private static final RadioThread radioThread = new RadioThread();
     
     /**
      * Fired when the player right-clicks an entity.  Check to see if the entity clicked is a vehicle.  If so,
@@ -82,7 +83,7 @@ public final class ClientEventSystem{
     				MTS.MTSNet.sendToServer(new PacketVehicleInteract(vehicle, event.getEntityPlayer(), boxClicked.rel.x, boxClicked.rel.y - 0.5D, boxClicked.rel.z, PacketVehicleInteract.PacketVehicleInteractType.PART_SLOT_RIGHTCLICK));
     			}
     		}else{
-    			throw new NullPointerException("ERROR: A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
+    			MTS.MTSLog.error("ERROR: A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
     		}
     		event.setCanceled(true);
 			event.setCancellationResult(EnumActionResult.SUCCESS);
@@ -165,12 +166,8 @@ public final class ClientEventSystem{
     			}
         	}else{
         		//We are on the client.  Do update logic.
-        		//First update the radio threa.
-        		if(!radioThread.isAlive()){
-                	radioThread.start();
-                }else{
-                	radioThread.setListenerPosition(event.player.posX, event.player.posY, event.player.posZ, !minecraft.isGamePaused());	
-                }
+        		//Update the sounds in the audio system.
+        		WrapperAudio.update();
         		
         		//If we are riding a vehicle, do rotation and control operation.
         		if(event.player.getRidingEntity() instanceof EntityVehicleE_Powered){
@@ -256,6 +253,16 @@ public final class ClientEventSystem{
             	minecraft.getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
             }
         }
+        Entity renderViewEntity = minecraft.getRenderViewEntity();
+		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * event.getPartialTicks();
+		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * event.getPartialTicks();
+		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * event.getPartialTicks();
+        for(TileEntity tile : minecraft.world.loadedTileEntityList){
+        	if(tile instanceof WrapperTileEntity){
+        		Vec3d delta = new Vec3d(tile.getPos()).addVector(-playerX, -playerY, -playerZ);
+        		TileEntityRendererDispatcher.instance.getRenderer(tile).render(tile, delta.x, delta.y, delta.z, event.getPartialTicks(), 0, 0);
+        	}
+        }
     }
 
     /**
@@ -303,14 +310,6 @@ public final class ClientEventSystem{
 		                GL11.glRotated(placementRotation.z, -Math.sin((vehicle.rotationYaw + parentYaw)  * 0.017453292F), 0, Math.cos((vehicle.rotationYaw + parentYaw) * 0.017453292F));
 		                GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
 		            }
-		            
-		            //Make the player dance if the radio is playing.
-		            RenderPlayer render = event.getRenderer();
-		            if(RadioManager.getRadio(vehicle).getPlayState() != -1){
-		            	render.getMainModel().bipedHead.offsetZ = 0.075F - 0.15F*(Minecraft.getMinecraft().world.getTotalWorldTime()%6)/6F;
-		            }else{
-		            	render.getMainModel().bipedHead.offsetZ = 0.0F;
-		            }
 	        	}
         	}
         }
@@ -327,7 +326,7 @@ public final class ClientEventSystem{
      * Renders the HUD on vehicles.  We don't use the GUI here as it would lock inputs.
      */
     @SubscribeEvent
-    public static void on(RenderGameOverlayEvent.Post event){    	
+    public static void on(RenderGameOverlayEvent.Post event){
     	boolean inFirstPerson = minecraft.gameSettings.thirdPersonView == 0;
         if(minecraft.player.getRidingEntity() instanceof EntityVehicleE_Powered && (inFirstPerson ? ConfigSystem.configObject.client.renderHUD_1P.value : ConfigSystem.configObject.client.renderHUD_3P.value)){
             if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
@@ -397,9 +396,19 @@ public final class ClientEventSystem{
      * Opens the config screen when the config key is pressed.
      */
     @SubscribeEvent
-    public static void onKeyInput(InputEvent.KeyInputEvent event){
+    public static void on(InputEvent.KeyInputEvent event){
         if(WrapperInput.isMasterControlButttonPressed() && minecraft.currentScreen == null){
             WrapperGUI.openGUI(new GUIConfig());
         }
+    }
+    
+	/**
+     * Stop all sounds when the world is unloaded.
+     */
+    @SubscribeEvent
+    public static void on(WorldEvent.Unload event){
+    	if(event.getWorld().isRemote){
+    		WrapperAudio.haltSoundsIn(event.getWorld().provider.getDimension());
+    	}
     }
 }

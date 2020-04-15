@@ -7,11 +7,13 @@ import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -66,6 +68,10 @@ public abstract class APartEngine extends APart implements FXPart{
 		engineStartRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;
 		if(dataTag.hasKey("engineState")){
 			this.state = EngineStates.values()[dataTag.getByte("engineState")];
+			if(state.running && vehicle.world.isRemote){
+				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
+			}
 		}else{
 			this.state = EngineStates.ENGINE_OFF;
 		}
@@ -76,7 +82,6 @@ public abstract class APartEngine extends APart implements FXPart{
 		brokenStarter = dataTag.getBoolean("brokenStarter");
 		hours = dataTag.getDouble("hours");
 		RPM = dataTag.getDouble("rpm");
-		MTS.proxy.addVehicleEngineSound(vehicle, this);
 	}
 	
 	@Override
@@ -129,10 +134,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		if(state.esOn){
 			if(starterLevel == 0){
 				if(vehicle.electricPower > 2){
-					starterLevel += definition.engine.starterDuration;
-					if(vehicle.world.isRemote){
-						MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM), vehicle);
-					}
+					starterLevel += 4;
 				}else{
 					setElectricStarterStatus(false);
 				}
@@ -141,9 +143,9 @@ public abstract class APartEngine extends APart implements FXPart{
 				if(!isCreative){
 					vehicle.electricUsage += 0.05F;
 				}
-				if(vehicle.fuel > definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value && !isCreative){
-					vehicle.fuel -= definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
-					fuelFlow += definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value;
+				if(vehicle.fuel > getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value && !isCreative){
+					vehicle.fuel -= getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value;
+					fuelFlow += getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value;
 				}
 			}
 		}else if(state.hsOn){
@@ -162,7 +164,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		}
 		
 		ambientTemp = 25*vehicle.world.getBiome(vehicle.getPosition()).getTemperature(vehicle.getPosition()) - 5*(Math.pow(2, vehicle.posY/400) - 1);
-		coolingFactor = 0.001 + Math.abs(vehicle.velocity)/500F;
+		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(RPM/2000F)) + Math.abs(vehicle.velocity)/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		vehicle.electricUsage -= state.running ? 0.05*RPM/definition.engine.maxRPM : 0;
 		
@@ -171,19 +173,19 @@ public abstract class APartEngine extends APart implements FXPart{
 			oilPressure = Math.min(90 - temp/10, oilPressure + RPM/engineStartRPM - 0.5*(oilLeak ? 5F : 1F)*(oilPressure/engineOilDanger));
 			if(oilPressure < engineOilDanger){
 				temp += Math.max(0, (20*RPM/definition.engine.maxRPM)/20);
-				hours += 0.01*ConfigSystem.configObject.general.engineHoursFactor.value;
+				hours += 0.01*getTotalWearFactor();
 			}else{
 				temp += Math.max(0, (7*RPM/definition.engine.maxRPM - temp/(engineColdTemp*2))/20);
-				hours += 0.001*ConfigSystem.configObject.general.engineHoursFactor.value;	
+				hours += 0.001*getTotalWearFactor();	
 			}
 			if(RPM > engineStartRPM*1.5 && temp < engineColdTemp){//Not warmed up
-				hours += 0.001*(RPM/engineStartRPM - 1)*ConfigSystem.configObject.general.engineHoursFactor.value;
+				hours += 0.001*(RPM/engineStartRPM - 1)*getTotalWearFactor();
 			}
 			if(RPM > getSafeRPMFromMax(this.definition.engine.maxRPM)){//Too fast
-				hours += 0.001*(RPM - getSafeRPMFromMax(this.definition.engine.maxRPM))/10F*ConfigSystem.configObject.general.engineHoursFactor.value;
+				hours += 0.001*(RPM - getSafeRPMFromMax(this.definition.engine.maxRPM))/10F*getTotalWearFactor();
 			}
 			if(temp > engineOverheatTemp1){//Too hot
-				hours += 0.001*(temp - engineOverheatTemp1)*ConfigSystem.configObject.general.engineHoursFactor.value;
+				hours += 0.001*(temp - engineOverheatTemp1)*getTotalWearFactor();
 				if(temp > engineFailureTemp && !vehicle.world.isRemote && !isCreative){
 					explodeEngine();
 				}
@@ -197,13 +199,13 @@ public abstract class APartEngine extends APart implements FXPart{
 
 			if(!isCreative && !vehicle.fluidName.isEmpty()){
 				if(!ConfigSystem.configObject.fuel.fuels.containsKey(definition.engine.fuelType)){					
-					throw new IllegalArgumentException("ERROR: Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.configObject.fuel.fuels.keySet().toString());
+					throw new IllegalArgumentException("ERROR: Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.configObject.fuel.fuels.keySet().toString() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BORKEN!");
 				}else if(!ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicle.fluidName)){
 					//Clear out the fuel from this vehicle as it's the wrong type.
 					vehicle.fuel = 0;
 					vehicle.fluidName = "";
 				}else{
-					fuelFlow = definition.engine.fuelConsumption*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicle.fluidName)*RPM*(fuelLeak ? 1.5F : 1.0F)/definition.engine.maxRPM;
+					fuelFlow = getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicle.fluidName)*RPM*(fuelLeak ? 1.5F : 1.0F)/definition.engine.maxRPM;
 					vehicle.fuel -= fuelFlow;
 				}
 			}
@@ -291,7 +293,9 @@ public abstract class APartEngine extends APart implements FXPart{
 			}else if(state.equals(EngineStates.RUNNING)){
 				state = EngineStates.ENGINE_OFF;
 				internalFuel = 100;
-				MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1, vehicle);
+				if(vehicle.world.isRemote){
+					WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
+				}
 			}
 		}
 	}
@@ -303,8 +307,14 @@ public abstract class APartEngine extends APart implements FXPart{
 					state = EngineStates.MAGNETO_OFF_ES_ON;
 				}else if(state.equals(EngineStates.MAGNETO_ON_STARTERS_OFF)){
 					state = EngineStates.MAGNETO_ON_ES_ON;
+					if(vehicle.world.isRemote){
+						WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+					}
 				}else if(state.equals(EngineStates.RUNNING)){
 					state =  EngineStates.RUNNING_ES_ON;
+					if(vehicle.world.isRemote){
+						WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+					}
 				}
 			}else{
 				if(state.equals(EngineStates.MAGNETO_OFF_ES_ON)){
@@ -328,9 +338,9 @@ public abstract class APartEngine extends APart implements FXPart{
 		}else{
 			return;
 		}
-		starterLevel += definition.engine.starterDuration;
+		starterLevel += 4;
 		if(vehicle.world.isRemote){
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_cranking", 1, (float) (RPM/engineStartRPM), vehicle);
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
 		}
 	}
 	
@@ -339,7 +349,7 @@ public abstract class APartEngine extends APart implements FXPart{
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.BACKFIRE));
 		}else{
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_sputter", 0.5F, 1, vehicle);
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_sputter"));
 			backfired = true;
 		}
 	}
@@ -357,7 +367,9 @@ public abstract class APartEngine extends APart implements FXPart{
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.START));
 		}else{
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_starting", 1, 1, vehicle);
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_starting"));
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
 		}
 	}
 	
@@ -375,7 +387,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(!packetType.equals(PacketEngineTypes.DROWN)){
 				internalFuel = 100;
 			}
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_stopping", 1, 1, vehicle);
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
 		}
 	}
 	
@@ -391,6 +403,18 @@ public abstract class APartEngine extends APart implements FXPart{
 	public static int getSafeRPMFromMax(int maxRPM){
 		return maxRPM < 15000 ? maxRPM - (maxRPM - 2500)/2 : (int) (maxRPM/1.1);
 	}
+	//Get the total fuel consumption of this engine, to account for supercharged engines.
+	public float getTotalFuelConsumption(){
+		return definition.engine.fuelConsumption + definition.engine.superchargerFuelConsumption;
+	}
+	//Get the total wear factor to be applied to this engine, to account for supercharged engines.
+	public double getTotalWearFactor(){
+		if (definition.engine.superchargerEfficiency > 1.0F){
+			return definition.engine.superchargerEfficiency*ConfigSystem.configObject.general.engineHoursFactor.value;
+		}else{
+			return ConfigSystem.configObject.general.engineHoursFactor.value;
+		}
+	}
 	
 	protected boolean isInLiquid(){
 		return vehicle.world.getBlockState(new BlockPos(partPos.addVector(0, packVehicleDef.intakeOffset, 0))).getMaterial().isLiquid();
@@ -405,6 +429,46 @@ public abstract class APartEngine extends APart implements FXPart{
 	}
 	
 	public abstract double getForceOutput();
+	
+	@Override
+	public void updateProviderSound(SoundInstance sound){
+		super.updateProviderSound(sound);
+		//Adjust cranking sound pitch to match RPM and stop looping if we are done cranking.
+		//Adjust running sound to have pitch based on engine RPM.
+		if(sound.soundName.endsWith("_cranking")){
+			if(!state.esOn && !state.hsOn){
+				sound.stop();
+			}else{
+				sound.pitch = (float) ((engineStartRPM*0.25F + RPM*0.75F)/engineStartRPM);
+			}
+		}else if(sound.soundName.endsWith("_running")){
+			if(!state.running && internalFuel == 0){
+				sound.stop();
+			}else{
+				//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines.
+				sound.pitch = (float) (0.35*(1 + Math.max(0, (RPM - engineStartRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
+			}
+		}else if(sound.soundName.endsWith("_supercharger")){
+			if(!state.running && internalFuel == 0){
+				sound.stop();
+			}else{
+				//Pitch should be 0.35 at idle with a 0.35 increase for every 2500 RPM, as with the regular engine sound, but in addition the volume increases with RPM so that it's 1.0 at the engine's max safe RPM.
+				sound.volume = (float) RPM/definition.engine.maxRPM;
+				sound.pitch = (float) (0.35*(1 + Math.max(0, (RPM - engineStartRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
+			}
+		}
+	}
+	
+	@Override
+	public void restartSound(SoundInstance sound){
+		if(sound.soundName.endsWith("_cranking")){
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+		}else if(sound.soundName.endsWith("_running")){
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+		}else if(sound.soundName.endsWith("_supercharger")){
+		WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
+	}
+	}
 
 	@Override
 	@SideOnly(Side.CLIENT)

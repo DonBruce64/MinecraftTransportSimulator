@@ -6,9 +6,11 @@ import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -38,8 +40,9 @@ public abstract class APartGun extends APart implements FXPart{
 	public int temp;
 	public int cooldownTimeRemaining;
 	public int reloadTimeRemaining;
-	private long lastTickFired;
-	private long lastTickToFire;
+	private byte gunNumber;
+	private long lastTimeFired;
+	private long timeToFire;
 	
 	private final double anglePerTickSpeed;
 		
@@ -53,6 +56,14 @@ public abstract class APartGun extends APart implements FXPart{
 			this.loadedBullet = (ItemPartBullet) MTSRegistry.packItemMap.get(dataTag.getString("loadedBulletPack")).get(dataTag.getString("loadedBulletName"));
 		}
 		this.anglePerTickSpeed = (50/definition.gun.diameter + 1/definition.gun.length);
+		
+		//Get the gun number based on how many guns the vehicle has.
+		gunNumber = 1;
+		for(APart part : vehicle.getVehicleParts()){
+			if(part instanceof APartGun){
+				++gunNumber;
+			}
+		}
 	}
 	
 	@Override
@@ -164,8 +175,11 @@ public abstract class APartGun extends APart implements FXPart{
 					//If we aren't in a cooldown time, we can fire.
 					if(cooldownTimeRemaining == 0){
 						//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.
+						//Make sure to add-on an offset to our firing point to allow for multi-gun units.
+						//We also add 1 tick here, as it's only subsequent ticks we check for gun firing.
+						long millisecondCamOffset = (long) (definition.gun.fireDelay*(1000D/20D)*(gunNumber - 1D)/vehicle.totalGuns);
 						cooldownTimeRemaining = definition.gun.fireDelay;
-						lastTickToFire = vehicle.world.getTotalWorldTime();
+						timeToFire = System.currentTimeMillis() + millisecondCamOffset;
 						--bulletsLeft;
 					}
 					if(cooldownTimeRemaining > 0){
@@ -179,16 +193,39 @@ public abstract class APartGun extends APart implements FXPart{
 				//When we do yaw, make sure we do calculations with positive values.
 				//Both the vehicle and the player can have yaw greater than 360.
 				double deltaPitch = playerController.rotationPitch - vehicle.rotationPitch;
-				double deltaYaw = (playerController.rotationYaw%360 + 360)%360 - (vehicle.rotationYaw%360 - partRotation.y + 360)%360;
-				if(deltaPitch < currentPitch && currentPitch > getMinPitch()){
+				double deltaYaw = (playerController.rotationYaw + 360 - vehicle.rotationYaw + 360 + partRotation.y + 360)%360;
+				//I know this is weird, but the pitch is bigger when it's pointing the ground and smaller when it's pointing the sky.
+				//At least this won't be confusing on the pack creator's end in this way. -Bunting_chj
+				if(deltaPitch < currentPitch && currentPitch > -getMaxPitch()){
 					currentPitch -= Math.min(anglePerTickSpeed, currentPitch - deltaPitch);
-				}else if(deltaPitch > currentPitch && currentPitch < getMaxPitch()){
+				}else if(deltaPitch > currentPitch && currentPitch < -getMinPitch()){
 					currentPitch += Math.min(anglePerTickSpeed, deltaPitch - currentPitch);
 				}
-				if(deltaYaw < currentYaw && currentYaw > getMinYaw()){
-					currentYaw -= Math.min(anglePerTickSpeed, currentYaw - deltaYaw);
-				}else if(deltaYaw > currentYaw && currentYaw < getMaxYaw()){
-					currentYaw += Math.min(anglePerTickSpeed, deltaYaw - currentYaw);
+				//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
+				//We need to do special rotation logic for that.
+				if(getMinYaw() == -180  && getMaxYaw() == 180){
+					if((deltaYaw - currentYaw + 360)%360 >= 180){
+						currentYaw -= Math.min(anglePerTickSpeed,360 - (deltaYaw - currentYaw + 360)%360);
+					}else if((deltaYaw - currentYaw + 360)%360 < 180){
+						currentYaw += Math.min(anglePerTickSpeed,(deltaYaw - currentYaw + 360)%360);
+					}
+					if(currentYaw > 180 ){
+						currentYaw -= 360;
+					}else if(currentYaw < -180){
+						currentYaw += 360;
+					}
+					
+					//If we crossed the -180/180 yaw border this tick, change prevYaw to prevent spazzing.
+					//We know this if we have a sign difference, and yaw is large.
+					if(prevYaw*currentYaw < 0 && prevYaw*currentYaw < -180){
+						prevYaw += prevYaw < 0 ? 360 : -360;
+					}
+				}else{
+					if(deltaYaw < currentYaw && currentYaw > getMinYaw()){
+						currentYaw -= Math.min(anglePerTickSpeed, currentYaw - deltaYaw);
+					}else if(deltaYaw > currentYaw && currentYaw < getMaxYaw()){
+						currentYaw += Math.min(anglePerTickSpeed, deltaYaw - currentYaw);
+					}
 				}
 			}else{
 				playerControllerID = -1;
@@ -236,7 +273,7 @@ public abstract class APartGun extends APart implements FXPart{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void spawnParticles(){
-		if(lastTickToFire != lastTickFired){
+		if(timeToFire != lastTimeFired && System.currentTimeMillis() >= timeToFire){
 			//Fire a bullet by spawning it with the appropriate muzzle velocity and angle.
 			//Angle is based on rotation of the vehicle, gun, and gun mount.
 			//Set the trajectory of the bullet.
@@ -259,8 +296,8 @@ public abstract class APartGun extends APart implements FXPart{
 			
 			//Now add the bullet as a particle.
 			Minecraft.getMinecraft().effectRenderer.addEffect(new PartBullet(vehicle.world, partPos.x + bulletOrientation.x*definition.gun.length, partPos.y + bulletOrientation.y*definition.gun.length, partPos.z + bulletOrientation.z*definition.gun.length, bulletMotionX, bulletMotionY, bulletMotionZ, loadedBullet, playerControllerID, this.vehicle));
-			MTS.proxy.playSound(partPos, definition.packID + ":" + definition.systemName + "_firing", 1, 1, vehicle);
-			lastTickFired = lastTickToFire;
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
+			lastTimeFired = timeToFire;
 		}
 	}
 }

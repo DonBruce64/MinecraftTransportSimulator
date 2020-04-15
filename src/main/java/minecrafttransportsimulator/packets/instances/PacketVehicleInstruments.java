@@ -20,9 +20,9 @@ import net.minecraft.item.ItemStack;
  * @author don_bruce
  */
 public class PacketVehicleInstruments extends APacketVehicle{
-	private byte slot;
-	private String instrumentPackID;
-	private String instrumentSystemName;
+	private final byte slot;
+	private final String instrumentPackID;
+	private final String instrumentSystemName;
 	
 	public PacketVehicleInstruments(EntityVehicleE_Powered vehicle, byte slot, ItemInstrument instrument){
 		super(vehicle);

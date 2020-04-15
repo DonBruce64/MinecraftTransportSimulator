@@ -3,7 +3,9 @@ package minecrafttransportsimulator.vehicles.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.nbt.NBTTagCompound;
 
 public abstract class APartEngineGeared extends APartEngine{
@@ -77,7 +79,7 @@ public abstract class APartEngineGeared extends APartEngine{
 			if(vehicle.velocity > -0.1){
 				currentGear = 1;
 			}else if(vehicle.world.isRemote){
-				MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1, vehicle);
+				WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
 			}
 		}else if(currentGear < definition.engine.gearRatios.length - 2){
 			if(definition.engine.isAutomatic && packet){
@@ -99,7 +101,7 @@ public abstract class APartEngineGeared extends APartEngine{
 			if(vehicle.velocity < 0.1){
 				currentGear = -1;
 			}else if(vehicle.world.isRemote){
-				MTS.proxy.playSound(partPos, MTS.MODID + ":engine_shifting_grinding", 1.0F, 1, vehicle);
+				WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
 			}
 		}
 	}

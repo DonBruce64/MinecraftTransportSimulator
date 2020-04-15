@@ -6,9 +6,13 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemLead;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.AxisAlignedBB;
 
 public final class PartSeat extends APart{
 	
@@ -18,19 +22,47 @@ public final class PartSeat extends APart{
 	
 	@Override
 	public boolean interactPart(EntityPlayer player){
-		//See if we can enter this vehicle.
-		//Alternately, we can switch seats if we're already in the vehicle.
+		//let's get the Item player is holding, in case it is a lead.
+		ItemStack heldStack = player.getHeldItemMainhand();
+		//See if we can interact with the seats of this vehicle.
+		//This can happen if the vehicle isn't locked, or we're already inside.
 		if(!vehicle.locked || vehicle.equals(player.getRidingEntity())){
 			Entity seatRider = vehicle.getRiderForSeat(this);
 			if(seatRider != null){
-				if(!player.equals(seatRider)){
-					MTS.MTSNet.sendTo(new PacketChat("interact.failure.seattaken"), (EntityPlayerMP) player);
+				//We already have a rider for this seat.  If it's not us, return failure.
+				//If it's an entity that can be leashed, dismount the entity and leash it.
+				if(seatRider instanceof EntityPlayer){
+					if(!player.equals(seatRider)){
+						MTS.MTSNet.sendTo(new PacketChat("interact.failure.seattaken"), (EntityPlayerMP) player);
+					}
+				}else if(seatRider instanceof EntityLiving){
+					if(((EntityLiving) seatRider).canBeLeashedTo(player) && player.getHeldItemMainhand().getItem() instanceof ItemLead){
+						vehicle.removeRiderFromSeat(seatRider, this);
+						((EntityLiving)seatRider).setLeashHolder(player, true);
+						if(!player.isCreative()){
+							heldStack.shrink(1);
+						}
+					}else{
+						//Can't leash up this animal, so mark the seat as taken.
+						MTS.MTSNet.sendTo(new PacketChat("interact.failure.seattaken"), (EntityPlayerMP) player);
+					}
+				}else{
+					//Don't know WHAT this entity is.  But it don't belong here!
+					vehicle.removeRiderFromSeat(seatRider, this);
 				}
-				return true;
+			}else{
+				//If we got here we must have the seat number and it must be free.
+				//Either mount this seat, or if we have a leashed animal, set it in that seat.
+				for(EntityLiving entityliving : vehicle.world.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(player.posX - 7.0D, player.posY - 7.0D, player.posZ - 7.0D, player.posX + 7.0D, player.posY + 7.0D, player.posZ + 7.0D))){
+					if(entityliving.getLeashed() && player.equals(entityliving.getLeashHolder())){
+						entityliving.clearLeashed(true, !player.capabilities.isCreativeMode);
+						vehicle.setRiderInSeat(entityliving, this);
+						return true;
+					}
+				}
+				//Didn't find an animal.  Just mount the player.
+				vehicle.setRiderInSeat(player, this);
 			}
-			//If we got here we must have the seat number and it must be free.
-			//Let the player start riding at this point.
-			vehicle.setRiderInSeat(player, this);
 		}else{
 			MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
 		}

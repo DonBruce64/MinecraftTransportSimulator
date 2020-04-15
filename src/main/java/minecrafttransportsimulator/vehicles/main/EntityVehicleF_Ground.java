@@ -33,6 +33,8 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	private Vec3d xzPlaneDelta;
 	private Vec3d xzPlaneHeading;
 	
+	public boolean cruiseControl;
+	public double cruiseControlSpeed;
 	public EntityVehicleF_Ground towedVehicle;
 	public EntityVehicleF_Ground towedByVehicle;
 	public byte towingAngle;
@@ -52,11 +54,6 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 		}else{
 			return super.getCurrentMass();
 		}
-	}
-	
-	@Override
-	public boolean isLightOn(LightType light){
-		return definition.motorized.isTrailer && towedByVehicle != null ? towedByVehicle.isLightOn(light) : super.isLightOn(light);
 	}
 	
 	@Override
@@ -92,6 +89,12 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 			if(towedByVehicle.isDead){
 				towedByVehicle = null;
 			}else{
+				//Update our lights to match our towers if we are a trailer.
+				if(definition.motorized.isTrailer){
+					lightsOn.clear();
+					lightsOn.addAll(towedByVehicle.lightsOn);
+				}
+				
 				//Turn off the parking brake, but turn on the brake if we are a trailer and our tower is braking.
 				parkingBrakeOn = false;
 				brakeOn = definition.motorized.isTrailer && towedByVehicle.brakeOn;
@@ -120,6 +123,7 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 				//Match our tower's roll.
 				motionRoll = (towedByVehicle.rotationRoll - rotationRoll)/10;
 				
+				//Now set the motions.
 				motionX = hitchPos.x - hookupPos.x;
 				motionY = hitchPos.y - hookupPos.y;
 				motionZ = hitchPos.z - hookupPos.z;
@@ -144,6 +148,20 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	
 	@Override
 	protected void dampenControlSurfaces(){
+		if(cruiseControl){
+			if(velocity < cruiseControlSpeed){
+				if(throttle < 100){
+					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0), this);
+					++throttle;
+				}
+			}else if(velocity > cruiseControlSpeed){
+				if(throttle > 0){
+					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0), this);
+					--throttle;
+				}
+			}
+		}
+		
 		if(steeringCooldown==0){
 			if(steeringAngle != 0){
 				if(steeringAngle < STEERING_DAMPEN_RATE && steeringAngle > -STEERING_DAMPEN_RATE){

@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +10,8 @@ import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.sound.ISoundProvider;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.entity.item.EntityItem;
@@ -27,7 +32,7 @@ import net.minecraft.util.math.Vec3d;
  * 
  * @author don_bruce
  */
-public abstract class APart{	
+public abstract class APart implements ISoundProvider{	
 	/** Can a rider of this part send inputs to the vehicle this is a part of.*/
 	public final boolean isController;
 	/** Does this part rotate in-sync with the yaw changes of the vehicle.*/
@@ -39,14 +44,16 @@ public abstract class APart{
 	public final Vec3d partRotation;
 	public final boolean inverseMirroring;
 	public final boolean disableMirroring;
+	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	
 	/**The parent of this part, if this part is a sub-part of a part or an additional part for a vehicle.*/
 	public final APart parentPart;
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
 	public final List<APart> childParts = new ArrayList<APart>();
-	
+	/**The part's current position, in world coordinates.*/
 	public Vec3d partPos;
 	
+	//Internal cached variables.
 	private boolean isValid;
 	private ResourceLocation modelLocation;
 		
@@ -118,17 +125,47 @@ public abstract class APart{
 	 * Use this for reactions that this part can take based on its surroundings if need be.
 	 */
 	public void updatePart(){
-		if(parentPart != null){
-			Vec3d parentActionRotation = parentPart.getActionRotation(0);
-			if(!parentActionRotation.equals(Vec3d.ZERO)){
-				Vec3d partRelativeOffset = offset.subtract(parentPart.offset);
-				Vec3d partTranslationOffset = parentPart.offset.add(RotationSystem.getRotatedPoint(partRelativeOffset, (float) parentActionRotation.x, (float) parentActionRotation.y, (float) parentActionRotation.z));
-				partPos = RotationSystem.getRotatedPoint(partTranslationOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
-				return;
-			}
+		//Set position depending on if we are on a rotated parent or not.
+		Vec3d parentActionRotation = parentPart != null ? parentPart.getActionRotation(0) : null;
+		if(parentActionRotation != null && !parentActionRotation.equals(Vec3d.ZERO)){
+			Vec3d partRelativeOffset = offset.subtract(parentPart.offset);
+			Vec3d partTranslationOffset = parentPart.offset.add(RotationSystem.getRotatedPoint(partRelativeOffset, (float) parentActionRotation.x, (float) parentActionRotation.y, (float) parentActionRotation.z));
+			partPos = RotationSystem.getRotatedPoint(partTranslationOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+		}else{
+			partPos = RotationSystem.getRotatedPoint(this.offset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
 		}
-		partPos = RotationSystem.getRotatedPoint(this.offset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+
+		//Update sound variables.
+		soundPosition.rewind();
+		soundPosition.put((float) partPos.x);
+		soundPosition.put((float) partPos.y);
+		soundPosition.put((float) partPos.z);
+		soundPosition.flip();
 	}
+	
+	public final VehicleAxisAlignedBB getAABBWithOffset(Vec3d boxOffset){
+		return new VehicleAxisAlignedBB(Vec3d.ZERO.equals(boxOffset) ? partPos : partPos.add(boxOffset), this.offset, this.getWidth(), this.getHeight(), false, false);
+	}
+	
+	/**Gets the rotation vector for the part.
+	 * This comes from the part itself and is used
+	 * to determine the angle of the part for rendering
+	 * and for rotation of sub-parts.  This rotation is
+	 * variable and depends on what the part is doing, unlike
+	 * partRotation, which is a fixed rotation component that
+	 * comes from the vehicle JSONs.
+	 */
+	public Vec3d getActionRotation(float partialTicks){
+		return Vec3d.ZERO;
+	}
+
+	/**Checks to see if this part is collided with any collidable blocks.
+	 * Uses a regular Vanilla check: liquid checks may be done by overriding this method.
+	 * Can be given an offset vector to check for potential collisions. 
+	 */
+	public boolean isPartCollidingWithBlocks(Vec3d collisionOffset){
+		return !vehicle.world.getCollisionBoxes(null, this.getAABBWithOffset(collisionOffset)).isEmpty();
+    }
 	
 	/**Called when the vehicle removes this part.
 	 * Allows for parts to trigger logic that happens when they are removed.
@@ -158,6 +195,13 @@ public abstract class APart{
 		}
 	}
 	
+	/**Gets the item for this part.  If the part should not return an item 
+	 * (either due to damage or other reasons) make this method return null.
+	 */
+	public Item getItemForPart(){
+		return MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName);
+	}
+	
 	/**Return the part data in NBT form.
 	 * This is called when removing the part from a vehicle to return an item.
 	 * This is also called when saving this part, so ensure EVERYTHING you need to make this
@@ -171,14 +215,11 @@ public abstract class APart{
 	
 	public abstract float getHeight();
 	
-	/**Gets the item for this part.  If the part should not return an item 
-	 * (either due to damage or other reasons) make this method return null.
-	 */
-	public Item getItemForPart(){
-		return MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName);
-	}
+
 	
-	/**Gets the location of the model for this part. 
+	//--------------------START OF CLIENT-SPECIFIC CODE--------------------
+	/**
+	 * Gets the location of the model for this part. 
 	 */
 	public ResourceLocation getModelLocation(){
 		if(modelLocation == null){
@@ -198,27 +239,28 @@ public abstract class APart{
 		return new ResourceLocation(definition.packID, "textures/parts/" + definition.systemName + ".png");
 	}
 	
-	public final VehicleAxisAlignedBB getAABBWithOffset(Vec3d boxOffset){
-		return new VehicleAxisAlignedBB(Vec3d.ZERO.equals(boxOffset) ? partPos : partPos.add(boxOffset), this.offset, this.getWidth(), this.getHeight(), false, false);
+	@Override
+	public void updateProviderSound(SoundInstance sound){
+		if(!this.isValid || vehicle.isDead){
+			sound.stop();
+		}
 	}
 	
-	/**Gets the rotation vector for the part.
-	 * This comes from the part itself and is used
-	 * to determine the angle of the part for rendering
-	 * and for rotation of sub-parts.  This rotation is
-	 * variable and depends on what the part is doing, unlike
-	 * partRotation, which is a fixed rotation component that
-	 * comes from the vehicle JSONs.
-	 */
-	public Vec3d getActionRotation(float partialTicks){
-		return Vec3d.ZERO;
+	@Override
+	public void restartSound(SoundInstance sound){}
+    
+	@Override
+    public FloatBuffer getProviderPosition(){
+		return soundPosition;
 	}
-
-	/**Checks to see if this part is collided with any collidable blocks.
-	 * Uses a regular Vanilla check, as well as a liquid check for applicable parts.
-	 * Can be given an offset vector to check for potential collisions. 
-	 */
-	public boolean isPartCollidingWithBlocks(Vec3d collisionOffset){
-		return !vehicle.world.getCollisionBoxes(null, this.getAABBWithOffset(collisionOffset)).isEmpty();
-    }
+    
+	@Override
+    public FloatBuffer getProviderVelocity(){
+		return vehicle.getProviderVelocity();
+	}
+	
+	@Override
+    public int getProviderDimension(){
+		return vehicle.getProviderDimension();
+	}
 }

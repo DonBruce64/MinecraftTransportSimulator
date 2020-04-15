@@ -1,31 +1,38 @@
 package minecrafttransportsimulator.vehicles.main;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import minecrafttransportsimulator.baseclasses.VehicleSound;
-import minecrafttransportsimulator.baseclasses.VehicleSound.SoundTypes;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.radio.RadioContainer;
+import minecrafttransportsimulator.sound.IRadioProvider;
+import minecrafttransportsimulator.sound.Radio;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
+import minecrafttransportsimulator.vehicles.parts.APartGun;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
+import minecrafttransportsimulator.wrappers.WrapperBlockFakeLight;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**This class adds engine components for vehicles, such as fuel, throttle,
  * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.
@@ -37,12 +44,13 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * 
  * @author don_bruce
  */
-public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements RadioContainer{
+public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements IRadioProvider{
 	public boolean soundsNeedInit;
 	public boolean hornOn;
 	public boolean sirenOn;
 	
 	public byte throttle;
+	public byte totalGuns = 0;
 	public double fuel;
 	public boolean reverseThrust;
 	public short reversePercent;
@@ -53,13 +61,23 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public String fluidName = "";
 	public Vec3d velocityVec = Vec3d.ZERO;
 	
+	//Collision maps.
 	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
 	public final Map<Byte, APartEngine> engines = new HashMap<Byte, APartEngine>();
 	public final List<APartGroundDevice> wheels = new ArrayList<APartGroundDevice>();
 	public final List<APartGroundDevice> groundedWheels = new ArrayList<APartGroundDevice>();
 	
-	private final List<LightType> lightsOn = new ArrayList<LightType>();
-	private final List<VehicleSound> sounds = new ArrayList<VehicleSound>();
+	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
+	public final Set<LightType> lightsOn = new HashSet<LightType>();
+	
+	//Fake light position for this vehicle.
+	private BlockPos fakeLightPosition;
+	
+	//Internal radio variables.
+	private final Radio radio = new Radio(this);
+	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
+	private final FloatBuffer soundVelocity = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
+	
 	
 	public EntityVehicleE_Powered(World world){
 		super(world);
@@ -80,14 +98,48 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			}
 			
 			//Turn on the DRLs if we have an engine on.
-			boolean anyEngineOn = false;
+			lightsOn.remove(LightType.DAYTIMERUNNINGLIGHT);
 			for(APartEngine engine : engines.values()){
 				if(engine.state.running){
-					anyEngineOn = true;
+					lightsOn.add(LightType.DAYTIMERUNNINGLIGHT);
 					break;
 				}
 			}
-			changeLightStatus(LightType.DAYTIMERUNNINGLIGHT, anyEngineOn);
+			
+			//Make the light bright at our position if lights are on.
+			//DRLs are always on, so check for that.
+			if(world.isRemote){
+				if(ConfigSystem.configObject.client.vehicleBlklt.value){
+					if(lightsOn.contains(LightType.DAYTIMERUNNINGLIGHT) ? lightsOn.size() > 1 : !lightsOn.isEmpty()){
+						BlockPos newPos = getPosition();
+						//Check to see if we need to place a light.
+						if(!newPos.equals(fakeLightPosition)){
+							//If our prior position is not null, remove that block.
+							if(fakeLightPosition != null){
+								world.setBlockToAir(fakeLightPosition);
+								world.checkLight(fakeLightPosition);
+								fakeLightPosition = null;
+							}
+							//Set block in world and update pos.  Only do this if the block is air.
+							if(world.isAirBlock(newPos)){
+								world.setBlockState(newPos, WrapperBlockFakeLight.instance.getDefaultState());
+								world.checkLight(newPos);
+								fakeLightPosition = newPos;
+							}
+						}
+					}else if(fakeLightPosition != null){
+						//Lights are off, turn off fake light.
+						world.setBlockToAir(fakeLightPosition);
+						world.checkLight(fakeLightPosition);
+						fakeLightPosition = null;
+					}
+				}else if(fakeLightPosition != null){
+					//Fake light config was on, but was turned off.  Get rid of the remaining fake light.
+					world.setBlockToAir(fakeLightPosition);
+					world.checkLight(fakeLightPosition);
+					fakeLightPosition = null;
+				}
+			}
 			
 			//Set electric usage based on light status.
 			if(electricPower > 2){
@@ -115,6 +167,26 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 					groundedWheels.add(wheel);
 				}
 			}
+			
+			//Update sound variables.
+			soundPosition.rewind();
+			soundPosition.put((float) posX);
+			soundPosition.put((float) posY);
+			soundPosition.put((float) posZ);
+			soundPosition.flip();
+			soundVelocity.rewind();
+			soundVelocity.put((float) motionX);
+			soundVelocity.put((float) motionY);
+			soundVelocity.put((float) motionZ);
+			soundVelocity.flip();
+		}
+	}
+	
+	@Override
+	public void setDead(){
+		super.setDead();
+		if(fakeLightPosition != null){
+			world.setBlockToAir(fakeLightPosition);
 		}
 	}
 	
@@ -194,6 +266,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			if(((APartGroundDevice) part).canBeDrivenByEngine()){
 				wheels.add((APartGroundDevice) part);
 			}
+		}else if(part instanceof APartGun){
+			++totalGuns;
 		}
 	}
 	
@@ -214,107 +288,58 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		}
 		if(wheels.contains(part)){
 			wheels.remove(part);
+		}else if(part instanceof APartGun){
+			--totalGuns;
 		}
-	}
-	
-	protected void performGroundOperations(){
-		float brakingFactor = getBrakingForceFactor();
-		if(brakingFactor > 0){
-			double groundSpeed = Math.hypot(motionX, motionZ)*Math.signum(velocity);
-			groundSpeed -= 20F*brakingFactor/currentMass*Math.signum(velocity);
-			if(Math.abs(groundSpeed) > 0.1){
-				reAdjustGroundSpeed(groundSpeed);
-			}else{
-				motionX = 0;
-				motionZ = 0;
-				motionYaw = 0;
-			}
-		}
-		
-		float skiddingFactor = getSkiddingFactor();
-		if(skiddingFactor != 0){
-			Vec3d groundVelocityVec = new Vec3d(motionX, 0, motionZ).normalize();
-			Vec3d groundHeadingVec = new Vec3d(headingVec.x, 0, headingVec.z).normalize();
-			float vectorDelta = (float) groundVelocityVec.distanceTo(groundHeadingVec);
-			byte velocitySign = (byte) (vectorDelta < 1 ? 1 : -1);
-			if(vectorDelta > 0.001){
-				vectorDelta = Math.min(skiddingFactor, vectorDelta);
-				float yawTemp = rotationYaw;
-				rotationYaw += vectorDelta;
-				updateHeadingVec();
-				reAdjustGroundSpeed(Math.hypot(motionX, motionZ)*velocitySign);
-				rotationYaw = yawTemp;
-			}
-		}
-		
-		motionYaw += getTurningFactor();
-	}
-	
-	
-	//-----START OF LIGHT CODE-----
-	public void changeLightStatus(LightType light, boolean isOn){
-		if(isOn){
-			if(!lightsOn.contains(light)){
-				lightsOn.add(light);
-			}
-		}else{
-			if(lightsOn.contains(light)){
-				lightsOn.remove(light);
-			}
-		}
-	}
-	
-	public boolean isLightOn(LightType light){
-		return lightsOn.contains(light);
 	}
 	
 	//-----START OF SOUND CODE-----
-	@SideOnly(Side.CLIENT)
-	public final void initSounds(){
-		if(definition.motorized.hornSound != null){
-			addSound(SoundTypes.HORN, null);
-		}
-		if(definition.motorized.sirenSound != null){
-			addSound(SoundTypes.SIREN, null);
-		}
-	}
-	
-	@SideOnly(Side.CLIENT)
-	public final List<VehicleSound> getSounds(){
-		return this.sounds;
-	}
-	
-	@SideOnly(Side.CLIENT)
-	public final void addSound(SoundTypes typeToAdd, APart optionalPart){
-		VehicleSound newSound = new VehicleSound(this, optionalPart, typeToAdd);
-		//If we already have a sound for this part, remove it before adding this new one.
-		for(byte i=0; i<sounds.size(); ++i){
-			if(sounds.get(i).getSoundUniqueName().equals(newSound.getSoundUniqueName())){
-				sounds.remove(i);
-				break;
-			}
-		}
-		sounds.add(newSound);
-	}
-	
-	//-----START OF RADIO CODE-----
 	@Override
-	public double getDistanceTo(double x, double y, double z){
-		//Check to see if the listener is a passenger of this vehicle.
-		//If so, we should return a distance of 0.
-		for(Entity entity : getPassengers()){
-			if(entity.posX == x && entity.posY == y && entity.posZ == z){
-				return 0;
+	public void updateProviderSound(SoundInstance sound){
+		if(this.isDead){
+			sound.stop();
+		}else if(sound.soundName.equals(definition.motorized.hornSound)){
+			if(!hornOn){
+				sound.stop();
+			}
+		}else if(sound.soundName.equals(definition.motorized.sirenSound)){
+			if(!sirenOn){
+				sound.stop();
 			}
 		}
-		return Math.sqrt(Math.pow(this.posX - x, 2) + Math.pow(this.posY - y, 2) + Math.pow(this.posZ - z, 2));
 	}
 	
 	@Override
-	public boolean isValid(){
-		return !this.isDead;
+	public void restartSound(SoundInstance sound){
+		if(sound.soundName.equals(definition.motorized.hornSound)){
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.motorized.hornSound, true));
+		}else if(sound.soundName.equals(definition.motorized.sirenSound)){
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.motorized.sirenSound, true));
+		}
 	}
-			
+    
+	@Override
+    public FloatBuffer getProviderPosition(){
+		return soundPosition;
+	}
+    
+	@Override
+    public FloatBuffer getProviderVelocity(){
+		return soundVelocity;
+	}
+	
+	@Override
+    public int getProviderDimension(){
+		return world.provider.getDimension();
+	}
+	
+	@Override
+	public Radio getRadio(){
+		return radio;
+	}
+	
+	
+	//-----START OF NBT CODE-----
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
     	this.soundsNeedInit = world.isRemote && definition == null; 
@@ -400,7 +425,14 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		RUNNINGLIGHT(false),
 		HEADLIGHT(true),
 		EMERGENCYLIGHT(false),
-		DAYTIMERUNNINGLIGHT(false);
+		DAYTIMERUNNINGLIGHT(false),
+		
+		//The following light types are only for block-based systems.
+		STOPLIGHT(false),
+		CAUTIONLIGHT(false),
+		GOLIGHT(false),
+		STREETLIGHT(true),
+		DECORLIGHT(false);
 		
 		public final boolean hasBeam;
 		private LightType(boolean hasBeam){

@@ -3,6 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
@@ -11,6 +12,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.APartEngineGeared;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraft.entity.Entity;
@@ -50,13 +52,25 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 			case P_BRAKE : {
 				//If we are a big truck on a client that just set the brake, play the brake sound.
 				if(world.isClient() && !vehicle.parkingBrakeOn && controlState && vehicle instanceof EntityVehicleG_Car && vehicle.definition.car.isBigTruck){
-					MTS.proxy.playSound(vehicle.getPositionVector(), MTS.MODID + ":air_brake_activating", 1.0F, 1, vehicle);
+					WrapperAudio.playQuickSound(new SoundInstance(vehicle, MTS.MODID + ":air_brake_activating"));
 				}
 				vehicle.parkingBrakeOn = controlState;
 				break;
 			}
-			case HORN : vehicle.hornOn = controlState; break;
-			case SIREN : vehicle.sirenOn = controlState; break;
+			case HORN : {
+				if(world.isClient() && !vehicle.hornOn && controlState){
+					WrapperAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.hornSound, true));
+				}
+				vehicle.hornOn = controlState;
+				break;
+			}
+			case SIREN : {
+				if(world.isClient() && !vehicle.sirenOn && controlState){
+					WrapperAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.sirenSound, true));
+				}
+				vehicle.sirenOn = controlState;
+				break;
+			}
 			case TRAILER : {
 				//TODO change this out when we make aircraft tow-able.
 				EntityVehicleF_Ground mainVehicle = (EntityVehicleF_Ground) vehicle;
@@ -88,7 +102,9 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 											return true;
 										}
 									}
-									player.sendPacket(new PacketPlayerChatMessage("interact.trailer.wronghitch"));
+									if(!world.isClient()){
+										player.sendPacket(new PacketPlayerChatMessage("interact.trailer.wronghitch"));
+									}
 									break;
 								}
 							}
@@ -115,6 +131,17 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				break;
 			}
 			case REVERSE : vehicle.reverseThrust = controlState; break;
+			case AUTOPILOT : ((EntityVehicleF_Air) vehicle).autopilot = controlState; break;
+			case CRUISECONTROL : {
+				EntityVehicleF_Ground grounder = (EntityVehicleF_Ground) vehicle;
+				if(controlState){
+					grounder.cruiseControl = true;
+					grounder.cruiseControlSpeed = grounder.velocity;
+				}else{
+					grounder.cruiseControl = false;
+				}
+				break;
+			}
 			case FLAPS : ((EntityVehicleG_Plane) vehicle).flapDesiredAngle = (short) clampAngle(0, 350, ((EntityVehicleG_Plane) vehicle).flapDesiredAngle + (controlState ? 50 : -50)); break;
 			case TRIM_ROLL : ((EntityVehicleF_Air) vehicle).aileronTrim = (short) clampAngle(-100, 100, ((EntityVehicleF_Air) vehicle).aileronTrim + (controlState ? 1 : -1)); break;
 			case TRIM_PITCH : ((EntityVehicleF_Air) vehicle).elevatorTrim = (short) clampAngle(-100, 100, ((EntityVehicleF_Air) vehicle).elevatorTrim + (controlState ? 1 : -1)); break;
@@ -131,6 +158,8 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 		SHIFT,
 		TRAILER,
 		REVERSE,
+		AUTOPILOT,
+		CRUISECONTROL,
 		FLAPS,
 		TRIM_ROLL,
 		TRIM_PITCH,

@@ -18,6 +18,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject;
@@ -180,8 +181,8 @@ public class GUIVehicleEditor extends AGUIBase{
 		
 		//Add item icon model component if we haven't already.
 		//We don't want to re-create it here if we have it, otherwise we'll blow out the selection.
-		if(componentItemModel != null){
-			componentItemModel = new GUIComponentOBJModel(guiLeft + 208, guiTop + 205, false, true);
+		if(componentItemModel == null){
+			componentItemModel = new GUIComponentOBJModel(guiLeft + 208, guiTop + 205, 1.0F, true, false, true);
 			componentItemModel.scale = 6.0F;
 		}
 		addOBJModel(componentItemModel);
@@ -225,6 +226,7 @@ public class GUIVehicleEditor extends AGUIBase{
 	private static enum EditScreen{
 		NONE(null),
 		MODELS(new ModelLoader()),
+		COLLISION(new CollisionLoader()),
 		INSTRUMENTS(new InstrumentLoader()),
 		ROTATIONS(new RotationLoader()),
 		TRANSLATIONS(new TranslationLoader()),
@@ -336,6 +338,74 @@ public class GUIVehicleEditor extends AGUIBase{
 		}
 	}
 	
+	private static class CollisionLoader extends LoaderHelper<VehicleCollisionBox>{
+		@Override
+		public boolean setIndex(int index){
+			if(index < vehicle.definition.collision.size()){
+				currentIndex = index;
+				return true;
+			}else{
+				return false;
+			}
+		}
+		
+		@Override
+		public int setLabels(List<GUIComponentLabel> dataEntryLabels){
+			int labelBoxIndex = 0;
+			dataEntryLabels.get(labelBoxIndex++).text = "Box# (0 is first):";
+			dataEntryLabels.get(labelBoxIndex++).text = "X-Pos (blocks):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Y-Pos (blocks):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Z-Pos (blocks):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Width (blocks):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Height (blocks):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Interior (no slipping):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Flaoting (liquids):";
+			return labelBoxIndex;
+		}
+
+		@Override
+		public void loadObject(List<GUIComponentTextBox> dataEntryBoxes){
+			VehicleCollisionBox loading = vehicle.definition.collision.get(currentIndex);
+			
+			int dataEntryBoxIndex = 1;
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.pos[0]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.pos[1]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.pos[2]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.width));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.height));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.isInterior));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.collidesWithLiquids));
+		}
+
+		@Override
+		public int saveObject(List<GUIComponentTextBox> dataEntryBoxes){
+			VehicleCollisionBox saving = vehicle.definition.new VehicleCollisionBox();
+			
+			int dataEntryBoxIndex = 1;
+			try{
+				saving.pos = new float[3];
+				saving.pos[0] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.pos[1] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.pos[2] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.width = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.height = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.isInterior = Boolean.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.collidesWithLiquids = Boolean.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+			}catch(Exception e){
+				return -(--dataEntryBoxIndex);
+			}
+			
+			if(currentIndex >= vehicle.definition.collision.size()){
+				currentIndex = vehicle.definition.collision.size();
+				vehicle.definition.collision.add(saving);
+				return 100 + currentIndex;
+			}else{
+				vehicle.definition.collision.set(currentIndex, saving);
+				return currentIndex;
+			}
+		}
+	}
+	
 	private static class InstrumentLoader extends LoaderHelper<PackInstrument>{
 		@Override
 		public boolean setIndex(int index){
@@ -357,7 +427,7 @@ public class GUIVehicleEditor extends AGUIBase{
 			dataEntryLabels.get(labelBoxIndex++).text = "X-Rot (degrees):";
 			dataEntryLabels.get(labelBoxIndex++).text = "Y-Rot (degrees):";
 			dataEntryLabels.get(labelBoxIndex++).text = "Z-Rot (degrees):";
-			dataEntryLabels.get(labelBoxIndex++).text = "Scale (1=128x128 blocks):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Scale (1=128x128 px):";
 			dataEntryLabels.get(labelBoxIndex++).text = "HUD X-Pos (in texture px)";
 			dataEntryLabels.get(labelBoxIndex++).text = "HUD Y-Pos (in texture px)";
 			dataEntryLabels.get(labelBoxIndex++).text = "HUD Scale (1=128x128 px):";
@@ -449,6 +519,7 @@ public class GUIVehicleEditor extends AGUIBase{
 			dataEntryLabels.get(labelBoxIndex++).text = "Variable (see handbook):";
 			dataEntryLabels.get(labelBoxIndex++).text = "Min clamp (0 is no clamp):";
 			dataEntryLabels.get(labelBoxIndex++).text = "Max clamp (0 is no clamp):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Absolute Value:";
 			return labelBoxIndex;
 		}
 
@@ -467,6 +538,7 @@ public class GUIVehicleEditor extends AGUIBase{
 			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationVariable));
 			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationClampMin));
 			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationClampMax));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.absoluteValue));
 		}
 
 		@Override
@@ -487,6 +559,7 @@ public class GUIVehicleEditor extends AGUIBase{
 				saving.rotationVariable = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
 				saving.rotationClampMin = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 				saving.rotationClampMax = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.absoluteValue = Boolean.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 			}catch(Exception e){
 				return -(--dataEntryBoxIndex);
 			}
@@ -524,6 +597,7 @@ public class GUIVehicleEditor extends AGUIBase{
 			dataEntryLabels.get(labelBoxIndex++).text = "Variable (see handbook):";
 			dataEntryLabels.get(labelBoxIndex++).text = "Min clamp (0 is no clamp):";
 			dataEntryLabels.get(labelBoxIndex++).text = "Max clamp (0 is no clamp):";
+			dataEntryLabels.get(labelBoxIndex++).text = "Absolute Value:";
 			return labelBoxIndex;
 		}
 
@@ -539,6 +613,7 @@ public class GUIVehicleEditor extends AGUIBase{
 			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.translationVariable));
 			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.translationClampMin));
 			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.translationClampMax));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.absoluteValue));
 		}
 
 		@Override
@@ -555,6 +630,7 @@ public class GUIVehicleEditor extends AGUIBase{
 				saving.translationVariable = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
 				saving.translationClampMin = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 				saving.translationClampMax = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.absoluteValue = Boolean.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 			}catch(Exception e){
 				return -(--dataEntryBoxIndex);
 			}

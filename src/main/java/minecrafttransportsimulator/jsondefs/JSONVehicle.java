@@ -47,6 +47,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     
     public class VehiclePlane{
         public boolean hasFlaps;
+        public boolean hasAutopilot;
         public float wingSpan;
         public float wingArea;
         public float tailDistance;
@@ -65,6 +66,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public boolean isBigTruck;
         public boolean isFrontWheelDrive;
         public boolean isRearWheelDrive;
+        public boolean hasCruiseControl;
         public float axleRatio;
         public float dragCoefficient;
     }
@@ -138,6 +140,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     	public String rotationVariable;
     	public float rotationClampMin;
     	public float rotationClampMax;
+    	public boolean absoluteValue;
     }
     
     public class VehicleTranslatableModelObject{
@@ -146,5 +149,6 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     	public String translationVariable;
     	public float translationClampMin;
     	public float translationClampMax;
+    	public boolean absoluteValue;
     }
 }

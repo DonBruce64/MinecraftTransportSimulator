@@ -40,7 +40,7 @@ public class PartEngineBoat extends APartEngineGeared{
 	
 	@Override
 	public double getForceOutput(){
-		return state.running && isInLiquid ? RPM/definition.engine.maxRPM*50*definition.engine.fuelConsumption*currentGear : 0;
+		return state.running && isInLiquid ? RPM/definition.engine.maxRPM*50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*currentGear : 0;
 	}
 	
 	@Override

@@ -113,7 +113,7 @@ public class PacketBulletHit implements IMessage{
 						//We only get a packet back if we hit a block and didn't break it.
 						//If this is the case, play the block break sound and spawn some particles.
 						BlockPos hitPos = new BlockPos(message.x, message.y, message.z);
-						SoundType soundType = Minecraft.getMinecraft().world.getBlockState(hitPos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(hitPos), Minecraft.getMinecraft().world, hitPos, null);
+						SoundType soundType = Minecraft.getMinecraft().world.getBlockState(hitPos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(hitPos), Minecraft.getMinecraft().player.world, hitPos, null);
 						Minecraft.getMinecraft().world.playSound(null, message.x, message.y, message.z, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
 					}
 				}

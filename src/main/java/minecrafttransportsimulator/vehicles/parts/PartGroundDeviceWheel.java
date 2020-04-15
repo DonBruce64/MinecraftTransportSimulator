@@ -4,10 +4,12 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
@@ -138,6 +140,9 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	
 	public void setFlat(){
 		this.isFlat = true;
+		if(vehicle.world.isRemote){
+			WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":wheel_blowout"));
+		}
 	}
 	
 	@Override
@@ -147,7 +152,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 			for(byte i=0; i<4; ++i){
 				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
-			MTS.proxy.playSound(this.partPos, MTS.MODID + ":" + "wheel_striking", 1, 1, vehicle);
+			WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":" + "wheel_striking"));
 			contactThisTick = false;
 		}
 		if(skipAngularCalcs && this.isOnGround()){

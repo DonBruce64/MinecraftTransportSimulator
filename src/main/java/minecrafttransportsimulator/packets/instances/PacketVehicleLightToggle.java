@@ -15,7 +15,7 @@ import minecrafttransportsimulator.wrappers.WrapperWorld;
  * @author don_bruce
  */
 public class PacketVehicleLightToggle extends APacketVehicle{
-	private LightType lightType;
+	private final LightType lightType;
 	
 	public PacketVehicleLightToggle(EntityVehicleE_Powered vehicle, LightType lightType){
 		super(vehicle);
@@ -35,7 +35,11 @@ public class PacketVehicleLightToggle extends APacketVehicle{
 	
 	@Override
 	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleE_Powered vehicle){
-		vehicle.changeLightStatus(lightType, !vehicle.isLightOn(lightType));
+		if(vehicle.lightsOn.contains(lightType)){
+			vehicle.lightsOn.remove(lightType);
+		}else{
+			vehicle.lightsOn.add(lightType);
+		}
 		return true;
 	}
 }

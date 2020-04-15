@@ -11,7 +11,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'com.github.johnrengelman.shadow'
 
-version = "1.12.2-17.3.0"
+version = "1.12.2-17.4.2"
 group= "minecrafttransportsimulator" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "Immersive Vehicles"
 
@@ -35,25 +35,13 @@ reobf {
 
 shadowJar {
 	classifier ''
- 
-	dependencies {
-        //exclude dependency(':org.slf4j')
-		exclude dependency('junit:junit')
-    }
-	
-	relocate 'com.jcraft', 'minecrafttransportsimulator.shadowed.jcraft'
+	//Need to shadow javazoom (jlayer) for MP3 support.
     relocate 'javazoom', 'minecrafttransportsimulator.shadowed.javazoom'
-    relocate 'org.tritonus', 'minecrafttransportsimulator.shadowed.tritonus'
-	relocate 'org.slf4j', 'minecrafttransportsimulator.shadowed.slf4j'
-
     exclude 'dummyThing'
 }
 
 dependencies {
-
-	compile group: 'com.googlecode.soundlibs', name: 'vorbisspi', version: '1.0.3.3'
-	compile group: 'com.googlecode.soundlibs', name: 'mp3spi', version: '1.9.5.4'
-    compile group: 'com.googlecode.soundlibs', name: 'basicplayer', version: '3.0.0.0'
+    compile group: 'com.googlecode.soundlibs', name: 'jlayer', version: '1.0.1.4'
 }
 
 

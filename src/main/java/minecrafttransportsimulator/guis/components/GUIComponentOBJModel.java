@@ -15,7 +15,7 @@ import minecrafttransportsimulator.systems.OBJParserSystem;
  * model and texture associated with this component may change while this component
  * is still active.  This is to allows us to use one component to render changing
  * OBJ models, say in a crafting bench for instance.  The same reasoning applies
- * for why the position is not static (though it is required at construction.
+ * for why the position is not static (though it is required at construction).
  *
  * @author don_bruce
  */
@@ -24,22 +24,26 @@ public class GUIComponentOBJModel{
 	private static final Map<String, Integer> modelDisplayLists = new HashMap<String, Integer>();
 	private static final Map<String, Float> modelScalingFactors = new HashMap<String, Float>();
 	
-	public final boolean spin;
+	public final float scaleFactor;
+	public final boolean isometric;
 	public final boolean staticScaling;
 	
 	public int x;
 	public int y;
+	public boolean spin;
 	public float scale;
-	public String modelDomain = "";
-	public String modelLocation = "";
-	public String textureDomain = "";
-	public String textureLocation = "";
+	public String modelDomain;
+	public String modelLocation;
+	public String textureDomain;
+	public String textureLocation;
 	
 	public boolean visible = true;
 	    	
-	public GUIComponentOBJModel(int x, int y, boolean spin, boolean staticScaling){
+	public GUIComponentOBJModel(int x, int y, float scaleFactor, boolean isometric, boolean spin, boolean staticScaling){
 		this.x = x;
 		this.y = y;
+		this.scaleFactor = scaleFactor;
+		this.isometric = isometric;
 		this.spin = spin;
 		this.staticScaling = staticScaling;
 	}
@@ -49,30 +53,30 @@ public class GUIComponentOBJModel{
 	 */
     public void renderModel(){
     	if(visible){
-			if(!modelDomain.isEmpty()){
+			if(modelDomain != null){
 				String modelFile = modelDomain + ":" + modelLocation;
 				if(!modelDisplayLists.containsKey(modelFile)){
 					parseModel(modelDomain, modelLocation);
 				}
 				GL11.glPushMatrix();
-				//FIXME see if we need this.
-				//GL11.glDisable(GL11.GL_LIGHTING);
-				//Translate to position and rotate to isometric view.
+				//Translate to position and rotate to isometric view if required.
 				GL11.glTranslatef(x, y, 100);
 				GL11.glRotatef(180, 0, 0, 1);
-				GL11.glRotatef(45, 0, 1, 0);
-				GL11.glRotatef(35.264F, 1, 0, 1);
+				if(isometric){
+					GL11.glRotatef(45, 0, 1, 0);
+					GL11.glRotatef(35.264F, 1, 0, 1);
+				}
 				
 				//If set to rotate, do so now based on time.
 				if(spin){
-					GL11.glRotatef(System.currentTimeMillis()/1000/36, 0, 1, 0);
+					GL11.glRotatef((36*System.currentTimeMillis()/1000)%360, 0, 1, 0);
 				}
 
 				//Scale based on our scaling factor and render.
 				if(!staticScaling){
 					scale = modelScalingFactors.get(modelFile);
 				}
-				GL11.glScalef(scale, scale, scale);
+				GL11.glScalef(scale*scaleFactor, scale*scaleFactor, scale*scaleFactor);
 				GL11.glCallList(modelDisplayLists.get(modelFile));
 				GL11.glPopMatrix();
 			}
@@ -120,5 +124,6 @@ public class GUIComponentOBJModel{
     	for(int displayListID : modelDisplayLists.values()){
 			GL11.glDeleteLists(displayListID, 1);
 		}
+    	modelDisplayLists.clear();
     }
 }

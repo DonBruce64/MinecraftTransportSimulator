@@ -18,7 +18,6 @@ import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.vehicles.parts.PartCrate;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -28,7 +27,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 /**This is the next class level above the base vehicle.
  * At this level we add methods for the vehicle's existence in the world.
@@ -43,8 +41,6 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
  */
 abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public boolean locked;
-	public float rotationRoll;
-	public float prevRotationRoll;
 	public double airDensity;
 	public double currentMass;
 	public String ownerName="";
@@ -56,21 +52,13 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	
 	/**List for storage of rider linkages to seats.  Populated during NBT load and used to populate the riderSeats map after riders load.*/
 	private List<Double[]> riderSeatPositions = new ArrayList<Double[]>();
-	
-	/**Names for reflection to get the entity any entity is riding.**/
-	private static final String[] ridingEntityNames = { "ridingEntity", "field_73141_v", "field_184239_as"};
 			
 	public EntityVehicleB_Existing(World world){
 		super(world);
 	}
 	
 	public EntityVehicleB_Existing(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
-		super(world, definition);
-		//Set position to the spot that was clicked by the player.
-		//Add a -90 rotation offset so the vehicle is facing perpendicular.
-		//Makes placement easier and is less likely for players to get stuck.
-		this.setPositionAndRotation(posX, posY, posZ, playerRotation-90, 0);
-		
+		super(world, posX, posY, posZ, playerRotation, definition);
 		//This only gets done at the beginning when the entity is first spawned.
 		this.displayText = definition.rendering.defaultDisplayText;
 	}
@@ -121,16 +109,14 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			seatOffsetRotation = RotationSystem.getRotatedPoint(seatOffsetRotation, this.rotationPitch, this.rotationYaw, this.rotationRoll);
 			Vec3d playerOffsetVec = seat.partPos.add(seatOffsetRotation);
 			passenger.setPosition(playerOffsetVec.x, playerOffsetVec.y - passenger.height, playerOffsetVec.z);
-			passenger.motionX = this.motionX;
-			passenger.motionY = this.motionY;
-			passenger.motionZ = this.motionZ;
+
 		}else if(definition != null && !this.riderSeatPositions.isEmpty()){
 			Double[] seatLocation = this.riderSeatPositions.get(this.getPassengers().indexOf(passenger));
 			APart part = getPartAtLocation(seatLocation[0], seatLocation[1], seatLocation[2]);
 			if(part instanceof PartSeat){
 				riderSeats.put(passenger.getEntityId(), (PartSeat) part);
 			}else{
-				MTS.MTSLog.error("ERROR: NO SEAT FOUND WHEN LINKING RIDER TO SEAT IN VEHICLE!");
+				MTS.MTSLog.error("ERROR: No seat was found when trying to update seated passenger.  Did someone change the seat linking?");
 				if(!world.isRemote){
 					passenger.dismountRidingEntity();
 				}
@@ -138,24 +124,6 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			}
 		}
 	}
-	
-	@Override
-	public void addPart(APart part, boolean ignoreCollision){
-		if(!ignoreCollision){
-			//Check if we are colliding and adjust roll before letting part addition continue.
-			//This is needed as the vehicle system doesn't know about roll.
-			if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
-				this.rotationRoll = 0;
-			}
-		}
-		super.addPart(part, ignoreCollision);
-	}
-	
-    @Override
-    public boolean shouldRenderInPass(int pass){
-        //Need to render in pass 1 to render transparent things in the world like light beams.
-    	return true;
-    }
 	
     /**
      * Adds a rider to this vehicle and sets their seat.
@@ -176,19 +144,10 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	/**
-     * Removes the rider safely from this vehicle.  Returns true if removal was good, false if it failed.
+     * Removes the rider safely from this vehicle, attempting to set their dismount point in the process.
      */
 	public void removeRiderFromSeat(Entity rider, PartSeat seat){
-		try{
-			ObfuscationReflectionHelper.setPrivateValue(Entity.class, rider, null, ridingEntityNames);
-		}catch (Exception e){
-			MTS.MTSLog.fatal("ERROR IN VEHICLE RIDER REFLECTION!");
-			return;
-   	    }
-		
 		riderSeats.remove(rider.getEntityId());
-		this.removePassenger(rider);
-		rider.setSneaking(false);
 		if(!world.isRemote){
 			Vec3d placePosition;
 			VehiclePart packPart = this.getPackDefForLocation(seat.offset.x, seat.offset.y, seat.offset.z);
@@ -200,8 +159,6 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(placePosition));
 			if(!world.collidesWithAnyBlock(collisionDetectionBox)){
 				rider.setPositionAndRotation(placePosition.x, collisionDetectionBox.minY, placePosition.z, rider.rotationYaw, rider.rotationPitch);
-			}else if(rider instanceof EntityLivingBase){
-				((EntityLivingBase) rider).dismountEntity(this);
 			}
 			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, false));
 		}
@@ -310,7 +267,6 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
 		this.locked=tagCompound.getBoolean("locked");
-		this.rotationRoll=tagCompound.getFloat("rotationRoll");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
 		
@@ -328,7 +284,6 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
 		tagCompound.setBoolean("locked", this.locked);
-		tagCompound.setFloat("rotationRoll", this.rotationRoll);
 		tagCompound.setString("ownerName", this.ownerName);
 		tagCompound.setString("displayText", this.displayText);
 		

@@ -1,10 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import static minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType.LANDINGLIGHT;
-import static minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType.NAVIGATIONLIGHT;
-import static minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType.STROBELIGHT;
-import static minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType.TAXILIGHT;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -43,6 +38,8 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 	private static final int REVERSE_TEXTURE_HEIGHT_OFFSET = 216;
 	private static final int TRIM_TEXTURE_WIDTH_OFFSET = REVERSE_TEXTURE_WIDTH_OFFSET + 20;
 	private static final int TRIM_TEXTURE_HEIGHT_OFFSET = 216;
+	private static final int AUTOPILOT_TEXTURE_WIDTH_OFFSET = TRIM_TEXTURE_WIDTH_OFFSET + 40;
+	private static final int AUTOPILOT_TEXTURE_HEIGHT_OFFSET = 216;
 	
 	private final Map<LightType, GUIComponentSelector> lightSelectors = new HashMap<LightType, GUIComponentSelector>();
 	private final Map<Byte, GUIComponentSelector> magnetoSelectors = new HashMap<Byte, GUIComponentSelector>();
@@ -51,6 +48,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 	private GUIComponentSelector elevatorTrimSelector;
 	private GUIComponentSelector rudderTrimSelector;
 	private GUIComponentSelector reverseSelector;
+	private GUIComponentSelector autopilotSelector;
 	
 	private GUIComponentSelector selectedTrimSelector;
 	private PacketVehicleControlDigital.Controls selectedTrimType = null;
@@ -65,7 +63,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 	protected int setupLightComponents(int guiLeft, int guiTop, int xOffset){
 		lightSelectors.clear();
 		//Create up to four lights depending on how many this vehicle has.
-		for(LightType lightType : new LightType[]{NAVIGATIONLIGHT, STROBELIGHT, TAXILIGHT, LANDINGLIGHT}){
+		for(LightType lightType : new LightType[]{LightType.NAVIGATIONLIGHT, LightType.STROBELIGHT, LightType.TAXILIGHT, LightType.LANDINGLIGHT}){
 			final int LIGHT_TEXTURE_WIDTH_OFFSET;
 			final int LIGHT_TEXTURE_HEIGHT_OFFSET;
 			switch(lightType){
@@ -184,9 +182,9 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 		};
 		addSelector(rudderTrimSelector);
 		
-		//If we have reverse thrust, add a selector for it.
-		if(haveReverseThrustOption){
-			reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+		if(haveReverseThrustOption && vehicle.definition.plane.hasAutopilot){
+			//If we have both reverse AND Autopilot, render them side-by-side. otherwise just render one in the middle
+			reverseSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
 					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
@@ -196,6 +194,45 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 				public void onReleased(){}
 			};
 			addSelector(reverseSelector);
+			
+			autopilotSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.autopilot"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, AUTOPILOT_TEXTURE_WIDTH_OFFSET, AUTOPILOT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.AUTOPILOT, !vehicle.autopilot));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			addSelector(autopilotSelector);
+		}else{
+			//If we have reverse thrust, add a selector for it.
+			if(haveReverseThrustOption){
+				reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+					@Override
+					public void onClicked(boolean leftSide){
+						WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
+					}
+					
+					@Override
+					public void onReleased(){}
+				};
+				addSelector(reverseSelector);
+			}
+			
+			//If we have autopilot, add a selector for it.
+			if(vehicle.definition.plane.hasAutopilot){
+				autopilotSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.autopilot"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, AUTOPILOT_TEXTURE_WIDTH_OFFSET, AUTOPILOT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+					@Override
+					public void onClicked(boolean leftSide){
+						WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.AUTOPILOT, !vehicle.autopilot));
+					}
+					
+					@Override
+					public void onReleased(){}
+				};
+				addSelector(autopilotSelector);
+			}
 		}
 		return xOffset + GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
 	}
@@ -204,7 +241,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 	public void setStates(){
 		//Set the states of the light selectors.
 		for(Entry<LightType, GUIComponentSelector> lightEntry : lightSelectors.entrySet()){
-			lightEntry.getValue().selectorState = vehicle.isLightOn(lightEntry.getKey()) ? 1 : 0;
+			lightEntry.getValue().selectorState = vehicle.lightsOn.contains(lightEntry.getKey()) ? 1 : 0;
 		}
 		
 		//Set the states of the magneto selectors.
@@ -233,6 +270,11 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 		//If we have reverse thrust, set the selector state.
 		if(haveReverseThrustOption){
 			reverseSelector.selectorState = vehicle.reverseThrust ? 1 : 0;
+		}
+		
+		//If we have reverse thrust, set the selector state.
+		if(vehicle.definition.plane.hasAutopilot){
+			autopilotSelector.selectorState = vehicle.autopilot ? 1 : 0;
 		}
 	}
 }

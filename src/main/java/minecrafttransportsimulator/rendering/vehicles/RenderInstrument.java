@@ -37,7 +37,7 @@ public final class RenderInstrument{
 		//Check if the lights are on.  If so, disable the lightmap.
 		boolean lightsOn = RenderVehicle.isVehicleIlluminated(vehicle);
 		
-		//Finally, render the instrument based on the JSON definitions.
+		//Finally, render the instrument based on the JSON instrument.definitions.
 		for(byte i=0; i<instrument.definition.components.size(); ++i){
 			Component section = instrument.definition.components.get(i);
 			GL11.glPushMatrix();
@@ -73,7 +73,7 @@ public final class RenderInstrument{
 			//If we are rotating the window, but not the texture we should initialize the texture points to that rotated point.
 			//Otherwise, set the points to their normal location.
 			if(section.rotationVariable != null && section.rotateWindow){
-				double rotation = RenderAnimations.getVariableValue(addRotationSuffix ? section.rotationVariable + "_" + partNumber : section.rotationVariable, section.rotationFactor, section.rotationOffset, section.rotationClampMin, section.rotationClampMax, 0, vehicle, null);
+				double rotation = RenderAnimations.getVariableValue(addRotationSuffix ? section.rotationVariable + "_" + partNumber : section.rotationVariable, section.rotationFactor, section.rotationOffset, section.rotationClampMin, section.rotationClampMax, section.rotationAbsoluteValue, 0, vehicle, null);
 				double sin = Math.sin(Math.toRadians(rotation));
 				double cos = Math.sin(Math.toRadians(rotation));
 				layerUStart = (float) ((-section.textureWidth/2F)*cos - (-section.textureHeight/2F)*sin);
@@ -90,7 +90,7 @@ public final class RenderInstrument{
 			//If we are translating, offset the coords based on the translated amount.
 			//Adjust the window to either move or scale depending on settings.
 			if(section.translationVariable != null){
-				double translation = RenderAnimations.getVariableValue(addTranslationSuffix ? section.translationVariable + "_" + partNumber : section.translationVariable, section.translationFactor, 0, section.translationClampMin, section.translationClampMax, 0, vehicle, null);
+				double translation = RenderAnimations.getVariableValue(addTranslationSuffix ? section.translationVariable + "_" + partNumber : section.translationVariable, section.translationFactor, 0, section.translationClampMin, section.translationClampMax, section.translationAbsoluteValue, 0, vehicle, null);
 				if(section.extendWindow){
 					//We need to add to the edge of the window in this case rather than move the entire window.
 					if(section.translateHorizontal){
@@ -112,7 +112,7 @@ public final class RenderInstrument{
 			
 			//If we are rotating the texture, and not the window, apply the rotation here after the translation.
 			if(section.rotationVariable != null && !section.rotateWindow){
-				double rotation = RenderAnimations.getVariableValue(addRotationSuffix ? section.rotationVariable + "_" + partNumber : section.rotationVariable, section.rotationFactor, section.rotationOffset, section.rotationClampMin, section.rotationClampMax, 0, vehicle, null);
+				double rotation = RenderAnimations.getVariableValue(addRotationSuffix ? section.rotationVariable + "_" + partNumber : section.rotationVariable, section.rotationFactor, section.rotationOffset, section.rotationClampMin, section.rotationClampMax, section.rotationAbsoluteValue, 0, vehicle, null);
 				GL11.glRotated(rotation, 0, 0, 1);
 			}
 			

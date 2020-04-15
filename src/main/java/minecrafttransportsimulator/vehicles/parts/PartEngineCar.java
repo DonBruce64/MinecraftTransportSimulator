@@ -3,7 +3,9 @@ package minecrafttransportsimulator.vehicles.parts;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class PartEngineCar extends APartEngineGeared{
@@ -49,16 +51,11 @@ public class PartEngineCar extends APartEngineGeared{
 			}
 		}
 		
-		//If running, in reverse, and we are a big truck, fire the backup beepers.
-		if(state.running && this.currentGear == -1 && vehicle.definition != null && vehicle.definition.car.isBigTruck && vehicle.electricPower > 4 && vehicle.world.getTotalWorldTime()%20==1 && vehicle.world.isRemote){
-			MTS.proxy.playSound(vehicle.getPositionVector(), MTS.MODID + ":backup_beeper", 1.0F, 1, vehicle);
-		}
-		
 		//If running, use the friction of the wheels to determine the new speed.
 		if(state.running || state.esOn){
 			double engineTargetRPM = !state.esOn ? vehicle.throttle/100F*(definition.engine.maxRPM - engineStartRPM/1.25 - hours) + engineStartRPM/1.25 : engineStartRPM*1.2;
 			if(getRatioForCurrentGear() != 0 && vehicle.wheels.size() > 0){
-				engineForce = (engineTargetRPM - RPM)/definition.engine.maxRPM*getRatioForCurrentGear()*vehicle.definition.car.axleRatio*definition.engine.fuelConsumption*0.6F;
+				engineForce = (engineTargetRPM - RPM)/definition.engine.maxRPM*getRatioForCurrentGear()*vehicle.definition.car.axleRatio*(definition.engine.fuelConsumption+(definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F;
 				//Check to see if the wheels have enough friction to affect the engine.
 				if(Math.abs(engineForce/10F) > wheelFriction || (Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) > 0.1 && Math.abs(lowestSpeed) - Math.abs(vehicleDesiredSpeed) < Math.abs(engineForce/10F))){
 					engineForce *= vehicle.currentMass/100000F*wheelFriction/Math.abs(engineForce/10F);					
@@ -142,5 +139,32 @@ public class PartEngineCar extends APartEngineGeared{
 	
 	public double getForceOutput(){
 		return engineForce*30F;
+	}
+	
+	@Override
+	public void shiftDown(boolean packet){
+		//If we shifted into reverse, and the engine was running, and we are a big truck, turn on the backup beeper.
+		if(state.running && currentGear == 0 && vehicle.definition.car != null && vehicle.definition.car.isBigTruck && vehicle.world.isRemote){
+			WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
+		}
+		super.shiftDown(packet);
+	}
+	
+	@Override
+	public void updateProviderSound(SoundInstance sound){
+		super.updateProviderSound(sound);
+		//Turn off backup beeper if we are no longer in reverse.
+		if(sound.soundName.endsWith("backup_beeper")){
+			if(currentGear != -1){
+				sound.stop();
+			}
+		}
+	}
+	
+	@Override
+	public void restartSound(SoundInstance sound){
+		if(sound.soundName.endsWith("backup_beeper")){
+			WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
+		}
 	}
 }

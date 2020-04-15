@@ -57,6 +57,7 @@ public class JSONConfig{
 		public ConfigBoolean explosions = new ConfigBoolean(true, "Whether or not vehicles explode when crashed or shot down.");
 		public ConfigBoolean blockBreakage = new ConfigBoolean(true, "Whether or not vehicles can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks.");
 		public ConfigBoolean wheelBreakage = new ConfigBoolean(true, "Whether or not wheels can be broken (go flat).");
+		public ConfigBoolean wheelDamageIgnoreVelocity = new ConfigBoolean(false, "Whether or not velocity is ignored when calculating wheel damage.");
 		public ConfigDouble propellerDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by a propeller.");
 		public ConfigDouble jetDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by a jet engine.");
 		public ConfigDouble wheelDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by wheels on vehicles.");
@@ -70,9 +71,9 @@ public class JSONConfig{
 		public String comment1 = "The following section is used for fuel configs for engines.  Each entry here is a single fuel type for engines.";
 		public String comment2 = "Inside each entry exist values for the potency of the fluids that can be considered to be that fuel type.";
 		public String comment3 = "You can make engines take different types of fluids for their fuels by editing these values.  See the in-game handbook for more information.";
-		public Map<String, Map<String, Double>> fuels = populateDefaultFuels();
+		public Map<String, Map<String, Double>> fuels = getDefaultFuels();
 		
-		private static Map<String, Map<String, Double>> populateDefaultFuels(){
+		public static Map<String, Map<String, Double>> getDefaultFuels(){
 			Map<String, Map<String, Double>> fuels = new HashMap<String, Map<String, Double>>();
 			for(String packID : MTSRegistry.packItemMap.keySet()){
 				for(AItemPack<? extends AJSONItem<?>> item : MTSRegistry.packItemMap.get(packID).values()){
@@ -158,6 +159,10 @@ public class JSONConfig{
 		public ConfigBoolean seaLvlOffset = new ConfigBoolean(false, "Does altimiter read zero at average sea level instead of Y=0?");
 		public ConfigBoolean mouseYoke = new ConfigBoolean(false, "Enable mouse yoke for vehicles? Prevents looking around unless unlocked.  Think MCHeli controls.");
 		public ConfigBoolean kbOverride = new ConfigBoolean(true, "Should keyboard controls be ignored when a joystick control is mapped?  Leave true to free up the keyboard while using a joysick.");
+		public ConfigBoolean flareBlending = new ConfigBoolean(false, "If true, light flares from vehicles and lamps will not do brightness blending.  Normally false, but can be set to true if it makes shaders better.");
+		public ConfigBoolean beamBlending = new ConfigBoolean(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
+		public ConfigBoolean lightsPass0 = new ConfigBoolean(false, "If true, light rendering (and possibly blending) will happen on the first (solid) render pass.  For performance and compatibility, this should normally be false, but may be set to true to get proper light blending with shaders.");
+		public ConfigBoolean vehicleBlklt = new ConfigBoolean(false, "If true, vehicles will spawn invisible light blocks to force shaders to render them brighter.  Use this only if the other light options fail to work.");
 		public ConfigBoolean renderHUD_1P = new ConfigBoolean(true, "If false, the HUD in vehicles will not render in 1st-person mode.");
 		public ConfigBoolean renderHUD_3P = new ConfigBoolean(true, "If false, the HUD in vehicles will not render in 3rd-person mode.");
 		public ConfigBoolean fullHUD_1P = new ConfigBoolean(false, "If true, the full-size HUD will render in 1st-person rather than the half-size HUD.");
@@ -180,11 +185,9 @@ public class JSONConfig{
 	
 	public static class Config<ConfigType>{
 		public ConfigType value;
-		public ConfigType defaultValue;
 		public String comment;
 		
 		public Config(ConfigType defaultValue, String comment){
-			this.defaultValue = defaultValue;
 			this.value = defaultValue;
 			this.comment = comment;
 		}

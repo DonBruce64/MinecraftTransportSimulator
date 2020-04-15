@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.wrappers;
 
+import java.nio.FloatBuffer;
+
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.entity.Entity;
 
@@ -37,17 +39,11 @@ public class WrapperEntity{
 	}
 	
 	/**
-	 *  Returns true if the entity is riding ANY vehicle.
+	 *  Returns the vehicle this entity is riding, or null if
+	 *  the entity is not riding a vehicle.
 	 */
-	public boolean isRidingVehicle(){
-		return entity.getRidingEntity() instanceof EntityVehicleE_Powered;
-	}
-	
-	/**
-	 *  Returns true if the entity is riding the passed-in vehicle.
-	 */
-	public boolean isRidingVehicle(EntityVehicleE_Powered vehicle){
-		return vehicle.equals(entity.getRidingEntity());
+	public EntityVehicleE_Powered getVehicleRiding(){
+		return entity.getRidingEntity() instanceof EntityVehicleE_Powered ? (EntityVehicleE_Powered) entity.getRidingEntity() : null;
 	}
 	
 	/**
@@ -69,5 +65,45 @@ public class WrapperEntity{
 	 */
 	public void addToPosition(double x, double y, double z){
 		entity.setPosition(entity.posX + x, entity.posY + y, entity.posZ + z);
+	}
+	
+	/**
+	 *  Puts the entity's position into the passed-in buffer.
+	 *  Used for operations where position needs to be checked frequently.
+	 *  Note that this may be called from another thread safely.
+	 */
+	public void putPosition(FloatBuffer buffer){
+		buffer.rewind();
+		buffer.put((float) entity.posX);
+		buffer.put((float) entity.posY);
+		buffer.put((float) entity.posZ);
+		buffer.flip();
+	}
+	
+	/**
+	 *  Puts the entity's velocity into the passed-in buffer.
+	 *  Used for operations where velocity needs to be checked frequently.
+	 *  Note that this may be called from another thread safely.
+	 */
+	public void putVelocity(FloatBuffer buffer){
+		buffer.rewind();
+		buffer.put((float) entity.motionX);
+		buffer.put((float) entity.motionY);
+		buffer.put((float) entity.motionZ);
+		buffer.flip();
+	}
+	
+	/**
+	 *  Puts the entity's orientation as vectors into the passed-in buffer.
+	 *  Used for operations where orientation needs to be checked frequently.
+	 *  Note that this may be called from another thread safely.
+	 */
+	public void putOrientation(FloatBuffer buffer){
+		buffer.put(0, (float) Math.sin(Math.toRadians(entity.rotationYaw)));
+		buffer.put(1, 0.0F);
+		buffer.put(2, (float) Math.cos(Math.toRadians(entity.rotationYaw)));
+		buffer.put(3, 0.0F);
+		buffer.put(4, 1.0F);
+		buffer.put(5, 0.0F);
 	}
 }
