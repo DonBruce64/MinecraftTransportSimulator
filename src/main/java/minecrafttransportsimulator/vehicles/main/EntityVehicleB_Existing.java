@@ -102,8 +102,14 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void updatePassenger(Entity passenger){
 		PartSeat seat = this.getSeatForRider(passenger);
 		if(seat != null){
-			Vec3d passengerOffset = seat.partPos.add(RotationSystem.getRotatedPoint(new Vec3d(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll));
-			passenger.setPosition(passengerOffset.x, passengerOffset.y - passenger.height, passengerOffset.z);
+			Vec3d seatOffsetRotation = RotationSystem.getRotatedPoint(new Vec3d(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), (float)seat.partRotation.x, (float)seat.partRotation.y, (float)seat.partRotation.z);
+			if (seat.parentPart != null) {
+				seatOffsetRotation = RotationSystem.getRotatedPoint(seatOffsetRotation, (float)seat.parentPart.getActionRotation(0).x, (float)seat.parentPart.getActionRotation(0).y, (float)seat.parentPart.getActionRotation(0).z);
+			}
+			seatOffsetRotation = RotationSystem.getRotatedPoint(seatOffsetRotation, this.rotationPitch, this.rotationYaw, this.rotationRoll);
+			Vec3d playerOffsetVec = seat.partPos.add(seatOffsetRotation);
+			passenger.setPosition(playerOffsetVec.x, playerOffsetVec.y - passenger.height, playerOffsetVec.z);
+
 		}else if(definition != null && !this.riderSeatPositions.isEmpty()){
 			Double[] seatLocation = this.riderSeatPositions.get(this.getPassengers().indexOf(passenger));
 			APart part = getPartAtLocation(seatLocation[0], seatLocation[1], seatLocation[2]);
