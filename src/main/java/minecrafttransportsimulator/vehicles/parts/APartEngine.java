@@ -460,9 +460,7 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(!state.running && internalFuel == 0){
 				sound.stop();
 			}else{
-				//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines by default.
-				//Custom pitched engines allow for more/less dynamic engine sounds without game crashing or a "one fix all" solution that fixes nothing
-				//petition to add H
+				sound.volume = (float) RPM/definition.engine.maxRPM;
 				if (definition.engine.customPitch){
 				sound.pitch = (float) (((definition.engine.scPitchRev*((1 + Math.max(0, ((RPM - engineStartRPM))/definition.engine.maxRPM))))- definition.engine.scPitchRev)+ definition.engine.scPitchIdle);
 				}else{
