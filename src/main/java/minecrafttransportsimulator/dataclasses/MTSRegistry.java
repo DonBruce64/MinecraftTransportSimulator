@@ -10,7 +10,7 @@ import java.util.TreeMap;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.instances.BlockPartsBench;
-import minecrafttransportsimulator.guis.GUIPartBench;
+import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.items.core.ItemJerrycan;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.items.core.ItemKey;
