@@ -240,6 +240,13 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 							break;
 						}
 					}else if(component instanceof TileEntityPole_Sign){
+						//Render lights, if we have any.
+						for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
+							if(lightPart.type.equals(LightType.STREETLIGHT)){
+								lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
+							}
+						}
+						
 						//Render text, if we have any.
 						if(component.definition.general.textLines != null){
 							for(byte i=0; i<component.definition.general.textLines.length; ++i){
