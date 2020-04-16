@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.rendering.blocks.ARenderTileEntityBase;
@@ -36,7 +37,7 @@ public class WrapperTileEntityRender extends TileEntitySpecialRenderer<WrapperTi
 		
 		//If the TE exists and has its definition, render it.
 		//Definition may take a bit to get to clients due to network lag.
-		if(wrapper.tileEntity.world != null && wrapper.tileEntity.getDefinition() != null){
+		if(wrapper.tileEntity.world != null && wrapper.tileEntity.position != null && wrapper.tileEntity.getDefinition() != null){
 			//Get the render wrapper.
 			ARenderTileEntityBase<ATileEntityBase<?>, IBlockTileEntity<?>> render = (ARenderTileEntityBase<ATileEntityBase<?>, IBlockTileEntity<?>>) renders.get(wrapper.tileEntity);
 			
@@ -47,7 +48,12 @@ public class WrapperTileEntityRender extends TileEntitySpecialRenderer<WrapperTi
 			GL11.glTranslated(x, y, z);
 			GL11.glTranslatef(0.5F, render.translateToSlabs() && wrapper.tileEntity.world.isBlockBottomSlab(wrapper.tileEntity.position.newOffset(0, -1, 0)) ? -0.5F : 0.0F, 0.5F);			
 			if(render.rotateToBlock()){
-				GL11.glRotatef(-wrapper.tileEntity.getBlock().getRotation(wrapper.tileEntity.world, wrapper.tileEntity.position), 0, 1, 0);
+				ABlockBase block = wrapper.tileEntity.getBlock();
+				if(block != null){
+					GL11.glRotatef(-block.getRotation(wrapper.tileEntity.world, wrapper.tileEntity.position), 0, 1, 0);
+				}else{
+					return;
+				}
 			}
 			
 			//Render the TE.
