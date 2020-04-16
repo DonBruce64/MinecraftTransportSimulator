@@ -31,7 +31,6 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -68,8 +67,10 @@ public class WrapperBlock extends Block{
 	static final Map<ABlockBase, WrapperBlock> blockWrapperMap = new HashMap<ABlockBase, WrapperBlock>();
 	static final Map<String, IBlockTileEntity<?>> tileEntityMap = new HashMap<String, IBlockTileEntity<?>>();
 	
+	private static final Map<BlockPos, List<ItemStack>> dropsAtPositions = new HashMap<BlockPos, List<ItemStack>>();
+	
     public WrapperBlock(ABlockBase block){
-		super(Material.WOOD);
+		super(Material.ROCK);
 		this.block = block;
 		fullBlock = false;
 		setHardness(block.hardness);
@@ -154,30 +155,32 @@ public class WrapperBlock extends Block{
     
     @Override
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune){
-    	//Don't drop this block as an item in the normal drops if we have a TE.
-    	//TE drops happen in the breakBlock call.
-    	if(!(block instanceof IBlockTileEntity<?>)){
+    	//If this is a TE, drop TE drops.  Otherwise, drop normal drops.
+    	if(block instanceof IBlockTileEntity<?>){
+    		if(dropsAtPositions.containsKey(pos)){
+    			drops.addAll(dropsAtPositions.get(pos));
+    			dropsAtPositions.remove(pos);
+    		}
+    	}else{
     		super.getDrops(drops, world, pos, state, fortune);
     	}
+    		
     }
     
     @Override
     public void breakBlock(World world, BlockPos pos, IBlockState state){
-    	//This gets called before the block is broken to do logic.  Normally we'd use the getDrops method,
-    	//but MC is stupid and deletes the TE before calling that method, meaning we can't save NBT.
-    	//If the block has a TE, get it and save its NBT to the item.
+    	//This gets called before the block is broken to do logic.  Save drops to static map to be
+    	//spawned during the getDrops method.
     	if(block instanceof IBlockTileEntity<?>){
-    		//TODO move this into the interface when we have a wrapper itemstack.
     		WrapperWorld wWorld = new WrapperWorld(world);
     		Point3i location = new Point3i(pos.getX(), pos.getY(), pos.getZ());
     		ATileEntityBase<?> tile = wWorld.getTileEntity(location);
     		if(tile != null){
-    			AJSONItem<? extends AJSONItem<?>.General> definition = tile.getDefinition();
-        		ItemStack stack = new ItemStack(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName));
-        		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
-        		tile.save(data);
-        		stack.setTagCompound(data.tag);
-            	world.spawnEntity(new EntityItem(world, pos.getX(), pos.getY(), pos.getZ(), stack));
+    			List<ItemStack> drops = new ArrayList<ItemStack>();
+    			for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> item : tile.getDrops()){
+    				drops.add(new ItemStack(item));
+    			}
+    			dropsAtPositions.put(pos, drops);
     		}	
     	}
     }

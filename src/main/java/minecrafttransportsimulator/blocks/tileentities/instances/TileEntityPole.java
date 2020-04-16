@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -9,6 +11,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.rendering.blocks.RenderPole;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
@@ -34,6 +37,17 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			lightLevel = calculatedLevel;
 			world.updateLightBrightness(position);
 		}
+	}
+	
+	@Override
+	public List<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>> getDrops(){
+		List<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>> drops = new ArrayList<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>>();
+		for(Axis axis : Axis.values()){
+			if(components.containsKey(axis)){
+				drops.add(MTSRegistry.packItemMap.get(components.get(axis).definition.packID).get(components.get(axis).definition.systemName));
+			}
+		}
+		return drops;
 	}
 	
 	@Override
