@@ -182,7 +182,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 		};
 		addSelector(rudderTrimSelector);
 		
-		if(haveReverseThrustOption && vehicle.definition.plane.hasAutopilot){
+		if(haveReverseThrustOption && vehicle.definition.plane != null && vehicle.definition.plane.hasAutopilot){
 			//If we have both reverse AND Autopilot, render them side-by-side. otherwise just render one in the middle
 			reverseSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
@@ -221,7 +221,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 			}
 			
 			//If we have autopilot, add a selector for it.
-			if(vehicle.definition.plane.hasAutopilot){
+			if(vehicle.definition.plane != null && vehicle.definition.plane.hasAutopilot){
 				autopilotSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.autopilot"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, AUTOPILOT_TEXTURE_WIDTH_OFFSET, AUTOPILOT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){
@@ -273,7 +273,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 		}
 		
 		//If we have reverse thrust, set the selector state.
-		if(vehicle.definition.plane.hasAutopilot){
+		if(vehicle.definition.plane != null && vehicle.definition.plane.hasAutopilot){
 			autopilotSelector.selectorState = vehicle.autopilot ? 1 : 0;
 		}
 	}
