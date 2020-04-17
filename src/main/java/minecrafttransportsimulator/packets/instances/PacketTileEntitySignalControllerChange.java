@@ -83,7 +83,7 @@ public class PacketTileEntitySignalControllerChange extends APacketTileEntity<Ti
 		controller.componentLocations.addAll(componentLocations);
 		
 		//Reset controller opstate.
-		controller.changeState(OpState.GREEN_MAIN_RED_CROSS);
+		controller.updateState(OpState.GREEN_MAIN_RED_CROSS, true);
 		return true;
 	}
 }

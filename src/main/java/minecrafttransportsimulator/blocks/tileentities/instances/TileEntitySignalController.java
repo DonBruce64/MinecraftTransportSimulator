@@ -29,7 +29,7 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 	public boolean lightsOn = true;
 	public boolean mainDirectionXAxis = false;
 	public OpState currentOpState = OpState.GREEN_MAIN_RED_CROSS;
-	public long timeOperationStarted;
+	public int timeOperationStarted;
 	public int greenMainTime = 20;
 	public int greenCrossTime = 10;
 	public int yellowMainTime = 2;
@@ -41,13 +41,19 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 	
 	@Override
 	public void update(){
-		long currentTime = world.getTime()/20;
+		//Check every 1 seconds to make sure controlled components are in their correct states.
+		//This could have changed due to chunkloading.  We also check light redstone state here.
+		if(world.getTime()%20 == 0){
+			updateState(currentOpState, false);
+		}
+		
+		int currentTime = (int) ((world.getTime()/20)%Integer.MAX_VALUE);
 		//If we aren't in remote control mode, do checks for state changes.
 		if(!currentOpMode.equals(OpMode.REMOTE_CONTROL)){
 			//Change light status based on redstone state.
 			if(lightsOn ^ world.getRedstonePower(position.newOffset(0, -1, 0)) == 0){
 				lightsOn = !lightsOn;
-				changeState(currentOpState);
+				updateState(currentOpState, false);
 			}
 			
 			//If we are in the idle op sate, check if we need to start a cycle.
@@ -81,13 +87,13 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 						//We need to check along the non-primary axis, but we don't care about Y.
 						BoundingBox bounds = new BoundingBox(minX + (maxX - minX)/2, 0, minZ + (maxZ - minZ)/2, (maxX - minX)/2, Double.MAX_VALUE, (maxZ - minZ)/2);
 						if(!world.getVehiclesWithin(bounds).isEmpty()){
-							changeState(OpState.YELLOW_MAIN_RED_CROSS);
+							updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
 						}
 					}
 				}else{
 					//Not a triggered signal, we must be timed.
 					if(timeOperationStarted + greenMainTime <= currentTime){
-						changeState(OpState.YELLOW_MAIN_RED_CROSS);
+						updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
 					}
 				}
 			}else{
@@ -96,31 +102,31 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 					case GREEN_MAIN_RED_CROSS : break; //Not gonna happen, we tested for this.
 					case YELLOW_MAIN_RED_CROSS : {
 						if(timeOperationStarted + yellowMainTime <= currentTime){
-							changeState(OpState.RED_MAIN_RED_CROSS);
+							updateState(OpState.RED_MAIN_RED_CROSS, true);
 						}
 						break;
 					}
 					case RED_MAIN_RED_CROSS : {
 						if(timeOperationStarted + allRedTime <= currentTime){
-							changeState(OpState.RED_MAIN_GREEN_CROSS);
+							updateState(OpState.RED_MAIN_GREEN_CROSS, true);
 						}
 						break;
 					}
 					case RED_MAIN_GREEN_CROSS : {
 						if(timeOperationStarted + greenCrossTime <= currentTime){
-							changeState(OpState.RED_MAIN_YELLOW_CROSS);
+							updateState(OpState.RED_MAIN_YELLOW_CROSS, true);
 						}
 						break;
 					}
 					case RED_MAIN_YELLOW_CROSS : {
 						if(timeOperationStarted + yellowCrossTime <= currentTime){
-							changeState(OpState.RED_MAIN2_RED_CROSS2);
+							updateState(OpState.RED_MAIN2_RED_CROSS2, true);
 						}
 						break;
 					}
 					case RED_MAIN2_RED_CROSS2 : {
 						if(timeOperationStarted + allRedTime <= currentTime){
-							changeState(OpState.GREEN_MAIN_RED_CROSS);
+							updateState(OpState.GREEN_MAIN_RED_CROSS, true);
 						}
 						break;
 					}
@@ -131,10 +137,14 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 	
 	/**
 	 * Method to change signal state.  Can be internally called or externally called.
+	 * If cycleUpdate is true, then this is assumed to be a cycle increment, so the
+	 * timeOperationStarted value is set to the current time.
 	 */
-	public void changeState(OpState state){
+	public void updateState(OpState state, boolean cycleUpdate){
 		currentOpState = state;
-		timeOperationStarted = world.getTime()/20;
+		if(cycleUpdate){
+			timeOperationStarted = (int) ((world.getTime()/20)%Integer.MAX_VALUE);
+		}
 		Iterator<Point3i> iterator = componentLocations.iterator();
 		while(iterator.hasNext()){
 			TileEntityPole signal = (TileEntityPole) world.getTileEntity(iterator.next());
@@ -163,6 +173,8 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
     public void load(WrapperNBT data){
 		super.load(data);
 		currentOpMode = OpMode.values()[data.getInteger("currentOpMode")];
+		currentOpState = OpState.values()[data.getInteger("currentOpState")];
+		timeOperationStarted = data.getInteger("timeOperationStarted");
 		mainDirectionXAxis = data.getBoolean("mainDirectionXAxis");
         greenMainTime = data.getInteger("greenMainTime");
         greenCrossTime = data.getInteger("greenCrossTime");
@@ -178,7 +190,9 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
     public void save(WrapperNBT data){
 		super.save(data);
 		data.setInteger("currentOpMode", currentOpMode.ordinal());
-        data.setBoolean("mainDirectionXAxis", mainDirectionXAxis);
+		data.setInteger("currentOpState", currentOpState.ordinal());
+		data.setInteger("timeOperationStarted", timeOperationStarted);
+		data.setBoolean("mainDirectionXAxis", mainDirectionXAxis);
         data.setInteger("greenMainTime", greenMainTime);
         data.setInteger("greenCrossTime", greenCrossTime);
         data.setInteger("yellowMainTime", yellowMainTime);
