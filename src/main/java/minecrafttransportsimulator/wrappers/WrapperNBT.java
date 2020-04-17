@@ -81,6 +81,17 @@ public class WrapperNBT{
 		}
 	}
 	
+	//Point.
+	public Point3i getPoint(String name){
+		return new Point3i(getInteger(name + "x"), getInteger(name + "y"), getInteger(name + "z"));
+	}
+	
+	public void setPoint(String name, Point3i value){
+		setInteger(name + "x", value.x);
+		setInteger(name + "y", value.y);
+		setInteger(name + "z", value.z);
+	}
+	
 	//Point array.
 	public List<Point3i> getPoints(String name){
 		List<Point3i> values = new ArrayList<Point3i>();
