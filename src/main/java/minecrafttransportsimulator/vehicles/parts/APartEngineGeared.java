@@ -22,10 +22,18 @@ public abstract class APartEngineGeared extends APartEngine{
 		//Do automatic transmission functions if needed.
 		if(state.running && definition.engine.isAutomatic){
 			if(currentGear > 0){
-				if(RPM > getSafeRPMFromMax(this.definition.engine.maxRPM)*0.5F*(1.0F + vehicle.throttle/100F)){
-					shiftUp(false);
-				}else if(RPM < getSafeRPMFromMax(this.definition.engine.maxRPM)*0.25*(1.0F + vehicle.throttle/100F) && currentGear > 1){
-					shiftDown(false);
+				if (!definition.engine.customShifter) {
+					if(RPM > getSafeRPMFromMax(this.definition.engine.maxRPM)*0.47F*(1.0F + vehicle.throttle/100F)){
+							shiftUp(false);
+						}else if(RPM < getSafeRPMFromMax(this.definition.engine.maxRPM)*0.25*(1.0F + vehicle.throttle/100F) && currentGear > 1){
+							shiftDown(false);
+						}
+					}else{
+						if(RPM > definition.engine.upShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F) && currentGear > 0) {
+							shiftUp(false);
+						}else if (RPM < definition.engine.downShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F) && currentGear > 1) {
+							shiftDown(false);
+					}
 				}
 			}
 		}
@@ -76,7 +84,7 @@ public abstract class APartEngineGeared extends APartEngine{
 		if(currentGear == -1){
 			currentGear = 0;
 		}else if(currentGear == 0){
-			if(vehicle.velocity > -0.1){
+			if(vehicle.velocity > -0.4){
 				currentGear = 1;
 			}else if(vehicle.world.isRemote){
 				WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
@@ -98,7 +106,7 @@ public abstract class APartEngineGeared extends APartEngine{
 				--currentGear;
 			}
 		}else if(currentGear == 0){
-			if(vehicle.velocity < 0.1){
+			if(vehicle.velocity < 0.4){
 				currentGear = -1;
 			}else if(vehicle.world.isRemote){
 				WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
