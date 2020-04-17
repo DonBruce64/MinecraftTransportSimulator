@@ -61,7 +61,9 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 	 */
 	public List<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>> getDrops(){
 		List<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>> drops = new ArrayList<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>>();
-		drops.add(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName));
+		if(definition != null){
+			drops.add(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName));
+		}
 		return drops;
 	}
 
