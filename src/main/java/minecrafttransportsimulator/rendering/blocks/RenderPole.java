@@ -15,9 +15,9 @@ import minecrafttransportsimulator.blocks.instances.BlockPole;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Core;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_CrossingSignal;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight.LightState;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent.TextLine;
@@ -130,13 +130,15 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 							if(entry.getKey().startsWith("&")){
 								//Save light for special rendering.
 								lightParts.add(new RenderVehicle_LightPart(entry.getKey(), entry.getValue()));
-							}else{
-								//Add vertices
-								for(Float[] vertex : entry.getValue()){
-									GL11.glTexCoord2f(vertex[3], vertex[4]);
-									GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-									GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+								if(lightParts.get(lightParts.size() - 1).isLightupTexture){
+									continue;
 								}
+							}
+							//Add vertices
+							for(Float[] vertex : entry.getValue()){
+								GL11.glTexCoord2f(vertex[3], vertex[4]);
+								GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+								GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
 							}
 						}
 						GL11.glEnd();
@@ -159,92 +161,25 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 					}
 					
 					if(component instanceof TileEntityPole_TrafficSignal){
+						LightType litLight;
 						switch(((TileEntityPole_TrafficSignal) component).state){
-						case RED: {
-							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
-								if(lightPart.type.equals(LightType.STOPLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
-								}
-							}
-							break;
+							case UNLINKED: litLight = LightType.UNLINKEDLIGHT; break;
+							case RED: litLight = LightType.STOPLIGHT; break;
+							case YELLOW: litLight = LightType.CAUTIONLIGHT; break;
+							case GREEN: litLight = LightType.GOLIGHT; break;
+							default: litLight = null;
 						}
-						case YELLOW:
-							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
-								if(lightPart.type.equals(LightType.CAUTIONLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
-								}
-							}
-							break;
-						case GREEN:
-							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
-								if(lightPart.type.equals(LightType.GOLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
-								}
-							}
-							break;
-						case FLASHING_RED:
-							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
-								if(lightPart.type.equals(LightType.STOPLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", false);
-								}
-							}
-							break;
-						case FLASHING_YELLOW:
-							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
-								if(lightPart.type.equals(LightType.CAUTIONLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", false);
-								}
-							}
-							break;
-						default:
-							//This only happens if the light is off.
-							break;
-						}
-					}else if(component instanceof TileEntityPole_CrossingSignal){
-						switch(((TileEntityPole_CrossingSignal) component).state){
-						case DONTWALK:
-							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
-								if(lightPart.type.equals(LightType.STOPLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
-								}
-							}
-							break;
-						case FLASHING_DONTWALK:
-							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
-								if(lightPart.type.equals(LightType.STOPLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", false);
-								}
-							}
-							break;
-						case WALK:
-							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
-								if(lightPart.type.equals(LightType.GOLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
-								}
-							}
-							break;
-						default:
-							//This only happens if the light is off.
-							break;
+						for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
+							lightPart.renderOnBlock(tile.world, tile.position, lightPart.type.equals(litLight), component.definition.packID, "textures/poles/" + component.definition.systemName + ".png");
 						}
 					}else if(component instanceof TileEntityPole_StreetLight){
-						switch(((TileEntityPole_StreetLight) component).state){
-						case ON:
-							for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
-								if(lightPart.type.equals(LightType.STREETLIGHT)){
-									lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
-								}
-							}
-						default:
-							//This only happens if the light is off.
-							break;
+						for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
+							lightPart.renderOnBlock(tile.world, tile.position, ((TileEntityPole_StreetLight) component).state.equals(LightState.ON), component.definition.packID, "textures/poles/" + component.definition.systemName + ".png");
 						}
 					}else if(component instanceof TileEntityPole_Sign){
 						//Render lights, if we have any.
 						for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
-							if(lightPart.type.equals(LightType.STREETLIGHT)){
-								lightPart.renderOnBlock(tile.world, tile.position, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png", true);
-							}
+							lightPart.renderOnBlock(tile.world, tile.position, true, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png");
 						}
 						
 						//Render text, if we have any.

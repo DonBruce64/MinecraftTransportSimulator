@@ -126,8 +126,8 @@ public final class RenderVehicle_LightPart{
 	/**
 	 *  Renders this light at a specific block-based position.  Full power and brightness is assumed.
 	 */
-	public void renderOnBlock(WrapperWorld world, Point3i location, String textureDomain, String textureLocation, boolean ignoreFlashing){
-		render(ignoreFlashing ? true : isFlashingLightOn(), WrapperRender.getRenderPass() == -1, 12.0F, 1.0F, 1 - world.getLightBrightness(location, false), textureDomain, textureLocation);
+	public void renderOnBlock(WrapperWorld world, Point3i location, boolean lightActive, String textureDomain, String textureLocation){
+		render(lightActive && isFlashingLightOn(), WrapperRender.getRenderPass() == -1, 12.0F, 1.0F, 1 - world.getLightBrightness(location, false), textureDomain, textureLocation);
 	}
 	
 	/**

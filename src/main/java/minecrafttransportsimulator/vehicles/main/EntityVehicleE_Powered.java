@@ -428,6 +428,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		DAYTIMERUNNINGLIGHT(false),
 		
 		//The following light types are only for block-based systems.
+		UNLINKEDLIGHT(false),
 		STOPLIGHT(false),
 		CAUTIONLIGHT(false),
 		GOLIGHT(false),

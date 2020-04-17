@@ -10,7 +10,7 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
  */
 public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component{
 	
-	public SignalState state = SignalState.FLASHING_RED;
+	public SignalState state = SignalState.UNLINKED;
 	
 	public TileEntityPole_TrafficSignal(JSONPoleComponent definition){
 		super(definition);
@@ -22,11 +22,10 @@ public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component{
 	}
 	
 	public static enum SignalState{
-		OFF,
+		UNLINKED,
 		GREEN,
 		YELLOW,
 		RED,
-		FLASHING_YELLOW,
-		FLASHING_RED;
+		OFF;
 	}
 }

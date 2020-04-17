@@ -10,7 +10,6 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_CrossingSignal.CrossingState;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight.LightState;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal.SignalState;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
@@ -144,8 +143,6 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 					ATileEntityPole_Component component = signal.components.get(axis);
 					if(component instanceof TileEntityPole_TrafficSignal){
 						((TileEntityPole_TrafficSignal) component).state = (axis.equals(Axis.NORTH) || axis.equals(Axis.SOUTH)) ^ mainDirectionXAxis ? state.mainSignalState : state.crossSignalState;
-					}else if(component instanceof TileEntityPole_CrossingSignal){
-						((TileEntityPole_CrossingSignal) component).state = (axis.equals(Axis.NORTH) || axis.equals(Axis.SOUTH)) ^ mainDirectionXAxis ? state.mainCrossingState : state.crossCrossingState;
 					}else if(component instanceof TileEntityPole_StreetLight){
 						if(((TileEntityPole_StreetLight) component).state.equals(LightState.ON) ^ lightsOn){
 							((TileEntityPole_StreetLight) component).state = lightsOn ? LightState.ON : LightState.OFF;
@@ -197,23 +194,19 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 	}
 	
 	public static enum OpState{
-		GREEN_MAIN_RED_CROSS(SignalState.GREEN, SignalState.RED, CrossingState.WALK, CrossingState.DONTWALK),
-		YELLOW_MAIN_RED_CROSS(SignalState.YELLOW, SignalState.RED, CrossingState.FLASHING_DONTWALK, CrossingState.DONTWALK),
-		RED_MAIN_RED_CROSS(SignalState.RED, SignalState.RED, CrossingState.DONTWALK, CrossingState.DONTWALK),
-		RED_MAIN_GREEN_CROSS(SignalState.RED, SignalState.GREEN, CrossingState.DONTWALK, CrossingState.WALK),
-		RED_MAIN_YELLOW_CROSS(SignalState.RED, SignalState.YELLOW, CrossingState.DONTWALK, CrossingState.FLASHING_DONTWALK),
-		RED_MAIN2_RED_CROSS2(SignalState.RED, SignalState.RED, CrossingState.DONTWALK, CrossingState.DONTWALK);
+		GREEN_MAIN_RED_CROSS(SignalState.GREEN, SignalState.RED),
+		YELLOW_MAIN_RED_CROSS(SignalState.YELLOW, SignalState.RED),
+		RED_MAIN_RED_CROSS(SignalState.RED, SignalState.RED),
+		RED_MAIN_GREEN_CROSS(SignalState.RED, SignalState.GREEN),
+		RED_MAIN_YELLOW_CROSS(SignalState.RED, SignalState.YELLOW),
+		RED_MAIN2_RED_CROSS2(SignalState.RED, SignalState.RED);
 		
 		public final SignalState mainSignalState;
 		public final SignalState crossSignalState;
-		public final CrossingState mainCrossingState;
-		public final CrossingState crossCrossingState;
 		
-		private OpState(SignalState mainSignalState, SignalState crossSignalState, CrossingState mainCrossingState, CrossingState crossCrossingState){
+		private OpState(SignalState mainSignalState, SignalState crossSignalState){
 			this.mainSignalState = mainSignalState;
 			this.crossSignalState = crossSignalState;
-			this.mainCrossingState = mainCrossingState;
-			this.crossCrossingState = crossCrossingState;
 		}
 	}
 }
