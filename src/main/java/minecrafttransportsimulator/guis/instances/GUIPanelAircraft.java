@@ -268,12 +268,12 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 		}
 		
 		//If we have reverse thrust, set the selector state.
-		if(haveReverseThrustOption){
+		if(reverseSelector != null){
 			reverseSelector.selectorState = vehicle.reverseThrust ? 1 : 0;
 		}
 		
 		//If we have reverse thrust, set the selector state.
-		if(vehicle.definition.plane != null && vehicle.definition.plane.hasAutopilot){
+		if(autopilotSelector != null){
 			autopilotSelector.selectorState = vehicle.autopilot ? 1 : 0;
 		}
 	}
