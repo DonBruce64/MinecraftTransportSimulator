@@ -138,16 +138,18 @@ public class WrapperBlock extends Block{
     	//here will result in air being grabbed, and no WAILA support.
     	if(block instanceof IBlockTileEntity<?>){
     		//TODO move this into the interface when we have a wrapper itemstack.
-    		WrapperWorld wWorld = new WrapperWorld(world);
-    		Point3i location = new Point3i(pos.getX(), pos.getY(), pos.getZ());
-    		ATileEntityBase<?> tile = wWorld.getTileEntity(location);
-    		if(tile != null){
-    			AJSONItem<? extends AJSONItem<?>.General> definition = tile.getDefinition();
-        		ItemStack stack = new ItemStack(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName));
-        		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
-        		tile.save(data);
-        		stack.setTagCompound(data.tag);
-            	return stack;
+    		TileEntity tile = world.getTileEntity(pos);
+    		if(tile instanceof WrapperTileEntity){
+    			if(((WrapperTileEntity<?>) tile).tileEntity != null){
+    				AJSONItem<? extends AJSONItem<?>.General> definition = ((WrapperTileEntity<?>) tile).tileEntity.getDefinition();
+    				if(definition != null){
+    					ItemStack stack = new ItemStack(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName));
+    	        		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
+    	        		((WrapperTileEntity<?>) tile).tileEntity.save(data);
+    	        		stack.setTagCompound(data.tag);
+    	            	return stack;
+    				}
+    			}
     		}
     	}
     	return super.getPickBlock(state, target, world, pos, player);
@@ -172,16 +174,16 @@ public class WrapperBlock extends Block{
     	//This gets called before the block is broken to do logic.  Save drops to static map to be
     	//spawned during the getDrops method.
     	if(block instanceof IBlockTileEntity<?>){
-    		WrapperWorld wWorld = new WrapperWorld(world);
-    		Point3i location = new Point3i(pos.getX(), pos.getY(), pos.getZ());
-    		ATileEntityBase<?> tile = wWorld.getTileEntity(location);
-    		if(tile != null){
-    			List<ItemStack> drops = new ArrayList<ItemStack>();
-    			for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> item : tile.getDrops()){
-    				drops.add(new ItemStack(item));
+    		TileEntity tile = world.getTileEntity(pos);
+    		if(tile instanceof WrapperTileEntity){
+    			if(((WrapperTileEntity<?>) tile).tileEntity != null){
+    				List<ItemStack> drops = new ArrayList<ItemStack>();
+        			for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> item : ((WrapperTileEntity<?>) tile).tileEntity.getDrops()){
+        				drops.add(new ItemStack(item));
+        			}
+        			dropsAtPositions.put(pos, drops);
     			}
-    			dropsAtPositions.put(pos, drops);
-    		}	
+    		}
     	}
     }
     

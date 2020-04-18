@@ -60,9 +60,9 @@ public class WrapperTileEntityFluidTank<FluidTankTileEntity extends ATileEntityF
 	@Override
 	public int fill(FluidStack stack, boolean doFill){
 		if(tileEntity != null){
-			int fillAmount = tileEntity.fill(stack.getFluid().getName(), stack.amount, !doFill);
-			if(fillAmount > 0){
-				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(new FluidStack(getFluid().getFluid(), fillAmount), world, getPos(), this, fillAmount));
+			int fillAmount = tileEntity.fill(stack.getFluid().getName(), stack.amount, doFill);
+			if(fillAmount > 0 && doFill){
+				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(new FluidStack(stack.getFluid(), fillAmount), world, getPos(), this, fillAmount));
 			}
 			return fillAmount;
 		}else{
@@ -80,9 +80,9 @@ public class WrapperTileEntityFluidTank<FluidTankTileEntity extends ATileEntityF
 	
 	@Override
 	public FluidStack drain(FluidStack stack, boolean doDrain){
-		int drainAmount = tileEntity != null ? tileEntity.drain(tileEntity.getFluid(), stack.amount, !doDrain) : 0;
-		if(drainAmount > 0){
-			FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(new FluidStack(getFluid().getFluid(), drainAmount), world, getPos(), this, drainAmount));
+		int drainAmount = tileEntity != null ? tileEntity.drain(stack.getFluid().getName(), stack.amount, doDrain) : 0;
+		if(drainAmount > 0 && doDrain){
+			FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(new FluidStack(stack.getFluid(), drainAmount), world, getPos(), this, drainAmount));
 		}
 		return new FluidStack(stack.getFluid(), drainAmount);
 	}

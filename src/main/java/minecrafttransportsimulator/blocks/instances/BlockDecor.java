@@ -22,7 +22,9 @@ public class BlockDecor extends ABlockBase implements IBlockTileEntity<JSONDecor
     	TileEntityDecor decor = (TileEntityDecor) world.getTileEntity(location);
     	if(decor != null){
     		byte rotationIndex = (byte) (getRotation(world, location)/90F);
-    		collidingBoxes.add(decor.boundingBoxes[rotationIndex]);
+    		if(decor.boundingBoxes[rotationIndex] != null){
+    			collidingBoxes.add(decor.boundingBoxes[rotationIndex]);
+    		}
     	}else{
 			super.addCollisionBoxes(world, location, collidingBoxes);
 		}
