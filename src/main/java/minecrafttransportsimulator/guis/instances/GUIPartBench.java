@@ -58,6 +58,7 @@ public class GUIPartBench extends AGUIBase{
 	private GUIComponentButton nextColorButton;
 	
 	private GUIComponentLabel partInfo;
+	private GUIComponentLabel vehicleInfo;
 	private GUIComponentButton switchInfoButton;
 	private GUIComponentButton confirmButton;
 	
@@ -80,10 +81,7 @@ public class GUIPartBench extends AGUIBase{
 	//Only used for vehicles.
 	private AItemPack<? extends AJSONItem<?>> prevSubItem;
 	private AItemPack<? extends AJSONItem<?>> nextSubItem;
-	
-	boolean displayDescription = true;
-	private String descriptionText;
-	private String informationText;
+	boolean displayVehicleInfo = false;
 	
 
 	public GUIPartBench(BlockPartsBench bench, WrapperPlayer player){
@@ -147,7 +145,8 @@ public class GUIPartBench extends AGUIBase{
 			}
 		});
 		addLabel(partName = new GUIComponentLabel(packName.x, packName.y + prevPackButton.height, Color.WHITE, "", 0.75F, true, false, 0));
-		addLabel(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, Color.WHITE, "", 1.0F, false, false, 150));
+		addLabel(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, Color.WHITE, "", 0.75F, false, false, (int) (150/0.75F)));
+		addLabel(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, Color.WHITE, "", 1.0F, false, false, 150));
 		
 		
 		//Create color navigation section.
@@ -187,14 +186,7 @@ public class GUIPartBench extends AGUIBase{
 		addButton(switchInfoButton = new GUIComponentButton(guiLeft + 147, guiTop + 159, 20, "?", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(){
-				if(displayDescription){
-					displayDescription = false;
-					partInfo.text = informationText; 
-				}else{
-					displayDescription = true;
-					partInfo.text = descriptionText; 
-				}
-				WrapperNetwork.sendToServer(new PacketPlayerCraftItem(currentItem));
+				displayVehicleInfo = !displayVehicleInfo;
 			}
 		});
 				
@@ -222,7 +214,10 @@ public class GUIPartBench extends AGUIBase{
 		prevColorButton.enabled = prevSubItem != null;
 		nextColorButton.visible = currentItem instanceof ItemVehicle;
 		nextColorButton.enabled = nextSubItem != null;
+		
 		switchInfoButton.visible = currentItem instanceof ItemVehicle;
+		partInfo.visible = !displayVehicleInfo;
+		vehicleInfo.visible = displayVehicleInfo;
 		
 		//Set confirm button based on if player has materials.
 		confirmButton.enabled = currentItem != null && player.hasMaterials(currentItem);
@@ -386,19 +381,14 @@ public class GUIPartBench extends AGUIBase{
 		tempStack.setTagCompound(new NBTTagCompound());
 		List<String> descriptiveLines = new ArrayList<String>();
 		tempStack.getItem().addInformation(tempStack, Minecraft.getMinecraft().world, descriptiveLines, ITooltipFlag.TooltipFlags.NORMAL);
-		descriptionText = "";
+		partInfo.text = "";
 		for(String line : descriptiveLines){
-			descriptionText += line + "\n";
+			partInfo.text += line + "\n";
 		}
-		
 		//Create vehicle information text, if we are a vehicle item.
 		if(currentItem instanceof ItemVehicle){
-			informationText = getVehicleInfoText();
+			vehicleInfo.text = getVehicleInfoText();
 		}
-		
-		//Set the info text.
-		partInfo.text = displayDescription ? descriptionText : informationText;
-
 		
 		//Parse crafting items and set icon items.
 		String[] craftingItemTexts = MTSRegistry.packCraftingMap.get(currentItem);
