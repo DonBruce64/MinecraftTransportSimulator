@@ -14,10 +14,8 @@ import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
@@ -169,27 +167,14 @@ public abstract class APart implements ISoundProvider{
 	
 	/**Called when the vehicle removes this part.
 	 * Allows for parts to trigger logic that happens when they are removed.
-	 * By default, this removes all sub-parts from the vehicle.
-	 * It also removes any extra parts as defined in the vehicle JSON.
-	 * Make sure to call the part's removal methods PRIOR to removing them
-	 * from their vehicle as they need to be set invalid to prevent
-	 * bad packets from arriving on the client.
+	 * Note that hitboxes are configured to not allow this part to be
+	 * wrenched if it has children, so it may be assumed that no child
+	 * parts are present when this action occurs.  Do note that it's possible
+	 * this part is a child to another part, so you will need to remove this
+	 * part as the child from its parent if is has one.
 	 */
 	public void removePart(){
 		this.isValid = false;
-		while(childParts.size() > 0){
-			APart childPart = childParts.get(0);
-			childPart.removePart();
-			vehicle.removePart(childPart, false);
-			if(!vehicle.world.isRemote){
-				Item droppedItem = childPart.getItemForPart();
-				if(droppedItem != null){
-					ItemStack droppedStack = new ItemStack(droppedItem);
-					droppedStack.setTagCompound(childPart.getPartNBTTag());
-					vehicle.world.spawnEntity(new EntityItem(vehicle.world, childPart.partPos.x, childPart.partPos.y, childPart.partPos.z, droppedStack));
-				}
-			}
-		}
 		if(this.parentPart != null){
 			this.parentPart.childParts.remove(this);
 		}
