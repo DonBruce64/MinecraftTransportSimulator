@@ -13,6 +13,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL;
 import org.lwjgl.openal.AL10;
 
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.sound.OGGDecoderOutput;
 import minecrafttransportsimulator.sound.SoundInstance;
 
@@ -35,6 +36,10 @@ public class WrapperAudio{
 	
 	/**List of sounds to start playing next update.  Split from playing sounds to avoid CMEs and odd states.**/
 	private static volatile List<SoundInstance> queuedSounds = new ArrayList<SoundInstance>();
+	
+	/**This gets incremented whenever we try to get a source and fail.  If we get to 100, the sound system
+	 * will stop attempting to play sounds and will throw an error.  Used for when mods take all the sources.**/
+	private static byte sourceGetFailures = 0;
 	
 	private static final WrapperPlayer player;
 	private static final FloatBuffer playerPosition = BufferUtils.createFloatBuffer(3);
@@ -240,13 +245,22 @@ public class WrapperAudio{
 	 *  Useful for quick sounds like gunshots or button presses.
 	 */
 	public static void playQuickSound(SoundInstance sound){
-		if(AL.isCreated()){
+		if(AL.isCreated() && sourceGetFailures < 100){
 			//First get the IntBuffer pointer to where this sound data is stored.
 			Integer dataBufferPointer = loadOGGJarSound(sound.soundName);
 			if(dataBufferPointer != null){
 				//Set the sound's source buffer index.
 				IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
+				AL10.alGetError();
 				AL10.alGenSources(sourceBuffer);
+				if(AL10.alGetError() != AL10.AL_NO_ERROR){
+					++sourceGetFailures;
+					AL10.alDeleteBuffers(dataBufferPointer);
+					if(sourceGetFailures == 100){
+						WrapperNetwork.sendToAllClients(new PacketPlayerChatMessage("IMMERSIVE VEHICLES ERROR: Tried to make a sound over 100 times, but was told no sound slots were available.  Some mod is likely taking up all the slots.  Probabaly Immersive Railroading.  Sound will not play."));
+					}
+					return;
+				}
 				sound.sourceIndex = sourceBuffer.get(0);
 				
 				//Set properties and bind data buffer to source.
@@ -302,7 +316,7 @@ public class WrapperAudio{
 	 *  parse more data.  When the source runs out of buffers, the radio will be queried for another source.
 	 */
     public static void playStreamedSound(SoundInstance sound){
-    	if(AL.isCreated()){
+    	if(AL.isCreated() && sourceGetFailures < 100){
 	    	//Create 5 buffers to be used as rolling storage for the stream.
 			IntBuffer dataBuffers = BufferUtils.createIntBuffer(5);
 			AL10.alGenBuffers(dataBuffers);
@@ -322,7 +336,16 @@ public class WrapperAudio{
 			//Data has been buffered.  Now get source index.
 			//If we have an old source, use that index instead to allow smooth streaming.
 			IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
+			AL10.alGetError();
 			AL10.alGenSources(sourceBuffer);
+			if(AL10.alGetError() != AL10.AL_NO_ERROR){
+				++sourceGetFailures;
+				AL10.alDeleteBuffers(dataBuffers);
+				if(sourceGetFailures == 100){
+					WrapperNetwork.sendToAllClients(new PacketPlayerChatMessage("IMMERSIVE VEHICLES ERROR: Tried to make a sound over 100 times, but was told no sound slots were available.  Some mod is likely taking up all the slots.  Probabaly Immersive Railroading.  Sound will not play."));
+				}
+				return;
+			}
 			sound.sourceIndex = sourceBuffer.get(0);
 			
 			//Have source and data.  Queue sound to start playing.

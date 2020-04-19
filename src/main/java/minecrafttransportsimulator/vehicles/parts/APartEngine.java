@@ -35,6 +35,7 @@ public abstract class APartEngine extends APart implements FXPart{
 	
 	//Runtime data
 	public EngineStates state = EngineStates.ENGINE_OFF;
+	private boolean startSounds;
 	public boolean backfired;
 	public byte starterLevel;
 	public int internalFuel;
@@ -69,19 +70,10 @@ public abstract class APartEngine extends APart implements FXPart{
 		engineStartRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;
 		if(dataTag.hasKey("engineState")){
 			this.state = EngineStates.values()[dataTag.getByte("engineState")];
-			if(state.running && vehicle.world.isRemote){
-				if(definition.engine.customSoundset != null){
-					for(EngineSound soundDefinition : definition.engine.customSoundset){
-						WrapperAudio.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
-					}
-				}else{
-					WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
-					WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
-				}
-			}
 		}else{
 			this.state = EngineStates.ENGINE_OFF;
 		}
+		startSounds = vehicle.world.isRemote;
 		
 		isCreative = dataTag.getBoolean("isCreative");
 		oilLeak = dataTag.getBoolean("oilLeak");
@@ -113,6 +105,20 @@ public abstract class APartEngine extends APart implements FXPart{
 	public void updatePart(){
 		super.updatePart();
 		fuelFlow = 0;
+		
+		//Start up sounds if we haven't already.  We don't do this during construction as other mods are
+		//PITA and will construct new vehicles every tick to get data.  I'm looking a YOU WAILA!
+		if(startSounds && state.running && vehicle.world.isRemote){
+			if(definition.engine.customSoundset != null){
+				for(EngineSound soundDefinition : definition.engine.customSoundset){
+					WrapperAudio.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
+				}
+			}else{
+				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
+			}
+			startSounds = false;
+		}
 		
 		//Check to see if we are linked and need to equalize power between us and another engine.
 		if(linkedEngine != null){
