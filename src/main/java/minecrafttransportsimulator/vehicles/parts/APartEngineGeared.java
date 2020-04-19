@@ -22,17 +22,17 @@ public abstract class APartEngineGeared extends APartEngine{
 		//Do automatic transmission functions if needed.
 		if(state.running && definition.engine.isAutomatic){
 			if(currentGear > 0){
-				if (!definition.engine.customShifter) {
-					if(RPM > getSafeRPMFromMax(this.definition.engine.maxRPM)*0.5F*(1.0F + vehicle.throttle/100F)){
-							shiftUp(false);
-						}else if(RPM < getSafeRPMFromMax(this.definition.engine.maxRPM)*0.25*(1.0F + vehicle.throttle/100F) && currentGear > 1){
-							shiftDown(false);
-						}
-					}else{
-						if(RPM > definition.engine.upShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F) && currentGear > 0) {
-							shiftUp(false);
-						}else if (RPM < definition.engine.downShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F) && currentGear > 1) {
-							shiftDown(false);
+				if(definition.engine.upShiftRPM != null && definition.engine.downShiftRPM != null){
+					if(RPM > definition.engine.upShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F)) {
+						shiftUp(false);
+					}else if(RPM < definition.engine.downShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F) && currentGear > 1){
+						shiftDown(false);
+					}
+				}else{
+					if(RPM > getSafeRPMFromMax(definition.engine.maxRPM)*0.5F*(1.0F + vehicle.throttle/100F)){
+						shiftUp(false);
+					}else if(RPM < getSafeRPMFromMax(definition.engine.maxRPM)*0.25*(1.0F + vehicle.throttle/100F) && currentGear > 1){
+						shiftDown(false);
 					}
 				}
 			}

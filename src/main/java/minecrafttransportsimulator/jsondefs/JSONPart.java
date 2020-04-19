@@ -31,16 +31,11 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     }
     
     public class PartEngine{
-    	    	public boolean isAutomatic;
+    	public boolean isAutomatic;
     	public boolean flamesOnStartup;
+    	public boolean isCrankingNotPitched;
     	public byte starterPower;
     	public int maxRPM;
-		public boolean isCrankingNotPitched;
-		public boolean customShifter;
-		public float pitchRev;
-		public float pitchIdle;
-		public float volumeRev;
-		public float volumeIdle;
     	public float fuelConsumption;
     	public float[] gearRatios;
 		public int[] upShiftRPM;
@@ -48,25 +43,15 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     	public String fuelType;
 		public float superchargerFuelConsumption;
 		public float superchargerEfficiency;
-	    public float scPitchRev;
-		public float scPitchIdle;
-		public float scVolumeRev;
-		public float scVolumeIdle;
-			public String custom_running1;
-			public float pitchRev1;
-			public float pitchIdle1;
-			public float volumeRev1;
-			public float volumeIdle1;
-			public String custom_running2;
-			public float pitchRev2;
-			public float pitchIdle2;
-			public float volumeRev2;
-			public float volumeIdle2;
-			public String custom_running3;
-			public float pitchRev3;
-			public float pitchIdle3;
-			public float volumeRev3;
-			public float volumeIdle3;
+		public EngineSound customSoundset[];
+		
+		public class EngineSound{
+			public String soundName;
+			public float pitchIdle;
+			public float pitchMax;
+			public float volumeIdle;
+			public float volumeMax;
+		}
     }
     
     public class PartWheel{
