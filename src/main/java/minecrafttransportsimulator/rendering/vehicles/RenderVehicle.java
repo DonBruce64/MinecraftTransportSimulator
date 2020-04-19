@@ -15,6 +15,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ClientEventSystem;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
@@ -971,6 +972,13 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				GL11.glTexCoord2f(vertex[3], vertex[4]);
 				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
 				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+			}
+			if(ConfigSystem.configObject.client.innerWindows.value){
+				for(int j=window.vertices.length - 1; j>=0; --j){
+					GL11.glTexCoord2f(window.vertices[j][3], window.vertices[j][4]);
+					GL11.glNormal3f(window.vertices[j][5], window.vertices[j][6], window.vertices[j][7]);
+					GL11.glVertex3f(window.vertices[j][0], window.vertices[j][1], window.vertices[j][2]);
+				}	
 			}
 			GL11.glEnd();
 			GL11.glPopMatrix();

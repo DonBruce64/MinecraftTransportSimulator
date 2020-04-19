@@ -134,7 +134,7 @@ public final class RenderAnimations{
 			case("yaw"): return -vehicle.rotationYaw;
 			case("pitch"): return vehicle.rotationPitch;
 			case("roll"): return vehicle.rotationRoll;
-			case("altitude"): return vehicle.posY - (ConfigSystem.configObject.client.seaLvlOffset.value ? vehicle.world.provider.getAverageGroundLevel() : 0);
+			case("altitude"): return vehicle.posY;
 			case("speed"): return vehicle.velocity*vehicle.SPEED_FACTOR*20;
 			
 			//Vehicle state cases.
