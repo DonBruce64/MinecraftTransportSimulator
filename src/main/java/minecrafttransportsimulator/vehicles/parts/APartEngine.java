@@ -71,9 +71,9 @@ public abstract class APartEngine extends APart implements FXPart{
 			if(state.running && vehicle.world.isRemote){
 				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
 				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
-				WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.customSound1, true));
-				WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.customSound2, true));
-				WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.customSound3, true));
+				WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.custom_Running1, true));
+				WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.custom_Running2, true));
+				WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.custom_Running3, true));
 			}
 		}else{
 			this.state = EngineStates.ENGINE_OFF;
@@ -373,9 +373,9 @@ public abstract class APartEngine extends APart implements FXPart{
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_starting"));
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
-			WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.customSound1, true));
-			WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.customSound2, true));
-			WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.customSound3, true));
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.custom_Running1, true));
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.custom_Running2, true));
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.custom_Running3, true));
 		}
 	}
 	
@@ -459,7 +459,7 @@ public abstract class APartEngine extends APart implements FXPart{
 				sound.stop();
 			}else{
 				//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines by default.
-				//Custom pitched engines allow for more/less dynamic engine sounds without game crashing or a "one fix all" solution that fixes nothing
+				//Pitch and volume are set in the engine JSON
 				if (definition.engine.pitchRev > 0){
 						sound.pitch = (float) (((definition.engine.pitchRev*((1 + Math.max(0, ((RPM - engineStartRPM))/definition.engine.maxRPM))))- definition.engine.pitchRev)+ definition.engine.pitchIdle);
 						sound.volume = (float) (((definition.engine.volumeRev*((1 + Math.max(0, ((RPM - engineStartRPM))/definition.engine.maxRPM))))- definition.engine.volumeRev)+ definition.engine.volumeIdle);
@@ -479,21 +479,21 @@ public abstract class APartEngine extends APart implements FXPart{
 						sound.pitch = (float) (0.35*(1 + Math.max(0, (RPM - engineStartRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
 					}
 				}
-		}else if(sound.soundName.equals(definition.engine.customSound1)){
+		}else if(sound.soundName.equals(definition.engine.custom_Running1)){
 				if(!state.running && internalFuel == 0){
 					sound.stop();
 				}else{
 					sound.pitch = (float) (((definition.engine.pitchRev1*((1 + Math.max(0, ((RPM - engineStartRPM))/definition.engine.maxRPM))))- definition.engine.pitchRev1)+ definition.engine.pitchIdle1);
 					sound.volume = (float) (((definition.engine.volumeRev1*((1 + Math.max(0, ((RPM - engineStartRPM))/definition.engine.maxRPM))))- definition.engine.volumeRev1)+ definition.engine.volumeIdle1);
 				}
-		}else if(sound.soundName.equals(definition.engine.customSound2)){
+		}else if(sound.soundName.equals(definition.engine.custom_Running2)){
 				if(!state.running && internalFuel == 0){
 					sound.stop();
 				}else{
 					sound.pitch = (float) (((definition.engine.pitchRev2*((1 + Math.max(0, ((RPM - engineStartRPM))/definition.engine.maxRPM))))- definition.engine.pitchRev2)+ definition.engine.pitchIdle2);
 					sound.volume = (float) (((definition.engine.volumeRev2*((1 + Math.max(0, ((RPM - engineStartRPM))/definition.engine.maxRPM))))- definition.engine.volumeRev2)+ definition.engine.volumeIdle2);
 				}
-		}else if(sound.soundName.equals(definition.engine.customSound3)){
+		}else if(sound.soundName.equals(definition.engine.custom_Running3)){
 				if(!state.running && internalFuel == 0){
 					sound.stop();
 				}else{
@@ -512,12 +512,12 @@ public abstract class APartEngine extends APart implements FXPart{
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
 		}else if(sound.soundName.endsWith("_supercharger")){
 		WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
-		}else if(sound.soundName.equals(definition.engine.customSound1)){
-			WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.customSound1, true));
-		}else if(sound.soundName.equals(definition.engine.customSound2)){
-			WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.customSound2, true));
-		}else if(sound.soundName.equals(definition.engine.customSound3)){
-			WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.customSound3, true));
+		}else if(sound.soundName.equals(definition.engine.custom_Running1)){
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.custom_Running1, true));
+		}else if(sound.soundName.equals(definition.engine.custom_Running2)){
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.custom_Running2, true));
+		}else if(sound.soundName.equals(definition.engine.custom_Running3)){
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.engine.custom_Running3, true));
 		}
 	}
 
