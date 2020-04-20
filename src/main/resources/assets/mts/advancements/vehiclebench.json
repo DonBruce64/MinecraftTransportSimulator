@@ -26,7 +26,8 @@
 	"rewards": {
 		"recipes": [
 			"mts:key",
-			"mts:wrench"
+			"mts:wrench",
+			"mts:ticket"
 		]
 	}
 }

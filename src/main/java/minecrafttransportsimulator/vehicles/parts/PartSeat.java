@@ -37,7 +37,6 @@ public final class PartSeat extends APart{
 					}
 				}else if(seatRider instanceof EntityLiving){
 					if(((EntityLiving) seatRider).canBeLeashedTo(player) && player.getHeldItemMainhand().getItem() instanceof ItemLead){
-						vehicle.removeRiderFromSeat(seatRider, this);
 						((EntityLiving)seatRider).setLeashHolder(player, true);
 						if(!player.isCreative()){
 							heldStack.shrink(1);
@@ -48,7 +47,7 @@ public final class PartSeat extends APart{
 					}
 				}else{
 					//Don't know WHAT this entity is.  But it don't belong here!
-					vehicle.removeRiderFromSeat(seatRider, this);
+					seatRider.dismountRidingEntity();
 				}
 			}else{
 				//If we got here we must have the seat number and it must be free.

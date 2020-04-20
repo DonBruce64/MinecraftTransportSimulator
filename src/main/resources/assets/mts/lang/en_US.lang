@@ -64,6 +64,10 @@ interact.jumpercable.alreadylinked=This engine is already linked to another engi
 interact.jumpercable.toofar=The two engines are too far away.  They should be no further than 16 blocks apart.
 interact.jumpercable.samevehicle=The two engines are on the same vehicle.  That's not going to work well...
 
+interact.ticket.linked=NPC linked to ticket.
+interact.ticket.notnpc=This isn't an NPC.  Only NPCs can be assigned to tickets.
+interact.ticket.toofar=The NPC linked to the ticket is too far from the seat.  They must be within 15 blocks.
+
 interact.trailer.connect=Trailer connected!
 interact.trailer.disconnect=Trailer disconnected.
 interact.trailer.nohitch=This vehicle does not have a hitch and therefore cannot tow anything.
@@ -287,11 +291,16 @@ info.item.jerrycan.fill=Fill can by right-clicking a fuel pump.
 info.item.jerrycan.drain=Fill vehicle by right-clicking with full can.
 info.item.jerrycan.empty=Can is currently empty.
 info.item.jerrycan.contains=Can contains: 
+info.item.ticket.line1=Sneak-use on an NPC to assign him the ticket.
+info.item.ticket.line2=Use on a seat to make the assigned NPC sit.
+info.item.ticket.line3=Use on a ridden NPC to dismount them.
+info.item.ticket.line4=Use while commanding a vehicle to make all NPCs mount or dismount.
 
 item.wrench.name=Wrench
 item.key.name=Key
 item.jumpercable.name=Jumper Cables
 item.jerrycan.name=Jerrycan
+item.ticket.name=Ticket
 
 tile.vehiclebench.name=Drafting Table (Vehicles)
 tile.propellerbench.name=Propeller Bench

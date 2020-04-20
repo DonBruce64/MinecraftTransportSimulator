@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.collect.BiMap;
@@ -75,7 +76,9 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		//Check every tick to see if we still have riders in seats.
 		//If we are missing a rider, dismount them off of the vehicle.
 		Integer riderToRemove = -1;
-		for(Integer entityID : riderSeats.keySet()){
+		Iterator<Integer> seatIterator = riderSeats.keySet().iterator();
+		while(seatIterator.hasNext()){
+			Integer entityID = seatIterator.next();
 			boolean passengerIsValid = false;
 			for(Entity passenger : getPassengers()){
 				if(passenger.getEntityId() == entityID){
@@ -90,6 +93,8 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 					if(seat != null){
 						riderToRemove = entityID;
 					}
+				}else{
+					seatIterator.remove();
 				}
 			}
 		}
