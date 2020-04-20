@@ -50,6 +50,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private float serverDeltaYaw;
 	private float serverDeltaPitch;
 	private float serverDeltaRoll;
+	private int brakingTime = 10;
+	private int throttleTime = 10;
+	private double bodyAcceleration;
+    private double forceOfInertia;
+    private double bodyBrakeAngle;
+    private double bodyAcclAngle; 
 	
 	/**List of ground devices on the ground.  Populated after each movement to be used in turning/braking calculations.*/
 	protected final List<APartGroundDevice> groundedGroundDevices = new ArrayList<APartGroundDevice>();
@@ -130,6 +136,78 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 		}
 	}
+	
+	
+//Calculating Force of Inertia which will give mow much force is needed that is to be applied
+//to the suspensions when accelerating and braking to derive the angle.
+	
+	//Separate accelerating animation for better flexibility.
+	public double acclInertia() {
+		
+		forceOfInertia = currentMass*(bodyAcceleration);
+
+		
+		if (throttle > 0) {
+			
+			throttleTime++;
+			
+		}else {
+			
+			throttleTime = 0;
+		}
+		
+        if(throttleTime > 10 && throttleTime < 80 && velocity >= 0){
+        	
+        	bodyAcceleration = (velocity/throttleTime);
+        	
+        	bodyAcclAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*-0.01)); 
+        	
+        	return bodyAcclAngle;
+        	
+        }else if(throttleTime > 10 && throttleTime < 40 && velocity <= 0){
+        	
+        	bodyAcceleration = (velocity/throttleTime);
+        	
+        	bodyAcclAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*0.01)); 
+        	
+        	return bodyAcclAngle;
+        	
+        }else {
+        	
+        	bodyAcclAngle = 0;
+        	
+        	return 0;
+        }
+     }
+	
+	//Separate braking animation for better flexibility.
+	public double brakeInertia() {
+		
+		forceOfInertia = currentMass*(bodyAcceleration);
+		
+	    if (brakeOn && velocity != 0 || parkingBrakeOn && velocity != 0) {
+	    	
+	    	bodyAcceleration = (velocity/brakingTime);
+	    	
+	        if(velocity < 0) {
+	        	
+	        	bodyBrakeAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*-0.01));
+	        	
+	        }else {
+	        	
+		        bodyBrakeAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*0.01));
+		        
+	        }
+	        
+	        return bodyBrakeAngle;
+	        
+	    }else {
+	    	
+	    	bodyBrakeAngle = 0;
+	    	
+	    	return 0;
+	    }
+	 }
 	
 	/**
 	 *  This needs to be called before checking pitch and roll of ground devices.  It is responsible for ensuring that
@@ -816,6 +894,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			float addedFactor = 0;
 			if(brakeOn || parkingBrakeOn){
 				addedFactor = groundDevice.getMotiveFriction();
+				if(velocity > 0) {
+					brakingTime++;
+				}
+			}else if(velocity == 0) {
+				brakingTime = 10;
 			}
 			if(addedFactor != 0){
 				brakingFactor += Math.max(addedFactor - groundDevice.getFrictionLoss(), 0);

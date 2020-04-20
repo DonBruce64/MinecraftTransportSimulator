@@ -137,6 +137,10 @@ public final class RenderAnimations{
 			case("altitude"): return vehicle.posY;
 			case("speed"): return vehicle.velocity*vehicle.SPEED_FACTOR*20;
 			
+			//Inertia from accelerating and braking.
+            case("acceleration"): return vehicle.acclInertia();
+            case("braking"): return vehicle.brakeInertia();
+
 			//Vehicle state cases.
 			case("throttle"): return vehicle.throttle/100D;
 			case("fuel"): return vehicle.fuel/vehicle.definition.motorized.fuelCapacity;

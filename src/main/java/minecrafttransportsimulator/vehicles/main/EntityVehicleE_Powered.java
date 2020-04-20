@@ -49,7 +49,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public boolean hornOn;
 	public boolean sirenOn;
 	
-	public byte throttle;
 	public byte totalGuns = 0;
 	public double fuel;
 	public boolean reverseThrust;
@@ -389,8 +388,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
     
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
-		super.writeToNBT(tagCompound);		
-		tagCompound.setByte("throttle", this.throttle);
+		super.writeToNBT(tagCompound);
 		tagCompound.setDouble("fuel", this.fuel);
 		tagCompound.setDouble("electricPower", this.electricPower);
 		tagCompound.setString("fluidName", this.fluidName);
