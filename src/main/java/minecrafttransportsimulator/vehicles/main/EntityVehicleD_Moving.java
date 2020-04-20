@@ -141,7 +141,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 //Calculating Force of Inertia which will give mow much force is needed that is to be applied
 //to the suspensions when accelerating and braking to derive the angle.
 	
-	//Separate accelerating animation for better flexibility.
+	//Accelerating animation which calculates the amount of time the throttle is pressed to derive the acceleration
+	//to then get the value of force exerted by inertia.
 	public double acclInertia() {
 		
 		forceOfInertia = currentMass*(bodyAcceleration);
@@ -180,7 +181,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
         }
      }
 	
-	//Separate braking animation for better flexibility.
+	//Braking animation which calculates the amount of time the brake is pressed to derive the deceleration
+	//to then get the value of force exerted by inertia.
 	public double brakeInertia() {
 		
 		forceOfInertia = currentMass*(bodyAcceleration);
