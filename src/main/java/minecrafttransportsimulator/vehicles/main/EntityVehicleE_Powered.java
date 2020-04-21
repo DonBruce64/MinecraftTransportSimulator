@@ -343,7 +343,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public void readFromNBT(NBTTagCompound tagCompound){
     	this.soundsNeedInit = world.isRemote && definition == null; 
     	super.readFromNBT(tagCompound);
-		this.throttle=tagCompound.getByte("throttle");
 		this.fuel=tagCompound.getDouble("fuel");
 		this.electricPower=tagCompound.getDouble("electricPower");
 		this.fluidName=tagCompound.getString("fluidName");

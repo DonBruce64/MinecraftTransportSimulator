@@ -275,6 +275,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		this.locked=tagCompound.getBoolean("locked");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
+		this.throttle=tagCompound.getByte("throttle");
 		
 		this.riderSeatPositions.clear();
 		while(tagCompound.hasKey("Seat" + String.valueOf(riderSeatPositions.size()) + "0")){
