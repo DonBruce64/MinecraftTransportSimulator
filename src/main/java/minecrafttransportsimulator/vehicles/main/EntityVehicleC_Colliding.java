@@ -17,6 +17,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.APartGun;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -226,7 +227,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 					//If the player is holding a part, and the part isn't a seat, don't add it.
 					//This prevents us from clicking on parts when we're trying to place one.
 					//Seats are left in because it'd be a pain to switch items.
-					if(Minecraft.getMinecraft().player.getHeldItemMainhand().getItem() instanceof AItemPart && !(part instanceof PartSeat)){
+					//Guns are also left in as the player may be clicking them with a bullet part to load them.
+					if(Minecraft.getMinecraft().player.getHeldItemMainhand().getItem() instanceof AItemPart && !(part instanceof PartSeat) && !(part instanceof APartGun)){
 						continue;
 					}
 				}
