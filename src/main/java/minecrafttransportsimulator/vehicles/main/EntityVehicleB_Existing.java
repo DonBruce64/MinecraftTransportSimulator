@@ -47,6 +47,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public String ownerName="";
 	public String displayText="";
 	public Vec3d headingVec = Vec3d.ZERO;
+	public byte throttle;
 	
 	/**Cached map that links entity IDs to the seats riding them.  Used for mounting/dismounting functions.*/
 	private final BiMap<Integer, PartSeat> riderSeats = HashBiMap.create();
@@ -274,6 +275,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		this.locked=tagCompound.getBoolean("locked");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
+		this.throttle=tagCompound.getByte("throttle");
 		
 		this.riderSeatPositions.clear();
 		while(tagCompound.hasKey("Seat" + String.valueOf(riderSeatPositions.size()) + "0")){
@@ -288,6 +290,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
+		tagCompound.setByte("throttle", this.throttle);
 		tagCompound.setBoolean("locked", this.locked);
 		tagCompound.setString("ownerName", this.ownerName);
 		tagCompound.setString("displayText", this.displayText);
