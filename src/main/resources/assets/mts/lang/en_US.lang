@@ -257,6 +257,7 @@ info.item.propeller.maxrpm=Max RPM:
 info.item.propeller.health=Health: 
 info.item.gun.type.fixed=Type: Fixed-Mount Gun
 info.item.gun.type.tripod=Type: Tripod-Mount Gun
+info.item.gun.type.turret=Type: Turret Gun
 info.item.gun.diameter=Diameter (mm): 
 info.item.gun.length=Length (m): 
 info.item.gun.fireDelay=Fire Delay (ticks): 
