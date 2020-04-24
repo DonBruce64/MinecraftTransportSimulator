@@ -709,7 +709,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 		
 		
-		float treadMovementPercentage = (float) ((treadPart.angularPosition + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing);
+		float treadMovementPercentage = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing);
+		if(treadPart.angularPosition < 0){
+			treadMovementPercentage = 1 - treadMovementPercentage;
+		}
 		GL11.glPushMatrix();
 		//First translate to the initial point.
 		GL11.glTranslated(0, treadPart.offset.y + treadPart.packVehicleDef.treadYPoints[0], treadPart.offset.z + treadPart.packVehicleDef.treadZPoints[0]);
@@ -773,8 +776,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				RenderVehicle_TreadRoller roller = rollers[i];
 				roller.startAngle = rollers[i - 1].endAngle;
 				//End angle should be 0-360 greater than start angle, or within
-				//10 degrees less, as is the case for concave rollers. 
-				while(roller.endAngle < roller.startAngle - 10){
+				//30 degrees less, as is the case for concave rollers. 
+				while(roller.endAngle < roller.startAngle - 30){
 					roller.endAngle += 360;
 				}
 				while(roller.endAngle > roller.startAngle + 360){
@@ -886,7 +889,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//We manually set point 0 here due to the fact it's a joint between two differing angles.
 		//We also need to translate to that point to start rendering as we're currently at 0,0,0.
 		//For each remaining point, we only translate the delta of the point.
-		float treadMovementPercentage = (float) ((treadPart.angularPosition + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing);
+		float treadMovementPercentage = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing);
+		if(treadPart.angularPosition < 0){
+			treadMovementPercentage = 1 - treadMovementPercentage;
+		}
 		Double[] priorPoint = points.get(points.size() - 1);
 		Double[] point = points.get(0);
 		double yDelta = point[0] - priorPoint[0];
