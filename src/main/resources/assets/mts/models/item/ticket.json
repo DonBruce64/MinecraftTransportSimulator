@@ -1,5 +1,5 @@
 {
-  "parent": "minecraft:item/handheld",
+  "parent": "mts:item/basic",
   "textures": {
     "layer0": "mts:items/ticket"
   }
