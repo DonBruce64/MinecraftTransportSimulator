@@ -190,7 +190,7 @@ public final class RenderVehicle_LightPart{
 	 */
 	private void renderTexture(boolean disableLighting, String textureDomain, String textureLocation){
 		WrapperRender.bindTexture(textureDomain, textureLocation);
-		WrapperRender.setWorldLightingState(!disableLighting);
+		WrapperRender.setLightingState(!disableLighting);
 		WrapperRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 		
 		//If we don't have a DisplayList, create one now.
