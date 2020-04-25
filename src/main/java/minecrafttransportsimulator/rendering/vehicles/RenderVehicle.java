@@ -1056,7 +1056,12 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			GL11.glPushMatrix();
 			//This light may be rotateable.  Check this before continuing.
 			//It could rotate based on a vehicle rotation variable, or a part rotation.
+			//Additionally, texture may be from the part rather than the vehicle.
+			String textureDomain;
+			String textureLocation; 
 			if(vehicleLights.contains(light)){
+				textureDomain = textureMap.get(vehicle.definition.systemName).getResourceDomain();
+				textureLocation = textureMap.get(vehicle.definition.systemName).getResourcePath();
 				for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
 					if(rotatable.name.equals(light.name)){
 						rotatable.rotate(vehicle, null, partialTicks);
@@ -1064,6 +1069,13 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				}
 			}else{
 				APart part = lightIndexToParts.get(lightIndex);
+				if(!part.definition.general.useVehicleTexture){
+    				textureDomain = textureMap.get(part.definition.systemName).getResourceDomain();
+    				textureLocation = textureMap.get(part.definition.systemName).getResourcePath();
+    			}else{
+    				textureDomain = textureMap.get(vehicle.definition.systemName).getResourceDomain();
+    				textureLocation = textureMap.get(vehicle.definition.systemName).getResourcePath();
+    			}
 				GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
 				rotatePart(part, part.getActionRotation(partialTicks), false);
 				for(RenderVehicle_RotatablePart rotatable : partRotatableLists.get(part.getModelLocation())){
@@ -1074,7 +1086,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 
 			//Render the light.
-			light.renderOnVehicle(vehicle, wasRenderedPrior, textureMap.get(vehicle.definition.systemName).getResourceDomain(), textureMap.get(vehicle.definition.systemName).getResourcePath());
+			light.renderOnVehicle(vehicle, wasRenderedPrior, textureDomain, textureLocation);
 			GL11.glPopMatrix();
 		}
 	}
