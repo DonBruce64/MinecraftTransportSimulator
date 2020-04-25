@@ -318,40 +318,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 */
 	private static void renderMainModel(EntityVehicleE_Powered vehicle, float partialTicks){
-		GL11.glPushMatrix();
 		//Normally we use the pack name, but since all displaylists
 		//are the same for all models, this is more appropriate.
-		if(vehicleDisplayLists.containsKey(vehicle.definition.genericName)){
-			GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.genericName));
-			
-			//The display list only renders static parts.  We need to render dynamic ones manually.
-			//If this is a window, don't render it as that gets done all at once later.
-			//First render all rotatable parts.  If they are also translatable, translate first.
-			for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
-				if(!rotatable.name.toLowerCase().contains("window")){
-					GL11.glPushMatrix();
-					if(rotatable.name.contains("%")){
-						for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
-							if(translatable.name.equals(rotatable.name)){
-								translatable.translate(vehicle, null, partialTicks);
-								break;
-							}
-						}
-					}
-					rotatable.render(vehicle, null, partialTicks);
-					GL11.glPopMatrix();
-				}
-			}
-			
-			//Now render all translatable parts that don't rotate.
-			for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
-				if(!translatable.name.toLowerCase().contains("window") && !translatable.name.contains("$")){
-					GL11.glPushMatrix();
-					translatable.render(vehicle, null, partialTicks);
-					GL11.glPopMatrix();
-				}
-			}
-		}else{
+		if(!vehicleDisplayLists.containsKey(vehicle.definition.genericName)){
 			List<RenderVehicle_RotatablePart> rotatableParts = new ArrayList<RenderVehicle_RotatablePart>();
 			List<RenderVehicle_TranslatablePart> translatableParts = new ArrayList<RenderVehicle_TranslatablePart>();
 			List<RenderVehicle_LightPart> lightParts = new ArrayList<RenderVehicle_LightPart>();
@@ -416,7 +385,36 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			vehicleLightLists.put(vehicle.definition.genericName, lightParts);
 			vehicleWindowLists.put(vehicle.definition.genericName, windows);
 		}
-		GL11.glPopMatrix();
+		
+		GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.genericName));
+		
+		//The display list only renders static parts.  We need to render dynamic ones manually.
+		//If this is a window, don't render it as that gets done all at once later.
+		//First render all rotatable parts.  If they are also translatable, translate first.
+		for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
+			if(!rotatable.name.toLowerCase().contains("window")){
+				GL11.glPushMatrix();
+				if(rotatable.name.contains("%")){
+					for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
+						if(translatable.name.equals(rotatable.name)){
+							translatable.translate(vehicle, null, partialTicks);
+							break;
+						}
+					}
+				}
+				rotatable.render(vehicle, null, partialTicks);
+				GL11.glPopMatrix();
+			}
+		}
+		
+		//Now render all translatable parts that don't rotate.
+		for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
+			if(!translatable.name.toLowerCase().contains("window") && !translatable.name.contains("$")){
+				GL11.glPushMatrix();
+				translatable.render(vehicle, null, partialTicks);
+				GL11.glPopMatrix();
+			}
+		}
 	}
 	
 	/**
@@ -481,63 +479,63 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     			partRotatableLists.put(partModelLocation, rotatableParts);
     			partTranslatableLists.put(partModelLocation, translatableParts);
     			partLightLists.put(partModelLocation, lightParts);
-    		}else{
-    			//If we aren't using the vehicle texture, bind the texture for this part.
-    			//Otherwise, bind the vehicle texture as it may have been un-bound prior to this.
-    			if(!part.definition.general.useVehicleTexture){
-    				if(!textureMap.containsKey(part.definition.systemName)){
-        				textureMap.put(part.definition.systemName, part.getTextureLocation());
-        			}
-    				minecraft.getTextureManager().bindTexture(textureMap.get(part.definition.systemName));
-    			}else{
-    				minecraft.getTextureManager().bindTexture(textureMap.get(vehicle.definition.systemName));
-    			}
-    			
-    			//Get basic rotation properties and start the matrix.
-    			Vec3d actionRotation = part.getActionRotation(partialTicks);
-    			GL11.glPushMatrix();
-    			
-    			//If we are a tread, do the tread-specific render.
-        		//Otherwise render like all other parts.
-        		if(part instanceof PartGroundDeviceTread){
-        			//We need to manually do x translation here before rotating to prevent incorrect translation.
-        			GL11.glTranslated(part.offset.x, 0, 0);
-        			rotatePart(part, actionRotation, true);
-        			if(part.packVehicleDef.treadZPoints != null){
-        				doManualTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));	
-        			}else{
-        				doAutomaticTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));
-        			}
-        		}else{
-	    			//Rotate and translate the part prior to rendering the displayList.
-	    			//Note that if the part's parent has a rotation, use that to transform
-	    			//the translation to match that rotation.  Needed for things like
-	    			//tank turrets with seats or guns.
-	    			
-	    			if(part.parentPart != null && !part.parentPart.getActionRotation(partialTicks).equals(Vec3d.ZERO)){
-	    				//TODO play around with this to see if we need the math or we can use partPos.
-	    				Vec3d parentActionRotation = part.parentPart.getActionRotation(partialTicks);
-	    				Vec3d partRelativeOffset = part.offset.subtract(part.parentPart.offset);
-	    				Vec3d partTranslationOffset = part.parentPart.offset.add(RotationSystem.getRotatedPoint(partRelativeOffset, (float) parentActionRotation.x, (float) parentActionRotation.y, (float) parentActionRotation.z));
-	    				GL11.glTranslated(partTranslationOffset.x, partTranslationOffset.y, partTranslationOffset.z);
-	    				rotatePart(part, parentActionRotation.add(actionRotation), true);
-	    			}else{
-	    				GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
-	    				rotatePart(part, actionRotation, true);
-	    			}
-	        		GL11.glCallList(partDisplayLists.get(partModelLocation));
-	    			
-	    			//The display list only renders static parts.  We need to render dynamic ones manually.
-	    			for(RenderVehicle_RotatablePart rotatable : partRotatableLists.get(partModelLocation)){
-	    				GL11.glPushMatrix();
-	    				rotatable.render(vehicle, part, partialTicks);
-	    				GL11.glPopMatrix();
-	    			}
-    			}
-        		GL11.glCullFace(GL11.GL_BACK);
-        		GL11.glPopMatrix();
     		}
-        }
+			
+			//If we aren't using the vehicle texture, bind the texture for this part.
+			//Otherwise, bind the vehicle texture as it may have been un-bound prior to this.
+			if(!part.definition.general.useVehicleTexture){
+				if(!textureMap.containsKey(part.definition.systemName)){
+    				textureMap.put(part.definition.systemName, part.getTextureLocation());
+    			}
+				minecraft.getTextureManager().bindTexture(textureMap.get(part.definition.systemName));
+			}else{
+				minecraft.getTextureManager().bindTexture(textureMap.get(vehicle.definition.systemName));
+			}
+			
+			//Get basic rotation properties and start the matrix.
+			Vec3d actionRotation = part.getActionRotation(partialTicks);
+			GL11.glPushMatrix();
+			
+			//If we are a tread, do the tread-specific render.
+    		//Otherwise render like all other parts.
+    		if(part instanceof PartGroundDeviceTread){
+    			//We need to manually do x translation here before rotating to prevent incorrect translation.
+    			GL11.glTranslated(part.offset.x, 0, 0);
+    			rotatePart(part, actionRotation, true);
+    			if(part.packVehicleDef.treadZPoints != null){
+    				doManualTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));	
+    			}else{
+    				doAutomaticTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));
+    			}
+    		}else{
+    			//Rotate and translate the part prior to rendering the displayList.
+    			//Note that if the part's parent has a rotation, use that to transform
+    			//the translation to match that rotation.  Needed for things like
+    			//tank turrets with seats or guns.
+    			
+    			if(part.parentPart != null && !part.parentPart.getActionRotation(partialTicks).equals(Vec3d.ZERO)){
+    				//TODO play around with this to see if we need the math or we can use partPos.
+    				Vec3d parentActionRotation = part.parentPart.getActionRotation(partialTicks);
+    				Vec3d partRelativeOffset = part.offset.subtract(part.parentPart.offset);
+    				Vec3d partTranslationOffset = part.parentPart.offset.add(RotationSystem.getRotatedPoint(partRelativeOffset, (float) parentActionRotation.x, (float) parentActionRotation.y, (float) parentActionRotation.z));
+    				GL11.glTranslated(partTranslationOffset.x, partTranslationOffset.y, partTranslationOffset.z);
+    				rotatePart(part, parentActionRotation.add(actionRotation), true);
+    			}else{
+    				GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
+    				rotatePart(part, actionRotation, true);
+    			}
+        		GL11.glCallList(partDisplayLists.get(partModelLocation));
+    			
+    			//The display list only renders static parts.  We need to render dynamic ones manually.
+    			for(RenderVehicle_RotatablePart rotatable : partRotatableLists.get(partModelLocation)){
+    				GL11.glPushMatrix();
+    				rotatable.render(vehicle, part, partialTicks);
+    				GL11.glPopMatrix();
+    			}
+			}
+    		GL11.glCullFace(GL11.GL_BACK);
+    		GL11.glPopMatrix();
+		}
 	}
 	
 	/**
