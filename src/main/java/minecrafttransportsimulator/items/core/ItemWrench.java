@@ -61,7 +61,7 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 				}else if(player.isSneaking()){
 					//Attacker is a sneaking player with a wrench.
 					//Remove this vehicle if possible.
-					if(!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)){
+					if(!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN) && !ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.capabilities.isCreativeMode()){
 						ItemStack vehicleStack = new ItemStack(MTSRegistry.packItemMap.get(vehicle.definition.packID).get(vehicle.definition.systemName));
 						NBTTagCompound stackTag = vehicle.writeToNBT(new NBTTagCompound());
 						vehicleStack.setTagCompound(stackTag);
