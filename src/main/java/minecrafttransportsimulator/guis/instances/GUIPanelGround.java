@@ -40,12 +40,15 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 	private static final int TRAILER_TEXTURE_HEIGHT_OFFSET = 216;
 	private static final int REVERSE_TEXTURE_WIDTH_OFFSET = TRAILER_TEXTURE_WIDTH_OFFSET + 20;
 	private static final int REVERSE_TEXTURE_HEIGHT_OFFSET = 216;
+	private static final int CRUISECONTROL_TEXTURE_WIDTH_OFFSET = REVERSE_TEXTURE_WIDTH_OFFSET + 20;
+	private static final int CRUISECONTROL_TEXTURE_HEIGHT_OFFSET = 216;
 	
 	private GUIComponentSelector lightSelector;
 	private GUIComponentSelector turnSignalSelector;
 	private GUIComponentSelector emergencySelector;
 	private GUIComponentSelector sirenSelector;
 	private GUIComponentSelector reverseSelector;
+	private GUIComponentSelector cruiseControlSelector;
 	private final Map<Byte, GUIComponentSelector> engineSelectors = new HashMap<Byte, GUIComponentSelector>();
 	private final List<GUIComponentSelector> trailerSelectors = new ArrayList<GUIComponentSelector>();
 	
@@ -182,6 +185,60 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 			addSelector(reverseSelector);
 		}
 		
+		
+		if(haveReverseThrustOption && vehicle.definition.car != null && vehicle.definition.car.hasCruiseControl){
+			//If we have both reverse AND cruise control, render them side-by-side. otherwise just render one in the middle
+			reverseSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			addSelector(reverseSelector);
+			
+			cruiseControlSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.cruisecontrol"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CRUISECONTROL_TEXTURE_WIDTH_OFFSET, CRUISECONTROL_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CRUISECONTROL, !vehicle.cruiseControl));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			addSelector(cruiseControlSelector);
+		}else{
+			//If we have reverse thrust, add a selector for it.
+			if(haveReverseThrustOption){
+				reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+					@Override
+					public void onClicked(boolean leftSide){
+						WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
+					}
+					
+					@Override
+					public void onReleased(){}
+				};
+				addSelector(reverseSelector);
+			}
+			
+			//If we have cruise control, add a selector for it.
+			if(vehicle.definition.car != null && vehicle.definition.car.hasCruiseControl){
+				cruiseControlSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.cruisecontrol"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CRUISECONTROL_TEXTURE_WIDTH_OFFSET, CRUISECONTROL_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+					@Override
+					public void onClicked(boolean leftSide){
+						WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CRUISECONTROL, !vehicle.cruiseControl));
+					}
+					
+					@Override
+					public void onReleased(){}
+				};
+				addSelector(cruiseControlSelector);
+			}
+		}
+		
 		//Create the 8 trailer selectors.  Note that not all may be rendered.
 		for(int i=0; i<8; ++i){
 			//Go to next column if we are on our 4th row.
@@ -251,8 +308,13 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 		}
 		
 		//If we have reverse thrust, set the selector state.
-		if(haveReverseThrustOption){
+		if(reverseSelector != null){
 			reverseSelector.selectorState = vehicle.reverseThrust ? 1 : 0;
+		}
+		
+		//If we have cruise control, set the selector state.
+		if(cruiseControlSelector != null){
+			cruiseControlSelector.selectorState = vehicle.cruiseControl ? 1 : 0;
 		}
 		
 		//Iterate through trailers and set the visibility of the trailer selectors based on their state.

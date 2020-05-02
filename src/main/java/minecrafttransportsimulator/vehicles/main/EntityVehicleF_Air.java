@@ -2,6 +2,7 @@ package minecrafttransportsimulator.vehicles.main;
 
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
@@ -24,6 +25,7 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	public short aileronAngle;
 	public short aileronTrim;
 	public byte aileronCooldown;
+	public boolean autopilot;
 	
 	public final short MAX_ELEVATOR_ANGLE = 250;
 	public final short ELEVATOR_DAMPEN_RATE = 6;
@@ -92,9 +94,27 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		}
 		gravitationalForce = currentMass*(9.8/400);
 	}
-
+	
 	@Override
 	protected void dampenControlSurfaces(){
+		if(autopilot){
+			if(-rotationRoll > aileronTrim + 1){
+				WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true), this);
+				++aileronTrim;
+			}else if(-rotationRoll < aileronTrim - 1){
+				WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false), this);
+				--aileronTrim;
+			}
+			//If we are not flying at a steady elevation, angle the elevator to compensate
+			if(-motionY*100 > elevatorTrim + 1){
+				WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true), this);
+				++elevatorTrim;
+			}else if(-motionY*100 < elevatorTrim - 1){
+				WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false), this);
+				--elevatorTrim;
+			}
+		}
+		
 		if(aileronCooldown==0){
 			if(aileronAngle != 0){
 				if(aileronAngle < AILERON_DAMPEN_RATE && aileronAngle > -AILERON_DAMPEN_RATE){

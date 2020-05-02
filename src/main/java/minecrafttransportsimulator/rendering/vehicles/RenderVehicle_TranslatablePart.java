@@ -28,6 +28,7 @@ public final class RenderVehicle_TranslatablePart{
 	private final String[] translationVariables;
 	private final Float[] translationClampsMin;
 	private final Float[] translationClampsMax;
+	private final Boolean[] translationAbsolutes;
 	
 	private static final Map<String, Integer> partDisplayLists = new HashMap<String, Integer>();
 	
@@ -43,6 +44,7 @@ public final class RenderVehicle_TranslatablePart{
 		List<String> translationVariablesList = new ArrayList<String>();
 		List<Float> translationClampsMinList = new ArrayList<Float>();
 		List<Float> translationClampsMaxList = new ArrayList<Float>();
+		List<Boolean> translationAbsolutesList = new ArrayList<Boolean>();
 		for(VehicleTranslatableModelObject translatable : translatableModelObjects){
 			if(translatable != null && translatable.partName.equals(this.name)){
 				if(translatable.translationAxis != null){
@@ -60,6 +62,7 @@ public final class RenderVehicle_TranslatablePart{
 				}
 				translationClampsMinList.add(translatable.translationClampMin);
 				translationClampsMaxList.add(translatable.translationClampMax);
+				translationAbsolutesList.add(translatable.absoluteValue);
 			}
 		}
 		
@@ -69,6 +72,7 @@ public final class RenderVehicle_TranslatablePart{
 		this.translationVariables = translationVariablesList.toArray(new String[translationVariablesList.size()]);
 		this.translationClampsMin = translationClampsMinList.toArray(new Float[translationClampsMinList.size()]);
 		this.translationClampsMax = translationClampsMaxList.toArray(new Float[translationClampsMaxList.size()]);
+		this.translationAbsolutes = translationAbsolutesList.toArray(new Boolean[translationAbsolutesList.size()]);
 	}
 	
 	/**
@@ -79,7 +83,7 @@ public final class RenderVehicle_TranslatablePart{
 	 */
 	public void translate(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
 		for(byte i=0; i<translationVariables.length; ++i){
-			double translation = RenderAnimations.getVariableValue(translationVariables[i], translationMagnitudes[i], 0F, translationClampsMin[i], translationClampsMax[i], partialTicks, vehicle, null);
+			double translation = RenderAnimations.getVariableValue(translationVariables[i], translationMagnitudes[i], 0F, translationClampsMin[i], translationClampsMax[i], translationAbsolutes[i], partialTicks, vehicle, null);
 			if(translation != 0){
 				GL11.glTranslated(translation*translationAxis[i].x, translation*translationAxis[i].y, translation*translationAxis[i].z);
 			}

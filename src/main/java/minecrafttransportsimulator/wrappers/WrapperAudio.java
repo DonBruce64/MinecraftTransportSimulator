@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.LWJGLException;
 import org.lwjgl.openal.AL;
 import org.lwjgl.openal.AL10;
 
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.sound.OGGDecoderOutput;
 import minecrafttransportsimulator.sound.SoundInstance;
 
@@ -37,6 +37,10 @@ public class WrapperAudio{
 	/**List of sounds to start playing next update.  Split from playing sounds to avoid CMEs and odd states.**/
 	private static volatile List<SoundInstance> queuedSounds = new ArrayList<SoundInstance>();
 	
+	/**This gets incremented whenever we try to get a source and fail.  If we get to 100, the sound system
+	 * will stop attempting to play sounds and will throw an error.  Used for when mods take all the sources.**/
+	private static byte sourceGetFailures = 0;
+	
 	private static final WrapperPlayer player;
 	private static final FloatBuffer playerPosition = BufferUtils.createFloatBuffer(3);
 	private static final FloatBuffer playerVelocity = BufferUtils.createFloatBuffer(3);
@@ -46,17 +50,6 @@ public class WrapperAudio{
 	 *  Inits this class.  Static as we only need to do this this the first time we play a sound.
 	 */
 	static{
-		try{
-    		//Create the OpenAL system if we haven't already.
-			if(!AL.isCreated()){
-    			AL.create();
-    			AL10.alGetError();
-    		}
-	    }catch(LWJGLException e){
-	    	e.printStackTrace();
-	    	//This should NEVER happen.  OpenAl is in all MC as it comes with lwjgl.
-	    }
-		
 		//Get a reference to the player.  This will be stored to be updated every
 		//audio tick to allow us to update sound accordingly.
 		//Check to make sure the player exists before we do this.
@@ -66,21 +59,25 @@ public class WrapperAudio{
 		player.putPosition(playerPosition);
 		player.putVelocity(playerVelocity);
 		player.putOrientation(playerOrientation);
-		
-		//Set listener initial parameters.
-		AL10.alListener(AL10.AL_POSITION, playerPosition);
-	    AL10.alListener(AL10.AL_VELOCITY, playerVelocity);
-		AL10.alListener(AL10.AL_ORIENTATION, playerOrientation);
 	}
 	
 	/**
-	 *  Stops all sounds from playing.  Should be called when the world is un-loaded.
+	 *  Stops all sounds from playing in the passed-in dimension.
+	 *  Should be called when a dimension is un-loaded to prevent orphaned sounds.
 	 */
-	public static void halt(){
-		queuedSounds.clear();
-        for(SoundInstance sound : playingSounds){
-        	sound.stop();
-        }
+	public static void haltSoundsIn(int dimension){
+		Iterator<SoundInstance> iterator = queuedSounds.iterator();
+		while(iterator.hasNext()){
+			if(iterator.next().provider.getProviderDimension() == dimension){
+				iterator.remove();
+			}
+		}
+		
+		for(SoundInstance playingSound : playingSounds){
+			if(playingSound.provider.getProviderDimension() == dimension){
+				playingSound.stop();
+			}
+		}
         isSystemPaused = false;
         update();
 	}
@@ -90,6 +87,11 @@ public class WrapperAudio{
 	 *  as well as queue up sounds that aren't playing yet but need to.
 	 */
 	public static void update(){
+		if(!AL.isCreated()){
+			//Don't go any further if OpenAL isn't ready.
+			return;
+		}
+		
 		//Handle pause state logic.
 		if(WrapperGame.isGamePaused()){
 			if(!isSystemPaused){
@@ -108,9 +110,8 @@ public class WrapperAudio{
 		
 		
 		//Update player position velocity, and orientation.
-		//Don't need to re-bind these as they are buffers.
-		//Note that PaulsCode does this for us in 1.12.2, so we don't need to do that.
-		//However, it does foul up velocity, so we need to re-do that one.
+		//PaulsCode does this for us in 1.12.2, so we don't need to do that.
+		//However, it fouls up velocity, so we need to re-do that one.
 		//Note that players riding vehicles use the vehicle's velocity.
 		//player.putPosition(playerPosition);
 		//AL10.alListener(AL10.AL_POSITION, playerPosition);
@@ -150,11 +151,20 @@ public class WrapperAudio{
 		
 		
 		//Update playing sounds.
+		boolean soundSystemReset = false;
 		Iterator<SoundInstance> iterator = playingSounds.iterator();
 		while(iterator.hasNext()){
 			SoundInstance sound = iterator.next();
+			AL10.alGetError();
 			int state = AL10.alGetSourcei(sound.sourceIndex, AL10.AL_SOURCE_STATE);
-			//If we aren't stopped, do an update to pitch and volume.
+
+			//If we are an invalid name, it means the sound system was reset.
+			//Blow out all buffers and restart all sounds.
+			if(AL10.alGetError() == AL10.AL_INVALID_NAME){
+				soundSystemReset = true;
+				break;
+			}
+			
 			if(state != AL10.AL_STOPPED){
 				sound.provider.updateProviderSound(sound);
 				if(sound.stopSound){
@@ -208,7 +218,6 @@ public class WrapperAudio{
 					//Attempt to queue up the next song as this one is done.
 					//Only do this if the radio wasn't stopped manually.
 					if(!sound.stopSound){
-						System.out.println("NEXT SOUND QUEUED!");
 						sound.radio.queueNext();
 					}
 				}
@@ -220,6 +229,15 @@ public class WrapperAudio{
 				iterator.remove();
 			}
 		}
+		
+		//If the sound system was reset, blow out all saved data points.
+		if(soundSystemReset){
+			dataSourceBuffers.clear();
+			for(SoundInstance sound : playingSounds){
+				sound.provider.restartSound(sound);
+			}
+			playingSounds.clear();
+		}
 	}
 	
 	/**
@@ -227,22 +245,34 @@ public class WrapperAudio{
 	 *  Useful for quick sounds like gunshots or button presses.
 	 */
 	public static void playQuickSound(SoundInstance sound){
-		//First get the IntBuffer pointer to where this sound data is stored.
-		Integer dataBufferPointer = loadOGGJarSound(sound.soundName);
-		if(dataBufferPointer != null){
-			//Set the sound's source buffer index.
-			IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
-			AL10.alGenSources(sourceBuffer);
-			sound.sourceIndex = sourceBuffer.get(0);
-			
-			//Set properties and bind data buffer to source.
-			AL10.alSourcei(sound.sourceIndex, AL10.AL_LOOPING, sound.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
-			AL10.alSource(sound.sourceIndex, AL10.AL_POSITION, sound.provider.getProviderPosition());
-    	    AL10.alSource(sound.sourceIndex, AL10.AL_VELOCITY, sound.provider.getProviderVelocity());
-    	    AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER,	dataBufferPointer);    
+		if(AL.isCreated() && sourceGetFailures < 100){
+			//First get the IntBuffer pointer to where this sound data is stored.
+			Integer dataBufferPointer = loadOGGJarSound(sound.soundName);
+			if(dataBufferPointer != null){
+				//Set the sound's source buffer index.
+				IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
+				AL10.alGetError();
+				AL10.alGenSources(sourceBuffer);
+				if(AL10.alGetError() != AL10.AL_NO_ERROR){
+					++sourceGetFailures;
+					AL10.alDeleteBuffers(dataBufferPointer);
+					if(sourceGetFailures == 100){
+						WrapperNetwork.sendToAllClients(new PacketPlayerChatMessage("IMMERSIVE VEHICLES ERROR: Tried to make a sound over 100 times, but was told no sound slots were available.  Some mod is likely taking up all the slots.  Probabaly Immersive Railroading.  Sound will not play."));
+					}
+					return;
+				}
+				sound.sourceIndex = sourceBuffer.get(0);
 				
-			//Done setting up buffer.  Queue sound to start playing.
-			queuedSounds.add(sound);
+				//Set properties and bind data buffer to source.
+				AL10.alGetError();
+				AL10.alSourcei(sound.sourceIndex, AL10.AL_LOOPING, sound.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
+				AL10.alSource(sound.sourceIndex, AL10.AL_POSITION, sound.provider.getProviderPosition());
+	    	    AL10.alSource(sound.sourceIndex, AL10.AL_VELOCITY, sound.provider.getProviderVelocity());
+	    	    AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, dataBufferPointer);
+	    	    
+				//Done setting up buffer.  Queue sound to start playing.
+				queuedSounds.add(sound);
+			}
 		}
 	}
 
@@ -286,31 +316,42 @@ public class WrapperAudio{
 	 *  parse more data.  When the source runs out of buffers, the radio will be queried for another source.
 	 */
     public static void playStreamedSound(SoundInstance sound){
-		//Create 5 buffers to be used as rolling storage for the stream.
-		IntBuffer dataBuffers = BufferUtils.createIntBuffer(5);
-		AL10.alGenBuffers(dataBuffers);
-		
-		//Now decode data for each dataBuffer.
-		while(dataBuffers.hasRemaining()){
-			//Get the raw decoder output and bind it to the data buffers.
-			//Note that we may not obtain this data if we haven't decoded it yet.
-			ByteBuffer decoderData = sound.radio.getSampleBuffer();
-			if(decoderData != null){
-				AL10.alBufferData(dataBuffers.get(), AL10.AL_FORMAT_MONO16, decoderData, sound.radio.getSampleRate());
+    	if(AL.isCreated() && sourceGetFailures < 100){
+	    	//Create 5 buffers to be used as rolling storage for the stream.
+			IntBuffer dataBuffers = BufferUtils.createIntBuffer(5);
+			AL10.alGenBuffers(dataBuffers);
+			
+			//Now decode data for each dataBuffer.
+			while(dataBuffers.hasRemaining()){
+				//Get the raw decoder output and bind it to the data buffers.
+				//Note that we may not obtain this data if we haven't decoded it yet.
+				ByteBuffer decoderData = sound.radio.getSampleBuffer();
+				if(decoderData != null){
+					AL10.alBufferData(dataBuffers.get(), AL10.AL_FORMAT_MONO16, decoderData, sound.radio.getSampleRate());
+				}
 			}
-		}
-		//Flip the data buffers to prepare them for reading.
-		dataBuffers.flip();
-		
-		//Data has been buffered.  Now get source index.
-		//If we have an old source, use that index instead to allow smooth streaming.
-		IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
-		AL10.alGenSources(sourceBuffer);
-		sound.sourceIndex = sourceBuffer.get(0);
-		
-		//Have source and data.  Queue sound to start playing.
-		AL10.alSourceQueueBuffers(sound.sourceIndex, dataBuffers);
-		queuedSounds.add(sound);
+			//Flip the data buffers to prepare them for reading.
+			dataBuffers.flip();
+			
+			//Data has been buffered.  Now get source index.
+			//If we have an old source, use that index instead to allow smooth streaming.
+			IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
+			AL10.alGetError();
+			AL10.alGenSources(sourceBuffer);
+			if(AL10.alGetError() != AL10.AL_NO_ERROR){
+				++sourceGetFailures;
+				AL10.alDeleteBuffers(dataBuffers);
+				if(sourceGetFailures == 100){
+					WrapperNetwork.sendToAllClients(new PacketPlayerChatMessage("IMMERSIVE VEHICLES ERROR: Tried to make a sound over 100 times, but was told no sound slots were available.  Some mod is likely taking up all the slots.  Probabaly Immersive Railroading.  Sound will not play."));
+				}
+				return;
+			}
+			sound.sourceIndex = sourceBuffer.get(0);
+			
+			//Have source and data.  Queue sound to start playing.
+			AL10.alSourceQueueBuffers(sound.sourceIndex, dataBuffers);
+			queuedSounds.add(sound);
+    	}
 	}
 	
 	/**

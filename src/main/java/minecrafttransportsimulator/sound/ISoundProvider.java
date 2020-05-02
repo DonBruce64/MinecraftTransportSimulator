@@ -15,6 +15,12 @@ public interface ISoundProvider{
     public void updateProviderSound(SoundInstance sound);
     
     /**
+   	 *  Called to restart a sound if it has stopped.
+   	 *  Used when the system re-loads a sound set.
+   	 */
+    public void restartSound(SoundInstance sound);
+    
+    /**
 	 *  Return the position of this ISoundProvider as a 3-unit FloatBuffer.
 	 */
     public FloatBuffer getProviderPosition();
@@ -23,4 +29,9 @@ public interface ISoundProvider{
 	 *  Return the velocity of this ISoundProvider as a 3-unit FloatBuffer.
 	 */
     public FloatBuffer getProviderVelocity();
+    
+    /**
+	 *  Return the dimension this sound is in.  Required for world loading/unloading.
+	 */
+    public int getProviderDimension();
 }

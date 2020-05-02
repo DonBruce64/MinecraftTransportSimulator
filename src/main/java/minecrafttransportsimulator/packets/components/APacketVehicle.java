@@ -32,7 +32,7 @@ public abstract class APacketVehicle extends APacketBase{
 	
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
-		EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) world.getEntity(vehicleID); 
+		EntityVehicleE_Powered vehicle = world.getVehicle(vehicleID); 
 		if(vehicle != null && vehicle.definition != null){
 			if(handle(world, player, vehicle) && !world.isClient()){
 				WrapperNetwork.sendToClientsTracking(this, vehicle);

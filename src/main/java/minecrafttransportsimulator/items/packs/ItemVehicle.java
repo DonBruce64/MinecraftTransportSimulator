@@ -226,4 +226,14 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 			}
 		}
 	}
+	
+	@Override
+	public String getModelLocation(){
+		return "objmodels/vehicles/" + definition.genericName + ".obj";
+	}
+	
+	@Override
+	public String getTextureLocation(){
+		return "textures/vehicles/" + definition.systemName + ".png";
+	}
 }

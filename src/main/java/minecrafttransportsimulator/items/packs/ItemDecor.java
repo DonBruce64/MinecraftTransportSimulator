@@ -1,52 +1,44 @@
 package minecrafttransportsimulator.items.packs;
 
-import minecrafttransportsimulator.blocks.core.BlockDecor;
-import minecrafttransportsimulator.blocks.core.TileEntityDecor;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.blocks.instances.BlockDecor;
+import minecrafttransportsimulator.blocks.instances.BlockFuelPump;
+import minecrafttransportsimulator.blocks.instances.BlockSignalController;
+import minecrafttransportsimulator.items.core.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
-public class ItemDecor extends AItemPack<JSONDecor>{
+/**Decor item.  Note that while this item can (and does) spawn decor blocks,
+ * it can also spawn traffic signal controllers and fuel pumps depending on
+ * the definition.  This item, therefore, is essentially a catch-all for all
+ * pack, block-based things that aren't poles.
+ * 
+ * @author don_bruce
+ */
+public class ItemDecor extends AItemPack<JSONDecor> implements IItemBlock{
 	
 	public ItemDecor(JSONDecor definition){
 		super(definition);
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
-		if(!world.isRemote && player.getHeldItem(hand) != null){
-			ItemStack heldStack = player.getHeldItem(hand);
-			//Set position to correct spawning position.
-			if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
-	            pos = pos.offset(facing);
-	        }
-			
-			//Based on the block type and light, pick a registered block template.
-			if(!definition.general.oriented && !definition.general.lighted){
-				world.setBlockState(pos, MTSRegistry.decorBasicDark.getDefaultState().withProperty(BlockDecor.FACING, player.getHorizontalFacing().getOpposite()));
-			}else if(definition.general.oriented && !definition.general.lighted){
-				world.setBlockState(pos, MTSRegistry.decorOrientedDark.getDefaultState().withProperty(BlockDecor.FACING, player.getHorizontalFacing().getOpposite()));
-			}else if(!definition.general.oriented && definition.general.lighted){
-				world.setBlockState(pos, MTSRegistry.decorBasicLight.getDefaultState().withProperty(BlockDecor.FACING, player.getHorizontalFacing().getOpposite()));
-			}else if(definition.general.oriented && definition.general.lighted){
-				world.setBlockState(pos, MTSRegistry.decorOrientedLight.getDefaultState().withProperty(BlockDecor.FACING, player.getHorizontalFacing().getOpposite()));
+	public Class<? extends ABlockBase> getBlockClass(){
+		if(definition.general.type != null){
+			switch(definition.general.type){
+				case("fuel_pump") : return BlockFuelPump.class;
+				case("signal_controller") : return BlockSignalController.class;
 			}
-			
-			//Set the decor definition for rendering.
-			((TileEntityDecor) world.getTileEntity(pos)).definition = definition;
-	        
-			//Use up the item we used to spawn this block if we are not in creative.
-			if(!player.capabilities.isCreativeMode){
-				player.inventory.clearMatchingItems(heldStack.getItem(), heldStack.getItemDamage(), 1, heldStack.getTagCompound());
-			}
-			return EnumActionResult.SUCCESS;
 		}
-		return EnumActionResult.FAIL;
+		//Normal decor is assumed to be default per legacy systems.
+		return BlockDecor.class;
+	}
+	
+	@Override
+	public String getModelLocation(){
+		return definition.general.modelName != null ? "objmodels/decors/" + definition.general.modelName + ".obj" : "objmodels/decors/" + definition.systemName + ".obj";
+	}
+	
+	@Override
+	public String getTextureLocation(){
+		return "textures/decors/" + definition.systemName + ".png";
 	}
 }

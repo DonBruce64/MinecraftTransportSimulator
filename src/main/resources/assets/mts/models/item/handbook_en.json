@@ -1,6 +1,0 @@
-{
-    "parent": "mts:item/basic",
-    "textures": {
-        "layer0": "mts:items/handbook_en"
-    }
-}

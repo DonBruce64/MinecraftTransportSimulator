@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.lwjgl.BufferUtils;
 
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -14,10 +14,8 @@ import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
@@ -44,7 +42,7 @@ public abstract class APart implements ISoundProvider{
 	public final Vec3d partRotation;
 	public final boolean inverseMirroring;
 	public final boolean disableMirroring;
-	private final FloatBuffer soundPosition = BufferUtils.createFloatBuffer(3);
+	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	
 	/**The parent of this part, if this part is a sub-part of a part or an additional part for a vehicle.*/
 	public final APart parentPart;
@@ -169,27 +167,14 @@ public abstract class APart implements ISoundProvider{
 	
 	/**Called when the vehicle removes this part.
 	 * Allows for parts to trigger logic that happens when they are removed.
-	 * By default, this removes all sub-parts from the vehicle.
-	 * It also removes any extra parts as defined in the vehicle JSON.
-	 * Make sure to call the part's removal methods PRIOR to removing them
-	 * from their vehicle as they need to be set invalid to prevent
-	 * bad packets from arriving on the client.
+	 * Note that hitboxes are configured to not allow this part to be
+	 * wrenched if it has children, so it may be assumed that no child
+	 * parts are present when this action occurs.  Do note that it's possible
+	 * this part is a child to another part, so you will need to remove this
+	 * part as the child from its parent if is has one.
 	 */
 	public void removePart(){
 		this.isValid = false;
-		while(childParts.size() > 0){
-			APart childPart = childParts.get(0);
-			childPart.removePart();
-			vehicle.removePart(childPart, false);
-			if(!vehicle.world.isRemote){
-				Item droppedItem = childPart.getItemForPart();
-				if(droppedItem != null){
-					ItemStack droppedStack = new ItemStack(droppedItem);
-					droppedStack.setTagCompound(childPart.getPartNBTTag());
-					vehicle.world.spawnEntity(new EntityItem(vehicle.world, childPart.partPos.x, childPart.partPos.y, childPart.partPos.z, droppedStack));
-				}
-			}
-		}
 		if(this.parentPart != null){
 			this.parentPart.childParts.remove(this);
 		}
@@ -245,6 +230,9 @@ public abstract class APart implements ISoundProvider{
 			sound.stop();
 		}
 	}
+	
+	@Override
+	public void restartSound(SoundInstance sound){}
     
 	@Override
     public FloatBuffer getProviderPosition(){
@@ -254,5 +242,10 @@ public abstract class APart implements ISoundProvider{
 	@Override
     public FloatBuffer getProviderVelocity(){
 		return vehicle.getProviderVelocity();
+	}
+	
+	@Override
+    public int getProviderDimension(){
+		return vehicle.getProviderDimension();
 	}
 }

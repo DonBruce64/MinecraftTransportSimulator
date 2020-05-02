@@ -3,6 +3,8 @@ package minecrafttransportsimulator.systems;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -39,6 +41,13 @@ public final class ConfigSystem{
 		if(configFile.exists()){
 			try{
 				configObject = new Gson().fromJson(new FileReader(configFile), JSONConfig.class);
+				//Check to make sure we have all our fuels.  We may have loaded a new engine type this launch.
+				for(Entry<String, Map<String, Double>> fuelValues : JSONConfig.ConfigFuel.getDefaultFuels().entrySet()){
+					if(!configObject.fuel.fuels.containsKey(fuelValues.getKey())){
+						System.out.println(fuelValues.getKey());
+						configObject.fuel.fuels.put(fuelValues.getKey(), fuelValues.getValue());
+					}
+				}
 			}catch(Exception e){
 				MTS.MTSLog.error("ERROR: ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
 				MTS.MTSLog.error(e.getMessage());

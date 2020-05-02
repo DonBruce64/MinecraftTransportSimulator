@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.vehicles.main;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,8 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.lwjgl.BufferUtils;
 
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -24,10 +24,13 @@ import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.APartGun;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
+import minecrafttransportsimulator.wrappers.WrapperAudio;
+import minecrafttransportsimulator.wrappers.WrapperBlockFakeLight;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -46,7 +49,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public boolean hornOn;
 	public boolean sirenOn;
 	
-	public byte throttle;
 	public byte totalGuns = 0;
 	public double fuel;
 	public boolean reverseThrust;
@@ -67,10 +69,13 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
 	public final Set<LightType> lightsOn = new HashSet<LightType>();
 	
+	//Fake light position for this vehicle.
+	private BlockPos fakeLightPosition;
+	
 	//Internal radio variables.
 	private final Radio radio = new Radio(this);
-	private final FloatBuffer soundPosition = BufferUtils.createFloatBuffer(3);
-	private final FloatBuffer soundVelocity = BufferUtils.createFloatBuffer(3);
+	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
+	private final FloatBuffer soundVelocity = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	
 	
 	public EntityVehicleE_Powered(World world){
@@ -97,6 +102,41 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				if(engine.state.running){
 					lightsOn.add(LightType.DAYTIMERUNNINGLIGHT);
 					break;
+				}
+			}
+			
+			//Make the light bright at our position if lights are on.
+			//DRLs are always on, so check for that.
+			if(world.isRemote){
+				if(ConfigSystem.configObject.client.vehicleBlklt.value){
+					if(lightsOn.contains(LightType.DAYTIMERUNNINGLIGHT) ? lightsOn.size() > 1 : !lightsOn.isEmpty()){
+						BlockPos newPos = getPosition();
+						//Check to see if we need to place a light.
+						if(!newPos.equals(fakeLightPosition)){
+							//If our prior position is not null, remove that block.
+							if(fakeLightPosition != null){
+								world.setBlockToAir(fakeLightPosition);
+								world.checkLight(fakeLightPosition);
+								fakeLightPosition = null;
+							}
+							//Set block in world and update pos.  Only do this if the block is air.
+							if(world.isAirBlock(newPos)){
+								world.setBlockState(newPos, WrapperBlockFakeLight.instance.getDefaultState());
+								world.checkLight(newPos);
+								fakeLightPosition = newPos;
+							}
+						}
+					}else if(fakeLightPosition != null){
+						//Lights are off, turn off fake light.
+						world.setBlockToAir(fakeLightPosition);
+						world.checkLight(fakeLightPosition);
+						fakeLightPosition = null;
+					}
+				}else if(fakeLightPosition != null){
+					//Fake light config was on, but was turned off.  Get rid of the remaining fake light.
+					world.setBlockToAir(fakeLightPosition);
+					world.checkLight(fakeLightPosition);
+					fakeLightPosition = null;
 				}
 			}
 			
@@ -138,6 +178,14 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			soundVelocity.put((float) motionY);
 			soundVelocity.put((float) motionZ);
 			soundVelocity.flip();
+		}
+	}
+	
+	@Override
+	public void setDead(){
+		super.setDead();
+		if(fakeLightPosition != null){
+			world.setBlockToAir(fakeLightPosition);
 		}
 	}
 	
@@ -244,40 +292,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		}
 	}
 	
-	protected void performGroundOperations(){
-		float brakingFactor = getBrakingForceFactor();
-		if(brakingFactor > 0){
-			double groundSpeed = Math.hypot(motionX, motionZ)*Math.signum(velocity);
-			groundSpeed -= 20F*brakingFactor/currentMass*Math.signum(velocity);
-			if(Math.abs(groundSpeed) > 0.1){
-				reAdjustGroundSpeed(groundSpeed);
-			}else{
-				motionX = 0;
-				motionZ = 0;
-				motionYaw = 0;
-			}
-		}
-		
-		float skiddingFactor = getSkiddingFactor();
-		if(skiddingFactor != 0){
-			Vec3d groundVelocityVec = new Vec3d(motionX, 0, motionZ).normalize();
-			Vec3d groundHeadingVec = new Vec3d(headingVec.x, 0, headingVec.z).normalize();
-			float vectorDelta = (float) groundVelocityVec.distanceTo(groundHeadingVec);
-			byte velocitySign = (byte) (vectorDelta < 1 ? 1 : -1);
-			if(vectorDelta > 0.001){
-				vectorDelta = Math.min(skiddingFactor, vectorDelta);
-				float yawTemp = rotationYaw;
-				rotationYaw += vectorDelta;
-				updateHeadingVec();
-				reAdjustGroundSpeed(Math.hypot(motionX, motionZ)*velocitySign);
-				rotationYaw = yawTemp;
-			}
-		}
-		
-		motionYaw += getTurningFactor();
-	}
-	
-	
 	//-----START OF SOUND CODE-----
 	@Override
 	public void updateProviderSound(SoundInstance sound){
@@ -293,6 +307,15 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			}
 		}
 	}
+	
+	@Override
+	public void restartSound(SoundInstance sound){
+		if(sound.soundName.equals(definition.motorized.hornSound)){
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.motorized.hornSound, true));
+		}else if(sound.soundName.equals(definition.motorized.sirenSound)){
+			WrapperAudio.playQuickSound(new SoundInstance(this, definition.motorized.sirenSound, true));
+		}
+	}
     
 	@Override
     public FloatBuffer getProviderPosition(){
@@ -302,6 +325,11 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	@Override
     public FloatBuffer getProviderVelocity(){
 		return soundVelocity;
+	}
+	
+	@Override
+    public int getProviderDimension(){
+		return world.provider.getDimension();
 	}
 	
 	@Override
@@ -315,7 +343,6 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public void readFromNBT(NBTTagCompound tagCompound){
     	this.soundsNeedInit = world.isRemote && definition == null; 
     	super.readFromNBT(tagCompound);
-		this.throttle=tagCompound.getByte("throttle");
 		this.fuel=tagCompound.getDouble("fuel");
 		this.electricPower=tagCompound.getDouble("electricPower");
 		this.fluidName=tagCompound.getString("fluidName");
@@ -360,8 +387,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
     
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
-		super.writeToNBT(tagCompound);		
-		tagCompound.setByte("throttle", this.throttle);
+		super.writeToNBT(tagCompound);
 		tagCompound.setDouble("fuel", this.fuel);
 		tagCompound.setDouble("electricPower", this.electricPower);
 		tagCompound.setString("fluidName", this.fluidName);
@@ -396,7 +422,15 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		RUNNINGLIGHT(false),
 		HEADLIGHT(true),
 		EMERGENCYLIGHT(false),
-		DAYTIMERUNNINGLIGHT(false);
+		DAYTIMERUNNINGLIGHT(false),
+		
+		//The following light types are only for block-based systems.
+		UNLINKEDLIGHT(false),
+		STOPLIGHT(false),
+		CAUTIONLIGHT(false),
+		GOLIGHT(false),
+		STREETLIGHT(true),
+		DECORLIGHT(false);
 		
 		public final boolean hasBeam;
 		private LightType(boolean hasBeam){

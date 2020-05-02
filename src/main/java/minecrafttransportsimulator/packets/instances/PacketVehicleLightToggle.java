@@ -15,7 +15,7 @@ import minecrafttransportsimulator.wrappers.WrapperWorld;
  * @author don_bruce
  */
 public class PacketVehicleLightToggle extends APacketVehicle{
-	private LightType lightType;
+	private final LightType lightType;
 	
 	public PacketVehicleLightToggle(EntityVehicleE_Powered vehicle, LightType lightType){
 		super(vehicle);

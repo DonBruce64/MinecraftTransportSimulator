@@ -29,6 +29,7 @@ public final class RenderVehicle_RotatablePart{
 	private final String[] rotationVariables;
 	private final Float[] rotationClampsMin;
 	private final Float[] rotationClampsMax;
+	private final Boolean[] rotationAbsolutes;
 	
 	private static final Map<String, Integer> partDisplayLists = new HashMap<String, Integer>();
 	
@@ -45,6 +46,7 @@ public final class RenderVehicle_RotatablePart{
 		List<String> rotationVariablesList = new ArrayList<String>();
 		List<Float> rotationClampsMinList = new ArrayList<Float>();
 		List<Float> rotationClampsMaxList = new ArrayList<Float>();
+		List<Boolean> rotationAbsolutesList = new ArrayList<Boolean>();
 		for(VehicleRotatableModelObject rotatable : rotatableModelObjects){
 			if(rotatable != null && rotatable.partName.equals(this.name)){
 				if(rotatable.rotationPoint != null){
@@ -67,6 +69,7 @@ public final class RenderVehicle_RotatablePart{
 				}
 				rotationClampsMinList.add(rotatable.rotationClampMin);
 				rotationClampsMaxList.add(rotatable.rotationClampMax);
+				rotationAbsolutesList.add(rotatable.absoluteValue);
 			}
 		}
 		
@@ -77,6 +80,7 @@ public final class RenderVehicle_RotatablePart{
 		this.rotationVariables = rotationVariablesList.toArray(new String[rotationVariablesList.size()]);
 		this.rotationClampsMin = rotationClampsMinList.toArray(new Float[rotationClampsMinList.size()]);
 		this.rotationClampsMax = rotationClampsMaxList.toArray(new Float[rotationClampsMaxList.size()]);
+		this.rotationAbsolutes = rotationAbsolutesList.toArray(new Boolean[rotationAbsolutesList.size()]);
 	}
 	
 	/**
@@ -91,7 +95,7 @@ public final class RenderVehicle_RotatablePart{
 		//This also allows for multi-variable clamping.
 		double rotation = 0;
 		for(byte i=0; i<rotationVariables.length; ++i){
-			rotation = RenderAnimations.getVariableValue(rotationVariables[i], rotationMagnitudes[i], (float) rotation, rotationClampsMin[i], rotationClampsMax[i], partialTicks, vehicle, optionalPart);
+			rotation = RenderAnimations.getVariableValue(rotationVariables[i], rotationMagnitudes[i], (float) rotation, rotationClampsMin[i], rotationClampsMax[i], rotationAbsolutes[i], partialTicks, vehicle, optionalPart);
 			//If the next definition is the same point, and a co-linear vector, don't apply rotation yet.
 			//If we are co-linear, we may need to invert the rotation if our rotation is backwards.
 			if(i + 1 < rotationVariables.length && rotationPoints[i].equals(rotationPoints[i + 1])){

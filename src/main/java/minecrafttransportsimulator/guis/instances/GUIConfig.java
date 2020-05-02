@@ -162,6 +162,7 @@ public class GUIConfig extends AGUIBase{
 		
 		//Keyboard buttons and text.
 		keyboardBoxes.clear();
+		keyboardLabels.clear();
 		for(String vehicleType : vehicleTypes){
 			//First add the editable controls.
 			int verticalOffset = 20;
@@ -211,6 +212,7 @@ public class GUIConfig extends AGUIBase{
 		
 		
 		//Joystick selection buttons and text.
+		joystickSelectionButtons.clear();
 		for(String joystick : WrapperInput.getAllJoysticks()){
 			GUIComponentButton button = new GUIComponentButton(guiLeft + 10, guiTop + 40 + 20*joystickSelectionButtons.size(), 235, String.format(" %-30.28s", joystick), 20, false){public void onClicked(){selectedJoystick = joystickSelectionButtons.get(this);}};
 			joystickSelectionButtons.put(button, joystick);
@@ -226,6 +228,7 @@ public class GUIConfig extends AGUIBase{
 		
 		
 		//Joystick component selection buttons and text.
+		joystickComponentSelectionButtons.clear();
 		for(int i=0; i<9; ++i){
 			JoystickControlButton button = new JoystickControlButton(guiLeft+10, guiTop+45+15*i);
 			joystickComponentSelectionButtons.add(button);

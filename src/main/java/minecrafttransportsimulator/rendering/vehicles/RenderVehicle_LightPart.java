@@ -5,13 +5,14 @@ import java.awt.Color;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.Vec3d;
+import minecrafttransportsimulator.wrappers.WrapperRender;
+import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraft.world.EnumSkyBlock;
-import net.minecraftforge.client.MinecraftForgeClient;
 
 /**This class represents a lighted part on a vehicle.  Inputs are the name of the lighted parts,
  * and all vertices that make up the part.
@@ -19,11 +20,6 @@ import net.minecraftforge.client.MinecraftForgeClient;
  * @author don_bruce
  */
 public final class RenderVehicle_LightPart{
-	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
-	private static final ResourceLocation lensFlareTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lensflare.png");
-	private static final ResourceLocation lightTexture = new ResourceLocation(MTS.MODID, "textures/rendering/light.png");
-	private static final ResourceLocation lightBeamTexture = new ResourceLocation(MTS.MODID, "textures/rendering/lightbeam.png");
-	
 	public final String name;
 	public final LightType type;
 	public final boolean isLightupTexture;
@@ -35,7 +31,7 @@ public final class RenderVehicle_LightPart{
 	private final boolean renderCover;
 	
 	private final Float[][] vertices;
-	private final Vec3d[] centerPoints;
+	private final Point3d[] centerPoints;
 	private final Float[] size;
 	
 	//This can't be final as we'll do a double-display-list if we try to do this on construction.
@@ -63,7 +59,7 @@ public final class RenderVehicle_LightPart{
 		//If we need to render a flare, cover, or beam, calculate the center points and re-calculate the UV points.
 		if(renderFlare || renderCover || type.hasBeam){
 			this.vertices = new Float[masterVertices.length][];
-			this.centerPoints = new Vec3d[masterVertices.length/6];
+			this.centerPoints = new Point3d[masterVertices.length/6];
 			this.size = new Float[masterVertices.length/6];
 			for(short i=0; i<centerPoints.length; ++i){
 				double minX = 999;
@@ -100,7 +96,7 @@ public final class RenderVehicle_LightPart{
 					
 					this.vertices[(i)*6 + j] = newVertex;
 				}
-				this.centerPoints[i] = new Vec3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
+				this.centerPoints[i] = new Point3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
 				this.size[i] = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*32F;
 			}
 		}else{
@@ -114,74 +110,88 @@ public final class RenderVehicle_LightPart{
 	}
 	
 	/**
-	 *  Renders this light based on the state of the vehicle and whether or not it was rendered in a prior pass.
-	 *  This method needs to know the brightness of the sun and blocks to calculate the brightness of the lights.
-	 *  It calculates this based on the environment of the passed-in vehicle.  It also uses the vehicle's electric
-	 *  power level to determine brightness.  Rendering is done in all passes.
+	 *  Renders this light for this vehicle.  This falls down to the method below for actual rendering.  Segmented
+	 *  to allow for other things to use vehicle lighting code, such as blocks.
 	 */
-	public void render(EntityVehicleE_Powered vehicle, boolean wasRenderedPrior, ResourceLocation vehicleTexture){
-		boolean lightActuallyOn = isLightActuallyOn(vehicle);
-		float sunLight = vehicle.world.getSunBrightness(0)*vehicle.world.getLightBrightness(vehicle.getPosition());
-		float blockLight = vehicle.world.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, vehicle.getPosition())/15F;
+	public void renderOnVehicle(EntityVehicleE_Powered vehicle, boolean wasRenderedPrior, String textureDomain, String textureLocation){
+		boolean lightActuallyOn = vehicle.lightsOn.contains(type) && isFlashingLightOn();
+		float sunLight = vehicle.world.getSunBrightness(0)*(vehicle.world.getLightFor(EnumSkyBlock.SKY, vehicle.getPosition()) - vehicle.world.getSkylightSubtracted())/15F;
 		//Lights start dimming due to low power at 8V.
 		float electricFactor = (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1);
 		//Max brightness occurs when ambient light is 0 and we have at least 8V power.
-		float lightBrightness = Math.min((1 - Math.max(sunLight, blockLight))*electricFactor, 1);
-
+		float lightBrightness = Math.min((1 - sunLight)*electricFactor, 1);
+		render(lightActuallyOn, wasRenderedPrior, (float) vehicle.electricPower, electricFactor, lightBrightness, textureDomain, textureLocation);
+	}
+	
+	/**
+	 *  Renders this light at a specific block-based position.  Full power and brightness is assumed.
+	 */
+	public void renderOnBlock(WrapperWorld world, Point3i location, boolean lightActive, String textureDomain, String textureLocation){
+		render(lightActive && isFlashingLightOn(), WrapperRender.getRenderPass() == -1, 12.0F, 1.0F, 1 - world.getLightBrightness(location, false), textureDomain, textureLocation);
+	}
+	
+	/**
+	 *  Renders this light based on the state of the lighting at the passed-in position.  This main call can be used for
+	 *  multiple sources of light, not just vehicles.  Rendering is done in all passes.
+	 */
+	public void render(boolean lightOn, boolean wasRenderedPrior, float electricPower, float electricFactor, float lightBrightness, String textureDomain, String textureLocation){
 		//Render the texture, color, and cover in pass 0 or -1 as we don't want blending.
-		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
+		if(WrapperRender.getRenderPass() != 1 && !wasRenderedPrior){
 			//Render the texture if we are a light-up texture light.
 			//Otherwise, don't render the texture here as it'll be in the main vehicle DisplayList.
 			if(isLightupTexture){
-				renderTexture(lightActuallyOn && electricFactor > 0, vehicleTexture);
+				renderTexture(lightOn && electricFactor > 0, textureDomain, textureLocation);
 			}
 			
 			//Render the color portion of the light if required and we have power.
 			//We use electricFactor as color shows up even in daylight.
-			if(renderColor && lightActuallyOn && electricFactor > 0){
+			if(renderColor && lightOn && electricFactor > 0){
 				renderColor(electricFactor);
 			}
 			
 			//Render the cover portion of this light if required.
 			//If the light is on, and the vehicle has power, we want to make the cover bright.
 			if(renderCover){
-				renderCover(lightActuallyOn && electricFactor > 0);
+				renderCover(lightOn && electricFactor > 0);
 			}
 		}
 		
-		//If we need to render a flare, and the light is on, and our brightness is non-zero, do so now..
+		//Flag for flare and beam rendering.
+		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.client.lightsPass0.value ? WrapperRender.getRenderPass() != 1 : WrapperRender.getRenderPass() != 0) && !wasRenderedPrior; 
+		
+		//If we need to render a flare, and the light is on, and our brightness is non-zero, do so now.
 		//This needs to be done in pass 1 or -1 to do blending.
-		if(renderFlare && lightActuallyOn && lightBrightness > 0 && MinecraftForgeClient.getRenderPass() != 0 && !wasRenderedPrior){
+		if(renderFlare && lightOn && doBlendRenders){
 			renderFlare(lightBrightness);
 		}
 		
 		//Render beam if the light is on and the brightness is non-zero.
-		//This must be done in pass -1 to do proper blending.
-		if(lightActuallyOn && MinecraftForgeClient.getRenderPass() == -1){
-			renderBeam(Math.min(vehicle.electricPower > 4 ? 1.0F : 0, lightBrightness/2F));
+		//This must be done in pass 1 or -1 to do proper blending.
+		if(type.hasBeam && lightOn && doBlendRenders){
+			renderBeam(Math.min(electricPower > 4 ? 1.0F : 0, lightBrightness));
 		}
+		
+		//Set color, lighting and blending state back to normal.
+		WrapperRender.resetStates();
 	}
 	
 	/**
 	 *  Returns true if this light is actually on.  This takes into account the flashing
-	 *  bit portion of the light as well as if the light is set to be on in the vehicle.
+	 *  bit portion of the light.
 	 */
-	private boolean isLightActuallyOn(EntityVehicleE_Powered vehicle){
+	protected boolean isFlashingLightOn(){
 		//Fun with bit shifting!  20 bits make up the light on index here, so align to a 20 tick cycle.
-		return vehicle.lightsOn.contains(type) ? ((flashBits >> vehicle.world.getTotalWorldTime()%20) & 1) > 0 : false;
+		return ((flashBits >> (20*System.currentTimeMillis()/1000)%20) & 1) > 0;
 	}
 	
 	/**
 	 *  Renders the textured portion of this light.  All that really needs to be done here
 	 *  is disabling lighting to make the texture be bright if we have enough electricity to do so.
 	 */
-	private void renderTexture(boolean disableLighting, ResourceLocation vehicleTexture){
-		Minecraft.getMinecraft().getTextureManager().bindTexture(vehicleTexture);
-		if(disableLighting){
-			//GL11.glDisable(GL11.GL_LIGHTING);
-			Minecraft.getMinecraft().entityRenderer.disableLightmap();
-		}
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+	private void renderTexture(boolean disableLighting, String textureDomain, String textureLocation){
+		WrapperRender.bindTexture(textureDomain, textureLocation);
+		WrapperRender.setLightingState(!disableLighting);
+		WrapperRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 		
 		//If we don't have a DisplayList, create one now.
 		if(displayListIndex == -1){
@@ -197,11 +207,6 @@ public final class RenderVehicle_LightPart{
 			GL11.glEndList();
 		}
 		GL11.glCallList(displayListIndex);
-		
-		if(disableLighting){
-			//GL11.glEnable(GL11.GL_LIGHTING);
-			Minecraft.getMinecraft().entityRenderer.enableLightmap();
-		}
 	}
 	
 	/**
@@ -209,10 +214,9 @@ public final class RenderVehicle_LightPart{
 	 *  Parameter is the alpha value for the light.
 	 */
 	private void renderColor(float alphaValue){
-		Minecraft.getMinecraft().getTextureManager().bindTexture(lightTexture);
-		Minecraft.getMinecraft().entityRenderer.disableLightmap();
-		GL11.glColor4f(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
-		GL11.glDisable(GL11.GL_LIGHTING);
+		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/light.png");
+		WrapperRender.setLightingState(false);
+		WrapperRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(Float[] vertex : vertices){
 			//Add a slight translation and scaling to the light coords based on the normals to make the light
@@ -222,9 +226,6 @@ public final class RenderVehicle_LightPart{
 			GL11.glVertex3f(vertex[0]+vertex[5]*0.0001F, vertex[1]+vertex[6]*0.0001F, vertex[2]+vertex[7]*0.0001F);	
 		}
 		GL11.glEnd();
-		GL11.glEnable(GL11.GL_LIGHTING);
-		GL11.glColor4f(1, 1, 1, 1);
-		Minecraft.getMinecraft().entityRenderer.enableLightmap();
 	}
 	
 	/**
@@ -232,12 +233,9 @@ public final class RenderVehicle_LightPart{
 	 *  passed-in will disable lighting for the cover if true.
 	 */
 	private void renderCover(boolean disableLighting){
-		Minecraft.getMinecraft().getTextureManager().bindTexture(vanillaGlassTexture);
-		if(disableLighting){
-			GL11.glDisable(GL11.GL_LIGHTING);
-			Minecraft.getMinecraft().entityRenderer.disableLightmap();
-		}
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+		WrapperRender.bindTexture("minecraft", "textures/blocks/glass.png");
+		WrapperRender.setLightingState(!disableLighting);
+		WrapperRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(Float[] vertex : vertices){
 			//Add a slight translation and scaling to the cover coords based on the normals to make the light
@@ -247,10 +245,6 @@ public final class RenderVehicle_LightPart{
 			GL11.glVertex3f(vertex[0]+vertex[5]*0.0003F, vertex[1]+vertex[6]*0.0003F, vertex[2]+vertex[7]*0.0003F);	
 		}
 		GL11.glEnd();
-		if(disableLighting){
-			GL11.glEnable(GL11.GL_LIGHTING);
-			Minecraft.getMinecraft().entityRenderer.enableLightmap();
-		}
 	}
 	
 	/**
@@ -259,10 +253,10 @@ public final class RenderVehicle_LightPart{
 	 *  both lighting and lightmap here to prevent the flare from being dim.
 	 */
 	private void renderFlare(float alphaValue){
-		Minecraft.getMinecraft().getTextureManager().bindTexture(lensFlareTexture);
-		Minecraft.getMinecraft().entityRenderer.disableLightmap();
-		GL11.glColor4f(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
-		GL11.glDisable(GL11.GL_LIGHTING);
+		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/lensflare.png");
+		WrapperRender.setLightingState(false);
+		WrapperRender.setBlendState(true, ConfigSystem.configObject.client.flareBlending.value);
+		WrapperRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(byte i=0; i<centerPoints.length; ++i){
 			for(byte j=0; j<6; ++j){
@@ -277,9 +271,6 @@ public final class RenderVehicle_LightPart{
 			}
 		}
 		GL11.glEnd();
-		GL11.glEnable(GL11.GL_LIGHTING);
-		GL11.glColor4f(1, 1, 1, 1);
-		Minecraft.getMinecraft().entityRenderer.enableLightmap();
 	}
 	
 	/**
@@ -287,61 +278,41 @@ public final class RenderVehicle_LightPart{
 	 *  Parameter is the alpha value for the light.
 	 */
 	private void renderBeam(float alphaValue){
-		if(type.hasBeam){
-			Minecraft.getMinecraft().entityRenderer.disableLightmap();
-			Minecraft.getMinecraft().getTextureManager().bindTexture(lightBeamTexture);
+		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/lightbeam.png");
+		WrapperRender.setLightingState(false);
+		WrapperRender.setBlendState(true, ConfigSystem.configObject.client.beamBlending.value);
+		WrapperRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
+		
+		//As we can have more than one light per definition, we will only render 6 vertices at a time.
+		//Use the center point arrays for this; normals are the same for all 6 vertex sets so use whichever.
+		for(byte i=0; i<centerPoints.length; ++i){
 			GL11.glPushMatrix();
-	    	GL11.glDisable(GL11.GL_LIGHTING);
-	    	GL11.glEnable(GL11.GL_BLEND);
-	    	GL11.glColor4f(1, 1, 1, alphaValue);
-	    	//Allows making things brighter by using alpha blending.
-	    	GL11.glDepthMask(false);
-	    	GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
-			
-			//As we can have more than one light per definition, we will only render 6 vertices at a time.
-			//Use the center point arrays for this; normals are the same for all 6 vertex sets so use whichever.
-			for(byte i=0; i<centerPoints.length; ++i){
-				GL11.glPushMatrix();
-				//Translate light to the center of the cone beam.
-				GL11.glTranslated(centerPoints[i].x - vertices[i*6][5]*0.15F, centerPoints[i].y - vertices[i*6][6]*0.15F, centerPoints[i].z - vertices[i*6][7]*0.15F);
-				//Rotate beam to the normal face.
-				GL11.glRotatef((float) Math.toDegrees(Math.atan2(vertices[i*6][6], vertices[i*6][5])), 0, 0, 1);
-				GL11.glRotatef((float) Math.toDegrees(Math.acos(vertices[i*6][7])), 0, 1, 0);
-				//Now draw the beam
-				GL11.glDepthMask(false);
-				for(byte j=0; j<=2; ++j){
-		    		drawLightCone(size[i], false);
-		    	}
-				drawLightCone(size[i], true);
-				GL11.glPopMatrix();
-			}
-	    	GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-	    	GL11.glDepthMask(true);
-			GL11.glDisable(GL11.GL_BLEND);
+			//Translate light to the center of the cone beam.
+			GL11.glTranslated(centerPoints[i].x - vertices[i*6][5]*0.15F, centerPoints[i].y - vertices[i*6][6]*0.15F, centerPoints[i].z - vertices[i*6][7]*0.15F);
+			//Rotate beam to the normal face.
+			GL11.glRotatef((float) Math.toDegrees(Math.atan2(vertices[i*6][6], vertices[i*6][5])), 0, 0, 1);
+			GL11.glRotatef((float) Math.toDegrees(Math.acos(vertices[i*6][7])), 0, 1, 0);
+			//Now draw the beam
+			drawLightCone(size[i]);
 			GL11.glPopMatrix();
-			GL11.glEnable(GL11.GL_LIGHTING);
-			GL11.glColor4f(1, 1, 1, 1);
-			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		}
 	}
 	
 	/**
 	 *  Helper method to draw a light cone for the beam rendering.
+	 *  Draws two outer and one inner cone.
 	 */
-	private static void drawLightCone(double radius, boolean reverse){
+	private static void drawLightCone(double radius){
 		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
 		GL11.glTexCoord2f(0, 0);
 		GL11.glVertex3d(0, 0, 0);
-		if(reverse){
-			for(float theta=0; theta < 2*Math.PI + 0.1; theta += 2F*Math.PI/40F){
-				GL11.glTexCoord2f(theta, 1);
-				GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
-			}
-		}else{
-			for(float theta=(float) (2*Math.PI); theta>=0 - 0.1; theta -= 2F*Math.PI/40F){
-				GL11.glTexCoord2f(theta, 1);
-				GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
-			}
+		for(float theta=(float) (2*Math.PI); theta>=0 - 0.1; theta -= 2F*Math.PI/40F){
+			GL11.glTexCoord2f(theta, 1);
+			GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
+		}
+		for(float theta=0; theta < 2*Math.PI + 0.1; theta += 2F*Math.PI/40F){
+			GL11.glTexCoord2f(theta, 1);
+			GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
 		}
 		GL11.glEnd();
 	}

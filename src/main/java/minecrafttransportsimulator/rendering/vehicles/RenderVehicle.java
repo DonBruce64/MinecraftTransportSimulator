@@ -15,6 +15,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ClientEventSystem;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
@@ -218,9 +219,11 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
        
         //Set up lighting.
         int lightVar = vehicle.getBrightnessForRender();
-        minecraft.entityRenderer.enableLightmap();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
-        RenderHelper.enableStandardItemLighting();
+        if(MinecraftForgeClient.getRenderPass() == -1){
+	        minecraft.entityRenderer.enableLightmap();
+	        RenderHelper.enableStandardItemLighting();
+        }
         
 		//Bind texture.  Adds new element to cache if needed.
 		if(!textureMap.containsKey(vehicle.definition.systemName)){
@@ -243,8 +246,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			GL11.glEnable(GL11.GL_NORMALIZE);
 			renderWindows(vehicle, partialTicks);
 			GL11.glDisable(GL11.GL_NORMALIZE);
-			renderTextMarkings(vehicle);
 			renderInstruments(vehicle);
+			RenderHelper.disableStandardItemLighting();
+			renderTextMarkings(vehicle);
+			RenderHelper.enableStandardItemLighting();
 			GL11.glShadeModel(GL11.GL_FLAT);
 			GL11.glPopMatrix();
 			
@@ -269,6 +274,12 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}
 		
+		//Make sure lightmaps are set correctly.
+		if(MinecraftForgeClient.getRenderPass() == -1){
+			RenderHelper.disableStandardItemLighting();
+			minecraft.entityRenderer.disableLightmap();
+		}
+		
 		//Render lights, but make sure the light list is populated here before we try to render this, as loading de-syncs can leave it null.
 		if(vehicleLightLists.get(vehicle.definition.genericName) != null){
 			GL11.glPushMatrix();
@@ -284,15 +295,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//Render holograms for missing parts if applicable.
 		if(MinecraftForgeClient.getRenderPass() != 0 && !wasRenderedPrior){
 			renderPartBoxes(vehicle);
-		}
-		
-		//Make sure lightmaps are set correctly.
-		if(MinecraftForgeClient.getRenderPass() == -1){
-			RenderHelper.disableStandardItemLighting();
-			minecraft.entityRenderer.disableLightmap();
-		}else{
-			RenderHelper.enableStandardItemLighting();
-			minecraft.entityRenderer.enableLightmap();
 		}
 		GL11.glPopMatrix();
 		
@@ -316,40 +318,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 */
 	private static void renderMainModel(EntityVehicleE_Powered vehicle, float partialTicks){
-		GL11.glPushMatrix();
 		//Normally we use the pack name, but since all displaylists
 		//are the same for all models, this is more appropriate.
-		if(vehicleDisplayLists.containsKey(vehicle.definition.genericName)){
-			GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.genericName));
-			
-			//The display list only renders static parts.  We need to render dynamic ones manually.
-			//If this is a window, don't render it as that gets done all at once later.
-			//First render all rotatable parts.  If they are also translatable, translate first.
-			for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
-				if(!rotatable.name.toLowerCase().contains("window")){
-					GL11.glPushMatrix();
-					if(rotatable.name.contains("%")){
-						for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
-							if(translatable.name.equals(rotatable.name)){
-								translatable.translate(vehicle, null, partialTicks);
-								break;
-							}
-						}
-					}
-					rotatable.render(vehicle, null, partialTicks);
-					GL11.glPopMatrix();
-				}
-			}
-			
-			//Now render all translatable parts that don't rotate.
-			for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
-				if(!translatable.name.toLowerCase().contains("window") && !translatable.name.contains("$")){
-					GL11.glPushMatrix();
-					translatable.render(vehicle, null, partialTicks);
-					GL11.glPopMatrix();
-				}
-			}
-		}else{
+		if(!vehicleDisplayLists.containsKey(vehicle.definition.genericName)){
 			List<RenderVehicle_RotatablePart> rotatableParts = new ArrayList<RenderVehicle_RotatablePart>();
 			List<RenderVehicle_TranslatablePart> translatableParts = new ArrayList<RenderVehicle_TranslatablePart>();
 			List<RenderVehicle_LightPart> lightParts = new ArrayList<RenderVehicle_LightPart>();
@@ -414,7 +385,36 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			vehicleLightLists.put(vehicle.definition.genericName, lightParts);
 			vehicleWindowLists.put(vehicle.definition.genericName, windows);
 		}
-		GL11.glPopMatrix();
+		
+		GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.genericName));
+		
+		//The display list only renders static parts.  We need to render dynamic ones manually.
+		//If this is a window, don't render it as that gets done all at once later.
+		//First render all rotatable parts.  If they are also translatable, translate first.
+		for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
+			if(!rotatable.name.toLowerCase().contains("window")){
+				GL11.glPushMatrix();
+				if(rotatable.name.contains("%")){
+					for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
+						if(translatable.name.equals(rotatable.name)){
+							translatable.translate(vehicle, null, partialTicks);
+							break;
+						}
+					}
+				}
+				rotatable.render(vehicle, null, partialTicks);
+				GL11.glPopMatrix();
+			}
+		}
+		
+		//Now render all translatable parts that don't rotate.
+		for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
+			if(!translatable.name.toLowerCase().contains("window") && !translatable.name.contains("$")){
+				GL11.glPushMatrix();
+				translatable.render(vehicle, null, partialTicks);
+				GL11.glPopMatrix();
+			}
+		}
 	}
 	
 	/**
@@ -479,63 +479,63 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     			partRotatableLists.put(partModelLocation, rotatableParts);
     			partTranslatableLists.put(partModelLocation, translatableParts);
     			partLightLists.put(partModelLocation, lightParts);
-    		}else{
-    			//If we aren't using the vehicle texture, bind the texture for this part.
-    			//Otherwise, bind the vehicle texture as it may have been un-bound prior to this.
-    			if(!part.definition.general.useVehicleTexture){
-    				if(!textureMap.containsKey(part.definition.systemName)){
-        				textureMap.put(part.definition.systemName, part.getTextureLocation());
-        			}
-    				minecraft.getTextureManager().bindTexture(textureMap.get(part.definition.systemName));
-    			}else{
-    				minecraft.getTextureManager().bindTexture(textureMap.get(vehicle.definition.systemName));
-    			}
-    			
-    			//Get basic rotation properties and start the matrix.
-    			Vec3d actionRotation = part.getActionRotation(partialTicks);
-    			GL11.glPushMatrix();
-    			
-    			//If we are a tread, do the tread-specific render.
-        		//Otherwise render like all other parts.
-        		if(part instanceof PartGroundDeviceTread){
-        			//We need to manually do x translation here before rotating to prevent incorrect translation.
-        			GL11.glTranslated(part.offset.x, 0, 0);
-        			rotatePart(part, actionRotation, true);
-        			if(part.packVehicleDef.treadZPoints != null){
-        				doManualTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));	
-        			}else{
-        				doAutomaticTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));
-        			}
-        		}else{
-	    			//Rotate and translate the part prior to rendering the displayList.
-	    			//Note that if the part's parent has a rotation, use that to transform
-	    			//the translation to match that rotation.  Needed for things like
-	    			//tank turrets with seats or guns.
-	    			
-	    			if(part.parentPart != null && !part.parentPart.getActionRotation(partialTicks).equals(Vec3d.ZERO)){
-	    				//TODO play around with this to see if we need the math or we can use partPos.
-	    				Vec3d parentActionRotation = part.parentPart.getActionRotation(partialTicks);
-	    				Vec3d partRelativeOffset = part.offset.subtract(part.parentPart.offset);
-	    				Vec3d partTranslationOffset = part.parentPart.offset.add(RotationSystem.getRotatedPoint(partRelativeOffset, (float) parentActionRotation.x, (float) parentActionRotation.y, (float) parentActionRotation.z));
-	    				GL11.glTranslated(partTranslationOffset.x, partTranslationOffset.y, partTranslationOffset.z);
-	    				rotatePart(part, parentActionRotation.add(actionRotation), true);
-	    			}else{
-	    				GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
-	    				rotatePart(part, actionRotation, true);
-	    			}
-	        		GL11.glCallList(partDisplayLists.get(partModelLocation));
-	    			
-	    			//The display list only renders static parts.  We need to render dynamic ones manually.
-	    			for(RenderVehicle_RotatablePart rotatable : partRotatableLists.get(partModelLocation)){
-	    				GL11.glPushMatrix();
-	    				rotatable.render(vehicle, part, partialTicks);
-	    				GL11.glPopMatrix();
-	    			}
-    			}
-        		GL11.glCullFace(GL11.GL_BACK);
-        		GL11.glPopMatrix();
     		}
-        }
+			
+			//If we aren't using the vehicle texture, bind the texture for this part.
+			//Otherwise, bind the vehicle texture as it may have been un-bound prior to this.
+			if(!part.definition.general.useVehicleTexture){
+				if(!textureMap.containsKey(part.definition.systemName)){
+    				textureMap.put(part.definition.systemName, part.getTextureLocation());
+    			}
+				minecraft.getTextureManager().bindTexture(textureMap.get(part.definition.systemName));
+			}else{
+				minecraft.getTextureManager().bindTexture(textureMap.get(vehicle.definition.systemName));
+			}
+			
+			//Get basic rotation properties and start the matrix.
+			Vec3d actionRotation = part.getActionRotation(partialTicks);
+			GL11.glPushMatrix();
+			
+			//If we are a tread, do the tread-specific render.
+    		//Otherwise render like all other parts.
+    		if(part instanceof PartGroundDeviceTread){
+    			//We need to manually do x translation here before rotating to prevent incorrect translation.
+    			GL11.glTranslated(part.offset.x, 0, 0);
+    			rotatePart(part, actionRotation, true);
+    			if(part.packVehicleDef.treadZPoints != null){
+    				doManualTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));	
+    			}else{
+    				doAutomaticTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));
+    			}
+    		}else{
+    			//Rotate and translate the part prior to rendering the displayList.
+    			//Note that if the part's parent has a rotation, use that to transform
+    			//the translation to match that rotation.  Needed for things like
+    			//tank turrets with seats or guns.
+    			
+    			if(part.parentPart != null && !part.parentPart.getActionRotation(partialTicks).equals(Vec3d.ZERO)){
+    				//TODO play around with this to see if we need the math or we can use partPos.
+    				Vec3d parentActionRotation = part.parentPart.getActionRotation(partialTicks);
+    				Vec3d partRelativeOffset = part.offset.subtract(part.parentPart.offset);
+    				Vec3d partTranslationOffset = part.parentPart.offset.add(RotationSystem.getRotatedPoint(partRelativeOffset, (float) parentActionRotation.x, (float) parentActionRotation.y, (float) parentActionRotation.z));
+    				GL11.glTranslated(partTranslationOffset.x, partTranslationOffset.y, partTranslationOffset.z);
+    				rotatePart(part, parentActionRotation.add(actionRotation), true);
+    			}else{
+    				GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
+    				rotatePart(part, actionRotation, true);
+    			}
+        		GL11.glCallList(partDisplayLists.get(partModelLocation));
+    			
+    			//The display list only renders static parts.  We need to render dynamic ones manually.
+    			for(RenderVehicle_RotatablePart rotatable : partRotatableLists.get(partModelLocation)){
+    				GL11.glPushMatrix();
+    				rotatable.render(vehicle, part, partialTicks);
+    				GL11.glPopMatrix();
+    			}
+			}
+    		GL11.glCullFace(GL11.GL_BACK);
+    		GL11.glPopMatrix();
+		}
 	}
 	
 	/**
@@ -573,9 +573,16 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 		
 		if(!part.partRotation.equals(Vec3d.ZERO)){
-			GL11.glRotated(part.partRotation.x, 1, 0, 0);
-			GL11.glRotated(part.partRotation.y, 0, 1, 0);
-			GL11.glRotated(part.partRotation.z, 0, 0, 1);
+			if(part.parentPart != null) {
+				GL11.glRotated(part.partRotation.z, -Math.sin(Math.toRadians(part.parentPart.getActionRotation(0).y)), 0, Math.cos(Math.toRadians(part.parentPart.getActionRotation(0).y)));
+				GL11.glRotated(part.partRotation.y, 0, 1, 0);
+				GL11.glRotated(part.partRotation.x, Math.cos(Math.toRadians(part.parentPart.getActionRotation(0).y)), 0, Math.sin(Math.toRadians(part.parentPart.getActionRotation(0).y)));
+				}
+			else{
+				GL11.glRotated(part.partRotation.x, 1, 0, 0);
+				GL11.glRotated(part.partRotation.y, 0, 1, 0);
+				GL11.glRotated(part.partRotation.z, 0, 0, 1);
+			}
 		}
 
 		if(!actionRotation.equals(Vec3d.ZERO)){
@@ -700,7 +707,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 		
 		
-		float treadMovementPercentage = (float) ((treadPart.angularPosition + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing);
+		float treadMovementPercentage = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing);
+		if(treadPart.angularPosition < 0){
+			treadMovementPercentage = 1 - treadMovementPercentage;
+		}
 		GL11.glPushMatrix();
 		//First translate to the initial point.
 		GL11.glTranslated(0, treadPart.offset.y + treadPart.packVehicleDef.treadYPoints[0], treadPart.offset.z + treadPart.packVehicleDef.treadZPoints[0]);
@@ -764,8 +774,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				RenderVehicle_TreadRoller roller = rollers[i];
 				roller.startAngle = rollers[i - 1].endAngle;
 				//End angle should be 0-360 greater than start angle, or within
-				//10 degrees less, as is the case for concave rollers. 
-				while(roller.endAngle < roller.startAngle - 10){
+				//30 degrees less, as is the case for concave rollers. 
+				while(roller.endAngle < roller.startAngle - 30){
 					roller.endAngle += 360;
 				}
 				while(roller.endAngle > roller.startAngle + 360){
@@ -877,7 +887,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//We manually set point 0 here due to the fact it's a joint between two differing angles.
 		//We also need to translate to that point to start rendering as we're currently at 0,0,0.
 		//For each remaining point, we only translate the delta of the point.
-		float treadMovementPercentage = (float) ((treadPart.angularPosition + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing);
+		float treadMovementPercentage = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing);
+		if(treadPart.angularPosition < 0){
+			treadMovementPercentage = 1 - treadMovementPercentage;
+		}
 		Double[] priorPoint = points.get(points.size() - 1);
 		Double[] point = points.get(0);
 		double yDelta = point[0] - priorPoint[0];
@@ -964,6 +977,13 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
 				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
 			}
+			if(ConfigSystem.configObject.client.innerWindows.value){
+				for(int j=window.vertices.length - 1; j>=0; --j){
+					GL11.glTexCoord2f(window.vertices[j][3], window.vertices[j][4]);
+					GL11.glNormal3f(window.vertices[j][5], window.vertices[j][6], window.vertices[j][7]);
+					GL11.glVertex3f(window.vertices[j][0], window.vertices[j][1], window.vertices[j][2]);
+				}	
+			}
 			GL11.glEnd();
 			GL11.glPopMatrix();
 		}
@@ -1000,13 +1020,11 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			
 			//Finally, scale and render the text.
 			GL11.glScalef(text.scale, text.scale, text.scale);
-			RenderHelper.disableStandardItemLighting();
 			minecraft.fontRenderer.drawString(vehicle.displayText, -minecraft.fontRenderer.getStringWidth(vehicle.displayText)/2, 0, Color.decode(text.color).getRGB());
 			GL11.glPopMatrix();
 		}
 		GL11.glColor3f(1.0F, 1.0F, 1.0F);
-		RenderHelper.enableStandardItemLighting();
-		if(vehicle.definition.rendering.textLighted){
+		if(vehicle.definition.rendering.textLighted  && isVehicleIlluminated(vehicle)){
 			GL11.glEnable(GL11.GL_LIGHTING);
 			minecraft.entityRenderer.enableLightmap();
 		}
@@ -1036,7 +1054,12 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			GL11.glPushMatrix();
 			//This light may be rotateable.  Check this before continuing.
 			//It could rotate based on a vehicle rotation variable, or a part rotation.
+			//Additionally, texture may be from the part rather than the vehicle.
+			String textureDomain;
+			String textureLocation; 
 			if(vehicleLights.contains(light)){
+				textureDomain = textureMap.get(vehicle.definition.systemName).getResourceDomain();
+				textureLocation = textureMap.get(vehicle.definition.systemName).getResourcePath();
 				for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
 					if(rotatable.name.equals(light.name)){
 						rotatable.rotate(vehicle, null, partialTicks);
@@ -1044,6 +1067,13 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				}
 			}else{
 				APart part = lightIndexToParts.get(lightIndex);
+				if(!part.definition.general.useVehicleTexture){
+    				textureDomain = textureMap.get(part.definition.systemName).getResourceDomain();
+    				textureLocation = textureMap.get(part.definition.systemName).getResourcePath();
+    			}else{
+    				textureDomain = textureMap.get(vehicle.definition.systemName).getResourceDomain();
+    				textureLocation = textureMap.get(vehicle.definition.systemName).getResourcePath();
+    			}
 				GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
 				rotatePart(part, part.getActionRotation(partialTicks), false);
 				for(RenderVehicle_RotatablePart rotatable : partRotatableLists.get(part.getModelLocation())){
@@ -1054,7 +1084,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 
 			//Render the light.
-			light.render(vehicle, wasRenderedPrior, textureMap.get(vehicle.definition.systemName));
+			light.renderOnVehicle(vehicle, wasRenderedPrior, textureDomain, textureLocation);
 			GL11.glPopMatrix();
 		}
 	}
@@ -1176,7 +1206,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 							box = new AxisAlignedBB((float) (offset.x) - 0.375F, (float) (offset.y) - 0.5F, (float) (offset.z) - 0.375F, (float) (offset.x) + 0.375F, (float) (offset.y) + 1.25F, (float) (offset.z) + 0.375F);
 						}
 						
-						Minecraft.getMinecraft().entityRenderer.disableLightmap();
+						//Minecraft.getMinecraft().entityRenderer.disableLightmap();
 						GL11.glPushMatrix();
 						GL11.glDisable(GL11.GL_TEXTURE_2D);
 						GL11.glDisable(GL11.GL_LIGHTING);
@@ -1222,7 +1252,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 						GL11.glEnable(GL11.GL_LIGHTING);
 						GL11.glEnable(GL11.GL_TEXTURE_2D);
 						GL11.glPopMatrix();
-						Minecraft.getMinecraft().entityRenderer.enableLightmap();
+						//Minecraft.getMinecraft().entityRenderer.enableLightmap();
 					}
 				}
 			}

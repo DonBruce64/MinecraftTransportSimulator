@@ -1,6 +1,7 @@
 package minecrafttransportsimulator;
 
 import java.io.File;
+import java.io.InputStreamReader;
 
 import org.apache.logging.log4j.Logger;
 
@@ -22,7 +23,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="17.4.0";
+	public static final String MODVER="18.1.4";
 	
 	@Instance(value = MTS.MODID)
 	public static MTS instance;
@@ -32,8 +33,20 @@ public class MTS {
 	@SidedProxy(clientSide="minecrafttransportsimulator.ClientProxy", serverSide="minecrafttransportsimulator.CommonProxy")
 	public static CommonProxy proxy;
 	
-	public MTS(){
+	static{
+		//Enable universal bucket so we can use buckets on fuel pumps.
 		FluidRegistry.enableUniversalBucket();
+		
+		//Manually create the internal core mod pack items.
+		//These need to be created before we do checks for block registration.
+		//If we don't, then we risk not creating and registering the blocks.
+		try{
+			PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_en.json"), "UTF-8"), "handbook_en", MTS.MODID);
+			PackParserSystem.addBookletDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/booklets/handbook_ru.json"), "UTF-8"), "handbook_ru", MTS.MODID);
+			PackParserSystem.addDecorDefinition(new InputStreamReader(MTSRegistry.class.getResourceAsStream("/assets/" + MTS.MODID + "/jsondefs/decors/fuelpump.json"), "UTF-8"), "fuelpump", MTS.MODID);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	@EventHandler

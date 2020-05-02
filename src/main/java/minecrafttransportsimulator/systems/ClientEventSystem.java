@@ -18,12 +18,15 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
+import minecrafttransportsimulator.wrappers.WrapperTileEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
@@ -250,6 +253,16 @@ public final class ClientEventSystem{
             	minecraft.getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
             }
         }
+        Entity renderViewEntity = minecraft.getRenderViewEntity();
+		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * event.getPartialTicks();
+		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * event.getPartialTicks();
+		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * event.getPartialTicks();
+        for(TileEntity tile : minecraft.world.loadedTileEntityList){
+        	if(tile instanceof WrapperTileEntity){
+        		Vec3d delta = new Vec3d(tile.getPos()).addVector(-playerX, -playerY, -playerZ);
+        		TileEntityRendererDispatcher.instance.getRenderer(tile).render(tile, delta.x, delta.y, delta.z, event.getPartialTicks(), 0, 0);
+        	}
+        }
     }
 
     /**
@@ -265,14 +278,17 @@ public final class ClientEventSystem{
 	        	if(seat != null){
 		            //First restrict the player's yaw to prevent them from being able to rotate their body in a seat.
 		            Vec3d placementRotation = seat.partRotation;
-		            event.getEntityPlayer().renderYawOffset = (float) (vehicle.rotationYaw + placementRotation.y);
+		            event.getEntityPlayer().renderYawOffset = vehicle.rotationYaw + (float)((seat.parentPart != null ? seat.parentPart.getActionRotation(event.getPartialRenderTick()).y : 0) - seat.partRotation.y);
 		            if(vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90){
 		            	event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw*-1F;
 		            }else{
 			            event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw;
 		            }
 		            
+		            
 		            //Now add the pitch rotation.
+		            double vehicleRotationRad = Math.toRadians(vehicle.rotationYaw);
+		            double parentRotationRad = Math.toRadians(seat.parentPart != null ? seat.parentPart.getActionRotation(event.getPartialRenderTick()).y : 0);
 		            if(!event.getEntityPlayer().equals(minecraft.player)){
 		                EntityPlayer masterPlayer = Minecraft.getMinecraft().player;
 		                EntityPlayer renderedPlayer = event.getEntityPlayer();
@@ -281,14 +297,18 @@ public final class ClientEventSystem{
 		                float playerDistanceZ = (float) (renderedPlayer.posZ - masterPlayer.posZ);
 		                GL11.glTranslatef(playerDistanceX, playerDistanceY, playerDistanceZ);
 		                GL11.glTranslated(0, masterPlayer.getEyeHeight(), 0);
-		                GL11.glRotated(vehicle.rotationPitch + placementRotation.x, Math.cos(vehicle.rotationYaw  * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
-		                GL11.glRotated(vehicle.rotationRoll + placementRotation.z, -Math.sin(vehicle.rotationYaw  * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
+		                GL11.glRotated(vehicle.rotationPitch, Math.cos(vehicleRotationRad), 0, Math.sin(vehicleRotationRad));
+		                GL11.glRotated(vehicle.rotationRoll, -Math.sin(vehicleRotationRad), 0, Math.cos(vehicleRotationRad));
+		                GL11.glRotated(placementRotation.x, Math.cos(vehicleRotationRad + parentRotationRad), 0, Math.sin(vehicleRotationRad + parentRotationRad));
+		                GL11.glRotated(placementRotation.z, -Math.sin(vehicleRotationRad + parentRotationRad), 0, Math.cos(vehicleRotationRad + parentRotationRad));
 		                GL11.glTranslated(0, -masterPlayer.getEyeHeight(), 0);
 		                GL11.glTranslatef(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
 		            }else{
 		                GL11.glTranslated(0, event.getEntityPlayer().getEyeHeight(), 0);
-		                GL11.glRotated(vehicle.rotationPitch + placementRotation.x, Math.cos(vehicle.rotationYaw  * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
-		                GL11.glRotated(vehicle.rotationRoll + placementRotation.z, -Math.sin(vehicle.rotationYaw  * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
+		                GL11.glRotated(vehicle.rotationPitch, Math.cos(vehicleRotationRad), 0, Math.sin(vehicleRotationRad));
+		                GL11.glRotated(vehicle.rotationRoll, -Math.sin(vehicleRotationRad), 0, Math.cos(vehicleRotationRad));
+		                GL11.glRotated(placementRotation.x, Math.cos(vehicleRotationRad + parentRotationRad), 0, Math.sin(vehicleRotationRad + parentRotationRad));
+		                GL11.glRotated(placementRotation.z, -Math.sin(vehicleRotationRad + parentRotationRad), 0, Math.cos(vehicleRotationRad + parentRotationRad));
 		                GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
 		            }
 	        	}
@@ -389,7 +409,7 @@ public final class ClientEventSystem{
     @SubscribeEvent
     public static void on(WorldEvent.Unload event){
     	if(event.getWorld().isRemote){
-    		WrapperAudio.halt();
+    		WrapperAudio.haltSoundsIn(event.getWorld().provider.getDimension());
     	}
     }
 }

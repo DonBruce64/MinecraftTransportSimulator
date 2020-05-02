@@ -50,9 +50,15 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private float serverDeltaYaw;
 	private float serverDeltaPitch;
 	private float serverDeltaRoll;
+	private int brakingTime = 10;
+	private int throttleTime = 10;
+	private double bodyAcceleration;
+    private double forceOfInertia;
+    private double bodyBrakeAngle;
+    private double bodyAcclAngle; 
 	
 	/**List of ground devices on the ground.  Populated after each movement to be used in turning/braking calculations.*/
-	public final List<APartGroundDevice> groundedGroundDevices = new ArrayList<APartGroundDevice>();
+	protected final List<APartGroundDevice> groundedGroundDevices = new ArrayList<APartGroundDevice>();
 	
 	//Classes used for ground device collisions.
 	protected VehicleGroundDeviceBox frontLeftGroundDeviceBox;
@@ -103,13 +109,16 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			
 			//Now do update calculations and logic.
 			getForcesAndMotions();
+			//If we are a trailer, we don't want to move ourselves.
+			//This comes from the main vehicle itself.
+			
 			performGroundOperations();
 			moveVehicle();
 			if(!world.isRemote){
 				dampenControlSurfaces();
 			}
 			prevParkingBrakeAngle = parkingBrakeAngle;
-			if(parkingBrakeOn && velocity == 0 && !locked){
+			if(parkingBrakeOn && !locked && Math.abs(velocity) < 0.25){
 				if(parkingBrakeAngle < 30){
 					prevParkingBrakeAngle = parkingBrakeAngle;
 					++parkingBrakeAngle;
@@ -127,6 +136,80 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 		}
 	}
+	
+	
+//Calculating Force of Inertia which will give mow much force is needed that is to be applied
+//to the suspensions when accelerating and braking to derive the angle.
+	
+	//Accelerating animation which calculates the amount of time the throttle is pressed to derive the acceleration
+	//to then get the value of force exerted by inertia.
+	public double acclInertia() {
+		
+		forceOfInertia = currentMass*(bodyAcceleration);
+
+		
+		if (throttle > 0) {
+			
+			throttleTime++;
+			
+		}else {
+			
+			throttleTime = 0;
+		}
+		
+        if(throttleTime > 10 && throttleTime < 80 && velocity >= 0){
+        	
+        	bodyAcceleration = (velocity/throttleTime);
+        	
+        	bodyAcclAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*-0.01)); 
+        	
+        	return bodyAcclAngle;
+        	
+        }else if(throttleTime > 10 && throttleTime < 40 && velocity <= 0){
+        	
+        	bodyAcceleration = (velocity/throttleTime);
+        	
+        	bodyAcclAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*0.01)); 
+        	
+        	return bodyAcclAngle;
+        	
+        }else {
+        	
+        	bodyAcclAngle = 0;
+        	
+        	return 0;
+        }
+     }
+	
+	//Braking animation which calculates the amount of time the brake is pressed to derive the deceleration
+	//to then get the value of force exerted by inertia.
+	public double brakeInertia() {
+		
+		forceOfInertia = currentMass*(bodyAcceleration);
+		
+	    if (brakeOn && velocity != 0 || parkingBrakeOn && velocity != 0) {
+	    	
+	    	bodyAcceleration = (velocity/brakingTime);
+	    	
+	        if(velocity < 0) {
+	        	
+	        	bodyBrakeAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*-0.01));
+	        	
+	        }else {
+	        	
+		        bodyBrakeAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*0.01));
+		        
+	        }
+	        
+	        return bodyBrakeAngle;
+	        
+	    }else {
+	    	
+	    	bodyBrakeAngle = 0;
+	    	
+	    	return 0;
+	    }
+	 }
 	
 	/**
 	 *  This needs to be called before checking pitch and roll of ground devices.  It is responsible for ensuring that
@@ -762,12 +845,50 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		motionY -= (groundCollisionBoost + groundRotationBoost/SPEED_FACTOR);
 	}
 	
+	/**
+	 * Method block for ground operations.  This does braking force
+	 * and turning for applications independent of vehicle-specific
+	 * movement.  Must come AFTER force calculations as it depends on motions.
+	 */
+	private void performGroundOperations(){
+		float brakingFactor = getBrakingForceFactor();
+		if(brakingFactor > 0){
+			double groundSpeed = Math.hypot(motionX, motionZ)*Math.signum(velocity);
+			groundSpeed -= 20F*brakingFactor/currentMass*Math.signum(velocity);
+			if(Math.abs(groundSpeed) > 0.1){
+				reAdjustGroundSpeed(groundSpeed);
+			}else{
+				motionX = 0;
+				motionZ = 0;
+				motionYaw = 0;
+			}
+		}
+		
+		float skiddingFactor = getSkiddingFactor();
+		if(skiddingFactor != 0){
+			Vec3d groundVelocityVec = new Vec3d(motionX, 0, motionZ).normalize();
+			Vec3d groundHeadingVec = new Vec3d(headingVec.x, 0, headingVec.z).normalize();
+			float vectorDelta = (float) groundVelocityVec.distanceTo(groundHeadingVec);
+			byte velocitySign = (byte) (vectorDelta < 1 ? 1 : -1);
+			if(vectorDelta > 0.001){
+				vectorDelta = Math.min(skiddingFactor, vectorDelta);
+				//TODO this sounds like some place we might get stuck due to unchecked movement...
+				float yawTemp = rotationYaw;
+				rotationYaw += vectorDelta;
+				updateHeadingVec();
+				reAdjustGroundSpeed(Math.hypot(motionX, motionZ)*velocitySign);
+				rotationYaw = yawTemp;
+			}
+		}
+		
+		motionYaw += getTurningFactor();
+	}
 	
 	/**
 	 * Returns factor for braking.
 	 * Depends on number of grounded core collision sections and braking ground devices.
 	 */
-	protected float getBrakingForceFactor(){
+	private float getBrakingForceFactor(){
 		float brakingFactor = 0;
 		//First get the ground device braking contributions.
 		//This is both grounded ground devices, and liquid collision boxes that are set as such.
@@ -775,6 +896,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			float addedFactor = 0;
 			if(brakeOn || parkingBrakeOn){
 				addedFactor = groundDevice.getMotiveFriction();
+				if(velocity > 0) {
+					brakingTime++;
+				}
+			}else if(velocity == 0) {
+				brakingTime = 10;
 			}
 			if(addedFactor != 0){
 				brakingFactor += Math.max(addedFactor - groundDevice.getFrictionLoss(), 0);
@@ -807,7 +933,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 * turning code as it will interpret the yaw change as a skid and will 
 	 * attempt to prevent it!
 	 */
-	protected float getSkiddingFactor(){
+	private float getSkiddingFactor(){
 		float skiddingFactor = 0;
 		//First check grounded ground devices.
 		for(APartGroundDevice groundDevice : this.groundedGroundDevices){
@@ -903,12 +1029,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 * Method block for force and motion calculations.
 	 */
 	protected abstract void getForcesAndMotions();
-	
-	/**
-	 * Method block for ground operations.
-	 * Must come AFTER force calculations as it depends on motions.
-	 */
-	protected abstract void performGroundOperations();
 	
 	/**
 	 * Returns whatever the steering angle is.

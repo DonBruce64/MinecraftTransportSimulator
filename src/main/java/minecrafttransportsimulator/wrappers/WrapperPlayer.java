@@ -1,11 +1,15 @@
 package minecrafttransportsimulator.wrappers;
 
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.text.TextComponentString;
 
 /**Wrapper for the main player class.  This class wraps the player into a more
@@ -16,7 +20,7 @@ import net.minecraft.util.text.TextComponentString;
  * @author don_bruce
  */
 public class WrapperPlayer extends WrapperEntity{
-	private final EntityPlayer player;
+	final EntityPlayer player;
 	
 	public WrapperPlayer(EntityPlayer player){
 		super(player);
@@ -67,7 +71,7 @@ public class WrapperPlayer extends WrapperEntity{
 	 *  passed-in class.  Assumes main-hand for all cases.
 	 */
 	public boolean isHoldingItem(Class<?> itemClass){
-		return player.getHeldItemMainhand().getItem().getClass().isInstance(itemClass);
+		return itemClass.isInstance(player.getHeldItemMainhand().getItem());
 	}
 	
 	/**
@@ -87,6 +91,13 @@ public class WrapperPlayer extends WrapperEntity{
 	}
 	
 	/**
+	 *  Sets the held stack.
+	 */
+	public void setHeldStack(ItemStack stack){
+		player.setHeldItem(EnumHand.MAIN_HAND, stack);
+	}
+	
+	/**
 	 *  Returns true if the player has the quantity of the passed-in item in their inventory.
 	 *  Note that metadata isn't used in later MC releases.
 	 */
@@ -100,6 +111,41 @@ public class WrapperPlayer extends WrapperEntity{
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 *  Returns true if this player has all the materials to make the pack-based item.
+	 */
+	public boolean hasMaterials(AItemPack<? extends AJSONItem<?>> item){
+		if(!isCreative()){
+			for(ItemStack materialStack : MTSRegistry.getMaterials(item)){
+				int requiredMaterialCount = materialStack.getCount();
+				for(ItemStack stack : player.inventory.mainInventory){
+					if(ItemStack.areItemsEqual(stack, materialStack)){
+						requiredMaterialCount -= stack.getCount();
+					}
+				}
+				if(requiredMaterialCount > 0){
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 *  Has the player craft the passed-in item.  Materials are removed if
+	 *  required, and the item is added to the player's inventory.
+	 *  {@link #hasMaterials(AItemPack)} MUST be called before this method to ensure
+	 *  the player actually has the required materials.  Failure to do so will
+	 *  result in the player being able to craft the item even if they don't have
+	 *  all the materials to do so.
+	 */
+	public void craftItem(AItemPack<? extends AJSONItem<?>> item){
+		for(ItemStack materialStack : MTSRegistry.getMaterials(item)){
+			removeItem(materialStack);
+		}
+		addItem(new ItemStack(item));
 	}
 	
 	/**
