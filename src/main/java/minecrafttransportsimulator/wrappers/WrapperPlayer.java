@@ -134,6 +134,21 @@ public class WrapperPlayer extends WrapperEntity{
 	}
 	
 	/**
+	 *  Has the player craft the passed-in item.  Materials are removed if
+	 *  required, and the item is added to the player's inventory.
+	 *  {@link #hasMaterials(AItemPack)} MUST be called before this method to ensure
+	 *  the player actually has the required materials.  Failure to do so will
+	 *  result in the player being able to craft the item even if they don't have
+	 *  all the materials to do so.
+	 */
+	public void craftItem(AItemPack<? extends AJSONItem<?>> item){
+		for(ItemStack materialStack : MTSRegistry.getMaterials(item)){
+			removeItem(materialStack);
+		}
+		addItem(new ItemStack(item));
+	}
+	
+	/**
 	 *  Attempts to add the passed-in stack to the player's inventory.
 	 *  Returns true if addition was successful.
 	 */

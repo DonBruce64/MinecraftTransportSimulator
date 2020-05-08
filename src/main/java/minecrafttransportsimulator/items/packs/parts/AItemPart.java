@@ -19,4 +19,14 @@ public abstract class AItemPart extends AItemPack<JSONPart>{
 			return partDefinition.customTypes.contains(definition.general.customType);
 		}
 	}
+	
+	@Override
+	public String getModelLocation(){
+		return definition.general.modelName != null ? "objmodels/parts/" + definition.general.modelName + ".obj" : "objmodels/parts/" + definition.systemName + ".obj";
+	}
+	
+	@Override
+	public String getTextureLocation(){
+		return "textures/parts/" + definition.systemName + ".png";
+	}
 }

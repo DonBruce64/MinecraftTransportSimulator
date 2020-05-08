@@ -33,6 +33,8 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	private Vec3d xzPlaneDelta;
 	private Vec3d xzPlaneHeading;
 	
+	public boolean cruiseControl;
+	public double cruiseControlSpeed;
 	public EntityVehicleF_Ground towedVehicle;
 	public EntityVehicleF_Ground towedByVehicle;
 	public byte towingAngle;
@@ -146,6 +148,20 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	
 	@Override
 	protected void dampenControlSurfaces(){
+		if(cruiseControl){
+			if(velocity < cruiseControlSpeed){
+				if(throttle < 100){
+					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0), this);
+					++throttle;
+				}
+			}else if(velocity > cruiseControlSpeed){
+				if(throttle > 0){
+					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0), this);
+					--throttle;
+				}
+			}
+		}
+		
 		if(steeringCooldown==0){
 			if(steeringAngle != 0){
 				if(steeringAngle < STEERING_DAMPEN_RATE && steeringAngle > -STEERING_DAMPEN_RATE){

@@ -14,6 +14,7 @@ import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockSlab;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -122,6 +123,28 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Returns true if the block at the passed-in location is a slab, but only the
+	 *  bottom portion of the slab.  May be used to adjust renders to do half-block
+	 *  rendering to avoid floating blocks.
+	 */
+	public boolean isBlockBottomSlab(Point3i point){
+		IBlockState state = world.getBlockState(new BlockPos(point.x, point.y, point.z));
+		Block block = state.getBlock();
+		return block instanceof BlockSlab && !((BlockSlab) block).isDouble() && state.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM;
+	}
+	
+	/**
+	 *  Returns true if the block at the passed-in location is a slab, but only the
+	 *  top portion of the slab.  May be used to adjust renders to do half-block
+	 *  rendering to avoid floating blocks.
+	 */
+	public boolean isBlockTopSlab(Point3i point){
+		IBlockState state = world.getBlockState(new BlockPos(point.x, point.y, point.z));
+		Block block = state.getBlock();
+		return block instanceof BlockSlab && !((BlockSlab) block).isDouble() && state.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.TOP;
+	}
+	
+	/**
 	 *  Returns the block at the passed-in location, or null if it doesn't exist in the world.
 	 *  Only valid for blocks of type {@link ABlockBase} others will return null.
 	 */
@@ -214,5 +237,26 @@ public class WrapperWorld{
 			//as the actual state of the block doesn't change, so MC doesn't think it needs to do any lighting checks.
 			world.checkLight(pos);
 		}
+	}
+	
+	/**
+	 *  Sets a fake light block at the passed-in position.
+	 *  Only sets the fake light if the block at the passed-in position is air.
+	 *  Make sure you track this position and remove the light when it's not in-use! 
+	 */
+	public void setFakeLight(Point3i point){
+		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+		if(world.isAirBlock(pos)){
+			world.setBlockState(pos, WrapperBlockFakeLight.instance.getDefaultState());
+		}
+	}
+	
+	/**
+	 *  Sets the block at the passed-in position to air. 
+	 *  This does no sanity checks, so make sure you're
+	 *  actually allowed to do such a thing before calling.
+	 */
+	public void setToAir(Point3i point){
+		world.setBlockToAir(new BlockPos(point.x, point.y, point.z));
 	}
 }

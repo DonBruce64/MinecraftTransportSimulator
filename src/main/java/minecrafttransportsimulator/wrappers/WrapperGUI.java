@@ -137,7 +137,7 @@ public class WrapperGUI extends GuiScreen{
 		//Now render any OBJModels we may have.
 		//CHeck to make sure the texture exists before binding.
 		for(GUIComponentOBJModel objModel : gui.objModels){
-			if(!objModel.textureDomain.isEmpty()){
+			if(objModel.textureDomain != null){
 				mc.getTextureManager().bindTexture(new ResourceLocation(objModel.textureDomain, objModel.textureLocation));
 			}
 			objModel.renderModel();

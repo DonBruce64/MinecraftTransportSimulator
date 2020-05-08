@@ -53,29 +53,6 @@ public class WrapperRender{
 	private static final Map<String, Map<String, ResourceLocation>> textures = new HashMap<String, Map<String, ResourceLocation>>(); 
 	
 	/**
-	 *  We need to register a custom resource handler here to auto-generate JSON.
-	 *  FAR easier than trying to use the bloody bakery system.
-	 */
-	static{
-		for(Field field : Minecraft.class.getDeclaredFields()){
-			if(field.getName().equals("defaultResourcePacks") || field.getName().equals("field_110449_ao")){
-				try{
-					if(!field.isAccessible()){
-						field.setAccessible(true);
-					}
-					
-					@SuppressWarnings("unchecked")
-					List<IResourcePack> defaultPacks = (List<IResourcePack>) field.get(Minecraft.getMinecraft());
-					defaultPacks.add(new PackResourcePack());
-					FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-	
-	/**
 	 *  Gets the current render pass.  0 for solid blocks, 1 for transparent,
 	 *  and -1 for end-of world final renders.
 	 */
@@ -187,6 +164,26 @@ public class WrapperRender{
 	 */
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
+		//Create the custom JSON parser class.
+		//We need to register a custom resource handler here to auto-generate JSON.
+		//FAR easier than trying to use the bloody bakery system.
+		for(Field field : Minecraft.class.getDeclaredFields()){
+			if(field.getName().equals("defaultResourcePacks") || field.getName().equals("field_110449_ao")){
+				try{
+					if(!field.isAccessible()){
+						field.setAccessible(true);
+					}
+					
+					@SuppressWarnings("unchecked")
+					List<IResourcePack> defaultPacks = (List<IResourcePack>) field.get(Minecraft.getMinecraft());
+					defaultPacks.add(new PackResourcePack());
+					FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		//Register the vehicle rendering class.
 		RenderingRegistry.registerEntityRenderingHandler(EntityVehicleE_Powered.class, new IRenderFactory<EntityVehicleE_Powered>(){
 			@Override
@@ -253,10 +250,14 @@ public class WrapperRender{
 			String packID = jsonPath.substring(0, jsonPath.indexOf('.'));
 			//Get the asset name by stripping off the packID.
 			String asset = jsonPath.substring(packID.length() + 1);
-			//Auto-generate a JSON text file to feed to the loader.
-			String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + packID + ":items/" + asset + "\"}}";
-			//Send the fake JSON out as a stream.
-			return new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));				
+			//Attempt to get a JSON file normally from the path.  If this fails, generate a default JSON.
+			InputStream stream = getClass().getResourceAsStream("/assets/" + packID + "/models/item/" + asset + ".json");
+			if(stream != null){
+				return stream;
+			}else{
+				String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + packID + ":items/" + asset + "\"}}";
+				return new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
+			}
 		}
 
 		@Override

@@ -25,17 +25,17 @@ public class GUIComponentOBJModel{
 	private static final Map<String, Float> modelScalingFactors = new HashMap<String, Float>();
 	
 	public final float scaleFactor;
-	public final boolean spin;
 	public final boolean isometric;
 	public final boolean staticScaling;
 	
 	public int x;
 	public int y;
+	public boolean spin;
 	public float scale;
-	public String modelDomain = "";
-	public String modelLocation = "";
-	public String textureDomain = "";
-	public String textureLocation = "";
+	public String modelDomain;
+	public String modelLocation;
+	public String textureDomain;
+	public String textureLocation;
 	
 	public boolean visible = true;
 	    	
@@ -53,7 +53,7 @@ public class GUIComponentOBJModel{
 	 */
     public void renderModel(){
     	if(visible){
-			if(!modelDomain.isEmpty()){
+			if(modelDomain != null){
 				String modelFile = modelDomain + ":" + modelLocation;
 				if(!modelDisplayLists.containsKey(modelFile)){
 					parseModel(modelDomain, modelLocation);
@@ -69,7 +69,7 @@ public class GUIComponentOBJModel{
 				
 				//If set to rotate, do so now based on time.
 				if(spin){
-					GL11.glRotatef(System.currentTimeMillis()/1000/36, 0, 1, 0);
+					GL11.glRotatef((36*System.currentTimeMillis()/1000)%360, 0, 1, 0);
 				}
 
 				//Scale based on our scaling factor and render.

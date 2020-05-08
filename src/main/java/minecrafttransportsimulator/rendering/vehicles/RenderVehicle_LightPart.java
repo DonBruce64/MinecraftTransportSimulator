@@ -2,12 +2,12 @@ package minecrafttransportsimulator.rendering.vehicles;
 
 import java.awt.Color;
 
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.wrappers.WrapperRender;
@@ -126,8 +126,8 @@ public final class RenderVehicle_LightPart{
 	/**
 	 *  Renders this light at a specific block-based position.  Full power and brightness is assumed.
 	 */
-	public void renderOnBlock(WrapperWorld world, Point3i location, String textureDomain, String textureLocation, boolean ignoreFlashing){
-		render(ignoreFlashing ? true : isFlashingLightOn(), WrapperRender.getRenderPass() == -1, 12.0F, 1.0F, 1 - world.getLightBrightness(location, false), textureDomain, textureLocation);
+	public void renderOnBlock(WrapperWorld world, Point3i location, boolean lightActive, String textureDomain, String textureLocation){
+		render(lightActive && isFlashingLightOn(), WrapperRender.getRenderPass() == -1, 12.0F, 1.0F, 1 - world.getLightBrightness(location, false), textureDomain, textureLocation);
 	}
 	
 	/**
@@ -156,16 +156,19 @@ public final class RenderVehicle_LightPart{
 			}
 		}
 		
+		//Flag for flare and beam rendering.
+		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.client.lightsPass0.value ? WrapperRender.getRenderPass() != 1 : WrapperRender.getRenderPass() != 0) && !wasRenderedPrior; 
+		
 		//If we need to render a flare, and the light is on, and our brightness is non-zero, do so now.
 		//This needs to be done in pass 1 or -1 to do blending.
-		if(renderFlare && lightOn && lightBrightness > 0 && WrapperRender.getRenderPass() != 0 && !wasRenderedPrior){
+		if(renderFlare && lightOn && doBlendRenders){
 			renderFlare(lightBrightness);
 		}
 		
 		//Render beam if the light is on and the brightness is non-zero.
 		//This must be done in pass 1 or -1 to do proper blending.
-		if(type.hasBeam && lightOn && (Keyboard.isKeyDown(Keyboard.KEY_RSHIFT) ? WrapperRender.getRenderPass() == -1 : (WrapperRender.getRenderPass() != 0 && !wasRenderedPrior))){
-			renderBeam(Math.min(electricPower > 4 ? 1.0F : 0, lightBrightness/2F));
+		if(type.hasBeam && lightOn && doBlendRenders){
+			renderBeam(Math.min(electricPower > 4 ? 1.0F : 0, lightBrightness));
 		}
 		
 		//Set color, lighting and blending state back to normal.
@@ -187,7 +190,7 @@ public final class RenderVehicle_LightPart{
 	 */
 	private void renderTexture(boolean disableLighting, String textureDomain, String textureLocation){
 		WrapperRender.bindTexture(textureDomain, textureLocation);
-		WrapperRender.setWorldLightingState(!disableLighting);
+		WrapperRender.setLightingState(!disableLighting);
 		WrapperRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 		
 		//If we don't have a DisplayList, create one now.
@@ -230,7 +233,7 @@ public final class RenderVehicle_LightPart{
 	 *  passed-in will disable lighting for the cover if true.
 	 */
 	private void renderCover(boolean disableLighting){
-		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/glass.png");
+		WrapperRender.bindTexture("minecraft", "textures/blocks/glass.png");
 		WrapperRender.setLightingState(!disableLighting);
 		WrapperRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 		GL11.glBegin(GL11.GL_TRIANGLES);
@@ -252,7 +255,7 @@ public final class RenderVehicle_LightPart{
 	private void renderFlare(float alphaValue){
 		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/lensflare.png");
 		WrapperRender.setLightingState(false);
-		WrapperRender.setBlendState(true, false);
+		WrapperRender.setBlendState(true, ConfigSystem.configObject.client.flareBlending.value);
 		WrapperRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(byte i=0; i<centerPoints.length; ++i){
@@ -277,8 +280,7 @@ public final class RenderVehicle_LightPart{
 	private void renderBeam(float alphaValue){
 		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/lightbeam.png");
 		WrapperRender.setLightingState(false);
-		//FIXME put in a shaders config here  perhaps?
-		WrapperRender.setBlendState(true, true);
+		WrapperRender.setBlendState(true, ConfigSystem.configObject.client.beamBlending.value);
 		WrapperRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		
 		//As we can have more than one light per definition, we will only render 6 vertices at a time.
@@ -304,10 +306,6 @@ public final class RenderVehicle_LightPart{
 		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
 		GL11.glTexCoord2f(0, 0);
 		GL11.glVertex3d(0, 0, 0);
-		for(float theta=(float) (2*Math.PI); theta>=0 - 0.1; theta -= 2F*Math.PI/40F){
-			GL11.glTexCoord2f(theta, 1);
-			GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
-		}
 		for(float theta=(float) (2*Math.PI); theta>=0 - 0.1; theta -= 2F*Math.PI/40F){
 			GL11.glTexCoord2f(theta, 1);
 			GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);

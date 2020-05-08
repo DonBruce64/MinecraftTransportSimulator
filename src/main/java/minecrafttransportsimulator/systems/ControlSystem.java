@@ -320,7 +320,10 @@ public final class ControlSystem{
 			}else if(ControlsKeyboard.CAR_GAS.isPressed()){
 				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 100, Byte.MAX_VALUE));
 			}else{
-				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+				//Don't send gas off packet if we have cruise on.
+				if(!powered.cruiseControl){
+					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+				}
 			}
 		}
 		

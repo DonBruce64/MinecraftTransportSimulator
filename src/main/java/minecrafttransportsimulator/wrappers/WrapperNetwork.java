@@ -8,6 +8,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidTankChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
@@ -51,6 +52,7 @@ public class WrapperNetwork{
 		byte packetIndex = 0;
 		//Generic packets.
 		packetMappings.put(packetIndex++, PacketPlayerChatMessage.class);
+		packetMappings.put(packetIndex++, PacketPlayerCraftItem.class);
 		packetMappings.put(packetIndex++, PacketTileEntityFluidTankChange.class);
 		packetMappings.put(packetIndex++, PacketTileEntityPoleChange.class);
 		packetMappings.put(packetIndex++, PacketTileEntityPumpConnection.class);

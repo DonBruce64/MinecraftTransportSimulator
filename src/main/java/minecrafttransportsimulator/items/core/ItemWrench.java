@@ -32,6 +32,7 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
 		tooltipLines.add(WrapperGUI.translate("info.item.wrench.use"));
+		tooltipLines.add(WrapperGUI.translate("info.item.wrench.useblock"));
 		tooltipLines.add(WrapperGUI.translate("info.item.wrench.attack"));
 		tooltipLines.add(WrapperGUI.translate("info.item.wrench.sneakattack"));
 		if(ConfigSystem.configObject.client.devMode.value){
@@ -60,7 +61,7 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 				}else if(player.isSneaking()){
 					//Attacker is a sneaking player with a wrench.
 					//Remove this vehicle if possible.
-					if(!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)){
+					if(!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN) && !ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.capabilities.isCreativeMode){
 						ItemStack vehicleStack = new ItemStack(MTSRegistry.packItemMap.get(vehicle.definition.packID).get(vehicle.definition.systemName));
 						NBTTagCompound stackTag = vehicle.writeToNBT(new NBTTagCompound());
 						vehicleStack.setTagCompound(stackTag);

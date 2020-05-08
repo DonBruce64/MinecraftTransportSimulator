@@ -61,4 +61,14 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem<? extends AJSON
 			return super.onItemUse(player, world, pos, hand, facing, hitX, hitY, hitZ);
 		}
 	}
+	
+	/**
+	 *  Returns the location of the OBJ model for this item, or null if we use the default item rendering system.
+	 */
+	public abstract String getModelLocation();
+	
+	/**
+	 *  Returns the location of the texture for this item, or null if we use the default item rendering system.
+	 */
+	public abstract String getTextureLocation();
 }

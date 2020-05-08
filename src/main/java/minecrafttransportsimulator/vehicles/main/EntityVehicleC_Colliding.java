@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBBCollective;
+import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
@@ -16,6 +17,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.APartGun;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -205,12 +207,28 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			this.collisionFrame = new VehicleAxisAlignedBBCollective((EntityVehicleE_Powered) this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, collisionBoxes);
 			
 			//Add all part boxes to the part box list.
-			//If the part is a seat, and there is a rider in that seat, don't add it.
-			//This keeps riders from getting their clicks blocked by their own seats.
+			//The server always adds all boxes, the client omits some.
+			//This allows for smoother interaction on clients.
 			partBoxes.clear();
 			for(APart part : this.getVehicleParts()){
-				if(part instanceof PartSeat){
-					if(getRiderForSeat((PartSeat) part) != null){
+				if(world.isRemote){
+					//If the part is a seat, and we are riding it, don't add it.
+					//This keeps us from clicking our own seat when we want to click other things.
+					if(part instanceof PartSeat){
+						if(Minecraft.getMinecraft().player.equals(getRiderForSeat((PartSeat) part))){
+							continue;
+						}
+					}
+					//If the player is holding a wrench, and the part has children, don't add it.
+					//Player shouldn't be able to wrench parts with children.
+					if(Minecraft.getMinecraft().player.getHeldItemMainhand().getItem() instanceof ItemWrench && !part.childParts.isEmpty()){
+						continue;
+					}
+					//If the player is holding a part, and the part isn't a seat, don't add it.
+					//This prevents us from clicking on parts when we're trying to place one.
+					//Seats are left in because it'd be a pain to switch items.
+					//Guns are also left in as the player may be clicking them with a bullet part to load them.
+					if(Minecraft.getMinecraft().player.getHeldItemMainhand().getItem() instanceof AItemPart && !(part instanceof PartSeat) && !(part instanceof APartGun)){
 						continue;
 					}
 				}

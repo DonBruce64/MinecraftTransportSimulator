@@ -64,6 +64,10 @@ interact.jumpercable.alreadylinked=This engine is already linked to another engi
 interact.jumpercable.toofar=The two engines are too far away.  They should be no further than 16 blocks apart.
 interact.jumpercable.samevehicle=The two engines are on the same vehicle.  That's not going to work well...
 
+interact.ticket.linked=NPC linked to ticket.
+interact.ticket.notnpc=This isn't an NPC.  Only NPCs can be assigned to tickets.
+interact.ticket.toofar=The NPC linked to the ticket is too far from the seat.  They must be within 15 blocks.
+
 interact.trailer.connect=Trailer connected!
 interact.trailer.disconnect=Trailer disconnected.
 interact.trailer.nohitch=This vehicle does not have a hitch and therefore cannot tow anything.
@@ -172,7 +176,9 @@ gui.panel.engine=ENGINE
 gui.panel.trim_roll=ROLL TRIM
 gui.panel.trim_pitch=PITCH TRIM
 gui.panel.trim_yaw=YAW TRIM
-gui.panel.reverse=REVERSE
+gui.panel.reverse=REV
+gui.panel.autopilot=AUTO
+gui.panel.cruisecontrol=CRUISE
 gui.panel.headlights=LIGHTS
 gui.panel.turnsignals=TURNSGNL
 gui.panel.emergencylights=EMERLTS
@@ -226,6 +232,9 @@ info.item.engine.bypassratio=Bypass Ratio:
 info.item.engine.maxrpm=Max Possible RPM: 
 info.item.engine.maxsaferpm=Max safe RPM: 
 info.item.engine.fuelconsumption=Fuel use (mb/t): 
+info.item.engine.supercharged=Supercharged
+info.item.engine.superchargerfuelconsumption=Supercharger fuel use (mb/t): 
+info.item.engine.superchargerefficiency=Supercharger efficiency: 
 info.item.engine.fueltype=Fuel type: 
 info.item.engine.hours=Runtime hours: 
 info.item.engine.oilleak=Has an oil leak!
@@ -248,6 +257,7 @@ info.item.propeller.maxrpm=Max RPM:
 info.item.propeller.health=Health: 
 info.item.gun.type.fixed=Type: Fixed-Mount Gun
 info.item.gun.type.tripod=Type: Tripod-Mount Gun
+info.item.gun.type.turret=Type: Turret Gun
 info.item.gun.diameter=Diameter (mm): 
 info.item.gun.length=Length (m): 
 info.item.gun.fireDelay=Fire Delay (ticks): 
@@ -265,8 +275,9 @@ info.item.barrel.capacity=Capacity:
 info.item.crate.capacity=Capacity: 
 
 info.item.wrench.use=Use on vehicle to change instruments.
-info.item.wrench.attack=Attack a part to remove.
-info.item.wrench.sneakattack=Sneak-attack to remove vehicle.
+info.item.wrench.useblock=Use on pole components to remove them.
+info.item.wrench.attack=Attack a vehicle part to remove.
+info.item.wrench.sneakattack=Sneak-attack a vehicle to remove.
 info.item.key.line1=Use on a vehicle to lock.
 info.item.key.line2=Vehicle may only be opened with key.
 info.item.key.line3=Sneak-use to take ownership.
@@ -281,11 +292,16 @@ info.item.jerrycan.fill=Fill can by right-clicking a fuel pump.
 info.item.jerrycan.drain=Fill vehicle by right-clicking with full can.
 info.item.jerrycan.empty=Can is currently empty.
 info.item.jerrycan.contains=Can contains: 
+info.item.ticket.line1=Sneak-use on an NPC to assign him the ticket.
+info.item.ticket.line2=Use on a seat to make the assigned NPC sit.
+info.item.ticket.line3=Use on a ridden NPC to dismount them.
+info.item.ticket.line4=Use while commanding a vehicle to make all NPCs mount or dismount.
 
 item.wrench.name=Wrench
 item.key.name=Key
 item.jumpercable.name=Jumper Cables
 item.jerrycan.name=Jerrycan
+item.ticket.name=Ticket
 
 tile.vehiclebench.name=Drafting Table (Vehicles)
 tile.propellerbench.name=Propeller Bench
@@ -298,18 +314,8 @@ tile.instrumentbench.name=Instrument Bench
 tile.componentbench.name=Component Bench (Custom Items)
 tile.decorbench.name=Decor Bench (Decorative Blocks)
 
-tile.fuelpump.name=Fuel Pump
 tile.fuelpump.level=LVL:
 tile.fuelpump.dispensed=DISP:
-
-tile.trafficsignalcontroller.name=Traffic Signal Controller
-
-tile.pole.name=Pole
-tile.polebase.name=Pole Base
-tile.trafficsignal.name=Traffic Signal
-tile.crossingsignal.name=Crossing Signal
-tile.streetlight.name=Street Light
-tile.trafficsign.name=Traffic Sign
 
 itemGroup.tabMTSCore=MTS Core Components
 key.categories.mts=Minecraft Transport Simulator
@@ -351,16 +357,3 @@ advancements.mts.key.title=Swiper no Swiping
 advancements.mts.key.description=Create a Key for locking vehicles
 advancements.mts.wrench.title=Better Than Duct Tape
 advancements.mts.wrench.description=Create a wrench for reparing vehicles
-			
-advancements.mts.construction.title=Construction
-advancements.mts.construction.description=Get some construction materials
-advancements.mts.pole.title=Pole Position
-advancements.mts.pole.description=Place down a pole
-advancements.mts.streetlight.title=Light up my Life
-advancements.mts.streetlight.description=Place a street light onto a pole
-advancements.mts.trafficsign.title=I Saw The Sign
-advancements.mts.trafficsign.description=Place a traffic sign onto a pole
-advancements.mts.trafficsignal.title=Great, Another Red Light...
-advancements.mts.trafficsignal.description=Place a traffic signal onto a pole
-advancements.mts.trafficsignalcontroller.title=Haaaax!
-advancements.mts.trafficsignalcontroller.description=Craft a traffic signal controller

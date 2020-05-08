@@ -28,6 +28,7 @@ public class JSONConfig{
 	public static class ConfigGeneral{
 		public ConfigBoolean opSignEditingOnly = new ConfigBoolean(false, "If true, only OPs will be able to edit signs on servers.  Does not affect client worlds.");
 		public ConfigBoolean opPickupVehiclesOnly = new ConfigBoolean(false, "If true, only OPs will be able to pick up vehicles with wrenches.  Does not affect client worlds.");
+		public ConfigBoolean creativePickupVehiclesOnly = new ConfigBoolean(false, "If true, vehicles can only be picked up in creative mode.");
 		public ConfigDouble speedFactor = new ConfigDouble(0.35D, "Factor to apply to vehicle movement.  1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.");
 		public ConfigDouble fuelUsageFactor = new ConfigDouble(1.0D, "Factor times which engines use fuel.  Change this if you think engines use fuel too fast or slow.");
 		public ConfigDouble engineHoursFactor = new ConfigDouble(1.0D, "Factor times which engines hours accumulate.  Change this if you want to adjust how fast engines wear out.");
@@ -57,6 +58,7 @@ public class JSONConfig{
 		public ConfigBoolean explosions = new ConfigBoolean(true, "Whether or not vehicles explode when crashed or shot down.");
 		public ConfigBoolean blockBreakage = new ConfigBoolean(true, "Whether or not vehicles can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks.");
 		public ConfigBoolean wheelBreakage = new ConfigBoolean(true, "Whether or not wheels can be broken (go flat).");
+		public ConfigBoolean wheelDamageIgnoreVelocity = new ConfigBoolean(false, "Whether or not velocity is ignored when calculating wheel damage.");
 		public ConfigDouble propellerDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by a propeller.");
 		public ConfigDouble jetDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by a jet engine.");
 		public ConfigDouble wheelDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by wheels on vehicles.");
@@ -155,9 +157,13 @@ public class JSONConfig{
 	
 	public static class ConfigClient{
 		public ConfigBoolean devMode = new ConfigBoolean(false, "If enabled, MTS will re-load all resources every time the config key (P) is pressed.  This includes textures for vehicles and parts, JSON files, and OBJ models.  This is intended for use in pack creation with pack components being placed in an un-zipped resource pack.  Note that every re-load will also re-load EVERY resource, not just MTS resources.  Make sure not to have lots of mods installed when you are doing this!");
-		public ConfigBoolean seaLvlOffset = new ConfigBoolean(false, "Does altimiter read zero at average sea level instead of Y=0?");
+		public ConfigBoolean innerWindows = new ConfigBoolean(false, "Should the glass on windows be rendered on the inside of the vehicle?");
 		public ConfigBoolean mouseYoke = new ConfigBoolean(false, "Enable mouse yoke for vehicles? Prevents looking around unless unlocked.  Think MCHeli controls.");
 		public ConfigBoolean kbOverride = new ConfigBoolean(true, "Should keyboard controls be ignored when a joystick control is mapped?  Leave true to free up the keyboard while using a joysick.");
+		public ConfigBoolean flareBlending = new ConfigBoolean(false, "If true, light flares from vehicles and lamps will not do brightness blending.  Normally false, but can be set to true if it makes shaders better.");
+		public ConfigBoolean beamBlending = new ConfigBoolean(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
+		public ConfigBoolean lightsPass0 = new ConfigBoolean(false, "If true, light rendering (and possibly blending) will happen on the first (solid) render pass.  For performance and compatibility, this should normally be false, but may be set to true to get proper light blending with shaders.");
+		public ConfigBoolean vehicleBlklt = new ConfigBoolean(false, "If true, vehicles will spawn invisible light blocks to force shaders to render them brighter.  Use this only if the other light options fail to work.");
 		public ConfigBoolean renderHUD_1P = new ConfigBoolean(true, "If false, the HUD in vehicles will not render in 1st-person mode.");
 		public ConfigBoolean renderHUD_3P = new ConfigBoolean(true, "If false, the HUD in vehicles will not render in 3rd-person mode.");
 		public ConfigBoolean fullHUD_1P = new ConfigBoolean(false, "If true, the full-size HUD will render in 1st-person rather than the half-size HUD.");

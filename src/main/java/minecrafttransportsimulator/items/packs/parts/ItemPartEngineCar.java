@@ -19,13 +19,10 @@ public final class ItemPartEngineCar extends AItemPartEngine{
 	protected void addExtraInformation(ItemStack stack, JSONPart pack, List<String> tooltipLines){
 		tooltipLines.add(pack.engine.isAutomatic ? I18n.format("info.item.engine.automatic") : I18n.format("info.item.engine.manual"));
 		tooltipLines.add(I18n.format("info.item.engine.gearratios"));
-		for(byte i=0; i<pack.engine.gearRatios.length; i+=3){
-			String gearRatios = String.valueOf(pack.engine.gearRatios[i]);
-			if(i+1 < pack.engine.gearRatios.length){
-				gearRatios += ",   " + String.valueOf(pack.engine.gearRatios[i+1]);
-			}
-			if(i+2 < pack.engine.gearRatios.length){
-				gearRatios += ",   " + String.valueOf(pack.engine.gearRatios[i+2]);
+		for(byte i=0; i<pack.engine.gearRatios.length; i+=5){
+			String gearRatios = "";
+			for(byte j=i; j<i+5 && j<pack.engine.gearRatios.length; ++j){
+				gearRatios += String.valueOf(pack.engine.gearRatios[j]) + ",  ";
 			}
 			tooltipLines.add(gearRatios);
 		}

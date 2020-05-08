@@ -56,9 +56,13 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 				for(byte i=0; i<definition.general.textLines.length; ++i){
 					TextLine text = definition.general.textLines[i];
 					GL11.glPushMatrix();
-					GL11.glTranslatef(text.xPos, text.yPos, text.zPos + 0.01F);
+					GL11.glTranslatef(text.xPos, text.yPos, text.zPos + (i < 3 ? 0.001F : -0.001F));
 					GL11.glScalef(text.scale/16F, text.scale/16F, text.scale/16F);
 					GL11.glRotatef(180, 1, 0, 0);
+					//Need to rotate 180 for text on other sides.
+					if(i >= 3){
+						GL11.glRotatef(180, 0, 1, 0);	
+					}
 					switch(i%3){
 						case(0) :{//Render fuel name.
 							WrapperGUI.drawText(tank.getFluidLevel() > 0 ? WrapperGame.getFluidName(tank.getFluid()).toUpperCase() : "", 0, 0, Color.decode(text.color), true, false, 0);
@@ -66,12 +70,12 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 						}
 						case(1) :{//Render fuel level.
 							String fluidLevel = String.format("%04.1f", tank.getFluidLevel()/1000F);
-							WrapperGUI.drawText(WrapperGUI.translate("tile.fuelpump.level") + fluidLevel + "mb", 0,  0, Color.decode(text.color), true, false, 0);
+							WrapperGUI.drawText(WrapperGUI.translate("tile.fuelpump.level") + fluidLevel + "b", 0,  0, Color.decode(text.color), true, false, 0);
 							break;
 						}
 						case(2) :{//Render fuel dispensed.
 							String fluidDispensed = String.format("%04.1f", ((TileEntityFuelPump) tank).totalTransfered/1000F);
-							WrapperGUI.drawText(WrapperGUI.translate("tile.fuelpump.dispensed") + fluidDispensed + "mb", 0, 0, Color.decode(text.color), true, false, 0);
+							WrapperGUI.drawText(WrapperGUI.translate("tile.fuelpump.dispensed") + fluidDispensed + "b", 0, 0, Color.decode(text.color), true, false, 0);
 							break;
 						}
 					}

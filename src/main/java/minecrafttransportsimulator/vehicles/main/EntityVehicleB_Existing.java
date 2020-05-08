@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.collect.BiMap;
@@ -41,13 +42,12 @@ import net.minecraft.world.World;
  */
 abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public boolean locked;
-	public float rotationRoll;
-	public float prevRotationRoll;
 	public double airDensity;
 	public double currentMass;
 	public String ownerName="";
 	public String displayText="";
 	public Vec3d headingVec = Vec3d.ZERO;
+	public byte throttle;
 	
 	/**Cached map that links entity IDs to the seats riding them.  Used for mounting/dismounting functions.*/
 	private final BiMap<Integer, PartSeat> riderSeats = HashBiMap.create();
@@ -60,12 +60,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	public EntityVehicleB_Existing(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
-		super(world, definition);
-		//Set position to the spot that was clicked by the player.
-		//Add a -90 rotation offset so the vehicle is facing perpendicular.
-		//Makes placement easier and is less likely for players to get stuck.
-		this.setPositionAndRotation(posX, posY, posZ, playerRotation-90, 0);
-		
+		super(world, posX, posY, posZ, playerRotation, definition);
 		//This only gets done at the beginning when the entity is first spawned.
 		this.displayText = definition.rendering.defaultDisplayText;
 	}
@@ -82,7 +77,9 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		//Check every tick to see if we still have riders in seats.
 		//If we are missing a rider, dismount them off of the vehicle.
 		Integer riderToRemove = -1;
-		for(Integer entityID : riderSeats.keySet()){
+		Iterator<Integer> seatIterator = riderSeats.keySet().iterator();
+		while(seatIterator.hasNext()){
+			Integer entityID = seatIterator.next();
 			boolean passengerIsValid = false;
 			for(Entity passenger : getPassengers()){
 				if(passenger.getEntityId() == entityID){
@@ -97,6 +94,8 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 					if(seat != null){
 						riderToRemove = entityID;
 					}
+				}else{
+					seatIterator.remove();
 				}
 			}
 		}
@@ -109,15 +108,21 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void updatePassenger(Entity passenger){
 		PartSeat seat = this.getSeatForRider(passenger);
 		if(seat != null){
-			Vec3d playerOffsetVec = seat.partPos.add(RotationSystem.getRotatedPoint(new Vec3d(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll));
+			Vec3d seatOffsetRotation = RotationSystem.getRotatedPoint(new Vec3d(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), (float)seat.partRotation.x, (float)seat.partRotation.y, (float)seat.partRotation.z);
+			if (seat.parentPart != null) {
+				seatOffsetRotation = RotationSystem.getRotatedPoint(seatOffsetRotation, (float)seat.parentPart.getActionRotation(0).x, (float)seat.parentPart.getActionRotation(0).y, (float)seat.parentPart.getActionRotation(0).z);
+			}
+			seatOffsetRotation = RotationSystem.getRotatedPoint(seatOffsetRotation, this.rotationPitch, this.rotationYaw, this.rotationRoll);
+			Vec3d playerOffsetVec = seat.partPos.add(seatOffsetRotation);
 			passenger.setPosition(playerOffsetVec.x, playerOffsetVec.y - passenger.height, playerOffsetVec.z);
+
 		}else if(definition != null && !this.riderSeatPositions.isEmpty()){
 			Double[] seatLocation = this.riderSeatPositions.get(this.getPassengers().indexOf(passenger));
 			APart part = getPartAtLocation(seatLocation[0], seatLocation[1], seatLocation[2]);
 			if(part instanceof PartSeat){
 				riderSeats.put(passenger.getEntityId(), (PartSeat) part);
 			}else{
-				MTS.MTSLog.error("ERROR: NO SEAT FOUND WHEN LINKING RIDER TO SEAT IN VEHICLE!");
+				MTS.MTSLog.error("ERROR: No seat was found when trying to update seated passenger.  Did someone change the seat linking?");
 				if(!world.isRemote){
 					passenger.dismountRidingEntity();
 				}
@@ -125,24 +130,6 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			}
 		}
 	}
-	
-	@Override
-	public void addPart(APart part, boolean ignoreCollision){
-		if(!ignoreCollision){
-			//Check if we are colliding and adjust roll before letting part addition continue.
-			//This is needed as the vehicle system doesn't know about roll.
-			if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
-				this.rotationRoll = 0;
-			}
-		}
-		super.addPart(part, ignoreCollision);
-	}
-	
-    @Override
-    public boolean shouldRenderInPass(int pass){
-        //Need to render in pass 1 to render transparent things in the world like light beams.
-    	return true;
-    }
 	
     /**
      * Adds a rider to this vehicle and sets their seat.
@@ -286,9 +273,9 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
 		this.locked=tagCompound.getBoolean("locked");
-		this.rotationRoll=tagCompound.getFloat("rotationRoll");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
+		this.throttle=tagCompound.getByte("throttle");
 		
 		this.riderSeatPositions.clear();
 		while(tagCompound.hasKey("Seat" + String.valueOf(riderSeatPositions.size()) + "0")){
@@ -303,8 +290,8 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
+		tagCompound.setByte("throttle", this.throttle);
 		tagCompound.setBoolean("locked", this.locked);
-		tagCompound.setFloat("rotationRoll", this.rotationRoll);
 		tagCompound.setString("ownerName", this.ownerName);
 		tagCompound.setString("displayText", this.displayText);
 		

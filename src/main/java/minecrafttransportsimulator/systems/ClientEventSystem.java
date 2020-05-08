@@ -278,14 +278,17 @@ public final class ClientEventSystem{
 	        	if(seat != null){
 		            //First restrict the player's yaw to prevent them from being able to rotate their body in a seat.
 		            Vec3d placementRotation = seat.partRotation;
-		            event.getEntityPlayer().renderYawOffset = (float) (vehicle.rotationYaw + placementRotation.y);
+		            event.getEntityPlayer().renderYawOffset = vehicle.rotationYaw + (float)((seat.parentPart != null ? seat.parentPart.getActionRotation(event.getPartialRenderTick()).y : 0) - seat.partRotation.y);
 		            if(vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90){
 		            	event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw*-1F;
 		            }else{
 			            event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw;
 		            }
 		            
+		            
 		            //Now add the pitch rotation.
+		            double vehicleRotationRad = Math.toRadians(vehicle.rotationYaw);
+		            double parentRotationRad = Math.toRadians(seat.parentPart != null ? seat.parentPart.getActionRotation(event.getPartialRenderTick()).y : 0);
 		            if(!event.getEntityPlayer().equals(minecraft.player)){
 		                EntityPlayer masterPlayer = Minecraft.getMinecraft().player;
 		                EntityPlayer renderedPlayer = event.getEntityPlayer();
@@ -294,14 +297,18 @@ public final class ClientEventSystem{
 		                float playerDistanceZ = (float) (renderedPlayer.posZ - masterPlayer.posZ);
 		                GL11.glTranslatef(playerDistanceX, playerDistanceY, playerDistanceZ);
 		                GL11.glTranslated(0, masterPlayer.getEyeHeight(), 0);
-		                GL11.glRotated(vehicle.rotationPitch + placementRotation.x, Math.cos(vehicle.rotationYaw  * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
-		                GL11.glRotated(vehicle.rotationRoll + placementRotation.z, -Math.sin(vehicle.rotationYaw  * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
+		                GL11.glRotated(vehicle.rotationPitch, Math.cos(vehicleRotationRad), 0, Math.sin(vehicleRotationRad));
+		                GL11.glRotated(vehicle.rotationRoll, -Math.sin(vehicleRotationRad), 0, Math.cos(vehicleRotationRad));
+		                GL11.glRotated(placementRotation.x, Math.cos(vehicleRotationRad + parentRotationRad), 0, Math.sin(vehicleRotationRad + parentRotationRad));
+		                GL11.glRotated(placementRotation.z, -Math.sin(vehicleRotationRad + parentRotationRad), 0, Math.cos(vehicleRotationRad + parentRotationRad));
 		                GL11.glTranslated(0, -masterPlayer.getEyeHeight(), 0);
 		                GL11.glTranslatef(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
 		            }else{
 		                GL11.glTranslated(0, event.getEntityPlayer().getEyeHeight(), 0);
-		                GL11.glRotated(vehicle.rotationPitch + placementRotation.x, Math.cos(vehicle.rotationYaw  * 0.017453292F), 0, Math.sin(vehicle.rotationYaw * 0.017453292F));
-		                GL11.glRotated(vehicle.rotationRoll + placementRotation.z, -Math.sin(vehicle.rotationYaw  * 0.017453292F), 0, Math.cos(vehicle.rotationYaw * 0.017453292F));
+		                GL11.glRotated(vehicle.rotationPitch, Math.cos(vehicleRotationRad), 0, Math.sin(vehicleRotationRad));
+		                GL11.glRotated(vehicle.rotationRoll, -Math.sin(vehicleRotationRad), 0, Math.cos(vehicleRotationRad));
+		                GL11.glRotated(placementRotation.x, Math.cos(vehicleRotationRad + parentRotationRad), 0, Math.sin(vehicleRotationRad + parentRotationRad));
+		                GL11.glRotated(placementRotation.z, -Math.sin(vehicleRotationRad + parentRotationRad), 0, Math.cos(vehicleRotationRad + parentRotationRad));
 		                GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
 		            }
 	        	}
@@ -402,7 +409,7 @@ public final class ClientEventSystem{
     @SubscribeEvent
     public static void on(WorldEvent.Unload event){
     	if(event.getWorld().isRemote){
-    		WrapperAudio.halt();
+    		WrapperAudio.haltSoundsIn(event.getWorld().provider.getDimension());
     	}
     }
 }

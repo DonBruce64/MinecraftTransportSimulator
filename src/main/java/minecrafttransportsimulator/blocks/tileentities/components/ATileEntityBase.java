@@ -1,9 +1,13 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.rendering.blocks.ARenderTileEntityBase;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
@@ -48,6 +52,19 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 	 */
 	public void setDefinition(JSONDefinition definition){
 		this.definition = definition;
+	}
+	
+	/**
+	 *  Returns all items that make up this TE.  Used to spawn
+	 *  items when broken.  Note that such items do NOT save
+	 *  their NBT state.  Middle-clicking changes this.
+	 */
+	public List<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>> getDrops(){
+		List<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>> drops = new ArrayList<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>>();
+		if(definition != null){
+			drops.add(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName));
+		}
+		return drops;
 	}
 
 	/**

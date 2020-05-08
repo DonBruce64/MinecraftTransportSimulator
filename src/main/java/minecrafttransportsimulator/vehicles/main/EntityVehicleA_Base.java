@@ -48,13 +48,21 @@ abstract class EntityVehicleA_Base extends Entity{
 	/**Cooldown byte to prevent packet spam requests during client-side loading of part packs.**/
 	private byte clientPackPacketCooldown = 0;
 	
+	/**Roll variable, as default MC entities don't have this.**/
+	public float rotationRoll;
+	public float prevRotationRoll;
+	
 	public EntityVehicleA_Base(World world){
 		super(world);
 	}
 	
-	public EntityVehicleA_Base(World world, JSONVehicle definition){
+	public EntityVehicleA_Base(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
 		this(world);
-		this.definition = definition;
+		this.definition = definition;	
+		//Set position to the spot that was clicked by the player.
+		//Add a -90 rotation offset so the vehicle is facing perpendicular.
+		//Makes placement easier and is less likely for players to get stuck.
+		this.setPositionAndRotation(posX, posY, posZ, playerRotation-90, 0);
 	}
 	
 	@Override
@@ -82,6 +90,13 @@ abstract class EntityVehicleA_Base extends Entity{
     	setRenderDistanceWeight(100);
     	this.ignoreFrustumCheck = true;
     }
+    
+    @Override
+    public boolean shouldRenderInPass(int pass){
+        //Need to render in pass 1 to render transparent things in the world like light beams.
+    	return true;
+    }
+    
     
     /**
 	 * Adds the passed-part to this vehicle, but in this case the part is in item form
@@ -118,12 +133,14 @@ abstract class EntityVehicleA_Base extends Entity{
 		if(!ignoreCollision){
 			//Check for collision, and boost if needed.
 			if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
-				this.setPositionAndRotation(posX, posY + part.getHeight(), posZ, rotationYaw, rotationPitch);
+				//Adjust roll first, as otherwise we could end up with a sunk vehicle.
+				rotationRoll = 0;
+				setPositionAndRotation(posX, posY + part.getHeight(), posZ, rotationYaw, rotationPitch);
 			}
 			
 			//Sometimes we need to do this for parts that are deeper into the ground.
 			if(part.isPartCollidingWithBlocks(new Vec3d(0, Math.max(0, -part.offset.y) + part.getHeight(), 0))){
-				this.setPositionAndRotation(posX, posY +  part.getHeight(), posZ, rotationYaw, rotationPitch);
+				setPositionAndRotation(posX, posY +  part.getHeight(), posZ, rotationYaw, rotationPitch);
 			}
 		}
 	}
@@ -253,7 +270,7 @@ abstract class EntityVehicleA_Base extends Entity{
 	 * subParts inherit some properties from their parent parts. 
 	 */
 	public VehiclePart getPackForSubPart(VehiclePart parentPack, VehiclePart subPack){
-		VehiclePart correctPack = this.definition.new VehiclePart();
+		VehiclePart correctPack = definition.new VehiclePart();
 		correctPack.pos = new float[3];
 		//If we will be mirrored, make sure to invert the x-coords of any sub-parts.
 		correctPack.pos[0] = parentPack.pos[0] < 0 ^ parentPack.inverseMirroring ? parentPack.pos[0] - subPack.pos[0] : parentPack.pos[0] + subPack.pos[0];
@@ -305,6 +322,7 @@ abstract class EntityVehicleA_Base extends Entity{
 		}else{
 			this.definition = (JSONVehicle) MTSRegistry.packItemMap.get(tagCompound.getString("packID")).get(tagCompound.getString("systemName")).definition;
 		}
+		rotationRoll=tagCompound.getFloat("rotationRoll");
 		
 		if(this.parts.size() == 0){
 			NBTTagList partTagList = tagCompound.getTagList("Parts", 10);
@@ -339,9 +357,10 @@ abstract class EntityVehicleA_Base extends Entity{
 		super.writeToNBT(tagCompound);
 		tagCompound.setString("packID", definition.packID);
 		tagCompound.setString("systemName", definition.systemName);
+		tagCompound.setFloat("rotationRoll", rotationRoll);
 		
 		NBTTagList partTagList = new NBTTagList();
-		for(APart part : this.getVehicleParts()){
+		for(APart part : getVehicleParts()){
 			//Don't save the part if it's not valid.
 			if(part.isValid()){
 				NBTTagCompound partTag = part.getPartNBTTag();

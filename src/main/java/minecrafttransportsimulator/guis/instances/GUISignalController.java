@@ -8,7 +8,6 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_CrossingSignal;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
@@ -39,19 +38,15 @@ public class GUISignalController extends AGUIBase{
 	
 	//Labels and items for scan results.
 	private byte trafficSignals;
-	private byte crossingSignals;
 	private byte streetLights;
 	
 	private GUIComponentLabel trafficSignalCount;
-	private GUIComponentLabel crossingSignalCount;
 	private GUIComponentLabel streetLightCount;
 	private GUIComponentItem trafficSignalItem;
-	private GUIComponentItem crossingSignalItem;
 	private GUIComponentItem streetLightItem;
 	
 	//These are only used to save the item names until we create the item components.
 	private String trafficSignalItemNameTemp;
-	private String crossingSignalItemNameTemp;
 	private String streetLightItemNameTemp;
 	
 	
@@ -74,10 +69,6 @@ public class GUISignalController extends AGUIBase{
 						trafficSignalItemNameTemp = component.definition.packID + ":" + component.definition.systemName;
 						++trafficSignals;
 						componentLocations.add(location);
-					}else if(component instanceof TileEntityPole_CrossingSignal){
-						crossingSignalItemNameTemp = component.definition.packID + ":" + component.definition.systemName;
-						++crossingSignals;
-						componentLocations.add(location);
 					}else if(component instanceof TileEntityPole_StreetLight){
 						streetLightItemNameTemp = component.definition.packID + ":" + component.definition.systemName;
 						++streetLights;
@@ -93,7 +84,6 @@ public class GUISignalController extends AGUIBase{
 		addButton(new GUIComponentButton(guiLeft + 25, guiTop + 15, 200, WrapperGUI.translate("gui.trafficsignalcontroller.scan")){
 			public void onClicked(){
 				trafficSignals = 0;
-				crossingSignals = 0;
 				streetLights = 0;
 				componentLocations.clear();
 				int scanDistance = Integer.valueOf(scanDistanceText.getText());
@@ -107,10 +97,6 @@ public class GUISignalController extends AGUIBase{
 									if(component instanceof TileEntityPole_TrafficSignal){
 										trafficSignalItem.itemName = component.definition.packID + ":" + component.definition.systemName;
 										++trafficSignals;
-										componentLocations.add(location);
-									}else if(component instanceof TileEntityPole_CrossingSignal){
-										crossingSignalItem.itemName = component.definition.packID + ":" + component.definition.systemName;
-										++crossingSignals;
 										componentLocations.add(location);
 									}else if(component instanceof TileEntityPole_StreetLight){
 										streetLightItem.itemName = component.definition.packID + ":" + component.definition.systemName;
@@ -131,10 +117,6 @@ public class GUISignalController extends AGUIBase{
 		//Traffic signal scan results.
 		addItem(trafficSignalItem = new GUIComponentItem(guiLeft + 120, guiTop + 52, 1.0F, trafficSignalItemNameTemp, 1, -1));
 		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 56, Color.WHITE, " X" + trafficSignals));
-		
-		//Crossing signal scan results.
-		addItem(crossingSignalItem = new GUIComponentItem(guiLeft + 160, guiTop + 52, 1.0F, crossingSignalItemNameTemp, 1, -1));
-		addLabel(crossingSignalCount = new GUIComponentLabel(guiLeft + 175, guiTop + 56, Color.WHITE, " X" + crossingSignals));
 		
 		//Street lamp scan results.
 		addItem(streetLightItem = new GUIComponentItem(guiLeft + 200, guiTop + 52, 1.0F, streetLightItemNameTemp, 1, -1));
@@ -209,14 +191,12 @@ public class GUISignalController extends AGUIBase{
 	@Override
 	public void setStates(){
 		trafficSignalCount.visible = trafficSignals > 0;
-		crossingSignalCount.visible = crossingSignals > 0;
 		streetLightCount.visible = streetLights > 0;
 		
 		trafficSignalCount.text = " X" + trafficSignals;
-		crossingSignalCount.text = " X" + crossingSignals;
 		streetLightCount.text = " X" + streetLights;
 		
-		if(trafficSignals + crossingSignals > 0){
+		if(trafficSignals > 0){
 			orientationButton.enabled = true;
 			modeButton.enabled = true;
 			greenMainTimeText.enabled = true;

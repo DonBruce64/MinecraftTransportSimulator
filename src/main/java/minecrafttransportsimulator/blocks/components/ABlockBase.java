@@ -68,7 +68,7 @@ public abstract class ABlockBase{
 	public static enum Axis{
 		NONE(0, 0, 0, 0),
 		UP(0, 1, 0, 0),
-		DOWN(0, -1 ,0, 0),
+		DOWN(0, -1, 0, 0),
 		NORTH(0, 0, -1, 180),
 		SOUTH(0, 0, 1, 0),
 		EAST(1, 0, 0, 90),
@@ -88,6 +88,17 @@ public abstract class ABlockBase{
 		
 		public Point3i getOffsetPoint(Point3i point){
 			return point.newOffset(xOffset, yOffset, zOffset);
+		}
+		public Axis getOpposite(){
+			switch(this){
+				case UP: return DOWN;
+				case DOWN: return UP;
+				case NORTH: return SOUTH;
+				case SOUTH: return NORTH;
+				case EAST: return WEST;
+				case WEST: return EAST;
+				default: return NONE;
+			}
 		}
 	}
 }

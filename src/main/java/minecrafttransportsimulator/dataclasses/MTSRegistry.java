@@ -10,21 +10,23 @@ import java.util.TreeMap;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.instances.BlockPartsBench;
-import minecrafttransportsimulator.guis.GUIPartBench;
+import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.items.core.ItemJerrycan;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.items.core.ItemKey;
+import minecrafttransportsimulator.items.core.ItemTicket;
 import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONBooklet;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.packets.general.PacketChat;
-import minecrafttransportsimulator.packets.general.PacketPlayerCrafting;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
@@ -47,6 +49,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.wrappers.WrapperBlock;
+import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -94,6 +97,7 @@ public final class MTSRegistry{
 	public static final Item key = new ItemKey();
 	public static final Item jumperCable = new ItemJumperCable();
 	public static final Item jerrycan = new ItemJerrycan();
+	public static final Item ticket = new ItemTicket();
 	
 	//Crafting benches.
 	public static final WrapperBlock vehicleBench = new WrapperBlock(new BlockPartsBench(JSONVehicle.class));
@@ -101,15 +105,11 @@ public final class MTSRegistry{
 	public static final WrapperBlock engineBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "engine_aircraft", "engine_jet", "engine_car", "engine_boat"));
 	public static final WrapperBlock wheelBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "wheel", "skid", "pontoon", "tread"));
 	public static final WrapperBlock seatBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand"));
-	public static final WrapperBlock gunBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "gun_fixed", "gun_tripod", "bullet"));
+	public static final WrapperBlock gunBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "gun_fixed", "gun_tripod", "gun_turret", "bullet"));
 	public static final WrapperBlock customBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "custom"));
 	public static final WrapperBlock instrumentBench = new WrapperBlock(new BlockPartsBench(JSONInstrument.class));
-	public static final WrapperBlock componentBench = new WrapperBlock(new BlockPartsBench(JSONItem.class));
-	public static final WrapperBlock decorBench = new WrapperBlock(new BlockPartsBench(JSONDecor.class));
-	
-	//Fuel pump.
-	//FIXME make fuel pump a main pack item with regular crafting recipie.
-	//public static final WrapperBlock fuelPump = new WrapperBlock(new BlockFuelPump());
+	public static final WrapperBlock componentBench = new WrapperBlock(new BlockPartsBench(JSONItem.class).addValidClass(JSONBooklet.class));
+	public static final WrapperBlock decorBench = new WrapperBlock(new BlockPartsBench(JSONDecor.class).addValidClass(JSONPoleComponent.class));
 	
 	//Counter for packets.
 	private static int packetNumber = 0;
@@ -137,7 +137,7 @@ public final class MTSRegistry{
 	/**
 	 * This method returns a list of ItemStacks that are required
 	 * to craft the passed-in pack item.  Used by {@link GUIPartBench}
-	 * amd {@link PacketPlayerCrafting} as well as any other systems that 
+	 * amd {@link WrapperPlayer#hasMaterials(AItemPack)} as well as any other systems that 
 	 * need to know what materials make up pack items.
 	 */
     public static List<ItemStack> getMaterials(AItemPack<? extends AJSONItem<?>> item){
@@ -223,7 +223,6 @@ public final class MTSRegistry{
 		registerPacket(PacketBulletHit.class, PacketBulletHit.Handler.class, true, true);
 		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);
 		registerPacket(PacketPartGunReload.class, PacketPartGunReload.Handler.class, true, false);
-		registerPacket(PacketPlayerCrafting.class, PacketPlayerCrafting.Handler.class, false, true);
 		
 		//Packets in packets.vehicles.
 		registerPacket(PacketVehicleClientInit.class, PacketVehicleClientInit.Handler.class, false, true);
