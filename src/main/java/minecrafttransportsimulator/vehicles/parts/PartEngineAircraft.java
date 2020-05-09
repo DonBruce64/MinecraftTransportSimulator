@@ -70,13 +70,16 @@ public class PartEngineAircraft extends APartEngine{
 			effectivePitchVelocity *= (1D*propeller.currentPitch/propeller.definition.propeller.diameter + 0.2D)/(1D*propeller.currentPitch/propeller.definition.propeller.diameter);
 			if(effectivePitchVelocity != 0){
 				//Get the angle of attack of the propeller.
-				double angleOfAttack = Math.abs(effectivePitchVelocity - currentPitchVelocity);
+				//Note that because the effective pitch velocity is in meters per second, 
+				//it needs to be converted to meters per revolution before we can move on.
+				//This gets the angle as a ratio of forward pitch to propeller circumference.
+				double angleOfAttack = Math.abs(((effectivePitchVelocity - currentPitchVelocity)/((RPM*definition.engine.gearRatios[0])/60D))/((propeller.definition.propeller.diameter*Math.PI)*0.0254D));
 				double thrust = vehicle.airDensity*Math.PI*Math.pow(0.0254*propeller.definition.propeller.diameter/2D, 2)*
 						(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
 						Math.pow(propeller.definition.propeller.diameter/2D/Math.abs(propeller.currentPitch) + propeller.definition.propeller.numberBlades/1000D, 1.5)/400D;
-				//If the angle of attack is greater than 35, sap power off the propeller for stalling.
-				if(angleOfAttack > 35){
-					thrust *= 35/angleOfAttack;
+				//If the angle of attack is greater than 25 degrees (or a ratio of 0.4663), sap power off the propeller for stalling.
+				if(angleOfAttack > 0.4663D){
+					thrust *= 0.4663D/angleOfAttack;
 				}
 				//Get the correct sign of the force, taking engine systems into account.
 				if(vehicle instanceof EntityVehicleG_Blimp && vehicle.reverseThrust){
