@@ -15,14 +15,13 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.rendering.blocks.RenderDecor;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
-import minecrafttransportsimulator.wrappers.WrapperOCTESC;
 
 /**Traffic signal controller tile entity.  Responsible for keeping the state of traffic
  * intersections.
 *
 * @author don_bruce
 */
-public class TileEntitySignalController extends ATileEntityBase<JSONDecor> implements ITileEntityTickable, WrapperOCTESC{	
+public class TileEntitySignalController extends ATileEntityBase<JSONDecor> implements ITileEntityTickable{	
 	//Mode state.
 	public OpMode currentOpMode = OpMode.TIMED_CYCLE;
 	
@@ -134,11 +133,6 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 				}
 			}
 		}
-	}
-	
-	@Override
-	public TileEntitySignalController getController(){
-		return this;
 	}
 	
 	/**

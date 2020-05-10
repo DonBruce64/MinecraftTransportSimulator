@@ -17,6 +17,7 @@ import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityFluidTank;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.core.IItemBlock;
 import minecrafttransportsimulator.items.packs.AItemPack;
@@ -86,12 +87,28 @@ public class WrapperBlock extends Block{
     	return world.world.getBlockState(new BlockPos(point.x, point.y, point.z)).getValue(FACING).getHorizontalAngle();
     }
     
+    @Override
+    public boolean hasTileEntity(IBlockState state){
+    	//If our block implements the interface to be a TE, we return true.
+        return block instanceof IBlockTileEntity<?>;
+    }
+    
+	@Nullable
+    public TileEntity createTileEntity(World world, IBlockState state){
+    	//Need to return a wrapper class here, not the actual TE.
+		ATileEntityBase<?> tile = ((IBlockTileEntity<?>) block).createTileEntity();
+		if(tile instanceof TileEntitySignalController){
+			return new WrapperTileEntitySignalController((TileEntitySignalController) tile);
+		}else{
+			return getTileEntityGenericWrapper(tile);
+		}
+    }
+	
 	 /**
 	 *  Helper method for creating new Wrapper TEs for this block.
 	 *  Far better than ? all over for generics in the createTileEntity method.
 	 */
-	private static <JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> WrapperTileEntity<? extends ATileEntityBase<JSONDefinition>> getTileEntityWrapper(IBlockTileEntity<JSONDefinition> block){
-		ATileEntityBase<JSONDefinition> tile = block.createTileEntity();
+	private static <JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> WrapperTileEntity<? extends ATileEntityBase<JSONDefinition>> getTileEntityGenericWrapper(ATileEntityBase<JSONDefinition> tile){
 		if(tile instanceof ATileEntityFluidTank){
 		   	if(tile instanceof ITileEntityTickable){
 		   		return new WrapperTileEntityFluidTank.Tickable<ATileEntityFluidTank<JSONDefinition>>((ATileEntityFluidTank<JSONDefinition>) tile);	
@@ -106,20 +123,6 @@ public class WrapperBlock extends Block{
 	       	}
 		}
 	}
-	
-    
-    @Override
-    public boolean hasTileEntity(IBlockState state){
-    	//If our block implements the interface to be a TE, we return true.
-        return block instanceof IBlockTileEntity<?>;
-    }
-    
-    
-	@Nullable
-    public TileEntity createTileEntity(World world, IBlockState state){
-    	//Need to return a wrapper class here, not the actual TE.
-		return getTileEntityWrapper((IBlockTileEntity<?>) block);
-    }
 	
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ){
@@ -310,6 +313,7 @@ public class WrapperBlock extends Block{
 		//Register the TE wrappers.
 		GameRegistry.registerTileEntity(WrapperTileEntity.class, new ResourceLocation(MTS.MODID, WrapperTileEntity.class.getSimpleName()));
 		GameRegistry.registerTileEntity(WrapperTileEntity.Tickable.class, new ResourceLocation(MTS.MODID, WrapperTileEntity.class.getSimpleName() + WrapperTileEntity.Tickable.class.getSimpleName()));
+		GameRegistry.registerTileEntity(WrapperTileEntitySignalController.class, new ResourceLocation(MTS.MODID, WrapperTileEntity.class.getSimpleName() + WrapperTileEntitySignalController.class.getSimpleName()));
 		GameRegistry.registerTileEntity(WrapperTileEntityFluidTank.class, new ResourceLocation(MTS.MODID, WrapperTileEntityFluidTank.class.getSimpleName()));
 		GameRegistry.registerTileEntity(WrapperTileEntityFluidTank.Tickable.class, new ResourceLocation(MTS.MODID, WrapperTileEntityFluidTank.class.getSimpleName() + WrapperTileEntityFluidTank.Tickable.class.getSimpleName()));
 		
