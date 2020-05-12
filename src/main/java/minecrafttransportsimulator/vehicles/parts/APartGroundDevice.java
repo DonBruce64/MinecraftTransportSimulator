@@ -57,8 +57,13 @@ public abstract class APartGroundDevice extends APart{
 		super.updatePart();
 		if(this.isOnGround()){
 			//If we aren't skipping angular calcs, change our velocity accordingly.
+			//Long parts use linear propulsion, not rotary, so don't take height into account.
 			if(!skipAngularCalcs){
-				angularVelocity = (float) (vehicle.velocity/(this.getHeight()*Math.PI));
+				if(getLongPartOffset() == 0){
+					angularVelocity = (float) (vehicle.velocity/(this.getHeight()*Math.PI));
+				}else{
+					angularVelocity = (float) vehicle.velocity;
+				}
 			}
 			
 			//Check for colliding entities and damage them.

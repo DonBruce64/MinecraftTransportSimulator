@@ -796,9 +796,21 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			
 			//Now that the endpoints are set, we can calculate the path.
 			//Do this by following the start and end points at small increments.
-			points = new ArrayList<Double[]>();
-			double deltaDist = treadPart.definition.tread.spacing;
+			//First calculate the total path length, and determine the optimum spacing.
+			//This is the closest value to the definition's tread spacing.
+			double totalPathLength = 0;
+			for(int i=0; i<rollers.length; ++i){
+				RenderVehicle_TreadRoller roller = rollers[i];
+				totalPathLength += 2*Math.PI*roller.radius*Math.abs(roller.endAngle - (i == 0 ? roller.startAngle - 360 : roller.startAngle))/360D;
+				RenderVehicle_TreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
+				totalPathLength += Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
+			}
+			
+			double deltaDist = treadPart.definition.tread.spacing + (totalPathLength%treadPart.definition.tread.spacing)/(totalPathLength/treadPart.definition.tread.spacing);
 			double leftoverPathLength = 0;
+			double yPoint = 0;
+			double zPoint = 0; 
+			points = new ArrayList<Double[]>();
 			for(int i=0; i<rollers.length; ++i){
 				RenderVehicle_TreadRoller roller = rollers[i];
 				//Follow the curve of the roller from the start and end point.
@@ -814,8 +826,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				
 				//Add the first point here, and add more as we follow the path.
 				if(i == 0){
-					double yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
-					double zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
+					yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
+					zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
 					points.add(new Double[]{yPoint, zPoint, currentAngle + 180});
 				}
 				
@@ -829,16 +841,16 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 						//Then increment currentAngle to account for the new point made.
 						//Add an angle relative to the point on the roller.
 						Double[] lastPoint = points.get(points.size() - 1);
-						double yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
-						double zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
+						yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
+						zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
 						double pointDist = Math.hypot(yPoint - lastPoint[0], zPoint - lastPoint[1]);
 						double normalizedY = (yPoint - lastPoint[0])/pointDist;
 						double normalizedZ = (zPoint - lastPoint[1])/pointDist;
 						double rollerAngleSpan = 360D*((deltaDist - leftoverPathLength)/roller.circumference);
 						
 						points.add(new Double[]{lastPoint[0] + deltaDist*normalizedY, lastPoint[1] + deltaDist*normalizedZ, lastPoint[2] + rollerAngleSpan});
-						lastPoint = points.get(points.size() - 1);						
 						currentAngle += rollerAngleSpan;
+						rollerPathLength -= (deltaDist - leftoverPathLength);
 						leftoverPathLength = 0;
 					}
 					
@@ -846,8 +858,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 						//Go to and add the next point on the roller path.
 						rollerPathLength -= deltaDist;
 						currentAngle += 360D*(deltaDist/roller.circumference);
-						double yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
-						double zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
+						yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
+						zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
 						points.add(new Double[]{yPoint, zPoint, currentAngle + 180});
 					}
 					
@@ -859,27 +871,19 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				//We may also have leftover straight path length if we didn't do anything on a roller.
 				//If we are on the last roller, we need to get the first roller to complete the loop.
 				RenderVehicle_TreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
-				double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
-				double normalizedY = (nextRoller.startY - roller.endY)/straightPathLength;
-				double normalizedZ = (nextRoller.startZ - roller.endZ)/straightPathLength;
-				double currentY = roller.endY - normalizedY*(leftoverPathLength + rollerPathLength);
-				double currentZ = roller.endZ - normalizedZ*(leftoverPathLength + rollerPathLength);
-				straightPathLength += leftoverPathLength + rollerPathLength;
+				double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ) + leftoverPathLength + rollerPathLength;
+				double normalizedY = (nextRoller.startY - yPoint)/straightPathLength;
+				double normalizedZ = (nextRoller.startZ - zPoint)/straightPathLength;
 				while(straightPathLength > deltaDist){
 					//Go to and add the next point on the straight path.
 					straightPathLength -= deltaDist;
-					currentY += normalizedY*deltaDist;
-					currentZ += normalizedZ*deltaDist;
-					points.add(new Double[]{currentY, currentZ, roller.endAngle + 180});
+					yPoint += normalizedY*deltaDist;
+					zPoint += normalizedZ*deltaDist;
+					points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180});
 				}
 				leftoverPathLength = straightPathLength;
 			}
 			
-			//Add a final point to the list to account for the tread gap.
-			//This point is in the middle of the first and last point.
-			Double[] firstPoint = points.get(0);
-			Double[] lastPoint = points.get(points.size() - 1);
-			points.add(new Double[]{lastPoint[0] + (firstPoint[0] - lastPoint[0])/2D, lastPoint[1] + (firstPoint[1] - lastPoint[1])/2D, lastPoint[2]});
 			treadPoints.put(treadPart.vehicle.definition.genericName, points);
 		}
 				
@@ -887,25 +891,33 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//We manually set point 0 here due to the fact it's a joint between two differing angles.
 		//We also need to translate to that point to start rendering as we're currently at 0,0,0.
 		//For each remaining point, we only translate the delta of the point.
-		float treadMovementPercentage = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing);
+		float treadLinearPosition = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*treadPart.vehicle.SPEED_FACTOR);
+		float treadMovementPercentage = treadLinearPosition%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing;
 		if(treadPart.angularPosition < 0){
 			treadMovementPercentage = 1 - treadMovementPercentage;
 		}
-		Double[] priorPoint = points.get(points.size() - 1);
-		Double[] point = points.get(0);
-		double yDelta = point[0] - priorPoint[0];
-		double zDelta = point[1] - priorPoint[1];
-		double angleDelta = point[2] - priorPoint[2];
-		
+		Double[] point;
+		Double[] nextPoint;
+		double yDelta;
+		double zDelta;
+		double angleDelta;
 		GL11.glPushMatrix();
-		GL11.glTranslated(0, point[0] - yDelta, point[1] - zDelta);
 		for(int i=0; i<points.size() - 1; ++i){
-			//Update variables, except for point 0 as we've already calculated it.
-			if(i != 0){
-				point = points.get(i);
-				yDelta = point[0] - priorPoint[0];
-				zDelta = point[1] - priorPoint[1];
-				angleDelta = point[2] - priorPoint[2];
+			//Update variables.
+			//If we're at the last point, set the next point to the first point.
+			point = points.get(i);
+			if(i == points.size() - 1){
+				nextPoint = points.get(0);
+			}else{
+				nextPoint = points.get(i + 1);
+			}
+			yDelta = nextPoint[0] - point[0];
+			zDelta = nextPoint[1] - point[1];
+			angleDelta = nextPoint[2] - point[2];
+			
+			//If we're at the first point, do initial translation.
+			if(i == 0){
+				GL11.glTranslated(0, point[0], point[1]);
 			}
 			
 			//If our angle delta is greater than 180, we can assume that we're inverted.
@@ -915,19 +927,20 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}else if(angleDelta < -180){
 				angleDelta += 360;
 			}
+			
 			//If there's no rotation to the point, and no delta between points, don't do rotation.
 			//That's an expensive operation due to sin and cos operations.
 			//Do note that the model needs to be flipped 180 on the X-axis due to all our points
 			//assuming a YZ coordinate system with 0 degrees rotation being in +Y.
 			//This is why 180 is added to all points cached in the operations above.
-			if(priorPoint[2] != 0 || angleDelta != 0){
+			if(point[2] != 0 || angleDelta != 0){
 				//We can't use a running rotation here as we'll end up translating in the rotated
 				//coordinate system.  To combat this, we translate like normal, but then push a
 				//stack and rotate prior to rendering.  This keeps us from having to do another
 				//rotation to get the old coordinate system back.
 				GL11.glPushMatrix();
 				GL11.glTranslated(0, yDelta*treadMovementPercentage, zDelta*treadMovementPercentage);
-				GL11.glRotated(priorPoint[2] + angleDelta*treadMovementPercentage, 1, 0, 0);
+				GL11.glRotated(point[2] + angleDelta*treadMovementPercentage, 1, 0, 0);
 				GL11.glCallList(displayListIndex);
 				GL11.glPopMatrix();
 				GL11.glTranslated(0, yDelta, zDelta);
@@ -940,9 +953,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				GL11.glCallList(displayListIndex);
 				GL11.glTranslated(0, yDelta*(1 - treadMovementPercentage), zDelta*(1 - treadMovementPercentage));
 			}
-			
-			//Set prior point to current point.
-			priorPoint = point;
 		}
 		GL11.glPopMatrix();
 	}

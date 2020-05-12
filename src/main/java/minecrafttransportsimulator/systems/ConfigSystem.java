@@ -12,6 +12,7 @@ import com.google.gson.GsonBuilder;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONConfig;
+import minecrafttransportsimulator.jsondefs.JSONCraftingOverrides;
 
 
 /**Class that handles all configuration settings. This file is responsible for saving and loading
@@ -23,7 +24,6 @@ import minecrafttransportsimulator.jsondefs.JSONConfig;
  * @author don_bruce
  */
 public final class ConfigSystem{
-	
 	private static File configFile;
 	public static JSONConfig configObject;
 	
@@ -55,24 +55,45 @@ public final class ConfigSystem{
 		}
 		
 		//If we don't have a valid configObject, we must not have a file or have a corrupted file.
-		//If our configObject is valid, parse out the crafting overrides.
 		//In either case, make a fresh object now.
 		if(configObject == null){
 			configObject = new JSONConfig();
-		}else{
-			for(String craftingOverridePackID : configObject.crafting.overrides.keySet()){
-				if(MTSRegistry.packItemMap.containsKey(craftingOverridePackID)){
-					for(String craftingOverrideSystemName : configObject.crafting.overrides.get(craftingOverridePackID).keySet()){
-						if(MTSRegistry.packItemMap.get(craftingOverridePackID).containsKey(craftingOverrideSystemName)){
-							MTSRegistry.packCraftingMap.put(MTSRegistry.packItemMap.get(craftingOverridePackID).get(craftingOverrideSystemName), configObject.crafting.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
-						}
-					}
-				}
-			}
 		}
 		
 		//After parsing the config save it.  This allows new entries to be populated.
 		saveToDisk();
+		
+		
+		//Now parse the crafting override file.
+		File craftingFile = new File(configFile.getParentFile(), "mtscraftingoverrides.json");
+		if(craftingFile.exists()){
+			try{
+				JSONCraftingOverrides craftingOverridesObject = new Gson().fromJson(new FileReader(craftingFile), JSONCraftingOverrides.class);
+				for(String craftingOverridePackID : craftingOverridesObject.overrides.keySet()){
+					if(MTSRegistry.packItemMap.containsKey(craftingOverridePackID)){
+						for(String craftingOverrideSystemName : craftingOverridesObject.overrides.get(craftingOverridePackID).keySet()){
+							if(MTSRegistry.packItemMap.get(craftingOverridePackID).containsKey(craftingOverrideSystemName)){
+								MTSRegistry.packCraftingMap.put(MTSRegistry.packItemMap.get(craftingOverridePackID).get(craftingOverrideSystemName), craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
+							}
+						}
+					}
+				}
+			}catch(Exception e){
+				MTS.MTSLog.error("ERROR: ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
+				MTS.MTSLog.error(e.getMessage());
+			}
+		}else{
+			//Make the default override file and save it.
+			try{
+				FileWriter writer = new FileWriter(craftingFile);
+				new GsonBuilder().setPrettyPrinting().create().toJson(new JSONCraftingOverrides(), JSONCraftingOverrides.class, writer);
+				writer.flush();
+				writer.close();
+			}catch(Exception e){
+				System.err.println("ERROR: ConfigSystem failed to create fresh crafting overridesg file.  Report to the mod author!");
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	/**Called to save this class as a config File.  File
