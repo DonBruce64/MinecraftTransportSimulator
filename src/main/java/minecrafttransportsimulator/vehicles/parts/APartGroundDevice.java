@@ -67,7 +67,7 @@ public abstract class APartGroundDevice extends APart{
 			}
 			
 			//Check for colliding entities and damage them.
-			if(!vehicle.world.isRemote && vehicle.velocity > 0.2F){
+			if(!vehicle.world.isRemote && vehicle.velocity >= ConfigSystem.configObject.damage.wheelDamageMinimumVelocity.value){
 				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(Vec3d.ZERO).expand(0.25F, 0, 0.25F));
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
