@@ -123,6 +123,14 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 					newComponent.setTextLines(textLines);
 				}
 				pole.updateLightState();
+				//if player is not in creative mod, try to subtract the component.
+				if(!player.isCreative()){
+					ItemStack componentStack = player.getHeldStack();
+					componentStack.shrink(1);
+					if(componentStack.isEmpty()){
+						player.removeItem(componentStack);
+					}
+				}
 				return true;
 			} 
 		}
