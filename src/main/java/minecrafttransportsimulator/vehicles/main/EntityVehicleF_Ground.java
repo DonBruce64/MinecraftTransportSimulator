@@ -3,7 +3,7 @@ package minecrafttransportsimulator.vehicles.main;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.systems.RotationSystem;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
@@ -76,7 +76,7 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	@Override
 	protected void getForcesAndMotions(){
 		forwardForce = 0;
-		for(APartEngine engine : engines.values()){
+		for(PartEngine engine : engines.values()){
 			forwardForce += engine.getForceOutput();
 		}
 		dragForce = 0.5F*airDensity*velocity*velocity*5.0F*getDragCoefficient();

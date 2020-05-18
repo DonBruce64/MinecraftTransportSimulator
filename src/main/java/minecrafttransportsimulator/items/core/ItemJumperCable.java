@@ -9,7 +9,7 @@ import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -20,7 +20,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ItemJumperCable extends Item implements IItemVehicleInteractable{
-	public static APartEngine lastEngineClicked;
+	public static PartEngine lastEngineClicked;
 	
 	public ItemJumperCable(){
 		super();
@@ -38,8 +38,8 @@ public class ItemJumperCable extends Item implements IItemVehicleInteractable{
 	@Override
 	public void doVehicleInteraction(ItemStack stack, EntityVehicleE_Powered vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
 		if(rightClick){
-			if(part instanceof APartEngine){
-				APartEngine engine = (APartEngine) part;
+			if(part instanceof PartEngine){
+				PartEngine engine = (PartEngine) part;
 				if(engine.linkedEngine == null){
 					if(lastEngineClicked == null){
 						lastEngineClicked = engine;

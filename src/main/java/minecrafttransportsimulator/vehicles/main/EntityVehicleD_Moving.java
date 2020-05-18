@@ -12,7 +12,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.PartEngineBoat;
+import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -970,8 +970,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 			//Also check for boat engines, which can make us turn if we are in water.
 			for(APart part : this.getVehicleParts()){
-				if(part instanceof PartEngineBoat){
-					if(((PartEngineBoat) part).isInLiquid){
+				if(part instanceof PartPropeller){
+					if(part.isPartCollidingWithLiquids(Vec3d.ZERO)){
 						turningFactor += 1.0F;
 						turningDistance = (float) Math.max(turningDistance, Math.abs(part.offset.z));
 					}

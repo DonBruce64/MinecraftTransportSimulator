@@ -17,6 +17,6 @@ public final class ItemPartEngineJet extends AItemPartEngine{
 	@Override
 	@SideOnly(Side.CLIENT)
 	protected void addExtraInformation(ItemStack stack, JSONPart pack, List<String> tooltipLines){
-		tooltipLines.add(I18n.format("info.item.engine.bypassratio") + pack.engine.gearRatios[0]);
+		tooltipLines.add(I18n.format("info.item.engine.bypassratio") + pack.engine.bypassRatio);
 	}
 }

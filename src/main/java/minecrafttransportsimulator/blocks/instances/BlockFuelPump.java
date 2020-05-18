@@ -12,7 +12,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnect
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
@@ -96,7 +96,7 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDe
     					
     					//Fuel type can be taken by vehicle, check to make sure engines can take it.
     					for(APart part : nearestVehicle.getVehicleParts()){
-    						if(part instanceof APartEngine){
+    						if(part instanceof PartEngine){
     							if(ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).containsKey(pump.getFluid())){
     								pump.connectedVehicle = nearestVehicle;
     								pump.totalTransfered = 0;

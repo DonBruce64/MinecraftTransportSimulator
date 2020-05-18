@@ -8,8 +8,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
-import minecrafttransportsimulator.vehicles.parts.APartEngineGeared;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.APartGun;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
@@ -47,7 +46,7 @@ public final class RenderAnimations{
 			String partType = variable.substring(0, variable.indexOf('_'));
 			final Class<?> partClass;
 			switch(partType){
-				case("engine"): partClass = APartEngine.class; break;
+				case("engine"): partClass = PartEngine.class; break;
 				case("propeller"): partClass = PartPropeller.class; break;
 				case("gun"): partClass = APartGun.class; break;
 				default: if(ConfigSystem.configObject.client.devMode.value){
@@ -83,23 +82,23 @@ public final class RenderAnimations{
 			return 0;
 		}else if(optionalPart != null){
 			//If we passed-in a part, check for part-specific animations first.
-			if(optionalPart instanceof APartEngine){
-				APartEngine engine = (APartEngine) optionalPart;
+			if(optionalPart instanceof PartEngine){
+				PartEngine engine = (PartEngine) optionalPart;
 				switch(variable){
 					case("engine_rotation"): return engine.getEngineRotation(partialTicks);
 					case("engine_driveshaft_rotation"): return engine.getDriveshaftRotation(partialTicks);
 					case("engine_driveshaft_sin"): return Math.sin(Math.toRadians(engine.getDriveshaftRotation(partialTicks)));
 					case("engine_driveshaft_cos"): return Math.cos(Math.toRadians(engine.getDriveshaftRotation(partialTicks)));
 					case("engine_rpm"): return engine.definition.engine.maxRPM < 15000 ? engine.RPM : engine.RPM/10D;
-					case("engine_rpm_safe"): return engine.definition.engine.maxRPM < 15000 ? APartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM) : APartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM)/10D;
+					case("engine_rpm_safe"): return engine.definition.engine.maxRPM < 15000 ? PartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM) : PartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM)/10D;
 					case("engine_rpm_max"): return engine.definition.engine.maxRPM < 15000 ? engine.definition.engine.maxRPM : engine.definition.engine.maxRPM/10D;
 					case("engine_fuel_flow"): return engine.fuelFlow*20D*60D/1000D;
 					case("engine_temp"): return engine.temp;
-					case("engine_oil"): return engine.oilPressure;
-					case("engine_gear"): return ((APartEngineGeared) engine).currentGear;
-					case("engine_gearshift"): return ((APartEngineGeared) engine).getGearshiftRotation();
-					case("engine_gearshift_hvertical"): return ((APartEngineGeared) engine).getGearshiftPosition_Vertical();
-					case("engine_gearshift_hhorizontal"): return ((APartEngineGeared) engine).getGearshiftPosition_Horizontal();
+					case("engine_pressure"): return engine.pressure;
+					case("engine_gear"): return engine.currentGear;
+					case("engine_gearshift"): return engine.getGearshiftRotation();
+					case("engine_gearshift_hvertical"): return engine.getGearshiftPosition_Vertical();
+					case("engine_gearshift_hhorizontal"): return engine.getGearshiftPosition_Horizontal();
 					case("engine_magneto"): return engine.state.magnetoOn ? 1 : 0;
 					case("engine_starter"): return engine.state.esOn ? 1 : 0;
 				}

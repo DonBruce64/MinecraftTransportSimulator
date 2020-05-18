@@ -6,7 +6,7 @@ import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartEngineJet;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
@@ -39,7 +39,7 @@ public abstract class AGUIPanel<EntityVehicleX_Type extends EntityVehicleE_Power
 						haveReverseThrustOption = true;
 						return;
 					}
-				}else if(part instanceof PartEngineJet){
+				}else if(part instanceof PartEngine && part.definition.engine.jetPowerFactor > 0){
 					haveReverseThrustOption = true;
 					return;
 				}

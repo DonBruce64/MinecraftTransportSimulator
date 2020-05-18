@@ -1,8 +1,7 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
-import minecrafttransportsimulator.vehicles.parts.APartEngineGeared;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import net.minecraft.world.World;
 
 
@@ -68,12 +67,10 @@ public final class EntityVehicleG_Car extends EntityVehicleF_Ground{
 			
 			//Set backup light state.
 			lightsOn.remove(LightType.BACKUPLIGHT);
-			for(APartEngine engine : engines.values()){
-				if(engine instanceof APartEngineGeared){
-					if(((APartEngineGeared) engine).currentGear < 0){
-						lightsOn.add(LightType.BACKUPLIGHT);
-						break;
-					}
+			for(PartEngine engine : engines.values()){
+				if(engine.currentGear < 0){
+					lightsOn.add(LightType.BACKUPLIGHT);
+					break;
 				}
 			}
 		}

@@ -24,7 +24,7 @@ public class PartPropeller extends APart{
 	public float damage;
 	public short currentPitch;
 	
-	private final PartEngineAircraft connectedEngine;
+	private final PartEngine connectedEngine;
 	
 	public static final int MIN_DYNAMIC_PITCH = 45;
 	
@@ -32,7 +32,7 @@ public class PartPropeller extends APart{
 		super(vehicle, packVehicleDef, definition, dataTag);
 		this.damage = dataTag.getFloat("damage");
 		this.currentPitch = definition.propeller.pitch;
-		this.connectedEngine = (PartEngineAircraft) parentPart;
+		this.connectedEngine = (PartEngine) parentPart;
 	}
 	
 	@Override
@@ -60,14 +60,16 @@ public class PartPropeller extends APart{
 				--currentPitch;
 			}else if(!vehicle.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
 				++currentPitch;
-			}else if(connectedEngine.RPM < APartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) && currentPitch > MIN_DYNAMIC_PITCH){
+			}else if(connectedEngine.RPM < PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) && currentPitch > MIN_DYNAMIC_PITCH){
 				--currentPitch;
-			}else if(connectedEngine.RPM > APartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) && currentPitch < definition.propeller.pitch){
+			}else if(connectedEngine.RPM > PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) && currentPitch < definition.propeller.pitch){
 				++currentPitch;
 			}
 		}
+		
+		double propellerGearboxRatio = connectedEngine.definition.engine.propellerRatio != 0 ? connectedEngine.definition.engine.propellerRatio : connectedEngine.definition.engine.gearRatios[connectedEngine.currentGear + 1];
 		if(vehicle.world.isRemote){
-			angularVelocity = (float) (360*connectedEngine.RPM*connectedEngine.definition.engine.gearRatios[0]/60F/20F);
+			angularVelocity = (float) (360*connectedEngine.RPM*propellerGearboxRatio/60F/20F);
 			angularPosition += angularVelocity;
 		}else{
 			if(connectedEngine.RPM >= 100){
@@ -82,7 +84,7 @@ public class PartPropeller extends APart{
 					}
 					for(int i=0; i < collidedEntites.size(); ++i){
 						if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
-							collidedEntites.get(i).attackEntityFrom(new DamageSourcePropellor(attacker), (float) (ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.RPM*connectedEngine.definition.engine.gearRatios[0]/500F));
+							collidedEntites.get(i).attackEntityFrom(new DamageSourcePropellor(attacker), (float) (ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.RPM*propellerGearboxRatio/500F));
 						}
 					}
 				}
@@ -90,7 +92,7 @@ public class PartPropeller extends APart{
 					damagePropeller(1);
 					
 				}
-				if(connectedEngine.RPM*connectedEngine.definition.engine.gearRatios[0]/60*Math.PI*definition.propeller.diameter*0.0254 > 340.29){
+				if(connectedEngine.RPM*propellerGearboxRatio/60*Math.PI*definition.propeller.diameter*0.0254 > 340.29){
 					damagePropeller(9999);
 				}
 			}

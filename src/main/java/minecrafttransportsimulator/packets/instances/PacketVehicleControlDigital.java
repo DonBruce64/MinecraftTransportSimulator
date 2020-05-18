@@ -10,8 +10,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
-import minecrafttransportsimulator.vehicles.parts.APartEngineGeared;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
@@ -119,13 +118,11 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				return false;
 			}
 			case SHIFT : {
-				for(APartEngine engine : vehicle.engines.values()){
-					if(engine instanceof APartEngineGeared){
-						if(controlState){
-							((APartEngineGeared) engine).shiftUp(true);
-						}else{
-							((APartEngineGeared) engine).shiftDown(true);
-						}
+				for(PartEngine engine : vehicle.engines.values()){
+					if(controlState){
+						engine.shiftUp(true);
+					}else{
+						engine.shiftDown(true);
 					}
 				}
 				break;

@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
@@ -52,7 +52,7 @@ public abstract class AItemPartEngine extends AItemPart{
 			tooltipLines.add(TextFormatting.DARK_PURPLE + I18n.format("info.item.engine.creative"));
 		}
 		tooltipLines.add(I18n.format("info.item.engine.maxrpm") + definition.engine.maxRPM);
-		tooltipLines.add(I18n.format("info.item.engine.maxsaferpm") + APartEngine.getSafeRPMFromMax(definition.engine.maxRPM));
+		tooltipLines.add(I18n.format("info.item.engine.maxsaferpm") + PartEngine.getSafeRPMFromMax(definition.engine.maxRPM));
 		tooltipLines.add(I18n.format("info.item.engine.fuelconsumption") + definition.engine.fuelConsumption);
 		tooltipLines.add(I18n.format("info.item.engine.fueltype") + definition.engine.fuelType);
 		tooltipLines.add(I18n.format("info.item.engine.hours") + (stackTag != null ? Math.round(stackTag.getDouble("hours")*100D)/100D : 0));
