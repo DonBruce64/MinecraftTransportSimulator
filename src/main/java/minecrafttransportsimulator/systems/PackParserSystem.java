@@ -22,10 +22,7 @@ import minecrafttransportsimulator.items.packs.parts.ItemPartBarrel;
 import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.items.packs.parts.ItemPartCrate;
 import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
-import minecrafttransportsimulator.items.packs.parts.ItemPartEngineAircraft;
-import minecrafttransportsimulator.items.packs.parts.ItemPartEngineBoat;
-import minecrafttransportsimulator.items.packs.parts.ItemPartEngineCar;
-import minecrafttransportsimulator.items.packs.parts.ItemPartEngineJet;
+import minecrafttransportsimulator.items.packs.parts.ItemPartEngine;
 import minecrafttransportsimulator.items.packs.parts.ItemPartGeneric;
 import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDevicePontoon;
 import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDeviceSkid;
@@ -284,34 +281,33 @@ public final class PackParserSystem{
     }
     
     public static AItemPart createPartItem(JSONPart definition){
-    	switch(definition.general.type){
-	    	case "crate": return new ItemPartCrate(definition);
-			case "barrel": return new ItemPartBarrel(definition);
-			case "crafting_table": return new ItemPartGeneric(definition);
-			case "furnace": return new ItemPartGeneric(definition);
-			case "brewing_stand": return new ItemPartGeneric(definition);
-			case "plow": return new ItemPartGeneric(definition);
-			case "planter": return new ItemPartGeneric(definition);
-			case "fertilizer": return new ItemPartGeneric(definition);
-			case "harvester": return new ItemPartGeneric(definition);
-			case "engine_aircraft": return new ItemPartEngineAircraft(definition);
-			case "engine_jet": return new ItemPartEngineJet(definition);
-			case "engine_car": return new ItemPartEngineCar(definition);
-			case "engine_boat": return new ItemPartEngineBoat(definition);
-			case "wheel": return new ItemPartGroundDeviceWheel(definition);
-			case "skid": return new ItemPartGroundDeviceSkid(definition);
-			case "pontoon": return new ItemPartGroundDevicePontoon(definition);
-			case "tread": return new ItemPartGroundDeviceTread(definition);
-			case "propeller": return new ItemPartPropeller(definition);
-			case "seat": return new ItemPartGeneric(definition);
-			case "gun_fixed": return new ItemPartGun(definition);
-			case "gun_tripod": return new ItemPartGun(definition);
-			case "gun_turret": return new ItemPartGun(definition);
-			case "bullet": return new ItemPartBullet(definition);
-			case "custom": return new ItemPartCustom(definition);
-			
-			default: throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a part item.");
-		}
+    	if(definition.general.type.startsWith("engine_")){
+    		return new ItemPartEngine(definition);
+    	}else{
+	    	switch(definition.general.type){
+		    	case "crate": return new ItemPartCrate(definition);
+				case "barrel": return new ItemPartBarrel(definition);
+				case "crafting_table": return new ItemPartGeneric(definition);
+				case "furnace": return new ItemPartGeneric(definition);
+				case "brewing_stand": return new ItemPartGeneric(definition);
+				case "plow": return new ItemPartGeneric(definition);
+				case "planter": return new ItemPartGeneric(definition);
+				case "fertilizer": return new ItemPartGeneric(definition);
+				case "harvester": return new ItemPartGeneric(definition);
+				case "wheel": return new ItemPartGroundDeviceWheel(definition);
+				case "skid": return new ItemPartGroundDeviceSkid(definition);
+				case "pontoon": return new ItemPartGroundDevicePontoon(definition);
+				case "tread": return new ItemPartGroundDeviceTread(definition);
+				case "propeller": return new ItemPartPropeller(definition);
+				case "seat": return new ItemPartGeneric(definition);
+				case "gun_fixed": return new ItemPartGun(definition);
+				case "gun_tripod": return new ItemPartGun(definition);
+				case "gun_turret": return new ItemPartGun(definition);
+				case "bullet": return new ItemPartBullet(definition);
+				case "custom": return new ItemPartCustom(definition);
+	    	}
+    	}
+		throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a part item.");
     }
     
     public enum ItemClassification{
