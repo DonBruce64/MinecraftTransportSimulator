@@ -18,6 +18,8 @@ import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -78,7 +80,6 @@ public class PartEngine extends APart implements FXPart{
 	private static final float OVERHEAT_TEMP_2 = 121.111F;
 	private static final float FAILURE_TEMP = 132.222F;
 	private static final float LOW_OIL_PRESSURE = 40F;
-	private static final int WATER_PROPELLER_POWER_INCREASE = 813;
 	
 	
 	public PartEngine(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
@@ -108,15 +109,21 @@ public class PartEngine extends APart implements FXPart{
 			definition.engine.gearRatios[0] = 1.0F;
 		}
 		
-		//If we only have one gearRatio, add two more gears as we're a legacy propeller-based engine with no shifter.
+		//If we only have one gearRatio, add two more gears as we're a legacy propeller-based engine.
 		if(definition.engine.gearRatios.length == 1){
-			definition.engine.propellerRatio = definition.engine.gearRatios[0];
+			definition.engine.propellerRatio = 1/definition.engine.gearRatios[0];
 			definition.engine.gearRatios = new float[]{-1, 0, 1};
 		}
 		
 		//If our shiftSpeed is 0, we are a legacy engine that didn't set a shift speed.
 		if(definition.engine.shiftSpeed == 0){
 			definition.engine.shiftSpeed = 20;
+		}
+		
+		//If we aren't connected to a car or boat, set our gear to 1.
+		//This is needed for correct speed setting.
+		if(!(vehicle instanceof EntityVehicleG_Car || vehicle instanceof EntityVehicleG_Boat)){
+			currentGear = 1;
 		}
 	}
 	
@@ -242,11 +249,11 @@ public class PartEngine extends APart implements FXPart{
 			//Add hours to the engine.  Extra hours may be added by sub-classes.
 			if(!isCreative){
 				hours += 0.001*getTotalWearFactor();
-			}
-			
-			//Add extra hours if we are running the engine too fast.
-			if(RPM > getSafeRPMFromMax(definition.engine.maxRPM)){
-				hours += 0.001*(RPM - getSafeRPMFromMax(definition.engine.maxRPM))/10F*getTotalWearFactor();
+				
+				//Add extra hours if we are running the engine too fast.
+				if(RPM > getSafeRPMFromMax(definition.engine.maxRPM)){
+					hours += 0.001*(RPM - getSafeRPMFromMax(definition.engine.maxRPM))/10F*getTotalWearFactor();
+				}
 			}
 			
 			//Do engine-type specific update logic.
@@ -373,21 +380,21 @@ public class PartEngine extends APart implements FXPart{
 			desiredWheelVelocity = -999F;
 			wheelFriction = 0;
 			engineTargetRPM = !state.esOn ? vehicle.throttle/100F*(definition.engine.maxRPM - startRPM/1.25 - hours) + startRPM/1.25 : startRPM*1.2;
-			if(currentGear != 0){
-				for(APartGroundDevice wheel : vehicle.wheels){
-					if((wheel.offset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
-						//If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
-						//This means the wheel is spinning in the air and can't provide force or feedback.
-						if(wheel.isOnGround()){
-							wheelFriction += wheel.getMotiveFriction() - wheel.getFrictionLoss();
-							lowestWheelVelocity = Math.min(wheel.angularVelocity, lowestWheelVelocity);
-							desiredWheelVelocity = (float) Math.max(vehicle.velocity/wheel.getHeight(), desiredWheelVelocity);
-						}
+			
+			//Update wheel friction and velocity.
+			for(APartGroundDevice wheel : vehicle.wheels){
+				if((wheel.offset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
+					//If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
+					//This means the wheel is spinning in the air and can't provide force or feedback.
+					if(wheel.isOnGround()){
+						wheelFriction += wheel.getMotiveFriction() - wheel.getFrictionLoss();
+						lowestWheelVelocity = Math.min(wheel.angularVelocity, lowestWheelVelocity);
+						desiredWheelVelocity = (float) Math.max(vehicle.velocity/wheel.getHeight(), desiredWheelVelocity);
 					}
 				}
 			}
 			
-			//If friction is non-zero, adjust RPM of the engine.
+			//Adjust RPM of the engine.
 			//Don't adjust it down to stall the engine, that can only be done via backfire.
 			if(wheelFriction > 0){
 				double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicle.definition.car.axleRatio;
@@ -395,34 +402,48 @@ public class PartEngine extends APart implements FXPart{
 				if(RPM < stallRPM && state.running){
 					RPM = stallRPM;
 				}
+			}else{
+				//No wheel force.  Adjust wheels to engine speed.
+				for(APartGroundDevice wheel : vehicle.wheels){
+					wheel.skipAngularCalcs = false;
+					if((wheel.offset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
+						if(currentGearRatio != 0){
+							wheel.angularVelocity = (float) RPM/currentGearRatio/vehicle.definition.car.axleRatio/60F/20F;
+						}else if(wheel.angularVelocity > 0){
+							wheel.angularVelocity = Math.max(0, wheel.angularVelocity - 0.01F);
+						}else{
+							wheel.angularVelocity = Math.min(0, wheel.angularVelocity + 0.01F);
+						}
+					}
+				}
 			}
 		}
 		
-		//If wheel friction is 0, and we have a propeller, get RPM contributions for that.
-		if(wheelFriction == 0 && propeller != null){
+		//If wheel friction is 0, and we have a propeller, and arne't in neutral, get RPM contributions for that.
+		if(wheelFriction == 0 && propeller != null && currentGearRatio != 0){
 			isPropellerInLiquid = vehicle.world.getBlockState(new BlockPos(propeller.partPos)).getMaterial().isLiquid();
 			propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
-			double propellerForcePenalty = (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15);
-			double propellerDesiredSpeed = 0.0254*Math.abs(propeller.currentPitch)*RPM*propellerGearboxRatio/60D/20D;
-			double propellerFeedback = (propellerDesiredSpeed - vehicle.velocity)*(isPropellerInLiquid ? 500 : 50) + propellerForcePenalty*50;
+			double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
+			double propellerDesiredSpeed = 0.0254*Math.abs(propeller.currentPitch)*RPM/propellerGearboxRatio/60D/20D;
+			double propellerFeedback = Math.signum(currentGearRatio)*(propellerDesiredSpeed - vehicle.velocity)*(isPropellerInLiquid ? 150 : 50) + propellerForcePenalty*50;
 			if(state.running){
-				double desiredRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours) + startRPM*1.25;
-				double engineRPMDifference = desiredRPM - RPM;
+				double engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours) + startRPM*1.25;
+				double engineRPMDifference = engineTargetRPM - RPM;
 				
 				//propellerFeedback can't make an engine stall, but hours can.
 				if(RPM + engineRPMDifference/10 > stallRPM && RPM + engineRPMDifference/10 - propellerFeedback < stallRPM){
 					RPM = stallRPM;
 				}else{
-					RPM += engineRPMDifference/10 - propellerFeedback;	
+					RPM += engineRPMDifference/10 - propellerFeedback;
 				}
 			}else{
 				RPM = Math.max(RPM - (propellerFeedback - propellerForcePenalty*50), 0);
 			}
 		}
 		
-		//If wheel friction is 0, and we don't have a propeller, adjust RPM to throttle position.
+		//If wheel friction is 0, and we don't have a propeller, or we're in neutral, adjust RPM to throttle position.
 		//Or, if we are not on, just slowly spin the engine down.
-		if(wheelFriction == 0 && propeller == null){
+		if((wheelFriction == 0 && propeller == null) || currentGearRatio == 0){
 			if(state.running){
 				double engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours*10) + startRPM*1.25;
 				RPM += (engineTargetRPM - RPM)/10;
@@ -718,7 +739,7 @@ public class PartEngine extends APart implements FXPart{
 		if(currentGear == -1){
 			currentGear = 0;
 		}else if(currentGear == 0){
-			if(vehicle.velocity > -0.25){
+			if(vehicle.velocity > -0.25 || wheelFriction == 0){
 				currentGear = 1;
 			}else if(vehicle.world.isRemote){
 				WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
@@ -740,7 +761,7 @@ public class PartEngine extends APart implements FXPart{
 				--currentGear;
 			}
 		}else if(currentGear == 0){
-			if(vehicle.velocity < 0.25){
+			if(vehicle.velocity < 0.25 || wheelFriction == 0){
 				currentGear = -1;
 				//If the engine is running, and we are a big truck, turn on the backup beeper.
 				if(state.running && vehicle.definition.car != null && vehicle.definition.car.isBigTruck && vehicle.world.isRemote){
@@ -836,12 +857,12 @@ public class PartEngine extends APart implements FXPart{
 				engineForce = -RPM/definition.engine.maxRPM*Math.signum(currentGear)*30;
 			}
 		}else{
-			//If we didn't have any wheels driving us, check for propellers.
-			if(propeller != null && Math.abs(propeller.currentPitch) > 20 && state.running){
+			//No wheel force.  Check for propellers to provide force.
+			if(propeller != null && Math.abs(propeller.currentPitch) > 5 && state.running){
 				//Get what the pitch velocity of the propeller would be at the current velocity.
 				double currentPitchVelocity = vehicle.velocity*20D;
 				//Get the effective pitch velocity of the propeller at the current RPM.
-				double effectivePitchVelocity = 0.0254D*propeller.currentPitch*RPM*propellerGearboxRatio/60D;
+				double effectivePitchVelocity = 0.0254D*propeller.currentPitch*20D*propeller.angularVelocity;
 				//Multiply by a factor to get the true effective pitch velocity.  This is slightly higher than ideal.
 				effectivePitchVelocity *= (1D*propeller.currentPitch/propeller.definition.propeller.diameter + 0.2D)/(1D*propeller.currentPitch/propeller.definition.propeller.diameter);
 				if(effectivePitchVelocity != 0){
@@ -849,7 +870,7 @@ public class PartEngine extends APart implements FXPart{
 					//Note that because the effective pitch velocity is in meters per second, 
 					//it needs to be converted to meters per revolution before we can move on.
 					//This gets the angle as a ratio of forward pitch to propeller circumference.
-					double angleOfAttack = Math.abs(((effectivePitchVelocity - currentPitchVelocity)/((RPM*propellerGearboxRatio)/60D))/((propeller.definition.propeller.diameter*Math.PI)*0.0254D));
+					double angleOfAttack = Math.abs(((effectivePitchVelocity - currentPitchVelocity)/(20D*RPM/propellerGearboxRatio))/((propeller.definition.propeller.diameter*Math.PI)*0.0254D));
 					double thrust = vehicle.airDensity*Math.PI*Math.pow(0.0254*propeller.definition.propeller.diameter/2D, 2)*
 							(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
 							Math.pow(propeller.definition.propeller.diameter/2D/Math.abs(propeller.currentPitch) + propeller.definition.propeller.numberBlades/1000D, 1.5)/400D;
@@ -866,7 +887,7 @@ public class PartEngine extends APart implements FXPart{
 					
 					//Add thrust as a force to engine force.
 					//Note that propellers in water are more effective than those in air due to fluid dynamics.
-					engineForce += isPropellerInLiquid ? thrust*WATER_PROPELLER_POWER_INCREASE : thrust;
+					engineForce += isPropellerInLiquid ? thrust*50 : thrust;
 				}
 			}
 		}
@@ -990,7 +1011,7 @@ public class PartEngine extends APart implements FXPart{
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			//Render exhaust smoke if we have any exhausts and are running.
 			//If we are starting and have flames set, render those instead.
-			if(packVehicleDef.exhaustPos != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
+			if(packVehicleDef.exhaustPos != null && (state.running || (definition.engine.flamesOnStartup && state.esOn)) && RPM != 0){
 				//Render a smoke for every cycle the exhaust makes.
 				//Depending on the number of positions we have, render an exhaust for every one.
 				//So for 1 position, we render 1 every 2 engine cycles (4 stroke), and for 4, we render 4.

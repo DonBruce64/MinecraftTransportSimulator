@@ -67,11 +67,22 @@ public class PartPropeller extends APart{
 			}
 		}
 		
-		double propellerGearboxRatio = connectedEngine.definition.engine.propellerRatio != 0 ? connectedEngine.definition.engine.propellerRatio : connectedEngine.definition.engine.gearRatios[connectedEngine.currentGear + 1];
-		if(vehicle.world.isRemote){
-			angularVelocity = (float) (360*connectedEngine.RPM*propellerGearboxRatio/60F/20F);
-			angularPosition += angularVelocity;
+		double propellerGearboxRatio = connectedEngine.definition.engine.propellerRatio != 0 ? connectedEngine.definition.engine.propellerRatio : (connectedEngine.currentGear != 0 ? connectedEngine.definition.engine.gearRatios[connectedEngine.currentGear + 1] : 0);
+		
+		//Adjust angular position and velocity.
+		if(propellerGearboxRatio != 0){
+			angularVelocity = (float) (connectedEngine.RPM/propellerGearboxRatio/60F/20F);
+		}else if(angularVelocity > 1){
+			--angularVelocity;
+		}else if(angularVelocity < -1){
+			++angularVelocity;
 		}else{
+			angularVelocity = 0;
+		}
+		angularPosition += angularVelocity;
+		
+		//Damage propeller or entities if required.
+		if(!vehicle.world.isRemote){
 			if(connectedEngine.RPM >= 100){
 				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(Vec3d.ZERO).expand(0.2F, 0.2F, 0.2F));
 				if(!collidedEntites.isEmpty()){
@@ -92,7 +103,7 @@ public class PartPropeller extends APart{
 					damagePropeller(1);
 					
 				}
-				if(connectedEngine.RPM*propellerGearboxRatio/60*Math.PI*definition.propeller.diameter*0.0254 > 340.29){
+				if(20*angularVelocity*Math.PI*definition.propeller.diameter*0.0254 > 340.29){
 					damagePropeller(9999);
 				}
 			}
@@ -121,9 +132,9 @@ public class PartPropeller extends APart{
 		//If we are on an engine that can reverse, adjust our direction.
 		//Getting smooth changes here is a PITA, and I ain't gonna do it myself.
 		if(vehicle instanceof EntityVehicleG_Blimp && vehicle.reversePercent != 0){
-			return vehicle.reversePercent != 20 ? Vec3d.ZERO : new Vec3d(0, 0, -(this.angularPosition + this.angularVelocity*partialTicks));
+			return vehicle.reversePercent != 20 ? Vec3d.ZERO : new Vec3d(0, 0, -(this.angularPosition + this.angularVelocity*partialTicks)*360D);
 		}else{
-			return new Vec3d(0, 0, this.angularPosition + this.angularVelocity*partialTicks);
+			return new Vec3d(0, 0, (this.angularPosition + this.angularVelocity*partialTicks)*360D);
 		}
 	}
 	
