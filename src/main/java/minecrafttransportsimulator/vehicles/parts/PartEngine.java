@@ -246,7 +246,7 @@ public class PartEngine extends APart implements FXPart{
 			//Provide electric power to the vehicle we're in.
 			vehicle.electricUsage -= 0.05*RPM/definition.engine.maxRPM;
 			
-			//Add hours to the engine.  Extra hours may be added by sub-classes.
+			//Add hours to the engine.
 			if(!isCreative){
 				hours += 0.001*getTotalWearFactor();
 				
@@ -447,7 +447,7 @@ public class PartEngine extends APart implements FXPart{
 			if(state.running){
 				double engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours*10) + startRPM*1.25;
 				RPM += (engineTargetRPM - RPM)/10;
-				if(RPM > getSafeRPMFromMax(definition.engine.maxRPM)){
+				if(RPM > getSafeRPMFromMax(definition.engine.maxRPM) && definition.engine.jetPowerFactor == 0){
 					RPM -= Math.abs(engineTargetRPM - RPM)/5;
 				}
 			}else if(!state.esOn && !state.hsOn){
