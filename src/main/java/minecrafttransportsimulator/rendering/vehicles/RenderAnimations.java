@@ -135,6 +135,8 @@ public final class RenderAnimations{
 			case("roll"): return vehicle.rotationRoll;
 			case("altitude"): return vehicle.posY;
 			case("speed"): return vehicle.velocity*vehicle.SPEED_FACTOR*20;
+			case("turn_coordinator"): return ((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15D*25;
+			case("turn_indicator"): return (vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F;
 			
 			//Inertia from accelerating and braking.
             case("acceleration"): return vehicle.acclInertia();
@@ -181,8 +183,6 @@ public final class RenderAnimations{
 				case("trim_rudder"): return aircraft.rudderTrim/10D;
 				case("vertical_speed"): return vehicle.motionY*vehicle.SPEED_FACTOR*20;
 				case("slip"): return 75*aircraft.sideVec.dotProduct(vehicle.velocityVec);
-				case("turn_coordinator"): return ((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15D*25;
-				case("turn_indicator"): return (vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F;
 			}
 			if(aircraft instanceof EntityVehicleG_Plane){
 				EntityVehicleG_Plane plane = (EntityVehicleG_Plane) aircraft;
