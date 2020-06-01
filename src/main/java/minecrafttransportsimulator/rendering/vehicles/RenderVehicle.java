@@ -754,6 +754,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			//We also transfer the rollers to an ordered array for convenience later.
 			RenderVehicle_TreadRoller[] rollers = new RenderVehicle_TreadRoller[parsedRollers.size()];
 			for(int i=0; i<parsedRollers.size(); ++ i){
+				if(!parsedRollers.containsKey(i)){
+					throw new IndexOutOfBoundsException("ERROR: Attempted to render roller_" + i + " on " + treadPart.vehicle.definition.packID + ":" + treadPart.vehicle.definition.genericName + ", but it was not found.  Did you not make it in the OBJ model?");
+				}
 				if(i < parsedRollers.size() - 1){
 					parsedRollers.get(i).calculateEndpoints(parsedRollers.get(i + 1));
 				}else{
