@@ -23,7 +23,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class APartGun extends APart implements FXPart{	
+public class PartGun extends APart implements FXPart{	
 	//Stored variables used to determine bullet firing behavior.
 	public int shotsFired;
 	public int bulletsLeft;
@@ -46,7 +46,7 @@ public abstract class APartGun extends APart implements FXPart{
 	
 	private final double anglePerTickSpeed;
 		
-	public APartGun(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public PartGun(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 		this.shotsFired = dataTag.getInteger("shotsFired");
 		this.bulletsLeft = dataTag.getInteger("bulletsLeft");
@@ -60,7 +60,7 @@ public abstract class APartGun extends APart implements FXPart{
 		//Get the gun number based on how many guns the vehicle has.
 		gunNumber = 1;
 		for(APart part : vehicle.getVehicleParts()){
-			if(part instanceof APartGun){
+			if(part instanceof PartGun){
 				++gunNumber;
 			}
 		}
@@ -196,14 +196,14 @@ public abstract class APartGun extends APart implements FXPart{
 				double deltaYaw = (playerController.rotationYaw + 360 - vehicle.rotationYaw + 360 + partRotation.y + 360)%360;
 				//I know this is weird, but the pitch is bigger when it's pointing the ground and smaller when it's pointing the sky.
 				//At least this won't be confusing on the pack creator's end in this way. -Bunting_chj
-				if(deltaPitch < currentPitch && currentPitch > -getMaxPitch()){
+				if(deltaPitch < currentPitch && currentPitch > -definition.gun.maxPitch){
 					currentPitch -= Math.min(anglePerTickSpeed, currentPitch - deltaPitch);
-				}else if(deltaPitch > currentPitch && currentPitch < -getMinPitch()){
+				}else if(deltaPitch > currentPitch && currentPitch < -definition.gun.minPitch){
 					currentPitch += Math.min(anglePerTickSpeed, deltaPitch - currentPitch);
 				}
 				//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
 				//We need to do special rotation logic for that.
-				if(getMinYaw() == -180  && getMaxYaw() == 180){
+				if(definition.gun.minYaw == -180  && definition.gun.maxYaw == 180){
 					if((deltaYaw - currentYaw + 360)%360 >= 180){
 						currentYaw -= Math.min(anglePerTickSpeed,360 - (deltaYaw - currentYaw + 360)%360);
 					}else if((deltaYaw - currentYaw + 360)%360 < 180){
@@ -221,9 +221,9 @@ public abstract class APartGun extends APart implements FXPart{
 						prevYaw += prevYaw < 0 ? 360 : -360;
 					}
 				}else{
-					if(deltaYaw < currentYaw && currentYaw > getMinYaw()){
+					if(deltaYaw < currentYaw && currentYaw > definition.gun.minYaw){
 						currentYaw -= Math.min(anglePerTickSpeed, currentYaw - deltaYaw);
-					}else if(deltaYaw > currentYaw && currentYaw < getMaxYaw()){
+					}else if(deltaYaw > currentYaw && currentYaw < definition.gun.maxYaw){
 						currentYaw += Math.min(anglePerTickSpeed, deltaYaw - currentYaw);
 					}
 				}
@@ -259,16 +259,13 @@ public abstract class APartGun extends APart implements FXPart{
 
 	@Override
 	public Vec3d getActionRotation(float partialTicks){
-		return new Vec3d(prevPitch + (currentPitch - prevPitch)*partialTicks, prevYaw + (currentYaw - prevYaw)*partialTicks, 0);
+		//Don't return pitch if we are a turret.
+		if(definition.gun.isTurret){
+			return new Vec3d(0, currentYaw - (currentYaw - prevYaw)*(1 - partialTicks), 0);
+		}else{
+			return new Vec3d(prevPitch + (currentPitch - prevPitch)*partialTicks, prevYaw + (currentYaw - prevYaw)*partialTicks, 0);
+		}
 	}
-	
-	public abstract float getMinYaw();
-	
-	public abstract float getMaxYaw();
-	
-	public abstract float getMinPitch();
-	
-	public abstract float getMaxPitch();
 		
 	@Override
 	@SideOnly(Side.CLIENT)

@@ -9,7 +9,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
-import minecrafttransportsimulator.vehicles.parts.APartGun;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
 /**This class contains static methods for vehicle animations.  These are used to animate
@@ -48,7 +48,7 @@ public final class RenderAnimations{
 			switch(partType){
 				case("engine"): partClass = PartEngine.class; break;
 				case("propeller"): partClass = PartPropeller.class; break;
-				case("gun"): partClass = APartGun.class; break;
+				case("gun"): partClass = PartGun.class; break;
 				default: if(ConfigSystem.configObject.client.devMode.value){
 					throw new IllegalArgumentException("ERROR: Was told to find part: " + variable.substring(0, variable.indexOf('_')) + " for rotation definition: " + variable + " but could not as the part isn't a valid part name.  Is your spelling correct?");
 				}else{
@@ -109,8 +109,8 @@ public final class RenderAnimations{
 					case("propeller_pitch_in"): return propeller.currentPitch;
 					case("propeller_pitch_percent"): return 1D*(propeller.currentPitch - PartPropeller.MIN_DYNAMIC_PITCH)/(propeller.definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH);
 				}
-			}else if(optionalPart instanceof APartGun){
-				APartGun gun = (APartGun) optionalPart;
+			}else if(optionalPart instanceof PartGun){
+				PartGun gun = (PartGun) optionalPart;
 				switch(variable){
 					case("gun_pitch"): return gun.currentPitch;
 					case("gun_yaw"): return gun.currentYaw;

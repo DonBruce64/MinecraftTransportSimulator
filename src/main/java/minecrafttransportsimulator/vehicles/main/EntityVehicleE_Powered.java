@@ -22,7 +22,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.APartGun;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperBlockFakeLight;
@@ -265,7 +265,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			if(((APartGroundDevice) part).canBeDrivenByEngine()){
 				wheels.add((APartGroundDevice) part);
 			}
-		}else if(part instanceof APartGun){
+		}else if(part instanceof PartGun){
 			++totalGuns;
 		}
 	}
@@ -287,7 +287,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		}
 		if(wheels.contains(part)){
 			wheels.remove(part);
-		}else if(part instanceof APartGun){
+		}else if(part instanceof PartGun){
 			--totalGuns;
 		}
 	}

@@ -59,12 +59,9 @@ import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceSkid;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceWheel;
 import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorFertilizer;
-import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorHarvester;
 import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlanter;
 import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlow;
-import minecrafttransportsimulator.vehicles.parts.PartGunFixed;
-import minecrafttransportsimulator.vehicles.parts.PartGunTripod;
-import minecrafttransportsimulator.vehicles.parts.PartGunTurret;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.nbt.NBTTagCompound;
@@ -248,41 +245,40 @@ public final class PackParserSystem{
     }    
     
     public static APart createPart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
-    	switch(definition.general.type){
-			case "crate": return new PartCrate(vehicle, packVehicleDef, definition, dataTag);
-			case "barrel": return new PartBarrel(vehicle, packVehicleDef, definition, dataTag);
-			case "crafting_table": return new PartCraftingTable(vehicle, packVehicleDef, definition, dataTag);
-			case "furnace": return new PartFurnace(vehicle, packVehicleDef, definition, dataTag);
-			case "brewing_stand": return new PartBrewingStand(vehicle, packVehicleDef, definition, dataTag);
-			case "plow": return new PartGroundEffectorPlow(vehicle, packVehicleDef, definition, dataTag);
-			case "planter": return new PartGroundEffectorPlanter(vehicle, packVehicleDef, definition, dataTag);
-			case "fertilizer": return new PartGroundEffectorFertilizer(vehicle, packVehicleDef, definition, dataTag);
-			case "harvester": return new PartGroundEffectorHarvester(vehicle, packVehicleDef, definition, dataTag);
-			case "engine_aircraft": return new PartEngine(vehicle, packVehicleDef, definition, dataTag);
-			case "engine_jet": return new PartEngine(vehicle, packVehicleDef, definition, dataTag);
-			case "engine_car": return new PartEngine(vehicle, packVehicleDef, definition, dataTag);
-			case "engine_boat": return new PartEngine(vehicle, packVehicleDef, definition, dataTag);
-			case "wheel": return new PartGroundDeviceWheel(vehicle, packVehicleDef, definition, dataTag);
-			case "skid": return new PartGroundDeviceSkid(vehicle, packVehicleDef, definition, dataTag);
-			case "pontoon": return new PartGroundDevicePontoon(vehicle, packVehicleDef, definition, dataTag);
-			case "tread": return new PartGroundDeviceTread(vehicle, packVehicleDef, definition, dataTag);
-			case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, dataTag);
-			case "seat": return new PartSeat(vehicle, packVehicleDef, definition, dataTag);
-			case "gun_fixed": return new PartGunFixed(vehicle, packVehicleDef, definition, dataTag);
-			case "gun_tripod": return new PartGunTripod(vehicle, packVehicleDef, definition, dataTag);
-			case "gun_turret": return new PartGunTurret(vehicle, packVehicleDef, definition, dataTag);
-			//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
-			//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
-			//case "bullet": return PartBullet.class;
-			case "custom": return new PartCustom(vehicle, packVehicleDef, definition, dataTag);
-			
-			default: throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a part.");
-		}
+    	if(definition.general.type.startsWith("engine_")){
+    		return new PartEngine(vehicle, packVehicleDef, definition, dataTag);
+    	}else if(definition.general.type.startsWith("gun_")){
+    		return new PartGun(vehicle, packVehicleDef, definition, dataTag);
+    	}else{
+	    	switch(definition.general.type){
+				case "crate": return new PartCrate(vehicle, packVehicleDef, definition, dataTag);
+				case "barrel": return new PartBarrel(vehicle, packVehicleDef, definition, dataTag);
+				case "crafting_table": return new PartCraftingTable(vehicle, packVehicleDef, definition, dataTag);
+				case "furnace": return new PartFurnace(vehicle, packVehicleDef, definition, dataTag);
+				case "brewing_stand": return new PartBrewingStand(vehicle, packVehicleDef, definition, dataTag);
+				case "plow": return new PartGroundEffectorPlow(vehicle, packVehicleDef, definition, dataTag);
+				case "planter": return new PartGroundEffectorPlanter(vehicle, packVehicleDef, definition, dataTag);
+				case "fertilizer": return new PartGroundEffectorFertilizer(vehicle, packVehicleDef, definition, dataTag);
+				case "wheel": return new PartGroundDeviceWheel(vehicle, packVehicleDef, definition, dataTag);
+				case "skid": return new PartGroundDeviceSkid(vehicle, packVehicleDef, definition, dataTag);
+				case "pontoon": return new PartGroundDevicePontoon(vehicle, packVehicleDef, definition, dataTag);
+				case "tread": return new PartGroundDeviceTread(vehicle, packVehicleDef, definition, dataTag);
+				case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, dataTag);
+				case "seat": return new PartSeat(vehicle, packVehicleDef, definition, dataTag);
+				//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
+				//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
+				//case "bullet": return PartBullet.class;
+				case "custom": return new PartCustom(vehicle, packVehicleDef, definition, dataTag);
+			}
+    	}
+    	throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a part.");
     }
     
     public static AItemPart createPartItem(JSONPart definition){
     	if(definition.general.type.startsWith("engine_")){
     		return new ItemPartEngine(definition);
+    	}else if(definition.general.type.startsWith("gun_")){
+    		return new ItemPartGun(definition);
     	}else{
 	    	switch(definition.general.type){
 		    	case "crate": return new ItemPartCrate(definition);
@@ -300,9 +296,6 @@ public final class PackParserSystem{
 				case "tread": return new ItemPartGroundDeviceTread(definition);
 				case "propeller": return new ItemPartPropeller(definition);
 				case "seat": return new ItemPartGeneric(definition);
-				case "gun_fixed": return new ItemPartGun(definition);
-				case "gun_tripod": return new ItemPartGun(definition);
-				case "gun_turret": return new ItemPartGun(definition);
 				case "bullet": return new ItemPartBullet(definition);
 				case "custom": return new ItemPartCustom(definition);
 	    	}
