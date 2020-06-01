@@ -157,7 +157,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			throttleTime = 0;
 		}
 		
-        if(throttleTime > 10 && throttleTime < 80 && velocity >= 0){
+        if(throttleTime > 10 && !parkingBrakeOn && velocity >= 3){
         	
         	bodyAcceleration = (velocity/throttleTime);
         	
@@ -165,7 +165,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
         	
         	return bodyAcclAngle;
         	
-        }else if(throttleTime > 10 && throttleTime < 40 && velocity <= 0){
+        }else if(throttleTime > 10 && !parkingBrakeOn && velocity <= -3){
         	
         	bodyAcceleration = (velocity/throttleTime);
         	
@@ -191,7 +191,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	    	
 	    	bodyAcceleration = (velocity/brakingTime);
 	    	
-	        if(velocity < 0) {
+	        if(velocity < -3) {
 	        	
 	        	bodyBrakeAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*-0.01));
 	        	
