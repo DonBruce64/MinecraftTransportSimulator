@@ -4,6 +4,7 @@ import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.Loader;
 
 /**Wrapper for the core MC game.  This class has methods used for determining
@@ -33,7 +34,7 @@ public class WrapperGame{
 	 *  Returns the text-based name for the passed-in fluid.
 	 */
 	public static String getFluidName(String fluidID){
-		return FluidRegistry.getFluid(fluidID) != null ? FluidRegistry.getFluidName(FluidRegistry.getFluid(fluidID)) : "INVALID";
+		return FluidRegistry.getFluid(fluidID) != null ? new FluidStack(FluidRegistry.getFluid(fluidID), 1).getLocalizedName() : "INVALID";
 	}
 	
 	/**
