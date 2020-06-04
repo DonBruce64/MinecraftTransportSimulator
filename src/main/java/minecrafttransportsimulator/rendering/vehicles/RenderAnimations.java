@@ -8,9 +8,8 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
-import minecrafttransportsimulator.vehicles.parts.APartEngineGeared;
-import minecrafttransportsimulator.vehicles.parts.APartGun;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
 /**This class contains static methods for vehicle animations.  These are used to animate
@@ -47,9 +46,9 @@ public final class RenderAnimations{
 			String partType = variable.substring(0, variable.indexOf('_'));
 			final Class<?> partClass;
 			switch(partType){
-				case("engine"): partClass = APartEngine.class; break;
+				case("engine"): partClass = PartEngine.class; break;
 				case("propeller"): partClass = PartPropeller.class; break;
-				case("gun"): partClass = APartGun.class; break;
+				case("gun"): partClass = PartGun.class; break;
 				default: if(ConfigSystem.configObject.client.devMode.value){
 					throw new IllegalArgumentException("ERROR: Was told to find part: " + variable.substring(0, variable.indexOf('_')) + " for rotation definition: " + variable + " but could not as the part isn't a valid part name.  Is your spelling correct?");
 				}else{
@@ -83,23 +82,23 @@ public final class RenderAnimations{
 			return 0;
 		}else if(optionalPart != null){
 			//If we passed-in a part, check for part-specific animations first.
-			if(optionalPart instanceof APartEngine){
-				APartEngine engine = (APartEngine) optionalPart;
+			if(optionalPart instanceof PartEngine){
+				PartEngine engine = (PartEngine) optionalPart;
 				switch(variable){
 					case("engine_rotation"): return engine.getEngineRotation(partialTicks);
 					case("engine_driveshaft_rotation"): return engine.getDriveshaftRotation(partialTicks);
 					case("engine_driveshaft_sin"): return Math.sin(Math.toRadians(engine.getDriveshaftRotation(partialTicks)));
 					case("engine_driveshaft_cos"): return Math.cos(Math.toRadians(engine.getDriveshaftRotation(partialTicks)));
 					case("engine_rpm"): return engine.definition.engine.maxRPM < 15000 ? engine.RPM : engine.RPM/10D;
-					case("engine_rpm_safe"): return engine.definition.engine.maxRPM < 15000 ? APartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM) : APartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM)/10D;
+					case("engine_rpm_safe"): return engine.definition.engine.maxRPM < 15000 ? PartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM) : PartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM)/10D;
 					case("engine_rpm_max"): return engine.definition.engine.maxRPM < 15000 ? engine.definition.engine.maxRPM : engine.definition.engine.maxRPM/10D;
 					case("engine_fuel_flow"): return engine.fuelFlow*20D*60D/1000D;
 					case("engine_temp"): return engine.temp;
-					case("engine_oil"): return engine.oilPressure;
-					case("engine_gear"): return ((APartEngineGeared) engine).currentGear;
-					case("engine_gearshift"): return ((APartEngineGeared) engine).getGearshiftRotation();
-					case("engine_gearshift_hvertical"): return ((APartEngineGeared) engine).getGearshiftPosition_Vertical();
-					case("engine_gearshift_hhorizontal"): return ((APartEngineGeared) engine).getGearshiftPosition_Horizontal();
+					case("engine_pressure"): return engine.pressure;
+					case("engine_gear"): return engine.currentGear;
+					case("engine_gearshift"): return engine.getGearshiftRotation();
+					case("engine_gearshift_hvertical"): return engine.getGearshiftPosition_Vertical();
+					case("engine_gearshift_hhorizontal"): return engine.getGearshiftPosition_Horizontal();
 					case("engine_magneto"): return engine.state.magnetoOn ? 1 : 0;
 					case("engine_starter"): return engine.state.esOn ? 1 : 0;
 				}
@@ -110,8 +109,8 @@ public final class RenderAnimations{
 					case("propeller_pitch_in"): return propeller.currentPitch;
 					case("propeller_pitch_percent"): return 1D*(propeller.currentPitch - PartPropeller.MIN_DYNAMIC_PITCH)/(propeller.definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH);
 				}
-			}else if(optionalPart instanceof APartGun){
-				APartGun gun = (APartGun) optionalPart;
+			}else if(optionalPart instanceof PartGun){
+				PartGun gun = (PartGun) optionalPart;
 				switch(variable){
 					case("gun_pitch"): return gun.currentPitch;
 					case("gun_yaw"): return gun.currentYaw;
@@ -136,6 +135,8 @@ public final class RenderAnimations{
 			case("roll"): return vehicle.rotationRoll;
 			case("altitude"): return vehicle.posY;
 			case("speed"): return vehicle.velocity*vehicle.SPEED_FACTOR*20;
+			case("turn_coordinator"): return ((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15D*25;
+			case("turn_indicator"): return (vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F;
 			
 			//Inertia from accelerating and braking.
             case("acceleration"): return vehicle.acclInertia();
@@ -182,8 +183,6 @@ public final class RenderAnimations{
 				case("trim_rudder"): return aircraft.rudderTrim/10D;
 				case("vertical_speed"): return vehicle.motionY*vehicle.SPEED_FACTOR*20;
 				case("slip"): return 75*aircraft.sideVec.dotProduct(vehicle.velocityVec);
-				case("turn_coordinator"): return ((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15D*25;
-				case("turn_indicator"): return (vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F;
 			}
 			if(aircraft instanceof EntityVehicleG_Plane){
 				EntityVehicleG_Plane plane = (EntityVehicleG_Plane) aircraft;

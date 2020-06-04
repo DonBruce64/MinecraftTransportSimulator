@@ -13,7 +13,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartGun;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
@@ -141,19 +141,19 @@ public final class ControlSystem{
 			//If we are seated, attempt to control guns.
 			//Only control guns our seat is a part of, or guns with no seats part of them.
 			//First check our parent part.
-			if(seat.parentPart instanceof APartGun){
-				MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) seat.parentPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+			if(seat.parentPart instanceof PartGun){
+				MTS.MTSNet.sendToServer(new PacketPartGunSignal((PartGun) seat.parentPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 			}
 			//Now check subParts of our seat.
 			for(APart subPart : seat.childParts){
-				if(subPart instanceof APartGun){
-					MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) subPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+				if(subPart instanceof PartGun){
+					MTS.MTSNet.sendToServer(new PacketPartGunSignal((PartGun) subPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 				}
 			}
 			//If we are the vehicle controller, check for guns that don't have seats. 
 			if(seat.isController){
 				for(APart part : vehicle.getVehicleParts()){
-					if(part instanceof APartGun){
+					if(part instanceof PartGun){
 						if(!(part.parentPart instanceof PartSeat)){
 							boolean hasControllingSeats = false;
 							for(APart subPart : part.childParts){
@@ -162,7 +162,7 @@ public final class ControlSystem{
 								}
 							}
 							if(!hasControllingSeats){
-								MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+								MTS.MTSNet.sendToServer(new PacketPartGunSignal((PartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 							}
 						}
 					}

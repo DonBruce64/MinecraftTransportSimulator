@@ -125,7 +125,7 @@
             "centered": false
           },
           {
-            "text": "One of the most critical benches is the Component Bench.  The bench is used by a lot of packs to add custom items that are used to craft vehicle parts, and even vehicles themselves.  If you find yourself needing an item that's not picked up by JEI or other crafting systems, it's likely in there!",
+            "text": "One of the most critical benches is the Component Bench.  The bench is used by a lot of packs to add custom items that are used to craft vehicle parts, and even vehicles themselves.  If you find yourself needing an item that's not picked up by JEI or other crafting systems, it's likely in there!  Some packs also use the Custom Bench to make parts for other parts, so that one is also worth a look.",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 155,
@@ -157,7 +157,7 @@
             "centered": false
           },
           {
-            "text": "Also note that you must not be inside the vehicle in order to work on it, so no mid-air repairs of failing plane engines!  If you are holding a part and the hologram is red, it means the part is the correct type, but the wrong size.  One common example is a wheel that is too big or too small for the vehicle.  Another is if a pack creator wants to restrict that location to specific parts, such as a specific engine, so try parts from the pack first.",
+            "text": "If you are holding a part and the hologram is red, it means the part is the correct type, but the wrong size.  One common example is a wheel that is too big or too small for the vehicle.  Another is if a pack creator wants to restrict that location to specific parts, such as a specific engine, so try parts from the pack first.  Creators may also put what goes to the vehicle in the item description.",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 155,
@@ -221,7 +221,7 @@
             "centered": false
           },
           {
-            "text": "Each engine has a fuel type that is associated with it.  This type is not the name of the fluid it takes a fuel.  Rather, it is a general name for the fuel that the engine uses.  Fuel types can be served by multiple fluids, but lava is by default always supported.  Some of the more common fuel types allow for usage of other mod's fluids out of the box.  For example, gasoline engines support Immersive Petroleum gasoline and Immersive Engineering ethanol.",
+            "text": "Each engine has a fuel type that is associated with it.  This type is not the name of the fluid it takes a fuel.  Rather, it is a general name for the fuel that the engine uses.  Fuel types can be served by multiple fluids, but by default lava is works for all engines.  Some of the more common fuel types allow for usage of other mod's fluids out of the box.  For example, gasoline engines support Immersive Petroleum gasoline and Immersive Engineering ethanol.",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 155,
@@ -253,7 +253,7 @@
             "centered": false
           },
           {
-            "text": "In addition to the configuration of each individual fuel, there exists a config option called fuelUsageFactor that globally sets the fuel consumption for all engines.  If you find engines to be thirstier than you'd like, you can adjust that rather than adjusting each fuel individually.",
+            "text": "In addition to the configuration of each individual fuel, there exists a config option called fuelUsageFactor that globally sets the fuel consumption for all engines.  If you find engines to be thirstier than you'd like, you can adjust that rather than adjusting each fuel individually.  If you're having troubles with anything fuel-related, the mtsconfig.json file is a good place to start, especially if you're using a modpack.",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 155,
@@ -340,7 +340,7 @@
             "centered": true
           },
           {
-            "text": "The second control scheme is a Joystick-Keyboard hybrid.  This controller MUST be connected at the time you start Minecraft.  Configuration is done though the JOYSTICK section of the P-key menu.  When an axis such as yaw or pitch is being controlled by a joystick it will be unavailable on the keyboard.  Button inputs will also be disabled, but can be re-enabled though a CONFIG setting.",
+            "text": "The second control scheme is a Joystick-Keyboard hybrid.  This controller MUST be connected at the time you start Minecraft.  Configuration is done though the JOYSTICK section of the P-key menu.  When an axis such as yaw or pitch is being controlled by a joystick it will be unavailable on the keyboard.  This is the case even if you un-plug the joystick, so un-bind it before you do.",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 20,
@@ -349,7 +349,7 @@
             "centered": false
           },
           {
-            "text": "The final method of control available is a mouse-yoke system similar to both Flan's and MCHeli.  This system is currently in Beta and is not perfect, but should be functional enough for general use.  For all of these controls, there are a few extra settings in the P-key CONFIG menu.  These can be used to control joystick dead-zone, sensitivity, keyboard cooldown, as well as other general control settings.",
+            "text": "The final method of control available is a mouse-yoke system similar to both Flan's and MCHeli.  For all of these controls, there are a few extra settings in the P-key CONFIG menu.  These can be used to control joystick dead-zone, sensitivity, keyboard cooldown, as well as other general control settings.",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 155,
@@ -436,7 +436,7 @@
             "centered": true
           },
           {
-            "text": "If you're going to fly an aircraft, it will likely need one of these (well, unless it's a jet).  Larger diameter propellers provide more thrust than smaller ones; however, larger-diameter propellers also need larger engines to turn, so it may be that a weak engine can produce more thrust with a smaller propeller than a larger one.  Propellers are created on the Propeller Bench.",
+            "text": "If you're going to use anything that's not a car, it will likely need one of these (well, unless it's a jet).  Larger diameter propellers provide more thrust than smaller ones; however, larger-diameter propellers also need larger engines to turn, so it may be that a weak engine can produce more thrust with a smaller propeller than a larger one.  Propellers are created on the Propeller Bench.",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 20,
@@ -445,7 +445,7 @@
             "centered": false
           },
           {
-            "text": "Propeller pitch is also important, perhaps moreso than diameter, as it determines the optimal speed at any RPM.  Anything below this speed will speed the aircraft up, anything below will slow it down.  Note that propellers that have dynamic pitch will adjust their pitch in flight to maintain optimum thrust, and may also be reversed by pressing the REVERSE THRUST button in the plane panel.  Reversed propellers are not very effective, so make sure to use plenty of throttle and watch your temps!",
+            "text": "Propeller pitch is also important, perhaps moreso than diameter, as it determines the optimal speed at any RPM.  Anything below this speed will speed the aircraft up, anything below will slow it down.  Note that propellers that have dynamic pitch will adjust their pitch in flight to maintain optimum thrust, and may also be reversed by pressing the REV button in the plane panel.  Reversed propellers are not very effective, so make sure to use plenty of throttle and watch your temps!",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 155,
@@ -521,10 +521,10 @@
       },
 	  {
         "pageTexture": "mts:textures/guis/manual_pages.png",
-        "title": "Vehicle Panels",
+        "title": "Starting Engines",
         "pageText": [
           {
-            "text": "Vehicle Panels",
+            "text": "Starting Engines",
             "color": "0x000000",
             "scale": 1.0,
             "offsetX": 75,
@@ -532,7 +532,7 @@
             "centered": true
           },
           {
-            "text": "While most things on vehicles can be controled from your keyboard or joystick, a few functions are in the vehicle panel.  To open this panel, press the U key when in a vehicle.  This brings up the MAG/POWER switch for vehicles, and the START button to engage the starter.  You will need to turn the engine power on and THEN press the starter key to start an engine.  Please do remember this.",
+            "text": "While most things on vehicles can be controled from your keyboard or joystick, a few functions are in the vehicle panel.  To open this panel, press the U key when in a vehicle.  This brings up the switches for the engines, as well as the lights, trailers, airplane trim, reverse thrust, and a few other things.",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 20,
@@ -541,7 +541,7 @@
             "centered": false
           },
           {
-            "text": "Numerous other things are located on this panel besides the engine controls.  The switches for the different lights are on the left side, and trim controls for aircraft are towards the middle-left.  You can also find the thrust reverse button, which will cause planes to move backward if equipped with dynamic-pitch propellers, as well as trailer buttons for hitching traliers in ground-based vehicles.",
+            "text": "To start the engines of a vehicle, either turn on the MAG and hold START, or twist the engine switch right to the on position and click and hold again to engage the starter.  You should hear the stater wind up, and once the engine is going fast enough it will start.  Note: holding the starter too long will drain your battery.  If this happens, you'll need a pair of jumper cables and running vehicle to transfer some power.  See the tooltip on the jumper cables for information on how to do this.",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 155,
@@ -564,7 +564,7 @@
             "centered": true
           },
           {
-            "text": "Driving a car is so simple, even a villager could do it.  Once the engine is running press the R key to shift into forwards gear and press the W key to give it some gas and you're off!  The A and D keys can be used to steer the car, while S key activates the brake.  Some vehicles are equipped with lights, horns, sirens, or even turn signals.",
+            "text": "Driving a car is so simple, even a villager could do it.  Once the engine is running press the R key to shift into forwards gear and press the W key to give it some gas and you're off!  The A and D keys can be used to steer the car, while S key activates the brake.  Some vehicles are equipped with lights, horns, sirens, and even turn signals.",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 20,
@@ -701,7 +701,7 @@
             "centered": false
           },
           {
-            "text": "Should you wish to modify the recipes for the items made on the benches, you may do so by adding an override in the mtsconfig.json file.  See that file for details on how to do so.  Anything created on a crafting bench follows the normal process for editing, e.g. CraftTweaker.",
+            "text": "Should you wish to modify the recipes for the items made on the benches, you may do so by adding an override in the mtscraftingoverrides.json file.  See that file for details on how to do so.  Anything created on a crafting bench follows the normal process for editing, e.g. CraftTweaker.",
             "color": "0x000000",
             "scale": 0.75,
             "offsetX": 155,

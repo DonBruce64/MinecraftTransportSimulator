@@ -32,11 +32,16 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     
     public class PartEngine{
     	public boolean isAutomatic;
+    	public boolean isSteamPowered;
     	public boolean flamesOnStartup;
     	public boolean isCrankingNotPitched;
     	public byte starterPower;
+    	public byte shiftSpeed;
     	public int maxRPM;
     	public float fuelConsumption;
+    	public float jetPowerFactor;
+    	public float bypassRatio;
+    	public float propellerRatio;
     	public float[] gearRatios;
 		public int[] upShiftRPM;
 		public int[] downShiftRPM;
@@ -97,6 +102,7 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     
     public class PartGun{
     	public boolean autoReload;
+    	public boolean isTurret;
     	public int capacity;
     	public int fireDelay;
     	public int reloadTime;

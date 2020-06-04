@@ -176,7 +176,7 @@ public class WrapperAudio{
 					if(sound.radio != null){
 						AL10.alSource(sound.sourceIndex, AL10.AL_VELOCITY, playerVelocity);
 					}else{
-						//System.out.format("XP:%f XS:%f  YP:%f YS:%f  ZP:%f ZS:%f\n", playerVelocity.get(0), sound.provider.getProviderVelocity().get(0), playerVelocity.get(1), sound.provider.getProviderVelocity().get(1), playerVelocity.get(2), sound.provider.getProviderVelocity().get(2));
+						System.out.format("XP:%f XS:%f  YP:%f YS:%f  ZP:%f ZS:%f\n", playerVelocity.get(0), sound.provider.getProviderVelocity().get(0), playerVelocity.get(1), sound.provider.getProviderVelocity().get(1), playerVelocity.get(2), sound.provider.getProviderVelocity().get(2));
 						AL10.alSource(sound.sourceIndex, AL10.AL_VELOCITY, sound.provider.getProviderVelocity());
 					}
 					

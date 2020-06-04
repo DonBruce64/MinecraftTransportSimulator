@@ -20,9 +20,9 @@ import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.APartGun;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperBlockFakeLight;
@@ -62,7 +62,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	
 	//Collision maps.
 	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
-	public final Map<Byte, APartEngine> engines = new HashMap<Byte, APartEngine>();
+	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
 	public final List<APartGroundDevice> wheels = new ArrayList<APartGroundDevice>();
 	public final List<APartGroundDevice> groundedWheels = new ArrayList<APartGroundDevice>();
 	
@@ -98,7 +98,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			
 			//Turn on the DRLs if we have an engine on.
 			lightsOn.remove(LightType.DAYTIMERUNNINGLIGHT);
-			for(APartEngine engine : engines.values()){
+			for(PartEngine engine : engines.values()){
 				if(engine.state.running){
 					lightsOn.add(LightType.DAYTIMERUNNINGLIGHT);
 					break;
@@ -246,7 +246,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	@Override
 	public void addPart(APart part, boolean ignoreCollision){
 		super.addPart(part, ignoreCollision);
-		if(part instanceof APartEngine){
+		if(part instanceof PartEngine){
 			//Because parts is a list, the #1 engine will always come before the #2 engine.
 			//We can use this to determine where in the list this engine needs to go.
 			byte engineNumber = 0;
@@ -254,7 +254,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				for(String type : packPart.types){
 					if(type.startsWith("engine")){
 						if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
-							engines.put(engineNumber, (APartEngine) part);
+							engines.put(engineNumber, (PartEngine) part);
 							return;
 						}
 						++engineNumber;
@@ -265,7 +265,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			if(((APartGroundDevice) part).canBeDrivenByEngine()){
 				wheels.add((APartGroundDevice) part);
 			}
-		}else if(part instanceof APartGun){
+		}else if(part instanceof PartGun){
 			++totalGuns;
 		}
 	}
@@ -287,7 +287,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		}
 		if(wheels.contains(part)){
 			wheels.remove(part);
-		}else if(part instanceof APartGun){
+		}else if(part instanceof PartGun){
 			--totalGuns;
 		}
 	}

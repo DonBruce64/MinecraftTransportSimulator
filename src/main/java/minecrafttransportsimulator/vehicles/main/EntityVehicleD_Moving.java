@@ -12,7 +12,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.PartEngineBoat;
+import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -157,7 +157,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			throttleTime = 0;
 		}
 		
-        if(throttleTime > 10 && throttleTime < 80 && velocity >= 0){
+        if(throttleTime > 10 && !parkingBrakeOn && velocity >= 3){
         	
         	bodyAcceleration = (velocity/throttleTime);
         	
@@ -165,7 +165,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
         	
         	return bodyAcclAngle;
         	
-        }else if(throttleTime > 10 && throttleTime < 40 && velocity <= 0){
+        }else if(throttleTime > 10 && !parkingBrakeOn && velocity <= -3){
         	
         	bodyAcceleration = (velocity/throttleTime);
         	
@@ -191,7 +191,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	    	
 	    	bodyAcceleration = (velocity/brakingTime);
 	    	
-	        if(velocity < 0) {
+	        if(velocity < -3) {
 	        	
 	        	bodyBrakeAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*-0.01));
 	        	
@@ -970,8 +970,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 			//Also check for boat engines, which can make us turn if we are in water.
 			for(APart part : this.getVehicleParts()){
-				if(part instanceof PartEngineBoat){
-					if(((PartEngineBoat) part).isInLiquid){
+				if(part instanceof PartPropeller){
+					if(part.isPartCollidingWithLiquids(Vec3d.ZERO)){
 						turningFactor += 1.0F;
 						turningDistance = (float) Math.max(turningDistance, Math.abs(part.offset.z));
 					}

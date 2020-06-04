@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
@@ -18,9 +18,9 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class AItemPartEngine extends AItemPart{
+public class ItemPartEngine extends AItemPart{
 	
-	public AItemPartEngine(JSONPart definition){
+	public ItemPartEngine(JSONPart definition){
 		super(definition);
 	}
 	
@@ -52,12 +52,29 @@ public abstract class AItemPartEngine extends AItemPart{
 			tooltipLines.add(TextFormatting.DARK_PURPLE + I18n.format("info.item.engine.creative"));
 		}
 		tooltipLines.add(I18n.format("info.item.engine.maxrpm") + definition.engine.maxRPM);
-		tooltipLines.add(I18n.format("info.item.engine.maxsaferpm") + APartEngine.getSafeRPMFromMax(definition.engine.maxRPM));
+		tooltipLines.add(I18n.format("info.item.engine.maxsaferpm") + PartEngine.getSafeRPMFromMax(definition.engine.maxRPM));
 		tooltipLines.add(I18n.format("info.item.engine.fuelconsumption") + definition.engine.fuelConsumption);
+		if(definition.engine.jetPowerFactor > 0){
+			tooltipLines.add(I18n.format("info.item.engine.jetpowerfactor") + (int) (100*definition.engine.jetPowerFactor) + "%");
+			tooltipLines.add(I18n.format("info.item.engine.bypassratio") + definition.engine.bypassRatio);
+		}
 		tooltipLines.add(I18n.format("info.item.engine.fueltype") + definition.engine.fuelType);
 		tooltipLines.add(I18n.format("info.item.engine.hours") + (stackTag != null ? Math.round(stackTag.getDouble("hours")*100D)/100D : 0));
 		
-		addExtraInformation(stack, definition, tooltipLines);
+		if(definition.engine.gearRatios.length > 3){
+			tooltipLines.add(definition.engine.isAutomatic ? I18n.format("info.item.engine.automatic") : I18n.format("info.item.engine.manual"));
+			tooltipLines.add(I18n.format("info.item.engine.gearratios"));
+			for(byte i=0; i<definition.engine.gearRatios.length; i+=5){
+				String gearRatios = "";
+				for(byte j=i; j<i+5 && j<definition.engine.gearRatios.length; ++j){
+					gearRatios += String.valueOf(definition.engine.gearRatios[j]) + ",  ";
+				}
+				tooltipLines.add(gearRatios);
+			}
+			
+		}else{
+			tooltipLines.add(I18n.format("info.item.engine.gearratios") + definition.engine.gearRatios[definition.engine.gearRatios.length - 1]);
+		}
 		
 		if(stackTag != null){
 			if(stackTag.getBoolean("oilLeak")){
@@ -71,7 +88,4 @@ public abstract class AItemPartEngine extends AItemPart{
 			}
 		}
 	}
-	
-	@SideOnly(Side.CLIENT)
-	protected abstract void addExtraInformation(ItemStack stack, JSONPart pack, List<String> tooltipLines);
 }

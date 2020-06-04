@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.parts;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -18,7 +18,7 @@ public class PacketPartEngineLinked extends APacketPart{
 
 	public PacketPartEngineLinked(){}
 	
-	public PacketPartEngineLinked(APartEngine engine, APartEngine engineLinked){
+	public PacketPartEngineLinked(PartEngine engine, PartEngine engineLinked){
 		super(engine);
 		this.linkedId = engineLinked.vehicle.getEntityId();
 		this.linkedX = engineLinked.offset.x;
@@ -49,14 +49,14 @@ public class PacketPartEngineLinked extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					APartEngine engine = (APartEngine) getVehiclePartFromMessage(message, ctx);
+					PartEngine engine = (PartEngine) getVehiclePartFromMessage(message, ctx);
 					
 					EntityVehicleE_Powered linkedVehicle = (EntityVehicleE_Powered) Minecraft.getMinecraft().world.getEntityByID(message.linkedId);
-					APartEngine linkedEngine = null;
+					PartEngine linkedEngine = null;
 					if(linkedVehicle != null){
 						for(APart part : linkedVehicle.getVehicleParts()){
 							if(part.offset.x == message.linkedX && part.offset.y == message.linkedY && part.offset.z == message.linkedZ){
-								linkedEngine = (APartEngine) part;
+								linkedEngine = (PartEngine) part;
 							}
 						}
 					}

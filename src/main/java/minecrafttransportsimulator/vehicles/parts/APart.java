@@ -19,6 +19,7 @@ import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
 /**This class is the base for all parts and should be extended for any vehicle-compatible parts.
@@ -163,6 +164,33 @@ public abstract class APart implements ISoundProvider{
 	 */
 	public boolean isPartCollidingWithBlocks(Vec3d collisionOffset){
 		return !vehicle.world.getCollisionBoxes(null, this.getAABBWithOffset(collisionOffset)).isEmpty();
+    }
+	
+	/**Checks to see if this part is collided with any liquid blocks.
+	 * Can be given an offset vector to check for potential collisions. 
+	 */
+	public boolean isPartCollidingWithLiquids(Vec3d collisionOffset){
+		VehicleAxisAlignedBB collisionBox = this.getAABBWithOffset(collisionOffset);
+		int minX = (int) Math.floor(collisionBox.minX);
+    	int maxX = (int) Math.floor(collisionBox.maxX + 1.0D);
+    	int minY = (int) Math.floor(collisionBox.minY);
+    	int maxY = (int) Math.floor(collisionBox.maxY + 1.0D);
+    	int minZ = (int) Math.floor(collisionBox.minZ);
+    	int maxZ = (int) Math.floor(collisionBox.maxZ + 1.0D);
+    	
+    	for(int i = minX; i < maxX; ++i){
+    		for(int j = minY; j < maxY; ++j){
+    			for(int k = minZ; k < maxZ; ++k){
+    				BlockPos checkPos = new BlockPos(i, j, k);
+    				if(vehicle.world.isBlockLoaded(checkPos)){
+	    				if(vehicle.world.getBlockState(checkPos).getMaterial().isLiquid()){
+	    					return true;
+	    				}
+    				}
+    			}
+    		}
+    	}
+		return false;
     }
 	
 	/**Called when the vehicle removes this part.
