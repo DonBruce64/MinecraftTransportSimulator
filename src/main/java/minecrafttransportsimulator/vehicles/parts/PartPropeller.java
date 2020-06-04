@@ -24,7 +24,7 @@ public class PartPropeller extends APart{
 	public float damage;
 	public short currentPitch;
 	
-	private final PartEngine connectedEngine;
+	private final PartEngineAircraft connectedEngine;
 	
 	public static final int MIN_DYNAMIC_PITCH = 45;
 	
@@ -32,7 +32,7 @@ public class PartPropeller extends APart{
 		super(vehicle, packVehicleDef, definition, dataTag);
 		this.damage = dataTag.getFloat("damage");
 		this.currentPitch = definition.propeller.pitch;
-		this.connectedEngine = (PartEngine) parentPart;
+		this.connectedEngine = (PartEngineAircraft) parentPart;
 	}
 	
 	@Override
@@ -60,29 +60,16 @@ public class PartPropeller extends APart{
 				--currentPitch;
 			}else if(!vehicle.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
 				++currentPitch;
-			}else if(connectedEngine.RPM < PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) && currentPitch > MIN_DYNAMIC_PITCH){
+			}else if(connectedEngine.RPM < (connectedEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) - 150) && currentPitch > MIN_DYNAMIC_PITCH){
 				--currentPitch;
-			}else if(connectedEngine.RPM > PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) && currentPitch < definition.propeller.pitch){
+			}else if(connectedEngine.RPM > (connectedEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) - 100) && currentPitch < definition.propeller.pitch){
 				++currentPitch;
 			}
 		}
-		
-		double propellerGearboxRatio = connectedEngine.definition.engine.propellerRatio != 0 ? connectedEngine.definition.engine.propellerRatio : (connectedEngine.currentGear != 0 ? connectedEngine.definition.engine.gearRatios[connectedEngine.currentGear + 1] : 0);
-		
-		//Adjust angular position and velocity.
-		if(propellerGearboxRatio != 0){
-			angularVelocity = (float) (connectedEngine.RPM/propellerGearboxRatio/60F/20F);
-		}else if(angularVelocity > 1){
-			--angularVelocity;
-		}else if(angularVelocity < -1){
-			++angularVelocity;
+		if(vehicle.world.isRemote){
+			angularVelocity = (float) (360*connectedEngine.RPM*connectedEngine.definition.engine.gearRatios[0]/60F/20F);
+			angularPosition += angularVelocity;
 		}else{
-			angularVelocity = 0;
-		}
-		angularPosition += angularVelocity;
-		
-		//Damage propeller or entities if required.
-		if(!vehicle.world.isRemote){
 			if(connectedEngine.RPM >= 100){
 				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(Vec3d.ZERO).expand(0.2F, 0.2F, 0.2F));
 				if(!collidedEntites.isEmpty()){
@@ -95,7 +82,7 @@ public class PartPropeller extends APart{
 					}
 					for(int i=0; i < collidedEntites.size(); ++i){
 						if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
-							collidedEntites.get(i).attackEntityFrom(new DamageSourcePropellor(attacker), (float) (ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.RPM*propellerGearboxRatio/500F));
+							collidedEntites.get(i).attackEntityFrom(new DamageSourcePropellor(attacker), (float) (ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.RPM*connectedEngine.definition.engine.gearRatios[0]/500F));
 						}
 					}
 				}
@@ -103,7 +90,7 @@ public class PartPropeller extends APart{
 					damagePropeller(1);
 					
 				}
-				if(20*angularVelocity*Math.PI*definition.propeller.diameter*0.0254 > 340.29){
+				if(connectedEngine.RPM*connectedEngine.definition.engine.gearRatios[0]/60*Math.PI*definition.propeller.diameter*0.0254 > 340.29){
 					damagePropeller(9999);
 				}
 			}
@@ -132,9 +119,9 @@ public class PartPropeller extends APart{
 		//If we are on an engine that can reverse, adjust our direction.
 		//Getting smooth changes here is a PITA, and I ain't gonna do it myself.
 		if(vehicle instanceof EntityVehicleG_Blimp && vehicle.reversePercent != 0){
-			return vehicle.reversePercent != 20 ? Vec3d.ZERO : new Vec3d(0, 0, -(this.angularPosition + this.angularVelocity*partialTicks)*360D);
+			return vehicle.reversePercent != 20 ? Vec3d.ZERO : new Vec3d(0, 0, -(this.angularPosition + this.angularVelocity*partialTicks));
 		}else{
-			return new Vec3d(0, 0, (this.angularPosition + this.angularVelocity*partialTicks)*360D);
+			return new Vec3d(0, 0, this.angularPosition + this.angularVelocity*partialTicks);
 		}
 	}
 	
