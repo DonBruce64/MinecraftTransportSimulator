@@ -48,7 +48,7 @@ public class ItemJumperCable extends Item implements IItemVehicleInteractable{
 						if(lastEngineClicked.vehicle.equals(engine.vehicle)){
 							MTS.MTSNet.sendTo(new PacketChat("interact.jumpercable.samevehicle"), player);
 							lastEngineClicked = null;
-						}else if(engine.partPos.distanceTo(lastEngineClicked.partPos) < 15){
+						}else if(engine.worldPos.distanceTo(lastEngineClicked.worldPos) < 15){
 							engine.linkedEngine = lastEngineClicked;
 							lastEngineClicked.linkedEngine = engine;
 							lastEngineClicked = null;

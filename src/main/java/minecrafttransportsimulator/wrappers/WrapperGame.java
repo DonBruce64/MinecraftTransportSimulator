@@ -15,7 +15,7 @@ import net.minecraftforge.fml.common.Loader;
  *
  * @author don_bruce
  */
-public class WrapperGame{
+public class WrapperGame{	
 	/**
 	 *  Returns true if the mod with the passed-in modID is present.
 	 */
@@ -68,14 +68,34 @@ public class WrapperGame{
 	 *  isn't possible. 
 	 */
 	public static WrapperWorld getClientWorld(){
-		return new WrapperWorld(Minecraft.getMinecraft().world);
+		if(cachedClientWorld == null || !cachedClientWorld.world.equals(Minecraft.getMinecraft().world)){
+			cachedClientWorld = new WrapperWorld(Minecraft.getMinecraft().world);
+		}
+		return cachedClientWorld;
 	}
+	private static WrapperWorld cachedClientWorld;
 	
 	/**
 	 *  Returns the player.  Only valid on CLIENTs as on servers
 	 *  there are multiple players.
 	 */
 	public static WrapperPlayer getClientPlayer(){
-		return new WrapperPlayer(Minecraft.getMinecraft().player);
+		if(cachedClientPlayer == null || !cachedClientPlayer.entity.equals(Minecraft.getMinecraft().player)){
+			cachedClientPlayer = new WrapperPlayer(Minecraft.getMinecraft().player);
+		}
+		return cachedClientPlayer;
 	}
+	private static WrapperPlayer cachedClientPlayer;
+	
+	/**
+	 *  Returns the entity that is used to set up the render camera.
+	 *  Normally the player, but can (may?) change.
+	 */
+	public static WrapperEntity getRenderViewEntity(){
+		if(cachedRenderViewEntity == null || !cachedRenderViewEntity.entity.equals(Minecraft.getMinecraft().getRenderViewEntity())){
+			cachedRenderViewEntity = new WrapperEntity(Minecraft.getMinecraft().getRenderViewEntity());
+		}
+		return cachedRenderViewEntity;
+	}
+	private static WrapperEntity cachedRenderViewEntity;
 }

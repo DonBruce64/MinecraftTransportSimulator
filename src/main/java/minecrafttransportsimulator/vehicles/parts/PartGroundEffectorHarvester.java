@@ -32,7 +32,7 @@ public final class PartGroundEffectorHarvester extends APartGroundEffector{
 		if((state.getBlock() instanceof BlockCrops && ((BlockCrops) state.getBlock()).isMaxAge(state)) || state.getBlock() instanceof BlockBush){
 			Block harvestedBlock = state.getBlock();
 			NonNullList<ItemStack> drops = NonNullList.create();
-			vehicle.world.playSound(partPos.x, partPos.y, partPos.z, harvestedBlock.getSoundType(state, vehicle.world, pos, null).getBreakSound(), SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+			vehicle.world.playSound(worldPos.x, worldPos.y, worldPos.z, harvestedBlock.getSoundType(state, vehicle.world, pos, null).getBreakSound(), SoundCategory.BLOCKS, 1.0F, 1.0F, false);
 			if(!vehicle.world.isRemote){
 				harvestedBlock.getDrops(drops, vehicle.world, pos, state, 0);
 				vehicle.world.setBlockToAir(pos);
@@ -55,7 +55,7 @@ public final class PartGroundEffectorHarvester extends APartGroundEffector{
 				//Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
 				for(ItemStack stack : drops){
 					if(!stack.equals(ItemStack.EMPTY) && stack.getCount() > 0){
-						vehicle.world.spawnEntity(new EntityItem(vehicle.world, partPos.x, partPos.y, partPos.z, stack));
+						vehicle.world.spawnEntity(new EntityItem(vehicle.world, worldPos.x, worldPos.y, worldPos.z, stack));
 					}
 				}
 			}

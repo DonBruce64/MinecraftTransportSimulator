@@ -9,13 +9,20 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.Vector3d;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.rendering.components.ARenderableTransform;
+import minecrafttransportsimulator.rendering.components.RenderTickData;
+import minecrafttransportsimulator.rendering.components.RenderableModelObject;
+import minecrafttransportsimulator.rendering.components.TransformLight;
+import minecrafttransportsimulator.rendering.components.TransformRotatable;
+import minecrafttransportsimulator.rendering.components.TransformTranslatable;
+import minecrafttransportsimulator.rendering.components.TransformTreadRoller;
 import minecrafttransportsimulator.systems.ClientEventSystem;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
@@ -23,18 +30,17 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
+import minecrafttransportsimulator.wrappers.WrapperGUI;
+import minecrafttransportsimulator.wrappers.WrapperGame;
+import minecrafttransportsimulator.wrappers.WrapperPlayer;
+import minecrafttransportsimulator.wrappers.WrapperRender;
+import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
-import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 
 /**Main render class for all vehicles.  Renders the vehicle, along with all parts.
@@ -44,40 +50,20 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
  *
  * @author don_bruce
  */
-public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
-	private static final Minecraft minecraft = Minecraft.getMinecraft();
-	
+public final class RenderVehicle extends Render<EntityVehicleE_Powered>{	
 	//VEHICLE MAPS.  Maps are keyed by generic name.
 	private static final Map<String, Integer> vehicleDisplayLists = new HashMap<String, Integer>();
 	private static final Map<String, String> vehicleModelOverrides = new HashMap<String, String>();
-	private static final Map<String, List<RenderVehicle_RotatablePart>> vehicleRotatableLists = new HashMap<String, List<RenderVehicle_RotatablePart>>();
-	private static final Map<String, List<RenderVehicle_TranslatablePart>> vehicleTranslatableLists = new HashMap<String, List<RenderVehicle_TranslatablePart>>();
-	private static final Map<String, List<RenderVehicle_LightPart>> vehicleLightLists = new HashMap<String, List<RenderVehicle_LightPart>>();
-	private static final Map<String, List<WindowPart>> vehicleWindowLists = new HashMap<String, List<WindowPart>>();
+	private static final Map<String, List<RenderableModelObject>> vehicleObjectLists = new HashMap<String, List<RenderableModelObject>>();
 	private static final Map<String, List<Float[]>> treadDeltas = new HashMap<String, List<Float[]>>();
 	private static final Map<String, List<Double[]>> treadPoints = new HashMap<String, List<Double[]>>();
 	
-	//PART MAPS.  Maps are keyed by the part model location.
-	private static final Map<ResourceLocation, Integer> partDisplayLists = new HashMap<ResourceLocation, Integer>();
-	private static final Map<ResourceLocation, List<RenderVehicle_RotatablePart>> partRotatableLists = new HashMap<ResourceLocation, List<RenderVehicle_RotatablePart>>();
-	private static final Map<ResourceLocation, List<RenderVehicle_TranslatablePart>> partTranslatableLists = new HashMap<ResourceLocation, List<RenderVehicle_TranslatablePart>>();
-	private static final Map<ResourceLocation, List<RenderVehicle_LightPart>> partLightLists = new HashMap<ResourceLocation, List<RenderVehicle_LightPart>>();
+	//PART MAPS.  Maps are keyed by the part model name.
+	private static final Map<String, Integer> partDisplayLists = new HashMap<String, Integer>();
+	private static final Map<String, List<RenderableModelObject>> partObjectLists = new HashMap<String, List<RenderableModelObject>>();
 	
-	//COMMON MAPS.  Keyed by systemName.
-	private static final Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
-	
-	//Maps to check last render times for each vehicle.
-	private static final Map<EntityVehicleE_Powered, Byte> lastRenderPass = new HashMap<EntityVehicleE_Powered, Byte>();
-	private static final Map<EntityVehicleE_Powered, Long> lastRenderTick = new HashMap<EntityVehicleE_Powered, Long>();
-	private static final Map<EntityVehicleE_Powered, Float> lastRenderPartial = new HashMap<EntityVehicleE_Powered, Float>();
-	
-	//Additional maps to handle shaders compatibility.
-	private static boolean shadersDetected = false;
-	private static final Map<EntityVehicleE_Powered, Boolean> renderedShaderShadow = new HashMap<EntityVehicleE_Powered, Boolean>();
-	private static final Map<EntityVehicleE_Powered, Boolean> renderedShaderModel = new HashMap<EntityVehicleE_Powered, Boolean>();
-	
-	//Constants for built-in textures.
-	private static final ResourceLocation vanillaGlassTexture = new ResourceLocation("minecraft", "textures/blocks/glass.png");
+	//RENDER DATA MAPS.  Keyed by each instance of each vehicle loaded.
+	private static final Map<EntityVehicleE_Powered, RenderTickData> renderData = new HashMap<EntityVehicleE_Powered, RenderTickData>();
 	
 	public RenderVehicle(RenderManager renderManager){
 		super(renderManager);
@@ -86,17 +72,12 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	/**Used to clear out the rendering caches of the passed-in vehicle in dev mode to allow the re-loading of models.**/
 	public static void clearVehicleCaches(EntityVehicleE_Powered vehicle){
 		vehicleDisplayLists.remove(vehicle.definition.genericName);
-		for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
-			rotatable.clearCaches();
+		for(RenderableModelObject modelObject : vehicleObjectLists.get(vehicle.definition.genericName)){
+			modelObject.resetDisplayList();
 		}
-		vehicleRotatableLists.remove(vehicle.definition.genericName);
+		vehicleObjectLists.remove(vehicle.definition.genericName);
 		
-		for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
-			translatable.clearCaches();
-		}
-		vehicleTranslatableLists.remove(vehicle.definition.genericName);
-		vehicleLightLists.remove(vehicle.definition.genericName);
-		vehicleWindowLists.remove(vehicle.definition.genericName);
+		vehicleObjectLists.remove(vehicle.definition.genericName);
 		treadDeltas.remove(vehicle.definition.genericName);
 		treadPoints.remove(vehicle.definition.genericName);
 	}
@@ -116,72 +97,44 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	
 	@Override
 	public void doRender(EntityVehicleE_Powered vehicle, double x, double y, double z, float entityYaw, float partialTicks){
-		boolean didRender = false;
-		if(vehicle.definition != null){ 
-			if(lastRenderPass.containsKey(vehicle)){
-				//Did we render this tick?
-				if(lastRenderTick.get(vehicle) == vehicle.world.getTotalWorldTime() && lastRenderPartial.get(vehicle) == partialTicks){
-					//If we rendered last on a pass of 0 or 1 this tick, don't re-render some things.
-					//This prevents double-rendering in pass 0 and pass -1 from the event system.
-					if(lastRenderPass.get(vehicle) != -1 && MinecraftForgeClient.getRenderPass() == -1){
-						//If we have shaders, make sure we don't call this if we really haven't rendered the model.
-						if(!shadersDetected || (renderedShaderModel.containsKey(vehicle) && renderedShaderModel.get(vehicle))){
-							render(vehicle, Minecraft.getMinecraft().player, partialTicks, true);
-							didRender = true;
-						}
-					}
-				}
+		if(vehicle.definition != null){
+			//If we don't have render data yet, create one now.
+			if(!renderData.containsKey(vehicle)){
+				renderData.put(vehicle, new RenderTickData(new WrapperWorld(vehicle.world)));
 			}
 			
-			//If we didn't render the vehicle previously in any ticks do so now.
-			//This normally gets called when we get two consecutive renders from events in pass -1,
-			//but it also can happen if shaders are present and we only render the vehicle shadow.
-			if(!didRender){
-				render(vehicle, Minecraft.getMinecraft().player, partialTicks, false);
-			}
-
-			//If we previously rendered on pass 0 without rendering on pass -1, it means shaders are present.
-			//Set bit to detect these buggers and keep vehicles from disappearing.
-			//Also init map entries to prevent nulls from hitting logic checks.
-			if(!shadersDetected && lastRenderPass.containsKey(vehicle) && lastRenderPass.get(vehicle) == 1 && MinecraftForgeClient.getRenderPass() == 0){
-				shadersDetected = true;
-				renderedShaderShadow.put(vehicle, false);
-				renderedShaderModel.put(vehicle, false);
+			//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
+			int renderPass = WrapperRender.getRenderPass();
+			if(renderPass == -1){
+				renderPass = 2;
 			}
 			
-			//Update maps.
-			lastRenderPass.put(vehicle, (byte) MinecraftForgeClient.getRenderPass());
-			lastRenderTick.put(vehicle, vehicle.world.getTotalWorldTime());
-			lastRenderPartial.put(vehicle, partialTicks);
-			
-			//If we are in pass 1, and shaders are detected, let the system know one render has been completed.
-			//This will first be the shadow, and second be the model.
-			if(shadersDetected){
-				if(MinecraftForgeClient.getRenderPass() == 1){
-					if(!renderedShaderShadow.containsKey(vehicle) || renderedShaderShadow.get(vehicle)){
-						renderedShaderModel.put(vehicle, true);
-					}else{
-						renderedShaderShadow.put(vehicle, true);
-					}
-				}else if(MinecraftForgeClient.getRenderPass() == -1){
-					renderedShaderShadow.put(vehicle, false);
-					renderedShaderModel.put(vehicle, false);
-				}
+			//If we need to render, do so now.
+			if(renderData.get(vehicle).shouldRender(renderPass, partialTicks)){
+				render(vehicle, partialTicks);
 			}
 		}
 	}
 	
 	public static boolean doesVehicleHaveLight(EntityVehicleE_Powered vehicle, LightType light){
-		for(RenderVehicle_LightPart lightPart : vehicleLightLists.get(vehicle.definition.genericName)){
-			if(lightPart.type.equals(light)){
-				return true;
+		for(RenderableModelObject modelObject : vehicleObjectLists.get(vehicle.definition.genericName)){
+			for(ARenderableTransform transform : modelObject.transforms){
+				if(transform instanceof TransformLight){
+					if(((TransformLight) transform).type.equals(light)){
+						return true;
+					}
+				}
 			}
 		}
 		for(APart part : vehicle.getVehicleParts()){
-			if(partLightLists.containsKey(part.getModelLocation())){
-				for(RenderVehicle_LightPart lightPart : partLightLists.get(part.getModelLocation())){
-					if(lightPart.type.equals(light)){
-						return true;
+			if(partObjectLists.containsKey(part.getModelLocation())){
+				for(RenderableModelObject modelObject : partObjectLists.get(part.getModelLocation())){
+					for(ARenderableTransform transform : modelObject.transforms){
+						if(transform instanceof TransformLight){
+							if(((TransformLight) transform).type.equals(light)){
+								return true;
+							}
+						}
 					}
 				}
 			}
@@ -197,109 +150,88 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	}
 	
 	/**
-	 *  Renders the vehicle in its entirety.  Rendering happens in all three passes (0, 1, and -1), unless the vehicle wasn't rendered in
-	 *  pass 0 or 1 due to it being over the world height limit.  The parameter wasRenderedPrior should be true if the vehicle was rendered
-	 *  before in either of those passes, otherwise it will render again in pass -1 which will cause issues.  Some rendering routines
-	 *  only run on specific passes, so see the comments on the called methods for information on what is rendered when.  Note that if we
-	 *  didn't get rendered in pass 0 or 1, then all rendering will need to be done in pass -1, so methods that wish to run in pass 0 or 1
-	 *  will be forced to run in pass -1 if wasRenderedPrior is false.
+	 *  Renders the vehicle in its entirety.  Rendering happens normally in pass 0 (solid) and 1 (transparent), but may happen in the
+	 *  special pass -1 (end) if the vehicle wasn't rendered in either pass 0 or 1 due to chunk render culling.  Some rendering routines
+	 *  only run on specific passes, so see the comments on the called methods for information on what is rendered when.
 	 */
-	private static void render(EntityVehicleE_Powered vehicle, EntityPlayer playerRendering, float partialTicks, boolean wasRenderedPrior){
-		//Get position and rotation.
-		Entity renderViewEntity = minecraft.getRenderViewEntity();
-		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * partialTicks;
-		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * partialTicks;
-		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * partialTicks;
-        double thisX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * partialTicks;
-        double thisY = vehicle.lastTickPosY + (vehicle.posY - vehicle.lastTickPosY) * partialTicks;
-        double thisZ = vehicle.lastTickPosZ + (vehicle.posZ - vehicle.lastTickPosZ) * partialTicks;
+	private static void render(EntityVehicleE_Powered vehicle, float partialTicks){
+		//Set render camera position.
+		Vector3d renderPosition = WrapperGame.getRenderViewEntity().getRenderedPosition(partialTicks);
+		
+		//Get vehicle position and rotation.
+        double vehicleX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * partialTicks;
+        double vehicleY = vehicle.lastTickPosY + (vehicle.posY - vehicle.lastTickPosY) * partialTicks;
+        double vehicleZ = vehicle.lastTickPosZ + (vehicle.posZ - vehicle.lastTickPosZ) * partialTicks;
 		double rotateYaw = -vehicle.rotationYaw + (vehicle.rotationYaw - vehicle.prevRotationYaw)*(double)(1 - partialTicks);
         double rotatePitch = vehicle.rotationPitch - (vehicle.rotationPitch - vehicle.prevRotationPitch)*(double)(1 - partialTicks);
         double rotateRoll = vehicle.rotationRoll - (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)(1 - partialTicks);
        
         //Set up lighting.
-        int lightVar = vehicle.getBrightnessForRender();
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
-        if(MinecraftForgeClient.getRenderPass() == -1){
-	        minecraft.entityRenderer.enableLightmap();
-	        RenderHelper.enableStandardItemLighting();
-        }
+        WrapperRender.setLightingToVehicle(vehicle);
         
-		//Bind texture.  Adds new element to cache if needed.
-		if(!textureMap.containsKey(vehicle.definition.systemName)){
-			textureMap.put(vehicle.definition.systemName, new ResourceLocation(vehicle.definition.packID, "textures/vehicles/" + vehicle.definition.systemName + ".png"));
-		}
-		minecraft.getTextureManager().bindTexture(textureMap.get(vehicle.definition.systemName));
-
-		//Render all the model parts except windows.
-		//Those need to be rendered after the player if the player is rendered manually.
+        //Use smooth shading for main model rendering.
+		GL11.glShadeModel(GL11.GL_SMOOTH);
+        
+        //Push the matrix on the stack and translate and rotate to the vehicle's position.
         GL11.glPushMatrix();
-        GL11.glTranslated(thisX - playerX, thisY - playerY, thisZ - playerZ);
-		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
-			GL11.glPushMatrix();
-			GL11.glShadeModel(GL11.GL_SMOOTH);
-	        GL11.glRotated(rotateYaw, 0, 1, 0);
-	        GL11.glRotated(rotatePitch, 1, 0, 0);
-	        GL11.glRotated(rotateRoll, 0, 0, 1);
-			renderMainModel(vehicle, partialTicks);
-			renderParts(vehicle, partialTicks);
-			GL11.glEnable(GL11.GL_NORMALIZE);
-			renderWindows(vehicle, partialTicks);
-			GL11.glDisable(GL11.GL_NORMALIZE);
-			renderInstruments(vehicle);
-			RenderHelper.disableStandardItemLighting();
-			renderTextMarkings(vehicle);
-			RenderHelper.enableStandardItemLighting();
-			GL11.glShadeModel(GL11.GL_FLAT);
-			GL11.glPopMatrix();
-			
-			//Don't want the rotation applied for bounding boxes as they don't rotate.
-			if(Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()){
-				renderBoundingBoxes(vehicle);
+        GL11.glTranslated(vehicleX - renderPosition.x, vehicleY - renderPosition.y, vehicleZ - renderPosition.z);
+        
+        GL11.glPushMatrix();
+        GL11.glRotated(rotateYaw, 0, 1, 0);
+        GL11.glRotated(rotatePitch, 1, 0, 0);
+        GL11.glRotated(rotateRoll, 0, 0, 1);
+		
+        //Render the main model.
+		renderMainModel(vehicle, partialTicks);
+		
+		//Render all the parts.  Parts get translated to their offset position prior to rendering.
+		for(APart part : vehicle.getVehicleParts()){
+			//Only render valid parts that aren't sub parts.  SubParts need to be rendered relative to their main part.
+			if(part.isValid() && !part.packVehicleDef.isSubPart){
+				GL11.glPushMatrix();
+				if(part instanceof PartGroundDeviceTread){
+					//Treads don't get translated by y, or z.
+					GL11.glTranslated(part.placementOffset.x, 0, 0);
+				}else{
+					GL11.glTranslated(part.placementOffset.x, part.placementOffset.y, part.placementOffset.z);
+				}
+				renderPart(part, partialTicks);
+				GL11.glPopMatrix();
 			}
 		}
 		
-		//Check to see if we need to manually render riders.
-		//MC culls rendering above build height depending on the direction the player is looking.
- 		//Due to inconsistent culling based on view angle, this can lead to double-renders.
- 		//Better than not rendering at all I suppose.
-		if(MinecraftForgeClient.getRenderPass() != 1 && !wasRenderedPrior){
-			for(Entity passenger : vehicle.getPassengers()){
-				if(!(minecraft.player.equals(passenger) && minecraft.gameSettings.thirdPersonView == 0) && passenger.posY > passenger.world.getHeight()){
-		        	 GL11.glPushMatrix();
-		        	 GL11.glTranslated(passenger.posX - vehicle.posX, passenger.posY - vehicle.posY, passenger.posZ - vehicle.posZ);
-		        	 Minecraft.getMinecraft().getRenderManager().renderEntityStatic(passenger, partialTicks, false);
-		        	 GL11.glPopMatrix();
-		         }
-			}
-		}
+		//Set shading back to normal now that all model bits have been rendered.
+		GL11.glShadeModel(GL11.GL_FLAT);
 		
-		//Make sure lightmaps are set correctly.
-		if(MinecraftForgeClient.getRenderPass() == -1){
-			RenderHelper.disableStandardItemLighting();
-			minecraft.entityRenderer.disableLightmap();
-		}
+		//Render all instruments on the vehicle.
+		renderInstruments(vehicle);
 		
-		//Render lights, but make sure the light list is populated here before we try to render this, as loading de-syncs can leave it null.
-		if(vehicleLightLists.get(vehicle.definition.genericName) != null){
-			GL11.glPushMatrix();
-			GL11.glEnable(GL11.GL_NORMALIZE);
-	        GL11.glRotated(rotateYaw, 0, 1, 0);
-	        GL11.glRotated(rotatePitch, 1, 0, 0);
-	        GL11.glRotated(rotateRoll, 0, 0, 1);
-	        renderLights(vehicle, wasRenderedPrior, partialTicks);
-			GL11.glDisable(GL11.GL_NORMALIZE);
-			GL11.glPopMatrix();
-		}
+		//Render text markings.
+		renderTextMarkings(vehicle);
 		
-		//Render holograms for missing parts if applicable.
-		if(MinecraftForgeClient.getRenderPass() != 0 && !wasRenderedPrior){
-			renderPartBoxes(vehicle);
-		}
+		//Render holograms for missing parts.
+		renderPartBoxes(vehicle);
+		
+		//Pop vehicle rotation matrix as the following calls use world coords.
 		GL11.glPopMatrix();
 		
+		//Check to see if we need to manually render riders.
+		//This happens if we force-render this vehicle in pass -1.
+		if(WrapperRender.getRenderPass() == -1){
+			WrapperRender.renderVehicleRiders(vehicle, partialTicks);
+		}
+		
+		//Render bounding boxes for parts and collision points.
+		if(WrapperRender.shouldRenderBoundingBoxes()){
+			renderBoundingBoxes(vehicle);
+		}
+		
+		//Pop vehicle translation matrix and reset all states.
+		GL11.glPopMatrix();
+		WrapperRender.resetStates();
+		
 		//Spawn particles, but only once per render cycle.
-		if(MinecraftForgeClient.getRenderPass() == -1 && !minecraft.isGamePaused()){
+		if(WrapperRender.getRenderPass() != 1 && !WrapperGame.isGamePaused()){
 			for(APart part : vehicle.getVehicleParts()){
 				if(part instanceof FXPart){
 					((FXPart) part).spawnParticles();
@@ -312,7 +244,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  Renders the main vehicle model.  The model file is determined from the general name of the JSON, which is really
 	 *  just the JSON's file name.  Vehicle model is first translated to the position of the vehicle in the world,
 	 *  rotated to the roll, pitch, and yaw, of the vehicle, and then all static portions are rendered.  Dynamic
-	 *  animated portions like {@link RenderVehicle_RotatablePart}s, {@link RenderVehicle_TranslatablePart}s, and
+	 *  animated portions like {@link TransformRotatable}s, {@link TransformTranslatable}s, and
 	 *  {@link WindowPart}s are rendered after this with their respective transformations applied.  All renders are
 	 *  cached in DisplayLists, as we only need to translate and rotate them, not apply any transforms or splits.
 	 *  This should only be called in pass 0, as we don't do any alpha blending in this routine.
@@ -321,58 +253,31 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//Normally we use the pack name, but since all displaylists
 		//are the same for all models, this is more appropriate.
 		if(!vehicleDisplayLists.containsKey(vehicle.definition.genericName)){
-			List<RenderVehicle_RotatablePart> rotatableParts = new ArrayList<RenderVehicle_RotatablePart>();
-			List<RenderVehicle_TranslatablePart> translatableParts = new ArrayList<RenderVehicle_TranslatablePart>();
-			List<RenderVehicle_LightPart> lightParts = new ArrayList<RenderVehicle_LightPart>();
-			List<WindowPart> windows = new ArrayList<WindowPart>();
-			
-			ResourceLocation vehicleModelLocation = new ResourceLocation(vehicle.definition.packID, "objmodels/vehicles/" + vehicle.definition.genericName + ".obj");
+			//No distplay list for this model.  Parse and create it now.
 			Map<String, Float[][]> parsedModel;
 			if(vehicleModelOverrides.containsKey(vehicle.definition.genericName)){
 				parsedModel = OBJParserSystem.parseOBJModel(null, vehicleModelOverrides.get(vehicle.definition.genericName));
 			}else{
-				parsedModel = OBJParserSystem.parseOBJModel(vehicleModelLocation.getResourceDomain(), vehicleModelLocation.getResourcePath());
+				parsedModel = OBJParserSystem.parseOBJModel(vehicle.definition.packID, "objmodels/vehicles/" + vehicle.definition.genericName + ".obj");
 			}
+			
+			//Set up the Gl operations and lists.
+			List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
 			int displayListIndex = GL11.glGenLists(1);
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 			GL11.glBegin(GL11.GL_TRIANGLES);
 			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
-				//Don't add rotatable model parts or windows to the display list.
-				//Those go in separate maps, with windows going into both a rotatable and window mapping.
-				//Do add lights, as they will be rendered both as part of the model and with special things.
-				boolean shouldShapeBeInDL = true;
-				if(entry.getKey().contains("$")){
-					if(vehicle.definition.rendering.rotatableModelObjects != null){
-    					rotatableParts.add(new RenderVehicle_RotatablePart(entry.getKey(), entry.getValue(), vehicleModelLocation.toString(), vehicle.definition.rendering.rotatableModelObjects));
-    					shouldShapeBeInDL = false;
-					}else{
-						throw new NullPointerException("ERROR: Vehicle:" + vehicle.definition.packID + ":" + vehicle.definition.genericName + " has a rotatable part:" + entry.getKey() + ", but no rotatableModelObjects are present in the JSON!");
-					}
-				}
-				if(entry.getKey().contains("%")){
-					if(vehicle.definition.rendering.translatableModelObjects != null){
-    					translatableParts.add(new RenderVehicle_TranslatablePart(entry.getKey(), entry.getValue(), vehicleModelLocation.toString(), vehicle.definition.rendering.translatableModelObjects));
-    					shouldShapeBeInDL = false;
-					}else{
-						throw new NullPointerException("ERROR: Vehicle:" + vehicle.definition.packID + ":" + vehicle.definition.genericName + " has a translatable part:" + entry.getKey() + ", but no translatableModelObjects are present in the JSON!");
-					}
-				}
-				if(entry.getKey().contains("&")){
-					lightParts.add(new RenderVehicle_LightPart(entry.getKey(), entry.getValue()));
-					if(shouldShapeBeInDL && lightParts.get(lightParts.size() - 1).isLightupTexture){
-						shouldShapeBeInDL = false;
-					}
-				}
-				if(entry.getKey().toLowerCase().contains("window")){
-					windows.add(new WindowPart(entry.getKey(), entry.getValue()));
-					shouldShapeBeInDL = false;
-				}
-				if(shouldShapeBeInDL){
+				//Create model objects for all components of the model.
+				//If we have any objects that don't have transforms, ignore them.
+				RenderableModelObject modelObject = new RenderableModelObject(vehicle.definition.genericName, entry.getKey(), entry.getValue(), vehicle, null);
+				if(modelObject.transforms.isEmpty()){
 					for(Float[] vertex : entry.getValue()){
 						GL11.glTexCoord2f(vertex[3], vertex[4]);
 						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
 						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
 					}
+				}else{
+					modelObjects.add(modelObject);
 				}
 			}
 			GL11.glEnd();
@@ -380,166 +285,114 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			
 			//Now finalize the maps.
 			vehicleDisplayLists.put(vehicle.definition.genericName, displayListIndex);
-			vehicleRotatableLists.put(vehicle.definition.genericName, rotatableParts);
-			vehicleTranslatableLists.put(vehicle.definition.genericName, translatableParts);
-			vehicleLightLists.put(vehicle.definition.genericName, lightParts);
-			vehicleWindowLists.put(vehicle.definition.genericName, windows);
+			vehicleObjectLists.put(vehicle.definition.genericName, modelObjects);
 		}
 		
-		GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.genericName));
-		
-		//The display list only renders static parts.  We need to render dynamic ones manually.
-		//If this is a window, don't render it as that gets done all at once later.
-		//First render all rotatable parts.  If they are also translatable, translate first.
-		for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
-			if(!rotatable.name.toLowerCase().contains("window")){
-				GL11.glPushMatrix();
-				if(rotatable.name.contains("%")){
-					for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
-						if(translatable.name.equals(rotatable.name)){
-							translatable.translate(vehicle, null, partialTicks);
-							break;
-						}
-					}
-				}
-				rotatable.render(vehicle, null, partialTicks);
-				GL11.glPopMatrix();
-			}
+		//Bind the texture and render.
+		//Don't render on the transparent pass.
+		WrapperRender.setTexture(vehicle.definition.packID, "textures/vehicles/" + vehicle.definition.systemName + ".png");
+		if(WrapperRender.getRenderPass() != 1){
+			GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.genericName));
 		}
 		
-		//Now render all translatable parts that don't rotate.
-		for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
-			if(!translatable.name.toLowerCase().contains("window") && !translatable.name.contains("$")){
-				GL11.glPushMatrix();
-				translatable.render(vehicle, null, partialTicks);
-				GL11.glPopMatrix();
-			}
+		//The display list only renders static objects.  We need to render dynamic ones manually.
+		for(RenderableModelObject modelObject : vehicleObjectLists.get(vehicle.definition.genericName)){
+			modelObject.render(vehicle, null, partialTicks);
 		}
 	}
 	
 	/**
 	 *  Renders all parts on the vehicle.  Parts are first translated to their actual position, which they keep track of.
 	 *  After this they are rotated via {@link #rotatePart(APart, Vec3d, boolean)}.  Finally, any parts of the part
-	 *  model that are {@link RenderVehicle_RotatablePart}s or {@link RenderVehicle_TranslatablePart}s are rendered with
+	 *  model that are {@link TransformRotatable}s or {@link TransformTranslatable}s are rendered with
 	 *  their rotations applied.  This makes rendering a split process.  Translate to position, rotate at position,
 	 *  render static portions of part model, apply transforms to animated portions of the part model, and then
 	 *  render the animated portions.  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 */
-	private static void renderParts(EntityVehicleE_Powered vehicle, float partialTicks){
-		for(APart part : vehicle.getVehicleParts()){
-			ResourceLocation partModelLocation = part.getModelLocation();
-			if(partModelLocation == null){
-				continue;
-			}else if(!partDisplayLists.containsKey(partModelLocation)){
-				List<RenderVehicle_RotatablePart> rotatableParts = new ArrayList<RenderVehicle_RotatablePart>();
-				List<RenderVehicle_TranslatablePart> translatableParts = new ArrayList<RenderVehicle_TranslatablePart>();
-    			List<RenderVehicle_LightPart> lightParts = new ArrayList<RenderVehicle_LightPart>();
-				
-    			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(partModelLocation.getResourceDomain(), partModelLocation.getResourcePath());
-    			int displayListIndex = GL11.glGenLists(1);
-    			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-    			GL11.glBegin(GL11.GL_TRIANGLES);
-    			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
-    				boolean shouldShapeBeInDL = true;
-    				if(entry.getKey().contains("$")){
-    					if(part.definition.rendering.rotatableModelObjects != null){
-	    					rotatableParts.add(new RenderVehicle_RotatablePart(entry.getKey(), entry.getValue(), partModelLocation.toString(), part.definition.rendering.rotatableModelObjects));
-	    					shouldShapeBeInDL = false;
-    					}else{
-    						throw new NullPointerException("ERROR: Part:" + part.definition.packID + ":" + part.definition.systemName + " has a rotatable part:" + entry.getKey() + ", but no rotatableModelObjects are present in the JSON!");
-    					}
-    				}
-    				if(entry.getKey().contains("%")){
-    					if(part.definition.rendering.translatableModelObjects != null){
-	    					translatableParts.add(new RenderVehicle_TranslatablePart(entry.getKey(), entry.getValue(), partModelLocation.toString(), part.definition.rendering.translatableModelObjects));
-	    					shouldShapeBeInDL = false;
-    					}else{
-    						throw new NullPointerException("ERROR: Part:" + part.definition.packID + ":" + part.definition.systemName + " has a translatable part:" + entry.getKey() + ", but no translatableModelObjects are present in the JSON!");
-    					}
-    				}
-    				if(entry.getKey().contains("&")){
-    					lightParts.add(new RenderVehicle_LightPart(entry.getKey(), entry.getValue()));
-    					if(shouldShapeBeInDL && lightParts.get(lightParts.size() - 1).isLightupTexture){
-    						shouldShapeBeInDL = false;
-    					}
-    				}
-    				if(shouldShapeBeInDL){
-    					for(Float[] vertex : entry.getValue()){
-    						GL11.glTexCoord2f(vertex[3], vertex[4]);
-    						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-    						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-    					}
-    				}
-    			}
-    			GL11.glEnd();
-    			GL11.glEndList();
-    			
-    			//Now finalize the maps
-    			partDisplayLists.put(partModelLocation, displayListIndex);
-    			partRotatableLists.put(partModelLocation, rotatableParts);
-    			partTranslatableLists.put(partModelLocation, translatableParts);
-    			partLightLists.put(partModelLocation, lightParts);
-    		}
-			
-			//If we aren't using the vehicle texture, bind the texture for this part.
-			//Otherwise, bind the vehicle texture as it may have been un-bound prior to this.
-			if(!part.definition.general.useVehicleTexture){
-				if(!textureMap.containsKey(part.definition.systemName)){
-    				textureMap.put(part.definition.systemName, part.getTextureLocation());
-    			}
-				minecraft.getTextureManager().bindTexture(textureMap.get(part.definition.systemName));
-			}else{
-				minecraft.getTextureManager().bindTexture(textureMap.get(vehicle.definition.systemName));
+	private static void renderPart(APart part, float partialTicks){
+		String partModelLocation = part.getModelLocation();
+		if(!partDisplayLists.containsKey(partModelLocation)){
+			//Create the part display list and modelObjects.
+			List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
+			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(part.definition.packID, partModelLocation);
+			int displayListIndex = GL11.glGenLists(1);
+			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
+			GL11.glBegin(GL11.GL_TRIANGLES);
+			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
+				//Create model objects for all components of the model.
+				//If we have any objects that don't have transforms, ignore them.
+				RenderableModelObject modelObject = new RenderableModelObject(partModelLocation, entry.getKey(), entry.getValue(), part.vehicle, part);
+				if(modelObject.transforms.isEmpty()){
+					for(Float[] vertex : entry.getValue()){
+						GL11.glTexCoord2f(vertex[3], vertex[4]);
+						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+					}
+				}else{
+					modelObjects.add(modelObject);
+				}
 			}
+			GL11.glEnd();
+			GL11.glEndList();
 			
-			//Get basic rotation properties and start the matrix.
-			Vec3d actionRotation = part.getActionRotation(partialTicks);
-			GL11.glPushMatrix();
-			
-			//If we are a tread, do the tread-specific render.
-    		//Otherwise render like all other parts.
-    		if(part instanceof PartGroundDeviceTread){
-    			//We need to manually do x translation here before rotating to prevent incorrect translation.
-    			GL11.glTranslated(part.offset.x, 0, 0);
-    			rotatePart(part, actionRotation, true);
-    			if(part.packVehicleDef.treadZPoints != null){
-    				doManualTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));	
-    			}else{
-    				doAutomaticTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));
-    			}
-    		}else{
-    			//Rotate and translate the part prior to rendering the displayList.
-    			//Note that if the part's parent has a rotation, use that to transform
-    			//the translation to match that rotation.  Needed for things like
-    			//tank turrets with seats or guns.
-    			
-    			if(part.parentPart != null && !part.parentPart.getActionRotation(partialTicks).equals(Vec3d.ZERO)){
-    				//TODO play around with this to see if we need the math or we can use partPos.
-    				Vec3d parentActionRotation = part.parentPart.getActionRotation(partialTicks);
-    				Vec3d partRelativeOffset = part.offset.subtract(part.parentPart.offset);
-    				Vec3d partTranslationOffset = part.parentPart.offset.add(RotationSystem.getRotatedPoint(partRelativeOffset, (float) parentActionRotation.x, (float) parentActionRotation.y, (float) parentActionRotation.z));
-    				GL11.glTranslated(partTranslationOffset.x, partTranslationOffset.y, partTranslationOffset.z);
-    				rotatePart(part, parentActionRotation.add(actionRotation), true);
-    			}else{
-    				GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
-    				rotatePart(part, actionRotation, true);
-    			}
-        		GL11.glCallList(partDisplayLists.get(partModelLocation));
-    			
-    			//The display list only renders static parts.  We need to render dynamic ones manually.
-    			for(RenderVehicle_RotatablePart rotatable : partRotatableLists.get(partModelLocation)){
-    				GL11.glPushMatrix();
-    				rotatable.render(vehicle, part, partialTicks);
-    				GL11.glPopMatrix();
-    			}
-			}
-    		GL11.glCullFace(GL11.GL_BACK);
-    		GL11.glPopMatrix();
+			//Now finalize the maps
+			partDisplayLists.put(partModelLocation, displayListIndex);
+			partObjectLists.put(partModelLocation, modelObjects);
 		}
+		
+		//If we aren't using the vehicle texture, bind the texture for this part.
+		//Otherwise, bind the vehicle texture as it may have been un-bound prior to this from another part.
+		if(!part.definition.general.useVehicleTexture){
+			WrapperRender.setTexture(part.definition.packID, part.getTextureLocation());
+		}else{
+			WrapperRender.setTexture(part.vehicle.definition.packID, "textures/vehicles/" + part.vehicle.definition.systemName + ".png");
+		}
+		
+		//Rotate the part prior to rendering the displayList.
+		//We will already have been translated to our position prior to this call.
+		Vec3d actionRotation = part.getActionRotation(partialTicks);
+		GL11.glPushMatrix();
+		rotatePart(part, actionRotation, true);
+		
+		//If we are a tread, do the tread-specific render rather than the display list.
+		if(part instanceof PartGroundDeviceTread){
+			if(part.packVehicleDef.treadZPoints != null){
+				doManualTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));	
+			}else{
+				doAutomaticTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));
+			}
+		}else{
+    		//Render the part DisplayList.
+			GL11.glCallList(partDisplayLists.get(partModelLocation));
+			
+			//The display list only renders static object.  We need to render dynamic ones manually.
+			for(RenderableModelObject modelObject : partObjectLists.get(partModelLocation)){
+				modelObject.render(part.vehicle, part, partialTicks);
+			}
+			
+			//Now that we have rendered this part, render any sub-part children.
+			//Make sure to translate "back" to the vehicle center prior to rendering.
+			//This allows the subParts to translate to their correct positions.
+			GL11.glTranslated(-part.placementOffset.x, -part.placementOffset.y, -part.placementOffset.z);
+			for(APart childPart : part.childParts){
+				if(childPart.packVehicleDef.isSubPart){
+					Vec3d partRelativeOffset = childPart.placementOffset.subtract(part.placementOffset);
+					GL11.glPushMatrix();
+					GL11.glTranslated(partRelativeOffset.x, partRelativeOffset.y, partRelativeOffset.z);
+					renderPart(childPart, partialTicks);
+					GL11.glPopMatrix();
+				}
+			}
+		}
+		
+		//Set cull face back to normal.  This may have been changed
+		//during rotation operations.
+		GL11.glCullFace(GL11.GL_BACK);
+		GL11.glPopMatrix();
 	}
 	
 	/**
-	 *  Rotates a part on the model.  This is an actual part, not an instance of a {@link RenderVehicle_RotatablePart}.
+	 *  Rotates a part on the model.  This is an actual part, not an instance of a {@link TransformRotatable}.
 	 *  The rotation takes into account the vehicle, static, JSON-applied rotation, as well as the dynamic
 	 *  rotation returned by {@link APart#getActionRotation(float)}.  Rotation needs to be done after translation to the
 	 *  part's position to avoid coordinate system conflicts. 
@@ -548,16 +401,16 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		if(part.turnsWithSteer){
 			//Use custom steering rotation point if it's set in the JSON.
 			if(part.packVehicleDef.steerRotationOffset == null){
-				if(part.offset.z >= 0){
+				if(part.placementOffset.z >= 0){
 					GL11.glRotatef(part.vehicle.getSteerAngle(), 0, 1, 0);
 				}else{
 					GL11.glRotatef(-part.vehicle.getSteerAngle(), 0, 1, 0);
 				}
 			}else{
 				Vec3d offset = new Vec3d(-part.packVehicleDef.steerRotationOffset[0], -part.packVehicleDef.steerRotationOffset[1], -part.packVehicleDef.steerRotationOffset[2]);
-				Vec3d rotatedPoint = RotationSystem.getRotatedPoint(offset, 0, part.offset.z >= 0 ? -part.vehicle.getSteerAngle() : part.vehicle.getSteerAngle(), 0);
+				Vec3d rotatedPoint = RotationSystem.getRotatedPoint(offset, 0, part.placementOffset.z >= 0 ? -part.vehicle.getSteerAngle() : part.vehicle.getSteerAngle(), 0);
 				GL11.glTranslated(part.packVehicleDef.steerRotationOffset[0] + rotatedPoint.x, part.packVehicleDef.steerRotationOffset[1] + rotatedPoint.y, part.packVehicleDef.steerRotationOffset[2] + rotatedPoint.z);
-				if(part.offset.z >= 0){
+				if(part.placementOffset.z >= 0){
 					GL11.glRotatef(part.vehicle.getSteerAngle(), 0, 1, 0);
 				}else{
 					GL11.glRotatef(-part.vehicle.getSteerAngle(), 0, 1, 0);
@@ -565,23 +418,23 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}
 		
-		if(((part.offset.x < 0 && !part.inverseMirroring) || (part.offset.x > 0 && part.inverseMirroring)) && !part.disableMirroring){
+		if(((part.placementOffset.x < 0 && !part.inverseMirroring) || (part.placementOffset.x > 0 && part.inverseMirroring)) && !part.disableMirroring){
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);
 			if(cullface){
 				GL11.glCullFace(GL11.GL_FRONT);
 			}
 		}
 		
-		if(!part.partRotation.equals(Vec3d.ZERO)){
+		if(!part.placementRotation.equals(Vec3d.ZERO)){
 			if(part.parentPart != null) {
-				GL11.glRotated(part.partRotation.z, -Math.sin(Math.toRadians(part.parentPart.getActionRotation(0).y)), 0, Math.cos(Math.toRadians(part.parentPart.getActionRotation(0).y)));
-				GL11.glRotated(part.partRotation.y, 0, 1, 0);
-				GL11.glRotated(part.partRotation.x, Math.cos(Math.toRadians(part.parentPart.getActionRotation(0).y)), 0, Math.sin(Math.toRadians(part.parentPart.getActionRotation(0).y)));
+				GL11.glRotated(part.placementRotation.z, -Math.sin(Math.toRadians(part.parentPart.getActionRotation(0).y)), 0, Math.cos(Math.toRadians(part.parentPart.getActionRotation(0).y)));
+				GL11.glRotated(part.placementRotation.y, 0, 1, 0);
+				GL11.glRotated(part.placementRotation.x, Math.cos(Math.toRadians(part.parentPart.getActionRotation(0).y)), 0, Math.sin(Math.toRadians(part.parentPart.getActionRotation(0).y)));
 				}
 			else{
-				GL11.glRotated(part.partRotation.x, 1, 0, 0);
-				GL11.glRotated(part.partRotation.y, 0, 1, 0);
-				GL11.glRotated(part.partRotation.z, 0, 0, 1);
+				GL11.glRotated(part.placementRotation.x, 1, 0, 0);
+				GL11.glRotated(part.placementRotation.y, 0, 1, 0);
+				GL11.glRotated(part.placementRotation.z, 0, 0, 1);
 			}
 		}
 
@@ -713,7 +566,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 		GL11.glPushMatrix();
 		//First translate to the initial point.
-		GL11.glTranslated(0, treadPart.offset.y + treadPart.packVehicleDef.treadYPoints[0], treadPart.offset.z + treadPart.packVehicleDef.treadZPoints[0]);
+		GL11.glTranslated(0, treadPart.placementOffset.y + treadPart.packVehicleDef.treadYPoints[0], treadPart.placementOffset.z + treadPart.packVehicleDef.treadZPoints[0]);
 		//Next use the deltas to get the amount needed to translate and rotate each link.
 		for(Float[] point : deltas){
 			if(point[2] != 0){
@@ -742,17 +595,20 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		if(points == null){
 			//If we don't have the deltas, calculate them based on the points of the rollers on the vehicle.			
 			//Search through rotatable parts on the vehicle and grab the rollers.
-			Map<Integer, RenderVehicle_TreadRoller> parsedRollers = new HashMap<Integer, RenderVehicle_TreadRoller>();
-			for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(treadPart.vehicle.definition.genericName)){
-				if(rotatable.name.contains("roller")){
-					parsedRollers.put(Integer.valueOf(rotatable.name.substring(rotatable.name.lastIndexOf('_') + 1)), rotatable.createTreadRoller());
+			Map<Integer, TransformTreadRoller> parsedRollers = new HashMap<Integer, TransformTreadRoller>();
+			for(RenderableModelObject modelObject : vehicleObjectLists.get(treadPart.vehicle.definition.genericName)){
+				for(ARenderableTransform transform : modelObject.transforms){
+					if(transform instanceof TransformTreadRoller){
+						TransformTreadRoller treadTransform = (TransformTreadRoller) transform;
+						parsedRollers.put(treadTransform.rollerNumber, treadTransform);
+					}
 				}
 			}
 			
 			//Now that we have all the rollers, we can start calculating points.
 			//First calculate the endpoints on the rollers by calling the calculation method.
 			//We also transfer the rollers to an ordered array for convenience later.
-			RenderVehicle_TreadRoller[] rollers = new RenderVehicle_TreadRoller[parsedRollers.size()];
+			TransformTreadRoller[] rollers = new TransformTreadRoller[parsedRollers.size()];
 			for(int i=0; i<parsedRollers.size(); ++ i){
 				if(!parsedRollers.containsKey(i)){
 					throw new IndexOutOfBoundsException("ERROR: Attempted to render roller_" + i + " on " + treadPart.vehicle.definition.packID + ":" + treadPart.vehicle.definition.genericName + ", but it was not found.  Did you not make it in the OBJ model?");
@@ -774,7 +630,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			//At the end, we should have an end angle of 540, or 180 + 360.
 			rollers[0].endAngle = 180;
 			for(int i=1; i<rollers.length; ++i){
-				RenderVehicle_TreadRoller roller = rollers[i];
+				TransformTreadRoller roller = rollers[i];
 				roller.startAngle = rollers[i - 1].endAngle;
 				//End angle should be 0-360 greater than start angle, or within
 				//30 degrees less, as is the case for concave rollers. 
@@ -803,9 +659,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			//This is the closest value to the definition's tread spacing.
 			double totalPathLength = 0;
 			for(int i=0; i<rollers.length; ++i){
-				RenderVehicle_TreadRoller roller = rollers[i];
+				TransformTreadRoller roller = rollers[i];
 				totalPathLength += 2*Math.PI*roller.radius*Math.abs(roller.endAngle - (i == 0 ? roller.startAngle - 360 : roller.startAngle))/360D;
-				RenderVehicle_TreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
+				TransformTreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
 				totalPathLength += Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
 			}
 			
@@ -815,7 +671,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			double zPoint = 0; 
 			points = new ArrayList<Double[]>();
 			for(int i=0; i<rollers.length; ++i){
-				RenderVehicle_TreadRoller roller = rollers[i];
+				TransformTreadRoller roller = rollers[i];
 				//Follow the curve of the roller from the start and end point.
 				//Do this until we don't have enough roller path left to make a point.
 				//If we have any remaining path from a prior operation, we
@@ -873,7 +729,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				//If we have any leftover roller path, account for it here to keep spacing consistent.
 				//We may also have leftover straight path length if we didn't do anything on a roller.
 				//If we are on the last roller, we need to get the first roller to complete the loop.
-				RenderVehicle_TreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
+				TransformTreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
 				double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ) + leftoverPathLength + rollerPathLength;
 				double normalizedY = (nextRoller.startY - yPoint)/straightPathLength;
 				double normalizedZ = (nextRoller.startZ - zPoint)/straightPathLength;
@@ -961,148 +817,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	}
 	
 	/**
-	 *  Renders all windows in this vehicle.  Windows may rotate or translate like
-	 *  regular rotatable or translatable parts.  This allows for placement on doors
-	 *  or other animated vehicle sections.  This should only be called in pass 0, as
-	 *  we don't do any alpha blending in this routine.
-	 */
-	private static void renderWindows(EntityVehicleE_Powered vehicle, float partialTicks){
-		minecraft.getTextureManager().bindTexture(vanillaGlassTexture);
-		//Iterate through all windows.
-		for(byte i=0; i<vehicleWindowLists.get(vehicle.definition.genericName).size(); ++i){
-			GL11.glPushMatrix();
-			//This is a window or set of windows.  Like the model, it will be triangle-based.
-			//However, windows may be rotatable or translatable.  Check this before continuing.
-			WindowPart window = vehicleWindowLists.get(vehicle.definition.genericName).get(i);
-			for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
-				if(rotatable.name.equals(window.name)){
-					rotatable.rotate(vehicle, null, partialTicks);
-				}
-			}
-			for(RenderVehicle_TranslatablePart translatable : vehicleTranslatableLists.get(vehicle.definition.genericName)){
-				if(translatable.name.equals(window.name)){
-					translatable.translate(vehicle, null, partialTicks);
-				}
-			}
-			GL11.glBegin(GL11.GL_TRIANGLES);
-			for(Float[] vertex : window.vertices){
-				GL11.glTexCoord2f(vertex[3], vertex[4]);
-				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-			}
-			if(ConfigSystem.configObject.client.innerWindows.value){
-				for(int j=window.vertices.length - 1; j>=0; --j){
-					GL11.glTexCoord2f(window.vertices[j][3], window.vertices[j][4]);
-					GL11.glNormal3f(window.vertices[j][5], window.vertices[j][6], window.vertices[j][7]);
-					GL11.glVertex3f(window.vertices[j][0], window.vertices[j][1], window.vertices[j][2]);
-				}	
-			}
-			GL11.glEnd();
-			GL11.glPopMatrix();
-		}
-	}
-	
-	/**
-	 *  Renders all text markings for this vehicle.  Text is changed via the player,
-	 *  and may be lit up if configured to do so in the JSON.  This should only be called 
-	 *  in pass 0, as we don't do any alpha blending in this routine.
-	 */
-	private static void renderTextMarkings(EntityVehicleE_Powered vehicle){
-		if(vehicle.definition.rendering.textLighted && isVehicleIlluminated(vehicle)){
-			GL11.glDisable(GL11.GL_LIGHTING);
-			minecraft.entityRenderer.disableLightmap();
-		}
-		for(VehicleDisplayText text : vehicle.definition.rendering.textMarkings){
-			GL11.glPushMatrix();
-			GL11.glTranslatef(text.pos[0], text.pos[1], text.pos[2]);
-			GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
-			//First rotate 180 along the X-axis to get us rendering right-side up.
-			GL11.glRotatef(180F, 1, 0, 0);
-			
-			//Next, apply rotations.  Only doing so if they exist.
-			//Apply the Y-rotation first as it will always be used and allows for correct X-rotations.
-			if(text.rot[1] != 0){
-				GL11.glRotatef(-text.rot[1], 0, 1, 0);
-			}
-			if(text.rot[0] != 0){
-				GL11.glRotatef(text.rot[0], 1, 0, 0);
-			}
-			if(text.rot[2] != 0){
-				GL11.glRotatef(text.rot[2], 0, 0, 1);
-			}
-			
-			//Finally, scale and render the text.
-			GL11.glScalef(text.scale, text.scale, text.scale);
-			minecraft.fontRenderer.drawString(vehicle.displayText, -minecraft.fontRenderer.getStringWidth(vehicle.displayText)/2, 0, Color.decode(text.color).getRGB());
-			GL11.glPopMatrix();
-		}
-		GL11.glColor3f(1.0F, 1.0F, 1.0F);
-		if(vehicle.definition.rendering.textLighted  && isVehicleIlluminated(vehicle)){
-			GL11.glEnable(GL11.GL_LIGHTING);
-			minecraft.entityRenderer.enableLightmap();
-		}
-	}
-	
-	/**
-	 *  Renders all lights for this vehicle.  
-	 */
-	private static void renderLights(EntityVehicleE_Powered vehicle, boolean wasRenderedPrior, float partialTicks){
-		//Get all the lights for the vehicle and parts and put them into one common list.
-		List<RenderVehicle_LightPart> vehicleLights = vehicleLightLists.get(vehicle.definition.genericName);
-		Map<Integer, APart> lightIndexToParts = new HashMap<Integer, APart>();
-		List<RenderVehicle_LightPart> allLights = new ArrayList<RenderVehicle_LightPart>();
-		allLights.addAll(vehicleLights);
-		for(APart part : vehicle.getVehicleParts()){
-			if(partLightLists.containsKey(part.getModelLocation())){
-				for(RenderVehicle_LightPart partLight : partLightLists.get(part.getModelLocation())){
-					lightIndexToParts.put(allLights.size(), part);
-					allLights.add(partLight);
-				}
-			}
-		}
-		
-		//Iterate through the common light list to render all the lights.
-		for(int lightIndex=0; lightIndex<allLights.size(); ++lightIndex){
-			RenderVehicle_LightPart light = allLights.get(lightIndex);
-			GL11.glPushMatrix();
-			//This light may be rotateable.  Check this before continuing.
-			//It could rotate based on a vehicle rotation variable, or a part rotation.
-			//Additionally, texture may be from the part rather than the vehicle.
-			String textureDomain;
-			String textureLocation; 
-			if(vehicleLights.contains(light)){
-				textureDomain = textureMap.get(vehicle.definition.systemName).getResourceDomain();
-				textureLocation = textureMap.get(vehicle.definition.systemName).getResourcePath();
-				for(RenderVehicle_RotatablePart rotatable : vehicleRotatableLists.get(vehicle.definition.genericName)){
-					if(rotatable.name.equals(light.name)){
-						rotatable.rotate(vehicle, null, partialTicks);
-					}
-				}
-			}else{
-				APart part = lightIndexToParts.get(lightIndex);
-				if(!part.definition.general.useVehicleTexture){
-    				textureDomain = textureMap.get(part.definition.systemName).getResourceDomain();
-    				textureLocation = textureMap.get(part.definition.systemName).getResourcePath();
-    			}else{
-    				textureDomain = textureMap.get(vehicle.definition.systemName).getResourceDomain();
-    				textureLocation = textureMap.get(vehicle.definition.systemName).getResourcePath();
-    			}
-				GL11.glTranslated(part.offset.x, part.offset.y, part.offset.z);
-				rotatePart(part, part.getActionRotation(partialTicks), false);
-				for(RenderVehicle_RotatablePart rotatable : partRotatableLists.get(part.getModelLocation())){
-					if(rotatable.name.equals(light.name)){
-						rotatable.rotate(vehicle, part, partialTicks);
-					}
-				}
-			}
-
-			//Render the light.
-			light.renderOnVehicle(vehicle, wasRenderedPrior, textureDomain, textureLocation);
-			GL11.glPopMatrix();
-		}
-	}
-	
-	/**
 	 *  Renders all instruments on the vehicle.  Uses the instrument's render code.
 	 *  We only apply the appropriate translation and rotation.
 	 */
@@ -1124,37 +838,175 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	}
 	
 	/**
+	 *  Renders all text markings for this vehicle.  Text is changed via the player,
+	 *  and may be lit up if configured to do so in the JSON.  This should only be called 
+	 *  in pass 0, as we don't do any alpha blending in this routine.
+	 */
+	private static void renderTextMarkings(EntityVehicleE_Powered vehicle){
+		if(WrapperRender.getRenderPass() != 1){
+			//Disable system lighting as we have issues with it in 3D rendering.
+			WrapperRender.setSystemLightingState(false);
+			
+			//If we have light-up text, disable lightmap too.
+			if(vehicle.definition.rendering.textLighted && isVehicleIlluminated(vehicle)){
+				WrapperRender.setInternalLightingState(false);
+			}
+			
+			//Render all text strings.
+			for(VehicleDisplayText text : vehicle.definition.rendering.textMarkings){
+				GL11.glPushMatrix();
+				GL11.glTranslatef(text.pos[0], text.pos[1], text.pos[2]);
+				GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
+				//First rotate 180 along the X-axis to get us rendering right-side up.
+				GL11.glRotatef(180F, 1, 0, 0);
+				
+				//Next, apply rotations.  Only doing so if they exist.
+				//Apply the Y-rotation first as it will always be used and allows for correct X-rotations.
+				if(text.rot[1] != 0){
+					GL11.glRotatef(-text.rot[1], 0, 1, 0);
+				}
+				if(text.rot[0] != 0){
+					GL11.glRotatef(text.rot[0], 1, 0, 0);
+				}
+				if(text.rot[2] != 0){
+					GL11.glRotatef(text.rot[2], 0, 0, 1);
+				}
+				
+				//Finally, scale and render the text.
+				GL11.glScalef(text.scale, text.scale, text.scale);
+				WrapperGUI.drawScaledText(vehicle.displayText, 0, 0, Color.decode(text.color), true, false, 0, text.scale);
+				GL11.glPopMatrix();
+			}
+		}
+	}
+	
+	/**
+	 *  Renders holographic part boxes when holding parts that can go on this vehicle.  This
+	 *  needs to be rendered in pass 1 to do alpha blending.
+	 */
+	private static void renderPartBoxes(EntityVehicleE_Powered vehicle){
+		if(WrapperRender.getRenderPass() != 0){
+			//Disable lighting and texture rendering, and enable blending.
+			WrapperRender.setLightingState(false);
+			WrapperRender.setBlendState(true, false);
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			
+			//Enable blending if on pass -1 for transparency.
+			if(WrapperRender.getRenderPass() == -1){
+				WrapperRender.setBlendState(true, false);
+			}
+			
+			WrapperPlayer player = WrapperGame.getClientPlayer();
+			ItemStack heldStack = player.getHeldStack();
+			if(heldStack != null){
+				if(heldStack.getItem() instanceof AItemPart){
+					AItemPart heldItem = (AItemPart) heldStack.getItem();
+					for(Entry<Vec3d, VehiclePart> packPartEntry : vehicle.getAllPossiblePackParts().entrySet()){
+						boolean isPresent = false;
+						boolean isHoldingPart = false;
+						boolean isPartValid = false;
+						
+						if(vehicle.getPartAtLocation(packPartEntry.getKey().x, packPartEntry.getKey().y, packPartEntry.getKey().z) != null){
+							isPresent = true;
+						}
+						
+						if(packPartEntry.getValue().types.contains(heldItem.definition.general.type)){
+							isHoldingPart = true;
+							if(heldItem.isPartValidForPackDef(packPartEntry.getValue())){
+								isPartValid = true;
+							}
+						}
+								
+						if(!isPresent && isHoldingPart){
+							Vec3d offset = packPartEntry.getKey();
+							//If we are a custom part, use the custom hitbox.  Otherwise use the regular one.
+							AxisAlignedBB box;
+							if(packPartEntry.getValue().types.contains("custom") && heldItem.definition.general.type.equals("custom")){
+								box = new AxisAlignedBB((float) (offset.x) - heldItem.definition.custom.width/2F, (float) (offset.y) - heldItem.definition.custom.height/2F, (float) (offset.z) - heldItem.definition.custom.width/2F, (float) (offset.x) + heldItem.definition.custom.width/2F, (float) (offset.y) + heldItem.definition.custom.height/2F, (float) (offset.z) + heldItem.definition.custom.width/2F);		
+							}else{
+								box = new AxisAlignedBB((float) (offset.x) - 0.375F, (float) (offset.y) - 0.5F, (float) (offset.z) - 0.375F, (float) (offset.x) + 0.375F, (float) (offset.y) + 1.25F, (float) (offset.z) + 0.375F);
+							}
+							
+							if(isPartValid){
+								WrapperRender.setColorState(0, 1, 0, 0.5F);
+							}else{
+								WrapperRender.setColorState(1, 0, 0, 0.5F);
+							}
+							GL11.glBegin(GL11.GL_QUADS);
+							
+							GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+							GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+							GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+							GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+							
+							GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+							GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+							GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+							GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+							
+							GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+							GL11.glVertex3d(box.minX, box.minY, box.minZ);
+							GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+							GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+							
+							GL11.glVertex3d(box.minX, box.minY, box.minZ);
+							GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+							GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+							GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+							
+							GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+							GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+							GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+							GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+							
+							GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+							GL11.glVertex3d(box.minX, box.minY, box.minZ);
+							GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+							GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+							GL11.glEnd();
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	/**
 	 *  Renders the bounding boxes for the vehicle collision, and centers of all
 	 *  parts currently on the vehicle.
 	 */
 	private static void renderBoundingBoxes(EntityVehicleE_Powered vehicle){
-		GL11.glPushMatrix();
-		GL11.glDisable(GL11.GL_LIGHTING);
+		//Set states for box render.
+		WrapperRender.setLightingState(false);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glColor3f(0.0F, 0.0F, 0.0F);
+		WrapperRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
 		GL11.glLineWidth(3.0F);
+		
 		//Draw collision boxes for the vehicle.
 		for(VehicleAxisAlignedBB box : vehicle.collisionBoxes){
 			Vec3d boxOffset = box.pos.subtract(vehicle.posX, vehicle.posY, vehicle.posZ);
 			GL11.glBegin(GL11.GL_LINES);
+			//Bottom
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
 			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
 			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
 			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
 			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
+			
+			//Top
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
+			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
 			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
 			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
 			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
 			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
 			
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
-			
+			//Vertical sides.
 			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
 			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
 			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
@@ -1167,118 +1019,13 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 		
 		//Draw part center points.
-		GL11.glColor3f(0.0F, 1.0F, 0.0F);
+		WrapperRender.setColorState(0.0F, 1.0F, 0.0F, 1.0F);
 		GL11.glBegin(GL11.GL_LINES);
 		for(APart part : vehicle.getVehicleParts()){
-			GL11.glVertex3d(part.partPos.x - vehicle.posX, part.partPos.y - vehicle.posY - part.getHeight(), part.partPos.z - vehicle.posZ);
-			GL11.glVertex3d(part.partPos.x - vehicle.posX, part.partPos.y - vehicle.posY + part.getHeight(), part.partPos.z - vehicle.posZ);
+			GL11.glVertex3d(part.worldPos.x - vehicle.posX, part.worldPos.y - vehicle.posY - part.getHeight(), part.worldPos.z - vehicle.posZ);
+			GL11.glVertex3d(part.worldPos.x - vehicle.posX, part.worldPos.y - vehicle.posY + part.getHeight(), part.worldPos.z - vehicle.posZ);
 		}
 		GL11.glEnd();
-		
-		//Set params back to normal.
 		GL11.glLineWidth(1.0F);
-		GL11.glColor3f(1.0F, 1.0F, 1.0F);
-		GL11.glEnable(GL11.GL_LIGHTING);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glPopMatrix();
-	}
-	
-	/**
-	 *  Renders holographic part boxes when holding parts that can go on this vehicle.  This
-	 *  needs to be rendered in pass 1 to do alpha blending.
-	 */
-	private static void renderPartBoxes(EntityVehicleE_Powered vehicle){
-		EntityPlayer player = minecraft.player;
-		ItemStack heldStack = player.getHeldItemMainhand();
-		if(heldStack != null){
-			if(heldStack.getItem() instanceof AItemPart){
-				AItemPart heldItem = (AItemPart) heldStack.getItem();
-				for(Entry<Vec3d, VehiclePart> packPartEntry : vehicle.getAllPossiblePackParts().entrySet()){
-					boolean isPresent = false;
-					boolean isHoldingPart = false;
-					boolean isPartValid = false;
-					
-					if(vehicle.getPartAtLocation(packPartEntry.getKey().x, packPartEntry.getKey().y, packPartEntry.getKey().z) != null){
-						isPresent = true;
-					}
-					
-					if(packPartEntry.getValue().types.contains(heldItem.definition.general.type)){
-						isHoldingPart = true;
-						if(heldItem.isPartValidForPackDef(packPartEntry.getValue())){
-							isPartValid = true;
-						}
-					}
-							
-					if(!isPresent && isHoldingPart){
-						Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
-						//If we are a custom part, use the custom hitbox.  Otherwise use the regular one.
-						AxisAlignedBB box;
-						if(packPartEntry.getValue().types.contains("custom") && heldItem.definition.general.type.equals("custom")){
-							box = new AxisAlignedBB((float) (offset.x) - heldItem.definition.custom.width/2F, (float) (offset.y) - heldItem.definition.custom.height/2F, (float) (offset.z) - heldItem.definition.custom.width/2F, (float) (offset.x) + heldItem.definition.custom.width/2F, (float) (offset.y) + heldItem.definition.custom.height/2F, (float) (offset.z) + heldItem.definition.custom.width/2F);		
-						}else{
-							box = new AxisAlignedBB((float) (offset.x) - 0.375F, (float) (offset.y) - 0.5F, (float) (offset.z) - 0.375F, (float) (offset.x) + 0.375F, (float) (offset.y) + 1.25F, (float) (offset.z) + 0.375F);
-						}
-						
-						//Minecraft.getMinecraft().entityRenderer.disableLightmap();
-						GL11.glPushMatrix();
-						GL11.glDisable(GL11.GL_TEXTURE_2D);
-						GL11.glDisable(GL11.GL_LIGHTING);
-						if(isPartValid){
-							GL11.glColor4f(0, 1, 0, 0.5F);
-						}else{
-							GL11.glColor4f(1, 0, 0, 0.5F);
-						}
-						GL11.glBegin(GL11.GL_QUADS);
-						
-						GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
-						GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
-						GL11.glVertex3d(box.minX, box.minY, box.maxZ);
-						GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
-						
-						GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
-						GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
-						GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
-						GL11.glVertex3d(box.maxX, box.minY, box.minZ);
-						
-						GL11.glVertex3d(box.maxX, box.minY, box.minZ);
-						GL11.glVertex3d(box.minX, box.minY, box.minZ);
-						GL11.glVertex3d(box.minX, box.maxY, box.minZ);
-						GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
-						
-						GL11.glVertex3d(box.minX, box.minY, box.minZ);
-						GL11.glVertex3d(box.minX, box.minY, box.maxZ);
-						GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
-						GL11.glVertex3d(box.minX, box.maxY, box.minZ);
-						
-						GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
-						GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
-						GL11.glVertex3d(box.minX, box.maxY, box.minZ);
-						GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
-						
-						GL11.glVertex3d(box.minX, box.minY, box.maxZ);
-						GL11.glVertex3d(box.minX, box.minY, box.minZ);
-						GL11.glVertex3d(box.maxX, box.minY, box.minZ);
-						GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
-						GL11.glEnd();
-
-						GL11.glColor4f(1, 1, 1, 1);
-						GL11.glEnable(GL11.GL_LIGHTING);
-						GL11.glEnable(GL11.GL_TEXTURE_2D);
-						GL11.glPopMatrix();
-						//Minecraft.getMinecraft().entityRenderer.enableLightmap();
-					}
-				}
-			}
-		}
-	}
-	
-	private static final class WindowPart{
-		private final String name;
-		private final Float[][] vertices;
-		
-		private WindowPart(String name, Float[][] vertices){
-			this.name = name;
-			this.vertices = vertices;
-		}
 	}
 }

@@ -82,25 +82,25 @@ public class VehicleGroundDeviceBox{
 			if(part instanceof APartGroundDevice){
 				//X-offsets of 0 are both left and right as they are center points.
 				//This ensures we don't roll to try and align a center point.
-				if(isFront && part.offset.z > 0){
-					if(isLeft && part.offset.x >= 0){
+				if(isFront && part.placementOffset.z > 0){
+					if(isLeft && part.placementOffset.x >= 0){
 						groundDevices.add(part);
 						if(part instanceof PartGroundDevicePontoon){
 							liquidDevices.add(part);
 						}
-					}else if(!isLeft && part.offset.x <= 0){
+					}else if(!isLeft && part.placementOffset.x <= 0){
 						groundDevices.add(part);
 						if(part instanceof PartGroundDevicePontoon){
 							liquidDevices.add(part);
 						}
 					}
-				}else if(!isFront && part.offset.z <= 0){
-					if(isLeft && part.offset.x >= 0){
+				}else if(!isFront && part.placementOffset.z <= 0){
+					if(isLeft && part.placementOffset.x >= 0){
 						groundDevices.add(part);
 						if(part instanceof PartGroundDevicePontoon){
 							liquidDevices.add(part);
 						}
-					}else if(!isLeft && part.offset.x <= 0){
+					}else if(!isLeft && part.placementOffset.x <= 0){
 						groundDevices.add(part);
 						if(part instanceof PartGroundDevicePontoon){
 							liquidDevices.add(part);
@@ -160,9 +160,9 @@ public class VehicleGroundDeviceBox{
 		for(APart groundDevice : groundDevices){
 			heights += groundDevice.getHeight();
 			widths += groundDevice.getWidth();
-			xCoords += groundDevice.offset.x;
-			yCoords += groundDevice.offset.y;
-			zCoords += groundDevice.offset.z;
+			xCoords += groundDevice.placementOffset.x;
+			yCoords += groundDevice.placementOffset.y;
+			zCoords += groundDevice.placementOffset.z;
 		}
 		
 		heights /= groundDevices.size();
@@ -187,9 +187,9 @@ public class VehicleGroundDeviceBox{
 		for(APart groundDevice : liquidDevices){
 			heights += groundDevice.getHeight();
 			widths += groundDevice.getWidth();
-			xCoords += groundDevice.offset.x;
-			yCoords += groundDevice.offset.y;
-			zCoords += groundDevice.offset.z;
+			xCoords += groundDevice.placementOffset.x;
+			yCoords += groundDevice.placementOffset.y;
+			zCoords += groundDevice.placementOffset.z;
 		}
 		
 		for(VehicleAxisAlignedBB box : liquidCollisionBoxes){

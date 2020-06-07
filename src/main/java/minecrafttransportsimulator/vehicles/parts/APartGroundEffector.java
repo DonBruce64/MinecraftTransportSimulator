@@ -25,9 +25,9 @@ public abstract class APartGroundEffector extends APart{
 		for(int i=0; i<definition.effector.blocksWide; ++i){
 			int xOffset = startingIndex + i;
 			if(effectIsBelowPart()){
-				affectedBlocks[i] = new BlockPos(RotationSystem.getRotatedPoint(new Vec3d(xOffset, 0, 0), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(partPos)).down();
+				affectedBlocks[i] = new BlockPos(RotationSystem.getRotatedPoint(new Vec3d(xOffset, 0, 0), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(worldPos)).down();
 			}else{
-				affectedBlocks[i] = new BlockPos(RotationSystem.getRotatedPoint(new Vec3d(xOffset, 0, 0), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(partPos));
+				affectedBlocks[i] = new BlockPos(RotationSystem.getRotatedPoint(new Vec3d(xOffset, 0, 0), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(worldPos));
 			}
 		}
 		

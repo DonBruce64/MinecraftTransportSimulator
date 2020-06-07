@@ -139,7 +139,7 @@ abstract class EntityVehicleA_Base extends Entity{
 			}
 			
 			//Sometimes we need to do this for parts that are deeper into the ground.
-			if(part.isPartCollidingWithBlocks(new Vec3d(0, Math.max(0, -part.offset.y) + part.getHeight(), 0))){
+			if(part.isPartCollidingWithBlocks(new Vec3d(0, Math.max(0, -part.placementOffset.y) + part.getHeight(), 0))){
 				setPositionAndRotation(posX, posY +  part.getHeight(), posZ, rotationYaw, rotationPitch);
 			}
 		}
@@ -151,7 +151,7 @@ abstract class EntityVehicleA_Base extends Entity{
 			if(part.isValid()){
 				part.removePart();
 				if(!world.isRemote){
-					MTS.MTSNet.sendToAll(new PacketVehicleClientPartRemoval((EntityVehicleE_Powered) this, part.offset.x, part.offset.y, part.offset.z));
+					MTS.MTSNet.sendToAll(new PacketVehicleClientPartRemoval((EntityVehicleE_Powered) this, part.placementOffset.x, part.placementOffset.y, part.placementOffset.z));
 				}
 			}
 			if(!world.isRemote){
@@ -175,7 +175,7 @@ abstract class EntityVehicleA_Base extends Entity{
 	 */
 	public APart getPartAtLocation(double offsetX, double offsetY, double offsetZ){
 		for(APart part : this.parts){
-			if(part.offset.x == offsetX && part.offset.y == offsetY && part.offset.z == offsetZ){
+			if(part.placementOffset.x == offsetX && part.placementOffset.y == offsetY && part.placementOffset.z == offsetZ){
 				return part;
 			}
 		}
@@ -201,7 +201,7 @@ abstract class EntityVehicleA_Base extends Entity{
 			while(packPart.additionalPart != null){
 				boolean foundPart = false;
 				for(APart part : this.parts){
-					if(part.offset.equals(partPos)){
+					if(part.placementOffset.equals(partPos)){
 						partPos = new Vec3d(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]);
 						packPart = packPart.additionalPart;
 						packParts.put(partPos, packPart);
@@ -218,7 +218,7 @@ abstract class EntityVehicleA_Base extends Entity{
 		//Next get any sub parts on parts that are present.
 		for(APart part : this.parts){
 			if(part.definition.subParts != null){
-				VehiclePart parentPack = getPackDefForLocation(part.offset.x, part.offset.y, part.offset.z);
+				VehiclePart parentPack = getPackDefForLocation(part.placementOffset.x, part.placementOffset.y, part.placementOffset.z);
 				for(VehiclePart extraPackPart : part.definition.subParts){
 					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
 					packParts.put(new Vec3d(correctedPack.pos[0], correctedPack.pos[1], correctedPack.pos[2]), correctedPack);
@@ -252,7 +252,7 @@ abstract class EntityVehicleA_Base extends Entity{
 		//If this is not a main part or an additional part, check the sub-parts.
 		for(APart part : this.parts){
 			if(part.definition.subParts.size() > 0){
-				VehiclePart parentPack = getPackDefForLocation(part.offset.x, part.offset.y, part.offset.z);
+				VehiclePart parentPack = getPackDefForLocation(part.placementOffset.x, part.placementOffset.y, part.placementOffset.z);
 				for(VehiclePart extraPackPart : part.definition.subParts){
 					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
 					if(correctedPack.pos[0] == offsetX && correctedPack.pos[1] == offsetY && correctedPack.pos[2] == offsetZ){
@@ -271,6 +271,7 @@ abstract class EntityVehicleA_Base extends Entity{
 	 */
 	public VehiclePart getPackForSubPart(VehiclePart parentPack, VehiclePart subPack){
 		VehiclePart correctPack = definition.new VehiclePart();
+		correctPack.isSubPart = true;
 		correctPack.pos = new float[3];
 		//If we will be mirrored, make sure to invert the x-coords of any sub-parts.
 		correctPack.pos[0] = parentPack.pos[0] < 0 ^ parentPack.inverseMirroring ? parentPack.pos[0] - subPack.pos[0] : parentPack.pos[0] + subPack.pos[0];
@@ -368,9 +369,9 @@ abstract class EntityVehicleA_Base extends Entity{
 				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
 				partTag.setString("packID", part.definition.packID);
 				partTag.setString("systemName", part.definition.systemName);
-				partTag.setDouble("offsetX", part.offset.x);
-				partTag.setDouble("offsetY", part.offset.y);
-				partTag.setDouble("offsetZ", part.offset.z);
+				partTag.setDouble("offsetX", part.placementOffset.x);
+				partTag.setDouble("offsetY", part.placementOffset.y);
+				partTag.setDouble("offsetZ", part.placementOffset.z);
 				partTagList.appendTag(partTag);
 			}
 		}

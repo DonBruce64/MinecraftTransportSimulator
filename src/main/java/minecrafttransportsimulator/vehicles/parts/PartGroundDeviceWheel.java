@@ -14,15 +14,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public final class PartGroundDeviceWheel extends APartGroundDevice implements FXPart{
-	private ResourceLocation flatModelLocation;
-	
 	private boolean isFlat;
 	private boolean contactThisTick = false;
 	private int ticksCalcsSkipped = 0;
@@ -52,7 +49,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 		if(this.isOnGround()){
 			//Set contact for wheel skid.
 			if(prevAngularVelocity/(vehicle.velocity/(this.getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
-				BlockPos blockBelow = new BlockPos(partPos).down();
+				BlockPos blockBelow = new BlockPos(worldPos).down();
 				if(vehicle.world.getBlockState(blockBelow).getBlockHardness(vehicle.world, blockBelow) >= 1.25){
 					contactThisTick = true;
 				}
@@ -98,16 +95,9 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	}
 	
 	@Override
-	public ResourceLocation getModelLocation(){
+	public String getModelLocation(){
 		if(this.isFlat){
-			if(flatModelLocation == null){
-				if(definition.general.modelName != null){
-					flatModelLocation = new ResourceLocation(definition.packID, "objmodels/parts/" + definition.general.modelName + "_flat.obj");
-				}else{
-					flatModelLocation = new ResourceLocation(definition.packID, "objmodels/parts/" + definition.systemName + "_flat.obj");
-				}
-			}
-			return flatModelLocation;
+			return "objmodels/parts/" + (definition.general.modelName != null ? definition.general.modelName : definition.systemName) + "_flat.obj";
 		}else{
 			return super.getModelLocation();
 		}
@@ -150,14 +140,14 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	public void spawnParticles(){
 		if(contactThisTick){
 			for(byte i=0; i<4; ++i){
-				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, worldPos.x, worldPos.y, worldPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
 			WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":" + "wheel_striking"));
 			contactThisTick = false;
 		}
 		if(skipAngularCalcs && this.isOnGround()){
 			for(byte i=0; i<4; ++i){
-				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y, partPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, worldPos.x, worldPos.y, worldPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
 		}
 	}

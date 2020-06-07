@@ -40,7 +40,7 @@ public final class PartGroundEffectorPlanter extends APartGroundEffector{
 								IBlockState plantState = plantable.getPlant(vehicle.world, cropPos);
 								if(farmlandBlock.canSustainPlant(plantState, vehicle.world, farmlandPos, EnumFacing.UP, plantable)){
 									vehicle.world.setBlockState(cropPos, plantState, 11);
-									vehicle.world.playSound(partPos.x, partPos.y, partPos.z, plantState.getBlock().getSoundType(plantState, vehicle.world, pos, null).getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+									vehicle.world.playSound(worldPos.x, worldPos.y, worldPos.z, plantState.getBlock().getSoundType(plantState, vehicle.world, pos, null).getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 1.0F, false);
 									crateInventory.decrStackSize(i, 1);
 									return;
 								}

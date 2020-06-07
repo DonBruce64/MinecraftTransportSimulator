@@ -18,6 +18,7 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
+import minecrafttransportsimulator.wrappers.WrapperRender;
 import minecrafttransportsimulator.wrappers.WrapperTileEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
@@ -277,8 +278,8 @@ public final class ClientEventSystem{
 	        	PartSeat seat = vehicle.getSeatForRider(event.getEntityPlayer());
 	        	if(seat != null){
 		            //First restrict the player's yaw to prevent them from being able to rotate their body in a seat.
-		            Vec3d placementRotation = seat.partRotation;
-		            event.getEntityPlayer().renderYawOffset = vehicle.rotationYaw + (float)((seat.parentPart != null ? seat.parentPart.getActionRotation(event.getPartialRenderTick()).y : 0) - seat.partRotation.y);
+		            Vec3d placementRotation = seat.placementRotation;
+		            event.getEntityPlayer().renderYawOffset = vehicle.rotationYaw + (float)((seat.parentPart != null ? seat.parentPart.getActionRotation(event.getPartialRenderTick()).y : 0) - seat.placementRotation.y);
 		            if(vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90){
 		            	event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw*-1F;
 		            }else{
@@ -345,7 +346,8 @@ public final class ClientEventSystem{
                 		//Enable the lightmap to take brightness into account.
                 		//Normally this is disabled for the overlays.
                 		//The same goes for alpha testing.
-                		Minecraft.getMinecraft().entityRenderer.enableLightmap();
+                		WrapperRender.setLightingToVehicle(vehicle);
+                		WrapperRender.setSystemLightingState(false);
         				GL11.glEnable(GL11.GL_ALPHA_TEST);
                 		
                 		//Bind the HUD texture and render it if set in the config.
@@ -370,7 +372,7 @@ public final class ClientEventSystem{
                 		
                 		//Disable the translating, lightmap, alpha to put it back to its old state.
                 		GL11.glTranslated(0, 0, -250);
-                		Minecraft.getMinecraft().entityRenderer.disableLightmap();
+                		WrapperRender.setInternalLightingState(false);
                 		GL11.glDisable(GL11.GL_ALPHA_TEST);
                 	}
             	}

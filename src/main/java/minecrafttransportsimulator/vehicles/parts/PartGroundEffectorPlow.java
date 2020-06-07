@@ -35,7 +35,7 @@ public final class PartGroundEffectorPlow extends APartGroundEffector{
 	}
 	
 	private void setBlockFromPlow(IBlockState state, BlockPos pos){
-		vehicle.world.playSound(partPos.x, partPos.y, partPos.z, SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+		vehicle.world.playSound(worldPos.x, worldPos.y, worldPos.z, SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F, false);
 		if(!vehicle.world.isRemote){
 			vehicle.world.setBlockState(pos, state);
 		 }

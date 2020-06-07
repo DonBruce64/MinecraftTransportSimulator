@@ -21,9 +21,9 @@ public class PacketPartEngineLinked extends APacketPart{
 	public PacketPartEngineLinked(PartEngine engine, PartEngine engineLinked){
 		super(engine);
 		this.linkedId = engineLinked.vehicle.getEntityId();
-		this.linkedX = engineLinked.offset.x;
-		this.linkedY = engineLinked.offset.y;
-		this.linkedZ = engineLinked.offset.z;
+		this.linkedX = engineLinked.placementOffset.x;
+		this.linkedY = engineLinked.placementOffset.y;
+		this.linkedZ = engineLinked.placementOffset.z;
 	}
 	
 	@Override
@@ -55,7 +55,7 @@ public class PacketPartEngineLinked extends APacketPart{
 					PartEngine linkedEngine = null;
 					if(linkedVehicle != null){
 						for(APart part : linkedVehicle.getVehicleParts()){
-							if(part.offset.x == message.linkedX && part.offset.y == message.linkedY && part.offset.z == message.linkedZ){
+							if(part.placementOffset.x == message.linkedX && part.placementOffset.y == message.linkedY && part.placementOffset.z == message.linkedZ){
 								linkedEngine = (PartEngine) part;
 							}
 						}

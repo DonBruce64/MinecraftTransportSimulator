@@ -104,7 +104,7 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 				}else{
 					//We are an assigned ticket, load the entity.
 					EntityLiving entityliving = (EntityLiving) vehicle.world.getEntityByID(stack.getTagCompound().getInteger("entityID"));
-					if(entityliving != null && entityliving.getPositionVector().distanceTo(seat.partPos) < 35){
+					if(entityliving != null && entityliving.getPositionVector().distanceTo(seat.worldPos) < 35){
 						vehicle.setRiderInSeat(entityliving, seat);
 						stack.setTagCompound(null);
 					}else{

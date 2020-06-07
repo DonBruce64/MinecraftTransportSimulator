@@ -21,7 +21,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent.TextLine;
-import minecrafttransportsimulator.rendering.vehicles.RenderVehicle_LightPart;
+import minecrafttransportsimulator.rendering.components.TransformLight;
 import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
@@ -31,7 +31,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 	private static final Map<JSONPoleComponent, Map<Axis, Integer>> connectorDisplayListMap = new HashMap<JSONPoleComponent, Map<Axis, Integer>>();
 	private static final Map<JSONPoleComponent, Map<Axis, Integer>> solidConnectorDisplayListMap = new HashMap<JSONPoleComponent, Map<Axis, Integer>>();
 	private static final Map<JSONPoleComponent, Integer> componentDisplayListMap = new HashMap<JSONPoleComponent, Integer>();
-	private static final Map<JSONPoleComponent, List<RenderVehicle_LightPart>> componentLightMap = new HashMap<JSONPoleComponent, List<RenderVehicle_LightPart>>();
+	private static final Map<JSONPoleComponent, List<TransformLight>> componentLightMap = new HashMap<JSONPoleComponent, List<TransformLight>>();
 	
 	@Override
 	public void render(TileEntityPole tile, BlockPole block, float partialTicks){
@@ -121,7 +121,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 						}else{
 							parsedModel = OBJParserSystem.parseOBJModel(component.definition.packID, "objmodels/poles/" + component.definition.systemName + ".obj");
 						}
-						List<RenderVehicle_LightPart> lightParts = new ArrayList<RenderVehicle_LightPart>();
+						List<TransformLight> lightParts = new ArrayList<TransformLight>();
 						
 						int displayListIndex = GL11.glGenLists(1);
 						GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
@@ -129,7 +129,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 						for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
 							if(entry.getKey().startsWith("&")){
 								//Save light for special rendering.
-								lightParts.add(new RenderVehicle_LightPart(entry.getKey(), entry.getValue()));
+								lightParts.add(new TransformLight(component.definition.general.modelName, entry.getKey(), entry.getValue()));
 								if(lightParts.get(lightParts.size() - 1).isLightupTexture){
 									continue;
 								}
@@ -169,17 +169,17 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 							case GREEN: litLight = LightType.GOLIGHT; break;
 							default: litLight = null;
 						}
-						for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
-							lightPart.renderOnBlock(tile.world, tile.position, lightPart.type.equals(litLight), component.definition.packID, "textures/poles/" + component.definition.systemName + ".png");
+						for(TransformLight lightPart : componentLightMap.get(component.definition)){
+							lightPart.renderOnBlock(tile.world, tile.position, lightPart.type.equals(litLight));
 						}
 					}else if(component instanceof TileEntityPole_StreetLight){
-						for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
-							lightPart.renderOnBlock(tile.world, tile.position, ((TileEntityPole_StreetLight) component).state.equals(LightState.ON), component.definition.packID, "textures/poles/" + component.definition.systemName + ".png");
+						for(TransformLight lightPart : componentLightMap.get(component.definition)){
+							lightPart.renderOnBlock(tile.world, tile.position, ((TileEntityPole_StreetLight) component).state.equals(LightState.ON));
 						}
 					}else if(component instanceof TileEntityPole_Sign){
 						//Render lights, if we have any.
-						for(RenderVehicle_LightPart lightPart : componentLightMap.get(component.definition)){
-							lightPart.renderOnBlock(tile.world, tile.position, true, component.definition.packID, "textures/poles/" + component.definition.systemName + ".png");
+						for(TransformLight lightPart : componentLightMap.get(component.definition)){
+							lightPart.renderOnBlock(tile.world, tile.position, true);
 						}
 						
 						//Render text, if we have any.

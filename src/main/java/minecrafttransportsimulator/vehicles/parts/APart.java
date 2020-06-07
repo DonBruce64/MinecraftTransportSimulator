@@ -18,7 +18,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
@@ -36,11 +35,13 @@ public abstract class APart implements ISoundProvider{
 	public final boolean isController;
 	/** Does this part rotate in-sync with the yaw changes of the vehicle.*/
 	public final boolean turnsWithSteer;
-	public final Vec3d offset;
+	/**The offset from the center of the vehicle where this part is placed.*/
+	public final Vec3d placementOffset;
 	public final EntityVehicleE_Powered vehicle;
 	public final VehiclePart packVehicleDef;
 	public final JSONPart definition;
-	public final Vec3d partRotation;
+	/**The placement rotation for this part, as defined by the pack definition.*/
+	public final Vec3d placementRotation;
 	public final boolean inverseMirroring;
 	public final boolean disableMirroring;
 	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -50,19 +51,18 @@ public abstract class APart implements ISoundProvider{
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
 	public final List<APart> childParts = new ArrayList<APart>();
 	/**The part's current position, in world coordinates.*/
-	public Vec3d partPos;
+	public Vec3d worldPos;
 	
 	//Internal cached variables.
 	private boolean isValid;
-	private ResourceLocation modelLocation;
 		
 	public APart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		this.vehicle = vehicle;
-		this.offset = new Vec3d(packVehicleDef.pos[0], packVehicleDef.pos[1], packVehicleDef.pos[2]);
+		this.placementOffset = new Vec3d(packVehicleDef.pos[0], packVehicleDef.pos[1], packVehicleDef.pos[2]);
 		this.definition = definition;;
 		this.packVehicleDef = packVehicleDef;
-		this.partPos = RotationSystem.getRotatedPoint(this.offset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(this.vehicle.getPositionVector());
-		this.partRotation = packVehicleDef.rot != null ? new Vec3d(packVehicleDef.rot[0], packVehicleDef.rot[1], packVehicleDef.rot[2]) : Vec3d.ZERO;
+		this.worldPos = RotationSystem.getRotatedPoint(this.placementOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(this.vehicle.getPositionVector());
+		this.placementRotation = packVehicleDef.rot != null ? new Vec3d(packVehicleDef.rot[0], packVehicleDef.rot[1], packVehicleDef.rot[2]) : Vec3d.ZERO;
 		this.isController = packVehicleDef.isController;
 		this.turnsWithSteer = packVehicleDef.turnsWithSteer;
 		this.isValid = true;
@@ -84,7 +84,7 @@ public abstract class APart implements ISoundProvider{
 			for(APart part : vehicle.getVehicleParts()){
 				if(part.definition.subParts != null){
 					for(VehiclePart partSubPartPack : part.definition.subParts){
-						if((float) part.offset.x + partSubPartPack.pos[0] == (float) this.offset.x && (float) part.offset.y + partSubPartPack.pos[1] == (float) this.offset.y && (float) part.offset.z + partSubPartPack.pos[2] == (float) this.offset.z){
+						if((float) part.placementOffset.x + partSubPartPack.pos[0] == (float) this.placementOffset.x && (float) part.placementOffset.y + partSubPartPack.pos[1] == (float) this.placementOffset.y && (float) part.placementOffset.z + partSubPartPack.pos[2] == (float) this.placementOffset.z){
 							parentPart = part;
 							parentPart.childParts.add(this);
 							this.disableMirroring = parentPart.disableMirroring || definition.general.disableMirroring;
@@ -125,34 +125,32 @@ public abstract class APart implements ISoundProvider{
 	 */
 	public void updatePart(){
 		//Set position depending on if we are on a rotated parent or not.
-		Vec3d parentActionRotation = parentPart != null ? parentPart.getActionRotation(0) : null;
-		if(parentActionRotation != null && !parentActionRotation.equals(Vec3d.ZERO)){
-			Vec3d partRelativeOffset = offset.subtract(parentPart.offset);
-			Vec3d partTranslationOffset = parentPart.offset.add(RotationSystem.getRotatedPoint(partRelativeOffset, (float) parentActionRotation.x, (float) parentActionRotation.y, (float) parentActionRotation.z));
-			partPos = RotationSystem.getRotatedPoint(partTranslationOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+		//If we are on a rotated part, set the movementOffset and the partPos to reflect our rotated position.
+		Vec3d parentActionRotation = packVehicleDef.isSubPart && parentPart != null ? parentPart.getActionRotation(0) : Vec3d.ZERO;
+		if(!parentActionRotation.equals(Vec3d.ZERO)){
+			Vec3d partRelativeOffset = placementOffset.subtract(parentPart.placementOffset);
+			Vec3d movementOffset = parentPart.placementOffset.add(RotationSystem.getRotatedPoint(partRelativeOffset, (float) parentActionRotation.x, (float) parentActionRotation.y, (float) parentActionRotation.z));
+			worldPos = RotationSystem.getRotatedPoint(movementOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
 		}else{
-			partPos = RotationSystem.getRotatedPoint(this.offset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+			worldPos = RotationSystem.getRotatedPoint(placementOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
 		}
 
 		//Update sound variables.
 		soundPosition.rewind();
-		soundPosition.put((float) partPos.x);
-		soundPosition.put((float) partPos.y);
-		soundPosition.put((float) partPos.z);
+		soundPosition.put((float) worldPos.x);
+		soundPosition.put((float) worldPos.y);
+		soundPosition.put((float) worldPos.z);
 		soundPosition.flip();
 	}
 	
 	public final VehicleAxisAlignedBB getAABBWithOffset(Vec3d boxOffset){
-		return new VehicleAxisAlignedBB(Vec3d.ZERO.equals(boxOffset) ? partPos : partPos.add(boxOffset), this.offset, this.getWidth(), this.getHeight(), false, false);
+		return new VehicleAxisAlignedBB(Vec3d.ZERO.equals(boxOffset) ? worldPos : worldPos.add(boxOffset), this.placementOffset, this.getWidth(), this.getHeight(), false, false);
 	}
 	
 	/**Gets the rotation vector for the part.
-	 * This comes from the part itself and is used
-	 * to determine the angle of the part for rendering
-	 * and for rotation of sub-parts.  This rotation is
-	 * variable and depends on what the part is doing, unlike
-	 * partRotation, which is a fixed rotation component that
-	 * comes from the vehicle JSONs.
+	 * This comes from the part itself and is used to determine the angle of the part for rendering
+	 * and for translation of sub-parts.  This rotation is variable and depends on what the part is doing.
+	 * This is different from partRotation, which is a fixed rotation component that comes from the vehicle JSONs.
 	 */
 	public Vec3d getActionRotation(float partialTicks){
 		return Vec3d.ZERO;
@@ -234,22 +232,15 @@ public abstract class APart implements ISoundProvider{
 	/**
 	 * Gets the location of the model for this part. 
 	 */
-	public ResourceLocation getModelLocation(){
-		if(modelLocation == null){
-			if(definition.general.modelName != null){
-				modelLocation = new ResourceLocation(definition.packID, "objmodels/parts/" + definition.general.modelName + ".obj");
-			}else{
-				modelLocation = new ResourceLocation(definition.packID, "objmodels/parts/" + definition.systemName + ".obj");
-			}
-		}
-		return modelLocation;
+	public String getModelLocation(){
+		return "objmodels/parts/" + (definition.general.modelName != null ? definition.general.modelName : definition.systemName) + ".obj";
 	}
 	
 	/**Gets the location of the texture for this part.
 	 * This can be changed for data-dependent part texture. 
 	 */
-	public ResourceLocation getTextureLocation(){
-		return new ResourceLocation(definition.packID, "textures/parts/" + definition.systemName + ".png");
+	public String getTextureLocation(){
+		return "textures/parts/" + definition.systemName + ".png";
 	}
 	
 	@Override

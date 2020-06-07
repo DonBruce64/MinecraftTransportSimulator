@@ -169,11 +169,11 @@ public class PartEngine extends APart implements FXPart{
 				
 		//Check to see if we are linked and need to equalize power between us and another engine.
 		if(linkedEngine != null){
-			if(linkedEngine.partPos.distanceTo(this.partPos) > 16){
+			if(linkedEngine.worldPos.distanceTo(this.worldPos) > 16){
 				linkedEngine.linkedEngine = null;
 				linkedEngine = null;
 				if(vehicle.world.isRemote){
-					MTS.MTSNet.sendToAllAround(new PacketChat("interact.jumpercable.linkdropped"), new TargetPoint(vehicle.world.provider.getDimension(), partPos.x, partPos.y, partPos.z, 16));
+					MTS.MTSNet.sendToAllAround(new PacketChat("interact.jumpercable.linkdropped"), new TargetPoint(vehicle.world.provider.getDimension(), worldPos.x, worldPos.y, worldPos.z, 16));
 				}
 			}else if(vehicle.electricPower + 0.5 < linkedEngine.vehicle.electricPower){
 				linkedEngine.vehicle.electricPower -= 0.005F;
@@ -185,7 +185,7 @@ public class PartEngine extends APart implements FXPart{
 				linkedEngine.linkedEngine = null;
 				linkedEngine = null;
 				if(vehicle.world.isRemote){
-					MTS.MTSNet.sendToAllAround(new PacketChat("interact.jumpercable.powerequal"), new TargetPoint(vehicle.world.provider.getDimension(), partPos.x, partPos.y, partPos.z, 16));
+					MTS.MTSNet.sendToAllAround(new PacketChat("interact.jumpercable.powerequal"), new TargetPoint(vehicle.world.provider.getDimension(), worldPos.x, worldPos.y, worldPos.z, 16));
 				}
 			}
 		}
@@ -383,7 +383,7 @@ public class PartEngine extends APart implements FXPart{
 			
 			//Update wheel friction and velocity.
 			for(APartGroundDevice wheel : vehicle.wheels){
-				if((wheel.offset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
+				if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
 					//If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
 					//This means the wheel is spinning in the air and can't provide force or feedback.
 					if(wheel.isOnGround()){
@@ -406,7 +406,7 @@ public class PartEngine extends APart implements FXPart{
 				//No wheel force.  Adjust wheels to engine speed.
 				for(APartGroundDevice wheel : vehicle.wheels){
 					wheel.skipAngularCalcs = false;
-					if((wheel.offset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
+					if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
 						if(currentGearRatio != 0){
 							wheel.angularVelocity = (float) RPM/currentGearRatio/vehicle.definition.car.axleRatio/60F/20F;
 						}else if(wheel.angularVelocity > 0){
@@ -421,7 +421,7 @@ public class PartEngine extends APart implements FXPart{
 		
 		//If wheel friction is 0, and we have a propeller, and arne't in neutral, get RPM contributions for that.
 		if(wheelFriction == 0 && propeller != null && currentGearRatio != 0){
-			isPropellerInLiquid = vehicle.world.getBlockState(new BlockPos(propeller.partPos)).getMaterial().isLiquid();
+			isPropellerInLiquid = vehicle.world.getBlockState(new BlockPos(propeller.worldPos)).getMaterial().isLiquid();
 			propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
 			double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
 			double propellerDesiredSpeed = 0.0254*Math.abs(propeller.currentPitch)*RPM/propellerGearboxRatio/60D/20D;
@@ -499,7 +499,7 @@ public class PartEngine extends APart implements FXPart{
 		if(vehicle.definition.car != null){
 			float driveShaftDesiredSpeed = -999F;
 			for(APartGroundDevice wheel : vehicle.wheels){
-				if((wheel.offset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
+				if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
 					driveShaftDesiredSpeed = Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
 				}
 			}
@@ -515,7 +515,7 @@ public class PartEngine extends APart implements FXPart{
 		//Set state to off and tell wheels to stop skipping calcs from being controlled by the engine.
 		this.state = EngineStates.ENGINE_OFF;
 		for(APartGroundDevice wheel : vehicle.wheels){
-			if(!wheel.isOnGround() && ((wheel.offset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && vehicle.definition.car.isRearWheelDrive))){
+			if(!wheel.isOnGround() && ((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive))){
 				wheel.skipAngularCalcs = false;
 			}
 		}
@@ -694,9 +694,9 @@ public class PartEngine extends APart implements FXPart{
 	
 	protected void explodeEngine(){
 		if(ConfigSystem.configObject.damage.explosions.value){
-			vehicle.world.newExplosion(vehicle, partPos.x, partPos.y, partPos.z, 1F, true, true);
+			vehicle.world.newExplosion(vehicle, worldPos.x, worldPos.y, worldPos.z, 1F, true, true);
 		}else{
-			vehicle.world.newExplosion(vehicle, partPos.x, partPos.y, partPos.z, 0F, true, true);
+			vehicle.world.newExplosion(vehicle, worldPos.x, worldPos.y, worldPos.z, 0F, true, true);
 		}
 		vehicle.removePart(this, true);
 	}
@@ -794,7 +794,7 @@ public class PartEngine extends APart implements FXPart{
 	}
 	
 	public boolean isInLiquid(){
-		return vehicle.world.getBlockState(new BlockPos(partPos.addVector(0, packVehicleDef.intakeOffset, 0))).getMaterial().isLiquid();
+		return vehicle.world.getBlockState(new BlockPos(worldPos.addVector(0, packVehicleDef.intakeOffset, 0))).getMaterial().isLiquid();
 	}
 	
 	public double getEngineRotation(float partialTicks){
@@ -819,7 +819,7 @@ public class PartEngine extends APart implements FXPart{
 				if(Math.abs(engineForce/300F) > wheelFriction || (Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) > 0.1 && Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) < Math.abs(engineForce/300F))){
 					engineForce *= vehicle.currentMass/100000F*wheelFriction/Math.abs(engineForce/300F);					
 					for(APartGroundDevice wheel : vehicle.wheels){
-						if((wheel.offset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
+						if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
 							if(currentGearRatio > 0){
 								if(engineForce >= 0){
 									wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.car.axleRatio, wheel.angularVelocity + 0.01);
@@ -841,7 +841,7 @@ public class PartEngine extends APart implements FXPart{
 					//If we have wheels not on the ground and we drive them, adjust their velocity now.
 					for(APartGroundDevice wheel : vehicle.wheels){
 						wheel.skipAngularCalcs = false;
-						if(!wheel.isOnGround() && ((wheel.offset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.offset.z <= 0 && vehicle.definition.car.isRearWheelDrive))){
+						if(!wheel.isOnGround() && ((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive))){
 							wheel.angularVelocity = lowestWheelVelocity;
 						}
 					}
@@ -1073,7 +1073,7 @@ public class PartEngine extends APart implements FXPart{
 					}
 				}else{
 					for(byte i=0; i<5; ++i){
-						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y + 0.5, partPos.z, 0.07 - Math.random()*0.14, 0.15, 0.07 - Math.random()*0.14, 0.0F, 0.0F, 0.0F, 2.5F, 1.0F));
+						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, worldPos.x, worldPos.y + 0.5, worldPos.z, 0.07 - Math.random()*0.14, 0.15, 0.07 - Math.random()*0.14, 0.0F, 0.0F, 0.0F, 2.5F, 1.0F));
 					}
 				}
 			}
@@ -1081,20 +1081,20 @@ public class PartEngine extends APart implements FXPart{
 			//Render oil and fuel leak particles.
 			if(oilLeak){
 				if(vehicle.ticksExisted%20 == 0){
-					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.OilDropParticleFX(vehicle.world, partPos.x - 0.25*Math.sin(Math.toRadians(vehicle.rotationYaw)), partPos.y, partPos.z + 0.25*Math.cos(Math.toRadians(vehicle.rotationYaw))));
+					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.OilDropParticleFX(vehicle.world, worldPos.x - 0.25*Math.sin(Math.toRadians(vehicle.rotationYaw)), worldPos.y, worldPos.z + 0.25*Math.cos(Math.toRadians(vehicle.rotationYaw))));
 				}
 			}
 			if(fuelLeak){
 				if((vehicle.ticksExisted + 5)%20 == 0){
-					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.FuelDropParticleFX(vehicle.world, partPos.y, partPos.y, partPos.z));
+					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.FuelDropParticleFX(vehicle.world, worldPos.y, worldPos.y, worldPos.z));
 				}
 			}
 			
 			//Render engine smoke if we're overheating.  Only for non-steam engines.
 			if(!definition.engine.isSteamPowered && temp > OVERHEAT_TEMP_1){
-				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y + 0.5, partPos.z, 0, 0.15, 0, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F));
+				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, worldPos.x, worldPos.y + 0.5, worldPos.z, 0, 0.15, 0, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F));
 				if(temp > OVERHEAT_TEMP_2){
-					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, partPos.x, partPos.y + 0.5, partPos.z, 0, 0.15, 0, 0.0F, 0.0F, 0.0F, 2.5F, 1.0F));
+					Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, worldPos.x, worldPos.y + 0.5, worldPos.z, 0, 0.15, 0, 0.0F, 0.0F, 0.0F, 2.5F, 1.0F));
 				}
 			}
 			

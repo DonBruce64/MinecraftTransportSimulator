@@ -72,6 +72,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     }
     
     public class VehiclePart{
+    	public boolean isSubPart;
         public float[] pos;
         public float[] rot;
         public boolean turnsWithSteer;

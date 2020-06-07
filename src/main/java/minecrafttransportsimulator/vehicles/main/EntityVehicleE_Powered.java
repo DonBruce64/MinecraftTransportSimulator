@@ -253,7 +253,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			for(VehiclePart packPart : definition.parts){
 				for(String type : packPart.types){
 					if(type.startsWith("engine")){
-						if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
+						if(part.placementOffset.x == packPart.pos[0] && part.placementOffset.y == packPart.pos[1] && part.placementOffset.z == packPart.pos[2]){
 							engines.put(engineNumber, (PartEngine) part);
 							return;
 						}
@@ -277,7 +277,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		for(VehiclePart packPart : definition.parts){
 			for(String type : packPart.types){
 				if(type.startsWith("engine")){
-					if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
+					if(part.placementOffset.x == packPart.pos[0] && part.placementOffset.y == packPart.pos[1] && part.placementOffset.z == packPart.pos[2]){
 						engines.remove(engineNumber);
 						return;
 					}

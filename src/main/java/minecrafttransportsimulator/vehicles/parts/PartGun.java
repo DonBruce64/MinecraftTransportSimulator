@@ -193,7 +193,7 @@ public class PartGun extends APart implements FXPart{
 				//When we do yaw, make sure we do calculations with positive values.
 				//Both the vehicle and the player can have yaw greater than 360.
 				double deltaPitch = playerController.rotationPitch - vehicle.rotationPitch;
-				double deltaYaw = (playerController.rotationYaw + 360 - vehicle.rotationYaw + 360 + partRotation.y + 360)%360;
+				double deltaYaw = (playerController.rotationYaw + 360 - vehicle.rotationYaw + 360 + placementRotation.y + 360)%360;
 				//I know this is weird, but the pitch is bigger when it's pointing the ground and smaller when it's pointing the sky.
 				//At least this won't be confusing on the pack creator's end in this way. -Bunting_chj
 				if(deltaPitch < currentPitch && currentPitch > -definition.gun.maxPitch){
@@ -275,8 +275,8 @@ public class PartGun extends APart implements FXPart{
 			//Angle is based on rotation of the vehicle, gun, and gun mount.
 			//Set the trajectory of the bullet.
 			//Add a slight fudge-factor to the bullet's trajectory depending on the barrel length and shell size.
-			float bulletYaw = (float) (vehicle.rotationYaw - partRotation.y + currentYaw + (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)));
-			float bulletPitch = (float) (vehicle.rotationPitch + partRotation.x + currentPitch + (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)));
+			float bulletYaw = (float) (vehicle.rotationYaw - placementRotation.y + currentYaw + (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)));
+			float bulletPitch = (float) (vehicle.rotationPitch + placementRotation.x + currentPitch + (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)));
 			
 			//Set initial velocity to the gun muzzle velocity times the speedFactor.
 			//We bring in the code for vectors here to make the velocity calculations easier.
@@ -292,7 +292,7 @@ public class PartGun extends APart implements FXPart{
 			double bulletMotionZ = bulletOrientation.z*definition.gun.muzzleVelocity/20D/10D + vehicle.motionZ*ConfigSystem.configObject.general.speedFactor.value;
 			
 			//Now add the bullet as a particle.
-			Minecraft.getMinecraft().effectRenderer.addEffect(new PartBullet(vehicle.world, partPos.x + bulletOrientation.x*definition.gun.length, partPos.y + bulletOrientation.y*definition.gun.length, partPos.z + bulletOrientation.z*definition.gun.length, bulletMotionX, bulletMotionY, bulletMotionZ, loadedBullet, playerControllerID, this.vehicle));
+			Minecraft.getMinecraft().effectRenderer.addEffect(new PartBullet(vehicle.world, worldPos.x + bulletOrientation.x*definition.gun.length, worldPos.y + bulletOrientation.y*definition.gun.length, worldPos.z + bulletOrientation.z*definition.gun.length, bulletMotionX, bulletMotionY, bulletMotionZ, loadedBullet, playerControllerID, this.vehicle));
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			lastTimeFired = timeToFire;
 		}

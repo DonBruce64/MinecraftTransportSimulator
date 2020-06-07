@@ -109,9 +109,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			
 			//Now do update calculations and logic.
 			getForcesAndMotions();
-			//If we are a trailer, we don't want to move ourselves.
-			//This comes from the main vehicle itself.
-			
 			performGroundOperations();
 			moveVehicle();
 			if(!world.isRemote){
@@ -965,7 +962,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//Do we have enough friction to change yaw?
 				if(groundDevice.turnsWithSteer && groundDevice.getLateralFriction() - frictionLoss > 0){
 					turningFactor += groundDevice.getLateralFriction() - frictionLoss;
-					turningDistance = (float) Math.max(turningDistance, Math.abs(groundDevice.offset.z));
+					turningDistance = (float) Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
 				}
 			}
 			//Also check for boat engines, which can make us turn if we are in water.
@@ -973,7 +970,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				if(part instanceof PartPropeller){
 					if(part.isPartCollidingWithLiquids(Vec3d.ZERO)){
 						turningFactor += 1.0F;
-						turningDistance = (float) Math.max(turningDistance, Math.abs(part.offset.z));
+						turningDistance = (float) Math.max(turningDistance, Math.abs(part.placementOffset.z));
 					}
 				}
 			}

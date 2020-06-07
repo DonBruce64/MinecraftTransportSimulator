@@ -108,12 +108,12 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void updatePassenger(Entity passenger){
 		PartSeat seat = this.getSeatForRider(passenger);
 		if(seat != null){
-			Vec3d seatOffsetRotation = RotationSystem.getRotatedPoint(new Vec3d(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), (float)seat.partRotation.x, (float)seat.partRotation.y, (float)seat.partRotation.z);
+			Vec3d seatOffsetRotation = RotationSystem.getRotatedPoint(new Vec3d(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), (float)seat.placementRotation.x, (float)seat.placementRotation.y, (float)seat.placementRotation.z);
 			if (seat.parentPart != null) {
 				seatOffsetRotation = RotationSystem.getRotatedPoint(seatOffsetRotation, (float)seat.parentPart.getActionRotation(0).x, (float)seat.parentPart.getActionRotation(0).y, (float)seat.parentPart.getActionRotation(0).z);
 			}
 			seatOffsetRotation = RotationSystem.getRotatedPoint(seatOffsetRotation, this.rotationPitch, this.rotationYaw, this.rotationRoll);
-			Vec3d playerOffsetVec = seat.partPos.add(seatOffsetRotation);
+			Vec3d playerOffsetVec = seat.worldPos.add(seatOffsetRotation);
 			passenger.setPosition(playerOffsetVec.x, playerOffsetVec.y - passenger.height, playerOffsetVec.z);
 
 		}else if(definition != null && !this.riderSeatPositions.isEmpty()){
@@ -142,7 +142,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		//If we weren't riding before, set the player's yaw to the same yaw as the vehicle.
 		//We do this to ensure we don't have 360+ rotations to deal with.
 		if(!riderAlreadyInSeat){
-			rider.rotationYaw =  (float) (this.rotationYaw + seat.partRotation.y);
+			rider.rotationYaw =  (float) (this.rotationYaw + seat.placementRotation.y);
 		}
 		if(!world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, true));
@@ -156,11 +156,11 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		riderSeats.remove(rider.getEntityId());
 		if(!world.isRemote){
 			Vec3d placePosition;
-			VehiclePart packPart = this.getPackDefForLocation(seat.offset.x, seat.offset.y, seat.offset.z);
+			VehiclePart packPart = this.getPackDefForLocation(seat.placementOffset.x, seat.placementOffset.y, seat.placementOffset.z);
 			if(packPart.dismountPos != null){
 				placePosition = RotationSystem.getRotatedPoint(new Vec3d(packPart.dismountPos[0], packPart.dismountPos[1], packPart.dismountPos[2]), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());
 			}else{
-				placePosition = RotationSystem.getRotatedPoint(seat.offset.addVector(seat.offset.x > 0 ? 2 : -2, 0, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());	
+				placePosition = RotationSystem.getRotatedPoint(seat.placementOffset.addVector(seat.placementOffset.x > 0 ? 2 : -2, 0, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());	
 			}
 			AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(placePosition));
 			if(!world.collidesWithAnyBlock(collisionDetectionBox)){
@@ -194,7 +194,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 				if(stackTag != null){
 					partStack.setTagCompound(stackTag);
 				}
-				world.spawnEntity(new EntityItem(world, part.partPos.x, part.partPos.y, part.partPos.z, partStack));
+				world.spawnEntity(new EntityItem(world, part.worldPos.x, part.worldPos.y, part.worldPos.z, partStack));
 			}
 		}
 		
@@ -301,9 +301,9 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			Entity rider = this.getPassengers().get(i);
 			PartSeat seat = this.getSeatForRider(rider);
 			if(seat != null){
-				tagCompound.setDouble("Seat" + String.valueOf(i) + "0", seat.offset.x);
-				tagCompound.setDouble("Seat" + String.valueOf(i) + "1", seat.offset.y);
-				tagCompound.setDouble("Seat" + String.valueOf(i) + "2", seat.offset.z);
+				tagCompound.setDouble("Seat" + String.valueOf(i) + "0", seat.placementOffset.x);
+				tagCompound.setDouble("Seat" + String.valueOf(i) + "1", seat.placementOffset.y);
+				tagCompound.setDouble("Seat" + String.valueOf(i) + "2", seat.placementOffset.z);
 			}
 		}
 		return tagCompound;

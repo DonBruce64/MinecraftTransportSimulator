@@ -212,10 +212,10 @@ public final class MTSRegistry{
 	 */
 	private static void initEntities(){
 		int entityNumber = 0;
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Car.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Car.class, "vehiclecar", entityNumber++, MTS.MODID, 256, 5, false);
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Boat.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Boat.class, "vehicleboat", entityNumber++, MTS.MODID, 256, 5, false);
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Plane.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Plane.class, "vehicleplane", entityNumber++, MTS.MODID, 256, 5, false);
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Blimp.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Blimp.class, "vehicleblimp", entityNumber++, MTS.MODID, 256, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Car.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Car.class, "vehiclecar", entityNumber++, MTS.MODID, 32*16, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Boat.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Boat.class, "vehicleboat", entityNumber++, MTS.MODID, 32*16, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Plane.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Plane.class, "vehicleplane", entityNumber++, MTS.MODID, 32*16, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Blimp.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Blimp.class, "vehicleblimp", entityNumber++, MTS.MODID, 32*16, 5, false);
 	}
 	
 	private static void initPackets(){
