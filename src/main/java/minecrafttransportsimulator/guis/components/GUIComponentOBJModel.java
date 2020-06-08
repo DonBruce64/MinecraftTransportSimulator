@@ -98,16 +98,18 @@ public class GUIComponentOBJModel{
 		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
-			for(Float[] vertex : entry.getValue()){
-				GL11.glTexCoord2f(vertex[3], vertex[4]);
-				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-				GL11.glVertex3f(-vertex[0], vertex[1], vertex[2]);
-				minX = Math.min(minX, vertex[0]);
-				maxX = Math.max(maxX, vertex[0]);
-				minY = Math.min(minY, vertex[1]);
-				maxY = Math.max(maxY, vertex[1]);
-				minZ = Math.min(minZ, vertex[2]);
-				maxZ = Math.max(maxZ, vertex[2]);
+			if(!entry.getKey().toLowerCase().contains("window")){
+				for(Float[] vertex : entry.getValue()){
+					GL11.glTexCoord2f(vertex[3], vertex[4]);
+					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+					GL11.glVertex3f(-vertex[0], vertex[1], vertex[2]);
+					minX = Math.min(minX, vertex[0]);
+					maxX = Math.max(maxX, vertex[0]);
+					minY = Math.min(minY, vertex[1]);
+					maxY = Math.max(maxY, vertex[1]);
+					minZ = Math.min(minZ, vertex[2]);
+					maxZ = Math.max(maxZ, vertex[2]);
+				}
 			}
 		}
 		float globalMax = Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
