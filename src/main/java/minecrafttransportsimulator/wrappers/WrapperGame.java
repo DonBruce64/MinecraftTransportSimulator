@@ -80,7 +80,7 @@ public class WrapperGame{
 	 *  there are multiple players.
 	 */
 	public static WrapperPlayer getClientPlayer(){
-		if(cachedClientPlayer == null || !cachedClientPlayer.entity.equals(Minecraft.getMinecraft().player)){
+		if(cachedClientPlayer == null || cachedClientPlayer.entity.isDead || !cachedClientPlayer.entity.equals(Minecraft.getMinecraft().player)){
 			cachedClientPlayer = new WrapperPlayer(Minecraft.getMinecraft().player);
 		}
 		return cachedClientPlayer;
@@ -92,7 +92,7 @@ public class WrapperGame{
 	 *  Normally the player, but can (may?) change.
 	 */
 	public static WrapperEntity getRenderViewEntity(){
-		if(cachedRenderViewEntity == null || !cachedRenderViewEntity.entity.equals(Minecraft.getMinecraft().getRenderViewEntity())){
+		if(cachedRenderViewEntity == null || cachedRenderViewEntity.entity.isDead || !cachedRenderViewEntity.entity.equals(Minecraft.getMinecraft().getRenderViewEntity())){
 			cachedRenderViewEntity = new WrapperEntity(Minecraft.getMinecraft().getRenderViewEntity());
 		}
 		return cachedRenderViewEntity;
