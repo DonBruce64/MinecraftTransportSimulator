@@ -4,6 +4,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.Vec3d;
 
 public final class PartGroundDeviceSkid extends APartGroundDevice{
 	
@@ -44,5 +45,10 @@ public final class PartGroundDeviceSkid extends APartGroundDevice{
 	@Override
 	public boolean canBeDrivenByEngine(){
 		return false;
+	}
+	
+	@Override
+	public Vec3d getActionRotation(float partialTicks){
+		return new Vec3d(0, vehicleDefinition.turnsWithSteer ? vehicle.getSteerAngle() : 0, 0);
 	}
 }

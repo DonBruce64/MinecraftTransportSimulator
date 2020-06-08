@@ -10,7 +10,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
-import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
+import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
@@ -40,6 +40,8 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 	private static final int TRIM_TEXTURE_HEIGHT_OFFSET = 216;
 	private static final int AUTOPILOT_TEXTURE_WIDTH_OFFSET = TRIM_TEXTURE_WIDTH_OFFSET + 40;
 	private static final int AUTOPILOT_TEXTURE_HEIGHT_OFFSET = 216;
+	private static final int GEAR_TEXTURE_WIDTH_OFFSET = AUTOPILOT_TEXTURE_WIDTH_OFFSET + 20;
+	private static final int GEAR_TEXTURE_HEIGHT_OFFSET = 182;
 	
 	private final Map<LightType, GUIComponentSelector> lightSelectors = new HashMap<LightType, GUIComponentSelector>();
 	private final Map<Byte, GUIComponentSelector> magnetoSelectors = new HashMap<Byte, GUIComponentSelector>();
@@ -49,6 +51,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 	private GUIComponentSelector rudderTrimSelector;
 	private GUIComponentSelector reverseSelector;
 	private GUIComponentSelector autopilotSelector;
+	private GUIComponentSelector gearSelector;
 	
 	private GUIComponentSelector selectedTrimSelector;
 	private PacketVehicleControlDigital.Controls selectedTrimType = null;
@@ -234,7 +237,22 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 				addSelector(autopilotSelector);
 			}
 		}
-		return xOffset + GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
+		
+		//If we have gear, add a selector for it.
+		if(vehicle.definition.plane != null && vehicle.definition.motorized.gearSequenceDuration != 0){
+			gearSelector = new GUIComponentSelector(guiLeft + xOffset + GAP_BETWEEN_SELECTORS + SELECTOR_SIZE*2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.gear"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.GEAR, !vehicle.gearUpCommand));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			addSelector(gearSelector);
+		}
+		
+		return xOffset + GAP_BETWEEN_SELECTORS*2 + SELECTOR_SIZE;
 	}
 	
 	@Override
@@ -272,9 +290,18 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 			reverseSelector.selectorState = vehicle.reverseThrust ? 1 : 0;
 		}
 		
-		//If we have reverse thrust, set the selector state.
+		//If we have autopilot, set the selector state.
 		if(autopilotSelector != null){
 			autopilotSelector.selectorState = vehicle.autopilot ? 1 : 0;
+		}
+		
+		//If we have gear, set the selector state.
+		if(gearSelector != null){
+			if(vehicle.gearUpCommand){
+				gearSelector.selectorState = vehicle.gearMovementTime == vehicle.definition.motorized.gearSequenceDuration ? 2 : 3;
+			}else{
+				gearSelector.selectorState = vehicle.gearMovementTime == 0 ? 0 : 1;
+			}
 		}
 	}
 }

@@ -7,7 +7,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Vector3f;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
-import minecrafttransportsimulator.rendering.vehicles.RenderAnimations;
+import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -91,7 +91,7 @@ public class TransformRotatable extends ARenderableTransform{
 		//This also allows for multi-variable clamping.
 		double rotation = 0;
 		for(byte i=0; i<rotationVariables.length; ++i){
-			rotation = RenderAnimations.getVariableValue(rotationVariables[i], rotationMagnitudes[i], (float) rotation, rotationClampsMin[i], rotationClampsMax[i], rotationAbsolutes[i], partialTicks, vehicle, optionalPart);
+			rotation = VehicleAnimationSystem.getVariableValue(rotationVariables[i], rotationMagnitudes[i], (float) rotation, rotationClampsMin[i], rotationClampsMax[i], rotationAbsolutes[i], partialTicks, vehicle, optionalPart);
 			//If the next definition is the same point, don't apply rotation yet.
 			//We need to get cumulative rotation.
 			if(i + 1 < rotationVariables.length && rotationPoints[i].equals(rotationPoints[i + 1])){

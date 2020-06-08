@@ -13,7 +13,7 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.rendering.blocks.RenderPole;
+import minecrafttransportsimulator.rendering.instances.RenderPole;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
 
 /**Pole tile entity.  Remembers what components we have attached and the state of the components.

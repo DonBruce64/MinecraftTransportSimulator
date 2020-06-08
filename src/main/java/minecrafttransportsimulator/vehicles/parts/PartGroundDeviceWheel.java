@@ -105,7 +105,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	
 	@Override
 	public Vec3d getActionRotation(float partialTicks){
-		return new Vec3d(vehicle.SPEED_FACTOR*(this.angularPosition + this.angularVelocity*partialTicks)*360D, 0, 0);
+		return new Vec3d(vehicle.SPEED_FACTOR*(this.angularPosition + this.angularVelocity*partialTicks)*360D, vehicleDefinition.turnsWithSteer ? vehicle.getSteerAngle() : 0, 0);
 	}
 	
 	@Override

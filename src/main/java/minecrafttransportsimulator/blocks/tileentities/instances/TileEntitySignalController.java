@@ -13,7 +13,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTic
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight.LightState;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal.SignalState;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.rendering.blocks.RenderDecor;
+import minecrafttransportsimulator.rendering.instances.RenderDecor;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
 
 /**Traffic signal controller tile entity.  Responsible for keeping the state of traffic

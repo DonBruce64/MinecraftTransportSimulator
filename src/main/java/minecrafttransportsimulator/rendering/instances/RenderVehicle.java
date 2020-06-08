@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.vehicles;
+package minecrafttransportsimulator.rendering.instances;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -406,26 +406,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *   to the part's position to avoid coordinate system conflicts. 
 	 */
 	private static void rotatePart(APart part, float partialTicks){
-		if(part.vehicleDefinition.turnsWithSteer){
-			//Use custom steering rotation point if it's set in the JSON.
-			if(part.vehicleDefinition.steerRotationOffset == null){
-				if(part.placementOffset.z >= 0){
-					GL11.glRotatef(part.vehicle.getSteerAngle(), 0, 1, 0);
-				}else{
-					GL11.glRotatef(-part.vehicle.getSteerAngle(), 0, 1, 0);
-				}
-			}else{
-				Vec3d offset = new Vec3d(-part.vehicleDefinition.steerRotationOffset[0], -part.vehicleDefinition.steerRotationOffset[1], -part.vehicleDefinition.steerRotationOffset[2]);
-				Vec3d rotatedPoint = RotationSystem.getRotatedPoint(offset, 0, part.placementOffset.z >= 0 ? -part.vehicle.getSteerAngle() : part.vehicle.getSteerAngle(), 0);
-				GL11.glTranslated(part.vehicleDefinition.steerRotationOffset[0] + rotatedPoint.x, part.vehicleDefinition.steerRotationOffset[1] + rotatedPoint.y, part.vehicleDefinition.steerRotationOffset[2] + rotatedPoint.z);
-				if(part.placementOffset.z >= 0){
-					GL11.glRotatef(part.vehicle.getSteerAngle(), 0, 1, 0);
-				}else{
-					GL11.glRotatef(-part.vehicle.getSteerAngle(), 0, 1, 0);
-				}
-			}
-		}
-		
 		boolean mirrored = ((part.placementOffset.x < 0 && !part.vehicleDefinition.inverseMirroring) || (part.placementOffset.x > 0 && part.vehicleDefinition.inverseMirroring)) && !part.disableMirroring; 
 		if(mirrored){
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);
@@ -444,25 +424,24 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}
 		
-		Vec3d positionotation = part.getPositionRotation(partialTicks);
-		if(!positionotation.equals(Vec3d.ZERO)){
+		Vec3d positionRotation = part.getPositionRotation(partialTicks);
+		if(!positionRotation.equals(Vec3d.ZERO)){
 			if(mirrored){
-				GL11.glRotated(-positionotation.z, 0, 0, 1);
-				GL11.glRotated(-positionotation.y, 0, 1, 0);
-				GL11.glRotated(-positionotation.x, 1, 0, 0);
+				GL11.glRotated(-positionRotation.y, 0, 1, 0);
+				GL11.glRotated(-positionRotation.x, 1, 0, 0);
+				GL11.glRotated(-positionRotation.z, 0, 0, 1);
 			}else{
-				GL11.glRotated(positionotation.z, 0, 0, 1);
-				GL11.glRotated(positionotation.y, 0, 1, 0);
-				GL11.glRotated(positionotation.x, 1, 0, 0);
+				GL11.glRotated(positionRotation.y, 0, 1, 0);
+				GL11.glRotated(positionRotation.x, 1, 0, 0);
+				GL11.glRotated(positionRotation.z, 0, 0, 1);
 			}
 		}
 
 		Vec3d actionRotation = part.getActionRotation(partialTicks);
 		if(!actionRotation.equals(Vec3d.ZERO)){
-			//Need to rotate in reverse order, otherwise guns are off.
-			GL11.glRotated(actionRotation.z, 0, 0, 1);
-			GL11.glRotated(-actionRotation.y, 0, 1, 0);
+			GL11.glRotated(actionRotation.y, 0, 1, 0);
 			GL11.glRotated(actionRotation.x, 1, 0, 0);
+			GL11.glRotated(actionRotation.z, 0, 0, 1);
 		}
 	}
 	

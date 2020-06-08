@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.blocks;
+package minecrafttransportsimulator.rendering.instances;
 
 import java.awt.Color;
 import java.util.HashMap;

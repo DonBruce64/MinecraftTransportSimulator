@@ -5,7 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
-import minecrafttransportsimulator.rendering.vehicles.RenderInstrument;
+import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 

@@ -128,6 +128,7 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				break;
 			}
 			case REVERSE : vehicle.reverseThrust = controlState; break;
+			case GEAR : ((EntityVehicleF_Air) vehicle).gearUpCommand = controlState; break;
 			case AUTOPILOT : ((EntityVehicleF_Air) vehicle).autopilot = controlState; break;
 			case CRUISECONTROL : {
 				EntityVehicleF_Ground grounder = (EntityVehicleF_Ground) vehicle;
@@ -155,6 +156,7 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 		SHIFT,
 		TRAILER,
 		REVERSE,
+		GEAR,
 		AUTOPILOT,
 		CRUISECONTROL,
 		FLAPS,

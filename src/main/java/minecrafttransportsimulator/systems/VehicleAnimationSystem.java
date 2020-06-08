@@ -1,7 +1,6 @@
-package minecrafttransportsimulator.rendering.vehicles;
+package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
@@ -18,7 +17,7 @@ import minecrafttransportsimulator.vehicles.parts.PartPropeller;
  *
  * @author don_bruce
  */
-public final class RenderAnimations{
+public final class VehicleAnimationSystem{
 	/**
 	 *  Returns the current value for the passed-in variable on the passed-in vehicle.  A part may or
 	 *  may not be passed in to allow for part-specific animations (such as a specific engine's RPM).
@@ -183,6 +182,8 @@ public final class RenderAnimations{
 				case("trim_rudder"): return aircraft.rudderTrim/10D;
 				case("vertical_speed"): return vehicle.motionY*vehicle.SPEED_FACTOR*20;
 				case("slip"): return 75*aircraft.sideVec.dotProduct(vehicle.velocityVec);
+				case("gear_setpoint"): return aircraft.gearUpCommand ? 1 : 0;
+				case("gear_actual"): return aircraft.gearMovementTime/((double) aircraft.definition.motorized.gearSequenceDuration);
 			}
 			if(aircraft instanceof EntityVehicleG_Plane){
 				EntityVehicleG_Plane plane = (EntityVehicleG_Plane) aircraft;

@@ -7,7 +7,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Vector3f;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject;
-import minecrafttransportsimulator.rendering.vehicles.RenderAnimations;
+import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -69,7 +69,7 @@ public class TransformTranslatable extends ARenderableTransform{
 	@Override
 	public void applyTransforms(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
 		for(byte i=0; i<translationVariables.length; ++i){
-			double translation = RenderAnimations.getVariableValue(translationVariables[i], translationMagnitudes[i], 0F, translationClampsMin[i], translationClampsMax[i], translationAbsolutes[i], partialTicks, vehicle, null);
+			double translation = VehicleAnimationSystem.getVariableValue(translationVariables[i], translationMagnitudes[i], 0F, translationClampsMin[i], translationClampsMax[i], translationAbsolutes[i], partialTicks, vehicle, null);
 			if(translation != 0){
 				GL11.glTranslated(translation*translationAxis[i].x, translation*translationAxis[i].y, translation*translationAxis[i].z);
 			}

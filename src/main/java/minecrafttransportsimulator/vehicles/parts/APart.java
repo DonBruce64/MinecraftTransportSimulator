@@ -13,6 +13,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.RotationSystem;
+import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -154,17 +155,26 @@ public abstract class APart implements ISoundProvider{
 	 * This offset is an addition to the main placement offset defined by the JSON.
 	 */
 	public final Vec3d getPositionOffset(float partialTicks){
-		if(this instanceof PartSeat){
-			Vec3d tVec = new Vec3d(0.0D, 1.6875F, 0.0D);
-			Vec3d rotation = getPositionRotation(partialTicks);
-			if(vehicle.hornOn){
-				return tVec;
-			}
-			return RotationSystem.getRotatedPoint(tVec, (float) rotation.x, (float) rotation.y, (float) rotation.z).subtract(tVec);
-			
-		}else{
-			return Vec3d.ZERO;
+		//First rotate about the rotation point and angles.
+		Vec3d rotationAngles = getPositionRotation(partialTicks);
+		Vec3d rotationOffset = Vec3d.ZERO;
+		if(!rotationAngles.equals(Vec3d.ZERO)){
+			rotationOffset = RotationSystem.getRotatedPoint(new Vec3d(-vehicleDefinition.rotationPosition[0], -vehicleDefinition.rotationPosition[1], -vehicleDefinition.rotationPosition[2]), (float) rotationAngles.x, (float) rotationAngles.y, (float) rotationAngles.z);
+			rotationOffset = rotationOffset.addVector(vehicleDefinition.rotationPosition[0], vehicleDefinition.rotationPosition[1], vehicleDefinition.rotationPosition[2]);
 		}
+		
+		//Now translate.  This may incorporate rotation angles.
+		Vec3d translationOffset = Vec3d.ZERO;
+		if(vehicleDefinition.translationVariable != null){
+			double translationValue = VehicleAnimationSystem.getVariableValue(vehicleDefinition.translationVariable, 1, 0, vehicleDefinition.translationClampMin, vehicleDefinition.translationClampMax, vehicleDefinition.translationAbsolute, partialTicks, vehicle, this);
+			translationOffset = new Vec3d(translationValue*vehicleDefinition.translationPosition[0], translationValue*vehicleDefinition.translationPosition[1], translationValue*vehicleDefinition.translationPosition[2]); 
+			if(!rotationAngles.equals(Vec3d.ZERO)){
+				translationOffset = RotationSystem.getRotatedPoint(translationOffset, (float) rotationAngles.x, (float) rotationAngles.y, (float) rotationAngles.z);
+			}
+		}
+		
+		//Add rotation and translation offset and return net offset.
+		return rotationOffset.add(translationOffset);
 	}
 	
 	/**Gets the rotation angles for the part as a vector.
@@ -173,12 +183,9 @@ public abstract class APart implements ISoundProvider{
 	 * rotation vector for all operations.
 	 */
 	public final Vec3d getPositionRotation(float partialTicks){
-		if(this instanceof PartSeat){
-			if(vehicle.hornOn){
-				return new Vec3d(0F, 0.0F, 0.0F);
-			}else{
-				return new Vec3d(0.0F, 0.0F, 0.0F);
-			}
+		if(vehicleDefinition.rotationVariable != null){
+			double rotationValue = VehicleAnimationSystem.getVariableValue(vehicleDefinition.rotationVariable, 1, 0, vehicleDefinition.rotationClampMin, vehicleDefinition.rotationClampMax, vehicleDefinition.rotationAbsolute, partialTicks, vehicle, this);
+			return new Vec3d(rotationValue*vehicleDefinition.rotationAngles[0], rotationValue*vehicleDefinition.rotationAngles[1], rotationValue*vehicleDefinition.rotationAngles[2]);
 		}else{
 			return Vec3d.ZERO;
 		}

@@ -20,10 +20,10 @@ import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperBlockFakeLight;
 import net.minecraft.entity.Entity;
@@ -53,6 +53,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public double fuel;
 	public boolean reverseThrust;
 	public short reversePercent;
+	public boolean gearUpCommand;
+	public int gearMovementTime;
 	
 	public double electricPower = 12;
 	public double electricUsage;
@@ -157,6 +159,13 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				++reversePercent;
 			}else if(!reverseThrust && reversePercent > 0){
 				--reversePercent;
+			}
+			
+			//Adjust gear variables.
+			if(gearUpCommand && gearMovementTime < definition.motorized.gearSequenceDuration){
+				++gearMovementTime;
+			}else if(!gearUpCommand && gearMovementTime > 0){
+				--gearMovementTime;
 			}
 			
 			//Populate grounded wheels.  Needs to be independent of non-wheeled ground devices.

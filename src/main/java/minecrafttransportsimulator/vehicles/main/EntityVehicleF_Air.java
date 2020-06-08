@@ -25,7 +25,6 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	public short aileronAngle;
 	public short aileronTrim;
 	public byte aileronCooldown;
-	public boolean autopilot;
 	
 	public final short MAX_ELEVATOR_ANGLE = 250;
 	public final short ELEVATOR_DAMPEN_RATE = 6;
@@ -40,6 +39,7 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	public byte rudderCooldown;
 	
 	//Other variables.
+	public boolean autopilot;
 	public double trackAngle;
 	public Vec3d verticalVec = Vec3d.ZERO;
 	public Vec3d sideVec = Vec3d.ZERO;
