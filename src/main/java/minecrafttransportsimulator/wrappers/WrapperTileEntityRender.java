@@ -72,11 +72,13 @@ public class WrapperTileEntityRender extends TileEntitySpecialRenderer<WrapperTi
 					}
 				}
 				
-				//Render the TE.
+				//Set lighting and Render the TE.
+				WrapperRender.setLightingToBlock(wrapper.tileEntity.position);
 				render.render(wrapper.tileEntity, (IBlockTileEntity) wrapper.tileEntity.getBlock(), partialTicks);
 				
-				//End render matrix.
+				//End render matrix and reset states.
 				GL11.glPopMatrix();
+				WrapperRender.resetStates();
 			}
 		}
 	}

@@ -384,10 +384,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 					Vec3d parentRotation = part.getPositionRotation(partialTicks);
 					relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, (float) parentRotation.x, (float) parentRotation.y, (float) parentRotation.z);
 					
-					//Rotate again to take the action rotation into account.
-					parentRotation = part.getActionRotation(partialTicks);
-					relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, (float) parentRotation.x, (float) parentRotation.y, (float) parentRotation.z);
-					
 					//Add parent offset to our offset to get actual point.
 					Vec3d totalOffset = offset.add(relativeOffset);
 					GL11.glPushMatrix();

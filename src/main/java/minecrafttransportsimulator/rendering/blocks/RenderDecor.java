@@ -44,8 +44,8 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 			displayListMap.put(definition, displayListIndex);
 		}
 		
-		//Don't do solid model rendering if it's not pass 0.
-		if(WrapperRender.getRenderPass() == 0){
+		//Don't do solid model rendering on the blend pass.
+		if(WrapperRender.getRenderPass() != 1){
 			//Bind the texture and render.
 			WrapperRender.bindTexture(definition.packID, "textures/decors/" + definition.systemName + ".png");
 			GL11.glCallList(displayListMap.get(definition));
@@ -81,7 +81,6 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 					}
 					GL11.glPopMatrix();
 				}
-				WrapperRender.setLightingState(true);
 			}
 		}
 	}

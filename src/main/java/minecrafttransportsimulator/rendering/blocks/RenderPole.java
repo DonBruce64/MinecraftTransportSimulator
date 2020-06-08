@@ -58,8 +58,8 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 				solidConnectorDisplayListMap.put(definition, solidConncectorDisplayLists);
 			}
 			
-			//Render the connectors.  Don't do this on any pass except 0.
-			if(WrapperRender.getRenderPass() == 0){
+			//Render the connectors.  Don't do this on the blending pass 1.
+			if(WrapperRender.getRenderPass() != 1){
 				WrapperRender.bindTexture(definition.packID, "textures/poles/" + definition.systemName + ".png");
 				for(Axis axis : Axis.values()){
 					if(axis.equals(Axis.NONE)){
@@ -154,8 +154,8 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 					GL11.glRotatef(axis.yRotation, 0, 1, 0);
 					GL11.glTranslatef(0, 0, tile.getDefinition().general.radius + 0.001F);
 					
-					//Don't do solid model rendering if it's not pass 0.
-					if(WrapperRender.getRenderPass() == 0){
+					//Don't do solid model rendering on the blend pass.
+					if(WrapperRender.getRenderPass() != 1){
 						WrapperRender.bindTexture(component.definition.packID, "textures/poles/" + component.definition.systemName + ".png");
 						GL11.glCallList(componentDisplayListMap.get(component.definition));
 					}

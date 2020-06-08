@@ -154,9 +154,12 @@ public abstract class APart implements ISoundProvider{
 	 * This offset is an addition to the main placement offset defined by the JSON.
 	 */
 	public final Vec3d getPositionOffset(float partialTicks){
-		if(this instanceof APartGroundDevice){
-			Vec3d tVec = new Vec3d(0.0D, -0.6875F, 0.0D);
+		if(this instanceof PartSeat){
+			Vec3d tVec = new Vec3d(0.0D, 1.6875F, 0.0D);
 			Vec3d rotation = getPositionRotation(partialTicks);
+			if(vehicle.hornOn){
+				return tVec;
+			}
 			return RotationSystem.getRotatedPoint(tVec, (float) rotation.x, (float) rotation.y, (float) rotation.z).subtract(tVec);
 			
 		}else{
@@ -170,21 +173,12 @@ public abstract class APart implements ISoundProvider{
 	 * rotation vector for all operations.
 	 */
 	public final Vec3d getPositionRotation(float partialTicks){
-		Vec3d rotation;
-		if(parentPart != null && vehicleDefinition.isSubPart){
-			rotation = parentPart.getPositionRotation(partialTicks);
-		}else{
-			rotation = Vec3d.ZERO;
-		}
-		if(this instanceof APartGroundDevice){
-			if(this.placementOffset.x == 0){
-				return new Vec3d(120F*vehicle.reversePercent/100F, 0.0F, 0.0F).add(rotation);
-			}else if(this.placementOffset.x < 0){
-				return new Vec3d(0.0F, 0.0F, 90F*vehicle.reversePercent/100F).add(rotation);
+		if(this instanceof PartSeat){
+			if(vehicle.hornOn){
+				return new Vec3d(0F, 0.0F, 0.0F);
 			}else{
-				return new Vec3d(0.0F, 0.0F, -90F*vehicle.reversePercent/100F).add(rotation);
+				return new Vec3d(0.0F, 0.0F, 0.0F);
 			}
-			
 		}else{
 			return Vec3d.ZERO;
 		}
