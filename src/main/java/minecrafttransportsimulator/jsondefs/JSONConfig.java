@@ -65,6 +65,7 @@ public class JSONConfig{
 		public ConfigDouble bulletDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by bullets on vehicles.");
 		public ConfigDouble engineLeakProbability = new ConfigDouble(0.01D, "Chance an engine will spring a leak if hit.  Explosions cause 10x this chance.");
 		public ConfigDouble crashItemDropPercentage = new ConfigDouble(0.75D, "Percent that a crafting ingredient will be dropped when a vehicle is crashed.  Note that fire/explosions may destroy these items if enabled, so just because they drop does not mean you will get all of them.");
+		public ConfigDouble wheelDamageMinimumVelocity = new ConfigDouble(0.2D, "Minimum velocity (blocks/second) which vehicles must be going to damage entities with their wheels.");
 	}
 	
 	public static class ConfigFuel{
