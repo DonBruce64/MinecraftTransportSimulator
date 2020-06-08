@@ -193,8 +193,8 @@ public final class ClientEventSystem{
                 	if(vehicle.getSeatForRider(event.player) != null && event.player.equals(Minecraft.getMinecraft().player)){
                 		PartSeat playeSeat = vehicle.getSeatForRider(event.player);
                 		if(playeSeat != null){
-                			ControlSystem.controlVehicle(vehicle, playeSeat.isController);
-                			WrapperInput.setMouseEnabled(!(playeSeat.isController && ConfigSystem.configObject.client.mouseYoke.value && lockedView));
+                			ControlSystem.controlVehicle(vehicle, playeSeat.vehicleDefinition.isController);
+                			WrapperInput.setMouseEnabled(!(playeSeat.vehicleDefinition.isController && ConfigSystem.configObject.client.mouseYoke.value && lockedView));
                 			return;
                 		}
             		}
@@ -334,7 +334,7 @@ public final class ClientEventSystem{
             if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
             	EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.player.getRidingEntity();
             	if(vehicle.getSeatForRider(minecraft.player) != null){
-                	if(vehicle.getSeatForRider(minecraft.player).isController){
+                	if(vehicle.getSeatForRider(minecraft.player).vehicleDefinition.isController){
                 		//Translate far enough to not render behind the items.
                 		GL11.glTranslated(0, 0, 250);
                 		

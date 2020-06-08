@@ -960,7 +960,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			for(APartGroundDevice groundDevice : this.groundedGroundDevices){
 				float frictionLoss = groundDevice.getFrictionLoss();
 				//Do we have enough friction to change yaw?
-				if(groundDevice.turnsWithSteer && groundDevice.getLateralFriction() - frictionLoss > 0){
+				if(groundDevice.vehicleDefinition.turnsWithSteer && groundDevice.getLateralFriction() - frictionLoss > 0){
 					turningFactor += groundDevice.getLateralFriction() - frictionLoss;
 					turningDistance = (float) Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
 				}

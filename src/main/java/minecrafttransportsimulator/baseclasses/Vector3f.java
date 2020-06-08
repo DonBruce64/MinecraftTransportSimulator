@@ -5,6 +5,7 @@ package minecrafttransportsimulator.baseclasses;
 * @author don_bruce
 */
 public class Vector3f extends Point3f implements IVector3<Float, Point3f>{
+	public static final Vector3f ZERO = new Vector3f(0F, 0F, 0F);
 	
 	public Vector3f(Float x, Float y, Float z){
 		super(x, y, z);

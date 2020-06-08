@@ -201,7 +201,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		//Now find the controller to see who to display as the killer in the death message.
 		Entity controller = null;
 		for(Entity passenger : this.getPassengers()){
-			if(this.getSeatForRider(passenger).isController && controller != null){
+			if(this.getSeatForRider(passenger).vehicleDefinition.isController && controller != null){
 				controller = passenger;
 				break;
 			}

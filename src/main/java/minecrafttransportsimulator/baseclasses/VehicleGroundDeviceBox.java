@@ -160,9 +160,9 @@ public class VehicleGroundDeviceBox{
 		for(APart groundDevice : groundDevices){
 			heights += groundDevice.getHeight();
 			widths += groundDevice.getWidth();
-			xCoords += groundDevice.placementOffset.x;
-			yCoords += groundDevice.placementOffset.y;
-			zCoords += groundDevice.placementOffset.z;
+			xCoords += groundDevice.totalOffset.x;
+			yCoords += groundDevice.totalOffset.y;
+			zCoords += groundDevice.totalOffset.z;
 		}
 		
 		heights /= groundDevices.size();
@@ -187,9 +187,9 @@ public class VehicleGroundDeviceBox{
 		for(APart groundDevice : liquidDevices){
 			heights += groundDevice.getHeight();
 			widths += groundDevice.getWidth();
-			xCoords += groundDevice.placementOffset.x;
-			yCoords += groundDevice.placementOffset.y;
-			zCoords += groundDevice.placementOffset.z;
+			xCoords += groundDevice.totalOffset.x;
+			yCoords += groundDevice.totalOffset.y;
+			zCoords += groundDevice.totalOffset.z;
 		}
 		
 		for(VehicleAxisAlignedBB box : liquidCollisionBoxes){

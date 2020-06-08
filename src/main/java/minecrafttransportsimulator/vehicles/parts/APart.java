@@ -31,42 +31,36 @@ import net.minecraft.util.math.Vec3d;
  * @author don_bruce
  */
 public abstract class APart implements ISoundProvider{	
-	/** Can a rider of this part send inputs to the vehicle this is a part of.*/
-	public final boolean isController;
-	/** Does this part rotate in-sync with the yaw changes of the vehicle.*/
-	public final boolean turnsWithSteer;
-	/**The offset from the center of the vehicle where this part is placed.*/
-	public final Vec3d placementOffset;
-	public final EntityVehicleE_Powered vehicle;
-	public final VehiclePart packVehicleDef;
+	//JSON properties.
 	public final JSONPart definition;
-	/**The placement rotation for this part, as defined by the pack definition.*/
+	public final VehiclePart vehicleDefinition;
+	public final Vec3d placementOffset;
 	public final Vec3d placementRotation;
-	public final boolean inverseMirroring;
 	public final boolean disableMirroring;
-	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	
+	//Instance properties.
+	public final EntityVehicleE_Powered vehicle;
 	/**The parent of this part, if this part is a sub-part of a part or an additional part for a vehicle.*/
 	public final APart parentPart;
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
 	public final List<APart> childParts = new ArrayList<APart>();
-	/**The part's current position, in world coordinates.*/
-	public Vec3d worldPos;
 	
-	//Internal cached variables.
+	//Runtime variables.
+	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
+	public Vec3d totalOffset;
+	public Vec3d movementRotation;
+	public Vec3d worldPos;
 	private boolean isValid;
 		
 	public APart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		this.vehicle = vehicle;
 		this.placementOffset = new Vec3d(packVehicleDef.pos[0], packVehicleDef.pos[1], packVehicleDef.pos[2]);
+		this.totalOffset = placementOffset;
 		this.definition = definition;;
-		this.packVehicleDef = packVehicleDef;
+		this.vehicleDefinition = packVehicleDef;
 		this.worldPos = RotationSystem.getRotatedPoint(this.placementOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(this.vehicle.getPositionVector());
 		this.placementRotation = packVehicleDef.rot != null ? new Vec3d(packVehicleDef.rot[0], packVehicleDef.rot[1], packVehicleDef.rot[2]) : Vec3d.ZERO;
-		this.isController = packVehicleDef.isController;
-		this.turnsWithSteer = packVehicleDef.turnsWithSteer;
 		this.isValid = true;
-		this.inverseMirroring = packVehicleDef.inverseMirroring;
 		
 		//Check to see if we are an additional part to a part on our parent.
 		//If we are not valid due to us being fake, don't add ourselves.
@@ -124,16 +118,25 @@ public abstract class APart implements ISoundProvider{
 	 * Use this for reactions that this part can take based on its surroundings if need be.
 	 */
 	public void updatePart(){
-		//Set position depending on if we are on a rotated parent or not.
-		//If we are on a rotated part, set the movementOffset and the partPos to reflect our rotated position.
-		Vec3d parentActionRotation = packVehicleDef.isSubPart && parentPart != null ? parentPart.getActionRotation(0) : Vec3d.ZERO;
-		if(!parentActionRotation.equals(Vec3d.ZERO)){
-			Vec3d partRelativeOffset = placementOffset.subtract(parentPart.placementOffset);
-			Vec3d movementOffset = parentPart.placementOffset.add(RotationSystem.getRotatedPoint(partRelativeOffset, (float) parentActionRotation.x, (float) parentActionRotation.y, (float) parentActionRotation.z));
-			worldPos = RotationSystem.getRotatedPoint(movementOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+		//Set the updated totalOffset and worldPos.  This is used for part position, but not rendering.
+		if(parentPart != null && vehicleDefinition.isSubPart){
+			//Get the relative distance between our offset and our parent's offset.
+			Vec3d relativeOffset = placementOffset.add(getPositionOffset(0)).subtract(parentPart.placementOffset);
+			
+			//Rotate by the parent's rotation to match orientation.
+			Vec3d parentRotation = parentPart.getPositionRotation(0);
+			relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, (float) parentRotation.x, (float) parentRotation.y, (float) parentRotation.z);
+			
+			//Rotate again to take the action rotation into account.
+			parentRotation = parentPart.getActionRotation(0);
+			relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, (float) parentRotation.x, (float) parentRotation.y, (float) parentRotation.z);
+			
+			//Add parent offset to our offset to get actual point.
+			totalOffset = parentPart.placementOffset.add(parentPart.getPositionOffset(0)).add(relativeOffset);
 		}else{
-			worldPos = RotationSystem.getRotatedPoint(placementOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+			totalOffset = placementOffset.add(getPositionOffset(0));
 		}
+		worldPos = RotationSystem.getRotatedPoint(totalOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
 
 		//Update sound variables.
 		soundPosition.rewind();
@@ -144,13 +147,51 @@ public abstract class APart implements ISoundProvider{
 	}
 	
 	public final VehicleAxisAlignedBB getAABBWithOffset(Vec3d boxOffset){
-		return new VehicleAxisAlignedBB(Vec3d.ZERO.equals(boxOffset) ? worldPos : worldPos.add(boxOffset), this.placementOffset, this.getWidth(), this.getHeight(), false, false);
+		return new VehicleAxisAlignedBB(Vec3d.ZERO.equals(boxOffset) ? worldPos : worldPos.add(boxOffset), this.placementOffset.add(getPositionOffset(0)), this.getWidth(), this.getHeight(), false, false);
 	}
 	
-	/**Gets the rotation vector for the part.
-	 * This comes from the part itself and is used to determine the angle of the part for rendering
-	 * and for translation of sub-parts.  This rotation is variable and depends on what the part is doing.
-	 * This is different from partRotation, which is a fixed rotation component that comes from the vehicle JSONs.
+	/**Gets the movement position offset for the part as a vector.
+	 * This offset is an addition to the main placement offset defined by the JSON.
+	 */
+	public final Vec3d getPositionOffset(float partialTicks){
+		if(this instanceof APartGroundDevice){
+			Vec3d tVec = new Vec3d(0.0D, -0.6875F, 0.0D);
+			Vec3d rotation = getPositionRotation(partialTicks);
+			return RotationSystem.getRotatedPoint(tVec, (float) rotation.x, (float) rotation.y, (float) rotation.z).subtract(tVec);
+			
+		}else{
+			return Vec3d.ZERO;
+		}
+	}
+	
+	/**Gets the rotation angles for the part as a vector.
+	 * This rotation is used to rotate the part prior to translation.
+	 * It may be used for stacked rotations, and should return the final
+	 * rotation vector for all operations.
+	 */
+	public final Vec3d getPositionRotation(float partialTicks){
+		Vec3d rotation;
+		if(parentPart != null && vehicleDefinition.isSubPart){
+			rotation = parentPart.getPositionRotation(partialTicks);
+		}else{
+			rotation = Vec3d.ZERO;
+		}
+		if(this instanceof APartGroundDevice){
+			if(this.placementOffset.x == 0){
+				return new Vec3d(120F*vehicle.reversePercent/100F, 0.0F, 0.0F).add(rotation);
+			}else if(this.placementOffset.x < 0){
+				return new Vec3d(0.0F, 0.0F, 90F*vehicle.reversePercent/100F).add(rotation);
+			}else{
+				return new Vec3d(0.0F, 0.0F, -90F*vehicle.reversePercent/100F).add(rotation);
+			}
+			
+		}else{
+			return Vec3d.ZERO;
+		}
+	}
+	
+	/**Gets the rotation angles for the part as a vector.
+	 * This rotation is based on the internal part state, and cannot be modified via JSON.
 	 */
 	public Vec3d getActionRotation(float partialTicks){
 		return Vec3d.ZERO;

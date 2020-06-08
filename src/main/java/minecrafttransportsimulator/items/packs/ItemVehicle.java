@@ -164,7 +164,8 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 				
 				//Next, boost based on parts.
 				for(APart part : newVehicle.getVehicleParts()){
-					minHeight = Math.min(part.placementOffset.x - part.getHeight()/2F, minHeight);
+					//FIXME this was x before.
+					minHeight = Math.min(part.placementOffset.y - part.getHeight()/2F, minHeight);
 				}
 				
 				//Apply the boost, and check collisions.

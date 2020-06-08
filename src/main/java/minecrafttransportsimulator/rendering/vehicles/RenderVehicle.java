@@ -187,15 +187,17 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		//Render all the parts.  Parts get translated to their offset position prior to rendering.
 		for(APart part : vehicle.getVehicleParts()){
 			//Only render valid parts that aren't sub parts.  SubParts need to be rendered relative to their main part.
-			if(part.isValid() && !part.packVehicleDef.isSubPart){
+			if(part.isValid() && !part.vehicleDefinition.isSubPart){
 				GL11.glPushMatrix();
 				if(part instanceof PartGroundDeviceTread){
 					//Treads don't get translated by y, or z.
 					GL11.glTranslated(part.placementOffset.x, 0, 0);
+					renderPart(part, partialTicks, part.placementOffset);
 				}else{
-					GL11.glTranslated(part.placementOffset.x, part.placementOffset.y, part.placementOffset.z);
+					Vec3d offset = part.placementOffset.add(part.getPositionOffset(partialTicks));
+					GL11.glTranslated(offset.x, offset.y, offset.z);
+					renderPart(part, partialTicks, offset);
 				}
-				renderPart(part, partialTicks);
 				GL11.glPopMatrix();
 			}
 		}
@@ -309,7 +311,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  render static portions of part model, apply transforms to animated portions of the part model, and then
 	 *  render the animated portions.  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 */
-	private static void renderPart(APart part, float partialTicks){
+	private static void renderPart(APart part, float partialTicks, Vec3d offset){
 		String partModelLocation = part.getModelLocation();
 		if(!partDisplayLists.containsKey(partModelLocation)){
 			//Create the part display list and modelObjects.
@@ -350,13 +352,12 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		
 		//Rotate the part prior to rendering the displayList.
 		//We will already have been translated to our position prior to this call.
-		Vec3d actionRotation = part.getActionRotation(partialTicks);
 		GL11.glPushMatrix();
-		rotatePart(part, actionRotation, true);
+		rotatePart(part, partialTicks);
 		
 		//If we are a tread, do the tread-specific render rather than the display list.
 		if(part instanceof PartGroundDeviceTread){
-			if(part.packVehicleDef.treadZPoints != null){
+			if(part.vehicleDefinition.treadZPoints != null){
 				doManualTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));	
 			}else{
 				doAutomaticTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));
@@ -373,13 +374,25 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			//Now that we have rendered this part, render any sub-part children.
 			//Make sure to translate "back" to the vehicle center prior to rendering.
 			//This allows the subParts to translate to their correct positions.
-			GL11.glTranslated(-part.placementOffset.x, -part.placementOffset.y, -part.placementOffset.z);
+			GL11.glTranslated(-offset.x, -offset.y, -offset.z);
 			for(APart childPart : part.childParts){
-				if(childPart.packVehicleDef.isSubPart){
-					Vec3d partRelativeOffset = childPart.placementOffset.subtract(part.placementOffset);
+				if(childPart.vehicleDefinition.isSubPart){
+					//Get the relative distance between our offset and our parent's offset.
+					Vec3d relativeOffset = childPart.placementOffset.add(childPart.getPositionOffset(partialTicks)).subtract(part.placementOffset);
+					
+					//Rotate by the parent's rotation to match orientation.
+					Vec3d parentRotation = part.getPositionRotation(partialTicks);
+					relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, (float) parentRotation.x, (float) parentRotation.y, (float) parentRotation.z);
+					
+					//Rotate again to take the action rotation into account.
+					parentRotation = part.getActionRotation(partialTicks);
+					relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, (float) parentRotation.x, (float) parentRotation.y, (float) parentRotation.z);
+					
+					//Add parent offset to our offset to get actual point.
+					Vec3d totalOffset = offset.add(relativeOffset);
 					GL11.glPushMatrix();
-					GL11.glTranslated(partRelativeOffset.x, partRelativeOffset.y, partRelativeOffset.z);
-					renderPart(childPart, partialTicks);
+					GL11.glTranslated(totalOffset.x, totalOffset.y, totalOffset.z);
+					renderPart(childPart, partialTicks, totalOffset);
 					GL11.glPopMatrix();
 				}
 			}
@@ -392,24 +405,23 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	}
 	
 	/**
-	 *  Rotates a part on the model.  This is an actual part, not an instance of a {@link TransformRotatable}.
-	 *  The rotation takes into account the vehicle, static, JSON-applied rotation, as well as the dynamic
-	 *  rotation returned by {@link APart#getActionRotation(float)}.  Rotation needs to be done after translation to the
-	 *  part's position to avoid coordinate system conflicts. 
+	 *  Rotates a part on the model.  The rotation takes into account the vehicle, static, JSON-applied rotation, 
+	 *  as well as the dynamic rotation that depend on the part itself.  Rotation needs to be done after translation
+	 *   to the part's position to avoid coordinate system conflicts. 
 	 */
-	private static void rotatePart(APart part, Vec3d actionRotation, boolean cullface){
-		if(part.turnsWithSteer){
+	private static void rotatePart(APart part, float partialTicks){
+		if(part.vehicleDefinition.turnsWithSteer){
 			//Use custom steering rotation point if it's set in the JSON.
-			if(part.packVehicleDef.steerRotationOffset == null){
+			if(part.vehicleDefinition.steerRotationOffset == null){
 				if(part.placementOffset.z >= 0){
 					GL11.glRotatef(part.vehicle.getSteerAngle(), 0, 1, 0);
 				}else{
 					GL11.glRotatef(-part.vehicle.getSteerAngle(), 0, 1, 0);
 				}
 			}else{
-				Vec3d offset = new Vec3d(-part.packVehicleDef.steerRotationOffset[0], -part.packVehicleDef.steerRotationOffset[1], -part.packVehicleDef.steerRotationOffset[2]);
+				Vec3d offset = new Vec3d(-part.vehicleDefinition.steerRotationOffset[0], -part.vehicleDefinition.steerRotationOffset[1], -part.vehicleDefinition.steerRotationOffset[2]);
 				Vec3d rotatedPoint = RotationSystem.getRotatedPoint(offset, 0, part.placementOffset.z >= 0 ? -part.vehicle.getSteerAngle() : part.vehicle.getSteerAngle(), 0);
-				GL11.glTranslated(part.packVehicleDef.steerRotationOffset[0] + rotatedPoint.x, part.packVehicleDef.steerRotationOffset[1] + rotatedPoint.y, part.packVehicleDef.steerRotationOffset[2] + rotatedPoint.z);
+				GL11.glTranslated(part.vehicleDefinition.steerRotationOffset[0] + rotatedPoint.x, part.vehicleDefinition.steerRotationOffset[1] + rotatedPoint.y, part.vehicleDefinition.steerRotationOffset[2] + rotatedPoint.z);
 				if(part.placementOffset.z >= 0){
 					GL11.glRotatef(part.vehicle.getSteerAngle(), 0, 1, 0);
 				}else{
@@ -418,26 +430,38 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}
 		
-		if(((part.placementOffset.x < 0 && !part.inverseMirroring) || (part.placementOffset.x > 0 && part.inverseMirroring)) && !part.disableMirroring){
+		boolean mirrored = ((part.placementOffset.x < 0 && !part.vehicleDefinition.inverseMirroring) || (part.placementOffset.x > 0 && part.vehicleDefinition.inverseMirroring)) && !part.disableMirroring; 
+		if(mirrored){
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);
-			if(cullface){
-				GL11.glCullFace(GL11.GL_FRONT);
-			}
+			GL11.glCullFace(GL11.GL_FRONT);
 		}
 		
 		if(!part.placementRotation.equals(Vec3d.ZERO)){
-			if(part.parentPart != null) {
+			if(part.parentPart != null){
 				GL11.glRotated(part.placementRotation.z, -Math.sin(Math.toRadians(part.parentPart.getActionRotation(0).y)), 0, Math.cos(Math.toRadians(part.parentPart.getActionRotation(0).y)));
 				GL11.glRotated(part.placementRotation.y, 0, 1, 0);
 				GL11.glRotated(part.placementRotation.x, Math.cos(Math.toRadians(part.parentPart.getActionRotation(0).y)), 0, Math.sin(Math.toRadians(part.parentPart.getActionRotation(0).y)));
-				}
-			else{
+			}else{
 				GL11.glRotated(part.placementRotation.x, 1, 0, 0);
 				GL11.glRotated(part.placementRotation.y, 0, 1, 0);
 				GL11.glRotated(part.placementRotation.z, 0, 0, 1);
 			}
 		}
+		
+		Vec3d positionotation = part.getPositionRotation(partialTicks);
+		if(!positionotation.equals(Vec3d.ZERO)){
+			if(mirrored){
+				GL11.glRotated(-positionotation.z, 0, 0, 1);
+				GL11.glRotated(-positionotation.y, 0, 1, 0);
+				GL11.glRotated(-positionotation.x, 1, 0, 0);
+			}else{
+				GL11.glRotated(positionotation.z, 0, 0, 1);
+				GL11.glRotated(positionotation.y, 0, 1, 0);
+				GL11.glRotated(positionotation.x, 1, 0, 0);
+			}
+		}
 
+		Vec3d actionRotation = part.getActionRotation(partialTicks);
 		if(!actionRotation.equals(Vec3d.ZERO)){
 			//Need to rotate in reverse order, otherwise guns are off.
 			GL11.glRotated(actionRotation.z, 0, 0, 1);
@@ -455,12 +479,12 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		if(deltas == null){
 			//First calculate the total distance the treads need to be rendered.
 			float totalDistance = 0;
-			float lastY = treadPart.packVehicleDef.treadYPoints[0];
-			float lastZ = treadPart.packVehicleDef.treadZPoints[0];
-			for(byte i=1; i<treadPart.packVehicleDef.treadYPoints.length; ++i){
-				totalDistance += Math.hypot((treadPart.packVehicleDef.treadYPoints[i] - lastY), (treadPart.packVehicleDef.treadYPoints[i] - lastZ));
-				lastY = treadPart.packVehicleDef.treadYPoints[i];
-				lastZ = treadPart.packVehicleDef.treadZPoints[i];
+			float lastY = treadPart.vehicleDefinition.treadYPoints[0];
+			float lastZ = treadPart.vehicleDefinition.treadZPoints[0];
+			for(byte i=1; i<treadPart.vehicleDefinition.treadYPoints.length; ++i){
+				totalDistance += Math.hypot((treadPart.vehicleDefinition.treadYPoints[i] - lastY), (treadPart.vehicleDefinition.treadYPoints[i] - lastZ));
+				lastY = treadPart.vehicleDefinition.treadYPoints[i];
+				lastZ = treadPart.vehicleDefinition.treadZPoints[i];
 			}
 			
 			//Now that we have the total distance, generate a set of points for the path.
@@ -468,17 +492,17 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			deltas = new ArrayList<Float[]>();
 			final float spacing = treadPart.definition.tread.spacing;
 			byte pointIndex = 0;
-			float currentY = treadPart.packVehicleDef.treadYPoints[pointIndex];
-			float currentZ = treadPart.packVehicleDef.treadZPoints[pointIndex];
-			float nextY = treadPart.packVehicleDef.treadYPoints[pointIndex + 1];
-			float nextZ = treadPart.packVehicleDef.treadZPoints[pointIndex + 1];
+			float currentY = treadPart.vehicleDefinition.treadYPoints[pointIndex];
+			float currentZ = treadPart.vehicleDefinition.treadZPoints[pointIndex];
+			float nextY = treadPart.vehicleDefinition.treadYPoints[pointIndex + 1];
+			float nextZ = treadPart.vehicleDefinition.treadZPoints[pointIndex + 1];
 			float deltaYBeforeSegment = 0;
 			float deltaZBeforeSegment = 0;
 			float deltaBeforeSegment = 0;
 			float segmentDeltaY = (nextY - currentY);
 			float segmentDeltaZ = (nextZ - currentZ);
 			float segmentDeltaTotal = (float) Math.hypot(segmentDeltaY, segmentDeltaZ);
-			float angle = treadPart.packVehicleDef.treadAngles[pointIndex];
+			float angle = treadPart.vehicleDefinition.treadAngles[pointIndex];
 			float currentAngle = 0;
 			
 			//Keep moving along the sets of points, making another set of evenly-spaced points.
@@ -490,27 +514,27 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 					++pointIndex;
 					//If we run out of points go back to the start of the point set.
 					//If we are out again, exit the loop.
-					if(pointIndex + 1 == treadPart.packVehicleDef.treadYPoints.length){
-						currentY = treadPart.packVehicleDef.treadYPoints[pointIndex];
-						currentZ = treadPart.packVehicleDef.treadZPoints[pointIndex];
-						nextY = treadPart.packVehicleDef.treadYPoints[0];
-						nextZ = treadPart.packVehicleDef.treadZPoints[0];
+					if(pointIndex + 1 == treadPart.vehicleDefinition.treadYPoints.length){
+						currentY = treadPart.vehicleDefinition.treadYPoints[pointIndex];
+						currentZ = treadPart.vehicleDefinition.treadZPoints[pointIndex];
+						nextY = treadPart.vehicleDefinition.treadYPoints[0];
+						nextZ = treadPart.vehicleDefinition.treadZPoints[0];
 						//Ensure we rotate the angle by the correct amount for the joint.
 						//It's possible that we will add a negative angle here due to going from something like 270 to 0.
 						//This will cause a -270 rotation rather than the +30 we want.
-						float angleToAdd = treadPart.packVehicleDef.treadAngles[0] - treadPart.packVehicleDef.treadAngles[pointIndex];
+						float angleToAdd = treadPart.vehicleDefinition.treadAngles[0] - treadPart.vehicleDefinition.treadAngles[pointIndex];
 						while(angleToAdd < 0){
 							angleToAdd += 360; 
 						}
 						angle += angleToAdd;
-					}else if(pointIndex + 1 > treadPart.packVehicleDef.treadYPoints.length){
+					}else if(pointIndex + 1 > treadPart.vehicleDefinition.treadYPoints.length){
 						break;
 					}else{
-						currentY = treadPart.packVehicleDef.treadYPoints[pointIndex];
-						currentZ = treadPart.packVehicleDef.treadZPoints[pointIndex];
-						nextY = treadPart.packVehicleDef.treadYPoints[pointIndex + 1];
-						nextZ = treadPart.packVehicleDef.treadZPoints[pointIndex + 1];
-						angle += treadPart.packVehicleDef.treadAngles[pointIndex] - treadPart.packVehicleDef.treadAngles[pointIndex - 1];
+						currentY = treadPart.vehicleDefinition.treadYPoints[pointIndex];
+						currentZ = treadPart.vehicleDefinition.treadZPoints[pointIndex];
+						nextY = treadPart.vehicleDefinition.treadYPoints[pointIndex + 1];
+						nextZ = treadPart.vehicleDefinition.treadZPoints[pointIndex + 1];
+						angle += treadPart.vehicleDefinition.treadAngles[pointIndex] - treadPart.vehicleDefinition.treadAngles[pointIndex - 1];
 					}
 					
 					//Update deltas.
@@ -566,7 +590,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 		GL11.glPushMatrix();
 		//First translate to the initial point.
-		GL11.glTranslated(0, treadPart.placementOffset.y + treadPart.packVehicleDef.treadYPoints[0], treadPart.placementOffset.z + treadPart.packVehicleDef.treadZPoints[0]);
+		GL11.glTranslated(0, treadPart.placementOffset.y + treadPart.vehicleDefinition.treadYPoints[0], treadPart.placementOffset.z + treadPart.vehicleDefinition.treadZPoints[0]);
 		//Next use the deltas to get the amount needed to translate and rotate each link.
 		for(Float[] point : deltas){
 			if(point[2] != 0){

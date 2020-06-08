@@ -48,7 +48,7 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 		if(!world.isRemote && player.getRidingEntity() instanceof EntityVehicleE_Powered){
 			EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) player.getRidingEntity();
 			//Check to see if we're a controller.
-			if(vehicle.getSeatForRider(player).isController){
+			if(vehicle.getSeatForRider(player).vehicleDefinition.isController){
 				//Check if the vehicle is empty and we need to load or unload all NPCs.
 				boolean unloadMode = false;
 				for(Entity passenger : vehicle.getPassengers()){
@@ -64,7 +64,7 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 						if(entityliving instanceof INpc){
 							//Get the next free seat.
 							for(APart part : vehicle.getVehicleParts()){
-								if(part instanceof PartSeat && vehicle.getRiderForSeat((PartSeat) part) == null && !((PartSeat) part).isController){
+								if(part instanceof PartSeat && vehicle.getRiderForSeat((PartSeat) part) == null && !((PartSeat) part).vehicleDefinition.isController){
 									vehicle.setRiderInSeat(entityliving, (PartSeat) part);
 									break;
 								}

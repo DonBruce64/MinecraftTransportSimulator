@@ -73,7 +73,7 @@ public abstract class APartGroundDevice extends APart{
 					Entity attacker = null;
 					for(Entity passenger : vehicle.getPassengers()){
 						PartSeat seat = vehicle.getSeatForRider(passenger);
-						if(seat.isController){
+						if(seat.vehicleDefinition.isController){
 							attacker = passenger;
 							break;
 						}

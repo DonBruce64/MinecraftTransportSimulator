@@ -89,7 +89,7 @@ public final class RenderAnimations{
 					case("engine_driveshaft_rotation"): return engine.getDriveshaftRotation(partialTicks);
 					case("engine_driveshaft_sin"): return Math.sin(Math.toRadians(engine.getDriveshaftRotation(partialTicks)));
 					case("engine_driveshaft_cos"): return Math.cos(Math.toRadians(engine.getDriveshaftRotation(partialTicks)));
-					case("engine_rpm"): return engine.definition.engine.maxRPM < 15000 ? engine.RPM : engine.RPM/10D;
+					case("engine_rpm"): return engine.definition.engine.maxRPM < 15000 ? engine.rpm : engine.rpm/10D;
 					case("engine_rpm_safe"): return engine.definition.engine.maxRPM < 15000 ? PartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM) : PartEngine.getSafeRPMFromMax(engine.definition.engine.maxRPM)/10D;
 					case("engine_rpm_max"): return engine.definition.engine.maxRPM < 15000 ? engine.definition.engine.maxRPM : engine.definition.engine.maxRPM/10D;
 					case("engine_fuel_flow"): return engine.fuelFlow*20D*60D/1000D;

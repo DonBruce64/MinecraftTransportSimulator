@@ -41,7 +41,7 @@ public class PartEngine extends APart implements FXPart{
 	public boolean brokenStarter;
 	public byte currentGear;
 	public double hours;
-	public double RPM;
+	public double rpm;
 	public double temp = 20;
 	public double pressure;
 	public EngineStates state = EngineStates.ENGINE_OFF;
@@ -90,7 +90,7 @@ public class PartEngine extends APart implements FXPart{
 		this.brokenStarter = dataTag.getBoolean("brokenStarter");
 		this.currentGear = dataTag.getByte("currentGear");
 		this.hours = dataTag.getDouble("hours");
-		this.RPM = dataTag.getDouble("rpm");
+		this.rpm = dataTag.getDouble("rpm");
 		this.temp = dataTag.getDouble("temp");
 		this.pressure = dataTag.getDouble("pressure");
 		if(dataTag.hasKey("state")){
@@ -204,7 +204,7 @@ public class PartEngine extends APart implements FXPart{
 		
 		//Add cooling for ambient temp.
 		ambientTemp = 25*vehicle.world.getBiome(vehicle.getPosition()).getTemperature(vehicle.getPosition()) - 5*(Math.pow(2, vehicle.posY/400) - 1);
-		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(RPM/2000F)) + Math.abs(vehicle.velocity)/500F;
+		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(rpm/2000F)) + Math.abs(vehicle.velocity)/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		
 		//Check to see if electric or hand starter can keep running.
@@ -234,25 +234,25 @@ public class PartEngine extends APart implements FXPart{
 		//If the starter is running, adjust RPM.
 		if(starterLevel > 0){
 			--starterLevel;
-			if(RPM < startRPM*1.2){
-				RPM = Math.min(RPM + definition.engine.starterPower, startRPM*1.2);
+			if(rpm < startRPM*1.2){
+				rpm = Math.min(rpm + definition.engine.starterPower, startRPM*1.2);
 			}else{
-				RPM = Math.max(RPM - definition.engine.starterPower, startRPM*1.2);
+				rpm = Math.max(rpm - definition.engine.starterPower, startRPM*1.2);
 			}
 		}
 		
 		//Do running logic.
 		if(state.running){
 			//Provide electric power to the vehicle we're in.
-			vehicle.electricUsage -= 0.05*RPM/definition.engine.maxRPM;
+			vehicle.electricUsage -= 0.05*rpm/definition.engine.maxRPM;
 			
 			//Add hours to the engine.
 			if(!isCreative){
 				hours += 0.001*getTotalWearFactor();
 				
 				//Add extra hours if we are running the engine too fast.
-				if(RPM > getSafeRPMFromMax(definition.engine.maxRPM)){
-					hours += 0.001*(RPM - getSafeRPMFromMax(definition.engine.maxRPM))/10F*getTotalWearFactor();
+				if(rpm > getSafeRPMFromMax(definition.engine.maxRPM)){
+					hours += 0.001*(rpm - getSafeRPMFromMax(definition.engine.maxRPM))/10F*getTotalWearFactor();
 				}
 			}
 			
@@ -269,26 +269,26 @@ public class PartEngine extends APart implements FXPart{
 						vehicle.fuel = 0;
 						vehicle.fluidName = "";
 					}else{
-						fuelFlow = getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicle.fluidName)*RPM*(fuelLeak ? 1.5F : 1.0F)/definition.engine.maxRPM;
+						fuelFlow = getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicle.fluidName)*rpm*(fuelLeak ? 1.5F : 1.0F)/definition.engine.maxRPM;
 						vehicle.fuel -= fuelFlow;
 					}
 				}
 				
 				//Add temp based on engine speed.
-				temp += Math.max(0, (7*RPM/definition.engine.maxRPM - temp/(COLD_TEMP*2))/20);
+				temp += Math.max(0, (7*rpm/definition.engine.maxRPM - temp/(COLD_TEMP*2))/20);
 				
 				//Adjust oil pressure based on RPM and leak status.
-				pressure = Math.min(90 - temp/10, pressure + RPM/startRPM - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
+				pressure = Math.min(90 - temp/10, pressure + rpm/startRPM - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
 							
 				//Add extra hours and temp if we have low oil.
 				if(pressure < LOW_OIL_PRESSURE){
-					temp += Math.max(0, (20*RPM/definition.engine.maxRPM)/20);
+					temp += Math.max(0, (20*rpm/definition.engine.maxRPM)/20);
 					hours += 0.01*getTotalWearFactor();
 				}
 				
 				//Add extra hours if we tried to run the engine fast without it being warmed up.
-				if(RPM > startRPM*1.5 && temp < COLD_TEMP){
-					hours += 0.001*(RPM/startRPM - 1)*getTotalWearFactor();
+				if(rpm > startRPM*1.5 && temp < COLD_TEMP){
+					hours += 0.001*(rpm/startRPM - 1)*getTotalWearFactor();
 				}
 				
 				//Add extra hours, and possibly explode the engine, if its too hot.
@@ -301,7 +301,7 @@ public class PartEngine extends APart implements FXPart{
 				
 				//If the engine has high hours, give a chance for a backfire.
 				if(hours > 200 && !vehicle.world.isRemote){
-					if(Math.random() < hours/10000*(getSafeRPMFromMax(this.definition.engine.maxRPM)/(RPM+getSafeRPMFromMax(this.definition.engine.maxRPM)/2))){
+					if(Math.random() < hours/10000*(getSafeRPMFromMax(this.definition.engine.maxRPM)/(rpm+getSafeRPMFromMax(this.definition.engine.maxRPM)/2))){
 						backfireEngine();
 					}
 				}
@@ -312,7 +312,7 @@ public class PartEngine extends APart implements FXPart{
 						stallEngine(PacketEngineTypes.DROWN);
 					}else if(vehicle.fuel == 0 && !isCreative){
 						stallEngine(PacketEngineTypes.FUEL_OUT);
-					}else if(RPM < stallRPM){
+					}else if(rpm < stallRPM){
 						stallEngine(PacketEngineTypes.TOO_SLOW);
 					}
 				}
@@ -323,18 +323,18 @@ public class PartEngine extends APart implements FXPart{
 				if(currentGear > 0){
 					if(shiftCooldown == 0){
 						if(definition.engine.upShiftRPM != null && definition.engine.downShiftRPM != null){
-							if(RPM > definition.engine.upShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F)) {
+							if(rpm > definition.engine.upShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F)) {
 								shiftUp(false);
 								shiftCooldown = definition.engine.shiftSpeed;
-							}else if(RPM < definition.engine.downShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F) && currentGear > 1){
+							}else if(rpm < definition.engine.downShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F) && currentGear > 1){
 								shiftDown(false);
 								shiftCooldown = definition.engine.shiftSpeed;
 							}
 						}else{
-							if(RPM > getSafeRPMFromMax(definition.engine.maxRPM)*0.5F*(1.0F + vehicle.throttle/100F)){
+							if(rpm > getSafeRPMFromMax(definition.engine.maxRPM)*0.5F*(1.0F + vehicle.throttle/100F)){
 								shiftUp(false);
 								shiftCooldown = definition.engine.shiftSpeed;
-							}else if(RPM < getSafeRPMFromMax(definition.engine.maxRPM)*0.25*(1.0F + vehicle.throttle/100F) && currentGear > 1){
+							}else if(rpm < getSafeRPMFromMax(definition.engine.maxRPM)*0.25*(1.0F + vehicle.throttle/100F) && currentGear > 1){
 								shiftDown(false);
 								shiftCooldown = definition.engine.shiftSpeed;
 							}
@@ -354,7 +354,7 @@ public class PartEngine extends APart implements FXPart{
 			//Internal fuel is used for engine sound wind down.  NOT used for power.
 			if(internalFuel > 0){
 				--internalFuel;
-				if(RPM < startRPM){
+				if(rpm < startRPM){
 					internalFuel = 0;
 				}
 			}
@@ -362,7 +362,7 @@ public class PartEngine extends APart implements FXPart{
 			//Start engine if the RPM is high enough to cause it to start by itself.
 			//Used for drowned engines that come out of the water, or engines that don't
 			//have the ability to engage a starter.
-			if(RPM > startRPM){
+			if(rpm > startRPM){
 				if(vehicle.fuel > 0 || isCreative){
 					if(!isInLiquid() && state.magnetoOn && !vehicle.world.isRemote){
 						startEngine();
@@ -398,9 +398,9 @@ public class PartEngine extends APart implements FXPart{
 			//Don't adjust it down to stall the engine, that can only be done via backfire.
 			if(wheelFriction > 0){
 				double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicle.definition.car.axleRatio;
-				RPM += (desiredRPM - RPM)/10D;
-				if(RPM < stallRPM && state.running){
-					RPM = stallRPM;
+				rpm += (desiredRPM - rpm)/10D;
+				if(rpm < stallRPM && state.running){
+					rpm = stallRPM;
 				}
 			}else{
 				//No wheel force.  Adjust wheels to engine speed.
@@ -408,7 +408,7 @@ public class PartEngine extends APart implements FXPart{
 					wheel.skipAngularCalcs = false;
 					if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
 						if(currentGearRatio != 0){
-							wheel.angularVelocity = (float) RPM/currentGearRatio/vehicle.definition.car.axleRatio/60F/20F;
+							wheel.angularVelocity = (float) rpm/currentGearRatio/vehicle.definition.car.axleRatio/60F/20F;
 						}else if(wheel.angularVelocity > 0){
 							wheel.angularVelocity = Math.max(0, wheel.angularVelocity - 0.01F);
 						}else{
@@ -424,20 +424,20 @@ public class PartEngine extends APart implements FXPart{
 			isPropellerInLiquid = vehicle.world.getBlockState(new BlockPos(propeller.worldPos)).getMaterial().isLiquid();
 			propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
 			double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
-			double propellerDesiredSpeed = 0.0254*Math.abs(propeller.currentPitch)*RPM/propellerGearboxRatio/60D/20D;
+			double propellerDesiredSpeed = 0.0254*Math.abs(propeller.currentPitch)*rpm/propellerGearboxRatio/60D/20D;
 			double propellerFeedback = Math.signum(currentGearRatio)*(propellerDesiredSpeed - vehicle.velocity)*(isPropellerInLiquid ? 150 : 50) + propellerForcePenalty*50;
 			if(state.running){
 				double engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours) + startRPM*1.25;
-				double engineRPMDifference = engineTargetRPM - RPM;
+				double engineRPMDifference = engineTargetRPM - rpm;
 				
 				//propellerFeedback can't make an engine stall, but hours can.
-				if(RPM + engineRPMDifference/10 > stallRPM && RPM + engineRPMDifference/10 - propellerFeedback < stallRPM){
-					RPM = stallRPM;
+				if(rpm + engineRPMDifference/10 > stallRPM && rpm + engineRPMDifference/10 - propellerFeedback < stallRPM){
+					rpm = stallRPM;
 				}else{
-					RPM += engineRPMDifference/10 - propellerFeedback;
+					rpm += engineRPMDifference/10 - propellerFeedback;
 				}
 			}else{
-				RPM = Math.max(RPM - (propellerFeedback - propellerForcePenalty*50), 0);
+				rpm = Math.max(rpm - (propellerFeedback - propellerForcePenalty*50), 0);
 			}
 		}
 		
@@ -446,29 +446,29 @@ public class PartEngine extends APart implements FXPart{
 		if((wheelFriction == 0 && propeller == null) || currentGearRatio == 0){
 			if(state.running){
 				double engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours*10) + startRPM*1.25;
-				RPM += (engineTargetRPM - RPM)/10;
-				if(RPM > getSafeRPMFromMax(definition.engine.maxRPM) && definition.engine.jetPowerFactor == 0){
-					RPM -= Math.abs(engineTargetRPM - RPM)/5;
+				rpm += (engineTargetRPM - rpm)/10;
+				if(rpm > getSafeRPMFromMax(definition.engine.maxRPM) && definition.engine.jetPowerFactor == 0){
+					rpm -= Math.abs(engineTargetRPM - rpm)/5;
 				}
 			}else if(!state.esOn && !state.hsOn){
-				RPM = Math.max(RPM - 10, 0);
+				rpm = Math.max(rpm - 10, 0);
 			}
 		}
 		
 		//If we provide jet thrust, check for entities forward and aft of the engine and damage them.
-		if(definition.engine.jetPowerFactor > 0 && vehicle.world.isRemote && RPM >= 5000){
+		if(definition.engine.jetPowerFactor > 0 && vehicle.world.isRemote && rpm >= 5000){
 			List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(vehicle.headingVec).expand(-0.25F, -0.25F, -0.25F));
 			if(!collidedEntites.isEmpty()){
 				Entity attacker = null;
 				for(Entity passenger : vehicle.getPassengers()){
-					if(vehicle.getSeatForRider(passenger).isController){
+					if(vehicle.getSeatForRider(passenger).vehicleDefinition.isController){
 						attacker = passenger;
 						break;
 					}
 				}
 				for(int i=0; i < collidedEntites.size(); ++i){
 					if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
-						collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, true), (float) (definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*RPM/1000F));
+						collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, true), (float) (definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/1000F));
 					}
 				}
 			}
@@ -477,14 +477,14 @@ public class PartEngine extends APart implements FXPart{
 			if(!collidedEntites.isEmpty()){
 				Entity attacker = null;
 				for(Entity passenger : vehicle.getPassengers()){
-					if(vehicle.getSeatForRider(passenger).isController){
+					if(vehicle.getSeatForRider(passenger).vehicleDefinition.isController){
 						attacker = passenger;
 						break;
 					}
 				}
 				for(int i=0; i < collidedEntites.size(); ++i){
 					if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
-						collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, false), (float) (definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*RPM/2000F));
+						collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, false), (float) (definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/2000F));
 						collidedEntites.get(i).setFire(5);
 					}
 				}
@@ -494,7 +494,7 @@ public class PartEngine extends APart implements FXPart{
 		//Update engine and driveshaft rotation.
 		//If we are on a car, the driveshaft needs to follow the wheel rotation, not our own.
 		prevEngineRotation = engineRotation;
-		engineRotation += 360D*RPM/1200D;
+		engineRotation += 360D*rpm/1200D;
 		prevDriveshaftRotation = driveshaftRotation;
 		if(vehicle.definition.car != null){
 			float driveShaftDesiredSpeed = -999F;
@@ -505,7 +505,7 @@ public class PartEngine extends APart implements FXPart{
 			}
 			driveshaftRotation += (float) (vehicle.SPEED_FACTOR*driveShaftDesiredSpeed*Math.signum(vehicle.velocity)*360D);
 		}else{
-			driveshaftRotation += 360D*RPM/1200D*definition.engine.gearRatios[currentGear + 1];
+			driveshaftRotation += 360D*rpm/1200D*definition.engine.gearRatios[currentGear + 1];
 		}
 	}
 	
@@ -530,7 +530,7 @@ public class PartEngine extends APart implements FXPart{
 		partData.setBoolean("brokenStarter", this.brokenStarter);
 		partData.setByte("currentGear", this.currentGear);
 		partData.setDouble("hours", hours);
-		partData.setDouble("rpm", this.RPM);
+		partData.setDouble("rpm", this.rpm);
 		partData.setDouble("temp", this.temp);
 		partData.setDouble("pressure", this.pressure);
 		partData.setByte("state", (byte) this.state.ordinal());
@@ -683,7 +683,7 @@ public class PartEngine extends APart implements FXPart{
 	public void backfireEngine(){
 		//Decrease RPM and send off packet to have clients do the same.
 		//This also causes particles to spawn and sounds to play.
-		RPM -= definition.engine.maxRPM < 15000 ? 100 : 500;
+		rpm -= definition.engine.maxRPM < 15000 ? 100 : 500;
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.BACKFIRE));
 		}else{
@@ -794,7 +794,7 @@ public class PartEngine extends APart implements FXPart{
 	}
 	
 	public boolean isInLiquid(){
-		return vehicle.world.getBlockState(new BlockPos(worldPos.addVector(0, packVehicleDef.intakeOffset, 0))).getMaterial().isLiquid();
+		return vehicle.world.getBlockState(new BlockPos(worldPos.addVector(0, vehicleDefinition.intakeOffset, 0))).getMaterial().isLiquid();
 	}
 	
 	public double getEngineRotation(float partialTicks){
@@ -813,7 +813,7 @@ public class PartEngine extends APart implements FXPart{
 		if(wheelFriction != 0){
 			//If running, use the friction of the wheels to determine the new speed.
 			if(state.running || state.esOn){
-				engineForce = (engineTargetRPM - RPM)/definition.engine.maxRPM*currentGearRatio*vehicle.definition.car.axleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
+				engineForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicle.definition.car.axleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
 				//Check to see if the wheels need to spin out.
 				//If they do, we'll need to provide less force.
 				if(Math.abs(engineForce/300F) > wheelFriction || (Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) > 0.1 && Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) < Math.abs(engineForce/300F))){
@@ -854,7 +854,7 @@ public class PartEngine extends APart implements FXPart{
 				}
 			}else{
 				//Not running, do engine braking.
-				engineForce = -RPM/definition.engine.maxRPM*Math.signum(currentGear)*30;
+				engineForce = -rpm/definition.engine.maxRPM*Math.signum(currentGear)*30;
 			}
 		}else{
 			//No wheel force.  Check for propellers to provide force.
@@ -870,7 +870,7 @@ public class PartEngine extends APart implements FXPart{
 					//Note that because the effective pitch velocity is in meters per second, 
 					//it needs to be converted to meters per revolution before we can move on.
 					//This gets the angle as a ratio of forward pitch to propeller circumference.
-					double angleOfAttack = Math.abs(((effectivePitchVelocity - currentPitchVelocity)/(20D*RPM/propellerGearboxRatio))/((propeller.definition.propeller.diameter*Math.PI)*0.0254D));
+					double angleOfAttack = Math.abs(((effectivePitchVelocity - currentPitchVelocity)/(20D*rpm/propellerGearboxRatio))/((propeller.definition.propeller.diameter*Math.PI)*0.0254D));
 					double thrust = vehicle.airDensity*Math.PI*Math.pow(0.0254*propeller.definition.propeller.diameter/2D, 2)*
 							(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
 							Math.pow(propeller.definition.propeller.diameter/2D/Math.abs(propeller.currentPitch) + propeller.definition.propeller.numberBlades/1000D, 1.5)/400D;
@@ -899,13 +899,13 @@ public class PartEngine extends APart implements FXPart{
 			//We then multiply that by the RPM and the fuel consumption to get the raw power produced
 			//by the core of the engine.  This is speed-independent as the core will ALWAYS accelerate air.
 			//Note that due to a lack of jet physics formulas available, this is "hacky math".
-			double safeRPMFactor = RPM/getSafeRPMFromMax(definition.engine.maxRPM);
+			double safeRPMFactor = rpm/getSafeRPMFromMax(definition.engine.maxRPM);
 			double coreContribution = Math.max(10*vehicle.airDensity*definition.engine.fuelConsumption*safeRPMFactor - definition.engine.bypassRatio, 0);
 			//The fan portion is calculated similarly to how propellers are calculated.
 			//This takes into account the air density, and relative speed of the engine versus the fan's desired speed.
 			//Again, this is "hacky math", as for some reason there's no data on fan pitches.
 			//In this case, however, we don't care about the fuelConsumption as that's only used by the core.
-			double fanVelocityFactor = (0.0254*250*RPM/60/20 - vehicle.velocity)/200D;
+			double fanVelocityFactor = (0.0254*250*rpm/60/20 - vehicle.velocity)/200D;
 			double fanContribution = 10*vehicle.airDensity*safeRPMFactor*fanVelocityFactor*definition.engine.bypassRatio;
 			engineForce += (vehicle.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution)*definition.engine.jetPowerFactor;
 		}
@@ -930,7 +930,7 @@ public class PartEngine extends APart implements FXPart{
 				if(definition.engine.isCrankingNotPitched){
 					sound.pitch = (float) Math.min(1.0F, vehicle.electricPower/10);
 				}else{
-					sound.pitch = (float) (RPM/startRPM);
+					sound.pitch = (float) (rpm/startRPM);
 				}
 			}
 		}else if(sound.soundName.endsWith("backup_beeper")){
@@ -948,7 +948,7 @@ public class PartEngine extends APart implements FXPart{
 						}else{
 							//Interpolate in the form of Y=A*X + B.
 							//In this case, B is the idle offset, A is the slope, X is the RPM, and Y is the output.
-							double rpmPercentOfMax = Math.max(0, (RPM - startRPM)/definition.engine.maxRPM);
+							double rpmPercentOfMax = Math.max(0, (rpm - startRPM)/definition.engine.maxRPM);
 							sound.pitch = (float) ((soundDefinition.pitchMax - soundDefinition.pitchIdle)*rpmPercentOfMax + soundDefinition.pitchIdle);
 							sound.volume = (float) ((soundDefinition.volumeMax - soundDefinition.volumeIdle)*rpmPercentOfMax + soundDefinition.volumeIdle);
 						}
@@ -965,22 +965,22 @@ public class PartEngine extends APart implements FXPart{
 						if(definition.engine.isSteamPowered){
 							sound.pitch = 1.0F;
 						}else{
-							sound.pitch = (float) (0.35*(1 + Math.max(0, (RPM - startRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
+							sound.pitch = (float) (0.35*(1 + Math.max(0, (rpm - startRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
 						}
 					}
 				}else if(sound.soundName.endsWith("_supercharger")){
 					if(!state.running && internalFuel == 0){
 						sound.stop();
 					}else{
-						sound.volume = (float) RPM/definition.engine.maxRPM;
+						sound.volume = (float) rpm/definition.engine.maxRPM;
 						if(definition.engine.isSteamPowered){
 							sound.pitch = 1.0F;
 						}else{
-							sound.pitch = (float) (0.35*(1 + Math.max(0, (RPM - startRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
+							sound.pitch = (float) (0.35*(1 + Math.max(0, (rpm - startRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
 						}
 					}
 				}else if(sound.soundName.endsWith("_piston")){
-					sound.pitch = (float) (0.35*(1 + Math.max(0, (RPM - startRPM))/500D)); 
+					sound.pitch = (float) (0.35*(1 + Math.max(0, (rpm - startRPM))/500D)); 
 				}
 			}
 		}
@@ -1011,7 +1011,7 @@ public class PartEngine extends APart implements FXPart{
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			//Render exhaust smoke if we have any exhausts and are running.
 			//If we are starting and have flames set, render those instead.
-			if(packVehicleDef.exhaustPos != null && (state.running || (definition.engine.flamesOnStartup && state.esOn)) && RPM != 0){
+			if(vehicleDefinition.exhaustPos != null && (state.running || (definition.engine.flamesOnStartup && state.esOn)) && rpm != 0){
 				//Render a smoke for every cycle the exhaust makes.
 				//Depending on the number of positions we have, render an exhaust for every one.
 				//So for 1 position, we render 1 every 2 engine cycles (4 stroke), and for 4, we render 4.
@@ -1019,23 +1019,23 @@ public class PartEngine extends APart implements FXPart{
 				//in their aligned order.
 				
 				//Get timing information and particle information.
-				long engineCycleTimeMills = (long) (2D*(1D/(RPM/60D/1000D)));
+				long engineCycleTimeMills = (long) (2D*(1D/(rpm/60D/1000D)));
 				long currentTime = System.currentTimeMillis();
 				long camTime = currentTime%engineCycleTimeMills;
 				
 				float particleColor = definition.engine.isSteamPowered ? 0.0F : (float) Math.max(1 - temp/COLD_TEMP, 0);
-				boolean singleExhaust = packVehicleDef.exhaustPos.length == 3;
+				boolean singleExhaust = vehicleDefinition.exhaustPos.length == 3;
 				
 				//Iterate through all the exhaust positions and fire them if it is time to do so.
 				//We need to offset the time we are supposed to spawn by the cycle time for multi-point exhausts.
 				//For single-point exhausts, we only fire if we didn't fire this cycle.
-				for(int i=0; i<packVehicleDef.exhaustPos.length; i+=3){
+				for(int i=0; i<vehicleDefinition.exhaustPos.length; i+=3){
 					if(singleExhaust){
 						if(lastTimeParticleSpawned + camTime > currentTime){
 							continue;
 						}
 					}else{
-						long camOffset = engineCycleTimeMills*3/packVehicleDef.exhaustPos.length;
+						long camOffset = engineCycleTimeMills*3/vehicleDefinition.exhaustPos.length;
 						long camMin = (i/3)*camOffset;
 						long camMax = camMin + camOffset;
 						if(camTime < camMin || camTime > camMax || (lastTimeParticleSpawned > camMin && lastTimeParticleSpawned < camMax)){
@@ -1043,8 +1043,8 @@ public class PartEngine extends APart implements FXPart{
 						}
 					}
 					
-					Vec3d exhaustOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustPos[i], packVehicleDef.exhaustPos[i+1], packVehicleDef.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
-					Vec3d velocityOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustVelocity[i], packVehicleDef.exhaustVelocity[i+1], packVehicleDef.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
+					Vec3d exhaustOffset = RotationSystem.getRotatedPoint(new Vec3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+					Vec3d velocityOffset = RotationSystem.getRotatedPoint(new Vec3d(vehicleDefinition.exhaustVelocity[i], vehicleDefinition.exhaustVelocity[i+1], vehicleDefinition.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
 					if(state.running){
 						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04, particleColor, particleColor, particleColor, 1.0F, (float) Math.min((50 + hours)/500, 1)));
 						//Also play steam chuff sound if we are a steam engine.
@@ -1063,10 +1063,10 @@ public class PartEngine extends APart implements FXPart{
 			//Will be from the engine or the exhaust if we have any.
 			if(backfired){
 				backfired = false;
-				if(packVehicleDef.exhaustPos != null){
-					for(int i=0; i<packVehicleDef.exhaustPos.length; i+=3){
-						Vec3d exhaustOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustPos[i], packVehicleDef.exhaustPos[i+1], packVehicleDef.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
-						Vec3d velocityOffset = RotationSystem.getRotatedPoint(new Vec3d(packVehicleDef.exhaustVelocity[i], packVehicleDef.exhaustVelocity[i+1], packVehicleDef.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
+				if(vehicleDefinition.exhaustPos != null){
+					for(int i=0; i<vehicleDefinition.exhaustPos.length; i+=3){
+						Vec3d exhaustOffset = RotationSystem.getRotatedPoint(new Vec3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+						Vec3d velocityOffset = RotationSystem.getRotatedPoint(new Vec3d(vehicleDefinition.exhaustVelocity[i], vehicleDefinition.exhaustVelocity[i+1], vehicleDefinition.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
 						for(byte j=0; j<5; ++j){
 							Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.07 - Math.random()*0.14, velocityOffset.y/10D, velocityOffset.z/10D + 0.07 - Math.random()*0.14, 0.0F, 0.0F, 0.0F, 2.5F, 1.0F));
 						}

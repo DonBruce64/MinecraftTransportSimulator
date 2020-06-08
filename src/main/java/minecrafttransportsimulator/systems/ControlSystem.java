@@ -151,7 +151,7 @@ public final class ControlSystem{
 				}
 			}
 			//If we are the vehicle controller, check for guns that don't have seats. 
-			if(seat.isController){
+			if(seat.vehicleDefinition.isController){
 				for(APart part : vehicle.getVehicleParts()){
 					if(part instanceof PartGun){
 						if(!(part.parentPart instanceof PartSeat)){

@@ -60,9 +60,9 @@ public class PartPropeller extends APart{
 				--currentPitch;
 			}else if(!vehicle.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
 				++currentPitch;
-			}else if(connectedEngine.RPM < PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) && currentPitch > MIN_DYNAMIC_PITCH){
+			}else if(connectedEngine.rpm < PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) && currentPitch > MIN_DYNAMIC_PITCH){
 				--currentPitch;
-			}else if(connectedEngine.RPM > PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) && currentPitch < definition.propeller.pitch){
+			}else if(connectedEngine.rpm > PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) && currentPitch < definition.propeller.pitch){
 				++currentPitch;
 			}
 		}
@@ -71,7 +71,7 @@ public class PartPropeller extends APart{
 		
 		//Adjust angular position and velocity.
 		if(propellerGearboxRatio != 0){
-			angularVelocity = (float) (connectedEngine.RPM/propellerGearboxRatio/60F/20F);
+			angularVelocity = (float) (connectedEngine.rpm/propellerGearboxRatio/60F/20F);
 		}else if(angularVelocity > 1){
 			--angularVelocity;
 		}else if(angularVelocity < -1){
@@ -83,19 +83,19 @@ public class PartPropeller extends APart{
 		
 		//Damage propeller or entities if required.
 		if(!vehicle.world.isRemote){
-			if(connectedEngine.RPM >= 100){
+			if(connectedEngine.rpm >= 100){
 				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(Vec3d.ZERO).expand(0.2F, 0.2F, 0.2F));
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
 					for(Entity passenger : vehicle.getPassengers()){
-						if(vehicle.getSeatForRider(passenger).isController){
+						if(vehicle.getSeatForRider(passenger).vehicleDefinition.isController){
 							attacker = passenger;
 							break;
 						}
 					}
 					for(int i=0; i < collidedEntites.size(); ++i){
 						if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
-							collidedEntites.get(i).attackEntityFrom(new DamageSourcePropellor(attacker), (float) (ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.RPM*propellerGearboxRatio/500F));
+							collidedEntites.get(i).attackEntityFrom(new DamageSourcePropellor(attacker), (float) (ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*propellerGearboxRatio/500F));
 						}
 					}
 				}
